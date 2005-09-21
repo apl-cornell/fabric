@@ -11,6 +11,12 @@
   <!-- Directory for class file targets -->
   <property name="classes" location="${basedir}/classes"/>
 
+  <!-- Distribution directory -->
+  <property name="dist" location="${basedir}/dist"/>
+
+  <!-- Binaries directory -->
+  <property name="bin" location="${basedir}/bin"/>
+
   <path id="standard.classpath">
     <pathelement location="${classes}"/>
   </path>
@@ -23,6 +29,58 @@
     <property name="configure.up-to-date" value="true"/>
   </target>
 
+  <!-- Create appropriate executables in the bin directory -->
+  <target name="bin" depends="configure,bin-deps" unless="bin.up-to-date">
+    <antcall target="diaspora-bin"/>
+  </target>
+
+  <target name="bin-deps">
+    <dependset>
+      <srcfileset dir="${bin}" includes="diaspora.in"/>
+      <targetfileset dir="${bin}" includes="diaspora"/>
+    </dependset>
+    <condition property="bin.up-to-date">
+      <available file="${bin}/diaspora"/>
+    </condition>
+  </target>
+
+  <target name="defs-deps">
+    <condition property="defs.up-to-date">
+      <available file="${bin}/defs"/>
+    </condition>
+  </target> 
+
+  <!-- Creates a file containing common environment variable definitions -->
+  <target name="executable-defs" depends="defs-deps" unless="defs.up-to-date">
+    <echo message="Creating ${bin}/defs"/>
+    <echo file="${bin}/defs" append="no">#!/bin/sh
+# DO NOT EDIT - This file was automatically generated.
+
+JAVA='${java.home}/bin/java'
+FILE_SEP='${file.separator}'
+PATH_SEP='${path.separator}'
+TOP='${basedir}'
+    </echo>
+  </target>
+
+  <target name="diaspora-bin" depends="executable-defs">
+    <echo message="Creating ${bin}/diaspora"/>
+    <concat destfile="${bin}/diaspora" append="no">
+      <filelist dir="${bin}" files="defs"/>
+    </concat>
+    <echo file="${bin}/diaspora" append="yes">
+ext=""
+
+</echo>
+    <concat destfile="${bin}/diaspora" append="yes">
+      <filelist dir="${bin}" files="diaspora.in"/>
+    </concat>
+
+    <chmod perm="+x" file="${bin}/diaspora"/>
+
+    <delete file="${bin}/defs"/>
+  </target>
+
   <!-- Initialise the build -->
   <target name="init" depends="configure">
     <!-- Create the time stamp -->
@@ -32,7 +90,7 @@
   </target>
 
   <!-- Compiles Diaspora -->
-  <target name="all" depends="compile" description="Builds Diaspora"/>
+  <target name="all" depends="bin,compile" description="Builds Diaspora"/>
 
   <!-- Compiles Diaspora -->
   <target name="compile" depends="core" description="Builds Diaspora"/>
@@ -44,7 +102,14 @@
   </target>
 
   <target name="clobber" depends="clean"
-      description="Cleans up the directory tree and deletes generated files"/>
+      description="Cleans up the directory tree and deletes generated files">
+    <delete>
+      <fileset dir="${bin}">
+	<include name="diaspora"/>
+	<include name="defs"/>
+      </fileset>
+    </delete>
+  </target>
 
   <!-- Compiles the Diaspora core -->
   <target name="core" depends="init">
