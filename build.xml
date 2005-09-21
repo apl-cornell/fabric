@@ -1,0 +1,58 @@
+<project name="diaspora" default="all" basedir=".">
+  <description>
+    Diaspora build file
+  </description>
+
+  <!-- Set global properties for this build -->
+
+  <!-- Source directory -->
+  <property name="src" location="${basedir}/src"/>
+
+  <!-- Directory for class file targets -->
+  <property name="classes" location="${basedir}/classes"/>
+
+  <path id="standard.classpath">
+    <pathelement location="${classes}"/>
+  </path>
+
+  <target name="configure" description="Configures Diaspora"
+      unless="configure.up-to-date">
+    <echo message="java version is ${java.version}"/>
+    <echo message="current directory is ${user.dir}"/>
+    <echo message="Java home directory is ${java.home}"/>
+    <property name="configure.up-to-date" value="true"/>
+  </target>
+
+  <!-- Initialise the build -->
+  <target name="init" depends="configure">
+    <!-- Create the time stamp -->
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="${classes}"/>
+  </target>
+
+  <!-- Compiles Diaspora -->
+  <target name="all" depends="compile" description="Builds Diaspora"/>
+
+  <!-- Compiles Diaspora -->
+  <target name="compile" depends="core" description="Builds Diaspora"/>
+
+  <target name="clean" description="Cleans up the directory tree: deletes the distribution directory and the classes directories">
+    <!-- Delete the ${classes} and ${dist} directory trees -->
+    <delete dir="${classes}"/>
+    <delete dir="${dist}"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+      description="Cleans up the directory tree and deletes generated files"/>
+
+  <!-- Compiles the Diaspora core -->
+  <target name="core" depends="init">
+    <javac srcdir="${src}" destdir="${classes}" debug="on"
+	includes="diaspora/core/**">
+      <classpath refid="standard.classpath"/>
+    </javac>
+  </target>
+
+</project>
+
