@@ -129,7 +129,7 @@ ext=""
     </javac>
   </target>
 
-  <!-- Compiles the Diaspora client API -->
+  <!-- Compiles the Diaspora test programs -->
   <target name="tests" depends="init,diaspora">
     <javac srcdir="${src}" destdir="${classes}" debug="on" includes="tests/**">
       <classpath refid="standard.classpath"/>
