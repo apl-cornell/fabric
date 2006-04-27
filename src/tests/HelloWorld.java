@@ -4,7 +4,7 @@ import java.util.*;
 
 public class HelloWorld {
   public static void main(String[] args) throws Throwable {
-    Client client = new Client(50, 2, 3);
+    Client client = new Client(1000, 50, 2, 3);
 
     // Assume we have a fresh core.
 
