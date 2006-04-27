@@ -1,14 +1,10 @@
 import diaspora.common.*;
 import diaspora.client.*;
-import java.net.*;
 import java.util.*;
 
 public class HelloWorld {
   public static void main(String[] args) throws Throwable {
-    Core core =
-      new Core(Collections.singletonList(new InetSocketAddress("localhost", 
-	      3372)));
-    Client client = new Client(core, 30, 3);
+    Client client = new Client(50, 2, 3);
 
     // Assume we have a fresh core.
 
@@ -111,7 +107,7 @@ public class HelloWorld {
     // Get some OIDs.
     System.out.println();
     System.out.println("Obtaining new OIDs...");
-    long[] oids = client.getNewOIDs();
+    long[] oids = client.getNewOIDs(0);
     System.out.println("Got " + oids.length + " leases:");
     for (int i = 0; i < oids.length; i++) System.out.println(oids[i]);
   }
