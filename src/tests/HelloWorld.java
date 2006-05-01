@@ -1,9 +1,14 @@
 import diaspora.common.*;
 import diaspora.client.*;
+import java.security.*;
 import java.util.*;
 
 public class HelloWorld {
   public static void main(String[] args) throws Throwable {
+    // Generate a key pair for signing stuff.
+    KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
+    KeyPair keyPair = keygen.genKeyPair();
+
     Client client = new Client(1000, 50, 2, 3);
 
     // Assume we have a fresh core.
@@ -21,7 +26,7 @@ public class HelloWorld {
     System.out.println();
     System.out.println("Attempting to write OID 0; should fail");
     try {
-      if (client.writeOID(0L, new Public()))
+      if (client.writeOID(0L, new TestObj(keyPair)))
 	System.out.println("Succeeded");
       else
 	System.out.println("Failed");
@@ -33,7 +38,7 @@ public class HelloWorld {
     System.out.println();
     System.out.println("Attempting to insert at OID 0; should succeed");
     try {
-      if (client.insertOID(0L, new Public()))
+      if (client.insertOID(0L, new TestObj(keyPair)))
 	System.out.println("Succeeded");
       else
 	System.out.println("Failed");
@@ -54,7 +59,7 @@ public class HelloWorld {
     System.out.println();
     System.out.println("Attempting to write OID 0; should succeed");
     try {
-      if (client.writeOID(0L, new Writable()))
+      if (client.writeOID(0L, new TestObj(keyPair)))
 	System.out.println("Succeeded");
       else
 	System.out.println("Failed");
@@ -75,7 +80,7 @@ public class HelloWorld {
     System.out.println();
     System.out.println("Attempting to write OID 0; should succeed");
     try {
-      if (client.writeOID(0L, new Readable()))
+      if (client.writeOID(0L, new TestObj(keyPair)))
 	System.out.println("Succeeded");
       else
 	System.out.println("Failed");
@@ -96,7 +101,7 @@ public class HelloWorld {
     System.out.println();
     System.out.println("Attempting to write OID 0; should fail with access error");
     try {
-      if (client.writeOID(0L, new Public()))
+      if (client.writeOID(0L, new TestObj(keyPair)))
 	System.out.println("Succeeded");
       else
 	System.out.println("Failed");
@@ -112,19 +117,24 @@ public class HelloWorld {
     for (int i = 0; i < oids.length; i++) System.out.println(oids[i]);
   }
 
-  static class Readable extends DObject {
-    public boolean canRead(Principal client) { return true; }
-    public boolean canWrite(Principal client) { return false; }
-  }
-
-  static class Writable extends DObject {
-    public boolean canRead(Principal client) { return false; }
-    public boolean canWrite(Principal client) { return true; }
-  }
-
-  static class Public extends DObject {
-    public boolean canRead(Principal client) { return true; }
-    public boolean canWrite(Principal client) { return true; }
+  static class TestObj extends DObject {
+    TestObj(KeyPair keys) {
+      super(0, 0, keys.getPublic(), new byte[0], 0, new byte[0]);
+      try {
+	Signature signature = Signature.getInstance(Util.ALG_SIGNATURE);
+	signature.initSign(keys.getPrivate());
+	signature.update(Util.toArray(this));
+	this.signature = signature.sign();
+      } catch (NoSuchAlgorithmException e) {
+	throw new RuntimeException(e);
+      } catch (InvalidKeyException e) {
+	throw new RuntimeException(e);
+      } catch (SignatureException e) {
+	throw new RuntimeException(e);
+      } catch (java.io.IOException e) {
+	throw new RuntimeException(e);
+      }
+    }
   }
 }
 
