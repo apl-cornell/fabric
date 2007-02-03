@@ -13,6 +13,7 @@ public class HelloWorld {
     KeyPair keyPair = keygen.genKeyPair();
 
     Client client = new Client(1000, 50, 2, 3);
+    Random rand = new Random();
 
     // Assume we have a fresh core.
 
@@ -20,16 +21,17 @@ public class HelloWorld {
     System.out.println();
     System.out.println("Attempting to read OID 0; should get null");
     try {
-      System.out.println("Got " + client.readOID(0L));
+      System.out.println("Got " + client.readOID(0L, 0L));
     } catch (AccessError e) {
       System.out.println("Access error: " + e.getMessage());
     }
 
     // Attempt to write OID 0; should fail.
+    long curLong = rand.nextLong();
     System.out.println();
-    System.out.println("Attempting to write OID 0; should fail");
+    System.out.println("Attempting to write " + curLong + " to OID 0; should fail");
     try {
-      if (client.writeOID(0L, makeTestObj(keyPair)))
+      if (client.writeOID(0L, 0L, makeTestObj(curLong, keyPair)))
 	System.out.println("Succeeded");
       else
 	System.out.println("Failed");
@@ -38,10 +40,11 @@ public class HelloWorld {
     }
 
     // Attempt to insert at OID 0; should succeed.
+    curLong = rand.nextLong();
     System.out.println();
-    System.out.println("Attempting to insert at OID 0; should succeed");
+    System.out.println("Attempting to insert " + curLong + " at OID 0; should succeed");
     try {
-      if (client.insertOID(0L, makeTestObj(keyPair)))
+      if (client.insertOID(0L, 0L, makeTestObj(curLong, keyPair)))
 	System.out.println("Succeeded");
       else
 	System.out.println("Failed");
@@ -53,16 +56,17 @@ public class HelloWorld {
     System.out.println();
     System.out.println("Attempting to read OID 0; should succeed");
     try {
-      System.out.println("Got " + client.readOID(0L));
+      System.out.println("Got " + client.readOID(0L, 0L));
     } catch (AccessError e) {
       System.out.println("Access error: " + e.getMessage());
     }
 
     // Attempt to write that OID; should succeed.
+    curLong = rand.nextLong();
     System.out.println();
-    System.out.println("Attempting to write OID 0; should succeed");
+    System.out.println("Attempting to write " + curLong + " to OID 0; should succeed");
     try {
-      if (client.writeOID(0L, makeTestObj(keyPair)))
+      if (client.writeOID(0L, 0L, makeTestObj(curLong, keyPair)))
 	System.out.println("Succeeded");
       else
 	System.out.println("Failed");
@@ -74,7 +78,7 @@ public class HelloWorld {
     System.out.println();
     System.out.println("Attempting to read OID 0; should fail with access error");
     try {
-      System.out.println("Got " + client.readOID(0L));
+      System.out.println("Got " + client.readOID(0L, 0L));
     } catch (AccessError e) {
       System.out.println("Access error: " + e.getMessage());
     }
@@ -83,7 +87,7 @@ public class HelloWorld {
     System.out.println();
     System.out.println("Attempting to write OID 0; should succeed");
     try {
-      if (client.writeOID(0L, makeTestObj(keyPair)))
+      if (client.writeOID(0L, 0L, makeTestObj(keyPair)))
 	System.out.println("Succeeded");
       else
 	System.out.println("Failed");
@@ -95,7 +99,7 @@ public class HelloWorld {
     System.out.println();
     System.out.println("Attempting to read OID 0; should succeed");
     try {
-      System.out.println("Got " + client.readOID(0L));
+      System.out.println("Got " + client.readOID(0L, 0L));
     } catch (AccessError e) {
       System.out.println("Access error: " + e.getMessage());
     }
@@ -104,7 +108,7 @@ public class HelloWorld {
     System.out.println();
     System.out.println("Attempting to write OID 0; should fail with access error");
     try {
-      if (client.writeOID(0L, makeTestObj(keyPair)))
+      if (client.writeOID(0L, 0L, makeTestObj(keyPair)))
 	System.out.println("Succeeded");
       else
 	System.out.println("Failed");
@@ -114,10 +118,10 @@ public class HelloWorld {
 
     // Get some OIDs.
     System.out.println();
-    System.out.println("Obtaining new OIDs...");
-    long[] oids = client.getNewOIDs(0);
-    System.out.println("Got " + oids.length + " leases:");
-    for (int i = 0; i < oids.length; i++) System.out.println(oids[i]);
+    System.out.println("Obtaining new object numbers...");
+    long[] oNums = client.getNewONums(0);
+    System.out.println("Got " + oNums.length + " leases:");
+    for (int i = 0; i < oNums.length; i++) System.out.println(oNums[i]);
 
     try {
       SecretKey key = KeyGenerator.getInstance(Util.ALG_SECRET_KEY_GEN).generateKey();
@@ -127,8 +131,12 @@ public class HelloWorld {
   }
 
   static DObject.Unencrypted makeTestObj(KeyPair keys) {
+    return makeTestObj(new Serializable() { }, keys);
+  }
+
+  static DObject.Unencrypted makeTestObj(Serializable o, KeyPair keys) {
     DObject.Unencrypted result = new DObject.Unencrypted(0, 0, keys.getPublic(),
-	null, new byte[0], 0, new byte[0], new Serializable() { });
+	null, new byte[0], 0, 0, new byte[0], o);
 
     try {
       Signature signature = Signature.getInstance(Util.ALG_SIGNATURE);
