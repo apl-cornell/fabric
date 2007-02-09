@@ -23,54 +23,61 @@ public class HelloWorld {
     Client client = new Client(keyStore, passwd, trustStore, 1000, 50, 2, 3);
     Random rand = new Random();
 
-    // Attempt to read OID 0.
-    System.out.println();
-    System.out.println("Attempting to read OID 0");
-    try {
-      System.out.println("Got " + client.readOID(0L, 0L));
-    } catch (AccessError e) {
-      System.out.println("Access error: " + e.getMessage());
-    }
+    for (int onum = 0; onum < 2; onum++) {
+      Policy policy =
+          onum == 0 ? new DLMPolicy(new X500Principal(
+              "cn=client0,ou=Diaspora,o=Cornell University,l=Ithaca,st=NY,"
+                  + "c=US")) : new DLMPolicy();
 
-    // Attempt to write OID 0.
-    int curInt = rand.nextInt();
-    System.out.println();
-    System.out.println("Attempting to write " + curInt + " to OID 0");
-    try {
-      if (client.writeOID(0L, 0L, new TestObj(curInt)))
-        System.out.println("Succeeded");
-      else System.out.println("Failed");
-    } catch (AccessError e) {
-      System.out.println("Access error: " + e.getMessage());
-    }
+      // Attempt to read.
+      System.out.println();
+      System.out.println("Attempting to read OID " + onum);
+      try {
+        System.out.println("Got " + client.readOID(0L, onum));
+      } catch (AccessError e) {
+        System.out.println("Access error: " + e.getMessage());
+      }
 
-    // Attempt to read OID 0.
-    System.out.println();
-    System.out.println("Attempting to read OID 0");
-    try {
-      System.out.println("Got " + client.readOID(0L, 0L));
-    } catch (AccessError e) {
-      System.out.println("Access error: " + e.getMessage());
-    }
-    // Attempt to insert at OID 0.
-    curInt = rand.nextInt();
-    System.out.println();
-    System.out.println("Attempting to insert " + curInt + " at OID 0");
-    try {
-      if (client.insertOID(0L, 0L, new TestObj(curInt)))
-        System.out.println("Succeeded");
-      else System.out.println("Failed");
-    } catch (AccessError e) {
-      System.out.println("Access error: " + e.getMessage());
-    }
+      // Attempt to write.
+      int curInt = rand.nextInt();
+      System.out.println();
+      System.out.println("Attempting to write " + curInt + " to OID " + onum);
+      try {
+        if (client.writeOID(0L, onum, new TestObj(policy, curInt)))
+          System.out.println("Succeeded");
+        else System.out.println("Failed");
+      } catch (AccessError e) {
+        System.out.println("Access error: " + e.getMessage());
+      }
 
-    // Attempt to read OID 0.
-    System.out.println();
-    System.out.println("Attempting to read OID 0");
-    try {
-      System.out.println("Got " + client.readOID(0L, 0L));
-    } catch (AccessError e) {
-      System.out.println("Access error: " + e.getMessage());
+      // Attempt to read.
+      System.out.println();
+      System.out.println("Attempting to read OID " + onum);
+      try {
+        System.out.println("Got " + client.readOID(0L, onum));
+      } catch (AccessError e) {
+        System.out.println("Access error: " + e.getMessage());
+      }
+      // Attempt to insert.
+      curInt = rand.nextInt();
+      System.out.println();
+      System.out.println("Attempting to insert " + curInt + " at OID " + onum);
+      try {
+        if (client.insertOID(0L, onum, new TestObj(policy, curInt)))
+          System.out.println("Succeeded");
+        else System.out.println("Failed");
+      } catch (AccessError e) {
+        System.out.println("Access error: " + e.getMessage());
+      }
+
+      // Attempt to read.
+      System.out.println();
+      System.out.println("Attempting to read OID " + onum);
+      try {
+        System.out.println("Got " + client.readOID(0L, onum));
+      } catch (AccessError e) {
+        System.out.println("Access error: " + e.getMessage());
+      }
     }
 
     // Get some OIDs.
@@ -85,13 +92,12 @@ public class HelloWorld {
   static class TestObj extends DObject {
     int val;
 
-    public TestObj() {
-      this(new Random().nextInt());
+    public TestObj(Policy policy) {
+      this(policy, new Random().nextInt());
     }
 
-    public TestObj(int val) {
-      super(new DLMPolicy(new X500Principal(
-          "cn=client0,ou=Diaspora,o=Cornell University,l=Ithaca,st=NY,c=US")));
+    public TestObj(Policy policy, int val) {
+      super(policy);
       this.val = val;
     }
 
