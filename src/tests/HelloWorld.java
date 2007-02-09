@@ -3,12 +3,13 @@ import diaspora.client.*;
 import java.io.FileInputStream;
 import java.util.*;
 import java.security.KeyStore;
+import javax.security.auth.x500.X500Principal;
 
 public class HelloWorld {
   public static void main(String[] args) throws Throwable {
-    if (args.length != 2) {
+    if (args.length != 4) {
       System.out.println("Usage: " + HelloWorld.class.getName()
-          + " keystore passwd");
+          + " keystore passwd truststore passwd");
       System.exit(1);
     }
 
@@ -16,111 +17,58 @@ public class HelloWorld {
     char[] passwd = args[1].toCharArray();
     keyStore.load(new FileInputStream(args[0]), passwd);
 
-    Client client = new Client(keyStore, passwd, keyStore, 1000, 50, 2, 3);
+    KeyStore trustStore = KeyStore.getInstance("JKS");
+    trustStore.load(new FileInputStream(args[2]), args[3].toCharArray());
+
+    Client client = new Client(keyStore, passwd, trustStore, 1000, 50, 2, 3);
     Random rand = new Random();
 
-    // Assume we have a fresh core.
-
-    // Attempt to read OID 0; should get null.
+    // Attempt to read OID 0.
     System.out.println();
-    System.out.println("Attempting to read OID 0; should get null");
+    System.out.println("Attempting to read OID 0");
     try {
       System.out.println("Got " + client.readOID(0L, 0L));
     } catch (AccessError e) {
       System.out.println("Access error: " + e.getMessage());
     }
 
-    // Attempt to write OID 0; should fail.
+    // Attempt to write OID 0.
     int curInt = rand.nextInt();
     System.out.println();
-    System.out.println("Attempting to write " + curInt
-        + " to OID 0; should fail");
+    System.out.println("Attempting to write " + curInt + " to OID 0");
     try {
       if (client.writeOID(0L, 0L, new TestObj(curInt)))
         System.out.println("Succeeded");
-      else
-        System.out.println("Failed");
+      else System.out.println("Failed");
     } catch (AccessError e) {
       System.out.println("Access error: " + e.getMessage());
     }
 
-    // Attempt to insert at OID 0; should succeed.
+    // Attempt to read OID 0.
+    System.out.println();
+    System.out.println("Attempting to read OID 0");
+    try {
+      System.out.println("Got " + client.readOID(0L, 0L));
+    } catch (AccessError e) {
+      System.out.println("Access error: " + e.getMessage());
+    }
+    // Attempt to insert at OID 0.
     curInt = rand.nextInt();
     System.out.println();
-    System.out.println("Attempting to insert " + curInt
-        + " at OID 0; should succeed");
+    System.out.println("Attempting to insert " + curInt + " at OID 0");
     try {
       if (client.insertOID(0L, 0L, new TestObj(curInt)))
         System.out.println("Succeeded");
-      else
-        System.out.println("Failed");
+      else System.out.println("Failed");
     } catch (AccessError e) {
       System.out.println("Access error: " + e.getMessage());
     }
 
-    // Attempt to read OID 0; should succeed.
+    // Attempt to read OID 0.
     System.out.println();
-    System.out.println("Attempting to read OID 0; should succeed");
+    System.out.println("Attempting to read OID 0");
     try {
       System.out.println("Got " + client.readOID(0L, 0L));
-    } catch (AccessError e) {
-      System.out.println("Access error: " + e.getMessage());
-    }
-
-    // Attempt to write that OID; should succeed.
-    curInt = rand.nextInt();
-    System.out.println();
-    System.out.println("Attempting to write " + curInt
-        + " to OID 0; should succeed");
-    try {
-      if (client.writeOID(0L, 0L, new TestObj(curInt)))
-        System.out.println("Succeeded");
-      else
-        System.out.println("Failed");
-    } catch (AccessError e) {
-      System.out.println("Access error: " + e.getMessage());
-    }
-
-    // Attempt to read that OID; should fail with access error.
-    System.out.println();
-    System.out
-        .println("Attempting to read OID 0; should fail with access error");
-    try {
-      System.out.println("Got " + client.readOID(0L, 0L));
-    } catch (AccessError e) {
-      System.out.println("Access error: " + e.getMessage());
-    }
-
-    // Attempt to write that OID; should succeed.
-    System.out.println();
-    System.out.println("Attempting to write OID 0; should succeed");
-    try {
-      if (client.writeOID(0L, 0L, new TestObj()))
-        System.out.println("Succeeded");
-      else
-        System.out.println("Failed");
-    } catch (AccessError e) {
-      System.out.println("Access error: " + e.getMessage());
-    }
-
-    // Attempt to read that OID; should succeed.
-    System.out.println();
-    System.out.println("Attempting to read OID 0; should succeed");
-    try {
-      System.out.println("Got " + client.readOID(0L, 0L));
-    } catch (AccessError e) {
-      System.out.println("Access error: " + e.getMessage());
-    }
-
-    // Attempt to write that OID; should fail with access error.
-    System.out.println();
-    System.out
-        .println("Attempting to write OID 0; should fail with access error");
-    try {
-      if (client.writeOID(0L, 0L, new TestObj()))
-        System.out.println("Succeeded");
-      else
-        System.out.println("Failed");
     } catch (AccessError e) {
       System.out.println("Access error: " + e.getMessage());
     }
@@ -142,6 +90,8 @@ public class HelloWorld {
     }
 
     public TestObj(int val) {
+      super(new DLMPolicy(new X500Principal(
+          "cn=client0,ou=Diaspora,o=Cornell University,l=Ithaca,st=NY,c=US")));
       this.val = val;
     }
 
