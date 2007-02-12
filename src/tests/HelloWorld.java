@@ -43,7 +43,7 @@ public class HelloWorld {
       System.out.println();
       System.out.println("Attempting to write " + curInt + " to OID " + onum);
       try {
-        if (client.writeOID(0L, onum, new TestObj(policy, curInt)))
+        if (client.writeOID(0L, onum, makeTestObj(policy, curInt)))
           System.out.println("Succeeded");
         else System.out.println("Failed");
       } catch (AccessError e) {
@@ -63,7 +63,7 @@ public class HelloWorld {
       System.out.println();
       System.out.println("Attempting to insert " + curInt + " at OID " + onum);
       try {
-        if (client.insertOID(0L, onum, new TestObj(policy, curInt)))
+        if (client.insertOID(0L, onum, makeTestObj(policy, curInt)))
           System.out.println("Succeeded");
         else System.out.println("Failed");
       } catch (AccessError e) {
@@ -88,21 +88,10 @@ public class HelloWorld {
     for (int i = 0; i < oNums.length; i++)
       System.out.println(oNums[i]);
   }
-
-  static class TestObj extends DObject {
-    int val;
-
-    public TestObj(Policy policy) {
-      this(policy, new Random().nextInt());
-    }
-
-    public TestObj(Policy policy, int val) {
-      super(policy);
-      this.val = val;
-    }
-
-    public String toString() {
-      return new Long(val).toString();
-    }
+  
+  static DObject makeTestObj(Policy policy, int val) {
+    DObject result = new DObject(1L, 0L, policy);
+    result.numbers = new Number[] {val};
+    return result;
   }
 }
