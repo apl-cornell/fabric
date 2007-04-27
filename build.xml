@@ -7,7 +7,8 @@
 
   <!-- Source directory -->
   <property name="src" location="${basedir}/src"/>
-  <property name="sys-src" location="${basedir}/src/system"/>
+  <property name="sys.src" location="${src}/system"/>
+  <property name="compiler.src" location="${src}/compiler"/>
 
   <!-- Directory for class file targets -->
   <property name="classes" location="${basedir}/classes"/>
@@ -20,6 +21,7 @@
 
   <path id="standard.classpath">
     <pathelement location="${classes}"/>
+    <pathelement path="${java.class.path}" />
   </path>
 
   <target name="configure" description="Configures Diaspora"
@@ -92,10 +94,10 @@ ext=""
 
   <!-- Compiles Diaspora -->
   <target name="all"
-    depends="bin,diaspora-system,tests"
+    depends="bin,diaspora-system,diaspora-compiler,tests"
     description="Builds Diaspora"/>
 
-  <!-- Compiles Diaspora -->
+  <!-- Compiles the Diaspora system -->
   <target name="diaspora-system" depends="core,client" description="Builds Diaspora"/>
 
   <target name="clean" description="Cleans up the directory tree: deletes the distribution directory and the classes directories">
@@ -116,7 +118,7 @@ ext=""
 
   <!-- Compiles the Diaspora core -->
   <target name="core" depends="init">
-    <javac srcdir="${sys-src}" destdir="${classes}" debug="on"
+    <javac srcdir="${sys.src}" destdir="${classes}" debug="on"
 	includes="diaspora/core/**,diaspora/common/**,diaspora/messages/**">
       <classpath refid="standard.classpath"/>
     </javac>
@@ -124,16 +126,159 @@ ext=""
 
   <!-- Compiles the Diaspora client API -->
   <target name="client" depends="init">
-    <javac srcdir="${sys-src}" destdir="${classes}" debug="on"
+    <javac srcdir="${sys.src}" destdir="${classes}" debug="on"
 	includes="diaspora/client/**,diaspora/common/**,diaspora/messages/**">
       <classpath refid="standard.classpath"/>
     </javac>
+  </target>
+
+  <!-- Compiles the Diaspora compiler -->
+  <target name="diaspora-compiler" depends="init,configure">
+    <antcall target="standard-ext">
+      <param name="ext" value="diaspora" />
+      <param name="ext.pkg" value="diaspora" />
+      <param name="parser.type" value="ppg" />
+    </antcall>
   </target>
 
   <!-- Compiles the Diaspora test programs -->
   <target name="tests" depends="init,diaspora-system">
     <javac srcdir="${src}" destdir="${classes}" debug="on" includes="tests/**">
       <classpath refid="standard.classpath"/>
+    </javac>
+  </target>
+
+  <!--
+    Here begins generic helper stuff for building Polyglot extensions.
+  -->
+
+  <target name="standard-ext">
+    <antcall target="standard-ext-lexer" />
+    <antcall target="standard-ext-${parser.type}-parser" />
+    <antcall target="standard-ext-qq-dep" />
+    <antcall target="compile-ext" />
+  </target>
+
+  <target name="standard-ext-lexer">
+    <antcall target="jflex-lexer">
+      <param name="lexer.dir" value="${compiler.src}/${ext.pkg}/parse" />
+      <param name="lexer.class" value="Lexer_c" />
+      <param name="jflex.file" value="${ext}.flex" />
+    </antcall>
+  </target>
+
+  <target name="jflex-lexer" depends="jflex-lexer-deps"
+      unless="jflex.lexer.up-to-date">
+    <java classname="JFlex.Main" fork="true" dir="${lexer.dir}"
+	failonerror="true">
+      <classpath refid="standard.classpath" />
+      <arg value="${jflex.file}" />
+    </java>
+  </target>
+
+  <target name="jflex-lexer-deps">
+    <dependset>
+      <srcfileset dir="${lexer.dir}" includes="${jflex.file}" />
+      <targetfileset dir="${lexer.dir}" includes="${lexer.class}.java" />
+    </dependset>
+    <available property="jflex.lexer.up-to-date"
+	file="${lexer.dir}/${lexer.class}.java" />
+  </target>
+
+  <target name="standard-ext-ppg-parser">
+    <antcall target="ppg-parser">
+      <param name="parser.dir" value="${compiler.src}/${ext.pkg}/parse" />
+      <param name="ppg.file" value="${ext}.ppg" />
+      <param name="cup.file" value="${ext}_ppg.cup" />
+      <param name="parser.class" value="Grm" />
+      <param name="symbol.class" value="sym" />
+    </antcall>
+  </target>
+
+  <target name="ppg-parser" depends="ppg-parser-deps"
+      unless="ppg.parser.up-to-date">
+    <java classname="ppg.PPG" fork="true" dir="${parser.dir}"
+	output="${parser.dir}/${cup.file}" failonerror="true">
+      <classpath refid="standard.classpath" />
+      <arg value="${ppg.file}" />
+    </java>
+    <antcall target="cup-parser" />
+  </target>
+
+  <target name="ppg-parser-deps">
+    <dependset>
+      <srcfileset dir="${parser.dir}" includes="${ppg.file}" />
+      <targetfileset dir="${parser.dir}">
+	<include name="${cup.file}" />
+	<include name="${parser.class}.java" />
+	<include name="${symbol.class}.java" />
+      </targetfileset>
+    </dependset>
+    <condition property="ppg.parser.up-to-date">
+      <and>
+	<available file="${parser.dir}/${cup.file}" />
+	<available file="${parser.dir}/${parser.class}.java" />
+	<available file="${parser.dir}/${symbol.class}.java" />
+      </and>
+    </condition>
+  </target>
+
+  <target name="cup-parser" depends="cup-parser-using-jar"
+    unless="cup.parser.up-to-date">
+  </target>
+
+  <target name="cup-parser-using-jar" depends="cup-parser-deps"
+      unless="cup.parser.up-to-date">
+    <java classname="java_cup.Main" fork="true" dir="${parser.dir}"
+	failonerror="true">
+      <classpath refid="standard.classpath" />
+      <arg value="-parser"/>
+      <arg value="${parser.class}"/>
+      <arg value="-symbols"/>
+      <arg value="${symbol.class}"/>
+      <arg value="${cup.file}"/>
+    </java>
+  </target>
+
+  <target name="cup-parser-deps">
+    <dependset>
+      <srcfileset dir="${parser.dir}" includes="${cup.file}" />
+      <targetfileset dir="${parser.dir}">
+	<include name="${parser.class}.java" />
+	<include name="${symbol.class}.java" />
+      </targetfileset>
+    </dependset>
+    <condition property="cup.parser.up-to-date">
+      <and>
+	<available file="${parser.dir}/${parser.class}.java" />
+	<available file="${parser.dir}/${symbol.class}.java" />
+      </and>
+    </condition>
+  </target>
+
+  <target name="standard-ext-qq-dep" if="has-qq">
+    <antcall target="standard-ext-qq" />
+  </target>
+
+  <target name="standard-ext-qq">
+    <antcall target="jflex-lexer">
+      <param name="lexer.dir" value="${compiler.src}/${ext.pkg}/qq" />
+      <param name="lexer.class" value="Lexer_c" />
+      <param name="jflex.file" value="qq.flex" />
+    </antcall>
+    <antcall target="ppg-parser">
+      <param name="parser.dir" value="${compiler.src}/${ext.pkg}/qq" />
+      <param name="ppg.file" value="qq.ppg" />
+      <param name="cup.file" value="qq_ppg.cup" />
+      <param name="parser.class" value="Grm" />
+      <param name="symbol.class" value="sym" />
+    </antcall>
+  </target>
+
+  <target name="compile-ext">
+    <javac source="1.4" target="1.4" srcdir="${compiler.src}"
+	destdir="${classes}" debug="on" includes="${ext.pkg}/**">
+      <classpath refid="standard.classpath" />
     </javac>
   </target>
 
