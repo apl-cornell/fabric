@@ -7,6 +7,7 @@
 
   <!-- Source directory -->
   <property name="src" location="${basedir}/src"/>
+  <property name="sys-src" location="${basedir}/src/system"/>
 
   <!-- Directory for class file targets -->
   <property name="classes" location="${basedir}/classes"/>
@@ -91,11 +92,11 @@ ext=""
 
   <!-- Compiles Diaspora -->
   <target name="all"
-    depends="bin,diaspora,tests"
+    depends="bin,diaspora-system,tests"
     description="Builds Diaspora"/>
 
   <!-- Compiles Diaspora -->
-  <target name="diaspora" depends="core,client" description="Builds Diaspora"/>
+  <target name="diaspora-system" depends="core,client" description="Builds Diaspora"/>
 
   <target name="clean" description="Cleans up the directory tree: deletes the distribution directory and the classes directories">
     <!-- Delete the ${classes} and ${dist} directory trees -->
@@ -115,7 +116,7 @@ ext=""
 
   <!-- Compiles the Diaspora core -->
   <target name="core" depends="init">
-    <javac srcdir="${src}" destdir="${classes}" debug="on"
+    <javac srcdir="${sys-src}" destdir="${classes}" debug="on"
 	includes="diaspora/core/**,diaspora/common/**,diaspora/messages/**">
       <classpath refid="standard.classpath"/>
     </javac>
@@ -123,14 +124,14 @@ ext=""
 
   <!-- Compiles the Diaspora client API -->
   <target name="client" depends="init">
-    <javac srcdir="${src}" destdir="${classes}" debug="on"
+    <javac srcdir="${sys-src}" destdir="${classes}" debug="on"
 	includes="diaspora/client/**,diaspora/common/**,diaspora/messages/**">
       <classpath refid="standard.classpath"/>
     </javac>
   </target>
 
   <!-- Compiles the Diaspora test programs -->
-  <target name="tests" depends="init,diaspora">
+  <target name="tests" depends="init,diaspora-system">
     <javac srcdir="${src}" destdir="${classes}" debug="on" includes="tests/**">
       <classpath refid="standard.classpath"/>
     </javac>
