@@ -43,7 +43,10 @@
       <targetfileset dir="${bin}" includes="diaspora"/>
     </dependset>
     <condition property="bin.up-to-date">
-      <available file="${bin}/diaspora"/>
+      <and>
+	<available file="${bin}/diaspora"/>
+	<available file="${bin}/diasporac"/>
+      </and>
     </condition>
   </target>
 
@@ -70,16 +73,18 @@ TOP='${basedir}'
     <echo message="Creating ${bin}/diaspora"/>
     <concat destfile="${bin}/diaspora" append="no">
       <filelist dir="${bin}" files="defs"/>
-    </concat>
-    <echo file="${bin}/diaspora" append="yes">
-ext=""
-
-</echo>
-    <concat destfile="${bin}/diaspora" append="yes">
       <filelist dir="${bin}" files="diaspora.in"/>
     </concat>
 
     <chmod perm="+x" file="${bin}/diaspora"/>
+
+    <echo message="Creating ${bin}/diasporac"/>
+    <concat destfile="${bin}/diasporac" append="no">
+      <filelist dir="${bin}" files="defs"/>
+      <filelist dir="${bin}" files="diasporac.in"/>
+    </concat>
+
+    <chmod perm="+x" file="${bin}/diasporac"/>
 
     <delete file="${bin}/defs"/>
   </target>
