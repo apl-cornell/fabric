@@ -1,10 +1,10 @@
 import generated.DTree;
 import generated.DInt;
-import client.Core;
+import diaspora.client.Core;
 import java.net.InetSocketAddress;
 import java.util.Random;
 
-public class  Main
+public class Tree
 {
 	public static void main( String[] args )
 	{
