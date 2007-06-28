@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.util.*;
 import java.security.KeyStore;
 import javax.security.auth.x500.X500Principal;
+import generated.DInt;
 
 public class HelloWorld {
   public static void main(String[] args) throws Throwable {
@@ -23,6 +24,8 @@ public class HelloWorld {
     Client client = new Client(keyStore, passwd, trustStore, 1000, 50, 2, 3);
     Random rand = new Random();
 
+    core = Core.get_core( 0 );
+    
     for (int onum = 0; onum < 2; onum++) {
       Policy policy =
           onum == 0 ? new DLMPolicy(new X500Principal(
@@ -89,9 +92,11 @@ public class HelloWorld {
       System.out.println(oNums[i]);
   }
   
+  private static Core core; 
+  
   static DObject makeTestObj(Policy policy, int val) {
-    DObject result = new DObject(1L, 0L, policy);
-    result.numbers = new Number[] {val};
+    DInt result = new DInt( core, policy );
+    result.set_value( val );
     return result;
   }
 }
