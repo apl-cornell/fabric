@@ -1,38 +1,49 @@
 import generated.DTree;
 import generated.DInt;
+import diaspora.client.Client;
 import diaspora.client.Core;
-import java.net.InetSocketAddress;
+
+import java.io.FileInputStream;
+import java.security.KeyStore;
 import java.util.Random;
 
-public class Tree
-{
-	public static void main( String[] args )
-	{
-		InetSocketAddress node_addr  = new InetSocketAddress( "localhost", 2001 );
-		Core              node_core  = Core.get_core( node_addr );
+public class Tree {
+  public static void main(String[] args) throws Exception {
+    if (args.length != 4) {
+      System.out.println("Usage: " + Tree.class.getName()
+          + " keystore passwd truststore passwd");
+      System.exit(1);
+    }
 
-		InetSocketAddress value_addr = new InetSocketAddress( "localhost", 2002 );
-		Core              value_core = Core.get_core( value_addr );
+    KeyStore keyStore = KeyStore.getInstance("JKS");
+    char[] passwd = args[1].toCharArray();
+    keyStore.load(new FileInputStream(args[0]), passwd);
 
-		DTree   tree = new DTree( value_core, node_core );
-		Random random = new Random();
+    KeyStore trustStore = KeyStore.getInstance("JKS");
+    trustStore.load(new FileInputStream(args[2]), args[3].toCharArray());
 
-		for( int cycle = 0; ; cycle++ )
-		{
-			for( int i = 0; i < 50; i++)
-			{
-				DInt to_insert = new DInt( value_core );
-				to_insert.set_value( random.nextInt() );
-				tree.insert_iterative( to_insert );
-			}
+    Client.initialize(keyStore, passwd, trustStore, 1000, 50, 2, 3);
+    Client client = Client.getClient();
+    
+    Core node_core  = client.getCore(0);
+    Core value_core = client.getCore(1);
 
-			for( int i = 0; i < 50; i++)
-			{
-				DInt to_find = new DInt( node_core );
-				to_find.set_value( random.nextInt() );
-				tree.lookup( to_find );
-			}
-			System.out.println( "cycle " + cycle );
-		}
-	}
+    DTree tree = new DTree(value_core, node_core);
+    Random random = new Random();
+
+    for (int cycle = 0;; cycle++) {
+      for (int i = 0; i < 50; i++) {
+        DInt to_insert = new DInt(value_core);
+        to_insert.set_value(random.nextInt());
+        tree.insert_iterative(to_insert);
+      }
+
+      for (int i = 0; i < 50; i++) {
+        DInt to_find = new DInt(node_core);
+        to_find.set_value(random.nextInt());
+        tree.lookup(to_find);
+      }
+      System.out.println("cycle " + cycle);
+    }
+  }
 }
