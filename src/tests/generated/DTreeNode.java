@@ -1,10 +1,8 @@
 package generated;
 
-import java.lang.ref.SoftReference;
-
+import diaspora.client.Core;
 import diaspora.client.DObject;
 import diaspora.client.DRef;
-import diaspora.client.Core;
 
 class DTreeNode extends DObject
 {
