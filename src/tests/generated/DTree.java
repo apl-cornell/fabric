@@ -18,7 +18,7 @@ public class DTree extends DObject
 		if (root_ref == null)
 			return null;
 
-		DTreeNode result = (DTreeNode) root_ref.get();
+		DTreeNode result = (DTreeNode) root_ref.fetch();
 		root_ref         = result.this_ref;
 
 		return result;

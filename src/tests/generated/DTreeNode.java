@@ -15,7 +15,7 @@ class DTreeNode extends DObject
 		if (left_ref == null)
 			return null;
 
-		DTreeNode result = (DTreeNode) left_ref.get();
+		DTreeNode result = (DTreeNode) left_ref.fetch();
 		left_ref         = result.this_ref;
 
 		return result;
@@ -38,7 +38,7 @@ class DTreeNode extends DObject
 		if (right_ref == null)
 			return null;
 
-		DTreeNode result = (DTreeNode) right_ref.get();
+		DTreeNode result = (DTreeNode) right_ref.fetch();
 		right_ref         = result.this_ref;
 
 		return result;
@@ -61,7 +61,7 @@ class DTreeNode extends DObject
 		if (value_ref == null)
 			return null;
 
-		DInt result = (DInt) value_ref.get();
+		DInt result = (DInt) value_ref.fetch();
 		value_ref         = result.this_ref;
 
 		return result;
