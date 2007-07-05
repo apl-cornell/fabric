@@ -89,5 +89,17 @@ class DTreeNode extends DObject
 		set_right( right );
 		set_value( value );
 	}
+        
+        public void copyStateFrom(DObject obj) {
+          super.copyStateFrom(obj);
+          
+          if (!(obj instanceof DTreeNode))
+            throw new InternalError("Expected DTreeNode, got something else");
+          
+          DTreeNode other = (DTreeNode) obj;
+          this.left_ref = other.left_ref;
+          this.right_ref = other.right_ref;
+          this.value_ref = other.value_ref;
+        }
 }
 

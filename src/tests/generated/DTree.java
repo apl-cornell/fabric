@@ -45,6 +45,17 @@ public class DTree extends DObject
 		set_root( null );
 		this.node_location = node_location;
 	}
+        
+        @Override
+        public void copyStateFrom(DObject obj) {
+          super.copyStateFrom(obj);
+          
+          if(!(obj instanceof DTree))
+            throw new InternalError("Expected DTree, got something else");
+          
+          DTree other = (DTree) obj;
+          this.root_ref = other.root_ref;
+        }
 
 	public void insert( DInt value )
 	{
