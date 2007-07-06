@@ -35,6 +35,8 @@ public class Tree {
     DTree tree = new DTree(value_core, node_core);
     tx.commitTransaction();
     Random random = new Random();
+    
+    byte[] bigobj = new byte[500];
 
     for (int cycle = 0;; cycle++) {
       for (int i = 0; i < 50; i++) {
