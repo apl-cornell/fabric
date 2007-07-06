@@ -2,8 +2,6 @@ package generated;
 
 import diaspora.client.DObject;
 import diaspora.client.Core;
-import diaspora.common.ACLPolicy;
-import diaspora.common.Policy;
 
 public class DInt extends DObject {
   private int[] value;

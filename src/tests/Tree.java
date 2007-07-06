@@ -36,8 +36,6 @@ public class Tree {
     tx.commitTransaction();
     Random random = new Random();
     
-    byte[] bigobj = new byte[500];
-
     for (int cycle = 0;; cycle++) {
       for (int i = 0; i < 50; i++) {
         tx.startTransaction();
