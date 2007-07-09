@@ -10,7 +10,9 @@ public class Tree {
   }
 
   public void insert(int value) {
-    root = insertHelper(root, value);
+    atomic {
+      root = insertHelper(root, value);
+    }
   }
 
   private TreeNode insertHelper(TreeNode cur, int value) {
@@ -26,29 +28,31 @@ public class Tree {
   }
 
   public void insertIterative(int value) {
-    TreeNode newNode = new TreeNode@nodeLocation(null, null, value);
+    atomic {
+      TreeNode newNode = new TreeNode@nodeLocation(null, null, value);
 
-    if (root == null) {
-      root = newNode;
-      return;
-    }
-
-    TreeNode cur = root;
-    while (true) {
-      if (cur.value < value) {
-	if (cur.right == null) {
-	  cur.right = newNode;
-	  return;
-	}
-	cur = cur.right;
-	continue;
-      }
-
-      if (cur.left == null) {
-	cur.left = newNode;
+      if (root == null) {
+	root = newNode;
 	return;
       }
-      cur = cur.left;
+
+      TreeNode cur = root;
+      while (true) {
+	if (cur.value < value) {
+	  if (cur.right == null) {
+	    cur.right = newNode;
+	    return;
+	  }
+	  cur = cur.right;
+	  continue;
+	}
+
+	if (cur.left == null) {
+	  cur.left = newNode;
+	  return;
+	}
+	cur = cur.left;
+      }
     }
   }
 
