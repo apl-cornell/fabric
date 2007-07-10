@@ -3,12 +3,17 @@ import generated.DInt;
 
 import java.util.Random;
 
-public class Tree extends Example {
+import diaspora.client.Client;
+import diaspora.client.Core;
+import diaspora.client.TransactionManager;
+
+public class Tree {
   public static void main(String[] args) throws Exception {
-    new Tree(args).run();
-  }
+    Client client = Client.getClient();
+    Core   core0  = client.getCore(0);
+    Core   core1  = client.getCore(1);
+    TransactionManager tx = TransactionManager.INSTANCE;
     
-  public void run() throws Exception {
     tx.startTransaction();
     DTree tree = new DTree(core1, core0);
     tx.commitTransaction();
@@ -33,9 +38,5 @@ public class Tree extends Example {
       System.out.println("cycle " + cycle);
     }
   }
-  
-  public Tree(String[] args) throws Exception {
-    super(args);
-  }
-  
+ 
 }

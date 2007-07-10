@@ -45,7 +45,8 @@
     <condition property="bin.up-to-date">
       <and>
 	<available file="${bin}/diaspora"/>
-	<available file="${bin}/diasporac"/>
+    <available file="${bin}/diasporac"/>
+	<available file="${bin}/dclient"/>
       </and>
     </condition>
   </target>
@@ -85,6 +86,14 @@ TOP='${basedir}'
     </concat>
 
     <chmod perm="+x" file="${bin}/diasporac"/>
+  	
+  	<echo message="Creating ${bin}/dclient"/>
+  	<concat destfile="${bin}/dclient" append="no">
+  		<filelist dir="${bin}" files="defs"/>
+  		<filelist dir="${bin}" files="dclient.in"/>
+  	</concat>
+  	
+  	<chmod perm="+x" file="${bin}/dclient"/>
 
     <delete file="${bin}/defs"/>
   </target>
