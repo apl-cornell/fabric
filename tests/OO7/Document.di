@@ -2,7 +2,7 @@ package OO7;
 
 public class Document {
   public final int id;
-  public char[] title;
+  public String title;
   public String text;
 
   public CompositePart part;

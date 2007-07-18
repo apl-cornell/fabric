@@ -4,7 +4,7 @@ import java.util.Set;
 
 public class Module {
   public final int id;
-  public char[]    type;
+  public String    type;
   public int       buildDate;
   public Manual    man;
 

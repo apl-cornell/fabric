@@ -1,7 +1,7 @@
 package OO7;
 
 public class Manual {
-  public char[] title;
+  public String title;
   public int    id;
 
   public String text;

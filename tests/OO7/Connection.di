@@ -1,7 +1,7 @@
 package OO7;
 
 public class Connection {
-  public char[] type;
+  public String type;
   public int    length;
 
   public AtomicPart from;

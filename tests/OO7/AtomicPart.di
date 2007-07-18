@@ -5,7 +5,7 @@ import java.util.Set;
 
 public class AtomicPart {
   public int    id;
-  public char[] type;
+  public String type;
   public int    buildDate;
   public int    x, y;
   public int    docID;
