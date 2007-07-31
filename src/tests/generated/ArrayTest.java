@@ -59,18 +59,50 @@ public class ArrayTest extends DObject {
 
   public static void main(String[] args) {
     runTests();
-    // TODO: atomic {
+    // atomic {
     runTests();
-    // TODO: }
+    // }
   }
 
   public static void runTests() {
-    // TODO: atomic {
+    ArrayTest a1 = null;
+    ArrayTest a2 = null;
+    // atomic {
+    {
     Core core = null;
-    ArrayTest a1 = new ArrayTest(core);
-    ArrayTest a2 = new ArrayTest(core);
+    a1 = new ArrayTest(core);
+    a2 = new ArrayTest(core);
     a2.set_ints( new DArray<Integer>(core, new Integer[] {5, 4, 3, 2, 1}) );
-    // TODO: }
+    }
+    // }
+
+    // atomic {
+    {
+    DArray<Integer> temp = a1.get_ints();
+    a1.set_ints(a2.get_ints());
+    a2.set_ints(temp);
+    }
+    // }
+
+    // atomic {
+    {
+    DArray<DRef> temp = a1.get_obs();
+    a1.set_obs(a2.get_obs());
+    a2.set_obs(temp);
+    }
+    // }
+
+    // atomic {
+    {
+    a1.get_obs().set(0, a1.this_ref);
+    }
+    // }
+
+    // atomic {
+    {
+    a1.get_obs().set(0, ((ArrayTest) ((ArrayTest) a1.get_obs().get(0).fetch()).get_obs().get(0).fetch()).this_ref);
+    }
+    // }
   }
 }
 
