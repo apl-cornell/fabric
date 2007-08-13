@@ -4,7 +4,7 @@ import java.util.Random;
 
 public class Main {
   public static void main(String[] args) {
-    Tree tree;
+    Tree tree = null;
     atomic {
       tree = new Tree@0L(1L);
     }
