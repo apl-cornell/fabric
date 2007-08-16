@@ -3,6 +3,8 @@ package generated;
 import diaspora.client.Core;
 import diaspora.client.DObject;
 import diaspora.client.DRef;
+import diaspora.client.UnreachableCoreException;
+import diaspora.common.AccessError;
 
 public class DTree extends DObject {
   // TODO: Core parameter treated separately, or dynamic value treated the same?
@@ -12,7 +14,7 @@ public class DTree extends DObject {
 
   private DRef root_ref;
 
-  private DTreeNode get_root() {
+  private DTreeNode get_root() throws AccessError, UnreachableCoreException {
     if (root_ref == null) return null;
 
     DTreeNode result = (DTreeNode) root_ref.fetch();
@@ -30,11 +32,11 @@ public class DTree extends DObject {
   // constructors
   // ////////////////////////////////////////////////////////////////
 
-  public DTree(Core core) {
+  public DTree(Core core) throws UnreachableCoreException {
     this(core, core);
   }
 
-  public DTree(Core core, Core node_location) {
+  public DTree(Core core, Core node_location) throws UnreachableCoreException {
     super(core);
     set_root(null);
     this.node_location = node_location;
@@ -51,14 +53,14 @@ public class DTree extends DObject {
     this.root_ref = other.root_ref;
   }
 
-  public void insert(DInt value) {
+  public void insert(DInt value) throws AccessError, UnreachableCoreException {
     /*
      * ORIGINAL IMPLEMENTATION: root = insert_helper( value );
      */
     set_root(insert_helper(get_root(), value));
   }
 
-  private DTreeNode insert_helper(DTreeNode current, DInt value) {
+  private DTreeNode insert_helper(DTreeNode current, DInt value) throws AccessError, UnreachableCoreException {
     /*
      * ORIGINAL IMPLEMENTATION: if (current == null) return new DTreeNode(
      * value, null, null ) else if (current.value.value < value) current.right =
@@ -73,7 +75,7 @@ public class DTree extends DObject {
     return current;
   }
 
-  public void insert_iterative(DInt value) {
+  public void insert_iterative(DInt value) throws AccessError, UnreachableCoreException {
     /*
      * ORIGINAL IMPLEMENTATION: if (root == null) { root = new DTreeNode( value );
      * return; } TreeNode current = root; while( true ) { if
@@ -107,7 +109,7 @@ public class DTree extends DObject {
     }
   }
 
-  public DInt lookup(DInt value) {
+  public DInt lookup(DInt value) throws AccessError, UnreachableCoreException {
     /*
      * ORIGINAL IMPLEMENTATION: DTreeNode current = root; while( current != null ) {
      * if (current.value.value == value.value) return current.value; else if

@@ -2,6 +2,7 @@ package generated;
 
 import diaspora.client.DObject;
 import diaspora.client.Core;
+import diaspora.client.UnreachableCoreException;
 
 public class DInt extends DObject {
   private int[] value;
@@ -14,7 +15,7 @@ public class DInt extends DObject {
     this.value[0] = v;
   }
 
-  public DInt(Core core) {
+  public DInt(Core core) throws UnreachableCoreException {
     super(core);
     value = new int[100];
   }

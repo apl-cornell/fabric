@@ -3,6 +3,8 @@ package generated;
 import diaspora.client.Core;
 import diaspora.client.DObject;
 import diaspora.client.DRef;
+import diaspora.client.UnreachableCoreException;
+import diaspora.common.AccessError;
 
 class DTreeNode extends DObject
 {
@@ -10,7 +12,7 @@ class DTreeNode extends DObject
 
 	private DRef left_ref;
 
-	DTreeNode get_left()
+	DTreeNode get_left() throws AccessError, UnreachableCoreException
 	{
 		if (left_ref == null)
 			return null;
@@ -33,7 +35,7 @@ class DTreeNode extends DObject
 
 	private DRef right_ref;
 
-	DTreeNode get_right()
+	DTreeNode get_right() throws AccessError, UnreachableCoreException
 	{
 		if (right_ref == null)
 			return null;
@@ -56,7 +58,7 @@ class DTreeNode extends DObject
 
 	private DRef value_ref;
 
-	DInt get_value()
+	DInt get_value() throws AccessError, UnreachableCoreException
 	{
 		if (value_ref == null)
 			return null;
@@ -77,13 +79,13 @@ class DTreeNode extends DObject
 
 	// constructors ////////////////////////////////////////////////////////////////
 
-	public DTreeNode (Core core, DInt value)
+	public DTreeNode (Core core, DInt value) throws UnreachableCoreException
 	{
 		this( core, null, null, null );
 	}
 
 	public DTreeNode (Core core, DTreeNode left, DTreeNode right, DInt value)
-	{
+	throws UnreachableCoreException {
 		super( core );
 		set_left( left );
 		set_right( right );
