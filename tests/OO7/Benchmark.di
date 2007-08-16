@@ -6,24 +6,14 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Connection.di,v 1.3 2007-08-16 23:02:52 jed Exp $
+// $Id: Benchmark.di,v 1.1 2007-08-16 23:02:52 jed Exp $
 
 package OO7;
 
-public interface Connection {
-  void setType(String x);
+public interface Benchmark {
+  void create(int theScale) throws Exception;
 
-  String type();
+  void traversalQuery() throws Exception;
 
-  void setLength(long x);
-
-  long length();
-
-  void setFrom(AtomicPart x);
-
-  AtomicPart from();
-
-  void setTo(AtomicPart x);
-
-  AtomicPart to();
+  void matchQuery() throws Exception;
 }

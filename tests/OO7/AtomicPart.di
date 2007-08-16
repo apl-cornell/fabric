@@ -1,37 +1,39 @@
+// You can redistribute this software and/or modify it under the terms of
+// the Ozone Core License version 1 published by ozone-db.org.
+//
+// The original code and portions created by Thorsten Fiebig are
+// Copyright (C) 2000-@year@ by Thorsten Fiebig. All rights reserved.
+// Code portions created by SMB are
+// Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
+//
+// $Id: AtomicPart.di,v 1.3 2007-08-16 23:02:52 jed Exp $
+
 package OO7;
 
 import java.util.Collection;
-import java.util.Set;
 
-public class AtomicPart {
-  public int    id;
-  public String type;
-  public int    buildDate;
-  public int    x, y;
-  public int    docID;
+public interface AtomicPart extends DesignObject {
+  void setX(long x);
 
-  public Collection to;   // contains Connections
-  public Collection from; // contains Connections
+  long x();
 
-  public CompositePart   parent;
+  void setY(long y);
 
-  public AtomicPart(int partID) {
-  }
+  long y();
 
-  public void swapXY() {
-  }
+  void setDocId(long y);
 
-  public void toggleDate() {
-  }
+  long docId();
 
-  public int traverse(BenchmarkOp op, Set visited) {
-    return 0;
-  }
+  void addTo(Connection x);
 
-  public void doNothing() {}
+  Collection to();
+
+  void addFrom(Connection x);
+
+  Collection from();
+
+  void setPartOf(CompositePart x);
+
+  CompositePart partOf();
 }
-
-/*
-** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
-*/
-

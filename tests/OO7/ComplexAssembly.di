@@ -1,25 +1,19 @@
+// You can redistribute this software and/or modify it under the terms of
+// the Ozone Core License version 1 published by ozone-db.org.
+//
+// The original code and portions created by Thorsten Fiebig are
+// Copyright (C) 2000-@year@ by Thorsten Fiebig. All rights reserved.
+// Code portions created by SMB are
+// Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
+//
+// $Id: ComplexAssembly.di,v 1.2 2007-08-16 23:02:52 jed Exp $
+
 package OO7;
 
-import java.util.Set;
+import java.util.Collection;
 
-public class ComplexAssembly extends Assembly {
-  public Set subAssemblies; // Contains Assemblies
+public interface ComplexAssembly extends Assembly {
+  void addSubAssembly(Assembly x);
 
-  public ComplexAssembly (int id, ComplexAssembly parent, int levelNo, Module mod) {
-    super(id);
-  }
-
-  public int traverse (BenchmarkOp op) {
-    return 0;
-  }
-
-  public int traverse7 (Set visited) {
-    return 0;
-  }
-
+  Collection subAssemblies();
 }
-
-/*
-** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
-*/
-
