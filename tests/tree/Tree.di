@@ -1,10 +1,12 @@
 package tree;
 
+import diaspora.client.Core;
+
 public class Tree {
   private TreeNode root;
-  private long nodeLocation;
+  private Core nodeLocation;
 
-  Tree(long nodeLocation) {
+  Tree(Core nodeLocation) {
     this.root = null;
     this.nodeLocation = nodeLocation;
   }

@@ -1,5 +1,7 @@
 package arrays;
 
+import diaspora.client.Core;
+
 public class ArrayTest {
   public int[]       ints;
   public ArrayTest[] obs;
@@ -15,15 +17,19 @@ public class ArrayTest {
 
   public static void main(String[] args) {
     runTests();
-    atomic { runTests() };
+    atomic { runTests(); }
   }
 
   public static void runTests() {
+    ArrayTest a1 = null;
+    ArrayTest a2 = null;
     atomic {
       Core core;
-      ArrayTest a1 = new ArrayTest@core();
-      ArrayTest a2 = new ArrayTest@core();
-      a2.ints      = new int@core[] {5,4,3,2,1};
+      a1      = new ArrayTest@core();
+      a2      = new ArrayTest@core();
+      a2.ints = new int[]@core {5,4,3,2,1};
+
+      int[][] x = new int[][]@core {{1,2}, {3}};
     }
 
     atomic {
@@ -33,7 +39,7 @@ public class ArrayTest {
     }
 
     atomic {
-      ArrayTest temp = a1.obs;
+      ArrayTest[] temp = a1.obs;
       a1.obs = a2.obs;
       a2.obs = temp;
     }

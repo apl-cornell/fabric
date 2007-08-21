@@ -1,15 +1,21 @@
 package tree;
 
 import java.util.Random;
+import diaspora.client.AbortException;
+import diaspora.client.Core;
+import diaspora.client.Client;
 
 public class Main {
-  public static void main(String[] args) {
+  public static void main(String[] args) throws AbortException {
     Tree tree = null;
     atomic {
-      tree = new Tree@0L(1L);
+      Client client = diaspora.client.Client.getClient();
+      Core treeCore = client.getCore(0L);
+      Core nodeCore = client.getCore(1L);
+      tree = new Tree@treeCore(nodeCore);
     }
 
-    Random random = new Random@0L();
+    Random random = new Random();
 
     int cycle = 0;
     while (true) {
