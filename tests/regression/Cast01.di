@@ -1,0 +1,7 @@
+public class Cast01 {
+  Cast01 f;
+  void main(Cast01 arg) {
+    ((Cast01)f).main((Cast01)f);
+  }
+}
+
