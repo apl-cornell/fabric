@@ -6,18 +6,17 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BaseAssemblyImpl.di,v 1.1 2007-08-16 23:02:52 jed Exp $
+// $Id: BaseAssemblyImpl.di,v 1.2 2007-08-23 17:09:18 jed Exp $
 
 package OO7;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import OO7.util.Collection;
+import OO7.util.LinkedList;
 
 public class BaseAssemblyImpl extends AssemblyImpl implements
     BaseAssembly {
-  List theComponentsPriv;
-  List theComponentsShar;
+  LinkedList theComponentsPriv;
+  LinkedList theComponentsShar;
 
   public BaseAssemblyImpl() {
     theComponentsPriv = new LinkedList();
@@ -25,7 +24,7 @@ public class BaseAssemblyImpl extends AssemblyImpl implements
   }
 
   public void addComponentsPriv(CompositePart x) {
-    theComponentsPriv.addBack(x);
+    theComponentsPriv.addLast(x);
   }
 
   public Collection componetsPriv() {
@@ -33,7 +32,7 @@ public class BaseAssemblyImpl extends AssemblyImpl implements
   }
 
   public void addComponentsShar(CompositePart x) {
-    theComponentsShar.addBack(x);
+    theComponentsShar.addLast(x);
   }
 
   public Collection componentsShar() {

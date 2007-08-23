@@ -6,13 +6,13 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: AtomicPartImpl.di,v 1.1 2007-08-16 23:02:52 jed Exp $
+// $Id: AtomicPartImpl.di,v 1.2 2007-08-23 17:09:18 jed Exp $
 
 package OO7;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import OO7.util.Collection;
+import OO7.util.LinkedList;
+import OO7.util.List;
 
 public class AtomicPartImpl extends DesignObjectImpl implements
     AtomicPart {

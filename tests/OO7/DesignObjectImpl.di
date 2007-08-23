@@ -6,14 +6,11 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: DesignObjectImpl.di,v 1.1 2007-08-16 23:02:52 jed Exp $
+// $Id: DesignObjectImpl.di,v 1.2 2007-08-23 17:09:17 jed Exp $
 
 package OO7;
 
-import org.ozoneDB.OzoneObject;
-
-public class DesignObjectImpl extends OzoneObject implements
-    DesignObject {
+public class DesignObjectImpl implements DesignObject {
   long theId;
   String theType;
   long theBuildDate;

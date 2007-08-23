@@ -6,11 +6,11 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BenchmarkImpl.di,v 1.1 2007-08-16 23:02:52 jed Exp $
+// $Id: BenchmarkImpl.di,v 1.2 2007-08-23 17:09:18 jed Exp $
 
 package OO7;
 
-import java.util.*;
+import OO7.util.*;
 
 public class BenchmarkImpl implements Benchmark {
   // data base parameters
