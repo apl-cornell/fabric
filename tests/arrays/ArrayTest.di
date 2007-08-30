@@ -12,7 +12,7 @@ public class ArrayTest {
       ints[i] = i;
 
     obs = new ArrayTest[1];
-    obs[1] = this;
+    obs[0] = this;
   }
 
   public static void main(String[] args) {
