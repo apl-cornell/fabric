@@ -6,19 +6,19 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: CompositePartImpl.di,v 1.2 2007-08-23 17:09:18 jed Exp $
+// $Id: CompositePartImpl.di,v 1.3 2007-09-04 20:30:21 jed Exp $
 
 package OO7;
 
-import OO7.util.Collection;
-import OO7.util.List;
-import OO7.util.LinkedList;
+import diaspora.util.Collection;
+import diaspora.util.List;
+import diaspora.util.LinkedList;
 
 public class CompositePartImpl extends DesignObjectImpl implements
     CompositePart {
   Document theDocumentation;
-  List theUsedInPriv;
-  List theUsedInShar;
+  LinkedList theUsedInPriv;
+  LinkedList theUsedInShar;
   List theParts;
   AtomicPart theRootPart;
 
@@ -37,7 +37,7 @@ public class CompositePartImpl extends DesignObjectImpl implements
   }
 
   public void addUsedInPriv(BaseAssembly x) {
-    theUsedInPriv.addBack(x);
+    theUsedInPriv.addLast(x);
   }
 
   public Collection usedInPriv() {
@@ -45,7 +45,7 @@ public class CompositePartImpl extends DesignObjectImpl implements
   }
 
   public void addUsedInShar(BaseAssembly x) {
-    theUsedInShar.addBack(x);
+    theUsedInShar.addLast(x);
   }
 
   public Collection usedInShar() {

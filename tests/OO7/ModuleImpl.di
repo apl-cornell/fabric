@@ -6,17 +6,17 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: ModuleImpl.di,v 1.2 2007-08-23 17:09:18 jed Exp $
+// $Id: ModuleImpl.di,v 1.3 2007-09-04 20:30:21 jed Exp $
 
 package OO7;
 
-import OO7.util.Collection;
-import OO7.util.List;
-import OO7.util.LinkedList;
+import diaspora.util.Collection;
+import diaspora.util.List;
+import diaspora.util.LinkedList;
 
 public class ModuleImpl extends DesignObjectImpl implements Module {
   Manual theManual;
-  List theAssembly;
+  LinkedList theAssembly;
   ComplexAssembly theDesignRoot;
 
   public ModuleImpl() {
@@ -32,7 +32,7 @@ public class ModuleImpl extends DesignObjectImpl implements Module {
   }
 
   public void addAssembly(Assembly x) {
-    theAssembly.addBack(x);
+    theAssembly.addLast(x);
   }
 
   public Collection assembly() {

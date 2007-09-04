@@ -6,11 +6,11 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: DocumentImpl.di,v 1.1 2007-08-16 23:02:52 jed Exp $
+// $Id: DocumentImpl.di,v 1.2 2007-09-04 20:30:21 jed Exp $
 
 package OO7;
 
-public class DocumentImpl extends OzoneObject implements Document {
+public class DocumentImpl implements Document {
   String theTitle;
   long theId;
   String theText;

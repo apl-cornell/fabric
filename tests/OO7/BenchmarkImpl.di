@@ -6,11 +6,15 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BenchmarkImpl.di,v 1.2 2007-08-23 17:09:18 jed Exp $
+// $Id: BenchmarkImpl.di,v 1.3 2007-09-04 20:30:21 jed Exp $
 
 package OO7;
 
-import OO7.util.*;
+import diaspora.util.*;
+import java.util.Random;
+import java.util.Hashtable;
+
+import diaspora.client.Core;
 
 public class BenchmarkImpl implements Benchmark {
   // data base parameters
@@ -50,26 +54,22 @@ public class BenchmarkImpl implements Benchmark {
       }
     }
 
-    RemoteDatabase anDatabase = new RemoteDatabase();
-
     try {
-      // open the connection on localhost at port 3333
-      anDatabase.open("localhost", 3333);
-      System.out.println("Connected ...");
-      // reload our database classes if we changed them
-      anDatabase.reloadClasses();
-
       long start = System.currentTimeMillis();
 
       if (args[0].equals("query")) {
         if (args[1].equals("traversal")) {
+          // XXX assume benchmark object exists at OID 7.
+          // XXX should really be looking up a human-readable name in a name service 
           Benchmark anBenchmark =
-              (Benchmark) anDatabase.objectForName("OO7Benchmark");
+              (Benchmark) diaspora.client.Client.getClient().getCore(0).readObject(7);
           anBenchmark.traversalQuery();
         } else {
           if (args[1].equals("match")) {
+            // XXX assume benchmark object exists at OID 7.
+            // XXX should really be looking up a human-readable name in a name service 
             Benchmark anBenchmark =
-                (Benchmark) anDatabase.objectForName("OO7Benchmark");
+              (Benchmark) diaspora.client.Client.getClient().getCore(0).readObject(7);
             anBenchmark.matchQuery();
           }
         }
@@ -88,10 +88,9 @@ public class BenchmarkImpl implements Benchmark {
             System.out.println("Invalid scale");
             System.exit(1);
           }
+          diaspora.client.Core core = diaspora.client.Client.getClient().getCore(0); 
           Benchmark anBenchmark =
-              (Benchmark) anDatabase.createObject(
-                  BenchmarkImpl.class.getName(), OzoneInterface.Public,
-                  "OO7Benchmark");
+            new BenchmarkImpl@core();
           anBenchmark.create(scale);
         }
       }
@@ -99,23 +98,14 @@ public class BenchmarkImpl implements Benchmark {
       System.out.println("time: " + (System.currentTimeMillis() - start)
           + "msec");
 
-      // close the connection
-      anDatabase.close();
-
     } catch (Exception e) {
       System.out.println(e);
       e.printStackTrace();
-      try {
-        anDatabase.close();
-      } catch (Exception ex) {
-        System.out.println(ex);
-        ex.printStackTrace();
-      }
     }
   }
 
   static void printUsage() {
-    System.out.println("usage: ojvm BanchmarkImpl (create|query) [options]");
+    System.out.println("usage: BanchmarkImpl (create|query) [options]");
     System.out.println("    create options:");
     System.out.println("        size        - (tiny|small|large)");
     System.out.println("    query options:");
@@ -159,7 +149,7 @@ public class BenchmarkImpl implements Benchmark {
     if (anAssembly.getClass() == Class.forName("BaseAssemblyImpl_Proxy")) {
       // System.out.println( "Base Assembly Class: " );
       BaseAssembly baseAssembly = (BaseAssembly) anAssembly;
-      DxIterator compIterator = baseAssembly.componentsShar().iterator();
+      Iterator compIterator = baseAssembly.componentsShar().iterator();
       while (compIterator.next() != null) {
         CompositePart compositePart =
             (CompositePart) compIterator.object();
@@ -167,7 +157,7 @@ public class BenchmarkImpl implements Benchmark {
       }
     } else {
       ComplexAssembly complexAssembly = (ComplexAssembly) anAssembly;
-      DxIterator aIterator = complexAssembly.subAssemblies().iterator();
+      Iterator aIterator = complexAssembly.subAssemblies().iterator();
       while (aIterator.next() != null) {
         traversal((Assembly) aIterator.object(), aTable);
       }
@@ -182,7 +172,7 @@ public class BenchmarkImpl implements Benchmark {
 
   protected void dfsVisit(AtomicPart anAtomicPart, Hashtable aTable)
       throws Exception {
-    DxIterator connIterator = anAtomicPart.from().iterator();
+    Iterator connIterator = anAtomicPart.from().iterator();
     while (connIterator.next() != null) {
       Connection connection = (Connection) connIterator.object();
       AtomicPart part = connection.to();

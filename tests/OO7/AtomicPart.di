@@ -6,11 +6,11 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: AtomicPart.di,v 1.4 2007-08-23 17:09:18 jed Exp $
+// $Id: AtomicPart.di,v 1.5 2007-09-04 20:30:21 jed Exp $
 
 package OO7;
 
-import OO7.util.Collection;
+import diaspora.util.Collection;
 
 public interface AtomicPart extends DesignObject {
   void setX(long x);
