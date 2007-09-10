@@ -1,0 +1,11 @@
+public class Object03 {
+  void m(Object o) {
+    Object p = o;
+    o = new Integer(0);
+    p = new Integer(0);
+  }
+
+  void n() {
+    m(new Object());
+  }
+}
