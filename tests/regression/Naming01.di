@@ -1,3 +1,5 @@
+package regression;
+
 import diaspora.client.*;
 
 public class Naming01 {

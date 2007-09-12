@@ -1,3 +1,5 @@
+package regression;
+
 public class LRValue02 {
   LRValue02 t;
 

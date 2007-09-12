@@ -1,3 +1,5 @@
+package regression;
+
 public class Object03 {
   void m(Object o) {
     Object p = o;

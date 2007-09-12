@@ -1,3 +1,5 @@
+package regression;
+
 public class Cast01 {
   Cast01 f;
   void main(Cast01 arg) {

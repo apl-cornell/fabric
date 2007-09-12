@@ -1,3 +1,5 @@
+package regression;
+
 public class Cast02 {
   void m(Object a, Integer b) {
     b = (Integer) a;
