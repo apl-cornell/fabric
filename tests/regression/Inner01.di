@@ -5,9 +5,7 @@ public class Inner01 {
   }
   void m(final int x) {
     foo f = new foo();
-    I i = new I() {
-      int y = x;
-    };
+    I i = new I() { };
   }
 }
 

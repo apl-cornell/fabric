@@ -1,0 +1,10 @@
+public class Interface02 {
+  interface I {
+    Interface02 m();
+  }
+
+  void m(Object o) {
+    I i = (I) o;
+  }
+}
+
