@@ -5,8 +5,8 @@ public class Inner01 {
   }
   void m(final int x) {
     foo f = new foo();
-    I i = new I() { };
+    Inner01_I i = new Inner01_I() { };
   }
 }
 
-interface I {}
+interface Inner01_I {}
