@@ -108,7 +108,7 @@ TOP='${basedir}'
 
   <!-- Compiles Diaspora -->
   <target name="all"
-    depends="bin,diaspora-system,diaspora-compiler,tests"
+    depends="bin,diaspora-system,diaspora-compiler,tests,fabric-compiler"
     description="Builds Diaspora"/>
 
   <!-- Compiles the Diaspora system -->
@@ -151,6 +151,15 @@ TOP='${basedir}'
     <antcall target="standard-ext">
       <param name="ext" value="diaspora" />
       <param name="ext.pkg" value="diaspora" />
+      <param name="parser.type" value="ppg" />
+    </antcall>
+  </target>
+
+  <!-- Compiles the Fabric compiler -->
+  <target name="fabric-compiler" depends="init,configure">
+    <antcall target="standard-ext">
+      <param name="ext" value="fabric" />
+      <param name="ext.pkg" value="fabric" />
       <param name="parser.type" value="ppg" />
     </antcall>
   </target>
