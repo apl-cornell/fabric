@@ -44,9 +44,9 @@
     </dependset>
     <condition property="bin.up-to-date">
       <and>
-	<available file="${bin}/diaspora"/>
+        <available file="${bin}/diaspora"/>
     <available file="${bin}/diasporac"/>
-	<available file="${bin}/dclient"/>
+        <available file="${bin}/dclient"/>
       </and>
     </condition>
   </target>
@@ -86,14 +86,14 @@ TOP='${basedir}'
     </concat>
 
     <chmod perm="+x" file="${bin}/diasporac"/>
-  	
-  	<echo message="Creating ${bin}/dclient"/>
-  	<concat destfile="${bin}/dclient" append="no">
-  		<filelist dir="${bin}" files="defs"/>
-  		<filelist dir="${bin}" files="dclient.in"/>
-  	</concat>
-  	
-  	<chmod perm="+x" file="${bin}/dclient"/>
+
+    <echo message="Creating ${bin}/dclient"/>
+    <concat destfile="${bin}/dclient" append="no">
+      <filelist dir="${bin}" files="defs"/>
+      <filelist dir="${bin}" files="dclient.in"/>
+    </concat>
+
+    <chmod perm="+x" file="${bin}/dclient"/>
 
     <delete file="${bin}/defs"/>
   </target>
@@ -124,8 +124,8 @@ TOP='${basedir}'
       description="Cleans up the directory tree and deletes generated files">
     <delete>
       <fileset dir="${bin}">
-	<include name="diaspora"/>
-	<include name="defs"/>
+        <include name="diaspora"/>
+        <include name="defs"/>
       </fileset>
     </delete>
   </target>
@@ -133,7 +133,7 @@ TOP='${basedir}'
   <!-- Compiles the Diaspora core -->
   <target name="core" depends="init">
     <javac srcdir="${sys.src}" destdir="${classes}" debug="on"
-	includes="diaspora/core/**,diaspora/common/**,diaspora/messages/**">
+        includes="diaspora/core/**,diaspora/common/**,diaspora/messages/**">
       <classpath refid="standard.classpath"/>
     </javac>
   </target>
@@ -141,7 +141,7 @@ TOP='${basedir}'
   <!-- Compiles the Diaspora client API -->
   <target name="client" depends="init">
     <javac srcdir="${sys.src}" destdir="${classes}" debug="on"
-	includes="diaspora/client/**,diaspora/common/**,diaspora/messages/**">
+        includes="diaspora/client/**,diaspora/common/**,diaspora/messages/**">
       <classpath refid="standard.classpath"/>
     </javac>
   </target>
@@ -184,7 +184,7 @@ TOP='${basedir}'
   <target name="jflex-lexer" depends="jflex-lexer-deps"
       unless="jflex.lexer.up-to-date">
     <java classname="JFlex.Main" fork="true" dir="${lexer.dir}"
-	failonerror="true">
+        failonerror="true">
       <classpath refid="standard.classpath" />
       <arg value="${jflex.file}" />
     </java>
@@ -196,7 +196,7 @@ TOP='${basedir}'
       <targetfileset dir="${lexer.dir}" includes="${lexer.class}.java" />
     </dependset>
     <available property="jflex.lexer.up-to-date"
-	file="${lexer.dir}/${lexer.class}.java" />
+        file="${lexer.dir}/${lexer.class}.java" />
   </target>
 
   <target name="standard-ext-ppg-parser">
@@ -212,7 +212,7 @@ TOP='${basedir}'
   <target name="ppg-parser" depends="ppg-parser-deps"
       unless="ppg.parser.up-to-date">
     <java classname="ppg.PPG" fork="true" dir="${parser.dir}"
-	output="${parser.dir}/${cup.file}" failonerror="true">
+        output="${parser.dir}/${cup.file}" failonerror="true">
       <classpath refid="standard.classpath" />
       <arg value="${ppg.file}" />
     </java>
@@ -223,16 +223,16 @@ TOP='${basedir}'
     <dependset>
       <srcfileset dir="${parser.dir}" includes="${ppg.file}" />
       <targetfileset dir="${parser.dir}">
-	<include name="${cup.file}" />
-	<include name="${parser.class}.java" />
-	<include name="${symbol.class}.java" />
+        <include name="${cup.file}" />
+        <include name="${parser.class}.java" />
+        <include name="${symbol.class}.java" />
       </targetfileset>
     </dependset>
     <condition property="ppg.parser.up-to-date">
       <and>
-	<available file="${parser.dir}/${cup.file}" />
-	<available file="${parser.dir}/${parser.class}.java" />
-	<available file="${parser.dir}/${symbol.class}.java" />
+        <available file="${parser.dir}/${cup.file}" />
+        <available file="${parser.dir}/${parser.class}.java" />
+        <available file="${parser.dir}/${symbol.class}.java" />
       </and>
     </condition>
   </target>
@@ -244,7 +244,7 @@ TOP='${basedir}'
   <target name="cup-parser-using-jar" depends="cup-parser-deps"
       unless="cup.parser.up-to-date">
     <java classname="java_cup.Main" fork="true" dir="${parser.dir}"
-	failonerror="true">
+        failonerror="true">
       <classpath refid="standard.classpath" />
       <arg value="-parser"/>
       <arg value="${parser.class}"/>
@@ -258,14 +258,14 @@ TOP='${basedir}'
     <dependset>
       <srcfileset dir="${parser.dir}" includes="${cup.file}" />
       <targetfileset dir="${parser.dir}">
-	<include name="${parser.class}.java" />
-	<include name="${symbol.class}.java" />
+        <include name="${parser.class}.java" />
+        <include name="${symbol.class}.java" />
       </targetfileset>
     </dependset>
     <condition property="cup.parser.up-to-date">
       <and>
-	<available file="${parser.dir}/${parser.class}.java" />
-	<available file="${parser.dir}/${symbol.class}.java" />
+        <available file="${parser.dir}/${parser.class}.java" />
+        <available file="${parser.dir}/${symbol.class}.java" />
       </and>
     </condition>
   </target>
@@ -291,7 +291,7 @@ TOP='${basedir}'
 
   <target name="compile-ext">
     <javac source="1.5" target="1.5" srcdir="${compiler.src}"
-	destdir="${classes}" debug="on" includes="${ext.pkg}/**">
+        destdir="${classes}" debug="on" includes="${ext.pkg}/**">
       <classpath refid="standard.classpath" />
     </javac>
   </target>
