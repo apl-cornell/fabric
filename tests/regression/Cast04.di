@@ -1,0 +1,9 @@
+package regression;
+
+public class Cast04 {
+  Cast04 m() {
+    Cast04 o = (Cast04) m();
+    return o;
+  }
+}
+
