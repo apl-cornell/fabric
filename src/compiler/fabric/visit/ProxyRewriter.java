@@ -1,9 +1,10 @@
 package fabric.visit;
 
 import fabric.ExtensionInfo;
+import fabric.ast.FabricNodeFactory;
 import fabric.extension.FabricExt;
+import fabric.types.FabricTypeSystem;
 import polyglot.ast.Node;
-import polyglot.ast.NodeFactory;
 import polyglot.qq.QQ;
 import polyglot.visit.NodeVisitor;
 
@@ -12,11 +13,13 @@ import polyglot.visit.NodeVisitor;
  */
 public class ProxyRewriter extends NodeVisitor {
   protected QQ qq;
-  protected NodeFactory nf;
+  protected FabricNodeFactory nf;
+  protected FabricTypeSystem ts;
 
   public ProxyRewriter(ExtensionInfo extInfo) {
     this.qq = new QQ(extInfo);
-    this.nf = extInfo.nodeFactory();
+    this.nf = (FabricNodeFactory) extInfo.nodeFactory();
+    this.ts = extInfo.typeSystem();
   }
 
   /*
@@ -37,7 +40,11 @@ public class ProxyRewriter extends NodeVisitor {
     return qq;
   }
 
-  public NodeFactory nodeFactory() {
+  public FabricNodeFactory nodeFactory() {
     return nf;
+  }
+
+  public FabricTypeSystem typeSystem() {
+    return ts;
   }
 }

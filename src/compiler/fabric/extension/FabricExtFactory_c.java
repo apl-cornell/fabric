@@ -32,6 +32,36 @@ public class FabricExtFactory_c
   }
   
   @Override
+  protected Ext extClassDeclImpl() {
+    return new ClassDeclExt_c();
+  }
+  
+  @Override
+  protected Ext extConstructorDeclImpl() {
+    return new ConstructorDeclExt_c();
+  }
+  
+  @Override
+  protected Ext extFieldDeclImpl() {
+    return new FieldDeclExt_c();
+  }
+  
+  @Override
+  protected Ext extMethodDeclImpl() {
+    return new MethodDeclExt_c();
+  }
+
+  @Override
+  protected Ext extNewArrayImpl() {
+    return new NewArrayExt_c();
+  }
+  
+  @Override
+  protected Ext extNewImpl() {
+    return new NewExt_c();
+  }
+  
+  @Override
   protected Ext extNodeImpl() {
     return new FabricExt_c();
   }
