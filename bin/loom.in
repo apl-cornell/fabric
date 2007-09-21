@@ -1,0 +1,17 @@
+while true; do
+  case "$1" in
+    "") break;;
+    -v) verbose="1"; shift;;
+    *) args="$args '$1'"; shift;;
+  esac
+done
+
+classpath="${TOP}${FILE_SEP}classes${PATH_SEP}${CLASSPATH}${PATH_SEP}"
+command="\"$JAVA\" $vmargs -classpath \"$classpath\" fabric.Main $args"
+
+if [ -n "$verbose" ]
+then
+  echo "$command"
+fi
+
+eval "$command"

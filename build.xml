@@ -34,6 +34,7 @@
 
   <!-- Create appropriate executables in the bin directory -->
   <target name="bin" depends="configure,bin-deps" unless="bin.up-to-date">
+    <antcall target="fabric-bin"/>
     <antcall target="diaspora-bin"/>
   </target>
 
@@ -45,8 +46,9 @@
     <condition property="bin.up-to-date">
       <and>
         <available file="${bin}/diaspora"/>
-    <available file="${bin}/diasporac"/>
+        <available file="${bin}/diasporac"/>
         <available file="${bin}/dclient"/>
+	<available file="${bin}/loom"/>
       </and>
     </condition>
   </target>
@@ -94,6 +96,18 @@ TOP='${basedir}'
     </concat>
 
     <chmod perm="+x" file="${bin}/dclient"/>
+
+    <delete file="${bin}/defs"/>
+  </target>
+
+  <target name="fabric-bin" depends="executable-defs">
+    <echo message="Creating ${bin}/loom"/>
+    <concat destfile="${bin}/loom" append="no">
+      <filelist dir="${bin}" files="defs"/>
+      <filelist dir="${bin}" files="loom.in"/>
+    </concat>
+
+    <chmod perm="+x" file="${bin}/loom"/>
 
     <delete file="${bin}/defs"/>
   </target>
