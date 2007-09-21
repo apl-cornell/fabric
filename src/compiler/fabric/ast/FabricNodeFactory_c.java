@@ -7,6 +7,7 @@ import polyglot.ast.*;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 
+import fabric.extension.FabricExtFactory;
 import fabric.extension.FabricExtFactory_c;
 
 /**
@@ -15,19 +16,19 @@ import fabric.extension.FabricExtFactory_c;
 public class FabricNodeFactory_c extends NodeFactory_c implements
     FabricNodeFactory {
 
-  protected final DelFactory delFactory;
-  protected final FabricExtFactory_c extFactory;
-
   public FabricNodeFactory_c() {
     super(new FabricExtFactory_c());
-    this.extFactory = (FabricExtFactory_c) extFactory();
-    this.delFactory = delFactory();
+  }
+  
+  @Override
+  public FabricExtFactory extFactory() {
+    return (FabricExtFactory) super.extFactory();
   }
 
   public Atomic Atomic(Position pos, List<Stmt> statements) {
     Atomic atomic = new Atomic_c(pos, statements);
-    atomic = (Atomic) atomic.ext(extFactory.extAtomic());
-    atomic = (Atomic) atomic.del(delFactory.delBlock());
+    atomic = (Atomic) atomic.ext(extFactory().extAtomic());
+    atomic = (Atomic) atomic.del(delFactory().delBlock());
     return atomic;
   }
 
@@ -37,8 +38,8 @@ public class FabricNodeFactory_c extends NodeFactory_c implements
     New n =
         new New_c(pos, outer, objectType, location, CollectionUtil
             .nonNullList(args), body);
-    n = (New) n.ext(extFactory.extNew());
-    n = (New) n.del(delFactory.delNew());
+    n = (New) n.ext(extFactory().extNew());
+    n = (New) n.del(delFactory().delNew());
     return n;
   }
 
@@ -47,8 +48,8 @@ public class FabricNodeFactory_c extends NodeFactory_c implements
     NewArray result =
       new NewArray_c(pos,base,location,
                      CollectionUtil.nonNullList(dims),addDims,init);
-    result = (NewArray) result.ext(extFactory.extNewArray());
-    result = (NewArray) result.del(delFactory.delNewArray());
+    result = (NewArray) result.ext(extFactory().extNewArray());
+    result = (NewArray) result.del(delFactory().delNewArray());
     return result;
   }
   
