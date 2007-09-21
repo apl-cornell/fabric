@@ -4,28 +4,23 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import polyglot.frontend.CyclicDependencyException;
 import polyglot.frontend.JLScheduler;
 import polyglot.frontend.Job;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.goals.Barrier;
 import polyglot.frontend.goals.Goal;
+import polyglot.frontend.goals.Serialized;
 import polyglot.frontend.goals.VisitorGoal;
-import polyglot.util.InternalCompilerError;
 import polyglot.visit.*;
 import fabric.ExtensionInfo;
-import fabric.OutputExtensionInfo;
 import fabric.visit.*;
 
 
 public class FabricScheduler extends JLScheduler {
-  protected OutputExtensionInfo jlext;
   protected ExtensionInfo       extInfo;
 
-  public FabricScheduler(ExtensionInfo extInfo,
-      OutputExtensionInfo jlext) {
+  public FabricScheduler(ExtensionInfo extInfo) {
     super(extInfo);
-    this.jlext   = jlext;
     this.extInfo = extInfo;
   }
 
@@ -120,7 +115,8 @@ public class FabricScheduler extends JLScheduler {
             l.add(InitializationsChecked(job));
             l.add(ConstructorCallsChecked(job));
             l.add(ForwardReferencesChecked(job));
-            l.add(ASTFlattened(job));
+            //l.add(ASTFlattened(job));
+            l.add(InnerClassesRemoved(job));
             l.addAll(super.prerequisiteGoals(scheduler));
             return l;
           }
@@ -147,43 +143,17 @@ public class FabricScheduler extends JLScheduler {
 
   @Override
   public Goal Serialized(Job job) {
-    Goal g = super.Serialized(job);
-    try {
-      g.addPrerequisiteGoal(RewriteAtomic(job), this);
-      g.addPrerequisiteGoal(RewriteProxies(job), this);
-    } catch (CyclicDependencyException e) {
-      // Shouldn't happen.
-      throw new InternalCompilerError(e);
-    }
-    return g;
-  }
-
-  @Override
-  public Goal CodeGenerated(final Job job) {
-    Goal g = internGoal(new VisitorGoal(job, new HandoffToJLVisitor(jlext)) {
+    Goal g = internGoal(new Serialized(job) {
       @SuppressWarnings("unchecked")
       @Override
-      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
-        l.add(scheduler.Serialized(job));
-        l.addAll(super.prerequisiteGoals(scheduler));
-        return l;
-      }
-    });
-
+        public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+          List<Goal> l = new ArrayList<Goal>();
+          l.addAll(super.prerequisiteGoals(scheduler));
+          l.add(RewriteAtomic(job));
+          l.add(RewriteProxies(job));
+          return l;
+        }
+      });
     return g;
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public boolean runToCompletion() {
-    if (!super.runToCompletion()) return false;
-
-    // Create a goal to compile every resulting JL source file.
-    for (Job job : (List<Job>) jlext.scheduler().jobs()) {
-      jlext.scheduler().addGoal(jlext.getCompileGoal(job));
-    }
-
-    return jlext.scheduler().runToCompletion();
   }
 }

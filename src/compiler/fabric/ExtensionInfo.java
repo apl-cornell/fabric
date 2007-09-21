@@ -24,10 +24,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
     new Topics();
   }
 
-  protected OutputExtensionInfo jlext;
-
   public ExtensionInfo() {
-    this.jlext = new OutputExtensionInfo(this);
   }
 
   @Override
@@ -42,7 +39,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
 
   @Override
   protected Scheduler createScheduler() {
-    return new FabricScheduler(this, jlext);
+    return new FabricScheduler(this);
   }
 
   @Override
@@ -67,14 +64,9 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
 
   @Override
   public void initCompiler(Compiler compiler) {
-    jlext.initCompiler(compiler);
     super.initCompiler(compiler);
   }
   
-  public polyglot.frontend.ExtensionInfo outputExtInfo() {
-    return jlext;
-  }
-
   @Override
   public Parser parser(Reader reader, FileSource source, ErrorQueue eq) {
     Lexer lexer = new Lexer_c(reader, source, eq);

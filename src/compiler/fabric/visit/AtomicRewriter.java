@@ -19,8 +19,8 @@ public class AtomicRewriter extends NodeVisitor {
   protected Receiver    tm;
 
   public AtomicRewriter(ExtensionInfo extInfo) {
-    this.qq = new QQ(extInfo.outputExtInfo());
-    this.nf = extInfo.outputExtInfo().nodeFactory();
+    this.qq = new QQ(extInfo);
+    this.nf = extInfo.nodeFactory();
     
     FabricTypeSystem ts = extInfo.typeSystem();
     Position CG = Position.compilerGenerated();
