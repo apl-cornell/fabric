@@ -9,6 +9,7 @@ import polyglot.util.Position;
 
 import fabric.extension.FabricExtFactory;
 import fabric.extension.FabricExtFactory_c;
+import fabric.extension.LocatedExt_c;
 
 /**
  * NodeFactory for fabric extension.
@@ -36,20 +37,23 @@ public class FabricNodeFactory_c extends NodeFactory_c implements
   public New New(Position pos, Expr outer, TypeNode objectType,
       Expr location, List<Expr> args, ClassBody body) {
     New n =
-        new New_c(pos, outer, objectType, location, CollectionUtil
+        new New_c(pos, outer, objectType, CollectionUtil
             .nonNullList(args), body);
     n = (New) n.ext(extFactory().extNew());
     n = (New) n.del(delFactory().delNew());
+    n = (New) ((LocatedExt_c) n.ext()).location(location);
+    
     return n;
   }
 
   @SuppressWarnings("unchecked")
   public NewArray NewArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims, ArrayInit init) {
     NewArray result =
-      new NewArray_c(pos,base,location,
+      new NewArray_c(pos,base,
                      CollectionUtil.nonNullList(dims),addDims,init);
     result = (NewArray) result.ext(extFactory().extNewArray());
     result = (NewArray) result.del(delFactory().delNewArray());
+    result = (NewArray) ((LocatedExt_c) result.ext()).location(location);
     return result;
   }
   
