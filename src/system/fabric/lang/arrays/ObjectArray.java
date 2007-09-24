@@ -72,10 +72,10 @@ public interface ObjectArray<T> extends fabric.lang.Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$getProxy()
+     * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    public ObjectArray.$Proxy<T> $getProxy() {
+    protected ObjectArray.$Proxy<T> $makeProxy() {
       return new ObjectArray.$Proxy<T>(this);
     }
   }

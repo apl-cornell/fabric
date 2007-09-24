@@ -75,10 +75,10 @@ public interface floatArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$getProxy()
+     * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    public floatArray.$Proxy $getProxy() {
+    protected floatArray.$Proxy $makeProxy() {
       return new floatArray.$Proxy(this);
     }
 

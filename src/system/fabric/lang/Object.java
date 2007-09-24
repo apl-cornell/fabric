@@ -74,6 +74,7 @@ public interface Object {
   public static abstract class $Impl implements Object, Serializable, Cloneable {
     private final Core $core;
     private final long $onum;
+    private transient $Proxy $proxy;
 
     /**
      * A reference to the class object. TODO Figure out class loading.
@@ -146,7 +147,12 @@ public interface Object {
     public int $getVersion() {
       return $version;
     }
+    
+    public final $Proxy $getProxy() {
+      if ($proxy == null) $proxy = $makeProxy();
+      return $proxy;
+    }
 
-    public abstract $Proxy $getProxy();
+    protected abstract $Proxy $makeProxy();
   }
 }

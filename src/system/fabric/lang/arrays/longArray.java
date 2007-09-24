@@ -75,10 +75,10 @@ public interface longArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$getProxy()
+     * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    public longArray.$Proxy $getProxy() {
+    protected longArray.$Proxy $makeProxy() {
       return new longArray.$Proxy(this);
     }
 

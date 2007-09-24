@@ -75,10 +75,10 @@ public interface doubleArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$getProxy()
+     * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    public doubleArray.$Proxy $getProxy() {
+    protected doubleArray.$Proxy $makeProxy() {
       return new doubleArray.$Proxy(this);
     }
 

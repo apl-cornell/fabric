@@ -75,10 +75,10 @@ public interface charArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$getProxy()
+     * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    public charArray.$Proxy $getProxy() {
+    protected charArray.$Proxy $makeProxy() {
       return new charArray.$Proxy(this);
     }
 

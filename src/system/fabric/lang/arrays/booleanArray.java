@@ -75,10 +75,10 @@ public interface booleanArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$getProxy()
+     * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    public booleanArray.$Proxy $getProxy() {
+    protected booleanArray.$Proxy $makeProxy() {
       return new booleanArray.$Proxy(this);
     }
 

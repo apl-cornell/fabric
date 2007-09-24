@@ -75,10 +75,10 @@ public interface byteArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$getProxy()
+     * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    public byteArray.$Proxy $getProxy() {
+    protected byteArray.$Proxy $makeProxy() {
       return new byteArray.$Proxy(this);
     }
 

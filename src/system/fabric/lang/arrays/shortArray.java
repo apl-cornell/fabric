@@ -75,10 +75,10 @@ public interface shortArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$getProxy()
+     * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    public shortArray.$Proxy $getProxy() {
+    protected shortArray.$Proxy $makeProxy() {
       return new shortArray.$Proxy(this);
     }
 

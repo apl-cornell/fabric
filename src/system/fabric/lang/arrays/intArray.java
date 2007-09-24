@@ -75,10 +75,10 @@ public interface intArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$getProxy()
+     * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    public intArray.$Proxy $getProxy() {
+    protected intArray.$Proxy $makeProxy() {
       return new intArray.$Proxy(this);
     }
 
