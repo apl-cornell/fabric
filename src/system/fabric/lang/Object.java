@@ -25,7 +25,7 @@ public interface Object {
    * pointed to by a soft reference. This class abstracts away the code for
    * maintaining that soft reference.
    */
-  public static abstract class $Proxy implements Object, Serializable {
+  public static class $Proxy implements Object, Serializable {
     private final Core core;
     private final long onum;
     private transient SoftReference<$Impl> ref;
@@ -71,7 +71,7 @@ public interface Object {
    * $Impl objects hold the actual code and data of Fabric objects and may be
    * evicted from memory.
    */
-  public static abstract class $Impl implements Object, Serializable, Cloneable {
+  public static class $Impl implements Object, Serializable, Cloneable {
     private final Core $core;
     private final long $onum;
     private transient $Proxy $proxy;
@@ -153,6 +153,8 @@ public interface Object {
       return $proxy;
     }
 
-    protected abstract $Proxy $makeProxy();
+    protected $Proxy $makeProxy() {
+      return new $Proxy(this);
+    }
   }
 }
