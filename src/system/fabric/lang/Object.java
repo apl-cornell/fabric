@@ -13,40 +13,32 @@ import fabric.common.InternalError;
 import fabric.common.Policy;
 
 /**
- * All Fabric objects extend this class.
+ * All Fabric objects implement this interface.
  */
-public abstract class Object {
-  final Core core;
-  final long onum;
+public interface Object {
+  Core $getCore();
 
-  protected Object(Core core, long onum) {
-    this.core = core;
-    this.onum = onum;
-  }
-
-  public Core $getCore() {
-    return core;
-  }
-
-  public long $getOnum() {
-    return onum;
-  }
+  long $getOnum();
 
   /**
    * $Proxy objects behave like regular objects by delegating to $Impl objects,
    * pointed to by a soft reference. This class abstracts away the code for
    * maintaining that soft reference.
    */
-  public abstract static class $Proxy extends Object implements Serializable {
+  public static abstract class $Proxy implements Object, Serializable {
+    private final Core core;
+    private final long onum;
     private transient SoftReference<$Impl> ref;
 
     public $Proxy(Core core, long onum) {
-      super(core, onum);
+      this.core = core;
+      this.onum = onum;
       setRef(null);
     }
 
     public $Proxy($Impl impl) {
-      super(impl.core, impl.onum);
+      this.core = impl.$core;
+      this.onum = impl.$onum;
       setRef(impl);
     }
 
@@ -65,14 +57,24 @@ public abstract class Object {
 
       return result;
     }
+
+    public final Core $getCore() {
+      return core;
+    }
+
+    public final long $getOnum() {
+      return onum;
+    }
   }
 
   /**
    * $Impl objects hold the actual code and data of Fabric objects and may be
    * evicted from memory.
    */
-  public abstract static class $Impl extends Object implements Serializable,
-      Cloneable {
+  public static abstract class $Impl implements Object, Serializable, Cloneable {
+    private final Core $core;
+    private final long $onum;
+
     /**
      * A reference to the class object. TODO Figure out class loading.
      */
@@ -99,7 +101,8 @@ public abstract class Object {
      *          the security policy for the object
      */
     public $Impl(Core core, Policy policy) throws UnreachableCoreException {
-      super(core, core.createOnum());
+      this.$core = core;
+      this.$onum = core.createOnum();
       this.$version = 0;
       this.$policy = policy;
 
@@ -122,6 +125,14 @@ public abstract class Object {
      * <code>super.copyStateFrom(other)</code>.
      */
     public void $copyStateFrom($Impl other) {
+    }
+
+    public final Core $getCore() {
+      return $core;
+    }
+
+    public final long $getOnum() {
+      return $onum;
     }
 
     public $Proxy $getClass() {

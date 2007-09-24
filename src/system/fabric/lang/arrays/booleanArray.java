@@ -1,15 +1,16 @@
 package fabric.lang.arrays;
 
 import fabric.client.Core;
+import fabric.lang.Object;
 
-public interface booleanArray {
+public interface booleanArray extends Object {
   int getLength();
 
   boolean set(int i, boolean value);
 
   boolean get(int i);
 
-  public static class $Impl extends fabric.lang.Object.$Impl implements
+  public static class $Impl extends Object.$Impl implements
       booleanArray {
     private boolean[] value;
 
@@ -83,7 +84,7 @@ public interface booleanArray {
 
   }
 
-  public static class $Proxy extends fabric.lang.Object.$Proxy implements
+  public static class $Proxy extends Object.$Proxy implements
       booleanArray {
 
     public $Proxy(booleanArray.$Impl impl) {

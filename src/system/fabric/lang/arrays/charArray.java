@@ -1,15 +1,16 @@
 package fabric.lang.arrays;
 
 import fabric.client.Core;
+import fabric.lang.Object;
 
-public interface charArray {
+public interface charArray extends Object {
   int getLength();
 
   char set(int i, char value);
 
   char get(int i);
 
-  public static class $Impl extends fabric.lang.Object.$Impl implements
+  public static class $Impl extends Object.$Impl implements
       charArray {
     private char[] value;
 
@@ -83,7 +84,7 @@ public interface charArray {
 
   }
 
-  public static class $Proxy extends fabric.lang.Object.$Proxy implements
+  public static class $Proxy extends Object.$Proxy implements
       charArray {
 
     public $Proxy(charArray.$Impl impl) {

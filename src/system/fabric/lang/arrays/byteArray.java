@@ -1,15 +1,16 @@
 package fabric.lang.arrays;
 
 import fabric.client.Core;
+import fabric.lang.Object;
 
-public interface byteArray {
+public interface byteArray extends Object {
   int getLength();
 
   byte set(int i, byte value);
 
   byte get(int i);
 
-  public static class $Impl extends fabric.lang.Object.$Impl implements
+  public static class $Impl extends Object.$Impl implements
       byteArray {
     private byte[] value;
 
@@ -83,7 +84,7 @@ public interface byteArray {
 
   }
 
-  public static class $Proxy extends fabric.lang.Object.$Proxy implements
+  public static class $Proxy extends Object.$Proxy implements
       byteArray {
 
     public $Proxy(byteArray.$Impl impl) {

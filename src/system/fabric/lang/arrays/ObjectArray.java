@@ -2,7 +2,7 @@ package fabric.lang.arrays;
 
 import fabric.client.Core;
 
-public interface ObjectArray<T> {
+public interface ObjectArray<T> extends fabric.lang.Object {
   int getLength();
 
   T set(int i, T value);

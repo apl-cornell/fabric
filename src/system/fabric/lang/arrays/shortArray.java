@@ -1,15 +1,16 @@
 package fabric.lang.arrays;
 
 import fabric.client.Core;
+import fabric.lang.Object;
 
-public interface shortArray {
+public interface shortArray extends Object {
   int getLength();
 
   short set(int i, short value);
 
   short get(int i);
 
-  public static class $Impl extends fabric.lang.Object.$Impl implements
+  public static class $Impl extends Object.$Impl implements
       shortArray {
     private short[] value;
 
@@ -83,7 +84,7 @@ public interface shortArray {
 
   }
 
-  public static class $Proxy extends fabric.lang.Object.$Proxy implements
+  public static class $Proxy extends Object.$Proxy implements
       shortArray {
 
     public $Proxy(shortArray.$Impl impl) {
