@@ -37,7 +37,7 @@ public class MethodDeclExt_c extends FabricExt_c implements ClassMemberExt {
       Formal f = (Formal) o;
       params.add(nf.Local(Position.compilerGenerated(), f.id()));
     }
-    Block body = (Block) qq.parseStmt("{ "+ret+" fetch()."+node.name()+"(%LE); }", (Object) params);
+    Block body = (Block) qq.parseStmt("{ "+ret+" (($Impl) fetch())."+node.name()+"(%LE); }", (Object) params);
     return Collections.singletonList((ClassMember) node.body(body));
   }
 }
