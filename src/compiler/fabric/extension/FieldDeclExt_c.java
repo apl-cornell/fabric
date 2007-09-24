@@ -55,10 +55,10 @@ public class FieldDeclExt_c extends FabricExt_c implements ClassMemberExt {
     flags = flags.clear(Flags.TRANSIENT).clear(Flags.FINAL);
     List<ClassMember> members = new ArrayList<ClassMember> ();
     members.add(qq.parseMember(flags + " %T get" + name + "() {"
-        + "diaspora.client.TransactionManager.INSTANCE"
+        + "fabric.client.TransactionManager.INSTANCE"
         + ".registerRead(this);" + "return this." + name + "; }", typeNode));
     members.add(qq.parseMember(flags + " %T set" + name + "(%T val) {"
-        + "diaspora.client.TransactionManager.INSTANCE"
+        + "fabric.client.TransactionManager.INSTANCE"
         + ".registerWrite(this);" + "return this." + name + " = val; }",
         typeNode, typeNode));
     
