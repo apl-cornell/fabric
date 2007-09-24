@@ -1,0 +1,251 @@
+package fabric.client;
+
+import java.io.*;
+import java.lang.ref.SoftReference;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.security.Principal;
+import java.util.*;
+
+import javax.net.ssl.SSLSocket;
+import javax.security.auth.x500.X500Principal;
+
+import fabric.common.AccessError;
+import fabric.common.FabricException;
+import fabric.common.InternalError;
+import fabric.core.SerializedObject;
+import fabric.lang.Object.$Impl;
+import fabric.messages.*;
+
+/**
+ * Encapsulates a Core. This class maintains the connection to the core and
+ * manages all communication. Cores can only be obtained through the
+ * <code>Client.getCore()</code> interface.
+ */
+public class RemoteCore implements Serializable, Core {
+  private transient Socket conn;
+
+  /**
+   * The core identifier that this Core encapsulates.
+   */
+  public final long coreID;
+
+  /**
+   * A queue of fresh object identifiers.
+   */
+  private transient Queue<Long> fresh_ids;
+
+  /**
+   * The object table: locally resident objects.
+   */
+  private transient Map<Long, SoftReference<$Impl>> objects;
+
+  /**
+   * The connection to the actual Core.
+   */
+  private transient ObjectInputStream in;
+  private transient ObjectOutputStream out;
+
+  /**
+   * Cached but unserialized objects that the core has sent us.
+   */
+  private transient Map<Long, SoftReference<SerializedObject>> serialized;
+
+  /**
+   * Create a core representing the given coreID
+   */
+  RemoteCore(long coreID) {
+    this.coreID = coreID;
+    this.objects = new HashMap<Long, SoftReference<$Impl>>();
+    this.fresh_ids = new LinkedList<Long>();
+    this.serialized = new HashMap<Long, SoftReference<SerializedObject>>();
+  }
+
+  public ObjectInputStream objectInputStream() {
+    return in;
+  }
+
+  public ObjectOutputStream objectOutputStream() {
+    return out;
+  }
+
+  public int beginTransaction() throws UnreachableCoreException {
+    BeginTransactionMessage.Response reply =
+        new BeginTransactionMessage().send(this);
+    return reply.transactionID;
+  }
+
+  /**
+   * Establishes a connection with a core node at a given host. A helper for
+   * <code>Message.send(Core)</code>. XXX Is this in the right place?
+   * 
+   * @param client
+   *          The Client instance.
+   * @param host
+   *          The host to connect to.
+   * @param hostPrincipal
+   *          The principal associated with the host we're connecting to.
+   * @throws IOException
+   *           if there was an error.
+   */
+  public void connect(Client client, InetSocketAddress host,
+      Principal hostPrincipal) throws IOException {
+    SSLSocket socket = (SSLSocket) client.sslSocketFactory.createSocket();
+    socket.setKeepAlive(true);
+    socket.connect(host, client.timeout);
+    socket.startHandshake();
+
+    // Make sure we're talking to the right node.
+    X500Principal peer = (X500Principal) socket.getSession().getPeerPrincipal();
+    if (!peer.equals(hostPrincipal)) throw new IOException();
+    out = new ObjectOutputStream(socket.getOutputStream());
+    out.flush();
+    in = new ObjectInputStream(socket.getInputStream());
+
+    try {
+      new ConnectMessage(coreID).send(in, out);
+    } catch (FabricException e) {
+      // Shouldn't get an exception from the core.
+      throw new InternalError(e);
+    }
+
+    out.reset();
+
+    conn = socket;
+  }
+
+  public boolean isConnected() {
+    return conn != null && !conn.isClosed();
+  }
+
+  public long createOnum() throws UnreachableCoreException {
+    reserve(1);
+    return fresh_ids.poll();
+  }
+
+  /**
+   * Sends a PREPARE message to the core.
+   * 
+   * @return <code>true</code> iff the operation succeeded.
+   */
+  public void prepareTransaction(int transactionID, Collection<$Impl> toCreate,
+      Map<Long, Integer> reads, Collection<$Impl> writes)
+      throws UnreachableCoreException, TransactionPrepareFailedException {
+    new PrepareTransactionMessage(transactionID, toCreate, reads, writes)
+        .send(this);
+  }
+
+  /**
+   * Returns the requested $Impl, fetching it from the Core if it is not
+   * resident.
+   * 
+   * @param onum
+   *          The identifier of the requested object
+   * @return The requested object
+   * @throws FabricException
+   */
+  public $Impl readObject(long onum) throws AccessError,
+      UnreachableCoreException {
+    // Check object table
+    $Impl result = null;
+    SoftReference<$Impl> resultRef = objects.get(onum);
+    if (resultRef != null && (result = resultRef.get()) != null) return result;
+    return readObjectFromCore(onum);
+  }
+
+  /**
+   * Fetches the object from the serialized cache, or goes to the core if it is
+   * not present. Places the result in the object cache.
+   * 
+   * @param onum
+   *          The object number to fetch
+   * @return The constructed $Impl
+   * @throws FabricException
+   */
+  private $Impl readObjectFromCore(long onum) throws AccessError,
+      UnreachableCoreException {
+    SerializedObject serial = null;
+    SoftReference<SerializedObject> serialRef = serialized.remove(onum);
+
+    if (serialRef == null || (serial = serialRef.get()) == null) {
+      // no serial copy --- fetch from core
+      ReadMessage.Response response = new ReadMessage(onum).send(this);
+      serial = response.result;
+      for (Map.Entry<Long, SerializedObject> entry : response.related
+          .entrySet())
+        serialized.put(entry.getKey(), new SoftReference<SerializedObject>(
+            entry.getValue()));
+    }
+
+    try {
+      $Impl result = serial.getObject();
+      objects.put(onum, new SoftReference<$Impl>(result));
+      return result;
+    } catch (ClassNotFoundException e) {
+      // TODO handle this
+      return null;
+    }
+  }
+
+  /**
+   * Looks up the actual Core object when this core is deserialized. While this
+   * method is not explicitly called in the code, it is used by the Java
+   * serialization framework when deserializing a Core object.
+   * 
+   * @return The canonical Core object corresponding to this Core's onum
+   * @throws ObjectStreamException
+   */
+  public Object readResolve() {
+    return Client.getClient().getCore(coreID);
+  }
+
+  /**
+   * Ensure that a given number of objects can be created without contacting the
+   * core.
+   * 
+   * @param num
+   *          The number of objects to allocate
+   */
+  protected void reserve(int num) throws UnreachableCoreException {
+    while (fresh_ids.size() < num) {
+      AllocateMessage.Response response = new AllocateMessage(num).send(this);
+
+      for (long oid : response.oids)
+        fresh_ids.offer(oid);
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.client.Core#abortTransaction(int)
+   */
+  public void abortTransaction(int transactionID) {
+    new AbortTransactionMessage(transactionID).send(this);
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.client.Core#commitTransaction(int)
+   */
+  public void commitTransaction(int transactionID)
+      throws UnreachableCoreException, TransactionCommitFailedException {
+    new CommitTransactionMessage(transactionID).send(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return obj instanceof RemoteCore && ((RemoteCore) obj).coreID == coreID;
+  }
+
+  @Override
+  public int hashCode() {
+    return new Long(coreID).hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return "Core@" + coreID;
+  }
+}

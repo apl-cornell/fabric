@@ -1,6 +1,6 @@
-<project name="diaspora" default="all" basedir=".">
+<project name="fabric" default="all" basedir=".">
   <description>
-    Diaspora build file
+    Fabric build file
   </description>
 
   <!-- Set global properties for this build -->
@@ -24,7 +24,7 @@
     <pathelement path="${java.class.path}" />
   </path>
 
-  <target name="configure" description="Configures Diaspora"
+  <target name="configure" description="Configures Fabric"
       unless="configure.up-to-date">
     <echo message="java version is ${java.version}"/>
     <echo message="current directory is ${user.dir}"/>
@@ -35,19 +35,17 @@
   <!-- Create appropriate executables in the bin directory -->
   <target name="bin" depends="configure,bin-deps" unless="bin.up-to-date">
     <antcall target="fabric-bin"/>
-    <antcall target="diaspora-bin"/>
   </target>
 
   <target name="bin-deps">
     <dependset>
-      <srcfileset dir="${bin}" includes="diaspora.in"/>
-      <targetfileset dir="${bin}" includes="diaspora"/>
+      <srcfileset dir="${bin}" includes="fabric.in"/>
+      <targetfileset dir="${bin}" includes="fabric"/>
     </dependset>
     <condition property="bin.up-to-date">
       <and>
-        <available file="${bin}/diaspora"/>
-        <available file="${bin}/diasporac"/>
-        <available file="${bin}/dclient"/>
+        <available file="${bin}/fabric"/>
+        <available file="${bin}/tailor"/>
 	<available file="${bin}/loom"/>
       </and>
     </condition>
@@ -72,35 +70,15 @@ TOP='${basedir}'
     </echo>
   </target>
 
-  <target name="diaspora-bin" depends="executable-defs">
-    <echo message="Creating ${bin}/diaspora"/>
-    <concat destfile="${bin}/diaspora" append="no">
-      <filelist dir="${bin}" files="defs"/>
-      <filelist dir="${bin}" files="diaspora.in"/>
-    </concat>
-
-    <chmod perm="+x" file="${bin}/diaspora"/>
-
-    <echo message="Creating ${bin}/diasporac"/>
-    <concat destfile="${bin}/diasporac" append="no">
-      <filelist dir="${bin}" files="defs"/>
-      <filelist dir="${bin}" files="diasporac.in"/>
-    </concat>
-
-    <chmod perm="+x" file="${bin}/diasporac"/>
-
-    <echo message="Creating ${bin}/dclient"/>
-    <concat destfile="${bin}/dclient" append="no">
-      <filelist dir="${bin}" files="defs"/>
-      <filelist dir="${bin}" files="dclient.in"/>
-    </concat>
-
-    <chmod perm="+x" file="${bin}/dclient"/>
-
-    <delete file="${bin}/defs"/>
-  </target>
-
   <target name="fabric-bin" depends="executable-defs">
+    <echo message="Creating ${bin}/fabric"/>
+    <concat destfile="${bin}/fabric" append="no">
+      <filelist dir="${bin}" files="defs"/>
+      <filelist dir="${bin}" files="fabric.in"/>
+    </concat>
+
+    <chmod perm="+x" file="${bin}/fabric"/>
+
     <echo message="Creating ${bin}/loom"/>
     <concat destfile="${bin}/loom" append="no">
       <filelist dir="${bin}" files="defs"/>
@@ -108,6 +86,14 @@ TOP='${basedir}'
     </concat>
 
     <chmod perm="+x" file="${bin}/loom"/>
+
+    <echo message="Creating ${bin}/tailor"/>
+    <concat destfile="${bin}/tailor" append="no">
+      <filelist dir="${bin}" files="defs"/>
+      <filelist dir="${bin}" files="tailor.in"/>
+    </concat>
+
+    <chmod perm="+x" file="${bin}/tailor"/>
 
     <delete file="${bin}/defs"/>
   </target>
@@ -120,13 +106,13 @@ TOP='${basedir}'
     <mkdir dir="${classes}"/>
   </target>
 
-  <!-- Compiles Diaspora -->
+  <!-- Compiles Fabric -->
   <target name="all"
-    depends="bin,diaspora-system,diaspora-compiler,tests,fabric-compiler"
-    description="Builds Diaspora"/>
+    depends="bin,fabric-system,fabric-compiler,tests"
+    description="Builds Fabric"/>
 
-  <!-- Compiles the Diaspora system -->
-  <target name="diaspora-system" depends="core,client" description="Builds Diaspora"/>
+  <!-- Compiles the Fabric system -->
+  <target name="fabric-system" depends="core,client" description="Builds Fabric"/>
 
   <target name="clean" description="Cleans up the directory tree: deletes the distribution directory and the classes directories">
     <!-- Delete the ${classes} and ${dist} directory trees -->
@@ -138,35 +124,26 @@ TOP='${basedir}'
       description="Cleans up the directory tree and deletes generated files">
     <delete>
       <fileset dir="${bin}">
-        <include name="diaspora"/>
+        <include name="fabric"/>
         <include name="defs"/>
       </fileset>
     </delete>
   </target>
 
-  <!-- Compiles the Diaspora core -->
+  <!-- Compiles the Fabric core -->
   <target name="core" depends="init">
     <javac srcdir="${sys.src}" destdir="${classes}" debug="on"
-        includes="diaspora/core/**,diaspora/common/**,diaspora/messages/**">
+        includes="fabric/core/**,fabric/common/**,fabric/messages/**">
       <classpath refid="standard.classpath"/>
     </javac>
   </target>
 
-  <!-- Compiles the Diaspora client API -->
+  <!-- Compiles the Fabric client API -->
   <target name="client" depends="init">
     <javac srcdir="${sys.src}" destdir="${classes}" debug="on"
-        includes="diaspora/client/**,diaspora/common/**,diaspora/messages/**">
+        includes="fabric/client/**,fabric/common/**,fabric/messages/**">
       <classpath refid="standard.classpath"/>
     </javac>
-  </target>
-
-  <!-- Compiles the Diaspora compiler -->
-  <target name="diaspora-compiler" depends="init,configure">
-    <antcall target="standard-ext">
-      <param name="ext" value="diaspora" />
-      <param name="ext.pkg" value="diaspora" />
-      <param name="parser.type" value="ppg" />
-    </antcall>
   </target>
 
   <!-- Compiles the Fabric compiler -->
@@ -178,8 +155,8 @@ TOP='${basedir}'
     </antcall>
   </target>
 
-  <!-- Compiles the Diaspora test programs -->
-  <target name="tests" depends="init,diaspora-system">
+  <!-- Compiles the Fabric test programs -->
+  <target name="tests" depends="init,fabric-system">
     <javac srcdir="${src}" destdir="${classes}" debug="on" includes="tests/**">
       <classpath refid="standard.classpath"/>
     </javac>

@@ -7,7 +7,7 @@ while true; do
 done
 
 classpath="${TOP}${FILE_SEP}classes${PATH_SEP}"
-command="\"$JAVA\" $vmargs -classpath \"$classpath\" diaspora.client.Client $args"
+command="\"$JAVA\" $vmargs -classpath \"$classpath\" fabric.client.Client $args"
 
 if [ -n "$verbose" ]
 then

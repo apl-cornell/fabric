@@ -1,0 +1,120 @@
+package fabric.lang.arrays;
+
+import fabric.client.Core;
+
+public interface booleanArray {
+  int getLength();
+
+  boolean set(int i, boolean value);
+
+  boolean get(int i);
+
+  public static class $Impl extends fabric.lang.Object.$Impl implements
+      booleanArray {
+    private boolean[] value;
+
+    /**
+     * Creates a new boolean array at the given Core with the given length.
+     * 
+     * @param core
+     *          The core on which to allocate the array.
+     * @param length
+     *          The length of the array.
+     */
+    public $Impl(Core core, int length) {
+      super(core);
+      value = new boolean[length];
+    }
+
+    /**
+     * Creates a new boolean array at the given Core using the given backing
+     * array.
+     * 
+     * @param core
+     *          The core on which to allocate the array.
+     * @param value
+     *          The backing array to use.
+     */
+    public $Impl(Core core, boolean[] value) {
+      super(core);
+      this.value = value;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.booleanArray#getLength()
+     */
+    public int getLength() {
+      // TODO: mark as read
+      return value.length;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.booleanArray#get(int)
+     */
+    @SuppressWarnings("unchecked")
+    public boolean get(int i) {
+      // TODO: mark as read
+      return this.value[i];
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.booleanArray#set(int, boolean)
+     */
+    public boolean set(int i, boolean value) {
+      // TODO: mark as written
+      return this.value[i] = value;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.Object.$Impl#$getProxy()
+     */
+    @Override
+    public booleanArray.$Proxy $getProxy() {
+      return new booleanArray.$Proxy(this);
+    }
+
+  }
+
+  public static class $Proxy extends fabric.lang.Object.$Proxy implements
+      booleanArray {
+
+    public $Proxy(booleanArray.$Impl impl) {
+      super(impl);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.booleanArray#getLength()
+     */
+    public int getLength() {
+      return ((booleanArray) fetch()).getLength();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.booleanArray#get(int)
+     */
+    public boolean get(int i) {
+      return ((booleanArray) fetch()).get(i);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.booleanArray#set(int, boolean)
+     */
+    public boolean set(int i, boolean value) {
+      return ((booleanArray) fetch()).set(i, value);
+    }
+  }
+}

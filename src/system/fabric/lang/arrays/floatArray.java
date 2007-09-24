@@ -1,0 +1,120 @@
+package fabric.lang.arrays;
+
+import fabric.client.Core;
+
+public interface floatArray {
+  int getLength();
+
+  float set(int i, float value);
+
+  float get(int i);
+
+  public static class $Impl extends fabric.lang.Object.$Impl implements
+      floatArray {
+    private float[] value;
+
+    /**
+     * Creates a new float array at the given Core with the given length.
+     * 
+     * @param core
+     *          The core on which to allocate the array.
+     * @param length
+     *          The length of the array.
+     */
+    public $Impl(Core core, int length) {
+      super(core);
+      value = new float[length];
+    }
+
+    /**
+     * Creates a new float array at the given Core using the given backing
+     * array.
+     * 
+     * @param core
+     *          The core on which to allocate the array.
+     * @param value
+     *          The backing array to use.
+     */
+    public $Impl(Core core, float[] value) {
+      super(core);
+      this.value = value;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.floatArray#getLength()
+     */
+    public int getLength() {
+      // TODO: mark as read
+      return value.length;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.floatArray#get(int)
+     */
+    @SuppressWarnings("unchecked")
+    public float get(int i) {
+      // TODO: mark as read
+      return this.value[i];
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.floatArray#set(int, float)
+     */
+    public float set(int i, float value) {
+      // TODO: mark as written
+      return this.value[i] = value;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.Object.$Impl#$getProxy()
+     */
+    @Override
+    public floatArray.$Proxy $getProxy() {
+      return new floatArray.$Proxy(this);
+    }
+
+  }
+
+  public static class $Proxy extends fabric.lang.Object.$Proxy implements
+      floatArray {
+
+    public $Proxy(floatArray.$Impl impl) {
+      super(impl);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.floatArray#getLength()
+     */
+    public int getLength() {
+      return ((floatArray) fetch()).getLength();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.floatArray#get(int)
+     */
+    public float get(int i) {
+      return ((floatArray) fetch()).get(i);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.floatArray#set(int, float)
+     */
+    public float set(int i, float value) {
+      return ((floatArray) fetch()).set(i, value);
+    }
+  }
+}
