@@ -31,7 +31,7 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
 
     List<ClassMember> ifaceMembers = new ArrayList<ClassMember>(size);
     List<ClassMember> proxyMembers = new ArrayList<ClassMember>(size);
-    List<ClassMember> implMembers = new ArrayList<ClassMember>(size);
+    List<ClassMember> implMembers  = new ArrayList<ClassMember>(size);
 
     for (ClassMember m : oldMembers) {
       if (!(m.ext() instanceof ClassMemberExt))
@@ -50,19 +50,22 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
     NodeFactory nf = pr.nodeFactory();
     QQ qq = pr.qq();
 
-    if (node.superClass() == null
-        || node.superClass().equals(pr.typeSystem().Object()))
-      node =
-          node.superClass(nf.CanonicalTypeNode(node().position(), pr
-              .typeSystem().FObject()));
+    // TODO: this is probably the wrong way to tell
+    if (node.superClass() == null ||
+        "java.lang.Object".equals(node.superClass().toString()))
+      node = node.superClass(nf.CanonicalTypeNode(node().position(),
+                                                  pr.typeSystem().FObject()));
+    
     ClassDecl proxy =
         qq.parseDecl(
-            "public static class $Proxy implements %T {" + "  %LM;"
-                + "  protected $Impl fetch() {return ($Impl) super.fetch();}"
-                + "}", node.type(), proxyMembers);
+            "public static class $Proxy" +
+            " extends " + node.superClass() + ".$Proxy" +
+            " implements %T {%LM}", node.type(), proxyMembers);
     ClassDecl impl =
-        qq.parseDecl("public static class $Impl  implements %T {%LM}", node
-            .type(), implMembers);
+        qq.parseDecl(
+            "public static class $Impl" +
+            " extends " + node.superClass() + ".$Impl" +
+            " implements %T {%LM}", node.type(), implMembers);
     ifaceMembers.add(proxy.type(node.type()));
     ifaceMembers.add(impl.type(node.type()));
 
