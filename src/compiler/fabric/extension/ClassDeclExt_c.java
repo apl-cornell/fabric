@@ -56,6 +56,9 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
       node = node.superClass(nf.CanonicalTypeNode(node().position(),
                                                   pr.typeSystem().FObject()));
     
+    proxyMembers.add(qq.parseMember("public $Proxy($Impl impl) { super(impl); }"));
+    proxyMembers.add(qq.parseMember("public $Proxy(fabric.client.Core c, long onum) { super(c, onum); }"));
+    
     ClassDecl proxy =
         qq.parseDecl(
             "public static class $Proxy" +
