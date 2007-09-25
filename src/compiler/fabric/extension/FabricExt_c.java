@@ -7,6 +7,15 @@ import fabric.visit.ProxyRewriter;
 
 public class FabricExt_c extends Ext_c implements FabricExt {
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.extension.FabricExt#rewriteProxiesOverride(fabric.visit.ProxyRewriter)
+   */
+  public Node rewriteProxiesOverride(ProxyRewriter rewriter) {
+    return null;
+  }
+
   public Node rewriteAtomic(AtomicRewriter ar) {
     return node();
   }

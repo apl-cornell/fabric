@@ -9,7 +9,8 @@ import polyglot.qq.QQ;
 import polyglot.visit.NodeVisitor;
 
 /**
- * Rewrites the <code>atomic</code> construct.
+ * Rewrites Fabric classes into classes that implement
+ * <code>fabric.lang.Object</code>.
  */
 public class ProxyRewriter extends NodeVisitor {
   protected QQ qq;
@@ -25,12 +26,26 @@ public class ProxyRewriter extends NodeVisitor {
   /*
    * (non-Javadoc)
    * 
+   * @see polyglot.visit.NodeVisitor#override(polyglot.ast.Node)
+   */
+  @Override
+  public Node override(Node n) {
+    return ext(n).rewriteProxiesOverride(this);
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
    * @see polyglot.visit.NodeVisitor#leave(polyglot.ast.Node, polyglot.ast.Node,
    *      polyglot.visit.NodeVisitor)
    */
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
-    return ((FabricExt) n.ext()).rewriteProxies(this);
+    return ext(n).rewriteProxies(this);
+  }
+
+  private FabricExt ext(Node n) {
+    return (FabricExt) n.ext();
   }
 
   /**

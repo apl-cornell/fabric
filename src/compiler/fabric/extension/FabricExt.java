@@ -14,7 +14,13 @@ import fabric.visit.AtomicRewriter;
 public interface FabricExt extends Ext {
 
   /**
-   * Used by ProxyRewriter to rewrite references to proxy references
+   * Used by ProxyRewriter to override the default visitor behaviour.
+   * @see polyglot.visit.NodeVisitor#override(Node)
+   */
+  public Node rewriteProxiesOverride(ProxyRewriter rewriter);
+
+  /**
+   * Used by ProxyRewriter to rewrite references to proxy references.
    */
   public Node rewriteProxies(ProxyRewriter pr);
   
