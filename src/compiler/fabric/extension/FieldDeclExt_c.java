@@ -68,12 +68,12 @@ public class FieldDeclExt_c extends FabricExt_c implements ClassMemberExt {
     // Add post-incrementer and post-decrementer if type is numeric.
     if (typeNode.type().isNumeric()) {
       members.add(qq.parseMember(flags + " %T postInc$" + name + "() {"
-          + "%T tmp = this.get" + name + "();"
-          + "this.set" + name + "(tmp + 1);"
+          + "%T tmp = this.get$" + name + "();"
+          + "this.set$" + name + "(tmp + 1);"
           + "return tmp; }", typeNode, typeNode, typeNode));
       members.add(qq.parseMember(flags + " %T postDec$" + name + "() {"
-          + "%T tmp = this.get" + name + "();"
-          + "this.set" + name + "(tmp - 1);"
+          + "%T tmp = this.get$" + name + "();"
+          + "this.set$" + name + "(tmp - 1);"
           + "return tmp; }", typeNode, typeNode, typeNode));
     }
     return members;

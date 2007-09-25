@@ -78,4 +78,9 @@ public class FabricExtFactory_c extends AbstractExtFactory_c implements
   protected Ext extNodeImpl() {
     return new FabricExt_c();
   }
+
+  @Override
+  protected Ext extUnaryImpl() {
+    return new UnaryExt_c();
+  }
 }
