@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import polyglot.ast.Block;
+import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import polyglot.ast.Expr;
 import polyglot.ast.Formal;
@@ -16,18 +17,18 @@ import fabric.visit.ProxyRewriter;
 
 public class MethodDeclExt_c extends FabricExt_c implements ClassMemberExt {
 
-  public List<ClassMember> implMember(ProxyRewriter pr) {
+  public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     return Collections.singletonList((ClassMember) node());
   }
 
-  public List<ClassMember> interfaceMember(ProxyRewriter pr) {
+  public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
     MethodDecl_c node = (MethodDecl_c) node();
     node = (MethodDecl_c) node.body(null);
     
     return Collections.singletonList((ClassMember) node);
   }
 
-  public List<ClassMember> proxyMember(ProxyRewriter pr) {
+  public List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent) {
     MethodDecl_c node = (MethodDecl_c) node();
     QQ qq = pr.qq();
     NodeFactory nf = pr.nodeFactory();
@@ -37,7 +38,9 @@ public class MethodDeclExt_c extends FabricExt_c implements ClassMemberExt {
       Formal f = (Formal) o;
       params.add(nf.Local(Position.compilerGenerated(), f.id()));
     }
-    Block body = (Block) qq.parseStmt("{ "+ret+" (($Impl) fetch())."+node.name()+"(%LE); }", (Object) params);
+    
+    String type = parent.id() + ".$Impl";
+    Block body = (Block) qq.parseStmt("{ "+ret+" (("+type+") fetch())."+node.name()+"(%LE); }", (Object)params);
     return Collections.singletonList((ClassMember) node.body(body));
   }
 }

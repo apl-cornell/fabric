@@ -37,9 +37,9 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
       if (!(m.ext() instanceof ClassMemberExt))
         System.err.println(m.getClass());
       ClassMemberExt ext = (ClassMemberExt) m.ext();
-      ifaceMembers.addAll(ext.interfaceMember(pr));
-      proxyMembers.addAll(ext.proxyMember(pr));
-       implMembers.addAll(ext.implMember(pr));
+      ifaceMembers.addAll(ext.interfaceMember(pr, node));
+      proxyMembers.addAll(ext.proxyMember(pr, node));
+       implMembers.addAll(ext.implMember(pr, node));
     }
     
     ifaceMembers = makePublic(ifaceMembers);
@@ -82,15 +82,15 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
     return node;
   }
 
-  public List<ClassMember> implMember(ProxyRewriter pr) {
+  public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     return Collections.emptyList();
   }
 
-  public List<ClassMember> interfaceMember(ProxyRewriter pr) {
+  public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
     return Collections.singletonList((ClassMember) node());
   }
 
-  public List<ClassMember> proxyMember(ProxyRewriter pr) {
+  public List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent) {
     return Collections.emptyList();
   }
 

@@ -3,6 +3,7 @@ package fabric.extension;
 import java.util.ArrayList;
 import java.util.List;
 
+import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import polyglot.ast.FieldDecl;
 import polyglot.ast.TypeNode;
@@ -12,7 +13,7 @@ import fabric.visit.ProxyRewriter;
 
 public class FieldDeclExt_c extends FabricExt_c implements ClassMemberExt {
 
-  public List<ClassMember> implMember(ProxyRewriter pr) {
+  public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     FieldDecl fieldDecl  = (FieldDecl) node();
     Flags     fieldFlags =
       fieldDecl.flags().clear(Flags.PUBLIC)
@@ -21,22 +22,22 @@ public class FieldDeclExt_c extends FabricExt_c implements ClassMemberExt {
                        .clear(Flags.FINAL);
     List<ClassMember> result = new ArrayList<ClassMember>();
     for (ClassMember m : accessors(pr))
-      result.addAll(((ClassMemberExt) m.ext()).implMember(pr));
+      result.addAll(((ClassMemberExt) m.ext()).implMember(pr, parent));
     result.add(fieldDecl.flags(fieldFlags));
     return result;
   }
 
-  public List<ClassMember> interfaceMember(ProxyRewriter pr) {
+  public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
     List<ClassMember> result = new ArrayList<ClassMember>();
     for (ClassMember m : accessors(pr))
-      result.addAll(((ClassMemberExt) m.ext()).interfaceMember(pr));
+      result.addAll(((ClassMemberExt) m.ext()).interfaceMember(pr, parent));
     return result;
   }
 
-  public List<ClassMember> proxyMember(ProxyRewriter pr) {
+  public List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent) {
     List<ClassMember> result = new ArrayList<ClassMember>();
     for (ClassMember m : accessors(pr))
-      result.addAll(((ClassMemberExt) m.ext()).proxyMember(pr));
+      result.addAll(((ClassMemberExt) m.ext()).proxyMember(pr, parent));
     return result;
   }
 
