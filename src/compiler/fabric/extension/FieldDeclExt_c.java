@@ -15,7 +15,7 @@ public class FieldDeclExt_c extends FabricExt_c implements ClassMemberExt {
 
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     FieldDecl fieldDecl  = (FieldDecl) node();
-    String    fieldName  = "$" + fieldDecl.name();
+    String    fieldName  = fieldDecl.name();
     Flags     fieldFlags =
       fieldDecl.flags().clear(Flags.PUBLIC)
                        .clear(Flags.PROTECTED)
@@ -51,27 +51,27 @@ public class FieldDeclExt_c extends FabricExt_c implements ClassMemberExt {
     // TODO need to handle static fields.
     
     TypeNode typeNode = fieldDecl.type();
-    String name = "$" + fieldDecl.name();
+    String name = fieldDecl.name();
 
     // TODO consider fields that point to Java-only objects.
 
     flags = flags.clear(Flags.TRANSIENT).clear(Flags.FINAL);
     List<ClassMember> members = new ArrayList<ClassMember> ();
-    members.add(qq.parseMember(flags + " %T get" + name + "() {"
+    members.add(qq.parseMember(flags + " %T get$" + name + "() {"
         + "fabric.client.TransactionManager.INSTANCE"
         + ".registerRead(this);" + "return this." + name + "; }", typeNode));
-    members.add(qq.parseMember(flags + " %T set" + name + "(%T val) {"
+    members.add(qq.parseMember(flags + " %T set$" + name + "(%T val) {"
         + "fabric.client.TransactionManager.INSTANCE"
         + ".registerWrite(this);" + "return this." + name + " = val; }",
         typeNode, typeNode));
     
     // Add post-incrementer and post-decrementer if type is numeric.
     if (typeNode.type().isNumeric()) {
-      members.add(qq.parseMember(flags + " %T postInc" + name + "() {"
+      members.add(qq.parseMember(flags + " %T postInc$" + name + "() {"
           + "%T tmp = this.get" + name + "();"
           + "this.set" + name + "(tmp + 1);"
           + "return tmp; }", typeNode, typeNode, typeNode));
-      members.add(qq.parseMember(flags + " %T postDec" + name + "() {"
+      members.add(qq.parseMember(flags + " %T postDec$" + name + "() {"
           + "%T tmp = this.get" + name + "();"
           + "this.set" + name + "(tmp - 1);"
           + "return tmp; }", typeNode, typeNode, typeNode));
