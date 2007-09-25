@@ -42,6 +42,11 @@ public class FabricExtFactory_c
   }
   
   @Override
+  protected Ext extConstructorCallImpl() {
+    return new ConstructorCallExt_c();
+  }
+  
+  @Override
   protected Ext extFieldDeclImpl() {
     return new FieldDeclExt_c();
   }
