@@ -15,15 +15,17 @@ public class FieldDeclExt_c extends FabricExt_c implements ClassMemberExt {
 
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     FieldDecl fieldDecl  = (FieldDecl) node();
+    String    fieldName  = "$" + fieldDecl.name();
     Flags     fieldFlags =
       fieldDecl.flags().clear(Flags.PUBLIC)
                        .clear(Flags.PROTECTED)
                        .set(  Flags.PRIVATE)
                        .clear(Flags.FINAL);
+    
     List<ClassMember> result = new ArrayList<ClassMember>();
     for (ClassMember m : accessors(pr))
       result.addAll(((ClassMemberExt) m.ext()).implMember(pr, parent));
-    result.add(fieldDecl.flags(fieldFlags));
+    result.add(fieldDecl.flags(fieldFlags).name(fieldName));
     return result;
   }
 
