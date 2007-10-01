@@ -19,6 +19,8 @@ public interface Object {
   Core $getCore();
 
   long $getOnum();
+  
+  $Proxy $getProxy();
 
   /**
    * $Proxy objects behave like regular objects by delegating to $Impl objects,
@@ -64,6 +66,10 @@ public interface Object {
 
     public final long $getOnum() {
       return onum;
+    }
+    
+    public final $Proxy $getProxy() {
+      return fetch().$getProxy();
     }
   }
 

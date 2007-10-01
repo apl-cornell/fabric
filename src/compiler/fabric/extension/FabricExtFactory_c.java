@@ -30,6 +30,11 @@ public class FabricExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
+  protected Ext extCastImpl() {
+    return new CastExt_c();
+  }
+  
+  @Override
   protected Ext extClassDeclImpl() {
     return new ClassDeclExt_c();
   }
