@@ -4,13 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import polyglot.ast.Block;
-import polyglot.ast.ClassDecl;
-import polyglot.ast.ClassMember;
-import polyglot.ast.Expr;
-import polyglot.ast.Formal;
-import polyglot.ast.MethodDecl_c;
-import polyglot.ast.NodeFactory;
+import polyglot.ast.*;
 import polyglot.qq.QQ;
 import polyglot.util.Position;
 import fabric.visit.ProxyRewriter;
@@ -21,8 +15,11 @@ public class MethodDeclExt_c extends FabricExt_c implements ClassMemberExt {
     return Collections.singletonList((ClassMember) node());
   }
 
+  @SuppressWarnings("unchecked")
   public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
     MethodDecl_c node = (MethodDecl_c) node();
+    if (node.flags().isStatic()) return Collections.EMPTY_LIST;
+    
     node = (MethodDecl_c) node.body(null);
     
     return Collections.singletonList((ClassMember) node);

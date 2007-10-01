@@ -30,6 +30,21 @@ public class FabricExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
+  protected Ext extArrayAccessAssignImpl() {
+    return new ArrayAccessAssignExt_c();
+  }
+
+  @Override
+  protected Ext extArrayAccessImpl() {
+    return new ArrayAccessExt_c();
+  }
+
+  @Override
+  protected Ext extArrayInitImpl() {
+    return new ArrayInitExt_c();
+  }
+
+  @Override
   protected Ext extCastImpl() {
     return new CastExt_c();
   }
@@ -70,18 +85,23 @@ public class FabricExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
-  protected Ext extNewArrayImpl() {
-    return new NewArrayExt_c();
-  }
-
-  @Override
   protected Ext extNewImpl() {
     return new NewExt_c();
   }
 
   @Override
+  protected Ext extNewArrayImpl() {
+    return new NewArrayExt_c();
+  }
+
+  @Override
   protected Ext extNodeImpl() {
     return new FabricExt_c();
+  }
+
+  @Override
+  protected Ext extTypeNodeImpl() {
+    return new TypeNodeExt_c();
   }
 
   @Override
