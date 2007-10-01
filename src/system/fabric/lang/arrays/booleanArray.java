@@ -4,7 +4,7 @@ import fabric.client.Core;
 import fabric.lang.Object;
 
 public interface booleanArray extends Object {
-  int getLength();
+  int get$length();
 
   boolean set(int i, boolean value);
 
@@ -46,7 +46,7 @@ public interface booleanArray extends Object {
      * 
      * @see fabric.lang.arrays.booleanArray#getLength()
      */
-    public int getLength() {
+    public int get$length() {
       // TODO: mark as read
       return value.length;
     }
@@ -96,8 +96,8 @@ public interface booleanArray extends Object {
      * 
      * @see fabric.lang.arrays.booleanArray#getLength()
      */
-    public int getLength() {
-      return ((booleanArray) fetch()).getLength();
+    public int get$length() {
+      return ((booleanArray) fetch()).get$length();
     }
 
     /*

@@ -4,7 +4,7 @@ import fabric.client.Core;
 import fabric.lang.Object;
 
 public interface charArray extends Object {
-  int getLength();
+  int get$length();
 
   char set(int i, char value);
 
@@ -46,7 +46,7 @@ public interface charArray extends Object {
      * 
      * @see fabric.lang.arrays.charArray#getLength()
      */
-    public int getLength() {
+    public int get$length() {
       // TODO: mark as read
       return value.length;
     }
@@ -96,8 +96,8 @@ public interface charArray extends Object {
      * 
      * @see fabric.lang.arrays.charArray#getLength()
      */
-    public int getLength() {
-      return ((charArray) fetch()).getLength();
+    public int get$length() {
+      return ((charArray) fetch()).get$length();
     }
 
     /*

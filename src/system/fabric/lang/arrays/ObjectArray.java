@@ -3,7 +3,7 @@ package fabric.lang.arrays;
 import fabric.client.Core;
 
 public interface ObjectArray<T> extends fabric.lang.Object {
-  int getLength();
+  int get$length();
 
   T set(int i, T value);
 
@@ -45,7 +45,7 @@ public interface ObjectArray<T> extends fabric.lang.Object {
      * 
      * @see fabric.lang.arrays.ObjectArray#getLength()
      */
-    public int getLength() {
+    public int get$length() {
       return value.length;
     }
 
@@ -92,8 +92,8 @@ public interface ObjectArray<T> extends fabric.lang.Object {
      * 
      * @see fabric.lang.arrays.ObjectArray#getLength()
      */
-    public int getLength() {
-      return ((ObjectArray<T>) fetch()).getLength();
+    public int get$length() {
+      return ((ObjectArray<T>) fetch()).get$length();
     }
 
     /*
