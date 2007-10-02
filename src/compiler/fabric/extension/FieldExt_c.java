@@ -2,6 +2,8 @@ package fabric.extension;
 
 import polyglot.ast.Field;
 import polyglot.ast.Node;
+import polyglot.ast.Receiver;
+import polyglot.types.Type;
 import fabric.visit.ProxyRewriter;
 
 public class FieldExt_c extends FabricExt_c {
@@ -14,11 +16,16 @@ public class FieldExt_c extends FabricExt_c {
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {
     Field field = node();
+    Receiver target = field.target();
+    Type targetType = target.type();
 
-    // TODO What if field is member of Java object?
     // TODO Need to handle static fields.
 
-    return pr.qq().parseExpr("%E.get$"+field.id().id()+"()", field.target());
+    // Only rewrite field accesses on Fabric objects.
+    if (!pr.typeSystem().isFabric(targetType)) return super.rewriteProxies(pr);
+    
+    return pr.qq()
+        .parseExpr("%E.get$" + field.id().id() + "()", field.target());
   }
 
   /*

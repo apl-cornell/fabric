@@ -1,5 +1,6 @@
 package fabric.types;
 
+import polyglot.ast.TypeNode;
 import polyglot.types.*;
 
 public class FabricTypeSystem_c extends TypeSystem_c implements
@@ -39,6 +40,14 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
         return false;
       type = (ClassType) pct.superType();
     }
+  }
+
+  public boolean isFabric(Type type) {
+    return type instanceof ClassType && isFabric((ClassType) type);
+  }
+
+  public boolean isFabric(TypeNode type) {
+    return isFabric(type.type());
   }
 
 }

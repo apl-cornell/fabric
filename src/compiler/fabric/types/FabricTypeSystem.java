@@ -1,5 +1,6 @@
 package fabric.types;
 
+import polyglot.ast.TypeNode;
 import polyglot.types.ClassType;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
@@ -15,4 +16,6 @@ public interface FabricTypeSystem extends TypeSystem {
   ClassType fArrayImplOf(Type type);
   
   boolean isFabric(ClassType type);
+  boolean isFabric(Type type);
+  boolean isFabric(TypeNode type);
 }
