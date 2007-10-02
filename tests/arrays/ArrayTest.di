@@ -1,6 +1,6 @@
 package arrays;
 
-import diaspora.client.Core;
+import fabric.client.Core;
 
 public class ArrayTest {
   public int[]       ints;
@@ -24,7 +24,7 @@ public class ArrayTest {
     ArrayTest a1 = null;
     ArrayTest a2 = null;
     atomic {
-      Core core = diaspora.client.Client.getClient().getCore(0L);
+      Core core = fabric.client.Client.getClient().getCore(0L);
       a1      = new ArrayTest@core();
       a2      = new ArrayTest@core();
       a2.ints = new int[]@core {5,4,3,2,1};

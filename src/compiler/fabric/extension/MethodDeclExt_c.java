@@ -19,9 +19,9 @@ public class MethodDeclExt_c extends FabricExt_c implements ClassMemberExt {
   public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
     MethodDecl_c node = (MethodDecl_c) node();
     if (node.flags().isStatic()) return Collections.EMPTY_LIST;
-    
+
     node = (MethodDecl_c) node.body(null);
-    
+
     return Collections.singletonList((ClassMember) node);
   }
 
@@ -35,9 +35,13 @@ public class MethodDeclExt_c extends FabricExt_c implements ClassMemberExt {
       Formal f = (Formal) o;
       params.add(nf.Local(Position.compilerGenerated(), f.id()));
     }
-    
+
     String type = parent.id() + ".$Impl";
-    Block body = (Block) qq.parseStmt("{ "+ret+" (("+type+") fetch())."+node.name()+"(%LE); }", (Object)params);
+    String callTarget = type;
+    if (!node.flags().isStatic()) callTarget = "((" + type + ") fetch())";
+    Block body =
+        (Block) qq.parseStmt("{ " + ret + " " + callTarget + "." + node.name()
+            + "(%LE); }", (Object) params);
     return Collections.singletonList((ClassMember) node.body(body));
   }
 }
