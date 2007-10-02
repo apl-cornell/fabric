@@ -4,7 +4,9 @@ import polyglot.ast.Call;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.Receiver;
+import polyglot.types.ClassType;
 import polyglot.types.MethodInstance;
+import polyglot.types.Type;
 import polyglot.util.Position;
 import fabric.visit.ProxyRewriter;
 
@@ -19,13 +21,20 @@ public class CallExt_c extends FabricExt_c {
   public Node rewriteProxies(ProxyRewriter pr) {
     Call call = node();
     MethodInstance mi = call.methodInstance();
-    if (!mi.flags().isStatic()) return super.rewriteProxies(pr);
+    Receiver target = call.target();
+    Type targetType = target.type();
 
-    NodeFactory nf = pr.nodeFactory();
-    Receiver target =
-        nf.AmbReceiver(Position.compilerGenerated(), call.target(), nf.Id(
-            Position.compilerGenerated(), "$Impl"));
-    return call.target(target);
+    // Only rewrite calls to static methods of Fabric objects.
+    if (mi.flags().isStatic() && targetType instanceof ClassType
+        && pr.typeSystem().isFabric((ClassType) targetType)) {
+      NodeFactory nf = pr.nodeFactory();
+      Receiver newTarget =
+          nf.AmbReceiver(Position.compilerGenerated(), target, nf.Id(Position
+              .compilerGenerated(), "$Impl"));
+      return call.target(newTarget);
+    }
+    
+    return super.rewriteProxies(pr);
   }
 
   /*

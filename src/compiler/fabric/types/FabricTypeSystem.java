@@ -13,4 +13,6 @@ public interface FabricTypeSystem extends TypeSystem {
 
   ClassType fArrayOf(Type type);
   ClassType fArrayImplOf(Type type);
+  
+  boolean isFabric(ClassType type);
 }

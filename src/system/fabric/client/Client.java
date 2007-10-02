@@ -226,8 +226,9 @@ public class Client {
 
     // TODO: option overriding on command line?
 
+    Class<?> mainClass = Class.forName(args[0] + "$$Impl");
     Method main =
-        Class.forName(args[0]).getMethod("main", new Class[] { $Proxy.class });
+        mainClass.getMethod("main", new Class[] { ObjectArray.class });
     String[] newArgs = new String[args.length - 1];
     for (int i = 0; i < newArgs.length; i++)
       newArgs[i] = args[i + 1];
@@ -252,7 +253,7 @@ public class Client {
       for (ListIterator<StackTraceElement> it =
           trace.listIterator(trace.size()); it.hasPrevious();) {
         StackTraceElement elt = it.previous();
-        if (elt.getClassName().equals(args[0])) break;
+        if (elt.getClassName().equals(args[0] + "$$Impl")) break;
         it.remove();
       }
 

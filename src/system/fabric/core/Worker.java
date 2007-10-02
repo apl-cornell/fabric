@@ -79,7 +79,13 @@ public class Worker extends Thread {
       try {
         run_();
       } catch (SocketException e) {
-        e.printStackTrace();
+        String msg = e.getMessage();
+        if ("Connection reset".equals(msg)) {
+          System.err.println("Connection reset");
+          System.err.println("(" + client + ")");
+        } else e.printStackTrace();
+        
+        System.err.println();
       } catch (EOFException e) {
         // Client has closed the connection. Nothing to do here.
       } catch (IOException e) {
@@ -137,8 +143,8 @@ public class Worker extends Thread {
         .newTransaction(client));
   }
 
-  public CommitTransactionMessage.Response handle(CommitTransactionMessage message)
-      throws TransactionCommitFailedException {
+  public CommitTransactionMessage.Response handle(
+      CommitTransactionMessage message) throws TransactionCommitFailedException {
     transactionManager.commitTransaction(client, message.transactionID);
     return new CommitTransactionMessage.Response();
   }
@@ -148,7 +154,8 @@ public class Worker extends Thread {
    */
   public PrepareTransactionMessage.Response handle(PrepareTransactionMessage msg)
       throws TransactionPrepareFailedException {
-    transactionManager.prepare(client, msg.transactionID, msg.toCreate, msg.reads, msg.writes);
+    transactionManager.prepare(client, msg.transactionID, msg.toCreate,
+        msg.reads, msg.writes);
     return new PrepareTransactionMessage.Response();
   }
 
