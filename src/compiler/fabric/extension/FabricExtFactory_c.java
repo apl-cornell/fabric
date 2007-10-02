@@ -11,7 +11,7 @@ public class FabricExtFactory_c extends AbstractExtFactory_c implements
 
   /** Factory method for Atomic objects */
   public final Ext extAtomic() {
-    Ext e = extIdImpl();
+    Ext e = extAtomicImpl();
 
     FabricExtFactory nextExtFactory = (FabricExtFactory) nextExtFactory();
     if (nextExtFactory != null) {
