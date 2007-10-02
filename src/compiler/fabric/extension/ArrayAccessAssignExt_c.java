@@ -3,18 +3,17 @@ package fabric.extension;
 import polyglot.ast.ArrayAccess;
 import polyglot.ast.ArrayAccessAssign;
 import polyglot.ast.Expr;
-import polyglot.ast.Node;
 import fabric.visit.ProxyRewriter;
 
-public class ArrayAccessAssignExt_c extends FabricExt_c {
+public class ArrayAccessAssignExt_c extends ExprExt_c {
 
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.FabricExt_c#rewriteProxiesOverride(fabric.visit.ProxyRewriter)
+   * @see fabric.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabric.visit.ProxyRewriter)
    */
   @Override
-  public Node rewriteProxiesOverride(ProxyRewriter rewriter) {
+  public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     ArrayAccessAssign assign = node();
     ArrayAccess left = (ArrayAccess) assign.left();
     Expr array = (Expr) left.visitChild(left.array(), rewriter);

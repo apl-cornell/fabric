@@ -3,15 +3,15 @@ package fabric.extension;
 import polyglot.ast.*;
 import fabric.visit.ProxyRewriter;
 
-public class FieldAssignExt_c extends FabricExt_c {
+public class FieldAssignExt_c extends ExprExt_c {
 
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.FabricExt_c#rewriteProxiesOverride(fabric.visit.ProxyRewriter)
+   * @see fabric.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabric.visit.ProxyRewriter)
    */
   @Override
-  public Node rewriteProxiesOverride(ProxyRewriter rewriter) {
+  public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     FieldAssign assign = node();
     Field field = (Field) assign.left();
     Receiver target = (Receiver) field.visitChild(field.target(), rewriter);

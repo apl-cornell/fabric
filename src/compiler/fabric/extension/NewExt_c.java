@@ -13,7 +13,7 @@ import polyglot.util.Position;
 public class NewExt_c extends LocatedExt_c {
   @SuppressWarnings("unchecked")
   @Override
-  public New rewriteProxies(ProxyRewriter pr) {
+  public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     New call = (New) node();
     NodeFactory nf = pr.nodeFactory();
 
@@ -21,7 +21,7 @@ public class NewExt_c extends LocatedExt_c {
 
     // Only rewrite if instantiating a Fabric type.
     if (!pr.typeSystem().isFabric(objectType))
-      return (New) super.rewriteProxies(pr);
+      return super.rewriteProxiesImpl(pr);
 
     List<Expr> newargs = new LinkedList<Expr>(call.arguments());
     Expr location = location();

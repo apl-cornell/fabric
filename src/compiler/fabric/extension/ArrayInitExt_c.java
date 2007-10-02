@@ -3,16 +3,15 @@ package fabric.extension;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabric.types.FabricTypeSystem;
-import fabric.visit.ProxyRewriter;
 import polyglot.ast.ArrayInit;
 import polyglot.ast.Expr;
-import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Type;
 import polyglot.util.Position;
+import fabric.types.FabricTypeSystem;
+import fabric.visit.ProxyRewriter;
 
 public class ArrayInitExt_c extends LocatedExt_c {
 
@@ -29,21 +28,10 @@ public class ArrayInitExt_c extends LocatedExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.FabricExt_c#rewriteProxies(fabric.visit.ProxyRewriter)
+   * @see fabric.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabric.visit.ProxyRewriter)
    */
   @Override
-  public Node rewriteProxies(ProxyRewriter pr) {
-    // TODO Auto-generated method stub
-    return super.rewriteProxies(pr);
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.extension.FabricExt_c#rewriteProxiesOverride(fabric.visit.ProxyRewriter)
-   */
-  @Override
-  public Node rewriteProxiesOverride(ProxyRewriter rewriter) {
+  public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     NodeFactory nf = rewriter.nodeFactory();
     QQ qq = rewriter.qq();
     FabricTypeSystem ts = rewriter.typeSystem();

@@ -5,10 +5,10 @@ import java.util.Collections;
 import polyglot.ast.*;
 import fabric.visit.ProxyRewriter;
 
-public class UnaryExt_c extends FabricExt_c {
+public class UnaryExt_c extends ExprExt_c {
 
   @Override
-  public Node rewriteProxiesOverride(ProxyRewriter rewriter) {
+  public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     // Handle (pre/post)-(inc/dec)rement on fields.
     Unary unary = node();
     Expr expr = unary.expr();
@@ -28,7 +28,7 @@ public class UnaryExt_c extends FabricExt_c {
       Expr arg =
           rewriter.qq().parseExpr(
               "%E " + (op == Unary.PRE_DEC ? "-" : "+") + " 1", getterCall);
-      return setterCall.arguments(Collections.singletonList(arg));
+      return (Expr) setterCall.arguments(Collections.singletonList(arg));
     }
 
     // XXX Hacky. Mangle the getter call to obtain a post-inc/dec call.

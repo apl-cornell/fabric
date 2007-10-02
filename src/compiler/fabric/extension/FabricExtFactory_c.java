@@ -70,6 +70,11 @@ public class FabricExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
+  protected Ext extExprImpl() {
+    return new ExprExt_c();
+  }
+
+  @Override
   protected Ext extFieldAssignImpl() {
     return new FieldAssignExt_c();
   }

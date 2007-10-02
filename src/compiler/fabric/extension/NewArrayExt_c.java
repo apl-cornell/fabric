@@ -10,10 +10,10 @@ public class NewArrayExt_c extends LocatedExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.FabricExt_c#rewriteProxies(fabric.visit.ProxyRewriter)
+   * @see fabric.extension.ExprExt_c#rewriteProxiesImpl(fabric.visit.ProxyRewriter)
    */
   @Override
-  public Node rewriteProxies(ProxyRewriter pr) {
+  public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     QQ qq = pr.qq();
     NewArray newArray = node();
     if (location == null) location = qq.parseExpr("$getCore()");
@@ -34,10 +34,10 @@ public class NewArrayExt_c extends LocatedExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.FabricExt_c#rewriteProxiesOverride(fabric.visit.ProxyRewriter)
+   * @see fabric.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabric.visit.ProxyRewriter)
    */
   @Override
-  public Node rewriteProxiesOverride(ProxyRewriter rewriter) {
+  public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     NewArray newArray = node();
     if (newArray.init() != null) {
       ArrayInit init = newArray.init();
@@ -45,7 +45,7 @@ public class NewArrayExt_c extends LocatedExt_c {
       newArray = newArray.init(init);
 
       // Translation of initializer will be the array itself.
-      return newArray.visitChild(init, rewriter);
+      return (Expr) newArray.visitChild(init, rewriter);
     }
 
     return null;
