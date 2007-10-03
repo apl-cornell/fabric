@@ -36,7 +36,7 @@ public class NewExt_c extends LocatedExt_c {
             + ".$Impl");
     call = call.objectType(implType);
     call = (New) call.arguments(newargs);
-
-    return call;
+    
+    return pr.qq().parseExpr("(%T) %E.$getProxy()", objectType, call);
   }
 }
