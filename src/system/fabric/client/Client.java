@@ -14,7 +14,6 @@ import fabric.common.InternalError;
 import fabric.common.Resources;
 import fabric.lang.Object;
 import fabric.lang.Object.$Impl;
-import fabric.lang.Object.$Proxy;
 import fabric.lang.arrays.ObjectArray;
 
 /**
