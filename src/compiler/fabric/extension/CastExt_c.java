@@ -14,6 +14,9 @@ public class CastExt_c extends ExprExt_c {
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     Cast cast = (Cast) node();
+    if (!pr.typeSystem().isFabric(cast.castType()))
+      return cast;
+
     QQ qq = pr.qq();
 
     return qq.parseExpr("(%T) ((fabric.lang.Object) %E).$getProxy()", cast
