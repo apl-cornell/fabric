@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object;
 
 public class LocalCore implements Core {
 
@@ -13,17 +13,19 @@ public class LocalCore implements Core {
   private long freshOID = 0;
 
   private PendingTransaction prepared;
-  private Map<Long, $Impl> objects;
+  private Map<Long, Object.$Impl>   objects;
+  // TODO: should be a fabric.util.HashMap
+  private Object             rootMap;
 
   private static Logger log = Logger.getLogger("fabric.client.LocalCore");
 
   private class PendingTransaction {
     public int id;
-    public Collection<$Impl> toCreate;
-    public Collection<$Impl> writes;
+    public Collection<Object.$Impl> toCreate;
+    public Collection<Object.$Impl> writes;
 
-    public PendingTransaction(int id, Collection<$Impl> toCreate,
-        Collection<$Impl> writes) {
+    public PendingTransaction(int id, Collection<Object.$Impl> toCreate,
+        Collection<Object.$Impl> writes) {
       this.id = id;
       this.toCreate = toCreate;
       this.writes = writes;
@@ -36,8 +38,8 @@ public class LocalCore implements Core {
   }
 
   public void prepareTransaction(int transactionID,
-      Collection<$Impl> toCreate, Map<Long, Integer> reads,
-      Collection<$Impl> writes) {
+      Collection<Object.$Impl> toCreate, Map<Long, Integer> reads,
+      Collection<Object.$Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     log.info("Local transaction " + transactionID + " preparing");
@@ -57,9 +59,9 @@ public class LocalCore implements Core {
     log.info("Local transaction " + transactionID + " committing");
     assert prepared.id == transactionID;
 
-    if (prepared.writes != null) for ($Impl obj : prepared.writes)
+    if (prepared.writes != null) for (Object.$Impl obj : prepared.writes)
       this.objects.put(obj.$getOnum(), obj);
-    if (prepared.toCreate != null) for ($Impl obj : prepared.toCreate)
+    if (prepared.toCreate != null) for (Object.$Impl obj : prepared.toCreate)
       this.objects.put(obj.$getOnum(), obj);
     prepared = null;
   }
@@ -68,7 +70,7 @@ public class LocalCore implements Core {
     return freshOID++;
   }
 
-  public $Impl readObject(long onum) {
+  public Object.$Impl readObject(long onum) {
     return objects.get(onum);
   }
 
@@ -79,12 +81,17 @@ public class LocalCore implements Core {
    */
   LocalCore() {
     this.prepared = null;
-    this.objects = new HashMap<Long, $Impl>();
+    this.objects = new HashMap<Long, Object.$Impl>();
+    this.rootMap = new Object.$Impl(this).$getProxy();
   }
 
   @Override
   public String toString() {
     return "LocalCore";
+  }
+
+  public Object getRoot() throws UnreachableCoreException {
+    return rootMap;
   }
 
 }

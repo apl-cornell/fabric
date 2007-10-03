@@ -14,7 +14,7 @@ import fabric.common.AccessError;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
 import fabric.core.SerializedObject;
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object;
 import fabric.messages.*;
 
 /**
@@ -38,7 +38,7 @@ public class RemoteCore implements Serializable, Core {
   /**
    * The object table: locally resident objects.
    */
-  private transient Map<Long, SoftReference<$Impl>> objects;
+  private transient Map<Long, SoftReference<Object.$Impl>> objects;
 
   /**
    * The connection to the actual Core.
@@ -56,7 +56,7 @@ public class RemoteCore implements Serializable, Core {
    */
   RemoteCore(long coreID) {
     this.coreID = coreID;
-    this.objects = new HashMap<Long, SoftReference<$Impl>>();
+    this.objects = new HashMap<Long, SoftReference<Object.$Impl>>();
     this.fresh_ids = new LinkedList<Long>();
     this.serialized = new HashMap<Long, SoftReference<SerializedObject>>();
   }
@@ -128,8 +128,8 @@ public class RemoteCore implements Serializable, Core {
    * 
    * @return <code>true</code> iff the operation succeeded.
    */
-  public void prepareTransaction(int transactionID, Collection<$Impl> toCreate,
-      Map<Long, Integer> reads, Collection<$Impl> writes)
+  public void prepareTransaction(int transactionID, Collection<Object.$Impl> toCreate,
+      Map<Long, Integer> reads, Collection<Object.$Impl> writes)
       throws UnreachableCoreException, TransactionPrepareFailedException {
     new PrepareTransactionMessage(transactionID, toCreate, reads, writes)
         .send(this);
@@ -144,11 +144,11 @@ public class RemoteCore implements Serializable, Core {
    * @return The requested object
    * @throws FabricException
    */
-  public $Impl readObject(long onum) throws AccessError,
+  public Object.$Impl readObject(long onum) throws AccessError,
       UnreachableCoreException {
     // Check object table
-    $Impl result = null;
-    SoftReference<$Impl> resultRef = objects.get(onum);
+    Object.$Impl result = null;
+    SoftReference<Object.$Impl> resultRef = objects.get(onum);
     if (resultRef != null && (result = resultRef.get()) != null) return result;
     return readObjectFromCore(onum);
   }
@@ -162,7 +162,7 @@ public class RemoteCore implements Serializable, Core {
    * @return The constructed $Impl
    * @throws FabricException
    */
-  private $Impl readObjectFromCore(long onum) throws AccessError,
+  private Object.$Impl readObjectFromCore(long onum) throws AccessError,
       UnreachableCoreException {
     SerializedObject serial = null;
     SoftReference<SerializedObject> serialRef = serialized.remove(onum);
@@ -178,8 +178,8 @@ public class RemoteCore implements Serializable, Core {
     }
 
     try {
-      $Impl result = serial.getObject();
-      objects.put(onum, new SoftReference<$Impl>(result));
+      Object.$Impl result = serial.getObject();
+      objects.put(onum, new SoftReference<Object.$Impl>(result));
       return result;
     } catch (ClassNotFoundException e) {
       // TODO handle this
@@ -195,7 +195,7 @@ public class RemoteCore implements Serializable, Core {
    * @return The canonical Core object corresponding to this Core's onum
    * @throws ObjectStreamException
    */
-  public Object readResolve() {
+  public java.lang.Object readResolve() {
     return Client.getClient().getCore(coreID);
   }
 
@@ -235,7 +235,7 @@ public class RemoteCore implements Serializable, Core {
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(java.lang.Object obj) {
     return obj instanceof RemoteCore && ((RemoteCore) obj).coreID == coreID;
   }
 
@@ -247,5 +247,9 @@ public class RemoteCore implements Serializable, Core {
   @Override
   public String toString() {
     return "Core@" + coreID;
+  }
+
+  public Object getRoot() throws UnreachableCoreException {
+    return new Object.$Proxy(this, 0);
   }
 }

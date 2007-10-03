@@ -60,4 +60,9 @@ public interface Core {
    * @throws UnreachableCoreException
    */
   public long createOnum() throws UnreachableCoreException;
+  
+  /**
+   * Returns the root map of the Core
+   */
+  public fabric.lang.Object getRoot() throws UnreachableCoreException;
 }
