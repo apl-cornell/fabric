@@ -2,6 +2,7 @@ package fabric.extension;
 
 import polyglot.ast.*;
 import polyglot.qq.QQ;
+import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import fabric.visit.ProxyRewriter;
 
@@ -25,10 +26,12 @@ public class NewArrayExt_c extends LocatedExt_c {
       throw new InternalCompilerError("Missing array dimension");
 
     Expr size = (Expr) newArray.dims().get(0);
-    TypeNode arrayType =
-        qq.parseType("%T", pr.typeSystem().fArrayImplOf(
-            newArray.type().toArray().base()));
-    return qq.parseExpr("new %T(%E, %E)", arrayType, location, size);
+
+    Type baseType = newArray.type().toArray().base();
+    Type arrayImplType = pr.typeSystem().fArrayImplOf(baseType);
+    Type arrayType = pr.typeSystem().fArrayOf(baseType);
+    return qq.parseExpr("(%T) new %T(%E, %E).$getProxy()", arrayType,
+        arrayImplType, location, size);
   }
 
   /*
