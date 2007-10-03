@@ -1,0 +1,8 @@
+package regression;
+
+public class New01 {
+  void m() {
+    New01 o = new New01();
+  }
+}
+
