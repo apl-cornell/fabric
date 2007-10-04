@@ -198,6 +198,8 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
     methodDecl.append(flags + " ");
 
     Type returnType = mi.returnType();
+    if (returnType.isArray()) returnType = ts.toFArray(returnType.toArray());
+    
     String name = mi.name();
     methodDecl.append("%T " + name + "(");
     subst.add(returnType);
