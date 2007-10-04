@@ -25,6 +25,13 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
     return load("fabric.lang.arrays." + type.toString() + "Array.$Impl");
   }
 
+  /* (non-Javadoc)
+   * @see fabric.types.FabricTypeSystem#toFArray(polyglot.types.ArrayType)
+   */
+  public ClassType toFArray(ArrayType type) {
+    return fArrayOf(type.base());
+  }
+
   public boolean isFabric(ClassType type) {
     // TODO This whole thing is a hack.
     if ("java.lang.Object".equals(type.toString())) return false;

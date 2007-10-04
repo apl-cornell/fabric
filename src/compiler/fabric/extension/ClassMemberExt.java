@@ -8,20 +8,20 @@ import polyglot.ast.ClassDecl;
 
 public interface ClassMemberExt extends FabricExt {
   /**
-   * @param parent TODO
-   * @return the members to add to the proxy class, or null
+   * Returns the Proxy translation of the class member. The result is a list of
+   * class members to be included in the Proxy class.
    */
   List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent);
-  
+
   /**
-   * @param parent TODO
-   * @return the members to add to the interface, or null
+   * Returns the interface translation of the class member. The result is a list
+   * of class members to be included in the interface.
    */
   List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent);
-  
+
   /**
-   * @param parent TODO
-   * @return the members to add to the impl class, or null
+   * Returns the Impl translation of the class member. The result is a list of
+   * class members to be included in the Impl class.
    */
   List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent);
 }

@@ -110,6 +110,11 @@ public class FabricExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
+  protected Ext extSpecialImpl() {
+    return new SpecialExt_c();
+  }
+
+  @Override
   protected Ext extTypeNodeImpl() {
     return new TypeNodeExt_c();
   }

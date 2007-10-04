@@ -1,115 +1,303 @@
 package fabric.extension;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-import fabric.visit.ProxyRewriter;
-import polyglot.ast.ClassBody;
-import polyglot.ast.ClassDecl;
-import polyglot.ast.ClassMember;
-import polyglot.ast.Node;
-import polyglot.ast.NodeFactory;
-import polyglot.ast.TypeNode;
+import polyglot.ast.*;
 import polyglot.qq.QQ;
+import polyglot.types.ClassType;
 import polyglot.types.Flags;
-import polyglot.util.InternalCompilerError;
+import polyglot.types.MethodInstance;
+import polyglot.types.Type;
+import polyglot.util.Position;
+import fabric.types.FabricTypeSystem;
+import fabric.visit.ProxyRewriter;
 
 public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
+
+  /**
+   * Returns the interface translation of the class declaration.
+   * 
+   * @see fabric.extension.FabricExt_c#rewriteProxies(fabric.visit.ProxyRewriter)
+   */
   @SuppressWarnings("unchecked")
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {
-    ClassDecl node = (ClassDecl) node();
-    ClassBody body = node.body();
+    ClassDecl classDecl = node();
 
-    // TODO: static fields of interfaces
-    if (node.flags().contains(Flags.INTERFACE)) return node;
+    // Only translate if we're processing a Fabric class.
+    if (!pr.typeSystem().isFabric(classDecl.type())) return classDecl;
 
-    List<ClassMember> oldMembers = body.members();
-    int size = oldMembers.size();
+    // If already an interface, leave it.
+    // TODO Static fields of interfaces.
+    if (classDecl.flags().isInterface()) return classDecl;
 
-    List<ClassMember> ifaceMembers = new ArrayList<ClassMember>(size);
-    List<ClassMember> proxyMembers = new ArrayList<ClassMember>(size);
-    List<ClassMember> implMembers  = new ArrayList<ClassMember>(size);
-
-    for (ClassMember m : oldMembers) {
-      if (!(m.ext() instanceof ClassMemberExt))
-        System.err.println(m.getClass());
-      ClassMemberExt ext = (ClassMemberExt) m.ext();
-      ifaceMembers.addAll(ext.interfaceMember(pr, node));
-      proxyMembers.addAll(ext.proxyMember(pr, node));
-       implMembers.addAll(ext.implMember(pr, node));
-    }
-    
-    ifaceMembers = makePublic(ifaceMembers);
-    proxyMembers = makePublic(proxyMembers);
-     implMembers = makePublic(implMembers); 
-
-    // TODO: abstract classes
     NodeFactory nf = pr.nodeFactory();
-    QQ qq = pr.qq();
+    FabricTypeSystem ts = pr.typeSystem();
+    TypeNode superClass = classDecl.superClass();
 
-    // TODO: this is probably the wrong way to tell
-    if (node.superClass() == null ||
-        "java.lang.Object".equals(node.superClass().toString()))
-      node = node.superClass(nf.CanonicalTypeNode(node().position(),
-                                                  pr.typeSystem().FObject()));
-    
-    proxyMembers.add(qq.parseMember("public $Proxy("+node.id()+".$Impl impl) { super(impl); }"));
-    proxyMembers.add(qq.parseMember("public $Proxy(fabric.client.Core c, long onum) { super(c, onum); }"));
-    
-    ClassDecl proxy =
-        qq.parseDecl(
-            "public static class $Proxy" +
-            " extends " + node.superClass() + ".$Proxy" +
-            " implements %T {%LM}", node.type(), proxyMembers);
-    ClassDecl impl =
-        qq.parseDecl(
-            "public static class $Impl" +
-            " extends " + node.superClass() + ".$Impl" +
-            " implements %T {%LM}", node.type(), implMembers);
-    ifaceMembers.add(proxy.type(node.type()));
-    ifaceMembers.add(impl.type(node.type()));
+    // Make the super class explicit.
+    // TODO This is probably the wrong way to tell.
+    if (superClass == null || "java.lang.Object".equals(superClass.toString())) {
+      superClass =
+          nf.CanonicalTypeNode(Position.compilerGenerated(), ts.FObject());
+    }
 
-    List<TypeNode> interfaces = new ArrayList<TypeNode>(node.interfaces());
-    interfaces.add(node.superClass());
-    node = node.interfaces(interfaces);
-    node = node.superClass(null);
-    node = node.body(nf.ClassBody(node.position(), ifaceMembers));
-    node = node.flags(node.flags().set(Flags.INTERFACE));
+    // The super class will be turned into an interface that we will extend.
+    List<TypeNode> interfaces = new ArrayList<TypeNode>(classDecl.interfaces());
+    interfaces.add(superClass);
+    ClassDecl result = classDecl.interfaces(interfaces);
+    result = result.superClass(null);
 
-    return node;
+    // We're generating an interface.
+    Flags flags = ProxyRewriter.toInterface(classDecl.flags());
+    result = result.flags(flags);
+
+    // Rewrite the members.
+    ClassBody body = classDecl.body();
+    List<ClassMember> oldMembers = body.members();
+    List<ClassMember> members = new ArrayList<ClassMember>(oldMembers.size());
+    for (ClassMember m : oldMembers) {
+      members.addAll(ext(m).interfaceMember(pr, classDecl));
+    }
+
+    // Add the proxy and impl classes.
+    members.add(makeProxy(pr, superClass));
+    members.add(makeImpl(pr, superClass));
+
+    // Set the class body.
+    return result.body(body.members(members));
   }
 
+  /**
+   * Returns the Proxy translation of the class declaration.
+   */
+  @SuppressWarnings("unchecked")
+  private ClassDecl makeProxy(ProxyRewriter pr, TypeNode superClass) {
+    ClassDecl classDecl = node();
+
+    // Rewrite the members.
+    ClassBody body = classDecl.body();
+    List<ClassMember> oldMembers = body.members();
+    List<ClassMember> members = new ArrayList<ClassMember>(oldMembers.size());
+    for (ClassMember m : oldMembers) {
+      members.addAll(ext(m).proxyMember(pr, classDecl));
+    }
+
+    // Create proxy methods based on the class instances of this class and all
+    // the interfaces it implements.
+    members.addAll(makeProxyMethods(pr, classDecl.type()));
+
+    // Add constructors.
+    QQ qq = pr.qq();
+    ClassMember implConstr =
+        qq.parseMember("public $Proxy(" + classDecl.id() + ".$Impl impl) {"
+            + "super(impl); }");
+    ClassMember oidConstr =
+        qq.parseMember("public $Proxy(fabric.client.Core core, long onum) {"
+            + "super(core, onum); }");
+    members.add(implConstr);
+    members.add(oidConstr);
+
+    // Create the class declaration.
+    ClassDecl result =
+        qq.parseDecl("public static class $Proxy extends " + superClass
+            + ".$Proxy implements %T {%LM}", classDecl.type(), members);
+    return result.type(classDecl.type());
+  }
+
+  /**
+   * Generates proxy methods for methods contained in the given class type and
+   * all the interfaces it implements.
+   */
+  @SuppressWarnings("unchecked")
+  private List<ClassMember> makeProxyMethods(ProxyRewriter pr, ClassType ct) {
+    List<ClassMember> result = new ArrayList<ClassMember>();
+
+    Queue<ClassType> toVisit = new LinkedList<ClassType>();
+    Set<ClassType> visitedTypes = new HashSet<ClassType>();
+    visitedTypes.add(pr.typeSystem().Object());
+    visitedTypes.add(pr.typeSystem().FObject());
+
+    // Maps method names to sets of formal argument types. This prevents us
+    // from generating duplicate methods.
+    Map<String, Set<List<Type>>> translatedInstances =
+        new HashMap<String, Set<List<Type>>>();
+
+    // First populate the above data structures with the super class and the
+    // type hierarchy above that. The proxy's super class will already have
+    // methods for those types.
+    toVisit.add(ct.superType().toClass());
+    while (!toVisit.isEmpty()) {
+      ClassType type = toVisit.remove();
+      if (visitedTypes.contains(type)) continue;
+      visitedTypes.add(type);
+
+      List<MethodInstance> methods = type.methods();
+      for (MethodInstance mi : methods) {
+        // We actually want to generate proxies for static methods even if they
+        // exist already in a super type. This way, static method dispatching
+        // will work correctly.
+        if (mi.flags().isStatic()) continue;
+        
+        String name = mi.name();
+        Set<List<Type>> formalTypes = translatedInstances.get(name);
+        if (formalTypes == null) {
+          formalTypes = new HashSet<List<Type>>();
+          translatedInstances.put(name, formalTypes);
+        }
+        formalTypes.add(mi.formalTypes());
+      }
+    }
+
+    // Now go through the class itself and the interfaces it implements.
+    toVisit.add(ct);
+    while (!toVisit.isEmpty()) {
+      ClassType type = toVisit.remove();
+      if (visitedTypes.contains(type)) continue;
+      visitedTypes.add(type);
+
+      List<MethodInstance> methods = type.methods();
+      for (MethodInstance mi : methods) {
+        String name = mi.name();
+        List<Type> types = mi.formalTypes();
+
+        // Ensure this isn't a duplicate method.
+        Set<List<Type>> formalTypes = translatedInstances.get(name);
+        if (formalTypes == null) {
+          formalTypes = new HashSet<List<Type>>();
+          translatedInstances.put(name, formalTypes);
+        }
+
+        if (formalTypes.contains(types)) continue;
+        formalTypes.add(types);
+
+        result.add(makeProxyMethod(pr, mi));
+      }
+
+      toVisit.addAll(type.interfaces());
+    }
+
+    return result;
+  }
+
+  /**
+   * Generates a proxy method for the given method instance.
+   */
+  @SuppressWarnings("unchecked")
+  private ClassMember makeProxyMethod(ProxyRewriter pr, MethodInstance mi) {
+    FabricTypeSystem ts = pr.typeSystem();
+    
+    // The end result will be quasiquoted. Construct the quasiquoted string and
+    // list of substitution arguments in tandem.
+    StringBuffer methodDecl = new StringBuffer();
+    List<Object> subst = new ArrayList<Object>();
+
+    // Since the method will be implementing part of an interface, make the
+    // method public and non-abstract.
+    Flags flags = ProxyRewriter.toPublic(mi.flags()).clearAbstract();
+    methodDecl.append(flags + " ");
+
+    Type returnType = mi.returnType();
+    String name = mi.name();
+    methodDecl.append("%T " + name + "(");
+    subst.add(returnType);
+
+    // Generate the formals list. While we're doing this, may as well generate
+    // the args list too.
+    StringBuffer args = new StringBuffer();
+    List<Type> formalTypes = mi.formalTypes();
+    int argCount = 1;
+    for (Type t : formalTypes) {
+      methodDecl.append((argCount == 1 ? "" : ", ") + "%T arg" + argCount);
+      args.append((argCount == 1 ? "" : ", ") + "arg" + argCount);
+      
+      if (t.isArray()) t = ts.toFArray(t.toArray());
+      subst.add(t);
+      argCount++;
+    }
+
+    methodDecl.append(") { " + (returnType.isVoid() ? "" : "return "));
+
+    // Figure out the call target.
+    String implType = node().type() + ".$Impl";
+    if (flags.isStatic())
+      methodDecl.append(implType);
+    else methodDecl.append("((" + implType + ") fetch())");
+
+    // Call the delegate.
+    methodDecl.append("." + name + "(" + args + "); }");
+
+    QQ qq = pr.qq();
+    return qq.parseMember(methodDecl.toString(), subst);
+  }
+
+  /**
+   * Returns the Impl translation of the class declaration.
+   */
+  @SuppressWarnings("unchecked")
+  private ClassDecl makeImpl(ProxyRewriter pr, TypeNode superClass) {
+    ClassDecl classDecl = node();
+
+    // The Impl class will be public and static.
+    Flags flags = ProxyRewriter.toPublic(classDecl.flags()).Static();
+
+    // Rewrite the members.
+    ClassBody body = classDecl.body();
+    List<ClassMember> oldMembers = body.members();
+    List<ClassMember> members = new ArrayList<ClassMember>(oldMembers.size());
+    for (ClassMember m : oldMembers) {
+      members.addAll(ext(m).implMember(pr, classDecl));
+    }
+
+    // Create the class declaration.
+    QQ qq = pr.qq();
+    ClassDecl result =
+        qq.parseDecl(flags + " class $Impl extends " + superClass
+            + ".$Impl implements %T {%LM}", classDecl.type(), members);
+    return result.type(classDecl.type());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.extension.ClassMemberExt#implMember(fabric.visit.ProxyRewriter,
+   *      polyglot.ast.ClassDecl)
+   */
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     return Collections.emptyList();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.extension.ClassMemberExt#interfaceMember(fabric.visit.ProxyRewriter,
+   *      polyglot.ast.ClassDecl)
+   */
   public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
     return Collections.singletonList((ClassMember) node());
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.extension.ClassMemberExt#proxyMember(fabric.visit.ProxyRewriter,
+   *      polyglot.ast.ClassDecl)
+   */
   public List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent) {
     return Collections.emptyList();
   }
 
-  public List<ClassMember> makePublic(List<ClassMember> members) {
-    List<ClassMember> result = new ArrayList<ClassMember> (members.size());
-    for (ClassMember m : members) {
-      try {
-        // Note: this is an ugly hack to get around the fact that there's no
-        // flags() method in ClassMember but there is one in each subclass of it.
-        Method getFlags = m.getClass().getMethod("flags");
-        Method setFlags = m.getClass().getMethod("flags", Flags.class);
-        Flags f = (Flags) getFlags.invoke(m);
-        // Clear all access flags, then set public
-        f = f.Package().Public();
-        result.add((ClassMember) setFlags.invoke(m, f));
-      } catch(Exception e) {
-        throw new InternalCompilerError(e);
-      }
-    }
-    return result;
+  /*
+   * (non-Javadoc)
+   * 
+   * @see polyglot.ast.Ext_c#node()
+   */
+  @Override
+  public ClassDecl node() {
+    return (ClassDecl) super.node();
+  }
+
+  private ClassMemberExt ext(ClassMember m) {
+    return (ClassMemberExt) m.ext();
   }
 }

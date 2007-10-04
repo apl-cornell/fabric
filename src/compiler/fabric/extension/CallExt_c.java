@@ -29,7 +29,7 @@ public class CallExt_c extends ExprExt_c {
     Receiver newTarget =
         nf.AmbReceiver(Position.compilerGenerated(), target, nf.Id(Position
             .compilerGenerated(), "$Impl"));
-    return call.target(newTarget);
+    return call.target(newTarget).targetImplicit(false);
   }
 
   /*

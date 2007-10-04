@@ -1,6 +1,6 @@
 package tree;
 
-import diaspora.client.Core;
+import fabric.client.Core;
 
 public class Tree {
   private TreeNode root;

@@ -23,11 +23,11 @@ public class FieldExt_c extends ExprExt_c {
     // TODO Need to handle static fields.
 
     // Only rewrite field accesses on Fabric objects.
-    if (!pr.typeSystem().isFabric(targetType))
+    if (!targetType.isArray() && !pr.typeSystem().isFabric(targetType))
       return super.rewriteProxiesImpl(pr);
 
     Call getter = (Call) pr.qq().parseExpr("get$" + field.id().id() + "()");
-    return getter.target(target);
+    return getter.target(target).targetImplicit(false);
   }
 
   /*

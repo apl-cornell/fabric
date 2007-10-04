@@ -18,12 +18,12 @@ public class TypeNodeExt_c extends FabricExt_c {
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {
     TypeNode tn = node();
-    if (!tn.type().isArray()) return tn;
+    Type type = tn.type();
+    if (!type.isArray()) return tn;
     
-    Type base = tn.type().toArray().base();
     NodeFactory nf = pr.nodeFactory();
     FabricTypeSystem ts = pr.typeSystem();
-    return nf.CanonicalTypeNode(Position.compilerGenerated(), ts.fArrayOf(base));
+    return nf.CanonicalTypeNode(Position.compilerGenerated(), ts.toFArray(type.toArray()));
   }
 
   /*

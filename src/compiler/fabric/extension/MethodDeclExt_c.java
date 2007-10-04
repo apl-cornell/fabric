@@ -1,54 +1,64 @@
 package fabric.extension;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import polyglot.ast.*;
-import polyglot.qq.QQ;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
+import polyglot.ast.MethodDecl;
 import polyglot.types.Flags;
-import polyglot.util.Position;
 import fabric.visit.ProxyRewriter;
 
-public class MethodDeclExt_c extends FabricExt_c {
+public class MethodDeclExt_c extends FabricExt_c implements ClassMemberExt {
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.extension.ClassMemberExt#implMember(fabric.visit.ProxyRewriter,
+   *      polyglot.ast.ClassDecl)
+   */
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
-    return Collections.singletonList((ClassMember) node());
+    // Since the Impl will implement an interface, the method has to be public.
+    MethodDecl result = node();
+    Flags flags = ProxyRewriter.toPublic(result.flags());
+    result = result.flags(flags);
+    return Collections.singletonList((ClassMember) result);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.extension.ClassMemberExt#interfaceMember(fabric.visit.ProxyRewriter,
+   *      polyglot.ast.ClassDecl)
+   */
   @SuppressWarnings("unchecked")
   public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
     MethodDecl methodDecl = node();
     Flags flags = methodDecl.flags();
-    
+
     // Don't include static methods in interfaces.
     if (flags.isStatic()) return Collections.EMPTY_LIST;
-    
-    // Clear the "final" flag.
-    flags = flags.clear(Flags.FINAL);
-    
+
+    // Interface methods must be public and cannot be final.
+    flags = ProxyRewriter.toPublic(flags).clearFinal();
+
+    // Clear out the method body.
     ClassMember result = (ClassMember) methodDecl.flags(flags).body(null);
     return Collections.singletonList(result);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.extension.ClassMemberExt#proxyMember(fabric.visit.ProxyRewriter,
+   *      polyglot.ast.ClassDecl)
+   */
+  @SuppressWarnings("unchecked")
   public List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent) {
-    MethodDecl_c node = (MethodDecl_c) node();
-    QQ qq = pr.qq();
-    NodeFactory nf = pr.nodeFactory();
-    String ret = node.returnType().type().isVoid() ? "" : "return";
-    List<Expr> params = new ArrayList<Expr>();
-    for (Object o : node.formals()) {
-      Formal f = (Formal) o;
-      params.add(nf.Local(Position.compilerGenerated(), f.id()));
-    }
-
-    String type = parent.id() + ".$Impl";
-    String callTarget = type;
-    if (!node.flags().isStatic()) callTarget = "((" + type + ") fetch())";
-    Block body =
-        (Block) qq.parseStmt("{ " + ret + " " + callTarget + "." + node.name()
-            + "(%LE); }", (Object) params);
-    return Collections.singletonList((ClassMember) node.body(body));
+    // Proxy methods will be added based on the method instances in the class
+    // type, not on the methods declared. This handles the case where interfaces
+    // and abstract classes don't explicitly declare all of their methods.
+    return Collections.EMPTY_LIST;
   }
 
   /*

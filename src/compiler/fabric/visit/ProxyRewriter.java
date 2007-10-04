@@ -6,6 +6,7 @@ import fabric.extension.FabricExt;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.Node;
 import polyglot.qq.QQ;
+import polyglot.types.Flags;
 import polyglot.visit.NodeVisitor;
 
 /**
@@ -48,9 +49,6 @@ public class ProxyRewriter extends NodeVisitor {
     return (FabricExt) n.ext();
   }
 
-  /**
-   * @return the qq
-   */
   public QQ qq() {
     return qq;
   }
@@ -61,5 +59,21 @@ public class ProxyRewriter extends NodeVisitor {
 
   public FabricTypeSystem typeSystem() {
     return ts;
+  }
+  
+  public static Flags toPublic(Flags flags) {
+    return flags.clearPrivate().clearProtected().Public();
+  }
+  
+  public static Flags toPrivate(Flags flags) {
+    return flags.clearPublic().clearProtected().Private();
+  }
+  
+  public static Flags toFinal(Flags flags) {
+    return flags.clearAbstract().clearInterface().Final();
+  }
+  
+  public static Flags toInterface(Flags flags) {
+    return flags.clearAbstract().clearFinal().clearPrivate().Interface();
   }
 }

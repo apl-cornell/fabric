@@ -1,15 +1,15 @@
 package tree;
 
 import java.util.Random;
-import diaspora.client.AbortException;
-import diaspora.client.Core;
-import diaspora.client.Client;
+import fabric.client.AbortException;
+import fabric.client.Core;
+import fabric.client.Client;
 
 public class Main {
   public static void main(String[] args) throws AbortException {
     Tree tree = null;
     atomic {
-      Client client = diaspora.client.Client.getClient();
+      Client client = fabric.client.Client.getClient();
       Core treeCore = client.getCore(0L);
       Core nodeCore = client.getCore(1L);
       tree = new Tree@treeCore(nodeCore);
