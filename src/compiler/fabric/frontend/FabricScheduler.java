@@ -65,7 +65,7 @@ public class FabricScheduler extends JLScheduler {
     return g;
   }
 
-  public Goal BarrierForInnerClasses() {
+  public Goal InnerClassConstructorsFixedBarrier() {
     Goal g = internGoal(new Barrier(this) {
       @Override
       public Goal goalForJob(Job job) {
@@ -82,7 +82,7 @@ public class FabricScheduler extends JLScheduler {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
             List<Goal> l = new ArrayList<Goal>();
-            l.add(BarrierForInnerClasses());
+            l.add(InnerClassConstructorsFixedBarrier());
             return l;
           }
         });
