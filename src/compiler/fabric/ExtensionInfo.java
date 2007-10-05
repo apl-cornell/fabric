@@ -38,6 +38,11 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   }
 
   @Override
+  protected Options createOptions() {
+    return new Options(this);
+  }
+
+  @Override
   protected Scheduler createScheduler() {
     return new FabricScheduler(this);
   }
