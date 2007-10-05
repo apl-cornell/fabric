@@ -28,7 +28,6 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
     if (!pr.typeSystem().isFabric(classDecl.type())) return classDecl;
 
     // If already an interface, leave it.
-    // TODO Static fields of interfaces.
     if (classDecl.flags().isInterface()) return classDecl;
 
     NodeFactory nf = pr.nodeFactory();

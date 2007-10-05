@@ -4,6 +4,9 @@ import polyglot.ast.Call;
 import polyglot.ast.Expr;
 import polyglot.ast.Field;
 import polyglot.ast.Receiver;
+import polyglot.types.ClassType;
+import polyglot.types.FieldInstance;
+import polyglot.types.ReferenceType;
 import polyglot.types.Type;
 import fabric.visit.ProxyRewriter;
 
@@ -24,6 +27,13 @@ public class FieldExt_c extends ExprExt_c {
 
     // Only rewrite field accesses on Fabric objects.
     if (!targetType.isArray() && !pr.typeSystem().isFabric(targetType))
+      return super.rewriteProxiesImpl(pr);
+
+    // Don't rewrite if accessing a (static final) field on an interface.
+    FieldInstance fi = field.fieldInstance();
+    ReferenceType container = fi.container();
+    if (container instanceof ClassType
+        && ((ClassType) container).flags().isInterface())
       return super.rewriteProxiesImpl(pr);
 
     Call getter = (Call) pr.qq().parseExpr("get$" + field.id().id() + "()");
