@@ -74,6 +74,7 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
   @SuppressWarnings("unchecked")
   private ClassDecl makeProxy(ProxyRewriter pr, TypeNode superClass) {
     ClassDecl classDecl = node();
+    ClassType superType = (ClassType) superClass.type();
 
     // Rewrite the members.
     ClassBody body = classDecl.body();
@@ -100,8 +101,9 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
 
     // Create the class declaration.
     ClassDecl result =
-        qq.parseDecl("public static class $Proxy extends " + superClass
-            + ".$Proxy implements %T {%LM}", classDecl.type(), members);
+        qq.parseDecl("public static class $Proxy extends "
+            + superType.fullName() + ".$Proxy implements %T {%LM}", classDecl
+            .type(), members);
     return result.type(classDecl.type());
   }
 
@@ -138,7 +140,7 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
         // exist already in a super type. This way, static method dispatching
         // will work correctly.
         if (mi.flags().isStatic()) continue;
-        
+
         String name = mi.name();
         Set<List<Type>> formalTypes = translatedInstances.get(name);
         if (formalTypes == null) {
@@ -186,7 +188,7 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
   @SuppressWarnings("unchecked")
   private ClassMember makeProxyMethod(ProxyRewriter pr, MethodInstance mi) {
     FabricTypeSystem ts = pr.typeSystem();
-    
+
     // The end result will be quasiquoted. Construct the quasiquoted string and
     // list of substitution arguments in tandem.
     StringBuffer methodDecl = new StringBuffer();
@@ -199,7 +201,7 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
 
     Type returnType = mi.returnType();
     if (returnType.isArray()) returnType = ts.toFArray(returnType.toArray());
-    
+
     String name = mi.name();
     methodDecl.append("%T " + name + "(");
     subst.add(returnType);
@@ -212,7 +214,7 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
     for (Type t : formalTypes) {
       methodDecl.append((argCount == 1 ? "" : ", ") + "%T arg" + argCount);
       args.append((argCount == 1 ? "" : ", ") + "arg" + argCount);
-      
+
       if (t.isArray()) t = ts.toFArray(t.toArray());
       subst.add(t);
       argCount++;
@@ -221,7 +223,7 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
     methodDecl.append(") { " + (returnType.isVoid() ? "" : "return "));
 
     // Figure out the call target.
-    String implType = node().type() + ".$Impl";
+    String implType = node().type().fullName() + ".$Impl";
     if (flags.isStatic())
       methodDecl.append(implType);
     else methodDecl.append("((" + implType + ") fetch())");
@@ -239,6 +241,7 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
   @SuppressWarnings("unchecked")
   private ClassDecl makeImpl(ProxyRewriter pr, TypeNode superClass) {
     ClassDecl classDecl = node();
+    ClassType superType = (ClassType) superClass.type();
 
     // The Impl class will be public and static.
     Flags flags = ProxyRewriter.toPublic(classDecl.flags()).Static();
@@ -254,7 +257,7 @@ public class ClassDeclExt_c extends FabricExt_c implements ClassMemberExt {
     // Create the class declaration.
     QQ qq = pr.qq();
     ClassDecl result =
-        qq.parseDecl(flags + " class $Impl extends " + superClass
+        qq.parseDecl(flags + " class $Impl extends " + superType.fullName()
             + ".$Impl implements %T {%LM}", classDecl.type(), members);
     return result.type(classDecl.type());
   }

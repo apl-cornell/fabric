@@ -23,8 +23,8 @@ public class FieldDeclExt_c extends FabricExt_c implements ClassMemberExt {
     FieldDecl fieldDecl = node();
     String fieldName = fieldDecl.name();
 
-    // Make the field non-final and private.
-    Flags fieldFlags = ProxyRewriter.toPrivate(fieldDecl.flags()).clearFinal();
+    // Make the field private.
+    Flags fieldFlags = ProxyRewriter.toPrivate(fieldDecl.flags());
 
     List<ClassMember> result = new ArrayList<ClassMember>();
     for (ClassMember m : accessors(pr))
@@ -64,21 +64,24 @@ public class FieldDeclExt_c extends FabricExt_c implements ClassMemberExt {
     flags = ProxyRewriter.toPublic(flags).clearTransient().clearFinal();
 
     // Figure out the call target for the delegates.
-    String target = "((" + parent.type() + ".$Impl) fetch())";
+    String target = "((" + parent.type().fullName() + ".$Impl) fetch())";
 
     QQ qq = pr.qq();
-    List<ClassMember> result = new ArrayList<ClassMember>(2);
+    List<ClassMember> result = new ArrayList<ClassMember>(4);
     result.add(qq.parseMember(flags + " %T get$" + name + "() {" + "return "
         + target + ".get$" + name + "(); }", type));
-    result.add(qq.parseMember(flags + " %T set$" + name + "(%T val) {"
-        + "return " + target + ".set$" + name + "(val); }", type, type));
 
-    // Add post-incrementer and post-decrementer proxies if type is numeric.
-    if (type.type().isNumeric()) {
-      result.add(qq.parseMember(flags + " %T postInc$" + name + "() {"
-          + "return " + target + ".postInc$" + name + "(); }", type));
-      result.add(qq.parseMember(flags + " %T postDec$" + name + "() {"
-          + "return " + target + ".postDec$" + name + "(); }", type));
+    if (!fieldDecl.flags().isFinal()) {
+      result.add(qq.parseMember(flags + " %T set$" + name + "(%T val) {"
+          + "return " + target + ".set$" + name + "(val); }", type, type));
+
+      // Add post-incrementer and post-decrementer proxies if type is numeric.
+      if (type.type().isNumeric()) {
+        result.add(qq.parseMember(flags + " %T postInc$" + name + "() {"
+            + "return " + target + ".postInc$" + name + "(); }", type));
+        result.add(qq.parseMember(flags + " %T postDec$" + name + "() {"
+            + "return " + target + ".postDec$" + name + "(); }", type));
+      }
     }
 
     return result;
@@ -98,23 +101,27 @@ public class FieldDeclExt_c extends FabricExt_c implements ClassMemberExt {
     String name = fieldDecl.name();
 
     flags = flags.clearTransient().clearFinal();
-    List<ClassMember> members = new ArrayList<ClassMember>();
+    List<ClassMember> members = new ArrayList<ClassMember>(4);
     members.add(qq.parseMember(flags + " %T get$" + name + "() {"
-        + "fabric.client.TransactionManager.INSTANCE" + ".registerRead(this);"
+        + "fabric.client.TransactionManager.INSTANCE.registerRead(this);"
         + "return this." + name + "; }", typeNode));
-    members.add(qq.parseMember(flags + " %T set$" + name + "(%T val) {"
-        + "fabric.client.TransactionManager.INSTANCE" + ".registerWrite(this);"
-        + "return this." + name + " = val; }", typeNode, typeNode));
 
-    // Add post-incrementer and post-decrementer if type is numeric.
-    if (typeNode.type().isNumeric()) {
-      members.add(qq.parseMember(flags + " %T postInc$" + name + "() {"
-          + "%T tmp = this.get$" + name + "();" + "this.set$" + name
-          + "(tmp + 1);" + "return tmp; }", typeNode, typeNode, typeNode));
-      members.add(qq.parseMember(flags + " %T postDec$" + name + "() {"
-          + "%T tmp = this.get$" + name + "();" + "this.set$" + name
-          + "(tmp - 1);" + "return tmp; }", typeNode, typeNode, typeNode));
+    if (!fieldDecl.flags().isFinal()) {
+      members.add(qq.parseMember(flags + " %T set$" + name + "(%T val) {"
+          + "fabric.client.TransactionManager.INSTANCE.registerWrite(this);"
+          + "return this." + name + " = val; }", typeNode, typeNode));
+
+      // Add post-incrementer and post-decrementer if type is numeric.
+      if (typeNode.type().isNumeric()) {
+        members.add(qq.parseMember(flags + " %T postInc$" + name + "() {"
+            + "%T tmp = this.get$" + name + "();" + "this.set$" + name
+            + "(tmp + 1);" + "return tmp; }", typeNode, typeNode, typeNode));
+        members.add(qq.parseMember(flags + " %T postDec$" + name + "() {"
+            + "%T tmp = this.get$" + name + "();" + "this.set$" + name
+            + "(tmp - 1);" + "return tmp; }", typeNode, typeNode, typeNode));
+      }
     }
+
     return members;
   }
 

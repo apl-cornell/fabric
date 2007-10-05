@@ -17,6 +17,12 @@ public class FieldAssignExt_c extends ExprExt_c {
     Receiver target = (Receiver) field.visitChild(field.target(), rewriter);
     String name = ((Id) field.visitChild(field.id(), rewriter)).id();
     Expr rhs = (Expr) field.visitChild(assign.right(), rewriter);
+
+    // If we're assigning to a final field, we must be in a constructor or an
+    // initializer. Keep it as an assignment, since no setters will be
+    // generated.
+    if (field.flags().isFinal()) return assign.right(rhs);
+    
     return rewriter.qq().parseExpr("%E.set$" + name + "(%E)", target, rhs);
   }
 
