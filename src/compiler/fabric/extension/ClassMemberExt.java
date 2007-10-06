@@ -2,14 +2,14 @@ package fabric.extension;
 
 import java.util.List;
 
-import fabric.visit.ProxyRewriter;
-import polyglot.ast.ClassMember;
 import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
+import fabric.visit.ProxyRewriter;
 
 public interface ClassMemberExt extends FabricExt {
   /**
-   * Returns the Proxy translation of the class member. The result is a list of
-   * class members to be included in the Proxy class.
+   * Returns the $Proxy translation of the class member. The result is a list of
+   * class members to be included in the $Proxy class.
    */
   List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent);
 
@@ -20,8 +20,26 @@ public interface ClassMemberExt extends FabricExt {
   List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent);
 
   /**
-   * Returns the Impl translation of the class member. The result is a list of
-   * class members to be included in the Impl class.
+   * Returns the $Impl translation of the class member. The result is a list of
+   * class members to be included in the $Impl class.
    */
   List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent);
+
+  /**
+   * Returns the $Static-interface translation of the class member. The result
+   * is a list of class members to be included in the $Static interface.
+   */
+  List<ClassMember> staticInterfaceMember(ProxyRewriter pr, ClassDecl classDecl);
+
+  /**
+   * Returns the $Static.$Proxy translation of the class member. The result is a
+   * list of class members to be included in the $Static.$Proxy class.
+   */
+  List<ClassMember> staticProxyMember(ProxyRewriter pr, ClassDecl classDecl);
+
+  /**
+   * Returns the $Static.$Impl translation of the class member. The result is a
+   * list of class members to be included in the $Static.$Impl class.
+   */
+  List<ClassMember> staticImplMember(ProxyRewriter pr, ClassDecl classDecl);
 }

@@ -1,3 +1,5 @@
+package regression;
+
 public class Interface02 {
   interface I {
     Interface02 m();

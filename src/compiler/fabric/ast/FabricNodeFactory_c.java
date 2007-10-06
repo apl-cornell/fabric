@@ -93,9 +93,9 @@ public class FabricNodeFactory_c extends NodeFactory_c implements
     return NewArray(pos, base, location, dims, addDims, null);
   }
 
-  @SuppressWarnings("unchecked")
   public final NewArray NewArray(Position pos, TypeNode base, Expr location, int addDims, ArrayInit init) {
-    return NewArray(pos, base, location, Collections.EMPTY_LIST, addDims, init);
+    List<Expr> emptyList = Collections.emptyList();
+    return NewArray(pos, base, location, emptyList, addDims, init);
   }
 
 }

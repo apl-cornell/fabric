@@ -16,7 +16,7 @@ import polyglot.util.Position;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.ProxyRewriter;
 
-public class ConstructorDeclExt_c extends FabricExt_c implements ClassMemberExt {
+public class ConstructorDeclExt_c extends ClassMemberExt_c {
 
   /*
    * (non-Javadoc)
@@ -24,31 +24,12 @@ public class ConstructorDeclExt_c extends FabricExt_c implements ClassMemberExt 
    * @see fabric.extension.ClassMemberExt#implMember(fabric.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
+  @Override
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     // TODO add Core parameters?
     ConstructorDecl node = (ConstructorDecl) node();
     node = node.name("$Impl");
     return Collections.singletonList((ClassMember) node);
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.extension.ClassMemberExt#interfaceMember(fabric.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
-   */
-  public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
-    return Collections.emptyList();
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.extension.ClassMemberExt#proxyMember(fabric.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
-   */
-  public List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent) {
-    return Collections.emptyList();
   }
 
   /*
@@ -63,11 +44,11 @@ public class ConstructorDeclExt_c extends FabricExt_c implements ClassMemberExt 
     // containing class is a Fabric class.
     ConstructorDecl decl = (ConstructorDecl) node();
     FabricTypeSystem ts = pr.typeSystem();
-    
+
     // Ensure that we're translating a Fabric type.
     Type containerType = decl.constructorInstance().container();
     if (!ts.isFabric(containerType)) return decl;
-    
+
     NodeFactory nf = pr.nodeFactory();
     Position pos = Position.compilerGenerated();
     List<Formal> formals = new LinkedList<Formal>(decl.formals());

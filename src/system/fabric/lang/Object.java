@@ -19,7 +19,7 @@ public interface Object {
   Core $getCore();
 
   long $getOnum();
-  
+
   $Proxy $getProxy();
 
   /**
@@ -48,7 +48,7 @@ public interface Object {
       ref = new SoftReference<$Impl>(impl);
     }
 
-    protected $Impl fetch() throws AccessError, UnreachableCoreException {
+    protected final $Impl fetch() throws AccessError, UnreachableCoreException {
       $Impl result = ref.get();
 
       if (result == null) {
@@ -67,7 +67,7 @@ public interface Object {
     public final long $getOnum() {
       return onum;
     }
-    
+
     public final $Proxy $getProxy() {
       return fetch().$getProxy();
     }
@@ -118,7 +118,7 @@ public interface Object {
     }
 
     @Override
-    public $Impl clone() {
+    public final $Impl clone() {
       try {
         return ($Impl) super.clone();
       } catch (Exception e) {
@@ -128,7 +128,7 @@ public interface Object {
 
     /**
      * This is used to restore the state of the object during transaction
-     * rollback. Overriding methods should call
+     * rollback. Subclasses should override this method and call
      * <code>super.copyStateFrom(other)</code>.
      */
     public void $copyStateFrom($Impl other) {
@@ -142,25 +142,58 @@ public interface Object {
       return $onum;
     }
 
-    public $Proxy $getClass() {
+    public final $Proxy $getClass() {
       return $class;
     }
 
-    public Policy $getPolicy() {
+    public final Policy $getPolicy() {
       return $policy;
     }
 
-    public int $getVersion() {
+    public final int $getVersion() {
       return $version;
     }
-    
+
     public final $Proxy $getProxy() {
       if ($proxy == null) $proxy = $makeProxy();
       return $proxy;
     }
 
+    /**
+     * Subclasses should override this method.
+     */
     protected $Proxy $makeProxy() {
       return new $Proxy(this);
+    }
+  }
+
+  /**
+   * $Static objects hold all static state for the class.
+   */
+  public static interface $Static extends Object, Serializable, Cloneable {
+    public static class $Proxy extends Object.$Proxy implements $Static {
+      public $Proxy($Static.$Impl impl) {
+        super(impl);
+      }
+
+      public $Proxy(Core core, long onum) {
+        super(core, onum);
+      }
+    }
+
+    public static class $Impl extends Object.$Impl implements $Static {
+      public $Impl(Core core, Policy policy) throws UnreachableCoreException {
+        super(core, policy);
+      }
+
+      public $Impl(Core core) throws UnreachableCoreException {
+        super(core);
+      }
+
+      @Override
+      protected Object.$Proxy $makeProxy() {
+        return new $Static.$Proxy(this);
+      }
     }
   }
 }
