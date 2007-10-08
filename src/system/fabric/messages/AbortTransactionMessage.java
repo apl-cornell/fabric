@@ -7,7 +7,7 @@ import fabric.core.Worker;
 public class AbortTransactionMessage extends
     Message<AbortTransactionMessage.Response> {
 
-  private static class Response implements Message.Response {
+  public static class Response implements Message.Response {
   }
 
   public final int transactionID;

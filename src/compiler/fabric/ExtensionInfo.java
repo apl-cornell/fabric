@@ -64,8 +64,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
 
   @Override
   public String defaultFileExtension() {
-    // XXX return "fab";
-    return "di";
+    return "fab";
   }
 
   @Override

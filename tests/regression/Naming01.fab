@@ -1,0 +1,10 @@
+package regression;
+
+import fabric.client.*;
+
+public class Naming01 {
+  public static void main(String[] args) {
+    System.out.println(Client.getClient().getCore("cornell.edu"));
+  }
+}
+
