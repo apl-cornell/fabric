@@ -3,7 +3,7 @@
  */
 
 import diaspora.util.*;
-import diaspora.client.*;
+import fabric.client.*;
 
 public class UtilTest {
   public static void main(String[] args) {

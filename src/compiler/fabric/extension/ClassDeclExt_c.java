@@ -218,8 +218,17 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       subst.add(t);
       argCount++;
     }
+    
+    methodDecl.append(") ");
+    
+    // Figure out the throws list.
+    List<Type> throwTypes = mi.throwTypes();
+    if (!throwTypes.isEmpty()) {
+      methodDecl.append("throws %LT ");
+      subst.add(new ArrayList<Type>(throwTypes));
+    }
 
-    methodDecl.append(") { " + (returnType.isVoid() ? "" : "return "));
+    methodDecl.append("{ " + (returnType.isVoid() ? "" : "return "));
 
     // Figure out the call target.
     String implType = node().type().fullName() + ".$Impl";
