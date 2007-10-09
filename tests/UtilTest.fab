@@ -9,6 +9,7 @@ public class UtilTest {
   public static void main(String[] args) {
     Core core = Client.getClient().getCore(0);
     Map map;
+    List list;
     atomic {
       map = new HashMap@core();
       map.put("1", "6");
@@ -27,16 +28,22 @@ public class UtilTest {
     }
 
     atomic {
-      System.out.println(map.get("3"));
-      System.out.println(map.get("8"));
-      System.out.println(map.get("9"));
-      System.out.println(map.get("5"));
-      System.out.println(map.get("2"));
-      System.out.println(map.get("0"));
-      System.out.println(map.get("1"));
-      System.out.println(map.get("7"));
-      System.out.println(map.get("4"));
-      System.out.println(map.get("6"));
+      list = new LinkedList@core();
+      list.add("3");
+      list.add("8");
+      list.add("9");
+      list.add("5");
+      list.add("2");
+      list.add("0");
+      list.add("1");
+      list.add("7");
+      list.add("4");
+      list.add("6");
+    }
+
+    System.out.println("0 through 9 should follow.");
+    for (Iterator it = list.iterator(); it.hasNext(); ) {
+      System.out.println(map.get(it.next()));
     }
   }
 }

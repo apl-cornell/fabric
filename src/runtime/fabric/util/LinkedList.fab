@@ -755,7 +755,7 @@ public class LinkedList extends AbstractSequentialList
   private final class LinkedListItr implements ListIterator
   {
     /** Number of modifications we know about. */
-    private int knownMod = modCount;
+    private int knownMod;
 
     /** Entry that will be returned by next(). */
     private Entry next;
@@ -776,6 +776,7 @@ public class LinkedList extends AbstractSequentialList
      */
     LinkedListItr(int index)
     {
+      knownMod = modCount;
       if (index == size)
         {
           next = null;
