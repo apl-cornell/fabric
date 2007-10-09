@@ -188,8 +188,12 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
 
     if (!fieldDecl.flags().isFinal()) {
       members.add(qq.parseMember(flags + " %T set$" + name + "(%T val) {"
-          + "fabric.client.TransactionManager.INSTANCE.registerWrite(this);"
-          + "return this." + name + " = val; }", typeNode, typeNode));
+          + "fabric.client.TransactionManager tm = "
+          + "fabric.client.TransactionManager.INSTANCE;"
+          + "boolean transactionCreated = tm.registerWrite(this);"
+          + "this." + name + " = val;"
+          + "if (transactionCreated) tm.commitTransaction();"
+          + "return val; }", typeNode, typeNode));
 
       // Add post-incrementer and post-decrementer if type is numeric.
       if (typeNode.type().isNumeric()) {

@@ -228,11 +228,29 @@ public final class TransactionManager {
     curFrame = null;
   }
 
+  /**
+   * Determines whether there is a transaction running.
+   */
+  public boolean inTransaction() {
+    return curFrame != null;
+  }
+
   public void registerCreate($Impl obj) {
+    // If we're not in a transaction, start one just for the object creation.
+    boolean needTransaction = !inTransaction();
+    if (needTransaction) startTransaction();
+
+    // Register the object creation.
     curFrame.creates.put(obj.$getCore(), obj.$getOnum(), obj);
+
+    // Commit if we started a transaction for the object creation.
+    if (needTransaction) commitTransaction();
   }
 
   public void registerRead($Impl obj) throws VersionConflictException {
+    // Nothing to do if we're not in a transaction.
+    if (!inTransaction()) return;
+
     Core core = obj.$getCore();
     long onum = obj.$getOnum();
     if (curFrame.reads.containsKey(core, onum)
@@ -244,19 +262,27 @@ public final class TransactionManager {
 
   /**
    * This should be called <i>before</i> the object is modified.
+   * 
+   * @return whether a new (top-level) transaction was created.
    */
-  public void registerWrite($Impl obj) {
+  public boolean registerWrite($Impl obj) {
+    // Ensure that we're running in a transaction.
+    boolean needTransaction = !inTransaction();
+    if (needTransaction) startTransaction();
+    
     // Make sure the object hasn't already been modified or created during the
     // current transaction.
     Core core = obj.$getCore();
     long onum = obj.$getOnum();
 
     if (curFrame.creates.containsKey(core, onum)
-        || curFrame.writes.containsKey(core, onum)) return;
+        || curFrame.writes.containsKey(core, onum)) return needTransaction;
 
     // First time modifying the object. Save a copy of the object and a pointer
     // to the actual working copy of the object.
     curFrame.writes.put(core, onum, new Pair<$Impl, $Impl>(obj.clone(), obj));
+    
+    return needTransaction;
   }
 
   public void startTransaction() {
