@@ -1,6 +1,7 @@
 package fabric.core;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -13,6 +14,7 @@ import javax.net.ssl.*;
 
 
 import fabric.common.InternalError;
+import fabric.common.Resources;
 
 // TODO implement dissemination nodes
 public class Node {
@@ -35,12 +37,34 @@ public class Node {
 
     for (long coreid : opts.coreIDs) {
       try {
+        ObjectStore core = loadCore(coreid);
         // XXX using an empty memory store for each core
-        addCore(coreid, new TransactionManager(new MemoryStore()));
+        addCore(coreid, new TransactionManager(core));
       } catch (DuplicateCoreException e) {
         // Should never happen.
       }
     }
+  }
+
+  private ObjectStore loadCore(long coreid) {
+    // see if a file exists containing the core
+    try {
+      InputStream in = Resources.readFile("var", Long.toString(coreid));
+      ObjectStore os = new MemoryStore(in);
+      return os;
+    } catch (Exception exc) {
+      // continue
+    }
+    
+    try {
+      InputStream in = Resources.readFile("var", "skel");
+      ObjectStore os = new MemoryStore(in);
+      return os;
+    } catch (Exception exc) {
+      // create empty store
+      throw new InternalError("could not initialize core", exc);
+    }
+    
   }
 
   /**

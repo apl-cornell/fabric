@@ -1,5 +1,10 @@
 package fabric.core;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.security.Principal;
 import java.util.*;
 
@@ -20,13 +25,24 @@ class MemoryStore implements ObjectStore {
 
   private static final long LEASE_LENGTH = 300000L; // 5 minutes
 
-  public MemoryStore() {
-    this.objectTable = new HashMap<Long, SerializedObject>();
+  private MemoryStore() {
     this.leaseCleaner = new Timer();
     this.leaseTable = new HashMap<Long, Principal>();
     this.rand = new Random();
   }
 
+  @SuppressWarnings("unchecked")
+  public MemoryStore(InputStream in) throws IOException, ClassNotFoundException {
+    this();
+    ObjectInputStream oin = new ObjectInputStream(in);
+    this.objectTable = (Map<Long,SerializedObject>) oin.readObject();    
+  }
+  
+  public void dump(OutputStream out) throws IOException {
+    ObjectOutputStream oout = new ObjectOutputStream(out);
+    oout.writeObject(this.objectTable);
+  }
+   
   /*
    * (non-Javadoc)
    * 
