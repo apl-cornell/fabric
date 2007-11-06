@@ -90,6 +90,11 @@ public class FabricExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
+  protected Ext extInitializerImpl() {
+    return new InitializerExt_c();
+  }
+
+  @Override
   protected Ext extMethodDeclImpl() {
     return new MethodDeclExt_c();
   }
