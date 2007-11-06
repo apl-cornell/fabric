@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BenchmarkImpl.fab,v 1.2 2007-11-06 03:28:01 mdgeorge Exp $
+// $Id: BenchmarkImpl.fab,v 1.3 2007-11-06 17:45:59 mdgeorge Exp $
 
 package OO7;
 
@@ -15,30 +15,32 @@ import java.util.Random;
 import java.util.HashMap;
 
 import fabric.client.Core;
+import fabric.client.Client;
 
 public class BenchmarkImpl implements Benchmark {
   // data base parameters
-  private final static int fTest1Conn = 0;
-  private final static int fTest3Conn = 1;
-  private final static int fTiny = 2;
-  private final static int fSmall = 3;
+  private final static int fTest3Conn = 0;
+  private final static int fTest1Conn = 1;
+  private final static int fSmall     = 2;
+  private final static int fTiny      = 3;
 
-  private final static int[] fNumAtomicPerComp = { 20, 20, 20, 20 };
-  private final static int[] fConnPerAtomic = { 1, 3, 3, 3 };
-  private final static int[] fDocumentSize = { 20, 20, 20, 2000 };
-  private final static int[] fManualSize = { 1000, 1000, 1000, 100000 };
-  private final static int[] fNumCompPerModule = { 5, 5, 50, 500 };
-  private final static int[] fNumAssmPerAssm = { 3, 3, 3, 3 };
-  private final static int[] fNumAssmLevels = { 3, 3, 7, 7 };
-  private final static int[] fNumCompPerAssm = { 3, 3, 3, 3 };
-  private final static int[] fNumModules = { 1, 1, 1, 1 };
-  
+  private final static Core local = Client.getClient().getLocalCore();
+  private final static int[] fNumAtomicPerComp = new int[]@local { 20, 20, 20, 20 };
+  private final static int[] fConnPerAtomic    = new int[]@local { 1, 3, 3, 3 };
+  private final static int[] fDocumentSize     = new int[]@local { 20, 20, 20, 2000 };
+  private final static int[] fManualSize       = new int[]@local { 1000, 1000, 1000, 100000 };
+  private final static int[] fNumCompPerModule = new int[]@local { 5, 5, 50, 500 };
+  private final static int[] fNumAssmPerAssm   = new int[]@local { 3, 3, 3, 3 };
+  private final static int[] fNumAssmLevels    = new int[]@local { 3, 3, 7, 7 };
+  private final static int[] fNumCompPerAssm   = new int[]@local { 3, 3, 3, 3 };
+  private final static int[] fNumModules       = new int[]@local { 1, 1, 1, 1 };
+
   private final static String database = "OO7 Database";
 
   private static final Random rand = new Random();
 
-  int     scale  = 0;
-  Module  module = null;
+  int scale = 0;
+  Module module = null;
   HashMap atomicParts = null;
 
   public static void main(String[] args) {
@@ -106,31 +108,30 @@ public class BenchmarkImpl implements Benchmark {
     System.out.println("        type        - (traversal|match)");
   }
 
-	//////////////////////////////////////////////////////////////////////////////
-	// Database traversals                                                      //
-	//////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+  // Database traversals                                                      //
+  //////////////////////////////////////////////////////////////////////////////
 
   public void traversalQuery() throws Exception {
-    HashMap table = new HashMap();
+    Core local = Client.getClient().getLocalCore();
+    HashMap table = new HashMap@local();
     long time = System.currentTimeMillis();
     traversal(module.designRoot(), table);
     time = (System.currentTimeMillis() - time);
     System.out.println("Millis: " + time);
   }
 
-  protected void traversal(Assembly current, HashMap visited)
-      throws Exception {
+  protected void traversal(Assembly current, HashMap visited) throws Exception {
     if (current instanceof BaseAssembly) {
       BaseAssembly baseAssembly = (BaseAssembly) current;
 
       Iterator iter = baseAssembly.componentsShar().iterator();
       while (iter.hasNext()) {
-				CompositePart next = (CompositePart) iter.next();
-				if (visited.containsKey(next))
-					continue;
+        CompositePart next = (CompositePart) iter.next();
+        if (visited.containsKey(next)) continue;
         dfs(next);
-				visited.put(next, next);
-			}
+        visited.put(next, next);
+      }
 
     } else if (current instanceof ComplexAssembly) {
       ComplexAssembly complexAssembly = (ComplexAssembly) current;
@@ -139,16 +140,16 @@ public class BenchmarkImpl implements Benchmark {
       while (iter.hasNext())
         traversal((Assembly) iter.next(), visited);
     } else {
-			throw new Exception("Invalid Assembly");
-		}
+      throw new Exception("Invalid Assembly");
+    }
   }
 
-	protected void dfs(CompositePart root) throws Exception {
-		dfsVisit(root.rootPart(), new HashMap());
-	}
+  protected void dfs(CompositePart root) throws Exception {
+    Core local = Client.getClient().getLocalCore();
+    dfsVisit(root.rootPart(), new HashMap@local());
+  }
 
-  protected void dfsVisit(AtomicPart current, HashMap visited)
-      throws Exception {
+  protected void dfsVisit(AtomicPart current, HashMap visited) throws Exception {
 
     Iterator iter = current.from().iterator();
     while (iter.hasNext()) {
@@ -163,62 +164,68 @@ public class BenchmarkImpl implements Benchmark {
 
   public void matchQuery() throws Exception {
     // generate a random list of objects to fetch
-		int[] oids = new int[1000];
+    Core local = Client.getClient().getLocalCore();
+    int[] oids = new int[1000]@local;
     for (int i = 0; i < oids.length; ++i)
       oids[i] = rand.nextInt(atomicParts.size());
 
     // access each
     long time = System.currentTimeMillis();
     for (int i = 0; i < oids.length; ++i) {
-      AtomicPart part = (AtomicPart) atomicParts.get(new Integer(i));
+      AtomicPart part = (AtomicPart) atomicParts.get(new Integer@local(i));
       long x = part.x();
     }
     time = (System.currentTimeMillis() - time);
     System.out.println("Millis: " + time);
   }
 
-	//////////////////////////////////////////////////////////////////////////////
-	// Database creation                                                        //
-	//////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+  // Database creation                                                        //
+  //////////////////////////////////////////////////////////////////////////////
 
   public BenchmarkImpl(int scale) throws Exception {
-    this.scale       = scale;
-		this.atomicParts = new HashMap();
-    this.module      = createModule();
+    this.scale = scale;
+    Core local = Client.getClient().getLocalCore();
+    this.atomicParts = new HashMap@local();
+    this.module = createModule();
   }
 
   protected Module createModule() throws Exception {
-    CompositePart[] compositeParts = new CompositePart[fNumCompPerModule[scale]];
+    Core local = Client.getClient().getLocalCore();
+    CompositePart[] compositeParts =
+        new CompositePart[fNumCompPerModule[scale]]@local;
     for (int i = 0; i < fNumCompPerModule[scale]; ++i)
       compositeParts[i] = createCompositePart();
 
     Module module = new ModuleImpl();
     ComplexAssembly designRoot =
-			(ComplexAssembly) createAssembly(module, fNumAssmLevels[scale], compositeParts);
+        (ComplexAssembly) createAssembly(module, fNumAssmLevels[scale],
+            compositeParts);
     module.setDesignRoot(designRoot);
 
     return module;
   }
 
   protected CompositePart createCompositePart() throws Exception {
+    Core local = Client.getClient().getLocalCore();
     CompositePart compositePart = new CompositePartImpl();
     compositePart.setDocumentation(new DocumentImpl());
 
-		AtomicPart[] parts = new AtomicPart[fNumAtomicPerComp[scale]];
-    for (int i = 0; i < parts.length; ++i)
-		{
-			parts[i] = createAtomicPart(compositePart);
+    AtomicPart[] parts = new AtomicPart[fNumAtomicPerComp[scale]]@local;
+    for (int i = 0; i < parts.length; ++i) {
+      parts[i] = createAtomicPart(compositePart);
       compositePart.addPart(parts[i]);
-		}
+    }
     compositePart.setRootPart(parts[0]);
 
     for (int i = 0; i < parts.length; ++i) {
-			// Add a connection to i's neighbor
-      new ConnectionImpl(parts[i], parts[(i + 1) % parts.length]);
+      // Add a connection to i's neighbor
+      Connection c =
+          new ConnectionImpl(parts[i], parts[(i + 1) % parts.length]);
 
-			// add random connections
+      // add random connections
       for (int j = 0; j < (fConnPerAtomic[scale] - 1); ++j) {
-				new ConnectionImpl(parts[i], parts[rand.nextInt(parts.length)]);
+        c = new ConnectionImpl(parts[i], parts[rand.nextInt(parts.length)]);
       }
     }
 
@@ -226,32 +233,38 @@ public class BenchmarkImpl implements Benchmark {
   }
 
   protected AtomicPart createAtomicPart(CompositePart parent) throws Exception {
-		AtomicPart result = new AtomicPartImpl();
-		atomicParts.put(new Integer(atomicParts.size()), result);
-		result.setPartOf(parent);
-		return result;
-	}
+    AtomicPart result = new AtomicPartImpl();
+    atomicParts.put(new Integer(atomicParts.size()), result);
+    result.setPartOf(parent);
+    return result;
+  }
 
-  protected Assembly createAssembly(Module parent, int level, CompositePart[] available) throws Exception {
-		if (level == 1) {
-			// create base assembly
-			BaseAssembly result = new BaseAssemblyImpl();
-			parent.addAssembly(result);
+  protected Assembly createAssembly(Module parent, int level,
+      CompositePart[] available) throws Exception {
+    if (level == 1) {
+      // create base assembly
+      BaseAssembly result = new BaseAssemblyImpl();
+      parent.addAssembly(result);
 
-			for (int j = 0; j < fNumCompPerAssm[scale]; ++j) {
-				int k = rand.nextInt(available.length);
-				result.addComponentsShar(available[k]);
-			}
+      for (int j = 0; j < fNumCompPerAssm[scale]; ++j) {
+        int k = rand.nextInt(available.length);
+        result.addComponentsShar(available[k]);
+      }
 
-			return result;
-		} else {
-			// create complex assembly
-			ComplexAssembly result = new ComplexAssemblyImpl();
-			parent.addAssembly(result);
+      return result;
+    } else {
+      // create complex assembly
+      ComplexAssembly result = new ComplexAssemblyImpl();
+      parent.addAssembly(result);
 
-			for (int i = 0; i < fNumAssmPerAssm[scale]; ++i)
-				result.addSubAssembly(createAssembly(parent, level - 1, available));
-			return result;
-		}
+      for (int i = 0; i < fNumAssmPerAssm[scale]; ++i)
+        result.addSubAssembly(createAssembly(parent, level - 1, available));
+      return result;
+    }
   }
 }
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+
