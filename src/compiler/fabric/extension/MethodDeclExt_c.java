@@ -40,8 +40,8 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     // Don't include static methods in interfaces.
     if (flags.isStatic()) return Collections.emptyList();
 
-    // Interface methods must be public and cannot be final.
-    flags = ProxyRewriter.toPublic(flags).clearFinal();
+    // Interface methods must be public and cannot be final nor synchronized.
+    flags = ProxyRewriter.toPublic(flags).clearFinal().clearSynchronized();
 
     // Clear out the method body.
     ClassMember result = (ClassMember) methodDecl.flags(flags).body(null);
