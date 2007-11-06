@@ -71,6 +71,22 @@ public interface Object {
     public final $Proxy $getProxy() {
       return fetch().$getProxy();
     }
+    
+    /**
+     * A delegate for the default equals implementation.
+     */
+    @Override
+    public boolean equals(java.lang.Object arg1) {
+      return fetch().equals(arg1);
+    }
+    
+    /**
+     * A delegate for the default hashcode implementation.
+     */
+    @Override
+    public int hashCode() {
+      return fetch().hashCode();
+    }
   }
 
   /**
@@ -124,6 +140,24 @@ public interface Object {
       } catch (Exception e) {
         throw new InternalError(e);
       }
+    }
+    
+    /**
+     * Default equals implementation uses pointer equality.
+     */
+    @Override
+    public boolean equals(java.lang.Object o) {
+      if (!(o instanceof Object)) return false;
+      Object fobj = (Object) o;
+      return fobj.$getCore().equals($getCore()) && fobj.$getOnum() == $getOnum();
+    }
+    
+    /**
+     * Default hashCode implementation uses the OID to compute the hash value.
+     */
+    @Override
+    public int hashCode() {
+      return (int) ($getCore().hashCode() ^ $getOnum());
     }
 
     /**
