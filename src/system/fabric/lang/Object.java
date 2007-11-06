@@ -94,8 +94,8 @@ public interface Object {
    * evicted from memory.
    */
   public static class $Impl implements Object, Serializable, Cloneable {
-    private final Core $core;
-    private final long $onum;
+    private Core $core;
+    private long $onum;
     private transient $Proxy $proxy;
 
     /**
@@ -131,6 +131,20 @@ public interface Object {
 
       // Register the new object with the transaction manager.
       TransactionManager.INSTANCE.registerCreate(this);
+    }
+    
+    /**
+     * Create an $Impl with the given object number
+     * 
+     * @deprecated this should only be called to create the root object. It does
+     *             not contact the core and thus any attempt to commit this
+     *             object will fail.
+     */
+    public $Impl(Core core, long onum) {
+      this.$core = core;
+      this.$onum = onum;
+      this.$version = 0;
+      this.$policy  = new ACLPolicy();
     }
 
     @Override
@@ -198,6 +212,17 @@ public interface Object {
      */
     protected $Proxy $makeProxy() {
       return new $Proxy(this);
+    }
+    
+    /**
+     * This method changes the core and onum of the object. This method should
+     * not be called as it leaves the system in an inconsistent state.
+     * 
+     * @deprecated
+     */
+    public final void $forceRelocate(Core c, long onum) {
+      this.$core = c;
+      this.$onum = onum;
     }
   }
 

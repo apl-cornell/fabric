@@ -54,17 +54,8 @@ public class Node {
       return os;
     } catch (Exception exc) {
       // continue
-    }
-    
-    try {
-      InputStream in = Resources.readFile("var", "skel");
-      ObjectStore os = new MemoryStore(in);
-      return os;
-    } catch (Exception exc) {
-      // create empty store
       throw new InternalError("could not initialize core", exc);
     }
-    
   }
 
   /**
