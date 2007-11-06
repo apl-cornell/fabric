@@ -6,13 +6,13 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BenchmarkImpl.fab,v 1.1 2007-10-08 21:01:21 jed Exp $
+// $Id: BenchmarkImpl.fab,v 1.2 2007-11-06 03:28:01 mdgeorge Exp $
 
 package OO7;
 
 import fabric.util.*;
 import java.util.Random;
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import fabric.client.Core;
 
@@ -32,16 +32,14 @@ public class BenchmarkImpl implements Benchmark {
   private final static int[] fNumAssmLevels = { 3, 3, 7, 7 };
   private final static int[] fNumCompPerAssm = { 3, 3, 3, 3 };
   private final static int[] fNumModules = { 1, 1, 1, 1 };
+  
+  private final static String database = "OO7 Database";
 
-  final static boolean verbose = false;
+  private static final Random rand = new Random();
 
-  static Random theRandom = null;
-
-  int theScale = 0;
-
-  long theOid = 0;
-
-  Module theModule = null;
+  int     scale  = 0;
+  Module  module = null;
+  HashMap atomicParts = null;
 
   public static void main(String[] args) {
     if (args.length == 0) {
@@ -57,21 +55,19 @@ public class BenchmarkImpl implements Benchmark {
     try {
       long start = System.currentTimeMillis();
 
+      Core    core = fabric.client.Client.getClient().getCore(0);
+      HashMap root = (HashMap) core.getRoot();
+      
       if (args[0].equals("query")) {
+        Benchmark anBenchmark = (Benchmark) root.get(database);
         if (args[1].equals("traversal")) {
-          // XXX assume benchmark object exists at OID 7.
-          // XXX should really be looking up a human-readable name in a name service 
-          Benchmark anBenchmark =
-              (Benchmark) fabric.client.Client.getClient().getCore(0).readObject(7);
           anBenchmark.traversalQuery();
+        } else if (args[1].equals("match")) {
+          anBenchmark.matchQuery();
         } else {
-          if (args[1].equals("match")) {
-            // XXX assume benchmark object exists at OID 7.
-            // XXX should really be looking up a human-readable name in a name service 
-            Benchmark anBenchmark =
-              (Benchmark) fabric.client.Client.getClient().getCore(0).readObject(7);
-            anBenchmark.matchQuery();
-          }
+          System.out.println("Invalid query");
+          printUsage();
+          System.exit(1);
         }
       } else {
         if (args[0].equals("create")) {
@@ -88,10 +84,8 @@ public class BenchmarkImpl implements Benchmark {
             System.out.println("Invalid scale");
             System.exit(1);
           }
-          fabric.client.Core core = fabric.client.Client.getClient().getCore(0); 
-          Benchmark anBenchmark =
-            new BenchmarkImpl@core();
-          anBenchmark.create(scale);
+          Benchmark bench = new BenchmarkImpl@core(scale);
+          root.put("OO7 Benchmark", bench);
         }
       }
 
@@ -112,197 +106,152 @@ public class BenchmarkImpl implements Benchmark {
     System.out.println("        type        - (traversal|match)");
   }
 
-  static int getRandomInt(int lower, int upper) {
-    if (theRandom == null) {
-      theRandom = new Random();
-    }
-
-    int rVal;
-    do {
-      rVal = theRandom.nextInt();
-      rVal %= upper;
-      // System.out.println("rVal: " + rVal + " lower: " + lower + " upper: " +
-      // upper);
-    } while (rVal < lower || rVal >= upper);
-    return rVal;
-  }
-
-  protected long getAtomicPartOid() {
-    return theOid++;
-  }
-
-  public void create(int anScale) throws Exception {
-    theScale = anScale;
-    theModule = createModule();
-  }
+	//////////////////////////////////////////////////////////////////////////////
+	// Database traversals                                                      //
+	//////////////////////////////////////////////////////////////////////////////
 
   public void traversalQuery() throws Exception {
-    Hashtable table = new Hashtable();
+    HashMap table = new HashMap();
     long time = System.currentTimeMillis();
-    traversal(theModule.designRoot(), table);
+    traversal(module.designRoot(), table);
     time = (System.currentTimeMillis() - time);
     System.out.println("Millis: " + time);
   }
 
-  protected void traversal(Assembly anAssembly, Hashtable aTable)
+  protected void traversal(Assembly current, HashMap visited)
       throws Exception {
-    if (anAssembly.getClass() == Class.forName("BaseAssemblyImpl_Proxy")) {
-      // System.out.println( "Base Assembly Class: " );
-      BaseAssembly baseAssembly = (BaseAssembly) anAssembly;
-      Iterator compIterator = baseAssembly.componentsShar().iterator();
-      while (compIterator.next() != null) {
-        CompositePart compositePart =
-            (CompositePart) compIterator.object();
-        dfs(compositePart);
-      }
+    if (current instanceof BaseAssembly) {
+      BaseAssembly baseAssembly = (BaseAssembly) current;
+
+      Iterator iter = baseAssembly.componentsShar().iterator();
+      while (iter.hasNext()) {
+				CompositePart next = (CompositePart) iter.next();
+				if (visited.containsKey(next))
+					continue;
+        dfs(next);
+				visited.put(next, next);
+			}
+
+    } else if (current instanceof ComplexAssembly) {
+      ComplexAssembly complexAssembly = (ComplexAssembly) current;
+
+      Iterator iter = complexAssembly.subAssemblies().iterator();
+      while (iter.hasNext())
+        traversal((Assembly) iter.next(), visited);
     } else {
-      ComplexAssembly complexAssembly = (ComplexAssembly) anAssembly;
-      Iterator aIterator = complexAssembly.subAssemblies().iterator();
-      while (aIterator.next() != null) {
-        traversal((Assembly) aIterator.object(), aTable);
-      }
-    }
+			throw new Exception("Invalid Assembly");
+		}
   }
 
-  protected void dfs(CompositePart aPart) throws Exception {
-    Hashtable table = new Hashtable();
-    dfsVisit(aPart.rootPart(), table);
-    // System.out.println( "AtomicParts visited: " + table.size() );
-  }
+	protected void dfs(CompositePart root) throws Exception {
+		dfsVisit(root.rootPart(), new HashMap());
+	}
 
-  protected void dfsVisit(AtomicPart anAtomicPart, Hashtable aTable)
+  protected void dfsVisit(AtomicPart current, HashMap visited)
       throws Exception {
-    Iterator connIterator = anAtomicPart.from().iterator();
-    while (connIterator.next() != null) {
-      Connection connection = (Connection) connIterator.object();
+
+    Iterator iter = current.from().iterator();
+    while (iter.hasNext()) {
+      Connection connection = (Connection) iter.next();
       AtomicPart part = connection.to();
-      if (!aTable.containsKey(part)) {
-        aTable.put(part, part);
-        dfsVisit(part, aTable);
+      if (!visited.containsKey(part)) {
+        visited.put(part, part);
+        dfsVisit(part, visited);
       }
     }
   }
 
   public void matchQuery() throws Exception {
-    int atomicParts = fNumAtomicPerComp[theScale] * fNumCompPerModule[theScale];
-    long[] oids = new long[1000];
-    int i;
-    for (i = 0; i < oids.length; ++i) {
-      oids[i] = getRandomInt(0, atomicParts);
-      // System.out.println( "oids[" + i + "] : " + oids[i] );
-    }
+    // generate a random list of objects to fetch
+		int[] oids = new int[1000];
+    for (int i = 0; i < oids.length; ++i)
+      oids[i] = rand.nextInt(atomicParts.size());
+
+    // access each
     long time = System.currentTimeMillis();
-    for (i = 0; i < oids.length; ++i) {
-      AtomicPart part =
-          (AtomicPart) database().objectForName("AtomicPart" + oids[i]);
+    for (int i = 0; i < oids.length; ++i) {
+      AtomicPart part = (AtomicPart) atomicParts.get(new Integer(i));
       long x = part.x();
     }
     time = (System.currentTimeMillis() - time);
     System.out.println("Millis: " + time);
   }
 
+	//////////////////////////////////////////////////////////////////////////////
+	// Database creation                                                        //
+	//////////////////////////////////////////////////////////////////////////////
+
+  public BenchmarkImpl(int scale) throws Exception {
+    this.scale       = scale;
+		this.atomicParts = new HashMap();
+    this.module      = createModule();
+  }
+
   protected Module createModule() throws Exception {
-    CompositePart[] compositeParts =
-        new CompositePart[fNumCompPerModule[theScale]];
-    for (int i = 0; i < fNumCompPerModule[theScale]; ++i) {
+    CompositePart[] compositeParts = new CompositePart[fNumCompPerModule[scale]];
+    for (int i = 0; i < fNumCompPerModule[scale]; ++i)
       compositeParts[i] = createCompositePart();
-    }
-    Module module =
-        (Module) database().createObject(ModuleImpl.class.getName(), 0,
-            "Module");
+
+    Module module = new ModuleImpl();
     ComplexAssembly designRoot =
-        (ComplexAssembly) createAssembly(module, fNumAssmLevels[theScale],
-            compositeParts);
+			(ComplexAssembly) createAssembly(module, fNumAssmLevels[scale], compositeParts);
     module.setDesignRoot(designRoot);
 
     return module;
   }
 
   protected CompositePart createCompositePart() throws Exception {
-    // Document erzeugen
-    Document document =
-        (Document) database().createObject(
-            DocumentImpl.class.getName(), 0);
-    // CompositeParterzeugen
-    CompositePart compositePart =
-        (CompositePart) database().createObject(
-            CompositePartImpl.class.getName(), 0);
-    if (verbose) {
-      System.out.println("CompositePart created");
-    }
-    compositePart.setDocumentation(document);
+    CompositePart compositePart = new CompositePartImpl();
+    compositePart.setDocumentation(new DocumentImpl());
 
-    AtomicPart[] atomicParts =
-        new AtomicPart[fNumAtomicPerComp[theScale]];
-    // AtomicParts erzeugen
-    for (int i = 0; i < fNumAtomicPerComp[theScale]; ++i) {
-      long oid = getAtomicPartOid();
-      atomicParts[i] =
-          (AtomicPart) database().createObject(
-              AtomicPartImpl.class.getName(), 0, "AtomicPart" + oid);
-      if (verbose) {
-        System.out.println("AtomicPart: " + oid + " created");
-      }
-      compositePart.addPart(atomicParts[i]);
-      atomicParts[i].setPartOf(compositePart);
-    }
-    compositePart.setRootPart(atomicParts[0]);
+		AtomicPart[] parts = new AtomicPart[fNumAtomicPerComp[scale]];
+    for (int i = 0; i < parts.length; ++i)
+		{
+			parts[i] = createAtomicPart(compositePart);
+      compositePart.addPart(parts[i]);
+		}
+    compositePart.setRootPart(parts[0]);
 
-    // AtomicParts miteinander verbinden
-    for (int i = 0; i < fNumAtomicPerComp[theScale]; ++i) {
-      int next = (i + 1) % fNumAtomicPerComp[theScale];
-      Connection connection =
-          (Connection) database().createObject(
-              ConnectionImpl.class.getName(), 0);
-      connection.setFrom(atomicParts[i]);
-      atomicParts[i].addFrom(connection);
-      connection.setTo(atomicParts[next]);
-      atomicParts[next].addTo(connection);
-      if (verbose) {
-        System.out.println("Connection: from: " + i + " to: " + next);
-      }
-      for (int j = 0; j < (fConnPerAtomic[theScale] - 1); ++j) {
-        next = getRandomInt(0, fNumAtomicPerComp[theScale]);
-        connection =
-            (Connection) database().createObject(
-                ConnectionImpl.class.getName(), 0);
-        connection.setFrom(atomicParts[j]);
-        atomicParts[j].addFrom(connection);
-        connection.setTo(atomicParts[next]);
-        atomicParts[next].addTo(connection);
-        if (verbose) {
-          System.out.println("Connection: from: " + j + " to: " + next);
-        }
+    for (int i = 0; i < parts.length; ++i) {
+			// Add a connection to i's neighbor
+      new ConnectionImpl(parts[i], parts[(i + 1) % parts.length]);
+
+			// add random connections
+      for (int j = 0; j < (fConnPerAtomic[scale] - 1); ++j) {
+				new ConnectionImpl(parts[i], parts[rand.nextInt(parts.length)]);
       }
     }
+
     return compositePart;
   }
 
-  protected Assembly createAssembly(Module aModule, int aLevel,
-      CompositePart[] someCompositeParts) throws Exception {
-    if (verbose) {
-      System.out.println("level: " + aLevel);
-    }
-    if (aLevel == 1) {
-      BaseAssembly baseAssembly =
-          (BaseAssembly) database().createObject(
-              BaseAssemblyImpl.class.getName(), 0);
-      aModule.addAssembly(baseAssembly);
-      for (int j = 0; j < fNumCompPerAssm[theScale]; ++j) {
-        int k = getRandomInt(0, fNumCompPerModule[theScale]);
-        baseAssembly.addComponentsShar(someCompositeParts[k]);
-      }
-      return baseAssembly;
-    } else {
-      ComplexAssembly complexAssembly =
-          (ComplexAssembly) database().createObject(
-              ComplexAssemblyImpl.class.getName(), 0);
-      aModule.addAssembly(complexAssembly);
-      for (int i = 0; i < fNumAssmPerAssm[theScale]; ++i) {
-        complexAssembly.addSubAssembly(createAssembly(aModule, aLevel - 1,
-            someCompositeParts));
-      }
-      return complexAssembly;
-    }
+  protected AtomicPart createAtomicPart(CompositePart parent) throws Exception {
+		AtomicPart result = new AtomicPartImpl();
+		atomicParts.put(new Integer(atomicParts.size()), result);
+		result.setPartOf(parent);
+		return result;
+	}
+
+  protected Assembly createAssembly(Module parent, int level, CompositePart[] available) throws Exception {
+		if (level == 1) {
+			// create base assembly
+			BaseAssembly result = new BaseAssemblyImpl();
+			parent.addAssembly(result);
+
+			for (int j = 0; j < fNumCompPerAssm[scale]; ++j) {
+				int k = rand.nextInt(available.length);
+				result.addComponentsShar(available[k]);
+			}
+
+			return result;
+		} else {
+			// create complex assembly
+			ComplexAssembly result = new ComplexAssemblyImpl();
+			parent.addAssembly(result);
+
+			for (int i = 0; i < fNumAssmPerAssm[scale]; ++i)
+				result.addSubAssembly(createAssembly(parent, level - 1, available));
+			return result;
+		}
   }
 }
