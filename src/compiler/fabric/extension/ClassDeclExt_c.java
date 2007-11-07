@@ -15,6 +15,26 @@ import fabric.visit.ProxyRewriter;
 public class ClassDeclExt_c extends ClassMemberExt_c {
 
   /**
+   * A flag for determining whether the class's type information should be
+   * serialized.
+   */
+  protected boolean shouldSerializeType;
+
+  public ClassDeclExt_c() {
+    shouldSerializeType = false;
+  }
+
+  public boolean shouldSerializeType() {
+    return shouldSerializeType;
+  }
+
+  public ClassDeclExt_c shouldSerializeType(boolean shouldSerializeType) {
+    ClassDeclExt_c result = (ClassDeclExt_c) copy();
+    result.shouldSerializeType = shouldSerializeType;
+    return result;
+  }
+
+  /**
    * Returns the interface translation of the class declaration.
    * 
    * @see fabric.extension.FabricExt_c#rewriteProxies(fabric.visit.ProxyRewriter)
@@ -46,6 +66,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     interfaces.add(superClass);
     ClassDecl result = classDecl.interfaces(interfaces);
     result = result.superClass(null);
+
+    // Tag the interface's ClassType for serialization.
+    result = (ClassDecl) result.ext(shouldSerializeType(true));
 
     // We're generating an interface.
     Flags flags = ProxyRewriter.toInterface(classDecl.flags());
@@ -218,9 +241,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       subst.add(t);
       argCount++;
     }
-    
+
     methodDecl.append(") ");
-    
+
     // Figure out the throws list.
     List<Type> throwTypes = mi.throwTypes();
     if (!throwTypes.isEmpty()) {

@@ -2,8 +2,10 @@ package fabric.frontend;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
+import polyglot.ast.NodeFactory;
 import polyglot.frontend.JLScheduler;
 import polyglot.frontend.Job;
 import polyglot.frontend.Scheduler;
@@ -11,9 +13,18 @@ import polyglot.frontend.goals.Barrier;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.Serialized;
 import polyglot.frontend.goals.VisitorGoal;
-import polyglot.visit.*;
+import polyglot.main.Version;
+import polyglot.types.TypeSystem;
+import polyglot.util.ErrorQueue;
+import polyglot.visit.InnerClassConstructorFixer;
+import polyglot.visit.InnerClassRemover;
+import polyglot.visit.InnerClassRewriter;
+import polyglot.visit.LocalClassRemover;
 import fabric.ExtensionInfo;
-import fabric.visit.*;
+import fabric.visit.AssignNormalizer;
+import fabric.visit.AtomicRewriter;
+import fabric.visit.ClassSerializer;
+import fabric.visit.ProxyRewriter;
 
 public class FabricScheduler extends JLScheduler {
   protected ExtensionInfo extInfo;
@@ -150,6 +161,11 @@ public class FabricScheduler extends JLScheduler {
         l.add(RewriteAtomic(job));
         l.add(RewriteProxies(job));
         return l;
+      }
+
+      @Override
+      protected ClassSerializer createSerializer(TypeSystem ts, NodeFactory nf, Date lastModified, ErrorQueue eq, Version version) {
+        return new ClassSerializer(ts, nf, lastModified, eq, version);
       }
     });
     return g;
