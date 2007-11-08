@@ -132,8 +132,11 @@ TOP='${basedir}'
 
   <!-- Compiles the Fabric core -->
   <target name="core" depends="init">
-    <javac srcdir="${sys.src}" destdir="${classes}" debug="on"
-        includes="fabric/core/**,fabric/common/**,fabric/messages/**">
+    <javac srcdir="${sys.src}" destdir="${classes}" debug="on">
+      <include name="fabric/core/**" />
+      <include name="fabric/common/**" />
+      <include name="fabric/messages/**" />
+      <exclude name="fabric/core/GenMap.java" />
       <classpath refid="standard.classpath"/>
     </javac>
   </target>
