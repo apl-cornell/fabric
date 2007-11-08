@@ -9,6 +9,7 @@
   <property name="src" location="${basedir}/src"/>
   <property name="sys.src" location="${src}/system"/>
   <property name="compiler.src" location="${src}/compiler"/>
+  <property name="runtime.src" location="${src}/runtime"/>
 
   <!-- Directory for class file targets -->
   <property name="classes" location="${basedir}/classes"/>
@@ -131,12 +132,11 @@ TOP='${basedir}'
   </target>
 
   <!-- Compiles the Fabric core -->
-  <target name="core" depends="init">
+  <target name="core" depends="init,fabric-hashmap">
     <javac srcdir="${sys.src}" destdir="${classes}" debug="on">
       <include name="fabric/core/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
-      <exclude name="fabric/core/GenMap.java" />
       <classpath refid="standard.classpath"/>
     </javac>
   </target>
@@ -150,12 +150,21 @@ TOP='${basedir}'
   </target>
 
   <!-- Compiles the Fabric compiler -->
-  <target name="fabric-compiler" depends="init,configure">
+  <target name="fabric-compiler" depends="init,configure,client">
     <antcall target="standard-ext">
       <param name="ext" value="fabric" />
       <param name="ext.pkg" value="fabric" />
       <param name="parser.type" value="ppg" />
     </antcall>
+  </target>
+
+  <!-- Compiles fabric.util.HashMap -->
+  <target name="fabric-hashmap" depends="init,fabric-compiler">
+    <java classname="fabric.Main" fork="true" dir="${classes}" failonerror="true">
+      <classpath refid="standard.classpath" />
+      <arg line="-sourcepath ${runtime.src}" />
+      <arg line="${runtime.src}/fabric/util/HashMap.fab" />
+    </java>
   </target>
 
   <!-- Compiles the Fabric test programs -->
