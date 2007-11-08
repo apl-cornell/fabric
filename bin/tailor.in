@@ -2,6 +2,8 @@ while true; do
   case "$1" in
     "") break;;
     -v) verbose="1"; shift;;
+    -cp) EXTRACP=$2; shift; shift;;
+    -classpath) EXTRACP=$2; shift; shift;;    
     *) args="$args '$1'"; shift;;
   esac
 done
