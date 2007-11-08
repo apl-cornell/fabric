@@ -143,8 +143,11 @@ TOP='${basedir}'
 
   <!-- Compiles the Fabric client API -->
   <target name="client" depends="init">
-    <javac srcdir="${sys.src}" destdir="${classes}" debug="on"
-        includes="fabric/client/**,fabric/common/**,fabric/messages/**">
+    <javac srcdir="${sys.src}" destdir="${classes}" debug="on">
+      <include name="fabric/client/**" />
+      <include name="fabric/common/**" />
+      <include name="fabric/messages/**" />
+      <include name="fabric/lang/**" />
       <classpath refid="standard.classpath"/>
     </javac>
   </target>
