@@ -27,6 +27,13 @@
     <pathelement location="${classes}"/>
     <pathelement path="${java.class.path}" />
     <pathelement location="${lib}"/>
+
+  	<!-- jar files in the lib directory, excluding generated jars -->
+    <fileset dir="${lib}">
+        <include name="*.jar" />
+        <exclude name="${name}.jar" />
+        <exclude name="${name}-rt.jar" />
+    </fileset>
   </path>
 
   <target name="configure" description="Configures Fabric"
