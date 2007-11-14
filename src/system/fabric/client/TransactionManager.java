@@ -44,7 +44,7 @@ public final class TransactionManager {
     }
 
     /**
-     * Encorporates the reads, creates, and writes in the given log into this
+     * Incorporates the reads, creates, and writes in the given log into this
      * log. This method clobbers the writes that are recorded in the given log.
      */
     protected void merge(Log log) {
@@ -168,7 +168,7 @@ public final class TransactionManager {
         throw new TransactionPrepareFailedException(failures);
       }
 
-      // At this point, everything is PREPAREd at the cores. Send commit
+      // At this point, everything is PREPARED at the cores. Send commit
       // messages.
       final List<Core> unreachable =
           Collections.synchronizedList(new ArrayList<Core>());
