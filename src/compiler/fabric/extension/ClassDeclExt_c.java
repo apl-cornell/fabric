@@ -48,7 +48,12 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     if (!pr.typeSystem().isFabric(classDecl.type())) return classDecl;
 
     // If already an interface, leave it.
-    if (classDecl.flags().isInterface()) return classDecl;
+    if (classDecl.flags().isInterface()) {
+      List<ClassMember> members = 
+        new ArrayList<ClassMember>(classDecl.body().members());
+      members.add(makeProxy(pr, pr.typeSystem().FObject()));
+      return classDecl.body(classDecl.body().members(members));
+    }
 
     NodeFactory nf = pr.nodeFactory();
     FabricTypeSystem ts = pr.typeSystem();
@@ -112,13 +117,17 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Add constructors.
     QQ qq = pr.qq();
-    ClassMember implConstr =
-        qq.parseMember("public $Proxy(" + classDecl.id() + ".$Impl impl) {"
-            + "super(impl); }");
+    
+    if (!classDecl.flags().isInterface()) {
+      ClassMember implConstr =
+          qq.parseMember("public $Proxy(" + classDecl.id() + ".$Impl impl) {"
+              + "super(impl); }");
+      members.add(implConstr);
+    }
+    
     ClassMember oidConstr =
         qq.parseMember("public $Proxy(fabric.client.Core core, long onum) {"
             + "super(core, onum); }");
-    members.add(implConstr);
     members.add(oidConstr);
 
     // Create the class declaration.
@@ -254,10 +263,12 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     methodDecl.append("{ " + (returnType.isVoid() ? "" : "return "));
 
     // Figure out the call target.
-    String implType = node().type().fullName() + ".$Impl";
-    if (flags.isStatic())
-      methodDecl.append(implType);
-    else methodDecl.append("((" + implType + ") fetch())");
+    String implType = node().type().fullName();
+    if (flags.isStatic()) {
+      methodDecl.append(implType + ".$Impl");
+    } else {
+      methodDecl.append("((" + implType + ") fetch())");
+    }
 
     // Call the delegate.
     methodDecl.append("." + name + "(" + args + "); }");
@@ -291,6 +302,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         qq.parseMember("protected fabric.lang.Object.$Proxy $makeProxy() {"
             + "return new " + classType.fullName() + ".$Proxy(this); }");
     members.add(makeProxyDecl);
+    
+    members.addAll(makeSerializers(pr, members));
 
     // Create the class declaration.
     ClassDecl result =
@@ -386,6 +399,107 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     List<ClassMember> result = new ArrayList<ClassMember>(2);
     result.add(interfaceDecl);
     result.add(fieldDecl);
+    return result;
+  }
+  
+  private List<ClassMember> makeSerializers(ProxyRewriter pr, 
+      List<ClassMember> members) {
+    List<ClassMember> result = new ArrayList<ClassMember>(3);
+    List<FieldDecl> fields = new LinkedList<FieldDecl>();
+    
+    for (ClassMember m : members) {
+      if (m instanceof FieldDecl) {
+        FieldDecl f = (FieldDecl) m;
+        
+        if (!f.flags().isTransient()) {
+          fields.add(f);
+        }
+      }
+    }
+    
+    QQ qq = pr.qq();
+    ClassMember numFieldsDecl =
+      qq.parseMember("public int $numFields() {"
+          + "return super.$numFields() + " + fields.size() + "; }");
+    result.add(numFieldsDecl);
+    
+    StringBuilder header = new StringBuilder();
+    StringBuilder out = new StringBuilder();
+    StringBuilder in = new StringBuilder();
+    
+    for (FieldDecl f : fields) {
+      Type t = f.declType();
+      
+      if (t.isBoolean()) {
+        header.append("out.writeByte(0);");
+        out.append("out.writeBoolean(this." + f.name() + ");");
+        in.append("this." + f.name() + " = in.readBoolean();");
+      } else if (t.isByte()) {
+        header.append("out.writeByte(1);");
+        out.append("out.writeByte(this." + f.name() + ");");
+        in.append("this." + f.name() + " = in.readByte();");
+      } else if (t.isChar()) {
+        header.append("out.writeByte(2);");
+        out.append("out.writeChar(this." + f.name() + ");");
+        in.append("this." + f.name() + " = in.readChar();");
+      } else if (t.isDouble()) {
+        header.append("out.writeByte(3);");
+        out.append("out.writeDouble(this." + f.name() + ");");
+        in.append("this." + f.name() + " = in.readDouble();");
+      } else if (t.isFloat()) {
+        header.append("out.writeByte(4);");
+        out.append("out.writeFloat(this." + f.name() + ");");
+        in.append("this." + f.name() + " = in.readFloat();");
+      } else if (t.isInt()) {
+        header.append("out.writeByte(5);");
+        out.append("out.writeInt(this." + f.name() + ");");
+        in.append("this." + f.name() + " = in.readInt();");
+      } else if (t.isLong()) {
+        header.append("out.writeByte(6);");
+        out.append("out.writeLong(this." + f.name() + ");");
+        in.append("this." + f.name() + " = in.readLong();");
+      } else if (t.isShort()) {
+        header.append("out.writeByte(7);");
+        out.append("out.writeShort(this." + f.name() + ");");
+        in.append("this." + f.name() + " = in.readShort();");
+      } else {
+        header.append("out.writeByte(8);");
+        out.append("$writeRef(out, this." + f.name() + ");");
+        
+        in.append("core = in.readLong();");
+        in.append("onum = in.readLong();");
+        
+        if (!f.declType().toString().equals("java.lang.Object")) {
+          in.append("if (core != 0 || onum != 0) " +
+              "this." + f.name() + " = new " + f.declType() + ".$Proxy(" +
+              "fabric.client.Client.getClient().getCore(core), onum);");
+        }
+      }
+    }
+    
+    ClassMember serializeHeader =
+      qq.parseMember("public void $serializeHeader(java.io.DataOutput out) " +
+          "throws java.io.IOException {" +
+          "super.$serializeHeader(out);" + 
+          header + " }");
+    result.add(serializeHeader);
+
+    ClassMember serialize =
+      qq.parseMember("public void $serialize(java.io.DataOutput out) " +
+          "throws java.io.IOException {" +
+          "super.$serialize(out);" + 
+          out + " }");
+    result.add(serialize);
+
+    ClassMember deserialize =
+      qq.parseMember("public $Impl" +
+          "(fabric.core.SerializedObject.DataInput in) " +
+          "throws java.io.IOException {" +
+          "super(in);" + 
+          "long core, onum;" +
+          in + " }");
+    result.add(deserialize);
+    
     return result;
   }
 

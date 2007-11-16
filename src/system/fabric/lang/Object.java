@@ -1,16 +1,20 @@
 package fabric.lang;
 
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.client.RemoteCore;
 import fabric.client.TransactionManager;
 import fabric.client.UnreachableCoreException;
 import fabric.common.ACLPolicy;
 import fabric.common.AccessError;
 import fabric.common.InternalError;
 import fabric.common.Policy;
+import fabric.core.SerializedObject.DataInput;
 
 /**
  * All Fabric objects implement this interface.
@@ -206,7 +210,74 @@ public interface Object {
       if ($proxy == null) $proxy = $makeProxy();
       return $proxy;
     }
-
+    
+    /**
+     * Returns the number of non-transient fields in this class, including all
+     * inherited fields. Public, protected, package, and private fields should
+     * all be included. This is in other words the number of fields that will be
+     * serialized for objects of this type.
+     * 
+     * Subclasses should call the super method and add the number of fields
+     * declared in the particular subclass.
+     */
+    public int $numFields() {
+      return 0;
+    }
+    
+    /**
+     * This method should write to the given DataOutput information about each
+     * of the non-transient fields in this class. Subclasses should first call
+     * the super method so that information about inherited fields are written
+     * out first. The order in which fields are represented must be fixed and
+     * the same as the order used by $serialize and $deserialize.
+     * 
+     * For each field, one byte of information should be written, according to
+     * the following format:
+     * 
+     * TODO
+     */
+    public void $serializeHeader(DataOutput out) throws IOException {
+      return;
+    }
+    
+    /**
+     * This method should write each of the non-transient fields of this object
+     * to the given DataOutput. Subclasses should call the super method first
+     * so that inherited fields are written before fields declared in this
+     * subclass. The order in which fields are written must be fixed and the
+     * same as the order used by $serializeHeader and $deserialize.
+     */
+    public void $serialize(DataOutput out) throws IOException {
+      return;
+    }
+    
+    /**
+     * This is the deserialization constructor and reconstructs the object from
+     * its serialized state. Subclasses should call the super constructor to
+     * first read inherited fields. It should then read the value of each
+     * non-transient field declared in this subclass. The order in which fields
+     * are presented in the DataInput is the same as the order used by
+     * $serialize.
+     */
+    public $Impl(DataInput in) throws IOException {
+      return;
+    }
+    
+    /**
+     * This method serializes an object pointer to the given DataOutput.
+     */
+    protected static void $writeRef(DataOutput out, java.lang.Object obj)
+        throws IOException {
+      if (obj == null) {
+        out.writeLong(0);
+        out.writeLong(0);
+      } else {
+        $Proxy p = ($Proxy) obj;
+        out.writeLong(((RemoteCore) p.core).coreID);
+        out.writeLong(p.onum);
+      }
+    }
+    
     /**
      * Subclasses should override this method.
      */

@@ -48,8 +48,8 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     if (doStatic != flags.isStatic() || doStatic && flags.isFinal())
       return super.implMember(pr, parent);
 
-    // Make the field private and non-static.
-    flags = ProxyRewriter.toPrivate(flags).clearStatic();
+    // Make the field private and non-static, non-final.
+    flags = ProxyRewriter.toPrivate(flags).clearStatic().clearFinal();
 
     List<ClassMember> result = new ArrayList<ClassMember>();
     for (ClassMember m : accessors(pr))

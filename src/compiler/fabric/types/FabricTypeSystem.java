@@ -11,6 +11,8 @@ public interface FabricTypeSystem extends TypeSystem {
   // TODO: fabric.client or fabric.lang?
   /** return the ClassType corresponding to fabric.client.TransactionManager */
   ClassType TransactionManager();
+  
+  /** The ClassType of fabric.lang.Object. */
   ClassType FObject();
 
   ClassType fArrayOf(Type type);

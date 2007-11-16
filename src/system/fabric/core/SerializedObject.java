@@ -1,9 +1,14 @@
 package fabric.core;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 
+import fabric.common.InternalError;
 import fabric.common.Policy;
-import fabric.common.Util;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -27,14 +32,14 @@ public class SerializedObject implements Serializable {
   }
 
   public SerializedObject($Impl obj, long[] related) {
-    this.object = Util.toArray(obj);
+    this.object = serialize(obj);
     this.related = related;
     this.onum = obj.$getOnum();
     this.policy = obj.$getPolicy();
   }
 
   public $Impl getObject() throws ClassNotFoundException {
-    $Impl result = ($Impl) Util.fromArray(object);
+    $Impl result = deserialize(object);
     // TODO Update header information.
     result.$version = version;
     return result;
@@ -64,6 +69,58 @@ public class SerializedObject implements Serializable {
   @Override
   public String toString() {
     return onum + "v" + version;
+  }
+
+  protected byte[] serialize($Impl obj) {
+    Class<?> c = obj.getClass();
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    DataOutputStream dos = new DataOutputStream(bos);
+    
+    try {
+      dos.writeUTF(c.getName());
+      dos.writeInt(obj.$numFields());
+      obj.$serializeHeader(dos);
+      obj.$serialize(dos);
+      return bos.toByteArray();
+    } catch (IOException e) {}
+    
+    return null;
+  }
+  
+  protected $Impl deserialize(byte[] buf) throws ClassNotFoundException {
+    ByteArrayInputStream bis = new ByteArrayInputStream(buf);
+    DataInputStream dis = new DataInputStream(bis);
+    
+    try {
+      Class<?> c = Class.forName(dis.readUTF());
+      int numFields = dis.readInt();
+      dis.skip(numFields); // no need to actually read header information
+      $Impl obj = ($Impl) c.getConstructor(DataInput.class).newInstance(dis);
+      return obj;
+    } catch (ClassNotFoundException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InternalError(e);
+    }
+  }
+  
+  /**
+   * This interface is used solely for the deserialization constructor of
+   * $Impls. It's purpose is to make sure the constructor signature does not
+   * conflict with a user written constructor that also takes a
+   * java.io.DataInput as its only argument.
+   * 
+   * @author xinz
+   */
+  public interface DataInput extends java.io.DataInput {}
+  
+  private class DataInputStream extends java.io.DataInputStream 
+      implements DataInput {
+
+    public DataInputStream(InputStream in) {
+      super(in);
+    }
+    
   }
 
 }
