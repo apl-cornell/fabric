@@ -6,7 +6,7 @@ import java.util.Map;
 import fabric.common.AccessError;
 import fabric.lang.Object.$Impl;
 
-public interface Core {
+public interface Core extends java.io.Serializable {
 
   /**
    * Notifies the core that the transaction is entering the Prepare phase.

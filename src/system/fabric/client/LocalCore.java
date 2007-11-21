@@ -16,6 +16,7 @@ public class LocalCore implements Core {
   private Map<Long, Object.$Impl>   objects;
   // TODO: should be a fabric.util.HashMap
   private Object             rootMap;
+  private Core surrogate = null;
 
   private static Logger log = Logger.getLogger("fabric.client.LocalCore");
 
@@ -93,5 +94,19 @@ public class LocalCore implements Core {
   public Object getRoot() throws UnreachableCoreException {
     return rootMap;
   }
-
+  
+  /**
+   * This is a hook for hacks. It allows one to turn the local core into any
+   * other core for the purposes of serialization.
+   */
+  public void serializeAs(Core surrogate) {
+    this.surrogate  = surrogate;
+  }
+  
+  private java.lang.Object writeReplace() throws java.io.ObjectStreamException {
+    if (surrogate == null)
+      throw new java.io.NotSerializableException();
+    
+    return surrogate;
+  }
 }

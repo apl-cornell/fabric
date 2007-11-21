@@ -5,6 +5,7 @@ import java.util.Map;
 
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.client.LocalCore;
 import fabric.lang.Object;
 import fabric.lang.arrays.ObjectArray;
 
@@ -27,7 +28,10 @@ public class GenMap {
       ObjectOutputStream out = new ObjectOutputStream(System.out);
       Map<Long, SerializedObject> store =
           new java.util.HashMap<Long, SerializedObject>();
-      Object.$Impl rootMap = new HashMap.$Impl(client.getLocalCore());
+      
+      LocalCore local = client.getLocalCore();
+      Object.$Impl rootMap = new HashMap.$Impl(local);
+      local.serializeAs(core);
       rootMap.$forceRelocate(core, 0);
       store.put(0L, new SerializedObject(rootMap));
 

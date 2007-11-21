@@ -22,7 +22,7 @@ import fabric.messages.*;
  * manages all communication. Cores can only be obtained through the
  * <code>Client.getCore()</code> interface.
  */
-public class RemoteCore implements Serializable, Core {
+public class RemoteCore implements Core {
   private transient Socket conn;
 
   /**

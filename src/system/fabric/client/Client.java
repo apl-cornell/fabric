@@ -166,7 +166,7 @@ public class Client {
     return getCore(nameService.lookupCore(name));
   }
 
-  public Core getLocalCore() {
+  public LocalCore getLocalCore() {
     return localCore;
   }
 
