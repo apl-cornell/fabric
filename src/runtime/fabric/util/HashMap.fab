@@ -136,25 +136,25 @@ public class HashMap extends AbstractMap
    * Array containing the actual key-value mappings.
    * Package visible for use by nested and subclasses.
    */
-  transient HashEntry[] buckets;
+  HashEntry[] buckets;
 
   /**
    * Counts the number of modifications this HashMap has undergone, used
    * by Iterators to know when to throw ConcurrentModificationExceptions.
    * Package visible for use by nested and subclasses.
    */
-  transient int modCount;
+  int modCount;
 
   /**
    * The size of this HashMap:  denotes the number of key-value pairs.
    * Package visible for use by nested and subclasses.
    */
-  transient int size;
+  int size;
 
   /**
    * The cache for {@link #entrySet()}.
    */
-  private transient Set entries;
+  private Set entries;
 
   /**
    * Class to represent an entry in the hash table. Holds a single key-value
@@ -761,6 +761,7 @@ public class HashMap extends AbstractMap
    *             are emitted first.  They are followed by size entries,
    *             each consisting of a key (Object) and a value (Object).
    */
+  /*
   private void writeObject(ObjectOutputStream s) throws IOException
   {
     // Write the threshold and loadFactor fields.
@@ -776,7 +777,7 @@ public class HashMap extends AbstractMap
         s.writeObject(entry.key);
         s.writeObject(entry.value);
       }
-  }
+  } */
 
   /**
    * Deserializes this object from the given stream.
@@ -789,6 +790,7 @@ public class HashMap extends AbstractMap
    *             are emitted first.  They are followed by size entries,
    *             each consisting of a key (Object) and a value (Object).
    */
+  /*
   private void readObject(ObjectInputStream s)
     throws IOException, ClassNotFoundException
   {
@@ -804,7 +806,7 @@ public class HashMap extends AbstractMap
         Object key = s.readObject();
         addEntry(key, s.readObject(), hash(key), false);
       }
-  }
+  } */
 
   /**
    * Iterate over HashMap's entries.
