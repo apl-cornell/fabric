@@ -1,0 +1,21 @@
+package regression;
+
+import fabric.client.Client;
+import fabric.client.Core;
+
+import fabric.util.HashMap;
+
+class Root01 {
+	public static void main(String[] args) {
+		Core c = Client.getClient().getCore(0);
+
+		HashMap root = (HashMap) c.getRoot();
+		atomic {
+			String key = "Root01 Test";
+			if (root.containsKey(key))
+				System.out.println( root.get(key) );
+			if (args.length > 0)
+			root.put(key, args[0]);
+		}
+	}
+}
