@@ -87,6 +87,10 @@ public interface booleanArray extends Object {
   public static class $Proxy extends Object.$Proxy implements
       booleanArray {
 
+    public $Proxy(Core core, long onum) {
+      super(core, onum);
+    }
+
     public $Proxy(booleanArray.$Impl impl) {
       super(impl);
     }

@@ -87,6 +87,10 @@ public interface byteArray extends Object {
   public static class $Proxy extends Object.$Proxy implements
       byteArray {
 
+    public $Proxy(Core core, long onum) {
+      super(core, onum);
+    }
+
     public $Proxy(byteArray.$Impl impl) {
       super(impl);
     }

@@ -87,6 +87,10 @@ public interface floatArray extends Object {
   public static class $Proxy extends Object.$Proxy implements
       floatArray {
 
+    public $Proxy(Core core, long onum) {
+      super(core, onum);
+    }
+
     public $Proxy(floatArray.$Impl impl) {
       super(impl);
     }

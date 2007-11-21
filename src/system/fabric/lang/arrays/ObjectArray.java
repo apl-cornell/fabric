@@ -83,6 +83,10 @@ public interface ObjectArray<T> extends fabric.lang.Object {
   public static class $Proxy<T> extends fabric.lang.Object.$Proxy implements
       ObjectArray<T> {
 
+    public $Proxy(Core core, long onum) {
+      super(core, onum);
+    }
+
     public $Proxy(ObjectArray.$Impl<T> impl) {
       super(impl);
     }

@@ -87,6 +87,10 @@ public interface doubleArray extends Object {
   public static class $Proxy extends Object.$Proxy implements
       doubleArray {
 
+    public $Proxy(Core core, long onum) {
+      super(core, onum);
+    }
+
     public $Proxy(doubleArray.$Impl impl) {
       super(impl);
     }

@@ -87,6 +87,10 @@ public interface longArray extends Object {
   public static class $Proxy extends Object.$Proxy implements
       longArray {
 
+    public $Proxy(Core core, long onum) {
+      super(core, onum);
+    }
+
     public $Proxy(longArray.$Impl impl) {
       super(impl);
     }
