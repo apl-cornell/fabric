@@ -158,7 +158,10 @@ TOP='${basedir}'
       <include name="fabric/core/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
-      <classpath refid="standard.classpath"/>
+      <classpath>
+	<path refid="standard.classpath"/>
+	<pathelement location="${runtime.classes}" />
+      </classpath>
     </javac>
   </target>
 
