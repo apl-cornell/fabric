@@ -25,6 +25,8 @@ public interface Object {
   long $getOnum();
 
   $Proxy $getProxy();
+  
+  boolean equals(Object o);
 
   /**
    * $Proxy objects behave like regular objects by delegating to $Impl objects,
@@ -81,6 +83,13 @@ public interface Object {
      */
     @Override
     public boolean equals(java.lang.Object arg1) {
+      return fetch().equals(arg1);
+    }
+    
+    /**
+     * A delegate for the default equals implementation.
+     */
+    public boolean equals(Object arg1) {
       return fetch().equals(arg1);
     }
     
@@ -166,8 +175,14 @@ public interface Object {
     @Override
     public boolean equals(java.lang.Object o) {
       if (!(o instanceof Object)) return false;
-      Object fobj = (Object) o;
-      return fobj.$getCore().equals($getCore()) && fobj.$getOnum() == $getOnum();
+      return equals((Object) o);
+    }
+    
+    /**
+     * Default equals implementation uses pointer equality.
+     */
+    public boolean equals(Object o) {
+      return o.$getCore().equals($getCore()) && o.$getOnum() == $getOnum();
     }
     
     /**
