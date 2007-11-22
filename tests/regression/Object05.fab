@@ -1,0 +1,11 @@
+/**
+ * Test to ensure Fabric objects implicitly inherit from fabric.lang.Object.
+ */
+package regression;
+
+public class Object05 {
+  fabric.lang.Object o;
+  void m() {
+    o = this;
+  }
+}
