@@ -47,16 +47,37 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Only translate if we're processing a Fabric class.
     if (!pr.typeSystem().isFabric(classDecl.type())) return classDecl;
 
-    // If already an interface, leave it.
-    if (classDecl.flags().isInterface()) {
-      List<ClassMember> members = 
-        new ArrayList<ClassMember>(classDecl.body().members());
-      members.add(makeProxy(pr, pr.typeSystem().FObject()));
-      return classDecl.body(classDecl.body().members(members));
-    }
-
     NodeFactory nf = pr.nodeFactory();
     FabricTypeSystem ts = pr.typeSystem();
+
+    if (classDecl.flags().isInterface()) {
+      // Already an interface. Leave existing members alone, but insert a proxy
+      // class.
+      List<ClassMember> members =
+          new ArrayList<ClassMember>(classDecl.body().members());
+      members.add(makeProxy(pr, pr.typeSystem().FObject()));
+
+      // If necessary, add fabric.lang.Object as a super-interface.
+      List<TypeNode> interfaces = classDecl.interfaces();
+      boolean needObject = true;
+      for (TypeNode tn : interfaces) {
+        if ("fabric.lang.Object".equals(tn.toString())) {
+          needObject = false;
+          break;
+        }
+      }
+
+      if (needObject) {
+        interfaces = new ArrayList<TypeNode>(interfaces);
+        interfaces.add(nf.CanonicalTypeNode(Position.compilerGenerated(), ts
+            .FObject()));
+      }
+
+      // Flag the interface for serialization.
+      return classDecl.body(classDecl.body().members(members)).interfaces(
+          interfaces).ext(shouldSerializeType(true));
+    }
+
     TypeNode superClass = classDecl.superClass();
 
     // Make the super class explicit.
@@ -117,14 +138,14 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Add constructors.
     QQ qq = pr.qq();
-    
+
     if (!classDecl.flags().isInterface()) {
       ClassMember implConstr =
           qq.parseMember("public $Proxy(" + classDecl.id() + ".$Impl impl) {"
               + "super(impl); }");
       members.add(implConstr);
     }
-    
+
     ClassMember oidConstr =
         qq.parseMember("public $Proxy(fabric.client.Core core, long onum) {"
             + "super(core, onum); }");
@@ -302,7 +323,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         qq.parseMember("protected fabric.lang.Object.$Proxy $makeProxy() {"
             + "return new " + classType.fullName() + ".$Proxy(this); }");
     members.add(makeProxyDecl);
-    
+
     members.addAll(makeSerializers(pr, members));
 
     // Create the class declaration.
@@ -401,35 +422,35 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     result.add(fieldDecl);
     return result;
   }
-  
-  private List<ClassMember> makeSerializers(ProxyRewriter pr, 
+
+  private List<ClassMember> makeSerializers(ProxyRewriter pr,
       List<ClassMember> members) {
     List<ClassMember> result = new ArrayList<ClassMember>(3);
     List<FieldDecl> fields = new LinkedList<FieldDecl>();
-    
+
     for (ClassMember m : members) {
       if (m instanceof FieldDecl) {
         FieldDecl f = (FieldDecl) m;
-        
+
         if (!f.flags().isTransient()) {
           fields.add(f);
         }
       }
     }
-    
+
     QQ qq = pr.qq();
     ClassMember numFieldsDecl =
-      qq.parseMember("public int $numFields() {"
-          + "return super.$numFields() + " + fields.size() + "; }");
+        qq.parseMember("public int $numFields() {"
+            + "return super.$numFields() + " + fields.size() + "; }");
     result.add(numFieldsDecl);
-    
+
     StringBuilder header = new StringBuilder();
     StringBuilder out = new StringBuilder();
     StringBuilder in = new StringBuilder();
-    
+
     for (FieldDecl f : fields) {
       Type t = f.declType();
-      
+
       if (t.isBoolean()) {
         header.append("out.writeByte(0);");
         out.append("out.writeBoolean(this." + f.name() + ");");
@@ -465,41 +486,37 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       } else {
         header.append("out.writeByte(8);");
         out.append("$writeRef(out, this." + f.name() + ");");
-        
+
         in.append("core = in.readLong();");
         in.append("onum = in.readLong();");
-        
+
         if (!f.declType().toString().equals("java.lang.Object")) {
-          in.append("if (core != 0 || onum != 0) " +
-              "this." + f.name() + " = new " + f.declType() + ".$Proxy(" +
-              "fabric.client.Client.getClient().getCore(core), onum);");
+          in.append("if (core != 0 || onum != 0) " + "this." + f.name()
+              + " = new " + f.declType() + ".$Proxy("
+              + "fabric.client.Client.getClient().getCore(core), onum);");
         }
       }
     }
-    
+
     ClassMember serializeHeader =
-      qq.parseMember("public void $serializeHeader(java.io.DataOutput out) " +
-          "throws java.io.IOException {" +
-          "super.$serializeHeader(out);" + 
-          header + " }");
+        qq.parseMember("public void $serializeHeader(java.io.DataOutput out) "
+            + "throws java.io.IOException {" + "super.$serializeHeader(out);"
+            + header + " }");
     result.add(serializeHeader);
 
     ClassMember serialize =
-      qq.parseMember("public void $serialize(java.io.DataOutput out) " +
-          "throws java.io.IOException {" +
-          "super.$serialize(out);" + 
-          out + " }");
+        qq.parseMember("public void $serialize(java.io.DataOutput out) "
+            + "throws java.io.IOException {" + "super.$serialize(out);" + out
+            + " }");
     result.add(serialize);
 
     ClassMember deserialize =
-      qq.parseMember("public $Impl" +
-          "(fabric.core.SerializedObject.DataInput in) " +
-          "throws java.io.IOException {" +
-          "super(in);" + 
-          "long core, onum;" +
-          in + " }");
+        qq.parseMember("public $Impl"
+            + "(fabric.core.SerializedObject.DataInput in) "
+            + "throws java.io.IOException {" + "super(in);"
+            + "long core, onum;" + in + " }");
     result.add(deserialize);
-    
+
     return result;
   }
 
