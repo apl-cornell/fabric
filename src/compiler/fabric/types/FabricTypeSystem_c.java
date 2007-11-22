@@ -1,7 +1,10 @@
 package fabric.types;
 
+import java.util.List;
+
 import polyglot.ast.TypeNode;
 import polyglot.types.*;
+import polyglot.types.Package;
 
 public class FabricTypeSystem_c extends TypeSystem_c implements
     FabricTypeSystem {
@@ -12,6 +15,15 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
 
   public ClassType FObject() {
     return load("fabric.lang.Object");
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public List defaultPackageImports() {
+    // Include fabric.lang as a default import.
+    List<String> result = super.defaultPackageImports();
+    result.add("fabric.lang");
+    return result;
   }
 
   public ClassType fArrayOf(Type type) {
@@ -25,11 +37,34 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
     return load("fabric.lang.arrays." + type.toString() + "Array.$Impl");
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see fabric.types.FabricTypeSystem#toFArray(polyglot.types.ArrayType)
    */
   public ClassType toFArray(ArrayType type) {
     return fArrayOf(type.base());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see polyglot.types.TypeSystem_c#importTable(polyglot.types.Package)
+   */
+  @Override
+  public ImportTable importTable(Package pkg) {
+    return new FabricImportTable(this, pkg);
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see polyglot.types.TypeSystem_c#importTable(java.lang.String,
+   *      polyglot.types.Package)
+   */
+  @Override
+  public ImportTable importTable(String sourceName, Package pkg) {
+    return new FabricImportTable(this, pkg, sourceName);
   }
 
   public boolean isFabric(ClassType type) {
