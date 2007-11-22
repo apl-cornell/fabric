@@ -14,6 +14,7 @@
 
   <!-- Directory for class file targets -->
   <property name="classes" location="${basedir}/classes"/>
+  <property name="runtime.classes" location="${basedir}/rt-classes"/>
   <property name="signatures.classes" location="${basedir}/sig-classes"/>
 
   <!-- Distribution directory -->
@@ -121,6 +122,7 @@ TOP='${basedir}'
     <tstamp/>
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${classes}"/>
+    <mkdir dir="${runtime.classes}"/>
     <mkdir dir="${signatures.classes}"/>
   </target>
 
@@ -135,6 +137,7 @@ TOP='${basedir}'
   <target name="clean" description="Cleans up the directory tree: deletes the distribution directory and the classes directories">
     <!-- Delete the ${classes} and ${dist} directory trees -->
     <delete dir="${classes}"/>
+    <delete dir="${runtime.classes}"/>
     <delete dir="${signatures.classes}"/>
     <delete dir="${dist}"/>
   </target>
@@ -150,7 +153,7 @@ TOP='${basedir}'
   </target>
 
   <!-- Compiles the Fabric core -->
-  <target name="core" depends="init,fabric-hashmap">
+  <target name="core" depends="init,fabric-runtime">
     <javac srcdir="${system.src}" destdir="${lib}" debug="on">
       <include name="fabric/core/**" />
       <include name="fabric/common/**" />
@@ -220,15 +223,50 @@ TOP='${basedir}'
     </apply>
   </target>
 
-  <!-- Compiles fabric.util.HashMap -->
-  <target name="fabric-hashmap"
+  <!-- Compiles the Fabric runtime -->
+  <target name="fabric-runtime"
       depends="init,fabric-compiler,fabric-signatures">
-    <java classname="fabric.Main" fork="true" dir="${classes}" failonerror="true">
-      <classpath refid="standard.classpath" />
-      <arg line="-sigcp ${signatures.classes}" />
-      <arg line="-sourcepath ${runtime.src}" />
-      <arg line="${runtime.src}/fabric/util/HashMap.fab" />
-    </java>
+    <mkdir dir="${runtime.classes}" />
+    <apply executable="${loom}"
+	parallel="true"
+	failonerror="true"
+	dest="${basedir}"
+	relative="true"
+	skipemptyfilesets="true"
+	vmlauncher="false">
+      <arg value="-d" />
+      <arg value="rt-classes" />
+      <arg value="-sigcp" />
+      <arg value="sig-classes" />
+      <arg value="-sourcepath" />
+      <arg value="src/runtime" />
+      <srcfile />
+      <fileset dir="${basedir}"
+	  includes="src/runtime/**/*.fab"
+	  excludes="src/runtime/fabric/util/*.fab" />
+      <mapper type="regexp" from="src/runtime(.*)\.fab"
+	  to="classes\1\.class" />
+    </apply>
+
+    <apply executable="${loom}"
+	parallel="true"
+	failonerror="true"
+	dest="${basedir}"
+	relative="true"
+	skipemptyfilesets="true"
+	vmlauncher="false">
+      <arg value="-d" />
+      <arg value="rt-classes" />
+      <arg value="-sigcp" />
+      <arg value="sig-classes" />
+      <arg value="-sourcepath" />
+      <arg value="src/runtime" />
+      <srcfile />
+      <fileset dir="${basedir}"
+	  includes="src/runtime/fabric/util/HashMap.fab" />
+      <mapper type="regexp" from="src/runtime(.*)\.fab"
+	  to="classes\1\.class" />
+    </apply>
   </target>
 
   <!-- Compiles the Fabric test programs -->
