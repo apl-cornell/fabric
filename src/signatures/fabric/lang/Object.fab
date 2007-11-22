@@ -1,0 +1,5 @@
+package fabric.lang;
+
+public class Object extends java.lang.Object {
+}
+

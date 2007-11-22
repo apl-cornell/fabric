@@ -23,7 +23,6 @@ import polyglot.visit.LocalClassRemover;
 import fabric.ExtensionInfo;
 import fabric.visit.AssignNormalizer;
 import fabric.visit.AtomicRewriter;
-import fabric.visit.ClassSerializer;
 import fabric.visit.ProxyRewriter;
 
 public class FabricScheduler extends JLScheduler {
@@ -158,14 +157,21 @@ public class FabricScheduler extends JLScheduler {
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
         l.addAll(super.prerequisiteGoals(scheduler));
-        l.add(RewriteAtomic(job));
-        l.add(RewriteProxies(job));
+        if (!extInfo.getOptions().signatureMode) {
+          l.add(RewriteAtomic(job));
+          l.add(RewriteProxies(job));
+        }
         return l;
       }
 
       @Override
-      protected ClassSerializer createSerializer(TypeSystem ts, NodeFactory nf, Date lastModified, ErrorQueue eq, Version version) {
-        return new ClassSerializer(ts, nf, lastModified, eq, version);
+      protected polyglot.visit.ClassSerializer createSerializer(TypeSystem ts,
+          NodeFactory nf, Date lastModified, ErrorQueue eq, Version version) {
+        if (extInfo.getOptions().signatureMode)
+          return super.createSerializer(ts, nf, lastModified, eq, version);
+
+        return new fabric.visit.ClassSerializer(ts, nf, lastModified, eq,
+            version);
       }
     });
     return g;

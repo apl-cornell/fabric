@@ -1,0 +1,4 @@
+package regression;
+
+public class Object04 extends fabric.lang.Object {
+}

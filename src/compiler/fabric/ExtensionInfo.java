@@ -4,8 +4,9 @@ import java.io.Reader;
 
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.*;
-import polyglot.frontend.Compiler;
 import polyglot.lex.Lexer;
+import polyglot.types.LoadedClassResolver;
+import polyglot.types.SourceClassResolver;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
 import fabric.ast.FabricNodeFactory_c;
@@ -55,6 +56,16 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   /*
    * (non-Javadoc)
    * 
+   * @see polyglot.frontend.AbstractExtensionInfo#getOptions()
+   */
+  @Override
+  public Options getOptions() {
+    return (Options) super.getOptions();
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
    * @see polyglot.frontend.AbstractExtensionInfo#typeSystem()
    */
   @Override
@@ -67,11 +78,19 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
     return "fab";
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see polyglot.frontend.ParserlessJLExtensionInfo#makeLoadedClassResolver()
+   */
   @Override
-  public void initCompiler(Compiler compiler) {
-    super.initCompiler(compiler);
+  protected LoadedClassResolver makeLoadedClassResolver() {
+    Options options = getOptions();
+    String cp = options.constructFabricClasspath();
+    return new SourceClassResolver(compiler, this, cp, compiler.loader(), true,
+        options.compile_command_line_only, options.ignore_mod_times);
   }
-  
+
   @Override
   public Parser parser(Reader reader, FileSource source, ErrorQueue eq) {
     Lexer lexer = new Lexer_c(reader, source, eq);
