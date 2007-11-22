@@ -6,6 +6,7 @@ import polyglot.ast.TypeNode;
 import polyglot.frontend.Source;
 import polyglot.types.*;
 import polyglot.types.Package;
+import polyglot.util.Position;
 
 public class FabricTypeSystem_c extends TypeSystem_c implements
     FabricTypeSystem {
@@ -16,6 +17,17 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
 
   public ClassType FObject() {
     return load("fabric.lang.Object");
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see polyglot.types.TypeSystem_c#createArrayType(polyglot.util.Position,
+   *      polyglot.types.Type)
+   */
+  @Override
+  protected ArrayType createArrayType(Position pos, Type type) {
+    return new FabricArrayType_c(this, pos, type);
   }
 
   /*
