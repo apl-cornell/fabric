@@ -7,12 +7,14 @@
 
   <!-- Source directory -->
   <property name="src" location="${basedir}/src"/>
-  <property name="sys.src" location="${src}/system"/>
+  <property name="system.src" location="${src}/system"/>
   <property name="compiler.src" location="${src}/compiler"/>
   <property name="runtime.src" location="${src}/runtime"/>
+  <property name="signatures.src" location="${src}/signatures"/>
 
   <!-- Directory for class file targets -->
   <property name="classes" location="${basedir}/classes"/>
+  <property name="signatures.classes" location="${basedir}/sig-classes"/>
 
   <!-- Distribution directory -->
   <property name="dist" location="${basedir}/dist"/>
@@ -23,12 +25,15 @@
   <!-- Library directory -->
   <property name="lib" location="${basedir}/lib"/>
 
+  <!-- loom executable -->
+  <property name="loom" location="${bin}/loom" />
+
   <path id="standard.classpath">
     <pathelement location="${classes}"/>
     <pathelement path="${java.class.path}" />
     <pathelement location="${lib}"/>
 
-  	<!-- jar files in the lib directory, excluding generated jars -->
+    <!-- jar files in the lib directory, excluding generated jars -->
     <fileset dir="${lib}">
         <include name="*.jar" />
         <exclude name="${name}.jar" />
@@ -116,11 +121,12 @@ TOP='${basedir}'
     <tstamp/>
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${classes}"/>
+    <mkdir dir="${signatures.classes}"/>
   </target>
 
   <!-- Compiles Fabric -->
   <target name="all"
-    depends="bin,fabric-system,fabric-compiler,tests"
+    depends="bin,fabric-system,fabric-compiler,fabric-signatures,tests"
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
@@ -129,6 +135,7 @@ TOP='${basedir}'
   <target name="clean" description="Cleans up the directory tree: deletes the distribution directory and the classes directories">
     <!-- Delete the ${classes} and ${dist} directory trees -->
     <delete dir="${classes}"/>
+    <delete dir="${signatures.classes}"/>
     <delete dir="${dist}"/>
   </target>
 
@@ -144,7 +151,7 @@ TOP='${basedir}'
 
   <!-- Compiles the Fabric core -->
   <target name="core" depends="init,fabric-hashmap">
-    <javac srcdir="${sys.src}" destdir="${lib}" debug="on">
+    <javac srcdir="${system.src}" destdir="${lib}" debug="on">
       <include name="fabric/core/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
@@ -154,7 +161,7 @@ TOP='${basedir}'
 
   <!-- Compiles the Fabric client API -->
   <target name="client" depends="init">
-    <javac srcdir="${sys.src}" destdir="${classes}" debug="on">
+    <javac srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/client/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
@@ -172,10 +179,53 @@ TOP='${basedir}'
     </antcall>
   </target>
 
+  <!-- Compiles the Fabric signatures -->
+  <target name="fabric-signatures" depends="init,fabric-compiler">
+    <mkdir dir="${signatures.classes}" />
+    <apply executable="${loom}"
+	parallel="false"
+	failonerror="true"
+	dest="${basedir}"
+	relative="true"
+	skipemptyfilesets="true"
+	vmlauncher="false">
+      <arg value="-sig" />
+      <arg value="-d" />
+      <arg value="sig-classes" />
+      <arg value="-sourcepath" />
+      <arg value="src/signatures" />
+      <srcfile />
+      <fileset dir="${basedir}"
+	  includes="src/signatures/fabric/lang/Object.fab" />
+      <mapper type="regexp" from="src/signatures(.*)\.fab"
+	  to="sig-classes\1\.class" />
+    </apply>
+
+    <apply executable="${loom}"
+	parallel="true"
+	failonerror="true"
+	dest="${basedir}"
+	relative="true"
+	skipemptyfilesets="true"
+	vmlauncher="false">
+      <arg value="-sig" />
+      <arg value="-d" />
+      <arg value="sig-classes" />
+      <arg value="-sourcepath" />
+      <arg value="src/signatures" />
+      <srcfile />
+      <fileset dir="${basedir}" includes="src/signatures/**/*.fab" />
+      <mapper type="regexp" from="src/signatures(.*)\.fab"
+	  to="sig-classes\1\.class" />
+    </apply>
+  </target>
+
   <!-- Compiles fabric.util.HashMap -->
-  <target name="fabric-hashmap" depends="init,fabric-compiler">
+  <target name="fabric-hashmap"
+      depends="init,fabric-compiler,fabric-signatures">
     <java classname="fabric.Main" fork="true" dir="${classes}" failonerror="true">
       <classpath refid="standard.classpath" />
+      <arg line="-sigcp ${signatures.classes}" />
       <arg line="-sourcepath ${runtime.src}" />
       <arg line="${runtime.src}/fabric/util/HashMap.fab" />
     </java>
