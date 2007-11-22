@@ -236,6 +236,7 @@ public interface Object {
      * 
      * TODO
      */
+    @SuppressWarnings("unused")
     public void $serializeHeader(DataOutput out) throws IOException {
       return;
     }
@@ -247,6 +248,7 @@ public interface Object {
      * subclass. The order in which fields are written must be fixed and the
      * same as the order used by $serializeHeader and $deserialize.
      */
+    @SuppressWarnings("unused")
     public void $serialize(DataOutput out) throws IOException {
       return;
     }
@@ -259,6 +261,7 @@ public interface Object {
      * are presented in the DataInput is the same as the order used by
      * $serialize.
      */
+    @SuppressWarnings("unused")
     public $Impl(DataInput in) throws IOException {
       return;
     }
