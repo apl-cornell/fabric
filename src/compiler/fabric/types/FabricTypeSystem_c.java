@@ -3,6 +3,7 @@ package fabric.types;
 import java.util.List;
 
 import polyglot.ast.TypeNode;
+import polyglot.frontend.Source;
 import polyglot.types.*;
 import polyglot.types.Package;
 
@@ -15,6 +16,18 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
 
   public ClassType FObject() {
     return load("fabric.lang.Object");
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see polyglot.types.TypeSystem_c#createClassType(polyglot.types.LazyClassInitializer,
+   *      polyglot.frontend.Source)
+   */
+  @Override
+  public ParsedClassType createClassType(LazyClassInitializer init,
+      Source fromSource) {
+    return new FabricParsedClassType_c(this, init, fromSource);
   }
 
   @SuppressWarnings("unchecked")
@@ -72,7 +85,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
     if ("java.lang.Object".equals(type.toString())) return false;
     while (true) {
       if (type == null) return true;
-      if ("java.lang.Object".equals(type.toString())) return true;
+      if ("fabric.lang.Object".equals(type.toString())) return true;
       if (!(type instanceof ParsedClassType)) return false;
       ParsedClassType pct = (ParsedClassType) type;
       // XXX Assume any class loaded from the DeserializedClassInitializer was
