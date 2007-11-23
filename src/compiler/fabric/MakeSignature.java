@@ -51,9 +51,10 @@ public class MakeSignature {
     }
 
     for (Method m : c.getMethods()) {
-      int mod = m.getModifiers();
+      int mod = m.getModifiers() & ~(Modifier.VOLATILE | Modifier.TRANSIENT);
       System.out.print("  " + Modifier.toString(mod));
-      if (!Modifier.isNative(mod)) System.out.print(" native");
+      if (!Modifier.isNative(mod) && !Modifier.isAbstract(mod))
+        System.out.print(" native");
       System.out.print(" " + m.getReturnType().getCanonicalName() + " "
           + m.getName() + "(");
       int argNum = 0;
