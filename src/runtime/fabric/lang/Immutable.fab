@@ -1,8 +1,0 @@
-package fabric.lang;
-
-/**
- * A marker interface for immutable objects.
- */
-public interface Immutable {
-
-}

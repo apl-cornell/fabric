@@ -1,6 +1,6 @@
 package java.lang;
 
-public final class String implements fabric.lang.Inlineable,
+public final class String implements fabric.lang.JavaInlineable,
     java.lang.Comparable, java.lang.CharSequence {
 
   public String() {

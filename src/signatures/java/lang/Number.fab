@@ -1,6 +1,6 @@
 package java.lang;
 
-public abstract class Number implements fabric.lang.Inlineable {
+public abstract class Number implements fabric.lang.JavaInlineable {
   public Number() {
   }
 

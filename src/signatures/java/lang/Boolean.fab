@@ -1,6 +1,6 @@
 package java.lang;
 
-public final class Boolean implements fabric.lang.Inlineable,
+public final class Boolean implements fabric.lang.JavaInlineable,
     java.lang.Comparable {
   public Boolean(boolean arg0) {
   }

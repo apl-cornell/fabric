@@ -5,6 +5,6 @@ import java.io.Serializable;
 /**
  * A marker interface for inlineable objects.
  */
-public interface Inlineable extends Immutable, Serializable {
+public interface Inlineable extends Serializable {
 
 }
