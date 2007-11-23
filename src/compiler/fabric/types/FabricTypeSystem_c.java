@@ -94,9 +94,9 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
 
   public boolean isFabric(ClassType type) {
     // TODO This whole thing is a hack.
-    if ("java.lang.Object".equals(type.toString())) return false;
     while (true) {
       if (type == null) return true;
+      if ("java.lang.Object".equals(type.toString())) return false;
       if ("fabric.lang.Object".equals(type.toString())) return true;
       if (!(type instanceof ParsedClassType)) return false;
       ParsedClassType pct = (ParsedClassType) type;

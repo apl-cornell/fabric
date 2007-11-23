@@ -81,8 +81,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     TypeNode superClass = classDecl.superClass();
 
     // Make the super class explicit.
-    // TODO This is probably the wrong way to tell.
-    if (superClass == null || "java.lang.Object".equals(superClass.toString())) {
+    if (superClass == null) {
       superClass =
           nf.CanonicalTypeNode(Position.compilerGenerated(), ts.FObject());
     }
