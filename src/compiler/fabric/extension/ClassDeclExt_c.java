@@ -430,20 +430,11 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     for (ClassMember m : members) {
       if (m instanceof FieldDecl) {
         FieldDecl f = (FieldDecl) m;
-
-        if (!f.flags().isTransient()) {
-          fields.add(f);
-        }
+        if (!f.flags().isTransient()) fields.add(f);
       }
     }
 
     QQ qq = pr.qq();
-    ClassMember numFieldsDecl =
-        qq.parseMember("public int $numFields() {"
-            + "return super.$numFields() + " + fields.size() + "; }");
-    result.add(numFieldsDecl);
-
-    StringBuilder header = new StringBuilder();
     StringBuilder out = new StringBuilder();
     StringBuilder in = new StringBuilder();
 
@@ -451,39 +442,30 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       Type t = f.declType();
 
       if (t.isBoolean()) {
-        header.append("out.writeByte(0);");
         out.append("out.writeBoolean(this." + f.name() + ");");
         in.append("this." + f.name() + " = in.readBoolean();");
       } else if (t.isByte()) {
-        header.append("out.writeByte(1);");
         out.append("out.writeByte(this." + f.name() + ");");
         in.append("this." + f.name() + " = in.readByte();");
       } else if (t.isChar()) {
-        header.append("out.writeByte(2);");
         out.append("out.writeChar(this." + f.name() + ");");
         in.append("this." + f.name() + " = in.readChar();");
       } else if (t.isDouble()) {
-        header.append("out.writeByte(3);");
         out.append("out.writeDouble(this." + f.name() + ");");
         in.append("this." + f.name() + " = in.readDouble();");
       } else if (t.isFloat()) {
-        header.append("out.writeByte(4);");
         out.append("out.writeFloat(this." + f.name() + ");");
         in.append("this." + f.name() + " = in.readFloat();");
       } else if (t.isInt()) {
-        header.append("out.writeByte(5);");
         out.append("out.writeInt(this." + f.name() + ");");
         in.append("this." + f.name() + " = in.readInt();");
       } else if (t.isLong()) {
-        header.append("out.writeByte(6);");
         out.append("out.writeLong(this." + f.name() + ");");
         in.append("this." + f.name() + " = in.readLong();");
       } else if (t.isShort()) {
-        header.append("out.writeByte(7);");
         out.append("out.writeShort(this." + f.name() + ");");
         in.append("this." + f.name() + " = in.readShort();");
       } else {
-        header.append("out.writeByte(8);");
         out.append("$writeRef(out, this." + f.name() + ");");
 
         in.append("core = in.readLong();");
@@ -496,12 +478,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         }
       }
     }
-
-    ClassMember serializeHeader =
-        qq.parseMember("public void $serializeHeader(java.io.DataOutput out) "
-            + "throws java.io.IOException {" + "super.$serializeHeader(out);"
-            + header + " }");
-    result.add(serializeHeader);
 
     ClassMember serialize =
         qq.parseMember("public void $serialize(java.io.DataOutput out) "

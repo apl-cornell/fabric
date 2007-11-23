@@ -227,41 +227,11 @@ public interface Object {
     }
     
     /**
-     * Returns the number of non-transient fields in this class, including all
-     * inherited fields. Public, protected, package, and private fields should
-     * all be included. This is in other words the number of fields that will be
-     * serialized for objects of this type.
-     * 
-     * Subclasses should call the super method and add the number of fields
-     * declared in the particular subclass.
-     */
-    public int $numFields() {
-      return 0;
-    }
-    
-    /**
-     * This method should write to the given DataOutput information about each
-     * of the non-transient fields in this class. Subclasses should first call
-     * the super method so that information about inherited fields are written
-     * out first. The order in which fields are represented must be fixed and
-     * the same as the order used by $serialize and $deserialize.
-     * 
-     * For each field, one byte of information should be written, according to
-     * the following format:
-     * 
-     * TODO
-     */
-    @SuppressWarnings("unused")
-    public void $serializeHeader(DataOutput out) throws IOException {
-      return;
-    }
-    
-    /**
      * This method should write each of the non-transient fields of this object
      * to the given DataOutput. Subclasses should call the super method first
      * so that inherited fields are written before fields declared in this
      * subclass. The order in which fields are written must be fixed and the
-     * same as the order used by $serializeHeader and $deserialize.
+     * same as the order used by $deserialize.
      */
     @SuppressWarnings("unused")
     public void $serialize(DataOutput out) throws IOException {

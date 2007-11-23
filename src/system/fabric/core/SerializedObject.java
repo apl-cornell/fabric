@@ -78,8 +78,6 @@ public class SerializedObject implements Serializable {
     
     try {
       dos.writeUTF(c.getName());
-      dos.writeInt(obj.$numFields());
-      obj.$serializeHeader(dos);
       obj.$serialize(dos);
       return bos.toByteArray();
     } catch (IOException e) {}
@@ -93,8 +91,6 @@ public class SerializedObject implements Serializable {
     
     try {
       Class<?> c = Class.forName(dis.readUTF());
-      int numFields = dis.readInt();
-      dis.skip(numFields); // no need to actually read header information
       $Impl obj = ($Impl) c.getConstructor(DataInput.class).newInstance(dis);
       return obj;
     } catch (ClassNotFoundException e) {
