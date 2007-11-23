@@ -199,7 +199,7 @@ TOP='${basedir}'
       <arg value="-d" />
       <arg value="sig-classes" />
       <arg value="-sourcepath" />
-      <arg value="src/signatures" />
+      <arg value="src/signatures:src/runtime" />
       <srcfile />
       <fileset dir="${basedir}"
 	  includes="src/signatures/fabric/lang/Object.fab" />
@@ -219,6 +219,8 @@ TOP='${basedir}'
       <arg value="sig-classes" />
       <arg value="-sourcepath" />
       <arg value="src/signatures" />
+      <arg value="-sigcp" />
+      <arg value="sig-classes" />
       <srcfile />
       <fileset dir="${basedir}" includes="src/signatures/**/*.fab" />
       <mapper type="regexp" from="src/signatures(.*)\.fab"
