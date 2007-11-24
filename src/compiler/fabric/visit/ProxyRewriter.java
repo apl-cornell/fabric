@@ -20,7 +20,7 @@ public class ProxyRewriter extends NodeVisitor {
 
   public ProxyRewriter(ExtensionInfo extInfo) {
     this.qq = new QQ(extInfo);
-    this.nf = (FabricNodeFactory) extInfo.nodeFactory();
+    this.nf = extInfo.nodeFactory();
     this.ts = extInfo.typeSystem();
   }
 
