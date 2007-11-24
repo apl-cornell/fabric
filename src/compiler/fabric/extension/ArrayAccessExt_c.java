@@ -2,6 +2,8 @@ package fabric.extension;
 
 import polyglot.ast.ArrayAccess;
 import polyglot.ast.Expr;
+import polyglot.types.Type;
+import fabric.types.FabricTypeSystem;
 import fabric.visit.ProxyRewriter;
 
 public class ArrayAccessExt_c extends ExprExt_c {
@@ -14,8 +16,15 @@ public class ArrayAccessExt_c extends ExprExt_c {
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     ArrayAccess aa = node();
-    return pr.qq().parseExpr("(%T) %E.get(%E)", aa.type(), aa.array(),
-        aa.index());
+
+    // Only rewrite arrays of primitives and fabric.lang.Objects.
+    FabricTypeSystem ts = pr.typeSystem();
+    Expr array = aa.array();
+    Type base = array.type().toArray().ultimateBase();
+    if (base.isPrimitive() || ts.isFabric(base))
+      return pr.qq().parseExpr("(%T) %E.get(%E)", aa.type(), array, aa.index());
+    
+    return aa;
   }
 
   /*

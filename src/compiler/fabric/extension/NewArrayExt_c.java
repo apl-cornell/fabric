@@ -4,6 +4,7 @@ import polyglot.ast.*;
 import polyglot.qq.QQ;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
+import fabric.types.FabricTypeSystem;
 import fabric.visit.ProxyRewriter;
 
 public class NewArrayExt_c extends LocatedExt_c {
@@ -17,6 +18,13 @@ public class NewArrayExt_c extends LocatedExt_c {
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     QQ qq = pr.qq();
     NewArray newArray = node();
+
+    // Only rewrite if we have an array of primitives or an array of
+    // fabric.util.Objects.
+    Type baseType = newArray.baseType().type();
+    FabricTypeSystem ts = pr.typeSystem();
+    if (!baseType.isPrimitive() && !ts.isFabric(baseType)) return newArray;
+
     if (location == null) location = qq.parseExpr("$getCore()");
 
     if (newArray.dims().size() > 1)
@@ -27,9 +35,8 @@ public class NewArrayExt_c extends LocatedExt_c {
 
     Expr size = (Expr) newArray.dims().get(0);
 
-    Type baseType = newArray.type().toArray().base();
-    Type arrayImplType = pr.typeSystem().fArrayImplOf(baseType);
-    Type arrayType = pr.typeSystem().fArrayOf(baseType);
+    Type arrayImplType = ts.fArrayImplOf(baseType);
+    Type arrayType = ts.fArrayOf(baseType);
     return qq.parseExpr("(%T) new %T(%E, %E).$getProxy()", arrayType,
         arrayImplType, location, size);
   }
@@ -42,6 +49,15 @@ public class NewArrayExt_c extends LocatedExt_c {
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     NewArray newArray = node();
+
+    // Only rewrite if we have an array of primitives or an array of
+    // fabric.util.Objects.
+    Type base = newArray.baseType().type();
+    FabricTypeSystem ts = rewriter.typeSystem();
+    if (!base.isPrimitive() && !ts.isFabric(base)) {
+      return null;
+    }
+
     if (newArray.init() != null) {
       ArrayInit init = newArray.init();
       init = ((ArrayInitExt_c) init.ext()).location(location);

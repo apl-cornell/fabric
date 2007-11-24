@@ -3,11 +3,24 @@ package fabric.lang;
 import fabric.client.Core;
 import fabric.common.InternalError;
 
-class WrappedJavaInlineable implements JavaInlineable {
-  public final java.lang.Object obj;
+public class WrappedJavaInlineable<T> implements JavaInlineable {
+  public final T obj;
 
-  public WrappedJavaInlineable(java.lang.Object obj) {
+  public WrappedJavaInlineable(T obj) {
     this.obj = obj;
+  }
+
+  /**
+   * Returns an array containing the elements of the given array, individually
+   * wrapped.
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> WrappedJavaInlineable<T>[] wrap(T[] array) {
+    WrappedJavaInlineable<T>[] result =
+        new WrappedJavaInlineable[array.length];
+    for (int i = 0; i < array.length; i++)
+      result[i] = new WrappedJavaInlineable<T>(array[i]);
+    return result;
   }
 
   /*

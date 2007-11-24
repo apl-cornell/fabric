@@ -3,6 +3,7 @@ package fabric.extension;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
+import polyglot.types.ArrayType;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import fabric.types.FabricTypeSystem;
@@ -19,11 +20,18 @@ public class TypeNodeExt_c extends FabricExt_c {
   public Node rewriteProxies(ProxyRewriter pr) {
     TypeNode tn = node();
     Type type = tn.type();
+    
+    // Only rewrite array types.
     if (!type.isArray()) return tn;
     
-    NodeFactory nf = pr.nodeFactory();
+    // Only rewrite arrays of primitives or fabric.lang.Objects.
     FabricTypeSystem ts = pr.typeSystem();
-    return nf.CanonicalTypeNode(Position.compilerGenerated(), ts.toFArray(type.toArray()));
+    ArrayType at = type.toArray();
+    Type base = at.ultimateBase();
+    if (!base.isPrimitive() && !ts.isFabric(base)) return tn;
+    
+    NodeFactory nf = pr.nodeFactory();
+    return nf.CanonicalTypeNode(Position.compilerGenerated(), ts.toFArray(at));
   }
 
   /*

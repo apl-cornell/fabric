@@ -7,6 +7,7 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.LocalCore;
 import fabric.lang.Object;
+import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
 
 import fabric.util.HashMap;
@@ -20,9 +21,9 @@ import fabric.util.HashMap;
 public class GenMap {
   public static class $Impl {
     @SuppressWarnings("deprecation")
-    public static void main(ObjectArray<String> args) throws Exception {
+    public static void main(ObjectArray<WrappedJavaInlineable<String>> args) throws Exception {
       Client client = Client.getClient();
-      long coreID = Long.parseLong(args.get(0));
+      long coreID = Long.parseLong(args.get(0).obj);
       Core core = client.getCore(coreID);
 
       ObjectOutputStream out = new ObjectOutputStream(System.out);

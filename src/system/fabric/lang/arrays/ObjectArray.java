@@ -1,15 +1,16 @@
 package fabric.lang.arrays;
 
 import fabric.client.Core;
+import fabric.lang.Object;
 
-public interface ObjectArray<T> extends fabric.lang.Object {
+public interface ObjectArray<T extends Object> extends Object {
   int get$length();
 
   T set(int i, T value);
 
   T get(int i);
 
-  public static class $Impl<T> extends fabric.lang.Object.$Impl implements
+  public static class $Impl<T extends Object> extends Object.$Impl implements
       ObjectArray<T> {
     private Object[] value;
 
@@ -62,7 +63,7 @@ public interface ObjectArray<T> extends fabric.lang.Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.ObjectArray#set(int, java.lang.Object)
+     * @see fabric.lang.arrays.ObjectArray#set(int, fabric.lang.Object)
      */
     @SuppressWarnings("unchecked")
     public T set(int i, T value) {
@@ -80,7 +81,7 @@ public interface ObjectArray<T> extends fabric.lang.Object {
     }
   }
 
-  public static class $Proxy<T> extends fabric.lang.Object.$Proxy implements
+  public static class $Proxy<T extends Object> extends Object.$Proxy implements
       ObjectArray<T> {
 
     public $Proxy(Core core, long onum) {
@@ -112,7 +113,7 @@ public interface ObjectArray<T> extends fabric.lang.Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.ObjectArray#set(int, java.lang.Object)
+     * @see fabric.lang.arrays.ObjectArray#set(int, fabric.lang.Object)
      */
     public T set(int i, T value) {
       return ((ObjectArray<T>) fetch()).set(i, value);

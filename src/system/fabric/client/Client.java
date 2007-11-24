@@ -13,6 +13,7 @@ import fabric.common.AccessError;
 import fabric.common.InternalError;
 import fabric.common.Resources;
 import fabric.lang.Object;
+import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.Object.$Impl;
 import fabric.lang.arrays.ObjectArray;
 
@@ -237,7 +238,8 @@ public class Client {
     Core local = c.getLocalCore();
     TransactionManager.INSTANCE.startTransaction();
     Object argsProxy =
-        new ObjectArray.$Impl<String>(local, newArgs).$getProxy();
+        new ObjectArray.$Impl<WrappedJavaInlineable<String>>(local,
+            WrappedJavaInlineable.wrap(newArgs)).$getProxy();
     TransactionManager.INSTANCE.commitTransaction();
 
     try {

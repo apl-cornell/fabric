@@ -1,0 +1,9 @@
+package regression;
+
+public class Array02 {
+  void m() {
+    java.lang.Object[] a = new java.lang.Object[2];
+    a[0] = new java.util.HashMap();
+  }
+}
+
