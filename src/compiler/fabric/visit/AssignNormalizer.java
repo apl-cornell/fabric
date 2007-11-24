@@ -31,6 +31,7 @@ public class AssignNormalizer extends NodeVisitor {
     Expr lhs = assign.left();
     Expr rhs = assign.right();
     assign = assign.operator(Assign.ASSIGN);
-    return assign.right(nf.Binary(Position.compilerGenerated(), lhs, op, rhs));
+    return assign.right(nf.Binary(Position.compilerGenerated(), lhs, op, rhs)
+        .type(assign.type()));
   }
 }

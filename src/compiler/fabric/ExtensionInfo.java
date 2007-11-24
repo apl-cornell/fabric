@@ -3,12 +3,16 @@ package fabric;
 import java.io.Reader;
 
 import polyglot.ast.NodeFactory;
-import polyglot.frontend.*;
+import polyglot.frontend.CupParser;
+import polyglot.frontend.FileSource;
+import polyglot.frontend.Parser;
+import polyglot.frontend.Scheduler;
 import polyglot.lex.Lexer;
 import polyglot.types.LoadedClassResolver;
 import polyglot.types.SourceClassResolver;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
+import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
 import fabric.frontend.FabricScheduler;
 import fabric.parse.Grm;
@@ -71,6 +75,17 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   @Override
   public FabricTypeSystem typeSystem() {
     return (FabricTypeSystem) super.typeSystem();
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see polyglot.frontend.AbstractExtensionInfo#nodeFactory()
+   */
+  @Override
+  public FabricNodeFactory nodeFactory() {
+    // TODO Auto-generated method stub
+    return (FabricNodeFactory) super.nodeFactory();
   }
 
   @Override

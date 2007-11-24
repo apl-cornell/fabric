@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import polyglot.ast.*;
+import polyglot.ast.Assign.Operator;
 import polyglot.types.Flags;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
@@ -27,11 +28,41 @@ public class FabricNodeFactory_c extends NodeFactory_c implements
     return (FabricExtFactory) super.extFactory();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see polyglot.ast.NodeFactory_c#ArrayAccessAssign(polyglot.util.Position,
+   *      polyglot.ast.ArrayAccess, polyglot.ast.Assign.Operator,
+   *      polyglot.ast.Expr)
+   */
+  @Override
+  public ArrayAccessAssign ArrayAccessAssign(Position pos, ArrayAccess left,
+      Operator op, Expr right) {
+    ArrayAccessAssign aaa = new ArrayAccessAssign_c(pos, left, op, right);
+    aaa = (ArrayAccessAssign) aaa.ext(extFactory().extArrayAccessAssign());
+    aaa = (ArrayAccessAssign) aaa.del(delFactory().delArrayAccessAssign());
+    return aaa;
+  }
+
   public Atomic Atomic(Position pos, List<Stmt> statements) {
     Atomic atomic = new Atomic_c(pos, statements);
     atomic = (Atomic) atomic.ext(extFactory().extAtomic());
     atomic = (Atomic) atomic.del(delFactory().delBlock());
     return atomic;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see polyglot.ast.NodeFactory_c#Cast(polyglot.util.Position,
+   *      polyglot.ast.TypeNode, polyglot.ast.Expr)
+   */
+  @Override
+  public Cast Cast(Position pos, TypeNode type, Expr expr) {
+    Cast cast = new Cast_c(pos, type, expr);
+    cast = (Cast) cast.ext(extFactory().extCast());
+    cast = (Cast) cast.del(delFactory().delCast());
+    return cast;
   }
 
   /*

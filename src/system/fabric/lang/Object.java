@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
-import java.util.Map;
-import java.util.WeakHashMap;
 
 import fabric.client.*;
 import fabric.common.ACLPolicy;
@@ -25,6 +23,8 @@ public interface Object {
   $Proxy $getProxy();
 
   boolean equals(Object o);
+
+  java.lang.Object $unwrap();
 
   /**
    * $Proxy objects behave like regular objects by delegating to $Impl objects,
@@ -74,6 +74,10 @@ public interface Object {
 
     public final $Proxy $getProxy() {
       return fetch().$getProxy();
+    }
+
+    public final java.lang.Object $unwrap() {
+      return this;
     }
 
     /**
@@ -245,28 +249,8 @@ public interface Object {
      * $serialize.
      */
     @SuppressWarnings("unused")
-    public $Impl(ObjectInput in) throws IOException {
+    public $Impl(ObjectInput in) throws IOException, ClassNotFoundException {
       return;
-    }
-    
-    /**
-     * Maps ordinary Java objects to their JavaInlineable wrappers.
-     */
-    private static final Map<java.lang.Object, JavaInlineable> $wrappingMap =
-        new WeakHashMap<java.lang.Object, JavaInlineable>();
-
-    /**
-     * Given an object, in the Fabric type system, that implements
-     * fabric.lang.JavaInlineable, returns a wrapped version of that object. If
-     * the given object is already wrapped, it is returned unmodified.
-     */
-    protected static final JavaInlineable $wrapJavaInlineable(
-        java.lang.Object obj) {
-      if (obj instanceof JavaInlineable) return (JavaInlineable) obj;
-      if ($wrappingMap.containsKey(obj)) return $wrappingMap.get(obj);
-      WrappedJavaInlineable result = new WrappedJavaInlineable(obj);
-      $wrappingMap.put(obj, result);
-      return result;
     }
 
     /**
@@ -301,6 +285,10 @@ public interface Object {
      */
     protected $Proxy $makeProxy() {
       return new $Proxy(this);
+    }
+
+    public final java.lang.Object $unwrap() {
+      return this;
     }
 
     /**

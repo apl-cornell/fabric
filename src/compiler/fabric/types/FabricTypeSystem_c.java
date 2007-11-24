@@ -18,9 +18,13 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   public ClassType FObject() {
     return load("fabric.lang.Object");
   }
-  
+
   public ClassType JavaInlineable() {
     return load("fabric.lang.JavaInlineable");
+  }
+  
+  public ClassType WrappedJavaInlineable() {
+    return load("fabric.lang.WrappedJavaInlineable");
   }
 
   /*
@@ -119,6 +123,15 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
 
   public boolean isFabric(TypeNode type) {
     return isFabric(type.type());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isJavaInlineable(polyglot.types.Type)
+   */
+  public boolean isJavaInlineable(Type type) {
+    return isSubtype(type, JavaInlineable());
   }
 
 }

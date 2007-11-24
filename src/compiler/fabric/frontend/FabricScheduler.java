@@ -23,6 +23,7 @@ import polyglot.visit.LocalClassRemover;
 import fabric.ExtensionInfo;
 import fabric.visit.AssignNormalizer;
 import fabric.visit.AtomicRewriter;
+import fabric.visit.InlineableWrapper;
 import fabric.visit.ProxyRewriter;
 
 public class FabricScheduler extends JLScheduler {
@@ -112,19 +113,35 @@ public class FabricScheduler extends JLScheduler {
     return g;
   }
 
+  public Goal WrapInlineables(final Job job) {
+    Goal g =
+        internGoal(new VisitorGoal(job, new InlineableWrapper(job, extInfo
+            .typeSystem(), extInfo.nodeFactory())) {
+          @SuppressWarnings("unchecked")
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+            List<Goal> l = new ArrayList<Goal>();
+            l.add(ExceptionsChecked(job));
+            l.add(ExitPathsChecked(job));
+            l.add(InitializationsChecked(job));
+            l.add(ConstructorCallsChecked(job));
+            l.add(ForwardReferencesChecked(job));
+            l.add(InnerClassesRemoved(job));
+            l.add(AssignmentsNormalized(job));
+            l.addAll(super.prerequisiteGoals(scheduler));
+            return l;
+          }
+        });
+    return g;
+  }
+
   public Goal RewriteProxies(final Job job) {
     Goal g = internGoal(new VisitorGoal(job, new ProxyRewriter(extInfo)) {
       @SuppressWarnings("unchecked")
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
-        l.add(ExceptionsChecked(job));
-        l.add(ExitPathsChecked(job));
-        l.add(InitializationsChecked(job));
-        l.add(ConstructorCallsChecked(job));
-        l.add(ForwardReferencesChecked(job));
-        l.add(InnerClassesRemoved(job));
-        l.add(AssignmentsNormalized(job));
+        l.add(WrapInlineables(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
       }

@@ -21,10 +21,15 @@ public class ArrayAccessExt_c extends ExprExt_c {
     FabricTypeSystem ts = pr.typeSystem();
     Expr array = aa.array();
     Type base = array.type().toArray().ultimateBase();
-    if (base.isPrimitive() || ts.isFabric(base))
-      return pr.qq().parseExpr("(%T) %E.get(%E)", aa.type(), array, aa.index());
-    
-    return aa;
+    if (!base.isPrimitive() && !ts.isFabric(base)) return aa;
+
+    Expr result = pr.qq().parseExpr("%E.get(%E)", array, aa.index());
+
+    // Insert a cast if we have a pure Fabric type.
+    if (ts.isFabric(base) && !ts.isJavaInlineable(base))
+      result = pr.qq().parseExpr("(%T) %E", aa.type(), result);
+
+    return result;
   }
 
   /*

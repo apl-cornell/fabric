@@ -1,13 +1,40 @@
 package fabric.lang;
 
+import java.util.Map;
+import java.util.WeakHashMap;
+
 import fabric.client.Core;
 import fabric.common.InternalError;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
   public final T obj;
 
-  public WrappedJavaInlineable(T obj) {
+  private WrappedJavaInlineable(T obj) {
     this.obj = obj;
+  }
+
+  /**
+   * Maps ordinary Java objects to their JavaInlineable wrappers.
+   */
+  private static final Map<java.lang.Object, WrappedJavaInlineable<?>> $wrappingMap =
+      new WeakHashMap<java.lang.Object, WrappedJavaInlineable<?>>();
+
+  /**
+   * Given an object, in the Fabric type system, that implements
+   * fabric.lang.JavaInlineable, returns a wrapped version of that object. If
+   * the given object is already wrapped, it is returned unmodified.
+   */
+  @SuppressWarnings("unchecked")
+  public static final <T> WrappedJavaInlineable<T> $wrap(T obj) {
+    if (obj instanceof WrappedJavaInlineable)
+      return (WrappedJavaInlineable) obj;
+
+    if ($wrappingMap.containsKey(obj))
+      return (WrappedJavaInlineable<T>) $wrappingMap.get(obj);
+
+    WrappedJavaInlineable<T> result = new WrappedJavaInlineable<T>(obj);
+    $wrappingMap.put(obj, result);
+    return result;
   }
 
   /**
@@ -16,10 +43,9 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    */
   @SuppressWarnings("unchecked")
   public static <T> WrappedJavaInlineable<T>[] wrap(T[] array) {
-    WrappedJavaInlineable<T>[] result =
-        new WrappedJavaInlineable[array.length];
+    WrappedJavaInlineable<T>[] result = new WrappedJavaInlineable[array.length];
     for (int i = 0; i < array.length; i++)
-      result[i] = new WrappedJavaInlineable<T>(array[i]);
+      result[i] = $wrap(array[i]);
     return result;
   }
 
@@ -48,6 +74,15 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    */
   public fabric.lang.Object.$Proxy $getProxy() {
     throw new InternalError("WrappedJavaInlineables don't have proxies.");
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.lang.Object#$unwrap()
+   */
+  public T $unwrap() {
+    return obj;
   }
 
   /*

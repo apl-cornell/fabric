@@ -11,19 +11,31 @@ public interface FabricTypeSystem extends TypeSystem {
   // TODO: fabric.client or fabric.lang?
   /** return the ClassType corresponding to fabric.client.TransactionManager */
   ClassType TransactionManager();
-  
+
   /** The ClassType of fabric.lang.Object. */
   ClassType FObject();
-  
+
   /** The ClassType of fabric.lang.JavaInlineable. */
   ClassType JavaInlineable();
+  
+  /** The ClassType of fabric.lang.WrappedJavaInlineable. */
+  ClassType WrappedJavaInlineable();
 
   ClassType fArrayOf(Type type);
+
   ClassType fArrayImplOf(Type type);
-  
+
   ClassType toFArray(ArrayType type);
-  
+
   boolean isFabric(ClassType type);
+
   boolean isFabric(Type type);
+
   boolean isFabric(TypeNode type);
+
+  /**
+   * Determines whether the given type is a subtype of
+   * fabric.lang.JavaInlineable.
+   */
+  boolean isJavaInlineable(Type type);
 }

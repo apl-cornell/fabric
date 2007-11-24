@@ -55,7 +55,7 @@ public class ArrayInitExt_c extends LocatedExt_c {
 
     Type oldBase = arrayInit.type().toArray().base();
     ClassType newType = ts.fArrayImplOf(oldBase);
-    Type newBase = oldBase.isPrimitive() ? oldBase : ts.Object();
+    Type newBase = oldBase.isPrimitive() ? oldBase : ts.FObject();
     Expr init =
         nf.NewArray(Position.compilerGenerated(), nf.CanonicalTypeNode(Position
             .compilerGenerated(), newBase), 1, arrayInit);
