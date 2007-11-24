@@ -1,20 +1,18 @@
 package fabric.lang;
 
-import java.io.DataOutput;
 import java.io.IOException;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
+import java.util.Map;
+import java.util.WeakHashMap;
 
-import fabric.client.Client;
-import fabric.client.Core;
-import fabric.client.RemoteCore;
-import fabric.client.TransactionManager;
-import fabric.client.UnreachableCoreException;
+import fabric.client.*;
 import fabric.common.ACLPolicy;
 import fabric.common.AccessError;
 import fabric.common.InternalError;
 import fabric.common.Policy;
-import fabric.core.SerializedObject.DataInput;
+import fabric.core.SerializedObject.ObjectInput;
 
 /**
  * All Fabric objects implement this interface.
@@ -25,7 +23,7 @@ public interface Object {
   long $getOnum();
 
   $Proxy $getProxy();
-  
+
   boolean equals(Object o);
 
   /**
@@ -77,7 +75,7 @@ public interface Object {
     public final $Proxy $getProxy() {
       return fetch().$getProxy();
     }
-    
+
     /**
      * A delegate for the default equals implementation.
      */
@@ -85,14 +83,14 @@ public interface Object {
     public boolean equals(java.lang.Object arg1) {
       return fetch().equals(arg1);
     }
-    
+
     /**
      * A delegate for the default equals implementation.
      */
     public boolean equals(Object arg1) {
       return fetch().equals(arg1);
     }
-    
+
     /**
      * A delegate for the default hashcode implementation.
      */
@@ -145,7 +143,7 @@ public interface Object {
       // Register the new object with the transaction manager.
       TransactionManager.INSTANCE.registerCreate(this);
     }
-    
+
     /**
      * Create an $Impl with the given object number
      * 
@@ -157,7 +155,7 @@ public interface Object {
       this.$core = core;
       this.$onum = onum;
       this.$version = 0;
-      this.$policy  = new ACLPolicy();
+      this.$policy = new ACLPolicy();
     }
 
     @Override
@@ -168,7 +166,7 @@ public interface Object {
         throw new InternalError(e);
       }
     }
-    
+
     /**
      * Default equals implementation uses pointer equality.
      */
@@ -177,14 +175,14 @@ public interface Object {
       if (!(o instanceof Object)) return false;
       return equals((Object) o);
     }
-    
+
     /**
      * Default equals implementation uses pointer equality.
      */
     public boolean equals(Object o) {
       return o.$getCore().equals($getCore()) && o.$getOnum() == $getOnum();
     }
-    
+
     /**
      * Default hashCode implementation uses the OID to compute the hash value.
      */
@@ -225,36 +223,68 @@ public interface Object {
       if ($proxy == null) $proxy = $makeProxy();
       return $proxy;
     }
-    
+
     /**
      * This method should write each of the non-transient fields of this object
-     * to the given DataOutput. Subclasses should call the super method first
+     * to the given ObjectOutput. Subclasses should call the super method first
      * so that inherited fields are written before fields declared in this
      * subclass. The order in which fields are written must be fixed and the
      * same as the order used by $deserialize.
      */
     @SuppressWarnings("unused")
-    public void $serialize(DataOutput out) throws IOException {
+    public void $serialize(ObjectOutput out) throws IOException {
       return;
     }
-    
+
     /**
      * This is the deserialization constructor and reconstructs the object from
      * its serialized state. Subclasses should call the super constructor to
      * first read inherited fields. It should then read the value of each
      * non-transient field declared in this subclass. The order in which fields
-     * are presented in the DataInput is the same as the order used by
+     * are presented in the ObjectInput is the same as the order used by
      * $serialize.
      */
     @SuppressWarnings("unused")
-    public $Impl(DataInput in) throws IOException {
+    public $Impl(ObjectInput in) throws IOException {
       return;
     }
     
     /**
-     * This method serializes an object pointer to the given DataOutput.
+     * Maps ordinary Java objects to their JavaInlineable wrappers.
      */
-    protected static void $writeRef(DataOutput out, java.lang.Object obj)
+    private static final Map<java.lang.Object, JavaInlineable> $wrappingMap =
+        new WeakHashMap<java.lang.Object, JavaInlineable>();
+
+    /**
+     * Given an object, in the Fabric type system, that implements
+     * fabric.lang.JavaInlineable, returns a wrapped version of that object. If
+     * the given object is already wrapped, it is returned unmodified.
+     */
+    protected static final JavaInlineable $wrapJavaInlineable(
+        java.lang.Object obj) {
+      if (obj instanceof JavaInlineable) return (JavaInlineable) obj;
+      if ($wrappingMap.containsKey(obj)) return $wrappingMap.get(obj);
+      WrappedJavaInlineable result = new WrappedJavaInlineable(obj);
+      $wrappingMap.put(obj, result);
+      return result;
+    }
+
+    /**
+     * Serializes an object to the given ObjectOutput.
+     */
+    protected static final void $writeInline(ObjectOutput out,
+        java.lang.Object obj) throws IOException {
+      if (obj instanceof WrappedJavaInlineable) {
+        obj = ((WrappedJavaInlineable) obj).obj;
+      }
+
+      out.writeObject(obj);
+    }
+
+    /**
+     * Serializes an object pointer to the given ObjectOutput.
+     */
+    protected static final void $writeRef(ObjectOutput out, Object obj)
         throws IOException {
       if (obj == null) {
         out.writeLong(0);
@@ -265,14 +295,14 @@ public interface Object {
         out.writeLong(p.onum);
       }
     }
-    
+
     /**
      * Subclasses should override this method.
      */
     protected $Proxy $makeProxy() {
       return new $Proxy(this);
     }
-    
+
     /**
      * This method changes the core and onum of the object. This method should
      * not be called as it leaves the system in an inconsistent state.

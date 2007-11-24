@@ -14,6 +14,9 @@ public interface FabricTypeSystem extends TypeSystem {
   
   /** The ClassType of fabric.lang.Object. */
   ClassType FObject();
+  
+  /** The ClassType of fabric.lang.JavaInlineable. */
+  ClassType JavaInlineable();
 
   ClassType fArrayOf(Type type);
   ClassType fArrayImplOf(Type type);

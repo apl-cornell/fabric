@@ -424,19 +424,23 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
   private List<ClassMember> makeSerializers(ProxyRewriter pr,
       List<ClassMember> members) {
+    FabricTypeSystem ts = pr.typeSystem();
     List<ClassMember> result = new ArrayList<ClassMember>(3);
     List<FieldDecl> fields = new LinkedList<FieldDecl>();
 
+    // Determine the list of fields to serialize.
     for (ClassMember m : members) {
       if (m instanceof FieldDecl) {
         FieldDecl f = (FieldDecl) m;
-        if (!f.flags().isTransient()) fields.add(f);
+        TypeNode fieldType = f.type();
+        if (ts.isFabric(fieldType)) fields.add(f);
       }
     }
 
     QQ qq = pr.qq();
     StringBuilder out = new StringBuilder();
     StringBuilder in = new StringBuilder();
+    List<Object> inSubst = new ArrayList<Object>();
 
     for (FieldDecl f : fields) {
       Type t = f.declType();
@@ -465,6 +469,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       } else if (t.isShort()) {
         out.append("out.writeShort(this." + f.name() + ");");
         in.append("this." + f.name() + " = in.readShort();");
+      } else if (ts.isSubtype(t, ts.JavaInlineable())) {
+        out.append("$writeInline(out, this." + f.name() + ");");
+        in.append("this." + f.name() + " = (%T) in.readObject();");
+        inSubst.add(t);
       } else {
         out.append("$writeRef(out, this." + f.name() + ");");
 
@@ -480,16 +488,16 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     }
 
     ClassMember serialize =
-        qq.parseMember("public void $serialize(java.io.DataOutput out) "
+        qq.parseMember("public void $serialize(java.io.ObjectOutput out) "
             + "throws java.io.IOException {" + "super.$serialize(out);" + out
             + " }");
     result.add(serialize);
 
     ClassMember deserialize =
         qq.parseMember("public $Impl"
-            + "(fabric.core.SerializedObject.DataInput in) "
+            + "(fabric.core.SerializedObject.ObjectInput in) "
             + "throws java.io.IOException {" + "super(in);"
-            + "long core, onum;" + in + " }");
+            + "long core, onum;" + in + " }", inSubst);
     result.add(deserialize);
 
     return result;

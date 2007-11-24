@@ -18,6 +18,10 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   public ClassType FObject() {
     return load("fabric.lang.Object");
   }
+  
+  public ClassType JavaInlineable() {
+    return load("fabric.lang.JavaInlineable");
+  }
 
   /*
    * (non-Javadoc)

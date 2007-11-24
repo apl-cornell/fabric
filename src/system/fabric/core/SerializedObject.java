@@ -1,11 +1,6 @@
 package fabric.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
+import java.io.*;
 
 import fabric.common.InternalError;
 import fabric.common.Policy;
@@ -74,9 +69,9 @@ public class SerializedObject implements Serializable {
   protected byte[] serialize($Impl obj) {
     Class<?> c = obj.getClass();
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    DataOutputStream dos = new DataOutputStream(bos);
     
     try {
+      ObjectOutputStream dos = new ObjectOutputStream(bos);
       dos.writeUTF(c.getName());
       obj.$serialize(dos);
       return bos.toByteArray();
@@ -87,11 +82,11 @@ public class SerializedObject implements Serializable {
   
   protected $Impl deserialize(byte[] buf) throws ClassNotFoundException {
     ByteArrayInputStream bis = new ByteArrayInputStream(buf);
-    DataInputStream dis = new DataInputStream(bis);
     
     try {
+      ObjectInputStream dis = new ObjectInputStream(bis);
       Class<?> c = Class.forName(dis.readUTF());
-      $Impl obj = ($Impl) c.getConstructor(DataInput.class).newInstance(dis);
+      $Impl obj = ($Impl) c.getConstructor(ObjectInput.class).newInstance(dis);
       return obj;
     } catch (ClassNotFoundException e) {
       throw e;
@@ -104,16 +99,16 @@ public class SerializedObject implements Serializable {
    * This interface is used solely for the deserialization constructor of
    * $Impls. It's purpose is to make sure the constructor signature does not
    * conflict with a user written constructor that also takes a
-   * java.io.DataInput as its only argument.
+   * java.io.ObjectInput as its only argument.
    * 
    * @author xinz
    */
-  public interface DataInput extends java.io.DataInput {}
+  public interface ObjectInput extends java.io.ObjectInput {}
   
-  private class DataInputStream extends java.io.DataInputStream 
-      implements DataInput {
+  private class ObjectInputStream extends java.io.ObjectInputStream 
+      implements ObjectInput {
 
-    public DataInputStream(InputStream in) {
+    public ObjectInputStream(InputStream in) throws IOException {
       super(in);
     }
     
