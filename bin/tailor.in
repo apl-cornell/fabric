@@ -9,6 +9,7 @@ while true; do
 done
 
 classpath="${TOP}${FILE_SEP}classes${PATH_SEP}"
+classpath="${TOP}${FILE_SEP}rt-classes${PATH_SEP}${classpath}${PATH_SEP}"
 classpath="${TOP}${FILE_SEP}lib${PATH_SEP}${classpath}${PATH_SEP}"
 command="\"$JAVA\" $vmargs -classpath \"$classpath\" fabric.client.Client $args"
 
