@@ -3,6 +3,7 @@ package fabric.extension;
 import java.util.LinkedList;
 import java.util.List;
 
+import fabric.types.FabricTypeSystem;
 import fabric.visit.ProxyRewriter;
 import polyglot.ast.Expr;
 import polyglot.ast.New;
@@ -21,8 +22,9 @@ public class NewExt_c extends LocatedExt_c {
     TypeNode typeNode = call.objectType();
     ClassType type = (ClassType) typeNode.type();
 
-    // Only rewrite if instantiating a Fabric type.
-    if (!pr.typeSystem().isFabric(typeNode))
+    // Only rewrite if instantiating a pure Fabric type.
+    FabricTypeSystem ts = pr.typeSystem();
+    if (!ts.isFabric(typeNode) || ts.isJavaInlineable(typeNode))
       return super.rewriteProxiesImpl(pr);
 
     List<Expr> newargs = new LinkedList<Expr>(call.arguments());

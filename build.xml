@@ -268,7 +268,7 @@ TOP='${basedir}'
       <arg value="src/runtime" />
       <srcfile />
       <fileset dir="${basedir}"
-	  includes="src/runtime/fabric/util/HashMap.fab" />
+	  includes="src/runtime/fabric/util/HashMap.fab,src/runtime/fabric/util/LinkedList.fab" />
       <mapper type="regexp" from="src/runtime(.*)\.fab"
 	  to="classes\1\.class" />
     </apply>

@@ -742,7 +742,7 @@ public class LinkedList extends AbstractSequentialList
     s.defaultReadObject();
     int i = s.readInt();
     while (--i >= 0)
-      addLastEntry(new Entry(s.readObject()));
+      addLastEntry(new Entry((Object) s.readObject()));
   }
 
   /**

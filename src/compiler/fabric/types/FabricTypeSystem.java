@@ -38,4 +38,5 @@ public interface FabricTypeSystem extends TypeSystem {
    * fabric.lang.JavaInlineable.
    */
   boolean isJavaInlineable(Type type);
+  boolean isJavaInlineable(TypeNode type);
 }

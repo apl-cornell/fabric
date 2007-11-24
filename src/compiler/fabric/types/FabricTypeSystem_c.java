@@ -22,7 +22,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   public ClassType JavaInlineable() {
     return load("fabric.lang.JavaInlineable");
   }
-  
+
   public ClassType WrappedJavaInlineable() {
     return load("fabric.lang.WrappedJavaInlineable");
   }
@@ -134,4 +134,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
     return isSubtype(type, JavaInlineable());
   }
 
+  public boolean isJavaInlineable(TypeNode type) {
+    return isJavaInlineable(type.type());
+  }
 }
