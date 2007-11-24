@@ -21,11 +21,14 @@ public class FabricArrayType_c extends ArrayType_c {
    */
   @Override
   public boolean descendsFromImpl(Type ancestor) {
-    // Array types are subtypes of fabric.lang.Object.
+    // Arrays of primitives and arrays of Fabric objects are subtypes of
+    // fabric.lang.Object.
     FabricTypeSystem ts = (FabricTypeSystem) this.ts;
+    Type base = ultimateBase();
     if (ancestor.isCanonical() && !ancestor.isNull()
         && !ts.typeEquals(this, ancestor) && ancestor.isReference()
-        && ts.typeEquals(ancestor, ts.FObject())) return true;
+        && ts.typeEquals(ancestor, ts.FObject())
+        && (base.isPrimitive() || ts.isFabric(base))) return true;
     return super.descendsFromImpl(ancestor);
   }
 
