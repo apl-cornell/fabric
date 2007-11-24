@@ -14,21 +14,21 @@ public class MakeSignature {
       System.exit(-1);
     }
 
-    Class c = Class.forName(args[0]);
+    Class<?> c = Class.forName(args[0]);
     Package p = c.getPackage();
     System.out.println("package " + p.getName() + ";");
     System.out.println(Modifier.toString(c.getModifiers()) + " "
         + (c.isInterface() ? "interface" : "class") + " " + c.getSimpleName());
 
     // Print superclass.
-    Class superClass = c.getSuperclass();
+    Class<?> superClass = c.getSuperclass();
     if (!superClass.equals(Object.class)) {
       System.out.println("    extends " + superClass.getCanonicalName());
     }
 
     // Print interfaces.
     boolean firstIface = true;
-    for (Class iface : c.getInterfaces()) {
+    for (Class<?> iface : c.getInterfaces()) {
       if (firstIface) {
         firstIface = false;
         System.out.print("    " + (c.isInterface() ? "extends" : "implements")
@@ -39,11 +39,11 @@ public class MakeSignature {
 
     // Start body.
     System.out.println("{");
-    for (Constructor constr : c.getConstructors()) {
+    for (Constructor<?> constr : c.getConstructors()) {
       System.out.print("  " + Modifier.toString(constr.getModifiers()) + " "
           + c.getSimpleName() + "(");
       int argNum = 0;
-      for (Class param : constr.getParameterTypes()) {
+      for (Class<?> param : constr.getParameterTypes()) {
         if (argNum > 0) System.out.print(", ");
         System.out.print(param.getCanonicalName() + " arg" + (argNum++));
       }
@@ -58,7 +58,7 @@ public class MakeSignature {
       System.out.print(" " + m.getReturnType().getCanonicalName() + " "
           + m.getName() + "(");
       int argNum = 0;
-      for (Class param : m.getParameterTypes()) {
+      for (Class<?> param : m.getParameterTypes()) {
         if (argNum > 0) System.out.print(", ");
         System.out.print(param.getCanonicalName() + " arg" + (argNum++));
       }
