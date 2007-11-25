@@ -24,15 +24,13 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * fabric.lang.JavaInlineable, returns a wrapped version of that object. If
    * the given object is already wrapped, it is returned unmodified.
    */
-  @SuppressWarnings("unchecked")
-  public static final <T> WrappedJavaInlineable<T> $wrap(T obj) {
-    if (obj instanceof WrappedJavaInlineable)
-      return (WrappedJavaInlineable) obj;
+  public static final Object $wrap(java.lang.Object obj) {
+    if (obj instanceof Object) return (Object) obj;
 
-    if ($wrappingMap.containsKey(obj))
-      return (WrappedJavaInlineable<T>) $wrappingMap.get(obj);
+    if ($wrappingMap.containsKey(obj)) return $wrappingMap.get(obj);
 
-    WrappedJavaInlineable<T> result = new WrappedJavaInlineable<T>(obj);
+    WrappedJavaInlineable<?> result =
+        new WrappedJavaInlineable<java.lang.Object>(obj);
     $wrappingMap.put(obj, result);
     return result;
   }
@@ -42,8 +40,8 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * wrapped.
    */
   @SuppressWarnings("unchecked")
-  public static <T> WrappedJavaInlineable<T>[] wrap(T[] array) {
-    WrappedJavaInlineable<T>[] result = new WrappedJavaInlineable[array.length];
+  public static <T> Object[] wrap(T[] array) {
+    Object[] result = new Object[array.length];
     for (int i = 0; i < array.length; i++)
       result[i] = $wrap(array[i]);
     return result;

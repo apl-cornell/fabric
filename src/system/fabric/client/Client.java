@@ -239,7 +239,8 @@ public class Client {
     TransactionManager.INSTANCE.startTransaction();
     Object argsProxy =
         new ObjectArray.$Impl<WrappedJavaInlineable<String>>(local,
-            WrappedJavaInlineable.wrap(newArgs)).$getProxy();
+            (WrappedJavaInlineable<String>[]) WrappedJavaInlineable
+                .wrap(newArgs)).$getProxy();
     TransactionManager.INSTANCE.commitTransaction();
 
     try {

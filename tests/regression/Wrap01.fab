@@ -1,0 +1,9 @@
+package regression;
+
+public class Wrap01 {
+  void m() {
+    java.lang.Object jo = new fabric.lang.Object();
+    fabric.lang.Object fo = (fabric.lang.Object) jo;
+  }
+}
+
