@@ -74,6 +74,7 @@ public class SerializedObject implements Serializable {
       ObjectOutputStream dos = new ObjectOutputStream(bos);
       dos.writeUTF(c.getName());
       obj.$serialize(dos);
+      dos.flush();
       return bos.toByteArray();
     } catch (IOException e) {}
     
