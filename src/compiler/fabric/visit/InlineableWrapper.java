@@ -48,6 +48,7 @@ public class InlineableWrapper extends AscriptionVisitor {
   @SuppressWarnings("unchecked")
   @Override
   public Expr ascribe(Expr e, Type toType) {
+    Position CG = Position.compilerGenerated();
     Type fromType = e.type();
 
     if (!fromType.isReference() || !toType.isReference()) return e;
@@ -82,13 +83,11 @@ public class InlineableWrapper extends AscriptionVisitor {
     if (toFabric) {
       ClassType wrappedJavaInlineable = ts.WrappedJavaInlineable();
       Call call =
-          nf.Call(Position.compilerGenerated(), nf.CanonicalTypeNode(Position
-              .compilerGenerated(), wrappedJavaInlineable), nf.Id(Position
-              .compilerGenerated(), "$wrap"), e);
+          nf.Call(CG, nf.CanonicalTypeNode(CG, wrappedJavaInlineable), nf.Id(CG, "$wrap"), e);
       call = (Call) call.type(wrappedJavaInlineable);
 
       MethodInstance mi =
-          ts.methodInstance(Position.compilerGenerated(),
+          ts.methodInstance(CG,
               wrappedJavaInlineable, Flags.PUBLIC.set(Flags.STATIC).set(
                   Flags.FINAL), wrappedJavaInlineable, "$wrap", Collections
                   .singletonList(ts.Object()), Collections.emptyList());
@@ -97,14 +96,16 @@ public class InlineableWrapper extends AscriptionVisitor {
 
     // Must be converting from Fabric. Unwrap.
     Call call =
-        nf.Call(Position.compilerGenerated(), e, nf.Id(Position
-            .compilerGenerated(), "$unwrap"));
+        nf.Call(CG, e, nf.Id(CG, "$unwrap"));
     call = (Call) call.type(ts.Object());
 
     MethodInstance mi =
-        ts.methodInstance(Position.compilerGenerated(), ts.FObject(),
+        ts.methodInstance(CG, ts.FObject(),
             Flags.PUBLIC.set(Flags.ABSTRACT), ts.Object(), "$unwrap",
             Collections.emptyList(), Collections.emptyList());
-    return call.methodInstance(mi);
+    
+    Cast result =
+        nf.Cast(CG, nf.CanonicalTypeNode(CG, toType), call.methodInstance(mi));
+    return result;
   }
 }
