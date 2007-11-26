@@ -1,9 +1,6 @@
 package fabric.frontend;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.JLScheduler;
@@ -21,10 +18,7 @@ import polyglot.visit.InnerClassRemover;
 import polyglot.visit.InnerClassRewriter;
 import polyglot.visit.LocalClassRemover;
 import fabric.ExtensionInfo;
-import fabric.visit.AssignNormalizer;
-import fabric.visit.AtomicRewriter;
-import fabric.visit.InlineableWrapper;
-import fabric.visit.ProxyRewriter;
+import fabric.visit.*;
 
 public class FabricScheduler extends JLScheduler {
   protected ExtensionInfo extInfo;
@@ -135,6 +129,25 @@ public class FabricScheduler extends JLScheduler {
     return g;
   }
 
+  public Goal FixArrayInitializerTypes(final Job job) {
+    Goal g =
+        internGoal(new VisitorGoal(job, new ArrayInitializerTypeFixer(job,
+            extInfo.typeSystem(), extInfo.nodeFactory())) {
+          /*
+           * (non-Javadoc)
+           * 
+           * @see polyglot.frontend.goals.AbstractGoal#prerequisiteGoals(polyglot.frontend.Scheduler)
+           */
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+            List<Goal> l = new ArrayList<Goal>();
+            l.add(TypeChecked(job));
+            return l;
+          }
+        });
+    return g;
+  }
+
   public Goal RewriteProxies(final Job job) {
     Goal g = internGoal(new VisitorGoal(job, new ProxyRewriter(extInfo)) {
       @SuppressWarnings("unchecked")
@@ -142,6 +155,7 @@ public class FabricScheduler extends JLScheduler {
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
         l.add(WrapInlineables(job));
+        l.add(FixArrayInitializerTypes(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
       }

@@ -1,9 +1,12 @@
 package regression;
 
+import fabric.client.*;
+
 public class Array04 {
   public static void main(String[] args) {
-    Object[] foo = new Object[] {};
-    Object[] bar = new Object[][] {foo, foo};
+    Core core = Client.getClient().getCore(0);
+    Object[] foo = new Object[]@core {};
+    Object[] bar = new Object[][]@core {foo, foo};
   }
 }
 
