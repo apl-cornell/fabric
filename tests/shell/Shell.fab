@@ -117,8 +117,8 @@ public class Shell {
       path.remove(path.size()-1);
     else try {
       Class tail = tail().getClass();
-      Method get = tail.getMethod("get$" + args[0], new Class[] {});
-      Object result = (Object) get.invoke(tail(), null);
+      Method get = tail.getMethod("get$" + args[0], new Class[0]);
+      Object result = (Object) get.invoke(tail(), new Object[0]);
 
       path.add(new NamedObject(args[0], result));
     } catch( final Exception exc ) {
@@ -129,8 +129,8 @@ public class Shell {
   public void cat(String[] args) {
     try {
       Class tail = tail().getClass();
-      Method get = tail.getMethod("get$" + args[0], new Class[] {});
-      java.lang.Object result = get.invoke(tail(), null);
+      Method get = tail.getMethod("get$" + args[0], new Class[0]);
+      java.lang.Object result = get.invoke(tail(), new Object[0]);
 
       if (result instanceof Object) {
         Object obj = (Object) result;

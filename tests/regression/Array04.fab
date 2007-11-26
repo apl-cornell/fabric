@@ -1,0 +1,12 @@
+package regression;
+
+public class Array04 {
+  public static void main(String[] args) {
+    Object[] foo = new Object[] {};
+    Object[] bar = new Object[][] {foo, foo};
+  }
+}
+
+/*
+** vim: ts=2 sw=2 cindent cino=\:0 syntax=java et
+*/
