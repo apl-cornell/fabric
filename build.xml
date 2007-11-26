@@ -188,13 +188,14 @@ TOP='${basedir}'
   <!-- Compiles the Fabric signatures -->
   <target name="fabric-signatures" depends="init,fabric-compiler">
     <mkdir dir="${signatures.classes}" />
-    <apply executable="${loom}"
+    <apply executable="sh"
 	parallel="false"
 	failonerror="true"
-	dest="${basedir}"
+	dir="${basedir}"
 	relative="true"
 	skipemptyfilesets="true"
 	vmlauncher="false">
+      <arg value="${loom}" />
       <arg value="-sig" />
       <arg value="-d" />
       <arg value="sig-classes" />
@@ -203,17 +204,16 @@ TOP='${basedir}'
       <srcfile />
       <fileset dir="${basedir}"
 	  includes="src/signatures/fabric/lang/Object.fab" />
-      <mapper type="regexp" from="src/signatures(.*)\.fab"
-	  to="sig-classes\1\.class" />
     </apply>
 
-    <apply executable="${loom}"
+    <apply executable="sh"
 	parallel="true"
 	failonerror="true"
-	dest="${basedir}"
+	dir="${basedir}"
 	relative="true"
 	skipemptyfilesets="true"
 	vmlauncher="false">
+      <arg value="${loom}" />
       <arg value="-sig" />
       <arg value="-d" />
       <arg value="sig-classes" />
@@ -223,8 +223,6 @@ TOP='${basedir}'
       <arg value="sig-classes" />
       <srcfile />
       <fileset dir="${basedir}" includes="src/signatures/**/*.fab" />
-      <mapper type="regexp" from="src/signatures(.*)\.fab"
-	  to="sig-classes\1\.class" />
     </apply>
   </target>
 
@@ -232,13 +230,14 @@ TOP='${basedir}'
   <target name="fabric-runtime"
       depends="init,fabric-compiler,fabric-signatures">
     <mkdir dir="${runtime.classes}" />
-    <apply executable="${loom}"
+    <apply executable="sh"
 	parallel="true"
 	failonerror="true"
-	dest="${basedir}"
+	dir="${basedir}"
 	relative="true"
 	skipemptyfilesets="true"
 	vmlauncher="false">
+      <arg value="${loom}" />
       <arg value="-d" />
       <arg value="rt-classes" />
       <arg value="-sigcp" />
@@ -249,17 +248,16 @@ TOP='${basedir}'
       <fileset dir="${basedir}"
 	  includes="src/runtime/**/*.fab"
 	  excludes="src/runtime/fabric/util/*.fab" />
-      <mapper type="regexp" from="src/runtime(.*)\.fab"
-	  to="classes\1\.class" />
     </apply>
 
-    <apply executable="${loom}"
+    <apply executable="sh"
 	parallel="true"
 	failonerror="true"
-	dest="${basedir}"
+	dir="${basedir}"
 	relative="true"
 	skipemptyfilesets="true"
 	vmlauncher="false">
+      <arg value="${loom}" />
       <arg value="-d" />
       <arg value="rt-classes" />
       <arg value="-sigcp" />
@@ -269,8 +267,6 @@ TOP='${basedir}'
       <srcfile />
       <fileset dir="${basedir}"
 	  includes="src/runtime/fabric/util/HashMap.fab,src/runtime/fabric/util/LinkedList.fab" />
-      <mapper type="regexp" from="src/runtime(.*)\.fab"
-	  to="classes\1\.class" />
     </apply>
   </target>
 
