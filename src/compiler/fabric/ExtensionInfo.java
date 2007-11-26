@@ -84,7 +84,6 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
    */
   @Override
   public FabricNodeFactory nodeFactory() {
-    // TODO Auto-generated method stub
     return (FabricNodeFactory) super.nodeFactory();
   }
 
