@@ -24,6 +24,8 @@ public class FieldExt_c extends ExprExt_c {
     QQ qq = pr.qq();
 
     // Only rewrite field accesses on Fabric objects.
+    if (targetType.isArray() && !pr.typeSystem().isFabric(targetType.toArray().ultimateBase()))
+      return super.rewriteProxiesImpl(pr);
     if (!targetType.isArray() && !pr.typeSystem().isFabric(targetType))
       return super.rewriteProxiesImpl(pr);
 
