@@ -1,0 +1,11 @@
+package regression;
+
+class Inlineable03 {
+  public static void main(String[] args) {
+    String s = args[0];
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
