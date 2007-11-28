@@ -98,7 +98,7 @@ public class SerializedObject implements Serializable {
   
   /**
    * This interface is used solely for the deserialization constructor of
-   * $Impls. It's purpose is to make sure the constructor signature does not
+   * $Impls. Its purpose is to make sure the constructor signature does not
    * conflict with a user written constructor that also takes a
    * java.io.ObjectInput as its only argument.
    * 
