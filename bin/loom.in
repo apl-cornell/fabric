@@ -60,6 +60,8 @@ TOP_unix=`unixfilename $TOP`
 LIB_unix=$TOP_unix/lib
 classpath=`unixpath $CLASSPATH`
 classpath="$TOP_unix/classes:$LIB_unix/fabric.jar:$classpath"
+classpath="$TOP_unix/rt-classes:$LIB_unix/fabric-rt.jar:$classpath"
+
 #classpath="$TOP_unix/lib:$classpath"
 
 if [ -n "$POLYGLOT" ]; then 
@@ -71,9 +73,12 @@ fi
 classpath="$classpath:$polyglot_unix/classes:$polyglot_unix/lib/polyglot.jar"
 classpath="$classpath:$polyglot_unix/lib/java_cup.jar:$polyglot_unix/lib/JFlex.jar"
 
-classpath=`fixpath "$classpath"`
+sigcp="$TOP_unix/sig-classes:$LIB_unix/fabric-sig.jar"
 
-command="\"$JAVA\" $vmargs -classpath \"$classpath\" fabric.Main $args"
+classpath=`fixpath "$classpath"`
+sigcp=`fixpath "$sigcp"`
+
+command="\"$JAVA\" $vmargs -classpath \"$classpath\" fabric.Main -sigcp \"$sigcp\" $args"
 
 if [ -n "$verbose" ]
 then
