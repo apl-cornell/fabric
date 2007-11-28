@@ -5,6 +5,9 @@
 
   <!-- Set global properties for this build -->
 
+  <!-- Project name -->
+  <property name="name" value="fabric" />
+
   <!-- Source directory -->
   <property name="src" location="${basedir}/src"/>
   <property name="system.src" location="${src}/system"/>
@@ -26,19 +29,22 @@
   <!-- Library directory -->
   <property name="lib" location="${basedir}/lib"/>
 
+  <!-- Jar files -->
+  <property name="base.jar" location="${lib}/${name}.jar" />
+  <property name="runtime.jar" location="${lib}/${name}-rt.jar" />
+  <property name="signature.jar" location="${lib}/${name}-sig.jar" />
+
   <!-- loom executable -->
   <property name="loom" location="${bin}/loom" />
 
   <path id="standard.classpath">
     <pathelement location="${classes}"/>
     <pathelement path="${java.class.path}" />
-    <pathelement location="${lib}"/>
 
     <!-- jar files in the lib directory, excluding generated jars -->
     <fileset dir="${lib}">
         <include name="*.jar" />
-        <exclude name="${name}.jar" />
-        <exclude name="${name}-rt.jar" />
+        <exclude name="${name}*.jar" />
     </fileset>
   </path>
 
@@ -116,7 +122,7 @@ TOP='${basedir}'
     <delete file="${bin}/defs"/>
   </target>
 
-  <!-- Initialise the build -->
+  <!-- Initialize the build -->
   <target name="init" depends="configure">
     <!-- Create the time stamp -->
     <tstamp/>
@@ -140,6 +146,7 @@ TOP='${basedir}'
     <delete dir="${runtime.classes}"/>
     <delete dir="${signatures.classes}"/>
     <delete dir="${dist}"/>
+    <echo>${name}</echo>
   </target>
 
   <target name="clobber" depends="clean"
@@ -275,6 +282,22 @@ TOP='${basedir}'
     <javac srcdir="${src}" destdir="${classes}" debug="on" includes="tests/**">
       <classpath refid="standard.classpath"/>
     </javac>
+  </target>
+
+  <!-- Jar targets -->
+  <target name="jars" depends="jar-base,jar-runtime,jar-sig"
+    description="Builds all jars" />
+
+  <target name="jar-base" depends="fabric-compiler,core">
+    <jar jarfile="${base.jar}" basedir="${classes}" excludes="**/*.java" />
+  </target>
+
+  <target name="jar-runtime" depends="fabric-runtime">
+    <jar jarfile="${runtime.jar}" basedir="${runtime.classes}" excludes="**/*.java" />
+  </target>
+
+  <target name="jar-sig" depends="fabric-signatures">
+    <jar jarfile="${signature.jar}" basedir="${signatures.classes}" excludes="**/*.java" />
   </target>
 
   <!--
