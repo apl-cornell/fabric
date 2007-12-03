@@ -90,7 +90,7 @@ public abstract class Message<R extends Message.Response> implements
       }
     }
 
-    throw new UnreachableCoreException();
+    throw new UnreachableCoreException(core);
   }
 
   /**

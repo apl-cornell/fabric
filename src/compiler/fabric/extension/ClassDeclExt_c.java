@@ -495,9 +495,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     ClassMember deserialize =
         qq.parseMember("public $Impl"
-            + "(fabric.core.SerializedObject.ObjectInput in) "
+            + "(fabric.client.Core objCore, long onum, fabric.core.SerializedObject.ObjectInput in) "
             + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-            + "super(in);" + "long core, onum;" + in + " }", inSubst);
+            + "super(objCore, onum, in);" + "long core;" + in + " }", inSubst);
     result.add(deserialize);
 
     return result;

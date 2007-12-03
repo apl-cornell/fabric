@@ -249,7 +249,10 @@ public interface Object {
      * $serialize.
      */
     @SuppressWarnings("unused")
-    public $Impl(ObjectInput in) throws IOException, ClassNotFoundException {
+    public $Impl(Core core, long onum, ObjectInput in) throws IOException,
+        ClassNotFoundException {
+      this.$core = core;
+      this.$onum = onum;
       return;
     }
 

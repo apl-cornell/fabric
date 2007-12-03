@@ -7,4 +7,20 @@ import fabric.common.FabricException;
  * attempt to connect to a core has failed.
  */
 public class UnreachableCoreException extends FabricException {
+  private Core core;
+
+  public UnreachableCoreException(Core core) {
+    this.core = core;
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Throwable#getMessage()
+   */
+  @Override
+  public String getMessage() {
+    return "Unreachable core: " + core;
+  }
+
 }

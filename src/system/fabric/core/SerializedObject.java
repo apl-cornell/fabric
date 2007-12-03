@@ -2,6 +2,7 @@ package fabric.core;
 
 import java.io.*;
 
+import fabric.client.Core;
 import fabric.common.InternalError;
 import fabric.common.Policy;
 import fabric.lang.Object.$Impl;
@@ -33,8 +34,16 @@ public class SerializedObject implements Serializable {
     this.policy = obj.$getPolicy();
   }
 
-  public $Impl getObject() throws ClassNotFoundException {
-    $Impl result = deserialize(object);
+  /**
+   * Deserializes the object.
+   * 
+   * @param core
+   *          The core from which the object was obtained.
+   * @param onum
+   *          The object's onum.
+   */
+  public $Impl getObject(Core core, long onum) throws ClassNotFoundException {
+    $Impl result = deserialize(core, onum, object);
     // TODO Update header information.
     result.$version = version;
     return result;
@@ -69,25 +78,39 @@ public class SerializedObject implements Serializable {
   protected byte[] serialize($Impl obj) {
     Class<?> c = obj.getClass();
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    
+
     try {
       ObjectOutputStream dos = new ObjectOutputStream(bos);
       dos.writeUTF(c.getName());
       obj.$serialize(dos);
       dos.flush();
       return bos.toByteArray();
-    } catch (IOException e) {}
-    
+    } catch (IOException e) {
+    }
+
     return null;
   }
-  
-  protected $Impl deserialize(byte[] buf) throws ClassNotFoundException {
+
+  /**
+   * Deserializes an object.
+   * 
+   * @param core
+   *          The core on which the object lives.
+   * @param onum
+   *          The object's onum.
+   * @param buf
+   *          The serialized object.
+   */
+  protected $Impl deserialize(Core core, long onum, byte[] buf)
+      throws ClassNotFoundException {
     ByteArrayInputStream bis = new ByteArrayInputStream(buf);
-    
+
     try {
       ObjectInputStream dis = new ObjectInputStream(bis);
       Class<?> c = Class.forName(dis.readUTF());
-      $Impl obj = ($Impl) c.getConstructor(ObjectInput.class).newInstance(dis);
+      $Impl obj =
+          ($Impl) c.getConstructor(Core.class, long.class, ObjectInput.class)
+              .newInstance(core, onum, dis);
       return obj;
     } catch (ClassNotFoundException e) {
       throw e;
@@ -95,7 +118,7 @@ public class SerializedObject implements Serializable {
       throw new InternalError(e);
     }
   }
-  
+
   /**
    * This interface is used solely for the deserialization constructor of
    * $Impls. Its purpose is to make sure the constructor signature does not
@@ -104,15 +127,16 @@ public class SerializedObject implements Serializable {
    * 
    * @author xinz
    */
-  public interface ObjectInput extends java.io.ObjectInput {}
-  
-  private class ObjectInputStream extends java.io.ObjectInputStream 
-      implements ObjectInput {
+  public interface ObjectInput extends java.io.ObjectInput {
+  }
+
+  private class ObjectInputStream extends java.io.ObjectInputStream implements
+      ObjectInput {
 
     public ObjectInputStream(InputStream in) throws IOException {
       super(in);
     }
-    
+
   }
 
 }
