@@ -1,0 +1,9 @@
+package regression;
+
+public class Array06 {
+  int[] a;
+  void m() {
+    int x = a.length;
+  }
+}
+

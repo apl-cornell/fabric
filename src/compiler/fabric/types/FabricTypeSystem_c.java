@@ -59,6 +59,21 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
     return result;
   }
 
+  @SuppressWarnings("unchecked")
+  @Override
+  protected List<MethodInstance> findAcceptableMethods(ReferenceType container,
+      String name, List argTypes, ClassType currClass) throws SemanticException {
+    List<MethodInstance> result =
+        super.findAcceptableMethods(container, name, argTypes, currClass);
+    if (isJavaInlineable(container)) {
+      // Remove any methods from fabric.lang.Object. They don't really exist.
+      for (MethodInstance mi : (List<MethodInstance>) FObject().methods()) {
+        result.remove(mi);
+      }
+    }
+    return result;
+  }
+
   public ClassType fArrayOf(Type type) {
     if (type.isReference()) return load("fabric.lang.arrays.ObjectArray");
     return load("fabric.lang.arrays." + type.toString() + "Array");

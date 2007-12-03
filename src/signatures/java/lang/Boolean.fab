@@ -18,8 +18,6 @@ public final class Boolean implements fabric.lang.JavaInlineable,
 
   public native boolean equals(java.lang.Object arg0);
 
-  public native boolean equals(fabric.lang.Object arg0);
-
   public static native java.lang.String toString(boolean arg0);
 
   public native java.lang.String toString();

@@ -64,8 +64,6 @@ public final class String implements fabric.lang.JavaInlineable,
 
   public native boolean equals(java.lang.Object arg0);
 
-  public native boolean equals(fabric.lang.Object arg0);
-
   public native java.lang.String toString();
 
   public native char charAt(int arg0);
