@@ -146,7 +146,9 @@ TOP='${basedir}'
     <delete dir="${runtime.classes}"/>
     <delete dir="${signatures.classes}"/>
     <delete dir="${dist}"/>
-    <echo>${name}</echo>
+    <delete>
+      <fileset dir="${lib}" includes="${name}*.jar"/>
+    </delete>
   </target>
 
   <target name="clobber" depends="clean"
