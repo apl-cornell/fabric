@@ -480,7 +480,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         in.append("onum = in.readLong();");
 
         if (!f.declType().toString().equals("java.lang.Object")) {
-          in.append("if (core != 0 || onum != 0) " + "this." + f.name()
+          in.append("if (onum != -1) " + "this." + f.name()
               + " = new " + f.declType() + ".$Proxy("
               + "fabric.client.Client.getClient().getCore(core), onum);");
         }

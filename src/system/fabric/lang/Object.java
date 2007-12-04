@@ -279,8 +279,8 @@ public interface Object {
     protected static final void $writeRef(ObjectOutput out, Object obj)
         throws IOException {
       if (obj == null) {
-        out.writeLong(0);
-        out.writeLong(0);
+        out.writeLong(-1);
+        out.writeLong(-1);
       } else {
         $Proxy p = ($Proxy) obj;
         RemoteCore core =
