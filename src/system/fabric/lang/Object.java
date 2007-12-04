@@ -283,10 +283,7 @@ public interface Object {
         out.writeLong(-1);
       } else {
         $Proxy p = ($Proxy) obj;
-        RemoteCore core =
-            p.core instanceof RemoteCore ? (RemoteCore) p.core
-                : ((LocalCore) p.core).surrogate();
-        out.writeLong(core.coreID);
+        out.writeLong(p.core.id());
         out.writeLong(p.onum);
       }
     }

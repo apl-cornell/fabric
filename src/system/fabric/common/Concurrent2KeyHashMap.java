@@ -46,6 +46,10 @@ public class Concurrent2KeyHashMap<T, U, V> implements Cloneable {
     return false;
   }
 
+  public Set<T> keySet() {
+    return map.keySet();
+  }
+
   public Collection<V> values() {
     return new AbstractCollection<V>() {
 
@@ -101,7 +105,8 @@ public class Concurrent2KeyHashMap<T, U, V> implements Cloneable {
   }
 
   public Map<U, V> get(T key1) {
-    return Collections.unmodifiableMap(map.get(key1));
+    return map.containsKey(key1) ? Collections.unmodifiableMap(map.get(key1))
+        : null;
   }
 
   public V get(T key1, U key2) {

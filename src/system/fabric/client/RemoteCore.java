@@ -252,4 +252,8 @@ public class RemoteCore implements Core {
   public Object getRoot() throws UnreachableCoreException {
     return new Object.$Proxy(this, 0);
   }
+  
+  public long id() {
+    return coreID;
+  }
 }

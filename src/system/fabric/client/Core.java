@@ -7,6 +7,10 @@ import fabric.common.AccessError;
 import fabric.lang.Object.$Impl;
 
 public interface Core extends java.io.Serializable {
+  /**
+   * Returns this core's identifier.
+   */
+  public long id();
 
   /**
    * Notifies the core that the transaction is entering the Prepare phase.

@@ -101,10 +101,15 @@ public final class TransactionManager {
       return;
     }
 
-    // Go through the transaction log and group everything by core.
     Set<Core> cores = new HashSet<Core>();
     final Map<Core, Integer> transactionIDs =
         new ConcurrentHashMap<Core, Integer>();
+    
+    // Go through the transaction log and figure out the cores we need to
+    // contact.
+    cores.addAll(curFrame.creates.keySet());
+    cores.addAll(curFrame.reads.keySet());
+    cores.addAll(curFrame.writes.keySet());
 
     try {
       // Go through each core and send begin and prepare messages.
@@ -269,7 +274,7 @@ public final class TransactionManager {
     // Ensure that we're running in a transaction.
     boolean needTransaction = !inTransaction();
     if (needTransaction) startTransaction();
-    
+
     // Make sure the object hasn't already been modified or created during the
     // current transaction.
     Core core = obj.$getCore();
@@ -281,7 +286,7 @@ public final class TransactionManager {
     // First time modifying the object. Save a copy of the object and a pointer
     // to the actual working copy of the object.
     curFrame.writes.put(core, onum, new Pair<$Impl, $Impl>(obj.clone(), obj));
-    
+
     return needTransaction;
   }
 

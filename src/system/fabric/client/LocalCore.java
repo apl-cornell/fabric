@@ -99,11 +99,17 @@ public class LocalCore implements Core {
    * This is a hook for hacks. It allows one to turn the local core into any
    * other core for the purposes of serialization.
    */
+  @Deprecated
   public void surrogate(RemoteCore surrogate) {
     this.surrogate = surrogate;
   }
+  
+  @Deprecated
+  public Map<Long, Object.$Impl> objects() {
+    return objects;
+  }
 
-  public RemoteCore surrogate() {
-    return surrogate;
+  public long id() {
+    return surrogate.id();
   }
 }
