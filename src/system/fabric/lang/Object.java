@@ -79,7 +79,7 @@ public interface Object {
     public final java.lang.Object $unwrap() {
       return this;
     }
-    
+
     public static final java.lang.Object $getProxy(java.lang.Object o) {
       if (o instanceof Object) return ((Object) o).$getProxy();
       return o;
@@ -283,7 +283,10 @@ public interface Object {
         out.writeLong(0);
       } else {
         $Proxy p = ($Proxy) obj;
-        out.writeLong(((RemoteCore) p.core).coreID);
+        RemoteCore core =
+            p.core instanceof RemoteCore ? (RemoteCore) p.core
+                : ((LocalCore) p.core).surrogate();
+        out.writeLong(core.coreID);
         out.writeLong(p.onum);
       }
     }

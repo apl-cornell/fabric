@@ -147,7 +147,7 @@ public class Client {
    *          The 48-bit core identifier to fetch
    * @return The corresponding <code>Core</code> object.
    */
-  public Core getCore(long coreID) {
+  public RemoteCore getCore(long coreID) {
     RemoteCore result = connections.get(coreID);
     if (result == null) {
       result = new RemoteCore(coreID);
