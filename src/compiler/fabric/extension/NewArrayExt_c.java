@@ -19,11 +19,9 @@ public class NewArrayExt_c extends LocatedExt_c {
     QQ qq = pr.qq();
     NewArray newArray = node();
 
-    // Only rewrite if we have an array of primitives or an array of
-    // fabric.util.Objects.
-    Type baseType = newArray.baseType().type();
+    // Only rewrite if we have a Fabric array.
     FabricTypeSystem ts = pr.typeSystem();
-    if (!baseType.isPrimitive() && !ts.isFabric(baseType)) return newArray;
+    if (!ts.isFabricArray(newArray.type())) return newArray;
 
     if (location == null) location = qq.parseExpr("$getCore()");
 
@@ -35,6 +33,7 @@ public class NewArrayExt_c extends LocatedExt_c {
 
     Expr size = (Expr) newArray.dims().get(0);
 
+    Type baseType = newArray.baseType().type();
     Type arrayImplType = ts.fArrayImplOf(baseType);
     Type arrayType = ts.fArrayOf(baseType);
     return qq.parseExpr("(%T) new %T(%E, %E).$getProxy()", arrayType,
@@ -50,13 +49,9 @@ public class NewArrayExt_c extends LocatedExt_c {
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     NewArray newArray = node();
 
-    // Only rewrite if we have an array of primitives or an array of
-    // fabric.util.Objects.
-    Type base = newArray.baseType().type();
+    // Only rewrite if we have a Fabric array.
     FabricTypeSystem ts = rewriter.typeSystem();
-    if (!base.isPrimitive() && !ts.isFabric(base)) {
-      return null;
-    }
+    if (!ts.isFabricArray(newArray.type())) return null;
 
     if (newArray.init() != null) {
       ArrayInit init = newArray.init();

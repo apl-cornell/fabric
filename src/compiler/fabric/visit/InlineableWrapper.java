@@ -62,16 +62,18 @@ public class InlineableWrapper extends AscriptionVisitor {
 
     if (ts.isJavaInlineable(toType))
       toInlineable = true;
-    else if (ts.isFabric(toType))
+    else if (ts.isFabricReference(toType))
       toFabric = true;
     else toJava = true;
 
-    if (ts.isJavaInlineable(fromType) && !(e instanceof ArrayAccess))
+    if (ts.isJavaInlineable(fromType)
+        // Stuff coming out of an array of inlineables will already be wrapped. 
+        && !(e instanceof ArrayAccess))
       fromInlineable = true;
-    else if (ts.isFabric(fromType))
+    else if (ts.isFabricReference(fromType))
       fromFabric = true;
     else fromJava = true;
-    
+
     // No need to do anything if toType and fromType are in the same class.
     if (toInlineable == fromInlineable && toFabric == fromFabric
         && toJava == fromJava) return e;
@@ -79,31 +81,33 @@ public class InlineableWrapper extends AscriptionVisitor {
     // No need to do anything if converting inlineable -> Java or vice versa.
     if (fromInlineable && toJava || fromJava && toInlineable) return e;
 
+    ClassType wrappedJavaInlineable = ts.WrappedJavaInlineable();
+
     // If converting to Fabric, wrap.
     if (toFabric) {
-      ClassType wrappedJavaInlineable = ts.WrappedJavaInlineable();
       Call call =
-          nf.Call(CG, nf.CanonicalTypeNode(CG, wrappedJavaInlineable), nf.Id(CG, "$wrap"), e);
+          nf.Call(CG, nf.CanonicalTypeNode(CG, wrappedJavaInlineable), nf.Id(
+              CG, "$wrap"), e);
       call = (Call) call.type(wrappedJavaInlineable);
 
       MethodInstance mi =
-          ts.methodInstance(CG,
-              wrappedJavaInlineable, Flags.PUBLIC.set(Flags.STATIC).set(
-                  Flags.FINAL), wrappedJavaInlineable, "$wrap", Collections
-                  .singletonList(ts.Object()), Collections.emptyList());
+          ts.methodInstance(CG, wrappedJavaInlineable, Flags.PUBLIC.set(
+              Flags.STATIC).set(Flags.FINAL), wrappedJavaInlineable, "$wrap",
+              Collections.singletonList(ts.Object()), Collections.emptyList());
       return call.methodInstance(mi);
     }
 
     // Must be converting from Fabric. Unwrap.
     Call call =
-        nf.Call(CG, e, nf.Id(CG, "$unwrap"));
+        nf.Call(CG, nf.CanonicalTypeNode(CG, wrappedJavaInlineable), nf.Id(CG,
+            "$unwrap"), e);
     call = (Call) call.type(ts.Object());
 
     MethodInstance mi =
-        ts.methodInstance(CG, ts.FObject(),
-            Flags.PUBLIC.set(Flags.ABSTRACT), ts.Object(), "$unwrap",
-            Collections.emptyList(), Collections.emptyList());
-    
+        ts.methodInstance(CG, wrappedJavaInlineable, Flags.PUBLIC.set(
+            Flags.STATIC).set(Flags.FINAL), ts.Object(), "$unwrap", Collections
+            .singletonList(ts.FObject()), Collections.emptyList());
+
     Cast result =
         nf.Cast(CG, nf.CanonicalTypeNode(CG, toType), call.methodInstance(mi));
     return result;

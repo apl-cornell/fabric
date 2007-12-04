@@ -25,7 +25,7 @@ public class Cast_c extends polyglot.ast.Cast_c {
       FabricTypeSystem ts = (FabricTypeSystem) av.typeSystem();
       Type toType = castType.type();
       if (ts.isJavaInlineable(toType)) return ts.Object();
-      if (ts.isFabric(toType)) return ts.FObject();
+      if (ts.isFabricReference(toType)) return ts.FObject();
     }
     
     return super.childExpectedType(child, av);

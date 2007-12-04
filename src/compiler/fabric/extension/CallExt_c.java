@@ -20,10 +20,10 @@ public class CallExt_c extends ExprExt_c {
     Receiver target = call.target();
     Type targetType = target.type();
 
-    // Only rewrite calls to static methods of Fabric objects.
-    boolean isStaticFabric =
-        mi.flags().isStatic() && pr.typeSystem().isFabric(targetType);
-    if (!isStaticFabric) return super.rewriteProxiesImpl(pr);
+    // Only rewrite calls to static methods of pure Fabric objects.
+    boolean isStaticPureFabric =
+        mi.flags().isStatic() && pr.typeSystem().isPureFabricType(targetType);
+    if (!isStaticPureFabric) return super.rewriteProxiesImpl(pr);
 
     NodeFactory nf = pr.nodeFactory();
     Receiver newTarget =

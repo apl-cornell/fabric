@@ -1,10 +1,7 @@
 package fabric.types;
 
 import polyglot.ast.TypeNode;
-import polyglot.types.ArrayType;
-import polyglot.types.ClassType;
-import polyglot.types.Type;
-import polyglot.types.TypeSystem;
+import polyglot.types.*;
 
 public interface FabricTypeSystem extends TypeSystem {
 
@@ -17,7 +14,7 @@ public interface FabricTypeSystem extends TypeSystem {
 
   /** The ClassType of fabric.lang.JavaInlineable. */
   ClassType JavaInlineable();
-  
+
   /** The ClassType of fabric.lang.WrappedJavaInlineable. */
   ClassType WrappedJavaInlineable();
 
@@ -27,16 +24,77 @@ public interface FabricTypeSystem extends TypeSystem {
 
   ClassType toFArray(ArrayType type);
 
-  boolean isFabric(ClassType type);
+  /**
+   * @return true iff the given type is a primitive, an array of Fabric types,
+   *         or is a class type that is a subtype of fabric.lang.Object.
+   */
+  boolean isFabricType(Type type);
 
-  boolean isFabric(Type type);
+  /**
+   * @return true iff the given type is a primitive, an array of Fabric types,
+   *         or is a class type that is a subtype of fabric.lang.Object.
+   */
+  boolean isFabricType(TypeNode type);
 
-  boolean isFabric(TypeNode type);
+  /**
+   * Determines whether the given type is a "pure" Fabric type. Fabric types are
+   * pure if they are not subtypes of fabric.lang.JavaInlineable.
+   */
+  boolean isPureFabricType(Type type);
+
+  /**
+   * Determines whether the given type is a "pure" Fabric type. Fabric types are
+   * pure if they are not subtypes of fabric.lang.JavaInlineable.
+   */
+  boolean isPureFabricType(TypeNode type);
+
+  /**
+   * @return true iff the given type is a subtype of fabric.lang.Object.
+   */
+  boolean isFabricReference(Type type);
+
+  /**
+   * @return true iff the given type is a subtype of fabric.lang.Object.
+   */
+  boolean isFabricReference(TypeNode type);
+
+  /**
+   * @return true iff the given class type is a subtype of fabric.lang.Object.
+   */
+  boolean isFabricClass(ClassType type);
+
+  /**
+   * @return true iff the given type is a class type that is a subtype of
+   *         fabric.lang.Object.
+   */
+  boolean isFabricClass(Type type);
+
+  /**
+   * @return true iff the given type is a class type that is a subtype of
+   *         fabric.lang.Object.
+   */
+  boolean isFabricClass(TypeNode type);
+
+  /**
+   * @return true iff the given type is an array of Fabric types.
+   */
+  boolean isFabricArray(ArrayType type);
+
+  /**
+   * @return true iff the given type is an array of Fabric types.
+   */
+  boolean isFabricArray(Type type);
+
+  /**
+   * @return true iff the given type is an array of Fabric types.
+   */
+  boolean isFabricArray(TypeNode type);
 
   /**
    * Determines whether the given type is a subtype of
    * fabric.lang.JavaInlineable.
    */
   boolean isJavaInlineable(Type type);
+
   boolean isJavaInlineable(TypeNode type);
 }

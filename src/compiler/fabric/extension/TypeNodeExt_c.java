@@ -24,11 +24,10 @@ public class TypeNodeExt_c extends FabricExt_c {
     // Only rewrite array types.
     if (!type.isArray()) return tn;
     
-    // Only rewrite arrays of primitives or fabric.lang.Objects.
+    // Only rewrite Fabric arrays.
     FabricTypeSystem ts = pr.typeSystem();
     ArrayType at = type.toArray();
-    Type base = at.ultimateBase();
-    if (!base.isPrimitive() && !ts.isFabric(base)) return tn;
+    if (!ts.isPureFabricType(at)) return tn;
     
     NodeFactory nf = pr.nodeFactory();
     return nf.CanonicalTypeNode(Position.compilerGenerated(), ts.toFArray(at));

@@ -1,10 +1,7 @@
 package fabric.types;
 
 import polyglot.frontend.Source;
-import polyglot.types.LazyClassInitializer;
-import polyglot.types.ParsedClassType_c;
-import polyglot.types.Type;
-import polyglot.types.TypeSystem;
+import polyglot.types.*;
 
 public class FabricParsedClassType_c extends ParsedClassType_c {
 
@@ -22,15 +19,23 @@ public class FabricParsedClassType_c extends ParsedClassType_c {
    * 
    * @see polyglot.types.ClassType_c#descendsFromImpl(polyglot.types.Type)
    */
+  @SuppressWarnings("unchecked")
   @Override
   public boolean descendsFromImpl(Type ancestor) {
     FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
 
+    // All Fabric interface types descend from Fabric.lang.Object.
     if (ancestor.isCanonical() && !ancestor.isNull()
         && !ts.typeEquals(this, ancestor) && ancestor.isReference()
-        && ts.isFabric(this) && ts.typeEquals(ancestor, ts.FObject()))
-      return true;
-    
+        && ts.typeEquals(ancestor, ts.FObject()) && flags().isInterface()) {
+      // Determine whether we have a Fabric interface.
+      // XXX Assume any class loaded from the DeserializedClassInitializer was
+      // compiled with loom.
+      if (job() != null
+          || initializer() instanceof DeserializedClassInitializer)
+        return true;
+    }
+
     return super.descendsFromImpl(ancestor);
   }
 }

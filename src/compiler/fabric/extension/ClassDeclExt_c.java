@@ -45,7 +45,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     ClassDecl classDecl = node();
 
     // Only translate if we're processing a Fabric class.
-    if (!pr.typeSystem().isFabric(classDecl.type())) return classDecl;
+    if (!pr.typeSystem().isFabricClass(classDecl.type())) return classDecl;
 
     NodeFactory nf = pr.nodeFactory();
     FabricTypeSystem ts = pr.typeSystem();
@@ -433,7 +433,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       if (m instanceof FieldDecl) {
         FieldDecl f = (FieldDecl) m;
         TypeNode fieldType = f.type();
-        if (ts.isFabric(fieldType)) fields.add(f);
+        if (ts.isFabricType(fieldType)) fields.add(f);
       }
     }
 

@@ -79,6 +79,11 @@ public interface Object {
     public final java.lang.Object $unwrap() {
       return this;
     }
+    
+    public static final java.lang.Object $getProxy(java.lang.Object o) {
+      if (o instanceof Object) return ((Object) o).$getProxy();
+      return o;
+    }
 
     /**
      * A delegate for the default equals implementation.

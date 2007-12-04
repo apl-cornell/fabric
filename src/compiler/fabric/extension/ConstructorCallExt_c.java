@@ -23,7 +23,7 @@ public class ConstructorCallExt_c extends FabricExt_c {
     // Ensure that we're translating a Fabric type.
     Type containerType = call.constructorInstance().container();
     if (!"java.lang.Object".equals(containerType.toString())
-        && !pr.typeSystem().isFabric(containerType))
+        && !pr.typeSystem().isFabricClass(containerType))
       return super.rewriteProxies(pr);
 
     List<Expr> args = new LinkedList<Expr>(call.arguments());

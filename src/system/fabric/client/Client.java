@@ -237,7 +237,7 @@ public class Client {
 
     Core local = c.getLocalCore();
     TransactionManager.INSTANCE.startTransaction();
-    Object argsProxy = WrappedJavaInlineable.wrap(local, newArgs);
+    Object argsProxy = WrappedJavaInlineable.$wrap(local, newArgs);
     TransactionManager.INSTANCE.commitTransaction();
 
     try {

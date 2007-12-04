@@ -24,7 +24,7 @@ public class NewExt_c extends LocatedExt_c {
 
     // Only rewrite if instantiating a pure Fabric type.
     FabricTypeSystem ts = pr.typeSystem();
-    if (!ts.isFabric(typeNode) || ts.isJavaInlineable(typeNode))
+    if (!ts.isPureFabricType(typeNode))
       return super.rewriteProxiesImpl(pr);
 
     List<Expr> newargs = new LinkedList<Expr>(call.arguments());

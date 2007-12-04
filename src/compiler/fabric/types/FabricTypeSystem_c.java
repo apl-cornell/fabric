@@ -115,29 +115,113 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
     return new FabricImportTable(this, pkg, sourceName);
   }
 
-  public boolean isFabric(ClassType type) {
-    // TODO This whole thing is a hack.
-    while (true) {
-      if (type == null) return true;
-      if ("java.lang.Object".equals(type.toString())) return false;
-      if ("fabric.lang.Object".equals(type.toString())) return true;
-      if (!(type instanceof ParsedClassType)) return false;
-      ParsedClassType pct = (ParsedClassType) type;
-      // XXX Assume any class loaded from the DeserializedClassInitializer was
-      // compiled with loom.
-      if (pct.job() == null
-          && !(pct.initializer() instanceof DeserializedClassInitializer))
-        return false;
-      type = (ClassType) pct.superType();
-    }
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isFabricType(polyglot.types.Type)
+   */
+  public boolean isFabricType(Type type) {
+    if (type.isPrimitive()) return true;
+    return isFabricReference(type);
   }
 
-  public boolean isFabric(Type type) {
-    return type instanceof ClassType && isFabric((ClassType) type);
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isFabricType(polyglot.ast.TypeNode)
+   */
+  public boolean isFabricType(TypeNode type) {
+    return isFabricType(type.type());
   }
 
-  public boolean isFabric(TypeNode type) {
-    return isFabric(type.type());
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isPureFabricType(polyglot.types.Type)
+   */
+  public boolean isPureFabricType(Type type) {
+    return isFabricType(type) && !isJavaInlineable(type);
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isPureFabricType(polyglot.ast.TypeNode)
+   */
+  public boolean isPureFabricType(TypeNode type) {
+    return isPureFabricType(type.type());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isFabricReference(polyglot.types.Type)
+   */
+  public boolean isFabricReference(Type type) {
+    return isFabricArray(type) || isFabricClass(type);
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isFabricReference(polyglot.ast.TypeNode)
+   */
+  public boolean isFabricReference(TypeNode type) {
+    return isFabricReference(type.type());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isFabricClass(polyglot.types.ClassType)
+   */
+  public boolean isFabricClass(ClassType type) {
+    return isSubtype(type, FObject());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isFabricClass(polyglot.types.Type)
+   */
+  public boolean isFabricClass(Type type) {
+    return type.isClass() && isFabricClass(type.toClass());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isFabricClass(polyglot.ast.TypeNode)
+   */
+  public boolean isFabricClass(TypeNode type) {
+    return isFabricClass(type.type());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isFabricArray(polyglot.types.ArrayType)
+   */
+  public boolean isFabricArray(ArrayType type) {
+    return isFabricType(type.ultimateBase());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isFabricArray(polyglot.types.Type)
+   */
+  public boolean isFabricArray(Type type) {
+    return type.isArray() && isFabricArray(type.toArray());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isFabricArray(polyglot.ast.TypeNode)
+   */
+  public boolean isFabricArray(TypeNode type) {
+    return isFabricArray(type.type());
   }
 
   /*

@@ -47,7 +47,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
 
     // Ensure that we're translating a Fabric type.
     Type containerType = decl.constructorInstance().container();
-    if (!ts.isFabric(containerType)) return decl;
+    if (!ts.isFabricClass(containerType)) return decl;
 
     NodeFactory nf = pr.nodeFactory();
     Position pos = Position.compilerGenerated();

@@ -21,12 +21,12 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
       new WeakHashMap<java.lang.Object, WrappedJavaInlineable<?>>();
 
   /**
-   * Given an object, in the Fabric type system, that implements
+   * Given an object that, in the Fabric type system, implements
    * fabric.lang.JavaInlineable, returns a wrapped version of that object. If
    * the given object is already wrapped, it is returned unmodified.
    */
   public static final Object $wrap(java.lang.Object obj) {
-    if (obj instanceof Object) return (Object) obj;
+    if (obj == null || obj instanceof Object) return (Object) obj;
 
     if ($wrappingMap.containsKey(obj)) return $wrappingMap.get(obj);
 
@@ -37,11 +37,20 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   }
 
   /**
+   * Given a Fabric object, returns an unwrapped version of that object. If the
+   * given object is already unwrapped, it is returned unmodified.
+   */
+  public static final java.lang.Object $unwrap(Object obj) {
+    if (obj == null) return null;
+    return obj.$unwrap();
+  }
+
+  /**
    * Creates a Fabric version of the given array. All elements of the given
    * array should be instances of fabric.lang.Object from the Fabric type
    * system's point of view.
    */
-  public static ObjectArray<Object> wrap(Core core, java.lang.Object[] array) {
+  public static ObjectArray<Object> $wrap(Core core, java.lang.Object[] array) {
     Object[] result = new Object[array.length];
     for (int i = 0; i < array.length; i++)
       result[i] = $wrap(array[i]);
