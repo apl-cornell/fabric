@@ -178,7 +178,7 @@ public class RemoteCore implements Core {
     }
 
     try {
-      Object.$Impl result = serial.getObject(this, onum);
+      Object.$Impl result = serial.deserialize(this, onum);
       objects.put(onum, new SoftReference<Object.$Impl>(result));
       return result;
     } catch (ClassNotFoundException e) {

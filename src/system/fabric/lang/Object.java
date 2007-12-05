@@ -254,10 +254,12 @@ public interface Object {
      * $serialize.
      */
     @SuppressWarnings("unused")
-    public $Impl(Core core, long onum, ObjectInput in) throws IOException,
-        ClassNotFoundException {
+    public $Impl(Core core, long onum, int version, Policy policy,
+        ObjectInput in) throws IOException, ClassNotFoundException {
       this.$core = core;
       this.$onum = onum;
+      this.$policy = policy;
+      this.$version = version;
       return;
     }
 
@@ -279,10 +281,13 @@ public interface Object {
     protected static final void $writeRef(ObjectOutput out, Object obj)
         throws IOException {
       if (obj == null) {
-        out.writeLong(-1);
-        out.writeLong(-1);
+        out.writeByte(0);
+      } else if (obj instanceof WrappedJavaInlineable<?>) {
+        out.writeByte(1);
+        out.writeObject(obj.$unwrap());
       } else {
         $Proxy p = ($Proxy) obj;
+        out.writeByte(2);
         out.writeLong(p.core.id());
         out.writeLong(p.onum);
       }

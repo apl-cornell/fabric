@@ -476,14 +476,24 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       } else {
         out.append("$writeRef(out, this." + f.name() + ");");
 
-        in.append("core = in.readLong();");
-        in.append("onum = in.readLong();");
-
-        if (!f.declType().toString().equals("java.lang.Object")) {
-          in.append("if (onum != -1) " + "this." + f.name()
-              + " = new " + f.declType() + ".$Proxy("
+        in.append("switch (in.readByte()) {");
+        in.append("case 0:");
+        in.append("  this." + f.name() + " = null;  break;");
+        if (ts.equals(f.declType(), ts.FObject())
+            || ts.isJavaInlineable(f.declType())) {
+          in.append("case 1:");
+          in.append("  this." + f.name()
+              + " = fabric.lang.WrappedJavaInlineable.$wrap(in.readObject());");
+          in.append("  break;");
+        }
+        if (ts.isPureFabricType(f.declType())) {
+          in.append("default:");
+          in.append(" core = in.readLong();");
+          in.append(" onum = in.readLong();");
+          in.append(" this." + f.name() + " = new " + f.declType() + ".$Proxy("
               + "fabric.client.Client.getClient().getCore(core), onum);");
         }
+        in.append("}");
       }
     }
 
@@ -494,10 +504,14 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     result.add(serialize);
 
     ClassMember deserialize =
-        qq.parseMember("public $Impl"
-            + "(fabric.client.Core objCore, long onum, fabric.core.SerializedObject.ObjectInput in) "
-            + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-            + "super(objCore, onum, in);" + "long core;" + in + " }", inSubst);
+        qq
+            .parseMember(
+                "public $Impl"
+                    + "(fabric.client.Core objCore, long onum, int version, "
+                    + "fabric.common.Policy policy, fabric.core.SerializedObject.ObjectInput in) "
+                    + "throws java.io.IOException, java.lang.ClassNotFoundException {"
+                    + "super(objCore, onum, version, policy, in);"
+                    + "long core;" + in + " }", inSubst);
     result.add(deserialize);
 
     return result;

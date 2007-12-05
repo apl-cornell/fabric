@@ -1,7 +1,15 @@
 package fabric.lang.arrays;
 
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.util.Arrays;
+
+import fabric.client.Client;
 import fabric.client.Core;
+import fabric.common.Policy;
+import fabric.core.SerializedObject.ObjectInput;
 import fabric.lang.Object;
+import fabric.lang.WrappedJavaInlineable;
 
 public interface ObjectArray<T extends Object> extends Object {
   int get$length();
@@ -41,6 +49,31 @@ public interface ObjectArray<T extends Object> extends Object {
       this.value = value;
     }
 
+    /**
+     * Used for deserializing.
+     */
+    @SuppressWarnings("unchecked")
+    public $Impl(Core core, long onum, int version, Policy policy,
+        ObjectInput in) throws IOException, ClassNotFoundException {
+      super(core, onum, version, policy, in);
+      value = new Object[in.readInt()];
+      for (int i = 0; i < value.length; i++) {
+        switch (in.readByte()) {
+        case 0:
+          value[i] = null;
+          break;
+        case 1:
+          value[i] = WrappedJavaInlineable.$wrap(in.readObject());
+          break;
+        case 2:
+          long coreID = in.readLong();
+          onum = in.readLong();
+          value[i] =
+              new ObjectArray.$Proxy(Client.getClient().getCore(coreID), onum);
+        }
+      }
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -73,11 +106,37 @@ public interface ObjectArray<T extends Object> extends Object {
     /*
      * (non-Javadoc)
      * 
+     * @see fabric.lang.Object.$Impl#$copyStateFrom(fabric.lang.Object.$Impl)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public void $copyStateFrom(Object.$Impl other) {
+      super.$copyStateFrom(other);
+      ObjectArray.$Impl<T> src = (ObjectArray.$Impl<T>) other;
+      value = Arrays.copyOf(src.value, src.value.length);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
     protected ObjectArray.$Proxy<T> $makeProxy() {
       return new ObjectArray.$Proxy<T>(this);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.Object.$Impl#$serialize(java.io.ObjectOutput)
+     */
+    @Override
+    public void $serialize(ObjectOutput out) throws IOException {
+      super.$serialize(out);
+      out.writeInt(value.length);
+      for (int i = 0; i < value.length; i++)
+        $writeRef(out, value[i]);
     }
   }
 

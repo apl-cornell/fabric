@@ -11,7 +11,7 @@ import fabric.lang.Object.$Impl;
  * <code>$Impl</code> objects are stored on cores in serialized form as
  * <code>SerializedObject</code>s.
  */
-public class SerializedObject implements Serializable {
+public final class SerializedObject implements Serializable {
   private byte[] object;
 
   private long onum;
@@ -32,21 +32,6 @@ public class SerializedObject implements Serializable {
     this.related = related;
     this.onum = obj.$getOnum();
     this.policy = obj.$getPolicy();
-  }
-
-  /**
-   * Deserializes the object.
-   * 
-   * @param core
-   *          The core from which the object was obtained.
-   * @param onum
-   *          The object's onum.
-   */
-  public $Impl getObject(Core core, long onum) throws ClassNotFoundException {
-    $Impl result = deserialize(core, onum, object);
-    // TODO Update header information.
-    result.$version = version;
-    return result;
   }
 
   public long getOnum() {
@@ -92,25 +77,23 @@ public class SerializedObject implements Serializable {
   }
 
   /**
-   * Deserializes an object.
+   * Deserializes the object.
    * 
    * @param core
    *          The core on which the object lives.
    * @param onum
    *          The object's onum.
-   * @param buf
-   *          The serialized object.
    */
-  protected $Impl deserialize(Core core, long onum, byte[] buf)
-      throws ClassNotFoundException {
-    ByteArrayInputStream bis = new ByteArrayInputStream(buf);
+  public $Impl deserialize(Core core, long onum) throws ClassNotFoundException {
+    ByteArrayInputStream bis = new ByteArrayInputStream(object);
 
     try {
       ObjectInputStream dis = new ObjectInputStream(bis);
       Class<?> c = Class.forName(dis.readUTF());
       $Impl obj =
-          ($Impl) c.getConstructor(Core.class, long.class, ObjectInput.class)
-              .newInstance(core, onum, dis);
+          ($Impl) c.getConstructor(Core.class, long.class, int.class,
+              Policy.class, ObjectInput.class).newInstance(core, onum, version,
+              policy, dis);
       return obj;
     } catch (ClassNotFoundException e) {
       throw e;
@@ -130,8 +113,8 @@ public class SerializedObject implements Serializable {
   public interface ObjectInput extends java.io.ObjectInput {
   }
 
-  private class ObjectInputStream extends java.io.ObjectInputStream implements
-      ObjectInput {
+  private static class ObjectInputStream extends java.io.ObjectInputStream
+      implements ObjectInput {
 
     public ObjectInputStream(InputStream in) throws IOException {
       super(in);
