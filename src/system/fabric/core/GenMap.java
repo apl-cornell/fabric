@@ -33,13 +33,7 @@ public class GenMap {
       local.surrogate(core);
       rootMap.$forceRelocate(core, 0);
       store.put(0L, new SerializedObject(rootMap));
-
-      for (Map.Entry<Long, Object.$Impl> entry : local.objects().entrySet()) {
-        long onum = entry.getKey();
-        Object.$Impl obj = entry.getValue();
-        if (obj != rootMap) store.put(onum, new SerializedObject(obj));
-      }
-
+      store.put(3L, new SerializedObject(local.readObject(3)));
       out.writeObject(store);
     }
   }
