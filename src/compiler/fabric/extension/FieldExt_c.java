@@ -1,14 +1,34 @@
 package fabric.extension;
 
-import polyglot.ast.Call;
-import polyglot.ast.Expr;
-import polyglot.ast.Field;
-import polyglot.ast.Receiver;
+import polyglot.ast.*;
 import polyglot.qq.QQ;
 import polyglot.types.*;
 import fabric.visit.ProxyRewriter;
 
 public class FieldExt_c extends ExprExt_c {
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabric.visit.ProxyRewriter)
+   */
+  @Override
+  protected Expr rewriteProxiesOverrideImpl(ProxyRewriter pr) {
+    Field field = node();
+    Receiver target = field.target();
+    boolean rewriteTarget = true;
+    if (target instanceof Special) {
+      Special special = (Special) target;
+      rewriteTarget =
+          special.kind() != Special.THIS || special.qualifier() != null;
+    }
+    
+    if (rewriteTarget) target = (Receiver) field.visitChild(target, pr);
+    Id name = (Id) field.visitChild(field.id(), pr);
+    field = field.target(target).id(name);
+    
+    return ((FieldExt_c)field.ext()).rewriteProxiesImpl(pr);
+  }
 
   /*
    * (non-Javadoc)

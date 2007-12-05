@@ -17,11 +17,16 @@ public class SpecialExt_c extends ExprExt_c {
   protected Expr rewriteProxiesImpl(ProxyRewriter pr) {
     Special special = node();
     TypeNode qualifier = special.qualifier();
-    if (qualifier == null) return super.rewriteProxiesImpl(pr);
-
-    // Tack on a ".$Impl" to the qualifier.
     QQ qq = pr.qq();
-    return qq.parseExpr(qualifier + ".$Impl." + special.kind());
+    if (qualifier != null) {
+      // Tack on a ".$Impl" to the qualifier.
+      special =
+          (Special) qq.parseExpr(qualifier + ".$Impl." + special.kind()).type(
+              special.type());
+    }
+
+    if (special.kind() != Special.THIS) return special;
+    return qq.parseExpr("(%T) %E.$getProxy()", special.type(), special);
   }
 
   /*
