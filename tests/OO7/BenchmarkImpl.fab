@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BenchmarkImpl.fab,v 1.4 2007-11-06 21:20:19 mdgeorge Exp $
+// $Id: BenchmarkImpl.fab,v 1.5 2007-12-05 23:49:15 xinz Exp $
 
 package OO7;
 
@@ -187,8 +187,8 @@ public class BenchmarkImpl implements Benchmark {
 
   public BenchmarkImpl(int scale) throws Exception {
     this.scale = scale;
-    Core local = Client.getClient().getLocalCore();
-    this.atomicParts = new HashMap@local();
+    Core core = Client.getClient().getCore(0);
+    this.atomicParts = new HashMap@core();
     this.module = createModule();
   }
 
