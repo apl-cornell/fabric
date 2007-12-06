@@ -33,11 +33,12 @@ public class NewArrayExt_c extends LocatedExt_c {
 
     Expr size = (Expr) newArray.dims().get(0);
 
-    Type baseType = newArray.baseType().type();
+    Type baseType = newArray.type().toArray().base();
     Type arrayImplType = ts.fArrayImplOf(baseType);
     Type arrayType = ts.fArrayOf(baseType);
-    return qq.parseExpr("(%T) new %T(%E, %E).$getProxy()", arrayType,
-        arrayImplType, location, size);
+    return qq.parseExpr("(%T) new %T(%E, " + baseType
+        + ".$Proxy.class, %E).$getProxy()", arrayType, arrayImplType, location,
+        size);
   }
 
   /*

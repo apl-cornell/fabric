@@ -54,8 +54,8 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
     Object[] result = new Object[array.length];
     for (int i = 0; i < array.length; i++)
       result[i] = $wrap(array[i]);
-    return (ObjectArray<Object>) new ObjectArray.$Impl<Object>(core, result)
-        .$getProxy();
+    return (ObjectArray<Object>) new ObjectArray.$Impl<Object>(core,
+        Object.$Proxy.class, result).$getProxy();
   }
 
   /*

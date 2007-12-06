@@ -7,6 +7,7 @@ import java.util.Arrays;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.TransactionManager;
+import fabric.common.InternalError;
 import fabric.common.Policy;
 import fabric.core.SerializedObject.ObjectInput;
 import fabric.lang.Object;
@@ -21,6 +22,11 @@ public interface ObjectArray<T extends Object> extends Object {
 
   public static class $Impl<T extends Object> extends Object.$Impl implements
       ObjectArray<T> {
+    /**
+     * The class representing the proxy type for the array elements.
+     */
+    private final Class<?> proxyType;
+
     private Object[] value;
 
     /**
@@ -31,8 +37,9 @@ public interface ObjectArray<T extends Object> extends Object {
      * @param length
      *          The length of the array.
      */
-    public $Impl(Core core, int length) {
+    public $Impl(Core core, Class<?> proxyType, int length) {
       super(core);
+      this.proxyType = proxyType;
       value = new Object[length];
     }
 
@@ -45,8 +52,9 @@ public interface ObjectArray<T extends Object> extends Object {
      * @param value
      *          The backing array to use.
      */
-    public $Impl(Core core, T[] value) {
+    public $Impl(Core core, Class<?> proxyType, T[] value) {
       super(core);
+      this.proxyType = proxyType;
       this.value = value;
     }
 
@@ -57,6 +65,7 @@ public interface ObjectArray<T extends Object> extends Object {
     public $Impl(Core core, long onum, int version, Policy policy,
         ObjectInput in) throws IOException, ClassNotFoundException {
       super(core, onum, version, policy, in);
+      proxyType = Class.forName(in.readUTF());
       value = new Object[in.readInt()];
       for (int i = 0; i < value.length; i++) {
         switch (in.readByte()) {
@@ -69,8 +78,13 @@ public interface ObjectArray<T extends Object> extends Object {
         case 2:
           long coreID = in.readLong();
           onum = in.readLong();
-          value[i] =
-              new ObjectArray.$Proxy(Client.getClient().getCore(coreID), onum);
+          try {
+            value[i] =
+                (Object) proxyType.getConstructor(Core.class, long.class)
+                    .newInstance(Client.getClient().getCore(coreID), onum);
+          } catch (Exception e) {
+            throw new InternalError(e);
+          }
         }
       }
     }
@@ -103,7 +117,8 @@ public interface ObjectArray<T extends Object> extends Object {
      */
     @SuppressWarnings("unchecked")
     public T set(int i, T value) {
-      boolean transactionCreated = TransactionManager.INSTANCE.registerWrite(this);
+      boolean transactionCreated =
+          TransactionManager.INSTANCE.registerWrite(this);
       T result = (T) (this.value[i] = value);
       if (transactionCreated) TransactionManager.INSTANCE.commitTransaction();
       return result;
@@ -140,6 +155,7 @@ public interface ObjectArray<T extends Object> extends Object {
     @Override
     public void $serialize(ObjectOutput out) throws IOException {
       super.$serialize(out);
+      out.writeUTF(proxyType.getName());
       out.writeInt(value.length);
       for (int i = 0; i < value.length; i++)
         $writeRef(out, value[i]);
