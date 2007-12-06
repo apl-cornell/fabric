@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.client.TransactionManager;
 import fabric.common.Policy;
 import fabric.core.SerializedObject.ObjectInput;
 import fabric.lang.Object;
@@ -80,6 +81,7 @@ public interface ObjectArray<T extends Object> extends Object {
      * @see fabric.lang.arrays.ObjectArray#getLength()
      */
     public int get$length() {
+      TransactionManager.INSTANCE.registerRead(this);
       return value.length;
     }
 
@@ -90,6 +92,7 @@ public interface ObjectArray<T extends Object> extends Object {
      */
     @SuppressWarnings("unchecked")
     public T get(int i) {
+      TransactionManager.INSTANCE.registerRead(this);
       return (T) value[i];
     }
 
@@ -100,7 +103,10 @@ public interface ObjectArray<T extends Object> extends Object {
      */
     @SuppressWarnings("unchecked")
     public T set(int i, T value) {
-      return (T) (this.value[i] = value);
+      boolean transactionCreated = TransactionManager.INSTANCE.registerWrite(this);
+      T result = (T) (this.value[i] = value);
+      if (transactionCreated) TransactionManager.INSTANCE.commitTransaction();
+      return result;
     }
 
     /*

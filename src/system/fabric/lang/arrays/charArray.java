@@ -1,6 +1,13 @@
 package fabric.lang.arrays;
 
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.util.Arrays;
+
 import fabric.client.Core;
+import fabric.client.TransactionManager;
+import fabric.common.Policy;
+import fabric.core.SerializedObject.ObjectInput;
 import fabric.lang.Object;
 
 public interface charArray extends Object {
@@ -41,13 +48,24 @@ public interface charArray extends Object {
       this.value = value;
     }
 
+    /**
+     * Used for deserializing.
+     */
+    public $Impl(Core core, long onum, int version, Policy policy,
+        ObjectInput in) throws IOException, ClassNotFoundException {
+      super(core, onum, version, policy, in);
+      value = new char[in.readInt()];
+      for (int i = 0; i < value.length; i++)
+        value[i] = in.readChar();
+    }
+
     /*
      * (non-Javadoc)
      * 
      * @see fabric.lang.arrays.charArray#getLength()
      */
     public int get$length() {
-      // TODO: mark as read
+      TransactionManager.INSTANCE.registerRead(this);
       return value.length;
     }
 
@@ -58,7 +76,7 @@ public interface charArray extends Object {
      */
     @SuppressWarnings("unchecked")
     public char get(int i) {
-      // TODO: mark as read
+      TransactionManager.INSTANCE.registerRead(this);
       return this.value[i];
     }
 
@@ -68,8 +86,23 @@ public interface charArray extends Object {
      * @see fabric.lang.arrays.charArray#set(int, char)
      */
     public char set(int i, char value) {
-      // TODO: mark as written
-      return this.value[i] = value;
+      boolean transactionCreated = TransactionManager.INSTANCE.registerWrite(this);
+      char result = this.value[i] = value;
+      if (transactionCreated) TransactionManager.INSTANCE.commitTransaction();
+      return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.Object.$Impl#$copyStateFrom(fabric.lang.Object.$Impl)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public void $copyStateFrom(Object.$Impl other) {
+      super.$copyStateFrom(other);
+      charArray.$Impl src = (charArray.$Impl) other;
+      value = Arrays.copyOf(src.value, src.value.length);
     }
 
     /*
@@ -82,6 +115,18 @@ public interface charArray extends Object {
       return new charArray.$Proxy(this);
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.Object.$Impl#$serialize(java.io.ObjectOutput)
+     */
+    @Override
+    public void $serialize(ObjectOutput out) throws IOException {
+      super.$serialize(out);
+      out.writeInt(value.length);
+      for (int i = 0; i < value.length; i++)
+        out.writeChar(value[i]);
+    }
   }
 
   public static class $Proxy extends Object.$Proxy implements
