@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BenchmarkImpl.fab,v 1.6 2007-12-06 05:11:20 jed Exp $
+// $Id: BenchmarkImpl.fab,v 1.7 2007-12-06 22:51:13 jed Exp $
 
 package OO7;
 
@@ -174,7 +174,7 @@ public class BenchmarkImpl implements Benchmark {
     // access each
     long time = System.currentTimeMillis();
     for (int i = 0; i < oids.length; ++i) {
-      AtomicPart part = (AtomicPart) atomicParts.get(new Integer@local(i));
+      AtomicPart part = (AtomicPart) atomicParts.get(new Integer@local(oids[i]));
       long x = part.x();
     }
     time = (System.currentTimeMillis() - time);
