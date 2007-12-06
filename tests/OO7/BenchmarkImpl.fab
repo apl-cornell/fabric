@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BenchmarkImpl.fab,v 1.5 2007-12-05 23:49:15 xinz Exp $
+// $Id: BenchmarkImpl.fab,v 1.6 2007-12-06 05:11:20 jed Exp $
 
 package OO7;
 
@@ -88,7 +88,7 @@ public class BenchmarkImpl implements Benchmark {
           }
           atomic {
             Benchmark bench = new BenchmarkImpl@core(scale);
-            root.put("OO7 Benchmark", bench);
+            root.put(database, bench);
           }
         }
       }
