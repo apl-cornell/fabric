@@ -45,17 +45,32 @@ public final class TransactionManager {
 
     /**
      * Incorporates the reads, creates, and writes in the given log into this
-     * log. This method clobbers the writes that are recorded in the given log.
+     * log.
      */
     protected void merge(Log log) {
-      // Copy in the other log's reads and creates.
-      reads.putAll(log.reads);
+      // Copy in the other log's reads. Ignore any reads on objects that we've
+      // created.
+      for (Core core : log.reads.keySet()) {
+        for (Map.Entry<Long, Integer> entry : log.reads.get(core).entrySet()) {
+          long oid = entry.getKey();
+          if (!creates.containsKey(core, oid))
+            reads.put(core, oid, entry.getValue());
+        }
+      }
+
+      // Copy in the other log's creates.
       creates.putAll(log.creates);
 
-      // Some hackery here: add writes from the other log, but don't
-      // clobber writes already recorded in this log.
-      log.writes.putAll(writes);
-      writes = log.writes;
+      // Add writes from the other log. Ignore any writes to objects that we've
+      // created or have already written to.
+      for (Core core : log.writes.keySet()) {
+        for (Map.Entry<Long, Pair<$Impl, $Impl>> entry : log.writes.get(core)
+            .entrySet()) {
+          long oid = entry.getKey();
+          if (!creates.containsKey(core, oid) && !writes.containsKey(core, oid))
+            writes.put(core, oid, entry.getValue());
+        }
+      }
     }
   }
 
@@ -104,7 +119,7 @@ public final class TransactionManager {
     Set<Core> cores = new HashSet<Core>();
     final Map<Core, Integer> transactionIDs =
         new ConcurrentHashMap<Core, Integer>();
-    
+
     // Go through the transaction log and figure out the cores we need to
     // contact.
     cores.addAll(curFrame.creates.keySet());
@@ -258,6 +273,10 @@ public final class TransactionManager {
 
     Core core = obj.$getCore();
     long onum = obj.$getOnum();
+
+    // Nothing to do if we created the object ourselves.
+    if (curFrame.creates.containsKey(core, onum)) return;
+
     if (curFrame.reads.containsKey(core, onum)
         && curFrame.reads.get(core, onum) != obj.$getVersion())
       throw new VersionConflictException(obj);
