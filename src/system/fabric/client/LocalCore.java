@@ -18,7 +18,7 @@ public class LocalCore implements Core {
   private Object rootMap;
   private RemoteCore surrogate = null;
 
-  private static Logger log = Logger.getLogger("fabric.client.LocalCore");
+  private static final Logger log = Logger.getLogger("fabric.client.LocalCore");
 
   private class PendingTransaction {
     public int id;

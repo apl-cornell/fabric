@@ -1,6 +1,9 @@
 package fabric.client;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamException;
 import java.lang.ref.SoftReference;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -128,9 +131,10 @@ public class RemoteCore implements Core {
    * 
    * @return <code>true</code> iff the operation succeeded.
    */
-  public void prepareTransaction(int transactionID, Collection<Object.$Impl> toCreate,
-      Map<Long, Integer> reads, Collection<Object.$Impl> writes)
-      throws UnreachableCoreException, TransactionPrepareFailedException {
+  public void prepareTransaction(int transactionID,
+      Collection<Object.$Impl> toCreate, Map<Long, Integer> reads,
+      Collection<Object.$Impl> writes) throws UnreachableCoreException,
+      TransactionPrepareFailedException {
     new PrepareTransactionMessage(transactionID, toCreate, reads, writes)
         .send(this);
   }
@@ -208,10 +212,13 @@ public class RemoteCore implements Core {
    */
   protected void reserve(int num) throws UnreachableCoreException {
     while (fresh_ids.size() < num) {
-      AllocateMessage.Response response = new AllocateMessage(num).send(this);
+//      log.info("Requesting new onums, coreid=" + coreID);
+      if (num < 512) num = 512;
+      AllocateMessage.Response response =
+          new AllocateMessage(num).send(this);
 
       for (long oid : response.oids)
-        fresh_ids.offer(oid);
+        fresh_ids.add(oid);
     }
   }
 
@@ -252,7 +259,7 @@ public class RemoteCore implements Core {
   public Object getRoot() throws UnreachableCoreException {
     return new Object.$Proxy(this, 0);
   }
-  
+
   public long id() {
     return coreID;
   }
