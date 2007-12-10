@@ -135,14 +135,6 @@ public class Worker extends Thread {
     return new AllocateMessage.Response(onums);
   }
 
-  /**
-   * Processes the given begin-transaction request.
-   */
-  public BeginTransactionMessage.Response handle(BeginTransactionMessage message) {
-    return new BeginTransactionMessage.Response(transactionManager
-        .newTransaction(client));
-  }
-
   public CommitTransactionMessage.Response handle(
       CommitTransactionMessage message) throws TransactionCommitFailedException {
     transactionManager.commitTransaction(client, message.transactionID);
@@ -154,9 +146,9 @@ public class Worker extends Thread {
    */
   public PrepareTransactionMessage.Response handle(PrepareTransactionMessage msg)
       throws TransactionPrepareFailedException {
-    transactionManager.prepare(client, msg.transactionID, msg.toCreate,
+    int transactionID = transactionManager.prepare(client, msg.toCreate,
         msg.reads, msg.writes);
-    return new PrepareTransactionMessage.Response();
+    return new PrepareTransactionMessage.Response(transactionID);
   }
 
   /**

@@ -15,9 +15,9 @@ public interface Core extends java.io.Serializable {
   /**
    * Notifies the core that the transaction is entering the Prepare phase.
    * 
-   * @return <code>true</code> iff the operation succeeded.
+   * @return a core-specific transaction ID iff the operation succeeded.
    */
-  public void prepareTransaction(int transactionID, Collection<$Impl> toCreate,
+  public int prepareTransaction(Collection<$Impl> toCreate,
       Map<Long, Integer> reads, Collection<$Impl> writes)
       throws UnreachableCoreException, TransactionPrepareFailedException;
 
@@ -50,13 +50,6 @@ public interface Core extends java.io.Serializable {
    */
   public void commitTransaction(int transactionID)
       throws UnreachableCoreException, TransactionCommitFailedException;
-
-  /**
-   * Notifies the Core that a new transaction is beginning.
-   * 
-   * @return a Core-specific identifier for the transaction
-   */
-  public int beginTransaction() throws UnreachableCoreException;
 
   /**
    * Obtains a new, unused object number from the Core.

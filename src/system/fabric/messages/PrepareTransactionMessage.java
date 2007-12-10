@@ -19,19 +19,19 @@ public class PrepareTransactionMessage extends
     Message<PrepareTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
-    public Response() {
+    public final int transactionID;
+    public Response(int transactionID) {
+      this.transactionID = transactionID;
     }
   }
 
-  public final int transactionID;
   public final Collection<SerializedObject> toCreate;
   public final Map<Long, Integer> reads;
   public final Collection<SerializedObject> writes;
 
-  public PrepareTransactionMessage(int transactionID, Collection<$Impl> toCreate,
+  public PrepareTransactionMessage(Collection<$Impl> toCreate,
       Map<Long, Integer> reads, Collection<$Impl> writes) {
     super(Response.class);
-    this.transactionID = transactionID;
 
     this.toCreate = new HashSet<SerializedObject>();
     if (reads != null)

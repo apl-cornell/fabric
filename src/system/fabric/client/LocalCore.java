@@ -33,21 +33,16 @@ public class LocalCore implements Core {
     }
   }
 
-  public int beginTransaction() {
-    log.info("Local transaction " + freshTID + " beginning");
-    return freshTID++;
-  }
-
-  public void prepareTransaction(int transactionID,
-      Collection<Object.$Impl> toCreate, Map<Long, Integer> reads,
-      Collection<Object.$Impl> writes) {
+  public int prepareTransaction(Collection<Object.$Impl> toCreate,
+      Map<Long, Integer> reads, Collection<Object.$Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
-    log.info("Local transaction " + transactionID + " preparing");
+    log.info("Local transaction " + freshTID + " preparing");
     // TODO: more robust checking
     assert prepared == null;
 
-    prepared = new PendingTransaction(transactionID, toCreate, writes);
+    prepared = new PendingTransaction(freshTID, toCreate, writes);
+    return freshTID++;
   }
 
   public void abortTransaction(int transactionID) {
@@ -103,7 +98,7 @@ public class LocalCore implements Core {
   public void surrogate(RemoteCore surrogate) {
     this.surrogate = surrogate;
   }
-  
+
   @Deprecated
   public Map<Long, Object.$Impl> objects() {
     return objects;

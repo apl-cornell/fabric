@@ -72,24 +72,18 @@ public class RemoteCore implements Core {
     return out;
   }
 
-  public int beginTransaction() throws UnreachableCoreException {
-    BeginTransactionMessage.Response reply =
-        new BeginTransactionMessage().send(this);
-    return reply.transactionID;
-  }
-
   /**
    * Establishes a connection with a core node at a given host. A helper for
    * <code>Message.send(Core)</code>. XXX Is this in the right place?
    * 
    * @param client
-   *          The Client instance.
+   *                The Client instance.
    * @param host
-   *          The host to connect to.
+   *                The host to connect to.
    * @param hostPrincipal
-   *          The principal associated with the host we're connecting to.
+   *                The principal associated with the host we're connecting to.
    * @throws IOException
-   *           if there was an error.
+   *                 if there was an error.
    */
   public void connect(Client client, InetSocketAddress host,
       Principal hostPrincipal) throws IOException {
@@ -129,14 +123,14 @@ public class RemoteCore implements Core {
   /**
    * Sends a PREPARE message to the core.
    * 
-   * @return <code>true</code> iff the operation succeeded.
+   * @return a core-specific transaction ID iff the operation succeeded.
    */
-  public void prepareTransaction(int transactionID,
-      Collection<Object.$Impl> toCreate, Map<Long, Integer> reads,
-      Collection<Object.$Impl> writes) throws UnreachableCoreException,
-      TransactionPrepareFailedException {
-    new PrepareTransactionMessage(transactionID, toCreate, reads, writes)
-        .send(this);
+  public int prepareTransaction(Collection<Object.$Impl> toCreate,
+      Map<Long, Integer> reads, Collection<Object.$Impl> writes)
+      throws UnreachableCoreException, TransactionPrepareFailedException {
+    PrepareTransactionMessage.Response response =
+        new PrepareTransactionMessage(toCreate, reads, writes).send(this);
+    return response.transactionID;
   }
 
   /**
@@ -144,7 +138,7 @@ public class RemoteCore implements Core {
    * resident.
    * 
    * @param onum
-   *          The identifier of the requested object
+   *                The identifier of the requested object
    * @return The requested object
    * @throws FabricException
    */
@@ -162,7 +156,7 @@ public class RemoteCore implements Core {
    * not present. Places the result in the object cache.
    * 
    * @param onum
-   *          The object number to fetch
+   *                The object number to fetch
    * @return The constructed $Impl
    * @throws FabricException
    */
@@ -208,14 +202,13 @@ public class RemoteCore implements Core {
    * core.
    * 
    * @param num
-   *          The number of objects to allocate
+   *                The number of objects to allocate
    */
   protected void reserve(int num) throws UnreachableCoreException {
     while (fresh_ids.size() < num) {
-//      log.info("Requesting new onums, coreid=" + coreID);
+      // log.info("Requesting new onums, coreid=" + coreID);
       if (num < 512) num = 512;
-      AllocateMessage.Response response =
-          new AllocateMessage(num).send(this);
+      AllocateMessage.Response response = new AllocateMessage(num).send(this);
 
       for (long oid : response.oids)
         fresh_ids.add(oid);

@@ -30,8 +30,8 @@ public final class TransactionManager {
 
     /**
      * @param log
-     *          The outer transaction's log. Can be null if creating the log for
-     *          a top-level transaction.
+     *                The outer transaction's log. Can be null if creating the
+     *                log for a top-level transaction.
      */
     private Log(Log log) {
       if (log != null) {
@@ -140,9 +140,6 @@ public final class TransactionManager {
           @Override
           public void run() {
             try {
-              int transactionID = core.beginTransaction();
-              transactionIDs.put(core, transactionID);
-
               Map<Long, $Impl> createsMap = curFrame.creates.get(core);
               Collection<$Impl> creates = null;
               if (createsMap != null) creates = createsMap.values();
@@ -157,8 +154,10 @@ public final class TransactionManager {
                 }
               }
 
-              core.prepareTransaction(transactionID, creates, curFrame.reads
-                  .get(core), writes);
+              int transactionID =
+                  core.prepareTransaction(creates, curFrame.reads.get(core),
+                      writes);
+              transactionIDs.put(core, transactionID);
             } catch (TransactionPrepareFailedException exc) {
               failures.put(core, exc);
             } catch (UnreachableCoreException exc) {

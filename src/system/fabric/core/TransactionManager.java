@@ -94,7 +94,7 @@ public class TransactionManager {
     transactions.remove(transactionID);
     lockedONums.removeAll(transaction.lockedONums);
 
-    // TODO: need a better messaage
+    // TODO: need a better message
     if (!result)
       throw new TransactionCommitFailedException("something went wrong");
   }
@@ -112,23 +112,24 @@ public class TransactionManager {
     }
   }
 
-  public synchronized void prepare(Principal client, int transactionID,
+  public synchronized int prepare(Principal client,
       Collection<SerializedObject> toCreate, Map<Long, Integer> reads,
       Collection<SerializedObject> writes)
     throws TransactionPrepareFailedException
   {
-    Transaction transaction = transactions.get(transactionID);
-    if (transaction == null)
-      throw new TransactionPrepareFailedException("Transaction does not exist");
+    int transactionID;
+    do {
+      transactionID = random.nextInt();
+    } while (transactions.containsKey(transactionID));
     
-    if (!transaction.client.equals(client))
-      throw new TransactionPrepareFailedException("Transaction is not owned by you");
+    Transaction transaction = new Transaction(client);
 
     try {
       prepare(client, transaction, toCreate, reads, writes);
+      transactions.put(transactionID, transaction);
+      return transactionID;
     } catch (TransactionPrepareFailedException e) {
       // Transaction failed. Unlock everything held by this transaction.
-      transactions.remove(transactionID);
       lockedONums.removeAll(transaction.lockedONums);
       e.fillInStackTrace();
       throw e;
