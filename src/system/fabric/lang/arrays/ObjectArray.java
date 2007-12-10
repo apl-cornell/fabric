@@ -178,6 +178,7 @@ public interface ObjectArray<T extends Object> extends Object {
      * 
      * @see fabric.lang.arrays.ObjectArray#getLength()
      */
+    @SuppressWarnings("unchecked")
     public int get$length() {
       return ((ObjectArray<T>) fetch()).get$length();
     }
@@ -187,6 +188,7 @@ public interface ObjectArray<T extends Object> extends Object {
      * 
      * @see fabric.lang.arrays.ObjectArray#get(int)
      */
+    @SuppressWarnings("unchecked")
     public T get(int i) {
       return ((ObjectArray<T>) fetch()).get(i);
     }
@@ -196,6 +198,7 @@ public interface ObjectArray<T extends Object> extends Object {
      * 
      * @see fabric.lang.arrays.ObjectArray#set(int, fabric.lang.Object)
      */
+    @SuppressWarnings("unchecked")
     public T set(int i, T value) {
       return ((ObjectArray<T>) fetch()).set(i, value);
     }

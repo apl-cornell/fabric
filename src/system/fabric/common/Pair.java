@@ -12,7 +12,7 @@ public class Pair<T1,T2> {
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof Pair)) return false;
-    Pair<?,?> p = (Pair)o;
+    Pair<?,?> p = (Pair<?,?>)o;
     if (first == null) return p.first == null;
     else if (!first.equals(p.first)) return false;
     return second == null ? p.second == null : second.equals(p.second);

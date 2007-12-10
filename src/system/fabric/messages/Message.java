@@ -148,7 +148,7 @@ public abstract class Message<R extends Message.Response> implements
     try {
       Message<?> m;
       try {
-        m = (Message) in.readUnshared();
+        m = (Message<?>) in.readUnshared();
       } catch (ClassNotFoundException e) {
         throw new ProtocolError("Unknown request type.");
       }

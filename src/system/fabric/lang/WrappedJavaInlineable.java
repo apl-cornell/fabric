@@ -50,6 +50,7 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * array should be instances of fabric.lang.Object from the Fabric type
    * system's point of view.
    */
+  @SuppressWarnings("unchecked")
   public static ObjectArray<Object> $wrap(Core core, java.lang.Object[] array) {
     Object[] result = new Object[array.length];
     for (int i = 0; i < array.length; i++)
@@ -101,7 +102,7 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    */
   public boolean equals(Object o) {
     if (!(o instanceof WrappedJavaInlineable)) return false;
-    java.lang.Object obj = ((WrappedJavaInlineable) o).obj;
+    java.lang.Object obj = ((WrappedJavaInlineable<?>) o).obj;
     if (obj == null) return this.obj == null;
     return obj.equals(this.obj);
   }
@@ -114,7 +115,7 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   @Override
   public boolean equals(java.lang.Object obj) {
     if (obj instanceof WrappedJavaInlineable)
-      return equals((WrappedJavaInlineable) obj);
+      return equals((WrappedJavaInlineable<?>) obj);
     if (obj == null) return this.obj == null;
     return obj.equals(this.obj);
   }

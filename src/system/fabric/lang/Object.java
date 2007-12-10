@@ -269,7 +269,7 @@ public interface Object {
     protected static final void $writeInline(ObjectOutput out,
         java.lang.Object obj) throws IOException {
       if (obj instanceof WrappedJavaInlineable) {
-        obj = ((WrappedJavaInlineable) obj).obj;
+        obj = ((WrappedJavaInlineable<?>) obj).obj;
       }
 
       out.writeObject(obj);
