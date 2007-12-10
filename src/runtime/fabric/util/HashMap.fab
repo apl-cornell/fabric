@@ -278,7 +278,9 @@ public class HashMap extends AbstractMap
    */
   public boolean isEmpty()
   {
-    return size == 0;
+    atomic {
+      return size == 0;
+    }
   }
 
   /**
@@ -294,15 +296,17 @@ public class HashMap extends AbstractMap
    */
   public Object get(Object key)
   {
-    int idx = hash(key);
-    HashEntry e = buckets[idx];
-    while (e != null)
+    atomic {
+      int idx = hash(key);
+      HashEntry e = buckets[idx];
+      while (e != null)
       {
         if (equals(key, e.key))
           return e.value;
         e = e.next;
       }
-    return null;
+      return null;
+    }
   }
 
   /**
@@ -315,15 +319,17 @@ public class HashMap extends AbstractMap
    */
   public boolean containsKey(Object key)
   {
-    int idx = hash(key);
-    HashEntry e = buckets[idx];
-    while (e != null)
+    atomic {
+      int idx = hash(key);
+      HashEntry e = buckets[idx];
+      while (e != null)
       {
         if (equals(key, e.key))
           return true;
         e = e.next;
       }
-    return false;
+      return false;
+    }
   }
 
   /**
@@ -341,34 +347,36 @@ public class HashMap extends AbstractMap
    */
   public Object put(Object key, Object value)
   {
-    int idx = hash(key);
-    HashEntry e = buckets[idx];
-
-    while (e != null)
-      {
-        if (equals(key, e.key))
-          {
-            e.access(); // Must call this for bookkeeping in LinkedHashMap.
-            Object r = e.value;
-            e.value = value;
-            return r;
-          }
-        else
-          e = e.next;
-      }
-
-    // At this point, we know we need to add a new entry.
-    modCount++;
-    if (++size > threshold)
-      {
-        rehash();
-        // Need a new hash value to suit the bigger table.
-        idx = hash(key);
-      }
-
-    // LinkedHashMap cannot override put(), hence this call.
-    addEntry(key, value, idx, true);
-    return null;
+    atomic {
+      int idx = hash(key);
+      HashEntry e = buckets[idx];
+  
+      while (e != null)
+        {
+          if (equals(key, e.key))
+            {
+              e.access(); // Must call this for bookkeeping in LinkedHashMap.
+              Object r = e.value;
+              e.value = value;
+              return r;
+            }
+          else
+            e = e.next;
+        }
+  
+      // At this point, we know we need to add a new entry.
+      modCount++;
+      if (++size > threshold)
+        {
+          rehash();
+          // Need a new hash value to suit the bigger table.
+          idx = hash(key);
+        }
+  
+      // LinkedHashMap cannot override put(), hence this call.
+      addEntry(key, value, idx, true);
+      return null;
+    }
   }
 
   /**
@@ -380,19 +388,21 @@ public class HashMap extends AbstractMap
    */
   public void putAll(Map m)
   {
+    atomic {
     Iterator itr = m.entrySet().iterator();
-    while (itr.hasNext())
-      {
-        Map.Entry e = (Map.Entry) itr.next();
-        // Optimize in case the Entry is one of our own.
-        if (e instanceof AbstractMap.BasicMapEntry)
-          {
-            AbstractMap.BasicMapEntry entry = (AbstractMap.BasicMapEntry) e;
-            put(entry.key, entry.value);
-          }
-        else
-          put(e.getKey(), e.getValue());
-      }
+      while (itr.hasNext())
+        {
+          Map.Entry e = (Map.Entry) itr.next();
+          // Optimize in case the Entry is one of our own.
+          if (e instanceof AbstractMap.BasicMapEntry)
+            {
+              AbstractMap.BasicMapEntry entry = (AbstractMap.BasicMapEntry) e;
+              put(entry.key, entry.value);
+            }
+          else
+            put(e.getKey(), e.getValue());
+        }
+    }
   }
   
   /**
@@ -407,27 +417,29 @@ public class HashMap extends AbstractMap
    */
   public Object remove(Object key)
   {
-    int idx = hash(key);
-    HashEntry e = buckets[idx];
-    HashEntry last = null;
-
-    while (e != null)
-      {
-        if (equals(key, e.key))
-          {
-            modCount++;
-            if (last == null)
-              buckets[idx] = e.next;
-            else
-              last.next = e.next;
-            size--;
-            // Method call necessary for LinkedHashMap to work correctly.
-            return e.cleanup();
-          }
-        last = e;
-        e = e.next;
-      }
-    return null;
+    atomic {
+      int idx = hash(key);
+      HashEntry e = buckets[idx];
+      HashEntry last = null;
+  
+      while (e != null)
+        {
+          if (equals(key, e.key))
+            {
+              modCount++;
+              if (last == null)
+                buckets[idx] = e.next;
+              else
+                last.next = e.next;
+              size--;
+              // Method call necessary for LinkedHashMap to work correctly.
+              return e.cleanup();
+            }
+          last = e;
+          e = e.next;
+        }
+      return null;
+    }
   }
 
   /**
@@ -435,12 +447,14 @@ public class HashMap extends AbstractMap
    */
   public void clear()
   {
-    if (size != 0)
+    atomic {
+      if (size != 0)
       {
         modCount++;
         for (int i = 0; i < buckets.length; i++) buckets[i] = null;//Arrays.fill(buckets, null);
         size = 0;
       }
+    }
   }
 
   /**
@@ -453,7 +467,8 @@ public class HashMap extends AbstractMap
    */
   public boolean containsValue(Object value)
   {
-    for (int i = buckets.length - 1; i >= 0; i--)
+    atomic {
+      for (int i = buckets.length - 1; i >= 0; i--)
       {
         HashEntry e = buckets[i];
         while (e != null)
@@ -463,7 +478,8 @@ public class HashMap extends AbstractMap
             e = e.next;
           }
       }
-    return false;
+      return false;
+    }
   }
 
 //  /**
@@ -501,43 +517,47 @@ public class HashMap extends AbstractMap
    */
   public Set keySet()
   {
-    if (keys == null)
-      // Create an AbstractSet with custom implementations of those methods
-      // that can be overridden easily and efficiently.
-      keys = new AbstractSet()
-      {
-        public int size()
+    atomic {
+      if (keys == null)
+        // Create an AbstractSet with custom implementations of those methods
+        // that can be overridden easily and efficiently.
+        keys = new AbstractSet()
         {
-          return size;
-        }
-
-        public Iterator iterator()
-        {
-          // Cannot create the iterator directly, because of LinkedHashMap.
-          return HashMap.this.iterator(KEYS);
-        }
-
-        public void clear()
-        {
-          HashMap.this.clear();
-        }
-
-        public boolean contains(Object o)
-        {
-          return containsKey(o);
-        }
-
-        public boolean remove(Object o)
-        {
-          // Test against the size of the HashMap to determine if anything
-          // really got removed. This is necessary because the return value
-          // of HashMap.remove() is ambiguous in the null case.
-          int oldsize = size;
-          HashMap.this.remove(o);
-          return oldsize != size;
-        }
-      };
-    return keys;
+          public int size()
+          {
+            return size;
+          }
+  
+          public Iterator iterator()
+          {
+            // Cannot create the iterator directly, because of LinkedHashMap.
+            return HashMap.this.iterator(KEYS);
+          }
+  
+          public void clear()
+          {
+            HashMap.this.clear();
+          }
+  
+          public boolean contains(Object o)
+          {
+            return containsKey(o);
+          }
+  
+          public boolean remove(Object o)
+          {
+            atomic {
+              // Test against the size of the HashMap to determine if anything
+              // really got removed. This is necessary because the return value
+              // of HashMap.remove() is ambiguous in the null case.
+              int oldsize = size;
+              HashMap.this.remove(o);
+              return oldsize != size;
+            }
+          }
+        };
+      return keys;
+    }
   }
 
   /**
@@ -552,28 +572,30 @@ public class HashMap extends AbstractMap
    */
   public Collection values()
   {
-    if (values == null)
-      // We don't bother overriding many of the optional methods, as doing so
-      // wouldn't provide any significant performance advantage.
-      values = new AbstractCollection()
-      {
-        public int size()
+    atomic {
+      if (values == null)
+        // We don't bother overriding many of the optional methods, as doing so
+        // wouldn't provide any significant performance advantage.
+        values = new AbstractCollection()
         {
-          return size;
-        }
-
-        public Iterator iterator()
-        {
-          // Cannot create the iterator directly, because of LinkedHashMap.
-          return HashMap.this.iterator(VALUES);
-        }
-
-        public void clear()
-        {
-          HashMap.this.clear();
-        }
-      };
-    return values;
+          public int size()
+          {
+            return size;
+          }
+  
+          public Iterator iterator()
+          {
+            // Cannot create the iterator directly, because of LinkedHashMap.
+            return HashMap.this.iterator(VALUES);
+          }
+  
+          public void clear()
+          {
+            HashMap.this.clear();
+          }
+        };
+      return values;
+    }
   }
 
   /**
@@ -591,44 +613,50 @@ public class HashMap extends AbstractMap
    */
   public Set entrySet()
   {
-    if (entries == null)
-      // Create an AbstractSet with custom implementations of those methods
-      // that can be overridden easily and efficiently.
-      entries = new AbstractSet()
-      {
-        public int size()
+    atomic {
+      if (entries == null)
+        // Create an AbstractSet with custom implementations of those methods
+        // that can be overridden easily and efficiently.
+        entries = new AbstractSet()
         {
-          return size;
-        }
-
-        public Iterator iterator()
-        {
-          // Cannot create the iterator directly, because of LinkedHashMap.
-          return HashMap.this.iterator(ENTRIES);
-        }
-
-        public void clear()
-        {
-          HashMap.this.clear();
-        }
-
-        public boolean contains(Object o)
-        {
-          return getEntry(o) != null;
-        }
-
-        public boolean remove(Object o)
-        {
-          HashEntry e = getEntry(o);
-          if (e != null)
-            {
-              HashMap.this.remove(e.key);
-              return true;
+          public int size()
+          {
+            return size;
+          }
+  
+          public Iterator iterator()
+          {
+            // Cannot create the iterator directly, because of LinkedHashMap.
+            return HashMap.this.iterator(ENTRIES);
+          }
+  
+          public void clear()
+          {
+            HashMap.this.clear();
+          }
+  
+          public boolean contains(Object o)
+          {
+            atomic {
+              return getEntry(o) != null;
             }
-          return false;
-        }
-      };
-    return entries;
+          }
+  
+          public boolean remove(Object o)
+          {
+            atomic {
+              HashEntry e = getEntry(o);
+              if (e != null)
+                {
+                  HashMap.this.remove(e.key);
+                  return true;
+                }
+              return false;
+            }
+          }
+        };
+      return entries;
+    }
   }
 
   /**
