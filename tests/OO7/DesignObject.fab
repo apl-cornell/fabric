@@ -6,20 +6,40 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: DesignObject.fab,v 1.1 2007-10-08 21:01:21 jed Exp $
+// $Id: DesignObject.fab,v 1.2 2007-12-14 20:32:32 mdgeorge Exp $
 
 package OO7;
 
-public interface DesignObject {
-  void setId(long x);
+public class DesignObject {
+  long   id;
+  String type;
+  long   buildDate;
 
-  long id();
+  DesignObject() {
+    type = "";
+  }
 
-  void setType(String x);
+  public void setId(long id) {
+    this.id = id;
+  }
 
-  String type();
+  public long id() {
+    return this.id;
+  }
 
-  void setBuildDate(long x);
+  public void setType(String type) {
+    this.type = type;
+  }
 
-  long buildDate();
+  public String type() {
+    return this.type;
+  }
+
+  public void setBuildDate(long date) {
+    this.buildDate = date;
+  }
+
+  public long buildDate() {
+    return this.buildDate;
+  }
 }

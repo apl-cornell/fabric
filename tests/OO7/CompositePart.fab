@@ -6,30 +6,66 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: CompositePart.fab,v 1.1 2007-10-08 21:01:21 jed Exp $
+// $Id: CompositePart.fab,v 1.2 2007-12-14 20:32:32 mdgeorge Exp $
 
 package OO7;
 
 import fabric.util.Collection;
+import fabric.util.List;
+import fabric.util.LinkedList;
 
-public interface CompositePart extends DesignObject {
-  void setDocumentation(Document x);
+public class CompositePart extends DesignObject {
+  Document documentation;
+  
+  LinkedList/*BaseAssembly*/ usedInPriv;
+  LinkedList/*BaseAssembly*/ usedInShar;
+  List/*AtomicPart*/         parts;
+  
+  AtomicPart rootPart;
 
-  Document documentation();
+  public CompositePart() {
+    usedInPriv = new LinkedList();
+    usedInShar = new LinkedList();
+    parts      = new LinkedList();
+  }
 
-  void addUsedInPriv(BaseAssembly x);
+  public void setDocumentation(Document d) {
+    documentation = d;
+  }
 
-  Collection usedInPriv();
+  public Document documentation() {
+    return documentation;
+  }
 
-  void addUsedInShar(BaseAssembly x);
+  public void addUsedInPriv(BaseAssembly ba) {
+    usedInPriv.addLast(ba);
+  }
 
-  Collection usedInShar();
+  public Collection usedInPriv() {
+    return usedInPriv;
+  }
 
-  void addPart(AtomicPart x);
+  public void addUsedInShar(BaseAssembly ba) {
+    usedInShar.addLast(ba);
+  }
 
-  Collection parts();
+  public Collection usedInShar() {
+    return usedInShar;
+  }
 
-  void setRootPart(AtomicPart x);
+  public void addPart(AtomicPart x) {
+    parts.add(x);
+  }
 
-  AtomicPart rootPart();
+  public Collection parts() {
+    return parts;
+  }
+
+  public void setRootPart(AtomicPart x) {
+    rootPart = x;
+  }
+
+  public AtomicPart rootPart() {
+    return rootPart;
+  }
 }

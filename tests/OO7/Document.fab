@@ -6,20 +6,41 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Document.fab,v 1.1 2007-10-08 21:01:21 jed Exp $
+// $Id: Document.fab,v 1.2 2007-12-14 20:32:32 mdgeorge Exp $
 
 package OO7;
 
-public interface Document {
-  void setTitle(String x);
+public class Document {
+  String title;
+  long   id;
+  String text;
+  
+  CompositePart part;
 
-  String title();
+  public Document() {
+  }
 
-  void setId(long x);
+  public void setTitle(String title) {
+    this.title = title;
+  }
 
-  long id();
+  public String title() {
+    return this.title;
+  }
 
-  void setText(String x);
+  public void setId(long id) {
+    this.id = id;
+  }
 
-  String text();
+  public long id() {
+    return this.id;
+  }
+
+  public void setText(String text) {
+    this.text = text;
+  }
+
+  public String text() {
+    return this.text;
+  }
 }

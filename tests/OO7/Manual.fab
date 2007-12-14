@@ -6,24 +6,45 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Manual.fab,v 1.1 2007-10-08 21:01:21 jed Exp $
+// $Id: Manual.fab,v 1.2 2007-12-14 20:32:32 mdgeorge Exp $
 
 package OO7;
 
-public interface Manual {
-  void setTitle(String x);
+public class Manual {
+  String title;
+  long   id;
+  String text;
+  Module mod;
 
-  String title();
+  public void setTitle(String title) {
+    this.title = title;
+  }
 
-  void setId(long x);
+  public String title() {
+    return title;
+  }
 
-  long id();
+  public void setId(long id) {
+    this.id = id;
+  }
 
-  void setText(String x);
+  public long id() {
+    return this.id;
+  }
 
-  String text();
+  public void setText(String text) {
+    this.text = text;
+  }
 
-  void setModule(Module x);
+  public String text() {
+    return text;
+  }
 
-  Module module();
+  public void setModule(Module x) {
+    mod = x;
+  }
+
+  public Module module() {
+    return mod;
+  }
 }

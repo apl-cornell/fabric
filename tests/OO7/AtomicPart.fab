@@ -6,34 +6,71 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: AtomicPart.fab,v 1.1 2007-10-08 21:01:21 jed Exp $
+// $Id: AtomicPart.fab,v 1.2 2007-12-14 20:32:32 mdgeorge Exp $
 
 package OO7;
 
 import fabric.util.Collection;
+import fabric.util.LinkedList;
+import fabric.util.List;
 
-public interface AtomicPart extends DesignObject {
-  void setX(long x);
+public class AtomicPart extends DesignObject {
+  long x, y;
+  long docId;
+  List/*Connection*/ to;
+  List/*Connection*/ from;
+  CompositePart partOf;
 
-  long x();
+  public AtomicPart() {
+    to   = new LinkedList();
+    from = new LinkedList();
+  }
 
-  void setY(long y);
+  public void setX(long x) {
+    this.x = x;
+  }
 
-  long y();
+  public long x() {
+    return this.x;
+  }
 
-  void setDocId(long y);
+  public void setY(long y) {
+    this.y = y;
+  }
 
-  long docId();
+  public long y() {
+    return this.y;
+  }
 
-  void addTo(Connection x);
+  public void setDocId(long docId) {
+    this.docId = docId;
+  }
 
-  Collection to();
+  public long docId() {
+    return this.docId;
+  }
 
-  void addFrom(Connection x);
+  public void addTo(Connection x) {
+    to.add(x);
+  }
 
-  Collection from();
+  public Collection to() {
+    return to;
+  }
 
-  void setPartOf(CompositePart x);
+  public void addFrom(Connection x) {
+    from.add(x);
+  }
 
-  CompositePart partOf();
+  public Collection from() {
+    return from;
+  }
+
+  public void setPartOf(CompositePart x) {
+    this.partOf = x;
+  }
+
+  public CompositePart partOf() {
+    return this.partOf;
+  }
 }

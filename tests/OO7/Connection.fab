@@ -6,24 +6,55 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Connection.fab,v 1.1 2007-10-08 21:01:21 jed Exp $
+// $Id: Connection.fab,v 1.2 2007-12-14 20:32:32 mdgeorge Exp $
 
 package OO7;
 
-public interface Connection {
-  void setType(String x);
+public class Connection {
+  String type;
+  long   length;
+  
+  AtomicPart from;
+  AtomicPart to;
 
-  String type();
+  public Connection() {
+    type = new String("");
+  }
 
-  void setLength(long x);
+  public Connection(AtomicPart from, AtomicPart to) {
+    setFrom(from); from.addFrom(this);
+    setTo(to);     to.addTo(this);
+  }
 
-  long length();
+  public void setType(String type) {
+    this.type = type;
+  }
 
-  void setFrom(AtomicPart x);
+  public String type() {
+    return this.type;
+  }
 
-  AtomicPart from();
+  public void setLength(long l) {
+    this.length = l;
+  }
 
-  void setTo(AtomicPart x);
+  public long length() {
+    return this.length;
+  }
 
-  AtomicPart to();
+  public void setFrom(AtomicPart x) {
+    this.from = x;
+  }
+
+  public AtomicPart from() {
+    return this.from;
+  }
+
+  public void setTo(AtomicPart x) {
+    this.to = x;
+  }
+
+  public AtomicPart to() {
+    return this.to;
+  }
 }

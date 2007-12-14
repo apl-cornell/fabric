@@ -6,23 +6,44 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Module.fab,v 1.1 2007-10-08 21:01:21 jed Exp $
+// $Id: Module.fab,v 1.2 2007-12-14 20:32:32 mdgeorge Exp $
 
 package OO7;
 
 import fabric.util.Collection;
+import fabric.util.List;
+import fabric.util.LinkedList;
 
-public interface Module extends DesignObject {
+public class Module extends DesignObject {
+  Manual           man;
+  LinkedList/*Assembly*/ assemblies;
+  ComplexAssembly  designRoot;
 
-  void setManual(Manual x);
+  public Module() {
+    assemblies = new LinkedList();
+  }
 
-  Manual manual();
+  public void setManual(Manual x) {
+    man = x;
+  }
 
-  void addAssembly(Assembly x);
+  public Manual manual() {
+    return man;
+  }
 
-  Collection assembly();
+  public void addAssembly(Assembly x) {
+    assemblies.addLast(x);
+  }
 
-  void setDesignRoot(ComplexAssembly x);
+  public Collection assembly() {
+    return assemblies;
+  }
 
-  ComplexAssembly designRoot();
+  public void setDesignRoot(ComplexAssembly x) {
+    designRoot = x;
+  }
+
+  public ComplexAssembly designRoot() {
+    return designRoot;
+  }
 }

@@ -6,16 +6,30 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Assembly.fab,v 1.1 2007-10-08 21:01:21 jed Exp $
+// $Id: Assembly.fab,v 1.2 2007-12-14 20:32:32 mdgeorge Exp $
 
 package OO7;
 
-public interface Assembly extends DesignObject {
-  void setSuperAssembly(ComplexAssembly x);
+public class Assembly extends DesignObject {
+  ComplexAssembly superAssembly;
+  Module          module;
 
-  ComplexAssembly superAssembly();
+  public Assembly() {
+  }
 
-  void setModule(Module x);
+  public void setSuperAssembly(ComplexAssembly x) {
+    superAssembly = x;
+  }
 
-  Module module();
+  public ComplexAssembly superAssembly() {
+    return superAssembly;
+  }
+
+  public void setModule(Module x) {
+    module = x;
+  }
+
+  public Module module() {
+    return module;
+  }
 }
