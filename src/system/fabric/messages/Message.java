@@ -56,7 +56,7 @@ public abstract class Message<R extends Message.Response> implements
         if (needToConnect) {
           if (hosts == null) {
 
-            hosts = client.nameService.lookupCore(core.coreID);
+            hosts = client.nameService.lookupCore(core);
             numHosts = hosts.size();
             startHostIdx = Client.RAND.nextInt(numHosts);
           }

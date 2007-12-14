@@ -32,6 +32,11 @@ public class RemoteCore implements Core {
    * The core identifier that this Core encapsulates.
    */
   public final long coreID;
+  
+  /**
+   * The DNS name of the host.
+   */
+  public final String host;
 
   /**
    * A queue of fresh object identifiers.
@@ -58,7 +63,12 @@ public class RemoteCore implements Core {
    * Create a core representing the given coreID
    */
   RemoteCore(long coreID) {
+    this(coreID, "localhost");
+  }
+  
+  RemoteCore(long coreID, String host) {
     this.coreID = coreID;
+    this.host = host;
     this.objects = new HashMap<Long, SoftReference<Object.$Impl>>();
     this.fresh_ids = new LinkedList<Long>();
     this.serialized = new HashMap<Long, SoftReference<SerializedObject>>();

@@ -24,4 +24,9 @@ public interface FetchManager {
   public $Impl fetch(Core c, long onum) throws AccessError, 
       UnreachableCoreException;
 
+  /**
+   * Called to destroy and clean up the fetch manager.
+   */
+  public void destroy();
+  
 }

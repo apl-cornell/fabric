@@ -12,5 +12,7 @@ public class DirectFetchManager implements FetchManager {
       UnreachableCoreException {
     return c.readObject(onum);
   }
+  
+  public void destroy() {}
 
 }

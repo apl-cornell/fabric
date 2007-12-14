@@ -3,11 +3,25 @@ package fabric.client;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.*;
-import java.util.*;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Random;
 import java.util.logging.Logger;
 
-import javax.net.ssl.*;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 
 import fabric.common.AccessError;
 import fabric.common.InternalError;
@@ -26,6 +40,8 @@ import fabric.lang.arrays.ObjectArray;
 public class Client {
   // A map from 48-bit core IDs to Core objects
   protected Map<Long, RemoteCore> connections;
+  
+  protected Map<String, RemoteCore> cores;
 
   protected LocalCore localCore;
 
@@ -120,10 +136,17 @@ public class Client {
     this.retries = retries;
     this.nameService = new NameService();
     this.connections = new HashMap<Long, RemoteCore>();
+    this.cores = new HashMap<String, RemoteCore>();
     this.localCore = new LocalCore();
 
-    // TODO load specific fetch manager as user option
-    this.fetchManager = new DirectFetchManager();
+    String fm = System.getProperty("fabric.client.fetchmanager",
+        "fabric.client.DirectFetchManager");
+    
+    try {
+      this.fetchManager = (FetchManager) Class.forName(fm).newInstance();
+    } catch (Exception e) {
+      throw new InternalError("Unable to load fetch manager", e);
+    }
   }
 
   /**
@@ -164,7 +187,12 @@ public class Client {
    * @return The corresponding <code>Core</code> object.
    */
   public Core getCore(String name) {
-    return getCore(nameService.lookupCore(name));
+    RemoteCore result = connections.get(name);
+    if (result == null) {
+      result = new RemoteCore(0, name);
+      cores.put(name, result);
+    }
+    return result;
   }
 
   public LocalCore getLocalCore() {
@@ -185,6 +213,13 @@ public class Client {
   public $Impl fetchObject(Core c, long onum) throws AccessError,
       UnreachableCoreException {
     return fetchManager.fetch(c, onum);
+  }
+  
+  /**
+   * Called to shut down and clean up client.
+   */
+  protected void shutdown() {
+    fetchManager.destroy();
   }
 
   // TODO: throws exception?
@@ -260,5 +295,7 @@ public class Client {
       cause.setStackTrace(trace.toArray(traceArray));
       throw cause;
     }
+    
+    c.shutdown();
   }
 }
