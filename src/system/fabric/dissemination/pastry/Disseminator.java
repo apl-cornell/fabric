@@ -19,14 +19,25 @@ import fabric.dissemination.pastry.messages.Fetch;
 import fabric.lang.Object.$Impl;
 import fabric.messages.ReadMessage;
 
+/**
+ * A pastry application that implements the functionality of a Fabric
+ * dissemination network.
+ */
 public class Disseminator implements Application {
 
+  /** The pastry node. */
   protected PastryNode node;
+  
+  /** The pastry endpoint. */
   protected Endpoint endpoint;
+  
+  /** The pastry id generating factory. */
   protected IdFactory idf;
   
+  /** The cache of fetched objects. */
   protected Concurrent2KeyHashMap<Core, Long, Glob> cache;
   
+  /** The outstanding fetch message to be processed. */
   protected Fetch outstandingFetch;
   
   public Disseminator(PastryNode node) {
@@ -43,10 +54,23 @@ public class Disseminator implements Application {
     public void receiveResult(Object result) {}
   };
 
+  /**
+    * Processes a task on the task processing thread. When messages are
+    * received, handlers should run on the processing thread so as not to
+    * block the message receiving thread.
+    */
   protected void process(Executable task) {
     endpoint.process(task, halt);
   }
 
+  /**
+   * Routes a message on the pastry ring. At least one of id or hint must be
+   * non-null.
+   * 
+   * @param id The id of this message (hash value where it should be routed)
+   * @param message The message to be routed
+   * @param hint NodeHandle of a starting node, if desired
+   */
   protected void route(Id id, Message message, NodeHandle hint) {
     endpoint.route(id, message, hint);
 
@@ -55,6 +79,7 @@ public class Disseminator implements Application {
     } catch (InterruptedException e) {}
   }
 
+  /** The NodeHandle of this pastry node. */
   protected NodeHandle getLocalHandle() {
     return endpoint.getLocalNodeHandle();
   }
@@ -67,14 +92,18 @@ public class Disseminator implements Application {
     }
   }
   
+  /** Process the Fetch message. */
   protected void fetch(final Fetch msg) {
     process(new Executable() {
       public Object execute() {
         Client client = Client.getClient();
         RemoteCore c = (RemoteCore) client.getCore(msg.core());
         long onum = msg.onum();
+        Glob g = null;
         
-        Glob g = cache.get(c, onum);
+        if (!msg.refresh()) {
+          g = cache.get(c, onum);
+        }
         
         if (g == null) {
           ReadMessage.Response response = new ReadMessage(onum).send(c);
@@ -90,6 +119,7 @@ public class Disseminator implements Application {
     });
   }
   
+  /** Process a Fetch.Reply. */
   protected void fetch(final Fetch.Reply msg) {
     process(new Executable() {
       public Object execute() {
@@ -105,6 +135,7 @@ public class Disseminator implements Application {
     });
   }
   
+  /** Called by a FetchManager to fetch the specified object. */
   public $Impl fetch(Core c, long onum) {
     outstandingFetch = new Fetch(getLocalHandle(), ((RemoteCore) c).host, onum);
     
