@@ -99,5 +99,4 @@ public class Fetch implements Message {
     }
     
   }
-
 }

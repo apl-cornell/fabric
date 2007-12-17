@@ -1,5 +1,8 @@
 package fabric.dissemination.pastry;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import rice.Continuation;
 import rice.Executable;
 import rice.p2p.commonapi.Application;
@@ -14,7 +17,7 @@ import rice.pastry.commonapi.PastryIdFactory;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.common.Concurrent2KeyHashMap;
+import fabric.common.Pair;
 import fabric.dissemination.pastry.messages.Fetch;
 import fabric.lang.Object.$Impl;
 import fabric.messages.ReadMessage;
@@ -35,7 +38,7 @@ public class Disseminator implements Application {
   protected IdFactory idf;
   
   /** The cache of fetched objects. */
-  protected Concurrent2KeyHashMap<Core, Long, Glob> cache;
+  protected Map<Pair<Core, Long>, Glob> cache;
   
   /** The outstanding fetch message to be processed. */
   protected Fetch outstandingFetch;
@@ -46,7 +49,7 @@ public class Disseminator implements Application {
     endpoint.register();
     idf = new PastryIdFactory(node.getEnvironment());
     
-    cache = new Concurrent2KeyHashMap<Core, Long, Glob>();
+    cache = new HashMap<Pair<Core, Long>, Glob>();
   }
 
   private static final Continuation halt = new Continuation() {
@@ -100,15 +103,18 @@ public class Disseminator implements Application {
         RemoteCore c = (RemoteCore) client.getCore(msg.core());
         long onum = msg.onum();
         Glob g = null;
+        Pair<Core, Long> key = new Pair<Core, Long>(c, onum);
         
-        if (!msg.refresh()) {
-          g = cache.get(c, onum);
-        }
-        
-        if (g == null) {
-          ReadMessage.Response response = new ReadMessage(onum).send(c);
-          g = new Glob(response.result, response.related);
-          cache.put(c, onum, g);
+        synchronized (cache) {
+          if (!msg.refresh()) {
+            g = cache.get(key);
+          }
+          
+          if (g == null) {
+            ReadMessage.Response response = new ReadMessage(onum).send(c);
+            g = new Glob(response.result, response.related);
+            cache.put(key, g);
+          }
         }
         
         Fetch.Reply r = new Fetch.Reply(g.obj(), g.related());
@@ -155,6 +161,24 @@ public class Disseminator implements Application {
   }
 
   public boolean forward(RouteMessage message) {
+    Message m = message.getMessage();
+    
+    if (m instanceof Fetch) {
+      return forward((Fetch) m);
+    } else if (m instanceof Fetch.Reply) {
+      return forward((Fetch.Reply) m);
+    }
+    
+    return true;
+  }
+  
+  protected boolean forward(Fetch msg) {
+    // TODO see if we already have this object
+    return true;
+  }
+  
+  protected boolean forward(Fetch.Reply msg) {
+    // TODO cache this object if we don't have it
     return true;
   }
 
