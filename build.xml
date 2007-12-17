@@ -163,7 +163,7 @@ TOP='${basedir}'
 
   <!-- Compiles the Fabric core -->
   <target name="core" depends="init,fabric-runtime">
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}" debug="on">
+    <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/core/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
@@ -176,7 +176,7 @@ TOP='${basedir}'
 
   <!-- Compiles the Fabric client API -->
   <target name="client" depends="init">
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}" debug="on">
+    <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/client/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
@@ -285,7 +285,7 @@ TOP='${basedir}'
 
   <!-- Compiles the Fabric test programs -->
   <target name="tests" depends="init,fabric-system">
-    <javac target="1.6" srcdir="${src}" destdir="${classes}" debug="on" includes="tests/**">
+    <javac target="1.5" srcdir="${src}" destdir="${classes}" debug="on" includes="tests/**">
       <classpath refid="standard.classpath"/>
     </javac>
   </target>
@@ -434,7 +434,7 @@ TOP='${basedir}'
   </target>
 
   <target name="compile-ext">
-    <javac source="1.6" target="1.6" srcdir="${compiler.src}"
+    <javac source="1.5" target="1.5" srcdir="${compiler.src}"
         destdir="${classes}" debug="on" includes="${ext.pkg}/**">
       <classpath refid="standard.classpath" />
     </javac>
