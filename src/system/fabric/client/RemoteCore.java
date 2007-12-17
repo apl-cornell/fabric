@@ -98,6 +98,7 @@ public class RemoteCore implements Core {
   public void connect(Client client, InetSocketAddress host,
       Principal hostPrincipal) throws IOException {
     SSLSocket socket = (SSLSocket) client.sslSocketFactory.createSocket();
+    socket.setTcpNoDelay(true);
     socket.setKeepAlive(true);
     socket.connect(host, client.timeout);
     socket.startHandshake();
