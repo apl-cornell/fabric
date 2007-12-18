@@ -1,0 +1,10 @@
+package OO7;
+
+public class T1 implements Traversal {
+  public static void main(String[] args) {
+  }
+}
+
+/*
+** vim: ts=2 sw=2 cindent cino=\:0 et syntax=java
+*/

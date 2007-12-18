@@ -1,0 +1,16 @@
+package OO7;
+
+/*
+ * Visitor interface for DesignObjects
+ */
+public interface Traversal {
+  void visitModule (Module m);
+  void visitComplexAssembly (ComplexAssembly ca);
+  void visitBaseAssembly (BaseAssembly ba);
+  void visitAtomicPart (AtomicPart p);
+  void visitCompositePart (CompositePart p);
+}
+
+/*
+** vim: ts=2 sw=2 cindent cino=\:0 et syntax=java
+*/

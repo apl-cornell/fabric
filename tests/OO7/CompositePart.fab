@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: CompositePart.fab,v 1.2 2007-12-14 20:32:32 mdgeorge Exp $
+// $Id: CompositePart.fab,v 1.3 2007-12-18 20:01:38 mdgeorge Exp $
 
 package OO7;
 
@@ -68,4 +68,12 @@ public class CompositePart extends DesignObject {
   public AtomicPart rootPart() {
     return rootPart;
   }
+
+  public void accept (Traversal t) {
+    t.visitCompositePart(this);
+  }
 }
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
