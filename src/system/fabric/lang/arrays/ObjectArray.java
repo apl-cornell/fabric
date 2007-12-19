@@ -4,14 +4,11 @@ import java.io.IOException;
 import java.io.ObjectOutput;
 import java.util.Arrays;
 
-import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.TransactionManager;
-import fabric.common.InternalError;
 import fabric.common.Policy;
 import fabric.core.SerializedObject.ObjectInput;
 import fabric.lang.Object;
-import fabric.lang.WrappedJavaInlineable;
 
 public interface ObjectArray<T extends Object> extends Object {
   int get$length();
@@ -25,7 +22,7 @@ public interface ObjectArray<T extends Object> extends Object {
     /**
      * The class representing the proxy type for the array elements.
      */
-    private final Class<?> proxyType;
+    private final Class<? extends Object.$Proxy> proxyType;
 
     private Object[] value;
 
@@ -33,11 +30,11 @@ public interface ObjectArray<T extends Object> extends Object {
      * Creates a new object array at the given Core with the given length.
      * 
      * @param core
-     *          The core on which to allocate the array.
+     *                The core on which to allocate the array.
      * @param length
-     *          The length of the array.
+     *                The length of the array.
      */
-    public $Impl(Core core, Class<?> proxyType, int length) {
+    public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, int length) {
       super(core);
       this.proxyType = proxyType;
       value = new Object[length];
@@ -48,11 +45,11 @@ public interface ObjectArray<T extends Object> extends Object {
      * array.
      * 
      * @param core
-     *          The core on which to allocate the array.
+     *                The core on which to allocate the array.
      * @param value
-     *          The backing array to use.
+     *                The backing array to use.
      */
-    public $Impl(Core core, Class<?> proxyType, T[] value) {
+    public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, T[] value) {
       super(core);
       this.proxyType = proxyType;
       this.value = value;
@@ -65,27 +62,10 @@ public interface ObjectArray<T extends Object> extends Object {
     public $Impl(Core core, long onum, int version, Policy policy,
         ObjectInput in) throws IOException, ClassNotFoundException {
       super(core, onum, version, policy, in);
-      proxyType = Class.forName(in.readUTF());
+      proxyType = (Class<? extends Object.$Proxy>) Class.forName(in.readUTF());
       value = new Object[in.readInt()];
       for (int i = 0; i < value.length; i++) {
-        switch (in.readByte()) {
-        case 0:
-          value[i] = null;
-          break;
-        case 1:
-          value[i] = WrappedJavaInlineable.$wrap(in.readObject());
-          break;
-        case 2:
-          long coreID = in.readLong();
-          onum = in.readLong();
-          try {
-            value[i] =
-                (Object) proxyType.getConstructor(Core.class, long.class)
-                    .newInstance(Client.getClient().getCore(coreID), onum);
-          } catch (Exception e) {
-            throw new InternalError(e);
-          }
-        }
+        value[i] = $readRef(proxyType, in);
       }
     }
 
