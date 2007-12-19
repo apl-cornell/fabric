@@ -5,7 +5,10 @@ import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 
-import fabric.client.*;
+import fabric.client.Client;
+import fabric.client.Core;
+import fabric.client.TransactionManager;
+import fabric.client.UnreachableCoreException;
 import fabric.common.ACLPolicy;
 import fabric.common.AccessError;
 import fabric.common.InternalError;
@@ -139,9 +142,9 @@ public interface Object {
      * Creates a new Fabric object that will reside on the given Core.
      * 
      * @param core
-     *          the location for the object
+     *                the location for the object
      * @param policy
-     *          the security policy for the object
+     *                the security policy for the object
      */
     public $Impl(Core core, Policy policy) throws UnreachableCoreException {
       this.$core = core;
@@ -273,6 +276,33 @@ public interface Object {
       }
 
       out.writeObject(obj);
+    }
+
+    /**
+     * Deserializes an object pointer from the given ObjectInput.
+     * 
+     * @throws ClassNotFoundException
+     */
+    protected static final Object $readRef(
+        Class<? extends Object.$Proxy> proxyClass, ObjectInput in)
+        throws IOException, ClassNotFoundException {
+      switch (in.readByte()) {
+      case 0:
+        return null;
+      case 1:
+        return WrappedJavaInlineable.$wrap(in.readObject());
+      case 2:
+        long core = in.readLong();
+        long onum = in.readLong();
+        try {
+            return proxyClass.getConstructor(Core.class, long.class).newInstance(
+                Client.getClient().getCore(core), onum);
+          } catch (Exception e) {
+            throw new InternalError(e);
+          }
+      }
+      throw new InternalError(
+          "Unknown pointer type while deserializing reference.");
     }
 
     /**

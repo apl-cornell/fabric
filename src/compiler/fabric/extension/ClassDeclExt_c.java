@@ -475,25 +475,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         inSubst.add(t);
       } else {
         out.append("$writeRef(out, this." + f.name() + ");");
-
-        in.append("switch (in.readByte()) {");
-        in.append("case 0:");
-        in.append("  this." + f.name() + " = null;  break;");
-        if (ts.equals(f.declType(), ts.FObject())
-            || ts.isJavaInlineable(f.declType())) {
-          in.append("case 1:");
-          in.append("  this." + f.name()
-              + " = fabric.lang.WrappedJavaInlineable.$wrap(in.readObject());");
-          in.append("  break;");
-        }
-        if (ts.isPureFabricType(f.declType())) {
-          in.append("default:");
-          in.append(" core = in.readLong();");
-          in.append(" onum = in.readLong();");
-          in.append(" this." + f.name() + " = new " + f.declType() + ".$Proxy("
-              + "fabric.client.Client.getClient().getCore(core), onum);");
-        }
-        in.append("}");
+        in.append("this." + f.name() + " = (" + f.declType() + ") $readRef("
+            + f.declType() + ".$Proxy.class, in);");
       }
     }
 
@@ -511,7 +494,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
                     + "fabric.common.Policy policy, fabric.core.SerializedObject.ObjectInput in) "
                     + "throws java.io.IOException, java.lang.ClassNotFoundException {"
                     + "super(objCore, onum, version, policy, in);"
-                    + "long core;" + in + " }", inSubst);
+                    + in + " }", inSubst);
     result.add(deserialize);
 
     return result;
