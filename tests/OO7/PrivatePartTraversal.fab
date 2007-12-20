@@ -9,6 +9,7 @@ import fabric.util.Iterator;
 public abstract class PrivatePartTraversal extends Traversal {
 
   public void visitBenchmark (Benchmark b) {
+    visitModule(b.module);
   }
   
   public void visitModule (Module m) {
