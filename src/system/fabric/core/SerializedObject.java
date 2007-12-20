@@ -1,9 +1,13 @@
 package fabric.core;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import fabric.client.Core;
 import fabric.common.InternalError;
+import fabric.common.Pair;
 import fabric.common.Policy;
 import fabric.lang.Object.$Impl;
 
@@ -12,26 +16,70 @@ import fabric.lang.Object.$Impl;
  * <code>SerializedObject</code>s.
  */
 public final class SerializedObject implements Serializable {
-  private byte[] object;
-
-  private long onum;
-
-  private long[] related;
-
-  private int version;
-
-  private Policy policy;
-
-  public SerializedObject($Impl obj) {
-    // TODO Somehow locate all of the co-located references.
-    this(obj, null);
+  public static enum RefTypeEnum {
+    NULL, INLINE, ONUM, REMOTE
   }
 
-  public SerializedObject($Impl obj, long[] related) {
-    this.object = serialize(obj);
-    this.related = related;
+  /**
+   * The core-specific object number for this object.
+   */
+  private long onum;
+
+  /**
+   * The name of the class's object. XXX This should be an OID referencing the
+   * appropriate class object.
+   */
+  private final String className;
+
+  /**
+   * The object's version number.
+   */
+  private int version;
+
+  private final Policy policy;
+
+  /**
+   * The object's primitive field and inlined object data.
+   */
+  private final byte[] serializedData;
+
+  private final List<RefTypeEnum> refTypes;
+
+  /**
+   * The onums representing the intra-core references in this object.
+   */
+  private final List<Long> relatedOnums;
+
+  /**
+   * Global object names representing the inter-core references in this object.
+   * Before storing any <code>SerializedObject</code>, the core should
+   * swizzle these references into intra-core references to surrogates.
+   */
+  private List<Pair<String, Long>> intercoreRefs;
+
+  /**
+   * Creates a serialized representation of the given object.
+   * 
+   * @param obj
+   *                The object to serialize.
+   */
+  public SerializedObject($Impl obj) {
     this.onum = obj.$getOnum();
+    this.className = obj.getClass().getName();
     this.policy = obj.$getPolicy();
+
+    ByteArrayOutputStream serializedData = new ByteArrayOutputStream();
+    this.refTypes = new ArrayList<RefTypeEnum>();
+    this.relatedOnums = new ArrayList<Long>();
+    this.intercoreRefs = new ArrayList<Pair<String, Long>>();
+
+    try {
+      obj.$serialize(new ObjectOutputStream(serializedData), this.refTypes,
+          this.relatedOnums, this.intercoreRefs);
+    } catch (IOException e) {
+      throw new InternalError("Unexpected I/O error.", e);
+    }
+    this.serializedData = serializedData.toByteArray();
   }
 
   public long getOnum() {
@@ -42,9 +90,8 @@ public final class SerializedObject implements Serializable {
     return policy;
   }
 
-  public long[] getRelated() {
-    if (this.related == null) return new long[0];
-    return this.related;
+  public List<Long> getRelated() {
+    return relatedOnums;
   }
 
   public int getVersion() {
@@ -60,66 +107,25 @@ public final class SerializedObject implements Serializable {
     return onum + "v" + version;
   }
 
-  protected byte[] serialize($Impl obj) {
-    Class<?> c = obj.getClass();
-    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-    try {
-      ObjectOutputStream dos = new ObjectOutputStream(bos);
-      dos.writeUTF(c.getName());
-      obj.$serialize(dos);
-      dos.flush();
-      return bos.toByteArray();
-    } catch (IOException e) {
-    }
-
-    return null;
-  }
-
   /**
-   * Deserializes the object.
+   * Used by the client to deserialize this object.
    * 
    * @param core
-   *          The core on which the object lives.
-   * @param onum
-   *          The object's onum.
+   *                The core on which this object lives.
+   * @return The deserialized object.
+   * @throws ClassNotFoundException
+   *                 Thrown when the class for this object is unavailable.
    */
-  public $Impl deserialize(Core core, long onum) throws ClassNotFoundException {
-    ByteArrayInputStream bis = new ByteArrayInputStream(object);
-
+  public $Impl deserialize(Core core) throws ClassNotFoundException {
+    Class<?> c = Class.forName(className);
     try {
-      ObjectInputStream dis = new ObjectInputStream(bis);
-      Class<?> c = Class.forName(dis.readUTF());
-      $Impl obj =
-          ($Impl) c.getConstructor(Core.class, long.class, int.class,
-              Policy.class, ObjectInput.class).newInstance(core, onum, version,
-              policy, dis);
-      return obj;
-    } catch (ClassNotFoundException e) {
-      throw e;
+      return ($Impl) c.getConstructor(Core.class, long.class, int.class,
+          Policy.class, ObjectInput.class, Iterator.class, Iterator.class)
+          .newInstance(core, onum, version, policy,
+              new ObjectInputStream(new ByteArrayInputStream(serializedData)),
+              refTypes.iterator(), relatedOnums.iterator());
     } catch (Exception e) {
       throw new InternalError(e);
     }
   }
-
-  /**
-   * This interface is used solely for the deserialization constructor of
-   * $Impls. Its purpose is to make sure the constructor signature does not
-   * conflict with a user written constructor that also takes a
-   * java.io.ObjectInput as its only argument.
-   * 
-   * @author xinz
-   */
-  public interface ObjectInput extends java.io.ObjectInput {
-  }
-
-  private static class ObjectInputStream extends java.io.ObjectInputStream
-      implements ObjectInput {
-
-    public ObjectInputStream(InputStream in) throws IOException {
-      super(in);
-    }
-
-  }
-
 }

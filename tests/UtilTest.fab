@@ -7,7 +7,7 @@ import fabric.client.*;
 
 public class UtilTest {
   public static void main(String[] args) {
-    Core core = Client.getClient().getCore(0);
+    Core core = Client.getClient().getCore("0");
     Map map;
     List list;
     atomic {

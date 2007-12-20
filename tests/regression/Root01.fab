@@ -7,7 +7,7 @@ import fabric.util.HashMap;
 
 class Root01 {
 	public static void main(String[] args) {
-		Core c = Client.getClient().getCore(0);
+		Core c = Client.getClient().getCore("0");
 
 		HashMap root = (HashMap) c.getRoot();
 		atomic {

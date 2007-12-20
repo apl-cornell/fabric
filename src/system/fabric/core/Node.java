@@ -21,9 +21,9 @@ public class Node {
   public Options opts;
 
   /**
-   * A map from core IDs to corresponding TransactionManagers.
+   * A map from core host-names to corresponding TransactionManagers.
    */
-  protected Map<Long, TransactionManager> cores;
+  protected Map<String, TransactionManager> cores;
 
   /** The number of additional connections the node can handle. */
   private int availConns;
@@ -33,23 +33,23 @@ public class Node {
 
   public Node(Options opts) {
     this.opts = opts;
-    this.cores = new HashMap<Long, TransactionManager>();
+    this.cores = new HashMap<String, TransactionManager>();
 
-    for (long coreid : opts.coreIDs) {
+    for (String coreName : opts.coreNames) {
       try {
-        ObjectStore core = loadCore(coreid);
+        ObjectStore core = loadCore(coreName);
         // XXX using an empty memory store for each core
-        addCore(coreid, new TransactionManager(core));
+        addCore(coreName, new TransactionManager(core));
       } catch (DuplicateCoreException e) {
         // Should never happen.
       }
     }
   }
 
-  private ObjectStore loadCore(long coreid) {
+  private ObjectStore loadCore(String coreName) {
     // see if a file exists containing the core
     try {
-      InputStream in = Resources.readFile("var", Long.toString(coreid));
+      InputStream in = Resources.readFile("var", coreName);
       ObjectStore os = new MemoryStore(in);
       return os;
     } catch (Exception exc) {
@@ -61,25 +61,25 @@ public class Node {
   /**
    * Adds a new Core to this node.
    * 
-   * @param coreID
-   *          the 48-bit ID for the core being added.
+   * @param coreName
+   *          the host name for the core being added.
    * @param tm
    *          a <code>TransactionManager</code> to use for the core being added.
    */
-  public void addCore(long coreID, TransactionManager tm)
+  public void addCore(String coreName, TransactionManager tm)
       throws DuplicateCoreException {
-    if (cores.containsKey(coreID)) throw new DuplicateCoreException();
-    cores.put(coreID, tm);
+    if (cores.containsKey(coreName)) throw new DuplicateCoreException();
+    cores.put(coreName, tm);
   }
 
   /**
-   * Given a 48-bit ID for an object core, returns its corresponding
+   * Given the host name for an object core, returns its corresponding
    * <code>TransactionManager</code>.
    * 
    * @return null if there is no corresponding binding.
    */
-  public TransactionManager getTransactionManager(long coreID) {
-    return cores.get(coreID);
+  public TransactionManager getTransactionManager(String coreName) {
+    return cores.get(coreName);
   }
 
   /**

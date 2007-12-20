@@ -1,13 +1,17 @@
 package fabric.lang.arrays;
 
 import java.io.IOException;
+import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import fabric.client.Core;
 import fabric.client.TransactionManager;
+import fabric.common.Pair;
 import fabric.common.Policy;
-import fabric.core.SerializedObject.ObjectInput;
+import fabric.core.SerializedObject.RefTypeEnum;
 import fabric.lang.Object;
 
 public interface ObjectArray<T extends Object> extends Object {
@@ -60,12 +64,15 @@ public interface ObjectArray<T extends Object> extends Object {
      */
     @SuppressWarnings("unchecked")
     public $Impl(Core core, long onum, int version, Policy policy,
-        ObjectInput in) throws IOException, ClassNotFoundException {
-      super(core, onum, version, policy, in);
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intracoreRefs) throws IOException,
+        ClassNotFoundException {
+      super(core, onum, version, policy, in, refTypes, intracoreRefs);
       proxyType = (Class<? extends Object.$Proxy>) Class.forName(in.readUTF());
       value = new Object[in.readInt()];
       for (int i = 0; i < value.length; i++) {
-        value[i] = $readRef(proxyType, in);
+        value[i] =
+            $readRef(proxyType, refTypes.next(), in, core, intracoreRefs);
       }
     }
 
@@ -133,12 +140,15 @@ public interface ObjectArray<T extends Object> extends Object {
      * @see fabric.lang.Object.$Impl#$serialize(java.io.ObjectOutput)
      */
     @Override
-    public void $serialize(ObjectOutput out) throws IOException {
-      super.$serialize(out);
+    public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
+        List<Long> intracoreRefs, List<Pair<String, Long>> intercoreRefs)
+        throws IOException {
+      super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
       out.writeUTF(proxyType.getName());
       out.writeInt(value.length);
       for (int i = 0; i < value.length; i++)
-        $writeRef(out, value[i]);
+        $writeRef($getCore(), value[i], refTypes, out, intracoreRefs,
+            intercoreRefs);
     }
   }
 

@@ -175,7 +175,7 @@ public class Worker extends Thread {
       throw new ProtocolError("Already connected");
     }
 
-    this.transactionManager = node.getTransactionManager(message.coreID);
+    this.transactionManager = node.getTransactionManager(message.coreName);
 
     // Validate the information given thus far.
     if (this.transactionManager == null) throw new NoSuchCoreError();

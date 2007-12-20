@@ -1,19 +1,17 @@
 package fabric.lang;
 
-import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.Serializable;
+import java.io.*;
 import java.lang.ref.SoftReference;
+import java.util.Iterator;
+import java.util.List;
 
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.TransactionManager;
 import fabric.client.UnreachableCoreException;
-import fabric.common.ACLPolicy;
-import fabric.common.AccessError;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.Policy;
-import fabric.core.SerializedObject.ObjectInput;
+import fabric.core.SerializedObject.RefTypeEnum;
 
 /**
  * All Fabric objects implement this interface.
@@ -205,7 +203,7 @@ public interface Object {
 
     /**
      * This is used to restore the state of the object during transaction
-     * rollback. Subclasses should override this method and call
+     * roll-back. Subclasses should override this method and call
      * <code>super.copyStateFrom(other)</code>.
      */
     public void $copyStateFrom($Impl other) {
@@ -237,14 +235,30 @@ public interface Object {
     }
 
     /**
-     * This method should write each of the non-transient fields of this object
-     * to the given ObjectOutput. Subclasses should call the super method first
-     * so that inherited fields are written before fields declared in this
-     * subclass. The order in which fields are written must be fixed and the
-     * same as the order used by $deserialize.
+     * Serializes the non-transient fields of this object. Subclasses should
+     * call the super method first so that inherited fields are written before
+     * fields declared in this subclass. The order in which fields are written
+     * must be fixed and the same as the order used by the deserialization
+     * constructor.
+     * 
+     * @param serializedOutput
+     *                An output stream for writing serialized primitive values
+     *                and inlined objects.
+     * @param refTypes
+     *                A list to which <code>RefTypeEnum</code>s will be
+     *                written to indicate the type of reference being serialized
+     *                (e.g., null, inlined, intracore, intercore).
+     * @param intracoreRefs
+     *                A list to which onums denoting intracore references will
+     *                be written.
+     * @param intercoreRefs
+     *                A list to which global object names (hostname/onum pairs),
+     *                denoting intercore references, will be written.
      */
     @SuppressWarnings("unused")
-    public void $serialize(ObjectOutput out) throws IOException {
+    public void $serialize(ObjectOutput serializedOutput,
+        List<RefTypeEnum> refTypes, List<Long> intracoreRefs,
+        List<Pair<String, Long>> intercoreRefs) throws IOException {
       return;
     }
 
@@ -253,17 +267,88 @@ public interface Object {
      * its serialized state. Subclasses should call the super constructor to
      * first read inherited fields. It should then read the value of each
      * non-transient field declared in this subclass. The order in which fields
-     * are presented in the ObjectInput is the same as the order used by
-     * $serialize.
+     * are presented is the same as the order used by $serialize.
+     * 
+     * @param core
+     *                The core on which the object lives.
+     * @param onum
+     *                The object's onum.
+     * @param version
+     *                The object's version number.
+     * @param policy
+     *                The object's policy.
+     * @param serializedInput
+     *                A stream of serialized primitive values and inlined
+     *                objects.
+     * @param refTypes
+     *                An iterator of <code>RefTypeEnum</code>s indicating the
+     *                type of each reference being deserialized (e.g., null,
+     *                inlined, intracore).
+     * @param intracoreRefs
+     *                An iterator of intracore references, each represented by
+     *                an onum.
      */
     @SuppressWarnings("unused")
     public $Impl(Core core, long onum, int version, Policy policy,
-        ObjectInput in) throws IOException, ClassNotFoundException {
+        ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intracoreRefs) throws IOException,
+        ClassNotFoundException {
       this.$core = core;
       this.$onum = onum;
       this.$policy = policy;
       this.$version = version;
       return;
+    }
+
+    /**
+     * A helper method for reading a pointer during object deserialization.
+     * 
+     * @param proxyClass
+     *                The expected proxy class for the reference being read.
+     * @param refType
+     *                The type of reference being read.
+     * @param in
+     *                The stream from which to read any inlined objects.
+     * @param core
+     *                The core to use when constructing any intracore
+     *                references.
+     * @param intracoreRefs
+     *                An iterator of intracore references, each represented by
+     *                an onum.
+     * @throws ClassNotFoundException
+     *                 Thrown when the class for a wrapped object is
+     *                 unavailable.
+     * @throws IOException
+     *                 Thrown when an I/O error has occurred in the given
+     *                 <code>ObjectInput</code> stream.
+     */
+    protected static final Object $readRef(
+        Class<? extends Object.$Proxy> proxyClass, RefTypeEnum refType,
+        ObjectInput in, Core core, Iterator<Long> intracoreRefs)
+        throws IOException, ClassNotFoundException {
+      switch (refType) {
+      case NULL:
+        return null;
+
+      case INLINE:
+        return WrappedJavaInlineable.$wrap(in.readObject());
+
+      case ONUM:
+        try {
+          return proxyClass.getConstructor(Core.class, long.class).newInstance(
+              core, intracoreRefs.next());
+        } catch (Exception e) {
+          throw new InternalError(e);
+        }
+
+      case REMOTE:
+        // These should have been swizzled by the core.
+        throw new InternalError(
+            "Unexpected remote object reference encountered during deserialization.");
+      }
+
+      throw new InternalError(
+          "Unknown pointer type while deserializing reference.");
     }
 
     /**
@@ -279,48 +364,50 @@ public interface Object {
     }
 
     /**
-     * Deserializes an object pointer from the given ObjectInput.
+     * A helper method for serializing a reference during object serialization.
      * 
-     * @throws ClassNotFoundException
+     * @param core
+     *                The referring object's core.
+     * @param obj
+     *                The reference to be serialized.
+     * @param refType
+     *                A list to which a <code>RefTypeEnum</code> will be
+     *                written to indicate the type of reference being serialized
+     *                (e.g., null, inlined, intracore, intercore).
+     * @param out
+     *                An output stream for writing inlined objects.
+     * @param intracoreRefs
+     *                A list for writing intracore references, represented by
+     *                onums.
+     * @param intercoreRefs
+     *                A list for writing denoting intercore references,
+     *                represented by global object names (hostname/onum pairs).
      */
-    protected static final Object $readRef(
-        Class<? extends Object.$Proxy> proxyClass, ObjectInput in)
-        throws IOException, ClassNotFoundException {
-      switch (in.readByte()) {
-      case 0:
-        return null;
-      case 1:
-        return WrappedJavaInlineable.$wrap(in.readObject());
-      case 2:
-        long core = in.readLong();
-        long onum = in.readLong();
-        try {
-            return proxyClass.getConstructor(Core.class, long.class).newInstance(
-                Client.getClient().getCore(core), onum);
-          } catch (Exception e) {
-            throw new InternalError(e);
-          }
-      }
-      throw new InternalError(
-          "Unknown pointer type while deserializing reference.");
-    }
-
-    /**
-     * Serializes an object pointer to the given ObjectOutput.
-     */
-    protected static final void $writeRef(ObjectOutput out, Object obj)
-        throws IOException {
+    protected static final void $writeRef(Core core, Object obj,
+        List<RefTypeEnum> refType, ObjectOutput out, List<Long> intracoreRefs,
+        List<Pair<String, Long>> intercoreRefs) throws IOException {
       if (obj == null) {
-        out.writeByte(0);
-      } else if (obj instanceof WrappedJavaInlineable<?>) {
-        out.writeByte(1);
-        out.writeObject(obj.$unwrap());
-      } else {
-        $Proxy p = ($Proxy) obj;
-        out.writeByte(2);
-        out.writeLong(p.core.id());
-        out.writeLong(p.onum);
+        refType.add(RefTypeEnum.NULL);
+        return;
       }
+
+      if (obj instanceof WrappedJavaInlineable<?>) {
+        refType.add(RefTypeEnum.INLINE);
+        out.writeObject(obj.$unwrap());
+        return;
+      }
+
+      $Proxy p = ($Proxy) obj;
+      if (p.core.equals(core)) {
+        // Intracore reference.
+        refType.add(RefTypeEnum.ONUM);
+        intracoreRefs.add(p.onum);
+        return;
+      }
+
+      // Remote reference.
+      refType.add(RefTypeEnum.REMOTE);
+      intercoreRefs.add(new Pair<String, Long>(p.core.name(), p.onum));
     }
 
     /**

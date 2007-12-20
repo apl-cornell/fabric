@@ -10,8 +10,8 @@ public class Main {
     Tree tree = null;
     atomic {
       Client client = fabric.client.Client.getClient();
-      Core treeCore = client.getCore(0L);
-      Core nodeCore = client.getCore(1L);
+      Core treeCore = client.getCore("0");
+      Core nodeCore = client.getCore("1");
       tree = new Tree@treeCore(nodeCore);
     }
 

@@ -19,11 +19,18 @@ public final class ConnectMessage extends Message<ConnectMessage.Response> {
   public static class Response implements Message.Response {
   }
 
-  public long coreID;
+  public final String coreName;
 
-  public ConnectMessage(long coreID) {
+  /**
+   * Connects to the core at the given host name.
+   * 
+   * @param name
+   *                The host name for the core to which the connection is being
+   *                made.
+   */
+  public ConnectMessage(String name) {
     super(Response.class);
-    this.coreID = coreID;
+    this.coreName = name;
   }
 
   /*

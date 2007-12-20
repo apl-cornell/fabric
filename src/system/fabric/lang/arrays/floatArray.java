@@ -1,13 +1,15 @@
 package fabric.lang.arrays;
 
-import java.io.IOException;
-import java.io.ObjectOutput;
+import java.io.*;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import fabric.client.Core;
 import fabric.client.TransactionManager;
+import fabric.common.Pair;
 import fabric.common.Policy;
-import fabric.core.SerializedObject.ObjectInput;
+import fabric.core.SerializedObject.RefTypeEnum;
 import fabric.lang.Object;
 
 public interface floatArray extends Object {
@@ -17,17 +19,16 @@ public interface floatArray extends Object {
 
   float get(int i);
 
-  public static class $Impl extends Object.$Impl implements
-      floatArray {
+  public static class $Impl extends Object.$Impl implements floatArray {
     private float[] value;
 
     /**
      * Creates a new float array at the given Core with the given length.
      * 
      * @param core
-     *          The core on which to allocate the array.
+     *                The core on which to allocate the array.
      * @param length
-     *          The length of the array.
+     *                The length of the array.
      */
     public $Impl(Core core, int length) {
       super(core);
@@ -39,9 +40,9 @@ public interface floatArray extends Object {
      * array.
      * 
      * @param core
-     *          The core on which to allocate the array.
+     *                The core on which to allocate the array.
      * @param value
-     *          The backing array to use.
+     *                The backing array to use.
      */
     public $Impl(Core core, float[] value) {
       super(core);
@@ -52,8 +53,10 @@ public interface floatArray extends Object {
      * Used for deserializing.
      */
     public $Impl(Core core, long onum, int version, Policy policy,
-        ObjectInput in) throws IOException, ClassNotFoundException {
-      super(core, onum, version, policy, in);
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intracoreRefs) throws IOException,
+        ClassNotFoundException {
+      super(core, onum, version, policy, in, refTypes, intracoreRefs);
       value = new float[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readFloat();
@@ -86,7 +89,8 @@ public interface floatArray extends Object {
      * @see fabric.lang.arrays.floatArray#set(int, float)
      */
     public float set(int i, float value) {
-      boolean transactionCreated = TransactionManager.INSTANCE.registerWrite(this);
+      boolean transactionCreated =
+          TransactionManager.INSTANCE.registerWrite(this);
       float result = this.value[i] = value;
       if (transactionCreated) TransactionManager.INSTANCE.commitTransaction();
       return result;
@@ -121,16 +125,17 @@ public interface floatArray extends Object {
      * @see fabric.lang.Object.$Impl#$serialize(java.io.ObjectOutput)
      */
     @Override
-    public void $serialize(ObjectOutput out) throws IOException {
-      super.$serialize(out);
+    public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
+        List<Long> intracoreRefs, List<Pair<String, Long>> intercoreRefs)
+        throws IOException {
+      super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
       out.writeInt(value.length);
       for (int i = 0; i < value.length; i++)
         out.writeFloat(value[i]);
     }
   }
 
-  public static class $Proxy extends Object.$Proxy implements
-      floatArray {
+  public static class $Proxy extends Object.$Proxy implements floatArray {
 
     public $Proxy(Core core, long onum) {
       super(core, onum);

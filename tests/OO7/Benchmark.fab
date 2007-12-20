@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Benchmark.fab,v 1.3 2007-12-14 20:32:32 mdgeorge Exp $
+// $Id: Benchmark.fab,v 1.4 2007-12-20 05:36:45 jed Exp $
 
 package OO7;
 
@@ -57,7 +57,7 @@ public class Benchmark {
     try {
       long start = System.currentTimeMillis();
 
-      Core    core = fabric.client.Client.getClient().getCore(0);
+      Core    core = fabric.client.Client.getClient().getCore("0");
       HashMap root = (HashMap) core.getRoot();
       
       if (args[0].equals("query")) {
@@ -191,7 +191,7 @@ public class Benchmark {
 
   public Benchmark(int scale) throws Exception {
     this.scale = scale;
-    Core core = Client.getClient().getCore(0);
+    Core core = Client.getClient().getCore("0");
     this.atomicParts = new HashMap@core();
     this.module = createModule();
   }

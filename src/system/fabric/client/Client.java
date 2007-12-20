@@ -164,32 +164,16 @@ public class Client {
   }
 
   /**
-   * Returns a <code>Core</code> object representing the given coreID
-   * 
-   * @param coreID
-   *          The 48-bit core identifier to fetch
-   * @return The corresponding <code>Core</code> object.
-   */
-  public RemoteCore getCore(long coreID) {
-    RemoteCore result = connections.get(coreID);
-    if (result == null) {
-      result = new RemoteCore(coreID);
-      connections.put(coreID, result);
-    }
-    return result;
-  }
-
-  /**
    * Returns a <code>Core</code> object representing the given core.
    * 
    * @param name
-   *          A human-readable name for the core.
+   *          The core's host name.
    * @return The corresponding <code>Core</code> object.
    */
-  public Core getCore(String name) {
+  public RemoteCore getCore(String name) {
     RemoteCore result = connections.get(name);
     if (result == null) {
-      result = new RemoteCore(0, name);
+      result = new RemoteCore(name);
       cores.put(name, result);
     }
     return result;

@@ -143,7 +143,7 @@ public class Disseminator implements Application {
   
   /** Called by a FetchManager to fetch the specified object. */
   public $Impl fetch(Core c, long onum) {
-    outstandingFetch = new Fetch(getLocalHandle(), ((RemoteCore) c).host, onum);
+    outstandingFetch = new Fetch(getLocalHandle(), ((RemoteCore) c).name, onum);
     
     synchronized (outstandingFetch) {
       route(idf.buildId(outstandingFetch.toString()), outstandingFetch, null);
@@ -153,7 +153,7 @@ public class Disseminator implements Application {
       } catch (InterruptedException e) {}
       
       try {
-        return outstandingFetch.reply().obj().deserialize(c, onum);
+        return outstandingFetch.reply().obj().deserialize(c);
       } catch (ClassNotFoundException e) {}
     }
     

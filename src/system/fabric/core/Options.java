@@ -14,7 +14,7 @@ import java.util.*;
 public class Options {
 
   public int port;
-  public Set<Long> coreIDs;
+  public Set<String> coreNames;
   public int threadPool;
   public int maxConnect;
   public int timeout;
@@ -35,7 +35,7 @@ public class Options {
 
   public void setDefaultValues() {
     this.port = 3372;
-    this.coreIDs = new TreeSet<Long>();
+    this.coreNames = new TreeSet<String>();
     this.threadPool = 10;
     this.maxConnect = 25;
     this.timeout = 15;
@@ -52,7 +52,7 @@ public class Options {
     usageForFlag(out, "--keystore <file> <passwd>", "key store for this node");
     usageForFlag(out, "--truststore <file> <passwd>",
         "trust store for this node");
-    usageForFlag(out, "--core <coreid>",
+    usageForFlag(out, "--core <hostname>",
         "participate in a core (can be specified multiple times)");
     usageForFlag(out, "--pool <number>", "size of worker thread pool",
         defaults.threadPool);
@@ -137,16 +137,16 @@ public class Options {
 
     if (args[i].equals("--core")) {
       i++;
-      long coreID;
+      String coreName;
       try {
-        coreID = new Long(args[i]).longValue();
+        coreName = args[i];
       } catch (NumberFormatException e) {
         throw new UsageError("Invalid core number: " + args[i]);
       }
 
-      if (this.coreIDs.contains(coreID))
+      if (this.coreNames.contains(coreName))
         throw new UsageError("Duplicate core number: " + args[i]);
-      this.coreIDs.add(coreID);
+      this.coreNames.add(coreName);
 
       return i + 1;
     }

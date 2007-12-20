@@ -21,8 +21,8 @@ public class GenMap {
     public static void main(ObjectArray<WrappedJavaInlineable<String>> args)
         throws Exception {
       Client client = Client.getClient();
-      long coreID = Long.parseLong(args.get(0).obj);
-      RemoteCore core = client.getCore(coreID);
+      String coreName = args.get(0).obj;
+      RemoteCore core = client.getCore(coreName);
 
       ObjectOutputStream out = new ObjectOutputStream(System.out);
       Map<Long, SerializedObject> store =

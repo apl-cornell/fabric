@@ -79,6 +79,7 @@ public class TransactionManager {
       throw new TransactionCommitFailedException("Insufficient Authorization");
 
     // Commit all pending creates and writes.
+    // FIXME Swizzle inter-core refs.
     boolean result = true;
     for (Map.Entry<Long, SerializedObject> entry : transaction.creates
         .entrySet()) {

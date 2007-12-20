@@ -64,7 +64,7 @@ public abstract class Message<R extends Message.Response> implements
           // Attempt to establish a connection.
           int hostNum = (startHostIdx + hostIdx) % numHosts;
           Pair<InetSocketAddress, Principal> entry = hosts.get(hostNum);
-          core.connect(client, entry.first, entry.second);
+          core.connect(client, core, entry.first, entry.second);
         } else {
           // Set the flag for the next loop iteration in case we fail.
           needToConnect = true;

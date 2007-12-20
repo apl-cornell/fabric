@@ -104,7 +104,7 @@ public class LocalCore implements Core {
     return objects;
   }
 
-  public long id() {
-    return surrogate.id();
+  public String name() {
+    return surrogate.name();
   }
 }

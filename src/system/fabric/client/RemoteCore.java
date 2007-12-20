@@ -29,14 +29,9 @@ public class RemoteCore implements Core {
   private transient Socket conn;
 
   /**
-   * The core identifier that this Core encapsulates.
+   * The DNS host name of the host.
    */
-  public final long coreID;
-  
-  /**
-   * The DNS name of the host.
-   */
-  public final String host;
+  public final String name;
 
   /**
    * A queue of fresh object identifiers.
@@ -55,20 +50,15 @@ public class RemoteCore implements Core {
   private transient ObjectOutputStream out;
 
   /**
-   * Cached but unserialized objects that the core has sent us.
+   * Cache of unserialized objects that the core has sent us.
    */
   private transient Map<Long, SoftReference<SerializedObject>> serialized;
 
   /**
-   * Create a core representing the given coreID
+   * Creates a core representing the core at the given host name.
    */
-  RemoteCore(long coreID) {
-    this(coreID, "localhost");
-  }
-  
-  RemoteCore(long coreID, String host) {
-    this.coreID = coreID;
-    this.host = host;
+  RemoteCore(String name) {
+    this.name = name;
     this.objects = new HashMap<Long, SoftReference<Object.$Impl>>();
     this.fresh_ids = new LinkedList<Long>();
     this.serialized = new HashMap<Long, SoftReference<SerializedObject>>();
@@ -88,6 +78,8 @@ public class RemoteCore implements Core {
    * 
    * @param client
    *                The Client instance.
+   * @param core
+   *                The core being connected to.
    * @param host
    *                The host to connect to.
    * @param hostPrincipal
@@ -95,7 +87,7 @@ public class RemoteCore implements Core {
    * @throws IOException
    *                 if there was an error.
    */
-  public void connect(Client client, InetSocketAddress host,
+  public void connect(Client client, Core core, InetSocketAddress host,
       Principal hostPrincipal) throws IOException {
     SSLSocket socket = (SSLSocket) client.sslSocketFactory.createSocket();
     socket.setTcpNoDelay(true);
@@ -111,7 +103,7 @@ public class RemoteCore implements Core {
     in = new ObjectInputStream(socket.getInputStream());
 
     try {
-      new ConnectMessage(coreID).send(in, out);
+      new ConnectMessage(core.name()).send(in, out);
     } catch (FabricException e) {
       // Shouldn't get an exception from the core.
       throw new InternalError(e);
@@ -187,7 +179,7 @@ public class RemoteCore implements Core {
     }
 
     try {
-      Object.$Impl result = serial.deserialize(this, onum);
+      Object.$Impl result = serial.deserialize(this);
       objects.put(onum, new SoftReference<Object.$Impl>(result));
       return result;
     } catch (ClassNotFoundException e) {
@@ -205,7 +197,7 @@ public class RemoteCore implements Core {
    * @throws ObjectStreamException
    */
   public java.lang.Object readResolve() {
-    return Client.getClient().getCore(coreID);
+    return Client.getClient().getCore(name);
   }
 
   /**
@@ -247,24 +239,24 @@ public class RemoteCore implements Core {
 
   @Override
   public boolean equals(java.lang.Object obj) {
-    return obj instanceof RemoteCore && ((RemoteCore) obj).coreID == coreID;
+    return obj instanceof RemoteCore && ((RemoteCore) obj).name.equals(name);
   }
 
   @Override
   public int hashCode() {
-    return new Long(coreID).hashCode();
+    return name.hashCode();
   }
 
   @Override
   public String toString() {
-    return "Core@" + coreID;
+    return "Core@" + name;
   }
 
   public Object getRoot() throws UnreachableCoreException {
     return new Object.$Proxy(this, 0);
   }
 
-  public long id() {
-    return coreID;
+  public String name() {
+    return name;
   }
 }

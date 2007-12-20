@@ -8,9 +8,9 @@ import fabric.lang.Object.$Impl;
 
 public interface Core extends java.io.Serializable {
   /**
-   * Returns this core's identifier.
+   * Returns this core's host name.
    */
-  public long id();
+  public String name();
 
   /**
    * Notifies the core that the transaction is entering the Prepare phase.

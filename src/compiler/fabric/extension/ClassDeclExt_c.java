@@ -414,7 +414,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     FieldDecl fieldDecl =
         (FieldDecl) qq.parseMember(classType.fullName()
             + ".$Static $static = new " + classType.fullName()
-            + ".$Static.$Impl(fabric.client.Client.getClient().getCore(0));");
+            + ".$Static.$Impl(fabric.client.Client.getClient()"
+            + ".getCore(\"core0\"));");
 
     List<ClassMember> result = new ArrayList<ClassMember>(2);
     result.add(interfaceDecl);
@@ -474,26 +475,31 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         in.append("this." + f.name() + " = (%T) in.readObject();");
         inSubst.add(t);
       } else {
-        out.append("$writeRef(out, this." + f.name() + ");");
+        out.append("$writeRef($getCore(), this." + f.name() + ", refTypes, "
+            + "out, intracoreRefs, intercoreRefs);");
         in.append("this." + f.name() + " = (" + f.declType() + ") $readRef("
-            + f.declType() + ".$Proxy.class, in);");
+            + f.declType() + ".$Proxy.class, "
+            + "(fabric.core.SerializedObject.RefTypeEnum) "
+            + "refTypes.next(), in, core, intracoreRefs);");
       }
     }
 
     ClassMember serialize =
-        qq.parseMember("public void $serialize(java.io.ObjectOutput out) "
-            + "throws java.io.IOException {" + "super.$serialize(out);" + out
-            + " }");
+        qq.parseMember("public void $serialize(java.io.ObjectOutput out, "
+            + "java.util.List refTypes, java.util.List intracoreRefs, "
+            + "java.util.List intercoreRefs) throws java.io.IOException {"
+            + "super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);"
+            + out + " }");
     result.add(serialize);
 
     ClassMember deserialize =
         qq
             .parseMember(
-                "public $Impl"
-                    + "(fabric.client.Core objCore, long onum, int version, "
-                    + "fabric.common.Policy policy, fabric.core.SerializedObject.ObjectInput in) "
+                "public $Impl(fabric.client.Core core, long onum, int version, "
+                    + "fabric.common.Policy policy, java.io.ObjectInput in, "
+                    + "java.util.Iterator refTypes, java.util.Iterator intracoreRefs) "
                     + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-                    + "super(objCore, onum, version, policy, in);"
+                    + "super(core, onum, version, policy, in, refTypes, intracoreRefs);"
                     + in + " }", inSubst);
     result.add(deserialize);
 
