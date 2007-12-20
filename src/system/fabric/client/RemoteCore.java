@@ -239,7 +239,7 @@ public class RemoteCore implements Core {
 
   @Override
   public boolean equals(java.lang.Object obj) {
-    return obj instanceof RemoteCore && ((RemoteCore) obj).name.equals(name);
+    return obj instanceof Core && ((Core) obj).name().equals(name);
   }
 
   @Override

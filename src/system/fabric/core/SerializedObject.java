@@ -74,8 +74,9 @@ public final class SerializedObject implements Serializable {
     this.intercoreRefs = new ArrayList<Pair<String, Long>>();
 
     try {
-      obj.$serialize(new ObjectOutputStream(serializedData), this.refTypes,
-          this.relatedOnums, this.intercoreRefs);
+      ObjectOutputStream oos = new ObjectOutputStream(serializedData);
+      obj.$serialize(oos, this.refTypes, this.relatedOnums, this.intercoreRefs);
+      oos.flush();
     } catch (IOException e) {
       throw new InternalError("Unexpected I/O error.", e);
     }

@@ -107,4 +107,11 @@ public class LocalCore implements Core {
   public String name() {
     return surrogate.name();
   }
+
+  @Override
+  public boolean equals(java.lang.Object obj) {
+    if (!(obj instanceof Core)) return false;
+    return obj instanceof LocalCore || surrogate != null
+        && ((Core) obj).name().equals(name());
+  }
 }
