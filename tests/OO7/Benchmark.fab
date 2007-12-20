@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Benchmark.fab,v 1.4 2007-12-20 05:36:45 jed Exp $
+// $Id: Benchmark.fab,v 1.5 2007-12-20 19:00:42 mdgeorge Exp $
 
 package OO7;
 
@@ -43,128 +43,9 @@ public class Benchmark {
   Module module = null;
   HashMap atomicParts = null;
 
-  public static void main(String[] args) {
-    if (args.length == 0) {
-      printUsage();
-      System.exit(1);
-    } else {
-      if (args.length == 1 && args[1] == "query") {
-        printUsage();
-        System.exit(1);
-      }
-    }
-
-    try {
-      long start = System.currentTimeMillis();
-
-      Core    core = fabric.client.Client.getClient().getCore("0");
-      HashMap root = (HashMap) core.getRoot();
-      
-      if (args[0].equals("query")) {
-        Benchmark anBenchmark = (Benchmark) root.get(database);
-        if (args[1].equals("traversal")) {
-          anBenchmark.traversalQuery();
-        } else if (args[1].equals("match")) {
-          anBenchmark.matchQuery();
-        } else {
-          System.out.println("Invalid query");
-          printUsage();
-          System.exit(1);
-        }
-      } else {
-        if (args[0].equals("create")) {
-          int scale = -1;
-          if (args[1].equals("test3Conn")) {
-            scale = fTest3Conn;
-          } else if (args[1].equals("test1Conn")) {
-            scale = fTest1Conn;
-          } else if (args[1].equals("tiny")) {
-            scale = fTiny;
-          } else if (args[1].equals("small")) {
-            scale = fSmall;
-          } else {
-            System.out.println("Invalid scale");
-            System.exit(1);
-          }
-          atomic {
-            Benchmark bench = new Benchmark@core(scale);
-            root.put(database, bench);
-          }
-        }
-      }
-
-      System.out.println("time: " + (System.currentTimeMillis() - start)
-          + "msec");
-
-    } catch (Exception e) {
-      System.out.println(e);
-      e.printStackTrace();
-    }
-  }
-
-  static void printUsage() {
-    System.out.println("usage: Banchmark (create|query) [options]");
-    System.out.println("    create options:");
-    System.out.println("        size        - (tiny|small|large)");
-    System.out.println("    query options:");
-    System.out.println("        type        - (traversal|match)");
-  }
-
   //////////////////////////////////////////////////////////////////////////////
   // Database traversals                                                      //
   //////////////////////////////////////////////////////////////////////////////
-
-  public void traversalQuery() throws Exception {
-    Core local = Client.getClient().getLocalCore();
-    HashMap table = new HashMap@local();
-    long time = System.currentTimeMillis();
-    atomic {
-      traversal(module.designRoot(), table);
-    }
-    time = (System.currentTimeMillis() - time);
-    System.out.println("Millis: " + time);
-  }
-
-  protected void traversal(Assembly current, HashMap visited) throws Exception {
-    if (current instanceof BaseAssembly) {
-      BaseAssembly baseAssembly = (BaseAssembly) current;
-
-      Iterator iter = baseAssembly.componentsShar().iterator();
-      while (iter.hasNext()) {
-        CompositePart next = (CompositePart) iter.next();
-        if (visited.containsKey(next)) continue;
-        dfs(next);
-        visited.put(next, next);
-      }
-
-    } else if (current instanceof ComplexAssembly) {
-      ComplexAssembly complexAssembly = (ComplexAssembly) current;
-
-      Iterator iter = complexAssembly.subAssemblies().iterator();
-      while (iter.hasNext())
-        traversal((Assembly) iter.next(), visited);
-    } else {
-      throw new Exception("Invalid Assembly");
-    }
-  }
-
-  protected void dfs(CompositePart root) throws Exception {
-    Core local = Client.getClient().getLocalCore();
-    dfsVisit(root.rootPart(), new HashMap@local());
-  }
-
-  protected void dfsVisit(AtomicPart current, HashMap visited) throws Exception {
-
-    Iterator iter = current.from().iterator();
-    while (iter.hasNext()) {
-      Connection connection = (Connection) iter.next();
-      AtomicPart part = connection.to();
-      if (!visited.containsKey(part)) {
-        visited.put(part, part);
-        dfsVisit(part, visited);
-      }
-    }
-  }
 
   public void matchQuery() throws Exception {
     // generate a random list of objects to fetch
@@ -268,6 +149,78 @@ public class Benchmark {
       return result;
     }
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // main                                                                     //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static void main(String[] args) {
+    if (args.length == 0) {
+      printUsage();
+      System.exit(1);
+    } else {
+      if (args.length == 1 && args[1] == "query") {
+        printUsage();
+        System.exit(1);
+      }
+    }
+
+    try {
+      long start = System.currentTimeMillis();
+
+      Core    core = fabric.client.Client.getClient().getCore("0");
+      HashMap root = (HashMap) core.getRoot();
+      
+      if (args[0].equals("query")) {
+        // Benchmark anBenchmark = (Benchmark) root.get(database);
+        // if (args[1].equals("traversal")) {
+        //   anBenchmark.traversalQuery();
+        // } else if (args[1].equals("match")) {
+        //   anBenchmark.matchQuery();
+        // } else {
+        //   System.out.println("Invalid query");
+        //   printUsage();
+        //   System.exit(1);
+        // }
+      } else {
+        if (args[0].equals("create")) {
+          int scale = -1;
+          if (args[1].equals("test3Conn")) {
+            scale = fTest3Conn;
+          } else if (args[1].equals("test1Conn")) {
+            scale = fTest1Conn;
+          } else if (args[1].equals("tiny")) {
+            scale = fTiny;
+          } else if (args[1].equals("small")) {
+            scale = fSmall;
+          } else {
+            System.out.println("Invalid scale");
+            System.exit(1);
+          }
+          atomic {
+            Benchmark bench = new Benchmark@core(scale);
+            root.put(database, bench);
+          }
+        }
+      }
+
+      System.out.println("time: " + (System.currentTimeMillis() - start)
+          + "msec");
+
+    } catch (Exception e) {
+      System.out.println(e);
+      e.printStackTrace();
+    }
+  }
+
+  static void printUsage() {
+    System.out.println("usage: Benchmark (create|query) [options]");
+    System.out.println("    create options:");
+    System.out.println("        size        - (tiny|small|large)");
+    System.out.println("    query options:");
+    System.out.println("        type        - (traversal|match)");
+  }
+
 }
 
 /*

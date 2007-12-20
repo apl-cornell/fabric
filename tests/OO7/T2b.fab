@@ -5,21 +5,28 @@ import fabric.client.Client;
 import fabric.util.Iterator;
 import fabric.util.HashMap;
 
-/** Traverse the assembly hierarchy.  As each base assembly is visited, visit
- * each of its unshared referenced parts.  As each composite part is visited,
- * perform a depth-first search of its graph of atomic parts.  Return the
- * number of visited atomic parts when complete.
+/** Traversal T2: Traversal with updates Repeat Traversal T1, but update
+ *  objects during the traversal. There are three types of update patterns in
+ *  this traversal. In each, a single update to an atomic part consists of
+ *  swapping its (x,y) attributes. The three types of updates are:
+ *
+ *  B Update every atomic part as it is encountered.
  */
-public class T1 extends PrivatePartTraversal {
+public class T2b extends PrivatePartTraversal {
   HashMap visited = null;
-  int     result  = 0;
 
   public static void main(String[] args) {
     Core local = Client.getClient().getLocalCore();
-    new T1@local().mainImpl(args);
+    new T2b@local().mainImpl(args);
   }
 
   public void visitAtomicPart (AtomicPart current) {
+    atomic {
+      long x = current.x();
+      current.setX(current.y());
+      current.setY(x);
+    }
+
     Iterator iter = current.from().iterator();
     while (iter.hasNext()) {
       Connection connection = (Connection) iter.next();
@@ -35,7 +42,6 @@ public class T1 extends PrivatePartTraversal {
     Core local = Client.getClient().getLocalCore();
     visited = new HashMap@local();
     p.rootPart().accept(this);
-    result += visited.size();
     visited = null;
   }
 }
