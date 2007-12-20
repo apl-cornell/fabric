@@ -59,7 +59,16 @@ public class ArrayInitExt_c extends LocatedExt_c {
     Expr init =
         nf.NewArray(Position.compilerGenerated(), nf.CanonicalTypeNode(Position
             .compilerGenerated(), newBase), 1, arrayInit);
-    return qq.parseExpr("new %T(%E, %E)", newType, location, init);
+    String typeArg = "";
+    if (oldBase.isReference()) {
+      if (oldBase.isArray())
+        typeArg = newBase.toString();
+      else typeArg = oldBase.toString();
+      if (ts.isPureFabricType(oldBase)) typeArg += ".$Proxy";
+      typeArg += ".class, ";
+    }
+    return qq.parseExpr("new %T(%E, " + typeArg + "%E)", newType, location,
+        init);
   }
 
   /*

@@ -26,8 +26,12 @@ public class ArrayAccessExt_c extends ExprExt_c {
 
     // Insert a cast if we have a pure Fabric base type.
     Type base = array.type().toArray().ultimateBase();
-    if (ts.isFabricType(base) && !ts.isJavaInlineable(base))
-      result = pr.qq().parseExpr("(%T) %E", aa.type(), result);
+    if (ts.isFabricType(base) && !ts.isJavaInlineable(base)) {
+      Type castType = aa.type();
+      if (castType.isArray())
+        castType = ts.fArrayOf(castType.toArray().base());
+      result = pr.qq().parseExpr("(%T) %E", castType, result);
+    }
 
     return result;
   }

@@ -7,6 +7,8 @@ public class Array04 {
     Core core = Client.getClient().getCore("0");
     Object[] foo = new Object[]@core {};
     Object[] bar = new Object[][]@core {foo, foo};
+    Object[][] baz = (Object[][]) bar;
+    foo = baz[0];
   }
 }
 
