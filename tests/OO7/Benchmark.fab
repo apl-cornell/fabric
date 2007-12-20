@@ -6,12 +6,13 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Benchmark.fab,v 1.6 2007-12-20 19:22:03 mdgeorge Exp $
+// $Id: Benchmark.fab,v 1.7 2007-12-20 20:41:26 mdgeorge Exp $
 
 package OO7;
 
 import fabric.util.*;
 import java.util.Random;
+import java.net.URI;
 import fabric.util.HashMap;
 
 import fabric.client.Core;
@@ -19,28 +20,30 @@ import fabric.client.Client;
 
 public class Benchmark {
   // data base parameters
-  private final static int fTest3Conn = 3;
-  private final static int fTest1Conn = 2;
-  private final static int fSmall     = 1;
-  private final static int fTiny      = 0;
+  private final static int LARGE  = 3;
+  private final static int MEDIUM = 2;
+  private final static int SMALL  = 1;
+  private final static int TINY   = 0;
 
   private final static Core local = Client.getClient().getLocalCore();
-  private final static int[] fNumAtomicPerComp = new int[]@local { 20, 20, 20, 20 };
-  private final static int[] fConnPerAtomic    = new int[]@local { 1, 3, 3, 3 };
-  private final static int[] fDocumentSize     = new int[]@local { 20, 20, 20, 2000 };
-  private final static int[] fManualSize       = new int[]@local { 1000, 1000, 1000, 100000 };
-  private final static int[] fNumCompPerModule = new int[]@local { 5, 5, 50, 500 };
-  private final static int[] fNumAssmPerAssm   = new int[]@local { 3, 3, 3, 3 };
-  private final static int[] fNumAssmLevels    = new int[]@local { 3, 3, 7, 7 };
-  private final static int[] fNumCompPerAssm   = new int[]@local { 3, 3, 3, 3 };
-  private final static int[] fNumModules       = new int[]@local { 1, 1, 1, 1 };
+
+  //                            Database paramters                   TINY  SMALL  MEDIUM LARGE
+  private final static int[]    numAtomicPerComp = new int[]@local    { 20,   20,    200,   200    };
+  private final        int      numConnPerAtomic;                     
+  private final static int[]    documentSize     = new int[]@local    { 20,   2000,  20000, 20000  };
+  private final static double[] manualSize       = new double[]@local { 1e3,  100e3, 1e6,   1e6    };
+  private final static int[]    numCompPerModule = new int[]@local    { 5,    500,   500,   500    };
+  private final static int[]    numAssmPerAssm   = new int[]@local    { 3,    3,     3,     3      };
+  private final static int[]    numAssmLevels    = new int[]@local    { 3,    7,     7,     7      };
+  private final static int[]    numCompPerAssm   = new int[]@local    { 3,    3,     3,     3      };
+  private final static int[]    numModules       = new int[]@local    { 1,    1,     1,     10     };
 
   private final static String database = "OO7 Database";
 
   private static final Random rand = new Random();
 
   int scale = 0;
-  // TODO: expose this as an extent
+  // TODO: expose extents
   Module module = null;
   HashMap atomicParts = null;
 
@@ -71,8 +74,14 @@ public class Benchmark {
   // Database creation                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Benchmark(int scale) throws Exception {
+  /** Create a benchmark of the corresponding size.
+    *
+    * @param scale either TINY, SMALL, MEDIUM or LARGE
+    * @param numConnPerAtomic the fan-out value (either 3, 6 or 9)
+    */
+  public Benchmark(int scale, int numConnPerAtomic) throws Exception {
     this.scale = scale;
+    this.numConnPerAtomic = numConnPerAtomic;
     Core core = Client.getClient().getCore("0");
     this.atomicParts = new HashMap@core();
     this.module = createModule();
@@ -81,13 +90,13 @@ public class Benchmark {
   protected Module createModule() throws Exception {
     Core local = Client.getClient().getLocalCore();
     CompositePart[] compositeParts =
-        new CompositePart[fNumCompPerModule[scale]]@local;
-    for (int i = 0; i < fNumCompPerModule[scale]; ++i)
+        new CompositePart[numCompPerModule[scale]]@local;
+    for (int i = 0; i < numCompPerModule[scale]; ++i)
       compositeParts[i] = createCompositePart();
 
     Module module = new Module();
     ComplexAssembly designRoot =
-        (ComplexAssembly) createAssembly(module, fNumAssmLevels[scale],
+        (ComplexAssembly) createAssembly(module, numAssmLevels[scale],
             compositeParts);
     module.setDesignRoot(designRoot);
 
@@ -99,7 +108,7 @@ public class Benchmark {
     CompositePart compositePart = new CompositePart();
     compositePart.setDocumentation(new Document());
 
-    AtomicPart[] parts = new AtomicPart[fNumAtomicPerComp[scale]]@local;
+    AtomicPart[] parts = new AtomicPart[numAtomicPerComp[scale]]@local;
     for (int i = 0; i < parts.length; ++i) {
       parts[i] = createAtomicPart(compositePart);
       compositePart.addPart(parts[i]);
@@ -112,7 +121,7 @@ public class Benchmark {
           new Connection(parts[i], parts[(i + 1) % parts.length]);
 
       // add random connections
-      for (int j = 0; j < (fConnPerAtomic[scale] - 1); ++j) {
+      for (int j = 0; j < (numConnPerAtomic - 1); ++j) {
         c = new Connection(parts[i], parts[rand.nextInt(parts.length)]);
       }
     }
@@ -134,7 +143,7 @@ public class Benchmark {
       BaseAssembly result = new BaseAssembly();
       parent.addAssembly(result);
 
-      for (int j = 0; j < fNumCompPerAssm[scale]; ++j) {
+      for (int j = 0; j < numCompPerAssm[scale]; ++j) {
         int k = rand.nextInt(available.length);
         result.addComponentsShar(available[k]);
       }
@@ -145,7 +154,7 @@ public class Benchmark {
       ComplexAssembly result = new ComplexAssembly();
       parent.addAssembly(result);
 
-      for (int i = 0; i < fNumAssmPerAssm[scale]; ++i)
+      for (int i = 0; i < numAssmPerAssm[scale]; ++i)
         result.addSubAssembly(createAssembly(parent, level - 1, available));
       return result;
     }
@@ -156,56 +165,40 @@ public class Benchmark {
   //////////////////////////////////////////////////////////////////////////////
 
   public static void main(String[] args) {
-    if (args.length == 0) {
+    if (args.length != 3) {
       printUsage();
       System.exit(1);
-    } else {
-      if (args.length == 1 && args[1] == "query") {
-        printUsage();
-        System.exit(1);
-      }
     }
 
     try {
       long start = System.currentTimeMillis();
 
-      Core    core = fabric.client.Client.getClient().getCore("0");
-      HashMap root = (HashMap) core.getRoot();
-      
-      if (args[0].equals("query")) {
-        // Benchmark anBenchmark = (Benchmark) root.get(database);
-        // if (args[1].equals("traversal")) {
-        //   anBenchmark.traversalQuery();
-        // } else if (args[1].equals("match")) {
-        //   anBenchmark.matchQuery();
-        // } else {
-        //   System.out.println("Invalid query");
-        //   printUsage();
-        //   System.exit(1);
-        // }
+      URI  path = new URI(args[0]);
+      Core core = fabric.client.Client.getClient().getCore(path.getHost());
+      Map  root = (Map) core.getRoot();
+
+      int scale = -1;
+      if (args[1].equalsIgnoreCase("TINY")) {
+        scale = TINY;
+      } else if (args[1].equalsIgnoreCase("SMALL")) {
+        scale = SMALL;
+      } else if (args[1].equalsIgnoreCase("MEDIUM")) {
+        scale = MEDIUM;
+      } else if (args[1].equalsIgnoreCase("LARGE")) {
+        scale = LARGE;
       } else {
-        if (args[0].equals("create")) {
-          int scale = -1;
-          if (args[1].equals("test3Conn")) {
-            scale = fTest3Conn;
-          } else if (args[1].equals("test1Conn")) {
-            scale = fTest1Conn;
-          } else if (args[1].equals("tiny")) {
-            scale = fTiny;
-          } else if (args[1].equals("small")) {
-            scale = fSmall;
-          } else {
-            System.out.println("Invalid scale");
-            System.exit(1);
-          }
-          atomic {
-            Benchmark bench = new Benchmark@core(scale);
-            root.put(database, bench);
-          }
-        }
+        printUsage();
+        System.out.println("Invalid scale");
+        System.exit(1);
       }
 
-      System.out.println("time: " + (System.currentTimeMillis() - start)
+      int fanout = Integer.parseInt(args[2]);
+
+      atomic {
+        root.put(path.getPath(), new Benchmark@core(scale, fanout));
+      }
+
+      System.out.println("elapsed time: " + (System.currentTimeMillis() - start)
           + "msec");
 
     } catch (Exception e) {
@@ -215,11 +208,12 @@ public class Benchmark {
   }
 
   static void printUsage() {
-    System.out.println("usage: Benchmark (create|query) [options]");
-    System.out.println("    create options:");
-    System.out.println("        size        - (tiny|small|large)");
-    System.out.println("    query options:");
-    System.out.println("        type        - (traversal|match)");
+    System.out.println("usage: tailor Benchmark <path> <size> <fanout>");
+    System.out.println("  creates a OO7 database and places it at the given path.");
+    System.out.println("");
+    System.out.println("  - <path> should be a fabric URI, eg. \"fab://localhost/OO7\"");
+    System.out.println("  - <size> should be one of \"tiny\", \"small\", \"medium\", or \"large\"");
+    System.out.println("  - <fanout> can be any number, but the standard values are 3, 6 and 9");
   }
 
 }
