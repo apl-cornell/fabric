@@ -37,10 +37,8 @@ import fabric.lang.arrays.ObjectArray;
  * methods, and can then use the singleton Client instance to access Cores and
  * Objects.
  */
-public class Client {
-  // A map from 48-bit core IDs to Core objects
-  protected Map<Long, RemoteCore> connections;
-  
+public final class Client {
+  // A map from core hostnames to Core objects
   protected Map<String, RemoteCore> cores;
 
   protected LocalCore localCore;
@@ -135,7 +133,6 @@ public class Client {
     this.timeout = 1000 * timeout;
     this.retries = retries;
     this.nameService = new NameService();
-    this.connections = new HashMap<Long, RemoteCore>();
     this.cores = new HashMap<String, RemoteCore>();
     this.localCore = new LocalCore();
 
@@ -171,7 +168,7 @@ public class Client {
    * @return The corresponding <code>Core</code> object.
    */
   public RemoteCore getCore(String name) {
-    RemoteCore result = connections.get(name);
+    RemoteCore result = cores.get(name);
     if (result == null) {
       result = new RemoteCore(name);
       cores.put(name, result);
