@@ -102,6 +102,14 @@ public interface Object {
     }
 
     /**
+     * A delegate for the default toString implementation.
+     */
+    @Override
+    public String toString() {
+      return fetch().toString();
+    }
+
+    /**
      * A delegate for the default hashcode implementation.
      */
     @Override
@@ -199,6 +207,16 @@ public interface Object {
     @Override
     public int hashCode() {
       return (int) ($getCore().hashCode() ^ $getOnum());
+    }
+
+    /**
+     * Default toString implementation prints out the class name and global
+     * object name.
+     */
+    @Override
+    public String toString() {
+      return getClass().getName() + "@fab://" + $getCore().name() + "/"
+          + $getOnum();
     }
 
     /**
