@@ -47,7 +47,7 @@ public class Worker extends Thread {
    * <code>Node</code> to hand off a client to this worker.
    * 
    * @throws IOException
-   *           if extracting the I/O streams from the client socket fails.
+   *                 if extracting the I/O streams from the client socket fails.
    */
   public synchronized void handle(SSLSocket socket) throws IOException {
     this.socket = socket;
@@ -84,7 +84,7 @@ public class Worker extends Thread {
           System.err.println("Connection reset");
           System.err.println("(" + client + ")");
         } else e.printStackTrace();
-        
+
         System.err.println();
       } catch (EOFException e) {
         // Client has closed the connection. Nothing to do here.
@@ -146,8 +146,8 @@ public class Worker extends Thread {
    */
   public PrepareTransactionMessage.Response handle(PrepareTransactionMessage msg)
       throws TransactionPrepareFailedException {
-    int transactionID = transactionManager.prepare(client, msg.toCreate,
-        msg.reads, msg.writes);
+    int transactionID =
+        transactionManager.prepare(client, msg.toCreate, msg.reads, msg.writes);
     return new PrepareTransactionMessage.Response(transactionID);
   }
 
@@ -158,7 +158,11 @@ public class Worker extends Thread {
     Map<Long, SerializedObject> group = new HashMap<Long, SerializedObject>();
     SerializedObject obj = transactionManager.read(client, msg.onum);
     if (obj != null) {
-      // TODO traverse object graph and add more objects to the object group.
+      // Traverse object graph and add more objects to the object group.
+      for (long onum : obj.relatedOnums) {
+        SerializedObject related = transactionManager.read(client, onum);
+        if (related != null) group.put(onum, related);
+      }
 
       return new ReadMessage.Response(obj, group);
     }
