@@ -297,6 +297,7 @@ public class TransactionManager {
     transaction.lockedONums.add(onum);
     lockedONums.add(onum);
     transaction.creates.put(onum, surrogate);
+    transaction.surrogates.put(remoteRef, onum);
 
     return onum;
   }
