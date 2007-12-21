@@ -16,6 +16,7 @@ import javax.security.auth.x500.X500Principal;
 import fabric.common.AccessError;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
+import fabric.common.Surrogate;
 import fabric.core.SerializedObject;
 import fabric.lang.Object;
 import fabric.messages.*;
@@ -180,6 +181,11 @@ public class RemoteCore implements Core {
 
     try {
       Object.$Impl result = serial.deserialize(this);
+      while (result instanceof Surrogate) {
+        // XXX Track surrogates for reuse?
+        Surrogate surrogate = (Surrogate) result;
+        result = Client.getClient().fetchObject(surrogate.core, surrogate.onum);
+      }
       objects.put(onum, new SoftReference<Object.$Impl>(result));
       return result;
     } catch (ClassNotFoundException e) {
