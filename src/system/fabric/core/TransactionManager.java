@@ -4,9 +4,11 @@ import java.security.Principal;
 import java.security.SecureRandom;
 import java.util.*;
 
-
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
+import fabric.common.ACLPolicy;
+import fabric.common.Pair;
+import fabric.core.SerializedObject.RefTypeEnum;
 
 public class TransactionManager {
   public static class Transaction {
@@ -30,11 +32,18 @@ public class TransactionManager {
      */
     protected final Map<Long, SerializedObject> writes;
 
+    /**
+     * The set of onums of surrogates created by this transaction, indexed by
+     * remote reference.
+     */
+    protected final Map<Pair<String, Long>, Long> surrogates;
+
     public Transaction(Principal client) {
       this.client = client;
       this.lockedONums = new HashSet<Long>();
       this.creates = new HashMap<Long, SerializedObject>();
       this.writes = new HashMap<Long, SerializedObject>();
+      this.surrogates = new HashMap<Pair<String, Long>, Long>();
     }
   }
 
@@ -71,15 +80,13 @@ public class TransactionManager {
     lockedONums.removeAll(transaction.lockedONums);
   }
 
-  public synchronized void commitTransaction(Principal client,
-      int transactionID)
+  public synchronized void commitTransaction(Principal client, int transactionID)
       throws TransactionCommitFailedException {
     Transaction transaction = transactions.get(transactionID);
     if (transaction == null || !transaction.client.equals(client))
       throw new TransactionCommitFailedException("Insufficient Authorization");
 
     // Commit all pending creates and writes.
-    // FIXME Swizzle inter-core refs.
     boolean result = true;
     for (Map.Entry<Long, SerializedObject> entry : transaction.creates
         .entrySet()) {
@@ -116,17 +123,16 @@ public class TransactionManager {
   public synchronized int prepare(Principal client,
       Collection<SerializedObject> toCreate, Map<Long, Integer> reads,
       Collection<SerializedObject> writes)
-    throws TransactionPrepareFailedException
-  {
+      throws TransactionPrepareFailedException {
     int transactionID;
     do {
       transactionID = random.nextInt();
     } while (transactions.containsKey(transactionID));
-    
+
     Transaction transaction = new Transaction(client);
 
     try {
-      prepare(client, transaction, toCreate, reads, writes);
+      prepare(transaction, toCreate, reads, writes);
       transactions.put(transactionID, transaction);
       return transactionID;
     } catch (TransactionPrepareFailedException e) {
@@ -137,30 +143,32 @@ public class TransactionManager {
     }
   }
 
-  private void prepare(Principal client, Transaction transaction,
+  private void prepare(Transaction transaction,
       Collection<SerializedObject> toCreate, Map<Long, Integer> reads,
       Collection<SerializedObject> writes)
-    throws TransactionPrepareFailedException
-  {
+      throws TransactionPrepareFailedException {
     // Handle the reads.
     for (Map.Entry<Long, Integer> entry : reads.entrySet()) {
       long onum = entry.getKey();
       int version = entry.getValue();
-      SerializedObject obj = store.read(client, onum);
+      SerializedObject obj = store.read(transaction.client, onum);
 
       // Object must exist and the version numbers must match.
       if (obj == null)
-        throw new TransactionPrepareFailedException("Object " + onum + " does not exist");
+        throw new TransactionPrepareFailedException("Object " + onum
+            + " does not exist");
       if (version != obj.getVersion())
-        throw new TransactionPrepareFailedException("Object " + onum + " is out of date"); 
+        throw new TransactionPrepareFailedException("Object " + onum
+            + " is out of date");
 
       // If the transaction has read it already, nothing to do.
       if (transaction.lockedONums.contains(onum)) continue;
 
       // Object must not be locked by another transaction.
       if (lockedONums.contains(onum))
-        throw new TransactionPrepareFailedException("Object " + onum + " has been modified by an uncommitted transaction");
-      
+        throw new TransactionPrepareFailedException("Object " + onum
+            + " has been modified by an uncommitted transaction");
+
       // This is a new read. Record it.
       transaction.lockedONums.add(onum);
       lockedONums.add(onum);
@@ -171,8 +179,12 @@ public class TransactionManager {
       long onum = obj.getOnum();
 
       // Make sure the client has write permissions.
-      if (!store.checkWritePerm(client, onum))
-        throw new TransactionPrepareFailedException("Object " + onum + " is not writable");
+      if (!store.checkWritePerm(transaction.client, onum))
+        throw new TransactionPrepareFailedException("Object " + onum
+            + " is not writable");
+
+      // Swizzle intercore references.
+      makeSurrogates(transaction, obj);
 
       // If the transaction has already locked object, succeed.
       if (transaction.lockedONums.contains(onum)) {
@@ -182,7 +194,8 @@ public class TransactionManager {
 
       // Fail if the object is already locked by another transaction.
       if (lockedONums.contains(onum))
-        throw new TransactionPrepareFailedException("Object " + onum + "has been modified by an uncommitted transaction");
+        throw new TransactionPrepareFailedException("Object " + onum
+            + "has been modified by an uncommitted transaction");
 
       // This is a new write. Record it.
       transaction.lockedONums.add(onum);
@@ -195,8 +208,12 @@ public class TransactionManager {
       long onum = obj.getOnum();
 
       // Make sure the client can create the object.
-      if (!store.checkInsertPerm(client, onum))
-        throw new TransactionPrepareFailedException("Creation of object " + onum + " is unauthorized");
+      if (!store.checkInsertPerm(transaction.client, onum))
+        throw new TransactionPrepareFailedException("Creation of object "
+            + onum + " is unauthorized");
+
+      // Swizzle intercore references.
+      makeSurrogates(transaction, obj);
 
       // If the transaction has already locked object, succeed.
       if (transaction.lockedONums.contains(onum)) {
@@ -206,13 +223,82 @@ public class TransactionManager {
 
       // Fail if the object is already locked by another transaction.
       if (lockedONums.contains(onum))
-        throw new TransactionPrepareFailedException("Object " + onum + " has been created by a pending transaction");
+        throw new TransactionPrepareFailedException("Object " + onum
+            + " has been created by a pending transaction");
 
       // This is a new create. Record it.
       transaction.lockedONums.add(onum);
       lockedONums.add(onum);
       transaction.creates.put(onum, obj);
     }
+  }
+
+  /**
+   * Creates surrogates for the given object as part of the given transaction.
+   */
+  private void makeSurrogates(Transaction transaction, SerializedObject obj) {
+    Iterator<RefTypeEnum> refTypeIter =
+        new ArrayList<RefTypeEnum>(obj.refTypes).iterator();
+    Iterator<Long> relatedOnumIter =
+        new ArrayList<Long>(obj.relatedOnums).iterator();
+    Iterator<Pair<String, Long>> intercoreRefIter =
+        obj.intercoreRefs.iterator();
+
+    obj.refTypes.clear();
+    obj.relatedOnums.clear();
+    obj.intercoreRefs = null;
+    while (refTypeIter.hasNext()) {
+      RefTypeEnum refType = refTypeIter.next();
+      switch (refType) {
+      case NULL:
+      case INLINE:
+        obj.refTypes.add(refType);
+        break;
+
+      case ONUM:
+        obj.relatedOnums.add(relatedOnumIter.next());
+        obj.refTypes.add(refType);
+        break;
+
+      case REMOTE:
+        obj.refTypes.add(RefTypeEnum.ONUM);
+        obj.relatedOnums.add(createSurrogate(transaction, intercoreRefIter
+            .next()));
+        break;
+      }
+    }
+  }
+
+  /**
+   * A helper method for obtaining the onum for a surrogate for the given remote
+   * reference. The cache of surrogates in the given transaction is first
+   * checked. If no appropriate surrogate has already been created in the
+   * transaction, a new one is made as part of the transaction.
+   * 
+   * @return the onum for a surrogate for the given remote reference.
+   */
+  Long createSurrogate(Transaction transaction, Pair<String, Long> remoteRef) {
+    // Check our cache of surrogates.
+    if (transaction.surrogates.containsKey(remoteRef))
+      return transaction.surrogates.get(remoteRef);
+
+    // Allocate a new onum for the surrogate.
+    long onum;
+    do {
+      onum = newOIDs(transaction.client, 1)[0];
+    } while (lockedONums.contains(onum));
+
+    // Create the surrogate.
+    // XXX Use the right policy here.
+    SerializedObject surrogate =
+        new SerializedObject(onum, new ACLPolicy(), remoteRef);
+
+    // Register the surrogate.
+    transaction.lockedONums.add(onum);
+    lockedONums.add(onum);
+    transaction.creates.put(onum, surrogate);
+
+    return onum;
   }
 
   public synchronized SerializedObject read(Principal client, long onum) {

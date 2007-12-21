@@ -2,6 +2,7 @@ package fabric.core;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import fabric.client.Core;
 import fabric.common.InternalError;
 import fabric.common.Pair;
 import fabric.common.Policy;
+import fabric.common.Surrogate;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -43,19 +45,19 @@ public final class SerializedObject implements Serializable {
    */
   private final byte[] serializedData;
 
-  private final List<RefTypeEnum> refTypes;
+  final List<RefTypeEnum> refTypes;
 
   /**
    * The onums representing the intra-core references in this object.
    */
-  private final List<Long> relatedOnums;
+  final List<Long> relatedOnums;
 
   /**
    * Global object names representing the inter-core references in this object.
    * Before storing any <code>SerializedObject</code>, the core should
    * swizzle these references into intra-core references to surrogates.
    */
-  private List<Pair<String, Long>> intercoreRefs;
+  List<Pair<String, Long>> intercoreRefs;
 
   /**
    * Creates a serialized representation of the given object.
@@ -81,6 +83,37 @@ public final class SerializedObject implements Serializable {
       throw new InternalError("Unexpected I/O error.", e);
     }
     this.serializedData = serializedData.toByteArray();
+  }
+
+  /**
+   * Creates a serialized representation of a surrogate object.
+   * 
+   * @param onum
+   *                The local object number for the surrogate.
+   * @param policy
+   *                The policy for the surrogate.
+   * @param remoteRef
+   *                The name of the remote object being referred to.
+   */
+  SerializedObject(long onum, Policy policy, Pair<String, Long> remoteRef) {
+    this.onum = onum;
+    this.className = Surrogate.class.getName();
+    this.policy = policy;
+    
+    ByteArrayOutputStream serializedData = new ByteArrayOutputStream();
+    try {
+      ObjectOutputStream oos = new ObjectOutputStream(serializedData);
+      oos.writeUTF(remoteRef.first);
+      oos.writeLong(remoteRef.second);
+      oos.flush();
+    } catch (IOException e) {
+      throw new InternalError("Unexpected I/O error.", e);
+    }
+    
+    this.serializedData = serializedData.toByteArray();
+    this.refTypes = Collections.emptyList();
+    this.relatedOnums = Collections.emptyList();
+    this.intercoreRefs = Collections.emptyList();
   }
 
   public long getOnum() {
