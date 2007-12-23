@@ -17,7 +17,6 @@ public class NameService {
    */
   public Pair<List<InetSocketAddress>, Principal> lookupCore(RemoteCore core)
       throws UnknownHostException {
-    if (core.name.equals("0")) Thread.dumpStack();
     // Look up the core's hostname in DNS.
     InetAddress[] ipAddrs;
     try {
