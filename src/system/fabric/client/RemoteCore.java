@@ -83,13 +83,13 @@ public class RemoteCore implements Core {
    *                The core being connected to.
    * @param host
    *                The host to connect to.
-   * @param hostPrincipal
-   *                The principal associated with the host we're connecting to.
+   * @param corePrincipal
+   *                The principal associated with the core we're connecting to.
    * @throws IOException
    *                 if there was an error.
    */
   public void connect(Client client, Core core, InetSocketAddress host,
-      Principal hostPrincipal) throws IOException {
+      Principal corePrincipal) throws IOException {
     SSLSocket socket = (SSLSocket) client.sslSocketFactory.createSocket();
     socket.setTcpNoDelay(true);
     socket.setKeepAlive(true);
@@ -98,7 +98,10 @@ public class RemoteCore implements Core {
 
     // Make sure we're talking to the right node.
     X500Principal peer = (X500Principal) socket.getSession().getPeerPrincipal();
-    if (!peer.equals(hostPrincipal)) throw new IOException();
+    if (!peer.equals(corePrincipal)) {
+      socket.close();
+      throw new IOException();
+    }
     out = new ObjectOutputStream(socket.getOutputStream());
     out.flush();
     in = new ObjectInputStream(socket.getInputStream());
