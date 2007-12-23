@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
@@ -80,10 +81,12 @@ public class Worker extends Thread {
           out.flush();
 
           // Initiate the SSL handshake and initialize the fields.
-          synchronized (node.sslSocketFactory) {
+          SSLSocketFactory sslSocketFactory =
+              node.getSSLSocketFactory(coreName);
+          synchronized (sslSocketFactory) {
             this.sslSocket =
-                (SSLSocket) node.sslSocketFactory.createSocket(socket, null, 0,
-                    true);
+                (SSLSocket) sslSocketFactory
+                    .createSocket(socket, null, 0, true);
           }
           this.sslSocket.setUseClientMode(false);
           this.sslSocket.setNeedClientAuth(true);

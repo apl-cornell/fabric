@@ -1,26 +1,45 @@
 package fabric.core;
 
-import fabric.common.InternalError;
-import fabric.common.UsageError;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.security.*;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.*;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+
+import fabric.common.InternalError;
+import fabric.common.UsageError;
 
 public class Options {
 
   public int port;
-  public Set<String> coreNames;
+
+  /**
+   * Maps core names to their associated key and trust stores.
+   */
+  public Map<String, CoreKeyStores> cores;
+
   public int threadPool;
   public int maxConnect;
   public int timeout;
-  public KeyStore keyStore;
-  public char[] passwd;
-  public KeyStore trustStore;
+
+  public static class CoreKeyStores {
+    public final KeyStore keyStore;
+    public final KeyStore trustStore;
+    public final char[] password;
+
+    public CoreKeyStores(KeyStore keyStore, KeyStore trustStore, char[] password) {
+      this.keyStore = keyStore;
+      this.trustStore = trustStore;
+      this.password = password;
+    }
+  }
 
   private Options() {
     setDefaultValues();
@@ -29,17 +48,14 @@ public class Options {
   public Options(String[] args) throws UsageError {
     this();
     parseCommandLine(args);
-    if (keyStore == null)
-      throw new UsageError("No key store specified.");
   }
 
   public void setDefaultValues() {
     this.port = 3372;
-    this.coreNames = new TreeSet<String>();
+    this.cores = new TreeMap<String, CoreKeyStores>();
     this.threadPool = 10;
     this.maxConnect = 25;
     this.timeout = 15;
-    this.trustStore = null;
   }
 
   public static void usage(PrintStream out) {
@@ -49,11 +65,10 @@ public class Options {
     out.println("where [options] includes:");
     usageForFlag(out, "--port <number>", "port on which to listen",
         defaults.port);
-    usageForFlag(out, "--keystore <file> <passwd>", "key store for this node");
-    usageForFlag(out, "--truststore <file> <passwd>",
-        "trust store for this node");
-    usageForFlag(out, "--core <hostname>",
-        "participate in a core (can be specified multiple times)");
+    usageForFlag(out,
+        "--core <hostname> <keystore file> <truststore file> <passwd>",
+        "participate in the given core with the associated key and trust "
+            + "stores. Can be specified multiple times.");
     usageForFlag(out, "--pool <number>", "size of worker thread pool",
         defaults.threadPool);
     usageForFlag(out, "--conn <number>", "maximum number of simultaneous "
@@ -91,64 +106,42 @@ public class Options {
       return i + 1;
     }
 
-    if (args[i].equals("--keystore")) {
-      i++;
-      try {
-        this.keyStore = KeyStore.getInstance("JKS");
-        this.passwd = args[i + 1].toCharArray();
-        this.keyStore.load(new FileInputStream(args[i]), this.passwd);
-      } catch (KeyStoreException e) {
-        throw new InternalError("Unable to open key store.", e);
-      } catch (NoSuchAlgorithmException e) {
-        throw new InternalError(e);
-      } catch (CertificateException e) {
-        throw new InternalError("Unable to open key store.", e);
-      } catch (FileNotFoundException e) {
-        throw new UsageError("File not found: " + args[i]);
-      } catch (IOException e) {
-        if (e.getCause() instanceof UnrecoverableKeyException)
-          throw new UsageError("Unable to open key store: invalid password.");
-        throw new InternalError("Unable to open key store.", e);
-      }
-      return i + 2;
-    }
-
-    if (args[i].equals("--truststore")) {
-      i++;
-      try {
-        this.trustStore = KeyStore.getInstance("JKS");
-        this.trustStore.load(new FileInputStream(args[i]), args[i + 1]
-            .toCharArray());
-      } catch (KeyStoreException e) {
-        throw new InternalError("Unable to open trust store.", e);
-      } catch (NoSuchAlgorithmException e) {
-        throw new InternalError(e);
-      } catch (CertificateException e) {
-        throw new InternalError("Unable to open trust store.", e);
-      } catch (FileNotFoundException e) {
-        throw new UsageError("File not found: " + args[i]);
-      } catch (IOException e) {
-        if (e.getCause() instanceof UnrecoverableKeyException)
-          throw new UsageError("Unable to open trust store: invalid password.");
-        throw new InternalError("Unable to open trust store.", e);
-      }
-      return i + 2;
-    }
-
     if (args[i].equals("--core")) {
       i++;
-      String coreName;
+      String coreName = args[i];
+      String keyFile = args[i + 1];
+      String trustFile = args[i + 2];
+      char[] passwd = args[i + 3].toCharArray();
+
+      if (this.cores.containsKey(coreName))
+        throw new UsageError("Duplicate core: " + args[i]);
+
+      KeyStore keyStore, trustStore;
       try {
-        coreName = args[i];
-      } catch (NumberFormatException e) {
-        throw new UsageError("Invalid core number: " + args[i]);
+        keyStore = KeyStore.getInstance("JKS");
+        keyStore.load(new FileInputStream(keyFile), passwd);
+
+        trustStore = KeyStore.getInstance("JKS");
+        trustStore.load(new FileInputStream(trustFile), passwd);
+      } catch (KeyStoreException e) {
+        throw new InternalError("Unable to open key or trust store.", e);
+      } catch (NoSuchAlgorithmException e) {
+        throw new InternalError(e);
+      } catch (CertificateException e) {
+        throw new InternalError("Unable to open key or trust store.", e);
+      } catch (FileNotFoundException e) {
+        throw new UsageError("File not found: " + args[i]);
+      } catch (IOException e) {
+        if (e.getCause() instanceof UnrecoverableKeyException)
+          throw new UsageError(
+              "Unable to open key or trust store: invalid password.");
+        throw new InternalError("Unable to open key or trust store.", e);
       }
 
-      if (this.coreNames.contains(coreName))
-        throw new UsageError("Duplicate core number: " + args[i]);
-      this.coreNames.add(coreName);
+      this.cores.put(coreName, new CoreKeyStores(keyStore,
+          trustStore, passwd));
 
-      return i + 1;
+      return i + 4;
     }
 
     if (args[i].equals("--pool")) {
@@ -188,8 +181,7 @@ public class Options {
     for (int i = 0; i < args.length;) {
       try {
         int ni = parseCommand(args, i);
-        if (ni == i)
-          throw new UsageError("Illegal option: " + args[i]);
+        if (ni == i) throw new UsageError("Illegal option: " + args[i]);
         i = ni;
       } catch (ArrayIndexOutOfBoundsException e) {
         throw new UsageError("Missing argument");
@@ -213,11 +205,11 @@ public class Options {
    * Output a flag and a description of its usage in a nice format.
    * 
    * @param out
-   *          output PrintStream
+   *                output PrintStream
    * @param flag
-   *          the name of the flag.
+   *                the name of the flag.
    * @param description
-   *          description of the flag.
+   *                description of the flag.
    */
   private static void usageForFlag(PrintStream out, String flag, String desc) {
     out.print("  ");
@@ -267,13 +259,13 @@ public class Options {
    * Output a flag and a description of its usage in a nice format.
    * 
    * @param out
-   *          output PrintStream
+   *                output PrintStream
    * @param flag
-   *          the name of the flag.
+   *                the name of the flag.
    * @param description
-   *          description of the flag.
+   *                description of the flag.
    * @param defVal
-   *          default value
+   *                default value
    */
   private static void usageForFlag(PrintStream out, String flag, String desc,
       String defVal) {
@@ -284,13 +276,13 @@ public class Options {
    * Output a flag and a description of its usage in a nice format.
    * 
    * @param out
-   *          output PrintStream
+   *                output PrintStream
    * @param flag
-   *          the name of the flag.
+   *                the name of the flag.
    * @param description
-   *          description of the flag.
+   *                description of the flag.
    * @param defVal
-   *          default value
+   *                default value
    */
   private static void usageForFlag(PrintStream out, String flag, String desc,
       int defVal) {

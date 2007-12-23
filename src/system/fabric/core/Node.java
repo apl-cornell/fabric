@@ -4,10 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
+import java.security.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -15,18 +12,21 @@ import java.util.Stack;
 import javax.net.ssl.*;
 
 import fabric.common.InternalError;
+import fabric.common.Pair;
 import fabric.common.Resources;
+import fabric.core.Options.CoreKeyStores;
 
 // TODO implement dissemination nodes
 public class Node {
   public Options opts;
 
   /**
-   * A map from core host-names to corresponding TransactionManagers.
+   * A map from core host-names to corresponding <code>SSLSocketFactory</code>s
+   * and <code>TransactionManager</code>s.
    */
-  protected Map<String, TransactionManager> cores;
+  protected Map<String, Pair<SSLSocketFactory, TransactionManager>> cores;
 
-  /** 
+  /**
    * The number of additional connections the node can handle.
    */
   private int availConns;
@@ -35,47 +35,47 @@ public class Node {
    * The thread pool.
    */
   private Stack<Worker> pool;
-  
-  /**
-   * A factory for starting SSL on existing sockets.
-   */
-  final SSLSocketFactory sslSocketFactory;
 
   public Node(Options opts) {
     this.opts = opts;
-    this.cores = new HashMap<String, TransactionManager>();
+    this.cores =
+        new HashMap<String, Pair<SSLSocketFactory, TransactionManager>>();
 
-    // Initialize the cores with their object stores.
-    for (String coreName : opts.coreNames) {
+    // Initialize the cores with their object stores and SSL socket factories.
+    for (Map.Entry<String, CoreKeyStores> coreEntry : opts.cores
+        .entrySet()) {
+      String coreName = coreEntry.getKey();
+      CoreKeyStores keyStores = coreEntry.getValue();
+
+      ObjectStore core = loadCore(coreName);
+      SSLSocketFactory sslSocketFactory;
+
+      // Create the SSL socket factory.
       try {
-        ObjectStore core = loadCore(coreName);
-        addCore(coreName, new TransactionManager(core));
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+        kmf.init(keyStores.keyStore, keyStores.password);
+        TrustManager[] tm = null;
+        if (keyStores.trustStore != null) {
+          TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
+          tmf.init(keyStores.trustStore);
+          tm = tmf.getTrustManagers();
+        }
+        sslContext.init(kmf.getKeyManagers(), tm, null);
+        sslSocketFactory = sslContext.getSocketFactory();
+
+        addCore(coreName, sslSocketFactory, new TransactionManager(core));
+      } catch (KeyManagementException e) {
+        throw new InternalError("Unable to initialise key manager factory.", e);
+      } catch (UnrecoverableKeyException e1) {
+        throw new InternalError("Unable to open key store.", e1);
+      } catch (NoSuchAlgorithmException e1) {
+        throw new InternalError(e1);
+      } catch (KeyStoreException e1) {
+        throw new InternalError("Unable to initialise key manager factory.", e1);
       } catch (DuplicateCoreException e) {
         // Should never happen.
       }
-    }
-    
-    // Create the SSL socket factory.
-    try {
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-      kmf.init(opts.keyStore, opts.passwd);
-      TrustManager[] tm = null;
-      if (opts.trustStore != null) {
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
-        tmf.init(opts.trustStore);
-        tm = tmf.getTrustManagers();
-      }
-      sslContext.init(kmf.getKeyManagers(), tm, null);
-      this.sslSocketFactory = sslContext.getSocketFactory();
-    } catch (KeyManagementException e) {
-      throw new InternalError("Unable to initialise key manager factory.", e);
-    } catch (UnrecoverableKeyException e1) {
-      throw new InternalError("Unable to open key store.", e1);
-    } catch (NoSuchAlgorithmException e1) {
-      throw new InternalError(e1);
-    } catch (KeyStoreException e1) {
-      throw new InternalError("Unable to initialise key manager factory.", e1);
     }
   }
 
@@ -94,14 +94,19 @@ public class Node {
    * Adds a new Core to this node.
    * 
    * @param coreName
-   *          the host name for the core being added.
+   *                the host name for the core being added.
+   * @param sslSocketFactory
+   *                the <code>SSLSocketFactory</code> for initiating SSL
+   *                sessions with the core.
    * @param tm
-   *          a <code>TransactionManager</code> to use for the core being added.
+   *                a <code>TransactionManager</code> to use for the core
+   *                being added.
    */
-  public void addCore(String coreName, TransactionManager tm)
-      throws DuplicateCoreException {
+  public void addCore(String coreName, SSLSocketFactory sslSocketFactory,
+      TransactionManager tm) throws DuplicateCoreException {
     if (cores.containsKey(coreName)) throw new DuplicateCoreException();
-    cores.put(coreName, tm);
+    cores.put(coreName, new Pair<SSLSocketFactory, TransactionManager>(
+        sslSocketFactory, tm));
   }
 
   /**
@@ -111,7 +116,15 @@ public class Node {
    * @return null if there is no corresponding binding.
    */
   public TransactionManager getTransactionManager(String coreName) {
-    return cores.get(coreName);
+    return cores.containsKey(coreName) ? cores.get(coreName).second : null;
+  }
+
+  /**
+   * Given the host name for an object core, returns its corresponding
+   * <code>SSLSocketFactory</code>.
+   */
+  public SSLSocketFactory getSSLSocketFactory(String coreName) {
+    return cores.get(coreName).first;
   }
 
   /**

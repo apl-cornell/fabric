@@ -6,8 +6,10 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.Principal;
 import java.util.*;
+import java.util.logging.Logger;
 
 import javax.net.ssl.SSLSocket;
+import javax.security.auth.x500.X500Principal;
 
 import fabric.common.AccessError;
 import fabric.common.FabricException;
@@ -107,17 +109,16 @@ public class RemoteCore implements Core {
     sslSocket.startHandshake();
 
     // Make sure we're talking to the right node.
-    // XXX This is disabled until virtual hosting is supported.
-    // X500Principal peer = (X500Principal)
-    // sslSocket.getSession().getPeerPrincipal();
-    // if (!peer.equals(corePrincipal)) {
-    // Logger.getLogger(this.getClass().getName()).info(
-    // "Rejecting connection to " + host + ": got principal " + peer
-    // + " when we expected " + corePrincipal);
-    // socket.close();
-    // throw new IOException();
-    //     }
-    
+    X500Principal peer =
+        (X500Principal) sslSocket.getSession().getPeerPrincipal();
+    if (!peer.equals(corePrincipal)) {
+      Logger.getLogger(this.getClass().getName()).info(
+          "Rejecting connection to " + host + ": got principal " + peer
+              + " when we expected " + corePrincipal);
+      socket.close();
+      throw new IOException();
+    }
+
     out = new ObjectOutputStream(sslSocket.getOutputStream());
     out.flush();
     out.reset();

@@ -14,13 +14,13 @@ public class Main {
     }
     
     Client client = fabric.client.Client.getClient();
-    Map root = (Map) client.getCore("1").getRoot();
+    Map root = (Map) client.getCore("core1").getRoot();
     Random random = new Random();
     Tree tree;
     if (args[0].equals("create")) {
       atomic {
-        Core treeCore = client.getCore("0");
-        Core nodeCore = client.getCore("1");
+        Core treeCore = client.getCore("core0");
+        Core nodeCore = client.getCore("core1");
         tree = new Tree@treeCore(nodeCore);
         root.put("theTree", tree);
         for (int i = 0; i < 500; i++) {

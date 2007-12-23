@@ -5,7 +5,7 @@ import fabric.util.HashMap;
 
 public class Naming03 {
   public static void main(String[] args) {
-    Core core = Client.getClient().getCore("0");
+    Core core = Client.getClient().getCore("core0");
     HashMap root = (HashMap) core.getRoot();
     System.out.println(root.get("regression/Naming02").getClass());
   }

@@ -4,7 +4,7 @@ import fabric.client.*;
 
 public class Array04 {
   public static void main(String[] args) {
-    Core core = Client.getClient().getCore("0");
+    Core core = Client.getClient().getCore("core0");
     Object[] foo = new Object[]@core {};
     Object[] bar = new Object[][]@core {foo, foo};
     Object[][] baz = (Object[][]) bar;
