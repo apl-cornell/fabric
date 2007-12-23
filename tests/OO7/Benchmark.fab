@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Benchmark.fab,v 1.7 2007-12-20 20:41:26 mdgeorge Exp $
+// $Id: Benchmark.fab,v 1.8 2007-12-23 06:29:08 jed Exp $
 
 package OO7;
 
@@ -82,8 +82,7 @@ public class Benchmark {
   public Benchmark(int scale, int numConnPerAtomic) throws Exception {
     this.scale = scale;
     this.numConnPerAtomic = numConnPerAtomic;
-    Core core = Client.getClient().getCore("0");
-    this.atomicParts = new HashMap@core();
+    this.atomicParts = new HashMap();
     this.module = createModule();
   }
 
