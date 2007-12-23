@@ -135,17 +135,10 @@ public class Node {
       // Accept a connection and give it to a worker thread.
       SSLSocket client = (SSLSocket) server.accept();
       Worker worker = getWorker();
-      try {
-        // XXX not setting timeout
-        // client.setSoTimeout(opts.timeout * 1000);
-        client.startHandshake();
-        worker.handle(client);
-      } catch (IOException e) {
-        // Something messed up with the client socket. Abort handling the
-        // client.
-        e.printStackTrace();
-        workerDone(worker);
-      }
+
+      // XXX not setting timeout
+      // client.setSoTimeout(opts.timeout * 1000);
+      worker.handle(client);
     }
   }
 

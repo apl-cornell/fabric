@@ -45,16 +45,9 @@ public class Worker extends Thread {
    * Initialises this worker to handle the given client and signals this thread
    * to start processing the client's requests. This is invoked by a
    * <code>Node</code> to hand off a client to this worker.
-   * 
-   * @throws IOException
-   *                 if extracting the I/O streams from the client socket fails.
    */
-  public synchronized void handle(SSLSocket socket) throws IOException {
+  public synchronized void handle(SSLSocket socket) {
     this.socket = socket;
-    this.in = new ObjectInputStream(socket.getInputStream());
-    this.out = new ObjectOutputStream(socket.getOutputStream());
-    this.out.flush();
-    this.client = socket.getSession().getPeerPrincipal();
 
     // Get the worker thread running.
     notify();
@@ -77,6 +70,13 @@ public class Worker extends Thread {
       }
 
       try {
+        // Initiate the SSL handshake and initialize the fields.
+        socket.startHandshake();
+        this.out = new ObjectOutputStream(socket.getOutputStream());
+        this.out.flush();
+        this.in = new ObjectInputStream(socket.getInputStream());
+        this.client = socket.getSession().getPeerPrincipal();
+        
         run_();
       } catch (SocketException e) {
         String msg = e.getMessage();
