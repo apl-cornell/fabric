@@ -1,12 +1,12 @@
 package fabric.client;
 
-import fabric.common.FabricException;
+import fabric.common.FabricRuntimeException;
 
 /**
  * An <code>UnreachableCoreException</code> is used to indicate that an
  * attempt to connect to a core has failed.
  */
-public class UnreachableCoreException extends FabricException {
+public class UnreachableCoreException extends FabricRuntimeException {
   private Core core;
 
   public UnreachableCoreException(Core core) {

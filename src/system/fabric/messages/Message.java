@@ -11,10 +11,8 @@ import java.util.List;
 import fabric.client.Client;
 import fabric.client.RemoteCore;
 import fabric.client.UnreachableCoreException;
-import fabric.common.FabricException;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.Pair;
-import fabric.common.ProtocolError;
 import fabric.core.Worker;
 
 public abstract class Message<R extends Message.Response> implements
@@ -27,12 +25,12 @@ public abstract class Message<R extends Message.Response> implements
    * Sends this message to the given core.
    * 
    * @param message
-   *          The message to send.
+   *                The message to send.
    * @return The reply from the core.
    * @throws FabricException
-   *           if an error occurs at the core while handling the message.
+   *                 if an error occurs at the core while handling the message.
    * @throws UnreachableCoreException
-   *           if unable to connect to the core.
+   *                 if unable to connect to the core.
    */
   protected R send(RemoteCore core) throws FabricException,
       UnreachableCoreException {
@@ -47,7 +45,8 @@ public abstract class Message<R extends Message.Response> implements
     int hostIdx = 0;
 
     // These will be filled in with real values if needed.
-    List<Pair<InetSocketAddress, Principal>> hosts = null;
+    List<InetSocketAddress> hosts = null;
+    Principal corePrincipal = null;
     int numHosts = 0;
     int startHostIdx = 0;
 
@@ -55,16 +54,18 @@ public abstract class Message<R extends Message.Response> implements
       try {
         if (needToConnect) {
           if (hosts == null) {
+            Pair<List<InetSocketAddress>, Principal> entry =
+                client.nameService.lookupCore(core);
+            hosts = entry.first;
+            corePrincipal = entry.second;
 
-            hosts = client.nameService.lookupCore(core);
             numHosts = hosts.size();
             startHostIdx = Client.RAND.nextInt(numHosts);
           }
 
           // Attempt to establish a connection.
           int hostNum = (startHostIdx + hostIdx) % numHosts;
-          Pair<InetSocketAddress, Principal> entry = hosts.get(hostNum);
-          core.connect(client, core, entry.first, entry.second);
+          core.connect(client, core, hosts.get(hostNum), corePrincipal);
         } else {
           // Set the flag for the next loop iteration in case we fail.
           needToConnect = true;
@@ -72,6 +73,15 @@ public abstract class Message<R extends Message.Response> implements
 
         // Attempt to send our message and obtain a reply.
         return send(core.objectInputStream(), core.objectOutputStream());
+      } catch (NoSuchCoreError e) {
+        // Connected to a node that doesn't host the core we're interested in.
+        // Increment loop counter variables.
+        hostIdx++;
+        if (hostIdx == numHosts) {
+          hostIdx = 0;
+          if (retries >= 0) retry++;
+        }
+        continue;
       } catch (IOException e) {
         // Retry.
         if (hosts == null) {
@@ -97,14 +107,16 @@ public abstract class Message<R extends Message.Response> implements
    * Sends this message to a core node. Used only by the client.
    * 
    * @param in
-   *          the input stream for sending objects to the core.
+   *                the input stream for sending objects to the core.
    * @param out
-   *          the output stream on which to obtain response objects.
+   *                the output stream on which to obtain response objects.
    * @return the response from the core.
    * @throws FabricException
-   *           if an error occurred at the core while handling this request.
+   *                 if an error occurred at the core while handling this
+   *                 request.
    * @throws IOException
-   *           if an I/O error occurs during serialization/deserialization.
+   *                 if an I/O error occurs during
+   *                 serialization/deserialization.
    */
   protected R send(ObjectInputStream in, ObjectOutputStream out)
       throws FabricException, IOException {
@@ -132,14 +144,15 @@ public abstract class Message<R extends Message.Response> implements
    * provided OutputStream. Used only by the core.
    * 
    * @param in
-   *          The input stream to read the incoming message from.
+   *                The input stream to read the incoming message from.
    * @param out
-   *          The output stream to write the result to.
+   *                The output stream to write the result to.
    * @param handler
-   *          The worker that will handle the message and generate the response
+   *                The worker that will handle the message and generate the
+   *                response
    * @throws IOException
-   *           If a malformed message is sent, or in the case of a failure in
-   *           the i/o streams provided.
+   *                 If a malformed message is sent, or in the case of a failure
+   *                 in the i/o streams provided.
    * @throws ClassNotFoundException
    */
   public static void receive(ObjectInputStream in, ObjectOutputStream out,

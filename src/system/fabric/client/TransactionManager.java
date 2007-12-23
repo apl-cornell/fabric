@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import fabric.common.Concurrent2KeyHashMap;
-import fabric.common.FabricException;
+import fabric.common.FabricRuntimeException;
 import fabric.common.Pair;
 import fabric.lang.Object.$Impl;
 import fabric.lang.Object.$Proxy;
@@ -74,7 +74,8 @@ public final class TransactionManager {
     }
   }
 
-  public static final class VersionConflictException extends FabricException {
+  public static final class VersionConflictException extends
+      FabricRuntimeException {
     public $Proxy reference;
 
     public VersionConflictException($Impl obj) {

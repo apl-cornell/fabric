@@ -2,6 +2,8 @@ package fabric.core;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -11,7 +13,6 @@ import java.util.Map;
 import java.util.Stack;
 
 import javax.net.ssl.*;
-
 
 import fabric.common.InternalError;
 import fabric.common.Resources;
@@ -25,24 +26,56 @@ public class Node {
    */
   protected Map<String, TransactionManager> cores;
 
-  /** The number of additional connections the node can handle. */
+  /** 
+   * The number of additional connections the node can handle.
+   */
   private int availConns;
 
-  /** The thread pool. */
+  /**
+   * The thread pool.
+   */
   private Stack<Worker> pool;
+  
+  /**
+   * A factory for starting SSL on existing sockets.
+   */
+  final SSLSocketFactory sslSocketFactory;
 
   public Node(Options opts) {
     this.opts = opts;
     this.cores = new HashMap<String, TransactionManager>();
 
+    // Initialize the cores with their object stores.
     for (String coreName : opts.coreNames) {
       try {
         ObjectStore core = loadCore(coreName);
-        // XXX using an empty memory store for each core
         addCore(coreName, new TransactionManager(core));
       } catch (DuplicateCoreException e) {
         // Should never happen.
       }
+    }
+    
+    // Create the SSL socket factory.
+    try {
+      SSLContext sslContext = SSLContext.getInstance("TLS");
+      KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+      kmf.init(opts.keyStore, opts.passwd);
+      TrustManager[] tm = null;
+      if (opts.trustStore != null) {
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
+        tmf.init(opts.trustStore);
+        tm = tmf.getTrustManagers();
+      }
+      sslContext.init(kmf.getKeyManagers(), tm, null);
+      this.sslSocketFactory = sslContext.getSocketFactory();
+    } catch (KeyManagementException e) {
+      throw new InternalError("Unable to initialise key manager factory.", e);
+    } catch (UnrecoverableKeyException e1) {
+      throw new InternalError("Unable to open key store.", e1);
+    } catch (NoSuchAlgorithmException e1) {
+      throw new InternalError(e1);
+    } catch (KeyStoreException e1) {
+      throw new InternalError("Unable to initialise key manager factory.", e1);
     }
   }
 
@@ -53,7 +86,6 @@ public class Node {
       ObjectStore os = new MemoryStore(in);
       return os;
     } catch (Exception exc) {
-      // continue
       throw new InternalError("could not initialize core", exc);
     }
   }
@@ -86,37 +118,15 @@ public class Node {
    * The main execution body of a core node.
    */
   public void start() throws IOException {
-    SSLServerSocket server;
-    try {
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-      kmf.init(opts.keyStore, opts.passwd);
-      TrustManager[] tm = null;
-      if (opts.trustStore != null) {
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
-        tmf.init(opts.trustStore);
-        tm = tmf.getTrustManagers();
-      }
-      sslContext.init(kmf.getKeyManagers(), tm, null);
-      SSLServerSocketFactory ssf = sslContext.getServerSocketFactory();
-      server = (SSLServerSocket) ssf.createServerSocket(opts.port);
-      server.setNeedClientAuth(true);
-    } catch (KeyManagementException e) {
-      throw new InternalError("Unable to initialise key manager factory.", e);
-    } catch (UnrecoverableKeyException e1) {
-      throw new InternalError("Unable to open key store.", e1);
-    } catch (NoSuchAlgorithmException e1) {
-      throw new InternalError(e1);
-    } catch (KeyStoreException e1) {
-      throw new InternalError("Unable to initialise key manager factory.", e1);
-    }
-    availConns = opts.maxConnect;
-
     // Set up the thread pool.
+    availConns = opts.maxConnect;
     pool = new Stack<Worker>();
     for (int i = 0; i < opts.threadPool; i++) {
       pool.push(new Worker(this));
     }
+
+    // Start listening.
+    ServerSocket server = new ServerSocket(opts.port);
 
     // The main server loop.
     while (true) {
@@ -133,7 +143,7 @@ public class Node {
       }
 
       // Accept a connection and give it to a worker thread.
-      SSLSocket client = (SSLSocket) server.accept();
+      Socket client = server.accept();
       Worker worker = getWorker();
 
       // XXX not setting timeout

@@ -1,9 +1,6 @@
 package fabric.client;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectStreamException;
+import java.io.*;
 import java.lang.ref.SoftReference;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -11,11 +8,10 @@ import java.security.Principal;
 import java.util.*;
 
 import javax.net.ssl.SSLSocket;
-import javax.security.auth.x500.X500Principal;
 
 import fabric.common.AccessError;
 import fabric.common.FabricException;
-import fabric.common.InternalError;
+import fabric.common.NoSuchCoreError;
 import fabric.common.Surrogate;
 import fabric.core.SerializedObject;
 import fabric.lang.Object;
@@ -75,7 +71,7 @@ public class RemoteCore implements Core {
 
   /**
    * Establishes a connection with a core node at a given host. A helper for
-   * <code>Message.send(Core)</code>. XXX Is this in the right place?
+   * <code>Message.send(Core)</code>.
    * 
    * @param client
    *                The Client instance.
@@ -89,33 +85,45 @@ public class RemoteCore implements Core {
    *                 if there was an error.
    */
   public void connect(Client client, Core core, InetSocketAddress host,
-      Principal corePrincipal) throws IOException {
-    SSLSocket socket = (SSLSocket) client.sslSocketFactory.createSocket();
+      Principal corePrincipal) throws NoSuchCoreError, IOException {
+    Socket socket = new Socket();
     socket.setTcpNoDelay(true);
     socket.setKeepAlive(true);
+
+    // Connect to the core node and identify the core we're interested in.
     socket.connect(host, client.timeout);
-    socket.startHandshake();
+    DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
+    dataOut.writeUTF(core.name());
+    dataOut.flush();
+
+    // Determine whether the core exists at the node.
+    if (socket.getInputStream().read() == 0) throw new NoSuchCoreError();
+
+    // Start encrypting.
+    SSLSocket sslSocket =
+        (SSLSocket) client.sslSocketFactory.createSocket(socket, core.name(),
+            host.getPort(), true);
+    sslSocket.setUseClientMode(true);
+    sslSocket.startHandshake();
 
     // Make sure we're talking to the right node.
-    X500Principal peer = (X500Principal) socket.getSession().getPeerPrincipal();
-    if (!peer.equals(corePrincipal)) {
-      socket.close();
-      throw new IOException();
-    }
-    out = new ObjectOutputStream(socket.getOutputStream());
+    // XXX This is disabled until virtual hosting is supported.
+    // X500Principal peer = (X500Principal)
+    // sslSocket.getSession().getPeerPrincipal();
+    // if (!peer.equals(corePrincipal)) {
+    // Logger.getLogger(this.getClass().getName()).info(
+    // "Rejecting connection to " + host + ": got principal " + peer
+    // + " when we expected " + corePrincipal);
+    // socket.close();
+    // throw new IOException();
+    //     }
+    
+    out = new ObjectOutputStream(sslSocket.getOutputStream());
     out.flush();
-    in = new ObjectInputStream(socket.getInputStream());
-
-    try {
-      new ConnectMessage(core.name()).send(in, out);
-    } catch (FabricException e) {
-      // Shouldn't get an exception from the core.
-      throw new InternalError(e);
-    }
-
     out.reset();
+    in = new ObjectInputStream(sslSocket.getInputStream());
 
-    conn = socket;
+    conn = sslSocket;
   }
 
   public boolean isConnected() {
@@ -261,7 +269,7 @@ public class RemoteCore implements Core {
     return "Core@" + name;
   }
 
-  public Object getRoot() throws UnreachableCoreException {
+  public Object getRoot() {
     return new Object.$Proxy(this, 0);
   }
 

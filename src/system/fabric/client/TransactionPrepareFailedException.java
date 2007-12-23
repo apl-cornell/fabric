@@ -3,9 +3,10 @@ package fabric.client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import fabric.common.FabricException;
 
-public class TransactionPrepareFailedException extends FabricException {
+import fabric.common.FabricRuntimeException;
+
+public class TransactionPrepareFailedException extends FabricRuntimeException {
   public final List<String> messages;
 
   public TransactionPrepareFailedException(Map<Core, TransactionPrepareFailedException> causes) {

@@ -4,8 +4,7 @@ package fabric.common;
  * A <code>FabricException</code> represents an error that may be communicated
  * by the core to a client.
  */
-// FIXME should not be runtime exception
-public class FabricException extends RuntimeException {
+public class FabricException extends Exception {
   public FabricException() {
   }
 

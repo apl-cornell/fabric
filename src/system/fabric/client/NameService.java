@@ -8,17 +8,36 @@ import java.security.Principal;
 import javax.security.auth.x500.X500Principal;
 
 /**
- * This class represents a name service that binds core IDs to core node
- * addresses.
+ * This class represents a name service that maps core hostnames to socket
+ * addresses and X500 principals.
  */
 public class NameService {
   /**
    * Returns a list of core node addresses for the given core.
    */
-  public List<Pair<InetSocketAddress, Principal>> lookupCore(RemoteCore core) {
-    // TODO implement a real name service.
-    return Collections.singletonList(new Pair<InetSocketAddress, Principal>(
-        new InetSocketAddress("localhost", 3372), new X500Principal(
-            "cn=core0,ou=Fabric,o=Cornell University,l=Ithaca,st=NY,c=US")));
+  public Pair<List<InetSocketAddress>, Principal> lookupCore(RemoteCore core)
+      throws UnknownHostException {
+    System.out.println(core.name);
+    if (core.name.equals("0")) Thread.dumpStack();
+    // Look up the core's hostname in DNS.
+    InetAddress[] ipAddrs;
+    try {
+      ipAddrs = InetAddress.getAllByName(core.name);
+    } catch (UnknownHostException e) {
+      // XXX If hostname not found, use localhost.
+      ipAddrs = new InetAddress[] { InetAddress.getLocalHost() };
+    }
+
+    List<InetSocketAddress> socketAddrs =
+        new ArrayList<InetSocketAddress>(ipAddrs.length);
+    for (InetAddress ip : ipAddrs) {
+      // XXX Obtain port number from DNS too?
+      socketAddrs.add(new InetSocketAddress(ip, 3372));
+    }
+
+    // XXX Need to obtain X500 principal from DNS too.
+    return new Pair<List<InetSocketAddress>, Principal>(socketAddrs,
+        new X500Principal("cn=" + core.name
+            + ",ou=Fabric,o=Cornell University,l=Ithaca,st=NY,c=US"));
   }
 }

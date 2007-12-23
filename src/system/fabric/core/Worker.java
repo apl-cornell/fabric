@@ -1,9 +1,7 @@
 package fabric.core;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
+import java.net.Socket;
 import java.net.SocketException;
 import java.security.Principal;
 import java.util.HashMap;
@@ -14,8 +12,6 @@ import javax.net.ssl.SSLSocket;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.AccessError;
-import fabric.common.NoSuchCoreError;
-import fabric.common.ProtocolError;
 import fabric.messages.*;
 
 public class Worker extends Thread {
@@ -29,7 +25,8 @@ public class Worker extends Thread {
   private TransactionManager transactionManager;
 
   // The socket and associated I/O streams for communicating with the client.
-  private SSLSocket socket;
+  private Socket socket;
+  private SSLSocket sslSocket;
   private ObjectInputStream in;
   private ObjectOutputStream out;
 
@@ -46,7 +43,7 @@ public class Worker extends Thread {
    * to start processing the client's requests. This is invoked by a
    * <code>Node</code> to hand off a client to this worker.
    */
-  public synchronized void handle(SSLSocket socket) {
+  public synchronized void handle(Socket socket) {
     this.socket = socket;
 
     // Get the worker thread running.
@@ -70,14 +67,38 @@ public class Worker extends Thread {
       }
 
       try {
-        // Initiate the SSL handshake and initialize the fields.
-        socket.startHandshake();
-        this.out = new ObjectOutputStream(socket.getOutputStream());
-        this.out.flush();
-        this.in = new ObjectInputStream(socket.getInputStream());
-        this.client = socket.getSession().getPeerPrincipal();
-        
-        run_();
+        // Get the name of the core that the client is talking to and obtain the
+        // corresponding object store.
+        DataInput dataIn = new DataInputStream(socket.getInputStream());
+        OutputStream out = socket.getOutputStream();
+        String coreName = dataIn.readUTF();
+        this.transactionManager = node.getTransactionManager(coreName);
+
+        if (this.transactionManager != null) {
+          // Indicate that the core exists.
+          out.write(1);
+          out.flush();
+
+          // Initiate the SSL handshake and initialize the fields.
+          synchronized (node.sslSocketFactory) {
+            this.sslSocket =
+                (SSLSocket) node.sslSocketFactory.createSocket(socket, null, 0,
+                    true);
+          }
+          this.sslSocket.setUseClientMode(false);
+          this.sslSocket.setNeedClientAuth(true);
+          this.sslSocket.startHandshake();
+          this.out = new ObjectOutputStream(sslSocket.getOutputStream());
+          this.out.flush();
+          this.in = new ObjectInputStream(sslSocket.getInputStream());
+          this.client = sslSocket.getSession().getPeerPrincipal();
+
+          run_();
+        } else {
+          // Indicate that the core doesn't exist here.
+          out.write(0);
+          out.flush();
+        }
       } catch (SocketException e) {
         String msg = e.getMessage();
         if ("Connection reset".equals(msg)) {
@@ -92,12 +113,18 @@ public class Worker extends Thread {
         e.printStackTrace();
       }
 
+      // Try to close our connection gracefully.
       try {
-        out.flush();
-        socket.close();
+        if (out != null) out.flush();
+
+        if (sslSocket != null)
+          sslSocket.close();
+        else socket.close();
       } catch (IOException e) {
         e.printStackTrace();
       }
+
+      // Signal that this worker is now available.
       node.workerDone(this);
     }
   }
@@ -119,7 +146,7 @@ public class Worker extends Thread {
   protected void cleanup() {
     in = null;
     out = null;
-    socket = null;
+    sslSocket = null;
     transactionManager = null;
   }
 
@@ -168,23 +195,5 @@ public class Worker extends Thread {
     }
 
     throw new AccessError();
-  }
-
-  public ConnectMessage.Response handle(ConnectMessage message)
-      throws ProtocolError, NoSuchCoreError {
-    // Client identifies the 48-bit ID for core it's interested in. Get the
-    // corresponding object store.
-
-    if (this.transactionManager != null) {
-      throw new ProtocolError("Already connected");
-    }
-
-    this.transactionManager = node.getTransactionManager(message.coreName);
-
-    // Validate the information given thus far.
-    if (this.transactionManager == null) throw new NoSuchCoreError();
-
-    // Everything looks good. Tell the client that we're ready to serve.
-    return new ConnectMessage.Response();
   }
 }
