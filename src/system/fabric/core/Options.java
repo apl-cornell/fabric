@@ -130,7 +130,7 @@ public class Options {
       } catch (CertificateException e) {
         throw new InternalError("Unable to open key or trust store.", e);
       } catch (FileNotFoundException e) {
-        throw new UsageError("File not found: " + args[i]);
+        throw new UsageError("File not found: " + e.getMessage());
       } catch (IOException e) {
         if (e.getCause() instanceof UnrecoverableKeyException)
           throw new UsageError(
