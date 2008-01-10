@@ -23,12 +23,12 @@ public class NameService {
       ipAddrs = InetAddress.getAllByName(core.name);
     } catch (UnknownHostException e) {
       // XXX If hostname not found, use localhost.
-      ipAddrs = new InetAddress[] { InetAddress.getLocalHost() };
+      ipAddrs = InetAddress.getAllByName("localhost");
     }
 
     List<InetSocketAddress> socketAddrs =
         new ArrayList<InetSocketAddress>(ipAddrs.length);
-    for (InetAddress ip : ipAddrs) {
+    for (InetAddress ip : ipAddrs) {System.out.println(ip);
       // XXX Obtain port number from DNS too?
       socketAddrs.add(new InetSocketAddress(ip, 3372));
     }
