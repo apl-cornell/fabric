@@ -28,7 +28,7 @@ public class NameService {
 
     List<InetSocketAddress> socketAddrs =
         new ArrayList<InetSocketAddress>(ipAddrs.length);
-    for (InetAddress ip : ipAddrs) {System.out.println(ip);
+    for (InetAddress ip : ipAddrs) {
       // XXX Obtain port number from DNS too?
       socketAddrs.add(new InetSocketAddress(ip, 3372));
     }
