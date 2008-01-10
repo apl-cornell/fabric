@@ -189,7 +189,7 @@ public class Worker extends Thread {
     SerializedObject obj = transactionManager.read(client, msg.onum);
     if (obj != null) {
       // Traverse object graph and add more objects to the object group.
-      for (long onum : obj.relatedOnums) {
+      for (long onum : obj.intracoreRefs) {
         SerializedObject related = transactionManager.read(client, onum);
         if (related != null) group.put(onum, related);
       }

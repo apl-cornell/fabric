@@ -240,12 +240,12 @@ public class TransactionManager {
     Iterator<RefTypeEnum> refTypeIter =
         new ArrayList<RefTypeEnum>(obj.refTypes).iterator();
     Iterator<Long> relatedOnumIter =
-        new ArrayList<Long>(obj.relatedOnums).iterator();
+        new ArrayList<Long>(obj.intracoreRefs).iterator();
     Iterator<Pair<String, Long>> intercoreRefIter =
         obj.intercoreRefs.iterator();
 
     obj.refTypes.clear();
-    obj.relatedOnums.clear();
+    obj.intracoreRefs.clear();
     obj.intercoreRefs = null;
     while (refTypeIter.hasNext()) {
       RefTypeEnum refType = refTypeIter.next();
@@ -256,13 +256,13 @@ public class TransactionManager {
         break;
 
       case ONUM:
-        obj.relatedOnums.add(relatedOnumIter.next());
+        obj.intracoreRefs.add(relatedOnumIter.next());
         obj.refTypes.add(refType);
         break;
 
       case REMOTE:
         obj.refTypes.add(RefTypeEnum.ONUM);
-        obj.relatedOnums.add(createSurrogate(transaction, intercoreRefIter
+        obj.intracoreRefs.add(createSurrogate(transaction, intercoreRefIter
             .next()));
         break;
       }

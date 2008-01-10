@@ -50,7 +50,7 @@ public final class SerializedObject implements Serializable {
   /**
    * The onums representing the intra-core references in this object.
    */
-  final List<Long> relatedOnums;
+  final List<Long> intracoreRefs;
 
   /**
    * Global object names representing the inter-core references in this object.
@@ -72,12 +72,12 @@ public final class SerializedObject implements Serializable {
 
     ByteArrayOutputStream serializedData = new ByteArrayOutputStream();
     this.refTypes = new ArrayList<RefTypeEnum>();
-    this.relatedOnums = new ArrayList<Long>();
+    this.intracoreRefs = new ArrayList<Long>();
     this.intercoreRefs = new ArrayList<Pair<String, Long>>();
 
     try {
       ObjectOutputStream oos = new ObjectOutputStream(serializedData);
-      obj.$serialize(oos, this.refTypes, this.relatedOnums, this.intercoreRefs);
+      obj.$serialize(oos, this.refTypes, this.intracoreRefs, this.intercoreRefs);
       oos.flush();
     } catch (IOException e) {
       throw new InternalError("Unexpected I/O error.", e);
@@ -112,7 +112,7 @@ public final class SerializedObject implements Serializable {
     
     this.serializedData = serializedData.toByteArray();
     this.refTypes = Collections.emptyList();
-    this.relatedOnums = Collections.emptyList();
+    this.intracoreRefs = Collections.emptyList();
     this.intercoreRefs = Collections.emptyList();
   }
 
@@ -125,7 +125,7 @@ public final class SerializedObject implements Serializable {
   }
 
   public List<Long> getRelated() {
-    return relatedOnums;
+    return intracoreRefs;
   }
 
   public int getVersion() {
@@ -157,7 +157,7 @@ public final class SerializedObject implements Serializable {
           Policy.class, ObjectInput.class, Iterator.class, Iterator.class)
           .newInstance(core, onum, version, policy,
               new ObjectInputStream(new ByteArrayInputStream(serializedData)),
-              refTypes.iterator(), relatedOnums.iterator());
+              refTypes.iterator(), intracoreRefs.iterator());
     } catch (Exception e) {
       throw new InternalError(e);
     }
