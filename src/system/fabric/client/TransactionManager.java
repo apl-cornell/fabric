@@ -10,6 +10,10 @@ import fabric.lang.Object.$Impl;
 import fabric.lang.Object.$Proxy;
 
 public final class TransactionManager {
+  /**
+   * Represents a transaction log, recording the objects that have been created,
+   * read, and written during a single transaction.
+   */
   private static final class Log {
     /**
      * Maps OIDs to objects that have been created.
