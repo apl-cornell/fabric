@@ -115,13 +115,12 @@ public class RemoteCore implements Core {
       Logger.getLogger(this.getClass().getName()).info(
           "Rejecting connection to " + host + ": got principal " + peer
               + " when we expected " + corePrincipal);
-      socket.close();
+      sslSocket.close();
       throw new IOException();
     }
 
     out = new ObjectOutputStream(sslSocket.getOutputStream());
     out.flush();
-    out.reset();
     in = new ObjectInputStream(sslSocket.getInputStream());
 
     conn = sslSocket;
