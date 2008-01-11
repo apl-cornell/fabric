@@ -29,6 +29,9 @@
   <!-- Library directory -->
   <property name="lib" location="${basedir}/lib"/>
 
+  <!-- Var directory -->
+  <property name="var" location="${basedir}/var"/>
+
   <!-- Jar files -->
   <property name="base.jar" location="${lib}/${name}.jar" />
   <property name="runtime.jar" location="${lib}/${name}-rt.jar" />
@@ -36,6 +39,9 @@
 
   <!-- loom executable -->
   <property name="loom" location="${bin}/loom" />
+
+  <!-- tailor executable -->
+  <property name="tailor" location="${bin}/tailor" />
 
   <path id="standard.classpath">
     <pathelement location="${classes}"/>
@@ -134,7 +140,7 @@ TOP='${basedir}'
 
   <!-- Compiles Fabric -->
   <target name="all"
-    depends="bin,fabric-system,fabric-compiler,fabric-signatures,tests"
+    depends="bin,fabric-system,fabric-compiler,fabric-signatures,var,tests"
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
@@ -146,6 +152,7 @@ TOP='${basedir}'
     <delete dir="${runtime.classes}"/>
     <delete dir="${signatures.classes}"/>
     <delete dir="${dist}"/>
+    <delete dir="${var}"/>
     <delete>
       <fileset dir="${lib}" includes="${name}*.jar"/>
     </delete>
@@ -281,6 +288,26 @@ TOP='${basedir}'
       <fileset dir="${basedir}"
 	  includes="src/runtime/fabric/util/HashMap.fab,src/runtime/fabric/util/LinkedList.fab" />
     </apply>
+  </target>
+
+  <!-- Creates the contents of var -->
+  <target name="var" depends="fabric-system">
+    <mkdir dir="${var}" />
+    <antcall target="genmap">
+      <param name="core" value="core0"/>
+    </antcall>
+    <antcall target="genmap">
+      <param name="core" value="core1"/>
+    </antcall>
+  </target>
+
+  <target name="genmap">
+    <exec executable="sh"
+	failonerror="true"
+	dir="${basedir}">
+      <arg value="-c" />
+      <arg value="${tailor} fabric.core.GenMap ${core} &gt; ${var}/${core}" />
+    </exec>
   </target>
 
   <!-- Compiles the Fabric test programs -->
