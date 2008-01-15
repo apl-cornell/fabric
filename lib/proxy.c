@@ -22,6 +22,9 @@ void die();
 // Counters from client's point of view.
 int sent, received;
 
+FILE* client_log;
+FILE* server_log;
+
 int main(int argc, char** argv) {
   int client_sock, dest_sock, listen_sock, local_port, dest_port;
   char* dest_addr;
@@ -30,8 +33,14 @@ int main(int argc, char** argv) {
   int addr_len;
 
   // Sanity-check arguments.
-  if (argc != 4) {
-    fprintf(stderr, "Usage: %s <listen-port> <dest-addr> <dest-port>\n");
+  if (argc != 4 && argc != 5) {
+    fprintf(stderr, "Usage: %s <listen-port> <dest-addr> <dest-port> "
+      "[logfile]\n", argv[0]);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "  If logfile is provided, client-generated data\n");
+    fprintf(stderr, "  will be logged to logfile.client and server-generated "
+      "data\n");
+    fprintf(stderr, "  will be logged to logfile.server.\n");
     die();
   }
 
@@ -39,6 +48,17 @@ int main(int argc, char** argv) {
   local_port = atoi(argv[1]);
   dest_addr = argv[2];
   dest_port = atoi(argv[3]);
+
+  if (argc == 5) {
+    char* tmp = (char*) malloc((8+strlen(argv[4])) * sizeof(char));
+    sprintf(tmp, "%s.client", argv[4]);
+    client_log = fopen(tmp, "w");
+    sprintf(tmp, "%s.server", argv[4]);
+    server_log = fopen(tmp, "w");
+    free(tmp);
+  } else {
+    client_log = server_log = NULL;
+  }
 
   // Create and bind a socket for listening.
   listen_sock = socket(PF_INET, SOCK_STREAM, 0);
@@ -127,7 +147,7 @@ int connect_to(char* addr, short port) {
   return sock;
 }
 
-void transfer(int src, int dst, int* counter);
+void transfer(int src, int dst, int* counter, FILE** log);
 
 /**
  * Shuttles data between two given sockets.
@@ -148,8 +168,10 @@ void tunnel(int client, int server) {
     }
 
     if (retval > 0) {
-      if (FD_ISSET(client, &fds)) transfer(client, server, &sent);
-      if (FD_ISSET(server, &fds)) transfer(server, client, &received);
+      if (FD_ISSET(client, &fds))
+	transfer(client, server, &sent, &client_log);
+      if (FD_ISSET(server, &fds))
+	transfer(server, client, &received, &server_log);
     }
   }
 }
@@ -157,7 +179,7 @@ void tunnel(int client, int server) {
 /**
  * Reads from src socket, writes to dst socket, updates given counter.
  */
-void transfer(int src, int dst, int* counter) {
+void transfer(int src, int dst, int* counter, FILE** log) {
   char buf[1024];
   int size = read(src, buf, 1024);
   int written = 0;
@@ -168,6 +190,29 @@ void transfer(int src, int dst, int* counter) {
   }
 
   *counter = *counter + size;
+  if (*log != NULL) {
+    while (written < size) {
+      int retval = fwrite(buf+written, 1, size-written, *log);
+      if (retval == -1) {
+	fprintf(stderr, "Error logging data: ");
+	switch (errno) {
+	case EBADF: fprintf(stderr, "EBADF\n"); break;
+	case EFAULT: fprintf(stderr, "EFAULT\n"); break;
+	case EFBIG: fprintf(stderr, "EFBIG\n"); break;
+	case EINTR: fprintf(stderr, "EINTR\n"); break;
+	case EINVAL: fprintf(stderr, "EINVAL\n"); break;
+	case EIO: fprintf(stderr, "EIO\n"); break;
+	case ENOSPC: fprintf(stderr, "ENOSPC\n"); break;
+	case EPIPE: fprintf(stderr, "EPIPE\n"); break;
+	default: fprintf(stderr, "%d\n", errno);
+	}
+	break;
+      }
+
+      written += retval;
+    }
+    written = 0;
+  }
 
   while (written < size) {
     int retval = write(dst, buf+written, size-written);
@@ -183,6 +228,8 @@ void transfer(int src, int dst, int* counter) {
 void die() {
   printf("Client sent %d bytes.\n", sent);
   printf("Client received %d bytes.\n", received);
+  if (client_log != NULL) fclose(client_log);
+  if (server_log != NULL) fclose(server_log);
   exit(-1);
 }
 
