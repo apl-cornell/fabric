@@ -27,7 +27,6 @@ public class Worker extends Thread {
 
   // The socket and associated I/O streams for communicating with the client.
   private Socket socket;
-  private SSLSocket sslSocket;
   private ObjectInputStream in;
   private ObjectOutputStream out;
 
@@ -67,6 +66,7 @@ public class Worker extends Thread {
         continue;
       }
 
+      SSLSocket sslSocket = null;
       try {
         // Get the name of the core that the client is talking to and obtain the
         // corresponding object store.
@@ -84,13 +84,13 @@ public class Worker extends Thread {
           SSLSocketFactory sslSocketFactory =
               node.getSSLSocketFactory(coreName);
           synchronized (sslSocketFactory) {
-            this.sslSocket =
+            sslSocket =
                 (SSLSocket) sslSocketFactory
                     .createSocket(socket, null, 0, true);
           }
-          this.sslSocket.setUseClientMode(false);
-          this.sslSocket.setNeedClientAuth(true);
-          this.sslSocket.startHandshake();
+          sslSocket.setUseClientMode(false);
+          sslSocket.setNeedClientAuth(true);
+          sslSocket.startHandshake();
           this.out = new ObjectOutputStream(sslSocket.getOutputStream());
           this.out.flush();
           this.in = new ObjectInputStream(sslSocket.getInputStream());
@@ -149,7 +149,7 @@ public class Worker extends Thread {
   protected void cleanup() {
     in = null;
     out = null;
-    sslSocket = null;
+    socket = null;
     transactionManager = null;
   }
 
