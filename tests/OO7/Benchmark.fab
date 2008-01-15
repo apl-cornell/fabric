@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Benchmark.fab,v 1.8 2007-12-23 06:29:08 jed Exp $
+// $Id: Benchmark.fab,v 1.9 2008-01-15 22:17:42 mdgeorge Exp $
 
 package OO7;
 
@@ -27,6 +27,9 @@ public class Benchmark {
 
   private final static Core local = Client.getClient().getLocalCore();
 
+  // TODO: these shouldn't be @local, they should be @static (whatever that
+  // means) but our implementation of static stuff makes it not matter yet
+
   //                            Database paramters                   TINY  SMALL  MEDIUM LARGE
   private final static int[]    numAtomicPerComp = new int[]@local    { 20,   20,    200,   200    };
   private final        int      numConnPerAtomic;                     
@@ -38,14 +41,9 @@ public class Benchmark {
   private final static int[]    numCompPerAssm   = new int[]@local    { 3,    3,     3,     3      };
   private final static int[]    numModules       = new int[]@local    { 1,    1,     1,     10     };
 
-  private final static String database = "OO7 Database";
-
   private static final Random rand = new Random();
 
   int scale = 0;
-  // TODO: expose extents
-  Module module = null;
-  HashMap atomicParts = null;
 
   //////////////////////////////////////////////////////////////////////////////
   // Database traversals                                                      //
@@ -55,6 +53,8 @@ public class Benchmark {
     // generate a random list of objects to fetch
     Core local = Client.getClient().getLocalCore();
     int[] oids = new int[1000]@local;
+    Map atomicParts = atomicPartsById();
+
     atomic {
       for (int i = 0; i < oids.length; ++i)
         oids[i] = rand.nextInt(atomicParts.size());
@@ -71,6 +71,54 @@ public class Benchmark {
   }
 
   //////////////////////////////////////////////////////////////////////////////
+  // Extents                                                                  //
+  //////////////////////////////////////////////////////////////////////////////
+
+  // Note: each class is responsible for maintaining its own extents.
+  Map/*Integer,AtomicPart*/    atomicPartsById;
+  Map/*Long,AtomicPart*/       atomicPartsByBuildDate;
+  Map/*Integer,CompositePart*/ compositePartsById;
+  Map/*String,Document*/       documentsByTitle;
+  Map/*Integer,Document*/      documentsById;
+  Map/*Integer,BaseAssembly*/  baseAssembliesById;
+  Map/*Integer,Module*/        modulesById;
+
+  public Map atomicPartsById() {
+    return atomicPartsById;
+    // TODO: return Collections.unmodifiableMap(atomicPartsById);
+  }
+
+  public Map atomicPartsByBuildDate() {
+    return atomicPartsByBuildDate;
+    // TODO: return Collections.unmodifiableMap(atomicPartsByBuildDate);
+  }
+
+  public Map compositePartsById() {
+    return compositePartsById;
+    // TODO: return Collections.unmodifiableMap(compositePartsById);
+  }
+
+  public Map documentsByTitle() {
+    return documentsByTitle;
+    //TODO: return Collections.unmodifiableMap(documentsByTitle);
+  }
+
+  public Map documentsById() {
+    return documentsById;
+    // TODO: return Collections.unmodifiableMap(documentsById);
+  }
+
+  public Map baseAssembliesById() {
+    return baseAssembliesById;
+    // TODO: return Collections.unmodifiableMap(baseAssembliesById);
+  }
+
+  public Map modulesById() {
+    return modulesById;
+    // TODO: return Collections.unmodifiableMap(modulesById);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
   // Database creation                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
@@ -82,8 +130,19 @@ public class Benchmark {
   public Benchmark(int scale, int numConnPerAtomic) throws Exception {
     this.scale = scale;
     this.numConnPerAtomic = numConnPerAtomic;
-    this.atomicParts = new HashMap();
-    this.module = createModule();
+    
+    // Initialize extents
+    this.atomicPartsById        = new HashMap();
+    this.atomicPartsByBuildDate = new HashMap();
+    this.compositePartsById     = new HashMap();
+    this.documentsByTitle       = new HashMap();
+    this.documentsById          = new HashMap();
+    this.baseAssembliesById     = new HashMap();
+    this.modulesById            = new HashMap();
+
+    // Create content
+    for (int i = 0; i < numModules[scale]; i++)
+      createModule();
   }
 
   protected Module createModule() throws Exception {
@@ -130,8 +189,8 @@ public class Benchmark {
 
   protected AtomicPart createAtomicPart(CompositePart parent) throws Exception {
     AtomicPart result = new AtomicPart();
-    atomicParts.put(new Integer(atomicParts.size()), result);
     result.setPartOf(parent);
+
     return result;
   }
 
