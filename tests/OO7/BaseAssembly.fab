@@ -6,9 +6,10 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BaseAssembly.fab,v 1.4 2007-12-20 19:00:42 mdgeorge Exp $
+// $Id: BaseAssembly.fab,v 1.5 2008-01-15 21:44:00 mdgeorge Exp $
 
 package OO7;
+import OO7.traversals.Traversal;
 
 import fabric.util.Collection;
 import fabric.util.LinkedList;

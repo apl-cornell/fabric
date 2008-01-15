@@ -1,4 +1,5 @@
-package OO7;
+package OO7.traversals;
+import OO7.*;
 
 import fabric.client.Core;
 import fabric.client.Client;

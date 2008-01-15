@@ -1,4 +1,5 @@
-package OO7;
+package OO7.traversals;
+import OO7.*;
 
 import fabric.util.Iterator;
 

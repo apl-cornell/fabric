@@ -1,0 +1,14 @@
+package OO7.traversals;
+
+/** Wrapper for executing a hot traversal.
+ *
+ * This class executes another traversal five times and reports the average
+ * running time of the middle three executions.
+ */
+public class HotTraversal extends Traversal {
+	
+}
+
+/*
+** vim: ts=2 sw=2 cindent cino=\:0 et syntax=java
+*/
