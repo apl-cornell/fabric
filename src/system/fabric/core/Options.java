@@ -28,6 +28,7 @@ public class Options {
   public int threadPool;
   public int maxConnect;
   public int timeout;
+  public boolean useSSL;
 
   public static class CoreKeyStores {
     public final KeyStore keyStore;
@@ -56,6 +57,7 @@ public class Options {
     this.threadPool = 10;
     this.maxConnect = 25;
     this.timeout = 15;
+    this.useSSL = true;
   }
 
   public static void usage(PrintStream out) {
@@ -75,6 +77,7 @@ public class Options {
         + "connections to support", defaults.maxConnect);
     usageForFlag(out, "--timeout <seconds>", "time-out for idle client "
         + "connections", defaults.timeout);
+    usageForFlag(out, "--nossl", "disables SSL for debugging purposes");
     usageForFlag(out, "--version", "print version info");
     usageForFlag(out, "--help", "print this message");
   }
@@ -172,6 +175,13 @@ public class Options {
         throw new UsageError("Invalid argument: " + args[i]);
       }
       return i + 1;
+    }
+
+    if (args[i].equals("--nossl")) {
+      i++;
+      this.useSSL = false;
+        
+      return i;
     }
 
     return i;

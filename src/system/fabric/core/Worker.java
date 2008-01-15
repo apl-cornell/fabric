@@ -80,21 +80,28 @@ public class Worker extends Thread {
           out.write(1);
           out.flush();
 
-          // Initiate the SSL handshake and initialize the fields.
-          SSLSocketFactory sslSocketFactory =
-              node.getSSLSocketFactory(coreName);
-          synchronized (sslSocketFactory) {
-            sslSocket =
-                (SSLSocket) sslSocketFactory
-                    .createSocket(socket, null, 0, true);
+          if (node.opts.useSSL) {
+            // Initiate the SSL handshake and initialize the fields.
+            SSLSocketFactory sslSocketFactory =
+                node.getSSLSocketFactory(coreName);
+            synchronized (sslSocketFactory) {
+              sslSocket =
+                  (SSLSocket) sslSocketFactory.createSocket(socket, null, 0,
+                      true);
+            }
+            sslSocket.setUseClientMode(false);
+            sslSocket.setNeedClientAuth(true);
+            sslSocket.startHandshake();
+            this.out = new ObjectOutputStream(sslSocket.getOutputStream());
+            this.out.flush();
+            this.in = new ObjectInputStream(sslSocket.getInputStream());
+            this.client = sslSocket.getSession().getPeerPrincipal();
+          } else {
+            this.out = new ObjectOutputStream(socket.getOutputStream());
+            this.out.flush();
+            this.in = new ObjectInputStream(socket.getInputStream());
+            this.client = (Principal) in.readObject();
           }
-          sslSocket.setUseClientMode(false);
-          sslSocket.setNeedClientAuth(true);
-          sslSocket.startHandshake();
-          this.out = new ObjectOutputStream(sslSocket.getOutputStream());
-          this.out.flush();
-          this.in = new ObjectInputStream(sslSocket.getInputStream());
-          this.client = sslSocket.getSession().getPeerPrincipal();
 
           run_();
         } else {
@@ -108,13 +115,17 @@ public class Worker extends Thread {
           System.err.println("Connection reset");
           System.err.println("(" + client + ")");
         } else e.printStackTrace();
-
-        System.err.println();
       } catch (EOFException e) {
         // Client has closed the connection. Nothing to do here.
+        System.err.println("Connection closed");
+        System.err.println("(" + client + ")");
       } catch (IOException e) {
         e.printStackTrace();
+      } catch (ClassNotFoundException e) {
+        e.printStackTrace();
       }
+
+      System.err.println();
 
       // Try to close our connection gracefully.
       try {
@@ -125,6 +136,7 @@ public class Worker extends Thread {
         else socket.close();
       } catch (IOException e) {
         e.printStackTrace();
+        System.err.println();
       }
 
       // Signal that this worker is now available.

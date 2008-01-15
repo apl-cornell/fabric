@@ -101,29 +101,37 @@ public class RemoteCore implements Core {
     // Determine whether the core exists at the node.
     if (socket.getInputStream().read() == 0) throw new NoSuchCoreError();
 
-    // Start encrypting.
-    SSLSocket sslSocket =
-        (SSLSocket) client.sslSocketFactory.createSocket(socket, core.name(),
-            host.getPort(), true);
-    sslSocket.setUseClientMode(true);
-    sslSocket.startHandshake();
+    if (client.useSSL) {
+      // Start encrypting.
+      SSLSocket sslSocket =
+          (SSLSocket) client.sslSocketFactory.createSocket(socket, core.name(),
+              host.getPort(), true);
+      sslSocket.setUseClientMode(true);
+      sslSocket.startHandshake();
 
-    // Make sure we're talking to the right node.
-    X500Principal peer =
-        (X500Principal) sslSocket.getSession().getPeerPrincipal();
-    if (!peer.equals(corePrincipal)) {
-      Logger.getLogger(this.getClass().getName()).info(
-          "Rejecting connection to " + host + ": got principal " + peer
-              + " when we expected " + corePrincipal);
-      sslSocket.close();
-      throw new IOException();
+      // Make sure we're talking to the right node.
+      X500Principal peer =
+          (X500Principal) sslSocket.getSession().getPeerPrincipal();
+      if (!peer.equals(corePrincipal)) {
+        Logger.getLogger(this.getClass().getName()).info(
+            "Rejecting connection to " + host + ": got principal " + peer
+                + " when we expected " + corePrincipal);
+        sslSocket.close();
+        throw new IOException();
+      }
+
+      out = new ObjectOutputStream(sslSocket.getOutputStream());
+      out.flush();
+      in = new ObjectInputStream(sslSocket.getInputStream());
+
+      conn = sslSocket;
+    } else {
+      out = new ObjectOutputStream(socket.getOutputStream());
+      out.writeObject(client.principal);
+      out.flush();
+      in = new ObjectInputStream(socket.getInputStream());
+      conn = socket;
     }
-
-    out = new ObjectOutputStream(sslSocket.getOutputStream());
-    out.flush();
-    in = new ObjectInputStream(sslSocket.getInputStream());
-
-    conn = sslSocket;
   }
 
   public boolean isConnected() {

@@ -17,11 +17,8 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.*;
+import javax.security.auth.x500.X500Principal;
 
 import fabric.common.AccessError;
 import fabric.common.InternalError;
@@ -39,12 +36,18 @@ import fabric.lang.arrays.ObjectArray;
  */
 public final class Client {
   // A map from core hostnames to Core objects
-  protected Map<String, RemoteCore> cores;
+  protected final Map<String, RemoteCore> cores;
 
-  protected LocalCore localCore;
+  protected final LocalCore localCore;
 
   // A socket factory for creating TLS connections.
-  protected SSLSocketFactory sslSocketFactory;
+  protected final SSLSocketFactory sslSocketFactory;
+
+  // The principal on whose behalf this client is running.
+  protected final X500Principal principal;
+
+  // Whether SSL encryption is desired.
+  protected final boolean useSSL;
 
   // The timeout (in milliseconds) to use whilst attempting to connect to a core
   // node.
@@ -57,7 +60,7 @@ public final class Client {
   public final NameService nameService;
 
   // The manager to use for fetching objects from cores.
-  protected FetchManager fetchManager;
+  protected final FetchManager fetchManager;
 
   public static final Random RAND = new Random();
   private static final int DEFAULT_TIMEOUT = 2;
@@ -68,33 +71,38 @@ public final class Client {
    * failing. A negative retry-count is interpreted as an infinite retry-count.
    * 
    * @param keyStore
-   *          The client's key store. Should contain the client's X509
-   *          certificate.
+   *                The client's key store. Should contain the client's X509
+   *                certificate.
    * @param passwd
-   *          The password for unlocking the key store.
+   *                The password for unlocking the key store.
    * @param trustStore
-   *          The trust store to use. If this value is null, then the default
-   *          trust store will be used.
+   *                The trust store to use. If this value is null, then the
+   *                default trust store will be used.
    * @param cacheSize
-   *          The object cache size, in number of objects; must be positive.
+   *                The object cache size, in number of objects; must be
+   *                positive.
    * @param maxConnections
-   *          The maximum number of connections to core nodes to maintain; must
-   *          be positive.
+   *                The maximum number of connections to core nodes to maintain;
+   *                must be positive.
    * @param timeout
-   *          The timeout value to be used in seconds; must be positive.
+   *                The timeout value to be used in seconds; must be positive.
    * @param retries
-   *          The number of times to retry before failing to connect.
+   *                The number of times to retry before failing to connect.
+   * @param useSSL
+   *                Whether SSL encryption is desired. Used for debugging
+   *                purposes.
    */
   public static Client initialize(KeyStore keyStore, char[] passwd,
-      KeyStore trustStore, int maxConnections, int timeout, int retries)
-      throws InternalError, UnrecoverableKeyException, IllegalStateException {
+      KeyStore trustStore, int maxConnections, int timeout, int retries,
+      boolean useSSL) throws InternalError, UnrecoverableKeyException,
+      IllegalStateException {
     if (instance != null)
       throw new IllegalStateException(
           "The Fabric client has already been initialized");
     Logger.getLogger("fabric.client").info("Initializing Fabric client");
     instance =
         new Client(keyStore, passwd, trustStore, maxConnections, timeout,
-            retries);
+            retries, useSSL);
     return instance;
   }
 
@@ -104,8 +112,8 @@ public final class Client {
   protected static Client instance;
 
   protected Client(KeyStore keyStore, char[] passwd, KeyStore trustStore,
-      int maxConnections, int timeout, int retries) throws InternalError,
-      UnrecoverableKeyException {
+      int maxConnections, int timeout, int retries, boolean useSSL)
+      throws InternalError, UnrecoverableKeyException {
     // Sanitise input.
     if (timeout < 1) timeout = DEFAULT_TIMEOUT;
 
@@ -114,6 +122,11 @@ public final class Client {
       SSLContext sslContext = SSLContext.getInstance("TLS");
       KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
       kmf.init(keyStore, passwd);
+
+      this.principal =
+          ((X509KeyManager) kmf.getKeyManagers()[0])
+              .getCertificateChain("client0")[0].getSubjectX500Principal();
+
       TrustManager[] tm = null;
       if (trustStore != null) {
         TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
@@ -132,13 +145,16 @@ public final class Client {
 
     this.timeout = 1000 * timeout;
     this.retries = retries;
+    this.useSSL = useSSL;
+    
     this.nameService = new NameService();
     this.cores = new HashMap<String, RemoteCore>();
     this.localCore = new LocalCore();
 
-    String fm = System.getProperty("fabric.client.fetchmanager",
-        "fabric.client.DirectFetchManager");
-    
+    String fm =
+        System.getProperty("fabric.client.fetchmanager",
+            "fabric.client.DirectFetchManager");
+
     try {
       this.fetchManager = (FetchManager) Class.forName(fm).newInstance();
     } catch (Exception e) {
@@ -151,7 +167,7 @@ public final class Client {
    * 
    * @return the Client instance
    * @throws IllegalStateException
-   *           if the Fabric client is uninitialized
+   *                 if the Fabric client is uninitialized
    */
   public static Client getClient() throws IllegalStateException {
     if (instance == null)
@@ -164,7 +180,7 @@ public final class Client {
    * Returns a <code>Core</code> object representing the given core.
    * 
    * @param name
-   *          The core's host name.
+   *                The core's host name.
    * @return The corresponding <code>Core</code> object.
    */
   public RemoteCore getCore(String name) {
@@ -184,9 +200,9 @@ public final class Client {
    * Fetches the requested object using the current fetch manager.
    * 
    * @param c
-   *          the core where the object resides.
+   *                the core where the object resides.
    * @param onum
-   *          the object identifier.
+   *                the object identifier.
    * @return the requested object if successful.
    * @throws AccessError
    * @throws UnreachableCoreException
@@ -195,7 +211,7 @@ public final class Client {
       UnreachableCoreException {
     return fetchManager.fetch(c, onum);
   }
-  
+
   /**
    * Called to shut down and clean up client.
    */
@@ -237,8 +253,12 @@ public final class Client {
     int retries =
         Integer.parseInt(System.getProperty("fabric.client.retries", "5"));
 
+    boolean useSSL =
+        Boolean
+            .parseBoolean(System.getProperty("fabric.client.useSSL", "true"));
+
     initialize(keyStore, passwd.toCharArray(), trustStore, maxConnections,
-        timeout, retries);
+        timeout, retries, useSSL);
 
     // TODO: option overriding on command line?
 
@@ -276,7 +296,7 @@ public final class Client {
       cause.setStackTrace(trace.toArray(traceArray));
       throw cause;
     }
-    
+
     c.shutdown();
   }
 }

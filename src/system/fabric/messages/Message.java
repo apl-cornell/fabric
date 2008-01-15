@@ -123,6 +123,7 @@ public abstract class Message<R extends Message.Response> implements
 
     try {
       out.writeUnshared(this);
+      out.flush();
       Object result = in.readUnshared();
 
       if (resultType.isInstance(result)) return resultType.cast(result);
