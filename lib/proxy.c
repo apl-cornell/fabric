@@ -180,8 +180,8 @@ void tunnel(int client, int server) {
  * Reads from src socket, writes to dst socket, updates given counter.
  */
 void transfer(int src, int dst, int* counter, FILE** log) {
-  char buf[1024];
-  int size = read(src, buf, 1024);
+  char buf[1024*8];
+  int size = read(src, buf, 1024*8);
   int written = 0;
 
   if (size == -1) {
