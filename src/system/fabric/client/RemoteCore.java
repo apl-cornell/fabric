@@ -120,16 +120,24 @@ public class RemoteCore implements Core {
         throw new IOException();
       }
 
-      out = new ObjectOutputStream(sslSocket.getOutputStream());
+      out =
+          new ObjectOutputStream(new BufferedOutputStream(sslSocket
+              .getOutputStream()));
       out.flush();
-      in = new ObjectInputStream(sslSocket.getInputStream());
+      in =
+          new ObjectInputStream(new BufferedInputStream(sslSocket
+              .getInputStream()));
 
       conn = sslSocket;
     } else {
-      out = new ObjectOutputStream(socket.getOutputStream());
+      out =
+          new ObjectOutputStream(new BufferedOutputStream(socket
+              .getOutputStream()));
       out.writeObject(client.principal);
       out.flush();
-      in = new ObjectInputStream(socket.getInputStream());
+      in =
+          new ObjectInputStream(
+              new BufferedInputStream(socket.getInputStream()));
       conn = socket;
     }
   }

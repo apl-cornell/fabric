@@ -92,14 +92,22 @@ public class Worker extends Thread {
             sslSocket.setUseClientMode(false);
             sslSocket.setNeedClientAuth(true);
             sslSocket.startHandshake();
-            this.out = new ObjectOutputStream(sslSocket.getOutputStream());
+            this.out =
+                new ObjectOutputStream(new BufferedOutputStream(sslSocket
+                    .getOutputStream()));
             this.out.flush();
-            this.in = new ObjectInputStream(sslSocket.getInputStream());
+            this.in =
+                new ObjectInputStream(new BufferedInputStream(sslSocket
+                    .getInputStream()));
             this.client = sslSocket.getSession().getPeerPrincipal();
           } else {
-            this.out = new ObjectOutputStream(socket.getOutputStream());
+            this.out =
+                new ObjectOutputStream(new BufferedOutputStream(socket
+                    .getOutputStream()));
             this.out.flush();
-            this.in = new ObjectInputStream(socket.getInputStream());
+            this.in =
+                new ObjectInputStream(new BufferedInputStream(socket
+                    .getInputStream()));
             this.client = (Principal) in.readObject();
           }
 
