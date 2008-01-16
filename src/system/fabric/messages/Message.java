@@ -118,7 +118,7 @@ public abstract class Message<R extends Message.Response> implements
    *                 if an I/O error occurs during
    *                 serialization/deserialization.
    */
-  protected R send(ObjectInputStream in, ObjectOutputStream out)
+  private R send(ObjectInputStream in, ObjectOutputStream out)
       throws FabricException, IOException {
 
     try {
@@ -191,7 +191,7 @@ public abstract class Message<R extends Message.Response> implements
   /**
    * Type tag for the reply message.
    */
-  private transient Class<R> resultType;
+  private transient final Class<R> resultType;
 
   protected Message(Class<R> resultType) {
     this.resultType = resultType;

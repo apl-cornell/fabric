@@ -26,7 +26,7 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
     }
   }
 
-  public long onum;
+  public final long onum;
 
   public ReadMessage(long onum) {
     super(Response.class);

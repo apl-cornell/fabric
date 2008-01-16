@@ -20,7 +20,7 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
     }
   }
 
-  public int num;
+  public final int num;
 
   /**
    * @param num
