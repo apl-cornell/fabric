@@ -22,7 +22,8 @@ import fabric.messages.*;
 /**
  * Encapsulates a Core. This class maintains the connection to the core and
  * manages all communication. Cores can only be obtained through the
- * <code>Client.getCore()</code> interface.
+ * <code>Client.getCore()</code> interface. For each remote core, there should
+ * be at most one <code>RemoteCore</code> object representing that core.
  */
 public class RemoteCore implements Core {
   private transient Socket conn;
@@ -268,16 +269,6 @@ public class RemoteCore implements Core {
   public void commitTransaction(int transactionID)
       throws UnreachableCoreException, TransactionCommitFailedException {
     new CommitTransactionMessage(transactionID).send(this);
-  }
-
-  @Override
-  public boolean equals(java.lang.Object obj) {
-    return obj instanceof Core && ((Core) obj).name().equals(name);
-  }
-
-  @Override
-  public int hashCode() {
-    return name.hashCode();
   }
 
   @Override
