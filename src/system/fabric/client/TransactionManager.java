@@ -281,8 +281,9 @@ public final class TransactionManager {
     // Nothing to do if we created the object ourselves.
     if (curFrame.creates.containsKey(core, onum)) return;
 
-    if (curFrame.reads.containsKey(core, onum)
-        && curFrame.reads.get(core, onum) != obj.$getVersion())
+    Integer otherVersionNum = curFrame.reads.get(core, onum);
+    if (otherVersionNum != null
+        && otherVersionNum.intValue() != obj.$getVersion())
       throw new VersionConflictException(obj);
 
     curFrame.reads.put(core, onum, obj.$getVersion());
