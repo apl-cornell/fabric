@@ -13,7 +13,7 @@ public class AbortTransactionMessage extends
   public final int transactionID;
   
   public AbortTransactionMessage(int transactionID) {
-    super(Response.class);
+    super(MessageType.ABORT_TRANSACTION, Response.class);
     this.transactionID = transactionID;
   }
 

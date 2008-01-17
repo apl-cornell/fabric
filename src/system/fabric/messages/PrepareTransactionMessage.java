@@ -31,7 +31,7 @@ public class PrepareTransactionMessage extends
 
   public PrepareTransactionMessage(Collection<$Impl> toCreate,
       Map<Long, Integer> reads, Collection<$Impl> writes) {
-    super(Response.class);
+    super(MessageType.PREPARE_TRANSACTION, Response.class);
 
     this.toCreate = new HashSet<SerializedObject>();
     if (reads != null)

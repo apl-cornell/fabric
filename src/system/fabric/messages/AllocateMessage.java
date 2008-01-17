@@ -27,7 +27,7 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
    *          The number of object IDs to allocate.
    */
   public AllocateMessage(int num) {
-    super(Response.class);
+    super(MessageType.ALLOCATE_ONUMS, Response.class);
     this.num = num;
   }
 

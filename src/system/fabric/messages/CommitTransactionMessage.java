@@ -16,7 +16,7 @@ public class CommitTransactionMessage extends
   public final int transactionID;
   
   public CommitTransactionMessage(int transactionID) {
-    super(Response.class);
+    super(MessageType.COMMIT_TRANSACTION, Response.class);
     this.transactionID = transactionID;
   }
 

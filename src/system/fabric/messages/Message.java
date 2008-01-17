@@ -21,6 +21,26 @@ public abstract class Message<R extends Message.Response> implements
   public static interface Response extends Serializable {
   }
 
+  protected static enum MessageType {
+    ALLOCATE_ONUMS, READ_ONUM, PREPARE_TRANSACTION, COMMIT_TRANSACTION,
+    ABORT_TRANSACTION
+  }
+  
+  /**
+   * The <code>MessageType</code> corresponding to this class.
+   */
+  protected final MessageType messageType;
+  
+  /**
+   * Type tag for the reply message.
+   */
+  private transient final Class<R> resultType;
+
+  protected Message(MessageType messageType, Class<R> resultType) {
+    this.messageType = messageType;
+    this.resultType = resultType;
+  }
+
   /**
    * Sends this message to the given core.
    * 
@@ -187,13 +207,4 @@ public abstract class Message<R extends Message.Response> implements
    * @throws FabricException
    */
   public abstract R dispatch(Worker handler) throws FabricException;
-
-  /**
-   * Type tag for the reply message.
-   */
-  private transient final Class<R> resultType;
-
-  protected Message(Class<R> resultType) {
-    this.resultType = resultType;
-  }
 }

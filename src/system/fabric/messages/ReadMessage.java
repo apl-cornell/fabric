@@ -29,7 +29,7 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
   public final long onum;
 
   public ReadMessage(long onum) {
-    super(Response.class);
+    super(MessageType.READ_ONUM, Response.class);
     this.onum = onum;
   }
 
