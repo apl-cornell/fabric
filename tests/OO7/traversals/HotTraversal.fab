@@ -1,12 +1,46 @@
 package OO7.traversals;
 
+import java.lang.reflect.*;
+import fabric.client.*;
+
 /** Wrapper for executing a hot traversal.
  *
  * This class executes another traversal five times and reports the average
  * running time of the middle three executions.
  */
-public class HotTraversal extends Traversal {
-	
+public class HotTraversal {
+  public static void main(String[] args) throws Exception {
+    Core local = Client.getClient().getLocalCore();
+    String[] newargs = new String[args.length-1]@local;
+    for (int i = 0; i < newargs.length; i++)
+      newargs[i] = args[i+1];
+    
+    Class       tclass = Class.forName(args[0]);
+    
+    // note this is expanded this way to work around a compiler bug.
+    Class[]     cclass = new Class[0]@local;
+    cclass[0] = Core.class;
+
+    java.lang.Object[]    params = new Object[0]@local;
+    params[0] = local;
+
+    Constructor cons   = tclass.getConstructor(cclass);
+    Traversal t = (Traversal) cons.newInstance(params);
+    t.mainImpl(newargs);
+    
+    long start = System.currentTimeMillis();
+    for (int i = 0; i < 3; i++)
+      t.mainImpl(newargs);
+    long finish = System.currentTimeMillis();
+    
+    System.out.println("Average time: " + (finish - start)/3);
+  }
+  
+  protected void printUsage() {
+    System.out.println("Usage: tailor OO7.traversals.HotTraversal <benchmark>");
+    System.out.println("  Where <benchmark> is another traversal class with its parameters.");
+    System.out.println("  Example: tailor OO7.traversals.HotTraversal OO7.traversals.T1 fab://core0/OO7");
+  }
 }
 
 /*
