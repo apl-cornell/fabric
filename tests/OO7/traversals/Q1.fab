@@ -1,0 +1,31 @@
+package OO7.traversal;
+
+public class Q1 {
+  /* TODO: extract into a separate traversal
+  public void matchQuery() throws Exception {
+    // generate a random list of objects to fetch
+    Core local = Client.getClient().getLocalCore();
+    int[] oids = new int[1000]@local;
+    Map atomicParts = atomicPartsById();
+
+    atomic {
+      for (int i = 0; i < oids.length; ++i)
+        oids[i] = rand.nextInt(atomicParts.size());
+    }
+
+    // access each
+    long time = System.currentTimeMillis();
+    for (int i = 0; i < oids.length; ++i) {
+      AtomicPart part = (AtomicPart) atomicParts.get(new Integer@local(oids[i]));
+      long x = part.x();
+    }
+    time = (System.currentTimeMillis() - time);
+    System.out.println("Millis: " + time);
+  }
+  */
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+
