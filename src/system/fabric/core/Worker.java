@@ -30,6 +30,10 @@ public class Worker extends Thread {
   private ObjectInputStream in;
   private ObjectOutputStream out;
 
+  private int numReads;
+  private int numPrepares;
+  private int numCommits;
+
   /**
    * Instantiates a new worker thread and starts it running.
    */
@@ -137,6 +141,9 @@ public class Worker extends Thread {
         e.printStackTrace();
       }
 
+      System.err.println(numReads + " read requests");
+      System.err.println(numPrepares + " prepare requests");
+      System.err.println(numCommits + " commit requests");
       System.err.println();
 
       // Try to close our connection gracefully.
@@ -160,6 +167,9 @@ public class Worker extends Thread {
    * The execution body of the worker thread.
    */
   private void run_() throws IOException {
+    // Reset the statistics counters.
+    numReads = numPrepares = numCommits = 0;
+    
     while (true) {
       Message.receive(in, out, this);
     }
@@ -191,6 +201,8 @@ public class Worker extends Thread {
 
   public CommitTransactionMessage.Response handle(
       CommitTransactionMessage message) throws TransactionCommitFailedException {
+    this.numCommits++;
+
     transactionManager.commitTransaction(client, message.transactionID);
     return new CommitTransactionMessage.Response();
   }
@@ -200,6 +212,8 @@ public class Worker extends Thread {
    */
   public PrepareTransactionMessage.Response handle(PrepareTransactionMessage msg)
       throws TransactionPrepareFailedException {
+    this.numPrepares++;
+
     int transactionID =
         transactionManager.prepare(client, msg.serializedCreates, msg.reads,
             msg.serializedWrites);
@@ -210,6 +224,8 @@ public class Worker extends Thread {
    * Processes the given read request.
    */
   public ReadMessage.Response handle(ReadMessage msg) throws AccessError {
+    this.numReads++;
+
     Map<Long, SerializedObject> group = new HashMap<Long, SerializedObject>();
     SerializedObject obj = transactionManager.read(client, msg.onum);
     if (obj != null) {
