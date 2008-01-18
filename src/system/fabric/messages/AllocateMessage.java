@@ -1,5 +1,10 @@
 package fabric.messages;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
+import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.client.UnreachableCoreException;
 import fabric.common.FabricException;
@@ -18,17 +23,48 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
     public Response(long[] onums) {
       this.oids = onums;
     }
+
+    /**
+     * Deserialization constructor, used by the client.
+     * 
+     * @param core
+     *                The core from which the response is being read.
+     * @param in
+     *                the input stream from which to read the response.
+     */
+    Response(Core core, ObjectInputStream in) throws IOException {
+      oids = new long[in.readInt()];
+      for (int i = 0; i < oids.length; i++)
+        oids[i] = in.readLong();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.messages.Message.Response#write(java.io.ObjectOutputStream)
+     */
+    public void write(ObjectOutputStream out) throws IOException {
+      out.writeInt(oids.length);
+      for (long oid : oids) out.writeLong(oid);
+    }
   }
 
   public final int num;
 
   /**
    * @param num
-   *          The number of object IDs to allocate.
+   *                The number of object IDs to allocate.
    */
   public AllocateMessage(int num) {
     super(MessageType.ALLOCATE_ONUMS, Response.class);
     this.num = num;
+  }
+
+  /**
+   * Deserialization constructor.
+   */
+  AllocateMessage(ObjectInputStream in) throws IOException {
+    this(in.readInt());
   }
 
   /*
@@ -55,6 +91,16 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from core.", e);
     }
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.messages.Message#write(java.io.ObjectOutputStream)
+   */
+  @Override
+  public void write(ObjectOutputStream out) throws IOException {
+    out.writeInt(num);
   }
 
 }

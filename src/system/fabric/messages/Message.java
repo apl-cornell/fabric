@@ -3,34 +3,43 @@ package fabric.messages;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.security.Principal;
 import java.util.List;
 
 import fabric.client.Client;
+import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.client.UnreachableCoreException;
 import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.core.Worker;
 
-public abstract class Message<R extends Message.Response> implements
-    Serializable {
+public abstract class Message<R extends Message.Response> {
 
-  public static interface Response extends Serializable {
+  public static interface Response {
+    void write(ObjectOutputStream out) throws IOException;
   }
 
   protected static enum MessageType {
-    ALLOCATE_ONUMS, READ_ONUM, PREPARE_TRANSACTION, COMMIT_TRANSACTION,
-    ABORT_TRANSACTION
+    ALLOCATE_ONUMS(AllocateMessage.class), READ_ONUM(ReadMessage.class), PREPARE_TRANSACTION(
+        PrepareTransactionMessage.class), COMMIT_TRANSACTION(
+        CommitTransactionMessage.class), ABORT_TRANSACTION(
+        AbortTransactionMessage.class);
+
+    private final Class<? extends Message<?>> messageClass;
+
+    MessageType(Class<? extends Message<?>> messageClass) {
+      this.messageClass = messageClass;
+    }
   }
-  
+
   /**
    * The <code>MessageType</code> corresponding to this class.
    */
   protected final MessageType messageType;
-  
+
   /**
    * Type tag for the reply message.
    */
@@ -92,7 +101,7 @@ public abstract class Message<R extends Message.Response> implements
         }
 
         // Attempt to send our message and obtain a reply.
-        return send(core.objectInputStream(), core.objectOutputStream());
+        return send(core, core.objectInputStream(), core.objectOutputStream());
       } catch (NoSuchCoreError e) {
         // Connected to a node that doesn't host the core we're interested in.
         // Increment loop counter variables.
@@ -126,6 +135,8 @@ public abstract class Message<R extends Message.Response> implements
   /**
    * Sends this message to a core node. Used only by the client.
    * 
+   * @param core
+   *                the core to which the object is being sent.
    * @param in
    *                the input stream for sending objects to the core.
    * @param out
@@ -138,31 +149,46 @@ public abstract class Message<R extends Message.Response> implements
    *                 if an I/O error occurs during
    *                 serialization/deserialization.
    */
-  private R send(ObjectInputStream in, ObjectOutputStream out)
+  private R send(Core core, ObjectInputStream in, ObjectOutputStream out)
       throws FabricException, IOException {
+    // Write this message out.
+    out.writeByte(messageType.ordinal());
+    write(out);
+    out.flush();
 
-    try {
-      out.writeUnshared(this);
-      out.flush();
-      Object result = in.readUnshared();
-
-      if (resultType.isInstance(result)) return resultType.cast(result);
-      if (result instanceof FabricException) {
-        FabricException exc = (FabricException) result;
+    // Read in the reply. Determine if an error occurred.
+    if (in.readBoolean()) {
+      try {
+        // We have an error.
+        FabricException exc = (FabricException) in.readObject();
         exc.fillInStackTrace();
         throw exc;
+      } catch (ClassNotFoundException e) {
+        throw new InternalError("Unexpected response from core", e);
       }
-      throw new InternalError("Unexpected response from Core: "
-          + result.getClass());
-    } catch (final ClassNotFoundException exc) {
-      throw new InternalError("Unexpected response from Core", exc);
+    }
+
+    // Read the response.
+    try {
+      try {
+        return resultType.getDeclaredConstructor(Core.class,
+            ObjectInputStream.class).newInstance(core, in);
+      } catch (InvocationTargetException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof IOException) throw (IOException) cause;
+        throw e;
+      }
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InternalError(e);
     }
   }
 
   /**
    * This reads a <code>Message</code> from the provided input stream,
-   * dispatches it to a <code>Worker</code>, and writes the response to the
-   * provided OutputStream. Used only by the core.
+   * dispatches it to the given <code>Worker</code>, and writes the response
+   * to the provided OutputStream. Used only by the core.
    * 
    * @param in
    *                The input stream to read the incoming message from.
@@ -180,20 +206,37 @@ public abstract class Message<R extends Message.Response> implements
       Worker handler) throws IOException {
 
     try {
+      MessageType messageType = MessageType.values()[in.readByte()];
+      Class<? extends Message<?>> messageClass = messageType.messageClass;
       Message<?> m;
       try {
-        m = (Message<?>) in.readUnshared();
-      } catch (ClassNotFoundException e) {
-        throw new ProtocolError("Unknown request type.");
+        m =
+            messageClass.getDeclaredConstructor(ObjectInputStream.class)
+                .newInstance(in);
+      } catch (InvocationTargetException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof IOException) throw (IOException) cause;
+        throw new FabricException(cause);
+      } catch (RuntimeException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new FabricException(e);
       }
       Response r = m.dispatch(handler);
 
-      out.writeUnshared(r);
+      // Signal that no error occurred.
+      out.writeBoolean(false);
+
+      // Write out the response.
+      r.write(out);
       out.reset();
       out.flush();
     } catch (final FabricException e) {
       // Clear out the stack trace before sending the exception to the client.
       e.setStackTrace(new StackTraceElement[0]);
+
+      // Signal that an error occurred and write out the exception.
+      out.writeBoolean(true);
       out.writeUnshared(e);
       out.flush();
     }
@@ -207,4 +250,13 @@ public abstract class Message<R extends Message.Response> implements
    * @throws FabricException
    */
   public abstract R dispatch(Worker handler) throws FabricException;
+
+  /**
+   * Writes this message out on the given output stream. Only used by the
+   * client.
+   * 
+   * @throws IOException
+   *                 if the output stream throws an IOException.
+   */
+  public abstract void write(ObjectOutputStream out) throws IOException;
 }

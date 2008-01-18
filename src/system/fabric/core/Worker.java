@@ -197,7 +197,8 @@ public class Worker extends Thread {
   public PrepareTransactionMessage.Response handle(PrepareTransactionMessage msg)
       throws TransactionPrepareFailedException {
     int transactionID =
-        transactionManager.prepare(client, msg.toCreate, msg.reads, msg.writes);
+        transactionManager.prepare(client, msg.serializedCreates, msg.reads,
+            msg.serializedWrites);
     return new PrepareTransactionMessage.Response(transactionID);
   }
 

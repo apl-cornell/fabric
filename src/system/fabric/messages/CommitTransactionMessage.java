@@ -1,5 +1,10 @@
 package fabric.messages;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
+import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.UnreachableCoreException;
@@ -11,13 +16,41 @@ public class CommitTransactionMessage extends
     Message<CommitTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
+    public Response() {
+    }
+
+    /**
+     * Deserialization constructor, used by the client.
+     * 
+     * @param core
+     *                The core from which the response is being read.
+     * @param in
+     *                the input stream from which to read the response.
+     */
+    Response(Core core, ObjectInputStream in) {
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.messages.Message.Response#write(java.io.ObjectOutputStream)
+     */
+    public void write(ObjectOutputStream out) {
+    }
   }
 
   public final int transactionID;
-  
+
   public CommitTransactionMessage(int transactionID) {
     super(MessageType.COMMIT_TRANSACTION, Response.class);
     this.transactionID = transactionID;
+  }
+
+  /**
+   * Deserialization constructor.
+   */
+  CommitTransactionMessage(ObjectInputStream in) throws IOException {
+    this(in.readInt());
   }
 
   /*
@@ -36,7 +69,8 @@ public class CommitTransactionMessage extends
    * @see fabric.messages.Message#send(fabric.client.Core)
    */
   @Override
-  public Response send(RemoteCore core) throws UnreachableCoreException, TransactionCommitFailedException {
+  public Response send(RemoteCore core) throws UnreachableCoreException,
+      TransactionCommitFailedException {
     try {
       return super.send(core);
     } catch (UnreachableCoreException e) {
@@ -46,6 +80,16 @@ public class CommitTransactionMessage extends
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from core.", e);
     }
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.messages.Message#write(java.io.ObjectOutputStream)
+   */
+  @Override
+  public void write(ObjectOutputStream out) throws IOException {
+    out.writeInt(transactionID);
   }
 
 }

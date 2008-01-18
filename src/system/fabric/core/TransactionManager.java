@@ -246,7 +246,7 @@ public class TransactionManager {
 
     obj.refTypes.clear();
     obj.intracoreRefs.clear();
-    obj.intercoreRefs = null;
+    obj.intercoreRefs = Collections.emptyList();
     while (refTypeIter.hasNext()) {
       RefTypeEnum refType = refTypeIter.next();
       switch (refType) {

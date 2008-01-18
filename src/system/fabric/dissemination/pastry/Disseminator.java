@@ -112,7 +112,7 @@ public class Disseminator implements Application {
           
           if (g == null) {
             ReadMessage.Response response = new ReadMessage(onum).send(c);
-            g = new Glob(response.result, response.related);
+            g = new Glob(response.serializedResult, response.related);
             cache.put(key, g);
           }
         }

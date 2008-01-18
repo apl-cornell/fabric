@@ -194,32 +194,35 @@ public class RemoteCore implements Core {
    */
   private Object.$Impl readObjectFromCore(long onum) throws AccessError,
       UnreachableCoreException {
-    SerializedObject serial = null;
+    Object.$Impl result = null;
     SoftReference<SerializedObject> serialRef = serialized.remove(onum);
+    if (serialRef != null) {
+      SerializedObject serial = serialRef.get();
+      try {
+        if (serial != null) result = serial.deserialize(this);
+      } catch (ClassNotFoundException e) {
+        // TODO handle this
+        return null;
+      }
+    }
 
-    if (serialRef == null || (serial = serialRef.get()) == null) {
+    if (result == null) {
       // no serial copy --- fetch from core
       ReadMessage.Response response = new ReadMessage(onum).send(this);
-      serial = response.result;
+      result = response.result;
       for (Map.Entry<Long, SerializedObject> entry : response.related
           .entrySet())
         serialized.put(entry.getKey(), new SoftReference<SerializedObject>(
             entry.getValue()));
     }
 
-    try {
-      Object.$Impl result = serial.deserialize(this);
-      while (result instanceof Surrogate) {
-        // XXX Track surrogates for reuse?
-        Surrogate surrogate = (Surrogate) result;
-        result = Client.getClient().fetchObject(surrogate.core, surrogate.onum);
-      }
-      objects.put(onum, new SoftReference<Object.$Impl>(result));
-      return result;
-    } catch (ClassNotFoundException e) {
-      // TODO handle this
-      return null;
+    while (result instanceof Surrogate) {
+      // XXX Track surrogates for reuse?
+      Surrogate surrogate = (Surrogate) result;
+      result = Client.getClient().fetchObject(surrogate.core, surrogate.onum);
     }
+    objects.put(onum, new SoftReference<Object.$Impl>(result));
+    return result;
   }
 
   /**
