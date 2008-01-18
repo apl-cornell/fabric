@@ -111,6 +111,10 @@ public class Worker extends Thread {
             this.client = (Principal) in.readObject();
           }
 
+          System.err.println("Accepted connection for " + coreName);
+          System.err.println("(" + client + ")");
+          System.err.println();
+
           run_();
         } else {
           // Indicate that the core doesn't exist here.
