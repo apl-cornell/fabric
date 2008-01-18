@@ -213,7 +213,6 @@ public final class SerializedObject implements Serializable {
     out.writeInt(intracoreRefs.size());
     for (Long onum : intracoreRefs)
       out.writeLong(onum);
-    out.flush();
 
     out.writeInt(intercoreRefs.size());
     for (Pair<String, Long> oid : intercoreRefs) {
