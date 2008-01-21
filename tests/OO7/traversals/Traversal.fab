@@ -22,21 +22,36 @@ public abstract class Traversal {
   public void mainImpl(String[] args) {
     try {
       
+      if (args.length < 1) {
+        printUsage();
+        System.exit(1);
+      }
+      
       URI    addr = new URI(args[0]);
       Core   core = Client.getClient().getCore(addr.getHost());
       Benchmark b = (Benchmark) ((Map) core.getRoot()).get(addr.getPath());
 
       long start = System.currentTimeMillis();
       this.visitBenchmark (b);
-      System.out.println("elapsed time: " + (System.currentTimeMillis() - start)
-          + "msec");
+      long finish = System.currentTimeMillis();
+      System.out.println("cold elapsed time: " + (finish - start) + "msec");
+      
+      if (args.length >= 2 && args[1].equals("--hot")) {
+        start = System.currentTimeMillis(); 
+        int n = 3;
+        for (int i = 0; i < n; i++)
+          this.visitBenchmark(b);
+        finish = System.currentTimeMillis();
+        
+        System.out.println("hot elapsed time: " + (finish - start)/n + "msec");
+      }
     } catch(Exception exc) {
       printUsage();
     }
   }
 
   public void printUsage() {
-    System.out.println("usage: tailor " + getClass().getName() + " fab://core/benchmark");
+    System.out.println("usage: tailor " + getClass().getName() + " fab://core/benchmark [--hot]");
   }
 }
 
