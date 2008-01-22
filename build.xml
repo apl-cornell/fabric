@@ -79,6 +79,7 @@
 	<available file="${bin}/loom"/>
 	<available file="${bin}/genkey"/>
 	<available file="${bin}/genmap"/>
+	<available file="${bin}/emulab-update"/>
       </and>
     </condition>
   </target>
@@ -142,6 +143,14 @@ TOP='${basedir}'
     </concat>
 
     <chmod perm="+x" file="${bin}/genmap"/>
+
+    <echo message="Creating ${bin}/emulab-update"/>
+    <concat destfile="${bin}/emulab-update" append="no">
+      <filelist dir="${bin}" files="defs"/>
+      <filelist dir="${bin}" files="emulab-update.in"/>
+    </concat>
+
+    <chmod perm="+x" file="${bin}/emulab-update"/>
 
     <delete file="${bin}/defs"/>
   </target>

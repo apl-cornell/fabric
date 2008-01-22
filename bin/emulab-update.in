@@ -1,0 +1,15 @@
+# Transfer files.
+rsync -arzvP --rsh=ssh --delete \
+  "${TOP}"/bin \
+  "${TOP}"/classes \
+  "${TOP}"/etc \
+  "${TOP}"/rt-classes \
+  "${TOP}"/var \
+  users.emulab.net:/proj/Fabric/fabric/
+
+# Fix up scripts.
+# ssh users.emulab.net 'for i in /proj/Fabric/fabric/bin/*.in ; do cat /proj/Fabric/fabric/bin/emulab-defs $i > /proj/Fabric/fabric/bin/$(basename $i .in) ; done'
+
+# Fix up permissions.
+ssh users.emulab.net 'chmod -R g+rw,o-rwx /proj/Fabric/fabric'
+
