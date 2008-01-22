@@ -233,7 +233,7 @@ public final class Client {
     String passwd = System.getProperty("fabric.client.password");
     String filename =
         System.getProperty("fabric.client.keystore", "client.keystore");
-    in = Resources.readFile("etc", filename);
+    in = Resources.readFile("etc/keys", filename);
     keyStore.load(in, passwd.toCharArray());
     in.close();
 
@@ -241,7 +241,7 @@ public final class Client {
     String trustPass = System.getProperty("fabric.client.trustpassword");
     String trustFile =
         System.getProperty("fabric.client.trustfilename", "trust.keystore");
-    in = Resources.readFile("etc", trustFile);
+    in = Resources.readFile("etc/keys", trustFile);
     trustStore.load(in, trustPass.toCharArray());
     in.close();
 

@@ -40,8 +40,8 @@
   <!-- loom executable -->
   <property name="loom" location="${bin}/loom" />
 
-  <!-- tailor executable -->
-  <property name="tailor" location="${bin}/tailor" />
+  <!-- genmap executable -->
+  <property name="genmap" location="${bin}/genmap" />
 
   <path id="standard.classpath">
     <pathelement location="${classes}"/>
@@ -77,6 +77,8 @@
         <available file="${bin}/fabric"/>
         <available file="${bin}/tailor"/>
 	<available file="${bin}/loom"/>
+	<available file="${bin}/genkey"/>
+	<available file="${bin}/genmap"/>
       </and>
     </condition>
   </target>
@@ -124,6 +126,22 @@ TOP='${basedir}'
     </concat>
 
     <chmod perm="+x" file="${bin}/tailor"/>
+
+    <echo message="Creating ${bin}/genkey"/>
+    <concat destfile="${bin}/genkey" append="no">
+      <filelist dir="${bin}" files="defs"/>
+      <filelist dir="${bin}" files="genkey.in"/>
+    </concat>
+
+    <chmod perm="+x" file="${bin}/genkey"/>
+
+    <echo message="Creating ${bin}/genmap"/>
+    <concat destfile="${bin}/genmap" append="no">
+      <filelist dir="${bin}" files="defs"/>
+      <filelist dir="${bin}" files="genmap.in"/>
+    </concat>
+
+    <chmod perm="+x" file="${bin}/genmap"/>
 
     <delete file="${bin}/defs"/>
   </target>
@@ -292,21 +310,11 @@ TOP='${basedir}'
 
   <!-- Creates the contents of var -->
   <target name="var" depends="fabric-system">
-    <mkdir dir="${var}" />
-    <antcall target="genmap">
-      <param name="core" value="core0"/>
-    </antcall>
-    <antcall target="genmap">
-      <param name="core" value="core1"/>
-    </antcall>
-  </target>
-
-  <target name="genmap">
     <exec executable="sh"
 	failonerror="true"
 	dir="${basedir}">
       <arg value="-c" />
-      <arg value="${tailor} fabric.core.GenMap ${core} &gt; ${var}/${core}" />
+      <arg value="${genmap}" />
     </exec>
   </target>
 

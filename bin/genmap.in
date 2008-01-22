@@ -1,0 +1,14 @@
+TAILOR="${TOP}/bin/tailor"
+KEYDIR="${TOP}/etc/keys"
+VAR="${TOP}/var"
+
+for i in "${KEYDIR}"/*.keystore ; do
+  NAME="$(basename "$i" .keystore)"
+
+  if [[ "${NAME}" == "trust" ]] ; then
+    continue
+  fi
+
+  "${TAILOR}" fabric.core.GenMap "${NAME}" > "${VAR}/${NAME}"
+done
+
