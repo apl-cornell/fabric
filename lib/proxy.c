@@ -184,6 +184,8 @@ void transfer(int src, int dst, int* counter, FILE** log) {
   int size = read(src, buf, 1024*8);
   int written = 0;
 
+  if (size == 0) die();
+
   if (size == -1) {
     fprintf(stderr, "Error reading from network: %d\n", errno);
     die();
