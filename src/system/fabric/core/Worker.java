@@ -31,8 +31,11 @@ public class Worker extends Thread {
   private ObjectOutputStream out;
 
   private int numReads;
+  private int numObjectsSent;
   private int numPrepares;
   private int numCommits;
+  private int numCreates;
+  private int numWrites;
 
   /**
    * Instantiates a new worker thread and starts it running.
@@ -142,8 +145,11 @@ public class Worker extends Thread {
       }
 
       System.err.println(numReads + " read requests");
+      System.err.println(numObjectsSent + " objects sent");
       System.err.println(numPrepares + " prepare requests");
       System.err.println(numCommits + " commit requests");
+      System.err.println(numCreates + " objects created");
+      System.err.println(numWrites + " objects updated");
       System.err.println();
 
       // Try to close our connection gracefully.
@@ -168,8 +174,9 @@ public class Worker extends Thread {
    */
   private void run_() throws IOException {
     // Reset the statistics counters.
-    numReads = numPrepares = numCommits = 0;
-    
+    numReads =
+        numObjectsSent = numPrepares = numCommits = numCreates = numWrites = 0;
+
     while (true) {
       Message.receive(in, out, this);
     }
@@ -202,6 +209,10 @@ public class Worker extends Thread {
   public CommitTransactionMessage.Response handle(
       CommitTransactionMessage message) throws TransactionCommitFailedException {
     this.numCommits++;
+    this.numCreates =
+        transactionManager.numCreates(client, message.transactionID);
+    this.numWrites =
+        transactionManager.numWrites(client, message.transactionID);
 
     transactionManager.commitTransaction(client, message.transactionID);
     return new CommitTransactionMessage.Response();
@@ -234,6 +245,8 @@ public class Worker extends Thread {
         SerializedObject related = transactionManager.read(client, onum);
         if (related != null) group.put(onum, related);
       }
+      
+      this.numObjectsSent += group.size() + 1;
 
       return new ReadMessage.Response(obj, group);
     }

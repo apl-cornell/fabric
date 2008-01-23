@@ -106,6 +106,22 @@ public class TransactionManager {
     if (!result)
       throw new TransactionCommitFailedException("something went wrong");
   }
+  
+  public synchronized int numCreates(Principal client, int transactionID) {
+    Transaction transaction = transactions.get(transactionID);
+    if (transaction == null || !transaction.client.equals(client))
+      return 0;
+    
+    return transaction.creates.size();
+  }
+  
+  public synchronized int numWrites(Principal client, int transactionID) {
+    Transaction transaction = transactions.get(transactionID);
+    if (transaction == null || !transaction.client.equals(client))
+      return 0;
+    
+    return transaction.writes.size();
+  }
 
   public int newTransaction(Principal client) {
     while (true) {
