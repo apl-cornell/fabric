@@ -10,9 +10,11 @@ import fabric.util.Iterator;
 public abstract class PrivatePartTraversal extends Traversal {
 
   public void visitBenchmark (Benchmark b) {
-    Iterator i = b.modulesById().values().iterator();
-    while (i.hasNext())
-      visitModule((Module) i.next());
+    atomic {
+      Iterator i = b.modulesById().values().iterator();
+      while (i.hasNext())
+        visitModule((Module) i.next());
+    }
   }
   
   public void visitModule (Module m) {
