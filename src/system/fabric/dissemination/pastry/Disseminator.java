@@ -38,7 +38,7 @@ public class Disseminator implements Application {
   protected IdFactory idf;
   
   /** The cache of fetched objects. */
-  protected Map<Pair<Core, Long>, Glob> cache;
+  protected Cache cache;
   
   /** The outstanding fetch message to be processed. */
   protected Fetch outstandingFetch;
@@ -49,7 +49,7 @@ public class Disseminator implements Application {
     endpoint.register();
     idf = new PastryIdFactory(node.getEnvironment());
     
-    cache = new HashMap<Pair<Core, Long>, Glob>();
+    cache = new Cache();
   }
 
   private static final Continuation halt = new Continuation() {
@@ -100,29 +100,23 @@ public class Disseminator implements Application {
     process(new Executable() {
       public Object execute() {
         Client client = Client.getClient();
-        RemoteCore c = (RemoteCore) client.getCore(msg.core());
+        RemoteCore c = client.getCore(msg.core());
         long onum = msg.onum();
-        Glob g = null;
-        Pair<Core, Long> key = new Pair<Core, Long>(c, onum);
+        Glob g = cache.get(c, onum);
         
-        synchronized (cache) {
-          if (!msg.refresh()) {
-            g = cache.get(key);
-          }
-          
-          if (g == null) {
-            ReadMessage.Response response = new ReadMessage(onum).send(c);
-            g = new Glob(response.serializedResult, response.related);
-            cache.put(key, g);
-          }
+        if (g == null) {
+          g = cache.get(c, onum, true);
         }
         
-        Fetch.Reply r = new Fetch.Reply(g.obj(), g.related());
-        route(null, r, msg.sender());
-        
+        reply(g, msg);
         return null;
       }
     });
+  }
+  
+  protected void reply(Glob g, Fetch msg) {
+    Fetch.Reply r = msg.new Reply(g.obj(), g.related());
+    route(null, r, msg.sender());
   }
   
   /** Process a Fetch.Reply. */
@@ -173,12 +167,28 @@ public class Disseminator implements Application {
   }
   
   protected boolean forward(Fetch msg) {
-    // TODO see if we already have this object
+    if (!msg.refresh()) {
+      Client client = Client.getClient();
+      RemoteCore c = client.getCore(msg.core());
+      long onum = msg.onum();
+      Glob g = cache.get(c, onum);
+      
+      if (g != null) {
+        reply(g, msg);
+        return false;
+      }
+    }
+    
     return true;
   }
   
   protected boolean forward(Fetch.Reply msg) {
-    // TODO cache this object if we don't have it
+    Client client = Client.getClient();
+    RemoteCore c = client.getCore(msg.core());
+    long onum = msg.onum();
+    Glob g = new Glob(msg.obj(), msg.related());
+    cache.put(c, onum, g);
+    
     return true;
   }
 

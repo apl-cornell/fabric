@@ -74,7 +74,7 @@ public class Fetch implements Message {
   /**
    * A reply to a Fetch message.
    */
-  public static class Reply implements Message {
+  public class Reply implements Message {
     
     private SerializedObject obj;
     private Map<Long, SerializedObject> related;
@@ -92,6 +92,16 @@ public class Fetch implements Message {
     /** The related objects. */
     public Map<Long, SerializedObject> related() {
       return related;
+    }
+
+    /** The core where the requested object resides. */
+    public String core() {
+      return core;
+    }
+    
+    /** The object number of the requested object. */
+    public long onum() {
+      return onum;
     }
 
     public int getPriority() {
