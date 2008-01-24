@@ -6,6 +6,7 @@ import java.net.SocketException;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -36,6 +37,7 @@ public class Worker extends Thread {
   private int numCommits;
   private int numCreates;
   private int numWrites;
+  private Map<String, Integer> numReadsByType;
 
   /**
    * Instantiates a new worker thread and starts it running.
@@ -150,6 +152,10 @@ public class Worker extends Thread {
       System.err.println(numCommits + " commit requests");
       System.err.println(numCreates + " objects created");
       System.err.println(numWrites + " objects updated");
+      for (Map.Entry<String, Integer> entry : numReadsByType.entrySet()) {
+        System.err.println("\t" + entry.getValue() + " " + entry.getKey()
+            + " sent");
+      }
       System.err.println();
 
       // Try to close our connection gracefully.
@@ -176,6 +182,7 @@ public class Worker extends Thread {
     // Reset the statistics counters.
     numReads =
         numObjectsSent = numPrepares = numCommits = numCreates = numWrites = 0;
+    numReadsByType = new TreeMap<String, Integer>();
 
     while (true) {
       Message.receive(in, out, this);
@@ -247,6 +254,10 @@ public class Worker extends Thread {
       }
       
       this.numObjectsSent += group.size() + 1;
+      int i = 0;
+      if (numReadsByType.containsKey(obj.className)) i = numReadsByType.get(obj.className);
+      i++;
+      numReadsByType.put(obj.className, i);
 
       return new ReadMessage.Response(obj, group);
     }
