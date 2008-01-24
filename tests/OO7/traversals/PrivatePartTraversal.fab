@@ -28,7 +28,7 @@ public abstract class PrivatePartTraversal extends Traversal {
   }
   
   public void visitBaseAssembly (BaseAssembly ba) {
-    Iterator i = ba.componentsPriv().iterator();
+    Iterator i = ba.componentsShar().iterator();
     while (i.hasNext())
       ((CompositePart) i.next()).accept(this);
   }
