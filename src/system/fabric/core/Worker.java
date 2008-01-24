@@ -37,7 +37,7 @@ public class Worker extends Thread {
   private int numCommits;
   private int numCreates;
   private int numWrites;
-  private Map<String, Integer> numReadsByType;
+  private Map<String, Integer> numSendsByType;
 
   /**
    * Instantiates a new worker thread and starts it running.
@@ -152,7 +152,7 @@ public class Worker extends Thread {
       System.err.println(numCommits + " commit requests");
       System.err.println(numCreates + " objects created");
       System.err.println(numWrites + " objects updated");
-      for (Map.Entry<String, Integer> entry : numReadsByType.entrySet()) {
+      for (Map.Entry<String, Integer> entry : numSendsByType.entrySet()) {
         System.err.println("\t" + entry.getValue() + " " + entry.getKey()
             + " sent");
       }
@@ -182,7 +182,7 @@ public class Worker extends Thread {
     // Reset the statistics counters.
     numReads =
         numObjectsSent = numPrepares = numCommits = numCreates = numWrites = 0;
-    numReadsByType = new TreeMap<String, Integer>();
+    numSendsByType = new TreeMap<String, Integer>();
 
     while (true) {
       Message.receive(in, out, this);
@@ -250,14 +250,22 @@ public class Worker extends Thread {
       // Traverse object graph and add more objects to the object group.
       for (long onum : obj.intracoreRefs) {
         SerializedObject related = transactionManager.read(client, onum);
-        if (related != null) group.put(onum, related);
+        if (related != null) {
+          group.put(onum, related);
+          int count = 0;
+          if (numSendsByType.containsKey(related.className))
+            count = numSendsByType.get(related.className);
+          count++;
+          numSendsByType.put(related.className, count);
+        }
       }
-      
+
       this.numObjectsSent += group.size() + 1;
-      int i = 0;
-      if (numReadsByType.containsKey(obj.className)) i = numReadsByType.get(obj.className);
-      i++;
-      numReadsByType.put(obj.className, i);
+      int count = 0;
+      if (numSendsByType.containsKey(obj.className))
+        count = numSendsByType.get(obj.className);
+      count++;
+      numSendsByType.put(obj.className, count);
 
       return new ReadMessage.Response(obj, group);
     }
