@@ -167,7 +167,7 @@ TOP='${basedir}'
 
   <!-- Compiles Fabric -->
   <target name="all"
-    depends="bin,fabric-system,fabric-compiler,fabric-signatures,var,tests"
+    depends="bin,fabric-system,fabric-compiler,fabric-signatures,client-debug,var,tests"
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
@@ -215,7 +215,19 @@ TOP='${basedir}'
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
       <include name="fabric/lang/**" />
+      <exclude name="fabric/client/debug/**" />
       <classpath refid="standard.classpath"/>
+    </javac>
+  </target>
+
+  <!-- Compiles the Fabric system-debugging tools -->
+  <target name="client-debug" depends="client,fabric-runtime">
+    <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
+      <include name="fabric/client/debug/**" />
+      <classpath>
+	<path refid="standard.classpath"/>
+	<pathelement location="${runtime.classes}" />
+      </classpath>
     </javac>
   </target>
 

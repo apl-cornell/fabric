@@ -1,5 +1,6 @@
 package fabric.client;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -8,6 +9,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -215,14 +217,14 @@ public final class Client {
   /**
    * Called to shut down and clean up client.
    */
-  protected void shutdown() {
+  public void shutdown() {
     fetchManager.destroy();
   }
-
-  // TODO: throws exception?
-  public static void main(String[] args) throws Throwable {
+  
+  public static void initialize() throws IOException, KeyStoreException,
+      NoSuchAlgorithmException, CertificateException,
+      UnrecoverableKeyException, IllegalStateException, InternalError {
     // Read in the Fabric properties file and update the System properties
-
     InputStream in = Resources.readFile("etc", "client.properties");
     Properties p = new Properties(System.getProperties());
     p.load(in);
@@ -259,6 +261,11 @@ public final class Client {
 
     initialize(keyStore, passwd.toCharArray(), trustStore, maxConnections,
         timeout, retries, useSSL);
+  }
+
+  // TODO: throws exception?
+  public static void main(String[] args) throws Throwable {
+    initialize();
 
     // TODO: option overriding on command line?
 

@@ -48,9 +48,12 @@ public final class SerializedObject implements Serializable {
   final List<RefTypeEnum> refTypes;
 
   /**
-   * The onums representing the intra-core references in this object.
+   * The onums representing the intra-core references in this object. This is
+   * public for debugging purposes.
+   * 
+   * @see fabric.client.debug.ObjectCount#countReachable
    */
-  final List<Long> intracoreRefs;
+  public final List<Long> intracoreRefs;
 
   /**
    * Global object names representing the inter-core references in this object.
@@ -61,7 +64,7 @@ public final class SerializedObject implements Serializable {
 
   /**
    * Creates a serialized representation of the given object. This should only
-   * be used by GenMap.
+   * be used by GenMap and for debugging (client.debug.*).
    * 
    * @param obj
    *                The object to serialize.
