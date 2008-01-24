@@ -76,6 +76,7 @@ public class ObjectCount {
     Set<Long> visited = new HashSet<Long>();
     Stack<Long> toVisit = new Stack<Long>();
     toVisit.add(obj.$getOnum());
+    java.util.Map<String, Integer> byType = new TreeMap<String, Integer>();
 
     Client client = Client.getClient();
     Core core = obj.$getCore();
@@ -87,10 +88,14 @@ public class ObjectCount {
       Object.$Impl impl = client.fetchObject(core, onum);
       SerializedObject so = new SerializedObject(impl);
       for (long ref : so.intracoreRefs)
-        if (!visited.contains(ref)) toVisit.push(ref);
+        if (!visited.contains(ref) && !toVisit.contains(ref)) toVisit.push(ref);
       
       result++;
-    }
+      int i = 0;
+      if (byType.containsKey(so.className)) i=byType.get(so.className);
+      i++;
+      byType.put(so.className, i);
+    }for (java.util.Map.Entry<String, Integer> entry : byType.entrySet()) System.out.println(entry.getKey() + " => " + entry.getValue());
 
     return result;
   }

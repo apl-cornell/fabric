@@ -31,7 +31,7 @@ public final class SerializedObject implements Serializable {
    * The name of the class's object. XXX This should be an OID referencing the
    * appropriate class object.
    */
-  private final String className;
+  public final String className;
 
   /**
    * The object's version number.
