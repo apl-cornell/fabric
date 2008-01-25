@@ -2,6 +2,7 @@ package fabric.dissemination.pastry;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import rice.Continuation;
 import rice.Executable;
@@ -17,10 +18,8 @@ import rice.pastry.commonapi.PastryIdFactory;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.common.Pair;
 import fabric.dissemination.pastry.messages.Fetch;
 import fabric.lang.Object.$Impl;
-import fabric.messages.ReadMessage;
 
 /**
  * A pastry application that implements the functionality of a Fabric
@@ -37,19 +36,23 @@ public class Disseminator implements Application {
   /** The pastry id generating factory. */
   protected IdFactory idf;
   
+  protected Random rand;
+  
   /** The cache of fetched objects. */
   protected Cache cache;
   
-  /** The outstanding fetch message to be processed. */
-  protected Fetch outstandingFetch;
+  /** Outstanding fetch messages awaiting replies. */
+  protected Map<Id, Fetch> outstanding;
   
   public Disseminator(PastryNode node) {
     this.node = node;
     endpoint = node.buildEndpoint(this, null);
     endpoint.register();
     idf = new PastryIdFactory(node.getEnvironment());
+    rand = new Random();
     
     cache = new Cache();
+    outstanding = new HashMap<Id, Fetch>();
   }
 
   private static final Continuation halt = new Continuation() {
@@ -86,7 +89,7 @@ public class Disseminator implements Application {
   protected NodeHandle getLocalHandle() {
     return endpoint.getLocalNodeHandle();
   }
-  
+
   public void deliver(Id id, Message message) {
     if (message instanceof Fetch) {
       fetch((Fetch) message);
@@ -114,6 +117,7 @@ public class Disseminator implements Application {
     });
   }
   
+  /** Reply to a Fetch message with given glob. */
   protected void reply(Glob g, Fetch msg) {
     Fetch.Reply r = msg.new Reply(g.obj(), g.related());
     route(null, r, msg.sender());
@@ -123,10 +127,16 @@ public class Disseminator implements Application {
   protected void fetch(final Fetch.Reply msg) {
     process(new Executable() {
       public Object execute() {
-        if (outstandingFetch != null) {
-          synchronized (outstandingFetch) {
-            outstandingFetch.reply(msg);
-            outstandingFetch.notifyAll();
+        Fetch f = null;
+        
+        synchronized (outstanding) {
+          f = outstanding.remove(msg.id());
+        }
+        
+        if (f != null) {
+          synchronized (f) {
+            f.reply(msg);
+            f.notifyAll();
           }
         }
         
@@ -137,17 +147,22 @@ public class Disseminator implements Application {
   
   /** Called by a FetchManager to fetch the specified object. */
   public $Impl fetch(Core c, long onum) {
-    outstandingFetch = new Fetch(getLocalHandle(), ((RemoteCore) c).name, onum);
+    Id id = idf.buildRandomId(rand);
+    Fetch f = new Fetch(getLocalHandle(), id, ((RemoteCore) c).name, onum);
     
-    synchronized (outstandingFetch) {
-      route(idf.buildId(outstandingFetch.toString()), outstandingFetch, null);
-      
+    synchronized (outstanding) {
+      outstanding.put(id, f);
+    }
+    
+    route(idf.buildId(f.toString()), f, null);
+    
+    synchronized (f) {
       try {
-        outstandingFetch.wait();
+        f.wait();
       } catch (InterruptedException e) {}
       
       try {
-        return outstandingFetch.reply().obj().deserialize(c);
+        return f.reply().obj().deserialize(c);
       } catch (ClassNotFoundException e) {}
     }
     
@@ -166,6 +181,13 @@ public class Disseminator implements Application {
     return true;
   }
   
+  /**
+   * See if we should keep routing the given Fetch message or if we can reply
+   * to it using our cache.
+   * 
+   * @param msg the Fetch message
+   * @return true if message should be further routed
+   */
   protected boolean forward(Fetch msg) {
     if (!msg.refresh()) {
       Client client = Client.getClient();
@@ -182,6 +204,12 @@ public class Disseminator implements Application {
     return true;
   }
   
+  /**
+   * Cache glob from Fetch.Reply if we don't already have it.
+   * 
+   * @param msg the Fetch.Reply message
+   * @return always true, indicating message should be further routed
+   */
   protected boolean forward(Fetch.Reply msg) {
     Client client = Client.getClient();
     RemoteCore c = client.getCore(msg.core());

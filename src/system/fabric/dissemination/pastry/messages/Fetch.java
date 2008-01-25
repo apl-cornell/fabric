@@ -2,6 +2,7 @@ package fabric.dissemination.pastry.messages;
 
 import java.util.Map;
 
+import rice.p2p.commonapi.Id;
 import rice.p2p.commonapi.Message;
 import rice.p2p.commonapi.NodeHandle;
 import fabric.core.SerializedObject;
@@ -12,14 +13,16 @@ import fabric.core.SerializedObject;
 public class Fetch implements Message {
   
   private final NodeHandle sender;
+  private final Id id;
   private final String core;
   private final long onum;
   private boolean refresh;
   
   private transient Reply reply;
   
-  public Fetch(NodeHandle sender, String core, long onum) {
+  public Fetch(NodeHandle sender, Id id, String core, long onum) {
     this.sender = sender;
+    this.id = id;
     this.core = core;
     this.onum = onum;
   }
@@ -29,6 +32,11 @@ public class Fetch implements Message {
     return sender;
   }
   
+  /** The random id of this message. */
+  public Id id() {
+    return id;
+  }
+
   /** The core where the requested object resides. */
   public String core() {
     return core;
@@ -92,6 +100,11 @@ public class Fetch implements Message {
     /** The related objects. */
     public Map<Long, SerializedObject> related() {
       return related;
+    }
+
+    /** The random id of this message. */
+    public Id id() {
+      return id;
     }
 
     /** The core where the requested object resides. */
