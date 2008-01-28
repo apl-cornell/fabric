@@ -260,7 +260,7 @@ public final class SerializedObject implements Serializable {
 
     size = in.readInt();
     if (size == 0) {
-      this.intracoreRefs = Collections.emptyList();
+      this.intracoreRefs = new ArrayList<Long>(0);
     } else {
       this.intracoreRefs = new ArrayList<Long>(size);
       for (int i = 0; i < size; i++)
