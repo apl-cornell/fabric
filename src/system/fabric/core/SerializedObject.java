@@ -74,6 +74,7 @@ public final class SerializedObject implements Serializable {
     this.onum = obj.$getOnum();
     this.className = obj.getClass().getName();
     this.policy = obj.$getPolicy();
+    this.version = obj.$version;
 
     ByteArrayOutputStream serializedData = new ByteArrayOutputStream();
     this.refTypes = new ArrayList<RefTypeEnum>();

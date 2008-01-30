@@ -35,7 +35,7 @@ class MemoryStore implements ObjectStore {
   public MemoryStore(InputStream in) throws IOException, ClassNotFoundException {
     this();
     ObjectInputStream oin = new ObjectInputStream(in);
-    this.objectTable = (Map<Long,SerializedObject>) oin.readObject();    
+    this.objectTable = (Map<Long,SerializedObject>) oin.readObject();
   }
   
   public void dump(OutputStream out) throws IOException {
@@ -106,7 +106,7 @@ class MemoryStore implements ObjectStore {
     if (!checkInsertPerm(client, onum)) return false;
 
     // Initialise the version number and insert
-    obj.setVersion(0);
+    obj.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
     objectTable.put(onum, obj);
     return true;
   }

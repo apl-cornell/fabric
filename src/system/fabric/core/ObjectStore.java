@@ -11,6 +11,8 @@ import java.util.Set;
  * safety ensures safe usage of <code>ObjectStore</code>s.
  */
 interface ObjectStore {
+  final int INITIAL_OBJECT_VERSION_NUMBER = 1;
+  
   /**
    * Fetches an object by object number from the store. Returns null if there is
    * no object with that object number or if the client is not authorised to

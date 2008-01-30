@@ -32,8 +32,13 @@ public class GenMap {
       Object.$Impl rootMap = new HashMap.$Impl(local);
       local.surrogate(core);
       rootMap.$forceRelocate(core, 0);
+      
+      rootMap.$version = 1;
       store.put(0L, new SerializedObject(rootMap));
-      store.put(3L, new SerializedObject(local.readObject(3)));
+      
+      Object.$Impl obj = local.readObject(3);
+      obj.$version = 1;
+      store.put(3L, new SerializedObject(obj));
       out.writeObject(store);
     }
   }

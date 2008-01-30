@@ -2,17 +2,16 @@ package fabric.common;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
- * Provides a two-key hash map. XXX Only the outer map is a ConcurrentMap.
+ * Provides a two-key hash map.
  */
-public class Concurrent2KeyHashMap<T, U, V> implements Cloneable {
+public class TwoKeyHashMap<T, U, V> implements Cloneable {
 
-  private ConcurrentMap<T, HashMap<U, V>> map;
+  private Map<T, HashMap<U, V>> map;
 
-  public Concurrent2KeyHashMap() {
-    map = new ConcurrentHashMap<T, HashMap<U, V>>();
+  public TwoKeyHashMap() {
+    map = new HashMap<T, HashMap<U, V>>();
   }
 
   public void clear() {
@@ -24,7 +23,8 @@ public class Concurrent2KeyHashMap<T, U, V> implements Cloneable {
   }
 
   public boolean containsKey(T key1, U key2) {
-    return map.containsKey(key1) && map.get(key1).containsKey(key2);
+    HashMap<U,V> submap = map.get(key1);
+    return submap != null && submap.containsKey(key2);
   }
 
   public boolean containsValue(V value) {
@@ -98,7 +98,7 @@ public class Concurrent2KeyHashMap<T, U, V> implements Cloneable {
        */
       @Override
       public int size() {
-        return Concurrent2KeyHashMap.this.size();
+        return TwoKeyHashMap.this.size();
       }
 
     };
@@ -128,7 +128,7 @@ public class Concurrent2KeyHashMap<T, U, V> implements Cloneable {
     return map.put(key2, value);
   }
 
-  public void putAll(Concurrent2KeyHashMap<T, U, V> other) {
+  public void putAll(TwoKeyHashMap<T, U, V> other) {
     for (Map.Entry<T, HashMap<U, V>> entry : other.map.entrySet()) {
       T key = entry.getKey();
       HashMap<U, V> map = this.map.get(key);
@@ -162,10 +162,10 @@ public class Concurrent2KeyHashMap<T, U, V> implements Cloneable {
 
   @Override
   @SuppressWarnings("unchecked")
-  public Concurrent2KeyHashMap<T, U, V> clone() {
-    Concurrent2KeyHashMap<T, U, V> result = null;
+  public TwoKeyHashMap<T, U, V> clone() {
+    TwoKeyHashMap<T, U, V> result = null;
     try {
-      result = (Concurrent2KeyHashMap<T, U, V>) super.clone();
+      result = (TwoKeyHashMap<T, U, V>) super.clone();
       result.map = new ConcurrentHashMap<T, HashMap<U, V>>(result.map);
       for (Map.Entry<T, HashMap<U, V>> entry : result.map.entrySet()) {
         entry.setValue((HashMap<U, V>) entry.getValue().clone());
