@@ -348,13 +348,9 @@ public final class TransactionManager {
     Core core = obj.$getCore();
     long onum = obj.$getOnum();
 
-    Integer otherVersionNum = log.reads.get(core, onum);
-    if (otherVersionNum == null) {
-      log.reads.put(core, onum, obj.$getVersion());
-      return;
-    }
-
-    if (otherVersionNum.intValue() != obj.$getVersion())
+    int readVersionNum = obj.$getVersion();
+    Integer otherVersionNum = log.reads.put(core, onum, readVersionNum);
+    if (otherVersionNum != null && otherVersionNum.intValue() != readVersionNum)
       throw new VersionConflictException(obj);
   }
 
