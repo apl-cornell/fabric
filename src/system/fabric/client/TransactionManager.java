@@ -216,7 +216,8 @@ public final class TransactionManager {
                 writes = new ArrayList<$Impl>(writesMap.size());
                 for (Map.Entry<Long, Pair<$Impl, Integer>> entry : writesMap
                     .entrySet()) {
-                  if (!createsMap.containsKey(entry.getKey()))
+                  if (createsMap == null
+                      || !createsMap.containsKey(entry.getKey()))
                     writes.add(entry.getValue().first);
                 }
               }
