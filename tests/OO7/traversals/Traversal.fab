@@ -46,6 +46,7 @@ public abstract class Traversal {
         System.out.println("hot elapsed time: " + (finish - start)/n + "msec");
       }
     } catch(Exception exc) {
+      exc.printStackTrace();
       printUsage();
     }
   }
