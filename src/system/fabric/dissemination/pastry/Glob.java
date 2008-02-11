@@ -4,6 +4,9 @@ import java.util.Map;
 
 import fabric.core.SerializedObject;
 
+/**
+ * A glob is a serialized object and a set of related objects.
+ */
 public class Glob {
   
   private final SerializedObject obj;
@@ -14,10 +17,16 @@ public class Glob {
     this.related = related;
   }
   
+  /**
+   * The main object of this glob.
+   */
   public SerializedObject obj() {
     return obj;
   }
   
+  /**
+   * The related objects as a map from their onums to the objects.
+   */
   public Map<Long, SerializedObject> related() {
     return related;
   }

@@ -15,10 +15,15 @@ import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.RouteMessage;
 import rice.pastry.PastryNode;
 import rice.pastry.commonapi.PastryIdFactory;
+import rice.pastry.routing.RouteSet;
+import rice.pastry.routing.RoutingTable;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
+import fabric.common.Pair;
 import fabric.dissemination.pastry.messages.Fetch;
+import fabric.dissemination.pastry.messages.Replicate;
+import fabric.dissemination.pastry.messages.ReplicateInterval;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -53,6 +58,8 @@ public class Disseminator implements Application {
     
     cache = new Cache();
     outstanding = new HashMap<Id, Fetch>();
+    
+    endpoint.scheduleMessage(new ReplicateInterval(), 60000, 60000);
   }
 
   private static final Continuation halt = new Continuation() {
@@ -61,7 +68,7 @@ public class Disseminator implements Application {
   };
 
   /**
-    * Processes a task on the task processing thread. When messages are
+    * Schedules a task on the task processing thread. When messages are
     * received, handlers should run on the processing thread so as not to
     * block the message receiving thread.
     */
@@ -86,7 +93,7 @@ public class Disseminator implements Application {
   }
 
   /** The NodeHandle of this pastry node. */
-  protected NodeHandle getLocalHandle() {
+  protected NodeHandle localHandle() {
     return endpoint.getLocalNodeHandle();
   }
 
@@ -95,6 +102,12 @@ public class Disseminator implements Application {
       fetch((Fetch) message);
     } else if (message instanceof Fetch.Reply) {
       fetch((Fetch.Reply) message);
+    } else if (message instanceof ReplicateInterval) {
+      replicateInterval();
+    } else if (message instanceof Replicate) {
+      
+    } else if (message instanceof Replicate.Reply) {
+      
     }
   }
   
@@ -148,7 +161,7 @@ public class Disseminator implements Application {
   /** Called by a FetchManager to fetch the specified object. */
   public $Impl fetch(Core c, long onum) {
     Id id = idf.buildRandomId(rand);
-    Fetch f = new Fetch(getLocalHandle(), id, ((RemoteCore) c).name, onum);
+    Fetch f = new Fetch(localHandle(), id, ((RemoteCore) c).name, onum);
     
     synchronized (outstanding) {
       outstanding.put(id, f);
@@ -167,6 +180,70 @@ public class Disseminator implements Application {
     }
     
     return null;
+  }
+  
+  /**
+   * Called once every replicate interval.
+   */
+  protected void replicateInterval() {
+    process(new Executable() {
+      public Object execute() {
+        rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
+        RoutingTable rt = node.getRoutingTable();
+        int k = rt.numRows();
+
+        for (int i = 0; i < k; i++) {
+          int d = me.getDigit(i, rt.baseBitLength());
+
+          for (int j = 0; j < rt.numColumns(); j++) {
+            if (j == d) {
+              continue;
+            }
+
+            RouteSet rs = rt.getRouteSet(i, j);
+
+            if (rs != null && rs.size() > 0) {
+              NodeHandle n = rs.closestNode();
+              Replicate msg = new Replicate(localHandle(), k - i - 1);
+              route(null, msg, n);
+            }
+          }
+        }
+        
+        return null;
+      }
+    });
+  }
+  
+  protected void replicate(final Replicate msg) {
+    process(new Executable() {
+      public Object execute() {
+        int level = msg.level();
+        rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
+        byte baselen = node.getRoutingTable().idBaseBitLength;
+        int idlen = node.getRoutingTable().numRows();
+        
+        Map<Pair<String, Long>, Glob> globs = 
+          new HashMap<Pair<String, Long>, Glob>();
+        
+        for (Pair<Core, Long> k : cache.map.keySet()) {
+          rice.pastry.Id id = (rice.pastry.Id) idf.buildId(k.first + "/" + k.second);
+          
+          if (me.indexOfMSDD(id, baselen) < idlen - level) {
+            RemoteCore c = (RemoteCore) k.first;
+            Long onum = k.second;
+            Glob g = cache.get(c, onum);
+            
+            globs.put(new Pair<String, Long>(c.name(), onum), g);
+          }
+        }
+        
+        Replicate.Reply r = new Replicate.Reply(globs);
+        route(null, r, msg.sender());
+        
+        return null;
+      }
+    });
   }
 
   public boolean forward(RouteMessage message) {

@@ -3,7 +3,6 @@ package fabric.dissemination.pastry;
 import java.util.HashMap;
 import java.util.Map;
 
-import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.common.Pair;
@@ -13,8 +12,6 @@ public class Cache {
   
   protected Map<Pair<Core, Long>, Glob> map = 
     new HashMap<Pair<Core, Long>, Glob>();
-  
-  protected Client client = Client.getClient();
   
   /**
    * Retrieves a glob from the cache, without trying to fetch it from the core.
