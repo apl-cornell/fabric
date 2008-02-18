@@ -331,12 +331,26 @@ TOP='${basedir}'
 
   <!-- Creates the contents of var -->
   <target name="var" depends="fabric-system">
-    <exec executable="sh"
+    <!-- exec executable="sh"
 	failonerror="true"
 	dir="${basedir}">
       <arg value="-c" />
       <arg value="${genmap}" />
-    </exec>
+    </exec -->
+  	
+    <apply executable="sh"
+    parallel="true"
+    failonerror="true"
+    dir="${basedir}"
+    relative="true"
+    skipemptyfilesets="true"
+    vmlauncher="false"
+    addsourcefile="false">
+      <arg value="${genmap}" />
+      <fileset dir="${basedir}"
+      includes="etc/keys/*.keystore" excludes="etc/keys/trust.keystore" />
+      <globmapper from="etc/keys/*.keystore" to="var/*" />
+    </apply>
   </target>
 
   <!-- Compiles the Fabric test programs -->
