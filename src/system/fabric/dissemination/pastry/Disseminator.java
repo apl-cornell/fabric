@@ -1,8 +1,10 @@
 package fabric.dissemination.pastry;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import rice.Continuation;
 import rice.Executable;
@@ -15,6 +17,7 @@ import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.RouteMessage;
 import rice.pastry.PastryNode;
 import rice.pastry.commonapi.PastryIdFactory;
+import rice.pastry.leafset.LeafSet;
 import rice.pastry.routing.RouteSet;
 import rice.pastry.routing.RoutingTable;
 import fabric.client.Client;
@@ -189,6 +192,22 @@ public class Disseminator implements Application {
     process(new Executable() {
       public Object execute() {
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
+        
+        LeafSet ls = node.getLeafSet();
+        NodeHandle n = ls.get(-1);
+        
+        if (n != null) {
+          Replicate msg = new Replicate(localHandle(), -1);
+          route(null, msg, n);
+        }
+        
+        NodeHandle m = ls.get(1);
+        
+        if (m != null && m != n) {
+          Replicate msg = new Replicate(localHandle(), -1);
+          route(null, msg, m);
+        }
+        
         RoutingTable rt = node.getRoutingTable();
         int k = rt.numRows();
 
@@ -203,7 +222,7 @@ public class Disseminator implements Application {
             RouteSet rs = rt.getRouteSet(i, j);
 
             if (rs != null && rs.size() > 0) {
-              NodeHandle n = rs.closestNode();
+              n = rs.closestNode();
               Replicate msg = new Replicate(localHandle(), k - i - 1);
               route(null, msg, n);
             }
@@ -218,18 +237,28 @@ public class Disseminator implements Application {
   protected void replicate(final Replicate msg) {
     process(new Executable() {
       public Object execute() {
+        NodeHandle sender = msg.sender();
         int level = msg.level();
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
-        byte baselen = node.getRoutingTable().idBaseBitLength;
-        int idlen = node.getRoutingTable().numRows();
+        RoutingTable rt = node.getRoutingTable();
+        byte baselen = rt.idBaseBitLength;
+        int idlen = rt.numRows();
         
         Map<Pair<String, Long>, Glob> globs = 
           new HashMap<Pair<String, Long>, Glob>();
         
         for (Pair<Core, Long> k : cache.map.keySet()) {
           rice.pastry.Id id = (rice.pastry.Id) idf.buildId(k.first + "/" + k.second);
+          boolean send = false;
           
-          if (me.indexOfMSDD(id, baselen) < idlen - level) {
+          if (level != -1) {
+            send = id.indexOfMSDD(me, baselen) < idlen - level;
+          } else {
+            send = id.indexOfMSDD((rice.pastry.Id) sender.getId(), baselen) <
+              id.indexOfMSDD(me, baselen);
+          }
+          
+          if (send) {
             RemoteCore c = (RemoteCore) k.first;
             Long onum = k.second;
             Glob g = cache.get(c, onum);
@@ -238,8 +267,10 @@ public class Disseminator implements Application {
           }
         }
         
-        Replicate.Reply r = new Replicate.Reply(globs);
-        route(null, r, msg.sender());
+        if (globs.size() > 0) {
+          Replicate.Reply r = new Replicate.Reply(globs);
+          route(null, r, sender);
+        }
         
         return null;
       }
