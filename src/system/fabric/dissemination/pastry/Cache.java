@@ -64,7 +64,11 @@ public class Cache {
     Pair<Core, Long> key = new Pair<Core, Long>(c, onum);
     
     synchronized (map) {
-      map.put(key, g);
+      Glob old = map.get(key);
+      
+      if (old == null || old.obj().getVersion() < g.obj().getVersion()) {
+        map.put(key, g);
+      }
     }
   }
 

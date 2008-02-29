@@ -1,10 +1,8 @@
 package fabric.dissemination.pastry;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 import rice.Continuation;
 import rice.Executable;
@@ -24,6 +22,7 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.common.Pair;
+import fabric.dissemination.pastry.messages.AggregateInterval;
 import fabric.dissemination.pastry.messages.Fetch;
 import fabric.dissemination.pastry.messages.Replicate;
 import fabric.dissemination.pastry.messages.ReplicateInterval;
@@ -63,6 +62,7 @@ public class Disseminator implements Application {
     outstanding = new HashMap<Id, Fetch>();
     
     endpoint.scheduleMessage(new ReplicateInterval(), 60000, 60000);
+    endpoint.scheduleMessage(new AggregateInterval(), 120000, 120000);
   }
 
   private static final Continuation halt = new Continuation() {
@@ -100,17 +100,19 @@ public class Disseminator implements Application {
     return endpoint.getLocalNodeHandle();
   }
 
-  public void deliver(Id id, Message message) {
-    if (message instanceof Fetch) {
-      fetch((Fetch) message);
-    } else if (message instanceof Fetch.Reply) {
-      fetch((Fetch.Reply) message);
-    } else if (message instanceof ReplicateInterval) {
+  public void deliver(Id id, Message msg) {
+    if (msg instanceof Fetch) {
+      fetch((Fetch) msg);
+    } else if (msg instanceof Fetch.Reply) {
+      fetch((Fetch.Reply) msg);
+    } else if (msg instanceof ReplicateInterval) {
       replicateInterval();
-    } else if (message instanceof Replicate) {
-      
-    } else if (message instanceof Replicate.Reply) {
-      
+    } else if (msg instanceof Replicate) {
+      replicate((Replicate) msg);
+    } else if (msg instanceof Replicate.Reply) {
+      replicate((Replicate.Reply) msg);
+    } else if (msg instanceof AggregateInterval) {
+      aggregateInterval();
     }
   }
   
@@ -135,6 +137,7 @@ public class Disseminator implements Application {
   
   /** Reply to a Fetch message with given glob. */
   protected void reply(Glob g, Fetch msg) {
+    g.touch();
     Fetch.Reply r = msg.new Reply(g.obj(), g.related());
     route(null, r, msg.sender());
   }
@@ -277,6 +280,27 @@ public class Disseminator implements Application {
     });
   }
 
+  protected void replicate(final Replicate.Reply msg) {
+    process(new Executable() {
+      public Object execute() {
+        Client client = Client.getClient();
+        
+        for (Map.Entry<Pair<String, Long>, Glob> e : msg.globs().entrySet()) {
+          RemoteCore c = client.getCore(e.getKey().first);
+          long onum = e.getKey().second;
+          Glob g = e.getValue();
+          cache.put(c, onum, g);
+        }
+        
+        return null;
+      }
+    });
+  }
+  
+  protected void aggregateInterval() {
+    // TODO
+  }
+  
   public boolean forward(RouteMessage message) {
     Message m = message.getMessage();
     

@@ -16,9 +16,17 @@ public class Glob {
   private transient int frequency;
   private transient int popularity;
   
+  private transient boolean home;
+  
   public Glob(SerializedObject obj, Map<Long, SerializedObject> related) {
+    this(obj, related, false);
+  }
+
+  public Glob(SerializedObject obj, Map<Long, SerializedObject> related, 
+      boolean home) {
     this.obj = obj;
     this.related = related;
+    this.home = home;
   }
   
   /**
@@ -51,12 +59,20 @@ public class Glob {
     this.frequency = frequency;
   }
   
+  public void touch() {
+    this.frequency++;
+  }
+  
   public int popularity() {
     return popularity;
   }
   
   public void popularity(int popularity) {
     this.popularity = popularity;
+  }
+  
+  public boolean home() {
+    return home;
   }
 
 }
