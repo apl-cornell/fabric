@@ -6,5 +6,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/polyglot"/>
 	<classpathentry kind="lib" path="rt-classes" sourcepath="/tmp/fabric"/>
 	<classpathentry kind="lib" path="lib/FreePastry-2.0_03.jar"/>
+	<classpathentry kind="lib" path="lib/je-3.2.68.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
