@@ -1,6 +1,7 @@
 package fabric.common;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -85,16 +86,33 @@ public final class Util {
             advance();
             if (current == null)
               throw new NoSuchElementException();
-            return current.next();
+            T result = current.next();
+            if (!current.hasNext())
+              current = null;
+            return result;
           }
 
           public void remove() {
             // TODO Auto-generated method stub
-
+            throw new UnsupportedOperationException();
           }
         };
       }
     };
+  }
+  
+  public static void main(String[] args) {
+    ArrayList<Integer> x = new ArrayList<Integer>();
+    ArrayList<Integer> y = new ArrayList<Integer>();
+    ArrayList<Integer> z = new ArrayList<Integer>();
+    
+    x.add(1);
+    x.add(2);
+    x.add(3);
+    z.add(7);
+    
+    for (int i : chain(x, y, z))
+      System.out.println(i);
   }
 }
 
