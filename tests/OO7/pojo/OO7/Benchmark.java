@@ -6,95 +6,154 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Benchmark.java,v 1.1 2008-01-08 18:38:02 mdgeorge Exp $
+// $Id: Benchmark.java,v 1.2 2008-03-07 19:46:24 jed Exp $
 
 package OO7;
 
-import java.util.*;
+import java.util.Map;
 import java.util.Random;
 import java.net.URI;
+import java.util.HashMap;
 
 public class Benchmark {
-  // data base parameters
-  public final static int LARGE  = 3;
+  // database parameters
+  public final static int LARGE = 3;
   public final static int MEDIUM = 2;
-  public final static int SMALL  = 1;
-  public final static int TINY   = 0;
+  public final static int SMALL = 1;
+  public final static int TINY = 0;
 
-  //                            Database paramters                   TINY  SMALL  MEDIUM LARGE
-  private final static int[]    numAtomicPerComp = new int[]{ 20,   20,    200,   200    };
-  private final        int      numConnPerAtomic;                     
-  private final static int[]    documentSize     = new int[]{ 20,   2000,  20000, 20000  };
-  private final static double[] manualSize       = new double[]{ 1e3,  100e3, 1e6,   1e6    };
-  private final static int[]    numCompPerModule = new int[]{ 5,    500,   500,   500    };
-  private final static int[]    numAssmPerAssm   = new int[]{ 3,    3,     3,     3      };
-  private final static int[]    numAssmLevels    = new int[]{ 3,    7,     7,     7      };
-  private final static int[]    numCompPerAssm   = new int[]{ 3,    3,     3,     3      };
-  private final static int[]    numModules       = new int[]{ 1,    1,     1,     10     };
-
-  private final static String database = "OO7 Database";
+  // Database parameters TINY SMALL MEDIUM LARGE
+  private final static int[] numAtomicPerComp = new int[] { 20, 20, 200, 200 };
+  private final int numConnPerAtomic;
+  private final static int[] documentSize =
+      new int[] { 20, 2000, 20000, 20000 };
+  private final static double[] manualSize =
+      new double[] { 1e3, 100e3, 1e6, 1e6 };
+  private final static int[] numCompPerModule = new int[] { 5, 500, 500, 500 };
+  private final static int[] numAssmPerAssm = new int[] { 3, 3, 3, 3 };
+  private final static int[] numAssmLevels = new int[] { 3, 7, 7, 7 };
+  private final static int[] numCompPerAssm = new int[] { 3, 3, 3, 3 };
+  private final static int[] numModules = new int[] { 1, 1, 1, 10 };
 
   private static final Random rand = new Random();
 
   int scale = 0;
-  // TODO: expose extents
-  Module module = null;
-  HashMap atomicParts = null;
+  int maxId = 10;
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Database traversals                                                      //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // Extents //
+  // ////////////////////////////////////////////////////////////////////////////
 
-  public void matchQuery() throws Exception {
-    // generate a random list of objects to fetch
-    int[] oids = new int[1000];
-    for (int i = 0; i < oids.length; ++i)
-      oids[i] = rand.nextInt(atomicParts.size());
+  // Note: each class is responsible for maintaining its own extents.
+  Map/* Integer,AtomicPart */atomicPartsById;
+  // Map/*Long,AtomicPart*/ atomicPartsByBuildDate;
+  Map/* Integer,CompositePart */compositePartsById;
+  // Map/*String,Document*/ documentsByTitle;
+  Map/* Integer,Document */documentsById;
+  Map/* Integer,BaseAssembly */baseAssembliesById;
+  Map/* Integer,Module */modulesById;
 
-    // access each
-    long time = System.currentTimeMillis();
-    for (int i = 0; i < oids.length; ++i) {
-      AtomicPart part = (AtomicPart) atomicParts.get(new Integer(oids[i]));
-      long x = part.x();
-    }
-    time = (System.currentTimeMillis() - time);
-    System.out.println("Millis: " + time);
+  public Map atomicPartsById() {
+    return atomicPartsById;
+    // TODO: return Collections.unmodifiableMap(atomicPartsById);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Database creation                                                        //
-  //////////////////////////////////////////////////////////////////////////////
+  /*
+   * This index isn't implemented because it requires multimaps public Map
+   * atomicPartsByBuildDate() { return atomicPartsByBuildDate; // TODO: return
+   * Collections.unmodifiableMap(atomicPartsByBuildDate); }
+   */
 
-  /** Create a benchmark of the corresponding size.
-    *
-    * @param scale either TINY, SMALL, MEDIUM or LARGE
-    * @param numConnPerAtomic the fan-out value (either 3, 6 or 9)
-    */
+  public Map compositePartsById() {
+    return compositePartsById;
+    // TODO: return Collections.unmodifiableMap(compositePartsById);
+  }
+
+  /*
+   * This index isn't implemented because it requires multimaps public Map
+   * documentsByTitle() { return documentsByTitle; //TODO: return
+   * Collections.unmodifiableMap(documentsByTitle); }
+   */
+
+  public Map documentsById() {
+    return documentsById;
+    // TODO: return Collections.unmodifiableMap(documentsById);
+  }
+
+  public Map baseAssembliesById() {
+    return baseAssembliesById;
+    // TODO: return Collections.unmodifiableMap(baseAssembliesById);
+  }
+
+  public Map modulesById() {
+    return modulesById;
+    // TODO: return Collections.unmodifiableMap(modulesById);
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  // Database creation //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Return an unused identifier.
+   */
+  int newId() {
+    return maxId++;
+  }
+
+  /**
+   * Create a benchmark of the corresponding size.
+   * 
+   * @param scale
+   *                either TINY, SMALL, MEDIUM or LARGE
+   * @param numConnPerAtomic
+   *                the fan-out value (either 3, 6 or 9)
+   */
+
   public Benchmark(int scale, int numConnPerAtomic) throws Exception {
     this.scale = scale;
     this.numConnPerAtomic = numConnPerAtomic;
-    this.atomicParts = new HashMap();
-    this.module = createModule();
+
+    // Initialize extents
+    this.atomicPartsById = new HashMap();
+    // this.atomicPartsByBuildDate = new HashMap@partCore();
+    this.compositePartsById = new HashMap();
+    // this.documentsByTitle = new HashMap@documentCore();
+    this.documentsById = new HashMap();
+    this.baseAssembliesById = new HashMap();
+    this.modulesById = new HashMap();
+
+    // Create content
+    for (int i = 0; i < numModules[scale]; i++)
+      createModule();
+
+    System.err.println("Benchmarks:      1");
+    System.err.println("Modules:         " + modulesById().size());
+    System.err.println("Base Assemblies: " + baseAssembliesById().size());
+    System.err.println("Composite Parts: " + compositePartsById().size());
+    System.err.println("Atomic Parts:    " + atomicPartsById().size());
+    System.err.println("Documents:       " + documentsById().size());
   }
 
   protected Module createModule() throws Exception {
-    CompositePart[] compositeParts =
-        new CompositePart[numCompPerModule[scale]];
+    CompositePart[] compositeParts = new CompositePart[numCompPerModule[scale]];
     for (int i = 0; i < numCompPerModule[scale]; ++i)
       compositeParts[i] = createCompositePart();
 
-    Module module = new Module();
+    Module module = new Module(this);
     ComplexAssembly designRoot =
         (ComplexAssembly) createAssembly(module, numAssmLevels[scale],
             compositeParts);
+
     module.setDesignRoot(designRoot);
+    module.setManual(new Manual((int) manualSize[scale]));
 
     return module;
   }
 
   protected CompositePart createCompositePart() throws Exception {
-    CompositePart compositePart = new CompositePart();
-    compositePart.setDocumentation(new Document());
+    CompositePart compositePart = new CompositePart(this);
+    compositePart.setDocumentation(new Document(this, documentSize[scale]));
 
     AtomicPart[] parts = new AtomicPart[numAtomicPerComp[scale]];
     for (int i = 0; i < parts.length; ++i) {
@@ -105,8 +164,7 @@ public class Benchmark {
 
     for (int i = 0; i < parts.length; ++i) {
       // Add a connection to i's neighbor
-      Connection c =
-          new Connection(parts[i], parts[(i + 1) % parts.length]);
+      Connection c = new Connection(parts[i], parts[(i + 1) % parts.length]);
 
       // add random connections
       for (int j = 0; j < (numConnPerAtomic - 1); ++j) {
@@ -118,9 +176,9 @@ public class Benchmark {
   }
 
   protected AtomicPart createAtomicPart(CompositePart parent) throws Exception {
-    AtomicPart result = new AtomicPart();
-    atomicParts.put(new Integer(atomicParts.size()), result);
+    AtomicPart result = new AtomicPart(this);
     result.setPartOf(parent);
+
     return result;
   }
 
@@ -128,7 +186,7 @@ public class Benchmark {
       CompositePart[] available) throws Exception {
     if (level == 1) {
       // create base assembly
-      BaseAssembly result = new BaseAssembly();
+      BaseAssembly result = new BaseAssembly(this);
       parent.addAssembly(result);
 
       for (int j = 0; j < numCompPerAssm[scale]; ++j) {
@@ -139,7 +197,7 @@ public class Benchmark {
       return result;
     } else {
       // create complex assembly
-      ComplexAssembly result = new ComplexAssembly();
+      ComplexAssembly result = new ComplexAssembly(this);
       parent.addAssembly(result);
 
       for (int i = 0; i < numAssmPerAssm[scale]; ++i)
@@ -147,9 +205,10 @@ public class Benchmark {
       return result;
     }
   }
+
 }
 
 /*
-** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
-*/
+ * * vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+ */
 

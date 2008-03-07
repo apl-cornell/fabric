@@ -6,14 +6,14 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Connection.java,v 1.1 2008-01-08 18:38:02 mdgeorge Exp $
+// $Id: Connection.java,v 1.2 2008-03-07 19:46:24 jed Exp $
 
 package OO7;
 
 public class Connection {
   String type;
-  long   length;
-  
+  long length;
+
   AtomicPart from;
   AtomicPart to;
 
@@ -22,8 +22,10 @@ public class Connection {
   }
 
   public Connection(AtomicPart from, AtomicPart to) {
-    setFrom(from); from.addFrom(this);
-    setTo(to);     to.addTo(this);
+    setFrom(from);
+    from.addFrom(this);
+    setTo(to);
+    to.addTo(this);
   }
 
   public void setType(String type) {
@@ -60,5 +62,5 @@ public class Connection {
 }
 
 /*
-** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
-*/
+ * * vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+ */

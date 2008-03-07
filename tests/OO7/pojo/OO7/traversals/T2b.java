@@ -1,14 +1,16 @@
-package OO7;
+package OO7.traversals;
+
+import OO7.*;
 
 import java.util.Iterator;
 import java.util.HashMap;
 
-/** Traversal T2: Traversal with updates Repeat Traversal T1, but update
- *  objects during the traversal. There are three types of update patterns in
- *  this traversal. In each, a single update to an atomic part consists of
- *  swapping its (x,y) attributes. The three types of updates are:
- *
- *  B Update every atomic part as it is encountered.
+/**
+ * Traversal T2: Traversal with updates Repeat Traversal T1, but update objects
+ * during the traversal. There are three types of update patterns in this
+ * traversal. In each, a single update to an atomic part consists of swapping
+ * its (x,y) attributes. The three types of updates are: B Update every atomic
+ * part as it is encountered.
  */
 public class T2b extends PrivatePartTraversal {
   HashMap visited = null;
@@ -17,7 +19,7 @@ public class T2b extends PrivatePartTraversal {
     new T2b().mainImpl(args);
   }
 
-  public void visitAtomicPart (AtomicPart current) {
+  public void visitAtomicPart(AtomicPart current) {
     long x = current.x();
     current.setX(current.y());
     current.setY(x);
@@ -33,7 +35,7 @@ public class T2b extends PrivatePartTraversal {
     }
   }
 
-  public void visitCompositePart (CompositePart p) {
+  public void visitCompositePart(CompositePart p) {
     visited = new HashMap();
     p.rootPart().accept(this);
     visited = null;
@@ -41,5 +43,5 @@ public class T2b extends PrivatePartTraversal {
 }
 
 /*
-** vim: ts=2 sw=2 cindent cino=\:0 et syntax=java
-*/
+ * * vim: ts=2 sw=2 cindent cino=\:0 et syntax=java
+ */

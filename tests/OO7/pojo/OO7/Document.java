@@ -6,18 +6,23 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Document.java,v 1.1 2008-01-08 18:38:02 mdgeorge Exp $
+// $Id: Document.java,v 1.2 2008-03-07 19:46:24 jed Exp $
 
 package OO7;
 
 public class Document {
   String title;
-  long   id;
-  String text;
-  
+  int id;
+  char[] text;
+
   CompositePart part;
 
-  public Document() {
+  public Document(Benchmark db, int size) {
+    this.id = db.newId();
+    db.documentsById.put(new Integer(id()), this);
+
+    // TODO: generate different strings, and index
+    this.text = new char[size];
   }
 
   public void setTitle(String title) {
@@ -28,23 +33,19 @@ public class Document {
     return this.title;
   }
 
-  public void setId(long id) {
-    this.id = id;
-  }
-
-  public long id() {
+  public int id() {
     return this.id;
   }
 
-  public void setText(String text) {
+  public void setText(char[] text) {
     this.text = text;
   }
 
-  public String text() {
+  public char[] text() {
     return this.text;
   }
 }
 
 /*
-** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
-*/
+ * * vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+ */

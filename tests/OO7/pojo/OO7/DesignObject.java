@@ -6,29 +6,24 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: DesignObject.java,v 1.1 2008-01-08 18:38:02 mdgeorge Exp $
+// $Id: DesignObject.java,v 1.2 2008-03-07 19:46:24 jed Exp $
 
 package OO7;
 
-public abstract class DesignObject {
-  long   id;
-  String type;
-  long   buildDate;
+import OO7.traversals.Traversal;
 
-  DesignObject() {
+public abstract class DesignObject {
+  int id;
+  String type;
+  long buildDate;
+
+  DesignObject(Benchmark db) {
+    this.id = db.newId();
     type = "";
   }
 
-  public void setId(long id) {
-    this.id = id;
-  }
-
-  public long id() {
+  public int id() {
     return this.id;
-  }
-
-  public void setType(String type) {
-    this.type = type;
   }
 
   public String type() {
@@ -42,7 +37,7 @@ public abstract class DesignObject {
   public long buildDate() {
     return this.buildDate;
   }
-  
+
   /*
    * Visitor method
    */
@@ -50,5 +45,5 @@ public abstract class DesignObject {
 }
 
 /*
-** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
-*/
+ * * vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+ */

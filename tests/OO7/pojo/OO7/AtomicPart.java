@@ -6,24 +6,37 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: AtomicPart.java,v 1.1 2008-01-08 18:38:02 mdgeorge Exp $
+// $Id: AtomicPart.java,v 1.2 2008-03-07 19:46:24 jed Exp $
 
 package OO7;
+
+import OO7.traversals.Traversal;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
 public class AtomicPart extends DesignObject {
+  final static long minAtomicDate = 1000;
+  final static long maxAtomicDate = 1999;
+
   long x, y;
   long docId;
-  List/*Connection*/ to;
-  List/*Connection*/ from;
+  List/* Connection */to;
+  List/* Connection */from;
   CompositePart partOf;
 
-  public AtomicPart() {
-    to   = new LinkedList();
+  public AtomicPart(Benchmark db) {
+    super(db);
+
+    db.atomicPartsById.put(new Integer(id()), this);
+
+    to = new LinkedList();
     from = new LinkedList();
+  }
+
+  public void setBuildDate(long buildDate) {
+    this.buildDate = buildDate;
   }
 
   public void setX(long x) {
@@ -74,11 +87,11 @@ public class AtomicPart extends DesignObject {
     return this.partOf;
   }
 
-  public void accept (Traversal t) {
+  public void accept(Traversal t) {
     t.visitAtomicPart(this);
   }
 }
 
 /*
-** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
-*/
+ * * vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+ */

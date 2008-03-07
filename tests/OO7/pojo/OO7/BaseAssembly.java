@@ -6,18 +6,23 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BaseAssembly.java,v 1.1 2008-01-08 18:38:02 mdgeorge Exp $
+// $Id: BaseAssembly.java,v 1.2 2008-03-07 19:46:24 jed Exp $
 
 package OO7;
+
+import OO7.traversals.Traversal;
 
 import java.util.Collection;
 import java.util.LinkedList;
 
 public class BaseAssembly extends Assembly {
-  LinkedList/*CompositePart*/ componentsPriv;
-  LinkedList/*CompositePart*/ componentsShar;
+  LinkedList/* CompositePart */componentsPriv;
+  LinkedList/* CompositePart */componentsShar;
 
-  public BaseAssembly() {
+  public BaseAssembly(Benchmark db) {
+    super(db);
+    db.baseAssembliesById.put(new Long(id()), this);
+
     componentsPriv = new LinkedList();
     componentsShar = new LinkedList();
   }
@@ -38,11 +43,11 @@ public class BaseAssembly extends Assembly {
     return componentsShar;
   }
 
-  public void accept (Traversal t) {
+  public void accept(Traversal t) {
     t.visitBaseAssembly(this);
   }
 }
 
 /*
-** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
-*/
+ * * vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+ */

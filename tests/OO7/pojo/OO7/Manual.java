@@ -6,15 +6,19 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Manual.java,v 1.1 2008-01-08 18:38:02 mdgeorge Exp $
+// $Id: Manual.java,v 1.2 2008-03-07 19:46:24 jed Exp $
 
 package OO7;
 
 public class Manual {
   String title;
-  long   id;
-  String text;
+  long id;
+  char[] text;
   Module mod;
+
+  public Manual(int size) {
+    text = new char[size];
+  }
 
   public void setTitle(String title) {
     this.title = title;
@@ -32,16 +36,12 @@ public class Manual {
     return this.id;
   }
 
-  public void setText(String text) {
+  public void setText(char[] text) {
     this.text = text;
   }
 
-  public String text() {
+  public char[] text() {
     return text;
-  }
-
-  public void setModule(Module x) {
-    mod = x;
   }
 
   public Module module() {
@@ -50,5 +50,5 @@ public class Manual {
 }
 
 /*
-** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
-*/
+ * * vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+ */

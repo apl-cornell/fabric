@@ -1,4 +1,5 @@
-package OO7;
+package OO7.traversals;
+import OO7.*;
 
 import java.util.Iterator;
 import java.util.HashMap;
@@ -17,14 +18,13 @@ public class T1 extends PrivatePartTraversal {
   }
 
   public void visitAtomicPart (AtomicPart current) {
+    if (visited.containsKey(current)) return;
+    visited.put(current, current);
     Iterator iter = current.from().iterator();
     while (iter.hasNext()) {
       Connection connection = (Connection) iter.next();
       AtomicPart part = connection.to();
-      if (!visited.containsKey(part)) {
-        visited.put(part, part);
-        part.accept(this);
-      }
+      part.accept(this);
     }
   }
 

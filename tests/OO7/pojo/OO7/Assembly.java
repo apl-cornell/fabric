@@ -6,15 +6,16 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Assembly.java,v 1.1 2008-01-08 18:38:02 mdgeorge Exp $
+// $Id: Assembly.java,v 1.2 2008-03-07 19:46:24 jed Exp $
 
 package OO7;
 
 public abstract class Assembly extends DesignObject {
   ComplexAssembly superAssembly;
-  Module          module;
+  Module module;
 
-  public Assembly() {
+  public Assembly(Benchmark db) {
+    super(db);
   }
 
   public void setSuperAssembly(ComplexAssembly x) {
@@ -35,5 +36,5 @@ public abstract class Assembly extends DesignObject {
 }
 
 /*
-** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
-*/
+ * * vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+ */
