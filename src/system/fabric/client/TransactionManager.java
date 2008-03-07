@@ -1,5 +1,6 @@
 package fabric.client;
 
+import java.lang.ref.SoftReference;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -11,135 +12,180 @@ import fabric.lang.Object.$Proxy;
 
 public final class TransactionManager {
   /**
-   * Represents a transaction log, recording the objects that have been created,
-   * read, and written during a single top-level transaction and all its
-   * sub-transactions.
+   * Records the objects that are created, read, and written during a single
+   * nested transaction.
    */
-  private static final class TransactionLog {
+  private static final class Log {
     /**
-     * Maps OIDs to objects that have been created.
+     * The identifier for the nested transaction being logged.
      */
-    protected TwoKeyHashMap<Core, Long, $Impl> creates;
-
-    /**
-     * Maps OIDs to the version number that was read.
-     */
-    protected TwoKeyHashMap<Core, Long, Integer> reads;
+    private final int tid;
 
     /**
-     * Maps OIDs to $Impls that have been modified and a count of how many undo
-     * logs exist for the object.
+     * The log for the outer transaction.
      */
-    protected TwoKeyHashMap<Core, Long, Pair<$Impl, Integer>> writes;
-
-    private TransactionLog() {
-      this.creates = new TwoKeyHashMap<Core, Long, $Impl>();
-      this.reads = new TwoKeyHashMap<Core, Long, Integer>();
-      this.writes = new TwoKeyHashMap<Core, Long, Pair<$Impl, Integer>>();
-    }
-  }
-
-  /**
-   * Provides undo information for rolling back a sub-transaction.
-   */
-  private final class UndoLog {
-    /**
-     * The set of OIDs for objects that have been created during the
-     * sub-transaction.
-     */
-    protected Map<Core, Set<Long>> creates;
+    private final Log outerLog;
 
     /**
-     * The set of OIDs for objects that were read for the first time during the
-     * sub-transaction.
+     * Contains version numbers for the objects that have been read.
      */
-    protected Map<Core, Set<Long>> reads;
+    protected Map<Core, HashMap<Long, Pair<SoftReference<$Impl>, Integer>>> reads;
 
     /**
-     * Maps the OID of each object modified during the sub-transaction to a copy
-     * of the original state of the object.
+     * Contains $Impls that have been created.
      */
-    protected TwoKeyHashMap<Core, Long, $Impl> writes;
-    protected Stack<TwoKeyHashMap<Core, Long, $Impl>> writeStack;
+    protected Map<Core, List<$Impl>> creates;
 
     /**
-     * A stack of undo logs for sub-transactions.
+     * Contains $Impls that have been modified.
      */
-    protected Stack<UndoLog> nestedLogs;
+    protected Map<Core, List<$Impl>> writes;
 
-    private UndoLog() {
-      this.creates = new HashMap<Core, Set<Long>>();
-      this.reads = new HashMap<Core, Set<Long>>();
-      this.writes = new TwoKeyHashMap<Core, Long, $Impl>();
-      this.writeStack = new Stack<TwoKeyHashMap<Core, Long, $Impl>>();
-      this.nestedLogs = new Stack<UndoLog>();
+    private Log(Log outerLog) {
+      this.tid = outerLog == null ? 1 : (outerLog.tid + 1);
+      this.outerLog = outerLog;
+      this.reads =
+          new HashMap<Core, HashMap<Long, Pair<SoftReference<$Impl>, Integer>>>();
+      this.creates = new HashMap<Core, List<$Impl>>();
+      this.writes = new HashMap<Core, List<$Impl>>();
     }
 
     /**
-     * Starts a new sub-log for a new sub-transaction.
-     * 
-     * @return the new sub-log
+     * Incorporates the reads, creates, and writes in this log into the parent
+     * transaction's log.
      */
-    private UndoLog startSublog() {
-      UndoLog result = new UndoLog();
-      nestedLogs.push(result);
-      if (writes.isEmpty())
-        writeStack.push(null);
-      else {
-        writeStack.push(writes);
-        writes = new TwoKeyHashMap<Core, Long, $Impl>();
-      }
-      return result;
-    }
-
-    private void discardLastSublog() {
-      nestedLogs.pop();
-
-      TwoKeyHashMap<Core, Long, $Impl> writes = writeStack.pop();
-      if (writes == null)
-        this.writes.clear();
-      else this.writes = writes;
-    }
-
-    /**
-     * Undoes the actions recorded in this undo log.
-     */
-    private void rollback() {
-      // Undo creates.
-      for (Map.Entry<Core, Set<Long>> entry : creates.entrySet()) {
+    protected void mergeWithParent() {
+      // Merge creates. We do this by adding everything in our "creates" list to
+      // our parent's "creates" list. Also, for each object created in this
+      // transaction, we update the $createTransactionID to our parent's TID.
+      for (Map.Entry<Core, List<$Impl>> entry : creates.entrySet()) {
         Core core = entry.getKey();
-        for (long onum : entry.getValue()) {
-          log.creates.remove(core, onum);
+        List<$Impl> newCreates = entry.getValue();
+
+        List<$Impl> parentCreates = outerLog.creates.get(core);
+        if (parentCreates == null) {
+          parentCreates = new ArrayList<$Impl>();
+          outerLog.creates.put(core, parentCreates);
         }
+
+        parentCreates.addAll(newCreates);
+        for ($Impl obj : newCreates)
+          obj.$createTransactionID = tid;
       }
 
-      // Undo reads.
-      for (Map.Entry<Core, Set<Long>> entry : reads.entrySet()) {
+      // Merge writes.
+      for (Map.Entry<Core, List<$Impl>> entry : writes.entrySet()) {
         Core core = entry.getKey();
-        for (long onum : entry.getValue()) {
-          log.reads.remove(core, onum);
-        }
-      }
-
-      // Undo writes and sub-logs.
-      while (true) {
-        if (writes != null) {
-          for (Core core : writes.keySet()) {
-            for (Map.Entry<Long, $Impl> entry : writes.get(core).entrySet()) {
-              long onum = entry.getKey();
-              Pair<$Impl, Integer> pair = log.writes.get(core, onum);
-              pair.first.$copyStateFrom(entry.getValue());
-              pair.second--;
-
-              if (pair.second == 0) writes.remove(core, onum);
-            }
+        for ($Impl obj : entry.getValue()) {
+          if (obj.$commit(outerLog.tid)) {
+            Log.addEntry(outerLog.writes, core, obj);
           }
         }
-
-        if (nestedLogs.isEmpty()) break;
-        nestedLogs.pop().rollback();
-        writes = writeStack.pop();
       }
+
+      // Merge reads.
+      for (Map.Entry<Core, HashMap<Long, Pair<SoftReference<$Impl>, Integer>>> entry : reads
+          .entrySet()) {
+        Core core = entry.getKey();
+
+        Map<Long, Pair<SoftReference<$Impl>, Integer>> parentMap =
+            outerLog.reads.get(core);
+        if (parentMap == null) {
+          parentMap = new HashMap<Long, Pair<SoftReference<$Impl>, Integer>>();
+          outerLog.reads.put(core,
+              (HashMap<Long, Pair<SoftReference<$Impl>, Integer>>) parentMap);
+        }
+
+        for (Map.Entry<Long, Pair<SoftReference<$Impl>, Integer>> subEntry : entry
+            .getValue().entrySet()) {
+          Long onum = subEntry.getKey();
+          Pair<SoftReference<$Impl>, Integer> pair = subEntry.getValue();
+
+          // Add the entry to the parent.
+          parentMap.put(onum, pair);
+
+          $Impl obj = pair.first.get();
+          if (obj == null) {
+            // Object was evicted at some point. Get a copy from the object
+            // cache.
+            obj = core.readObjectFromCache(onum);
+            if (obj == null) continue;
+            pair.first = new SoftReference<$Impl>(obj);
+          }
+
+          obj.$readTransactionID = outerLog.tid;
+        }
+      }
+    }
+
+    /**
+     * Returns information about the first time a given object was read.
+     * 
+     * @param core
+     *                the on which the object lives.
+     * @param onum
+     *                the object's onum.
+     * @return null if the object was never read; otherwise, returns the ID of
+     *         the transaction that first read the object, a soft reference to
+     *         the object, and the version number that was read.
+     */
+    public Pair<Integer, Pair<SoftReference<$Impl>, Integer>> getFirstRead(
+        Core core, Long onum) {
+      Log curLog = this;
+      while (curLog != null) {
+        Pair<SoftReference<$Impl>, Integer> pair =
+            TwoKeyHashMap.get(curLog.reads, core, onum);
+        if (pair != null) {
+          return new Pair<Integer, Pair<SoftReference<$Impl>, Integer>>(
+              curLog.tid, pair);
+        }
+
+        curLog = curLog.outerLog;
+      }
+
+      return null;
+    }
+
+    /**
+     * Goes through the objects first read during this sub-transaction and sets
+     * their read-transaction-IDs to the given value.
+     * 
+     * @param tid
+     */
+    public void setReadTIDs(int tid) {
+      for (Map.Entry<Core, HashMap<Long, Pair<SoftReference<$Impl>, Integer>>> entry : reads
+          .entrySet()) {
+        for (Map.Entry<Long, Pair<SoftReference<$Impl>, Integer>> subEntry : entry
+            .getValue().entrySet()) {
+          Pair<SoftReference<$Impl>, Integer> pair = subEntry.getValue();
+          $Impl obj = pair.first.get();
+          if (obj == null) {
+            // Object was evicted at some point. Get a copy from the object
+            // cache.
+            Core core = entry.getKey();
+            Long onum = subEntry.getKey();
+            obj = core.readObjectFromCache(onum);
+            if (obj == null) continue;
+            pair.first = new SoftReference<$Impl>(obj);
+          }
+
+          obj.$readTransactionID = tid;
+        }
+      }
+    }
+
+    /**
+     * Adds an entry to a log structure.
+     */
+    private static void addEntry(Map<Core, List<$Impl>> map, Core core,
+        $Impl obj) {
+      List<$Impl> list = map.get(core);
+      if (list == null) {
+        list = new ArrayList<$Impl>();
+        map.put(core, list);
+      }
+
+      list.add(obj);
     }
   }
 
@@ -158,29 +204,37 @@ public final class TransactionManager {
 
   public static final TransactionManager INSTANCE = new TransactionManager();
 
-  private TransactionLog log;
-  private UndoLog undoLog;
-
-  private final Stack<UndoLog> frames;
+  private Log curFrame;
 
   private TransactionManager() {
-    this.log = null;
-    this.undoLog = null;
-    this.frames = new Stack<UndoLog>();
+    curFrame = null;
   }
 
   public void abortTransaction() {
-    undoLog.rollback();
-    undoLog = frames.pop();
-    if (undoLog != null) {
-      undoLog.discardLastSublog();
+    // Restore the state of all objects that were modified during the aborted
+    // transaction.
+    for (List<$Impl> list : curFrame.writes.values()) {
+      for ($Impl obj : list) {
+        obj.$abort();
+      }
     }
+
+    // Reset the read-transaction-ID for any object that was read for the first
+    // time by this transaction.
+    curFrame.setReadTIDs(-1);
+
+    curFrame = curFrame.outerLog;
   }
 
   public void commitTransaction() throws TransactionPrepareFailedException {
     // XXX This is a long and ugly method. Refactor?
-    undoLog = frames.pop();
-    if (undoLog != null) return;
+    Log parentFrame = curFrame.outerLog;
+    if (parentFrame != null) {
+      // Merge current transaction with its parent.
+      curFrame.mergeWithParent();
+      curFrame = parentFrame;
+      return;
+    }
 
     Set<Core> cores = new HashSet<Core>();
     final Map<Core, Integer> transactionIDs =
@@ -188,9 +242,9 @@ public final class TransactionManager {
 
     // Go through the transaction log and figure out the cores we need to
     // contact.
-    cores.addAll(log.creates.keySet());
-    cores.addAll(log.reads.keySet());
-    cores.addAll(log.writes.keySet());
+    cores.addAll(curFrame.creates.keySet());
+    cores.addAll(curFrame.reads.keySet());
+    cores.addAll(curFrame.writes.keySet());
 
     try {
       // Go through each core and send begin and prepare messages.
@@ -206,24 +260,22 @@ public final class TransactionManager {
           @Override
           public void run() {
             try {
-              Map<Long, $Impl> createsMap = log.creates.get(core);
-              Collection<$Impl> creates = null;
-              if (createsMap != null) creates = createsMap.values();
+              Collection<$Impl> creates = curFrame.creates.get(core);
+              Map<Long, Pair<SoftReference<$Impl>, Integer>> readsWithRefs =
+                  curFrame.reads.get(core);
+              Map<Long, Integer> reads = new HashMap<Long, Integer>();
+              Collection<$Impl> writes = curFrame.writes.get(core);
 
-              Map<Long, Pair<$Impl, Integer>> writesMap = log.writes.get(core);
-              Collection<$Impl> writes = null;
-              if (writesMap != null) {
-                writes = new ArrayList<$Impl>(writesMap.size());
-                for (Map.Entry<Long, Pair<$Impl, Integer>> entry : writesMap
+              // Convert the read map.
+              if (readsWithRefs != null) {
+                for (Map.Entry<Long, Pair<SoftReference<$Impl>, Integer>> entry : readsWithRefs
                     .entrySet()) {
-                  if (createsMap == null
-                      || !createsMap.containsKey(entry.getKey()))
-                    writes.add(entry.getValue().first);
+                  reads.put(entry.getKey(), entry.getValue().second);
                 }
               }
 
               int transactionID =
-                  core.prepareTransaction(creates, log.reads.get(core), writes);
+                  core.prepareTransaction(creates, reads, writes);
               transactionIDs.put(core, transactionID);
             } catch (TransactionPrepareFailedException exc) {
               failures.put(core, exc);
@@ -271,14 +323,17 @@ public final class TransactionManager {
               core.commitTransaction(transactionID);
 
               // Update the local version numbers.
-              Map<Long, Pair<$Impl, Integer>> writes = log.writes.get(core);
-              if (writes != null)
-                for (Pair<$Impl, Integer> obj : writes.values())
-                  obj.first.$version++;
+              List<$Impl> writes = curFrame.writes.get(core);
+              if (writes != null) {
+                for ($Impl obj : writes)
+                  obj.$version++;
+              }
 
-              Map<Long, $Impl> creates = log.creates.get(core);
-              if (creates != null) for ($Impl obj : creates.values())
-                obj.$version = 1;
+              List<$Impl> creates = curFrame.creates.get(core);
+              if (creates != null) {
+                for ($Impl obj : creates)
+                  obj.$version = 1;
+              }
             } catch (TransactionCommitFailedException e) {
               failed.add(core);
             } catch (UnreachableCoreException e) {
@@ -315,23 +370,26 @@ public final class TransactionManager {
       throw e;
     }
 
-    log = null;
-  }
+    // Reset the create-transaction-IDs for all the new objects.
+    for (List<$Impl> list : curFrame.creates.values()) {
+      for ($Impl obj : list)
+        obj.$createTransactionID = -1;
+    }
 
-  /**
-   * Determines whether there is a transaction running.
-   */
-  public final boolean inTransaction() {
-    return log != null;
+    // Reset the read-transaction-IDs for all the read objects.
+    curFrame.setReadTIDs(-1);
+
+    curFrame = null;
   }
 
   public void registerCreate($Impl obj) {
     // If we're not in a transaction, start one just for the object creation.
-    boolean needTransaction = !inTransaction();
+    boolean needTransaction = curFrame == null;
     if (needTransaction) startTransaction();
 
     // Register the object creation.
-    log.creates.put(obj.$getCore(), obj.$getOnum(), obj);
+    obj.$createTransactionID = curFrame.tid;
+    Log.addEntry(curFrame.creates, obj.$getCore(), obj);
 
     // Commit if we started a transaction for the object creation.
     if (needTransaction) commitTransaction();
@@ -339,19 +397,42 @@ public final class TransactionManager {
 
   public void registerRead($Impl obj) throws VersionConflictException {
     // Nothing to do if we're not in a transaction.
-    if (!inTransaction()) return;
+    if (curFrame == null) return;
 
     // Nothing to do if we created the object ourselves. (If this is the case,
     // we will be working on version 0 of the object.)
     if (obj.$version == 0) return;
 
-    Core core = obj.$getCore();
-    long onum = obj.$getOnum();
+    // Nothing to do if the object is marked as being read already.
+    if (obj.$readTransactionID > 0) return;
 
-    int readVersionNum = obj.$getVersion();
-    Integer otherVersionNum = log.reads.put(core, onum, readVersionNum);
-    if (otherVersionNum != null && otherVersionNum.intValue() != readVersionNum)
-      throw new VersionConflictException(obj);
+    Core core = obj.$getCore();
+    Long onum = obj.$getOnum();
+
+    Pair<Integer, Pair<SoftReference<$Impl>, Integer>> firstRead =
+        curFrame.getFirstRead(core, onum);
+
+    if (firstRead == null) {
+      // First time reading the object.
+      SoftReference<$Impl> ref = new SoftReference<$Impl>(obj);
+      TwoKeyHashMap.put(curFrame.reads, core, onum,
+          new Pair<SoftReference<$Impl>, Integer>(ref, obj.$getVersion()));
+      obj.$readTransactionID = curFrame.tid;
+    } else {
+      // Object was evicted from cache.
+      Pair<SoftReference<$Impl>, Integer> readEntry = firstRead.second;
+      int otherVersionNum = readEntry.second;
+
+      if (otherVersionNum != obj.$getVersion())
+        throw new VersionConflictException(obj);
+
+      // Restore object's read-transaction ID.
+      int firstReadTID = firstRead.first;
+      obj.$readTransactionID = firstReadTID;
+
+      // Save a soft reference.
+      readEntry.first = new SoftReference<$Impl>(obj);
+    }
   }
 
   /**
@@ -361,35 +442,23 @@ public final class TransactionManager {
    */
   public boolean registerWrite($Impl obj) {
     // Ensure that we're running in a transaction.
-    boolean needTransaction = !inTransaction();
+    boolean needTransaction = curFrame == null;
     if (needTransaction) startTransaction();
 
     // Make sure the object hasn't already been modified or created during the
     // current transaction.
+    if (obj.$createTransactionID == curFrame.tid
+        || !obj.$prepareToWrite(curFrame.tid)) return needTransaction;
+
+    // First time modifying the object in this transaction. Save a copy of the
+    // object along with a pointer to the actual working copy of the object.
     Core core = obj.$getCore();
-    long onum = obj.$getOnum();
-
-    // If we're modifying a pre-existing object, log the write.
-    Set<Long> onums = undoLog.creates.get(core);
-    if (onums == null || !onums.contains(onum)) {
-      undoLog.writes.put(core, onum, obj.clone());
-
-      Pair<$Impl, Integer> pair = log.writes.get(core, onum);
-      if (pair != null)
-        pair.second++;
-      else log.writes.put(core, onum, new Pair<$Impl, Integer>(obj, 1));
-    }
+    Log.addEntry(curFrame.writes, core, obj);
 
     return needTransaction;
   }
 
   public void startTransaction() {
-    frames.push(undoLog);
-
-    if (undoLog == null)
-      undoLog = new UndoLog();
-    else undoLog = undoLog.startSublog();
-
-    if (log == null) log = new TransactionLog();
+    curFrame = new Log(curFrame);
   }
 }

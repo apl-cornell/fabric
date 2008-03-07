@@ -128,6 +128,30 @@ public interface Object {
     private transient $Proxy $proxy;
 
     /**
+     * Modification log. If the object has been modified by the current
+     * transaction, this field will point to the initial state of the object at
+     * the start of the transaction.
+     */
+    private transient $Impl $log;
+
+    /**
+     * The identifier for the transaction in which this object was first read.
+     * Should only be accessed from the transaction manager.
+     */
+    public transient int $readTransactionID;
+
+    /**
+     * The identifier for the transaction in which this object was created.
+     * Should only be accessed from the transaction manager.
+     */
+    public transient int $createTransactionID;
+
+    /**
+     * The identifier for the transaction modifying this object.
+     */
+    private transient int $writeTransactionID;
+
+    /**
      * A reference to the class object. TODO Figure out class loading.
      */
     protected $Proxy $class;
@@ -157,6 +181,10 @@ public interface Object {
       this.$onum = core.createOnum();
       this.$version = 0;
       this.$policy = policy;
+      this.$log = null;
+      this.$readTransactionID = -1;
+      this.$createTransactionID = -1;
+      this.$writeTransactionID = -1;
 
       // Register the new object with the transaction manager.
       TransactionManager.INSTANCE.registerCreate(this);
@@ -174,6 +202,7 @@ public interface Object {
       this.$onum = onum;
       this.$version = 0;
       this.$policy = new ACLPolicy();
+      this.$log = null;
     }
 
     @Override
@@ -224,7 +253,7 @@ public interface Object {
      * roll-back. Subclasses should override this method and call
      * <code>super.copyStateFrom(other)</code>.
      */
-    public void $copyStateFrom($Impl other) {
+    protected void $copyStateFrom($Impl other) {
     }
 
     public final Core $getCore() {
@@ -250,6 +279,51 @@ public interface Object {
     public final $Proxy $getProxy() {
       if ($proxy == null) $proxy = $makeProxy();
       return $proxy;
+    }
+
+    /**
+     * This should only be used by the transaction manager.
+     * 
+     * @return true iff this is a new write for the current transaction.
+     */
+    public final boolean $prepareToWrite(int transactionID) {
+      if ($log == null || $writeTransactionID != transactionID) {
+        $log = clone();
+        $writeTransactionID = transactionID;
+        return true;
+      }
+
+      return false;
+    }
+
+    /**
+     * This should only be used by the transaction manager. Commits the changes
+     * in this copy of the object. Should be called whenever a transaction that
+     * has modified this object commits.
+     * 
+     * @return true iff this is a new write for the outer transaction.
+     */
+    public final boolean $commit(int outerTID) {
+      if (outerTID != $log.$writeTransactionID
+          && outerTID != $createTransactionID) {
+        $writeTransactionID = outerTID;
+        return true;
+      }
+
+      $writeTransactionID = $log.$writeTransactionID;
+      $log = $log.$log;
+      return false;
+    }
+
+    /**
+     * This should only be used by the transaction manager. Rolls back the
+     * changes in this copy of the object. Should be called whenever a
+     * transaction that has modified this object aborts.
+     */
+    public final void $abort() {
+      $copyStateFrom($log);
+      $writeTransactionID = $log.$writeTransactionID;
+      $log = $log.$log;
     }
 
     /**
@@ -315,7 +389,9 @@ public interface Object {
       this.$onum = onum;
       this.$policy = policy;
       this.$version = version;
-      return;
+      this.$readTransactionID = -1;
+      this.$createTransactionID = -1;
+      this.$writeTransactionID = -1;
     }
 
     /**

@@ -177,10 +177,15 @@ public class RemoteCore implements Core {
   public Object.$Impl readObject(long onum) throws AccessError,
       UnreachableCoreException {
     // Check object table
-    Object.$Impl result = null;
-    SoftReference<Object.$Impl> resultRef = objects.get(onum);
-    if (resultRef != null && (result = resultRef.get()) != null) return result;
+    Object.$Impl result = readObjectFromCache(onum);
+    if (result != null) return result;
     return readObjectFromCore(onum);
+  }
+  
+  public Object.$Impl readObjectFromCache(long onum) {
+    SoftReference<Object.$Impl> ref = objects.get(onum);
+    if (ref == null) return null;
+    return ref.get();
   }
 
   /**

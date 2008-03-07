@@ -69,6 +69,10 @@ public class LocalCore implements Core {
   public Object.$Impl readObject(long onum) {
     return objects.get(onum);
   }
+  
+  public Object.$Impl readObjectFromCache(long onum) {
+    return readObject(onum);
+  }
 
   /**
    * The singleton LocalCore object is managed by the Client class.

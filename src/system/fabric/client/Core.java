@@ -31,6 +31,14 @@ public interface Core extends java.io.Serializable {
    */
   public $Impl readObject(long onum) throws AccessError,
       UnreachableCoreException;
+  
+  /**
+   * Returns the requested $Impl object if it exists in the object cache.
+   * 
+   * @param onum The identifier of the requested object.
+   * @return The requested object if it exists in the object cache; otherwise, null.
+   */
+  public $Impl readObjectFromCache(long onum);
 
   /**
    * Notifies the core that the transaction is being Aborted.
