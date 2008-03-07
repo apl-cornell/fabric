@@ -226,7 +226,7 @@ public final class TransactionManager {
     curFrame = curFrame.outerLog;
   }
 
-  public void commitTransaction() throws TransactionPrepareFailedException {
+  public void commitTransaction() throws AbortException {
     // XXX This is a long and ugly method. Refactor?
     Log parentFrame = curFrame.outerLog;
     if (parentFrame != null) {
@@ -367,7 +367,7 @@ public final class TransactionManager {
       }
       // frames.push(null);
       abortTransaction();
-      throw e;
+      throw new AbortException(e);
     }
 
     // Reset the create-transaction-IDs for all the new objects.

@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import fabric.common.FabricRuntimeException;
+import fabric.common.FabricException;
 
-public class TransactionPrepareFailedException extends FabricRuntimeException {
+public class TransactionPrepareFailedException extends FabricException {
   public final List<String> messages;
 
   public TransactionPrepareFailedException(Map<Core, TransactionPrepareFailedException> causes) {
