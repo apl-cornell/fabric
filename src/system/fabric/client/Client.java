@@ -50,6 +50,9 @@ public final class Client {
 
   // Whether SSL encryption is desired.
   protected final boolean useSSL;
+  
+  // The logger
+  protected static Logger logger;
 
   // The timeout (in milliseconds) to use whilst attempting to connect to a core
   // node.
@@ -98,10 +101,16 @@ public final class Client {
       KeyStore trustStore, int maxConnections, int timeout, int retries,
       boolean useSSL) throws InternalError, UnrecoverableKeyException,
       IllegalStateException {
+    
     if (instance != null)
       throw new IllegalStateException(
           "The Fabric client has already been initialized");
-    Logger.getLogger("fabric.client").info("Initializing Fabric client");
+    logger.info("Initializing Fabric client");
+    //logger.info(logger.getLevel().toString());
+    logger.config("maximum connections: " + maxConnections);
+    logger.config("timeout:             " + timeout);
+    logger.config("retries:             " + retries);
+    logger.config("use ssl:             " + useSSL);
     instance =
         new Client(keyStore, passwd, trustStore, maxConnections, timeout,
             retries, useSSL);
@@ -230,6 +239,8 @@ public final class Client {
     p.load(in);
     in.close();
     System.setProperties(p);
+    
+    logger = Logger.getLogger("fabric.client");
 
     KeyStore keyStore = KeyStore.getInstance("JKS");
     String passwd = System.getProperty("fabric.client.password");
@@ -268,6 +279,14 @@ public final class Client {
     initialize();
 
     // TODO: option overriding on command line?
+
+    // log the command line
+    StringBuilder cmd = new StringBuilder("Command Line: Client");
+    for (String c : args) {
+      cmd.append(" ");
+      cmd.append(c);
+    }
+    logger.config(cmd.toString());
 
     Class<?> mainClass = Class.forName(args[0] + "$$Impl");
     Method main =

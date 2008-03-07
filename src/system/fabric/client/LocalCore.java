@@ -37,7 +37,7 @@ public class LocalCore implements Core {
       Map<Long, Integer> reads, Collection<Object.$Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
-    log.info("Local transaction " + freshTID + " preparing");
+    log.fine("Local transaction " + freshTID + " preparing");
     // TODO: more robust checking
     assert prepared == null;
 
@@ -46,13 +46,13 @@ public class LocalCore implements Core {
   }
 
   public void abortTransaction(int transactionID) {
-    log.info("Local transaction " + transactionID + " aborting");
+    log.fine("Local transaction " + transactionID + " aborting");
     assert (prepared != null);
     prepared = null;
   }
 
   public void commitTransaction(int transactionID) {
-    log.info("Local transaction " + transactionID + " committing");
+    log.fine("Local transaction " + transactionID + " committing");
     assert prepared.id == transactionID;
 
     if (prepared.writes != null) for (Object.$Impl obj : prepared.writes)
