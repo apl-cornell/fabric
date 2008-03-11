@@ -1,7 +1,6 @@
 package fabric.lang.arrays;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -106,7 +105,8 @@ public interface floatArray extends Object {
     public void $copyStateFrom(Object.$Impl other) {
       super.$copyStateFrom(other);
       floatArray.$Impl src = (floatArray.$Impl) other;
-      value = Arrays.copyOf(src.value, src.value.length);
+      value = new float[src.value.length];
+      System.arraycopy(src.value, 0, value, 0, src.value.length);
     }
 
     /*

@@ -3,7 +3,6 @@ package fabric.lang.arrays;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -121,7 +120,8 @@ public interface ObjectArray<T extends Object> extends Object {
     public void $copyStateFrom(Object.$Impl other) {
       super.$copyStateFrom(other);
       ObjectArray.$Impl<T> src = (ObjectArray.$Impl<T>) other;
-      value = Arrays.copyOf(src.value, src.value.length);
+      value = new Object[src.value.length];
+      System.arraycopy(src.value, 0, value, 0, src.value.length);
     }
 
     /*
