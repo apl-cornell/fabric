@@ -7,10 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import fabric.client.Core;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.Pair;
-import fabric.common.Policy;
-import fabric.common.Surrogate;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -159,7 +157,9 @@ public final class SerializedObject implements Serializable {
     out.writeUTF(impl.getClass().getName());
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
-    out.writeObject(impl.$getPolicy());
+    
+    // XXX FIXME TODO write out the policy.
+    //out.writeObject(impl.$getPolicy());
 
     // Get the object to serialize itself into a bunch of buffers.
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -204,7 +204,9 @@ public final class SerializedObject implements Serializable {
     out.writeUTF(className);
     out.writeLong(onum);
     out.writeInt(version);
-    out.writeObject(policy);
+    
+    // XXX FIXME TODO write out the policy.
+    // out.writeObject(policy);
 
     // Write out the object's contents.
     out.writeInt(serializedData.length);
@@ -239,11 +241,8 @@ public final class SerializedObject implements Serializable {
     this.className = in.readUTF();
     this.onum = in.readLong();
     this.version = in.readInt();
-    try {
-      this.policy = (Policy) in.readObject();
-    } catch (ClassNotFoundException e) {
-      throw new InternalError(e);
-    }
+    // XXX FIXME TODO Read in a real policy.
+    this.policy = ACLPolicy.DEFAULT;
 
     // Read the object body.
     this.serializedData = new byte[in.readInt()];
@@ -296,7 +295,8 @@ public final class SerializedObject implements Serializable {
     Class<?> c = Class.forName(in.readUTF());
     long onum = in.readLong();
     int version = in.readInt();
-    Policy policy = (Policy) in.readObject();
+    // XXX FIXME TODO Read in a real policy.
+    Policy policy = ACLPolicy.DEFAULT;
 
     // Read the object body.
     byte[] serializedData = new byte[in.readInt()];

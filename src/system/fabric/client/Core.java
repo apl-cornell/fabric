@@ -1,9 +1,9 @@
 package fabric.client;
 
 import java.util.Collection;
-import java.util.Map;
 
 import fabric.common.AccessError;
+import fabric.common.util.LongKeyMap;
 import fabric.lang.Object.$Impl;
 
 public interface Core extends java.io.Serializable {
@@ -18,7 +18,7 @@ public interface Core extends java.io.Serializable {
    * @return a core-specific transaction ID iff the operation succeeded.
    */
   public int prepareTransaction(Collection<$Impl> toCreate,
-      Map<Long, Integer> reads, Collection<$Impl> writes)
+      LongKeyMap<Integer> reads, Collection<$Impl> writes)
       throws UnreachableCoreException, TransactionPrepareFailedException;
 
   /**

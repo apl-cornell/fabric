@@ -17,7 +17,7 @@ public final class DLMPolicy implements Policy {
    * provided.
    */
   public DLMPolicy() {
-    this.effectivePolicy = new ACLPolicy();
+    this.effectivePolicy = ACLPolicy.DEFAULT;
   }
 
   /**

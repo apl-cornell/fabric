@@ -8,6 +8,8 @@ import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.ACLPolicy;
 import fabric.common.Pair;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.core.SerializedObject.RefTypeEnum;
 
 public class TransactionManager {
@@ -25,12 +27,12 @@ public class TransactionManager {
     /**
      * The set of objects created by this transaction, indexed by onum.
      */
-    protected final Map<Long, SerializedObject> creates;
+    protected final LongKeyMap<SerializedObject> creates;
 
     /**
      * The set of objects written by this transaction, indexed by onum.
      */
-    protected final Map<Long, SerializedObject> writes;
+    protected final LongKeyMap<SerializedObject> writes;
 
     /**
      * The set of onums of surrogates created by this transaction, indexed by
@@ -41,8 +43,8 @@ public class TransactionManager {
     public Transaction(Principal client) {
       this.client = client;
       this.lockedONums = new HashSet<Long>();
-      this.creates = new HashMap<Long, SerializedObject>();
-      this.writes = new HashMap<Long, SerializedObject>();
+      this.creates = new LongKeyHashMap<SerializedObject>();
+      this.writes = new LongKeyHashMap<SerializedObject>();
       this.surrogates = new HashMap<Pair<String, Long>, Long>();
     }
   }
@@ -88,12 +90,12 @@ public class TransactionManager {
 
     // Commit all pending creates and writes.
     boolean result = true;
-    for (Map.Entry<Long, SerializedObject> entry : transaction.creates
+    for (LongKeyMap.Entry<SerializedObject> entry : transaction.creates
         .entrySet()) {
       result &= store.insert(client, entry.getKey(), entry.getValue());
     }
 
-    for (Map.Entry<Long, SerializedObject> entry : transaction.writes
+    for (LongKeyMap.Entry<SerializedObject> entry : transaction.writes
         .entrySet()) {
       result &= store.write(client, entry.getKey(), entry.getValue());
     }
@@ -137,7 +139,7 @@ public class TransactionManager {
   }
 
   public synchronized int prepare(Principal client,
-      Collection<SerializedObject> toCreate, Map<Long, Integer> reads,
+      Collection<SerializedObject> toCreate, LongKeyMap<Integer> reads,
       Collection<SerializedObject> writes)
       throws TransactionPrepareFailedException {
     int transactionID;
@@ -160,11 +162,11 @@ public class TransactionManager {
   }
 
   private void prepare(Transaction transaction,
-      Collection<SerializedObject> toCreate, Map<Long, Integer> reads,
+      Collection<SerializedObject> toCreate, LongKeyMap<Integer> reads,
       Collection<SerializedObject> writes)
       throws TransactionPrepareFailedException {
     // Handle the reads.
-    for (Map.Entry<Long, Integer> entry : reads.entrySet()) {
+    for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
       long onum = entry.getKey();
       int version = entry.getValue();
       SerializedObject obj = store.read(transaction.client, onum);
@@ -307,7 +309,7 @@ public class TransactionManager {
     // Create the surrogate.
     // XXX Use the right policy here.
     SerializedObject surrogate =
-        new SerializedObject(onum, new ACLPolicy(), remoteRef);
+        new SerializedObject(onum, ACLPolicy.DEFAULT, remoteRef);
 
     // Register the surrogate.
     transaction.lockedONums.add(onum);

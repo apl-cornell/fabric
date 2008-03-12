@@ -8,6 +8,9 @@ import java.io.OutputStream;
 import java.security.Principal;
 import java.util.*;
 
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
+
 /**
  * This class is not thread-safe. Only the <code>TransactionManager</code>
  * should directly interact with this class. The <code>TransactionManager</code>'s
@@ -18,8 +21,8 @@ class MemoryStore implements ObjectStore {
    * Maps 48-bit object numbers to SerializedObjects. Value is null if object
    * lease has been created.
    */
-  private Map<Long, SerializedObject> objectTable;
-  private Map<Long, Principal> leaseTable;
+  private LongKeyMap<SerializedObject> objectTable;
+  private LongKeyMap<Principal> leaseTable;
   private Timer leaseCleaner;
   private Random rand;
 
@@ -27,7 +30,7 @@ class MemoryStore implements ObjectStore {
 
   private MemoryStore() {
     this.leaseCleaner = new Timer();
-    this.leaseTable = new HashMap<Long, Principal>();
+    this.leaseTable = new LongKeyHashMap<Principal>();
     this.rand = new Random();
   }
 
@@ -35,7 +38,7 @@ class MemoryStore implements ObjectStore {
   public MemoryStore(InputStream in) throws IOException, ClassNotFoundException {
     this();
     ObjectInputStream oin = new ObjectInputStream(in);
-    this.objectTable = (Map<Long,SerializedObject>) oin.readObject();
+    this.objectTable = (LongKeyMap<SerializedObject>) oin.readObject();
   }
   
   public void dump(OutputStream out) throws IOException {

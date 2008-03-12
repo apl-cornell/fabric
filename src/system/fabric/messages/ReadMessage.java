@@ -3,8 +3,6 @@ package fabric.messages;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
@@ -12,6 +10,8 @@ import fabric.client.UnreachableCoreException;
 import fabric.common.AccessError;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.core.SerializedObject;
 import fabric.core.Worker;
 import fabric.lang.Object.$Impl;
@@ -23,7 +23,7 @@ import fabric.lang.Object.$Impl;
 public final class ReadMessage extends Message<ReadMessage.Response> {
   public static class Response implements Message.Response {
 
-    public final Map<Long, SerializedObject> related;
+    public final LongKeyMap<SerializedObject> related;
 
     /**
      * The serialized result of the read message. This will only be non-null on
@@ -41,7 +41,7 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
     /**
      * Used by the core to create a read-message response.
      */
-    public Response(SerializedObject obj, Map<Long, SerializedObject> group) {
+    public Response(SerializedObject obj, LongKeyMap<SerializedObject> group) {
       this.serializedResult = obj;
       this.related = group;
       this.result = null;
@@ -60,7 +60,7 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
       this.serializedResult = null;
 
       int size = in.readInt();
-      this.related = new HashMap<Long, SerializedObject>(size);
+      this.related = new LongKeyHashMap<SerializedObject>(size);
       for (int i = 0; i < size; i++) {
         related.put(in.readLong(), new SerializedObject(in));
       }
@@ -74,7 +74,7 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
      */
     public void write(ObjectOutputStream out) throws IOException {
       out.writeInt(related.size());
-      for (Map.Entry<Long, SerializedObject> entry : related.entrySet()) {
+      for (LongKeyMap.Entry<SerializedObject> entry : related.entrySet()) {
         out.writeLong(entry.getKey());
         entry.getValue().write(out);
       }

@@ -1,10 +1,9 @@
 package fabric.dissemination.pastry.messages;
 
-import java.util.Map;
-
 import rice.p2p.commonapi.Id;
 import rice.p2p.commonapi.Message;
 import rice.p2p.commonapi.NodeHandle;
+import fabric.common.util.LongKeyMap;
 import fabric.core.SerializedObject;
 
 /**
@@ -85,9 +84,9 @@ public class Fetch implements Message {
   public class Reply implements Message {
     
     private SerializedObject obj;
-    private Map<Long, SerializedObject> related;
+    private LongKeyMap<SerializedObject> related;
     
-    public Reply(SerializedObject obj, Map<Long, SerializedObject> related) {
+    public Reply(SerializedObject obj, LongKeyMap<SerializedObject> related) {
       this.obj = obj;
       this.related = related;
     }
@@ -98,7 +97,7 @@ public class Fetch implements Message {
     }
     
     /** The related objects. */
-    public Map<Long, SerializedObject> related() {
+    public LongKeyMap<SerializedObject> related() {
       return related;
     }
 

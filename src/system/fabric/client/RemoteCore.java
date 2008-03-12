@@ -15,6 +15,8 @@ import fabric.common.AccessError;
 import fabric.common.FabricException;
 import fabric.common.NoSuchCoreError;
 import fabric.common.Surrogate;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.core.SerializedObject;
 import fabric.lang.Object;
 import fabric.messages.*;
@@ -41,7 +43,7 @@ public class RemoteCore implements Core {
   /**
    * The object table: locally resident objects.
    */
-  private transient Map<Long, SoftReference<Object.$Impl>> objects;
+  private transient LongKeyMap<SoftReference<Object.$Impl>> objects;
 
   /**
    * The connection to the actual Core.
@@ -52,16 +54,16 @@ public class RemoteCore implements Core {
   /**
    * Cache of unserialized objects that the core has sent us.
    */
-  private transient Map<Long, SoftReference<SerializedObject>> serialized;
+  private transient LongKeyMap<SoftReference<SerializedObject>> serialized;
 
   /**
    * Creates a core representing the core at the given host name.
    */
   RemoteCore(String name) {
     this.name = name;
-    this.objects = new HashMap<Long, SoftReference<Object.$Impl>>();
+    this.objects = new LongKeyHashMap<SoftReference<Object.$Impl>>();
     this.fresh_ids = new LinkedList<Long>();
-    this.serialized = new HashMap<Long, SoftReference<SerializedObject>>();
+    this.serialized = new LongKeyHashMap<SoftReference<SerializedObject>>();
   }
 
   public ObjectInputStream objectInputStream() {
@@ -158,7 +160,7 @@ public class RemoteCore implements Core {
    * @return a core-specific transaction ID iff the operation succeeded.
    */
   public int prepareTransaction(Collection<Object.$Impl> toCreate,
-      Map<Long, Integer> reads, Collection<Object.$Impl> writes)
+      LongKeyMap<Integer> reads, Collection<Object.$Impl> writes)
       throws UnreachableCoreException, TransactionPrepareFailedException {
     PrepareTransactionMessage.Response response =
         new PrepareTransactionMessage(toCreate, reads, writes).send(this);
@@ -215,7 +217,7 @@ public class RemoteCore implements Core {
       // no serial copy --- fetch from core
       ReadMessage.Response response = new ReadMessage(onum).send(this);
       result = response.result;
-      for (Map.Entry<Long, SerializedObject> entry : response.related
+      for (LongKeyMap.Entry<SerializedObject> entry : response.related
           .entrySet())
         serialized.put(entry.getKey(), new SoftReference<SerializedObject>(
             entry.getValue()));

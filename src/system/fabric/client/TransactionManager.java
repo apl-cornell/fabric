@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import fabric.common.FabricRuntimeException;
 import fabric.common.Pair;
 import fabric.common.TwoKeyHashMap;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.lang.Object.$Impl;
 import fabric.lang.Object.$Proxy;
 
@@ -29,7 +31,7 @@ public final class TransactionManager {
     /**
      * Contains version numbers for the objects that have been read.
      */
-    protected Map<Core, HashMap<Long, Pair<SoftReference<$Impl>, Integer>>> reads;
+    protected Map<Core, LongKeyHashMap<Pair<SoftReference<$Impl>, Integer>>> reads;
 
     /**
      * Contains $Impls that have been created.
@@ -45,7 +47,7 @@ public final class TransactionManager {
       this.tid = outerLog == null ? 1 : (outerLog.tid + 1);
       this.outerLog = outerLog;
       this.reads =
-          new HashMap<Core, HashMap<Long, Pair<SoftReference<$Impl>, Integer>>>();
+          new HashMap<Core, LongKeyHashMap<Pair<SoftReference<$Impl>, Integer>>>();
       this.creates = new HashMap<Core, List<$Impl>>();
       this.writes = new HashMap<Core, List<$Impl>>();
     }
@@ -84,21 +86,21 @@ public final class TransactionManager {
       }
 
       // Merge reads.
-      for (Map.Entry<Core, HashMap<Long, Pair<SoftReference<$Impl>, Integer>>> entry : reads
+      for (Map.Entry<Core, LongKeyHashMap<Pair<SoftReference<$Impl>, Integer>>> entry : reads
           .entrySet()) {
         Core core = entry.getKey();
 
-        Map<Long, Pair<SoftReference<$Impl>, Integer>> parentMap =
+        LongKeyMap<Pair<SoftReference<$Impl>, Integer>> parentMap =
             outerLog.reads.get(core);
         if (parentMap == null) {
-          parentMap = new HashMap<Long, Pair<SoftReference<$Impl>, Integer>>();
+          parentMap = new LongKeyHashMap<Pair<SoftReference<$Impl>, Integer>>();
           outerLog.reads.put(core,
-              (HashMap<Long, Pair<SoftReference<$Impl>, Integer>>) parentMap);
+              (LongKeyHashMap<Pair<SoftReference<$Impl>, Integer>>) parentMap);
         }
 
-        for (Map.Entry<Long, Pair<SoftReference<$Impl>, Integer>> subEntry : entry
+        for (LongKeyMap.Entry<Pair<SoftReference<$Impl>, Integer>> subEntry : entry
             .getValue().entrySet()) {
-          Long onum = subEntry.getKey();
+          long onum = subEntry.getKey();
           Pair<SoftReference<$Impl>, Integer> pair = subEntry.getValue();
 
           // Add the entry to the parent.
@@ -153,9 +155,9 @@ public final class TransactionManager {
      * @param tid
      */
     public void setReadTIDs(int tid) {
-      for (Map.Entry<Core, HashMap<Long, Pair<SoftReference<$Impl>, Integer>>> entry : reads
+      for (Map.Entry<Core, LongKeyHashMap<Pair<SoftReference<$Impl>, Integer>>> entry : reads
           .entrySet()) {
-        for (Map.Entry<Long, Pair<SoftReference<$Impl>, Integer>> subEntry : entry
+        for (LongKeyMap.Entry<Pair<SoftReference<$Impl>, Integer>> subEntry : entry
             .getValue().entrySet()) {
           Pair<SoftReference<$Impl>, Integer> pair = subEntry.getValue();
           $Impl obj = pair.first.get();
@@ -163,7 +165,7 @@ public final class TransactionManager {
             // Object was evicted at some point. Get a copy from the object
             // cache.
             Core core = entry.getKey();
-            Long onum = subEntry.getKey();
+            long onum = subEntry.getKey();
             obj = core.readObjectFromCache(onum);
             if (obj == null) continue;
             pair.first = new SoftReference<$Impl>(obj);
@@ -261,14 +263,14 @@ public final class TransactionManager {
           public void run() {
             try {
               Collection<$Impl> creates = curFrame.creates.get(core);
-              Map<Long, Pair<SoftReference<$Impl>, Integer>> readsWithRefs =
+              LongKeyMap<Pair<SoftReference<$Impl>, Integer>> readsWithRefs =
                   curFrame.reads.get(core);
-              Map<Long, Integer> reads = new HashMap<Long, Integer>();
+              LongKeyMap<Integer> reads = new LongKeyHashMap<Integer>();
               Collection<$Impl> writes = curFrame.writes.get(core);
 
               // Convert the read map.
               if (readsWithRefs != null) {
-                for (Map.Entry<Long, Pair<SoftReference<$Impl>, Integer>> entry : readsWithRefs
+                for (LongKeyMap.Entry<Pair<SoftReference<$Impl>, Integer>> entry : readsWithRefs
                     .entrySet()) {
                   reads.put(entry.getKey(), entry.getValue().second);
                 }
@@ -407,7 +409,7 @@ public final class TransactionManager {
     if (obj.$readTransactionID > 0) return;
 
     Core core = obj.$getCore();
-    Long onum = obj.$getOnum();
+    long onum = obj.$getOnum();
 
     Pair<Integer, Pair<SoftReference<$Impl>, Integer>> firstRead =
         curFrame.getFirstRead(core, onum);

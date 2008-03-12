@@ -1,7 +1,6 @@
 package fabric.dissemination.pastry;
 
-import java.util.Map;
-
+import fabric.common.util.LongKeyMap;
 import fabric.core.SerializedObject;
 
 /**
@@ -10,7 +9,7 @@ import fabric.core.SerializedObject;
 public class Glob {
   
   private final SerializedObject obj;
-  private final Map<Long, SerializedObject> related;
+  private final LongKeyMap<SerializedObject> related;
   
   private transient int level;
   private transient int frequency;
@@ -18,11 +17,11 @@ public class Glob {
   
   private transient boolean home;
   
-  public Glob(SerializedObject obj, Map<Long, SerializedObject> related) {
+  public Glob(SerializedObject obj, LongKeyMap<SerializedObject> related) {
     this(obj, related, false);
   }
 
-  public Glob(SerializedObject obj, Map<Long, SerializedObject> related, 
+  public Glob(SerializedObject obj, LongKeyMap<SerializedObject> related, 
       boolean home) {
     this.obj = obj;
     this.related = related;
@@ -39,7 +38,7 @@ public class Glob {
   /**
    * The related objects as a map from their onums to the objects.
    */
-  public Map<Long, SerializedObject> related() {
+  public LongKeyMap<SerializedObject> related() {
     return related;
   }
   

@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -14,6 +13,8 @@ import javax.net.ssl.SSLSocketFactory;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.AccessError;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.messages.*;
 
 public class Worker extends Thread {
@@ -244,7 +245,7 @@ public class Worker extends Thread {
   public ReadMessage.Response handle(ReadMessage msg) throws AccessError {
     this.numReads++;
 
-    Map<Long, SerializedObject> group = new HashMap<Long, SerializedObject>();
+    LongKeyMap<SerializedObject> group = new LongKeyHashMap<SerializedObject>();
     SerializedObject obj = transactionManager.read(client, msg.onum);
     if (obj != null) {
       // Traverse object graph and add more objects to the object group.

@@ -1,10 +1,10 @@
 package fabric.client;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Logger;
 
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;
 
 public class LocalCore implements Core {
@@ -13,7 +13,7 @@ public class LocalCore implements Core {
   private long freshOID = 0;
 
   private PendingTransaction prepared;
-  private Map<Long, Object.$Impl> objects;
+  private LongKeyMap<Object.$Impl> objects;
   // TODO: should be a fabric.util.HashMap
   private Object rootMap;
   private RemoteCore surrogate = null;
@@ -34,7 +34,7 @@ public class LocalCore implements Core {
   }
 
   public int prepareTransaction(Collection<Object.$Impl> toCreate,
-      Map<Long, Integer> reads, Collection<Object.$Impl> writes) {
+      LongKeyMap<Integer> reads, Collection<Object.$Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     log.fine("Local transaction " + freshTID + " preparing");
@@ -81,7 +81,7 @@ public class LocalCore implements Core {
    */
   LocalCore() {
     this.prepared = null;
-    this.objects = new HashMap<Long, Object.$Impl>();
+    this.objects = new LongKeyHashMap<Object.$Impl>();
     this.rootMap = new Object.$Impl(this).$getProxy();
   }
 
@@ -104,7 +104,7 @@ public class LocalCore implements Core {
   }
 
   @Deprecated
-  public Map<Long, Object.$Impl> objects() {
+  public LongKeyMap<Object.$Impl> objects() {
     return objects;
   }
 

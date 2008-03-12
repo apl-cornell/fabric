@@ -11,6 +11,8 @@ import fabric.client.TransactionPrepareFailedException;
 import fabric.client.UnreachableCoreException;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.core.SerializedObject;
 import fabric.core.Worker;
 import fabric.lang.Object.$Impl;
@@ -51,7 +53,7 @@ public class PrepareTransactionMessage extends
     }
   }
 
-  public final Map<Long, Integer> reads;
+  public final LongKeyMap<Integer> reads;
 
   /**
    * The objects created during the transaction, unserialized. This will only be
@@ -85,7 +87,7 @@ public class PrepareTransactionMessage extends
    * Only used by the client.
    */
   public PrepareTransactionMessage(Collection<$Impl> toCreate,
-      Map<Long, Integer> reads, Collection<$Impl> writes) {
+      LongKeyMap<Integer> reads, Collection<$Impl> writes) {
     super(MessageType.PREPARE_TRANSACTION, Response.class);
 
     this.creates = toCreate;
@@ -108,9 +110,9 @@ public class PrepareTransactionMessage extends
     // Read reads.
     int size = in.readInt();
     if (size == 0) {
-      reads = Collections.emptyMap();
+      reads = new LongKeyHashMap<Integer>();
     } else {
-      reads = new HashMap<Long, Integer>(size);
+      reads = new LongKeyHashMap<Integer>(size);
       for (int i = 0; i < size; i++)
         reads.put(in.readLong(), in.readInt());
     }
@@ -177,7 +179,7 @@ public class PrepareTransactionMessage extends
       out.writeInt(0);
     } else {
       out.writeInt(reads.size());
-      for (Map.Entry<Long, Integer> entry : reads.entrySet()) {
+      for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
         out.writeLong(entry.getKey());
         out.writeInt(entry.getValue());
       }

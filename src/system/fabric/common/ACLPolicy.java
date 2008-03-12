@@ -14,12 +14,14 @@ public final class ACLPolicy implements Policy {
 
   // The set of allowed writers. If null, then everyone is allowed to write.
   private Set<Principal> writers;
+  
+  public static final ACLPolicy DEFAULT = new ACLPolicy();
 
   /**
    * Creates a default ACLPolicy. Under the default policy, no protection is
    * provided.
    */
-  public ACLPolicy() {}
+  private ACLPolicy() {}
 
   /**
    * Creates a policy under which the given principal is the sole reader and

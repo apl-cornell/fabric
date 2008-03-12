@@ -165,7 +165,7 @@ public interface Object {
      */
     public $Impl(Core core) throws UnreachableCoreException {
       // TODO Determine how Policy objects should be managed.
-      this(core, new ACLPolicy());
+      this(core, ACLPolicy.DEFAULT);
     }
 
     /**
@@ -201,7 +201,7 @@ public interface Object {
       this.$core = core;
       this.$onum = onum;
       this.$version = 0;
-      this.$policy = new ACLPolicy();
+      this.$policy = ACLPolicy.DEFAULT;
       this.$log = null;
     }
 

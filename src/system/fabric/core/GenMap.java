@@ -1,11 +1,11 @@
 package fabric.core;
 
 import java.io.ObjectOutputStream;
-import java.util.Map;
-
 import fabric.client.Client;
 import fabric.client.LocalCore;
 import fabric.client.RemoteCore;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
@@ -25,8 +25,8 @@ public class GenMap {
       RemoteCore core = client.getCore(coreName);
 
       ObjectOutputStream out = new ObjectOutputStream(System.out);
-      Map<Long, SerializedObject> store =
-          new java.util.HashMap<Long, SerializedObject>();
+      LongKeyMap<SerializedObject> store =
+          new LongKeyHashMap<SerializedObject>();
 
       LocalCore local = client.getLocalCore();
       Object.$Impl rootMap = new HashMap.$Impl(local);
