@@ -52,7 +52,7 @@ public final class Client {
   protected final boolean useSSL;
   
   // The logger
-  protected static Logger logger;
+  public static final Logger logger = Logger.getLogger("fabric.client");
 
   // The timeout (in milliseconds) to use whilst attempting to connect to a core
   // node.
@@ -239,8 +239,6 @@ public final class Client {
     p.load(in);
     in.close();
     System.setProperties(p);
-    
-    logger = Logger.getLogger("fabric.client");
 
     KeyStore keyStore = KeyStore.getInstance("JKS");
     String passwd = System.getProperty("fabric.client.password");
