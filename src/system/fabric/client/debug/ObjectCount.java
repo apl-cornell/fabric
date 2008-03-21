@@ -17,6 +17,7 @@ import fabric.util.Map;
  * Counts the number of objects reachable from a given object.
  */
 public class ObjectCount {
+  
   public static void main(String[] args) throws Exception {
     if (args.length == 0) showUsage();
     Client.initialize();
@@ -87,16 +88,17 @@ public class ObjectCount {
 
       Object.$Impl impl = client.fetchObject(core, onum);
       SerializedObject so = new SerializedObject(impl);
-      for (long ref : so.intracoreRefs)
+      for (long ref : so.getIntracoreRefs())
         if (!visited.contains(ref) && !toVisit.contains(ref)) toVisit.push(ref);
       
       result++;
       int i = 0;
-      if (byType.containsKey(so.className)) i=byType.get(so.className);
+      if (byType.containsKey(so.getClassName())) i=byType.get(so.getClassName());
       i++;
-      byType.put(so.className, i);
+      byType.put(so.getClassName(), i);
     }for (java.util.Map.Entry<String, Integer> entry : byType.entrySet()) System.out.println(entry.getKey() + " => " + entry.getValue());
 
     return result;
   }
+  
 }
