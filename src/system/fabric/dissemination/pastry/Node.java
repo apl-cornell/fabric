@@ -9,6 +9,12 @@ import rice.pastry.PastryNode;
 import rice.pastry.socket.SocketPastryNodeFactory;
 import rice.pastry.standard.RandomNodeIdFactory;
 
+/**
+ * Represents a pastry node with a dissemination process. Creating an instance
+ * of this class will set up a pastry node on the local machine, attempt to
+ * join a pastry ring, and start a disseminator application associated with the
+ * pastry node created.
+ */
 public class Node {
 
   protected Environment env;
@@ -16,19 +22,37 @@ public class Node {
   protected PastryNode node;
   protected Disseminator disseminator;
 
-  public Node() throws IOException {
+  /**
+   * Creates a node and joins an existing ring.
+   * 
+   * @param bootstrap the NodeHandle of the bootstrap node.
+   * @throws IOException if a network error occurred.
+   */
+  public Node(NodeHandle bootstrap) throws IOException {
     env = new Environment();
     NodeIdFactory idf = new RandomNodeIdFactory(env);
     pnf = new SocketPastryNodeFactory(idf, 3373, env);
 
-    // TODO get bootstrap node
-    NodeHandle bootstrap = null;
     node = pnf.newNode(bootstrap);
     waitForReady();
 
     disseminator = new Disseminator(node);
   }
+  
+  /**
+   * Creates a node without joining an existing ring (starts its own ring).
+   * 
+   * @throws IOException if a network error occurred.
+   */
+  public Node() throws IOException {
+    this(null);
+  }
 
+  /**
+   * Returns the disseminator application of this node.
+   * 
+   * @return the disseminator of this node.
+   */
   public Disseminator disseminator() {
     return disseminator;
   }
@@ -48,6 +72,9 @@ public class Node {
     }
   }
 
+  /**
+   * Shuts down and destroys this node.
+   */
   public void destroy() {
     env.destroy();
   }

@@ -8,6 +8,11 @@ import fabric.client.RemoteCore;
 import fabric.common.Pair;
 import fabric.messages.ReadMessage;
 
+/**
+ * The cache objects used by the disseminator to store globs. Essentially a
+ * hashtable specialized for globs; it also fetches globs directly from cores
+ * when needed.
+ */
 public class Cache {
   
   protected Map<Pair<Core, Long>, Glob> map = 
@@ -16,9 +21,9 @@ public class Cache {
   /**
    * Retrieves a glob from the cache, without trying to fetch it from the core.
    * 
-   * @param c the core of the object to retrieve
-   * @param onum the onum of the object
-   * @return the glob, if it is in the cache; null otherwise
+   * @param c the core of the object to retrieve.
+   * @param onum the onum of the object.
+   * @return the glob, if it is in the cache; null otherwise.
    */
   public Glob get(RemoteCore c, long onum) {
     return get(c, onum, false);
@@ -27,11 +32,11 @@ public class Cache {
   /**
    * Retrieves a glob from the cache, or fetches it from the core.
    * 
-   * @param c the core of the object to retrieve
-   * @param onum the onum of the object
-   * @param fetch true if we should fetch from core
+   * @param c the core of the object to retrieve.
+   * @param onum the onum of the object.
+   * @param fetch true if we should fetch from core.
    * @return the glob, or null if fetch is false and glob does not exists in
-   * cache
+   * cache.
    */
   public Glob get(RemoteCore c, long onum, boolean fetch) {
     Pair<Core, Long> key = new Pair<Core, Long>(c, onum);
@@ -56,9 +61,9 @@ public class Cache {
   /**
    * Put given glob into the cache.
    * 
-   * @param c the core of the object
-   * @param onum the onum of the object
-   * @param g the glob
+   * @param c the core of the object.
+   * @param onum the onum of the object.
+   * @param g the glob.
    */
   public void put(Core c, long onum, Glob g) {
     Pair<Core, Long> key = new Pair<Core, Long>(c, onum);

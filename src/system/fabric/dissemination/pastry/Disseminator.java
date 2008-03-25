@@ -30,7 +30,7 @@ import fabric.lang.Object.$Impl;
 
 /**
  * A pastry application that implements the functionality of a Fabric
- * dissemination network.
+ * dissemination network based on the beehive replication protocol.
  */
 public class Disseminator implements Application {
 
@@ -51,6 +51,17 @@ public class Disseminator implements Application {
   /** Outstanding fetch messages awaiting replies. */
   protected Map<Id, Fetch> outstanding;
   
+  /** Replication interval, in milliseconds. */
+  protected static long REPLICATION_INTERVAL = 60000;
+  
+  /** Aggregation interval, in milliseconds. */
+  protected static long AGGREGATION_INTERVAL = 120000;
+  
+  /**
+   * Creates a disseminator attached to the given pastry node.
+   * 
+   * @param node PastryNode where the disseminator is to run.
+   */
   public Disseminator(PastryNode node) {
     this.node = node;
     endpoint = node.buildEndpoint(this, null);
@@ -61,8 +72,10 @@ public class Disseminator implements Application {
     cache = new Cache();
     outstanding = new HashMap<Id, Fetch>();
     
-    endpoint.scheduleMessage(new ReplicateInterval(), 60000, 60000);
-    endpoint.scheduleMessage(new AggregateInterval(), 120000, 120000);
+    endpoint.scheduleMessage(new ReplicateInterval(), 
+        REPLICATION_INTERVAL, REPLICATION_INTERVAL);
+    endpoint.scheduleMessage(new AggregateInterval(), 
+        AGGREGATION_INTERVAL, AGGREGATION_INTERVAL);
   }
 
   private static final Continuation halt = new Continuation() {
@@ -74,6 +87,8 @@ public class Disseminator implements Application {
     * Schedules a task on the task processing thread. When messages are
     * received, handlers should run on the processing thread so as not to
     * block the message receiving thread.
+    * 
+    * @param tast the task to run.
     */
   protected void process(Executable task) {
     endpoint.process(task, halt);
@@ -188,9 +203,7 @@ public class Disseminator implements Application {
     return null;
   }
   
-  /**
-   * Called once every replicate interval.
-   */
+  /** Called once every replicate interval. */
   protected void replicateInterval() {
     process(new Executable() {
       public Object execute() {
@@ -237,6 +250,10 @@ public class Disseminator implements Application {
     });
   }
   
+  /**
+   * Processes a Replicate message. It sends back to the sender objects that
+   * should be replicated to the sender.
+   */
   protected void replicate(final Replicate msg) {
     process(new Executable() {
       public Object execute() {
@@ -280,6 +297,10 @@ public class Disseminator implements Application {
     });
   }
 
+  /**
+   * Processes a Replicate.Reply message, and adds objects in the reply to the
+   * cache.
+   */
   protected void replicate(final Replicate.Reply msg) {
     process(new Executable() {
       public Object execute() {
@@ -297,6 +318,7 @@ public class Disseminator implements Application {
     });
   }
   
+  /** Called once every aggregation interval. */
   protected void aggregateInterval() {
     // TODO
   }
