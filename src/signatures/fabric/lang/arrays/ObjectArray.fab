@@ -1,0 +1,13 @@
+package fabric.lang.arrays;
+
+public class ObjectArray {
+  public native Object set(int i, Object value);
+
+  public native Object get(int i);
+
+  public ObjectArray(Class proxyType, int length) {
+  }
+
+  public ObjectArray(Class proxyType, Object[] value) {
+  }
+}

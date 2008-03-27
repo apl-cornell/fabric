@@ -47,7 +47,8 @@ public interface ResizableArray<T extends Object> extends Object {
 
     /**
      * The number of elements in each little array Dependent on the MTU?
-     * Analogous to a block in a file system. Also directly determines the fanout
+     * Analogous to a block in a file system. Also directly determines the
+     * fanout
      */
     int CHUNK_SIZE = 128;
 
@@ -70,10 +71,10 @@ public interface ResizableArray<T extends Object> extends Object {
     private final Class<? extends Object.$Proxy> proxyType;
 
     /**
-     * The root of the tree of little arrays. The runtime type of root is
-     * a Fabric array of Fabric Objects. Each object in the array is either a further
-     * array of objects or is an array element if this array is at the leaf
-     * level
+     * The root of the tree of little arrays. The runtime type of root is a
+     * Fabric array of Fabric Objects. Each object in the array is either a
+     * further array of objects or is an array element if this array is at the
+     * leaf level
      */
     ObjectArray<Object> root;
 
@@ -90,7 +91,7 @@ public interface ResizableArray<T extends Object> extends Object {
       this.proxyType = proxyType;
       this.length = length;
       this.height =
-          (int) Math.ceil(Math.log10(length) / Math.log10(CHUNK_SIZE));
+          (int) Math.ceil(Math.log(length) / Math.log(CHUNK_SIZE));
       root = new ObjectArray.$Impl<Object>(core, proxyType, CHUNK_SIZE);
     }
 
@@ -118,8 +119,6 @@ public interface ResizableArray<T extends Object> extends Object {
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
-      // FIXME MJL: Why doesn't this restore length and height fields?
-      // KV: Fixed it
       super(core, onum, version, policy, in, refTypes, intracoreRefs);
       proxyType = (Class<? extends Object.$Proxy>) Class.forName(in.readUTF());
       length = in.readInt();
@@ -141,7 +140,7 @@ public interface ResizableArray<T extends Object> extends Object {
 
       // This method implicitly reads the state of this object (viz height)
       TransactionManager.INSTANCE.registerRead(this);
-      
+
       int newHeight =
           (int) Math.ceil(Math.log10(newSize) / Math.log10(CHUNK_SIZE));
       int difference = newHeight - this.height;
@@ -158,7 +157,7 @@ public interface ResizableArray<T extends Object> extends Object {
         return;
       }
 
-      // difference > 0.  Truncate the last so many array slots
+      // difference > 0. Truncate the last so many array slots
       while (difference++ < 0) {
         ObjectArray<Object> rootArray = (ObjectArray<Object>) root.get(0);
         root = rootArray;
@@ -169,45 +168,52 @@ public interface ResizableArray<T extends Object> extends Object {
     @SuppressWarnings("unchecked")
     public T get(int i) {
       TransactionManager.INSTANCE.registerRead(this);
-      if (root == null) {
-        return null;
-      }
-      return (T) getByLevel(root, height, i, true, null);
+      return (T) accessByLevel(root, height, i, true, null);
     }
 
     /**
-     * getOrSet = true if get and false if set
+     * Reads/writes an array element.
+     * 
+     * @param node
+     *                the subtree being accessed.
+     * @param level
+     *                the height of the given node in the tree.
+     * @param i
+     *                the index of the element to read/write.
+     * @param isRead
+     *                true if the access is a read, false if the access is a
+     *                write.
+     * @param data
+     *                the value to write, if the access is a write. This is
+     *                unused if the access is a read.
      */
     @SuppressWarnings("unchecked")
-    private Object getByLevel(ObjectArray<Object> node, int level, int i,
-        boolean getOrSet, Object data) {
+    private Object accessByLevel(ObjectArray<Object> node, int level, int i,
+        boolean isRead, Object data) {
 
       if (node == null) {
+        if (isRead) return null;
+        
         // we're boldly going where no one has gone before
+        // XXX this new node needs to join the tree somehow.
         node = new ObjectArray.$Impl<Object>($getCore(), proxyType, CHUNK_SIZE);
       }
 
       int divider = (int) Math.pow(CHUNK_SIZE, level - 1);
-      int firstDigit = (int) Math.floor(i / divider);
-      int otherDigits = i - firstDigit * divider;
+      int firstDigit = i / divider;
+      int otherDigits = i % divider;
 
-      if (level == 1) {
-        if (getOrSet) {
-          return node.get(i);
-        } else {
-          return node.set(i, data);
-        }
-      } else {
-        return getByLevel((ObjectArray<Object>) node.get(firstDigit),
-            level - 1, otherDigits, getOrSet, data);
-      }
+      if (level == 1) return isRead ? node.get(i) : node.set(i, data);
+      
+      return accessByLevel((ObjectArray<Object>) node.get(firstDigit),
+          level - 1, otherDigits, isRead, data);
     }
 
     @SuppressWarnings("unchecked")
     public T set(int i, T data) {
       boolean transactionCreated =
           TransactionManager.INSTANCE.registerWrite(this);
-      T result = (T) getByLevel(root, height, i, false, data);
+      T result = (T) accessByLevel(root, height, i, false, data);
       if (transactionCreated) TransactionManager.INSTANCE.commitTransaction();
       return result;
     }
@@ -217,8 +223,6 @@ public interface ResizableArray<T extends Object> extends Object {
     public void $copyStateFrom(Object.$Impl other) {
       super.$copyStateFrom(other);
       ResizableArray.$Impl<T> src = (ResizableArray.$Impl<T>) other;
-      // FIXME MJL: Why doesn't this copy over length and height?
-      // KV: Fixed this
       // FIXME MJL: This is supposed to be a shallow copy.
       // KV: What are the semantic of copy state from and why?
       root = deepArrayCopy(src.root);
@@ -255,12 +259,10 @@ public interface ResizableArray<T extends Object> extends Object {
         List<Long> intracoreRefs, List<Pair<String, Long>> intercoreRefs)
         throws IOException {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
-      // FIXME MJL: Why doesn't this write out length, height?
-      // KV: Good point. Fixed it.
       out.writeUTF(proxyType.getName());
       out.write(length);
       out.write(height);
-      
+
       for (int i = 0; i < CHUNK_SIZE; i++)
         $writeRef($getCore(), root.get(i), refTypes, out, intracoreRefs,
             intercoreRefs);
