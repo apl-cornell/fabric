@@ -26,9 +26,10 @@ import fabric.lang.Object;
  * 1. convert the length to a base 128 representation
  *    will make it easier to take logs then
  *    
- * Bugs:
+ * Bugs/Unintended Features:
  * 1. If the array is indeed of ObjectArray instance, then things could get messed up
  *    We're assuming for now that this case won't arise
+ * 2. We've just created this for Object arrays. Still need to extend it to primitive arrays
  *
  **/
 
@@ -46,7 +47,7 @@ public interface ResizableArray<T extends Object> extends Object {
 
     /**
      * The number of elements in each little array Dependent on the MTU?
-     * Analogous to a block in a file system Also directly determines the fanout
+     * Analogous to a block in a file system. Also directly determines the fanout
      */
     int CHUNK_SIZE = 128;
 
@@ -69,8 +70,8 @@ public interface ResizableArray<T extends Object> extends Object {
     private final Class<? extends Object.$Proxy> proxyType;
 
     /**
-     * The root of the tree of little arrays. The runtime type of root is simply
-     * a java array of objects Each object in the array is either a further
+     * The root of the tree of little arrays. The runtime type of root is
+     * a Fabric array of Fabric Objects. Each object in the array is either a further
      * array of objects or is an array element if this array is at the leaf
      * level
      */
@@ -118,8 +119,11 @@ public interface ResizableArray<T extends Object> extends Object {
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
       // FIXME MJL: Why doesn't this restore length and height fields?
+      // KV: Fixed it
       super(core, onum, version, policy, in, refTypes, intracoreRefs);
       proxyType = (Class<? extends Object.$Proxy>) Class.forName(in.readUTF());
+      length = in.readInt();
+      height = in.readInt();
       root = new ObjectArray.$Impl<Object>(core, proxyType, CHUNK_SIZE);
       for (int i = 0; i < CHUNK_SIZE; i++) {
         root.set(i, $readRef(proxyType, refTypes.next(), in, core,
@@ -214,8 +218,12 @@ public interface ResizableArray<T extends Object> extends Object {
       super.$copyStateFrom(other);
       ResizableArray.$Impl<T> src = (ResizableArray.$Impl<T>) other;
       // FIXME MJL: Why doesn't this copy over length and height?
+      // KV: Fixed this
       // FIXME MJL: This is supposed to be a shallow copy.
+      // KV: What are the semantic of copy state from and why?
       root = deepArrayCopy(src.root);
+      this.length = other.length;
+      this.height = other.height;
     }
 
     @SuppressWarnings("unchecked")
@@ -226,7 +234,7 @@ public interface ResizableArray<T extends Object> extends Object {
         Object ithSlot = src.get(i);
         if (ithSlot != null) {
           if (ithSlot instanceof ObjectArray) {
-            // the slot plot thickens
+            // the slot thickens
             ObjectArray<Object> deeperArray = (ObjectArray<Object>) ithSlot;
             dest.set(i, deepArrayCopy(deeperArray));
           } else {
@@ -248,7 +256,11 @@ public interface ResizableArray<T extends Object> extends Object {
         throws IOException {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
       // FIXME MJL: Why doesn't this write out length, height?
+      // KV: Good point. Fixed it.
       out.writeUTF(proxyType.getName());
+      out.write(length);
+      out.write(height);
+      
       for (int i = 0; i < CHUNK_SIZE; i++)
         $writeRef($getCore(), root.get(i), refTypes, out, intracoreRefs,
             intercoreRefs);
