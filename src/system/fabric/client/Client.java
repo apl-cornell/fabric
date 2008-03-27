@@ -28,7 +28,8 @@ import fabric.common.Resources;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.Object.$Impl;
-import fabric.lang.arrays.ObjectArray;
+//import fabric.lang.arrays.ObjectArray;
+import fabric.lang.arrays.ResizableArray;
 
 /**
  * This is the main interface to the Fabric API. Clients wishing to use Fabric
@@ -287,8 +288,10 @@ public final class Client {
     logger.config(cmd.toString());
 
     Class<?> mainClass = Class.forName(args[0] + "$$Impl");
+//    Method main =
+//      mainClass.getMethod("main", new Class[] { ObjectArray.class });
     Method main =
-        mainClass.getMethod("main", new Class[] { ObjectArray.class });
+      mainClass.getMethod("main", new Class[] { ResizableArray.class });
     String[] newArgs = new String[args.length - 1];
     for (int i = 0; i < newArgs.length; i++)
       newArgs[i] = args[i + 1];

@@ -1,0 +1,18 @@
+package fabric-nfs;
+
+class NFSException extends java.lang.Object  extends Exception {
+    long xid;
+    long nfserr;
+    
+    NFSException(long x, long e) {
+	xid = x;
+	nfserr = e;
+    }
+    
+    long GetXID() {
+	return xid;
+    }
+    long GetError() {
+	return nfserr;
+    }
+};

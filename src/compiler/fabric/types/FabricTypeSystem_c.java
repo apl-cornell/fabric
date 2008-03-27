@@ -9,7 +9,7 @@ import polyglot.types.Package;
 import polyglot.util.Position;
 
 public class FabricTypeSystem_c extends TypeSystem_c implements
-    FabricTypeSystem {
+FabricTypeSystem {
 
   public ClassType TransactionManager() {
     return load("fabric.client.TransactionManager");
@@ -64,7 +64,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   protected List<MethodInstance> findAcceptableMethods(ReferenceType container,
       String name, List argTypes, ClassType currClass) throws SemanticException {
     List<MethodInstance> result =
-        super.findAcceptableMethods(container, name, argTypes, currClass);
+      super.findAcceptableMethods(container, name, argTypes, currClass);
     if (isJavaInlineable(container)) {
       // Remove any methods from fabric.lang.Object. They don't really exist.
       for (MethodInstance mi : (List<MethodInstance>) FObject().methods()) {
@@ -75,13 +75,16 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   }
 
   public ClassType fArrayOf(Type type) {
-    if (type.isReference()) return load("fabric.lang.arrays.ObjectArray");
+//  if (type.isReference()) return load("fabric.lang.arrays.ObjectArray");
+    if (type.isReference()) return load("fabric.lang.arrays.ResizableArray");
     return load("fabric.lang.arrays." + type.toString() + "Array");
   }
 
   public ClassType fArrayImplOf(Type type) {
+//  if (type.isReference())
+//  return load("fabric.lang.arrays.ObjectArray.$Impl");
     if (type.isReference())
-      return load("fabric.lang.arrays.ObjectArray.$Impl");
+      return load("fabric.lang.arrays.ResizableArray.$Impl");
     return load("fabric.lang.arrays." + type.toString() + "Array.$Impl");
   }
 

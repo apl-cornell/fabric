@@ -12,12 +12,14 @@ import fabric.client.TransactionManager;
 import fabric.common.Pair;
 import fabric.common.Policy;
 import fabric.core.SerializedObject.RefTypeEnum;
+//import ObjectArray<Object>.$Impl;
 
 
 /**
  * author: kvikram
- * This class implements a resizable array using regular java arrays as a primitive
- * The smaller java array pieces are arranged as a tree so as to 
+ * This class implements a resizable array using ObjectArray as a primitive
+ * The smaller array pieces are arranged as a tree so as to support efficient
+ * indexing operations 
  * 
  * This version of ResizableArray assumes elements are Object instances
  * For primitive types, other versions may be written
@@ -25,16 +27,20 @@ import fabric.core.SerializedObject.RefTypeEnum;
  * Possible optimizations:
  * 1. convert the length to a base 128 representation
  *    will make it easier to take logs then
+ *    
+ * Bugs:
+ * 1. If the array is indeed of ObjectArray instance, then things could get messed up
+ *    We're assuming for now that this case won't arise
  *
  **/
 
 public interface ResizableArray<T extends Object> extends Object {
-  long get$length();
-  void set$length(long newSize);
+  int get$length();
+  void set$length(int newSize);
 
-  T set(long i, T value);
+  T set(int i, T value);
 
-  T get(long i);
+  T get(int i);
 
 
 
@@ -59,7 +65,7 @@ public interface ResizableArray<T extends Object> extends Object {
      * The number of expected elements in this big array
      * Can be modified even after an instance has been created
      */
-    long length;
+    int length;
 
     /**
      * The class representing the proxy type for the array elements.
@@ -72,7 +78,7 @@ public interface ResizableArray<T extends Object> extends Object {
      * Each object in the array is either a further array of objects
      *  or is an array element if this array is at the leaf level
      */
-    java.lang.Object[] root;
+    ObjectArray<Object> root;
 
     /**
      * Creates a new object array at the given Core with the given length.
@@ -82,15 +88,15 @@ public interface ResizableArray<T extends Object> extends Object {
      * @param length
      *                The length of the array.
      */
-    public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, long length) {
+    public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, int length) {
       super(core);
       this.proxyType = proxyType;
       this.length = length;
       this.height = (int) Math.ceil(Math.log10(length)/Math.log10(CHUNK_SIZE));
-      root = new java.lang.Object[CHUNK_SIZE];
+      root = new ObjectArray.$Impl<Object>(core, proxyType, CHUNK_SIZE);
     }
 
-    /** TODO XXX is this necessary?
+    /** 
      * Creates a new object array at the given Core using the given backing
      * array.
      * 
@@ -99,6 +105,17 @@ public interface ResizableArray<T extends Object> extends Object {
      * @param value
      *                The backing array to use.
      */
+    public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, T[] value) {
+      super(core);
+      this.proxyType = proxyType;
+      this.length = value.length;
+      this.height = (int) Math.ceil(Math.log10(length)/Math.log10(CHUNK_SIZE));
+      root = new ObjectArray.$Impl<Object>(core, proxyType, CHUNK_SIZE);
+      for(int i = 0; i < length; i++) {
+        this.set(i, value[i]);
+      }
+    }
+    
 
 
     /**
@@ -111,19 +128,18 @@ public interface ResizableArray<T extends Object> extends Object {
         ClassNotFoundException {
       super(core, onum, version, policy, in, refTypes, intracoreRefs);
       proxyType = (Class<? extends Object.$Proxy>) Class.forName(in.readUTF());
-      root = new java.lang.Object[CHUNK_SIZE];
+      root = new ObjectArray.$Impl<Object>(core, proxyType, CHUNK_SIZE);
       for (int i = 0; i < CHUNK_SIZE; i++) {
-        root[i] =
-          $readRef(proxyType, refTypes.next(), in, core, intracoreRefs);
+        root.set(i, $readRef(proxyType, refTypes.next(), in, core, intracoreRefs));
       }
     }
 
-    public long get$length() {
+    public int get$length() {
       TransactionManager.INSTANCE.registerRead(this);
       return length;
     }
 
-    public void set$length(long newSize) {
+    public void set$length(int newSize) {
 
       // since this is also there in get$length
       TransactionManager.INSTANCE.registerRead(this);
@@ -134,8 +150,9 @@ public interface ResizableArray<T extends Object> extends Object {
       if(difference > 0) {
         // make sure the leaves are at the right level - push down the root
         while(difference-- > 0) {
-          java.lang.Object[] newRoot = new java.lang.Object[CHUNK_SIZE];
-          newRoot[0] = root;
+          ObjectArray<Object> newRoot = new ObjectArray.$Impl<Object>($getCore(),
+              proxyType, CHUNK_SIZE);
+          newRoot.set(0, root);
           root = newRoot;
         }
         return;
@@ -144,7 +161,7 @@ public interface ResizableArray<T extends Object> extends Object {
       if(difference < 0) {
         // truncate the last so many array slots
         while(difference++ < 0) {
-          java.lang.Object[] rootArray = (java.lang.Object[])root[0];
+          ObjectArray<Object> rootArray = (ObjectArray<Object>)root.get(0);
           root = rootArray;
         }
         return;            
@@ -152,7 +169,7 @@ public interface ResizableArray<T extends Object> extends Object {
 
     }
 
-    public T get(long i) {
+    public T get(int i) {
       TransactionManager.INSTANCE.registerRead(this);
       if(root == null) {
         return null;
@@ -163,32 +180,32 @@ public interface ResizableArray<T extends Object> extends Object {
     /**
      * getOrSet = true if get and false if set
      */
-    private java.lang.Object getByLevel(java.lang.Object[] node, int level, long i, 
-        boolean getOrSet, java.lang.Object data) {
+    private Object getByLevel(ObjectArray<Object> node, int level, int i, 
+        boolean getOrSet, Object data) {
 
       if(node == null) {
         // we're boldly going where no one has gone before
-        node = new java.lang.Object[CHUNK_SIZE];
+        node = new ObjectArray.$Impl<Object>($getCore(), proxyType, CHUNK_SIZE);
       }
 
-      long divider = (long) Math.pow(CHUNK_SIZE, level - 1);
+      int divider = (int) Math.pow(CHUNK_SIZE, level - 1);
       int firstDigit = (int) Math.floor(i/divider);
-      long otherDigits = i - firstDigit * divider;
+      int otherDigits = i - firstDigit * divider;
 
       if(level == 1) {
         if(getOrSet) {
-          return node[(int)i];
+          return node.get((int)i);
         } else {
-          return node[(int)i] = data;
+          return node.set((int)i, data);
         }
       } else {
-        return getByLevel((java.lang.Object[])node[firstDigit], 
+        return getByLevel((ObjectArray<Object>)node.get(firstDigit), 
             level - 1, otherDigits, getOrSet, data);            
       }
     }
 
     @SuppressWarnings("unchecked")
-    public T set(long i, T data) {
+    public T set(int i, T data) {
       boolean transactionCreated =
         TransactionManager.INSTANCE.registerWrite(this);
       T result = (T)getByLevel(root, height, i, false, data);
@@ -204,18 +221,22 @@ public interface ResizableArray<T extends Object> extends Object {
       root = deepArrayCopy(src.root);
     }
 
-    private java.lang.Object[] deepArrayCopy(java.lang.Object[] src) {
-      java.lang.Object[] dest = new java.lang.Object[CHUNK_SIZE];
+    private ObjectArray<Object> deepArrayCopy(ObjectArray<Object> src) {
+      ObjectArray<Object> dest = new ObjectArray.$Impl<Object>(src.$getCore(),
+          proxyType, CHUNK_SIZE);
       for(int i = 0; i < CHUNK_SIZE; i++) {
-        if(src[i] != null) {
-          if(src[i] instanceof java.lang.Object[]) {
-            java.lang.Object[] deeperArray = (java.lang.Object[])src[i];
-            dest[i] = deepArrayCopy(deeperArray);
+        Object ithSlot = src.get(i); 
+        if(ithSlot != null) {
+          if(ithSlot instanceof ObjectArray) {
+            // the slot plot thickens
+            ObjectArray<Object> deeperArray = (ObjectArray<Object>)ithSlot;
+            dest.set(i, deepArrayCopy(deeperArray));
           } else {
-            dest[i] = src[i];
+            dest.set(i, ithSlot);
           }
         }
       }
+      return dest;
     }
 
     protected ResizableArray.$Proxy<T> $makeProxy() {
@@ -228,7 +249,7 @@ public interface ResizableArray<T extends Object> extends Object {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
       out.writeUTF(proxyType.getName());
       for (int i = 0; i < CHUNK_SIZE; i++)
-        $writeRef($getCore(), root[i], refTypes, out, intracoreRefs,
+        $writeRef($getCore(), root.get(i), refTypes, out, intracoreRefs,
             intercoreRefs);
     }
 
@@ -251,13 +272,13 @@ public interface ResizableArray<T extends Object> extends Object {
      * @see fabric.lang.arrays.ObjectArray#getLength()
      */
     @SuppressWarnings("unchecked")
-    public long get$length() {
+    public int get$length() {
       return ((ResizableArray<T>) fetch()).get$length();
     }
 
 
     @SuppressWarnings("unchecked")
-    public void set$length(long newSize) {
+    public void set$length(int newSize) {
       ((ResizableArray<T>) fetch()).set$length(newSize);
     }
     
@@ -267,7 +288,7 @@ public interface ResizableArray<T extends Object> extends Object {
      * @see fabric.lang.arrays.ObjectArray#get(int)
      */
     @SuppressWarnings("unchecked")
-    public T get(long i) {
+    public T get(int i) {
       return ((ResizableArray<T>) fetch()).get(i);
     }
 
@@ -277,7 +298,7 @@ public interface ResizableArray<T extends Object> extends Object {
      * @see fabric.lang.arrays.ObjectArray#set(int, fabric.lang.Object)
      */
     @SuppressWarnings("unchecked")
-    public T set(long i, T value) {
+    public T set(int i, T value) {
       return ((ResizableArray<T>) fetch()).set(i, value);
     }
   }
