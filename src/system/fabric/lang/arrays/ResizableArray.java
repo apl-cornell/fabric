@@ -1,6 +1,5 @@
 package fabric.lang.arrays;
 
-import fabric.lang.Object;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -12,8 +11,7 @@ import fabric.client.TransactionManager;
 import fabric.common.Pair;
 import fabric.common.Policy;
 import fabric.core.SerializedObject.RefTypeEnum;
-//import ObjectArray<Object>.$Impl;
-
+import fabric.lang.Object;
 
 /**
  * author: kvikram
@@ -36,34 +34,32 @@ import fabric.core.SerializedObject.RefTypeEnum;
 
 public interface ResizableArray<T extends Object> extends Object {
   int get$length();
+
   void set$length(int newSize);
 
   T set(int i, T value);
 
   T get(int i);
 
-
-
   public static class $Impl<T extends Object> extends Object.$Impl implements
-  ResizableArray<T> {
+      ResizableArray<T> {
 
     /**
-     * The number of elements in each little array
-     * Dependent on the MTU? Analogous to a block in a file system
-     * Also directly determines the fanout 
+     * The number of elements in each little array Dependent on the MTU?
+     * Analogous to a block in a file system Also directly determines the fanout
      */
     int CHUNK_SIZE = 128;
 
     /**
-     * The height of the tree of little arrays. 
-     * Depends on the chunk size (determining the branching factor)
-     *  and the number of expected elements in the bigger array
+     * The height of the tree of little arrays. Depends on the chunk size
+     * (determining the branching factor) and the number of expected elements in
+     * the bigger array
      */
     int height;
 
     /**
-     * The number of expected elements in this big array
-     * Can be modified even after an instance has been created
+     * The number of expected elements in this big array Can be modified even
+     * after an instance has been created
      */
     int length;
 
@@ -73,10 +69,10 @@ public interface ResizableArray<T extends Object> extends Object {
     private final Class<? extends Object.$Proxy> proxyType;
 
     /**
-     * The root of the tree of little arrays. 
-     * The runtime type of root is simply a java array of objects
-     * Each object in the array is either a further array of objects
-     *  or is an array element if this array is at the leaf level
+     * The root of the tree of little arrays. The runtime type of root is simply
+     * a java array of objects Each object in the array is either a further
+     * array of objects or is an array element if this array is at the leaf
+     * level
      */
     ObjectArray<Object> root;
 
@@ -92,11 +88,12 @@ public interface ResizableArray<T extends Object> extends Object {
       super(core);
       this.proxyType = proxyType;
       this.length = length;
-      this.height = (int) Math.ceil(Math.log10(length)/Math.log10(CHUNK_SIZE));
+      this.height =
+          (int) Math.ceil(Math.log10(length) / Math.log10(CHUNK_SIZE));
       root = new ObjectArray.$Impl<Object>(core, proxyType, CHUNK_SIZE);
     }
 
-    /** 
+    /**
      * Creates a new object array at the given Core using the given backing
      * array.
      * 
@@ -109,14 +106,13 @@ public interface ResizableArray<T extends Object> extends Object {
       super(core);
       this.proxyType = proxyType;
       this.length = value.length;
-      this.height = (int) Math.ceil(Math.log10(length)/Math.log10(CHUNK_SIZE));
+      this.height =
+          (int) Math.ceil(Math.log10(length) / Math.log10(CHUNK_SIZE));
       root = new ObjectArray.$Impl<Object>(core, proxyType, CHUNK_SIZE);
-      for(int i = 0; i < length; i++) {
+      for (int i = 0; i < length; i++) {
         this.set(i, value[i]);
       }
     }
-    
-
 
     /**
      * Used for deserializing.
@@ -130,7 +126,8 @@ public interface ResizableArray<T extends Object> extends Object {
       proxyType = (Class<? extends Object.$Proxy>) Class.forName(in.readUTF());
       root = new ObjectArray.$Impl<Object>(core, proxyType, CHUNK_SIZE);
       for (int i = 0; i < CHUNK_SIZE; i++) {
-        root.set(i, $readRef(proxyType, refTypes.next(), in, core, intracoreRefs));
+        root.set(i, $readRef(proxyType, refTypes.next(), in, core,
+            intracoreRefs));
       }
     }
 
@@ -139,76 +136,80 @@ public interface ResizableArray<T extends Object> extends Object {
       return length;
     }
 
+    @SuppressWarnings("unchecked")
     public void set$length(int newSize) {
 
       // since this is also there in get$length
       TransactionManager.INSTANCE.registerRead(this);
-      int newHeight = (int) Math.ceil(Math.log10(newSize)/Math.log10(CHUNK_SIZE));
+      int newHeight =
+          (int) Math.ceil(Math.log10(newSize) / Math.log10(CHUNK_SIZE));
       int difference = newHeight - this.height;
-      if(difference == 0) return;
+      if (difference == 0) return;
 
-      if(difference > 0) {
+      if (difference > 0) {
         // make sure the leaves are at the right level - push down the root
-        while(difference-- > 0) {
-          ObjectArray<Object> newRoot = new ObjectArray.$Impl<Object>($getCore(),
-              proxyType, CHUNK_SIZE);
+        while (difference-- > 0) {
+          ObjectArray<Object> newRoot =
+              new ObjectArray.$Impl<Object>($getCore(), proxyType, CHUNK_SIZE);
           newRoot.set(0, root);
           root = newRoot;
         }
         return;
       }
 
-      if(difference < 0) {
+      if (difference < 0) {
         // truncate the last so many array slots
-        while(difference++ < 0) {
-          ObjectArray<Object> rootArray = (ObjectArray<Object>)root.get(0);
+        while (difference++ < 0) {
+          ObjectArray<Object> rootArray = (ObjectArray<Object>) root.get(0);
           root = rootArray;
         }
-        return;            
+        return;
       }
 
     }
 
+    @SuppressWarnings("unchecked")
     public T get(int i) {
       TransactionManager.INSTANCE.registerRead(this);
-      if(root == null) {
+      if (root == null) {
         return null;
       }
-      return (T)getByLevel(root, height, i, true, null);
+      return (T) getByLevel(root, height, i, true, null);
     }
 
     /**
      * getOrSet = true if get and false if set
      */
-    private Object getByLevel(ObjectArray<Object> node, int level, int i, 
+    @SuppressWarnings("unchecked")
+    private Object getByLevel(ObjectArray<Object> node, int level, int i,
         boolean getOrSet, Object data) {
 
-      if(node == null) {
+      if (node == null) {
         // we're boldly going where no one has gone before
         node = new ObjectArray.$Impl<Object>($getCore(), proxyType, CHUNK_SIZE);
       }
 
       int divider = (int) Math.pow(CHUNK_SIZE, level - 1);
-      int firstDigit = (int) Math.floor(i/divider);
+      int firstDigit = (int) Math.floor(i / divider);
       int otherDigits = i - firstDigit * divider;
 
-      if(level == 1) {
-        if(getOrSet) {
-          return node.get((int)i);
+      if (level == 1) {
+        if (getOrSet) {
+          return node.get(i);
         } else {
-          return node.set((int)i, data);
+          return node.set(i, data);
         }
       } else {
-        return getByLevel((ObjectArray<Object>)node.get(firstDigit), 
-            level - 1, otherDigits, getOrSet, data);            
+        return getByLevel((ObjectArray<Object>) node.get(firstDigit),
+            level - 1, otherDigits, getOrSet, data);
       }
     }
 
     @SuppressWarnings("unchecked")
     public T set(int i, T data) {
       boolean transactionCreated =
-        TransactionManager.INSTANCE.registerWrite(this);
-      T result = (T)getByLevel(root, height, i, false, data);
+          TransactionManager.INSTANCE.registerWrite(this);
+      T result = (T) getByLevel(root, height, i, false, data);
       if (transactionCreated) TransactionManager.INSTANCE.commitTransaction();
       return result;
     }
@@ -221,15 +222,16 @@ public interface ResizableArray<T extends Object> extends Object {
       root = deepArrayCopy(src.root);
     }
 
+    @SuppressWarnings("unchecked")
     private ObjectArray<Object> deepArrayCopy(ObjectArray<Object> src) {
-      ObjectArray<Object> dest = new ObjectArray.$Impl<Object>(src.$getCore(),
-          proxyType, CHUNK_SIZE);
-      for(int i = 0; i < CHUNK_SIZE; i++) {
-        Object ithSlot = src.get(i); 
-        if(ithSlot != null) {
-          if(ithSlot instanceof ObjectArray) {
+      ObjectArray<Object> dest =
+          new ObjectArray.$Impl<Object>(src.$getCore(), proxyType, CHUNK_SIZE);
+      for (int i = 0; i < CHUNK_SIZE; i++) {
+        Object ithSlot = src.get(i);
+        if (ithSlot != null) {
+          if (ithSlot instanceof ObjectArray) {
             // the slot plot thickens
-            ObjectArray<Object> deeperArray = (ObjectArray<Object>)ithSlot;
+            ObjectArray<Object> deeperArray = (ObjectArray<Object>) ithSlot;
             dest.set(i, deepArrayCopy(deeperArray));
           } else {
             dest.set(i, ithSlot);
@@ -239,13 +241,15 @@ public interface ResizableArray<T extends Object> extends Object {
       return dest;
     }
 
+    @Override
     protected ResizableArray.$Proxy<T> $makeProxy() {
       return new ResizableArray.$Proxy<T>(this);
     }
 
+    @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intracoreRefs, List<Pair<String, Long>> intercoreRefs)
-    throws IOException {
+        throws IOException {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
       out.writeUTF(proxyType.getName());
       for (int i = 0; i < CHUNK_SIZE; i++)
@@ -256,7 +260,7 @@ public interface ResizableArray<T extends Object> extends Object {
   }
 
   public static class $Proxy<T extends Object> extends Object.$Proxy implements
-  ResizableArray<T> {
+      ResizableArray<T> {
 
     public $Proxy(Core core, long onum) {
       super(core, onum);
@@ -276,12 +280,11 @@ public interface ResizableArray<T extends Object> extends Object {
       return ((ResizableArray<T>) fetch()).get$length();
     }
 
-
     @SuppressWarnings("unchecked")
     public void set$length(int newSize) {
       ((ResizableArray<T>) fetch()).set$length(newSize);
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -302,6 +305,5 @@ public interface ResizableArray<T extends Object> extends Object {
       return ((ResizableArray<T>) fetch()).set(i, value);
     }
   }
-
 
 }
