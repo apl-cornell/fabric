@@ -103,12 +103,7 @@ public interface ResizableArray<T extends Object> extends Object {
      *                The backing array to use.
      */
     public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, T[] value) {
-      super(core);
-      this.proxyType = proxyType;
-      this.length = value.length;
-      this.height =
-          (int) Math.ceil(Math.log10(length) / Math.log10(CHUNK_SIZE));
-      root = new ObjectArray.$Impl<Object>(core, proxyType, CHUNK_SIZE);
+      this(core, proxyType, value.length);
       for (int i = 0; i < length; i++) {
         this.set(i, value[i]);
       }
@@ -122,6 +117,7 @@ public interface ResizableArray<T extends Object> extends Object {
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
+      // FIXME MJL: Why doesn't this restore length and height fields?
       super(core, onum, version, policy, in, refTypes, intracoreRefs);
       proxyType = (Class<? extends Object.$Proxy>) Class.forName(in.readUTF());
       root = new ObjectArray.$Impl<Object>(core, proxyType, CHUNK_SIZE);
@@ -139,8 +135,9 @@ public interface ResizableArray<T extends Object> extends Object {
     @SuppressWarnings("unchecked")
     public void set$length(int newSize) {
 
-      // since this is also there in get$length
+      // This method implicitly reads the state of this object (viz height)
       TransactionManager.INSTANCE.registerRead(this);
+      
       int newHeight =
           (int) Math.ceil(Math.log10(newSize) / Math.log10(CHUNK_SIZE));
       int difference = newHeight - this.height;
@@ -157,15 +154,12 @@ public interface ResizableArray<T extends Object> extends Object {
         return;
       }
 
-      if (difference < 0) {
-        // truncate the last so many array slots
-        while (difference++ < 0) {
-          ObjectArray<Object> rootArray = (ObjectArray<Object>) root.get(0);
-          root = rootArray;
-        }
-        return;
+      // difference > 0.  Truncate the last so many array slots
+      while (difference++ < 0) {
+        ObjectArray<Object> rootArray = (ObjectArray<Object>) root.get(0);
+        root = rootArray;
       }
-
+      return;
     }
 
     @SuppressWarnings("unchecked")
@@ -219,6 +213,8 @@ public interface ResizableArray<T extends Object> extends Object {
     public void $copyStateFrom(Object.$Impl other) {
       super.$copyStateFrom(other);
       ResizableArray.$Impl<T> src = (ResizableArray.$Impl<T>) other;
+      // FIXME MJL: Why doesn't this copy over length and height?
+      // FIXME MJL: This is supposed to be a shallow copy.
       root = deepArrayCopy(src.root);
     }
 
@@ -251,6 +247,7 @@ public interface ResizableArray<T extends Object> extends Object {
         List<Long> intracoreRefs, List<Pair<String, Long>> intercoreRefs)
         throws IOException {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
+      // FIXME MJL: Why doesn't this write out length, height?
       out.writeUTF(proxyType.getName());
       for (int i = 0; i < CHUNK_SIZE; i++)
         $writeRef($getCore(), root.get(i), refTypes, out, intracoreRefs,
