@@ -222,8 +222,8 @@ public interface ResizableArray<T extends Object> extends Object {
       // FIXME MJL: This is supposed to be a shallow copy.
       // KV: What are the semantic of copy state from and why?
       root = deepArrayCopy(src.root);
-      this.length = other.length;
-      this.height = other.height;
+      this.length = src.length;
+      this.height = src.height;
     }
 
     @SuppressWarnings("unchecked")
