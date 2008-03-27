@@ -1,14 +1,23 @@
 package fabric.core;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import fabric.client.Core;
-import fabric.common.*;
+import fabric.common.ACLPolicy;
 import fabric.common.InternalError;
+import fabric.common.Pair;
+import fabric.common.Policy;
+import fabric.common.Surrogate;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -16,6 +25,7 @@ import fabric.lang.Object.$Impl;
  * <code>SerializedObject</code>s.
  */
 public final class SerializedObject implements Serializable {
+  
   public static enum RefTypeEnum {
     NULL, INLINE, ONUM, REMOTE
   }
@@ -29,13 +39,16 @@ public final class SerializedObject implements Serializable {
    * The name of the class's object. XXX This should be an OID referencing the
    * appropriate class object.
    */
-  public final String className;
+  private final String className;
 
   /**
    * The object's version number.
    */
   private int version;
 
+  /**
+   * The object's security policy.
+   */
   private final Policy policy;
 
   /**
@@ -43,7 +56,10 @@ public final class SerializedObject implements Serializable {
    */
   private final byte[] serializedData;
 
-  final List<RefTypeEnum> refTypes;
+  /**
+   * The type (intra-core, inter-core, inline) of each reference field.
+   */
+  private final List<RefTypeEnum> refTypes;
 
   /**
    * The onums representing the intra-core references in this object. This is
@@ -51,14 +67,14 @@ public final class SerializedObject implements Serializable {
    * 
    * @see fabric.client.debug.ObjectCount#countReachable
    */
-  public final List<Long> intracoreRefs;
+  private final List<Long> intracoreRefs;
 
   /**
    * Global object names representing the inter-core references in this object.
    * Before storing any <code>SerializedObject</code>, the core should
    * swizzle these references into intra-core references to surrogates.
    */
-  List<Pair<String, Long>> intercoreRefs;
+  private final List<Pair<String, Long>> intercoreRefs;
 
   /**
    * Creates a serialized representation of the given object. This should only
@@ -125,6 +141,10 @@ public final class SerializedObject implements Serializable {
   public long getOnum() {
     return onum;
   }
+  
+  public String getClassName() {
+    return className;
+  }
 
   public Policy getPolicy() {
     return policy;
@@ -138,6 +158,22 @@ public final class SerializedObject implements Serializable {
     this.version = version;
   }
 
+  public byte[] getSerializedData() {
+    return serializedData;
+  }
+
+  public List<RefTypeEnum> getRefTypes() {
+    return refTypes;
+  }
+
+  public List<Long> getIntracoreRefs() {
+    return intracoreRefs;
+  }
+
+  public List<Pair<String, Long>> getIntercoreRefs() {
+    return intercoreRefs;
+  }
+  
   @Override
   public String toString() {
     return onum + "v" + version;
@@ -354,4 +390,5 @@ public final class SerializedObject implements Serializable {
       throw new InternalError(e);
     }
   }
+
 }

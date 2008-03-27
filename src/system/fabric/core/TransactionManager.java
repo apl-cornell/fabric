@@ -256,31 +256,31 @@ public class TransactionManager {
    */
   private void makeSurrogates(Transaction transaction, SerializedObject obj) {
     Iterator<RefTypeEnum> refTypeIter =
-        new ArrayList<RefTypeEnum>(obj.refTypes).iterator();
+        new ArrayList<RefTypeEnum>(obj.getRefTypes()).iterator();
     Iterator<Long> relatedOnumIter =
-        new ArrayList<Long>(obj.intracoreRefs).iterator();
+        new ArrayList<Long>(obj.getIntracoreRefs()).iterator();
     Iterator<Pair<String, Long>> intercoreRefIter =
-        obj.intercoreRefs.iterator();
+        obj.getIntercoreRefs().iterator();
 
-    obj.refTypes.clear();
-    obj.intracoreRefs.clear();
-    obj.intercoreRefs = Collections.emptyList();
+    obj.getRefTypes().clear();
+    obj.getIntracoreRefs().clear();
+    obj.getIntercoreRefs().clear();
     while (refTypeIter.hasNext()) {
       RefTypeEnum refType = refTypeIter.next();
       switch (refType) {
       case NULL:
       case INLINE:
-        obj.refTypes.add(refType);
+        obj.getRefTypes().add(refType);
         break;
 
       case ONUM:
-        obj.intracoreRefs.add(relatedOnumIter.next());
-        obj.refTypes.add(refType);
+        obj.getIntracoreRefs().add(relatedOnumIter.next());
+        obj.getRefTypes().add(refType);
         break;
 
       case REMOTE:
-        obj.refTypes.add(RefTypeEnum.ONUM);
-        obj.intracoreRefs.add(createSurrogate(transaction, intercoreRefIter
+        obj.getRefTypes().add(RefTypeEnum.ONUM);
+        obj.getIntracoreRefs().add(createSurrogate(transaction, intercoreRefIter
             .next()));
         break;
       }

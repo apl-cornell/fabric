@@ -249,24 +249,24 @@ public class Worker extends Thread {
     SerializedObject obj = transactionManager.read(client, msg.onum);
     if (obj != null) {
       // Traverse object graph and add more objects to the object group.
-      for (long onum : obj.intracoreRefs) {
+      for (long onum : obj.getIntracoreRefs()) {
         SerializedObject related = transactionManager.read(client, onum);
         if (related != null) {
           group.put(onum, related);
           int count = 0;
-          if (numSendsByType.containsKey(related.className))
-            count = numSendsByType.get(related.className);
+          if (numSendsByType.containsKey(related.getClassName()))
+            count = numSendsByType.get(related.getClassName());
           count++;
-          numSendsByType.put(related.className, count);
+          numSendsByType.put(related.getClassName(), count);
         }
       }
 
       this.numObjectsSent += group.size() + 1;
       int count = 0;
-      if (numSendsByType.containsKey(obj.className))
-        count = numSendsByType.get(obj.className);
+      if (numSendsByType.containsKey(obj.getClassName()))
+        count = numSendsByType.get(obj.getClassName());
       count++;
-      numSendsByType.put(obj.className, count);
+      numSendsByType.put(obj.getClassName(), count);
 
       return new ReadMessage.Response(obj, group);
     }
