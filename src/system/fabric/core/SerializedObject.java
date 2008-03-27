@@ -7,8 +7,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import fabric.client.Core;
-import fabric.common.*;
 import fabric.common.InternalError;
+import fabric.common.Pair;
+import fabric.common.Policy;
+import fabric.common.Surrogate;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -16,6 +18,7 @@ import fabric.lang.Object.$Impl;
  * <code>SerializedObject</code>s.
  */
 public final class SerializedObject implements Serializable {
+  
   public static enum RefTypeEnum {
     NULL, INLINE, ONUM, REMOTE
   }
@@ -29,13 +32,16 @@ public final class SerializedObject implements Serializable {
    * The name of the class's object. XXX This should be an OID referencing the
    * appropriate class object.
    */
-  public final String className;
+  private final String className;
 
   /**
    * The object's version number.
    */
   private int version;
 
+  /**
+   * The object's security policy.
+   */
   private final Policy policy;
 
   /**
@@ -43,7 +49,10 @@ public final class SerializedObject implements Serializable {
    */
   private final byte[] serializedData;
 
-  final List<RefTypeEnum> refTypes;
+  /**
+   * The type (intra-core, inter-core, inline) of each reference field.
+   */
+  private final List<RefTypeEnum> refTypes;
 
   /**
    * The onums representing the intra-core references in this object. This is
@@ -51,14 +60,14 @@ public final class SerializedObject implements Serializable {
    * 
    * @see fabric.client.debug.ObjectCount#countReachable
    */
-  public final List<Long> intracoreRefs;
+  private final List<Long> intracoreRefs;
 
   /**
    * Global object names representing the inter-core references in this object.
    * Before storing any <code>SerializedObject</code>, the core should
    * swizzle these references into intra-core references to surrogates.
    */
-  List<Pair<String, Long>> intercoreRefs;
+  private final List<Pair<String, Long>> intercoreRefs;
 
   /**
    * Creates a serialized representation of the given object. This should only
@@ -125,6 +134,10 @@ public final class SerializedObject implements Serializable {
   public long getOnum() {
     return onum;
   }
+  
+  public String getClassName() {
+    return className;
+  }
 
   public Policy getPolicy() {
     return policy;
@@ -138,6 +151,22 @@ public final class SerializedObject implements Serializable {
     this.version = version;
   }
 
+  public byte[] getSerializedData() {
+    return serializedData;
+  }
+
+  public List<RefTypeEnum> getRefTypes() {
+    return refTypes;
+  }
+
+  public List<Long> getIntracoreRefs() {
+    return intracoreRefs;
+  }
+
+  public List<Pair<String, Long>> getIntercoreRefs() {
+    return intercoreRefs;
+  }
+  
   @Override
   public String toString() {
     return onum + "v" + version;
@@ -157,9 +186,7 @@ public final class SerializedObject implements Serializable {
     out.writeUTF(impl.getClass().getName());
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
-    
-    // XXX FIXME TODO write out the policy.
-    //out.writeObject(impl.$getPolicy());
+    out.writeObject(impl.$getPolicy());
 
     // Get the object to serialize itself into a bunch of buffers.
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -204,9 +231,7 @@ public final class SerializedObject implements Serializable {
     out.writeUTF(className);
     out.writeLong(onum);
     out.writeInt(version);
-    
-    // XXX FIXME TODO write out the policy.
-    // out.writeObject(policy);
+    out.writeObject(policy);
 
     // Write out the object's contents.
     out.writeInt(serializedData.length);
@@ -241,8 +266,11 @@ public final class SerializedObject implements Serializable {
     this.className = in.readUTF();
     this.onum = in.readLong();
     this.version = in.readInt();
-    // XXX FIXME TODO Read in a real policy.
-    this.policy = ACLPolicy.DEFAULT;
+    try {
+      this.policy = (Policy) in.readObject();
+    } catch (ClassNotFoundException e) {
+      throw new InternalError(e);
+    }
 
     // Read the object body.
     this.serializedData = new byte[in.readInt()];
@@ -295,8 +323,7 @@ public final class SerializedObject implements Serializable {
     Class<?> c = Class.forName(in.readUTF());
     long onum = in.readLong();
     int version = in.readInt();
-    // XXX FIXME TODO Read in a real policy.
-    Policy policy = ACLPolicy.DEFAULT;
+    Policy policy = (Policy) in.readObject();
 
     // Read the object body.
     byte[] serializedData = new byte[in.readInt()];
@@ -354,4 +381,5 @@ public final class SerializedObject implements Serializable {
       throw new InternalError(e);
     }
   }
+
 }
