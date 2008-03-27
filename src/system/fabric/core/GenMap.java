@@ -8,7 +8,6 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
-//import fabric.lang.arrays.ObjectArray;
 import fabric.lang.arrays.ResizableArray;
 import fabric.util.HashMap;
 

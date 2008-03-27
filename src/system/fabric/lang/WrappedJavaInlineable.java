@@ -5,7 +5,6 @@ import java.util.WeakHashMap;
 
 import fabric.client.Core;
 import fabric.common.InternalError;
-//import fabric.lang.arrays.ObjectArray;
 import fabric.lang.arrays.ResizableArray;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
