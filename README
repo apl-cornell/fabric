@@ -1,0 +1,8 @@
+This is Fabric.
+
+
+To Build:
+1. download and build polyglot
+2. set $POLYGLOT to your polyglot directory
+3. run ant
+
