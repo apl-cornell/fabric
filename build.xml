@@ -199,6 +199,11 @@ TOP='${basedir}'
   <!-- Compiles the Fabric system -->
   <target name="fabric-system" depends="core,client" description="Builds Fabric"/>
 
+  <target name="dust" description="Cleans up the generated runtime and signatures">
+    <delete dir="${runtime.classes}"/>
+    <delete dir="${signatures.classes}"/>
+  </target>
+
   <target name="clean" description="Cleans up the directory tree: deletes the distribution directory and the classes directories">
     <!-- Delete the ${classes} and ${dist} directory trees -->
     <delete dir="${classes}"/>
