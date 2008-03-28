@@ -56,8 +56,8 @@
   <property name="runtime.jar" location="${lib}/${name}-rt.jar" />
   <property name="signature.jar" location="${lib}/${name}-sig.jar" />
 
-  <!-- loom executable -->
-  <property name="loom" location="${bin}/loom" />
+  <!-- fabc executable -->
+  <property name="fabc" location="${bin}/fabc" />
 
   <!-- genmap executable -->
   <property name="genmap" location="${bin}/genmap" />
@@ -95,14 +95,14 @@
 
   <target name="bin-deps">
     <dependset>
-      <srcfileset dir="${bin}" includes="fabric.in"/>
-      <targetfileset dir="${bin}" includes="fabric"/>
+      <srcfileset dir="${bin}" includes="fab-core.in"/>
+      <targetfileset dir="${bin}" includes="fab-core"/>
     </dependset>
     <condition property="bin.up-to-date">
       <and>
-        <available file="${bin}/fabric"/>
-        <available file="${bin}/tailor"/>
-	<available file="${bin}/loom"/>
+        <available file="${bin}/fab-core"/>
+        <available file="${bin}/fab"/>
+	<available file="${bin}/fabc"/>
 	<available file="${bin}/genkey"/>
 	<available file="${bin}/genmap"/>
 	<available file="${bin}/emulab-update"/>
@@ -130,29 +130,29 @@ TOP='${basedir}'
   </target>
 
   <target name="fabric-bin" depends="executable-defs">
-    <echo message="Creating ${bin}/fabric"/>
-    <concat destfile="${bin}/fabric" append="no">
+    <echo message="Creating ${bin}/fab-core"/>
+    <concat destfile="${bin}/fab-core" append="no">
       <filelist dir="${bin}" files="defs"/>
-      <filelist dir="${bin}" files="fabric.in"/>
+      <filelist dir="${bin}" files="fab-core.in"/>
     </concat>
 
-    <chmod perm="+x" file="${bin}/fabric"/>
+    <chmod perm="+x" file="${bin}/fab-core"/>
 
-    <echo message="Creating ${bin}/loom"/>
-    <concat destfile="${bin}/loom" append="no">
+    <echo message="Creating ${bin}/fabc"/>
+    <concat destfile="${bin}/fabc" append="no">
       <filelist dir="${bin}" files="defs"/>
-      <filelist dir="${bin}" files="loom.in"/>
+      <filelist dir="${bin}" files="fabc.in"/>
     </concat>
 
-    <chmod perm="+x" file="${bin}/loom"/>
+    <chmod perm="+x" file="${bin}/fabc"/>
 
-    <echo message="Creating ${bin}/tailor"/>
-    <concat destfile="${bin}/tailor" append="no">
+    <echo message="Creating ${bin}/fab"/>
+    <concat destfile="${bin}/fab" append="no">
       <filelist dir="${bin}" files="defs"/>
-      <filelist dir="${bin}" files="tailor.in"/>
+      <filelist dir="${bin}" files="fab.in"/>
     </concat>
 
-    <chmod perm="+x" file="${bin}/tailor"/>
+    <chmod perm="+x" file="${bin}/fab"/>
 
     <echo message="Creating ${bin}/genkey"/>
     <concat destfile="${bin}/genkey" append="no">
@@ -220,8 +220,12 @@ TOP='${basedir}'
       description="Cleans up the directory tree and deletes generated files">
     <delete>
       <fileset dir="${bin}">
-        <include name="fabric"/>
-        <include name="defs"/>
+        <include name="fab-core"/>
+        <include name="fab"/>
+        <include name="fabc"/>
+	<include name="genkey"/>
+	<include name="genmap"/>
+	<include name="emulab-update"/>
       </fileset>
     </delete>
   </target>
@@ -281,7 +285,7 @@ TOP='${basedir}'
 	relative="true"
 	skipemptyfilesets="true"
 	vmlauncher="false">
-      <arg value="${loom}" />
+      <arg value="${fabc}" />
       <arg value="-nooutput" />
       <arg value="-sig" />
       <arg value="-d" />
@@ -300,7 +304,7 @@ TOP='${basedir}'
 	relative="true"
 	skipemptyfilesets="true"
 	vmlauncher="false">
-      <arg value="${loom}" />
+      <arg value="${fabc}" />
       <arg value="-nooutput" />
       <arg value="-sig" />
       <arg value="-d" />
@@ -325,7 +329,7 @@ TOP='${basedir}'
 	relative="true"
 	skipemptyfilesets="true"
 	vmlauncher="false">
-      <arg value="${loom}" />
+      <arg value="${fabc}" />
       <arg value="-nooutput" />
       <arg value="-d" />
       <arg value="rt-classes" />
@@ -346,7 +350,7 @@ TOP='${basedir}'
 	relative="true"
 	skipemptyfilesets="true"
 	vmlauncher="false">
-      <arg value="${loom}" />
+      <arg value="${fabc}" />
       <arg value="-nooutput" />
       <arg value="-d" />
       <arg value="rt-classes" />
