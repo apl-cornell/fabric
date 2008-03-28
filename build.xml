@@ -278,11 +278,13 @@ TOP='${basedir}'
   <!-- Compiles the Fabric signatures -->
   <target name="fabric-signatures" depends="init,fabric-compiler,bin">
     <mkdir dir="${signatures.classes}" />
+  	
     <apply executable="sh"
-	parallel="false"
+	parallel="true"
 	failonerror="true"
 	dir="${basedir}"
-	relative="true"
+    dest="${signatures.classes}"
+	relative="false"
 	skipemptyfilesets="true"
 	vmlauncher="false">
       <arg value="${fabc}" />
@@ -293,15 +295,17 @@ TOP='${basedir}'
       <arg value="-sourcepath" />
       <arg value="src/signatures:src/runtime" />
       <srcfile />
-      <fileset dir="${basedir}"
-	  includes="src/signatures/fabric/lang/Object.fab" />
+      <fileset dir="${basedir}/src/signatures"
+      includes="fabric/lang/Object.fab" />
+      <globmapper from="*.fab" to="*.class" />
     </apply>
 
     <apply executable="sh"
 	parallel="true"
 	failonerror="true"
 	dir="${basedir}"
-	relative="true"
+    dest="${signatures.classes}"
+	relative="false"
 	skipemptyfilesets="true"
 	vmlauncher="false">
       <arg value="${fabc}" />
@@ -314,19 +318,22 @@ TOP='${basedir}'
       <arg value="-sigcp" />
       <arg value="sig-classes" />
       <srcfile />
-      <fileset dir="${basedir}" includes="src/signatures/**/*.fab" />
+      <fileset dir="${basedir}/src/signatures" includes="**/*.fab" />
+      <globmapper from="*.fab" to="*.class" />
     </apply>
   </target>
 
   <!-- Compiles the Fabric runtime -->
   <target name="fabric-runtime"
-      depends="init,fabric-compiler,fabric-signatures">
+  depends="init,fabric-compiler,fabric-signatures">
     <mkdir dir="${runtime.classes}" />
+  	
     <apply executable="sh"
 	parallel="true"
 	failonerror="true"
 	dir="${basedir}"
-	relative="true"
+    dest="${runtime.classes}"
+	relative="false"
 	skipemptyfilesets="true"
 	vmlauncher="false">
       <arg value="${fabc}" />
@@ -338,16 +345,18 @@ TOP='${basedir}'
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
       <srcfile />
-      <fileset dir="${basedir}"
-	  includes="src/runtime/**/*.fab"
-	  excludes="src/runtime/fabric/util/*.fab" />
+      <fileset dir="${basedir}/src/runtime"
+	  includes="**/*.fab"
+	  excludes="fabric/util/*.fab" />
+      <globmapper from="*.fab" to="*.class" />
     </apply>
 
     <apply executable="sh"
 	parallel="true"
 	failonerror="true"
 	dir="${basedir}"
-	relative="true"
+    dest="${runtime.classes}"
+	relative="false"
 	skipemptyfilesets="true"
 	vmlauncher="false">
       <arg value="${fabc}" />
@@ -359,8 +368,9 @@ TOP='${basedir}'
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
       <srcfile />
-      <fileset dir="${basedir}"
-	  includes="src/runtime/fabric/util/HashMap.fab,src/runtime/fabric/util/LinkedList.fab" />
+      <fileset dir="${basedir}/src/runtime"
+	  includes="fabric/util/HashMap.fab,fabric/util/LinkedList.fab" />
+      <globmapper from="*.fab" to="*.class" />
     </apply>
   </target>
 
@@ -382,7 +392,9 @@ TOP='${basedir}'
     vmlauncher="false"
     addsourcefile="false">
       <arg value="${genmap}" />
-      <fileset dir="etc/keys" includes="*.keystore" excludes="trust.keystore" />
+      <fileset dir="${basedir}/etc/keys"
+      includes="*.keystore"
+      excludes="trust.keystore" />
       <globmapper from="*.keystore" to="*" />
     </apply>
   </target>
