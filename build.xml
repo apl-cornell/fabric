@@ -8,6 +8,25 @@
   <!-- Project name -->
   <property name="name" value="fabric" />
 
+  <!-- set the prefix for accessing environment variables -->
+  <property environment="env" />
+
+  <!-- Polyglot installation -->
+  <!-- If it is not defined in the properties file, use the environment variable $POLYGLOT. -->
+  <condition property="polyglot.dir" value="${env.POLYGLOT}">
+    <and>
+      <isset property="env.POLYGLOT" />
+      <not>
+        <isset property="polyglot.dir" />
+      </not>
+    </and>
+  </condition>
+  
+  <!-- As a last resort, try to use polyglot.jar from distribution -->
+  <condition property="polyglot.dir" value="${basedir}">
+    <not><isset property="polyglot.dir" /></not>
+  </condition>
+
   <!-- Source directory -->
   <property name="src" location="${basedir}/src"/>
   <property name="system.src" location="${src}/system"/>
@@ -52,6 +71,13 @@
         <include name="*.jar" />
         <exclude name="${name}*.jar" />
     </fileset>
+
+    <!-- the Polyglot classes -->
+    <pathelement path="${polyglot.dir}/classes" />
+    <pathelement path="${polyglot.dir}/lib/polyglot.jar" />
+    <pathelement path="${polyglot.dir}/lib/ppg.jar" />
+    <pathelement path="${polyglot.dir}/lib/java_cup.jar" />
+    <pathelement path="${polyglot.dir}/lib/JFlex.jar" />
   </path>
 
   <target name="configure" description="Configures Fabric"
