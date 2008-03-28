@@ -1,4 +1,4 @@
-TAILOR="${TOP}/bin/tailor"
+TAILOR="${TOP}/bin/fab"
 KEYDIR="${TOP}/etc/keys"
 VAR="${TOP}/var"
 
