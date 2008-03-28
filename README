@@ -6,3 +6,16 @@ To Build:
 2. set $POLYGLOT to your polyglot directory
 3. run ant
 
+To Compile an application:
+use the fabc script, or run fabric.Main with java, e.g.:
+java fabric.Main tests/OO7/*.fab -d rt-classes -sourcepath src/runtime:tests -sigcp sig-classes
+
+To Run a core:
+use the core script, or run fabric.core.Main with java, e.g.:
+java fabric.core.Main --core core0 etc/keys/core0.keystore etc/keys/trust.keystore password
+
+To Run an application:
+use the fab script, or run fabric.client.Client with java, e.g.:
+java fabric.client.Client OO7.Benchmark fab://core0/OO7 tiny 3
+java fabric.client.Client OO7.traversals.T1 fab://core0/OO7 --hot
+
