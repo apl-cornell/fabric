@@ -17,11 +17,6 @@ import fabric.client.Core;
 
 public class ResizableObjectArray {
   /**
-   * The core at which to create new nodes in the tree.
-   */
-  private Core core;
-
-  /**
    * The number of elements in each little array. Dependent on the MTU?
    * Analogous to a block in a file system. Also directly determines the fanout.
    */
@@ -60,15 +55,14 @@ public class ResizableObjectArray {
    * @param length
    *                The length of the array.
    */
-  public ResizableObjectArray(Core core, Class proxyType, int length) {
-    this.core = core;
+  public ResizableObjectArray(Class proxyType, int length) {
     this.proxyType = proxyType;
     this.length = length;
     this.height = (int) Math.ceil(Math.log(length) / Math.log(CHUNK_SIZE));
     if (height == 1)
-      root = new ObjectArray@core(proxyType, CHUNK_SIZE);
+      root = new ObjectArray(proxyType, CHUNK_SIZE);
     else
-      root = new ObjectArray@core(ObjectArray.class, CHUNK_SIZE);
+      root = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
   }
 
   public int getLength() {
@@ -81,7 +75,7 @@ public class ResizableObjectArray {
     if (difference > 0) {
       // make sure the leaves are at the right level - push down the root
       for (int count = 0; count < difference; count++) {
-        ObjectArray newRoot = new ObjectArray@core(ObjectArray.class, CHUNK_SIZE);
+        ObjectArray newRoot = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
         newRoot.set(0, root);
         root = newRoot;
       }
@@ -147,9 +141,9 @@ public class ResizableObjectArray {
 
       // Writing to a node that doesn't exist yet.  Time to create it.
       if (level == 2)
-        nextObject = new ObjectArray@core(proxyType, CHUNK_SIZE);
+        nextObject = new ObjectArray(proxyType, CHUNK_SIZE);
       else
-        nextObject = new ObjectArray@core(ObjectArray.class, CHUNK_SIZE);
+        nextObject = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
       node.set(firstDigit, nextObject);
     }
 
