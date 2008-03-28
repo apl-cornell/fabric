@@ -61,6 +61,8 @@ LIB_unix=$TOP_unix/lib
 classpath=`unixpath $CLASSPATH`
 classpath="$TOP_unix/classes:$LIB_unix/fabric.jar:$classpath"
 
+classpath="$TOP_unix/lib/je-3.2.68.jar:$classpath"
+
 classpath=`fixpath "$classpath"`
 
 command="\"$JAVA\" $vmargs -classpath \"$classpath\" fabric.core.Main $args"
