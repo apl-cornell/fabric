@@ -189,7 +189,6 @@ TOP='${basedir}'
     <mkdir dir="${classes}"/>
     <mkdir dir="${runtime.classes}"/>
     <mkdir dir="${signatures.classes}"/>
-    <mkdir dir="${var}"/>
   </target>
 
   <!-- Compiles Fabric -->
@@ -277,7 +276,7 @@ TOP='${basedir}'
   </target>
 
   <!-- Compiles the Fabric signatures -->
-  <target name="fabric-signatures" depends="init,fabric-compiler">
+  <target name="fabric-signatures" depends="init,fabric-compiler,bin">
     <mkdir dir="${signatures.classes}" />
     <apply executable="sh"
 	parallel="false"
@@ -378,14 +377,13 @@ TOP='${basedir}'
     parallel="true"
     failonerror="true"
     dir="${basedir}"
-    relative="true"
+    dest="${basedir}/var"
     skipemptyfilesets="true"
     vmlauncher="false"
     addsourcefile="false">
       <arg value="${genmap}" />
-      <fileset dir="${basedir}"
-      includes="etc/keys/*.keystore" excludes="etc/keys/trust.keystore" />
-      <globmapper from="etc/keys/*.keystore" to="var/*" />
+      <fileset dir="etc/keys" includes="*.keystore" excludes="trust.keystore" />
+      <globmapper from="*.keystore" to="*" />
     </apply>
   </target>
 
