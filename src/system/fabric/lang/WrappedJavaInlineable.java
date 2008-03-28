@@ -5,7 +5,7 @@ import java.util.WeakHashMap;
 
 import fabric.client.Core;
 import fabric.common.InternalError;
-import fabric.lang.arrays.ResizableArray;
+import fabric.lang.arrays.ObjectArray;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
   public final T obj;
@@ -51,11 +51,11 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * system's point of view.
    */
   @SuppressWarnings("unchecked")
-  public static ResizableArray<Object> $wrap(Core core, java.lang.Object[] array) {
+  public static ObjectArray<Object> $wrap(Core core, java.lang.Object[] array) {
     Object[] result = new Object[array.length];
     for (int i = 0; i < array.length; i++)
       result[i] = $wrap(array[i]);
-    return (ResizableArray<Object>) new ResizableArray.$Impl<Object>(core,
+    return (ObjectArray<Object>) new ObjectArray.$Impl<Object>(core,
         Object.$Proxy.class, result).$getProxy();
   }
 

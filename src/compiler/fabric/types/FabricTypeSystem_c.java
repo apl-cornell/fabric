@@ -75,13 +75,13 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   }
 
   public ClassType fArrayOf(Type type) {
-    if (type.isReference()) return load("fabric.lang.arrays.ResizableArray");
+    if (type.isReference()) return load("fabric.lang.arrays.ObjectArray");
     return load("fabric.lang.arrays." + type.toString() + "Array");
   }
 
   public ClassType fArrayImplOf(Type type) {
     if (type.isReference())
-      return load("fabric.lang.arrays.ResizableArray.$Impl");
+      return load("fabric.lang.arrays.ObjectArray.$Impl");
     return load("fabric.lang.arrays." + type.toString() + "Array.$Impl");
   }
 
