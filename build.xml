@@ -189,6 +189,7 @@ TOP='${basedir}'
     <mkdir dir="${classes}"/>
     <mkdir dir="${runtime.classes}"/>
     <mkdir dir="${signatures.classes}"/>
+    <mkdir dir="${var}"/>
   </target>
 
   <!-- Compiles Fabric -->
