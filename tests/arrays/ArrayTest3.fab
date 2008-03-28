@@ -2,6 +2,8 @@ package arrays;
 
 import fabric.client.Core;
 import fabric.lang.arrays.ResizableObjectArray;
+import fabric.util.HashMap;
+
 
 public class ArrayTest3 {
     public int id;
@@ -27,7 +29,12 @@ public class ArrayTest3 {
                 ((ArrayTest3)testArray.get(0)).id + "," + 
                 ((ArrayTest3)testArray.get(999)).id + "," +
                 ((ArrayTest3)testArray.get(1099)).id);
+            
+            // storing the array into the core with name "testArray"
+            HashMap root = (HashMap) core.getRoot();
+            root.put("testArray", testArray);
+            
+            // now execute ArrayTest3Read.main
         }
-
     }
 }
