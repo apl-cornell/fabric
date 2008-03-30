@@ -20,5 +20,12 @@ public class Resources {
     return new FileInputStream(filename);
   }
   
-  private static final String prefix = System.getProperty("fabric.prefix", ".");
+  private static final String prefix;
+  
+  static {
+    // Read FABRIC_HOME environment variable.
+    String fabHome = System.getenv("FABRIC_HOME");
+    if (fabHome == null) fabHome = ".";
+    prefix = System.getProperty("fabric.prefix", fabHome);
+  }
 }
