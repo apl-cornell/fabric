@@ -12,11 +12,12 @@ public class ArrayTest3Read {
     public static void main(String[] args) {
         Core core = fabric.client.Client.getClient().getCore("core0");
         HashMap map = (HashMap)core.getRoot();
+        System.out.println("Map obtained is " + map.toString());
         
         System.out.println("Fetching the persistent object array from the core");
         ResizableObjectArray array = (ResizableObjectArray) map.get("testArray");
         
-        System.out.println("Fetched array: " + array);
+        System.out.println("Fetched array: " + array.toString());
         
         System.out.println("The three objects: " + 
             ((ArrayTest3)array.get(0)).id + "," + 

@@ -32,7 +32,10 @@ public class ArrayTest3 {
             
             // storing the array into the core with name "testArray"
             HashMap root = (HashMap) core.getRoot();
+            System.out.println("Map obtained is " + root.toString());
+            
             root.put("testArray", testArray);
+            System.out.println("Map now is " + root.toString());
             
             // now execute ArrayTest3Read.main
         }
