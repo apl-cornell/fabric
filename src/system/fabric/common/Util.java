@@ -1,7 +1,5 @@
 package fabric.common;
 
-import java.io.*;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -13,28 +11,6 @@ public final class Util {
 
   public static final String ALG_PUBLIC_KEY_GEN = "RSA";
   public static final String ALG_PUBLIC_CRYPTO = "RSA/CBC/PKCS5Padding";
-
-  public static Object fromArray(byte[] buf) throws ClassNotFoundException {
-    try {
-      ByteArrayInputStream bis = new ByteArrayInputStream(buf);
-      ObjectInputStream ois = new ObjectInputStream(bis);
-      return ois.readUnshared();
-    } catch (final IOException exc) {
-      throw new InternalError(exc);
-    }
-  }
-
-  public static byte[] toArray(Serializable obj) {
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      ObjectOutputStream oos = new ObjectOutputStream(bos);
-      oos.writeUnshared(obj);
-      oos.close();
-      return bos.toByteArray();
-    } catch (final IOException exc) {
-      throw new InternalError(exc);
-    }
-  }
 
   /**
    * Returns an iterable that iterates over the elements of the iterables passed
@@ -93,20 +69,6 @@ public final class Util {
         };
       }
     };
-  }
-
-  public static void main(String[] args) {
-    ArrayList<Integer> x = new ArrayList<Integer>();
-    ArrayList<Integer> y = new ArrayList<Integer>();
-    ArrayList<Integer> z = new ArrayList<Integer>();
-
-    x.add(1);
-    x.add(2);
-    x.add(3);
-    z.add(7);
-
-    for (int i : chain(x, y, z))
-      System.out.println(i);
   }
 
   /**
