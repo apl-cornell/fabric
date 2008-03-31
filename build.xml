@@ -337,6 +337,7 @@ TOP='${basedir}'
 	skipemptyfilesets="true"
 	vmlauncher="false">
       <arg value="${fabc}" />
+      <!--arg value="-nooutput" /-->
       <arg value="-d" />
       <arg value="rt-classes" />
       <arg value="-sigcp" />
@@ -347,25 +348,6 @@ TOP='${basedir}'
       <fileset dir="${basedir}/src/runtime"
 	  includes="**/*.fab"
 	  excludes="fabric/util/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
-
-    <apply executable="sh"
-	parallel="true"
-	failonerror="true"
-	dir="${basedir}"
-    dest="${runtime.classes}"
-	relative="false"
-	skipemptyfilesets="true"
-	vmlauncher="false">
-      <arg value="${fabc}" />
-      <arg value="-d" />
-      <arg value="rt-classes" />
-      <arg value="-sigcp" />
-      <arg value="sig-classes" />
-      <arg value="-sourcepath" />
-      <arg value="src/runtime" />
-      <srcfile />
       <fileset dir="${basedir}/src/runtime"
 	  includes="fabric/util/HashMap.fab,fabric/util/LinkedList.fab" />
       <globmapper from="*.fab" to="*.class" />
