@@ -13,7 +13,7 @@ public final class Util {
   public static final String ALG_PUBLIC_CRYPTO = "RSA/CBC/PKCS5Padding";
 
   /**
-   * Returns an iterable that iterates over the elements of the iterables passed
+   * <p>Returns an iterable that iterates over the elements of the iterables passed
    * in. The common use is:
    * 
    * <pre>
@@ -21,8 +21,11 @@ public final class Util {
    *  o.f()
    * </pre>
    * 
-   * This is intended to be more efficient and easier than creating a new
-   * collection containing the contents.
+   * which will call f() on each element of a, then each element of b, then each
+   * element of c. </p>
+   * 
+   * <p>This is intended to be more efficient and easier than
+   * creating a new collection containing the contents.</p>
    * 
    * @param <T>
    *                the types of the elements of the iterables
