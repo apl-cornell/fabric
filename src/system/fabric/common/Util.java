@@ -14,27 +14,25 @@ public final class Util {
   public static final String ALG_PUBLIC_KEY_GEN = "RSA";
   public static final String ALG_PUBLIC_CRYPTO = "RSA/CBC/PKCS5Padding";
 
-  public static Object fromArray(byte[] buf)
-    throws ClassNotFoundException {
-	  try {
-		  ByteArrayInputStream bis = new ByteArrayInputStream(buf);
-		  ObjectInputStream ois = new ObjectInputStream(bis);
-		  return ois.readUnshared();
-	  } catch( final IOException exc ) {
-		  throw new InternalError( exc );
-	  }
+  public static Object fromArray(byte[] buf) throws ClassNotFoundException {
+    try {
+      ByteArrayInputStream bis = new ByteArrayInputStream(buf);
+      ObjectInputStream ois = new ObjectInputStream(bis);
+      return ois.readUnshared();
+    } catch (final IOException exc) {
+      throw new InternalError(exc);
+    }
   }
 
   public static byte[] toArray(Serializable obj) {
-    try
-    {
-    	ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    	ObjectOutputStream oos = new ObjectOutputStream(bos);
-    	oos.writeUnshared(obj);
-    	oos.close();
-        return bos.toByteArray();
-    } catch( final IOException exc ) {
-    	throw new InternalError( exc );
+    try {
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      ObjectOutputStream oos = new ObjectOutputStream(bos);
+      oos.writeUnshared(obj);
+      oos.close();
+      return bos.toByteArray();
+    } catch (final IOException exc) {
+      throw new InternalError(exc);
     }
   }
 
@@ -51,13 +49,13 @@ public final class Util {
    * collection containing the contents.
    * 
    * @param <T>
-   *          the types of the elements of the iterables
+   *                the types of the elements of the iterables
    * @param iters
-   *          the iterables to chain
+   *                the iterables to chain
    * @return an object that can be used to traverse iters in order
    */
-  public static <T> Iterable<T> chain(final Iterable<T> ... iters) {
-    return new Iterable<T> () {
+  public static <T> Iterable<T> chain(final Iterable<T>... iters) {
+    return new Iterable<T>() {
       public Iterator<T> iterator() {
         return new Iterator<T>() {
           private int i = 0;
@@ -69,11 +67,9 @@ public final class Util {
            * current.hasNext().
            */
           private void advance() {
-            while (current == null && i < iters.length)
-            {
+            while (current == null && i < iters.length) {
               current = iters[i++].iterator();
-              if (!current.hasNext())
-                current = null;
+              if (!current.hasNext()) current = null;
             }
           }
 
@@ -84,11 +80,9 @@ public final class Util {
 
           public T next() {
             advance();
-            if (current == null)
-              throw new NoSuchElementException();
+            if (current == null) throw new NoSuchElementException();
             T result = current.next();
-            if (!current.hasNext())
-              current = null;
+            if (!current.hasNext()) current = null;
             return result;
           }
 
@@ -100,19 +94,36 @@ public final class Util {
       }
     };
   }
-  
+
   public static void main(String[] args) {
     ArrayList<Integer> x = new ArrayList<Integer>();
     ArrayList<Integer> y = new ArrayList<Integer>();
     ArrayList<Integer> z = new ArrayList<Integer>();
-    
+
     x.add(1);
     x.add(2);
     x.add(3);
     z.add(7);
-    
+
     for (int i : chain(x, y, z))
       System.out.println(i);
   }
-}
 
+  /**
+   * Gets the proxy class of a given class. If the given class is already a
+   * proxy class, it is returned back to the caller.
+   */
+  @SuppressWarnings("unchecked")
+  @Deprecated
+  public static Class<? extends fabric.lang.Object.$Proxy> getProxy(Class<?> c) {
+    if (c.getSimpleName().equals("$Proxy"))
+      return (Class<? extends fabric.lang.Object.$Proxy>) c;
+
+    Class<?>[] classes = c.getClasses();
+    for (Class<?> c_ : classes)
+      if (c_.getSimpleName().equals("$Proxy"))
+        return (Class<? extends fabric.lang.Object.$Proxy>) c_;
+
+    throw new InternalError("Error finding proxy type in " + c);
+  }
+}

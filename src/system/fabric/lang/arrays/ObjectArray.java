@@ -10,6 +10,7 @@ import fabric.client.Core;
 import fabric.client.TransactionManager;
 import fabric.common.Pair;
 import fabric.common.Policy;
+import fabric.common.Util;
 import fabric.core.SerializedObject.RefTypeEnum;
 import fabric.lang.Object;
 
@@ -25,7 +26,7 @@ public interface ObjectArray<T extends Object> extends Object {
     /**
      * The class representing the proxy type for the array elements.
      */
-    private final Class<? extends Object.$Proxy> proxyType;
+    private /*final*/ Class<? extends Object.$Proxy> proxyType;
 
     private Object[] value;
 
@@ -37,9 +38,10 @@ public interface ObjectArray<T extends Object> extends Object {
      * @param length
      *                The length of the array.
      */
+    @SuppressWarnings("unchecked")
     public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, int length) {
       super(core);
-      this.proxyType = proxyType;
+      this.proxyType = Util.getProxy(proxyType);
       value = new Object[length];
     }
 
@@ -54,7 +56,7 @@ public interface ObjectArray<T extends Object> extends Object {
      */
     public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, T[] value) {
       super(core);
-      this.proxyType = proxyType;
+      this.proxyType = Util.getProxy(proxyType);
       this.value = value;
     }
 
