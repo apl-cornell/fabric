@@ -1,0 +1,27 @@
+package regression;
+
+import fabric.client.Core;
+
+public class PrintObject01 {
+    int id;
+    
+    public PrintObject01(int id) {
+        this.id = id;
+    }
+    public static void main(String[] arg) {
+        Core core = fabric.client.Client.getClient().getLocalCore();
+        
+        PrintObject01 integer = new PrintObject01@core(99);
+        
+        System.out.println("Number is " + integer.toString());
+
+        // this should call toString instead of trying to cast into a String
+        System.out.println("Number is " + integer);
+        
+        
+    }
+    
+    public String toString() {
+        return Integer.toString(id);
+    }
+}
