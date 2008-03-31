@@ -199,10 +199,12 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
       if (typeNode.type().isNumeric()) {
         members.add(qq.parseMember(flags + " %T postInc$" + name + "() {"
             + "%T tmp = this.get$" + name + "();" + "this.set$" + name
-            + "(tmp + 1);" + "return tmp; }", typeNode, typeNode, typeNode));
+            + "((%T) (tmp + 1));" + "return tmp; }", typeNode, typeNode,
+            typeNode, typeNode));
         members.add(qq.parseMember(flags + " %T postDec$" + name + "() {"
             + "%T tmp = this.get$" + name + "();" + "this.set$" + name
-            + "(tmp - 1);" + "return tmp; }", typeNode, typeNode, typeNode));
+            + "((%T) (tmp - 1));" + "return tmp; }", typeNode, typeNode,
+            typeNode, typeNode));
       }
     }
 
