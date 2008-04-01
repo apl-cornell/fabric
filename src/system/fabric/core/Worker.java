@@ -1,11 +1,22 @@
 package fabric.core;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -15,9 +26,15 @@ import fabric.client.TransactionPrepareFailedException;
 import fabric.common.AccessError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.messages.*;
+import fabric.messages.AbortTransactionMessage;
+import fabric.messages.AllocateMessage;
+import fabric.messages.CommitTransactionMessage;
+import fabric.messages.Message;
+import fabric.messages.PrepareTransactionMessage;
+import fabric.messages.ReadMessage;
 
 public class Worker extends Thread {
+  
   /** The node that we're working for. */
   private final Node node;
 
@@ -27,11 +44,15 @@ public class Worker extends Thread {
   /** The transaction manager for the object core that the client is talking to. */
   private TransactionManager transactionManager;
 
+  /** The surrogate creation policy object */
+  private SurrogateManager surrogateManager;
+  
   // The socket and associated I/O streams for communicating with the client.
   private Socket socket;
   private ObjectInputStream in;
   private ObjectOutputStream out;
 
+  // Bookkeeping information for debugging/monitoring purposes:
   private int numReads;
   private int numObjectsSent;
   private int numPrepares;
@@ -39,7 +60,20 @@ public class Worker extends Thread {
   private int numCreates;
   private int numWrites;
   private Map<String, Integer> numSendsByType;
+  private static final Logger logger = Logger.getLogger("fabric.core.worker");
 
+  /** associate debugging log messages with pending transactions */
+  private Map<Integer, LogRecord> pendingLogs;
+  
+  private class LogRecord {
+    public LogRecord(int creates, int writes) {
+      this.creates = creates;
+      this.writes  = writes;
+    }
+    public int creates;
+    public int writes;
+  }
+  
   /**
    * Instantiates a new worker thread and starts it running.
    */
@@ -84,6 +118,8 @@ public class Worker extends Thread {
         OutputStream out = socket.getOutputStream();
         String coreName = dataIn.readUTF();
         this.transactionManager = node.getTransactionManager(coreName);
+        this.surrogateManager   = node.getSurrogateManager(coreName);
+        this.pendingLogs        = new HashMap<Integer, LogRecord>();
 
         if (this.transactionManager != null) {
           // Indicate that the core exists.
@@ -121,9 +157,9 @@ public class Worker extends Thread {
             this.client = (Principal) in.readObject();
           }
 
-          System.err.println("Accepted connection for " + coreName);
-          System.err.println("(" + client + ")");
-          System.err.println();
+          logger.info("Accepted connection for " + coreName);
+          logger.info("(" + client + ")");
+          logger.info("");
 
           run_();
         } else {
@@ -132,32 +168,31 @@ public class Worker extends Thread {
           out.flush();
         }
       } catch (SocketException e) {
+        // TODO: this logging/handler should be cleaned up.
         String msg = e.getMessage();
         if ("Connection reset".equals(msg)) {
-          System.err.println("Connection reset");
-          System.err.println("(" + client + ")");
-        } else e.printStackTrace();
+          logger.info("Connection reset");
+          logger.info("(" + client + ")");
+        } else logger.log(Level.WARNING, "Connection closing", e);
       } catch (EOFException e) {
         // Client has closed the connection. Nothing to do here.
-        System.err.println("Connection closed");
-        System.err.println("(" + client + ")");
-      } catch (IOException e) {
-        e.printStackTrace();
-      } catch (ClassNotFoundException e) {
-        e.printStackTrace();
+        logger.warning("Connection closed");
+        logger.warning("(" + client + ")");
+      } catch (final IOException e) {
+        logger.log(Level.WARNING, "Connection closing", e);
+      } catch (final ClassNotFoundException e) {
+        logger.log(Level.WARNING, "Connection closing", e);
       }
 
-      System.err.println(numReads + " read requests");
-      System.err.println(numObjectsSent + " objects sent");
-      System.err.println(numPrepares + " prepare requests");
-      System.err.println(numCommits + " commit requests");
-      System.err.println(numCreates + " objects created");
-      System.err.println(numWrites + " objects updated");
+      logger.info(numReads       + " read requests");
+      logger.info(numObjectsSent + " objects sent");
+      logger.info(numPrepares    + " prepare requests");
+      logger.info(numCommits     + " commit requests");
+      logger.info(numCreates     + " objects created");
+      logger.info(numWrites      + " objects updated");
       for (Map.Entry<String, Integer> entry : numSendsByType.entrySet()) {
-        System.err.println("\t" + entry.getValue() + " " + entry.getKey()
-            + " sent");
+        logger.info("\t" + entry.getValue() + " " + entry.getKey() + " sent");
       }
-      System.err.println();
 
       // Try to close our connection gracefully.
       try {
@@ -167,8 +202,8 @@ public class Worker extends Thread {
           sslSocket.close();
         else socket.close();
       } catch (IOException e) {
-        e.printStackTrace();
-        System.err.println();
+        logger.log(Level.WARNING, "Failed to close connection gracefully", e);
+        logger.log(Level.WARNING, "");
       }
 
       // Signal that this worker is now available.
@@ -203,26 +238,36 @@ public class Worker extends Thread {
   }
 
   public void handle(AbortTransactionMessage message) {
+    logger.finer("Handling Abort Message");
     transactionManager.abortTransaction(client, message.transactionID);
+    logger.fine("Transaction " + message.transactionID + " aborted");
   }
 
   /**
    * Processes the given request for new OIDs.
    */
   public AllocateMessage.Response handle(AllocateMessage msg) {
+    logger.finer("Handling Allocate Message");
     long[] onums = transactionManager.newOIDs(client, msg.num);
     return new AllocateMessage.Response(onums);
   }
 
+  /**
+   * Processes the given commit request
+   */
   public CommitTransactionMessage.Response handle(
       CommitTransactionMessage message) throws TransactionCommitFailedException {
+    logger.finer("Handling Commit Message");
     this.numCommits++;
-    this.numCreates =
-        transactionManager.numCreates(client, message.transactionID);
-    this.numWrites =
-        transactionManager.numWrites(client, message.transactionID);
-
+    
     transactionManager.commitTransaction(client, message.transactionID);
+    logger.fine("Transaction " + message.transactionID + " committed");
+
+    // updated object tallies
+    LogRecord lr = pendingLogs.remove(message.transactionID);
+    this.numCreates += lr.creates;
+    this.numWrites  += lr.writes;
+
     return new CommitTransactionMessage.Response();
   }
 
@@ -231,11 +276,23 @@ public class Worker extends Thread {
    */
   public PrepareTransactionMessage.Response handle(PrepareTransactionMessage msg)
       throws TransactionPrepareFailedException {
+    logger.finer("Handling Prepare Message");
     this.numPrepares++;
+    
+    PrepareRequest req = new PrepareRequest(msg.serializedCreates,
+                                            msg.serializedWrites,
+                                            msg.reads);
 
-    int transactionID =
-        transactionManager.prepare(client, msg.serializedCreates, msg.reads,
-            msg.serializedWrites);
+    surrogateManager.createSurrogates(req);
+    int transactionID = transactionManager.prepare(client, req);
+    
+    logger.fine("Transaction " + transactionID + " prepared");
+    // Store the size of the transaction for debugging at the end of the session
+    // Note: this number does not include surrogates
+    pendingLogs.put(transactionID,
+          new LogRecord(msg.serializedCreates.size(),
+                        msg.serializedWrites.size()));
+
     return new PrepareTransactionMessage.Response(transactionID);
   }
 
@@ -243,6 +300,7 @@ public class Worker extends Thread {
    * Processes the given read request.
    */
   public ReadMessage.Response handle(ReadMessage msg) throws AccessError {
+    logger.finer("Handling Read Message");
     this.numReads++;
 
     LongKeyMap<SerializedObject> group = new LongKeyHashMap<SerializedObject>();
@@ -273,4 +331,5 @@ public class Worker extends Thread {
 
     throw new AccessError();
   }
+  
 }

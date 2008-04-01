@@ -1,54 +1,139 @@
 package fabric.core;
 
+import java.io.IOException;
 import java.security.Principal;
-import java.util.Set;
-
+import java.util.NoSuchElementException;
+import fabric.common.AccessError;
 
 /**
- * Implementations of this do not have to be thread-safe. Only the
- * <code>TransactionManager</code> should directly interact with
- * <code>ObjectStore</code>s. The <code>TransactionManager</code>'s thread
- * safety ensures safe usage of <code>ObjectStore</code>s.
+ * <p>
+ * An Object Store encapsulates the persistent state of the Core. It is
+ * responsible for storing and retrieving objects, and also for checking
+ * permissions.
+ * </p>
+ * <p>
+ * The Object Store interface is designed to support a two-phase commit
+ * protocol. Consequently to insert or modify an object, users must first call
+ * the prepare() method, passing in the set of objects to update. These objects
+ * will be stored, but will remain unavailable until the commit() method is
+ * called with the returned transaction identifier.
+ * </p>
+ * <p>
+ * All ObjectStore implementations should provide a constructor which takes the
+ * name of the core and opens the appropriate backend store if it exists, or
+ * creates it if it doesn't exist.
+ * </p>
  */
-interface ObjectStore {
-  final int INITIAL_OBJECT_VERSION_NUMBER = 1;
+public interface ObjectStore {
+
+  /**
+   * Store object creations and modifications for later commit. The updates will
+   * not become visible until commit() is called with the resulting transaction
+   * identifier. In the case of an exception, no objects should be marked as
+   * prepared.
+   * 
+   * @param client
+   *          the client to the transaction
+   * @param req
+   *          the read, write, and create sets for the transaction to prepare
+   * @return a transaction identifier that can subsequently be passed to
+   *         commit() or abort()
+   * @throws AccessError
+   *           if the client has insufficient privileges.
+   */
+  int prepare(Principal client, PrepareRequest req) throws AccessError;
+
+  /**
+   * Cause the objects prepared in transaction [tid] to be committed. The
+   * changes will hereafter be visible to read.
+   * 
+   * @param client
+   *          the principal requesting the commit
+   * @param tid
+   *          the identifier (returned by prepare) corresponding to the
+   *          transaction
+   * @throws AccessError
+   *           if the principal differs from the caller of prepare()
+   */
+  void commit(Principal client, int tid) throws AccessError;
+
+  /**
+   * Cause the objects prepared in transaction [tid] to be discarded.
+   * 
+   * @param client
+   *          the principal requesting the rollback
+   * @param tid
+   *          the identifier (returned by prepare) corresponding to the
+   *          transaction
+   * @throws AccessError
+   *           if the principal differs from the caller of prepare()
+   */
+  void rollback(Principal client, int tid) throws AccessError;
+
+  /**
+   * Return the object stored at a particular onum.
+   * 
+   * @param client
+   *          the client responsible for the request
+   * @param onum
+   *          the identifier
+   * @return the object
+   * @throws AccessError
+   *           if client is not allowed to read the object (according to the
+   *           access control policy associated with the object
+   * @throws NoSuchElementException
+   *           if there is no object stored at the given onum
+   */
+  SerializedObject read(Principal client, long onum)
+      throws AccessError, NoSuchElementException;
+
+  /**
+   * Determine whether an onum has outstanding uncommitted changes or reads.
+   * 
+   * @param onum
+   *          the object number in question
+   * @return true if the object has been prepared by transaction that hasn't
+   *         been committed or rolled back.
+   */
+  boolean isPrepared(long onum);
   
   /**
-   * Fetches an object by object number from the store. Returns null if there is
-   * no object with that object number or if the client is not authorised to
-   * read the object.
+   * <p>
+   * Return a set of onums that aren't currently occupied. The ObjectStore may
+   * return the same onum more than once from this method, althogh doing so would
+   * encourage collisions. There is no assumption of unpredictability or
+   * randomness about the returned ids.
+   * </p>
+   * <p>
+   * The returned onums should be packed in the lower 48 bits. We assume that
+   * the object store is never full, and can always provide new onums
+   * </p>
+   * 
+   * @param num
+   *          the number of onums to return
+   * @return num fresh onums
    */
-  SerializedObject read(Principal client, long onum);
+  long[] newOnums(int num) throws AccessError;
+  
+  /**
+   * Checks whether an object with the corresponding onum exists, in either
+   * prepared or committed form.
+   * 
+   * @param onum
+   *          the onum of to check
+   * @return true if an object exists for onum
+   */
+  boolean exists(long onum);
 
   /**
-   * Determines whether a given principal may insert an object at a specific
-   * object number.
+   * Returns the name of this core.
    */
-  boolean checkInsertPerm(Principal client, long onum);
-
+  String getName();
+  
   /**
-   * Determines whether a given principal may write to an object.
+   * Gracefully shutdown the object store.
+   * @throws IOException 
    */
-  boolean checkWritePerm(Principal client, long onum);
+  void close() throws IOException;
 
-  /**
-   * Writes an object to the store. The write fails and the method returns false
-   * if there is no object already in the store with the given object number, or
-   * if the client is not authorised to write the object.
-   */
-  boolean write(Principal client, long onum, SerializedObject obj);
-
-  /**
-   * Inserts an object into the store. Insertion fails and the method returns
-   * false if a lease for the object number exists and is not owned by the
-   * client.
-   */
-  boolean insert(Principal client, long onum, SerializedObject obj);
-
-  /**
-   * Returns a set of object numbers that aren't already in use. An object
-   * number is in use if there is an object stored at that object number, or if
-   * there is an unexpired lease for the object number.
-   */
-  long[] newOIDs(Principal client, Set<Long> lockedONums, int num);
 }

@@ -1,9 +1,13 @@
 package fabric.core;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Properties;
+import java.util.logging.Logger;
 
 
+import fabric.common.Resources;
 import fabric.common.UsageError;
 import fabric.common.Version;
 
@@ -22,9 +26,22 @@ public class Main {
   }
 
   public static void start(String args[]) {
-    System.out.println("Fabric version " + new Version());
-    System.out.println("Core node");
-    System.out.println();
+    try {
+      InputStream in = Resources.readFile("etc", "core.properties");
+      Properties p = new Properties(System.getProperties());
+      p.load(in);
+      in.close();
+      System.setProperties(p);
+    } catch (final IOException exc) {
+      System.err.println("Failed to load core configuration file");
+      exc.printStackTrace();
+    }
+    
+    Logger logger = Logger.getLogger("fabric.core");
+    
+    logger.info("Core node");
+    logger.config("Fabric version " + new Version());
+    logger.info("");
 
     // Parse the command-line options.
     Options opts;
@@ -41,6 +58,9 @@ public class Main {
       throw new TerminationException(ue.exitCode);
     }
 
+    // Start the console
+    new ConsoleHandler().start();
+    
     // Start up core-node services.
     try {
       Node node = new Node(opts);
@@ -48,6 +68,7 @@ public class Main {
     } catch (IOException e) {
       throw new TerminationException(e.getMessage(), 1);
     }
+
   }
 
   /**

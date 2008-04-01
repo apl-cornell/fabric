@@ -1,7 +1,6 @@
 package fabric.core;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.*;
@@ -12,8 +11,6 @@ import java.util.Stack;
 import javax.net.ssl.*;
 
 import fabric.common.InternalError;
-import fabric.common.Pair;
-import fabric.common.Resources;
 import fabric.core.Options.CoreKeyStores;
 
 // TODO implement dissemination nodes
@@ -24,8 +21,15 @@ public class Node {
    * A map from core host-names to corresponding <code>SSLSocketFactory</code>s
    * and <code>TransactionManager</code>s.
    */
-  protected Map<String, Pair<SSLSocketFactory, TransactionManager>> cores;
+  protected Map<String, Core> cores;
 
+  protected class Core {
+    public SSLSocketFactory   factory;
+    public TransactionManager tm;
+    public SurrogateManager   sm;
+    public ObjectStore        os;
+  }
+  
   /**
    * The number of additional connections the node can handle.
    */
@@ -38,8 +42,7 @@ public class Node {
 
   public Node(Options opts) {
     this.opts = opts;
-    this.cores =
-        new HashMap<String, Pair<SSLSocketFactory, TransactionManager>>();
+    this.cores = new HashMap<String, Core>();
 
     // Initialize the cores with their object stores and SSL socket factories.
     for (Map.Entry<String, CoreKeyStores> coreEntry : opts.cores
@@ -64,7 +67,7 @@ public class Node {
         sslContext.init(kmf.getKeyManagers(), tm, null);
         sslSocketFactory = sslContext.getSocketFactory();
 
-        addCore(coreName, sslSocketFactory, new TransactionManager(core));
+        addCore(coreName, sslSocketFactory, core);
       } catch (KeyManagementException e) {
         throw new InternalError("Unable to initialise key manager factory.", e);
       } catch (UnrecoverableKeyException e1) {
@@ -80,10 +83,21 @@ public class Node {
   }
 
   private ObjectStore loadCore(String coreName) {
-    // see if a file exists containing the core
     try {
-      InputStream in = Resources.readFile("var", coreName);
-      ObjectStore os = new MemoryStore(in);
+      final ObjectStore os = new MemoryStore(coreName);
+      
+      // register a hook to close the object store gracefully.
+      Runtime.getRuntime().addShutdownHook(new Thread() {
+        @Override
+        public void run() {
+          try {
+            os.close();
+          } catch (final IOException exc) {
+            // do nothing.
+          }
+        }
+      });
+
       return os;
     } catch (Exception exc) {
       throw new InternalError("could not initialize core", exc);
@@ -103,10 +117,16 @@ public class Node {
    *                being added.
    */
   public void addCore(String coreName, SSLSocketFactory sslSocketFactory,
-      TransactionManager tm) throws DuplicateCoreException {
-    if (cores.containsKey(coreName)) throw new DuplicateCoreException();
-    cores.put(coreName, new Pair<SSLSocketFactory, TransactionManager>(
-        sslSocketFactory, tm));
+      ObjectStore os) throws DuplicateCoreException {
+    if (cores.containsKey(coreName))
+      throw new DuplicateCoreException();
+    
+    Core c    = new Core();
+    c.os      = os;
+    c.tm      = new TransactionManager(os);
+    c.sm      = new SimpleSurrogateManager(os);
+    c.factory = sslSocketFactory;
+    cores.put(coreName, c);
   }
 
   /**
@@ -116,7 +136,7 @@ public class Node {
    * @return null if there is no corresponding binding.
    */
   public TransactionManager getTransactionManager(String coreName) {
-    return cores.containsKey(coreName) ? cores.get(coreName).second : null;
+    return cores.containsKey(coreName) ? cores.get(coreName).tm : null;
   }
 
   /**
@@ -124,9 +144,13 @@ public class Node {
    * <code>SSLSocketFactory</code>.
    */
   public SSLSocketFactory getSSLSocketFactory(String coreName) {
-    return cores.get(coreName).first;
+    return cores.get(coreName).factory;
   }
 
+  public SurrogateManager getSurrogateManager(String coreName) {
+    return cores.get(coreName).sm;
+  }
+  
   /**
    * The main execution body of a core node.
    */

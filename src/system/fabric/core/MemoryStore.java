@@ -1,56 +1,133 @@
 package fabric.core;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.security.Principal;
 import java.util.*;
 
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.AccessError;
+import fabric.common.Resources;
+import fabric.common.Util;
 
 /**
- * This class is not thread-safe. Only the <code>TransactionManager</code>
- * should directly interact with this class. The <code>TransactionManager</code>'s
- * thread safety ensures safe usage of this class.
+ * <p>An in-memory implementation of the ObjectStore implementation.  This class
+ * assumes there will be no failures and hopefully will provide very high
+ * performance at the cost of no fault tolerance whatsoever.  This class does
+ * have a simple facility for loading and saving the store to a file.</p>
+ *
+ * <p> TODO: This class is not thread-safe. Only the
+ * <code>TransactionManager</code> should directly interact with this class.
+ * The <code>TransactionManager</code>'s thread safety ensures safe usage of
+ * this class.</p>
  */
-class MemoryStore implements ObjectStore {
+public class MemoryStore implements ObjectStore {
   /**
-   * Maps 48-bit object numbers to SerializedObjects. Value is null if object
-   * lease has been created.
+   * The data stored for a prepared transaction
+   */
+  private class PendingTransaction {
+    public Principal        owner;
+    public PrepareRequest   request;
+  }
+
+  /**
+   * Largest object number ever handed out
+   */
+  private long maxOnum;
+
+  /**
+   * Largest transaction id ever used;
+   */
+  private int maxTid;
+
+  /**
+   * The table of pending objects. For each value tx in pendingByTid, it should
+   * be the case that for each onum l in tx.request, tx is contained in
+   * pendingByOnum(l). Similarly, each tx in the values of pendingByOnum should
+   * be a value of pendingByTid.
+   */
+  private Map<Integer, PendingTransaction>           pendingByTid;
+  private LongKeyMap<Collection<PendingTransaction>> pendingByOnum;
+
+  /**
+   * Maps 48-bit object numbers to SerializedObjects.
    */
   private LongKeyMap<SerializedObject> objectTable;
-  private LongKeyMap<Principal> leaseTable;
-  private Timer leaseCleaner;
-  private Random rand;
 
-  private static final long LEASE_LENGTH = 300000L; // 5 minutes
+  private String name;
 
-  private MemoryStore() {
-    this.leaseCleaner = new Timer();
-    this.leaseTable = new LongKeyHashMap<Principal>();
-    this.rand = new Random();
+  /**
+   * Opens the core contained in file "var/coreName" if it exists, or an empty
+   * core otherwise. 
+   */
+  @SuppressWarnings("unchecked")
+  public MemoryStore(String name) {
+    this.pendingByTid  = new HashMap<Integer, PendingTransaction>();
+    this.pendingByOnum = new LongKeyHashMap<Collection<PendingTransaction>> ();
+    this.name          = name;
+    
+    try {
+      ObjectInputStream oin = new ObjectInputStream(Resources.readFile("var", name));
+      this.objectTable = (LongKeyMap<SerializedObject>) oin.readObject();
+    } catch (Exception e) {
+      // Do nothing
+      // TODO: distinguish invalid files from nonexistent
+      this.objectTable = new LongKeyHashMap<SerializedObject>();
+    }
+
+    // Note: this would be much faster if objectTable was sorted...but it's just
+    //       recovery so IMO probably not worth it
+    this.maxOnum = 1;
+    LongIterator iter = this.objectTable.keySet().iterator();
+    while(iter.hasNext()) {
+      long l = iter.next();
+      if (this.maxOnum < l)
+        maxOnum = l;
+    }
+
+    this.maxTid = 0;
+  }
+
+  public int prepare(Principal client, PrepareRequest req)
+               throws AccessError {
+    
+    // create and register PendingTransaction
+    int tid = ++maxTid;
+    PendingTransaction entry = new PendingTransaction();
+
+    entry.owner   = client;
+    entry.request = req;
+
+    pendingByTid.put(tid, entry);
+    for (Long onum : entry.request)
+      if (pendingByOnum.containsKey(onum))
+        pendingByOnum.get(onum).add(entry);
+      else
+      {
+        Collection<PendingTransaction> pending = new ArrayList<PendingTransaction>();
+        pending.add(entry);
+        pendingByOnum.put(onum, pending);
+      }
+
+    return tid;
   }
 
   @SuppressWarnings("unchecked")
-  public MemoryStore(InputStream in) throws IOException, ClassNotFoundException {
-    this();
-    ObjectInputStream oin = new ObjectInputStream(in);
-    this.objectTable = (LongKeyMap<SerializedObject>) oin.readObject();
+  public void commit(Principal client, int tid) throws AccessError {
+    PendingTransaction tx = remove(client, tid);
+
+    // merge in the objects
+    for (SerializedObject o : Util.chain(tx.request.creates, tx.request.writes))
+      objectTable.put(o.getOnum(), o);
   }
-  
-  public void dump(OutputStream out) throws IOException {
-    ObjectOutputStream oout = new ObjectOutputStream(out);
-    oout.writeObject(this.objectTable);
+
+  public void rollback(Principal client, int tid) throws AccessError {
+    remove(client, tid);
   }
-   
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.core.ObjectStore#read(java.security.Principal, long)
-   */
+
   public SerializedObject read(Principal client, long onum) {
     SerializedObject obj = objectTable.get(onum);
 
@@ -58,102 +135,56 @@ class MemoryStore implements ObjectStore {
     return obj;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.core.ObjectStore#checkInsertPerm(java.security.Principal, long)
-   */
-  public boolean checkInsertPerm(Principal client, long onum) {
-    if (objectTable.containsKey(onum)) return false;
-
-    Principal owner = leaseTable.get(onum);
-    return owner == null || owner.equals(client);
+  public boolean exists(long onum) {
+    return isPrepared(onum) || objectTable.containsKey(onum);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.core.ObjectStore#checkWritePerm(java.security.Principal, long)
-   */
-  public boolean checkWritePerm(Principal client, long onum) {
-    SerializedObject curObj = objectTable.get(onum);
-    return curObj != null && curObj.getPolicy().canWrite(client);
+  public boolean isPrepared(long onum) {
+    return pendingByOnum.containsKey(onum);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.core.ObjectStore#write(java.security.Principal, long,
-   *      fabric.core.SerializedObject)
-   */
-  public boolean write(Principal client, long onum, SerializedObject obj) {
+  public long[] newOnums(int num) throws AccessError {
+    final long[] result = new long[num < 0 ? 0 : num];
 
-    if (!checkWritePerm(client, onum)) return false;
-
-    // Update the version number.
-    SerializedObject curObj = objectTable.get(onum);
-    obj.setVersion(curObj.getVersion() + 1);
-
-    objectTable.put(onum, obj);
-    return true;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.core.ObjectStore#insert(java.security.Principal, long,
-   *      fabric.core.SerializedObject)
-   */
-  public boolean insert(Principal client, long onum, SerializedObject obj) {
-
-    if (!checkInsertPerm(client, onum)) return false;
-
-    // Initialise the version number and insert
-    obj.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
-    objectTable.put(onum, obj);
-    return true;
-  }
-
-  /**
-   * Default number of leases to hand out in reponse to a lease request.
-   */
-  private static final int LEASE_REQ_DEFAULT = 10;
-
-  /**
-   * Returns a set of object numbers that aren't already in use. An object
-   * number is in use if there is an object stored at that object number, or if
-   * there is an unexpired lease for the object number.
-   */
-  public long[] newOIDs(Principal client, Set<Long> lockedONums, int num) {
-    if (num < 1) num = LEASE_REQ_DEFAULT;
-    final long[] result = new long[num];
-
-    // generate the object numbers
-    for (int count = 0; count < num; count++) {
-      long onum;
-      do {
-        onum = rand.nextLong() & 0x0000ffffffffffffL;
-      } while (objectTable.containsKey(onum) || leaseTable.containsKey(onum)
-          || lockedONums.contains(onum));
-      result[count] = onum;
-    }
-
-    // store leases
-    for (long onum : result)
-      leaseTable.put(onum, client);
-
-    // schedule removal
-    TimerTask remover = new TimerTask() {
-      @Override
-      public void run() {
-        synchronized (MemoryStore.this) {
-          for (long onum : result)
-            leaseTable.remove(onum);
-        }
-      }
-    };
-    leaseCleaner.schedule(remover, LEASE_LENGTH);
+    for (int i = 0; i < num; i++)
+      result[i] = ++maxOnum;
 
     return result;
   }
+
+  /**
+   * Helper method to check permissions and update the pending object table for a commit or rollback
+   */
+  private PendingTransaction remove(Principal client, int tid) throws AccessError {
+    PendingTransaction tx = pendingByTid.get(tid);
+    if (tx == null)
+      throw new AccessError();
+    if (!client.equals(tx.owner))
+      throw new AccessError();
+
+    // remove the pending transaction
+    pendingByTid.remove(tid);
+    for (Long l : tx.request) {
+      Collection<PendingTransaction> index = pendingByOnum.get(l);
+      index.remove(tx);
+      if (index.isEmpty())
+        pendingByOnum.remove(l);
+    }
+
+    return tx;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void close() throws IOException {
+    ObjectOutputStream oout = new ObjectOutputStream(Resources.writeFile("var", name));
+    oout.writeObject(this.objectTable);
+    oout.close();
+  }
 }
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0
+*/
