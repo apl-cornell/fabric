@@ -215,7 +215,7 @@ public class BdbStore implements ObjectStore {
 
   public SerializedObject read(Principal client, long onum) throws AccessError,
       NoSuchElementException {
-    log.info("Bdb read onum " + onum);
+    log.fine("Bdb read onum " + onum);
     DatabaseEntry key = new DatabaseEntry(toBytes(onum));
     DatabaseEntry data = new DatabaseEntry();
     

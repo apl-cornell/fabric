@@ -1,16 +1,19 @@
 package fabric.core;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Stack;
 
 import javax.net.ssl.*;
 
 import fabric.common.InternalError;
+import fabric.common.Resources;
 import fabric.core.Options.CoreKeyStores;
 
 // TODO implement dissemination nodes
@@ -83,8 +86,19 @@ public class Node {
   }
 
   private ObjectStore loadCore(String coreName) {
+    Properties p = new Properties(System.getProperties());
+    
     try {
-      final ObjectStore os = new MemoryStore(coreName);
+      InputStream in = Resources.readFile("etc", "core", 
+          coreName + ".properties");
+      p.load(in);
+      in.close();
+    } catch (IOException e) {}
+
+    try {
+      String store = p.getProperty("fabric.core.store");
+      final ObjectStore os = (ObjectStore) Class.forName(store).getConstructor(
+          String.class).newInstance(coreName);
       
       // register a hook to close the object store gracefully.
       Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -92,9 +106,7 @@ public class Node {
         public void run() {
           try {
             os.close();
-          } catch (final IOException exc) {
-            // do nothing.
-          }
+          } catch (final IOException exc) {}
         }
       });
 
