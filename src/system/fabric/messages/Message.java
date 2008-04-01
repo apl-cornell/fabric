@@ -239,6 +239,17 @@ public abstract class Message<R extends Message.Response> {
       out.writeBoolean(true);
       out.writeUnshared(e);
       out.flush();
+    } catch (final FabricRuntimeException e) {
+      // TODO: this is copied and pasted from above. We need to figure out what
+      // exceptions _not_ to catch and then catch all the others.
+      
+      // Clear out the stack trace before sending the exception to the client.
+      e.setStackTrace(new StackTraceElement[0]);
+
+      // Signal that an error occurred and write out the exception.
+      out.writeBoolean(true);
+      out.writeUnshared(e);
+      out.flush();
     }
   }
 
