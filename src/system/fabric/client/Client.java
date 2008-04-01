@@ -162,9 +162,8 @@ public final class Client {
     this.cores = new HashMap<String, RemoteCore>();
     this.localCore = new LocalCore();
 
-    String fm =
-        System.getProperty("fabric.client.fetchmanager",
-            "fabric.client.DirectFetchManager");
+    String fm = System.getProperty("fabric.client.fetchmanager",
+        "fabric.client.DirectFetchManager");
 
     try {
       this.fetchManager = (FetchManager) Class.forName(fm).newInstance();
