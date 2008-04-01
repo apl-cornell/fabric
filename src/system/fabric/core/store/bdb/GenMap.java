@@ -5,6 +5,7 @@ import fabric.lang.WrappedJavaInlineable;
 public interface GenMap extends fabric.lang.Object {
     public static class $Proxy extends fabric.lang.Object.$Proxy implements GenMap {
         
+        @SuppressWarnings("unchecked")
         public static void main(fabric.lang.arrays.ObjectArray arg1) { GenMap.$Impl.main(arg1); }
         
         public $Proxy(GenMap.$Impl impl) { super(impl); }
@@ -14,6 +15,7 @@ public interface GenMap extends fabric.lang.Object {
     
     public static class $Impl extends fabric.lang.Object.$Impl implements GenMap {
         
+        @SuppressWarnings("deprecation")
         public static void main(fabric.lang.arrays.ObjectArray<WrappedJavaInlineable<String>> args) {
             fabric.client.Core core = fabric.client.Client.getClient().getCore(args.get(0).obj);
             {
@@ -39,14 +41,18 @@ public interface GenMap extends fabric.lang.Object {
         
         public $Impl(fabric.client.Core $location) { super($location); }
         
+        @Override
         protected fabric.lang.Object.$Proxy $makeProxy() { return new GenMap.$Proxy(this); }
         
+        @Override
+        @SuppressWarnings("unchecked")
         public void $serialize(java.io.ObjectOutput out, java.util.List refTypes, java.util.List intracoreRefs,
                                java.util.List intercoreRefs)
               throws java.io.IOException {
             super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
         }
         
+        @SuppressWarnings("unchecked")
         public $Impl(fabric.client.Core core, long onum, int version, fabric.common.Policy policy,
                      java.io.ObjectInput in, java.util.Iterator refTypes, java.util.Iterator intracoreRefs)
               throws java.io.IOException,
@@ -72,6 +78,7 @@ public interface GenMap extends fabric.lang.Object {
                 super(core, policy);
             }
             
+            @Override
             protected fabric.lang.Object.$Proxy $makeProxy() {
                 return new GenMap.$Static.$Proxy(this);
             }
