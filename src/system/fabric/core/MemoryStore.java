@@ -4,14 +4,18 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Logger;
 
-import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
 import fabric.common.AccessError;
 import fabric.common.Resources;
 import fabric.common.Util;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 
 /**
  * <p>An in-memory implementation of the ObjectStore implementation.  This class
@@ -58,6 +62,8 @@ public class MemoryStore implements ObjectStore {
   private LongKeyMap<SerializedObject> objectTable;
 
   private String name;
+  
+  private Logger log;
 
   /**
    * Opens the core contained in file "var/coreName" if it exists, or an empty
@@ -89,6 +95,9 @@ public class MemoryStore implements ObjectStore {
     }
 
     this.maxTid = 0;
+    
+    log = Logger.getLogger("fabric.core.memorystore");
+    log.info("Memory store loaded");
   }
 
   public int prepare(Principal client, PrepareRequest req)
