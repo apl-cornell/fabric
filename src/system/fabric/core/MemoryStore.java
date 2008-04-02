@@ -63,7 +63,7 @@ public class MemoryStore implements ObjectStore {
 
   private String name;
   
-  private Logger log;
+  private Logger log = Logger.getLogger("fabric.core.store.mem");
 
   /**
    * Opens the core contained in file "var/coreName" if it exists, or an empty
@@ -95,9 +95,7 @@ public class MemoryStore implements ObjectStore {
     }
 
     this.maxTid = 0;
-    
-    log = Logger.getLogger("fabric.core.memorystore");
-    log.info("Memory store loaded");
+    log.info("Mem store loaded");
   }
 
   public int prepare(Principal client, PrepareRequest req)
