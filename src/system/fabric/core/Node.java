@@ -42,11 +42,15 @@ public class Node {
    * The thread pool.
    */
   private Stack<Worker> pool;
+  
+  public ConsoleHandler console;
 
   public Node(Options opts) {
     this.opts = opts;
     this.cores = new HashMap<String, Core>();
-
+    this.console = new ConsoleHandler();
+    this.console.start();
+    
     // Initialize the cores with their object stores and SSL socket factories.
     for (Map.Entry<String, CoreKeyStores> coreEntry : opts.cores
         .entrySet()) {
@@ -83,6 +87,7 @@ public class Node {
         // Should never happen.
       }
     }
+    console.println("Core started");
   }
 
   private ObjectStore loadCore(String coreName) {

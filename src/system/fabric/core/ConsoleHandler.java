@@ -23,4 +23,8 @@ public class ConsoleHandler extends Thread {
       System.exit(1);
     }
   }
+
+  public void println(String msg) {
+    System.out.println(msg);
+  }
 }

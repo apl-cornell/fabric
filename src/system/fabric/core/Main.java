@@ -57,9 +57,6 @@ public class Main {
       Options.usage(out);
       throw new TerminationException(ue.exitCode);
     }
-
-    // Start the console
-    new ConsoleHandler().start();
     
     // Start up core-node services.
     try {
