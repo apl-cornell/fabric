@@ -20,7 +20,7 @@ public class ResizableObjectArray {
    * The number of elements in each little array. Dependent on the MTU?
    * Analogous to a block in a file system. Also directly determines the fanout.
    */
-  private static final int CHUNK_SIZE = 128;
+  private int CHUNK_SIZE;
 
   /**
    * The height of the tree of little arrays. Depends on the chunk size
@@ -56,15 +56,20 @@ public class ResizableObjectArray {
    *                The length of the array.
    */
   public ResizableObjectArray(Class proxyType, int length) {
-    this.proxyType = proxyType;
-    this.length = length;
-    this.height = (int) Math.ceil(Math.log(length) / Math.log(CHUNK_SIZE));
-    if (height == 1)
-      root = new ObjectArray(proxyType, CHUNK_SIZE);
-    else
-      root = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
+      this(proxyType, length, 64);
   }
 
+  public ResizableObjectArray(Class proxyType, int length, int CHUNK_SIZE) {
+      this.CHUNK_SIZE = CHUNK_SIZE;
+      this.proxyType = proxyType;
+      this.length = length;
+      this.height = (int) Math.ceil(Math.log(length) / Math.log(CHUNK_SIZE));
+      if (height == 1)
+        root = new ObjectArray(proxyType, CHUNK_SIZE);
+      else
+        root = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
+  }
+  
   public int getLength() {
     return length;
   }

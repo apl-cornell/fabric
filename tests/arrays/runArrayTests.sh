@@ -1,0 +1,14 @@
+SIZE1=10000
+SIZE2=1000000
+MAXCOUNT=1000
+INCOUNT=100
+ISBATCH=true
+while true
+ do
+   fab arrays.ResizableArrayTest01 64 $SIZE1 $SIZE2 $MAXCOUNT $INCOUNT $ISBATCH
+   fab arrays.ResizableArrayTest01 128 $SIZE1 $SIZE2 $MAXCOUNT $INCOUNT $ISBATCH
+   fab arrays.ResizableArrayTest01 96 $SIZE1 $SIZE2 $MAXCOUNT $INCOUNT $ISBATCH
+   fab arrays.ResizableArrayTest01 256 $SIZE1 $SIZE2 $MAXCOUNT $INCOUNT $ISBATCH
+   fab arrays.ObjectArrayTest01 $SIZE1 $SIZE2 $MAXCOUNT $INCOUNT $ISBATCH
+   java JavaArrayTest01 $SIZE1 $SIZE2 $MAXCOUNT $INCOUNT $ISBATCH
+ done
