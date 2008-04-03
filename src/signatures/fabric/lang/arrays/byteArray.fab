@@ -1,0 +1,13 @@
+package fabric.lang.arrays;
+
+public class byteArray {
+  public native byte set(int i, byte value);
+
+  public native byte get(int i);
+
+  public byteArray(int length) {
+  }
+
+  public byteArray(byte[] value) {
+  }
+}

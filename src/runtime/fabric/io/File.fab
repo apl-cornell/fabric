@@ -1,0 +1,15 @@
+package fabric.io;
+
+import fabric.lang.arrays.ResizableByteArray;
+
+public class File {
+    String name;
+    ResizableByteArray contents;
+    int minLength = 4096;
+    public File(String name) {
+        this.name = name;
+        contents = new ResizableByteArray(minLength);
+    }
+    
+    
+}
