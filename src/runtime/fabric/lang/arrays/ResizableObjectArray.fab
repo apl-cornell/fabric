@@ -133,27 +133,30 @@ public class ResizableObjectArray {
    */
   private Object accessByLevel(ObjectArray node, int level, int i,
       boolean isRead, Object data) {
-    
-    if (level == 1) return isRead ? node.get(i) : node.set(i, data);
+      int divider, firstDigit, otherDigits;
+      Object nextObject;
+      while(level > 1) {
+          divider = (int) Math.pow(CHUNK_SIZE, level - 1);
+          firstDigit = i / divider;
+          otherDigits = i % divider;
 
-    int divider = (int) Math.pow(CHUNK_SIZE, level - 1);
-    int firstDigit = i / divider;
-    int otherDigits = i % divider;
+          nextObject = node.get(firstDigit);
+          if (nextObject == null) {
+              if (isRead) return null;
 
-    Object nextObject = node.get(firstDigit);
-    if (nextObject == null) {
-      if (isRead) return null;
+              // Writing to a node that doesn't exist yet.  Time to create it.
+              if (level == 2)
+                  nextObject = new ObjectArray(proxyType, CHUNK_SIZE);
+              else
+                  nextObject = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
+              node.set(firstDigit, nextObject);
+          }
+          node = (ObjectArray) nextObject;
+          level--;
+          i = otherDigits;
+      }
 
-      // Writing to a node that doesn't exist yet.  Time to create it.
-      if (level == 2)
-        nextObject = new ObjectArray(proxyType, CHUNK_SIZE);
-      else
-        nextObject = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
-      node.set(firstDigit, nextObject);
-    }
-
-    return accessByLevel((ObjectArray) nextObject, level - 1,
-        otherDigits, isRead, data);
+      return isRead ? node.get(i) : node.set(i, data);
   }
 
   public Object set(int i, Object data) {
