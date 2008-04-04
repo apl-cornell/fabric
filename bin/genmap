@@ -28,7 +28,7 @@ classpath="$classpath:${TOP}/classes:${TOP}/lib/fabric.jar:${TOP}/lib/je-3.2.68.
 command="\"$JAVA\" -classpath \"$(fixpath $classpath)\" fabric.core.Main"
 
 for i in "$@"; do
-  command="$command --core $i $(fixfilename "${KEYDIR}/$i.keystore") $(fixfilename "${KEYDIR}/trust.keystore") password"
+  command="$command --core $i \"$(fixfilename "${KEYDIR}/$i.keystore")\" \"$(fixfilename "${KEYDIR}/trust.keystore")\" password"
 done
 
 # run command, and block until the first line of output is written
@@ -42,4 +42,3 @@ done
 
 # kill the core
 killchildren $corepid
-
