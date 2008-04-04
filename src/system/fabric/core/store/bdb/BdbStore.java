@@ -389,14 +389,13 @@ public class BdbStore implements ObjectStore {
     }
   }
   
-  @SuppressWarnings("unchecked")
   private PrepareRequest toPrepareRequest(byte[] data) {
     try {
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
       ObjectInputStream ois = new ObjectInputStream(bis);
       return new PrepareRequest(ois);
     } catch (IOException e) {
-      return null;
+      throw new InternalError(e);
     }
   }
   
