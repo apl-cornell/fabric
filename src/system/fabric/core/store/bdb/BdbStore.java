@@ -11,6 +11,7 @@ import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.NoSuchElementException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.sleepycat.je.Database;
@@ -75,7 +76,7 @@ public class BdbStore implements ObjectStore {
       
       log.info("Bdb databases opened");
     } catch (DatabaseException e) {
-      log.severe("Bdb error in <init>: " + e);
+      log.log(Level.SEVERE, "Bdb error in <init>: ", e);
       throw new InternalError(e);
     }
     
@@ -111,7 +112,7 @@ public class BdbStore implements ObjectStore {
         throw new InternalError("Unknown transaction id " + tid);
       }
     } catch (DatabaseException e) {
-      log.severe("Bdb error in commit: " + e);
+      log.log(Level.SEVERE, "Bdb error in commit: ", e);
       throw new InternalError(e);
     }
   }
@@ -126,7 +127,7 @@ public class BdbStore implements ObjectStore {
         return true;
       }
     } catch (DatabaseException e) {
-      log.severe("Bdb error in exists: " + e);
+      log.log(Level.SEVERE, "Bdb error in exists: ", e);
       throw new InternalError(e);
     }
     
@@ -142,7 +143,7 @@ public class BdbStore implements ObjectStore {
         return true;
       }
     } catch (DatabaseException e) {
-      log.severe("Bdb error in isPrepared: " + e);
+      log.log(Level.SEVERE, "Bdb error in isPrepared: ", e);
       throw new InternalError(e);
     }
     
@@ -174,7 +175,7 @@ public class BdbStore implements ObjectStore {
       log.fine("Bdb new onums " + c + "--" + (c + num - 1));
       return onums;
     } catch (DatabaseException e) {
-      log.severe("Bdb error in newOnums: " + e);
+      log.log(Level.SEVERE, "Bdb error in newOnums: ", e);
       throw new InternalError(e);
     }
   }
@@ -206,7 +207,7 @@ public class BdbStore implements ObjectStore {
       txn.commit();
       log.info("Bdb prepare success tid " + tid);
     } catch (DatabaseException e) {
-      log.severe("Bdb error in prepare: " + e);
+      log.log(Level.SEVERE, "Bdb error in prepare: ", e);
       throw new InternalError(e);
     }
     
@@ -224,7 +225,7 @@ public class BdbStore implements ObjectStore {
         return toSerializedObject(data.getData());
       }
     } catch (DatabaseException e) {
-      log.severe("Bdb error in read: " + e);
+      log.log(Level.SEVERE, "Bdb error in read: ", e);
       throw new InternalError(e);
     }
     
@@ -240,7 +241,7 @@ public class BdbStore implements ObjectStore {
       txn.commit();
       log.info("Bdb rollback success tid " + tid);
     } catch (DatabaseException e) {
-      log.severe("Bdb error in rollback: " + e);
+      log.log(Level.SEVERE, "Bdb error in rollback: ", e);
       throw new InternalError(e);
     }
   }
@@ -327,7 +328,7 @@ public class BdbStore implements ObjectStore {
       
       return c;
     } catch (DatabaseException e) {
-      log.severe("Bdb error in newTid: " + e);
+      log.log(Level.SEVERE, "Bdb error in newTid: ", e);
       throw new InternalError(e);
     }
   }
