@@ -285,7 +285,7 @@ public class BdbStore implements ObjectStore {
     DatabaseEntry data = new DatabaseEntry();
     
     if (prepared.get(txn, key, data, LockMode.DEFAULT) == SUCCESS) {
-      PrepareRequest req = toObject(data.getData());
+      PrepareRequest req = toPrepareRequest(data.getData());
       prepared.delete(txn, key);
       
       for (long onum : req) {
@@ -377,11 +377,11 @@ public class BdbStore implements ObjectStore {
     return i;
   }
 
-  private byte[] toBytes(Object o) {
+  private byte[] toBytes(PrepareRequest o) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       ObjectOutputStream oos = new ObjectOutputStream(bos);
-      oos.writeObject(o);
+      o.write(oos);
       oos.flush();
       return bos.toByteArray();
     } catch (IOException e) {
@@ -390,14 +390,12 @@ public class BdbStore implements ObjectStore {
   }
   
   @SuppressWarnings("unchecked")
-  private <T> T toObject(byte[] data) {
+  private PrepareRequest toPrepareRequest(byte[] data) {
     try {
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
       ObjectInputStream ois = new ObjectInputStream(bis);
-      return (T) ois.readObject();
+      return new PrepareRequest(ois);
     } catch (IOException e) {
-      return null;
-    } catch (ClassNotFoundException e) {
       return null;
     }
   }
