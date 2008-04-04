@@ -6,12 +6,29 @@ CORE="${TOP}/bin/fab-core"
 FAB="${TOP}/bin/fab"
 KEYDIR="${TOP}/etc/keys"
 
+#
+# kill the children of a given PID
+killchildren () {
+  pid=$1
+
+  if [ `uname | grep -c CYGWIN` -ne 0 ]; then
+    # windows - find use awk to find the process list
+    # cygwin ps -l:
+    # PID PPID PGID WINPID TTY UID STIME COMMAND
+    pslist=$(ps -l | awk "\$2 == $pid {print \$1}")
+  else
+    pslist=$(ps --ppid $pid h -o pid)
+  fi
+
+  kill $pslist
+}
+
 # create core command
 classpath="$classpath:${TOP}/classes:${TOP}/lib/fabric.jar:${TOP}/lib/je-3.2.68.jar"
 command="\"$JAVA\" -classpath \"$(fixpath $classpath)\" fabric.core.Main"
 
 for i in "$@"; do
-  command="$command --core $i ${KEYDIR}/$i.keystore ${KEYDIR}/trust.keystore password"
+  command="$command --core $i $(fixpath "${KEYDIR}/$i.keystore") $(fixpath "${KEYDIR}/trust.keystore") password"
 done
 
 # run command, and block until the first line of output is written
@@ -24,5 +41,5 @@ for i in "$@"; do
 done
 
 # kill the core
-kill $(ps --ppid $corepid h -o pid)
+killchildren $corepid
 
