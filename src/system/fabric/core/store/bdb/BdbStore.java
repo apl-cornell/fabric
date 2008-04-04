@@ -221,7 +221,7 @@ public class BdbStore implements ObjectStore {
     
     try {
       if (store.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
-        return toObject(data.getData());
+        return toSerializedObject(data.getData());
       }
     } catch (DatabaseException e) {
       log.severe("Bdb error in read: " + e);
@@ -398,6 +398,29 @@ public class BdbStore implements ObjectStore {
       return null;
     } catch (ClassNotFoundException e) {
       return null;
+    }
+  }
+  
+  private byte[] toBytes(SerializedObject o) {
+    try {
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      ObjectOutputStream oos = new ObjectOutputStream(bos);
+      o.write(oos);
+      oos.flush();
+      return bos.toByteArray();
+    } catch (IOException e) {
+      throw new InternalError(e);
+    }
+  }
+  
+  private SerializedObject toSerializedObject(byte[] data) {
+    try {
+      ByteArrayInputStream bis = new ByteArrayInputStream(data);
+      ObjectInputStream ois = new ObjectInputStream(bis);
+      SerializedObject o = new SerializedObject(ois);
+      return o;
+    } catch (IOException e) {
+      throw new InternalError(e);
     }
   }
   
