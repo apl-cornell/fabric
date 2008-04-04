@@ -159,7 +159,6 @@ public class Worker extends Thread {
 
           logger.info("Accepted connection for " + coreName);
           logger.info("(" + client + ")");
-          logger.info("");
 
           run_();
         } else {

@@ -164,7 +164,8 @@ public class Node {
   }
 
   public SurrogateManager getSurrogateManager(String coreName) {
-    return cores.get(coreName).sm;
+    Core c = cores.get(coreName);
+    return c == null ? null : c.sm;
   }
   
   /**
