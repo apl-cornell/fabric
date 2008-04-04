@@ -94,20 +94,6 @@ public class LocalCore implements Core {
     return rootMap;
   }
 
-  /**
-   * This is a hook for hacks. It allows one to turn the local core into any
-   * other core for the purposes of serialization.
-   */
-  @Deprecated
-  public void surrogate(RemoteCore surrogate) {
-    this.surrogate = surrogate;
-  }
-
-  @Deprecated
-  public LongKeyMap<Object.$Impl> objects() {
-    return objects;
-  }
-
   public String name() {
     return surrogate.name();
   }
