@@ -49,7 +49,6 @@ public class Node {
     this.opts = opts;
     this.cores = new HashMap<String, Core>();
     this.console = new ConsoleHandler();
-    this.console.start();
     
     // Initialize the cores with their object stores and SSL socket factories.
     for (Map.Entry<String, CoreKeyStores> coreEntry : opts.cores

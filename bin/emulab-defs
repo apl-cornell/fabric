@@ -1,6 +1,0 @@
-# Definitions file for Emulab.  Used for running scripts on Emulab.
-
-JAVA='/usr/bin/java'
-FILE_SEP='/'
-PATH_SEP=':'
-TOP='/groups/Fabric'

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+source "$(dirname $0)/defs"
+
+while true; do
+  case "$1" in
+    "") break;;
+    -v) verbose="1"; shift;;
+    *) args="$args '$1'"; shift;;
+  esac
+done
+
+classpath="$classpath:$TOP/classes"
+classpath="$classpath:$TOP/lib/fabric.jar"
+classpath="$classpath:$TOP/rt-classes"
+classpath="$classpath:$TOP/lib/fabric-rt.jar"
+classpath="$classpath:$POLYGLOT/classes:"
+classpath="$classpath:$POLYGLOT/lib/polyglot.jar"
+classpath="$classpath:$POLYGLOT/lib/java_cup.jar"
+classpath="$classpath:$POLYGLOT/lib/JFlex.jar"
+
+sigcp="$TOP/sig-classes:$TOP/lib/fabric-sig.jar"
+
+command="\"$JAVA\" $vmargs -classpath \"$(fixpath $classpath)\" \
+                   fabric.Main -sigcp \"$(fixpath $sigcp)\" $args"
+
+if [ -n "$verbose" ]
+then
+  echo "$command"
+fi
+
+eval "$command"

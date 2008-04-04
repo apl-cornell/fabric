@@ -1,4 +1,7 @@
 
+#
+# output paths compatible with the current platform
+#
 fixpath() {
   windows=0
 
@@ -15,6 +18,9 @@ fixpath() {
   fi
 }
 
+#
+# output filenames compatible with unix syntax
+#
 unixfilename() {
   windows=0
 
@@ -31,6 +37,9 @@ unixfilename() {
   fi
 }
 
+#
+# output paths compatible with unix syntax
+#
 unixpath() {
   windows=0
 
@@ -47,29 +56,10 @@ unixpath() {
   fi
 }
 
+JAVA_HOME=$(unixfilename "@JAVA_HOME@")
+JAVA="${JAVA_HOME}/bin/java"
+TOP=$(unixfilename "@TOP@")
+POLYGLOT=$(unixfilename "@POLYGLOT@")
 
-while true; do
-  case "$1" in
-    "") break;;
-    -v) verbose="1"; shift;;
-    *) args="$args '$1'"; shift;;
-  esac
-done
+classpath=$(unixpath ${CLASSPATH})
 
-TOP_unix=`unixfilename $TOP`
-LIB_unix=$TOP_unix/lib
-classpath=`unixpath $CLASSPATH`
-classpath="$TOP_unix/classes:$LIB_unix/fabric.jar:$classpath"
-
-classpath="$TOP_unix/lib/je-3.2.68.jar:$classpath"
-
-classpath=`fixpath "$classpath"`
-
-command="\"$JAVA\" $vmargs -classpath \"$classpath\" fabric.core.Main $args"
-
-if [ -n "$verbose" ]
-then
-  echo "$command"
-fi
-
-eval "$command"

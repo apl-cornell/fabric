@@ -82,103 +82,32 @@
 
   <target name="configure" description="Configures Fabric"
       unless="configure.up-to-date">
+
     <echo message="java version is ${java.version}"/>
     <echo message="current directory is ${user.dir}"/>
     <echo message="Java home directory is ${java.home}"/>
+    <echo message="polglot home directory is ${polyglot.dir}"/>
+
     <property name="configure.up-to-date" value="true"/>
   </target>
 
   <!-- Create appropriate executables in the bin directory -->
-  <target name="bin" depends="configure,bin-deps" unless="bin.up-to-date">
-    <antcall target="fabric-bin"/>
-  </target>
+  <uptodate property="bin.up-to-date" srcfile="bin/defs.in" targetfile="bin/defs"/>
+  <target name="bin" depends="configure" unless="bin.up-to-date">
+    <fail message="Failed to find polyglot.  Make sure that your POLYGLOT environment variable is set, and that you have built polyglot.">
+      <condition> <not> <and>
+        <isset property="polyglot.dir" />
+        <available classname="polyglot.main.Version" classpathref="standard.classpath" />
+      </and> </not> </condition>
+    </fail>
 
-  <target name="bin-deps">
-    <dependset>
-      <srcfileset dir="${bin}" includes="fab-core.in"/>
-      <targetfileset dir="${bin}" includes="fab-core"/>
-    </dependset>
-    <condition property="bin.up-to-date">
-      <and>
-        <available file="${bin}/fab-core"/>
-        <available file="${bin}/fab"/>
-	<available file="${bin}/fabc"/>
-	<available file="${bin}/genkey"/>
-	<available file="${bin}/genmap"/>
-	<available file="${bin}/emulab-update"/>
-      </and>
-    </condition>
-  </target>
-
-  <target name="defs-deps">
-    <condition property="defs.up-to-date">
-      <available file="${bin}/defs"/>
-    </condition>
-  </target> 
-
-  <!-- Creates a file containing common environment variable definitions -->
-  <target name="executable-defs" depends="defs-deps" unless="defs.up-to-date">
-    <echo message="Creating ${bin}/defs"/>
-    <echo file="${bin}/defs" append="no">#!/bin/sh
-# DO NOT EDIT - This file was automatically generated.
-
-JAVA='${java.home}/bin/java'
-FILE_SEP='${file.separator}'
-PATH_SEP='${path.separator}'
-TOP='${basedir}'
-    </echo>
-  </target>
-
-  <target name="fabric-bin" depends="executable-defs">
-    <echo message="Creating ${bin}/fab-core"/>
-    <concat destfile="${bin}/fab-core" append="no">
-      <filelist dir="${bin}" files="defs"/>
-      <filelist dir="${bin}" files="fab-core.in"/>
-    </concat>
-
-    <chmod perm="+x" file="${bin}/fab-core"/>
-
-    <echo message="Creating ${bin}/fabc"/>
-    <concat destfile="${bin}/fabc" append="no">
-      <filelist dir="${bin}" files="defs"/>
-      <filelist dir="${bin}" files="fabc.in"/>
-    </concat>
-
-    <chmod perm="+x" file="${bin}/fabc"/>
-
-    <echo message="Creating ${bin}/fab"/>
-    <concat destfile="${bin}/fab" append="no">
-      <filelist dir="${bin}" files="defs"/>
-      <filelist dir="${bin}" files="fab.in"/>
-    </concat>
-
-    <chmod perm="+x" file="${bin}/fab"/>
-
-    <echo message="Creating ${bin}/genkey"/>
-    <concat destfile="${bin}/genkey" append="no">
-      <filelist dir="${bin}" files="defs"/>
-      <filelist dir="${bin}" files="genkey.in"/>
-    </concat>
-
-    <chmod perm="+x" file="${bin}/genkey"/>
-
-    <echo message="Creating ${bin}/genmap"/>
-    <concat destfile="${bin}/genmap" append="no">
-      <filelist dir="${bin}" files="defs"/>
-      <filelist dir="${bin}" files="genmap.in"/>
-    </concat>
-
-    <chmod perm="+x" file="${bin}/genmap"/>
-
-    <echo message="Creating ${bin}/emulab-update"/>
-    <concat destfile="${bin}/emulab-update" append="no">
-      <filelist dir="${bin}" files="defs"/>
-      <filelist dir="${bin}" files="emulab-update.in"/>
-    </concat>
-
-    <chmod perm="+x" file="${bin}/emulab-update"/>
-
-    <delete file="${bin}/defs"/>
+    <copy file="${bin}/defs.in" tofile="${bin}/defs">
+      <filterset>
+        <filter token="JAVA_HOME" value="${java.home}"    />
+        <filter token="TOP"       value="${basedir}"      />
+        <filter token="POLYGLOT"  value="${polyglot.dir}" />
+      </filterset>
+    </copy>
   </target>
 
   <!-- Initialize the build -->
@@ -223,9 +152,9 @@ TOP='${basedir}'
         <include name="fab-core"/>
         <include name="fab"/>
         <include name="fabc"/>
-	<include name="genkey"/>
-	<include name="genmap"/>
-	<include name="emulab-update"/>
+        <include name="genkey"/>
+        <include name="genmap"/>
+        <include name="emulab-update"/>
       </fileset>
     </delete>
   </target>
@@ -237,8 +166,8 @@ TOP='${basedir}'
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
       <classpath>
-	<path refid="standard.classpath"/>
-	<pathelement location="${runtime.classes}" />
+        <path refid="standard.classpath"/>
+        <pathelement location="${runtime.classes}" />
       </classpath>
     </javac>
   </target>
@@ -260,8 +189,8 @@ TOP='${basedir}'
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/client/debug/**" />
       <classpath>
-	<path refid="standard.classpath"/>
-	<pathelement location="${runtime.classes}" />
+        <path refid="standard.classpath"/>
+        <pathelement location="${runtime.classes}" />
       </classpath>
     </javac>
   </target>
@@ -278,15 +207,15 @@ TOP='${basedir}'
   <!-- Compiles the Fabric signatures -->
   <target name="fabric-signatures" depends="init,fabric-compiler,bin">
     <mkdir dir="${signatures.classes}" />
-  	
-    <apply executable="sh"
-	parallel="true"
-	failonerror="true"
-	dir="${basedir}"
+        
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${basedir}"
     dest="${signatures.classes}"
-	relative="false"
-	skipemptyfilesets="true"
-	vmlauncher="false">
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
       <arg value="${fabc}" />
       <arg value="-nooutput" />
       <arg value="-sig" />
@@ -306,15 +235,15 @@ TOP='${basedir}'
   <target name="fabric-runtime"
   depends="init,fabric-compiler,fabric-signatures">
     <mkdir dir="${runtime.classes}" />
-  	
-    <apply executable="sh"
-	parallel="true"
-	failonerror="true"
-	dir="${basedir}"
+        
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${basedir}"
     dest="${runtime.classes}"
-	relative="false"
-	skipemptyfilesets="true"
-	vmlauncher="false">
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
       <arg value="${fabc}" />
       <arg value="-d" />
       <arg value="rt-classes" />
@@ -324,8 +253,8 @@ TOP='${basedir}'
       <arg value="src/runtime" />
       <srcfile />
       <fileset dir="${basedir}/src/runtime"
-	  includes="**/*.fab"
-	  excludes="fabric/util/*.fab" />
+          includes="**/*.fab"
+          excludes="fabric/util/*.fab" />
       <fileset dir="${basedir}/src/runtime"
       includes="fabric/util/HashMap.fab,fabric/util/LinkedList.fab" />
       <globmapper from="*.fab" to="*.class" />
@@ -333,26 +262,21 @@ TOP='${basedir}'
   </target>
 
   <!-- Creates the contents of var -->
-  <target name="var" depends="fabric-system">
-    <!-- exec executable="sh"
-	failonerror="true"
-	dir="${basedir}">
-      <arg value="-c" />
+  <target name="var" depends="bin,fabric-system">
+    <apply executable="bash"
+           dir="${basedir}"
+           dest="${basedir}/var"
+           failonerror="true"
+           vmlauncher="false"
+           relative="true"
+           parallel="true"
+           skipemptyfilesets="true"
+           addsourcefile="false">
       <arg value="${genmap}" />
-    </exec -->
-  	
-    <apply executable="sh"
-    parallel="true"
-    failonerror="true"
-    dir="${basedir}"
-    dest="${basedir}/var"
-    skipemptyfilesets="true"
-    vmlauncher="false"
-    addsourcefile="false">
-      <arg value="${genmap}" />
+      <targetfile />
       <fileset dir="${basedir}/etc/keys"
-      includes="*.keystore"
-      excludes="trust.keystore" />
+               includes="*.keystore"
+               excludes="trust.keystore" />
       <globmapper from="*.keystore" to="*" />
     </apply>
   </target>

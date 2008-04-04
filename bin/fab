@@ -1,0 +1,28 @@
+#!/bin/bash
+
+source "$(dirname $0)/defs"
+
+while true; do
+  case "$1" in
+    "") break;;
+    -v) verbose="1"; shift;;
+    -cp) EXTRACP=$2; shift; shift;;
+    -classpath) EXTRACP=$2; shift; shift;;    
+    *) args="$args '$1'"; shift;;
+  esac
+done
+
+classpath="$TOP/classes:$classpath"
+classpath="$TOP/lib/fabric.jar:$classpath"
+classpath="$TOP/rt-classes:$classpath"
+classpath="$TOP/lib/fabric-rt.jar:$classpath"
+classpath="$EXTRACP:$classpath"
+
+command="\"$JAVA_HOME\"/bin/java $vmargs -classpath \"$(fixpath $classpath)\" fabric.client.Client $args"
+
+if [ -n "$verbose" ]
+then
+  echo "$command"
+fi
+
+eval "$command"
