@@ -19,6 +19,17 @@ fixpath() {
 }
 
 #
+# output filenames compatible with the current platform
+#
+fixfilename() {
+  if [ `uname  | grep -c CYGWIN` -ne 0 ]; then
+    cygpath -w "$1"
+  else
+    echo "$1"
+  fi
+}
+
+#
 # output filenames compatible with unix syntax
 #
 unixfilename() {
