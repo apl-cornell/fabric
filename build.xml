@@ -149,12 +149,7 @@
       description="Cleans up the directory tree and deletes generated files">
     <delete>
       <fileset dir="${bin}">
-        <include name="fab-core"/>
-        <include name="fab"/>
-        <include name="fabc"/>
-        <include name="genkey"/>
-        <include name="genmap"/>
-        <include name="emulab-update"/>
+        <include name="defs"/>
       </fileset>
     </delete>
   </target>
