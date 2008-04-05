@@ -179,21 +179,25 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
 
     TypeNode typeNode = fieldDecl.type();
     String name = fieldDecl.name();
+    boolean finalField = flags.isFinal();
 
     flags = flags.clearTransient().clearFinal().clearStatic();
     List<ClassMember> members = new ArrayList<ClassMember>(4);
-    members.add(qq.parseMember(flags + " %T get$" + name + "() {"
-        + "fabric.client.TransactionManager.INSTANCE.registerRead(this);"
+    String regRead =
+        finalField ? ""
+            : "fabric.client.TransactionManager.INSTANCE.registerRead(this);";
+    members.add(qq.parseMember(flags + " %T get$" + name + "() {" + regRead
         + "return this." + name + "; }", typeNode));
 
-    if (!fieldDecl.flags().isFinal()) {
-      members.add(qq.parseMember(flags + " %T set$" + name + "(%T val) {"
-          + "fabric.client.TransactionManager tm = "
-          + "fabric.client.TransactionManager.INSTANCE;"
-          + "boolean transactionCreated = tm.registerWrite(this);"
-          + "this." + name + " = val;"
-          + "if (transactionCreated) tm.commitTransaction();"
-          + "return val; }", typeNode, typeNode));
+    if (!finalField) {
+      members.add(qq.parseMember(
+          flags + " %T set$" + name + "(%T val) {"
+              + "fabric.client.TransactionManager tm = "
+              + "fabric.client.TransactionManager.INSTANCE;"
+              + "boolean transactionCreated = tm.registerWrite(this);"
+              + "this." + name + " = val;"
+              + "if (transactionCreated) tm.commitTransaction();"
+              + "return val; }", typeNode, typeNode));
 
       // Add post-incrementer and post-decrementer if type is numeric.
       if (typeNode.type().isNumeric()) {
