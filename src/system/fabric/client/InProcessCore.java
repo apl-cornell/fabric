@@ -8,7 +8,6 @@ import fabric.common.util.LongKeyMap;
 import fabric.core.PrepareRequest;
 import fabric.core.SerializedObject;
 import fabric.core.TransactionManager;
-import fabric.lang.Object;
 import fabric.lang.Object.$Impl;
 
 /**
