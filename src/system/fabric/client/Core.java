@@ -17,7 +17,7 @@ public interface Core extends java.io.Serializable {
    * 
    * @return a core-specific transaction ID iff the operation succeeded.
    */
-  public int prepareTransaction(Collection<$Impl> toCreate,
+  int prepareTransaction(Collection<$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<$Impl> writes)
       throws UnreachableCoreException, TransactionPrepareFailedException;
 
@@ -29,7 +29,7 @@ public interface Core extends java.io.Serializable {
    *          The identifier of the requested object
    * @return The requested object
    */
-  public $Impl readObject(long onum) throws AccessError,
+  $Impl readObject(long onum) throws AccessError,
       UnreachableCoreException;
   
   /**
@@ -38,7 +38,7 @@ public interface Core extends java.io.Serializable {
    * @param onum The identifier of the requested object.
    * @return The requested object if it exists in the object cache; otherwise, null.
    */
-  public $Impl readObjectFromCache(long onum);
+  $Impl readObjectFromCache(long onum);
 
   /**
    * Notifies the core that the transaction is being Aborted.
@@ -46,7 +46,7 @@ public interface Core extends java.io.Serializable {
    * @param transactionID
    *          the ID of the aborting transaction.
    */
-  public void abortTransaction(int transactionID);
+  void abortTransaction(int transactionID);
 
   /**
    * Notifies the Core that the transaction should be committed.
@@ -56,7 +56,7 @@ public interface Core extends java.io.Serializable {
    * @throws UnreachableCoreException
    * @throws TransactionCommitFailedException
    */
-  public void commitTransaction(int transactionID)
+  void commitTransaction(int transactionID)
       throws UnreachableCoreException, TransactionCommitFailedException;
 
   /**
@@ -64,7 +64,7 @@ public interface Core extends java.io.Serializable {
    * 
    * @throws UnreachableCoreException
    */
-  public long createOnum() throws UnreachableCoreException;
+  long createOnum() throws UnreachableCoreException;
   
   /**
    * Returns the root map of the Core
