@@ -3,6 +3,7 @@ package fabric.dissemination.pastry;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import rice.Continuation;
 import rice.Executable;
@@ -52,10 +53,12 @@ public class Disseminator implements Application {
   protected Map<Id, Fetch> outstanding;
   
   /** Replication interval, in milliseconds. */
-  protected static long REPLICATION_INTERVAL = 60000;
+  protected static long REPLICATION_INTERVAL = 10 * 60 * 1000;
   
   /** Aggregation interval, in milliseconds. */
-  protected static long AGGREGATION_INTERVAL = 120000;
+  protected static long AGGREGATION_INTERVAL = 20 * 60 * 1000;
+  
+  private Logger log = Logger.getLogger("fabric.dissem.pastry");
   
   /**
    * Creates a disseminator attached to the given pastry node.
@@ -76,6 +79,8 @@ public class Disseminator implements Application {
         REPLICATION_INTERVAL, REPLICATION_INTERVAL);
     endpoint.scheduleMessage(new AggregateInterval(), 
         AGGREGATION_INTERVAL, AGGREGATION_INTERVAL);
+        
+    log.info("Pastry disseminator created");
   }
 
   private static final Continuation halt = new Continuation() {
@@ -159,6 +164,8 @@ public class Disseminator implements Application {
   
   /** Process a Fetch.Reply. */
   protected void fetch(final Fetch.Reply msg) {
+    log.fine("Pastry dissem fetch reply");
+    
     process(new Executable() {
       public Object execute() {
         Fetch f = null;
@@ -181,6 +188,8 @@ public class Disseminator implements Application {
   
   /** Called by a FetchManager to fetch the specified object. */
   public Glob fetch(Core c, long onum) {
+    log.fine("Pastry dissem fetch request " + c + " " + onum);
+    
     Id id = idf.buildRandomId(rand);
     Fetch f = new Fetch(localHandle(), id, ((RemoteCore) c).name, onum);
     
@@ -191,9 +200,11 @@ public class Disseminator implements Application {
     route(idf.buildId(f.toString()), f, null);
     
     synchronized (f) {
-      try {
-        f.wait();
-      } catch (InterruptedException e) {}
+      while (f.reply() == null) {
+        try {
+          f.wait();
+        } catch (InterruptedException e) {}
+      }
       
       return f.reply().glob();
     }
