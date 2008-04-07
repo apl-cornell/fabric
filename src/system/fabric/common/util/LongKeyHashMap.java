@@ -480,7 +480,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
    *
    * @return the clone
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "null" })
   @Override
   public Object clone()
   {
