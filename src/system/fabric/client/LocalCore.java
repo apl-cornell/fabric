@@ -16,7 +16,6 @@ public class LocalCore implements Core {
   private LongKeyMap<Object.$Impl> objects;
   // TODO: should be a fabric.util.HashMap
   private Object rootMap;
-  private RemoteCore surrogate = null;
 
   private static final Logger log = Logger.getLogger("fabric.client.LocalCore");
 
@@ -95,13 +94,6 @@ public class LocalCore implements Core {
   }
 
   public String name() {
-    return surrogate.name();
-  }
-
-  @Override
-  public boolean equals(java.lang.Object obj) {
-    if (!(obj instanceof Core)) return false;
-    return obj instanceof LocalCore || surrogate != null
-        && ((Core) obj).name().equals(name());
+    return "local";
   }
 }
