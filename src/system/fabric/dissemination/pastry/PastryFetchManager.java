@@ -2,11 +2,11 @@ package fabric.dissemination.pastry;
 
 import java.io.IOException;
 
-import fabric.client.Core;
-import fabric.client.FetchManager;
+import fabric.client.RemoteCore;
 import fabric.client.UnreachableCoreException;
 import fabric.common.AccessError;
-import fabric.lang.Object.$Impl;
+import fabric.dissemination.FetchManager;
+import fabric.dissemination.Glob;
 
 public class PastryFetchManager implements FetchManager {
   
@@ -18,7 +18,7 @@ public class PastryFetchManager implements FetchManager {
     } catch (IOException e) {}
   }
 
-  public $Impl fetch(Core c, long onum) throws AccessError,
+  public Glob fetch(RemoteCore c, long onum) throws AccessError,
       UnreachableCoreException {
     return node.disseminator().fetch(c, onum);
   }

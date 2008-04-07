@@ -36,7 +36,9 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
      * on the client. The core should use the <code>result</code> field
      * instead.
      */
-    public final $Impl result;
+    //public final $Impl result;
+    
+    private transient final Core core;
 
     /**
      * Used by the core to create a read-message response.
@@ -44,7 +46,8 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
     public Response(SerializedObject obj, LongKeyMap<SerializedObject> group) {
       this.serializedResult = obj;
       this.related = group;
-      this.result = null;
+      //this.result = null;
+      this.core = null;
     }
 
     /**
@@ -55,16 +58,16 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
      * @param in
      *                the input stream from which to read the response.
      */
-    Response(Core core, ObjectInputStream in) throws ClassNotFoundException,
-        IOException {
-      this.serializedResult = null;
+    Response(Core core, ObjectInputStream in) throws IOException {
+      //this.serializedResult = null;
 
+      this.core = core;
       int size = in.readInt();
       this.related = new LongKeyHashMap<SerializedObject>(size);
       for (int i = 0; i < size; i++) {
         related.put(in.readLong(), new SerializedObject(in));
       }
-      this.result = SerializedObject.readImpl(core, in);
+      this.serializedResult = new SerializedObject(in);
     }
 
     /*
@@ -80,6 +83,10 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
       }
       
       serializedResult.write(out);
+    }
+    
+    public $Impl result() throws ClassNotFoundException {
+      return serializedResult.deserialize(core);
     }
   }
 

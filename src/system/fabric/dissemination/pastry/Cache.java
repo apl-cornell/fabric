@@ -6,7 +6,7 @@ import java.util.Map;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.common.Pair;
-import fabric.messages.ReadMessage;
+import fabric.dissemination.Glob;
 
 /**
  * The cache objects used by the disseminator to store globs. Essentially a
@@ -43,8 +43,7 @@ public class Cache {
     Glob g = null;
     
     if (fetch) {
-      ReadMessage.Response response = new ReadMessage(onum).send(c);
-      g = new Glob(response.serializedResult, response.related);
+      g = c.readObjectFromCore(onum);
     
       synchronized (map) {
         map.put(key, g);

@@ -2,7 +2,10 @@ package fabric.client.debug;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeMap;
 
 import fabric.client.Client;
 import fabric.client.Core;
@@ -78,15 +81,14 @@ public class ObjectCount {
     Stack<Long> toVisit = new Stack<Long>();
     toVisit.add(obj.$getOnum());
     java.util.Map<String, Integer> byType = new TreeMap<String, Integer>();
-
-    Client client = Client.getClient();
+    
     Core core = obj.$getCore();
 
     while (!toVisit.isEmpty()) {
       long onum = toVisit.pop();
       visited.add(onum);
 
-      Object.$Impl impl = client.fetchObject(core, onum);
+      Object.$Impl impl = core.readObject(onum);
       SerializedObject so = new SerializedObject(impl);
       for (long ref : so.getIntracoreRefs())
         if (!visited.contains(ref) && !toVisit.contains(ref)) toVisit.push(ref);

@@ -1,11 +1,19 @@
 package fabric.client;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamException;
 import java.lang.ref.SoftReference;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.Principal;
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLSocket;
@@ -13,13 +21,19 @@ import javax.security.auth.x500.X500Principal;
 
 import fabric.common.AccessError;
 import fabric.common.FabricException;
+import fabric.common.InternalError;
 import fabric.common.NoSuchCoreError;
 import fabric.common.Surrogate;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.SerializedObject;
+import fabric.dissemination.Glob;
 import fabric.lang.Object;
-import fabric.messages.*;
+import fabric.messages.AbortTransactionMessage;
+import fabric.messages.AllocateMessage;
+import fabric.messages.CommitTransactionMessage;
+import fabric.messages.PrepareTransactionMessage;
+import fabric.messages.ReadMessage;
 
 /**
  * Encapsulates a Core. This class maintains the connection to the core and
@@ -52,7 +66,7 @@ public class RemoteCore implements Core {
   private transient ObjectOutputStream out;
 
   /**
-   * Cache of unserialized objects that the core has sent us.
+   * Cache of serialized objects that the core has sent us.
    */
   private transient LongKeyMap<SoftReference<SerializedObject>> serialized;
 
@@ -181,7 +195,7 @@ public class RemoteCore implements Core {
     // Check object table
     Object.$Impl result = readObjectFromCache(onum);
     if (result != null) return result;
-    return readObjectFromCore(onum);
+    return fetchObject(onum);
   }
   
   public Object.$Impl readObjectFromCache(long onum) {
@@ -199,10 +213,11 @@ public class RemoteCore implements Core {
    * @return The constructed $Impl
    * @throws FabricException
    */
-  private Object.$Impl readObjectFromCore(long onum) throws AccessError,
+  private Object.$Impl fetchObject(long onum) throws AccessError,
       UnreachableCoreException {
     Object.$Impl result = null;
     SoftReference<SerializedObject> serialRef = serialized.remove(onum);
+    
     if (serialRef != null) {
       SerializedObject serial = serialRef.get();
       try {
@@ -214,11 +229,16 @@ public class RemoteCore implements Core {
     }
 
     if (result == null) {
-      // no serial copy --- fetch from core
-      ReadMessage.Response response = new ReadMessage(onum).send(this);
-      result = response.result;
-      for (LongKeyMap.Entry<SerializedObject> entry : response.related
-          .entrySet())
+      // no serial copy --- fetch from dissemination
+      Glob g = Client.getClient().fetchManager().fetch(this, onum);
+      
+      try {
+        result = g.obj().deserialize(this);
+      } catch (ClassNotFoundException e) {
+        throw new InternalError(e);
+      }
+      
+      for (LongKeyMap.Entry<SerializedObject> entry : g.related().entrySet())
         serialized.put(entry.getKey(), new SoftReference<SerializedObject>(
             entry.getValue()));
     }
@@ -226,12 +246,28 @@ public class RemoteCore implements Core {
     while (result instanceof Surrogate) {
       // XXX Track surrogates for reuse?
       Surrogate surrogate = (Surrogate) result;
-      result = Client.getClient().fetchObject(surrogate.core, surrogate.onum);
+      result = surrogate.core.readObject(surrogate.onum);
     }
     objects.put(onum, new SoftReference<Object.$Impl>(result));
     return result;
   }
 
+  /**
+   * Fetches the object from the serialized cache, or goes to the core if it is
+   * not present. Places the result in the object cache.
+   * 
+   * @param onum
+   *                The object number to fetch
+   * @return The constructed $Impl
+   * @throws FabricException
+   */
+  public Glob readObjectFromCore(long onum) throws AccessError,
+      UnreachableCoreException {
+    ReadMessage.Response response = new ReadMessage(onum).send(this);
+    Glob g = new Glob(response.serializedResult, response.related);
+    return g;
+  }
+  
   /**
    * Looks up the actual Core object when this core is deserialized. While this
    * method is not explicitly called in the code, it is used by the Java

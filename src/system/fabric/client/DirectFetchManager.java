@@ -1,16 +1,17 @@
 package fabric.client;
 
 import fabric.common.AccessError;
-import fabric.lang.Object.$Impl;
+import fabric.dissemination.FetchManager;
+import fabric.dissemination.Glob;
 
 /**
  * This simple FetchManger always goes directly to the core.
  */
 public class DirectFetchManager implements FetchManager {
 
-  public $Impl fetch(Core c, long onum) throws AccessError,
+  public Glob fetch(RemoteCore c, long onum) throws AccessError,
       UnreachableCoreException {
-    return c.readObject(onum);
+    return c.readObjectFromCore(onum);
   }
   
   public void destroy() {}

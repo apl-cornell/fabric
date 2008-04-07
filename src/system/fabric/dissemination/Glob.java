@@ -1,4 +1,4 @@
-package fabric.dissemination.pastry;
+package fabric.dissemination;
 
 import fabric.common.util.LongKeyMap;
 import fabric.core.SerializedObject;

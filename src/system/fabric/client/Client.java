@@ -19,15 +19,19 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import javax.net.ssl.*;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509KeyManager;
 import javax.security.auth.x500.X500Principal;
 
-import fabric.common.AccessError;
 import fabric.common.InternalError;
 import fabric.common.Resources;
+import fabric.dissemination.FetchManager;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
-import fabric.lang.Object.$Impl;
 import fabric.lang.arrays.ObjectArray;
 
 /**
@@ -207,19 +211,10 @@ public final class Client {
   }
 
   /**
-   * Fetches the requested object using the current fetch manager.
-   * 
-   * @param c
-   *                the core where the object resides.
-   * @param onum
-   *                the object identifier.
-   * @return the requested object if successful.
-   * @throws AccessError
-   * @throws UnreachableCoreException
+   * Returns the fetch manager.
    */
-  public $Impl fetchObject(Core c, long onum) throws AccessError,
-      UnreachableCoreException {
-    return fetchManager.fetch(c, onum);
+  public FetchManager fetchManager() {
+    return fetchManager;
   }
 
   /**

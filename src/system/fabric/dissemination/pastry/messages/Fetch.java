@@ -5,6 +5,7 @@ import rice.p2p.commonapi.Message;
 import rice.p2p.commonapi.NodeHandle;
 import fabric.common.util.LongKeyMap;
 import fabric.core.SerializedObject;
+import fabric.dissemination.Glob;
 
 /**
  * A Fetch message represents a request to fetch a particular object.
@@ -83,22 +84,25 @@ public class Fetch implements Message {
    */
   public class Reply implements Message {
     
-    private SerializedObject obj;
-    private LongKeyMap<SerializedObject> related;
+    private Glob glob;
     
     public Reply(SerializedObject obj, LongKeyMap<SerializedObject> related) {
-      this.obj = obj;
-      this.related = related;
+      glob = new Glob(obj, related);
+    }
+    
+    /** The glob returned. */
+    public Glob glob() {
+      return glob;
     }
     
     /** The object requested. */
     public SerializedObject obj() {
-      return obj;
+      return glob.obj();
     }
     
     /** The related objects. */
     public LongKeyMap<SerializedObject> related() {
-      return related;
+      return glob.related();
     }
 
     /** The random id of this message. */

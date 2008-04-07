@@ -1,16 +1,21 @@
 package fabric.lang;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.util.Iterator;
 import java.util.List;
 
-import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.TransactionManager;
 import fabric.client.UnreachableCoreException;
-import fabric.common.*;
+import fabric.common.ACLPolicy;
+import fabric.common.AccessError;
 import fabric.common.InternalError;
+import fabric.common.Pair;
+import fabric.common.Policy;
 import fabric.core.SerializedObject.RefTypeEnum;
 
 /**
@@ -58,7 +63,7 @@ public interface Object {
 
       if (result == null) {
         // Object has been evicted.
-        result = Client.getClient().fetchObject(core, onum);
+        result = core.readObject(onum);
         setRef(result);
       }
 

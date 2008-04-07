@@ -22,11 +22,11 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.common.Pair;
+import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.messages.AggregateInterval;
 import fabric.dissemination.pastry.messages.Fetch;
 import fabric.dissemination.pastry.messages.Replicate;
 import fabric.dissemination.pastry.messages.ReplicateInterval;
-import fabric.lang.Object.$Impl;
 
 /**
  * A pastry application that implements the functionality of a Fabric
@@ -180,7 +180,7 @@ public class Disseminator implements Application {
   }
   
   /** Called by a FetchManager to fetch the specified object. */
-  public $Impl fetch(Core c, long onum) {
+  public Glob fetch(Core c, long onum) {
     Id id = idf.buildRandomId(rand);
     Fetch f = new Fetch(localHandle(), id, ((RemoteCore) c).name, onum);
     
@@ -195,12 +195,8 @@ public class Disseminator implements Application {
         f.wait();
       } catch (InterruptedException e) {}
       
-      try {
-        return f.reply().obj().deserialize(c);
-      } catch (ClassNotFoundException e) {}
+      return f.reply().glob();
     }
-    
-    return null;
   }
   
   /** Called once every replicate interval. */

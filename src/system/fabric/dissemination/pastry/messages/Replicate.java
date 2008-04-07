@@ -5,7 +5,7 @@ import java.util.Map;
 import rice.p2p.commonapi.Message;
 import rice.p2p.commonapi.NodeHandle;
 import fabric.common.Pair;
-import fabric.dissemination.pastry.Glob;
+import fabric.dissemination.Glob;
 
 /**
  * This represents a Replicate message in the beehive system. Node A sends node

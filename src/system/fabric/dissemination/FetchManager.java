@@ -1,7 +1,8 @@
-package fabric.client;
+package fabric.dissemination;
 
+import fabric.client.RemoteCore;
+import fabric.client.UnreachableCoreException;
 import fabric.common.AccessError;
-import fabric.lang.Object.$Impl;
 
 /**
  * A FetchManager is responsible for retrieving objects from Cores. Clients
@@ -11,17 +12,17 @@ import fabric.lang.Object.$Impl;
 public interface FetchManager {
   
   /**
-   * Fetches the object identified by onum located at core c.
+   * Fetches the glob identified by onum located at core c.
    * 
    * @param c
    *                the core.
    * @param onum
    *                the object identifier.
-   * @return the requested object if fetch was successful.
+   * @return the requested glob if fetch was successful.
    * @throws AccessError
    * @throws UnreachableCoreException
    */
-  public $Impl fetch(Core c, long onum) throws AccessError, 
+  public Glob fetch(RemoteCore c, long onum) throws AccessError, 
       UnreachableCoreException;
 
   /**
