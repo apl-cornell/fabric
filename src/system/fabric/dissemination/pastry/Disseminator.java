@@ -158,7 +158,7 @@ public class Disseminator implements Application {
   /** Reply to a Fetch message with given glob. */
   protected void reply(Glob g, Fetch msg) {
     g.touch();
-    Fetch.Reply r = msg.new Reply(g.obj(), g.related());
+    Fetch.Reply r = new Fetch.Reply(msg, g);
     route(null, r, msg.sender());
   }
   
