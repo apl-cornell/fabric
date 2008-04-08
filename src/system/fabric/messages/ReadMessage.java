@@ -26,18 +26,10 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
     public final LongKeyMap<SerializedObject> related;
 
     /**
-     * The serialized result of the read message. This will only be non-null on
-     * the core. The client should use the <code>result</code> field instead.
+     * The serialized result of the read message.
      */
     public final SerializedObject serializedResult;
 
-    /**
-     * The unserialized result of the read message. This will only be non-null
-     * on the client. The core should use the <code>result</code> field
-     * instead.
-     */
-    //public final $Impl result;
-    
     private transient final Core core;
 
     /**
@@ -46,7 +38,6 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
     public Response(SerializedObject obj, LongKeyMap<SerializedObject> group) {
       this.serializedResult = obj;
       this.related = group;
-      //this.result = null;
       this.core = null;
     }
 
@@ -59,8 +50,6 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
      *                the input stream from which to read the response.
      */
     Response(Core core, ObjectInputStream in) throws IOException {
-      //this.serializedResult = null;
-
       this.core = core;
       int size = in.readInt();
       this.related = new LongKeyHashMap<SerializedObject>(size);
@@ -145,4 +134,5 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
   public void write(ObjectOutputStream out) throws IOException {
     out.writeLong(onum);
   }
+  
 }
