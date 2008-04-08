@@ -1,5 +1,6 @@
 package fabric.dissemination.pastry;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -14,6 +15,8 @@ import rice.p2p.commonapi.IdFactory;
 import rice.p2p.commonapi.Message;
 import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.RouteMessage;
+import rice.p2p.commonapi.rawserialization.InputBuffer;
+import rice.p2p.commonapi.rawserialization.MessageDeserializer;
 import rice.pastry.PastryNode;
 import rice.pastry.commonapi.PastryIdFactory;
 import rice.pastry.leafset.LeafSet;
@@ -26,6 +29,7 @@ import fabric.common.Pair;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.messages.AggregateInterval;
 import fabric.dissemination.pastry.messages.Fetch;
+import fabric.dissemination.pastry.messages.MessageType;
 import fabric.dissemination.pastry.messages.Replicate;
 import fabric.dissemination.pastry.messages.ReplicateInterval;
 
@@ -52,6 +56,8 @@ public class Disseminator implements Application {
   /** Outstanding fetch messages awaiting replies. */
   protected Map<Id, Fetch> outstanding;
   
+  protected MessageDeserializer deserializer;
+  
   /** Replication interval, in milliseconds. */
   protected static long REPLICATION_INTERVAL = 10 * 60 * 1000;
   
@@ -68,7 +74,8 @@ public class Disseminator implements Application {
   public Disseminator(PastryNode node) {
     this.node = node;
     endpoint = node.buildEndpoint(this, null);
-    endpoint.register();
+    deserializer = new Deserializer();
+    endpoint.setDeserializer(deserializer);
     idf = new PastryIdFactory(node.getEnvironment());
     rand = new Random();
     
@@ -79,7 +86,8 @@ public class Disseminator implements Application {
         REPLICATION_INTERVAL, REPLICATION_INTERVAL);
     endpoint.scheduleMessage(new AggregateInterval(), 
         AGGREGATION_INTERVAL, AGGREGATION_INTERVAL);
-        
+
+    endpoint.register();
     log.info("Pastry disseminator created");
   }
 
@@ -109,10 +117,6 @@ public class Disseminator implements Application {
    */
   protected void route(Id id, Message message, NodeHandle hint) {
     endpoint.route(id, message, hint);
-
-    try {
-      endpoint.getEnvironment().getTimeSource().sleep(10);
-    } catch (InterruptedException e) {}
   }
 
   /** The NodeHandle of this pastry node. */
@@ -201,9 +205,7 @@ public class Disseminator implements Application {
     
     synchronized (f) {
       while (f.reply() == null) {
-        try {
-          f.wait();
-        } catch (InterruptedException e) {}
+        try { f.wait(); } catch (InterruptedException e) {}
       }
       
       return f.reply().glob();
@@ -331,13 +333,15 @@ public class Disseminator implements Application {
   }
   
   public boolean forward(RouteMessage message) {
-    Message m = message.getMessage();
-    
-    if (m instanceof Fetch) {
-      return forward((Fetch) m);
-    } else if (m instanceof Fetch.Reply) {
-      return forward((Fetch.Reply) m);
-    }
+    try {
+      Message m = message.getMessage(deserializer);
+      
+      if (m instanceof Fetch) {
+        return forward((Fetch) m);
+      } else if (m instanceof Fetch.Reply) {
+        return forward((Fetch.Reply) m);
+      }
+    } catch (IOException e) {}
     
     return true;
   }
@@ -382,6 +386,22 @@ public class Disseminator implements Application {
   }
 
   public void update(NodeHandle handle, boolean joined) {
+  }
+  
+  private class Deserializer implements MessageDeserializer {
+
+    public Message deserialize(InputBuffer buf, short type, int priority,
+        NodeHandle sender) throws IOException {
+      switch (type) {
+      case MessageType.FETCH:
+        return new Fetch(buf, endpoint, sender);
+      case MessageType.FETCH_REPLY:
+        return new Fetch.Reply(buf, endpoint);
+      }
+      
+      return null;
+    }
+    
   }
 
 }
