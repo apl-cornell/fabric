@@ -10,7 +10,7 @@ import fabric.lang.arrays.ObjectArray;
 public class ObjectArrayTest01 {
     char c;
     public ObjectArrayTest01(char c) {
-      this.c = c;
+        this.c = c;
     }
 
     public static void main(String[] args) {
@@ -27,9 +27,9 @@ public class ObjectArrayTest01 {
         int ITER_REPS;
         boolean isBatchOutput;
 
-        if(args.length != 5) {
-          System.out.println("I need 5 arguments - size1, size2, maxCount, iterReps, isBatchOutput");
-          return;
+        if(args.length < 5) {
+            System.out.println("I need 5 arguments - size1, size2, maxCount, iterReps, isBatchOutput");
+            return;
         }
 
         SIZE1 = Integer.parseInt(args[0]);
@@ -37,6 +37,7 @@ public class ObjectArrayTest01 {
         MAX_COUNT = Integer.parseInt(args[2]);
         ITER_REPS = Integer.parseInt(args[3]);
         isBatchOutput = args[4].equals("true")?true:false;
+
 
         Core core = Client.getClient().getLocalCore();
         long startTime, startInitialize, startReadIteration, startWriteIteration, startResize, endTime;
@@ -47,6 +48,16 @@ public class ObjectArrayTest01 {
 
         int percentage = 0;
         int step = 5;
+
+        if(args.length > 5) { 
+            System.out.println("Starting test in 3 seconds");
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                System.out.println("Don't mess with me, buddy!");
+                return;
+            }
+        }
 
         long startTest = System.currentTimeMillis();
         atomic {
@@ -68,7 +79,8 @@ public class ObjectArrayTest01 {
                 startReadIteration = System.currentTimeMillis();
                 for(int j = 0; j < ITER_REPS; j++)
                     for(int i = 0; i < SIZE1; i++) {
-                        ObjectArrayTest01 element = (ObjectArrayTest01)testArray.get(i);
+//                      ObjectArrayTest01 element = (ObjectArrayTest01)testArray.get(i);
+                        testArray.get(i);                        
                     }
 
                 // replace all elements of the array multiple times
@@ -80,11 +92,11 @@ public class ObjectArrayTest01 {
 
                 // resize array
                 startResize = System.currentTimeMillis();
-//                ObjectArray testArrayNew = new ObjectArray@core(ObjectArrayTest01.class, SIZE2);
-//                for(int i = 0; i < SIZE1; i++) {
-//                    testArrayNew.set(i, testArray.get(i));
-//                }
-//                testArray = testArrayNew;
+//              ObjectArray testArrayNew = new ObjectArray@core(ObjectArrayTest01.class, SIZE2);
+//              for(int i = 0; i < SIZE1; i++) {
+//              testArrayNew.set(i, testArray.get(i));
+//              }
+//              testArray = testArrayNew;
 
                 // end time
                 endTime = System.currentTimeMillis();
@@ -121,26 +133,26 @@ public class ObjectArrayTest01 {
         replacing = replacing * 1000 / (MAX_COUNT*ITER_REPS);
         float replacingPer = replacing/SIZE1;
         resizing = resizing * 1000 / MAX_COUNT;
-        
+
         NumberFormat formatter = new DecimalFormat("#0.0000");
 
         if(!isBatchOutput) {
-          System.out.println("\nArray Creation: " + formatter.format(creation)
-              + "us\nArray Initialization: " + formatter.format(initialization)
-              + "us (" + formatter.format(initializationPer) 
-              + "us)\nReading Elements: " + formatter.format(reading)
-              + "us (" + formatter.format(readingPer) 
-              + "us)\nReplacing Elements: " + formatter.format(replacing)
-              + "us (" + formatter.format(replacingPer)
-              + "us)\nResizing Array: " + formatter.format(resizing) + "us"); 
+            System.out.println("\nArray Creation: " + formatter.format(creation)
+                + "us\nArray Initialization: " + formatter.format(initialization)
+                + "us (" + formatter.format(initializationPer) 
+                + "us)\nReading Elements: " + formatter.format(reading)
+                + "us (" + formatter.format(readingPer) 
+                + "us)\nReplacing Elements: " + formatter.format(replacing)
+                + "us (" + formatter.format(replacingPer)
+                + "us)\nResizing Array: " + formatter.format(resizing) + "us"); 
         } else {
-          System.out.println(args[0] + " " + args[1] + " " + args[2] + " " + args[3] + " " + args[4] +
-              " objectarray " + creation + " " + formatter.format(initialization)
-              + " " + formatter.format(initializationPer) 
-              + " " + formatter.format(reading)
-              + " " + formatter.format(readingPer) 
-              + " " + formatter.format(replacing) + " " + formatter.format(replacingPer)
-              + " " + formatter.format(resizing));
+            System.out.println("0 " + args[0] + " " + args[1] + " " + args[2] + " " + args[3] + " " + args[4] +
+                " objectarray " + creation + " " + formatter.format(initialization)
+                + " " + formatter.format(initializationPer) 
+                + " " + formatter.format(reading)
+                + " " + formatter.format(readingPer) 
+                + " " + formatter.format(replacing) + " " + formatter.format(replacingPer)
+                + " " + formatter.format(resizing));
         }
     }
 }

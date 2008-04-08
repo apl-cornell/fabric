@@ -7,160 +7,218 @@ import fabric.client.Core;
  * a primitive The smaller array pieces are arranged as a tree so as to support
  * efficient indexing operations. This version of ResizableArray assumes
  * elements are Object instances. For primitive types, other versions may be
- * written. Possible optimizations: 1. convert the length to a base 128
- * representation will make it easier to take logs then. Bugs/Unintended
- * Features: 1. If the array is indeed of ObjectArray instance, then things
- * could get messed up. We're assuming for now that this case won't arise 2.
- * We've just created this for Object arrays. Still need to extend it to
- * primitive arrays.
+ * written. 
+ * 
+ * Possible optimizations:
+ *  1. convert the length to a base 128 representation will make it easier
+ *     to take logs then. 
+ * 
+ * Bugs/Unintended Features:
+ *  1. If the array is indeed of ObjectArray instance, then things
+ *     could get messed up. We're assuming for now that this case won't arise
+ *  2. We've just created this for Object arrays. Still need to extend it to
+ *     primitive arrays.
  */
 
 public class ResizableObjectArray {
-  /**
-   * The number of elements in each little array. Dependent on the MTU?
-   * Analogous to a block in a file system. Also directly determines the fanout.
-   */
-  private int CHUNK_SIZE;
+    /**
+     * The number of elements in each little array. Dependent on the MTU?
+     * Analogous to a block in a file system. Also directly determines the fanout.
+     * We always need it to be a power of 2
+     */
+    private final int CHUNK_SIZE;
+    private final int CHUNK_SIZE_LOG2;
 
-  /**
-   * The height of the tree of little arrays. Depends on the chunk size
-   * (determining the branching factor) and the number of expected elements in
-   * the bigger array
-   */
-  private int height;
+    /**
+     * The height of the tree of little arrays. Depends on the chunk size
+     * (determining the branching factor) and the number of expected elements in
+     * the bigger array
+     */
+    private int height;
+    
+    /**
+     * The number of expected elements in this big array Can be modified even
+     * after an instance has been created
+     */
+    private int length;
 
-  /**
-   * The number of expected elements in this big array Can be modified even
-   * after an instance has been created
-   */
-  private int length;
+    /**
+     * The class representing the proxy type for the array elements.
+     */
+    private final Class proxyType;
 
-  /**
-   * The class representing the proxy type for the array elements.
-   */
-  private final Class proxyType;
+    /**
+     * The root of the tree of little arrays. The runtime type of root is a Fabric
+     * array of Fabric Objects. Each object in the array is either a further array
+     * of objects or is an array element if this array is at the leaf level
+     */
+    private ObjectArray root;
 
-  /**
-   * The root of the tree of little arrays. The runtime type of root is a Fabric
-   * array of Fabric Objects. Each object in the array is either a further array
-   * of objects or is an array element if this array is at the leaf level
-   */
-  private ObjectArray root;
+    /**
+     * Creates a new object array at the given Core with the given length.
+     * 
+     * @param core
+     *                The core on which to allocate the array.
+     * @param length
+     *                The length of the array.
+     */
+    public ResizableObjectArray(Class proxyType, int length) {
+        /* default chunk size is 256 */
+        this(proxyType, length, 8);
+    }
 
-  /**
-   * Creates a new object array at the given Core with the given length.
-   * 
-   * @param core
-   *                The core on which to allocate the array.
-   * @param length
-   *                The length of the array.
-   */
-  public ResizableObjectArray(Class proxyType, int length) {
-      this(proxyType, length, 64);
-  }
+    public ResizableObjectArray(Class proxyType, int length, int CHUNK_SIZE_LOG2) {
+        this.CHUNK_SIZE_LOG2 = CHUNK_SIZE_LOG2;
+        this.CHUNK_SIZE = (1 << CHUNK_SIZE_LOG2);
+        this.proxyType = proxyType;
+        this.length = length;
 
-  public ResizableObjectArray(Class proxyType, int length, int CHUNK_SIZE) {
-      this.CHUNK_SIZE = CHUNK_SIZE;
-      this.proxyType = proxyType;
-      this.length = length;
-      this.height = (int) Math.ceil(Math.log(length) / Math.log(CHUNK_SIZE));
-      if (height == 1)
-        root = new ObjectArray(proxyType, CHUNK_SIZE);
-      else
-        root = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
-  }
-  
-  public int getLength() {
-    return length;
-  }
+        // compute required height (height starts at 1)
+        this.height = getCounter(length - 1) + 1;
+        if (height == 1)
+            root = new ObjectArray(proxyType, CHUNK_SIZE);
+        else
+            root = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
+    }
 
-  public void setLength(int newSize) {
-    int newHeight = (int) Math.ceil(Math.log(newSize) / Math.log(CHUNK_SIZE));
-    int difference = newHeight - this.height;
-    if (difference > 0) {
-      // make sure the leaves are at the right level - push down the root
-      for (int count = 0; count < difference; count++) {
-        ObjectArray newRoot = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
-        newRoot.set(0, root);
-        root = newRoot;
-      }
-    } else if (difference < 0){
-      // Truncate the last so many array slots.
-      for (int count = 0; count < -difference; count++) {
-        ObjectArray rootArray = (ObjectArray) root.get(0);
-        root = rootArray;
-      }
-      
-      // Null out the part of the tree that shouldn't exist anymore.
-      ObjectArray curNode = root;
-      int curHeight = newHeight;
-      while (curHeight > 1 && curNode != null) {
-        int divider = (int) Math.pow(CHUNK_SIZE, curHeight - 1);
-        int firstDigit = newSize / divider;
-        
-        for (int count = firstDigit+1; count < CHUNK_SIZE; count++)
-          curNode.set(count, null);
-        
-        curNode = (ObjectArray) curNode.get(firstDigit);
-        curHeight--;
-      }
+    public int getLength() {
+        return length;
     }
     
-    this.height = newHeight;
-    this.length = newSize;
-  }
+    private int getCounter(int i) {
+        int counter = 0;
+        while(i > 0) {
+            i = (i >> this.CHUNK_SIZE_LOG2);
+            counter++;
+        }
+        counter--;
+        return counter;
+    }
+    
+    public void setLength(int newSize) {
+        int counter = getCounter(newSize - 1);
+        int newHeight = counter + 1;
+        int difference = newHeight - this.height;
+        this.height = newHeight;
+        this.length = newSize;
 
-  public Object get(int i) {
-    if (i < 0 || i >= length) throw new ArrayIndexOutOfBoundsException();
-    return accessByLevel(root, height, i, true, null);
-  }
+        /* now set root and null out unnecessary stuff */
+        if (difference > 0) {
+            // make sure the leaves are at the right level - push down the root
+            for (int count = 0; count < difference; count++) {
+                ObjectArray newRoot = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
+                newRoot.set(0, root);
+                root = newRoot;
+            }
+        } else if (difference < 0){
+            // Truncate the last so many array slots.
+            for (int count = 0; count < -difference; count++) {
+                ObjectArray rootArray = (ObjectArray) root.get(0);
+                root = rootArray;
+            }
 
-  /**
-   * Reads/writes an array element.
-   * 
-   * @param node
-   *                the subtree being accessed.
-   * @param level
-   *                the height of the given node in the tree.
-   * @param i
-   *                the index of the element to read/write.
-   * @param isRead
-   *                true if the access is a read, false if the access is a
-   *                write.
-   * @param data
-   *                the value to write, if the access is a write. This is unused
-   *                if the access is a read.
-   */
-  private Object accessByLevel(ObjectArray node, int level, int i,
-      boolean isRead, Object data) {
-      int divider, firstDigit, otherDigits;
-      Object nextObject;
-      while(level > 1) {
-          divider = (int) Math.pow(CHUNK_SIZE, level - 1);
-          firstDigit = i / divider;
-          otherDigits = i % divider;
+            // Null out the part of the tree that shouldn't exist anymore.
+            ObjectArray curNode = root;
+            int curIndex = newSize - 1;
+            int curHeight = newHeight;
+            int firstDigit;
+            while (curHeight > 1 && curNode != null) {
+                firstDigit = (curIndex >> (counter * this.CHUNK_SIZE_LOG2));
+                for (int count = firstDigit + 1; count < CHUNK_SIZE; count++) {
+                    curNode.set(count, null);
+                }
+                curNode = (ObjectArray) curNode.get(firstDigit);
+                curIndex = ( curIndex & ((1 << counter*this.CHUNK_SIZE_LOG2) - 1) );
+                counter -= this.CHUNK_SIZE_LOG2;
+                curHeight--;
+            }
+        }
+    }
+    
+    public Object get(int i) {
+        if (i >= length) throw new ArrayIndexOutOfBoundsException();
+        ObjectArray node = root;
+        int level = height;
+        int c = this.CHUNK_SIZE_LOG2;
+        int counter = (level - 1) * c;
+        int firstDigit;
+        while(level > 1) {
+            firstDigit = (i >> counter);
+            node = (ObjectArray)node.get(firstDigit);
+            if (node == null) {
+                return null;
+            }
+            i = ( i & ((1 << counter) - 1) );
+            counter -= c;
+            level--;
+        }
+        return node.get(i);
+    }
 
-          nextObject = node.get(firstDigit);
-          if (nextObject == null) {
-              if (isRead) return null;
+    public Object set(int i, Object data) {
+        if (i >= length) throw new ArrayIndexOutOfBoundsException();
+        ObjectArray node = root;
+        int level = height;
+        int c = this.CHUNK_SIZE_LOG2;
+        int counter = (level - 1) * c;
+        int firstDigit;
+        Object nextObject;
+        while(level > 1) {
+            firstDigit = (i >> counter);
+            nextObject = node.get(firstDigit);
+            if (nextObject == null) {
+                // Writing to a node that doesn't exist yet.  Time to create it.
+                if (level == 2)
+                    nextObject = new ObjectArray(proxyType, CHUNK_SIZE);
+                else
+                    nextObject = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
+                node.set(firstDigit, nextObject);
+            }
+            node = (ObjectArray) nextObject;
+            i = ( i & ((1 << counter) - 1) );
+            counter -= c;
+            level--;
+        }
+        return node.set(i, data);
+    }
 
-              // Writing to a node that doesn't exist yet.  Time to create it.
-              if (level == 2)
-                  nextObject = new ObjectArray(proxyType, CHUNK_SIZE);
-              else
-                  nextObject = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
-              node.set(firstDigit, nextObject);
-          }
-          node = (ObjectArray) nextObject;
-          level--;
-          i = otherDigits;
-      }
-
-      return isRead ? node.get(i) : node.set(i, data);
-  }
-
-  public Object set(int i, Object data) {
-    if (i < 0 || i >= length) throw new ArrayIndexOutOfBoundsException();
-    return accessByLevel(root, height, i, false, data);
-  }
+    /**
+     * Reads/writes an array element.
+     * 
+     * @param i
+     *                the index of the element to read/write.
+     * @param isRead
+     *                true if the access is a read, false if the access is a
+     *                write.
+     * @param data
+     *                the value to write, if the access is a write. This is unused
+     *                if the access is a read.
+     */
+//    private Object accessByLevel(int i, boolean isRead, Object data) {
+//        ObjectArray node = root;
+//        int level = height;
+//        int firstDigit;
+//        Object nextObject;
+//        int counter = level * this.CHUNK_SIZE_LOG2;
+//        while(level > 1) {
+//            firstDigit = (i >> counter);
+//            nextObject = node.get(firstDigit);
+//            if (nextObject == null) {
+//                if (isRead) return null;
+//
+//                // Writing to a node that doesn't exist yet.  Time to create it.
+//                if (level == 2)
+//                    nextObject = new ObjectArray(proxyType, CHUNK_SIZE);
+//                else
+//                    nextObject = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
+//                node.set(firstDigit, nextObject);
+//            }
+//            node = (ObjectArray) nextObject;
+//            i = ( i & ((1 << counter) - 1) );
+//            counter -= this.CHUNK_SIZE_LOG2;
+//            level--;
+//        }
+//
+//        return isRead ? node.get(i) : node.set(i, data);
+//    }
 }

@@ -29,8 +29,9 @@ public class ResizableArrayTest01 {
         int ITER_REPS;
         boolean isBatchOutput;
 
-        if(args.length != 6) {
-            System.out.println("I need 6 arguments - chunkSize, size1, size2, maxCount, iterReps, isBatchOutput");
+        if(args.length < 6) {
+            System.out.println("I need 6 arguments - " +
+            "chunkSize, size1, size2, maxCount, iterReps, isBatchOutput");
             return;
         }
 
@@ -42,7 +43,8 @@ public class ResizableArrayTest01 {
         isBatchOutput = args[5].equals("true")?true:false;
 
         Core core = Client.getClient().getLocalCore();
-        long startTime, startInitialize, startReadIteration, startWriteIteration, startResize, endTime;
+        long startTime, startInitialize, startReadIteration,
+        startWriteIteration, startResize, endTime;
         float creation=0, initialization=0, reading=0, replacing=0, resizing=0;
 
         ResizableArrayTest01 element1 = new ResizableArrayTest01@core('f');
@@ -51,12 +53,14 @@ public class ResizableArrayTest01 {
         int percentage = 0;
         int step = 5;
 
-        System.out.println("Starting test in 3 seconds");
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            System.out.println("Don't mess with me, buddy!");
-            return;
+        if(args.length > 6) {
+            System.out.println("Starting test in 3 seconds");
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                System.out.println("Don't mess with me, buddy!");
+                return;
+            }
         }
         long startTest = System.currentTimeMillis();
         atomic {
@@ -65,7 +69,8 @@ public class ResizableArrayTest01 {
                 // create array
                 startTime = System.currentTimeMillis();
                 ResizableObjectArray testArray;
-                testArray = new ResizableObjectArray@core(ResizableArrayTest01.class, SIZE1, chunkSize);
+                testArray = new ResizableObjectArray@core(ResizableArrayTest01.class,
+                    SIZE1, chunkSize);
 
                 // initialize array with element 1
                 startInitialize = System.currentTimeMillis();
@@ -78,7 +83,8 @@ public class ResizableArrayTest01 {
                 startReadIteration = System.currentTimeMillis();
                 for(int j = 0; j < ITER_REPS; j++)
                     for(int i = 0; i < SIZE1; i++) {
-                        ResizableArrayTest01 element = (ResizableArrayTest01)testArray.get(i);
+//                      ResizableArrayTest01 element = (ResizableArrayTest01)testArray.get(i);
+                        testArray.get(i);
                     }
 
                 // replace all elements of the array multiple times
@@ -108,7 +114,8 @@ public class ResizableArrayTest01 {
                     long timeNow = System.currentTimeMillis() - startTest;
                     if(percentage > 0) {
                         long estimatedEnd = (timeNow*100)/percentage;
-                        System.out.println("(" + timeNow + "ms/" + estimatedEnd + "ms)");
+                        System.out.println("(" + timeNow + "ms/"
+                            + estimatedEnd + "ms)");
                     } else {
                         System.out.println();
                     }
@@ -128,7 +135,7 @@ public class ResizableArrayTest01 {
         replacing = replacing * 1000 / (MAX_COUNT*ITER_REPS);
         float replacingPer = replacing/SIZE1;
         resizing = resizing * 1000 / MAX_COUNT;
-        
+
         NumberFormat formatter = new DecimalFormat("#0.00");
 
         if(!isBatchOutput) {
@@ -141,7 +148,8 @@ public class ResizableArrayTest01 {
                 + "us (" + formatter.format(replacingPer)
                 + "us)\nResizing Array: " + formatter.format(resizing) + "us"); 
         } else {
-            System.out.println(args[0] + " " + args[1] + " " + args[2] + " " + args[3] + " " + args[4] + " " + args[5] +
+            System.out.println(args[0] + " " + args[1] + " " + args[2] +
+                " " + args[3] + " " + args[4] + " " + args[5] +
                 " resizablearray " + creation + " " + formatter.format(initialization)
                 + " " + formatter.format(initializationPer) 
                 + " " + formatter.format(reading)
