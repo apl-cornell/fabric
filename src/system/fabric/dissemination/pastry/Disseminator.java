@@ -28,6 +28,7 @@ import fabric.client.RemoteCore;
 import fabric.common.Pair;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.messages.AggregateInterval;
+import fabric.dissemination.pastry.messages.DataInputBuffer;
 import fabric.dissemination.pastry.messages.Fetch;
 import fabric.dissemination.pastry.messages.MessageType;
 import fabric.dissemination.pastry.messages.Replicate;
@@ -392,11 +393,13 @@ public class Disseminator implements Application {
 
     public Message deserialize(InputBuffer buf, short type, int priority,
         NodeHandle sender) throws IOException {
+      DataInputBuffer b = new DataInputBuffer(buf);
+      
       switch (type) {
       case MessageType.FETCH:
-        return new Fetch(buf, endpoint, sender);
+        return new Fetch(b, endpoint, sender);
       case MessageType.FETCH_REPLY:
-        return new Fetch.Reply(buf, endpoint);
+        return new Fetch.Reply(b, endpoint);
       }
       
       return null;

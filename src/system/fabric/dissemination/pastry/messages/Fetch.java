@@ -1,18 +1,12 @@
 package fabric.dissemination.pastry.messages;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 
 import rice.p2p.commonapi.Endpoint;
 import rice.p2p.commonapi.Id;
 import rice.p2p.commonapi.NodeHandle;
-import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
-import fabric.common.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.SerializedObject;
@@ -104,12 +98,8 @@ public class Fetch implements RawMessage {
   
   /**
    * Deserialization constructor.
-   * 
-   * @param buf The input buffer containing the serialized message.
-   * @param endpoint The endpoint where this message is to be deserialized.
-   * @throws IOException If an error occurs reading from buf.
    */
-  public Fetch(InputBuffer buf, Endpoint endpoint, NodeHandle sender)
+  public Fetch(DataInputBuffer buf, Endpoint endpoint, NodeHandle sender)
       throws IOException {
     this.sender = sender;
     id = endpoint.readId(buf, buf.readShort());
@@ -174,77 +164,43 @@ public class Fetch implements RawMessage {
     }
 
     public void serialize(OutputBuffer buf) throws IOException {
-      buf.writeShort(id.getType());
-      id.serialize(buf);
-      buf.writeUTF(core);
-      buf.writeLong(onum);
+      DataOutputBuffer b = new DataOutputBuffer(buf);
+      b.writeShort(id.getType());
+      id.serialize(b);
+      b.writeUTF(core);
+      b.writeLong(onum);
       
-      byte[] b = toBytes(glob.obj());
-      buf.writeInt(b.length);
-      buf.write(b, 0, b.length);
-
-      buf.writeInt(glob.related().size());
+      glob.obj().write(b);
+      b.writeInt(glob.related().size());
       
       for (LongKeyMap.Entry<SerializedObject> e : glob.related().entrySet()) {
-        buf.writeLong(e.getKey());
-        b = toBytes(e.getValue());
-        buf.writeInt(b.length);
-        buf.write(b, 0, b.length);
+        b.writeLong(e.getKey());
+        e.getValue().write(b);
       }
     }
 
     /**
      * Deserialization constructor.
-     * 
-     * @param buf The input buffer containing the serialized message.
-     * @param endpoint The endpoint where this message should be deserialized.
-     * @throws IOException If an error occurred reading from buf.
      */
-    public Reply(InputBuffer buf, Endpoint endpoint) throws IOException {
+    public Reply(DataInputBuffer buf, Endpoint endpoint) throws IOException {
       id = endpoint.readId(buf, buf.readShort());
       core = buf.readUTF();
       onum = buf.readLong();
       
-      byte[] b = new byte[buf.readInt()];
-      buf.read(b);
-      SerializedObject obj = toSerializedObject(b);
+      SerializedObject obj = new SerializedObject(buf);
       
       int n = buf.readInt();
       LongKeyMap<SerializedObject> related = new LongKeyHashMap<SerializedObject>(n);
       
       for (int i = 0; i < n; i++) {
         long onum = buf.readLong();
-        b = new byte[buf.readInt()];
-        buf.read(b);
-        related.put(onum, toSerializedObject(b));
+        obj = new SerializedObject(buf);
+        related.put(onum, obj);
       }
       
       glob = new Glob(obj, related);
     }
 
-    private byte[] toBytes(SerializedObject o) {
-      try {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(bos);
-        o.write(oos);
-        oos.flush();
-        return bos.toByteArray();
-      } catch (IOException e) {
-        throw new InternalError(e);
-      }
-    }
-    
-    private SerializedObject toSerializedObject(byte[] data) {
-      try {
-        ByteArrayInputStream bis = new ByteArrayInputStream(data);
-        ObjectInputStream ois = new ObjectInputStream(bis);
-        SerializedObject o = new SerializedObject(ois);
-        return o;
-      } catch (IOException e) {
-        throw new InternalError(e);
-      }
-    }
-    
   }
 
 }
