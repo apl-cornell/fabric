@@ -2,6 +2,8 @@ package fabric.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
@@ -187,7 +189,7 @@ public final class SerializedObject implements Serializable {
    * @see SerializedObject#readImpl(Core, ObjectInputStream)
    * @see SerializedObject#SerializedObject(ObjectInput)
    */
-  public static void write($Impl impl, ObjectOutputStream out)
+  public static void write($Impl impl, DataOutput out)
       throws IOException {
     // Write out the object header.
     out.writeUTF(impl.getClass().getName());
@@ -228,14 +230,14 @@ public final class SerializedObject implements Serializable {
   }
 
   /**
-   * Writes this SerializedObject out to the given output stream. The behaviour
+   * Writes this SerializedObject out to the given output stream. The behavior
    * of this method should mirror write($Impl, ObjectOutputStream).
    * 
    * @see SerializedObject#write($Impl, ObjectOutputStream)
    * @see SerializedObject#readImpl(Core, ObjectInputStream)
    * @see SerializedObject#SerializedObject(ObjectInput)
    */
-  public void write(ObjectOutputStream out) throws IOException {
+  public void write(DataOutput out) throws IOException {
     // Write out the object header.
     out.writeUTF(className);
     out.writeLong(onum);
@@ -272,7 +274,7 @@ public final class SerializedObject implements Serializable {
    * @see SerializedObject#write($Impl, ObjectOutputStream)
    * @see SerializedObject#readImpl(Core, ObjectInputStream)
    */
-  public SerializedObject(ObjectInput in) throws IOException {
+  public SerializedObject(DataInput in) throws IOException {
     // Read the object header.
     this.className = in.readUTF();
     this.onum = in.readLong();
@@ -325,7 +327,7 @@ public final class SerializedObject implements Serializable {
    * @see SerializedObject#write($Impl, ObjectOutputStream)
    * @see SerializedObject#SerializedObject(ObjectInput)
    */
-  public static $Impl readImpl(Core core, ObjectInputStream in)
+  public static $Impl readImpl(Core core, DataInput in)
       throws ClassNotFoundException, IOException {
     // Read the object header.
     Class<?> c = Class.forName(in.readUTF());
