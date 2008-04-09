@@ -1,5 +1,10 @@
 package fabric.dissemination;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
+import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.SerializedObject;
 
@@ -72,6 +77,31 @@ public class Glob {
   
   public boolean home() {
     return home;
+  }
+  
+  /** Serializer. */
+  public void write(DataOutput out) throws IOException {
+    obj.write(out);
+    out.writeInt(related.size());
+    
+    for (LongKeyMap.Entry<SerializedObject> e : related.entrySet()) {
+      out.writeLong(e.getKey());
+      e.getValue().write(out);
+    }
+  }
+  
+  /** Deserializer. */
+  public Glob(DataInput in) throws IOException {
+    obj = new SerializedObject(in);
+    
+    int n = in.readInt();
+    related = new LongKeyHashMap<SerializedObject>(n);
+    
+    for (int i = 0; i < n; i++) {
+      long onum = in.readLong();
+      SerializedObject o = new SerializedObject(in);
+      related.put(onum, o);
+    }
   }
 
 }

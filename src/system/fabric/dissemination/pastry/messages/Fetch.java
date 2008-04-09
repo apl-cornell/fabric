@@ -7,7 +7,6 @@ import rice.p2p.commonapi.Id;
 import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.SerializedObject;
 import fabric.dissemination.Glob;
@@ -169,14 +168,7 @@ public class Fetch implements RawMessage {
       id.serialize(b);
       b.writeUTF(core);
       b.writeLong(onum);
-      
-      glob.obj().write(b);
-      b.writeInt(glob.related().size());
-      
-      for (LongKeyMap.Entry<SerializedObject> e : glob.related().entrySet()) {
-        b.writeLong(e.getKey());
-        e.getValue().write(b);
-      }
+      glob.write(b);
     }
 
     /**
@@ -186,19 +178,7 @@ public class Fetch implements RawMessage {
       id = endpoint.readId(buf, buf.readShort());
       core = buf.readUTF();
       onum = buf.readLong();
-      
-      SerializedObject obj = new SerializedObject(buf);
-      
-      int n = buf.readInt();
-      LongKeyMap<SerializedObject> related = new LongKeyHashMap<SerializedObject>(n);
-      
-      for (int i = 0; i < n; i++) {
-        long onum = buf.readLong();
-        obj = new SerializedObject(buf);
-        related.put(onum, obj);
-      }
-      
-      glob = new Glob(obj, related);
+      glob = new Glob(buf);
     }
 
   }
