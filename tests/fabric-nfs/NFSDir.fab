@@ -2,11 +2,8 @@ package fabric-nfs;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import fabric.io.RandomAccessFile;
+import fabric.io.File;
 
 
 class NFSDir extends java.lang.Object  implements NFSConsts {

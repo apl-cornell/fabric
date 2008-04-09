@@ -1,0 +1,17 @@
+package fabric.io;
+
+import fabric.lang.arrays.ResizableByteArray;
+
+public class RandomAccessFile {
+    String name;
+    ResizableByteArray contents;
+    
+    public RandomAccessFile(String fileName) {
+        this.name = fileName;
+    }
+    
+    void close() {
+        
+    }
+    
+}

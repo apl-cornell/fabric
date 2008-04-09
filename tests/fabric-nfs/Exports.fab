@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.net.InetAddress;
 
+/* File objects only used to access the exports file - leaving unchanged */
 
 class Exports extends java.lang.Object  {
     ExportsItem explist = null;

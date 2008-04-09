@@ -1,9 +1,9 @@
 package fabric-nfs;
 
-import java.io.FileInputStream;
+import fabric.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import fabric.io.RandomAccessFile;
 
 
 class NFSIO extends java.lang.Object  implements NFSConsts, RPCConsts {

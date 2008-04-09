@@ -1,0 +1,21 @@
+package fabric.io;
+
+public class FileInputStream {
+    File file;
+    
+    public FileInputStream(String fileName) {
+        file = new File(fileName);
+    }
+    
+    public long skip(long n) {
+        return 0;
+    }
+    
+    int read(byte[] b) {
+        return 0;
+    }
+    
+    public void close() {
+        
+    }
+}

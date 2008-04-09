@@ -1,8 +1,9 @@
 package fabric-nfs;
 
-import java.io.File;
+import fabric.io.File;
 import java.io.FileNotFoundException;
 
+/* replacing java.io.File by fabric.io.File , etc. */
 
 // The file attributes that NFS needs.
 //

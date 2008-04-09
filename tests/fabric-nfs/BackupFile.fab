@@ -7,6 +7,10 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.StreamTokenizer;
 
+/*
+ * The files used in this class are all on the local host
+ */
+
 
 class BackupFile extends java.lang.Object {
     RandomAccessFile output;

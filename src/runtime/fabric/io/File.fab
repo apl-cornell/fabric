@@ -5,11 +5,57 @@ import fabric.lang.arrays.ResizableByteArray;
 public class File {
     String name;
     ResizableByteArray contents;
+    // other attributes
     int minLength = 4096;
     public File(String name) {
         this.name = name;
         contents = new ResizableByteArray(minLength);
     }
+    
+    // all the methods in java.io.File
+    
+    boolean exists() {
+        return false;
+    }
+    
+    boolean isFile() {
+        return false;
+    }
+    
+    boolean isDirectory() {
+        return false;
+    }
+    
+    boolean canRead() {
+        return false;
+    }
+    
+    boolean canWrite() {
+        return false;
+    }
+    
+    long lastModified() {
+        return 0;
+    }
+    
+    boolean delete() {
+        return false;
+    }
+    
+    String[] list() {
+        return null;
+    }
+    
+    boolean mkdir() {
+        return false;
+    }
+    
+    public boolean renameTo(File dest) {
+        return false;
+    }
+    
+    
+    
     
     
 }
