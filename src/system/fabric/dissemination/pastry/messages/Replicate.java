@@ -1,6 +1,7 @@
 package fabric.dissemination.pastry.messages;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import rice.p2p.commonapi.NodeHandle;
@@ -78,16 +79,30 @@ public class Replicate implements RawMessage {
 
     public void serialize(OutputBuffer buf) throws IOException {
       // TODO Auto-generated method stub
+      DataOutputBuffer out = new DataOutputBuffer(buf);
+      out.writeInt(globs.size());
       
+      for (Map.Entry<Pair<String, Long>, Glob> e : globs.entrySet()) {
+        out.writeUTF(e.getKey().first);
+        out.writeLong(e.getKey().second);
+        e.getValue().write(out);
+      }
     }
     
     /**
      * Deserialization constructor.
      */
     public Reply(InputBuffer buf) throws IOException {
-      // TODO
+      DataInputBuffer in = new DataInputBuffer(buf);
+      int n = in.readInt();
+      globs = new HashMap<Pair<String, Long>, Glob>(n);
       
-      this.globs = null;
+      for (int i = 0; i < n; i++) {
+        String core = in.readUTF();
+        long onum = in.readLong();
+        Glob g = new Glob(in);
+        globs.put(new Pair<String, Long>(core, onum), g);
+      }
     }
     
   }

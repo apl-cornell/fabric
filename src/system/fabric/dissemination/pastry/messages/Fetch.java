@@ -5,6 +5,7 @@ import java.io.IOException;
 import rice.p2p.commonapi.Endpoint;
 import rice.p2p.commonapi.Id;
 import rice.p2p.commonapi.NodeHandle;
+import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
 import fabric.common.util.LongKeyMap;
@@ -98,7 +99,7 @@ public class Fetch implements RawMessage {
   /**
    * Deserialization constructor.
    */
-  public Fetch(DataInputBuffer buf, Endpoint endpoint, NodeHandle sender)
+  public Fetch(InputBuffer buf, Endpoint endpoint, NodeHandle sender)
       throws IOException {
     this.sender = sender;
     id = endpoint.readId(buf, buf.readShort());
@@ -174,11 +175,12 @@ public class Fetch implements RawMessage {
     /**
      * Deserialization constructor.
      */
-    public Reply(DataInputBuffer buf, Endpoint endpoint) throws IOException {
-      id = endpoint.readId(buf, buf.readShort());
-      core = buf.readUTF();
-      onum = buf.readLong();
-      glob = new Glob(buf);
+    public Reply(InputBuffer buf, Endpoint endpoint) throws IOException {
+      DataInputBuffer in = new DataInputBuffer(buf);
+      id = endpoint.readId(in, in.readShort());
+      core = in.readUTF();
+      onum = in.readLong();
+      glob = new Glob(in);
     }
 
   }

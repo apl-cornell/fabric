@@ -37,7 +37,7 @@ public class DataOutputBuffer implements DataOutput, OutputBuffer {
     buf.writeByte((byte) v);
   }
 
-  public void writeBytes(String s) throws IOException {
+  public void writeBytes(String s) {
     throw new UnsupportedOperationException();
   }
 
@@ -45,7 +45,7 @@ public class DataOutputBuffer implements DataOutput, OutputBuffer {
     buf.writeChar((char) v);
   }
 
-  public void writeChars(String s) throws IOException {
+  public void writeChars(String s) {
     throw new UnsupportedOperationException();
   }
 

@@ -50,7 +50,7 @@ public class DataInputBuffer implements DataInput, InputBuffer {
     return buf.readInt();
   }
 
-  public String readLine() throws IOException {
+  public String readLine() {
     throw new UnsupportedOperationException();
   }
 
@@ -74,7 +74,7 @@ public class DataInputBuffer implements DataInput, InputBuffer {
     return 0xffff & buf.readShort();
   }
 
-  public int skipBytes(int n) throws IOException {
+  public int skipBytes(int n) {
     throw new UnsupportedOperationException();
   }
 
