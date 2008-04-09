@@ -329,7 +329,8 @@ public class Disseminator implements Application {
   
   /** Called once every aggregation interval. */
   protected void aggregateInterval() {
-    // TODO
+    // TODO decide whether to aggregate or let nodes decide whether to increase
+    // object dissemination unilaterally.
   }
   
   public boolean forward(RouteMessage message) {

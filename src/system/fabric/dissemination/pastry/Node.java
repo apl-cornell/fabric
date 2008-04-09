@@ -1,9 +1,11 @@
 package fabric.dissemination.pastry;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 
 import rice.environment.Environment;
-import rice.pastry.NodeHandle;
 import rice.pastry.NodeIdFactory;
 import rice.pastry.PastryNode;
 import rice.pastry.socket.SocketPastryNodeFactory;
@@ -22,37 +24,26 @@ public class Node {
   protected PastryNode node;
   protected Disseminator disseminator;
 
-  /**
-   * Creates a node and joins an existing ring.
-   * 
-   * @param bootstrap the NodeHandle of the bootstrap node.
-   * @throws IOException if a network error occurred.
-   */
-  public Node(NodeHandle bootstrap) throws IOException {
-    env = new Environment();
+  public Node() throws IOException {
+    env = new Environment("etc/pastry");
+    String b = env.getParameters().getString("bootstrap");
+    String[] parts = b.split(":");
+    String h = parts.length > 0 ? parts[0] : null;
+    h = h.equals("localhost") ? InetAddress.getLocalHost().getHostName() : h;
+    int p = parts.length == 2 ? Integer.parseInt(parts[1]) : 3373;
+    InetSocketAddress boot = new InetSocketAddress(h, p);
+    
+    int port = findFreePort(3373);
     NodeIdFactory idf = new RandomNodeIdFactory(env);
-    pnf = new SocketPastryNodeFactory(idf, 3373, env);
-
-    node = pnf.newNode(bootstrap);
+    pnf = new SocketPastryNodeFactory(idf, port, env);
+    
+    node = pnf.newNode(pnf.getNodeHandle(boot));
     waitForReady();
 
     disseminator = new Disseminator(node);
   }
   
-  /**
-   * Creates a node without joining an existing ring (starts its own ring).
-   * 
-   * @throws IOException if a network error occurred.
-   */
-  public Node() throws IOException {
-    this(null);
-  }
-
-  /**
-   * Returns the disseminator application of this node.
-   * 
-   * @return the disseminator of this node.
-   */
+  /** Returns the disseminator application of this node. */
   public Disseminator disseminator() {
     return disseminator;
   }
@@ -72,6 +63,21 @@ public class Node {
     }
   }
 
+  private int findFreePort(int port) {
+    while (true) {
+      try {
+        ServerSocket sock = new ServerSocket();
+        sock.bind(new InetSocketAddress(InetAddress.getLocalHost(), port));
+        sock.close();
+        break;
+      } catch (IOException e) {
+        port++;
+      }
+    }
+    
+    return port;
+  }
+  
   /**
    * Shuts down and destroys this node.
    */

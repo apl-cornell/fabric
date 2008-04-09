@@ -5,7 +5,7 @@ import rice.p2p.commonapi.NodeHandle;
 
 public class Aggregate implements Message {
 
-  private final NodeHandle sender;
+  private transient final NodeHandle sender;
 
   public Aggregate(NodeHandle sender) {
     this.sender = sender;
