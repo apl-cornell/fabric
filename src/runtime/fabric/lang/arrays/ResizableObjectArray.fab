@@ -3,7 +3,8 @@ package fabric.lang.arrays;
 import fabric.client.Core;
 
 /**
- * author: kvikram This class implements a resizable array using ObjectArray as
+ * author: kvikram
+ *  This class implements a resizable array using ObjectArray as
  * a primitive The smaller array pieces are arranged as a tree so as to support
  * efficient indexing operations. This version of ResizableArray assumes
  * elements are Object instances. For primitive types, other versions may be
@@ -122,9 +123,9 @@ public class ResizableObjectArray {
             int curIndex = newSize - 1;
             int curHeight = newHeight;
             int firstDigit;
-            while (curHeight > 1 && curNode != null) {
+            while (curHeight >= 1 && curNode != null) {
                 firstDigit = (curIndex >> (counter * this.CHUNK_SIZE_LOG2));
-                for (int count = firstDigit + 1; count < CHUNK_SIZE; count++) {
+                for (int count = firstDigit + 1; count < this.CHUNK_SIZE; count++) {
                     curNode.set(count, null);
                 }
                 curNode = (ObjectArray) curNode.get(firstDigit);
