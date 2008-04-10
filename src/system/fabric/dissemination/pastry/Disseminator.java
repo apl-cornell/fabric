@@ -25,6 +25,7 @@ import rice.pastry.routing.RoutingTable;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
+import fabric.client.UnreachableCoreException;
 import fabric.common.Pair;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.messages.AggregateInterval;
@@ -140,6 +141,63 @@ public class Disseminator implements Application {
     }
   }
   
+  /** Called by a FetchManager to fetch the specified object. */
+  public Glob fetch(RemoteCore c, long onum) {
+    log.fine("Pastry dissem fetch request " + c + " " + onum);
+    
+    Glob g = cache.get(c, onum);
+    
+    if (g != null) {
+      return g;
+    }
+    
+    Id id = idf.buildRandomId(rand);
+    Fetch f = new Fetch(localHandle(), id, c.name(), onum);
+    
+    synchronized (outstanding) {
+      outstanding.put(id, f);
+    }
+    
+    route(idf.buildId(f.toString()), f, null);
+    
+    synchronized (f) {
+      if (f.reply() == null) {
+        try { f.wait(1000); } catch (InterruptedException e) {}
+      }
+      
+      if (f.reply() == null) {
+        throw new UnreachableCoreException(c);
+      }
+      
+      return f.reply().glob();
+    }
+  }
+  
+  /** Process a Fetch.Reply. */
+  protected void fetch(final Fetch.Reply msg) {
+    log.fine("Pastry dissem fetch reply");
+    forward(msg);  // cache glob
+    
+    process(new Executable() {
+      public Object execute() {
+        Fetch f = null;
+        
+        synchronized (outstanding) {
+          f = outstanding.remove(msg.id());
+        }
+        
+        if (f != null) {
+          synchronized (f) {
+            f.reply(msg);
+            f.notifyAll();
+          }
+        }
+        
+        return null;
+      }
+    });
+  }
+
   /** Process the Fetch message. */
   protected void fetch(final Fetch msg) {
     process(new Executable() {
@@ -165,53 +223,7 @@ public class Disseminator implements Application {
     Fetch.Reply r = new Fetch.Reply(msg, g);
     route(null, r, msg.sender());
   }
-  
-  /** Process a Fetch.Reply. */
-  protected void fetch(final Fetch.Reply msg) {
-    log.fine("Pastry dissem fetch reply");
-    
-    process(new Executable() {
-      public Object execute() {
-        Fetch f = null;
-        
-        synchronized (outstanding) {
-          f = outstanding.remove(msg.id());
-        }
-        
-        if (f != null) {
-          synchronized (f) {
-            f.reply(msg);
-            f.notifyAll();
-          }
-        }
-        
-        return null;
-      }
-    });
-  }
-  
-  /** Called by a FetchManager to fetch the specified object. */
-  public Glob fetch(Core c, long onum) {
-    log.fine("Pastry dissem fetch request " + c + " " + onum);
-    
-    Id id = idf.buildRandomId(rand);
-    Fetch f = new Fetch(localHandle(), id, ((RemoteCore) c).name, onum);
-    
-    synchronized (outstanding) {
-      outstanding.put(id, f);
-    }
-    
-    route(idf.buildId(f.toString()), f, null);
-    
-    synchronized (f) {
-      while (f.reply() == null) {
-        try { f.wait(); } catch (InterruptedException e) {}
-      }
-      
-      return f.reply().glob();
-    }
-  }
-  
+
   /** Called once every replicate interval. */
   protected void replicateInterval() {
     process(new Executable() {
@@ -380,7 +392,7 @@ public class Disseminator implements Application {
     Client client = Client.getClient();
     RemoteCore c = client.getCore(msg.core());
     long onum = msg.onum();
-    Glob g = new Glob(msg.obj(), msg.related());
+    Glob g = msg.glob();
     cache.put(c, onum, g);
     
     return true;

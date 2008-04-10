@@ -23,7 +23,11 @@ public class PastryFetchManager implements FetchManager {
 
   public Glob fetch(RemoteCore c, long onum) throws AccessError,
       UnreachableCoreException {
-    return node.disseminator().fetch(c, onum);
+    try {
+      return node.disseminator().fetch(c, onum);
+    } catch (UnreachableCoreException e) {
+      return c.readObjectFromCore(onum);
+    }
   }
   
   public void destroy() {

@@ -1,6 +1,6 @@
 package fabric.dissemination.pastry;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import fabric.client.Core;
@@ -15,8 +15,12 @@ import fabric.dissemination.Glob;
  */
 public class Cache {
   
-  protected Map<Pair<Core, Long>, Glob> map = 
-    new HashMap<Pair<Core, Long>, Glob>();
+  protected LinkedHashMap<Pair<Core, Long>, Glob> map = 
+      new LinkedHashMap<Pair<Core, Long>, Glob>(16, 0.75f, true) {
+    @Override protected boolean removeEldestEntry(Map.Entry<Pair<Core, Long>, Glob> eldest) {
+      return size() > 10;
+    }
+  };
   
   /**
    * Retrieves a glob from the cache, without trying to fetch it from the core.

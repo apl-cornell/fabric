@@ -8,8 +8,6 @@ import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
-import fabric.common.util.LongKeyMap;
-import fabric.core.SerializedObject;
 import fabric.dissemination.Glob;
 
 /**
@@ -130,16 +128,6 @@ public class Fetch implements RawMessage {
       return glob;
     }
     
-    /** The object requested. */
-    public SerializedObject obj() {
-      return glob.obj();
-    }
-    
-    /** The related objects. */
-    public LongKeyMap<SerializedObject> related() {
-      return glob.related();
-    }
-
     /** The id of this message. */
     public Id id() {
       return id;
@@ -164,12 +152,12 @@ public class Fetch implements RawMessage {
     }
 
     public void serialize(OutputBuffer buf) throws IOException {
-      DataOutputBuffer b = new DataOutputBuffer(buf);
-      b.writeShort(id.getType());
-      id.serialize(b);
-      b.writeUTF(core);
-      b.writeLong(onum);
-      glob.write(b);
+      DataOutputBuffer out = new DataOutputBuffer(buf);
+      out.writeShort(id.getType());
+      id.serialize(out);
+      out.writeUTF(core);
+      out.writeLong(onum);
+      glob.write(out);
     }
 
     /**
