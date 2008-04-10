@@ -67,69 +67,72 @@ public abstract class Message<R extends Message.Response> {
     // XXX This is pretty ugly. Can it be cleaned up?
     // XXX Is this code in the right place?
 
-    boolean needToConnect = !core.isConnected();
-    Client client = Client.getClient();
-    final int retries = client.retries;
-
-    int hostIdx = 0;
-
-    // These will be filled in with real values if needed.
-    List<InetSocketAddress> hosts = null;
-    Principal corePrincipal = null;
-    int numHosts = 0;
-    int startHostIdx = 0;
-
-    for (int retry = 0; retries < 0 || retry < retries;) {
-      try {
-        if (needToConnect) {
-          if (hosts == null) {
-            Pair<List<InetSocketAddress>, Principal> entry =
-                client.nameService.lookupCore(core);
-            hosts = entry.first;
-            corePrincipal = entry.second;
-
-            numHosts = hosts.size();
-            startHostIdx = Client.RAND.nextInt(numHosts);
+    // FIXME? do we want to lock entire core?
+    synchronized (core) {
+      boolean needToConnect = !core.isConnected();
+      Client client = Client.getClient();
+      final int retries = client.retries;
+  
+      int hostIdx = 0;
+  
+      // These will be filled in with real values if needed.
+      List<InetSocketAddress> hosts = null;
+      Principal corePrincipal = null;
+      int numHosts = 0;
+      int startHostIdx = 0;
+  
+      for (int retry = 0; retries < 0 || retry < retries;) {
+        try {
+          if (needToConnect) {
+            if (hosts == null) {
+              Pair<List<InetSocketAddress>, Principal> entry =
+                  client.nameService.lookupCore(core);
+              hosts = entry.first;
+              corePrincipal = entry.second;
+  
+              numHosts = hosts.size();
+              startHostIdx = Client.RAND.nextInt(numHosts);
+            }
+  
+            // Attempt to establish a connection.
+            int hostNum = (startHostIdx + hostIdx) % numHosts;
+            core.connect(client, core, hosts.get(hostNum), corePrincipal);
+          } else {
+            // Set the flag for the next loop iteration in case we fail.
+            needToConnect = true;
           }
-
-          // Attempt to establish a connection.
-          int hostNum = (startHostIdx + hostIdx) % numHosts;
-          core.connect(client, core, hosts.get(hostNum), corePrincipal);
-        } else {
-          // Set the flag for the next loop iteration in case we fail.
-          needToConnect = true;
-        }
-
-        // Attempt to send our message and obtain a reply.
-        return send(core, core.objectInputStream(), core.objectOutputStream());
-      } catch (NoSuchCoreError e) {
-        // Connected to a node that doesn't host the core we're interested in.
-        // Increment loop counter variables.
-        hostIdx++;
-        if (hostIdx == numHosts) {
-          hostIdx = 0;
-          if (retries >= 0) retry++;
-        }
-        continue;
-      } catch (IOException e) {
-        // Retry.
-        if (hosts == null) {
-          // Attempt to reuse an existing connection failed. Just restart the
-          // loop.
+  
+          // Attempt to send our message and obtain a reply.
+          return send(core, core.objectInputStream(), core.objectOutputStream());
+        } catch (NoSuchCoreError e) {
+          // Connected to a node that doesn't host the core we're interested in.
+          // Increment loop counter variables.
+          hostIdx++;
+          if (hostIdx == numHosts) {
+            hostIdx = 0;
+            if (retries >= 0) retry++;
+          }
+          continue;
+        } catch (IOException e) {
+          // Retry.
+          if (hosts == null) {
+            // Attempt to reuse an existing connection failed. Just restart the
+            // loop.
+            continue;
+          }
+  
+          // Increment loop counter variables.
+          hostIdx++;
+          if (hostIdx == numHosts) {
+            hostIdx = 0;
+            if (retries >= 0) retry++;
+          }
           continue;
         }
-
-        // Increment loop counter variables.
-        hostIdx++;
-        if (hostIdx == numHosts) {
-          hostIdx = 0;
-          if (retries >= 0) retry++;
-        }
-        continue;
       }
+  
+      throw new UnreachableCoreException(core);
     }
-
-    throw new UnreachableCoreException(core);
   }
 
   /**
