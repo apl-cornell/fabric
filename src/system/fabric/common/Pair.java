@@ -22,7 +22,6 @@ public class Pair<T1,T2> implements Serializable {
 
   @Override
   public int hashCode() {
-    // TODO Auto-generated method stub
     return first.hashCode() ^ second.hashCode();
   }
 }
