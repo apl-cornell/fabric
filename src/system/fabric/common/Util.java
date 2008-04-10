@@ -77,6 +77,9 @@ public final class Util {
   /**
    * Gets the proxy class of a given class. If the given class is already a
    * proxy class, it is returned back to the caller.
+   * 
+   * @deprecated Hack for testing and developing ResizableArray. Remove once
+   * that's done.
    */
   @SuppressWarnings("unchecked")
   @Deprecated
