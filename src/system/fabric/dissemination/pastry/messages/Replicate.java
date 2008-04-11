@@ -78,7 +78,6 @@ public class Replicate implements RawMessage {
     }
 
     public void serialize(OutputBuffer buf) throws IOException {
-      // TODO Auto-generated method stub
       DataOutputBuffer out = new DataOutputBuffer(buf);
       out.writeInt(globs.size());
       
