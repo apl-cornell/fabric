@@ -40,6 +40,7 @@ public class BdbStore implements ObjectStore {
   protected Database store;
   protected Database prepared;
   protected Database prepared2;
+  protected Database meta;
   
   private DatabaseEntry tidCounter;
   private DatabaseEntry onumCounter;
@@ -73,6 +74,7 @@ public class BdbStore implements ObjectStore {
       store = env.openDatabase(null, "store", dbconf);
       prepared = env.openDatabase(null, "prepared", dbconf);
       prepared2 = env.openDatabase(null, "prepared2", dbconf);
+      meta = env.openDatabase(null, "meta", dbconf);
       
       log.info("Bdb databases opened");
     } catch (DatabaseException e) {
@@ -158,12 +160,12 @@ public class BdbStore implements ObjectStore {
       DatabaseEntry data = new DatabaseEntry();
       long c = 1;
       
-      if (prepared.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
+      if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
         c = toLong(data.getData());
       }
       
       data.setData(toBytes(c + num));
-      prepared.put(txn, onumCounter, data);
+      meta.put(txn, onumCounter, data);
       txn.commit();
       
       long[] onums = new long[num];
@@ -318,12 +320,12 @@ public class BdbStore implements ObjectStore {
       DatabaseEntry data = new DatabaseEntry();
       int c = 0;
       
-      if (prepared.get(txn, tidCounter, data, LockMode.DEFAULT) == SUCCESS) {
+      if (meta.get(txn, tidCounter, data, LockMode.DEFAULT) == SUCCESS) {
         c = toInt(data.getData());
       }
 
       data.setData(toBytes(c + 1));
-      prepared.put(txn, tidCounter, data);
+      meta.put(txn, tidCounter, data);
       txn.commit();
       
       return c;
