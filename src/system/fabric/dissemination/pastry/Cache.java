@@ -1,7 +1,8 @@
 package fabric.dissemination.pastry;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.lang.ref.SoftReference;
+import java.util.HashMap;
+import java.util.Set;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
@@ -15,12 +16,8 @@ import fabric.dissemination.Glob;
  */
 public class Cache {
   
-  protected LinkedHashMap<Pair<Core, Long>, Glob> map = 
-      new LinkedHashMap<Pair<Core, Long>, Glob>(16, 0.75f, true) {
-    @Override protected boolean removeEldestEntry(Map.Entry<Pair<Core, Long>, Glob> eldest) {
-      return size() > 10;
-    }
-  };
+  protected HashMap<Pair<Core, Long>, SoftReference<Glob>> map = 
+      new HashMap<Pair<Core, Long>, SoftReference<Glob>>();
   
   /**
    * Retrieves a glob from the cache, without trying to fetch it from the core.
@@ -47,14 +44,31 @@ public class Cache {
     Glob g = null;
     
     if (fetch) {
-      g = c.readObjectFromCore(onum);
-    
-      synchronized (map) {
-        map.put(key, g);
-      }
+      g = fetch(c, onum);
     } else {
       synchronized (map) {
-        g = map.get(key);
+        SoftReference<Glob> r = map.get(key);
+        
+        if (r != null) {
+          g = r.get();
+          
+          if (g == null) {
+            map.remove(key);
+          }
+        }
+      }
+    }
+    
+    return g;
+  }
+  
+  private Glob fetch(RemoteCore c, long onum) {
+    Glob g = c.readObjectFromCore(onum);
+    
+    if (g != null) {
+      synchronized (map) {
+        Pair<Core, Long> key = new Pair<Core, Long>(c, onum);
+        map.put(key, new SoftReference<Glob>(g));
       }
     }
     
@@ -68,16 +82,20 @@ public class Cache {
    * @param onum the onum of the object.
    * @param g the glob.
    */
-  public void put(Core c, long onum, Glob g) {
+  public void put(RemoteCore c, long onum, Glob g) {
     Pair<Core, Long> key = new Pair<Core, Long>(c, onum);
     
     synchronized (map) {
-      Glob old = map.get(key);
+      Glob old = get(c, onum);
       
       if (old == null || old.obj().getVersion() < g.obj().getVersion()) {
-        map.put(key, g);
+        map.put(key, new SoftReference<Glob>(g));
       }
     }
+  }
+  
+  public Set<Pair<Core, Long>> keys() {
+    return map.keySet();
   }
 
 }

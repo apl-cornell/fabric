@@ -288,7 +288,7 @@ public class Disseminator implements Application {
         Map<Pair<String, Long>, Glob> globs = 
           new HashMap<Pair<String, Long>, Glob>();
         
-        for (Pair<Core, Long> k : cache.map.keySet()) {
+        for (Pair<Core, Long> k : cache.keys()) {
           rice.pastry.Id id = (rice.pastry.Id) idf.buildId(k.first + "/" + k.second);
           boolean send = false;
           
