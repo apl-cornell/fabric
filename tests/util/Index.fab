@@ -1,10 +1,7 @@
 package util;
 
 /** This class encapsulates a multimap - a map that can contain multiple values
- *  for each key.encapsulates a multimap - a map that can contain multiple
- *  values for each key.encapsulates a multimap - a map that can contain
- *  multiple values for each key.encapsulates a multimap - a map that can
- *  contain multiple values for each key.
+ *  for each key.
  */
 
 public class Index {
