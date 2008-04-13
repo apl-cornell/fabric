@@ -156,11 +156,11 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     // Ignore non-static fields.
     if (!flags.isStatic()) return super.interfaceMember(pr, parent);
 
-    // Include final static fields in the interface, ensuring that they're not
-    // private.
+    // Include final static fields in the interface, ensuring that they're
+    // neither protected nor private.
     if (flags.isFinal()) {
       return Collections.singletonList((ClassMember) fieldDecl.flags(flags
-          .clearPrivate()));
+          .clearPrivate().clearProtected()));
     }
 
     List<ClassMember> result = new ArrayList<ClassMember>();
