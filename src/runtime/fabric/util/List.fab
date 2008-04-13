@@ -234,7 +234,7 @@ public interface List extends Collection
    * calculated as follows:
    * 
 <p><pre>hashCode = 1;
-Iterator i = list.iterator();
+Iterator i = list.iterator(core);
 while (i.hasNext())
 {
   Object obj = i.next();
@@ -276,7 +276,7 @@ while (i.hasNext())
    *
    * @return an Iterator over the elements of this list, in order
    */
-  Iterator iterator();
+  Iterator iterator(fabric.client.Core core);
 
   /**
    * Obtain the last index at which a given object is to be found in this
@@ -297,7 +297,7 @@ while (i.hasNext())
    * @return a ListIterator over the elements of this list, in order, starting
    *         at the beginning
    */
-  ListIterator listIterator();
+  ListIterator listIterator(fabric.client.Core core);
 
   /**
    * Obtain a ListIterator over this list, starting at a given position.
@@ -310,7 +310,7 @@ while (i.hasNext())
    *         at index
    * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
    */
-  ListIterator listIterator(int index);
+  ListIterator listIterator(fabric.client.Core core, int index);
 
   /**
    * Remove the element at a given position in this list (optional operation).

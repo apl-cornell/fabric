@@ -504,7 +504,7 @@ public class Hashtable extends Dictionary
    */
   public synchronized void putAll(Map m)
   {
-    Iterator itr = m.entrySet().iterator();
+    Iterator itr = m.entrySet().iterator(LOCAL_CORE);
 
     while (itr.hasNext())
       {
@@ -573,10 +573,10 @@ public class Hashtable extends Dictionary
    */
   public synchronized String toString()
   {
-    // Since we are already synchronized, and entrySet().iterator()
+    // Since we are already synchronized, and entrySet().iterator(core)
     // would repeatedly re-lock/release the monitor, we directly use the
     // unsynchronized EntryIterator instead.
-    Iterator entries = new EntryIterator();
+    Iterator entries = new EntryIterator@LOCAL_CORE();
     StringBuffer r = new StringBuffer("{");
     for (int pos = size; pos > 0; pos--)
       {
@@ -616,9 +616,9 @@ public class Hashtable extends Dictionary
             return size;
           }
 
-          public Iterator iterator()
+          public Iterator iterator(fabric.client.Core core)
           {
-            return new KeyIterator();
+            return new KeyIterator@core();
           }
 
           public void clear()
@@ -674,9 +674,9 @@ public class Hashtable extends Dictionary
             return size;
           }
 
-          public Iterator iterator()
+          public Iterator iterator(fabric.client.Core core)
           {
-            return new ValueIterator();
+            return new ValueIterator@core();
           }
 
           public void clear()
@@ -726,9 +726,9 @@ public class Hashtable extends Dictionary
             return size;
           }
 
-          public Iterator iterator()
+          public Iterator iterator(fabric.client.Core core)
           {
-            return new EntryIterator();
+            return new EntryIterator@core();
           }
 
           public void clear()
@@ -790,10 +790,10 @@ public class Hashtable extends Dictionary
    */
   public synchronized int hashCode()
   {
-    // Since we are already synchronized, and entrySet().iterator()
+    // Since we are already synchronized, and entrySet().iterator(core)
     // would repeatedly re-lock/release the monitor, we directly use the
     // unsynchronized EntryIterator instead.
-    Iterator itr = new EntryIterator();
+    Iterator itr = new EntryIterator@LOCAL_CORE();
     int hashcode = 0;
     for (int pos = size; pos > 0; pos--)
       hashcode += itr.next().hashCode();
@@ -854,7 +854,7 @@ public class Hashtable extends Dictionary
    */
   void putAllInternal(Map m)
   {
-    Iterator itr = m.entrySet().iterator();
+    Iterator itr = m.entrySet().iterator(LOCAL_CORE);
     size = 0;
 
     while (itr.hasNext())
@@ -936,10 +936,10 @@ public class Hashtable extends Dictionary
 
     s.writeInt(buckets.length);
     s.writeInt(size);
-    // Since we are already synchronized, and entrySet().iterator()
+    // Since we are already synchronized, and entrySet().iterator(core)
     // would repeatedly re-lock/release the monitor, we directly use the
     // unsynchronized EntryIterator instead.
-    Iterator it = new EntryIterator();
+    Iterator it = new EntryIterator@LOCAL_CORE();
     while (it.hasNext())
       {
         HashEntry entry = (HashEntry) it.next();

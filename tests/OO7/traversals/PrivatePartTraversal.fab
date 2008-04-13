@@ -1,6 +1,8 @@
 package OO7.traversals;
 import OO7.*;
 
+import fabric.client.Client;
+import fabric.client.Core;
 import fabric.util.Iterator;
 
 /** Common base class for various traversals.  This class represents a visitor
@@ -11,7 +13,8 @@ public abstract class PrivatePartTraversal extends Traversal {
 
   public void visitBenchmark (Benchmark b) {
     atomic {
-      Iterator i = b.modulesById().values().iterator();
+      Core local = Client.getClient().getLocalCore();
+      Iterator i = b.modulesById().values().iterator(local);
       while (i.hasNext())
         visitModule((Module) i.next());
     }
@@ -22,13 +25,15 @@ public abstract class PrivatePartTraversal extends Traversal {
   }
   
   public void visitComplexAssembly (ComplexAssembly ca) {
-    Iterator i = ca.subAssemblies().iterator();
+    Core local = Client.getClient().getLocalCore();
+    Iterator i = ca.subAssemblies().iterator(local);
     while (i.hasNext())
       ((Assembly) i.next()).accept(this);
   }
   
   public void visitBaseAssembly (BaseAssembly ba) {
-    Iterator i = ba.componentsShar().iterator();
+    Core local = Client.getClient().getLocalCore();
+    Iterator i = ba.componentsShar().iterator(local);
     while (i.hasNext())
       ((CompositePart) i.next()).accept(this);
   }

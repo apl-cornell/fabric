@@ -30,7 +30,7 @@ public class T2c extends PrivatePartTraversal {
       current.setY(x);
     }
 
-    Iterator iter = current.from().iterator();
+    Iterator iter = current.from().iterator(Client.getClient().getLocalCore());
     while (iter.hasNext()) {
       Connection connection = (Connection) iter.next();
       AtomicPart part = connection.to();

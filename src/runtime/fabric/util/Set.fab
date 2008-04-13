@@ -173,7 +173,7 @@ public interface Set extends Collection
    *
    * @return a set iterator
    */
-  Iterator iterator();
+  Iterator iterator(fabric.client.Core core);
 
   /**
    * Removes the specified element from this set (optional operation). If

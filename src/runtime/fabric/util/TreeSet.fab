@@ -147,7 +147,7 @@ public class TreeSet extends AbstractSet
   public TreeSet(SortedSet sortedSet)
   {
     map = new TreeMap(sortedSet.comparator());
-    Iterator itr = sortedSet.iterator();
+    Iterator itr = sortedSet.iterator(LOCAL_CORE);
     ((TreeMap) map).putKeysLinear(itr, sortedSet.size());
   }
 
@@ -188,7 +188,7 @@ public class TreeSet extends AbstractSet
   {
     boolean result = false;
     int pos = c.size();
-    Iterator itr = c.iterator();
+    Iterator itr = c.iterator(LOCAL_CORE);
     while (--pos >= 0)
       result |= (map.put(itr.next(), "") == null);
     return result;
@@ -293,9 +293,9 @@ public class TreeSet extends AbstractSet
    *
    * @return an iterator
    */
-  public Iterator iterator()
+  public Iterator iterator(fabric.client.Core core)
   {
-    return map.keySet().iterator();
+    return map.keySet().iterator(core);
   }
 
   /**
@@ -386,7 +386,7 @@ public class TreeSet extends AbstractSet
   private void writeObject(ObjectOutputStream s) throws IOException
   {
     s.defaultWriteObject();
-    Iterator itr = map.keySet().iterator();
+    Iterator itr = map.keySet().iterator(LOCAL_CORE);
     int pos = map.size();
     s.writeObject(map.comparator());
     s.writeInt(pos);

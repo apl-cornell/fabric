@@ -43,7 +43,7 @@ package fabric.util;
  * implementations. In order to create an unmodifiable Map, subclass
  * AbstractMap and implement the <code>entrySet</code> (usually via an
  * AbstractSet).  To make it modifiable, also implement <code>put</code>,
- * and have <code>entrySet().iterator()</code> support <code>remove</code>.
+ * and have <code>entrySet().iterator(Core)</code> support <code>remove</code>.
  * <p>
  *
  * It is recommended that classes which extend this support at least the
@@ -71,6 +71,9 @@ public abstract class AbstractMap implements Map
   static final int KEYS = 0,
                    VALUES = 1,
                    ENTRIES = 2;
+
+  protected static final fabric.client.Core LOCAL_CORE =
+    fabric.client.Client.getClient().getLocalCore();
 
   /**
    * The cache for {@link #keySet()}.
@@ -155,7 +158,7 @@ public abstract class AbstractMap implements Map
    */
   public boolean containsKey(Object key)
   {
-    Iterator entries = entrySet().iterator();
+    Iterator entries = entrySet().iterator(LOCAL_CORE);
     int pos = size();
     while (--pos >= 0)
       if (equals(key, ((Map.Entry) entries.next()).getKey()))
@@ -178,7 +181,7 @@ public abstract class AbstractMap implements Map
    */
   public boolean containsValue(Object value)
   {
-    Iterator entries = entrySet().iterator();
+    Iterator entries = entrySet().iterator(LOCAL_CORE);
     int pos = size();
     while (--pos >= 0)
       if (equals(value, ((Map.Entry) entries.next()).getValue()))
@@ -207,7 +210,7 @@ public abstract class AbstractMap implements Map
    * Returns the value mapped by the given key. Returns <code>null</code> if
    * there is no mapping.  However, in Maps that accept null values, you
    * must rely on <code>containsKey</code> to determine if a mapping exists.
-   * This iteration takes linear time, searching entrySet().iterator() of
+   * This iteration takes linear time, searching entrySet().iterator(Core) of
    * the key.  Many implementations override this method.
    *
    * @param key the key to look up
@@ -217,7 +220,7 @@ public abstract class AbstractMap implements Map
    */
   public Object get(Object key)
   {
-    Iterator entries = entrySet().iterator();
+    Iterator entries = entrySet().iterator(LOCAL_CORE);
     int pos = size();
     while (--pos >= 0)
       {
@@ -268,7 +271,7 @@ public abstract class AbstractMap implements Map
    * there is a slight possibility of creating two sets.
    *
    * @return a Set view of the keys
-   * @see Set#iterator()
+   * @see Set#iterator(fabric.client.Core)
    * @see #size()
    * @see #containsKey(Object)
    * @see #values()
@@ -300,6 +303,54 @@ public abstract class AbstractMap implements Map
           return containsKey(key);
         }
 
+	class KeysIterator implements Iterator
+	{
+	  KeysIterator(fabric.client.Core core) {
+	    map_iterator = entrySet().iterator(core);
+	  }
+
+	  /**
+	   * The iterator returned by <code>entrySet()</code>.
+	   */
+	  private final Iterator map_iterator;
+
+	  /**
+	   * Returns true if a call to <code>next()</code> will
+	   * return another key.
+	   *
+	   * @return True if the iterator has not yet reached
+	   *         the last key.
+	   */
+	  public boolean hasNext()
+	  {
+	    return map_iterator.hasNext();
+	  }
+
+	  /**
+	   * Returns the key from the next entry retrieved
+	   * by the underlying <code>entrySet()</code> iterator.
+	   *
+	   * @return The next key.
+	   */
+	  public Object next()
+	  {
+	    return ((Map.Entry) map_iterator.next()).getKey();
+	  }
+
+	  /**
+	   * Removes the map entry which has a key equal
+	   * to that returned by the last call to
+	   * <code>next()</code>.
+	   *
+	   * @throws UnsupportedOperationException if the
+	   *         map doesn't support removal.
+	   */
+	  public void remove()
+	  {
+	    map_iterator.remove();
+	  }
+	}
+
 	/**
 	 * Returns an iterator which iterates over the keys
 	 * in the backing map, using a wrapper around the
@@ -307,51 +358,9 @@ public abstract class AbstractMap implements Map
 	 *
 	 * @return An iterator over the keys.
 	 */
-        public Iterator iterator()
+        public Iterator iterator(final fabric.client.Core core)
         {
-          return new Iterator()
-          {
-	    /**
-	     * The iterator returned by <code>entrySet()</code>.
-	     */
-            private final Iterator map_iterator = entrySet().iterator();
-
-	    /**
-	     * Returns true if a call to <code>next()</code> will
-	     * return another key.
-	     *
-	     * @return True if the iterator has not yet reached
-	     *         the last key.
-	     */
-            public boolean hasNext()
-            {
-              return map_iterator.hasNext();
-            }
-
-	    /**
-	     * Returns the key from the next entry retrieved
-	     * by the underlying <code>entrySet()</code> iterator.
-	     *
-	     * @return The next key.
-	     */
-            public Object next()
-            {
-              return ((Map.Entry) map_iterator.next()).getKey();
-            }
-
-	    /**
-	     * Removes the map entry which has a key equal
-	     * to that returned by the last call to
-	     * <code>next()</code>.
-	     *
-	     * @throws UnsupportedOperationException if the
-	     *         map doesn't support removal.
-	     */
-            public void remove()
-            {
-              map_iterator.remove();
-            }
-          };
+          return new KeysIterator@core(core);
         }
       };
     return keys;
@@ -398,7 +407,7 @@ public abstract class AbstractMap implements Map
    */
   public void putAll(Map m)
   {
-    Iterator entries = m.entrySet().iterator();
+    Iterator entries = m.entrySet().iterator(LOCAL_CORE);
     int pos = m.size();
     while (--pos >= 0)
       {
@@ -426,7 +435,7 @@ public abstract class AbstractMap implements Map
    */
   public Object remove(Object key)
   {
-    Iterator entries = entrySet().iterator();
+    Iterator entries = entrySet().iterator(LOCAL_CORE);
     int pos = size();
     while (--pos >= 0)
       {
@@ -469,7 +478,7 @@ public abstract class AbstractMap implements Map
    */
   public String toString()
   {
-    Iterator entries = entrySet().iterator();
+    Iterator entries = entrySet().iterator(LOCAL_CORE);
     StringBuffer r = new StringBuffer("{");
     for (int pos = size(); pos > 0; pos--)
       {
@@ -499,7 +508,7 @@ public abstract class AbstractMap implements Map
    * occurs, there is a slight possibility of creating two collections.
    *
    * @return a Collection view of the values
-   * @see Collection#iterator()
+   * @see Collection#iterator(fabric.client.Core)
    * @see #size()
    * @see #containsValue(Object)
    * @see #keySet()
@@ -532,6 +541,54 @@ public abstract class AbstractMap implements Map
           return containsValue(value);
         }
 
+	class ValuesIterator implements Iterator
+	{
+	  ValuesIterator(fabric.client.Core core) {
+	    map_iterator = entrySet().iterator(core);
+	  }
+
+	  /**
+	   * The iterator returned by <code>entrySet()</code>.
+	   */
+	  private final Iterator map_iterator;
+
+	  /**
+	   * Returns true if a call to <code>next()</call> will
+	   * return another value.
+	   *
+	   * @return True if the iterator has not yet reached
+	   * the last value.
+	   */
+	  public boolean hasNext()
+	  {
+	    return map_iterator.hasNext();
+	  }
+
+	  /**
+	   * Returns the value from the next entry retrieved
+	   * by the underlying <code>entrySet()</code> iterator.
+	   *
+	   * @return The next value.
+	   */
+	  public Object next()
+	  {
+	    return ((Map.Entry) map_iterator.next()).getValue();
+	  }
+
+	  /**
+	   * Removes the map entry which has a key equal
+	   * to that returned by the last call to
+	   * <code>next()</code>.
+	   *
+	   * @throws UnsupportedOperationException if the
+	   *         map doesn't support removal.
+	   */
+	  public void remove()
+	  {
+	    map_iterator.remove();
+	  }
+	}
+
 	/**
 	 * Returns an iterator which iterates over the
 	 * values in the backing map, by using a wrapper
@@ -539,51 +596,9 @@ public abstract class AbstractMap implements Map
 	 *
 	 * @return An iterator over the values.
 	 */
-        public Iterator iterator()
+        public Iterator iterator(final fabric.client.Core core)
         {
-          return new Iterator()
-          {
-	    /**
-	     * The iterator returned by <code>entrySet()</code>.
-	     */
-            private final Iterator map_iterator = entrySet().iterator();
-
-	    /**
-	     * Returns true if a call to <code>next()</call> will
-	     * return another value.
-	     *
-	     * @return True if the iterator has not yet reached
-	     * the last value.
-	     */
-            public boolean hasNext()
-            {
-              return map_iterator.hasNext();
-            }
-
-	    /**
-	     * Returns the value from the next entry retrieved
-	     * by the underlying <code>entrySet()</code> iterator.
-	     *
-	     * @return The next value.
-	     */
-            public Object next()
-            {
-              return ((Map.Entry) map_iterator.next()).getValue();
-            }
-
-	    /**
-	     * Removes the map entry which has a key equal
-	     * to that returned by the last call to
-	     * <code>next()</code>.
-	     *
-	     * @throws UnsupportedOperationException if the
-	     *         map doesn't support removal.
-	     */
-            public void remove()
-            {
-              map_iterator.remove();
-            }
-          };
+          return new ValuesIterator@core(core);
         }
       };
     return values;

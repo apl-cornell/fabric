@@ -448,7 +448,7 @@ public class LinkedList extends AbstractSequentialList
     if (csize == 0)
       return false;
 
-    Iterator itr = c.iterator();
+    Iterator itr = c.iterator(LOCAL_CORE);
 
     // Get the entries just before and after index. If index is at the start
     // of the list, BEFORE is null. If index is at the end of the list, AFTER
@@ -634,10 +634,10 @@ public class LinkedList extends AbstractSequentialList
    *        next(), or size() to be initially positioned at the end of the list
    * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
    */
-  public ListIterator listIterator(int index)
+  public ListIterator listIterator(fabric.client.Core core, int index)
   {
     checkBoundsInclusive(index);
-    return new LinkedListItr(index);
+    return new LinkedListItr@core(index);
   }
 
 //  /**

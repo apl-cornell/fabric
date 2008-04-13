@@ -435,9 +435,9 @@ public class LinkedHashMap extends HashMap
    * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
    * @return the appropriate iterator
    */
-  Iterator iterator(final int type)
+  Iterator iterator(fabric.client.Core core, final int type)
   {
-    return new Iterator()
+    return new Iterator@core()
     {
       /** The current Entry. */
       LinkedHashEntry current = root;

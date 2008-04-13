@@ -1,6 +1,11 @@
 package fabric.util;
 
+import fabric.client.Core;
+
 public interface Iterable {
-  Iterator iterator();
+  /**
+   * Creates an interator on the given core.
+   */
+  Iterator iterator(Core core);
 }
 

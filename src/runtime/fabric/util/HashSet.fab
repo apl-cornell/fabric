@@ -210,10 +210,10 @@ public class HashSet extends AbstractSet
    * @return a set iterator
    * @see ConcurrentModificationException
    */
-  public Iterator iterator()
+  public Iterator iterator(fabric.client.Core core)
   {
     // Avoid creating intermediate keySet() object by using non-public API.
-    return map.iterator(HashMap.KEYS);
+    return map.iterator(core, HashMap.KEYS);
   }
 
   /**

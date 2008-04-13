@@ -2918,7 +2918,7 @@ public class Arrays
     implements Serializable, RandomAccess
   {
     // We override the necessary methods, plus others which will be much
-    // more efficient with direct iteration rather than relying on iterator().
+    // more efficient with direct iteration rather than relying on iterator(core).
 
     /**
      * Compatible with JDK 1.4.

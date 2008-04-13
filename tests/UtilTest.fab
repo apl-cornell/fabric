@@ -42,7 +42,8 @@ public class UtilTest {
     }
 
     System.out.println("0 through 9 should follow.");
-    for (Iterator it = list.iterator(); it.hasNext(); ) {
+    Core local = Client.getClient().getLocalCore();
+    for (Iterator it = list.iterator(local); it.hasNext(); ) {
       System.out.println(map.get(it.next()));
     }
   }

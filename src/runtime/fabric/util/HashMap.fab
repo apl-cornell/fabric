@@ -389,7 +389,7 @@ public class HashMap extends AbstractMap
   public void putAll(Map m)
   {
     atomic {
-    Iterator itr = m.entrySet().iterator();
+    Iterator itr = m.entrySet().iterator(LOCAL_CORE);
       while (itr.hasNext())
         {
           Map.Entry e = (Map.Entry) itr.next();
@@ -528,10 +528,10 @@ public class HashMap extends AbstractMap
             return size;
           }
   
-          public Iterator iterator()
+          public Iterator iterator(fabric.client.Core core)
           {
             // Cannot create the iterator directly, because of LinkedHashMap.
-            return HashMap.this.iterator(KEYS);
+            return HashMap.this.iterator(core, KEYS);
           }
   
           public void clear()
@@ -583,10 +583,10 @@ public class HashMap extends AbstractMap
             return size;
           }
   
-          public Iterator iterator()
+          public Iterator iterator(fabric.client.Core core)
           {
             // Cannot create the iterator directly, because of LinkedHashMap.
-            return HashMap.this.iterator(VALUES);
+            return HashMap.this.iterator(core, VALUES);
           }
   
           public void clear()
@@ -624,10 +624,10 @@ public class HashMap extends AbstractMap
             return size;
           }
   
-          public Iterator iterator()
+          public Iterator iterator(fabric.client.Core core)
           {
             // Cannot create the iterator directly, because of LinkedHashMap.
-            return HashMap.this.iterator(ENTRIES);
+            return HashMap.this.iterator(core, ENTRIES);
           }
   
           public void clear()
@@ -721,9 +721,9 @@ public class HashMap extends AbstractMap
    * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
    * @return the appropriate iterator
    */
-  Iterator iterator(int type)
+  Iterator iterator(fabric.client.Core core, int type)
   {
-    return new HashIterator(type);
+    return new HashIterator@core(type);
   }
 
   /**
@@ -735,7 +735,7 @@ public class HashMap extends AbstractMap
    */
   void putAllInternal(Map m)
   {
-    Iterator itr = m.entrySet().iterator();
+    Iterator itr = m.entrySet().iterator(LOCAL_CORE);
     size = 0;
     while (itr.hasNext())
       {
