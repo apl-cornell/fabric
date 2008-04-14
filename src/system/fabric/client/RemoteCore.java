@@ -19,8 +19,8 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
 import javax.security.auth.x500.X500Principal;
 
-import fabric.common.AccessError;
 import fabric.common.FabricException;
+import fabric.common.FetchException;
 import fabric.common.InternalError;
 import fabric.common.NoSuchCoreError;
 import fabric.common.Surrogate;
@@ -190,8 +190,7 @@ public class RemoteCore implements Core {
    * @return The requested object
    * @throws FabricException
    */
-  public Object.$Impl readObject(long onum) throws AccessError,
-      UnreachableCoreException {
+  public Object.$Impl readObject(long onum) throws FetchException {
     // Check object table
     Object.$Impl result = readObjectFromCache(onum);
     if (result != null) return result;
@@ -213,8 +212,7 @@ public class RemoteCore implements Core {
    * @return The constructed $Impl
    * @throws FabricException
    */
-  private Object.$Impl fetchObject(long onum) throws AccessError,
-      UnreachableCoreException {
+  private Object.$Impl fetchObject(long onum) throws FetchException {
     Object.$Impl result = null;
     SoftReference<SerializedObject> serialRef = serialized.remove(onum);
     
@@ -261,8 +259,7 @@ public class RemoteCore implements Core {
    * @return The constructed $Impl
    * @throws FabricException
    */
-  public Glob readObjectFromCore(long onum) throws AccessError,
-      UnreachableCoreException {
+  public Glob readObjectFromCore(long onum) throws FetchException {
     ReadMessage.Response response = new ReadMessage(onum).send(this);
     Glob g = new Glob(response.serializedResult, response.related);
     return g;

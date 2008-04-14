@@ -4,10 +4,12 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import fabric.common.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.core.PrepareRequest;
 import fabric.core.SerializedObject;
 import fabric.core.TransactionManager;
+import fabric.core.store.StoreException;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -43,7 +45,11 @@ public class InProcessCore extends RemoteCore {
 
   @Override
   public long createOnum() {
-    return tm.newOIDs(client, 1)[0];
+    try {
+      return tm.newOIDs(client, 1)[0];
+    } catch (StoreException e) {
+      throw new InternalError(e);
+    }
   }
 
   @Override

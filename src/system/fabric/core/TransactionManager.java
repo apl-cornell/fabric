@@ -5,8 +5,8 @@ import java.util.NoSuchElementException;
 
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
-import fabric.common.AccessError;
 import fabric.common.util.LongKeyMap;
+import fabric.core.store.StoreException;
 
 public class TransactionManager {
 
@@ -25,7 +25,9 @@ public class TransactionManager {
    * Instruct the transaction manager that the given transaction is aborting
    */
   public synchronized void abortTransaction(Principal client, int transactionID) {
-    store.rollback(client, transactionID);
+    try {
+      store.rollback(client, transactionID);
+    } catch (StoreException e) {}
   }
 
   /**
@@ -35,7 +37,7 @@ public class TransactionManager {
       throws TransactionCommitFailedException {
     try {
       store.commit(client, transactionID);
-    } catch (final AccessError e) {
+    } catch (final StoreException e) {
       throw new TransactionCommitFailedException("Insufficient Authorization");
     } catch (final RuntimeException e) {
       throw new TransactionCommitFailedException("something went wrong");
@@ -81,7 +83,7 @@ public class TransactionManager {
    *           insufficiently priviledged to execute the transaction.
    */
   public int prepare(Principal client, PrepareRequest req)
-  throws TransactionPrepareFailedException {
+      throws TransactionPrepareFailedException {
     try {
       synchronized (store) {
 
@@ -98,7 +100,7 @@ public class TransactionManager {
           } catch(NoSuchElementException exc) {
             throw new TransactionPrepareFailedException(
                 "Object " + o.getOnum() + " does not exist.");
-          }
+          } catch (StoreException e) {}
         }
         
         // Check creates and initial version numbers
@@ -133,18 +135,20 @@ public class TransactionManager {
         
         return store.prepare(client, req);
       }
-    } catch(final AccessError e) {
+    } catch(final StoreException e) {
       throw new TransactionPrepareFailedException("Insufficient privileges");
     } catch(final NoSuchElementException e) {
       throw new TransactionPrepareFailedException("Object does not exist");
     }
   }
 
-  public synchronized SerializedObject read(Principal client, long onum) {
+  public synchronized SerializedObject read(Principal client, long onum)
+      throws StoreException {
     return store.read(client, onum);
   }
 
-  public synchronized long[] newOIDs(Principal client, int num) {
+  public synchronized long[] newOIDs(Principal client, int num)
+      throws StoreException {
     return store.newOnums(num);
   }
   

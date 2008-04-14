@@ -23,9 +23,10 @@ import javax.net.ssl.SSLSocketFactory;
 
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
-import fabric.common.AccessError;
+import fabric.common.AccessException;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.core.store.StoreException;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
 import fabric.messages.CommitTransactionMessage;
@@ -245,10 +246,14 @@ public class Worker extends Thread {
   /**
    * Processes the given request for new OIDs.
    */
-  public AllocateMessage.Response handle(AllocateMessage msg) {
+  public AllocateMessage.Response handle(AllocateMessage msg) throws AccessException {
     logger.finer("Handling Allocate Message");
-    long[] onums = transactionManager.newOIDs(client, msg.num);
-    return new AllocateMessage.Response(onums);
+    try {
+      long[] onums = transactionManager.newOIDs(client, msg.num);
+      return new AllocateMessage.Response(onums);
+    } catch (StoreException e) {
+      throw new AccessException();
+    }
   }
 
   /**
@@ -298,37 +303,44 @@ public class Worker extends Thread {
   /**
    * Processes the given read request.
    */
-  public ReadMessage.Response handle(ReadMessage msg) throws AccessError {
+  public ReadMessage.Response handle(ReadMessage msg) throws AccessException {
     logger.finer("Handling Read Message");
     this.numReads++;
 
     LongKeyMap<SerializedObject> group = new LongKeyHashMap<SerializedObject>();
-    SerializedObject obj = transactionManager.read(client, msg.onum);
-    if (obj != null) {
-      // Traverse object graph and add more objects to the object group.
-      for (long onum : obj.getIntracoreRefs()) {
-        SerializedObject related = transactionManager.read(client, onum);
-        if (related != null) {
-          group.put(onum, related);
-          int count = 0;
-          if (numSendsByType.containsKey(related.getClassName()))
-            count = numSendsByType.get(related.getClassName());
-          count++;
-          numSendsByType.put(related.getClassName(), count);
+    SerializedObject obj = null;
+    
+    try {
+      obj = transactionManager.read(client, msg.onum);
+    
+      if (obj != null) {
+        // Traverse object graph and add more objects to the object group.
+        for (long onum : obj.getIntracoreRefs()) {
+          SerializedObject related = transactionManager.read(client, onum);
+          if (related != null) {
+            group.put(onum, related);
+            int count = 0;
+            if (numSendsByType.containsKey(related.getClassName()))
+              count = numSendsByType.get(related.getClassName());
+            count++;
+            numSendsByType.put(related.getClassName(), count);
+          }
         }
+  
+        this.numObjectsSent += group.size() + 1;
+        int count = 0;
+        if (numSendsByType.containsKey(obj.getClassName()))
+          count = numSendsByType.get(obj.getClassName());
+        count++;
+        numSendsByType.put(obj.getClassName(), count);
+  
+        return new ReadMessage.Response(obj, group);
       }
-
-      this.numObjectsSent += group.size() + 1;
-      int count = 0;
-      if (numSendsByType.containsKey(obj.getClassName()))
-        count = numSendsByType.get(obj.getClassName());
-      count++;
-      numSendsByType.put(obj.getClassName(), count);
-
-      return new ReadMessage.Response(obj, group);
+    } catch (StoreException e) {
+      throw new AccessException();
     }
 
-    throw new AccessError();
+    throw new AccessException();
   }
   
 }

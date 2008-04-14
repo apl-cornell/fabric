@@ -7,9 +7,11 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import fabric.common.ACLPolicy;
+import fabric.common.InternalError;
 import fabric.common.Pair;
 import fabric.common.Util;
 import fabric.core.SerializedObject.RefTypeEnum;
+import fabric.core.store.StoreException;
 
 /**
  * This is a simple surrogate policy. It keeps no state between requests, and
@@ -59,7 +61,11 @@ public class SimpleSurrogateManager implements SurrogateManager {
           
           if (onum == null) {
             // create surrogate
-            onum = store.newOnums(1)[0];
+            try {
+              onum = store.newOnums(1)[0];
+            } catch (StoreException e) {
+              throw new InternalError(e);
+            }
             // TODO: policy?
             req.creates.add(new SerializedObject(onum, ACLPolicy.DEFAULT, ref));
           }

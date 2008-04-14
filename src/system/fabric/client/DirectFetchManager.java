@@ -1,6 +1,6 @@
 package fabric.client;
 
-import fabric.common.AccessError;
+import fabric.common.FetchException;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 
@@ -9,8 +9,7 @@ import fabric.dissemination.Glob;
  */
 public class DirectFetchManager implements FetchManager {
 
-  public Glob fetch(RemoteCore c, long onum) throws AccessError,
-      UnreachableCoreException {
+  public Glob fetch(RemoteCore c, long onum) throws FetchException {
     return c.readObjectFromCore(onum);
   }
   

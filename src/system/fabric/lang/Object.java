@@ -12,7 +12,7 @@ import fabric.client.Core;
 import fabric.client.TransactionManager;
 import fabric.client.UnreachableCoreException;
 import fabric.common.ACLPolicy;
-import fabric.common.AccessError;
+import fabric.common.FetchException;
 import fabric.common.InternalError;
 import fabric.common.Pair;
 import fabric.common.Policy;
@@ -58,12 +58,16 @@ public interface Object {
       ref = new SoftReference<$Impl>(impl);
     }
 
-    protected final $Impl fetch() throws AccessError, UnreachableCoreException {
+    protected final $Impl fetch() {
       $Impl result = ref.get();
 
       if (result == null) {
         // Object has been evicted.
-        result = core.readObject(onum);
+        try {
+          result = core.readObject(onum);
+        } catch (FetchException e) {
+          // TODO figure out how to communicate error
+        }
         setRef(result);
       }
 

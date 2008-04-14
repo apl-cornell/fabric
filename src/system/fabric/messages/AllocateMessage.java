@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.client.UnreachableCoreException;
+import fabric.common.AccessException;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
 import fabric.core.Worker;
@@ -73,7 +74,7 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
    * @see fabric.messages.Message#dispatch(fabric.core.Worker)
    */
   @Override
-  public Response dispatch(Worker w) {
+  public Response dispatch(Worker w) throws AccessException {
     return w.handle(this);
   }
 

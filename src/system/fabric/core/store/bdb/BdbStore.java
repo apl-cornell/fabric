@@ -23,7 +23,6 @@ import com.sleepycat.je.EnvironmentConfig;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.Transaction;
 
-import fabric.common.AccessError;
 import fabric.common.InternalError;
 import fabric.core.ObjectStore;
 import fabric.core.PrepareRequest;
@@ -90,7 +89,7 @@ public class BdbStore implements ObjectStore {
     }
   }
 
-  public void commit(Principal client, int tid) throws AccessError {
+  public void commit(Principal client, int tid) {
     log.info("Bdb commit begin tid " + tid);
     
     try {
@@ -152,7 +151,7 @@ public class BdbStore implements ObjectStore {
     return false;
   }
 
-  public long[] newOnums(int num) throws AccessError {
+  public long[] newOnums(int num) {
     log.fine("Bdb new onums begin");
     
     try {
@@ -182,8 +181,7 @@ public class BdbStore implements ObjectStore {
     }
   }
 
-  public int prepare(Principal client, PrepareRequest req)
-      throws AccessError, IllegalArgumentException {
+  public int prepare(Principal client, PrepareRequest req) {
     int tid = newTid();
     log.info("Bdb prepare begin tid " + tid);
     
@@ -216,8 +214,8 @@ public class BdbStore implements ObjectStore {
     return tid;
   }
 
-  public SerializedObject read(Principal client, long onum) throws AccessError,
-      NoSuchElementException {
+  public SerializedObject read(Principal client, long onum)
+      throws NoSuchElementException {
     log.fine("Bdb read onum " + onum);
     DatabaseEntry key = new DatabaseEntry(toBytes(onum));
     DatabaseEntry data = new DatabaseEntry();
@@ -234,7 +232,7 @@ public class BdbStore implements ObjectStore {
     throw new NoSuchElementException();
   }
 
-  public void rollback(Principal client, int tid) throws AccessError {
+  public void rollback(Principal client, int tid) {
     log.info("Bdb rollback begin tid " + tid);
     
     try {

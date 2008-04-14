@@ -3,7 +3,8 @@ package fabric.core;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.NoSuchElementException;
-import fabric.common.AccessError;
+
+import fabric.core.store.StoreException;
 
 /**
  * <p>
@@ -38,10 +39,10 @@ public interface ObjectStore {
    *          the read, write, and create sets for the transaction to prepare
    * @return a transaction identifier that can subsequently be passed to
    *         commit() or abort()
-   * @throws AccessError
+   * @throws StoreException
    *           if the client has insufficient privileges.
    */
-  int prepare(Principal client, PrepareRequest req) throws AccessError;
+  int prepare(Principal client, PrepareRequest req) throws StoreException;
 
   /**
    * Cause the objects prepared in transaction [tid] to be committed. The
@@ -52,10 +53,10 @@ public interface ObjectStore {
    * @param tid
    *          the identifier (returned by prepare) corresponding to the
    *          transaction
-   * @throws AccessError
+   * @throws StoreException
    *           if the principal differs from the caller of prepare()
    */
-  void commit(Principal client, int tid) throws AccessError;
+  void commit(Principal client, int tid) throws StoreException;
 
   /**
    * Cause the objects prepared in transaction [tid] to be discarded.
@@ -65,10 +66,10 @@ public interface ObjectStore {
    * @param tid
    *          the identifier (returned by prepare) corresponding to the
    *          transaction
-   * @throws AccessError
+   * @throws StoreException
    *           if the principal differs from the caller of prepare()
    */
-  void rollback(Principal client, int tid) throws AccessError;
+  void rollback(Principal client, int tid) throws StoreException;
 
   /**
    * Return the object stored at a particular onum.
@@ -78,14 +79,14 @@ public interface ObjectStore {
    * @param onum
    *          the identifier
    * @return the object
-   * @throws AccessError
+   * @throws StoreException
    *           if client is not allowed to read the object (according to the
    *           access control policy associated with the object
    * @throws NoSuchElementException
    *           if there is no object stored at the given onum
    */
   SerializedObject read(Principal client, long onum)
-      throws AccessError, NoSuchElementException;
+      throws StoreException, NoSuchElementException;
 
   /**
    * Determine whether an onum has outstanding uncommitted changes or reads.
@@ -113,7 +114,7 @@ public interface ObjectStore {
    *          the number of onums to return
    * @return num fresh onums
    */
-  long[] newOnums(int num) throws AccessError;
+  long[] newOnums(int num) throws StoreException;
   
   /**
    * Checks whether an object with the corresponding onum exists, in either

@@ -88,7 +88,12 @@ public class ObjectCount {
       long onum = toVisit.pop();
       visited.add(onum);
 
-      Object.$Impl impl = core.readObject(onum);
+      Object.$Impl impl = null;
+      try {
+        impl = core.readObject(onum);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
       SerializedObject so = new SerializedObject(impl);
       for (long ref : so.getIntracoreRefs())
         if (!visited.contains(ref) && !toVisit.contains(ref)) toVisit.push(ref);

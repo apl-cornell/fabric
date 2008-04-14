@@ -6,6 +6,7 @@ import java.util.Set;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
+import fabric.common.FetchException;
 import fabric.common.Pair;
 import fabric.dissemination.Glob;
 
@@ -63,7 +64,11 @@ public class Cache {
   }
   
   private Glob fetch(RemoteCore c, long onum) {
-    Glob g = c.readObjectFromCore(onum);
+    Glob g = null;
+    
+    try {
+      g = c.readObjectFromCore(onum);
+    } catch (FetchException e) {}
     
     if (g != null) {
       synchronized (map) {

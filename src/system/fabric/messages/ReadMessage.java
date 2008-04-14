@@ -6,9 +6,9 @@ import java.io.ObjectOutputStream;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.client.UnreachableCoreException;
-import fabric.common.AccessError;
+import fabric.common.AccessException;
 import fabric.common.FabricException;
+import fabric.common.FetchException;
 import fabric.common.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -102,7 +102,7 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
    * @see fabric.messages.Message#dispatch(fabric.core.Worker)
    */
   @Override
-  public Response dispatch(Worker w) throws AccessError {
+  public Response dispatch(Worker w) throws AccessException {
     return w.handle(this);
   }
 
@@ -112,13 +112,10 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
    * @see fabric.messages.Message#send(fabric.client.Core)
    */
   @Override
-  public Response send(RemoteCore core) throws AccessError,
-      UnreachableCoreException {
+  public Response send(RemoteCore core) throws FetchException {
     try {
       return super.send(core);
-    } catch (AccessError e) {
-      throw e;
-    } catch (UnreachableCoreException e) {
+    } catch (FetchException e) {
       throw e;
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from core.", e);

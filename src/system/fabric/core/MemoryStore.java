@@ -10,12 +10,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import fabric.common.AccessError;
 import fabric.common.Resources;
 import fabric.common.Util;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.core.store.StoreException;
 
 /**
  * <p>An in-memory implementation of the ObjectStore implementation.  This class
@@ -98,9 +98,7 @@ public class MemoryStore implements ObjectStore {
     log.info("Mem store loaded");
   }
 
-  public int prepare(Principal client, PrepareRequest req)
-               throws AccessError {
-    
+  public int prepare(Principal client, PrepareRequest req) {
     // create and register PendingTransaction
     int tid = ++maxTid;
     PendingTransaction entry = new PendingTransaction();
@@ -123,7 +121,7 @@ public class MemoryStore implements ObjectStore {
   }
 
   @SuppressWarnings("unchecked")
-  public void commit(Principal client, int tid) throws AccessError {
+  public void commit(Principal client, int tid) throws StoreException {
     PendingTransaction tx = remove(client, tid);
 
     // merge in the objects
@@ -131,7 +129,7 @@ public class MemoryStore implements ObjectStore {
       objectTable.put(o.getOnum(), o);
   }
 
-  public void rollback(Principal client, int tid) throws AccessError {
+  public void rollback(Principal client, int tid) throws StoreException {
     remove(client, tid);
   }
 
@@ -150,7 +148,7 @@ public class MemoryStore implements ObjectStore {
     return pendingByOnum.containsKey(onum);
   }
 
-  public long[] newOnums(int num) throws AccessError {
+  public long[] newOnums(int num) {
     final long[] result = new long[num < 0 ? 0 : num];
 
     for (int i = 0; i < num; i++)
@@ -162,12 +160,13 @@ public class MemoryStore implements ObjectStore {
   /**
    * Helper method to check permissions and update the pending object table for a commit or rollback
    */
-  private PendingTransaction remove(Principal client, int tid) throws AccessError {
+  private PendingTransaction remove(Principal client, int tid)
+      throws StoreException {
     PendingTransaction tx = pendingByTid.get(tid);
     if (tx == null)
-      throw new AccessError();
+      throw new StoreException();
     if (!client.equals(tx.owner))
-      throw new AccessError();
+      throw new StoreException();
 
     // remove the pending transaction
     pendingByTid.remove(tid);

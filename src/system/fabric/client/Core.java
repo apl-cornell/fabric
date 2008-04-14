@@ -2,7 +2,7 @@ package fabric.client;
 
 import java.util.Collection;
 
-import fabric.common.AccessError;
+import fabric.common.FetchException;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object.$Impl;
 
@@ -29,8 +29,7 @@ public interface Core extends java.io.Serializable {
    *          The identifier of the requested object
    * @return The requested object
    */
-  $Impl readObject(long onum) throws AccessError,
-      UnreachableCoreException;
+  $Impl readObject(long onum) throws FetchException;
   
   /**
    * Returns the requested $Impl object if it exists in the object cache.
