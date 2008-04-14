@@ -77,7 +77,10 @@ public class MemoryStore implements ObjectStore {
     
     try {
       ObjectInputStream oin = new ObjectInputStream(Resources.readFile("var", name));
-      this.objectTable = (LongKeyMap<SerializedObject>) oin.readObject();
+      int size = oin.readInt();
+      this.objectTable = new LongKeyHashMap<SerializedObject>(size);
+      for (int i = 0; i < size; i++)
+        this.objectTable.put(oin.readLong(), new SerializedObject(oin));
     } catch (Exception e) {
       // Do nothing
       // TODO: distinguish invalid files from nonexistent
@@ -186,7 +189,11 @@ public class MemoryStore implements ObjectStore {
 
   public void close() throws IOException {
     ObjectOutputStream oout = new ObjectOutputStream(Resources.writeFile("var", name));
-    oout.writeObject(this.objectTable);
+    oout.writeInt(this.objectTable.size());
+    for (LongKeyMap.Entry<SerializedObject> entry : this.objectTable.entrySet()) {
+      oout.writeLong(entry.getKey());
+      entry.getValue().write(oout);
+    }
     oout.close();
   }
 }

@@ -1,11 +1,9 @@
 package fabric.core;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 
+import fabric.common.FastSerializable;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -16,7 +14,7 @@ import fabric.common.util.LongKeyMap;
  * 
  * @author mdgeorge
  */
-public final class PrepareRequest implements Iterable<Long>, Serializable {
+public final class PrepareRequest implements Iterable<Long>, FastSerializable {
 
   /** The set of created objects */
   public Collection<SerializedObject> creates;
@@ -133,7 +131,7 @@ public final class PrepareRequest implements Iterable<Long>, Serializable {
   /**
    * Writes this PrepareRequest out to the given output stream.
    */
-  public void write(ObjectOutputStream out) throws IOException {
+  public void write(DataOutput out) throws IOException {
     // Write out reads.
     if (reads == null) {
       out.writeInt(0);

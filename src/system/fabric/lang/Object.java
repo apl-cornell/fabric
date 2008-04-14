@@ -3,7 +3,6 @@ package fabric.lang;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.util.Iterator;
 import java.util.List;
@@ -11,11 +10,8 @@ import java.util.List;
 import fabric.client.Core;
 import fabric.client.TransactionManager;
 import fabric.client.UnreachableCoreException;
-import fabric.common.ACLPolicy;
-import fabric.common.FetchException;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.Pair;
-import fabric.common.Policy;
 import fabric.core.SerializedObject.RefTypeEnum;
 
 /**
@@ -37,7 +33,7 @@ public interface Object {
    * pointed to by a soft reference. This class abstracts away the code for
    * maintaining that soft reference.
    */
-  public static class $Proxy implements Object, Serializable {
+  public static class $Proxy implements Object {
     private final Core core;
     private final long onum;
     private transient SoftReference<$Impl> ref;
@@ -131,7 +127,7 @@ public interface Object {
    * $Impl objects hold the actual code and data of Fabric objects and may be
    * evicted from memory.
    */
-  public static class $Impl implements Object, Serializable, Cloneable {
+  public static class $Impl implements Object, Cloneable {
     private Core $core;
     private long $onum;
     private transient $Proxy $proxy;
@@ -539,7 +535,7 @@ public interface Object {
   /**
    * $Static objects hold all static state for the class.
    */
-  public static interface $Static extends Object, Serializable, Cloneable {
+  public static interface $Static extends Object, Cloneable {
     public static class $Proxy extends Object.$Proxy implements $Static {
       public $Proxy($Static.$Impl impl) {
         super(impl);

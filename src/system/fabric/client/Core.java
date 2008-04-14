@@ -6,7 +6,7 @@ import fabric.common.FetchException;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object.$Impl;
 
-public interface Core extends java.io.Serializable {
+public interface Core {
   /**
    * Returns this core's host name.
    */

@@ -1,13 +1,12 @@
 package fabric.common;
 
-import java.io.Serializable;
 import java.security.Principal;
 
 /**
  * This represents the security (confidentiality, integrity, availability) and
  * persistence policy for a Fabric object.
  */
-public interface Policy extends Serializable {
+public interface Policy {
   // TODO add availability, persistence
   
   /**

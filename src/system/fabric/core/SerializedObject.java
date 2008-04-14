@@ -1,32 +1,21 @@
 package fabric.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import fabric.client.Core;
-import fabric.common.ACLPolicy;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.Pair;
-import fabric.common.Policy;
-import fabric.common.Surrogate;
 import fabric.lang.Object.$Impl;
 
 /**
  * <code>$Impl</code> objects are stored on cores in serialized form as
  * <code>SerializedObject</code>s.
  */
-public final class SerializedObject implements Serializable {
+public final class SerializedObject implements FastSerializable {
   
   public static enum RefTypeEnum {
     NULL, INLINE, ONUM, REMOTE
