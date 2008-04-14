@@ -40,14 +40,8 @@ public abstract class Message<R extends Message.Response> {
    */
   protected final MessageType messageType;
 
-  /**
-   * Type tag for the reply message.
-   */
-  private transient final Class<R> resultType;
-
-  protected Message(MessageType messageType, Class<R> resultType) {
+  protected Message(MessageType messageType) {
     this.messageType = messageType;
-    this.resultType = resultType;
   }
 
   /**
@@ -173,14 +167,7 @@ public abstract class Message<R extends Message.Response> {
 
     // Read the response.
     try {
-      try {
-        return resultType.getDeclaredConstructor(Core.class,
-            ObjectInputStream.class).newInstance(core, in);
-      } catch (InvocationTargetException e) {
-        Throwable cause = e.getCause();
-        if (cause instanceof IOException) throw (IOException) cause;
-        throw e;
-      }
+      return response(core, in);
     } catch (RuntimeException e) {
       throw e;
     } catch (Exception e) {
@@ -264,6 +251,16 @@ public abstract class Message<R extends Message.Response> {
    * @throws FabricException
    */
   public abstract R dispatch(Worker handler) throws FabricException;
+  
+  /**
+   * Creates a Response message of the appropriate type using the provided
+   * input stream.
+   * 
+   * @param c Core where the message came from.
+   * @param in Input stream containing the message.
+   * @return A Response message with the appropriate type.
+   */
+  public abstract R response(Core c, ObjectInputStream in) throws IOException;
 
   /**
    * Writes this message out on the given output stream. Only used by the

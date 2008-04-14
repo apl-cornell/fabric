@@ -85,7 +85,7 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
   public final long onum;
 
   public ReadMessage(long onum) {
-    super(MessageType.READ_ONUM, Response.class);
+    super(MessageType.READ_ONUM);
     this.onum = onum;
   }
 
@@ -122,6 +122,11 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
     }
   }
 
+  @Override
+  public Response response(Core c, ObjectInputStream in) throws IOException {
+    return new Response(c, in);
+  }
+  
   /*
    * (non-Javadoc)
    * 
@@ -131,5 +136,5 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
   public void write(ObjectOutputStream out) throws IOException {
     out.writeLong(onum);
   }
-  
+
 }

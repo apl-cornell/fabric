@@ -42,7 +42,7 @@ public class CommitTransactionMessage extends
   public final int transactionID;
 
   public CommitTransactionMessage(int transactionID) {
-    super(MessageType.COMMIT_TRANSACTION, Response.class);
+    super(MessageType.COMMIT_TRANSACTION);
     this.transactionID = transactionID;
   }
 
@@ -82,6 +82,11 @@ public class CommitTransactionMessage extends
     }
   }
 
+  @Override
+  public Response response(Core c, ObjectInputStream in) {
+    return new Response(c, in);
+  }
+  
   /*
    * (non-Javadoc)
    * 

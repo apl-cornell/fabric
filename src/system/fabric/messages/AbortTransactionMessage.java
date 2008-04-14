@@ -39,7 +39,7 @@ public class AbortTransactionMessage extends
   public final int transactionID;
 
   public AbortTransactionMessage(int transactionID) {
-    super(MessageType.ABORT_TRANSACTION, Response.class);
+    super(MessageType.ABORT_TRANSACTION);
     this.transactionID = transactionID;
   }
 
@@ -77,6 +77,11 @@ public class AbortTransactionMessage extends
     }
   }
 
+  @Override
+  public Response response(Core c, ObjectInputStream in) {
+    return new Response(c, in);
+  }
+  
   /*
    * (non-Javadoc)
    * 

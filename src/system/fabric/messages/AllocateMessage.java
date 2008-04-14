@@ -57,7 +57,7 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
    *                The number of object IDs to allocate.
    */
   public AllocateMessage(int num) {
-    super(MessageType.ALLOCATE_ONUMS, Response.class);
+    super(MessageType.ALLOCATE_ONUMS);
     this.num = num;
   }
 
@@ -94,6 +94,11 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
     }
   }
 
+  @Override
+  public Response response(Core c, ObjectInputStream in) throws IOException {
+    return new Response(c, in);
+  }
+  
   /*
    * (non-Javadoc)
    * 

@@ -3,7 +3,9 @@ package fabric.messages;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
@@ -88,7 +90,7 @@ public class PrepareTransactionMessage extends
    */
   public PrepareTransactionMessage(Collection<$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<$Impl> writes) {
-    super(MessageType.PREPARE_TRANSACTION, Response.class);
+    super(MessageType.PREPARE_TRANSACTION);
 
     this.creates = toCreate;
     this.reads = reads;
@@ -103,7 +105,7 @@ public class PrepareTransactionMessage extends
    * @throws IOException
    */
   PrepareTransactionMessage(ObjectInputStream in) throws IOException {
-    super(MessageType.PREPARE_TRANSACTION, Response.class);
+    super(MessageType.PREPARE_TRANSACTION);
     this.creates = null;
     this.writes = null;
 
@@ -167,6 +169,11 @@ public class PrepareTransactionMessage extends
     }
   }
 
+  @Override
+  public Response response(Core c, ObjectInputStream in) throws IOException {
+    return new Response(c, in);
+  }
+  
   /*
    * (non-Javadoc)
    * 
