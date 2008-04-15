@@ -1,3 +1,7 @@
+#!/bin/bash
+
+source "$(dirname $0)/defs"
+
 if [[ $# != 1 ]] ; then
   echo "Generates SSL keys and certificates for a core or client"
   echo "and adds them to the common trust store."
