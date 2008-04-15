@@ -12,7 +12,8 @@ rsync -arzvP --rsh=ssh --delete \
   users.emulab.net:/proj/Fabric/fabric/
 
 # Fix up scripts.
-# ssh users.emulab.net 'for i in /proj/Fabric/fabric/bin/*.in ; do cat /proj/Fabric/fabric/bin/emulab-defs $i > /proj/Fabric/fabric/bin/$(basename $i .in) ; done'
+ssh users.emulab.net \
+  mv /proj/Fabric/fabric/bin/emulab-defs /proj/Fabric/fabric/bin/defs
 
 # Fix up permissions.
 ssh users.emulab.net 'chmod -R g+rw,o-rwx /proj/Fabric/fabric'
