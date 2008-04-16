@@ -12,9 +12,9 @@ fi
 
 DIR="${TOP}/etc/keys"
 
-keytool -genkey -alias $1 -keyalg rsa -keysize 2048 -dname "CN=$1, OU=Fabric, O=Cornell University, L=Ithaca, ST=NY, C=US" -keypass 'password' -keystore "${DIR}/$1".keystore -storepass 'password'
-keytool -export -alias $1 -keystore "${DIR}/$1".keystore -keypass 'password' -file "${DIR}/$1".cert -storepass 'password'
+keytool -genkey -alias $1 -keyalg rsa -keysize 2048 -dname "CN=$1, OU=Fabric, O=Cornell University, L=Ithaca, ST=NY, C=US" -keypass 'password' -keystore "$(fixfilename ${DIR}/$1.keystore)" -storepass 'password'
+keytool -export -alias $1 -keystore "$(fixfilename ${DIR}/$1.keystore)" -keypass 'password' -file "$(fixfilename ${DIR}/$1.cert)" -storepass 'password'
 
-keytool -import -alias $1 -keystore "${DIR}"/trust.keystore -file "${DIR}/$1".cert -storepass 'password'
+keytool -import -alias $1 -keystore "$(fixfilename ${DIR}/trust.keystore)" -file "$(fixfilename ${DIR}/$1.cert)" -storepass 'password'
 rm "${DIR}/$1".cert
 
