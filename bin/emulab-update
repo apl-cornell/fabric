@@ -8,8 +8,11 @@ rsync -arzvP --rsh=ssh --delete \
   "${TOP}"/classes \
   "${TOP}"/etc \
   "${TOP}"/rt-classes \
-  "${TOP}"/var \
+  "${TOP}"/out \
   users.emulab.net:/proj/Fabric/fabric/
+
+rsync -arzvP --rsh=ssh --delete "${TOP}"/lib/*.jar \
+  users.emulab.net:/proj/Fabric/fabric/lib/
 
 # Fix up scripts.
 ssh users.emulab.net \
