@@ -1,0 +1,15 @@
+package regression;
+
+interface Static05 {
+	
+	static final int STATIC_FINAL = 1;
+	
+}
+
+class Static05Impl implements Static05 {
+	
+	public static int foo() {
+		return STATIC_FINAL;
+	}
+	
+}
