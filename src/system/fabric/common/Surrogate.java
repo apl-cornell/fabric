@@ -10,7 +10,6 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.core.SerializedObject.RefTypeEnum;
 import fabric.lang.Object.$Impl;
-import fabric.lang.auth.Label;
 
 /**
  * Encapsulates an intercore pointer.
@@ -31,7 +30,7 @@ public final class Surrogate extends $Impl {
    */
   private final String coreName;
 
-  public Surrogate(Core core, long onum, int version, Label label,
+  public Surrogate(Core core, long onum, int version, long label,
       ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
       Iterator<Long> intracoreRefs) throws IOException, ClassNotFoundException {
     super(core, onum, version, label, serializedInput, refTypes, intracoreRefs);

@@ -12,7 +12,6 @@ import fabric.common.Pair;
 import fabric.common.Util;
 import fabric.core.SerializedObject.RefTypeEnum;
 import fabric.lang.Object;
-import fabric.lang.auth.Label;
 
 public interface ObjectArray<T extends Object> extends Object {
   int get$length();
@@ -64,7 +63,7 @@ public interface ObjectArray<T extends Object> extends Object {
      * Used for deserializing.
      */
     @SuppressWarnings("unchecked")
-    public $Impl(Core core, long onum, int version, Label label,
+    public $Impl(Core core, long onum, int version, long label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {

@@ -381,7 +381,7 @@ public interface Object {
      * @param version
      *                The object's version number.
      * @param label
-     *                The object's label.
+     *                Onum of the object's label.
      * @param serializedInput
      *                A stream of serialized primitive values and inlined
      *                objects.
@@ -394,13 +394,13 @@ public interface Object {
      *                an onum.
      */
     @SuppressWarnings("unused")
-    public $Impl(Core core, long onum, int version, Label label,
+    public $Impl(Core core, long onum, int version, long label,
         ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
       this.$core = core;
       this.$onum = onum;
-      this.$label = label;
+      this.$label = new Label.$Proxy(core, label);
       this.$version = version;
       this.$readTransactionID = -1;
       this.$createTransactionID = -1;

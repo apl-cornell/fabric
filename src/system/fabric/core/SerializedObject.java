@@ -17,7 +17,6 @@ import fabric.client.Core;
 import fabric.common.FastSerializable;
 import fabric.common.InternalError;
 import fabric.common.Pair;
-import fabric.common.Policy;
 import fabric.common.Surrogate;
 import fabric.lang.Object.$Impl;
 import fabric.lang.auth.Label;
@@ -332,7 +331,7 @@ public final class SerializedObject implements FastSerializable {
     long onum = in.readLong();
     int version = in.readInt();
     
-    Label label = new Label.$Proxy(core, in.readLong());
+    long label = in.readLong();
 
     // Read the object body.
     byte[] serializedData = new byte[in.readInt()];
@@ -358,7 +357,7 @@ public final class SerializedObject implements FastSerializable {
     try {
       // Call the deserialization constructor.
       return ($Impl) c.getConstructor(Core.class, long.class, int.class,
-          Label.class, ObjectInput.class, Iterator.class, Iterator.class)
+          long.class, ObjectInput.class, Iterator.class, Iterator.class)
           .newInstance(core, onum, version, label,
               new ObjectInputStream(new ByteArrayInputStream(serializedData)),
               refTypes.iterator(), intracoreRefs.iterator());
@@ -382,7 +381,7 @@ public final class SerializedObject implements FastSerializable {
     Class<?> c = Class.forName(className);
     try {
       return ($Impl) c.getConstructor(Core.class, long.class, int.class,
-          Policy.class, ObjectInput.class, Iterator.class, Iterator.class)
+          long.class, ObjectInput.class, Iterator.class, Iterator.class)
           .newInstance(core, onum, version, label,
               new ObjectInputStream(new ByteArrayInputStream(serializedData)),
               refTypes.iterator(), intracoreRefs.iterator());

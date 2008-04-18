@@ -52,7 +52,7 @@ public interface Principal extends Object {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
     }
 
-    public $Impl(Core core, long onum, int version, Label label,
+    public $Impl(Core core, long onum, int version, long label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
