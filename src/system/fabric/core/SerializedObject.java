@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import fabric.client.Core;
-import fabric.common.ACLPolicy;
 import fabric.common.FastSerializable;
 import fabric.common.InternalError;
 import fabric.common.Pair;
@@ -50,9 +49,9 @@ public final class SerializedObject implements FastSerializable {
   private int version;
 
   /**
-   * The object's security policy.
+   * Onum of the object's security label. (Label must be on this core.)
    */
-  private final Label label;
+  private final long label;
 
   /**
    * The object's primitive field and inlined object data.
@@ -90,7 +89,7 @@ public final class SerializedObject implements FastSerializable {
   public SerializedObject($Impl obj) {
     this.onum = obj.$getOnum();
     this.className = obj.getClass().getName();
-    this.label = obj.$getLabel();
+    this.label = obj.$getLabel().$getOnum();
     this.version = obj.$version;
 
     ByteArrayOutputStream serializedData = new ByteArrayOutputStream();
@@ -115,7 +114,7 @@ public final class SerializedObject implements FastSerializable {
    * 
    * @param onum
    *                The local object number for the surrogate.
-   * @param policy
+   * @param label
    *                The policy for the surrogate.
    * @param remoteRef
    *                The name of the remote object being referred to.
@@ -123,7 +122,7 @@ public final class SerializedObject implements FastSerializable {
   SerializedObject(long onum, Label label, Pair<String, Long> remoteRef) {
     this.onum = onum;
     this.className = Surrogate.class.getName();
-    this.label = label;
+    this.label = label.$getOnum();
 
     ByteArrayOutputStream serializedData = new ByteArrayOutputStream();
     try {
@@ -149,7 +148,7 @@ public final class SerializedObject implements FastSerializable {
     return className;
   }
 
-  public Label getLabel() {
+  public long getLabel() {
     return label;
   }
 
@@ -197,8 +196,7 @@ public final class SerializedObject implements FastSerializable {
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
     
-    // XXX FIXME TODO write out the policy.
-    //out.writeObject(impl.$getPolicy());
+    out.writeLong(impl.$getLabel().$getOnum());
 
     // Get the object to serialize itself into a bunch of buffers.
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -244,8 +242,7 @@ public final class SerializedObject implements FastSerializable {
     out.writeLong(onum);
     out.writeInt(version);
     
-    // XXX FIXME TODO write out the policy.
-    // out.writeObject(policy);
+    out.writeLong(label);
 
     // Write out the object's contents.
     out.writeInt(serializedData.length);
@@ -280,8 +277,8 @@ public final class SerializedObject implements FastSerializable {
     this.className = in.readUTF();
     this.onum = in.readLong();
     this.version = in.readInt();
-    // XXX FIXME TODO Read in a real policy.
-    this.label = Label.DEFAULT;
+    
+    this.label = in.readLong();
 
     // Read the object body.
     this.serializedData = new byte[in.readInt()];
@@ -334,8 +331,8 @@ public final class SerializedObject implements FastSerializable {
     Class<?> c = Class.forName(in.readUTF());
     long onum = in.readLong();
     int version = in.readInt();
-    // XXX FIXME TODO Read in a real policy.
-    Policy policy = ACLPolicy.DEFAULT;
+    
+    Label label = new Label.$Proxy(core, in.readLong());
 
     // Read the object body.
     byte[] serializedData = new byte[in.readInt()];
@@ -361,8 +358,8 @@ public final class SerializedObject implements FastSerializable {
     try {
       // Call the deserialization constructor.
       return ($Impl) c.getConstructor(Core.class, long.class, int.class,
-          Policy.class, ObjectInput.class, Iterator.class, Iterator.class)
-          .newInstance(core, onum, version, policy,
+          Label.class, ObjectInput.class, Iterator.class, Iterator.class)
+          .newInstance(core, onum, version, label,
               new ObjectInputStream(new ByteArrayInputStream(serializedData)),
               refTypes.iterator(), intracoreRefs.iterator());
     } catch (RuntimeException e) {
