@@ -240,7 +240,6 @@
         skipemptyfilesets="true"
         vmlauncher="false">
       <arg value="${fabc}" />
-      <arg value="-nooutput" />
       <arg value="-d" />
       <arg value="rt-classes" />
       <arg value="-sigcp" />
@@ -252,7 +251,8 @@
           includes="**/*.fab"
           excludes="fabric/util/*.fab" />
       <fileset dir="${basedir}/src/runtime"
-      includes="fabric/util/HashMap.fab,fabric/util/LinkedList.fab" />
+      includes="fabric/util/HashMap.fab,fabric/util/LinkedList.fab,
+      	fabric/util/HashSet.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
   </target>
