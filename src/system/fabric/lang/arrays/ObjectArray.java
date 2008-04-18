@@ -9,10 +9,10 @@ import java.util.List;
 import fabric.client.Core;
 import fabric.client.TransactionManager;
 import fabric.common.Pair;
-import fabric.common.Policy;
 import fabric.common.Util;
 import fabric.core.SerializedObject.RefTypeEnum;
 import fabric.lang.Object;
+import fabric.lang.auth.Label;
 
 public interface ObjectArray<T extends Object> extends Object {
   int get$length();
@@ -64,11 +64,11 @@ public interface ObjectArray<T extends Object> extends Object {
      * Used for deserializing.
      */
     @SuppressWarnings("unchecked")
-    public $Impl(Core core, long onum, int version, Policy policy,
+    public $Impl(Core core, long onum, int version, Label label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
-      super(core, onum, version, policy, in, refTypes, intracoreRefs);
+      super(core, onum, version, label, in, refTypes, intracoreRefs);
       proxyType = (Class<? extends Object.$Proxy>) Class.forName(in.readUTF());
       value = new Object[in.readInt()];
       for (int i = 0; i < value.length; i++) {

@@ -9,7 +9,6 @@ import java.util.List;
 import fabric.client.Core;
 import fabric.client.UnreachableCoreException;
 import fabric.common.Pair;
-import fabric.common.Policy;
 import fabric.core.SerializedObject.RefTypeEnum;
 import fabric.lang.Object;
 
@@ -53,11 +52,11 @@ public interface Principal extends Object {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
     }
 
-    public $Impl(Core core, long onum, int version, Policy policy,
+    public $Impl(Core core, long onum, int version, Label label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
-      super(core, onum, version, policy, in, refTypes, intracoreRefs);
+      super(core, onum, version, label, in, refTypes, intracoreRefs);
     }
   }
 
@@ -79,8 +78,8 @@ public interface Principal extends Object {
         super(core);
       }
       
-      public $Impl(Core core, Policy policy) throws UnreachableCoreException {
-        super(core, policy);
+      public $Impl(Core core, Label label) throws UnreachableCoreException {
+        super(core, label);
       }
       
       @Override

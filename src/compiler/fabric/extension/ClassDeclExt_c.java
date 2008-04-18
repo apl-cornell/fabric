@@ -384,9 +384,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     implMembers.add(implConstructorDecl);
     implConstructorDecl =
         qq.parseMember("public $Impl(fabric.client.Core core, "
-            + "fabric.common.Policy policy) "
+            + "fabric.lang.auth.Label label) "
             + "throws fabric.client.UnreachableCoreException {"
-            + "super(core, policy); }");
+            + "super(core, label); }");
     implMembers.add(implConstructorDecl);
 
     // Create the $makeProxy method declaration and add it to the list of static
@@ -496,10 +496,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         qq
             .parseMember(
                 "public $Impl(fabric.client.Core core, long onum, int version, "
-                    + "fabric.common.Policy policy, java.io.ObjectInput in, "
+                    + "fabric.lang.auth.Label label, java.io.ObjectInput in, "
                     + "java.util.Iterator refTypes, java.util.Iterator intracoreRefs) "
                     + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-                    + "super(core, onum, version, policy, in, refTypes, intracoreRefs);"
+                    + "super(core, onum, version, label, in, refTypes, intracoreRefs);"
                     + in + " }", inSubst);
     result.add(deserialize);
 

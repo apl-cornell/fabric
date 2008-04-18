@@ -138,8 +138,6 @@ public class MemoryStore implements ObjectStore {
 
   public SerializedObject read(Principal client, long onum) {
     SerializedObject obj = objectTable.get(onum);
-
-    if (obj != null && !obj.getPolicy().canRead(client)) return null;
     return obj;
   }
 

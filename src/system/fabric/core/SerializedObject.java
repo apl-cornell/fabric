@@ -1,15 +1,27 @@
 package fabric.core;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import fabric.client.Core;
-import fabric.common.*;
+import fabric.common.ACLPolicy;
+import fabric.common.FastSerializable;
 import fabric.common.InternalError;
+import fabric.common.Pair;
+import fabric.common.Policy;
+import fabric.common.Surrogate;
 import fabric.lang.Object.$Impl;
+import fabric.lang.auth.Label;
 
 /**
  * <code>$Impl</code> objects are stored on cores in serialized form as
@@ -40,7 +52,7 @@ public final class SerializedObject implements FastSerializable {
   /**
    * The object's security policy.
    */
-  private final Policy policy;
+  private final Label label;
 
   /**
    * The object's primitive field and inlined object data.
@@ -78,7 +90,7 @@ public final class SerializedObject implements FastSerializable {
   public SerializedObject($Impl obj) {
     this.onum = obj.$getOnum();
     this.className = obj.getClass().getName();
-    this.policy = obj.$getPolicy();
+    this.label = obj.$getLabel();
     this.version = obj.$version;
 
     ByteArrayOutputStream serializedData = new ByteArrayOutputStream();
@@ -108,10 +120,10 @@ public final class SerializedObject implements FastSerializable {
    * @param remoteRef
    *                The name of the remote object being referred to.
    */
-  SerializedObject(long onum, Policy policy, Pair<String, Long> remoteRef) {
+  SerializedObject(long onum, Label label, Pair<String, Long> remoteRef) {
     this.onum = onum;
     this.className = Surrogate.class.getName();
-    this.policy = policy;
+    this.label = label;
 
     ByteArrayOutputStream serializedData = new ByteArrayOutputStream();
     try {
@@ -137,8 +149,8 @@ public final class SerializedObject implements FastSerializable {
     return className;
   }
 
-  public Policy getPolicy() {
-    return policy;
+  public Label getLabel() {
+    return label;
   }
 
   public int getVersion() {
@@ -269,7 +281,7 @@ public final class SerializedObject implements FastSerializable {
     this.onum = in.readLong();
     this.version = in.readInt();
     // XXX FIXME TODO Read in a real policy.
-    this.policy = ACLPolicy.DEFAULT;
+    this.label = Label.DEFAULT;
 
     // Read the object body.
     this.serializedData = new byte[in.readInt()];
@@ -374,7 +386,7 @@ public final class SerializedObject implements FastSerializable {
     try {
       return ($Impl) c.getConstructor(Core.class, long.class, int.class,
           Policy.class, ObjectInput.class, Iterator.class, Iterator.class)
-          .newInstance(core, onum, version, policy,
+          .newInstance(core, onum, version, label,
               new ObjectInputStream(new ByteArrayInputStream(serializedData)),
               refTypes.iterator(), intracoreRefs.iterator());
     } catch (Exception e) {

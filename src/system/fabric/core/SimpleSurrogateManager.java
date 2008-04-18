@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import fabric.common.ACLPolicy;
 import fabric.common.InternalError;
 import fabric.common.Pair;
 import fabric.common.Util;
 import fabric.core.SerializedObject.RefTypeEnum;
 import fabric.core.store.StoreException;
+import fabric.lang.auth.Label;
 
 /**
  * This is a simple surrogate policy. It keeps no state between requests, and
@@ -67,7 +67,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
               throw new InternalError(e);
             }
             // TODO: policy?
-            req.creates.add(new SerializedObject(onum, ACLPolicy.DEFAULT, ref));
+            req.creates.add(new SerializedObject(onum, Label.DEFAULT, ref));
           }
           newtypes.add(RefTypeEnum.ONUM);
           newrefs.add(onum);

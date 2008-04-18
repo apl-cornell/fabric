@@ -1,15 +1,17 @@
 package fabric.lang.arrays;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.List;
 
 import fabric.client.Core;
 import fabric.client.TransactionManager;
 import fabric.common.Pair;
-import fabric.common.Policy;
 import fabric.core.SerializedObject.RefTypeEnum;
 import fabric.lang.Object;
+import fabric.lang.auth.Label;
 
 public interface charArray extends Object {
   int get$length();
@@ -51,11 +53,11 @@ public interface charArray extends Object {
     /**
      * Used for deserializing.
      */
-    public $Impl(Core core, long onum, int version, Policy policy,
+    public $Impl(Core core, long onum, int version, Label label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
-      super(core, onum, version, policy, in, refTypes, intracoreRefs);
+      super(core, onum, version, label, in, refTypes, intracoreRefs);
       value = new char[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readChar();

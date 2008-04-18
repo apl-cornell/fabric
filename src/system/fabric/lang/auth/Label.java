@@ -13,6 +13,9 @@ public interface Label extends Object {
   // * returns false, then <code>dependencies</code> remains unaltered.
   // */
   // boolean relabelsTo(Label l, Set dependencies);
+  
+  // TODO make a default label?
+  Label DEFAULT = null;
 
   Label join(Label l);
 

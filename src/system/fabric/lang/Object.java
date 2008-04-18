@@ -10,9 +10,11 @@ import java.util.List;
 import fabric.client.Core;
 import fabric.client.TransactionManager;
 import fabric.client.UnreachableCoreException;
-import fabric.common.*;
+import fabric.common.FetchException;
 import fabric.common.InternalError;
+import fabric.common.Pair;
 import fabric.core.SerializedObject.RefTypeEnum;
+import fabric.lang.auth.Label;
 
 /**
  * All Fabric objects implement this interface.
@@ -161,7 +163,7 @@ public interface Object {
      */
     protected $Proxy $class;
 
-    protected Policy $policy;
+    protected Label $label;
 
     public transient int $version;
 
@@ -169,8 +171,8 @@ public interface Object {
      * Creates a new Fabric object that will reside on the given Core.
      */
     public $Impl(Core core) throws UnreachableCoreException {
-      // TODO Determine how Policy objects should be managed.
-      this(core, ACLPolicy.DEFAULT);
+      // TODO Determine how Label objects should be managed.
+      this(core, null);
     }
 
     /**
@@ -178,14 +180,14 @@ public interface Object {
      * 
      * @param core
      *                the location for the object
-     * @param policy
-     *                the security policy for the object
+     * @param label
+     *                the security label for the object
      */
-    public $Impl(Core core, Policy policy) throws UnreachableCoreException {
+    public $Impl(Core core, Label label) throws UnreachableCoreException {
       this.$core = core;
       this.$onum = core.createOnum();
       this.$version = 0;
-      this.$policy = policy;
+      this.$label = label;
       this.$log = null;
       this.$readTransactionID = -1;
       this.$createTransactionID = -1;
@@ -206,7 +208,7 @@ public interface Object {
       this.$core = core;
       this.$onum = onum;
       this.$version = 0;
-      this.$policy = ACLPolicy.DEFAULT;
+      this.$label = Label.DEFAULT;
       this.$log = null;
     }
 
@@ -273,8 +275,8 @@ public interface Object {
       return $class;
     }
 
-    public final Policy $getPolicy() {
-      return $policy;
+    public final Label $getLabel() {
+      return $label;
     }
 
     public final int $getVersion() {
@@ -372,8 +374,8 @@ public interface Object {
      *                The object's onum.
      * @param version
      *                The object's version number.
-     * @param policy
-     *                The object's policy.
+     * @param label
+     *                The object's label.
      * @param serializedInput
      *                A stream of serialized primitive values and inlined
      *                objects.
@@ -386,13 +388,13 @@ public interface Object {
      *                an onum.
      */
     @SuppressWarnings("unused")
-    public $Impl(Core core, long onum, int version, Policy policy,
+    public $Impl(Core core, long onum, int version, Label label,
         ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
       this.$core = core;
       this.$onum = onum;
-      this.$policy = policy;
+      this.$label = label;
       this.$version = version;
       this.$readTransactionID = -1;
       this.$createTransactionID = -1;
@@ -547,8 +549,8 @@ public interface Object {
     }
 
     public static class $Impl extends Object.$Impl implements $Static {
-      public $Impl(Core core, Policy policy) throws UnreachableCoreException {
-        super(core, policy);
+      public $Impl(Core core, Label label) throws UnreachableCoreException {
+        super(core, label);
       }
 
       public $Impl(Core core) throws UnreachableCoreException {
