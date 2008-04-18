@@ -259,6 +259,7 @@ public class HashSet extends AbstractSet
    *             of the backing store, followed by the set size (int),
    *             then a listing of its elements (Object) in no order
    */
+  /*
   private void writeObject(ObjectOutputStream s) throws IOException
   {
     s.defaultWriteObject();
@@ -270,6 +271,7 @@ public class HashSet extends AbstractSet
     while (it.hasNext())
       s.writeObject(it.next());
   }
+  */
 
   /**
    * Deserializes this object from the given stream.
@@ -281,6 +283,7 @@ public class HashSet extends AbstractSet
    *             of the backing store, followed by the set size (int),
    *             then a listing of its elements (Object) in no order
    */
+  /*
   private void readObject(ObjectInputStream s)
     throws IOException, ClassNotFoundException
   {
@@ -290,4 +293,5 @@ public class HashSet extends AbstractSet
     for (int size = s.readInt(); size > 0; size--)
       map.put(s.readObject(), "");
   }
+  */
 }
