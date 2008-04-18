@@ -20,14 +20,20 @@ import fabric.lang.auth.Label;
  * All Fabric objects implement this interface.
  */
 public interface Object {
+  
+  /** The core where the object resides. */
   Core $getCore();
 
+  /** The object's onum. */
   long $getOnum();
 
+  /** A proxy for this object. */
   $Proxy $getProxy();
 
+  /** Whether this object is "equal" to another object. */
   boolean equals(Object o);
 
+  /** Unwraps a wrapped Java inlineable. */
   java.lang.Object $unwrap();
 
   /**
@@ -563,4 +569,5 @@ public interface Object {
       }
     }
   }
+  
 }
