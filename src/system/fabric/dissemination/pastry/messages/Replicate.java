@@ -2,7 +2,9 @@ package fabric.dissemination.pastry.messages;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
@@ -20,10 +22,12 @@ public class Replicate implements RawMessage {
 
   private transient final NodeHandle sender;
   private final int level;
+  private final Set<Pair<String, Long>> skip;
   
-  public Replicate(NodeHandle sender, int level) {
+  public Replicate(NodeHandle sender, int level, Set<Pair<String, Long>> skip) {
     this.sender = sender;
     this.level = level;
+    this.skip = skip;
   }
   
   public NodeHandle sender() {
@@ -32,6 +36,10 @@ public class Replicate implements RawMessage {
   
   public int level() {
     return level;
+  }
+  
+  public Set<Pair<String, Long>> skip() {
+    return skip;
   }
 
   public int getPriority() {
@@ -44,6 +52,12 @@ public class Replicate implements RawMessage {
 
   public void serialize(OutputBuffer buf) throws IOException {
     buf.writeInt(level);
+    buf.writeInt(skip.size());
+    
+    for (Pair<String, Long> e : skip) {
+      buf.writeUTF(e.first);
+      buf.writeLong(e.second);
+    }
   }
   
   /**
@@ -52,6 +66,14 @@ public class Replicate implements RawMessage {
   public Replicate(InputBuffer buf, NodeHandle sender) throws IOException {
     this.sender = sender;
     level = buf.readInt();
+    int n = buf.readInt();
+    skip = new HashSet<Pair<String, Long>>(n);
+    
+    for (int i = 0; i < n; i++) {
+      String c = buf.readUTF();
+      long onum = buf.readLong();
+      skip.add(new Pair<String, Long>(c, onum));
+    }
   }
 
   /**

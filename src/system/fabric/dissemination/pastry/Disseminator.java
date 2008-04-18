@@ -2,12 +2,16 @@ package fabric.dissemination.pastry;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import rice.Continuation;
 import rice.Executable;
+import rice.environment.Environment;
+import rice.environment.params.Parameters;
 import rice.p2p.commonapi.Application;
 import rice.p2p.commonapi.Endpoint;
 import rice.p2p.commonapi.Id;
@@ -49,6 +53,10 @@ public class Disseminator implements Application {
   /** The pastry id generating factory. */
   protected IdFactory idf;
   
+  protected int idDigits;
+  protected int baseBits;
+  
+  /** Random source for random ids. */
   protected Random rand;
   
   /** The cache of fetched objects. */
@@ -60,10 +68,10 @@ public class Disseminator implements Application {
   protected MessageDeserializer deserializer;
   
   /** Replication interval, in milliseconds. */
-  protected static long REPLICATION_INTERVAL = 10 * 60 * 1000;
+  protected long REPLICATION_INTERVAL = 10 * 60 * 1000;
   
   /** Aggregation interval, in milliseconds. */
-  protected static long AGGREGATION_INTERVAL = 20 * 60 * 1000;
+  protected long AGGREGATION_INTERVAL = 20 * 60 * 1000;
   
   private Logger log = Logger.getLogger("fabric.dissem.pastry");
   
@@ -79,9 +87,24 @@ public class Disseminator implements Application {
     endpoint.setDeserializer(deserializer);
     idf = new PastryIdFactory(node.getEnvironment());
     rand = new Random();
+
+    RoutingTable rt = node.getRoutingTable();
+    baseBits = rt.baseBitLength();
+    idDigits = rt.numRows();
     
     cache = new Cache();
     outstanding = new HashMap<Id, Fetch>();
+    
+    Environment env = node.getEnvironment();
+    Parameters params = env.getParameters();
+    
+    try {
+      REPLICATION_INTERVAL = params.getLong("replication_interval");
+    } catch (NumberFormatException e) {}
+    
+    try {
+      AGGREGATION_INTERVAL = params.getLong("aggregation_interval");
+    } catch (NumberFormatException e) {}
     
     endpoint.scheduleMessage(new ReplicateInterval(), 
         REPLICATION_INTERVAL, REPLICATION_INTERVAL);
@@ -229,20 +252,23 @@ public class Disseminator implements Application {
     process(new Executable() {
       public Object execute() {
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
+        Set<Pair<String, Long>> skip;
         
         LeafSet ls = node.getLeafSet();
-        NodeHandle n = ls.get(-1);
+        NodeHandle n1 = ls.get(-1);
         
-        if (n != null) {
-          Replicate msg = new Replicate(localHandle(), -1);
-          route(null, msg, n);
+        if (n1 != null) {
+          skip = skipSet((rice.pastry.Id) n1.getId(), -1);
+          Replicate msg = new Replicate(localHandle(), -1, skip);
+          route(null, msg, n1);
         }
         
-        NodeHandle m = ls.get(1);
+        NodeHandle n2 = ls.get(1);
         
-        if (m != null && m != n) {
-          Replicate msg = new Replicate(localHandle(), -1);
-          route(null, msg, m);
+        if (n2 != null && !n2.equals(n1)) {
+          skip = skipSet((rice.pastry.Id) n2.getId(), -1);
+          Replicate msg = new Replicate(localHandle(), -1, skip);
+          route(null, msg, n2);
         }
         
         RoutingTable rt = node.getRoutingTable();
@@ -259,8 +285,9 @@ public class Disseminator implements Application {
             RouteSet rs = rt.getRouteSet(i, j);
 
             if (rs != null && rs.size() > 0) {
-              n = rs.closestNode();
-              Replicate msg = new Replicate(localHandle(), k - i - 1);
+              NodeHandle n = rs.closestNode();
+              skip = skipSet((rice.pastry.Id) n.getId(), k - i - 1);
+              Replicate msg = new Replicate(localHandle(), k - i - 1, skip);
               route(null, msg, n);
             }
           }
@@ -271,6 +298,22 @@ public class Disseminator implements Application {
     });
   }
   
+  private Set<Pair<String, Long>> skipSet(rice.pastry.Id deciderId, int level) {
+    rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
+    Set<Pair<String, Long>> skip = new HashSet<Pair<String, Long>>();
+    
+    for (Pair<Core, Long> k : cache.keys()) {
+      rice.pastry.Id id = (rice.pastry.Id) idf.buildId(k.first + "/" + k.second);
+      boolean send = shouldReplicate(deciderId, me, id, level);
+      
+      if (send) {
+        skip.add(new Pair<String, Long>(k.first.name(), k.second));
+      }
+    }
+    
+    return skip;
+  }
+  
   /**
    * Processes a Replicate message. It sends back to the sender objects that
    * should be replicated to the sender.
@@ -279,25 +322,18 @@ public class Disseminator implements Application {
     process(new Executable() {
       public Object execute() {
         NodeHandle sender = msg.sender();
+        rice.pastry.Id senderId = (rice.pastry.Id) sender.getId();
         int level = msg.level();
+        log.info("got replicate level " + level + " from " + sender);
+        
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
-        RoutingTable rt = node.getRoutingTable();
-        byte baselen = rt.idBaseBitLength;
-        int idlen = rt.numRows();
         
         Map<Pair<String, Long>, Glob> globs = 
           new HashMap<Pair<String, Long>, Glob>();
         
         for (Pair<Core, Long> k : cache.keys()) {
           rice.pastry.Id id = (rice.pastry.Id) idf.buildId(k.first + "/" + k.second);
-          boolean send = false;
-          
-          if (level != -1) {
-            send = id.indexOfMSDD(me, baselen) < idlen - level;
-          } else {
-            send = id.indexOfMSDD((rice.pastry.Id) sender.getId(), baselen) <
-              id.indexOfMSDD(me, baselen);
-          }
+          boolean send = shouldReplicate(me, senderId, id, level);
           
           if (send) {
             RemoteCore c = (RemoteCore) k.first;
@@ -305,6 +341,10 @@ public class Disseminator implements Application {
             Glob g = cache.get(c, onum);
             
             globs.put(new Pair<String, Long>(c.name(), onum), g);
+            
+            if (globs.size() == 100) {
+              break;
+            }
           }
         }
         
@@ -317,6 +357,16 @@ public class Disseminator implements Application {
       }
     });
   }
+  
+  private boolean shouldReplicate(rice.pastry.Id deciderId, 
+      rice.pastry.Id receiverId, rice.pastry.Id oid, int level) {
+    if (level != -1) {
+      return oid.indexOfMSDD(deciderId, baseBits) < idDigits - level;
+    } else {
+      return oid.indexOfMSDD(receiverId, baseBits) <
+        oid.indexOfMSDD(deciderId, baseBits);
+    }
+  }
 
   /**
    * Processes a Replicate.Reply message, and adds objects in the reply to the
@@ -325,6 +375,7 @@ public class Disseminator implements Application {
   protected void replicate(final Replicate.Reply msg) {
     process(new Executable() {
       public Object execute() {
+        log.info("got replicate reply with " + msg.globs().size() + " objects");
         Client client = Client.getClient();
         
         for (Map.Entry<Pair<String, Long>, Glob> e : msg.globs().entrySet()) {
@@ -410,6 +461,10 @@ public class Disseminator implements Application {
         return new Fetch(buf, endpoint, sender);
       case MessageType.FETCH_REPLY:
         return new Fetch.Reply(buf, endpoint);
+      case MessageType.REPLICATE:
+        return new Replicate(buf, sender);
+      case MessageType.REPLICATE_REPLY:
+        return new Replicate.Reply(buf);
       }
       
       return null;
