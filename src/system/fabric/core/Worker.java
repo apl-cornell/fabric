@@ -24,6 +24,7 @@ import javax.net.ssl.SSLSocketFactory;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.AccessException;
+import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.store.StoreException;

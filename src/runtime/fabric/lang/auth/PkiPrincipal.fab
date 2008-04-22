@@ -1,0 +1,26 @@
+package fabric.lang.auth;
+
+/**
+ * See the doucmentation for the Jif source file, $JIF/sig-src/jif/lang/Principal.jif.
+ */
+public class PkiPrincipal implements Principal {
+	
+	private final String name;
+	
+	public PkiPrincipal(String name) {
+		this.name = name;
+	}
+  
+    public String name() {
+    	return name;
+    }
+    
+    public boolean equals(final Principal p) {
+    	if (p instanceof PkiPrincipal) {
+    		PkiPrincipal pp = (PkiPrincipal) p;
+    		return name.equals(pp.name);
+    	}
+    	return false;
+    }
+
+}

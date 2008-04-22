@@ -479,7 +479,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             + "out, intracoreRefs, intercoreRefs);");
         in.append("this." + f.name() + " = (" + f.declType() + ") $readRef("
             + f.declType() + ".$Proxy.class, "
-            + "(fabric.core.SerializedObject.RefTypeEnum) "
+            + "(fabric.common.RefTypeEnum) "
             + "refTypes.next(), in, core, intracoreRefs);");
       }
     }

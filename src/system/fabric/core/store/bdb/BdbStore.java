@@ -24,9 +24,9 @@ import com.sleepycat.je.LockMode;
 import com.sleepycat.je.Transaction;
 
 import fabric.common.InternalError;
+import fabric.common.SerializedObject;
 import fabric.core.ObjectStore;
 import fabric.core.PrepareRequest;
-import fabric.core.SerializedObject;
 
 /**
  * An ObjectStore backed by a Berkeley Database.

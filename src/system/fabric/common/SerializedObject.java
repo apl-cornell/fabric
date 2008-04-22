@@ -1,4 +1,4 @@
-package fabric.core;
+package fabric.common;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -14,10 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import fabric.client.Core;
-import fabric.common.FastSerializable;
-import fabric.common.InternalError;
-import fabric.common.Pair;
-import fabric.common.Surrogate;
 import fabric.lang.Object.$Impl;
 import fabric.lang.auth.Label;
 
@@ -27,10 +23,6 @@ import fabric.lang.auth.Label;
  */
 public final class SerializedObject implements FastSerializable {
   
-  public static enum RefTypeEnum {
-    NULL, INLINE, ONUM, REMOTE
-  }
-
   /**
    * The core-specific object number for this object.
    */
@@ -118,7 +110,7 @@ public final class SerializedObject implements FastSerializable {
    * @param remoteRef
    *                The name of the remote object being referred to.
    */
-  SerializedObject(long onum, Label label, Pair<String, Long> remoteRef) {
+  public SerializedObject(long onum, Label label, Pair<String, Long> remoteRef) {
     this.onum = onum;
     this.className = Surrogate.class.getName();
     this.label = label.$getOnum();

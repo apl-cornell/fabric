@@ -13,7 +13,7 @@ import fabric.client.UnreachableCoreException;
 import fabric.common.FetchException;
 import fabric.common.InternalError;
 import fabric.common.Pair;
-import fabric.core.SerializedObject.RefTypeEnum;
+import fabric.common.RefTypeEnum;
 import fabric.lang.auth.Label;
 
 /**

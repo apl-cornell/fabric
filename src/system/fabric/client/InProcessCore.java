@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import fabric.common.InternalError;
+import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyMap;
 import fabric.core.PrepareRequest;
-import fabric.core.SerializedObject;
 import fabric.core.TransactionManager;
 import fabric.core.store.StoreException;
 import fabric.lang.Object.$Impl;
@@ -35,7 +35,8 @@ public class InProcessCore extends RemoteCore {
   }
 
   @Override
-  public void commitTransaction(int transactionID) throws TransactionCommitFailedException {
+  public void commitTransaction(int transactionID)
+      throws TransactionCommitFailedException {
     try {
       tm.commitTransaction(client, transactionID);
     } catch (TransactionCommitFailedException e) {
@@ -62,8 +63,10 @@ public class InProcessCore extends RemoteCore {
   public int prepareTransaction(Collection<$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<$Impl> writes)
       throws TransactionPrepareFailedException {
-    Collection<SerializedObject> serializedCreates = new ArrayList<SerializedObject> (toCreate.size());
-    Collection<SerializedObject> serializedWrites  = new ArrayList<SerializedObject> (writes.size());
+    Collection<SerializedObject> serializedCreates =
+        new ArrayList<SerializedObject>(toCreate.size());
+    Collection<SerializedObject> serializedWrites =
+        new ArrayList<SerializedObject>(writes.size());
     
     for ($Impl o : toCreate)
       serializedCreates.add(new SerializedObject(o));
@@ -71,8 +74,10 @@ public class InProcessCore extends RemoteCore {
     for ($Impl o : writes)
       serializedWrites.add(new SerializedObject(o));
     
-    PrepareRequest req = new PrepareRequest(serializedCreates, serializedWrites, reads);
+    PrepareRequest req =
+        new PrepareRequest(serializedCreates, serializedWrites, reads);
     
     return tm.prepare(client, req);
   }
+  
 }

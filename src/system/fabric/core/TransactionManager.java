@@ -5,6 +5,7 @@ import java.util.NoSuchElementException;
 
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
+import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyMap;
 import fabric.core.store.StoreException;
 

@@ -1,0 +1,97 @@
+package fabric.lang.auth;
+
+import fabric.client.*;
+import fabric.util.*;
+
+public final class ReaderPolicy implements ConfPolicy {
+  
+    private final Principal owner;
+    private final Set readers;  // Set<Principal>
+    
+    public ReaderPolicy(Principal owner, Set readers) {
+        this.owner = owner;
+        this.readers = readers;
+    }
+    
+    public Principal owner() {
+        return owner;
+    }
+    
+    public Set readers() {
+        return readers;
+    }
+    
+    public boolean relabelsTo(Policy p, Set s) {
+    	if (p instanceof ReaderPolicy) {
+	    	ReaderPolicy rp = (ReaderPolicy) p;
+	    	return readers.containsAll(rp.readers);
+    	}
+    	return false;
+    }
+    
+    public int hashCode() {
+        return (owner==null?0:owner.hashCode()) ^ (readers==null?0:readers.hashCode()) ^ 4238;
+    }
+    
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (! (o instanceof ReaderPolicy)) {
+            return false;
+        }
+        
+        ReaderPolicy policy = (ReaderPolicy) o;
+        
+        if (owner == policy.owner || (owner != null && owner.equals(policy.owner)
+                && policy.owner != null && policy.owner.equals(owner))) {
+            return (readers == policy.readers || 
+            		(readers != null && readers.equals(policy.readers)));
+        }
+        
+        return false;
+    }
+    
+    public String toString() {
+        String str = toString(owner) + ": ";
+        str += toString(readers);
+        return str;
+    }
+    
+    private String toString(Set s) {
+      boolean first = true;
+      String str = "";
+      Iterator i = s.iterator(Client.getClient().getLocalCore());
+      
+      while (i.hasNext()) {
+    	  if (first) {
+    		  first = false;
+    	  } else {
+    		  str += ",";
+    	  }
+		  str += toString((Principal) i.next());
+      }
+      
+      return str;
+    }
+
+    private String toString(Principal p) {
+      return p == null ? "_" : p.name();
+    }
+
+    /*
+    public ConfPolicy join(ConfPolicy p, Set s) {
+        return labelUtil.join(this, p, s);
+    }
+
+    public ConfPolicy join(ConfPolicy p) {
+        return labelUtil.join(this, p);
+    }
+
+    public ConfPolicy meet(ConfPolicy p, Set s) {
+        return labelUtil.meet(this, p, s);
+    }
+    public ConfPolicy meet(ConfPolicy p) {
+        return labelUtil.meetPol(this, p);
+    }
+    */
+    
+}

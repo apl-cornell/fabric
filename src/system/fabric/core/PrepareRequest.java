@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 
 import fabric.common.FastSerializable;
+import fabric.common.SerializedObject;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;

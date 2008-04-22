@@ -4,9 +4,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.core.SerializedObject;
 
 /**
  * A glob is a serialized object and a set of related objects.

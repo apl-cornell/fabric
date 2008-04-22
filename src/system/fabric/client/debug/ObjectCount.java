@@ -11,7 +11,7 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.client.UnreachableCoreException;
-import fabric.core.SerializedObject;
+import fabric.common.SerializedObject;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.util.Map;

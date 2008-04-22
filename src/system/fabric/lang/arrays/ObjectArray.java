@@ -9,8 +9,8 @@ import java.util.List;
 import fabric.client.Core;
 import fabric.client.TransactionManager;
 import fabric.common.Pair;
+import fabric.common.RefTypeEnum;
 import fabric.common.Util;
-import fabric.core.SerializedObject.RefTypeEnum;
 import fabric.lang.Object;
 
 public interface ObjectArray<T extends Object> extends Object {

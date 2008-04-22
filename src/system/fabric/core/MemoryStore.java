@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import fabric.common.Resources;
+import fabric.common.SerializedObject;
 import fabric.common.Util;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;

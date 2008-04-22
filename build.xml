@@ -122,7 +122,7 @@
 
   <!-- Compiles Fabric -->
   <target name="all"
-    depends="bin,fabric-system,fabric-compiler,fabric-signatures,client-debug,var,tests"
+    depends="bin,fabric-system,fabric-compiler,fabric-signatures,client-debug,tests"
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
@@ -153,12 +153,33 @@
       </fileset>
     </delete>
   </target>
+	
+  <uptodate property="native.up-to-date">
+    <srcfiles dir="${system.src}" includes="fabric/lang/**" />
+    <srcfiles dir="${system.src}" includes="fabric/common/**" />
+    <globmapper from="*.java" to="../../classes/*.class" />
+  </uptodate>
+	
+  <!-- Compiles the Fabric native runtime classes -->
+  <target name="native" depends="init,fabric-compiler" unless="native.up-to-date">
+    <javac target="1.5" srcdir="${signatures.src}" destdir="${classes}" debug="on">
+      <include name="fabric/lang/auth/Label.java" />
+      <classpath refid="standard.classpath"/>
+    </javac>
+  	
+    <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
+      <include name="fabric/lang/**" />
+      <include name="fabric/common/**" />
+      <classpath refid="standard.classpath"/>
+    </javac>
+  	
+  	<delete file="${classes}/fabric/lang/auth/Label.class" />
+  </target>
 
   <!-- Compiles the Fabric core -->
-  <target name="core" depends="init,fabric-runtime">
+  <target name="core" depends="init,native,fabric-runtime">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/core/**" />
-      <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
       <classpath>
         <path refid="standard.classpath"/>
@@ -168,12 +189,10 @@
   </target>
 
   <!-- Compiles the Fabric client API -->
-  <target name="client" depends="init">
+  <target name="client" depends="init,native">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/client/**" />
-      <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
-      <include name="fabric/lang/**" />
       <exclude name="fabric/client/debug/**" />
       <classpath refid="standard.classpath"/>
     </javac>
@@ -191,7 +210,7 @@
   </target>
 
   <!-- Compiles the Fabric compiler -->
-  <target name="fabric-compiler" depends="init,configure,client">
+  <target name="fabric-compiler" depends="init,configure">
     <antcall target="standard-ext">
       <param name="ext" value="fabric" />
       <param name="ext.pkg" value="fabric" />
@@ -228,7 +247,7 @@
 
   <!-- Compiles the Fabric runtime -->
   <target name="fabric-runtime"
-  depends="init,fabric-compiler,fabric-signatures">
+  depends="init,fabric-compiler,fabric-signatures,client">
     <mkdir dir="${runtime.classes}" />
         
     <apply executable="bash"

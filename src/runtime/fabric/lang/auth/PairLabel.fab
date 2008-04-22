@@ -1,0 +1,75 @@
+package fabric.lang.auth;
+
+import fabric.util.Set;
+
+
+/**
+ * A Label is the runtime representation of a Jif label. A Label consists of a
+ * set of components, each of which is a {@link jif.lang.IntegPolicy Policy}.
+ *  
+ */
+public final class PairLabel implements Label {
+  
+    private final ConfPolicy confPol;
+    private final IntegPolicy integPol;
+    
+    public PairLabel(ConfPolicy confPol, IntegPolicy integPol) {
+        this.confPol = confPol;
+        this.integPol = integPol;
+        if (confPol == null || integPol == null) throw new NullPointerException();
+    }
+
+    public boolean relabelsTo(Label l, Set s) {
+    	PairLabel pl = (PairLabel) l;
+		return this.confPol.relabelsTo(pl.confPol, s) &&
+				this.integPol.relabelsTo(pl.integPol, s);
+	}
+    
+    public int hashCode() {
+        return confPol.hashCode() ^ integPol.hashCode();
+    }
+    
+    public boolean equals(Object o) {
+        if (o instanceof PairLabel) {
+            PairLabel that = (PairLabel) o;
+            return this == that || 
+                    (this.hashCode() == that.hashCode() && 
+                            this.confPol.equals(that.confPol) &&
+                            this.integPol.equals(that.integPol));
+        }
+        
+        return false;
+    }
+    
+    public String toString() {
+        String c = confPol.toString();
+        String i = integPol.toString();
+        if (c.length() > 0 && i.length() > 0) {
+            return "{" + c + "; " + i + "}";
+           
+        }
+        // at least one of them is length 0.
+        return "{" + c  + i + "}";
+    }
+    
+    /*
+    public Label join(Label l) {
+    	// TODO not yet supported
+        throw new UnsupportedOperationException();
+    }
+
+    public Label meet(Label l) {
+    	// TODO not yet supported
+        throw new UnsupportedOperationException();
+    }
+    */
+
+    public ConfPolicy confPolicy() {
+        return confPol;
+    }
+
+    public IntegPolicy integPolicy() {
+        return integPol;
+    }
+    
+}

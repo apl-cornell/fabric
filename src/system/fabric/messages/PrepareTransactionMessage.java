@@ -13,9 +13,9 @@ import fabric.client.TransactionPrepareFailedException;
 import fabric.client.UnreachableCoreException;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
+import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.core.SerializedObject;
 import fabric.core.Worker;
 import fabric.lang.Object.$Impl;
 

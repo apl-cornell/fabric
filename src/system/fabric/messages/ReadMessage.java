@@ -10,9 +10,9 @@ import fabric.common.AccessException;
 import fabric.common.FabricException;
 import fabric.common.FetchException;
 import fabric.common.InternalError;
+import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.core.SerializedObject;
 import fabric.core.Worker;
 import fabric.lang.Object.$Impl;
 

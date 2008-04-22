@@ -1,0 +1,97 @@
+package fabric.lang.auth;
+
+import fabric.client.*;
+import fabric.util.*;
+
+public class WriterPolicy implements IntegPolicy {
+  
+    private final Principal owner;
+    private final Set writers;  // Set<Principal>
+    
+    public WriterPolicy(Principal owner, Set writers) {
+        this.owner = owner;
+        this.writers = writers;
+    }
+    
+    public Principal owner() {
+        return owner;
+    }
+    
+    public Set writers() {
+        return writers;
+    }
+    
+    public boolean relabelsTo(Policy p, Set s) {
+    	if (p instanceof WriterPolicy) {
+    		WriterPolicy wp = (WriterPolicy) p;
+    		return writers.containsAll(wp.writers);
+    	}
+        return false;
+    }
+    
+    public int hashCode() {
+        return (owner==null?0:owner.hashCode()) ^ (writers==null?0:writers.hashCode()) ^ -124978;
+    }
+    
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (! (o instanceof WriterPolicy)) {
+            return false;
+        }
+        
+        WriterPolicy policy = (WriterPolicy) o;
+        
+        if (owner == policy.owner || (owner != null && owner.equals(policy.owner)
+                && policy.owner != null && policy.owner.equals(owner))) {
+            return (writers == policy.writers || 
+            		(writers != null && writers.equals(policy.writers)));
+        }
+        
+        return false;
+    }
+    
+    public String toString() {
+        String str = toString(owner) + "!: ";
+        str += toString(writers);
+        return str;
+    }
+
+    private String toString(Set s) {
+      boolean first = true;
+      String str = "";
+      Iterator i = s.iterator(Client.getClient().getLocalCore());
+      
+      while (i.hasNext()) {
+    	  if (first) {
+    		  first = false;
+    	  } else {
+    		  str += ",";
+    	  }
+		  str += toString((Principal) i.next());
+      }
+      
+      return str;
+    }
+
+    private String toString(Principal p) {
+      return p == null ? "_" : p.name();
+    }
+
+    /*
+    public IntegPolicy join(IntegPolicy p, Set s) {
+        return labelUtil.join(this, p, s);
+    }
+
+    public IntegPolicy meet(IntegPolicy p, Set s) {
+        return labelUtil.meet(this, p, s);
+    }    
+    public IntegPolicy join(IntegPolicy p) {
+        return labelUtil.join(this, p);
+    }
+
+    public IntegPolicy meet(IntegPolicy p) {
+        return labelUtil.meetPol(this, p);
+    }
+    */
+    
+}

@@ -8,8 +8,9 @@ import java.util.TreeMap;
 
 import fabric.common.InternalError;
 import fabric.common.Pair;
+import fabric.common.RefTypeEnum;
+import fabric.common.SerializedObject;
 import fabric.common.Util;
-import fabric.core.SerializedObject.RefTypeEnum;
 import fabric.core.store.StoreException;
 import fabric.lang.auth.Label;
 

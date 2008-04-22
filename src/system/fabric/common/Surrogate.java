@@ -8,7 +8,6 @@ import java.util.List;
 
 import fabric.client.Client;
 import fabric.client.Core;
-import fabric.core.SerializedObject.RefTypeEnum;
 import fabric.lang.Object.$Impl;
 
 /**
