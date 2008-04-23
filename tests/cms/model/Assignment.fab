@@ -66,16 +66,6 @@ public class Assignment {
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public atomic void setCourse(final Course course) {
-    if (this.course != null)
-      this.course.assignments.remove(this);
-
-    this.course = course;
-
-    if (this.course != null)
-      this.course.assignments.put(this);
-  }
-
   public void setName             (final String name)              { this.name             = name;             }
   public void setNameShort        (final String nameShort)         { this.nameShort        = nameShort;        }
   public void setDescription      (final String description)       { this.description      = description;      }
@@ -105,6 +95,16 @@ public class Assignment {
   public void setGroupLimit       (final int groupLimit)           { this.groupLimit       = groupLimit;       }
   public void setDuration         (final long duration)            { this.duration         = duration;         }
   public void setTimeslotLockTime (final Date timeslotLockTime)    { this.timeslotLockTime = timeslotLockTime; }
+
+  public atomic void setCourse(final Course course) {
+    if (this.course != null)
+      this.course.assignments.remove(this);
+
+    this.course = course;
+
+    if (this.course != null)
+      this.course.assignments.put(this);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //
@@ -145,6 +145,18 @@ public class Assignment {
     return Collections.unmodifiableCollection(this.requiredSubmissions);
   }
 
+  public Collection/*SolutionFile*/ getHiddenSolutionFiles() {
+    return Collections.unmodifiableCollection(this.solutionFiles);
+  }
+
+  public Collection/*SubProblem*/ getSubProblems() {
+    return Collections.unmodifiableCollection(this.subProblems);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public methods                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
   public Collection/*RequiredSubmission*/ getHiddenRequiredSubmissions() {
     Collection result = new ArrayList();
     Iterator   i = requiredSubmissions.iterator();
@@ -154,14 +166,6 @@ public class Assignment {
         result.add(next);
     }
     return result;
-  }
-
-  public Collection/*SolutionFile*/ getHiddenSolutionFiles() {
-    return Collections.unmodifiableCollection(this.solutionFiles);
-  }
-
-  public Collection/*SubProblem*/ getSubProblems() {
-    return Collections.unmodifiableCollection(this.subProblems);
   }
 
   public boolean hasSubProblems() {
@@ -177,6 +181,37 @@ public class Assignment {
         result.add(next);
     }
     return result;
+  }
+
+  /**
+   * Find the subcollection of users who are active in a group for this
+   * assignment with at least one other active member.
+   * @param netids a Collection containing <code>User</code>s to return
+   * @return a subcollection of netids (Collection of User)
+   */
+  public Collection/*User*/ getNonSoloGroupMembers(Collection/*User*/ netids) {
+    // TODO
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Find the subcollection of users who have a grade for this assignment.
+   * @param netids A collection of <code>User</code>s to return
+   * @return the subcollection of netids (Collection of User)
+   */
+  public Collection/*User*/ getGradedStudents(Collection/*User*/ netids) {
+    // TODO
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Find the subcollection of groups that have a grade for this assignment
+   * @param groups A collection of <code>Group</code>s to return
+   * @param the subcollection of groups (Collection of Group)
+   */
+  public Collection/*Group*/ getGradedGroups(Collection/*Group*/ groups) {
+    // TODO
+    throw new UnsupportedOperationException();
   }
 }
 
