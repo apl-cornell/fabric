@@ -116,31 +116,31 @@ class Sort extends java.lang.Object  {
 	}
     }
     
-    public static void main(String args[])
-      throws FileNotFoundException, IOException {
-	File fd = new File(args[0]);
-	String [] files;
-	Sort sorter = new Sort();
-	sorter.VerifyResults(true);
-
-	files = fd.list();
-	Date begin = new Date();
-	sorter.BubbleSort(files);
-	Date end = new Date();
-	System.out.print("bubble " + (end.getTime() - begin.getTime())
-			 + "ms\n");
-
-	//files = fd.list();
-	//begin = new Date();
-	//sorter.MinSort(fd.list());
-	//end = new Date();
-	//System.out.print("min " + (end.getTime() - begin.getTime()) + "ms\n");
-
-	files = fd.list();
-	begin = new Date();
-	sorter.quicksort(files);
-	end = new Date();
-	System.out.print("qsort " + (end.getTime() - begin.getTime()) 
-			 + "ms\n");
-    }
+//    public static void main(String args[])
+//      throws FileNotFoundException, IOException {
+//	File fd = new File(args[0]);
+//	String [] files;
+//	Sort sorter = new Sort();
+//	sorter.VerifyResults(true);
+//
+//	files = fd.list();
+//	Date begin = new Date();
+//	sorter.BubbleSort(files);
+//	Date end = new Date();
+//	System.out.print("bubble " + (end.getTime() - begin.getTime())
+//			 + "ms\n");
+//
+//	//files = fd.list();
+//	//begin = new Date();
+//	//sorter.MinSort(fd.list());
+//	//end = new Date();
+//	//System.out.print("min " + (end.getTime() - begin.getTime()) + "ms\n");
+//
+//	files = fd.list();
+//	begin = new Date();
+//	sorter.quicksort(files);
+//	end = new Date();
+//	System.out.print("qsort " + (end.getTime() - begin.getTime()) 
+//			 + "ms\n");
+//    }
 };

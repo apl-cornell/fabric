@@ -6,13 +6,15 @@ import java.io.IOException;
 import fabric.io.RandomAccessFile;
 
 
-class NFSIO extends java.lang.Object  implements NFSConsts, RPCConsts {
+class NFSIO implements NFSConsts, RPCConsts {
     Handle handles;
     TimeMapper tm;
+    FileSystemInfo fsinfo;
 
-    NFSIO(Handle h, TimeMapper t) {
+    NFSIO(Handle h, TimeMapper t, FileSystemInfo f) {
 	handles = h;
 	tm = t;
+        fsinfo = f;
     }
 
     XDRPacket Write(long xid, XDRPacket packet, XDRPacketCache packetCache)
@@ -38,13 +40,14 @@ class NFSIO extends java.lang.Object  implements NFSConsts, RPCConsts {
 	    // System.out.print("Write(" + fileName + ", " + offset + ", " + 
 	    //		     datalen + ")\n");
 
-	    RandomAccessFile fd = new RandomAccessFile(fileName, "rw");
+//	    RandomAccessFile fd = new RandomAccessFile(fileName, "rw");
+            RandomAccessFile fd = RandomAccessFile.makeNew(fsinfo.localCore, fsinfo.core, fileName);
 	    fd.seek(offset);
-	    fd.write(packet.Data(), (int) packetOffset, (int) datalen);
+	    fd.write(new fileByteArray(packet.Data()), (int) packetOffset, (int) datalen);
 	    fd.close();
 
 	    // load in new file attributes
-	    fattr fa = new fattr(handles, tm);
+	    fattr fa = new fattr(fsinfo.core, handles, tm);
 	    fa.Load(fileName);
 
 	    // create the reply packet
@@ -85,9 +88,10 @@ class NFSIO extends java.lang.Object  implements NFSConsts, RPCConsts {
 		throw new NFSException(xid, NFSERR_IO);
 	    }
 
-	    FileInputStream fd = new FileInputStream(fileName);
+	    FileInputStream fd = FileInputStream.makeNew(fsinfo.localCore, fsinfo.core, fileName);
 	    fd.skip(offset);
-	    byte [] readbuf = new byte[(int) count];
+//	    byte [] readbuf = new byte[(int) count];
+            fileByteArray readbuf = new fileByteArray((int) count);
 	    int numberRead = fd.read(readbuf);
 	    fd.close();
 	    // XXX comment out prints to improve performance
@@ -101,7 +105,7 @@ class NFSIO extends java.lang.Object  implements NFSConsts, RPCConsts {
 	    }
 	    
 	    // load in file attributes.
-	    fattr fa = new fattr(handles, tm);
+	    fattr fa = new fattr(fsinfo.core, handles, tm);
 	    fa.Load(fileName);
 
 	    // put together the reply packet, this will copy the read
@@ -110,7 +114,7 @@ class NFSIO extends java.lang.Object  implements NFSConsts, RPCConsts {
 	    reply.AddReplyHeader(xid);
 	    reply.AddLong(NFS_OK);
 	    fa.Emit(reply);
-	    reply.AddData(numberRead, readbuf);
+	    reply.AddData(numberRead, readbuf.contents);
 
 	    return reply;
 	    

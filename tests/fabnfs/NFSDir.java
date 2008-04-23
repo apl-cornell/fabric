@@ -25,10 +25,10 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 	    fhandle f = new fhandle(packet);
 	    
 	    // carry out the operation
-	    fattr fa = new fattr(handles, tm);
+	    fattr fa = new fattr(fsinfo.core, handles, tm);
 	    String file = GetNameFromHandle(f.Handle(), xid);
 	    // make sure the file exists
-	    File fd = new File(file);
+            File fd = File.makeNew(fsinfo.localCore, fsinfo.core, file);
 	    if (fd.exists() == false)
 	        throw new NFSException(xid, NFSERR_NOENT);
 	    // System.out.print("getattr on " + file + "\n");
@@ -64,17 +64,17 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 	    //   be set to 0 to truncate the file 
 	    if (size == 0) {
 		// truncate by deleting and recreating the file
-		File fd = new File(fileName);
-		fd.delete();
-		RandomAccessFile ra = new RandomAccessFile(fileName, "rw");
-		ra.close();
+		File fd = File.makeNew(fsinfo.localCore, fsinfo.core, fileName);
+		fd.reset();
+//		RandomAccessFile ra = new RandomAccessFile(fileName, "rw");
+//		ra.close();
 	    }
 	    
 	    // make the reply
 	    XDRPacket reply = new XDRPacket(128);
 	    reply.AddReplyHeader(xid);
 	    reply.AddLong(NFS_OK);
-	    fattr fa = new fattr(handles, tm);
+	    fattr fa = new fattr(fsinfo.core, handles, tm);
 	    fa.Load(fileName);
 	    fa.Emit(reply);
 	    return reply;
@@ -96,10 +96,10 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 	    String dirName = GetNameFromHandle(dir.Handle(), xid);
 	    String fileName = pm.MakePath(dirName, entry);
 	    
-	    File fd = new File(fileName); // open it to make sure it exists
+            File fd = File.makeNew(fsinfo.localCore, fsinfo.core, fileName); // open it to make sure it exists
 	    if (fd.exists() != true)
 	        throw new NFSException(xid, NFSERR_NOENT);
-	    fattr childFA = new fattr(handles, tm);
+	    fattr childFA = new fattr(fsinfo.core, handles, tm);
 	    childFA.Load(fileName);
 	    
 	    // make a fhandle for this new path
@@ -136,11 +136,11 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 	System.out.print("Reading dir " + dirName + " cookie=" + cookie
 			 + " count=" + count + "\n");
 	if (cookie == 0 || (dirName.equals(cachedDirName) == false)) {
-	    File dirfd = new File(dirName);
+	    File dirfd = new File.makeNew(fsinfo.localCore, fsinfo.core, dirName);
 	    if (dirfd == null)
 		throw new NFSException(xid, NFSERR_NOENT);
 
-	    String [] dirfiles = dirfd.list();
+	    String [] dirfiles = dirfd.list().contents;
 	    if (dirfiles == null)
 		throw new NFSException(xid, NFSERR_NOENT);
 	    System.out.println("dir has " + dirfiles.length + " entries");
@@ -215,10 +215,13 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 	    String path = pm.MakePath(dirName, entry);
 	    
 	    // make the file
-	    File fd = new File(path);
+	    File fd = File.makeNew(fsinfo.localcore, fsinfo.core, path);
 	    if (fd.exists()) 
 	        throw new NFSException(xid, NFSERR_EXIST);
-	    RandomAccessFile ra = new RandomAccessFile(path, "rw");
+            
+            // TODO attributes not supported yet
+//	    RandomAccessFile ra = new RandomAccessFile(path, "rw");
+            RandomAccessFile ra = RandomAccessFile.makeNew(fsinfo.localCore, fsinfo.core, path);
 	    ra.close();
 	    
 	    // make a new handle for this file
@@ -227,7 +230,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 	    fh.Set(dirFH.Root(), handle, dirFH.ReadOnly());
 	    
 	    // get the attributes of this new file
-	    fattr fa = new fattr(handles, tm);
+	    fattr fa = new fattr(fsinfo.core, handles, tm);
 	    fa.Load(path);
 
 	    // create the reply packet
@@ -253,7 +256,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 	
 	// open and delete the file
 	String dirName = GetNameFromHandle(dirFH.Handle(), xid);
-	File fd = new File(dirName, entry);
+	File fd = File.makeNew(fsinfo.localCore, fsinfo.core, dirName + FileSystemObject.separatorChar + entry);
 	if (fd.exists() == false) 
 	    throw new NFSException(xid, NFSERR_NOENT);
 	if (fd.delete() == false) 
@@ -273,7 +276,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 	    
 	    String dirName = GetNameFromHandle(dirFH.Handle(), xid);
 	    String newdir = pm.MakePath(dirName, entry);
-	    File fd = new File(newdir);
+	    File fd = File.makeNew(fsinfo.localCore, fsinfo.core, newdir);
 	    
 	    if (fd.exists() == true) 
 	      throw new NFSException(xid, NFSERR_EXIST);
@@ -285,7 +288,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 	    newFH.Set(dirFH.Root(), handle, dirFH.ReadOnly());
 	    
 	    // get the attributes
-	    fattr fa = new fattr(handles, tm);
+	    fattr fa = new fattr(fsinfo.localCore, fsinfo.core, handles, tm);
 	    fa.Load(newdir);
 	    
 	    XDRPacket reply = new XDRPacket(128);
@@ -305,7 +308,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 	String name = packet.GetString();
 	
 	String dirname = GetNameFromHandle(dirFH.Handle(), xid);
-	File fd = new File(dirname, name);
+	File fd = File.makeNew(fsinfo.localCore, fsinfo.core, dirname + FileSystemObject.separatorChar + name);
 	// do some correctness checking
 	if (fd.exists() == false)
 	    throw new NFSException(xid, NFSERR_NOENT);
@@ -337,32 +340,36 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 	return reply;
     }
 
-    XDRPacket Rename(long xid, XDRPacket packet) throws NFSException {
-	// collect arguments from RPC packet
-	fhandle srcFH = new fhandle(packet);
-	String srcentry = packet.GetString();
-	fhandle destFH = new fhandle(packet);
-	String destentry = packet.GetString();
-	
-	// compute the path names specified
-	String srcdir = GetNameFromHandle(srcFH.Handle(), xid);
-	String destdir = GetNameFromHandle(destFH.Handle(), xid);
-	
-	File src = new File(srcdir, srcentry);
-	if (src.exists() == false)
-	  throw new NFSException(xid, NFSERR_NOENT);
-	File dest = new File(destdir, destentry);
-	if (dest.exists()) 
-	  throw new NFSException(xid, NFSERR_EXIST);
-	// do the rename operation
-	if (src.renameTo(dest) == false)
-	  throw new NFSException(xid, NFSERR_IO);
-	
-	XDRPacket reply = new XDRPacket(128);
-	reply.AddReplyHeader(xid);
-	reply.AddLong(NFS_OK);
-	return reply;
-    }
+    /*
+     * TODO: Not supported yet
+     */
+
+//    XDRPacket Rename(long xid, XDRPacket packet) throws NFSException {
+//	// collect arguments from RPC packet
+//	fhandle srcFH = new fhandle(packet);
+//	String srcentry = packet.GetString();
+//	fhandle destFH = new fhandle(packet);
+//	String destentry = packet.GetString();
+//	
+//	// compute the path names specified
+//	String srcdir = GetNameFromHandle(srcFH.Handle(), xid);
+//	String destdir = GetNameFromHandle(destFH.Handle(), xid);
+//	
+//	File src = new File(srcdir, srcentry);
+//	if (src.exists() == false)
+//	  throw new NFSException(xid, NFSERR_NOENT);
+//	File dest = new File(destdir, destentry);
+//	if (dest.exists()) 
+//	  throw new NFSException(xid, NFSERR_EXIST);
+//	// do the rename operation
+//	if (src.renameTo(dest) == false)
+//	  throw new NFSException(xid, NFSERR_IO);
+//	
+//	XDRPacket reply = new XDRPacket(128);
+//	reply.AddReplyHeader(xid);
+//	reply.AddLong(NFS_OK);
+//	return reply;
+//    }
     
     // local procedure to get the associated with a handle, throws an exception
     //   if there is a problem.

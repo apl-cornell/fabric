@@ -1,10 +1,14 @@
 package fabnfs;
 
+import fabric.client.Core;
+
 // this class is used to encapsulate all of the file system information.  The
 //   idea is that it be replaced by native code to get better NFS behavior.
 class FileSystemInfo extends java.lang.Object  {
     
-    FileSystemInfo() { };
+    Core core;
+    Core localCore;
+    FileSystemInfo(Core core, Core localCore) {this.core = core; this.localCore = localCore};
     
     void SetFS(String path) { /* nothing */ };
     

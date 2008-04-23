@@ -197,6 +197,13 @@
       <classpath refid="standard.classpath"/>
     </javac>
   </target>
+	
+  <target name="io" depends="client">
+    <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
+      <include name="fabric/io/**" />
+      <classpath refid="standard.classpath"/>
+    </javac>
+  </target>
 
   <!-- Compiles the Fabric system-debugging tools -->
   <target name="client-debug" depends="client,fabric-runtime">
@@ -247,7 +254,7 @@
 
   <!-- Compiles the Fabric runtime -->
   <target name="fabric-runtime"
-  depends="init,fabric-compiler,fabric-signatures,client">
+  depends="init,fabric-compiler,fabric-signatures,client,io">
     <mkdir dir="${runtime.classes}" />
         
     <apply executable="bash"

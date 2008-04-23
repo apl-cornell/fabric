@@ -1,6 +1,7 @@
 package fabnfs;
 
 import fabric.io.File;
+import fabric.client.Core;
 import java.io.FileNotFoundException;
 
 /* replacing java.io.File by fabric.io.File , etc. */
@@ -11,7 +12,7 @@ import java.io.FileNotFoundException;
 // Sun Microsystems, Inc.                                         [Page 15]
 // RFC 1094                NFS: Network File System              March 1989
 //
-class fattr extends java.lang.Object  implements NFSConsts, UnixPermissions {
+class fattr implements NFSConsts, UnixPermissions {
     long         type;
     long	 mode;
     long	 nlink;
@@ -31,9 +32,13 @@ class fattr extends java.lang.Object  implements NFSConsts, UnixPermissions {
     static TimeMapper tm;
     Handle fileHandles;
     
-    fattr(Handle h, TimeMapper t) { fileHandles = h; tm = t; }
+    Core core;
+    Core localCore;
+    
+    fattr(Core localCore, Core core, Handle h, TimeMapper t) { this.localCore = localCore; this.core = core; fileHandles = h; tm = t; }
     fattr(boolean controlDebug) { debug = controlDebug; }
 
+    /* Never called */
     boolean Read(XDRPacket from) {
 	type = from.GetLong();
 	mode = from.GetLong();
@@ -81,7 +86,7 @@ class fattr extends java.lang.Object  implements NFSConsts, UnixPermissions {
     };
 
     long Load(String file) throws FileNotFoundException {
-	File fd = new File(file);
+	File fd = File.makeNew(localCore, core, file);
 	if (fd.exists() != true) {
 	    if (debug) {
 		System.out.print("fattr: file " + file + " doesn't exist.\n");

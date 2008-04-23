@@ -36,7 +36,7 @@ class NFSHandler extends rpcHandler implements RPCConsts, NFSConsts
 	dirService = new NFSDir(fileHandles, pathmapper, timemapper, fsinfo);
 	
 	// io helper, does file read and write
-	ioService = new NFSIO(fileHandles, timemapper);
+	ioService = new NFSIO(fileHandles, timemapper, fsinfo);
 
         // XXX the xid cache has been removed
 	// packetQueue = new XIDCache();
