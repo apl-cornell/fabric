@@ -16,8 +16,8 @@ import fabric.common.InternalError;
 import fabric.common.Resources;
 import fabric.core.Options.CoreKeyStores;
 
-// TODO implement dissemination nodes
 public class Node {
+  
   public Options opts;
 
   /**
@@ -42,6 +42,8 @@ public class Node {
    * The thread pool.
    */
   private Stack<Worker> pool;
+  
+  private Principal root;
   
   public ConsoleHandler console;
 
@@ -143,6 +145,16 @@ public class Node {
     c.sm      = new SimpleSurrogateManager(os);
     c.factory = sslSocketFactory;
     cores.put(coreName, c);
+  }
+  
+  /**
+   * Returns the core corresponding to the given name.
+   * 
+   * @param name Name of core to retrieve.
+   * @return The requested core, or null if it does not exist.
+   */
+  public Core getCore(String name) {
+    return cores.get(name);
   }
 
   /**

@@ -1,12 +1,12 @@
 package fabric.io;
 
-public class fileByteArray {
+public class FileByteArray {
   public byte[] contents;
-  public fileByteArray(int length) {
+  public FileByteArray(int length) {
     contents = new byte[length];
   }
   
-  public fileByteArray(byte[] wrapped) {
+  public FileByteArray(byte[] wrapped) {
     this.contents = wrapped;
   }
   

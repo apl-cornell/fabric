@@ -46,7 +46,7 @@ public class AbortTransactionMessage extends
   /**
    * Deserialization constructor.
    */
-  AbortTransactionMessage(ObjectInputStream in) throws IOException {
+  protected AbortTransactionMessage(ObjectInputStream in) throws IOException {
     this(in.readInt());
   }
 

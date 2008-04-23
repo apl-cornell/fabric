@@ -1,14 +1,16 @@
-package fabric.client;
+package fabric.core;
 
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import fabric.client.RemoteCore;
+import fabric.client.TransactionCommitFailedException;
+import fabric.client.TransactionPrepareFailedException;
 import fabric.common.InternalError;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyMap;
-import fabric.core.PrepareRequest;
-import fabric.core.TransactionManager;
+import fabric.core.Node.Core;
 import fabric.core.store.StoreException;
 import fabric.lang.Object.$Impl;
 
@@ -21,14 +23,14 @@ import fabric.lang.Object.$Impl;
  */
 public class InProcessCore extends RemoteCore {
 
-  InProcessCore(String name) {
+  protected TransactionManager tm;
+  protected Principal client;
+
+  public InProcessCore(String name, Core c) {
     super(name);
     // TODO Auto-generated constructor stub
   }
-
-  TransactionManager tm;
-  Principal          client;
-
+  
   @Override
   public void abortTransaction(int transactionID) {
     tm.abortTransaction(client, transactionID);

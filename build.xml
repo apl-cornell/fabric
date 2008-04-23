@@ -154,14 +154,17 @@
     </delete>
   </target>
 	
-  <uptodate property="native.up-to-date">
-    <srcfiles dir="${system.src}" includes="fabric/lang/**" />
-    <srcfiles dir="${system.src}" includes="fabric/common/**" />
-    <globmapper from="*.java" to="../../classes/*.class" />
-  </uptodate>
+  <target name="native-check"> 
+    <uptodate property="native.up-to-date">
+      <srcfiles dir="${system.src}" includes="fabric/lang/**" />
+      <srcfiles dir="${system.src}" includes="fabric/common/**" />
+      <globmapper from="*.java" to="../../classes/*.class" />
+    </uptodate>
+  </target>
 	
   <!-- Compiles the Fabric native runtime classes -->
-  <target name="native" depends="init,fabric-compiler" unless="native.up-to-date">
+  <target name="native" depends="init,fabric-compiler,native-check" 
+  	unless="native.up-to-date">
     <javac target="1.5" srcdir="${signatures.src}" destdir="${classes}" debug="on">
       <include name="fabric/lang/auth/Label.java" />
       <classpath refid="standard.classpath"/>

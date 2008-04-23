@@ -49,7 +49,7 @@ public class CommitTransactionMessage extends
   /**
    * Deserialization constructor.
    */
-  CommitTransactionMessage(ObjectInputStream in) throws IOException {
+  protected CommitTransactionMessage(ObjectInputStream in) throws IOException {
     this(in.readInt());
   }
 

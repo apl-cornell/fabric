@@ -40,7 +40,7 @@ import fabric.lang.arrays.ObjectArray;
  * methods, and can then use the singleton Client instance to access Cores and
  * Objects.
  */
-public final class Client {
+public class Client {
   // A map from core hostnames to Core objects
   protected final Map<String, RemoteCore> cores;
 

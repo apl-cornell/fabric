@@ -80,7 +80,7 @@ public final class SerializedObject implements FastSerializable {
   public SerializedObject($Impl obj) {
     this.onum = obj.$getOnum();
     this.className = obj.getClass().getName();
-    this.label = obj.$getLabel().$getOnum();
+    this.label = getLabel(obj);
     this.version = obj.$version;
 
     ByteArrayOutputStream serializedData = new ByteArrayOutputStream();
@@ -113,7 +113,7 @@ public final class SerializedObject implements FastSerializable {
   public SerializedObject(long onum, Label label, Pair<String, Long> remoteRef) {
     this.onum = onum;
     this.className = Surrogate.class.getName();
-    this.label = label.$getOnum();
+    this.label = getLabel(label);
 
     ByteArrayOutputStream serializedData = new ByteArrayOutputStream();
     try {
@@ -171,6 +171,22 @@ public final class SerializedObject implements FastSerializable {
   public String toString() {
     return onum + "v" + version;
   }
+  
+  private long getLabel($Impl o) {
+    if (o == null || o.$getLabel() == null) {
+      return -1;
+    } else {
+      return o.$getLabel().$getOnum();
+    }
+  }
+  
+  private long getLabel(Label l) {
+    if (l == null) {
+      return -1;
+    } else {
+      return l.$getOnum();
+    }
+  }
 
   /**
    * Writes the given $Impl out to the given output stream. The behaviour of
@@ -187,7 +203,11 @@ public final class SerializedObject implements FastSerializable {
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
     
-    out.writeLong(impl.$getLabel().$getOnum());
+    if (impl.$getLabel() == Label.DEFAULT) {
+      out.writeLong(-1l);
+    } else {
+      out.writeLong(impl.$getLabel().$getOnum());
+    }
 
     // Get the object to serialize itself into a bunch of buffers.
     ByteArrayOutputStream bos = new ByteArrayOutputStream();

@@ -9,7 +9,7 @@ public interface RandomAccessFile {
 
   public void seek(int offset);
 
-  public void write(fileByteArray b, int off, int len);
+  public void write(FileByteArray b, int off, int len);
 
   public void close();
 }

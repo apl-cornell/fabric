@@ -64,7 +64,7 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
   /**
    * Deserialization constructor.
    */
-  AllocateMessage(ObjectInputStream in) throws IOException {
+  protected AllocateMessage(ObjectInputStream in) throws IOException {
     this(in.readInt());
   }
 

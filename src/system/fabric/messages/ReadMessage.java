@@ -92,7 +92,7 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
   /**
    * Deserialization constructor.
    */
-  ReadMessage(ObjectInputStream in) throws IOException {
+  protected ReadMessage(ObjectInputStream in) throws IOException {
     this(in.readLong());
   }
 

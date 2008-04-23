@@ -400,13 +400,13 @@ public interface Object {
         ClassNotFoundException {
       this.$core = core;
       this.$onum = onum;
-      this.$label = new Label.$Proxy(core, label);
+      this.$label = label == -1 ? Label.DEFAULT : new Label.$Proxy(core, label);
       this.$version = version;
       this.$readTransactionID = -1;
       this.$createTransactionID = -1;
       this.$writeTransactionID = -1;
     }
-
+    
     /**
      * A helper method for reading a pointer during object deserialization.
      * 

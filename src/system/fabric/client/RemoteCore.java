@@ -73,7 +73,7 @@ public class RemoteCore implements Core {
   /**
    * Creates a core representing the core at the given host name.
    */
-  RemoteCore(String name) {
+  protected RemoteCore(String name) {
     this.name = name;
     this.objects = new LongKeyHashMap<SoftReference<Object.$Impl>>();
     this.fresh_ids = new LinkedList<Long>();
@@ -251,8 +251,7 @@ public class RemoteCore implements Core {
   }
 
   /**
-   * Fetches the object from the serialized cache, or goes to the core if it is
-   * not present. Places the result in the object cache.
+   * Goes to the core to get object.
    * 
    * @param onum
    *                The object number to fetch

@@ -104,7 +104,7 @@ public class PrepareTransactionMessage extends
    * 
    * @throws IOException
    */
-  PrepareTransactionMessage(ObjectInputStream in) throws IOException {
+  protected PrepareTransactionMessage(ObjectInputStream in) throws IOException {
     super(MessageType.PREPARE_TRANSACTION);
     this.creates = null;
     this.writes = null;
