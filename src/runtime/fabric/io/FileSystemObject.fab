@@ -1,0 +1,18 @@
+package fabric.io;
+
+public class FileSystemObject {
+    
+    public static final String separatorChar = "/";
+    String fileName;
+    FabDirectory parent;
+    // have a bunch of attributes here
+    
+    public FileSystemObject(String name, FabDirectory parent) {
+        this.fileName = name;
+        this.parent = parent;
+    }
+    
+    public void selfDestruct() {
+        parent.dirElements.remove(fileName);
+    }
+}

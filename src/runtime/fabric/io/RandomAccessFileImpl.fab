@@ -1,0 +1,41 @@
+package fabric.io;
+
+import fabric.lang.arrays.ResizableByteArray;
+import fabric.client.Core;
+import java.io.IOException;
+
+public class RandomAccessFileImpl implements RandomAccessFile {
+    FileImpl file;
+    ResizableByteArray contents;
+    int currentPos;
+    
+    public RandomAccessFileImpl(Core remoteCore, String path) throws IOException {
+        this.file = new FileImpl(remoteCore, path);
+        
+        if(!file.exists()) {
+            if(!file.mkfile()) {
+                throw new IOException("Cannot find or create file: " + path);
+            }
+        }
+        contents = ((FabFile)file.element).contents;
+    }
+    
+    public RandomAccessFile makeNew(Core localCore, Core core, String path) throws IOException {
+        return new RandomAccessFileImpl@localCore(core, path);
+    }
+    
+    public void seek(int offset) {
+        currentPos += offset;
+    }
+    
+    public void write(fileByteArray b, int off, int len) {
+        for(int i = 0; i < len; i++) {
+            contents.set(i, b.get(i+off));
+        }
+    }
+    
+    public void close() {
+        
+    }
+    
+}

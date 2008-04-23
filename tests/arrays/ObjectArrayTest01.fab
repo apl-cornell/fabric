@@ -39,7 +39,7 @@ public class ObjectArrayTest01 {
         isBatchOutput = args[4].equals("true")?true:false;
 
 
-        Core core = Client.getClient().getLocalCore();
+        Core core = fabric.client.Client.getClient().getCore("core0");        
         long startTime, startInitialize, startReadIteration, startWriteIteration, startResize, endTime;
         float creation=0, initialization=0, reading=0, replacing=0, resizing=0;
 

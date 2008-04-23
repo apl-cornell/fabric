@@ -161,6 +161,14 @@ public class ResizableByteArray {
         }
         return ((byteArray)node).get(i);
     }
+    
+    /* This method really needs to be optimized */
+    public int get(int i, fabric.io.fileByteArray barray) {
+        for(int j = i; j < i + barray.length(); j++) {
+            barray.set(j-i, get(j));
+        }
+        return barray.length();
+    }
 
     public byte set(int i, byte data) {
         if (i >= length) throw new ArrayIndexOutOfBoundsException();

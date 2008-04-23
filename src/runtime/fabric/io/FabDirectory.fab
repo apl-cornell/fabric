@@ -1,0 +1,57 @@
+package fabric.io;
+
+import fabric.util.HashMap;
+import fabric.util.Collection;
+import fabric.util.Iterator;
+
+public class FabDirectory extends FileSystemObject {
+    
+    /** 
+     * Elements of this directory. Could be files or other directories
+     */
+    HashMap dirElements;
+    
+//    public FabDirectory(HashMap dirElements) {
+//        this.dirElements = dirElements;
+//    }
+//    
+    public FabDirectory(String name, FabDirectory parent) {
+        super(name, parent);
+        dirElements = new HashMap();
+    }
+    
+    /* This returns the root directory */
+    public FabDirectory() {
+        super("", null);
+        this.parent = this;
+        dirElements = new HashMap();
+    }
+    
+    public FileSystemObject getFile(String name) {
+        return (FileSystemObject)dirElements.get(name);
+    }
+    
+    public FabDirectory mkdir(String name) {
+        FabDirectory subdir = new FabDirectory(name, this);
+        dirElements.put(name, subdir);
+        return subdir;
+    }
+    
+    public FabFile mkfile(String name) {
+        FabFile file = new FabFile(name, this);
+        dirElements.put(name, file);
+        return file;
+    }
+    
+    public StringArray list() {
+        Collection coll = dirElements.values();
+        int size = coll.size();
+        StringArray toReturn = new StringArray(size);
+        int i = 0;
+        for(Iterator it = coll.iterator(fabric.client.Client.getClient().getLocalCore()); it.hasNext(); ) {
+            toReturn.set(i++, (String)it.next());
+        }
+        return toReturn;
+    }
+    
+}
