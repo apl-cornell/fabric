@@ -1,6 +1,7 @@
 package fabric.core;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
   @SuppressWarnings("unchecked")
   public void createSurrogates(PrepareRequest req) {
     Map<Pair<String,Long>, Long> cache = new TreeMap<Pair<String,Long>,Long>();
+    Collection<SerializedObject> surrogates = new ArrayList<SerializedObject>();
 
     for (SerializedObject obj : Util.chain(req.creates, req.writes)) {
       Iterator<Long> intracore = obj.getIntracoreRefs().iterator();
@@ -68,14 +70,25 @@ public class SimpleSurrogateManager implements SurrogateManager {
               throw new InternalError(e);
             }
             // TODO: policy?
-            req.creates.add(new SerializedObject(onum, Label.DEFAULT, ref));
+            surrogates.add(new SerializedObject(onum, Label.DEFAULT, ref));
+            cache.put(ref, onum);
           }
           newtypes.add(RefTypeEnum.ONUM);
           newrefs.add(onum);
           break;
         }
       }
+      
+      // set the refs on the object
+      obj.getRefTypes().clear();
+      obj.getIntercoreRefs().clear();
+      obj.getIntracoreRefs().clear();
+      obj.getRefTypes().addAll(newtypes);
+      obj.getIntracoreRefs().addAll(newrefs);
     }
+    
+    // add the surrogates to the creates list
+    req.creates.addAll(surrogates);
   }
   
 }
