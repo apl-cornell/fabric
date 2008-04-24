@@ -1,8 +1,6 @@
 package fabric.messages;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
@@ -49,7 +47,7 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
      * @param in
      *                the input stream from which to read the response.
      */
-    Response(Core core, ObjectInputStream in) throws IOException {
+    Response(Core core, DataInput in) throws IOException {
       this.core = core;
       int size = in.readInt();
       this.related = new LongKeyHashMap<SerializedObject>(size);
@@ -62,9 +60,9 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.messages.Message.Response#write(java.io.ObjectOutputStream)
+     * @see fabric.messages.Message.Response#write(java.io.DataOutput)
      */
-    public void write(ObjectOutputStream out) throws IOException {
+    public void write(DataOutput out) throws IOException {
       out.writeInt(related.size());
       for (LongKeyMap.Entry<SerializedObject> entry : related.entrySet()) {
         out.writeLong(entry.getKey());
@@ -92,7 +90,7 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
   /**
    * Deserialization constructor.
    */
-  protected ReadMessage(ObjectInputStream in) throws IOException {
+  protected ReadMessage(DataInput in) throws IOException {
     this(in.readLong());
   }
 
@@ -123,17 +121,17 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
   }
 
   @Override
-  public Response response(Core c, ObjectInputStream in) throws IOException {
+  public Response response(Core c, DataInput in) throws IOException {
     return new Response(c, in);
   }
   
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#write(java.io.ObjectOutputStream)
+   * @see fabric.messages.Message#write(java.io.DataOutput)
    */
   @Override
-  public void write(ObjectOutputStream out) throws IOException {
+  public void write(DataOutput out) throws IOException {
     out.writeLong(onum);
   }
 

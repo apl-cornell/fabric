@@ -1,8 +1,6 @@
 package fabric.messages;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
@@ -24,7 +22,7 @@ public class AbortTransactionMessage extends
      * @param in
      *                the input stream from which to read the response.
      */
-    Response(Core core, ObjectInputStream in) {
+    Response(Core core, DataInput in) {
     }
 
     /*
@@ -32,7 +30,7 @@ public class AbortTransactionMessage extends
      * 
      * @see fabric.messages.Message.Response#write(java.io.ObjectOutputStream)
      */
-    public void write(ObjectOutputStream out) {
+    public void write(DataOutput out) {
     }
   }
 
@@ -46,7 +44,7 @@ public class AbortTransactionMessage extends
   /**
    * Deserialization constructor.
    */
-  protected AbortTransactionMessage(ObjectInputStream in) throws IOException {
+  protected AbortTransactionMessage(DataInput in) throws IOException {
     this(in.readInt());
   }
 
@@ -78,7 +76,7 @@ public class AbortTransactionMessage extends
   }
 
   @Override
-  public Response response(Core c, ObjectInputStream in) {
+  public Response response(Core c, DataInput in) {
     return new Response(c, in);
   }
   
@@ -88,7 +86,7 @@ public class AbortTransactionMessage extends
    * @see fabric.messages.Message#write(java.io.ObjectOutputStream)
    */
   @Override
-  public void write(ObjectOutputStream out) throws IOException {
+  public void write(DataOutput out) throws IOException {
     out.writeInt(transactionID);
   }
 

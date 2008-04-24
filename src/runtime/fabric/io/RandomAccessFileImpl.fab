@@ -28,7 +28,7 @@ public class RandomAccessFileImpl implements RandomAccessFile {
         currentPos += offset;
     }
     
-    public void write(fileByteArray b, int off, int len) {
+    public void write(FileByteArray b, int off, int len) {
         for(int i = 0; i < len; i++) {
             contents.set(i, b.get(i+off));
         }

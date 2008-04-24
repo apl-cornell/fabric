@@ -1,8 +1,6 @@
 package fabric.messages;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.security.Principal;
@@ -19,7 +17,7 @@ import fabric.core.Worker;
 public abstract class Message<R extends Message.Response> {
 
   public static interface Response {
-    void write(ObjectOutputStream out) throws IOException;
+    void write(DataOutput out) throws IOException;
   }
 
   protected static enum MessageType {
@@ -192,7 +190,7 @@ public abstract class Message<R extends Message.Response> {
    *                 in the i/o streams provided.
    * @throws ClassNotFoundException
    */
-  public static void receive(ObjectInputStream in, ObjectOutputStream out,
+  public static void receive(DataInput in, ObjectOutputStream out,
       Worker handler) throws IOException {
 
     try {
@@ -201,7 +199,7 @@ public abstract class Message<R extends Message.Response> {
       Message<?> m;
       try {
         m =
-            messageClass.getDeclaredConstructor(ObjectInputStream.class)
+            messageClass.getDeclaredConstructor(DataInput.class)
                 .newInstance(in);
       } catch (InvocationTargetException e) {
         Throwable cause = e.getCause();
@@ -260,7 +258,7 @@ public abstract class Message<R extends Message.Response> {
    * @param in Input stream containing the message.
    * @return A Response message with the appropriate type.
    */
-  public abstract R response(Core c, ObjectInputStream in) throws IOException;
+  public abstract R response(Core c, DataInput in) throws IOException;
 
   /**
    * Writes this message out on the given output stream. Only used by the
@@ -269,5 +267,5 @@ public abstract class Message<R extends Message.Response> {
    * @throws IOException
    *                 if the output stream throws an IOException.
    */
-  public abstract void write(ObjectOutputStream out) throws IOException;
+  public abstract void write(DataOutput out) throws IOException;
 }

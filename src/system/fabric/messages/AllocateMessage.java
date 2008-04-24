@@ -1,8 +1,6 @@
 package fabric.messages;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
@@ -33,7 +31,7 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
      * @param in
      *                the input stream from which to read the response.
      */
-    Response(Core core, ObjectInputStream in) throws IOException {
+    Response(Core core, DataInput in) throws IOException {
       oids = new long[in.readInt()];
       for (int i = 0; i < oids.length; i++)
         oids[i] = in.readLong();
@@ -42,9 +40,9 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.messages.Message.Response#write(java.io.ObjectOutputStream)
+     * @see fabric.messages.Message.Response#write(java.io.DataOutput)
      */
-    public void write(ObjectOutputStream out) throws IOException {
+    public void write(DataOutput out) throws IOException {
       out.writeInt(oids.length);
       for (long oid : oids) out.writeLong(oid);
     }
@@ -64,7 +62,7 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
   /**
    * Deserialization constructor.
    */
-  protected AllocateMessage(ObjectInputStream in) throws IOException {
+  protected AllocateMessage(DataInput in) throws IOException {
     this(in.readInt());
   }
 
@@ -95,17 +93,17 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
   }
 
   @Override
-  public Response response(Core c, ObjectInputStream in) throws IOException {
+  public Response response(Core c, DataInput in) throws IOException {
     return new Response(c, in);
   }
   
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#write(java.io.ObjectOutputStream)
+   * @see fabric.messages.Message#write(java.io.DataOutput)
    */
   @Override
-  public void write(ObjectOutputStream out) throws IOException {
+  public void write(DataOutput out) throws IOException {
     out.writeInt(num);
   }
 

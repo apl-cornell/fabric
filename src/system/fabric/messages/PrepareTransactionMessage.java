@@ -1,8 +1,6 @@
 package fabric.messages;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -41,16 +39,16 @@ public class PrepareTransactionMessage extends
      * @param in
      *                the input stream from which to read the response.
      */
-    Response(Core core, ObjectInputStream in) throws IOException {
+    Response(Core core, DataInput in) throws IOException {
       transactionID = in.readInt();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.messages.Message.Response#write(java.io.ObjectOutputStream)
+     * @see fabric.messages.Message.Response#write(java.io.DataOutput)
      */
-    public void write(ObjectOutputStream out) throws IOException {
+    public void write(DataOutput out) throws IOException {
       out.writeInt(transactionID);
     }
   }
@@ -104,7 +102,7 @@ public class PrepareTransactionMessage extends
    * 
    * @throws IOException
    */
-  protected PrepareTransactionMessage(ObjectInputStream in) throws IOException {
+  protected PrepareTransactionMessage(DataInput in) throws IOException {
     super(MessageType.PREPARE_TRANSACTION);
     this.creates = null;
     this.writes = null;
@@ -124,7 +122,7 @@ public class PrepareTransactionMessage extends
     if (size == 0) {
       serializedCreates = Collections.emptyList();
     } else {
-      serializedCreates = new ArrayList<SerializedObject>();
+      serializedCreates = new ArrayList<SerializedObject>(size);
       for (int i = 0; i < size; i++)
         serializedCreates.add(new SerializedObject(in));
     }
@@ -134,7 +132,7 @@ public class PrepareTransactionMessage extends
     if (size == 0) {
       serializedWrites = Collections.emptyList();
     } else {
-      serializedWrites = new ArrayList<SerializedObject>();
+      serializedWrites = new ArrayList<SerializedObject>(size);
       for (int i = 0; i < size; i++)
         serializedWrites.add(new SerializedObject(in));
     }
@@ -170,17 +168,17 @@ public class PrepareTransactionMessage extends
   }
 
   @Override
-  public Response response(Core c, ObjectInputStream in) throws IOException {
+  public Response response(Core c, DataInput in) throws IOException {
     return new Response(c, in);
   }
   
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#write(java.io.ObjectOutputStream)
+   * @see fabric.messages.Message#write(java.io.DataOutput)
    */
   @Override
-  public void write(ObjectOutputStream out) throws IOException {
+  public void write(DataOutput out) throws IOException {
     // Serialize reads.
     if (reads == null) {
       out.writeInt(0);

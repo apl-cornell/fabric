@@ -190,11 +190,11 @@ public final class SerializedObject implements FastSerializable {
 
   /**
    * Writes the given $Impl out to the given output stream. The behaviour of
-   * this method should mirror write(ObjectOutputStream).
+   * this method should mirror write(DataOutput).
    * 
-   * @see SerializedObject#write(ObjectOutputStream)
-   * @see SerializedObject#readImpl(Core, ObjectInputStream)
-   * @see SerializedObject#SerializedObject(ObjectInput)
+   * @see SerializedObject#write(DataOutput)
+   * @see SerializedObject#readImpl(Core, DataInput)
+   * @see SerializedObject#SerializedObject(DataInput)
    */
   public static void write($Impl impl, DataOutput out)
       throws IOException {
@@ -241,11 +241,11 @@ public final class SerializedObject implements FastSerializable {
 
   /**
    * Writes this SerializedObject out to the given output stream. The behavior
-   * of this method should mirror write($Impl, ObjectOutputStream).
+   * of this method should mirror write($Impl, DataOutput).
    * 
-   * @see SerializedObject#write($Impl, ObjectOutputStream)
-   * @see SerializedObject#readImpl(Core, ObjectInputStream)
-   * @see SerializedObject#SerializedObject(ObjectInput)
+   * @see SerializedObject#write($Impl, DataOutput)
+   * @see SerializedObject#readImpl(Core, DataInput)
+   * @see SerializedObject#SerializedObject(DataInput)
    */
   public void write(DataOutput out) throws IOException {
     // Write out the object header.
@@ -279,9 +279,9 @@ public final class SerializedObject implements FastSerializable {
    * 
    * @param in
    *                An input stream containing a serialized object.
-   * @see SerializedObject#write(ObjectOutputStream)
-   * @see SerializedObject#write($Impl, ObjectOutputStream)
-   * @see SerializedObject#readImpl(Core, ObjectInputStream)
+   * @see SerializedObject#write(DataOutput)
+   * @see SerializedObject#write($Impl, DataOutput)
+   * @see SerializedObject#readImpl(Core, DataInput)
    */
   public SerializedObject(DataInput in) throws IOException {
     // Read the object header.
@@ -332,9 +332,9 @@ public final class SerializedObject implements FastSerializable {
    *                The core on which the object lives.
    * @param in
    *                The input stream from which to read the object.
-   * @see SerializedObject#write(ObjectOutputStream)
-   * @see SerializedObject#write($Impl, ObjectOutputStream)
-   * @see SerializedObject#SerializedObject(ObjectInput)
+   * @see SerializedObject#write(DataOutput)
+   * @see SerializedObject#write($Impl, DataOutput)
+   * @see SerializedObject#SerializedObject(DataInput)
    */
   public static $Impl readImpl(Core core, DataInput in)
       throws ClassNotFoundException, IOException {

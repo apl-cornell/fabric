@@ -38,7 +38,7 @@ public final class PrepareRequest implements Iterable<Long>, FastSerializable {
    * A deserialization constructor. Used for reading back PrepareRequests from
    * persistent storage.
    */
-  public PrepareRequest(ObjectInputStream in) throws IOException {
+  public PrepareRequest(DataInput in) throws IOException {
     // Read reads.
     int size = in.readInt();
     if (size == 0) {
@@ -54,7 +54,7 @@ public final class PrepareRequest implements Iterable<Long>, FastSerializable {
     if (size == 0) {
       creates = Collections.emptyList();
     } else {
-      creates = new ArrayList<SerializedObject>();
+      creates = new ArrayList<SerializedObject>(size);
       for (int i = 0; i < size; i++)
         creates.add(new SerializedObject(in));
     }
@@ -64,7 +64,7 @@ public final class PrepareRequest implements Iterable<Long>, FastSerializable {
     if (size == 0) {
       writes = Collections.emptyList();
     } else {
-      writes = new ArrayList<SerializedObject>();
+      writes = new ArrayList<SerializedObject>(size);
       for (int i = 0; i < size; i++)
         writes.add(new SerializedObject(in));
     }

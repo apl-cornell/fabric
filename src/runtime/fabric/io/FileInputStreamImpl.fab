@@ -30,7 +30,7 @@ public class FileInputStreamImpl implements FileInputStream {
         return n;
     }
     
-    public int read(fileByteArray fbarray) {
+    public int read(FileByteArray fbarray) {
         return barray.get(currentPos, fbarray);
         
     }
