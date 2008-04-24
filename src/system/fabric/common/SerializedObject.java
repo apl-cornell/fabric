@@ -221,12 +221,10 @@ public final class SerializedObject implements FastSerializable {
 
     // Write the object's contents.
     byte[] serializedData = bos.toByteArray();
-    out.writeInt(serializedData.length);
     out.writeInt(refTypes.size());
     out.writeInt(intracoreRefs.size());
     out.writeInt(intercoreRefs.size());
-    
-    out.write(serializedData);
+    out.writeInt(serializedData.length);
 
     for (RefTypeEnum refType : refTypes)
       out.writeByte(refType.ordinal());
@@ -238,6 +236,8 @@ public final class SerializedObject implements FastSerializable {
       out.writeUTF(oid.first);
       out.writeLong(oid.second);
     }
+    
+    out.write(serializedData);
   }
 
   /**
@@ -257,12 +257,10 @@ public final class SerializedObject implements FastSerializable {
     out.writeLong(label);
 
     // Write out the object's contents.
-    out.writeInt(serializedData.length);
     out.writeInt(refTypes.size());
     out.writeInt(intracoreRefs.size());
     out.writeInt(intercoreRefs.size());
-    
-    out.write(serializedData);
+    out.writeInt(serializedData.length);
 
     for (RefTypeEnum refType : refTypes)
       out.writeByte(refType.ordinal());
@@ -274,6 +272,8 @@ public final class SerializedObject implements FastSerializable {
       out.writeUTF(oid.first);
       out.writeLong(oid.second);
     }
+    
+    out.write(serializedData);
   }
 
   /**
@@ -294,13 +294,10 @@ public final class SerializedObject implements FastSerializable {
     this.label = in.readLong();
 
     // Read the object body.
-    int serializedDataLength = in.readInt();
     int numRefs = in.readInt();
     int numIntracoreRefs = in.readInt();
     int numIntercoreRefs = in.readInt();
-    
-    this.serializedData = new byte[serializedDataLength];
-    in.readFully(this.serializedData);
+    int serializedDataLength = in.readInt();
 
     if (numRefs == 0) {
       this.refTypes = Collections.emptyList();
@@ -327,6 +324,9 @@ public final class SerializedObject implements FastSerializable {
         this.intercoreRefs.add(new Pair<String, Long>(in.readUTF(), in
             .readLong()));
     }
+    
+    this.serializedData = new byte[serializedDataLength];
+    in.readFully(this.serializedData);
   }
 
   /**
@@ -350,18 +350,15 @@ public final class SerializedObject implements FastSerializable {
     long label = in.readLong();
 
     // Read the object body.
-    int serializedDataLength = in.readInt();
     int numRefs = in.readInt();
     int numIntracoreRefs = in.readInt();
+    int serializedDataLength = in.readInt();
 
     // There should be no intercore refs to read.
     if (in.readInt() != 0) {
       throw new InternalError(
           "Unexpected inter-core refs found during object deserialization.");
     }
-    
-    byte[] serializedData = new byte[serializedDataLength];
-    in.readFully(serializedData);
 
     List<RefTypeEnum> refTypes = new ArrayList<RefTypeEnum>(numRefs);
     RefTypeEnum[] refTypeEnums = RefTypeEnum.values();
@@ -371,6 +368,9 @@ public final class SerializedObject implements FastSerializable {
     List<Long> intracoreRefs = new ArrayList<Long>(numIntracoreRefs);
     for (int i = 0; i < numIntracoreRefs; i++)
       intracoreRefs.add(in.readLong());
+    
+    byte[] serializedData = new byte[serializedDataLength];
+    in.readFully(serializedData);
 
     try {
       // Call the deserialization constructor.
