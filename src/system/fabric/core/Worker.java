@@ -111,6 +111,8 @@ public class Worker extends Thread {
       } catch (InterruptedException e) {
         continue;
       }
+      
+      reset();
 
       SSLSocket sslSocket = null;
       try {
@@ -191,6 +193,7 @@ public class Worker extends Thread {
       logger.info(numCommits     + " commit requests");
       logger.info(numCreates     + " objects created");
       logger.info(numWrites      + " objects updated");
+      
       for (Map.Entry<String, Integer> entry : numSendsByType.entrySet()) {
         logger.info("\t" + entry.getValue() + " " + entry.getKey() + " sent");
       }
@@ -216,14 +219,16 @@ public class Worker extends Thread {
    * The execution body of the worker thread.
    */
   private void run_() throws IOException {
+    while (true) {
+      Message.receive(in, out, this);
+    }
+  }
+  
+  private void reset() {
     // Reset the statistics counters.
     numReads =
         numObjectsSent = numPrepares = numCommits = numCreates = numWrites = 0;
     numSendsByType = new TreeMap<String, Integer>();
-
-    while (true) {
-      Message.receive(in, out, this);
-    }
   }
 
   /**
