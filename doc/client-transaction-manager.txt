@@ -1,0 +1,103 @@
+This document describes our current thoughts on the design of the transaction
+manager for the client.  We start with the assumptions and requirements:
+
+Requirements
+============
+
+ - on the commit of a top-level transaction, we need to find all objects that
+   were read, written, or created in any non-aborted subtransaction.  The
+   creates list and read list should be disjoint, as should the creates list and
+   the writes list.
+
+ - on the rollback of any transaction, we need to restore all objects to the
+   state they held before that transaction began
+
+ - we need to ensure that no transaction reads two different versions of an
+   object
+
+ - no two threads can make conflicting accesses to the same data (TODO: this is
+   vague)
+
+
+Assumptions
+===========
+
+ - In the tree of subtransactions, only leaves are executing concurrently.
+   Stated differently, when a thread forks, both branches must be
+   subtransactions of the parent.
+
+ - once the top-level transaction within a thread aborts or commits, that thread
+   will terminate without performing further operations on the transaction
+   manager.
+ 
+ - the fetch operation will not be invoked concurrently on the same object
+
+Data structures and invariants
+==============================
+
+We store the following information per transaction:
+ - reads
+      a collection of all objects read in this transaction or completed
+      subtransactions
+
+ - writes
+      a collection of all objects written in this transaction or completed
+      subtransactions
+
+ - creates 
+      a collection of all objects read in this transaction or completed
+      subtransactions
+
+ - parent
+      the parent transaction of this transaction, or null if this tx is a
+      top-level transaction
+
+ - children
+      the collection of subtransactions.  parent and children are inverses
+
+ - abortSignal
+      a flag indicating that this transaction should abort.  This flag is
+      checked before each operation (and this check will not be mentioned
+      further)
+
+Per object data:
+ - writer
+      The unique running transaction that has written to the object, or null
+
+ - reader
+      Any transaction that has logged a read of the object, or null
+
+ - numWriters
+      The number of writers who desire or have aquired write locks
+
+ - history
+      The state of the object at the beginning of the writer transaction
+
+ - readList
+      A reference to the global read list and version number for this object
+      (see global data below)
+
+Per thread data:
+ - current
+      The current transaction in this thread
+
+Global data:
+ - readList
+      A map from oids to a version number and a list of transactions that have
+      read that version of the object.  It should be the case that for each
+      transaction tx, if o is in tx.reads then tx is in readlist[o] and
+      vice-versa
+
+We say that a transaction has acquired a write lock on an object if any entry in
+the objects history list has writer set to that transaction.  We say that a
+transaction has acquired a read lock if it is in the readList for that object.
+
+A set of locks is valid if for any pair of locks l1 and l2, one of the following
+holds:
+ 1. l1 and l2 are both read locks
+ 2. l1 is held by a transaction that is an ancestor of the tx holding l2
+ 3. l2 is held by a transaction that is an ancestor of the tx holding l1
+We maintain the invariant that the set of locks is always valid.
+
+
+
