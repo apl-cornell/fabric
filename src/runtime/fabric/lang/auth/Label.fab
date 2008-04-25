@@ -18,14 +18,17 @@ public interface Label {
      * that the result depends upon. If the method returns false,
      * then s has no eleents added to it.
      */
-    boolean relabelsTo(Label l, Set s);
+    //boolean relabelsTo(Label l, Set s);
     
     // not supported yet
     //Label join(Label l);
     //Label meet(Label l);
     
-    ConfPolicy confPolicy();
-    IntegPolicy integPolicy();
+    //ConfPolicy confPolicy();
+    //IntegPolicy integPolicy();
+	
+	Set readers();
+	Set writers();
     
     int hashCode();
     

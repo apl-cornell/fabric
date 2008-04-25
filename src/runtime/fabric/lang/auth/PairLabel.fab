@@ -1,55 +1,97 @@
 package fabric.lang.auth;
 
+import fabric.util.Iterator;
 import fabric.util.Set;
 
-
 /**
- * A Label is the runtime representation of a Jif label. A Label consists of a
- * set of components, each of which is a {@link jif.lang.IntegPolicy Policy}.
- *  
+ * What this class is supposed to be: A Label is the runtime representation of a
+ * Jif label. A Label consists of a set of components, each of which is a
+ * {@link jif.lang.IntegPolicy Policy}.
+ * 
+ * What this class actually is: Each label contains a set of allowed readers and
+ * allowed writers.
  */
 public final class PairLabel implements Label {
   
-    private final ConfPolicy confPol;
-    private final IntegPolicy integPol;
+    private final Set readers;  // <Principal>
+    private final Set writers;  // <Principal>
     
-    public PairLabel(ConfPolicy confPol, IntegPolicy integPol) {
-        this.confPol = confPol;
-        this.integPol = integPol;
-        if (confPol == null || integPol == null) throw new NullPointerException();
+    public PairLabel(Set readers, Set writers) {
+        this.readers = readers;
+        this.writers = writers;
+    }
+    
+    public Set readers() {
+    	return readers;
+    }
+    
+    public Set writers() {
+    	return writers;
     }
 
-    public boolean relabelsTo(Label l, Set s) {
-    	PairLabel pl = (PairLabel) l;
-		return this.confPol.relabelsTo(pl.confPol, s) &&
-				this.integPol.relabelsTo(pl.integPol, s);
-	}
-    
     public int hashCode() {
-        return confPol.hashCode() ^ integPol.hashCode();
+        return hash(readers) ^ hash(writers);
+    }
+    
+    private int hash(Object o) {
+    	return o == null ? 0 : o.hashCode();
     }
     
     public boolean equals(Object o) {
+    	if (this == o) {
+    		return true;
+    	}
+    	
         if (o instanceof PairLabel) {
-            PairLabel that = (PairLabel) o;
-            return this == that || 
-                    (this.hashCode() == that.hashCode() && 
-                            this.confPol.equals(that.confPol) &&
-                            this.integPol.equals(that.integPol));
-        }
-        
-        return false;
+			PairLabel that = (PairLabel) o;
+			return equal(this.readers, that.readers) && 
+				equal(this.writers, that.writers);
+		}
+
+		return false;
+	}
+    
+    private boolean equal(Object o1, Object o2) {
+    	if (o1 == o2) {
+    		return true;
+    	}
+    	
+    	if (o1 == null || o2 == null) {
+    		return false;
+    	}
+    	
+    	return o1.equals(o2);
     }
     
     public String toString() {
-        String c = confPol.toString();
-        String i = integPol.toString();
+        String c = toString(readers);
+        String i = toString(writers);
+        
         if (c.length() > 0 && i.length() > 0) {
             return "{" + c + "; " + i + "}";
            
         }
+        
         // at least one of them is length 0.
         return "{" + c  + i + "}";
+    }
+    
+    private String toString(Set set) {
+    	boolean first = true;
+    	String s = "";
+    	Iterator i = set.iterator();
+    	
+    	while (i.hasNext()) {
+    		if (first) {
+    			first = false;
+    		} else {
+    			s += ",";
+    		}
+    		
+    		s += i.next().toString();
+    	}
+    	
+    	return s;
     }
     
     /*
@@ -64,6 +106,7 @@ public final class PairLabel implements Label {
     }
     */
 
+    /*
     public ConfPolicy confPolicy() {
         return confPol;
     }
@@ -71,5 +114,6 @@ public final class PairLabel implements Label {
     public IntegPolicy integPolicy() {
         return integPol;
     }
+    */
     
 }

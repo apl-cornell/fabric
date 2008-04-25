@@ -176,6 +176,14 @@ public interface Set extends Collection
   Iterator iterator(fabric.client.Core core);
 
   /**
+   * Returns a local iterator over the set. The iterator has no specific order,
+   * unless further specified.
+   *
+   * @return a set iterator
+   */
+  Iterator iterator();
+
+  /**
    * Removes the specified element from this set (optional operation). If
    * an element e exists, <code>o == null ? e == null : o.equals(e)</code>,
    * it is removed from the set.
