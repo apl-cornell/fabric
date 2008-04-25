@@ -49,7 +49,7 @@ public class FabDirectory extends FileSystemObject {
         StringArray toReturn = new StringArray(size);
         int i = 0;
         for(Iterator it = coll.iterator(fabric.client.Client.getClient().getLocalCore()); it.hasNext(); ) {
-            toReturn.set(i++, (String)it.next());
+            toReturn.set(i++, ((FileSystemObject)it.next()).fileName);
         }
         return toReturn;
     }

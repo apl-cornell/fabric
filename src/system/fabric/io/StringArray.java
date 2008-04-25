@@ -1,10 +1,17 @@
 package fabric.io;
 
 public class StringArray {
+
+  public String[] contents;
+  
   public StringArray(int length) {
     contents = new String[length];
   }
-  public String[] contents;
+  
+  public StringArray(String[] args) {
+    this.contents = args;
+  }
+
   
   public void set(int i, String str) {
     contents[i] = str;

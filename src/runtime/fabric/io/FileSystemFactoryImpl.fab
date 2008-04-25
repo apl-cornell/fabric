@@ -1,0 +1,20 @@
+package fabric.io;
+
+import fabric.client.Core;
+import java.io.IOException;
+
+public class FileSystemFactoryImpl implements FileSystemFactory {
+    
+    public File makeFile(Core core, Core remoteCore, String name) {
+        return new FileImpl@core(remoteCore, name);        
+    }
+    
+    public RandomAccessFile makeRAFile(Core localCore, Core core, String path) throws IOException {
+        return new RandomAccessFileImpl@localCore(core, path);
+    }
+    
+    public FileInputStream makeFIStream(Core localCore, Core core, String name) throws IOException {
+        return new FileInputStreamImpl@localCore(core, name);
+    }
+    
+}

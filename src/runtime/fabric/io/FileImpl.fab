@@ -16,17 +16,15 @@ import java.util.StringTokenizer;
 public class FileImpl implements File {
     String name;
     String fileSystem = "fileSystem";
+    FabDirectory parentDir = null;
     FileSystemObject element = null;
+    String lastName;
     Core remoteCore;
 
     // attributes
     public FileImpl(Core remoteCore, String name) {
         this.name = name;
         this.remoteCore = remoteCore;
-    }
-    
-    public File makeNew(Core core, Core remoteCore, String name) {
-        return new FileImpl@core(remoteCore, name);
     }
 
     public FileImpl(String name, String fileSystem, Core remoteCore) {
@@ -36,39 +34,43 @@ public class FileImpl implements File {
     }
 
     // all the methods in java.io.File
-    public boolean exists() {
-        if(element == null) {
+    private void searchFile() {
+        atomic {
+            if(parentDir != null || element != null || lastName != null) return;
             HashMap root = (HashMap)remoteCore.getRoot();
-            Object rootDir = root.get("fileSystem");
-            if(rootDir == null || !(rootDir instanceof FabDirectory)) {
-                return false;
-            }
-            FabDirectory dir = (FabDirectory)rootDir;
+            FabDirectory rootDir = (FabDirectory)root.get("fileSystem");
+            FabDirectory dir = rootDir;
 
             StringTokenizer tokenizer = new StringTokenizer(name, FileSystemObject.separatorChar);
-            FileSystemObject obj = null;
+            FileSystemObject obj = dir;
+            String token = null;
             while(tokenizer.hasMoreTokens()) {
-                String token = tokenizer.nextToken();
+                token = tokenizer.nextToken();
                 obj = dir.getFile(token);
-                if(obj == null) {
-                    return false;
-                }
                 boolean moreToks = tokenizer.hasMoreTokens();
                 boolean isDir = (obj instanceof FabDirectory);
                 if(moreToks) {
                     if(!isDir) {
-                        return false;
+                        return;
                     }
                     dir = (FabDirectory)obj;
                 }
             }
-            if(obj != null) {
-                element = obj;
+            element = obj;
+            parentDir = dir;
+            lastName = token;
+            return;
+        }
+    }
+
+    public boolean exists() {
+        atomic {
+            if(element != null) {
                 return true;
             }
-            return false;
+            searchFile();
+            return (element != null);
         }
-        return true;
     }
 
     public boolean isFile() {
@@ -125,92 +127,44 @@ public class FileImpl implements File {
     }
 
     public boolean mkdir() {
-        if(element == null) {
-            HashMap root = (HashMap)remoteCore.getRoot();
-            Object rootDir = root.get("fileSystem");
-            if(rootDir == null || !(rootDir instanceof FabDirectory)) {
+        atomic {
+            if(element != null) {
                 return false;
             }
-            FabDirectory dir = (FabDirectory)rootDir;
+            if(parentDir == null) {
+                searchFile();
+            }
 
-            StringTokenizer tokenizer = new StringTokenizer(name, FileSystemObject.separatorChar);
-            FileSystemObject obj = null;
-            String token = null;
-            while(tokenizer.hasMoreTokens()) {
-                token = tokenizer.nextToken();
-                obj = dir.getFile(token);
-                if(obj == null) {
-                    return false;
-                }
-                boolean moreToks = tokenizer.hasMoreTokens();
-                boolean isDir = (obj instanceof FabDirectory);
-                if(moreToks) {
-                    if(!isDir) {
-                        return false;
-                    }
-                    dir = (FabDirectory)obj;
-                }
-            }
-            if(obj != null) {
-                // directory already exists
-                return false;
-            }
-            
-            element = dir.mkdir(token);
+            element = parentDir.mkdir(lastName);
             if(element == null) {
                 return false;
             }
             return true;
         }
-        return false;
     }
-    
-    public boolean mkfile() {
-        if(element == null) {
-            HashMap root = (HashMap)remoteCore.getRoot();
-            Object rootDir = root.get("fileSystem");
-            if(rootDir == null || !(rootDir instanceof FabDirectory)) {
-                return false;
-            }
-            FabDirectory dir = (FabDirectory)rootDir;
 
-            StringTokenizer tokenizer = new StringTokenizer(name, FileSystemObject.separatorChar);
-            FileSystemObject obj = null;
-            String token = null;
-            while(tokenizer.hasMoreTokens()) {
-                token = tokenizer.nextToken();
-                obj = dir.getFile(token);
-                if(obj == null) {
-                    return false;
-                }
-                boolean moreToks = tokenizer.hasMoreTokens();
-                boolean isDir = (obj instanceof FabDirectory);
-                if(moreToks) {
-                    if(!isDir) {
-                        return false;
-                    }
-                    dir = (FabDirectory)obj;
-                }
-            }
-            if(obj != null) {
-                // directory already exists
+    public boolean mkfile() {
+        atomic {
+            if(element != null) {
                 return false;
             }
-            
-            element = dir.mkfile(token);
+            if(parentDir == null) {
+                searchFile();
+            }
+
+            element = parentDir.mkfile(lastName);
             if(element == null) {
                 return false;
             }
             return true;
         }
-        return false;
     }
 
     // TODO not implemented
     public boolean renameTo(File dest) {
         return false;
     }
-    
+
     public boolean reset() {
         if(!exists()) {
             return false;
@@ -222,4 +176,17 @@ public class FileImpl implements File {
         file.contents.setLength(0);
         return true;
     }
+
+    public long length() {
+        if(!exists()) {
+            return 0;
+        }
+        if(!(element instanceof FabFile)) {
+            return 0;
+        }
+        FabFile file = (FabFile)element;
+        file.contents.setLength(0);
+        return file.contents.getLength();        
+    }
+
 }

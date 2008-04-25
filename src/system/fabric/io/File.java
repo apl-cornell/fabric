@@ -1,9 +1,9 @@
 package fabric.io;
 
 import fabric.client.Core;
+
 public interface File {
   
-  public File makeNew(Core core, Core remoteCore, String name);
   public boolean exists();
 
   public boolean isFile();
@@ -31,5 +31,7 @@ public interface File {
   public boolean renameTo(File dest);
 
   public boolean reset();
+  
+  public long length();
 
 }

@@ -21,10 +21,6 @@ public class FileInputStreamImpl implements FileInputStream {
         barray = ((FabFile)file.element).contents;
     }
     
-    public FileInputStream makeNew(Core localCore, Core core, String name) throws IOException {
-        return new FileInputStreamImpl@localCore(core, name);
-    }
-    
     public long skip(long n) {
         currentPos = currentPos + (int)n;
         return n;

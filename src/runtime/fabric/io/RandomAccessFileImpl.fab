@@ -20,12 +20,8 @@ public class RandomAccessFileImpl implements RandomAccessFile {
         contents = ((FabFile)file.element).contents;
     }
     
-    public RandomAccessFile makeNew(Core localCore, Core core, String path) throws IOException {
-        return new RandomAccessFileImpl@localCore(core, path);
-    }
-    
-    public void seek(int offset) {
-        currentPos += offset;
+    public void seek(long offset) {
+        currentPos += (int)offset;
     }
     
     public void write(FileByteArray b, int off, int len) {
