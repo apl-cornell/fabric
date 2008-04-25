@@ -25,3 +25,15 @@ use the "fab" script, or run fabric.client.Client with java, e.g.:
 java fabric.client.Client OO7.Benchmark fab://core0/OO7 tiny 3
 java fabric.client.Client OO7.traversals.T1 fab://core0/OO7 --hot
   (Make sure you have $FABRIC_HOME set properly!)
+
+
+Eclipse setup:
+The set up eclipse for Fabric, your project's classpath should have the
+following entries:
+
+* source folder src/compiler
+* source folder src/system
+* class folder classes
+* class folder rt-classes
+* jar files from lib folder
+* Polyglot project or Polyglot jar/classes
