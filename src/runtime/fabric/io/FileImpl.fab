@@ -185,8 +185,7 @@ public class FileImpl implements File {
             return 0;
         }
         FabFile file = (FabFile)element;
-        file.contents.setLength(0);
-        return file.contents.getLength();        
+        return file.contents.getLength();
     }
 
 }
