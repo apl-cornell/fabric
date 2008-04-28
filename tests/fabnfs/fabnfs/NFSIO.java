@@ -38,14 +38,14 @@ class NFSIO implements NFSConsts, RPCConsts {
 	    if (fileName == null)
 	        throw new NFSException(xid, NFSERR_STALE);
 	    // XXX comment out print lines to improve performance
-	    // System.out.print("Write(" + fileName + ", " + offset + ", " + 
-	    //		     datalen + ")\n");
+	     System.out.print("Write(" + fileName + ", " + offset + ", " + 
+	    		     datalen + ")\n");
 
 //	    RandomAccessFile fd = new RandomAccessFile(fileName, "rw");
             RandomAccessFile fd = fsinfo.factory.makeRAFile(fsinfo.localCore, fsinfo.core, fileName);
 	    fd.seek(offset);
 	    fd.write(new FileByteArray(packet.Data()), (int) packetOffset, (int) datalen);
-	    fd.close();
+	    fd.close();System.out.println("File created");
 
 	    // load in new file attributes
 	    fattr fa = new fattr(fsinfo, handles, tm);

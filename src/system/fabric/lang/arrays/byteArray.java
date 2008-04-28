@@ -46,6 +46,7 @@ public interface byteArray extends Object {
      */
     public $Impl(Core core, byte[] value) {
       super(core);
+      if(value == null) { throw new NullPointerException(); }
       this.value = value;
     }
 

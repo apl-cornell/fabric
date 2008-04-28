@@ -74,28 +74,33 @@ public class FileImpl implements File {
     }
 
     public boolean isFile() {
-        if(element == null) {
-            if(!exists()) {
-                return false;
+        atomic {
+            if(element == null) {
+                if(!exists()) {
+                    return false;
+                }
             }
+            if(element instanceof FabFile) {
+                return true;
+            }
+            return false;
         }
-        if(element instanceof FabFile) {
-            return true;
-        }
-        return false;
     }
 
     public boolean isDirectory() {
-        if(element == null) {
-            if(!exists()) {
-                return false;
+        atomic {
+            if(element == null) {
+                if(!exists()) {
+                    return false;
+                }
             }
+            if(element instanceof FabDirectory) {
+                return true;
+            }
+            return false;
         }
-        if(element instanceof FabDirectory) {
-            return true;
-        }
-        return false;
     }
+
 
     // TODO apply access control here
     public boolean canRead() {
@@ -113,17 +118,21 @@ public class FileImpl implements File {
     }
 
     public boolean delete() {
-        element.selfDestruct();
-        element = null;
-        return true;
+        atomic {
+            element.selfDestruct();
+            element = null;
+            return true;
+        }
     }
 
     public StringArray list() {
-        if(!isDirectory()) {
-            return null;
+        atomic {
+            if(!isDirectory()) {
+                return null;
+            }
+            FabDirectory dir = (FabDirectory)element;
+            return dir.list();
         }
-        FabDirectory dir = (FabDirectory)element;
-        return dir.list();
     }
 
     public boolean mkdir() {
@@ -166,26 +175,30 @@ public class FileImpl implements File {
     }
 
     public boolean reset() {
-        if(!exists()) {
-            return false;
+        atomic {
+            if(!exists()) {
+                return false;
+            }
+            if(!(element instanceof FabFile)) {
+                return false;
+            }
+            FabFile file = (FabFile)element;
+            file.contents.setLength(0);
+            return true;
         }
-        if(!(element instanceof FabFile)) {
-            return false;
-        }
-        FabFile file = (FabFile)element;
-        file.contents.setLength(0);
-        return true;
     }
 
     public long length() {
-        if(!exists()) {
-            return 0;
+        atomic {
+            if(!exists()) {
+                return 0;
+            }
+            if(!(element instanceof FabFile)) {
+                return 0;
+            }
+            FabFile file = (FabFile)element;
+            return file.contents.getLength();
         }
-        if(!(element instanceof FabFile)) {
-            return 0;
-        }
-        FabFile file = (FabFile)element;
-        return file.contents.getLength();
     }
 
 }
