@@ -331,7 +331,7 @@ public class Disseminator implements Application {
         Map<Pair<String, Long>, Glob> globs = 
           new HashMap<Pair<String, Long>, Glob>();
         
-        for (Pair<Core, Long> k : cache.keys()) {
+        for (Pair<Core, Long> k : cache.sortedKeys()) {
           rice.pastry.Id id = (rice.pastry.Id) idf.buildId(k.first + "/" + k.second);
           boolean send = shouldReplicate(me, senderId, id, level);
           
@@ -342,7 +342,7 @@ public class Disseminator implements Application {
             
             globs.put(new Pair<String, Long>(c.name(), onum), g);
             
-            if (globs.size() == 100) {
+            if (globs.size() == 10) {
               break;
             }
           }

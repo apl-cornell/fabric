@@ -1,7 +1,12 @@
 package fabric.dissemination.pastry;
 
 import java.lang.ref.SoftReference;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import fabric.client.Core;
@@ -100,7 +105,40 @@ public class Cache {
   }
   
   public Set<Pair<Core, Long>> keys() {
-    return map.keySet();
+    synchronized (map) {
+      return new HashSet<Pair<Core, Long>>(map.keySet());
+    }
+  }
+  
+  public List<Pair<Core, Long>> sortedKeys() {
+    List<Pair<Core, Long>> k;
+    
+    synchronized (map) {
+      k = new ArrayList<Pair<Core, Long>>(map.keySet());
+    }
+    
+    Collections.sort(k, new Comparator<Pair<Core, Long>>() {
+      public int compare(Pair<Core, Long> o1, Pair<Core, Long> o2) {
+        Glob g1 = map.get(o1).get();
+        Glob g2 = map.get(o2).get();
+        
+        if (g1 == g2) {
+          return 0;
+        }
+        
+        if (g1 == null) {
+          return 1;
+        }
+        
+        if (g2 == null) {
+          return -1;
+        }
+        
+        return g2.frequency() - g1.frequency();
+      }
+    });
+    
+    return k;
   }
 
 }
