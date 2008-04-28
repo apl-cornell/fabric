@@ -1,12 +1,17 @@
 package fabric.core;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.util.Properties;
 
 import fabric.client.Client;
-import fabric.client.RemoteCore;
 import fabric.common.InternalError;
-import fabric.core.Node.Core;
+import fabric.common.Resources;
 
 public class CoreClient extends Client {
   
@@ -19,6 +24,50 @@ public class CoreClient extends Client {
     super(keyStore, passwd, trustStore, maxConnections, timeout, retries, useSSL);
     
     this.node = node;
+    
+    for (String s : node.cores.keySet()) {
+      cores.put(s, new InProcessCore(s, node.cores.get(s)));
+    }
+  }
+
+  public static void initialize(Node node) throws IOException, KeyStoreException,
+      NoSuchAlgorithmException, CertificateException,
+      UnrecoverableKeyException, IllegalStateException, InternalError {
+    // Read in the Fabric properties file and update the System properties
+    InputStream in = Resources.readFile("etc", "client.properties");
+    Properties p = new Properties(System.getProperties());
+    p.load(in);
+    in.close();
+    System.setProperties(p);
+
+    KeyStore keyStore = KeyStore.getInstance("JKS");
+    String passwd = System.getProperty("fabric.client.password");
+    String filename =
+        System.getProperty("fabric.client.keystore", "client.keystore");
+    in = Resources.readFile("etc/keys", filename);
+    keyStore.load(in, passwd.toCharArray());
+    in.close();
+
+    KeyStore trustStore = KeyStore.getInstance("JKS");
+    String trustPass = System.getProperty("fabric.client.trustpassword");
+    String trustFile =
+        System.getProperty("fabric.client.trustfilename", "trust.keystore");
+    in = Resources.readFile("etc/keys", trustFile);
+    trustStore.load(in, trustPass.toCharArray());
+    in.close();
+
+    int maxConnections = Integer.parseInt(
+        System.getProperty("fabric.client.maxConnections", "50"));
+    int timeout = Integer.parseInt(
+        System.getProperty("fabric.client.timeout", "2"));
+    int retries = Integer.parseInt(
+        System.getProperty("fabric.client.retries", "5"));
+
+    boolean useSSL = Boolean.parseBoolean(
+        System.getProperty("fabric.client.useSSL", "true"));
+
+    initialize(keyStore, passwd.toCharArray(), trustStore, maxConnections,
+        timeout, retries, useSSL, node);
   }
 
   /**
@@ -47,6 +96,8 @@ public class CoreClient extends Client {
    * @param useSSL
    *                Whether SSL encryption is desired. Used for debugging
    *                purposes.
+   * @param Node
+   *                The node where this CoreClient is running.
    */
   public static Client initialize(KeyStore keyStore, char[] passwd,
       KeyStore trustStore, int maxConnections, int timeout, int retries,
@@ -61,30 +112,6 @@ public class CoreClient extends Client {
         new CoreClient(keyStore, passwd, trustStore, maxConnections, timeout,
             retries, useSSL, node);
     return instance;
-  }
-
-  /**
-   * Returns the core corresponding to the given name. It is however, an error
-   * to request a core not on the node in which this CoreClient is running.
-   * 
-   * @param name
-   *                The core's host name.
-   * @return The corresponding <code>Core</code> object.
-   */
-  @Override
-  public RemoteCore getCore(String name) {
-    RemoteCore result = cores.get(name);
-    
-    if (result == null) {
-      Core c = node.getCore(name);
-      
-      if (c != null) {
-        result = new InProcessCore(name, c);
-        cores.put(name, result);
-      }
-    }
-    
-    return result;
   }
 
 }

@@ -33,6 +33,7 @@ import fabric.dissemination.FetchManager;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
+import fabric.lang.auth.Label;
 
 /**
  * This is the main interface to the Fabric API. Clients wishing to use Fabric
@@ -70,6 +71,8 @@ public class Client {
 
   // The manager to use for fetching objects from cores.
   protected final FetchManager fetchManager;
+  
+  protected final ThreadLocal<Label> label;
 
   public static final Random RAND = new Random();
   private static final int DEFAULT_TIMEOUT = 2;
@@ -165,6 +168,8 @@ public class Client {
     this.nameService = new NameService();
     this.cores = new HashMap<String, RemoteCore>();
     this.localCore = new LocalCore();
+    
+    this.label = new ThreadLocal<Label>();
 
     String fm = System.getProperty("fabric.client.fetchmanager",
         "fabric.client.DirectFetchManager");
@@ -215,6 +220,19 @@ public class Client {
    */
   public FetchManager fetchManager() {
     return fetchManager;
+  }
+  
+  /**
+   * Sets the principal of the currently executing thread.
+   * 
+   * @param p The principal to use.
+   */
+  public void setLabel(Label l) {
+    label.set(l);
+  }
+  
+  public Label getLabel() {
+    return label.get();
   }
 
   /**

@@ -1,6 +1,11 @@
 package fabric.messages;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.security.Principal;
@@ -10,36 +15,42 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.client.UnreachableCoreException;
-import fabric.common.*;
+import fabric.common.FabricException;
+import fabric.common.FabricRuntimeException;
 import fabric.common.InternalError;
+import fabric.common.NoSuchCoreError;
+import fabric.common.Pair;
 import fabric.core.Worker;
+import fabric.lang.auth.Label;
 
 public abstract class Message<R extends Message.Response> {
-
-  public static interface Response {
-    void write(DataOutput out) throws IOException;
-  }
-
-  protected static enum MessageType {
-    ALLOCATE_ONUMS(AllocateMessage.class), READ_ONUM(ReadMessage.class), PREPARE_TRANSACTION(
-        PrepareTransactionMessage.class), COMMIT_TRANSACTION(
-        CommitTransactionMessage.class), ABORT_TRANSACTION(
-        AbortTransactionMessage.class);
-
-    private final Class<? extends Message<?>> messageClass;
-
-    MessageType(Class<? extends Message<?>> messageClass) {
-      this.messageClass = messageClass;
-    }
-  }
 
   /**
    * The <code>MessageType</code> corresponding to this class.
    */
   protected final MessageType messageType;
+  
+  /**
+   * The label of the program when sending this message. Available only on core.
+   */
+  private Label label;
 
   protected Message(MessageType messageType) {
     this.messageType = messageType;
+  }
+
+  /**
+   * The label of the program when sending this message. Available only on core.
+   */
+  public Label label() {
+    return label;
+  }
+  
+  /**
+   * Sets the label this message is associated with.
+   */
+  public void label(Label label) {
+    this.label = label;
   }
 
   /**
@@ -147,6 +158,7 @@ public abstract class Message<R extends Message.Response> {
   private R send(Core core, ObjectInputStream in, ObjectOutputStream out)
       throws FabricException, IOException {
     // Write this message out.
+    // TODO write out pc label
     out.writeByte(messageType.ordinal());
     write(out);
     out.flush();
@@ -190,17 +202,20 @@ public abstract class Message<R extends Message.Response> {
    *                 in the i/o streams provided.
    * @throws ClassNotFoundException
    */
-  public static void receive(DataInput in, ObjectOutputStream out,
+  public static void receive(ObjectInput in, ObjectOutputStream out,
       Worker handler) throws IOException {
 
     try {
+      // TODO read in label
+      Label l = null;
+      
       MessageType messageType = MessageType.values()[in.readByte()];
       Class<? extends Message<?>> messageClass = messageType.messageClass;
       Message<?> m;
+      
       try {
-        m =
-            messageClass.getDeclaredConstructor(DataInput.class)
-                .newInstance(in);
+        m = messageClass.getDeclaredConstructor(
+            DataInput.class).newInstance(in);
       } catch (InvocationTargetException e) {
         Throwable cause = e.getCause();
         if (cause instanceof IOException) throw (IOException) cause;
@@ -210,6 +225,8 @@ public abstract class Message<R extends Message.Response> {
       } catch (Exception e) {
         throw new FabricException(e);
       }
+      
+      m.label(l);
       Response r = m.dispatch(handler);
 
       // Signal that no error occurred.
@@ -268,4 +285,22 @@ public abstract class Message<R extends Message.Response> {
    *                 if the output stream throws an IOException.
    */
   public abstract void write(DataOutput out) throws IOException;
+
+  public static interface Response {
+    void write(DataOutput out) throws IOException;
+  }
+
+  protected static enum MessageType {
+    ALLOCATE_ONUMS(AllocateMessage.class), READ_ONUM(ReadMessage.class), PREPARE_TRANSACTION(
+        PrepareTransactionMessage.class), COMMIT_TRANSACTION(
+        CommitTransactionMessage.class), ABORT_TRANSACTION(
+        AbortTransactionMessage.class);
+
+    private final Class<? extends Message<?>> messageClass;
+
+    MessageType(Class<? extends Message<?>> messageClass) {
+      this.messageClass = messageClass;
+    }
+  }
+
 }

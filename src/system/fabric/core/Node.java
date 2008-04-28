@@ -43,8 +43,6 @@ public class Node {
    */
   private Stack<Worker> pool;
   
-  private Principal root;
-  
   public ConsoleHandler console;
 
   public Node(Options opts) {
@@ -88,6 +86,8 @@ public class Node {
         // Should never happen.
       }
     }
+    
+    startClient();
     console.println("Core started");
   }
 
@@ -119,6 +119,14 @@ public class Node {
       return os;
     } catch (Exception exc) {
       throw new InternalError("could not initialize core", exc);
+    }
+  }
+  
+  private void startClient() {
+    try {
+      CoreClient.initialize(this);
+    } catch (Exception e) {
+      throw new InternalError(e);
     }
   }
 
