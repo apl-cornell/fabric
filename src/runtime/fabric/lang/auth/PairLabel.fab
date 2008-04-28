@@ -29,6 +29,14 @@ public final class PairLabel implements Label {
     	return writers;
     }
 
+	public boolean canRead(Principal p) {
+		return readers.contains(p);
+	}
+	
+	public boolean canWrite(Principal p) {
+		return writers.contains(p);
+	}
+    
     public int hashCode() {
         return hash(readers) ^ hash(writers);
     }

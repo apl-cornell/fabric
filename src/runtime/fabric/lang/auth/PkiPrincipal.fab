@@ -1,24 +1,26 @@
 package fabric.lang.auth;
 
+import javax.security.auth.x500.X500Principal;
+
 /**
  * See the doucmentation for the Jif source file, $JIF/sig-src/jif/lang/Principal.jif.
  */
 public class PkiPrincipal implements Principal {
 	
-	private final String name;
+	private final X500Principal x500;
 	
 	public PkiPrincipal(String name) {
-		this.name = name;
+		x500 = new X500Principal(name);
 	}
   
     public String name() {
-    	return name;
+    	return x500.getName();
     }
     
     public boolean equals(final Principal p) {
     	if (p instanceof PkiPrincipal) {
     		PkiPrincipal pp = (PkiPrincipal) p;
-    		return name.equals(pp.name);
+    		return x500.equals(pp.x500);
     	}
     	return false;
     }

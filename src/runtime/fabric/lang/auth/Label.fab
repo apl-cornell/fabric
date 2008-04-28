@@ -27,8 +27,11 @@ public interface Label {
     //ConfPolicy confPolicy();
     //IntegPolicy integPolicy();
 	
-	Set readers();
-	Set writers();
+	Set readers();  // <Principal>
+	Set writers();  // <Principal>
+	
+	boolean canRead(Principal p);
+	boolean canWrite(Principal p);
     
     int hashCode();
     
