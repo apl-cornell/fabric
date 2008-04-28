@@ -15,7 +15,7 @@ while true; do
   esac
 done
 
-classpath="$TOP/classes:$classpath"
+classpath="$TOP/classes:$TOP/rt-classes:$classpath"
 classpath="$TOP/lib/fabric.jar:$classpath"
 classpath="$TOP/lib/je-3.2.68.jar:$classpath"
 
