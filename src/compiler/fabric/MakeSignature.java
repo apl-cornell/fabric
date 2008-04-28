@@ -9,12 +9,28 @@ import java.lang.reflect.Modifier;
  */
 public class MakeSignature {
   public static void main(String[] args) throws ClassNotFoundException {
-    if (args.length == 0) {
-      System.err.println("Usage: MakeSignature <classname>");
-      System.exit(-1);
+    boolean java = false;
+    String clazz = null;
+    
+    for (int i = 0; i < args.length; i++) {
+      if (args[i].equals("-j")) {
+        java = true;
+      } else if (args[i].startsWith("-")) {
+        printUsage();
+      } else {
+        if (clazz == null) {
+          clazz = args[i];
+        } else {
+          printUsage();
+        }
+      }
     }
-
-    Class<?> c = Class.forName(args[0]);
+    
+    if (clazz == null) {
+      printUsage();
+    }
+    
+    Class<?> c = Class.forName(clazz);
     Package p = c.getPackage();
     System.out.println("package " + p.getName() + ";");
     System.out.println(Modifier.toString(c.getModifiers()) + " "
@@ -28,6 +44,13 @@ public class MakeSignature {
 
     // Print interfaces.
     boolean firstIface = true;
+    
+    if (java) {
+      System.out.print("    " + (c.isInterface() ? "extends" : "implements")
+          + " fabric.lang.JavaInlineable");
+      firstIface = false;
+    }
+    
     for (Class<?> iface : c.getInterfaces()) {
       if (firstIface) {
         firstIface = false;
@@ -51,19 +74,26 @@ public class MakeSignature {
     }
 
     for (Method m : c.getMethods()) {
-      int mod = m.getModifiers() & ~(Modifier.VOLATILE | Modifier.TRANSIENT);
-      System.out.print("  " + Modifier.toString(mod));
-      if (!Modifier.isNative(mod) && !Modifier.isAbstract(mod))
-        System.out.print(" native");
-      System.out.print(" " + m.getReturnType().getCanonicalName() + " "
-          + m.getName() + "(");
-      int argNum = 0;
-      for (Class<?> param : m.getParameterTypes()) {
-        if (argNum > 0) System.out.print(", ");
-        System.out.print(param.getCanonicalName() + " arg" + (argNum++));
+      if (m.getDeclaringClass() == c) {  // don't output inherited methods
+        int mod = m.getModifiers() & ~(Modifier.VOLATILE | Modifier.TRANSIENT);
+        System.out.print("  " + Modifier.toString(mod));
+        if (!Modifier.isNative(mod) && !Modifier.isAbstract(mod))
+          System.out.print(" native");
+        System.out.print(" " + m.getReturnType().getCanonicalName() + " "
+            + m.getName() + "(");
+        int argNum = 0;
+        for (Class<?> param : m.getParameterTypes()) {
+          if (argNum > 0) System.out.print(", ");
+          System.out.print(param.getCanonicalName() + " arg" + (argNum++));
+        }
+        System.out.println(");");
       }
-      System.out.println(");");
     }
     System.out.println("}");
+  }
+  
+  private static void printUsage() {
+    System.err.println("Usage: MakeSignature [-j] <classname>");
+    System.exit(-1);
   }
 }
