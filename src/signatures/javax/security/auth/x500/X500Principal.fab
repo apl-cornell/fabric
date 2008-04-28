@@ -1,0 +1,15 @@
+package javax.security.auth.x500;
+public final class X500Principal
+    implements fabric.lang.JavaInlineable, java.security.Principal, java.io.Serializable{
+  public X500Principal(java.lang.String arg0) {}
+  public X500Principal(java.lang.String arg0, java.util.Map arg1) {}
+  public X500Principal(byte[] arg0) {}
+  public X500Principal(java.io.InputStream arg0) {}
+  public native int hashCode();
+  public native boolean equals(java.lang.Object arg0);
+  public native java.lang.String toString();
+  public native java.lang.String getName(java.lang.String arg0);
+  public native java.lang.String getName();
+  public native java.lang.String getName(java.lang.String arg0, java.util.Map arg1);
+  public native byte[] getEncoded();
+}
