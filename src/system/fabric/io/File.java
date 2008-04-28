@@ -16,7 +16,6 @@ public interface File {
 //TODO apply access control here
   public boolean canWrite();
 
-//TODO get data from Transaction manager
   public long lastModified();
 
   public boolean delete();
@@ -27,7 +26,6 @@ public interface File {
 
   public boolean mkfile();
 
-//TODO not implemented
   public boolean renameTo(File dest);
 
   public boolean reset();

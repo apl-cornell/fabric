@@ -5,10 +5,11 @@ import fabric.lang.arrays.ResizableByteArray;
 public class FabFile extends FileSystemObject {
     
     // file attributes should be here
+    
     ResizableByteArray contents;
     
     public FabFile(String name, FabDirectory parent) {
         super(name, parent);
-        contents = new ResizableByteArray(1000);
+        contents = new ResizableByteArray();
     }
 }

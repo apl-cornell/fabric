@@ -7,6 +7,7 @@ import java.io.IOException;
 public class RandomAccessFileImpl implements RandomAccessFile {
     FileImpl file;
     ResizableByteArray contents;
+    FabFile fabFile;
     int currentPos;
 
     public RandomAccessFileImpl(Core remoteCore, String path) throws IOException {
@@ -17,7 +18,9 @@ public class RandomAccessFileImpl implements RandomAccessFile {
                 throw new IOException("Cannot find or create file: " + path);
             }
         }
-        contents = ((FabFile)file.element).contents;
+        fabFile = (FabFile)file.element;
+        contents = fabFile.contents;
+        currentPos = 0;
     }
 
     public void seek(long offset) {
@@ -26,13 +29,18 @@ public class RandomAccessFileImpl implements RandomAccessFile {
 
     public void write(FileByteArray b, int off, int len) {
         atomic {
-            for(int i = 0; i < len; i++) {
-                contents.set(i, b.get(i+off));
+            if(contents.getLength() < currentPos + len) {
+                contents.setLength(currentPos + len);
             }
+            for(int i = 0; i < len; i++) {
+                contents.set(currentPos + i, b.get(i+off));
+            }
+            fabFile.lastModifiedDate = System.currentTimeMillis();
         }
     }
 
     public void close() {
+        currentPos = 0;
 
     }
 

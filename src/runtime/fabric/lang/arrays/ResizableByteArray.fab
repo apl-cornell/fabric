@@ -58,6 +58,16 @@ public class ResizableByteArray {
         /* default chunk size is 256 until further notice */
         this(length, 8);
     }
+    
+    /* Called when initial length is 0 */
+    public ResizableByteArray() {
+        /* default chunk size is 256 until further notice */
+        this.CHUNK_SIZE_LOG2 = 8;
+        this.CHUNK_SIZE = (1 << 8);
+        this.length = 0;
+        this.height = 1;
+        root = new byteArray(CHUNK_SIZE);
+    }
 
     public ResizableByteArray(int length, int CHUNK_SIZE_LOG2) {
         this.CHUNK_SIZE_LOG2 = CHUNK_SIZE_LOG2;
@@ -87,8 +97,15 @@ public class ResizableByteArray {
     public int getLength() {
         return length;
     }
+    
+    public void setZeroLength() {
+        this.length = 0;
+        this.height = 1;
+        root = new byteArray(CHUNK_SIZE);
+    }
 
     public void setLength(int newSize) {
+        if(newSize <= 0) throw new ArrayIndexOutOfBoundsException();
         int counter = getCounter(newSize - 1);
         int newHeight = counter + 1;
         int oldHeight = this.height;

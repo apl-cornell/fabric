@@ -342,36 +342,34 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     return reply;
   }
 
-  /*
-   * TODO: Not supported yet
-   */
 
-//XDRPacket Rename(long xid, XDRPacket packet) throws NFSException {
-//// collect arguments from RPC packet
-//fhandle srcFH = new fhandle(packet);
-//String srcentry = packet.GetString();
-//fhandle destFH = new fhandle(packet);
-//String destentry = packet.GetString();
-
-//// compute the path names specified
-//String srcdir = GetNameFromHandle(srcFH.Handle(), xid);
-//String destdir = GetNameFromHandle(destFH.Handle(), xid);
-
-//File src = new File(srcdir, srcentry);
-//if (src.exists() == false)
-//throw new NFSException(xid, NFSERR_NOENT);
-//File dest = new File(destdir, destentry);
-//if (dest.exists()) 
-//throw new NFSException(xid, NFSERR_EXIST);
-//// do the rename operation
-//if (src.renameTo(dest) == false)
-//throw new NFSException(xid, NFSERR_IO);
-
-//XDRPacket reply = new XDRPacket(128);
-//reply.AddReplyHeader(xid);
-//reply.AddLong(NFS_OK);
-//return reply;
-//}
+  XDRPacket Rename(long xid, XDRPacket packet) throws NFSException {
+    
+    //  collect arguments from RPC packet
+    fhandle srcFH = new fhandle(packet);
+    String srcentry = packet.GetString();
+    fhandle destFH = new fhandle(packet);
+    String destentry = packet.GetString();
+    
+    //  compute the path names specified
+    String srcdir = GetNameFromHandle(srcFH.Handle(), xid);
+    String destdir = GetNameFromHandle(destFH.Handle(), xid);
+    File src = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, srcdir + fsinfo.separatorChar + srcentry);
+    if (src.exists() == false)
+      throw new NFSException(xid, NFSERR_NOENT);
+    File dest = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, destdir + fsinfo.separatorChar + destentry);
+    if (dest.exists()) 
+      throw new NFSException(xid, NFSERR_EXIST);
+    
+    //  do the rename operation
+    if (src.renameTo(dest) == false)
+      throw new NFSException(xid, NFSERR_IO);
+    XDRPacket reply = new XDRPacket(128);
+    reply.AddReplyHeader(xid);
+    reply.AddLong(NFS_OK);
+    return reply;
+    
+  }
 
   // local procedure to get the associated with a handle, throws an exception
   //   if there is a problem.

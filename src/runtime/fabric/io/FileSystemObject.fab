@@ -5,14 +5,19 @@ public class FileSystemObject {
     public static final String separatorChar = "/";
     String fileName;
     FabDirectory parent;
+    
     // have a bunch of attributes here
+    public long lastModifiedDate;
+
     
     public FileSystemObject(String name, FabDirectory parent) {
         this.fileName = name;
         this.parent = parent;
+        this.lastModifiedDate = System.currentTimeMillis();
     }
     
     public void selfDestruct() {
         parent.dirElements.remove(fileName);
+        parent = null;
     }
 }
