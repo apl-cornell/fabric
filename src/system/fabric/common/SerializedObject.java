@@ -1,17 +1,10 @@
 package fabric.common;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import fabric.client.Core;
 import fabric.lang.Object.$Impl;
@@ -22,52 +15,33 @@ import fabric.lang.auth.Label;
  * <code>SerializedObject</code>s.
  */
 public final class SerializedObject implements FastSerializable {
-  
   /**
-   * The core-specific object number for this object.
+   * The serialized object. Format:
+   * <ul>
+   * <li>long onum</li>
+   * <li>int version number</li>
+   * <li>long label's onum</li>
+   * <li>short class name length</li>
+   * <li>byte[] class name data</li>
+   * <li>int # ref types</li>
+   * <li>int # intracore refs</li>
+   * <li>int serialized data length</li>
+   * <li>int # intercore refs</li>
+   * <li>byte[] ref type data</li>
+   * <li>long[] intracore refs</li>
+   * <li>byte[] serialized data</li>
+   * <li>(utf*long)[] intercore refs</li>
+   * </ul>
    */
-  private long onum;
+  private byte[] objectData;
 
   /**
-   * The name of the class's object. XXX This should be an OID referencing the
-   * appropriate class object.
+   * The name of this object's class. This is filled in lazily from the data in
+   * objectData when getClassName() is called.
    */
-  private final String className;
+  private String className;
 
-  /**
-   * The object's version number.
-   */
-  private int version;
-
-  /**
-   * Onum of the object's security label. (Label must be on this core.)
-   */
-  private final long label;
-
-  /**
-   * The object's primitive field and inlined object data.
-   */
-  private final byte[] serializedData;
-
-  /**
-   * The type (intra-core, inter-core, inline) of each reference field.
-   */
-  private final List<RefTypeEnum> refTypes;
-
-  /**
-   * The onums representing the intra-core references in this object. This is
-   * public for debugging purposes.
-   * 
-   * @see fabric.client.debug.ObjectCount#countReachable
-   */
-  private final List<Long> intracoreRefs;
-
-  /**
-   * Global object names representing the inter-core references in this object.
-   * Before storing any <code>SerializedObject</code>, the core should
-   * swizzle these references into intra-core references to surrogates.
-   */
-  private final List<Pair<String, Long>> intercoreRefs;
+  private static final RefTypeEnum[] refTypeEnums = RefTypeEnum.values();
 
   /**
    * Creates a serialized representation of the given object. This should only
@@ -78,26 +52,18 @@ public final class SerializedObject implements FastSerializable {
    */
   @Deprecated
   public SerializedObject($Impl obj) {
-    this.onum = obj.$getOnum();
-    this.className = obj.getClass().getName();
-    this.label = getLabel(obj);
-    this.version = obj.$version;
-
-    ByteArrayOutputStream serializedData = new ByteArrayOutputStream();
-    this.refTypes = new ArrayList<RefTypeEnum>();
-    this.intracoreRefs = new ArrayList<Long>();
-    this.intercoreRefs = new ArrayList<Pair<String, Long>>();
-
     try {
-      ObjectOutputStream oos = new ObjectOutputStream(serializedData);
-      obj
-          .$serialize(oos, this.refTypes, this.intracoreRefs,
-              this.intercoreRefs);
-      oos.flush();
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      DataOutputStream out = new DataOutputStream(baos);
+
+      write(obj, out);
+
+      out.flush();
+      baos.flush();
+      this.objectData = baos.toByteArray();
     } catch (IOException e) {
       throw new InternalError("Unexpected I/O error.", e);
     }
-    this.serializedData = serializedData.toByteArray();
   }
 
   /**
@@ -111,76 +77,283 @@ public final class SerializedObject implements FastSerializable {
    *                The name of the remote object being referred to.
    */
   public SerializedObject(long onum, Label label, Pair<String, Long> remoteRef) {
-    this.onum = onum;
-    this.className = Surrogate.class.getName();
-    this.label = getLabel(label);
-
-    ByteArrayOutputStream serializedData = new ByteArrayOutputStream();
     try {
-      ObjectOutputStream oos = new ObjectOutputStream(serializedData);
+      // Create a byte array containing the surrogate object's serialized data.
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      ObjectOutputStream oos = new ObjectOutputStream(baos);
       oos.writeUTF(remoteRef.first);
       oos.writeLong(remoteRef.second);
       oos.flush();
+
+      byte[] serializedData = baos.toByteArray();
+
+      // Write out the serialized object into a byte array.
+      baos = new ByteArrayOutputStream();
+      DataOutputStream out = new DataOutputStream(baos);
+
+      // onum.
+      out.writeLong(onum);
+
+      // Version number.
+      out.writeInt(0);
+
+      // Label's onum.
+      out.writeLong(getLabel(label));
+
+      // Class name.
+      out.writeUTF(Surrogate.class.getName());
+
+      // Number of ref types and intracore refs.
+      out.writeInt(0);
+      out.writeInt(0);
+
+      out.writeInt(serializedData.length);
+
+      // Number of intercore refs.
+      out.writeInt(0);
+
+      out.write(serializedData);
+
+      out.flush();
+      baos.flush();
+      this.objectData = baos.toByteArray();
     } catch (IOException e) {
       throw new InternalError("Unexpected I/O error.", e);
     }
+  }
 
-    this.serializedData = serializedData.toByteArray();
-    this.refTypes = Collections.emptyList();
-    this.intracoreRefs = Collections.emptyList();
-    this.intercoreRefs = Collections.emptyList();
+  /**
+   * Returns the unsigned short that starts at the given position in objectData.
+   */
+  private final int unsignedShortAt(int pos) {
+    return ((objectData[pos] & 0xff) << 8) | (objectData[pos + 1] & 0xff);
+  }
+
+  /**
+   * Returns the int that starts at the given position in objectData.
+   */
+  private final int intAt(int pos) {
+    return ((objectData[pos] & 0xff) << 24)
+        | ((objectData[pos + 1] & 0xff) << 16)
+        | ((objectData[pos + 2] & 0xff) << 8) | (objectData[pos + 3] & 0xff);
+  }
+
+  /**
+   * Sets the int that starts at the given position in objectData.
+   */
+  private final void setIntAt(int pos, int value) {
+    objectData[pos] = (byte) (0xff & (value >> 24));
+    objectData[pos + 1] = (byte) (0xff & (value >> 16));
+    objectData[pos + 2] = (byte) (0xff & (value >> 8));
+    objectData[pos + 3] = (byte) (0xff & value);
+  }
+
+  /**
+   * Returns the long that starts at the given position in objectData.
+   */
+  private final long longAt(int pos) {
+    return ((long) (objectData[pos] & 0xff) << 56)
+        | ((long) (objectData[pos + 1] & 0xff) << 48)
+        | ((long) (objectData[pos + 2] & 0xff) << 40)
+        | ((long) (objectData[pos + 3] & 0xff) << 32)
+        | ((long) (objectData[pos + 4] & 0xff) << 24)
+        | ((long) (objectData[pos + 5] & 0xff) << 16)
+        | ((long) (objectData[pos + 6] & 0xff) << 8)
+        | (objectData[pos + 7] & 0xff);
   }
 
   public long getOnum() {
-    return onum;
+    return longAt(0);
   }
-  
+
   public String getClassName() {
+    if (className == null) {
+      DataInput in =
+          new DataInputStream(new ByteArrayInputStream(objectData, 20,
+              objectData.length - 20));
+      try {
+        className = in.readUTF();
+      } catch (IOException e) {
+        throw new InternalError("Error while reading class name.", e);
+      }
+    }
+
     return className;
   }
 
   public long getLabel() {
-    return label;
+    return longAt(12);
   }
 
   public int getVersion() {
-    return version;
+    return intAt(8);
   }
 
   public void setVersion(final int version) {
-    this.version = version;
+    setIntAt(8, version);
   }
 
-  public byte[] getSerializedData() {
-    return serializedData;
+  public Iterator<RefTypeEnum> getRefTypeIterator() {
+    final int classNameLength = unsignedShortAt(20);
+    final int numRefTypes = intAt(22 + classNameLength);
+    final int offset = classNameLength + 38;
+
+    return new Iterator<RefTypeEnum>() {
+      int nextRefTypeNum = 0;
+
+      public boolean hasNext() {
+        return nextRefTypeNum < numRefTypes;
+      }
+
+      public RefTypeEnum next() {
+        if (!hasNext()) throw new NoSuchElementException();
+        return refTypeEnums[objectData[offset + nextRefTypeNum++]];
+      }
+
+      public void remove() {
+        throw new UnsupportedOperationException();
+      }
+    };
   }
 
-  public List<RefTypeEnum> getRefTypes() {
-    return refTypes;
+  public Iterator<Long> getIntracoreRefIterator() {
+    final int classNameLength = unsignedShortAt(20);
+    final int numRefTypes = intAt(22 + classNameLength);
+    final int numIntracoreRefs = intAt(26 + classNameLength);
+    final int offset = classNameLength + numRefTypes + 38;
+
+    return new Iterator<Long>() {
+      int nextIntracoreRefNum = 0;
+
+      public boolean hasNext() {
+        return nextIntracoreRefNum < numIntracoreRefs;
+      }
+
+      public Long next() {
+        if (!hasNext()) throw new NoSuchElementException();
+        return longAt(offset + 8 * (nextIntracoreRefNum++));
+      }
+
+      public void remove() {
+        throw new UnsupportedOperationException();
+      }
+    };
   }
 
-  public List<Long> getIntracoreRefs() {
-    return intracoreRefs;
+  public Iterator<Pair<String, Long>> getIntercoreRefIterator() {
+    final int classNameLength = unsignedShortAt(20);
+    final int numRefTypes = intAt(22 + classNameLength);
+    final int numIntracoreRefs = intAt(26 + classNameLength);
+    final int serializedDataLength = intAt(30 + classNameLength);
+    final int numIntercoreRefs = intAt(34 + classNameLength);
+    final int offset =
+        38 + classNameLength + numRefTypes + 8 * numIntracoreRefs
+            + serializedDataLength;
+
+    return new Iterator<Pair<String, Long>>() {
+      int nextIntercoreRefNum = 0;
+      DataInput in =
+          new DataInputStream(new ByteArrayInputStream(objectData, offset,
+              objectData.length - offset));
+
+      public boolean hasNext() {
+        return nextIntercoreRefNum < numIntercoreRefs;
+      }
+
+      public Pair<String, Long> next() {
+        if (!hasNext()) throw new NoSuchElementException();
+        nextIntercoreRefNum++;
+        try {
+          return new Pair<String, Long>(in.readUTF(), in.readLong());
+        } catch (IOException e) {
+          throw new InternalError("Unexpected IO exception.", e);
+        }
+      }
+
+      public void remove() {
+        throw new UnsupportedOperationException();
+      }
+    };
   }
 
-  public List<Pair<String, Long>> getIntercoreRefs() {
-    return intercoreRefs;
+  public InputStream getSerializedDataStream() {
+    int classNameLength = unsignedShortAt(20);
+    int numRefTypes = intAt(22 + classNameLength);
+    int numIntracoreRefs = intAt(26 + classNameLength);
+    int serializedDataLength = intAt(30 + classNameLength);
+    return new ByteArrayInputStream(objectData, classNameLength + 38
+        + numRefTypes + 8 * numIntracoreRefs, serializedDataLength);
   }
-  
-  @Override
-  public String toString() {
-    return onum + "v" + version;
+
+  public final int getNumRefTypes() {
+    int classNameLength = unsignedShortAt(20);
+    return intAt(22 + classNameLength);
   }
-  
-  private long getLabel($Impl o) {
-    if (o == null || o.$getLabel() == null) {
-      return -1;
-    } else {
-      return o.$getLabel().$getOnum();
+
+  public final int getNumIntracoreRefs() {
+    int classNameLength = unsignedShortAt(20);
+    return intAt(26 + classNameLength);
+  }
+
+  public final int getNumIntercoreRefs() {
+    int classNameLength = unsignedShortAt(20);
+    return intAt(34 + classNameLength);
+  }
+
+  /**
+   * Replaces the intracore and intercore references with the given intracore
+   * references. It is assumed that all intercore references are being replaced
+   * with intracore references.
+   */
+  public void setRefs(List<Long> intracoreRefs) {
+    try {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      DataOutputStream out = new DataOutputStream(baos);
+
+      int classNameLength = unsignedShortAt(20);
+      int numIntracoreRefs = getNumIntracoreRefs();
+      out.write(objectData, 0, 26 + classNameLength);
+      // Write number of intracore refs.
+      out.writeInt(getNumIntercoreRefs() + numIntracoreRefs);
+      // Write length of serialized data.
+      out.write(objectData, 30 + classNameLength, 4);
+      // Write number of intercore refs.
+      out.writeInt(0);
+
+      // Write ref type data.
+      int numRefs = getNumRefTypes();
+      final int REMOTE = RefTypeEnum.REMOTE.ordinal();
+      final int ONUM = RefTypeEnum.ONUM.ordinal();
+      int offset = 38 + classNameLength;
+      for (int i = 0; i < numRefs; i++) {
+        if (objectData[offset] == REMOTE)
+          out.write(ONUM);
+        else out.write(objectData[offset]);
+        offset++;
+      }
+
+      // Write intracore refs.
+      for (Long ref : intracoreRefs)
+        out.writeLong(ref);
+
+      // Write serialized data.
+      out.write(objectData, offset + 8 * numIntracoreRefs,
+          intAt(30 + classNameLength));
+
+      out.flush();
+      baos.flush();
+      this.objectData = baos.toByteArray();
+    } catch (IOException e) {
+      throw new InternalError("Unexpected I/O error.", e);
     }
   }
-  
-  private long getLabel(Label l) {
+
+  @Override
+  public String toString() {
+    return getOnum() + "v" + getVersion();
+  }
+
+  private static long getLabel(Label l) {
     if (l == null) {
       return -1;
     } else {
@@ -196,18 +369,12 @@ public final class SerializedObject implements FastSerializable {
    * @see SerializedObject#readImpl(Core, DataInput)
    * @see SerializedObject#SerializedObject(DataInput)
    */
-  public static void write($Impl impl, DataOutput out)
-      throws IOException {
+  public static void write($Impl impl, DataOutput out) throws IOException {
     // Write out the object header.
-    out.writeUTF(impl.getClass().getName());
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
-    
-    if (impl.$getLabel() == Label.DEFAULT) {
-      out.writeLong(-1l);
-    } else {
-      out.writeLong(impl.$getLabel().$getOnum());
-    }
+    out.writeLong(getLabel(impl.$getLabel()));
+    out.writeUTF(impl.getClass().getName());
 
     // Get the object to serialize itself into a bunch of buffers.
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -223,8 +390,8 @@ public final class SerializedObject implements FastSerializable {
     byte[] serializedData = bos.toByteArray();
     out.writeInt(refTypes.size());
     out.writeInt(intracoreRefs.size());
-    out.writeInt(intercoreRefs.size());
     out.writeInt(serializedData.length);
+    out.writeInt(intercoreRefs.size());
 
     for (RefTypeEnum refType : refTypes)
       out.writeByte(refType.ordinal());
@@ -232,12 +399,12 @@ public final class SerializedObject implements FastSerializable {
     for (Long onum : intracoreRefs)
       out.writeLong(onum);
 
+    out.write(serializedData);
+
     for (Pair<String, Long> oid : intercoreRefs) {
       out.writeUTF(oid.first);
       out.writeLong(oid.second);
     }
-    
-    out.write(serializedData);
   }
 
   /**
@@ -249,31 +416,7 @@ public final class SerializedObject implements FastSerializable {
    * @see SerializedObject#SerializedObject(DataInput)
    */
   public void write(DataOutput out) throws IOException {
-    // Write out the object header.
-    out.writeUTF(className);
-    out.writeLong(onum);
-    out.writeInt(version);
-    
-    out.writeLong(label);
-
-    // Write out the object's contents.
-    out.writeInt(refTypes.size());
-    out.writeInt(intracoreRefs.size());
-    out.writeInt(intercoreRefs.size());
-    out.writeInt(serializedData.length);
-
-    for (RefTypeEnum refType : refTypes)
-      out.writeByte(refType.ordinal());
-
-    for (Long onum : intracoreRefs)
-      out.writeLong(onum);
-
-    for (Pair<String, Long> oid : intercoreRefs) {
-      out.writeUTF(oid.first);
-      out.writeLong(oid.second);
-    }
-    
-    out.write(serializedData);
+    out.write(objectData);
   }
 
   /**
@@ -286,104 +429,75 @@ public final class SerializedObject implements FastSerializable {
    * @see SerializedObject#readImpl(Core, DataInput)
    */
   public SerializedObject(DataInput in) throws IOException {
-    // Read the object header.
-    this.className = in.readUTF();
-    this.onum = in.readLong();
-    this.version = in.readInt();
-    
-    this.label = in.readLong();
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    DataOutputStream out = new DataOutputStream(bos);
 
-    // Read the object body.
-    int numRefs = in.readInt();
+    // The buffer for copying stuff.
+    byte[] buf = new byte[BUF_LEN];
+
+    // Copy the object header.
+    in.readFully(buf, 0, 20);
+    out.write(buf, 0, 20);
+
+    // Copy the classname.
+    int classNameLength = in.readUnsignedShort();
+    out.writeShort(classNameLength);
+    copyBytes(in, out, classNameLength, buf);
+
+    // Copy the body.
+    int numRefTypes = in.readInt();
+    out.writeInt(numRefTypes);
+
     int numIntracoreRefs = in.readInt();
-    int numIntercoreRefs = in.readInt();
+    out.writeInt(numIntracoreRefs);
+
     int serializedDataLength = in.readInt();
+    out.writeInt(serializedDataLength);
 
-    if (numRefs == 0) {
-      this.refTypes = Collections.emptyList();
-    } else {
-      this.refTypes = new ArrayList<RefTypeEnum>(numRefs);
-      RefTypeEnum[] refTypeEnums = RefTypeEnum.values();
-      for (int i = 0; i < numRefs; i++)
-        this.refTypes.add(refTypeEnums[in.readByte()]);
+    int numIntercoreRefs = in.readInt();
+    out.writeInt(numIntercoreRefs);
+
+    copyBytes(in, out, numRefTypes + 8 * numIntracoreRefs
+        + serializedDataLength, buf);
+
+    for (int i = 0; i < numIntercoreRefs; i++) {
+      // Copy an intercore ref.
+      int len = in.readUnsignedShort();
+      out.writeShort(len);
+      copyBytes(in, out, len + 8, buf);
     }
 
-    if (numIntracoreRefs == 0) {
-      this.intracoreRefs = new ArrayList<Long>(0);
-    } else {
-      this.intracoreRefs = new ArrayList<Long>(numIntracoreRefs);
-      for (int i = 0; i < numIntracoreRefs; i++)
-        this.intracoreRefs.add(in.readLong());
-    }
-
-    if (numIntercoreRefs == 0) {
-      this.intercoreRefs = Collections.emptyList();
-    } else {
-      this.intercoreRefs = new ArrayList<Pair<String, Long>>(numIntercoreRefs);
-      for (int i = 0; i < numIntercoreRefs; i++)
-        this.intercoreRefs.add(new Pair<String, Long>(in.readUTF(), in
-            .readLong()));
-    }
-    
-    this.serializedData = new byte[serializedDataLength];
-    in.readFully(this.serializedData);
+    out.flush();
+    bos.flush();
+    this.objectData = bos.toByteArray();
   }
 
+  private static final int BUF_LEN = 128;
+  private static final byte BUF_LEN_LOG_2 = 7;
+  private static final byte BUF_LEN_MASK = 0x7f;
+
   /**
-   * Reads an $Impl from the given input stream.
+   * Copies the specified number of bytes from the given DataInput to the given
+   * DataOutput.
    * 
-   * @param core
-   *                The core on which the object lives.
    * @param in
-   *                The input stream from which to read the object.
-   * @see SerializedObject#write(DataOutput)
-   * @see SerializedObject#write($Impl, DataOutput)
-   * @see SerializedObject#SerializedObject(DataInput)
+   *                the DataInput to read from.
+   * @param out
+   *                the DataOutput to write to.
+   * @param length
+   *                the number of bytes to copy.
+   * @param buf
+   *                the buffer to use. Must be of length BUF_LEN.
    */
-  public static $Impl readImpl(Core core, DataInput in)
-      throws ClassNotFoundException, IOException {
-    // Read the object header.
-    Class<?> c = Class.forName(in.readUTF());
-    long onum = in.readLong();
-    int version = in.readInt();
-    
-    long label = in.readLong();
-
-    // Read the object body.
-    int numRefs = in.readInt();
-    int numIntracoreRefs = in.readInt();
-    int serializedDataLength = in.readInt();
-
-    // There should be no intercore refs to read.
-    if (in.readInt() != 0) {
-      throw new InternalError(
-          "Unexpected inter-core refs found during object deserialization.");
+  private static final void copyBytes(DataInput in, DataOutput out, int length,
+      byte[] buf) throws IOException {
+    int numLoops = length >> BUF_LEN_LOG_2;
+    for (int count = 0; count < numLoops; count++) {
+      in.readFully(buf);
+      out.write(buf);
     }
-
-    List<RefTypeEnum> refTypes = new ArrayList<RefTypeEnum>(numRefs);
-    RefTypeEnum[] refTypeEnums = RefTypeEnum.values();
-    for (int i = 0; i < numRefs; i++)
-      refTypes.add(refTypeEnums[in.readByte()]);
-
-    List<Long> intracoreRefs = new ArrayList<Long>(numIntracoreRefs);
-    for (int i = 0; i < numIntracoreRefs; i++)
-      intracoreRefs.add(in.readLong());
-    
-    byte[] serializedData = new byte[serializedDataLength];
-    in.readFully(serializedData);
-
-    try {
-      // Call the deserialization constructor.
-      return ($Impl) c.getConstructor(Core.class, long.class, int.class,
-          long.class, ObjectInput.class, Iterator.class, Iterator.class)
-          .newInstance(core, onum, version, label,
-              new ObjectInputStream(new ByteArrayInputStream(serializedData)),
-              refTypes.iterator(), intracoreRefs.iterator());
-    } catch (RuntimeException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new InternalError(e);
-    }
+    in.readFully(buf, 0, length & BUF_LEN_MASK);
+    out.write(buf, 0, length & BUF_LEN_MASK);
   }
 
   /**
@@ -396,13 +510,14 @@ public final class SerializedObject implements FastSerializable {
    *                 Thrown when the class for this object is unavailable.
    */
   public $Impl deserialize(Core core) throws ClassNotFoundException {
-    Class<?> c = Class.forName(className);
+    Class<?> c = Class.forName(getClassName());
+
     try {
       return ($Impl) c.getConstructor(Core.class, long.class, int.class,
           long.class, ObjectInput.class, Iterator.class, Iterator.class)
-          .newInstance(core, onum, version, label,
-              new ObjectInputStream(new ByteArrayInputStream(serializedData)),
-              refTypes.iterator(), intracoreRefs.iterator());
+          .newInstance(core, getOnum(), getVersion(), getLabel(),
+              new ObjectInputStream(getSerializedDataStream()),
+              getRefTypeIterator(), getIntracoreRefIterator());
     } catch (Exception e) {
       throw new InternalError(e);
     }

@@ -193,6 +193,7 @@ public class MemoryStore implements ObjectStore {
       oout.writeLong(entry.getKey());
       entry.getValue().write(oout);
     }
+    oout.flush();
     oout.close();
   }
 }

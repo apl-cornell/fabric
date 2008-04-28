@@ -1,18 +1,11 @@
 package fabric.core;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -28,12 +21,7 @@ import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.store.StoreException;
-import fabric.messages.AbortTransactionMessage;
-import fabric.messages.AllocateMessage;
-import fabric.messages.CommitTransactionMessage;
-import fabric.messages.Message;
-import fabric.messages.PrepareTransactionMessage;
-import fabric.messages.ReadMessage;
+import fabric.messages.*;
 
 public class Worker extends Thread {
   
@@ -321,7 +309,8 @@ public class Worker extends Thread {
     
       if (obj != null) {
         // Traverse object graph and add more objects to the object group.
-        for (long onum : obj.getIntracoreRefs()) {
+        for (Iterator<Long> it = obj.getIntracoreRefIterator(); it.hasNext();) {
+          long onum = it.next();
           SerializedObject related = transactionManager.read(client, onum);
           if (related != null) {
             group.put(onum, related);

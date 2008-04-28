@@ -2,10 +2,7 @@ package fabric.client.debug;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Stack;
-import java.util.TreeMap;
+import java.util.*;
 
 import fabric.client.Client;
 import fabric.client.Core;
@@ -20,7 +17,7 @@ import fabric.util.Map;
  * Counts the number of objects reachable from a given object.
  */
 public class ObjectCount {
-  
+
   public static void main(String[] args) throws Exception {
     if (args.length == 0) showUsage();
     Client.initialize();
@@ -81,7 +78,7 @@ public class ObjectCount {
     Stack<Long> toVisit = new Stack<Long>();
     toVisit.add(obj.$getOnum());
     java.util.Map<String, Integer> byType = new TreeMap<String, Integer>();
-    
+
     Core core = obj.$getCore();
 
     while (!toVisit.isEmpty()) {
@@ -95,17 +92,23 @@ public class ObjectCount {
         e.printStackTrace();
       }
       SerializedObject so = new SerializedObject(impl);
-      for (long ref : so.getIntracoreRefs())
-        if (!visited.contains(ref) && !toVisit.contains(ref)) toVisit.push(ref);
-      
+      for (Iterator<Long> it = so.getIntracoreRefIterator(); it.hasNext();) {
+        long ref = it.next();
+        if (!visited.contains(ref) && !toVisit.contains(ref))
+          toVisit.push(ref);
+      }
+
       result++;
       int i = 0;
-      if (byType.containsKey(so.getClassName())) i=byType.get(so.getClassName());
+      if (byType.containsKey(so.getClassName()))
+        i = byType.get(so.getClassName());
       i++;
       byType.put(so.getClassName(), i);
-    }for (java.util.Map.Entry<String, Integer> entry : byType.entrySet()) System.out.println(entry.getKey() + " => " + entry.getValue());
+    }
+    for (java.util.Map.Entry<String, Integer> entry : byType.entrySet())
+      System.out.println(entry.getKey() + " => " + entry.getValue());
 
     return result;
   }
-  
+
 }
