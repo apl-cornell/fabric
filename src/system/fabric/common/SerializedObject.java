@@ -373,7 +373,7 @@ public final class SerializedObject implements FastSerializable {
     // Write out the object header.
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
-    out.writeLong(getLabel(impl.$getLabel()));
+    out.writeLong(getLabel(impl.get$label()));
     out.writeUTF(impl.getClass().getName());
 
     // Get the object to serialize itself into a bunch of buffers.

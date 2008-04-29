@@ -72,6 +72,10 @@ import java.io.Serializable;
  */
 public class Collections
 {
+	
+  protected static final fabric.client.Core LOCAL_CORE = 
+    fabric.client.Client.getClient().getLocalCore();
+
   /**
    * Constant used to decide cutoff for when a non-RandomAccess list should
    * be treated as sequential-access. Basically, quadratic behavior is
@@ -776,7 +780,7 @@ public class Collections
    */
   public static void fill(List l, Object val)
   {
-    ListIterator itr = l.listIterator(core);
+    ListIterator itr = l.listIterator(LOCAL_CORE);
     for (int i = l.size() - 1; i >= 0; --i)
       {
 	itr.next();
@@ -1133,7 +1137,7 @@ public class Collections
     ListIterator i1 = l.listIterator(LOCAL_CORE);
     int pos1 = 1;
     int pos2 = l.size();
-    ListIterator i2 = l.listIterator(pos2);
+    ListIterator i2 = l.listIterator(LOCAL_CORE, pos2);
     while (pos1 < pos2)
       {
 	Object o = i1.next();
@@ -1339,7 +1343,7 @@ public class Collections
   public static void shuffle(List l, Random r)
   {
     int lsize = l.size();
-    ListIterator i = l.listIterator(lsize);
+    ListIterator i = l.listIterator(LOCAL_CORE, lsize);
     boolean sequential = isSequential(l);
     Object[] a = null; // stores a copy of the list for the sequential case
 
@@ -2185,6 +2189,14 @@ public class Collections
       synchronized (mutex)
         {
           return new SynchronizedIterator@core(mutex, c.iterator(core));
+        }
+    }
+
+    public Iterator iterator()
+    {
+      synchronized (mutex)
+        {
+          return new SynchronizedIterator@core(mutex, c.iterator(LOCAL_CORE));
         }
     }
 
@@ -4148,6 +4160,11 @@ public class Collections
     public Iterator iterator(fabric.client.Core core)
     {
       return new UnmodifiableIterator@core(c.iterator(core));
+    }
+
+    public Iterator iterator()
+    {
+      return new UnmodifiableIterator@core(c.iterator(LOCAL_CORE));
     }
 
     /**

@@ -56,6 +56,8 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
     // Include fabric.lang as a default import.
     List<String> result = super.defaultPackageImports();
     result.add("fabric.lang");
+    result.add("fabric.lang.auth");
+    result.add("fabric.client");
     return result;
   }
 

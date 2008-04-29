@@ -548,44 +548,44 @@ public class ArrayList extends AbstractList
     return true;
   }
 
-  /**
-   * Serializes this object to the given stream.
-   *
-   * @param s the stream to write to
-   * @throws IOException if the underlying stream fails
-   * @serialData the size field (int), the length of the backing array
-   *             (int), followed by its elements (Objects) in proper order.
-   */
-  private void writeObject(ObjectOutputStream s) throws IOException
-  {
-    // The 'size' field.
-    s.defaultWriteObject();
-    // We serialize unused list entries to preserve capacity.
-    int len = data.length;
-    s.writeInt(len);
-    // it would be more efficient to just write "size" items,
-    // this need readObject read "size" items too.
-    for (int i = 0; i < size; i++)
-      s.writeObject(data[i]);
-  }
-
-  /**
-   * Deserializes this object from the given stream.
-   *
-   * @param s the stream to read from
-   * @throws ClassNotFoundException if the underlying stream fails
-   * @throws IOException if the underlying stream fails
-   * @serialData the size field (int), the length of the backing array
-   *             (int), followed by its elements (Objects) in proper order.
-   */
-  private void readObject(ObjectInputStream s)
-    throws IOException, ClassNotFoundException
-  {
-    // the `size' field.
-    s.defaultReadObject();
-    int capacity = s.readInt();
-    data = new Object[capacity];
-    for (int i = 0; i < size; i++)
-      data[i] = s.readObject();
-  }
+//  /**
+//   * Serializes this object to the given stream.
+//   *
+//   * @param s the stream to write to
+//   * @throws IOException if the underlying stream fails
+//   * @serialData the size field (int), the length of the backing array
+//   *             (int), followed by its elements (Objects) in proper order.
+//   */
+//  private void writeObject(ObjectOutputStream s) throws IOException
+//  {
+//    // The 'size' field.
+//    s.defaultWriteObject();
+//    // We serialize unused list entries to preserve capacity.
+//    int len = data.length;
+//    s.writeInt(len);
+//    // it would be more efficient to just write "size" items,
+//    // this need readObject read "size" items too.
+//    for (int i = 0; i < size; i++)
+//      s.writeObject(data[i]);
+//  }
+//
+//  /**
+//   * Deserializes this object from the given stream.
+//   *
+//   * @param s the stream to read from
+//   * @throws ClassNotFoundException if the underlying stream fails
+//   * @throws IOException if the underlying stream fails
+//   * @serialData the size field (int), the length of the backing array
+//   *             (int), followed by its elements (Objects) in proper order.
+//   */
+//  private void readObject(ObjectInputStream s)
+//    throws IOException, ClassNotFoundException
+//  {
+//    // the `size' field.
+//    s.defaultReadObject();
+//    int capacity = s.readInt();
+//    data = new Object[capacity];
+//    for (int i = 0; i < size; i++)
+//      data[i] = s.readObject();
+//  }
 }

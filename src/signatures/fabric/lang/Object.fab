@@ -1,6 +1,7 @@
 package fabric.lang;
 
 public class Object extends java.lang.Object {
+  public Label label;
   public native boolean equals(Object o);
 }
 

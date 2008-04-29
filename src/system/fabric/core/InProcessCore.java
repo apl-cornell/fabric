@@ -1,9 +1,9 @@
 package fabric.core;
 
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import fabric.client.Client;
 import fabric.client.RemoteCore;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
@@ -24,40 +24,30 @@ import fabric.lang.Object.$Impl;
 public class InProcessCore extends RemoteCore {
 
   protected TransactionManager tm;
-  protected Principal client;
 
   public InProcessCore(String name, Core c) {
     super(name);
-    // TODO Auto-generated constructor stub
+    tm = c.tm;
   }
   
   @Override
   public void abortTransaction(int transactionID) {
-    tm.abortTransaction(client, transactionID);
+    tm.abortTransaction(Client.getClient().getPrincipal(), transactionID);
   }
 
   @Override
   public void commitTransaction(int transactionID)
       throws TransactionCommitFailedException {
-    try {
-      tm.commitTransaction(client, transactionID);
-    } catch (TransactionCommitFailedException e) {
-      throw new fabric.client.TransactionCommitFailedException(e.getMessage());
-    }
+    tm.commitTransaction(Client.getClient().getPrincipal(), transactionID);
   }
 
   @Override
   public long createOnum() {
     try {
-      return tm.newOIDs(client, 1)[0];
+      return tm.newOIDs(Client.getClient().getPrincipal(), 1)[0];
     } catch (StoreException e) {
       throw new InternalError(e);
     }
-  }
-
-  @Override
-  public String name() {
-    return tm.getObjectStore().getName();
   }
 
   @Override
@@ -79,7 +69,7 @@ public class InProcessCore extends RemoteCore {
     PrepareRequest req =
         new PrepareRequest(serializedCreates, serializedWrites, reads);
     
-    return tm.prepare(client, req);
+    return tm.prepare(Client.getClient().getPrincipal(), req);
   }
   
 }

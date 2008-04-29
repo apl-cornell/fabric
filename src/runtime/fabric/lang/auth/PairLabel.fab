@@ -1,7 +1,6 @@
 package fabric.lang.auth;
 
-import fabric.util.Iterator;
-import fabric.util.Set;
+import fabric.util.*;
 
 /**
  * What this class is supposed to be: A Label is the runtime representation of a
@@ -21,6 +20,11 @@ public final class PairLabel implements Label {
         this.writers = writers;
     }
     
+    public PairLabel(Principal r, Principal w) {
+    	readers = new HashSet(1); readers.add(r);
+    	writers = new HashSet(1); writers.add(w);
+    }
+    
     public Set readers() {
     	return readers;
     }
@@ -29,15 +33,15 @@ public final class PairLabel implements Label {
     	return writers;
     }
 
-	public boolean canRead(Principal p) {
+	public atomic boolean canRead(Principal p) {
 		return readers.contains(p);
 	}
 	
-	public boolean canWrite(Principal p) {
+	public atomic boolean canWrite(Principal p) {
 		return writers.contains(p);
 	}
     
-    public int hashCode() {
+    public atomic int hashCode() {
         return hash(readers) ^ hash(writers);
     }
     
@@ -45,7 +49,7 @@ public final class PairLabel implements Label {
     	return o == null ? 0 : o.hashCode();
     }
     
-    public boolean equals(Object o) {
+    public atomic boolean equals(Object o) {
     	if (this == o) {
     		return true;
     	}
@@ -59,7 +63,7 @@ public final class PairLabel implements Label {
 		return false;
 	}
     
-    private boolean equal(Object o1, Object o2) {
+    private atomic boolean equal(Object o1, Object o2) {
     	if (o1 == o2) {
     		return true;
     	}
@@ -71,7 +75,7 @@ public final class PairLabel implements Label {
     	return o1.equals(o2);
     }
     
-    public String toString() {
+    public atomic String toString() {
         String c = toString(readers);
         String i = toString(writers);
         

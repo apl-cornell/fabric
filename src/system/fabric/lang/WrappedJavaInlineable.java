@@ -6,6 +6,7 @@ import java.util.WeakHashMap;
 import fabric.client.Core;
 import fabric.common.InternalError;
 import fabric.lang.arrays.ObjectArray;
+import fabric.lang.auth.Label;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
   public final T obj;
@@ -75,6 +76,14 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    */
   public long $getOnum() {
     throw new InternalError("WrappedJavaInlineables don't have onums.");
+  }
+
+  public Label get$label() {
+    throw new InternalError("WrappedJavaInlineables don't have labels.");
+  }
+
+  public Label set$label(Label label) {
+    throw new InternalError("WrappedJavaInlineables don't have labels.");
   }
 
   /*

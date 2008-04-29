@@ -1,0 +1,13 @@
+package regression;
+
+public class Label01 {
+	public static atomic void main(String[] args) {
+		Core c = Client.getClient().getLocalCore();
+		Object o = new Object@c();
+		Principal p = new PkiPrincipal@c("CN=client0, OU=Fabric, " +
+				"O=Cornell University, L=Ithaca, ST=NY, C=US");
+		Label l = new PairLabel@c(p, p);
+		o.label = l;
+		System.out.println(o.label);
+	}
+}

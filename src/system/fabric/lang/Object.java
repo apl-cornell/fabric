@@ -29,6 +29,11 @@ public interface Object {
 
   /** A proxy for this object. */
   $Proxy $getProxy();
+  
+  /** Label for this object */
+  Label get$label();
+  
+  Label set$label(Label label);
 
   /** Whether this object is "equal" to another object. */
   boolean equals(Object o);
@@ -84,6 +89,14 @@ public interface Object {
 
     public final long $getOnum() {
       return onum;
+    }
+
+    public final Label get$label() {
+      return fetch().get$label();
+    }
+    
+    public final Label set$label(Label label) {
+      return fetch().set$label(label);
     }
 
     public final $Proxy $getProxy() {
@@ -281,8 +294,13 @@ public interface Object {
       return $class;
     }
 
-    public final Label $getLabel() {
+    public final Label get$label() {
       return $label;
+    }
+    
+    public final Label set$label(Label label) {
+      $label = label;
+      return label;
     }
 
     public final int $getVersion() {

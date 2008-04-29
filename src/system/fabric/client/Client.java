@@ -8,6 +8,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
@@ -25,7 +26,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509KeyManager;
-import javax.security.auth.x500.X500Principal;
 
 import fabric.common.InternalError;
 import fabric.common.Resources;
@@ -51,7 +51,7 @@ public class Client {
   protected final SSLSocketFactory sslSocketFactory;
 
   // The principal on whose behalf this client is running.
-  protected final X500Principal principal;
+  protected final Principal principal;
 
   // Whether SSL encryption is desired.
   protected final boolean useSSL;
@@ -220,6 +220,10 @@ public class Client {
    */
   public FetchManager fetchManager() {
     return fetchManager;
+  }
+  
+  public Principal getPrincipal() {
+    return principal;
   }
   
   /**
