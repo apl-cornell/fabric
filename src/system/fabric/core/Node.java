@@ -4,14 +4,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.*;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Stack;
 
-import javax.net.ssl.*;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 
+import fabric.client.Client;
 import fabric.common.InternalError;
 import fabric.common.Resources;
 import fabric.core.Options.CoreKeyStores;
@@ -127,6 +135,13 @@ public class Node {
       CoreClient.initialize(this);
     } catch (Exception e) {
       throw new InternalError(e);
+    }
+    
+    Client client = Client.getClient();
+    
+    for (String c : cores.keySet()) {
+      AuthManager auth = new AuthManager(client.getCore(c));
+      cores.get(c).tm.setAuthManager(auth);
     }
   }
 

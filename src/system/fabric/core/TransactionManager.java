@@ -5,6 +5,7 @@ import java.util.NoSuchElementException;
 
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
+import fabric.common.AccessException;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyMap;
 import fabric.core.store.StoreException;
@@ -16,10 +17,16 @@ public class TransactionManager {
   /**
    * The object store of the core for which we're managing transactions.
    */
-  private final ObjectStore store;
-
+  protected final ObjectStore store;
+  
+  protected AuthManager auth;
+  
   public TransactionManager(ObjectStore store) {
     this.store = store;
+  }
+  
+  public void setAuthManager(AuthManager auth) {
+    this.auth = auth;
   }
 
   /**
@@ -144,8 +151,14 @@ public class TransactionManager {
   }
 
   public synchronized SerializedObject read(Principal client, long onum)
-      throws StoreException {
-    return store.read(client, onum);
+      throws StoreException, AccessException {
+    SerializedObject o = store.read(client, onum);
+    
+    if (auth.canRead(client, o)) {
+      return o;
+    } else {
+      throw new AccessException();
+    }
   }
 
   public synchronized long[] newOIDs(Principal client, int num)
