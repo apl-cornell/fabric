@@ -28,7 +28,7 @@ class fattr implements NFSConsts, UnixPermissions {
     timeval      mtime;
     timeval      ctime;
     
-    static boolean debug = false;
+    static boolean debug = true;
     static TimeMapper tm;
     Handle fileHandles;
     

@@ -114,9 +114,11 @@ public class FileImpl implements File {
         return exists();
     }
 
-    // TODO get data from Transaction manager
     public long lastModified() {
-        return 0;
+        if(element == null) {
+            searchFile();
+        }
+        return element.lastModifiedDate;
     }
 
     public boolean delete() {

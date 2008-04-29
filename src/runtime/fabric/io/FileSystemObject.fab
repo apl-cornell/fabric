@@ -17,7 +17,7 @@ public class FileSystemObject {
     }
     
     public void selfDestruct() {
-        parent.dirElements.remove(fileName);
+        parent.deleteFile(fileName);
         parent = null;
     }
 }

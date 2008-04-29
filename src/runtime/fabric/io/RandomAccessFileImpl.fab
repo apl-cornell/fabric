@@ -13,7 +13,7 @@ public class RandomAccessFileImpl implements RandomAccessFile {
     public RandomAccessFileImpl(Core remoteCore, String path) throws IOException {
         this.file = new FileImpl(remoteCore, path);
 
-        if(!file.exists()) {
+        if(!file.exists()) {System.out.println("File " + path + " does not exist. Creating it...");
             if(!file.mkfile()) {
                 throw new IOException("Cannot find or create file: " + path);
             }

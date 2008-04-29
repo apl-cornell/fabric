@@ -5,55 +5,67 @@ import fabric.util.Collection;
 import fabric.util.Iterator;
 
 public class FabDirectory extends FileSystemObject {
-    
+
     /** 
      * Elements of this directory. Could be files or other directories
      */
-    HashMap dirElements;
-    
-//    public FabDirectory(HashMap dirElements) {
-//        this.dirElements = dirElements;
-//    }
-//    
+    private HashMap dirElements;
+
+//  public FabDirectory(HashMap dirElements) {
+//  this.dirElements = dirElements;
+//  }
+
     public FabDirectory(String name, FabDirectory parent) {
         super(name, parent);
         dirElements = new HashMap();
     }
-    
+
     /* This returns the root directory */
     public FabDirectory() {
         super("", null);
         this.parent = this;
         dirElements = new HashMap();
     }
-    
+
     public FileSystemObject getFile(String name) {
         return (FileSystemObject)dirElements.get(name);
     }
-    
+
     public FileSystemObject deleteFile(String name) {
-        return (FileSystemObject)dirElements.remove(name);
+//        System.out.println("Removing " + name + " from " + fileName + ": " + dirElements.values().size() + "," + dirElements.size());
+        atomic {
+            return (FileSystemObject)dirElements.remove(name);
+        }
     }
-    
+
     public FileSystemObject addFile(String name, FileSystemObject file) {
-        return (FileSystemObject)dirElements.put(name, file);
+//        System.out.println("Created " + name + " and added it to " + fileName + ": " + dirElements.values().size() + "," + dirElements.size());
+        atomic {
+            return (FileSystemObject)dirElements.put(name, file);
+        }
     }
-    
+
     public FabDirectory mkdir(String name) {
-        FabDirectory subdir = new FabDirectory(name, this);
-        dirElements.put(name, subdir);
-        return subdir;
+//        System.out.println("Created dir " + name + " and added it to " + fileName + ": " + dirElements.values().size() + "," + dirElements.size());
+        atomic {
+            FabDirectory subdir = new FabDirectory(name, this);
+            dirElements.put(name, subdir);
+            return subdir;
+        }
     }
-    
+
     public FabFile mkfile(String name) {
-        FabFile file = new FabFile(name, this);
-        dirElements.put(name, file);
-        return file;
+//        System.out.println("Created " + name + " and added it to " + fileName + ": " + dirElements.values().size() + "," + dirElements.size());
+        atomic {
+            FabFile file = new FabFile(name, this);
+            dirElements.put(name, file);
+            return file;
+        }
     }
-    
+
     public StringArray list() {
         Collection coll = dirElements.values();
-        int size = coll.size();
+        int size = coll.size();System.out.println("Directory " + fileName + " has #elements = " + size + " out of " + dirElements.size());
         StringArray toReturn = new StringArray(size);
         int i = 0;
         for(Iterator it = coll.iterator(fabric.client.Client.getClient().getLocalCore()); it.hasNext(); ) {
@@ -61,5 +73,5 @@ public class FabDirectory extends FileSystemObject {
         }
         return toReturn;
     }
-    
+
 }

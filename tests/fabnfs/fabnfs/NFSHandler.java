@@ -97,11 +97,9 @@ class NFSHandler extends rpcHandler implements RPCConsts, NFSConsts
 	    case (int) NFS_REMOVE:
 	      result = dirService.Remove(xid, packet);
 	      break;
-
-// TODO Rename not supported yet              
-//	    case (int) NFS_RENAME:
-//	      result = dirService.Rename(xid, packet);
-//	      break;
+	    case (int) NFS_RENAME:
+	      result = dirService.Rename(xid, packet);
+	      break;
 	    case (int) NFS_MKDIR:
 	      result = dirService.Mkdir(xid, packet);
 	      break;
