@@ -1,0 +1,24 @@
+package regression;
+
+import fabric.util.Map;
+
+public class Label02 {
+	public static void main(String[] args) {
+		Core c = Client.getClient().getCore("core0");
+		Map root = (Map) c.getRoot();
+		
+		atomic {
+			Object o = new Object@c();
+			Principal p = new PkiPrincipal@c("CN=client0, OU=Fabric, " +
+					"O=Cornell University, L=Ithaca, ST=NY, C=US");
+			Label l = new PairLabel@c(p, p);
+			o.label = l;
+			root.put("Label02", o);
+		}
+		
+		atomic {
+			Object o = root.get("Label02");
+			System.out.println(o.label);
+		}
+	}
+}
