@@ -7,6 +7,7 @@ import fabric.ast.Atomic;
 import fabric.ast.FabricNodeFactory;
 import polyglot.parse.*;
 import fabric.types.FabricTypeSystem;
+import fabric.types.FabricFlags;
 
 parser Grm extends polyglot.parse.Grm {:
     public final FabricTypeSystem ts;
@@ -132,3 +133,7 @@ extend explicit_constructor_invocation ::=
             {: RESULT = parser.nf.SuperCall(parser.pos(a, c, n), a, b); :}
     ;
 
+extend modifier ::=
+        ATOMIC:a
+            {: RESULT = FabricFlags.ATOMIC; :}
+    ;

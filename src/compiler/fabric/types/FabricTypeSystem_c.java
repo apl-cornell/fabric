@@ -115,6 +115,17 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
     return new FabricImportTable(this, pkg, sourceName);
   }
 
+  @Override
+  public Flags legalMethodFlags() {
+    return super.legalMethodFlags().set(FabricFlags.ATOMIC);
+  }
+
+  @Override
+  public Flags legalConstructorFlags() {
+    // TODO add atomic when we can do that for constructors
+    return super.legalConstructorFlags();
+  }
+
   /*
    * (non-Javadoc)
    * 

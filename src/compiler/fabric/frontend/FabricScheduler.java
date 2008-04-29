@@ -28,6 +28,21 @@ public class FabricScheduler extends JLScheduler {
     this.extInfo = extInfo;
   }
 
+  public Goal RewriteAtomicMethods(final Job job) {
+    Goal g =
+        internGoal(new VisitorGoal(job, new AtomicMethodRewriter(
+            (ExtensionInfo) job.extensionInfo())) {
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler s) {
+            List<Goal> l = new ArrayList<Goal>();
+            l.add(TypeChecked(job));
+            return l;
+          }
+        });
+
+    return g;
+  }
+
   public Goal LocalClassesRemoved(final Job job) {
     Goal g =
         internGoal(new VisitorGoal(job, new LocalClassRemover(job, extInfo
@@ -35,7 +50,7 @@ public class FabricScheduler extends JLScheduler {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
             List<Goal> l = new ArrayList<Goal>();
-            l.add(TypeChecked(job));
+            l.add(RewriteAtomicMethods(job));
             return l;
           }
         });
@@ -157,6 +172,7 @@ public class FabricScheduler extends JLScheduler {
         List<Goal> l = new ArrayList<Goal>();
         l.add(WrapInlineables(job));
         l.add(FixArrayInitializerTypes(job));
+        l.add(RewriteAtomicMethods(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
       }
