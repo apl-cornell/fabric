@@ -1,0 +1,98 @@
+import OO7.*;
+import org.w3c.dom.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+/**
+ * the fabric side of the XMLServlet
+ */
+
+public class XMLServletHelper {
+  DocumentBuilder builder = DocumentBuilderFactory.newDocumentBuilder();
+
+  Benchmark db;
+
+  /**
+   * Return a string uniquely identifying ob.
+   */
+  private String id(fabric.lang.Object ob) {
+    // TODO
+  }
+
+  /**
+   * Return the object identified by id, or null.  ob(id(o)) == o.
+   */
+  private fabric.lang.Object ob(String id) {
+    // TODO
+  }
+
+  public Document dbSummary() {
+    Document result = builder.newDocument();
+    Element  root   = result.addElement("database");
+
+    for (Module m : db.getModulesById()) {
+      Element mod = result.createElement("module");
+      mod.setAttribute("id", id(m));
+      for (Assembly a : m.assembly()) {
+        Element assm = result.createElement("assembly");
+        assm.setAttribute("id", id(a));
+        mod.addChild(assm);
+      }
+
+      Element designRoot = result.createElement("design-root");
+      designRoot.setAttribute("id", id(m.designRoot()));
+      mod.addChild(designRoot);
+
+      root.addChild(mod);
+    }
+
+    result.addChild(root);
+    return result;
+  }
+
+  public Document assemblySummary(String assmId) {
+    Document result = builder.newDocument();
+    Element  root   = result.createElement("assembly");
+
+    Assembly assm = (Assembly) ob(assmId);
+    Element parentElement = result.createElement("parent");
+    parentElement.setAttribute("id", id(assm.superAssembly()));
+    root.addChild(parentElement);
+
+    if (assm instanceof ComplexAssembly) {
+      ComplexAssembly ca = (ComplexAssembly) assm;
+
+      for (Assembly child : ca.subAssemblies()) {
+        Element childElement = result.createElement("assembly");
+        childElement.setAttribute("id", id(child));
+        root.addChild(childElement);
+      }
+      
+    } else if (assm instanceof BaseAssembly) {
+      BaseAssembly ba = (BaseAssembly) assm;
+
+      for (CompositePart part : ba.componentsShar()) {
+        Element partElement = result.createElement("part");
+        partElement.setAttribute("shared", true);
+        partElement.setAttribute("id", id(part));
+        root.addChild(partElement);
+      }
+
+      for (CompositePart part : ba.componentsPriv()) {
+        Element partElement = result.createElement("part");
+        partElement.setAttribute("shared", false);
+        partElement.setAttribute("id", id(part));
+        root.addChild(partElement);
+      }
+    } else throw new ClassCastException();
+
+    result.addChild(root);
+    return result;
+  }
+
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+
