@@ -22,8 +22,8 @@ public class FabDirectory extends FileSystemObject {
 
     /* This returns the root directory */
     public FabDirectory() {
-        super("", null);
-        this.parent = this;
+        super("");
+//        this.setParent(this);
         dirElements = new HashMap();
     }
 

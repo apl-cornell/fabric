@@ -4,7 +4,7 @@ public class FileSystemObject {
     
     public static final String separatorChar = "/";
     String fileName;
-    FabDirectory parent;
+    private FabDirectory parent;
     
     // have a bunch of attributes here
     public long lastModifiedDate;
@@ -12,16 +12,41 @@ public class FileSystemObject {
     public void moveTo(String fileName, FabDirectory parent) {
         this.fileName = fileName;
         this.parent = parent;
+        if(parent == null) {
+            throw new NullPointerException();
+        }
     }
+    
+//    public void setParent(FabDirectory parent) {
+//        this.parent = parent;
+//        if(parent == null) {
+//            throw new NullPointerException();
+//        }        
+//    }
 
     
     public FileSystemObject(String name, FabDirectory parent) {
         this.fileName = name;
         this.parent = parent;
         this.lastModifiedDate = System.currentTimeMillis();
+        if(parent == null) {
+            throw new NullPointerException();
+        }
+    }
+    
+    FileSystemObject(String name) {
+        this.fileName = name;
+        this.parent = (FabDirectory)this;
+        this.lastModifiedDate = System.currentTimeMillis();
+        if(parent == null) {
+            throw new NullPointerException();
+        }
     }
     
     public void selfDestruct() {
+        if(parent == null) {
+            System.out.println("Inode: Parent is unexpectedly null");
+        }
         parent.deleteFile(fileName);
         parent = null;
     }

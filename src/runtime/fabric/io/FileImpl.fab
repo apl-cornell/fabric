@@ -107,10 +107,12 @@ public class FileImpl implements File {
     }
 
     public long lastModified() {
-        if(element == null) {
-            searchFile();
+        atomic {
+            if(element == null) {
+                searchFile();
+            }
+            return element.lastModifiedDate;
         }
-        return element.lastModifiedDate;
     }
 
     public boolean delete() {
@@ -168,14 +170,23 @@ public class FileImpl implements File {
 
     public boolean renameTo(File dest) {
         atomic {
-            if(dest.exists()) {
-                return false;
-            }
+//          XXX Allowing rename even if dest exists            
+//          if(dest.exists()) {
+//          return false;
+//          }
+            
+            // setup the dest file
             FileImpl destImpl = (FileImpl)dest;
+            destImpl.searchFile();
             destImpl.element = this.element;
             destImpl.element.moveTo(destImpl.lastName, destImpl.parentDir);
-            this.parentDir.deleteFile(lastName);
             destImpl.parentDir.addFile(lastName, element);
+
+            // delete this file from here
+            this.parentDir.deleteFile(lastName);
+            this.element = null;
+            this.parentDir = null;
+            
             return true;
         }
     }
