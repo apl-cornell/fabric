@@ -19,7 +19,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import fabric.client.Client;
 import fabric.common.InternalError;
 import fabric.common.Resources;
 import fabric.core.Options.CoreKeyStores;
@@ -135,13 +134,6 @@ public class Node {
       CoreClient.initialize(this);
     } catch (Exception e) {
       throw new InternalError(e);
-    }
-    
-    Client client = Client.getClient();
-    
-    for (String c : cores.keySet()) {
-      AuthManager auth = new AuthManager(client.getCore(c));
-      cores.get(c).tm.setAuthManager(auth);
     }
   }
 

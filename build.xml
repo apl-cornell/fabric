@@ -169,10 +169,10 @@
   <!-- Compiles the Fabric native runtime classes -->
   <target name="native" depends="init,native-check" unless="native.up-to-date">
   	<!-- compile the fake Label class to allow rest of compilation thru  -->
-    <javac target="1.5" srcdir="${signatures.src}" destdir="${classes}" debug="on">
+    <!-- javac target="1.5" srcdir="${signatures.src}" destdir="${classes}" debug="on">
       <include name="fabric/lang/auth/Label.java" />
       <classpath refid="standard.classpath"/>
-    </javac>
+    </javac -->
   	
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/lang/**" />
@@ -181,7 +181,7 @@
     </javac>
   	
   	<!-- remove fake Label class -->
-  	<delete file="${classes}/fabric/lang/auth/Label.class" />
+  	<!-- delete file="${classes}/fabric/lang/auth/Label.class" /-->
   </target>
 
   <!-- Compiles the Fabric core -->

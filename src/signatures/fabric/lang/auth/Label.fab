@@ -1,8 +1,5 @@
 package fabric.lang.auth;
 
-import fabric.util.Set;
-
-
 /**
  * A Label is the runtime representation of a Jif label. 
  *  
@@ -27,14 +24,4 @@ public interface Label {
     //ConfPolicy confPolicy();
     //IntegPolicy integPolicy();
 	
-	Set readers();  // <Principal>
-	Set writers();  // <Principal>
-	
-	boolean canRead(Principal p);
-	boolean canWrite(Principal p);
-    
-    int hashCode();
-    
-    boolean equals(Object o);
-    
 }

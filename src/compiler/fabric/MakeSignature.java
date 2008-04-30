@@ -1,6 +1,7 @@
 package fabric;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
@@ -37,6 +38,10 @@ public class MakeSignature {
       System.out.println("package " + p.getName() + ";");
     }
     
+    printClass(c, java);
+  }
+  
+  private static void printClass(Class<?> c, boolean java) {
     System.out.println(Modifier.toString(c.getModifiers())
         + (c.isInterface() ? "" : " class") + " " + c.getSimpleName());
 
@@ -67,6 +72,28 @@ public class MakeSignature {
 
     // Start body.
     System.out.println("{");
+    
+    printFields(c);
+    printConstructors(c);
+    printMethods(c);
+    
+    for (Class<?> cc : c.getDeclaredClasses()) {
+      printClass(cc, java);
+    }
+    
+    System.out.println("}");
+  }
+  
+  private static void printFields(Class<?> c) {
+    for (Field f : c.getDeclaredFields()) {
+      int mod = f.getModifiers() & ~(Modifier.VOLATILE | Modifier.TRANSIENT |
+          Modifier.FINAL);
+      System.out.println("  " + Modifier.toString(mod) + " " + 
+          f.getType().getCanonicalName() + " " + f.getName() + ";");
+    }
+  }
+  
+  private static void printConstructors(Class<?> c) {
     for (Constructor<?> constr : c.getDeclaredConstructors()) {
       System.out.print("  " + Modifier.toString(constr.getModifiers()) + " "
           + c.getSimpleName() + "(");
@@ -77,7 +104,9 @@ public class MakeSignature {
       }
       System.out.println(") {}");
     }
-
+  }
+  
+  private static void printMethods(Class<?> c) {
     for (Method m : c.getDeclaredMethods()) {
       int mod = m.getModifiers() & ~(Modifier.VOLATILE | Modifier.TRANSIENT);
       System.out.print("  " + Modifier.toString(mod));
@@ -92,7 +121,6 @@ public class MakeSignature {
       }
       System.out.println(");");
     }
-    System.out.println("}");
   }
   
   private static void printUsage() {
