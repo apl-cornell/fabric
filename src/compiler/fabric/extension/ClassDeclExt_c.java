@@ -316,14 +316,19 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       members.addAll(ext(m).implMember(pr, classDecl));
     }
 
-    // Create and the $makeProxy method.
+    // Create the $makeProxy method.
     QQ qq = pr.qq();
     ClassMember makeProxyDecl =
         qq.parseMember("protected fabric.lang.Object.$Proxy $makeProxy() {"
             + "return new " + classType.fullName() + ".$Proxy(this); }");
     members.add(makeProxyDecl);
 
+    // Create serializers.
     members.addAll(makeSerializers(pr, members));
+
+    // Create the $copyStateFrom method.
+    ClassMember copyStateFrom = makeCopyStateFrom(pr, members);
+    if (copyStateFrom != null) members.add(copyStateFrom);
 
     // Create the class declaration.
     ClassDecl result =
@@ -478,8 +483,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         out.append("$writeRef($getCore(), this." + f.name() + ", refTypes, "
             + "out, intracoreRefs, intercoreRefs);");
         in.append("this." + f.name() + " = (" + f.declType() + ") $readRef("
-            + f.declType() + ".$Proxy.class, "
-            + "(fabric.common.RefTypeEnum) "
+            + f.declType() + ".$Proxy.class, " + "(fabric.common.RefTypeEnum) "
             + "refTypes.next(), in, core, intracoreRefs);");
       }
     }
@@ -504,6 +508,31 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     result.add(deserialize);
 
     return result;
+  }
+
+  private ClassMember makeCopyStateFrom(ProxyRewriter pr,
+      List<ClassMember> members) {
+    QQ qq = pr.qq();
+    StringBuilder body = new StringBuilder();
+    String implType = node().type().fullName() + ".$Impl";
+
+    // Determine the list of fields to copy.
+    for (ClassMember m : members) {
+      if (m instanceof FieldDecl) {
+        FieldDecl f = (FieldDecl) m;
+        body.append("this." + f.name() + " = src." + f.name() + ";");
+      }
+    }
+
+    if (body.length() == 0) return null;
+
+    return qq
+        .parseMember("public void $copyStateFrom(fabric.lang.Object.$Impl other) {"
+            + "super.$copyStateFrom(other);"
+            + implType
+            + " src = ("
+            + implType
+            + ") other;" + body + " }");
   }
 
   /*
