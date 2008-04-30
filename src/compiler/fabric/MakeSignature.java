@@ -32,13 +32,18 @@ public class MakeSignature {
     
     Class<?> c = Class.forName(clazz);
     Package p = c.getPackage();
-    System.out.println("package " + p.getName() + ";");
-    System.out.println(Modifier.toString(c.getModifiers()) + " "
-        + (c.isInterface() ? "interface" : "class") + " " + c.getSimpleName());
+    
+    if (p != null) {
+      System.out.println("package " + p.getName() + ";");
+    }
+    
+    System.out.println(Modifier.toString(c.getModifiers())
+        + (c.isInterface() ? "" : " class") + " " + c.getSimpleName());
 
     // Print superclass.
     Class<?> superClass = c.getSuperclass();
-    if (!superClass.equals(Object.class)) {
+    
+    if (superClass != null && !superClass.equals(Object.class)) {
       System.out.println("    extends " + superClass.getCanonicalName());
     }
 
@@ -62,7 +67,7 @@ public class MakeSignature {
 
     // Start body.
     System.out.println("{");
-    for (Constructor<?> constr : c.getConstructors()) {
+    for (Constructor<?> constr : c.getDeclaredConstructors()) {
       System.out.print("  " + Modifier.toString(constr.getModifiers()) + " "
           + c.getSimpleName() + "(");
       int argNum = 0;
@@ -73,21 +78,19 @@ public class MakeSignature {
       System.out.println(") {}");
     }
 
-    for (Method m : c.getMethods()) {
-      if (m.getDeclaringClass() == c) {  // don't output inherited methods
-        int mod = m.getModifiers() & ~(Modifier.VOLATILE | Modifier.TRANSIENT);
-        System.out.print("  " + Modifier.toString(mod));
-        if (!Modifier.isNative(mod) && !Modifier.isAbstract(mod))
-          System.out.print(" native");
-        System.out.print(" " + m.getReturnType().getCanonicalName() + " "
-            + m.getName() + "(");
-        int argNum = 0;
-        for (Class<?> param : m.getParameterTypes()) {
-          if (argNum > 0) System.out.print(", ");
-          System.out.print(param.getCanonicalName() + " arg" + (argNum++));
-        }
-        System.out.println(");");
+    for (Method m : c.getDeclaredMethods()) {
+      int mod = m.getModifiers() & ~(Modifier.VOLATILE | Modifier.TRANSIENT);
+      System.out.print("  " + Modifier.toString(mod));
+      if (!Modifier.isNative(mod) && !Modifier.isAbstract(mod))
+        System.out.print(" native");
+      System.out.print(" " + m.getReturnType().getCanonicalName() + " "
+          + m.getName() + "(");
+      int argNum = 0;
+      for (Class<?> param : m.getParameterTypes()) {
+        if (argNum > 0) System.out.print(", ");
+        System.out.print(param.getCanonicalName() + " arg" + (argNum++));
       }
+      System.out.println(");");
     }
     System.out.println("}");
   }
