@@ -358,8 +358,11 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     if (src.exists() == false)
       throw new NFSException(xid, NFSERR_NOENT);
     File dest = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, destdir + fsinfo.separatorChar + destentry);
-    if (dest.exists()) 
-      throw new NFSException(xid, NFSERR_EXIST);
+
+
+// XXX Disabling this feature. e.g. "$mv src dest" should work even if dest exists     
+//    if (dest.exists()) 
+//      throw new NFSException(xid, NFSERR_EXIST);
     
     //  do the rename operation
     if (src.renameTo(dest) == false)

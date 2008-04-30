@@ -38,14 +38,14 @@ class NFSIO implements NFSConsts, RPCConsts {
 	    if (fileName == null)
 	        throw new NFSException(xid, NFSERR_STALE);
 	    // XXX comment out print lines to improve performance
-	     System.out.print("Write(" + fileName + ", " + offset + ", " + 
+	     System.out.print("Write(" + fileName + ", " + offset + ", (" + beginoffset + ", " + totalcount + ") " +
 	    		     datalen + ")\n");
 
 //	    RandomAccessFile fd = new RandomAccessFile(fileName, "rw");
             RandomAccessFile fd = fsinfo.factory.makeRAFile(fsinfo.localCore, fsinfo.core, fileName);
 	    fd.seek(offset);
 	    fd.write(new FileByteArray(packet.Data()), (int) packetOffset, (int) datalen);
-	    fd.close();System.out.println("File created");
+	    fd.close();
 
 	    // load in new file attributes
 	    fattr fa = new fattr(fsinfo, handles, tm);
@@ -65,7 +65,7 @@ class NFSIO implements NFSConsts, RPCConsts {
 	} catch (SecurityException e) {
 	    throw new NFSException(xid, NFSERR_PERM);
 	}
-    };
+    }
 
     XDRPacket Read(long xid, XDRPacket packet, XDRPacketCache packetCache)
         throws NFSException {
@@ -81,8 +81,8 @@ class NFSIO implements NFSConsts, RPCConsts {
 	    if (fileName == null)
 	        throw new NFSException(xid, NFSERR_STALE);
 	    // XXX Comment out read lines to improve performance
-	    // System.out.print("Read(" + fileName + ", " + count + ", " + 
-	    //		     offset + ")\n");
+	     System.out.print("Read(" + fileName + ", " + count + ", " + 
+	    		     offset + ")\n");
 	    
 	    if (count <= 0) {
 		System.err.println("\tRead: invalid value for count " + count);

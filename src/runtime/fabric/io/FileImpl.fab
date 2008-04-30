@@ -1,6 +1,5 @@
 package fabric.io;
 
-import fabric.lang.arrays.ResizableByteArray;
 import fabric.client.Core;
 import fabric.util.HashMap;
 import java.util.StringTokenizer;
@@ -15,23 +14,16 @@ import java.util.StringTokenizer;
  */
 public class FileImpl implements File {
     String name;
-    String fileSystem = "fileSystem";
-
-    FileSystemObject element = null;
 
     FabDirectory parentDir = null;
+    FileSystemObject element = null;
     String lastName;
+
     Core remoteCore;
 
     // attributes
     public FileImpl(Core remoteCore, String name) {
         this.name = name;
-        this.remoteCore = remoteCore;
-    }
-
-    public FileImpl(String name, String fileSystem, Core remoteCore) {
-        this.name = name;
-        this.fileSystem = fileSystem;
         this.remoteCore = remoteCore;
     }
 
@@ -180,6 +172,8 @@ public class FileImpl implements File {
                 return false;
             }
             FileImpl destImpl = (FileImpl)dest;
+            destImpl.element = this.element;
+            destImpl.element.moveTo(destImpl.lastName, destImpl.parentDir);
             this.parentDir.deleteFile(lastName);
             destImpl.parentDir.addFile(lastName, element);
             return true;

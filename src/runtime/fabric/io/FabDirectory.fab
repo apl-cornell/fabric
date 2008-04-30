@@ -65,7 +65,8 @@ public class FabDirectory extends FileSystemObject {
 
     public StringArray list() {
         Collection coll = dirElements.values();
-        int size = coll.size();System.out.println("Directory " + fileName + " has #elements = " + size + " out of " + dirElements.size());
+        int size = coll.size();
+//        System.out.println("Directory " + fileName + " has #elements = " + size + " out of " + dirElements.size());
         StringArray toReturn = new StringArray(size);
         int i = 0;
         for(Iterator it = coll.iterator(fabric.client.Client.getClient().getLocalCore()); it.hasNext(); ) {

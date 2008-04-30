@@ -4,7 +4,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 
-class XIDCache extends java.lang.Object  implements Runnable {
+class XIDCache implements Runnable {
     Hashtable items;
     long gcPeriodMS = 10 * 1000; // number of ms between runs of the gc
     long packetLifetimeMS = 30 * 1000; // time in ms that a packet stays in cache

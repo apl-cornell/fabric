@@ -1,12 +1,11 @@
 package fabric.io;
 
 import fabric.client.Core;
-import fabric.lang.arrays.ResizableByteArray;
 import java.io.IOException;
 
 public class FileInputStreamImpl implements FileInputStream {
     FileImpl file;
-    ResizableByteArray barray;
+    ResizableFileByteArray barray;
     
     int currentPos = 0;
     

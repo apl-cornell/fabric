@@ -1,12 +1,11 @@
 package fabric.io;
 
-import fabric.lang.arrays.ResizableByteArray;
 import fabric.client.Core;
 import java.io.IOException;
 
 public class RandomAccessFileImpl implements RandomAccessFile {
     FileImpl file;
-    ResizableByteArray contents;
+    ResizableFileByteArray contents;
     FabFile fabFile;
     int currentPos;
 

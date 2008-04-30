@@ -8,6 +8,11 @@ public class FileSystemObject {
     
     // have a bunch of attributes here
     public long lastModifiedDate;
+    
+    public void moveTo(String fileName, FabDirectory parent) {
+        this.fileName = fileName;
+        this.parent = parent;
+    }
 
     
     public FileSystemObject(String name, FabDirectory parent) {

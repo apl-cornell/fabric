@@ -20,7 +20,7 @@ package fabnfs;
 // 							March 1997
 //
 
-class nfs extends java.lang.Object  implements NFSConsts, MountdConsts, RPCConsts { 
+class nfs implements NFSConsts, MountdConsts, RPCConsts { 
     rpcManager rpcmanager; // rpc packet dispatcher
     MountdHandler mountd;  // class to get and dispatch mountd requests
     NFSMTHandler nfs;	   // like mountdhandler for NFS requests
