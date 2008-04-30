@@ -34,7 +34,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
 
   @Override
   public String compilerName() {
-    return "loom";
+    return "fabc";
   }
 
   @Override
