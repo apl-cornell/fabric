@@ -1,95 +1,114 @@
 import OO7.*;
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import fabric.client.Client;
+import fabric.client.Core;
+import fabric.util.Iterator;
+import fabric.util.Map;
+
+import java.net.URI;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 /**
  * the fabric side of the XMLServlet
  */
 
 public class XMLServletHelper {
-  DocumentBuilder builder = DocumentBuilderFactory.newDocumentBuilder();
+  DocumentBuilder builder;
 
   Benchmark db;
-
-  /**
-   * Return a string uniquely identifying ob.
-   */
-  private String id(fabric.lang.Object ob) {
-    // TODO
-  }
-
-  /**
-   * Return the object identified by id, or null.  ob(id(o)) == o.
-   */
-  private fabric.lang.Object ob(String id) {
-    // TODO
-  }
+  Core local;
 
   public Document dbSummary() {
     Document result = builder.newDocument();
-    Element  root   = result.addElement("database");
+    Element  root   = result.createElement("database");
 
-    for (Module m : db.getModulesById()) {
+    Iterator i = db.modulesById().values().iterator(local);
+
+    while (i.hasNext()) {
+      Module m = (Module) i.next();
       Element mod = result.createElement("module");
-      mod.setAttribute("id", id(m));
-      for (Assembly a : m.assembly()) {
+      mod.setAttribute("id", Integer.toString(m.id()));
+
+      Iterator j = m.assembly().iterator(local);
+      while (j.hasNext()) {
+        Assembly a = (Assembly) j.next();
         Element assm = result.createElement("assembly");
-        assm.setAttribute("id", id(a));
-        mod.addChild(assm);
+        assm.setAttribute("id", Integer.toString(a.id()));
+        mod.appendChild(assm);
       }
 
       Element designRoot = result.createElement("design-root");
-      designRoot.setAttribute("id", id(m.designRoot()));
-      mod.addChild(designRoot);
+      designRoot.setAttribute("id", Integer.toString(m.designRoot().id()));
+      mod.appendChild(designRoot);
 
-      root.addChild(mod);
+      root.appendChild(mod);
     }
 
-    result.addChild(root);
+    result.appendChild(root);
     return result;
   }
 
   public Document assemblySummary(String assmId) {
     Document result = builder.newDocument();
-    Element  root   = result.createElement("assembly");
+    Integer  id   = new Integer(assmId);
 
-    Assembly assm = (Assembly) ob(assmId);
-    Element parentElement = result.createElement("parent");
-    parentElement.setAttribute("id", id(assm.superAssembly()));
-    root.addChild(parentElement);
+    if (db.complexAssembliesById().containsKey(id)) {
+      ComplexAssembly ca = (ComplexAssembly) db.complexAssembliesById().get(id);
 
-    if (assm instanceof ComplexAssembly) {
-      ComplexAssembly ca = (ComplexAssembly) assm;
+      Element root = result.createElement("complex-assembly");
+      root.setAttribute("parent", Integer.toString(ca.superAssembly().id()));
 
-      for (Assembly child : ca.subAssemblies()) {
+      Iterator i = ca.subAssemblies().iterator(local);
+      while (i.hasNext()) {
+        Assembly next = (Assembly) i.next();
         Element childElement = result.createElement("assembly");
-        childElement.setAttribute("id", id(child));
-        root.addChild(childElement);
-      }
-      
-    } else if (assm instanceof BaseAssembly) {
-      BaseAssembly ba = (BaseAssembly) assm;
-
-      for (CompositePart part : ba.componentsShar()) {
-        Element partElement = result.createElement("part");
-        partElement.setAttribute("shared", true);
-        partElement.setAttribute("id", id(part));
-        root.addChild(partElement);
+        childElement.setAttribute("id", Integer.toString(next.id()));
+        root.appendChild(childElement);
       }
 
-      for (CompositePart part : ba.componentsPriv()) {
+      result.appendChild(root);
+    } else if (db.baseAssembliesById().containsKey(id)) {
+      BaseAssembly ba = (BaseAssembly) db.baseAssembliesById().get(id);
+
+      Element root = result.createElement("base-assembly");
+      root.setAttribute("parent", Integer.toString(ba.superAssembly().id()));
+
+      Iterator i = ba.componentsShar().iterator(local);
+      Iterator j = ba.componentsPriv().iterator(local);
+      while (i.hasNext() || j.hasNext()) {
         Element partElement = result.createElement("part");
-        partElement.setAttribute("shared", false);
-        partElement.setAttribute("id", id(part));
-        root.addChild(partElement);
+
+        CompositePart next = null;
+        if (i.hasNext()) {
+          next   = (CompositePart) i.next();
+          partElement.setAttribute("shared", "true");
+        } else {
+          next   = (CompositePart) j.next();
+        }
+
+        partElement.setAttribute("id", Integer.toString(next.id()));
+        root.appendChild(partElement);
       }
+
+      result.appendChild(root);
     } else throw new ClassCastException();
-
-    result.addChild(root);
     return result;
   }
 
+  public XMLServletHelper(String dbUri) throws Exception {
+    local = Client.getClient().getLocalCore();
+
+    URI    addr = new URI(dbUri);
+    Core   core = Client.getClient().getCore(addr.getHost());
+
+    db      = (Benchmark) ((Map) core.getRoot()).get(addr.getPath());
+    builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+  }
 }
 
 /*
