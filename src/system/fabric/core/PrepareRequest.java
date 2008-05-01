@@ -162,6 +162,14 @@ public final class PrepareRequest implements Iterable<Long>, FastSerializable {
         obj.write(out);
     }
   }
+  
+  @Override
+  public String toString() {
+    return "reads: " + reads + "\n" +
+      "writes: " + writes + "\n" +
+      "creates: " + creates;
+  }
+  
 }
 
 /*

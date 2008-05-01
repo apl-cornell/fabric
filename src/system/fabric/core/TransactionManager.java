@@ -87,6 +87,8 @@ public class TransactionManager {
       throws TransactionPrepareFailedException {
     try {
       synchronized (store) {
+        
+        System.out.println(req);
 
         // Check writes and update version numbers
         for (SerializedObject o : req.writes) {

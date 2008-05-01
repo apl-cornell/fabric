@@ -10,6 +10,8 @@ import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
+import fabric.client.Client;
+import fabric.client.Core;
 import fabric.common.Pair;
 import fabric.dissemination.Glob;
 
@@ -22,9 +24,9 @@ public class Replicate implements RawMessage {
 
   private transient final NodeHandle sender;
   private final int level;
-  private final Set<Pair<String, Long>> skip;
+  private final Set<Pair<Core, Long>> skip;
   
-  public Replicate(NodeHandle sender, int level, Set<Pair<String, Long>> skip) {
+  public Replicate(NodeHandle sender, int level, Set<Pair<Core, Long>> skip) {
     this.sender = sender;
     this.level = level;
     this.skip = skip;
@@ -38,7 +40,7 @@ public class Replicate implements RawMessage {
     return level;
   }
   
-  public Set<Pair<String, Long>> skip() {
+  public Set<Pair<Core, Long>> skip() {
     return skip;
   }
 
@@ -49,13 +51,24 @@ public class Replicate implements RawMessage {
   public short getType() {
     return MessageType.REPLICATE;
   }
+  
+  @Override
+  public String toString() {
+    String s = "Replicate " + level + " [";
+    
+    for (Pair<Core, Long> p : skip) {
+      s = s + p;
+    }
+    
+    return s + "]";
+  }
 
   public void serialize(OutputBuffer buf) throws IOException {
     buf.writeInt(level);
     buf.writeInt(skip.size());
     
-    for (Pair<String, Long> e : skip) {
-      buf.writeUTF(e.first);
+    for (Pair<Core, Long> e : skip) {
+      buf.writeUTF(e.first.name());
       buf.writeLong(e.second);
     }
   }
@@ -64,15 +77,16 @@ public class Replicate implements RawMessage {
    * Deserialization constructor.
    */
   public Replicate(InputBuffer buf, NodeHandle sender) throws IOException {
+    Client client = Client.getClient();
     this.sender = sender;
     level = buf.readInt();
     int n = buf.readInt();
-    skip = new HashSet<Pair<String, Long>>(n);
+    skip = new HashSet<Pair<Core, Long>>(n);
     
     for (int i = 0; i < n; i++) {
       String c = buf.readUTF();
       long onum = buf.readLong();
-      skip.add(new Pair<String, Long>(c, onum));
+      skip.add(new Pair<Core, Long>(client.getCore(c), onum));
     }
   }
 
@@ -81,13 +95,13 @@ public class Replicate implements RawMessage {
    */
   public static class Reply implements RawMessage {
     
-    private final Map<Pair<String, Long>, Glob> globs;
+    private final Map<Pair<Core, Long>, Glob> globs;
     
-    public Reply(Map<Pair<String, Long>, Glob> globs) {
+    public Reply(Map<Pair<Core, Long>, Glob> globs) {
       this.globs = globs;
     }
     
-    public Map<Pair<String, Long>, Glob> globs() {
+    public Map<Pair<Core, Long>, Glob> globs() {
       return globs;
     }
 
@@ -98,13 +112,24 @@ public class Replicate implements RawMessage {
     public short getType() {
       return MessageType.REPLICATE_REPLY;
     }
+    
+    @Override
+    public String toString() {
+      String s = "Replicate.Reply [";
+
+      for (Pair<Core, Long> p : globs.keySet()) {
+        s = s + p;
+      }
+      
+      return s + "]";
+    }
 
     public void serialize(OutputBuffer buf) throws IOException {
       DataOutputBuffer out = new DataOutputBuffer(buf);
       out.writeInt(globs.size());
       
-      for (Map.Entry<Pair<String, Long>, Glob> e : globs.entrySet()) {
-        out.writeUTF(e.getKey().first);
+      for (Map.Entry<Pair<Core, Long>, Glob> e : globs.entrySet()) {
+        out.writeUTF(e.getKey().first.name());
         out.writeLong(e.getKey().second);
         e.getValue().write(out);
       }
@@ -115,14 +140,15 @@ public class Replicate implements RawMessage {
      */
     public Reply(InputBuffer buf) throws IOException {
       DataInputBuffer in = new DataInputBuffer(buf);
+      Client client = Client.getClient();
       int n = in.readInt();
-      globs = new HashMap<Pair<String, Long>, Glob>(n);
+      globs = new HashMap<Pair<Core, Long>, Glob>(n);
       
       for (int i = 0; i < n; i++) {
         String core = in.readUTF();
         long onum = in.readLong();
         Glob g = new Glob(in);
-        globs.put(new Pair<String, Long>(core, onum), g);
+        globs.put(new Pair<Core, Long>(client.getCore(core), onum), g);
       }
     }
     

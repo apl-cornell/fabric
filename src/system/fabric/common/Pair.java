@@ -8,14 +8,24 @@ public class Pair<T1,T2> {
     this.first = first;
     this.second = second;
   }
+  
+  @Override
+  public String toString() {
+    return "(" + first + "," + second + ")";
+  }
 
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof Pair)) return false;
-    Pair<?,?> p = (Pair<?,?>)o;
-    if (first == null) return p.first == null;
-    else if (!first.equals(p.first)) return false;
-    return second == null ? p.second == null : second.equals(p.second);
+    
+    Pair<?,?> p = (Pair<?,?>) o;
+    return equals(first, p.first) && equals(second, p.second);
+  }
+  
+  private boolean equals(Object o1, Object o2) {
+    if (o1 == o2) return true;
+    if (o1 == null || o2 == null) return false;
+    return o1.equals(o2);
   }
 
   @Override

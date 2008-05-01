@@ -252,7 +252,7 @@ public class Disseminator implements Application {
     process(new Executable() {
       public Object execute() {
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
-        Set<Pair<String, Long>> skip;
+        Set<Pair<Core, Long>> skip;
         
         LeafSet ls = node.getLeafSet();
         NodeHandle n1 = ls.get(-1);
@@ -298,16 +298,16 @@ public class Disseminator implements Application {
     });
   }
   
-  private Set<Pair<String, Long>> skipSet(rice.pastry.Id deciderId, int level) {
+  private Set<Pair<Core, Long>> skipSet(rice.pastry.Id deciderId, int level) {
     rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
-    Set<Pair<String, Long>> skip = new HashSet<Pair<String, Long>>();
+    Set<Pair<Core, Long>> skip = new HashSet<Pair<Core, Long>>();
     
     for (Pair<Core, Long> k : cache.keys()) {
       rice.pastry.Id id = (rice.pastry.Id) idf.buildId(k.first + "/" + k.second);
       boolean send = shouldReplicate(deciderId, me, id, level);
       
       if (send) {
-        skip.add(new Pair<String, Long>(k.first.name(), k.second));
+        skip.add(k);
       }
     }
     
@@ -324,14 +324,18 @@ public class Disseminator implements Application {
         NodeHandle sender = msg.sender();
         rice.pastry.Id senderId = (rice.pastry.Id) sender.getId();
         int level = msg.level();
-        log.info("got replicate level " + level + " from " + sender);
+        Set<Pair<Core, Long>> skip = msg.skip();
         
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
         
-        Map<Pair<String, Long>, Glob> globs = 
-          new HashMap<Pair<String, Long>, Glob>();
+        Map<Pair<Core, Long>, Glob> globs = 
+          new HashMap<Pair<Core, Long>, Glob>();
         
         for (Pair<Core, Long> k : cache.sortedKeys()) {
+          if (skip.contains(k)) {
+            continue;
+          }
+          
           rice.pastry.Id id = (rice.pastry.Id) idf.buildId(k.first + "/" + k.second);
           boolean send = shouldReplicate(me, senderId, id, level);
           
@@ -340,7 +344,7 @@ public class Disseminator implements Application {
             Long onum = k.second;
             Glob g = cache.get(c, onum);
             
-            globs.put(new Pair<String, Long>(c.name(), onum), g);
+            globs.put(k, g);
             
             if (globs.size() == 10) {
               break;
@@ -375,11 +379,8 @@ public class Disseminator implements Application {
   protected void replicate(final Replicate.Reply msg) {
     process(new Executable() {
       public Object execute() {
-        log.info("got replicate reply with " + msg.globs().size() + " objects");
-        Client client = Client.getClient();
-        
-        for (Map.Entry<Pair<String, Long>, Glob> e : msg.globs().entrySet()) {
-          RemoteCore c = client.getCore(e.getKey().first);
+        for (Map.Entry<Pair<Core, Long>, Glob> e : msg.globs().entrySet()) {
+          RemoteCore c = (RemoteCore) e.getKey().first;
           long onum = e.getKey().second;
           Glob g = e.getValue();
           cache.put(c, onum, g);
