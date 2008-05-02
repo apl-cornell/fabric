@@ -203,6 +203,10 @@ public class Client {
    * @return The corresponding <code>Core</code> object.
    */
   public RemoteCore getCore(String name) {
+    if (name == null) {
+      throw new NullPointerException();
+    }
+    
     RemoteCore result = cores.get(name);
     if (result == null) {
       result = new RemoteCore(name);
@@ -315,12 +319,12 @@ public class Client {
     }
     log.config(cmd.toString());
 
-    Class<?> mainClass = Class.forName(opts.main + "$$Impl");
+    Class<?> mainClass = Class.forName(opts.main[0] + "$$Impl");
     Method main =
         mainClass.getMethod("main", new Class[] { ObjectArray.class });
-    String[] newArgs = new String[args.length - 1];
+    String[] newArgs = new String[opts.main.length - 1];
     for (int i = 0; i < newArgs.length; i++)
-      newArgs[i] = args[i + 1];
+      newArgs[i] = opts.main[i + 1];
 
     Client c = getClient();
 
@@ -341,7 +345,7 @@ public class Client {
       for (ListIterator<StackTraceElement> it =
           trace.listIterator(trace.size()); it.hasPrevious();) {
         StackTraceElement elt = it.previous();
-        if (elt.getClassName().equals(args[0] + "$$Impl")) break;
+        if (elt.getClassName().equals(opts.main[0] + "$$Impl")) break;
         it.remove();
       }
 
@@ -364,7 +368,7 @@ public class Client {
         }
       }
       
-      opts.main = o.getCmdArgs()[0];
+      opts.main = o.getCmdArgs();
     } catch (Exception e) {
       throw new IllegalArgumentException();
     }
@@ -376,7 +380,7 @@ public class Client {
     
     public static final String OPTS = "n:";
     
-    public String main;
+    public String[] main;
     public String name;
     
   }
