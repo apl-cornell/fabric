@@ -27,6 +27,8 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509KeyManager;
 
+import com.sun.org.apache.xalan.internal.xsltc.cmdline.getopt.GetOpt;
+
 import fabric.common.InternalError;
 import fabric.common.Resources;
 import fabric.dissemination.FetchManager;
@@ -42,6 +44,7 @@ import fabric.lang.auth.Label;
  * Objects.
  */
 public class Client {
+  
   // A map from core hostnames to Core objects
   protected final Map<String, RemoteCore> cores;
 
@@ -57,7 +60,7 @@ public class Client {
   protected final boolean useSSL;
   
   // The logger
-  public static final Logger logger = Logger.getLogger("fabric.client");
+  public static final Logger log = Logger.getLogger("fabric.client");
 
   // The timeout (in milliseconds) to use whilst attempting to connect to a core
   // node.
@@ -73,7 +76,7 @@ public class Client {
   protected final FetchManager fetchManager;
   
   protected final ThreadLocal<Label> label;
-
+  
   public static final Random RAND = new Random();
   private static final int DEFAULT_TIMEOUT = 2;
 
@@ -106,21 +109,21 @@ public class Client {
    */
   public static Client initialize(KeyStore keyStore, char[] passwd,
       KeyStore trustStore, int maxConnections, int timeout, int retries,
-      boolean useSSL) throws InternalError, UnrecoverableKeyException,
-      IllegalStateException {
-    
+      boolean useSSL, String fetcher) throws InternalError,
+      UnrecoverableKeyException, IllegalStateException {
+
     if (instance != null)
       throw new IllegalStateException(
           "The Fabric client has already been initialized");
-    logger.info("Initializing Fabric client");
+    log.info("Initializing Fabric client");
     //logger.info(logger.getLevel().toString());
-    logger.config("maximum connections: " + maxConnections);
-    logger.config("timeout:             " + timeout);
-    logger.config("retries:             " + retries);
-    logger.config("use ssl:             " + useSSL);
+    log.config("maximum connections: " + maxConnections);
+    log.config("timeout:             " + timeout);
+    log.config("retries:             " + retries);
+    log.config("use ssl:             " + useSSL);
     instance =
         new Client(keyStore, passwd, trustStore, maxConnections, timeout,
-            retries, useSSL);
+            retries, useSSL, fetcher);
     return instance;
   }
 
@@ -130,8 +133,8 @@ public class Client {
   protected static Client instance;
 
   protected Client(KeyStore keyStore, char[] passwd, KeyStore trustStore,
-      int maxConnections, int timeout, int retries, boolean useSSL)
-      throws InternalError, UnrecoverableKeyException {
+      int maxConnections, int timeout, int retries, boolean useSSL, 
+      String fetcher) throws InternalError, UnrecoverableKeyException {
     // Sanitise input.
     if (timeout < 1) timeout = DEFAULT_TIMEOUT;
 
@@ -171,11 +174,8 @@ public class Client {
     
     this.label = new ThreadLocal<Label>();
 
-    String fm = System.getProperty("fabric.client.fetchmanager",
-        "fabric.client.DirectFetchManager");
-
     try {
-      this.fetchManager = (FetchManager) Class.forName(fm).newInstance();
+      this.fetchManager = (FetchManager) Class.forName(fetcher).newInstance();
     } catch (Exception e) {
       throw new InternalError("Unable to load fetch manager", e);
     }
@@ -249,50 +249,63 @@ public class Client {
   public static void initialize() throws IOException, KeyStoreException,
       NoSuchAlgorithmException, CertificateException,
       UnrecoverableKeyException, IllegalStateException, InternalError {
+    initialize(null);
+  }
+  
+  public static void initialize(String name) throws IOException,
+      KeyStoreException, NoSuchAlgorithmException, CertificateException,
+      UnrecoverableKeyException, IllegalStateException, InternalError {
     // Read in the Fabric properties file and update the System properties
     InputStream in = Resources.readFile("etc", "client.properties");
     Properties p = new Properties(System.getProperties());
     p.load(in);
     in.close();
     System.setProperties(p);
+    
+    if (name != null) {
+      try {
+        in = Resources.readFile("etc", "client", name + ".properties");
+        p = new Properties(System.getProperties());
+        p.load(in);
+        in.close();
+      } catch (IOException e) {}
+    }
 
     KeyStore keyStore = KeyStore.getInstance("JKS");
     String passwd = System.getProperty("fabric.client.password");
     String filename =
-        System.getProperty("fabric.client.keystore", "client.keystore");
+        p.getProperty("fabric.client.keystore", "client.keystore");
     in = Resources.readFile("etc/keys", filename);
     keyStore.load(in, passwd.toCharArray());
     in.close();
 
     KeyStore trustStore = KeyStore.getInstance("JKS");
-    String trustPass = System.getProperty("fabric.client.trustpassword");
+    String trustPass = p.getProperty("fabric.client.trustpassword");
     String trustFile =
-        System.getProperty("fabric.client.trustfilename", "trust.keystore");
+        p.getProperty("fabric.client.trustfilename", "trust.keystore");
     in = Resources.readFile("etc/keys", trustFile);
     trustStore.load(in, trustPass.toCharArray());
     in.close();
 
     int maxConnections =
-        Integer.parseInt(System.getProperty("fabric.client.maxConnections",
-            "50"));
-    int timeout =
-        Integer.parseInt(System.getProperty("fabric.client.timeout", "2"));
-    int retries =
-        Integer.parseInt(System.getProperty("fabric.client.retries", "5"));
+        Integer.parseInt(p.getProperty("fabric.client.maxConnections", "50"));
+    int timeout = Integer.parseInt(p.getProperty("fabric.client.timeout", "2"));
+    int retries = Integer.parseInt(p.getProperty("fabric.client.retries", "5"));
+
+    String fetcher = p.getProperty("fabric.client.fetchmanager",
+            "fabric.client.DirectFetchManager");
 
     boolean useSSL =
-        Boolean
-            .parseBoolean(System.getProperty("fabric.client.useSSL", "true"));
+        Boolean.parseBoolean(p.getProperty("fabric.client.useSSL", "true"));
 
     initialize(keyStore, passwd.toCharArray(), trustStore, maxConnections,
-        timeout, retries, useSSL);
+        timeout, retries, useSSL, fetcher);
   }
 
   // TODO: throws exception?
   public static void main(String[] args) throws Throwable {
-    initialize();
-
-    // TODO: option overriding on command line?
+    Options opts = getOpts(args);
+    initialize(opts.name);
 
     // log the command line
     StringBuilder cmd = new StringBuilder("Command Line: Client");
@@ -300,9 +313,9 @@ public class Client {
       cmd.append(" ");
       cmd.append(c);
     }
-    logger.config(cmd.toString());
+    log.config(cmd.toString());
 
-    Class<?> mainClass = Class.forName(args[0] + "$$Impl");
+    Class<?> mainClass = Class.forName(opts.main + "$$Impl");
     Method main =
         mainClass.getMethod("main", new Class[] { ObjectArray.class });
     String[] newArgs = new String[args.length - 1];
@@ -339,4 +352,33 @@ public class Client {
 
     c.shutdown();
   }
+  
+  private static Options getOpts(String[] args) throws IllegalArgumentException {
+    Options opts = new Options();
+    GetOpt o = new GetOpt(args, Options.OPTS);
+    
+    try {
+      for (int c = o.getNextOption(); c != -1; c = o.getNextOption()) {
+        switch (c) {
+        case 'n': opts.name = o.getOptionArg(); break;
+        }
+      }
+      
+      opts.main = o.getCmdArgs()[0];
+    } catch (Exception e) {
+      throw new IllegalArgumentException();
+    }
+    
+    return opts;
+  }
+  
+  private static class Options {
+    
+    public static final String OPTS = "n:";
+    
+    public String main;
+    public String name;
+    
+  }
+  
 }

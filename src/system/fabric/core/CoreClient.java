@@ -21,7 +21,8 @@ public class CoreClient extends Client {
   protected CoreClient(KeyStore keyStore, char[] passwd, KeyStore trustStore,
       int maxConnections, int timeout, int retries, boolean useSSL, Node node)
       throws InternalError, UnrecoverableKeyException {
-    super(keyStore, passwd, trustStore, maxConnections, timeout, retries, useSSL);
+    super(keyStore, passwd, trustStore, maxConnections, timeout, retries,
+        useSSL, "core");
     
     this.node = node;
     
@@ -107,7 +108,7 @@ public class CoreClient extends Client {
     if (instance != null)
       throw new IllegalStateException(
           "The Fabric client has already been initialized");
-    logger.info("Initializing Fabric client");
+    log.info("Initializing Fabric client");
     instance =
         new CoreClient(keyStore, passwd, trustStore, maxConnections, timeout,
             retries, useSSL, node);
