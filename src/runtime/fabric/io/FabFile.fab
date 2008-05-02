@@ -6,8 +6,8 @@ public class FabFile extends FileSystemObject {
     
     ResizableFileByteArray contents;
     
-    public FabFile(String name, FabDirectory parent) {
-        super(name, parent);
+    public FabFile(String name, FabDirectory parent, String fullPath) {
+        super(name, parent, fullPath);
         contents = new ResizableFileByteArray();
     }
 }

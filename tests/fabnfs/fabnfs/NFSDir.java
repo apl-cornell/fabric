@@ -97,9 +97,13 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
       String dirName = GetNameFromHandle(dir.Handle(), xid);
       String fileName = pm.MakePath(dirName, entry);
 
+      System.out.println("Looking up file " + fileName);
       File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, fileName); // open it to make sure it exists
-      if (fd.exists() != true)
+      if (fd.exists() != true) {
+        System.out.println("File does not exist!");
         throw new NFSException(xid, NFSERR_NOENT);
+      }
+        
       fattr childFA = new fattr(fsinfo, handles, tm);
       childFA.Load(fileName);
 
@@ -259,8 +263,10 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     // open and delete the file
     String dirName = GetNameFromHandle(dirFH.Handle(), xid);
     File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, dirName + fsinfo.separatorChar + entry);
+    System.out.println("Trying to delete the file " + dirName + fsinfo.separatorChar + entry);
     if (fd.exists() == false) 
       throw new NFSException(xid, NFSERR_NOENT);
+    System.out.println("Deleting the file " + dirName + fsinfo.separatorChar + entry);
     if (fd.delete() == false) 
       throw new NFSException(xid, NFSERR_IO);
 
@@ -312,11 +318,13 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     String dirname = GetNameFromHandle(dirFH.Handle(), xid);
     File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, dirname + fsinfo.separatorChar + name);
     // do some correctness checking
+    System.out.println("Trying to delete the directory " + dirname + fsinfo.separatorChar + name);    
     if (fd.exists() == false)
       throw new NFSException(xid, NFSERR_NOENT);
     if (fd.isDirectory() == false) 
       throw new NFSException(xid, NFSERR_NOTDIR);
     // try to remove the directory
+    System.out.println("Deleting the directory " + dirname + fsinfo.separatorChar + name);    
     if (fd.delete() == false)
       throw new NFSException(xid, NFSERR_IO);
 
@@ -370,6 +378,8 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     XDRPacket reply = new XDRPacket(128);
     reply.AddReplyHeader(xid);
     reply.AddLong(NFS_OK);
+    
+    System.out.println("Just renamed " + srcdir + fsinfo.separatorChar + srcentry + " to " + destdir + fsinfo.separatorChar + destentry);
     return reply;
     
   }

@@ -13,6 +13,9 @@ import java.util.StringTokenizer;
  * Also, let's say all paths are absolute
  */
 public class FileImpl implements File {
+    /**
+     * The full pathname for this file
+     */
     String name;
 
     FabDirectory parentDir = null;
@@ -59,11 +62,9 @@ public class FileImpl implements File {
 
     public boolean exists() {
         atomic {
-            if(element != null) {
-                return true;
-            }
             searchFile();
-            return (element != null);
+//            System.out.println("Checking for existence of " + name + " in " + parentDir.fullPath + parentDir.listString());
+            return(element != null);
         }
     }
 
@@ -143,7 +144,7 @@ public class FileImpl implements File {
                 searchFile();
             }
 
-            element = parentDir.mkdir(lastName);
+            element = parentDir.mkdir(lastName, name);
             if(element == null) {
                 return false;
             }
@@ -160,7 +161,8 @@ public class FileImpl implements File {
                 searchFile();
             }
 
-            element = parentDir.mkfile(lastName);
+//            System.out.println("Going to add file to parent");
+            element = parentDir.mkfile(lastName, name);
             if(element == null) {
                 return false;
             }
@@ -179,8 +181,8 @@ public class FileImpl implements File {
             FileImpl destImpl = (FileImpl)dest;
             destImpl.searchFile();
             destImpl.element = this.element;
-            destImpl.element.moveTo(destImpl.lastName, destImpl.parentDir);
-            destImpl.parentDir.addFile(lastName, element);
+            destImpl.element.moveTo(destImpl.lastName, destImpl.parentDir, destImpl.name);
+            destImpl.parentDir.addFile(destImpl.lastName, element);
 
             // delete this file from here
             this.parentDir.deleteFile(lastName);
