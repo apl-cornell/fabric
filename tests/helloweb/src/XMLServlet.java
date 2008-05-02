@@ -1,3 +1,18 @@
+import java.io.IOException;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.w3c.dom.Document;
+
+import fabric.client.Client;
+import fabric.client.Core;
+
 /**
  * This test uses the same basic design as the current CMS implementation.
  * This servlet accesses the fabric objects, and then builds an XML dom tree
@@ -9,25 +24,47 @@
 public class XMLServlet extends HttpServlet {
   XMLServletHelper helper;
 
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+  @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException {
     String   url = null;
     Document xml = null;
 
     String action = request.getParameter("action");
     if (action == null || action.equals("viewBenchmark")) {
-      url = "xml-db.jsp";
+      url = "/hello.jsp";
       xml = helper.dbSummary();
     }
     else if (action.equals("viewAssembly")) {
-      url = "xml-as.jsp";
+      url = "/xml-as.jsp";
       xml = helper.assemblySummary(request.getParameter("id"));
     }
     else {
       throw new ServletException("Invalid request");
     }
 
-    resuest.getSession(true).setAttribute("xmldata", xml);
-    getServletContext().getRequestDispatcher(url).forward(request, response);
+    request.getSession(true).setAttribute("xmldata", xml);
+    try {
+      ServletContext context = getServletContext();
+      RequestDispatcher rd   = context.getRequestDispatcher(url);
+      rd.forward(request, response);
+    } catch (IOException e) {
+      throw new ServletException(e);
+    }
+  }
+  
+  @Override
+  public void init(ServletConfig context) throws ServletException {
+    super.init(context);
+    try {
+      System.setProperty("fabric.prefix", context.getInitParameter("fabric-prefix"));
+      Client.initialize();
+      Client client = Client.getClient();
+      Core   local  = client.getLocalCore();
+
+      this.helper = XMLServletHelper.$Impl.create(local, context.getInitParameter("uri"));
+    } catch (final Exception e) {
+      throw new ServletException(e);
+    }
   }
 }
 

@@ -96,7 +96,7 @@ public class XMLServletHelper {
       }
 
       result.appendChild(root);
-    } else throw new ClassCastException();
+    } else throw new RuntimeException("id not in either set: " + assmId);
     return result;
   }
 
@@ -108,6 +108,10 @@ public class XMLServletHelper {
 
     db      = (Benchmark) ((Map) core.getRoot()).get(addr.getPath());
     builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+  }
+  
+  public static XMLServletHelper create(Core core, String uri) throws Exception {
+    return new XMLServletHelper@core(uri);
   }
 }
 
