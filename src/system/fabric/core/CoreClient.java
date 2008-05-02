@@ -22,7 +22,7 @@ public class CoreClient extends Client {
       int maxConnections, int timeout, int retries, boolean useSSL, Node node)
       throws InternalError, UnrecoverableKeyException {
     super(keyStore, passwd, trustStore, maxConnections, timeout, retries,
-        useSSL, "core");
+        useSSL, "fabric.client.DirectFetchManager");
     
     this.node = node;
     
