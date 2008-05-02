@@ -31,8 +31,8 @@ public class MakeSignature {
   }
   
   private void getOpts(String[] args) {
-    GetOpt o = new GetOpt(args, Options.OPTS);
     opts = new Options();
+    GetOpt o = new GetOpt(args, Options.OPTS);
     
     try {
       for (int c = o.getNextOption(); c != -1; c = o.getNextOption()) {
@@ -77,8 +77,7 @@ public class MakeSignature {
       out = new PrintWriter(System.out, true);
     } else {
       String fn = opts.out + "/" + c.getCanonicalName().replace('.', '/') + ".fab";
-      int i = fn.lastIndexOf('/');
-      String dir = fn.substring(0, i);
+      String dir = fn.substring(0, fn.lastIndexOf('/'));
       new File(dir).mkdirs();
       out = new PrintWriter(new FileWriter(fn), true);
     }
@@ -204,7 +203,7 @@ public class MakeSignature {
   }
   
   private void printUsage() {
-    System.err.println("Usage: MakeSignature [options] <classname>, ...");
+    System.err.println("Usage: MakeSignature [options] <classname> ...");
     System.err.println("  Options:");
     System.err.println("    -d <path>  output path");
     System.err.println("    -j         Java inlineable class");
