@@ -213,6 +213,8 @@ public final class TransactionManager {
   }
 
   public void abortTransaction() {
+//    System.out.println("abortTransaction: " + curFrame.tid);
+    
     // Restore the state of all objects that were modified during the aborted
     // transaction.
     for (List<$Impl> list : curFrame.writes.values()) {
@@ -229,6 +231,8 @@ public final class TransactionManager {
   }
 
   public void commitTransaction() throws AbortException {
+//    System.out.println("commitTransaction: " + curFrame.tid);
+    
     // XXX This is a long and ugly method. Refactor?
     Log parentFrame = curFrame.outerLog;
     if (parentFrame != null) {
@@ -462,5 +466,6 @@ public final class TransactionManager {
 
   public void startTransaction() {
     curFrame = new Log(curFrame);
+//    System.out.println("startTransaction: " + curFrame.tid);
   }
 }

@@ -23,7 +23,12 @@ public class FabDirectory extends FileSystemObject {
     }
 
     public FileSystemObject getFile(String name) {
-        return (FileSystemObject)dirElements.get(name);
+        System.out.println(this.toString() + ": Looking up " + name + " in " + fileName + "(" + fullPath + ")" + ": " + listString());
+        FileSystemObject fso = (FileSystemObject)dirElements.get(name);
+        if(fso == null) {
+            System.out.println("Found nothing!");
+        }
+        return fso;
     }
 
     public FileSystemObject deleteFile(String name) {
@@ -89,7 +94,7 @@ public class FabDirectory extends FileSystemObject {
 //                toReturn = toReturn + ((FileSystemObject)it.next()).fileName + ", ";
 //            }
             toReturn = dirElements.toString();
-            return toReturn;
+            return toReturn + "(size="+dirElements.size()+")";
         }
     }
 

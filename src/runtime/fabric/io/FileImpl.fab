@@ -20,7 +20,7 @@ public class FileImpl implements File {
 
     FabDirectory parentDir = null;
     FileSystemObject element = null;
-    String lastName;
+    String lastName = null;
 
     Core remoteCore;
 
@@ -109,8 +109,9 @@ public class FileImpl implements File {
 
     public long lastModified() {
         atomic {
-            if(element == null) {
                 searchFile();
+            if(element == null) {
+                return 0;
             }
             return element.lastModifiedDate;
         }

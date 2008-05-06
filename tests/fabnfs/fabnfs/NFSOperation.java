@@ -15,8 +15,13 @@ class NFSOperation extends java.lang.Object  implements Runnable, NFSConsts, RPC
 	    NFSItem next = (NFSItem) input.Get();
 	    //System.out.println("NFSOperation got item from queue xid=" + 
 	    //  next.xid);
+            
+            // wrapping this up in a transaction of its own
+            fabric.client.TransactionManager.INSTANCE.startTransaction();
 	    handler.Run(next.port, next.xid,
 			next.procedure, next.packet);
+            fabric.client.TransactionManager.INSTANCE.commitTransaction();
+            
 	}
     }
 };

@@ -271,7 +271,7 @@ public interface Object {
     @Override
     public String toString() {
       return getClass().getName() + "@fab://" + $getCore().name() + "/"
-          + $getOnum();
+          + $getOnum()+"("+super.toString()+")";
     }
 
     /**
