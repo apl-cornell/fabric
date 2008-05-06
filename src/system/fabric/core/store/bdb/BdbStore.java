@@ -25,6 +25,7 @@ import com.sleepycat.je.Transaction;
 
 import fabric.common.InternalError;
 import fabric.common.SerializedObject;
+import fabric.common.util.LongIterator;
 import fabric.core.ObjectStore;
 import fabric.core.PrepareRequest;
 
@@ -136,21 +137,33 @@ public class BdbStore implements ObjectStore {
   }
 
   public boolean isPrepared(long onum) {
+    return prepared(onum) > 0;
+  }
+
+  public boolean isRead(long onum) {
+    return prepared(onum) == 1;
+  }
+
+  public boolean isWritten(long onum) {
+    return prepared(onum) == 2;
+  }
+  
+  private int prepared(long onum) {
     DatabaseEntry key = new DatabaseEntry(toBytes(onum));
     DatabaseEntry data = new DatabaseEntry();
     
     try {
       if (prepared2.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
-        return true;
+        return toInt(data.getData()) < 0 ? 2 : 1;
       }
     } catch (DatabaseException e) {
       log.log(Level.SEVERE, "Bdb error in isPrepared: ", e);
       throw new InternalError(e);
     }
     
-    return false;
+    return 0;
   }
-
+  
   public long[] newOnums(int num) {
     log.fine("Bdb new onums begin");
     
@@ -191,17 +204,12 @@ public class BdbStore implements ObjectStore {
       DatabaseEntry data = new DatabaseEntry(toBytes(req));
       prepared.put(txn, key, data);
       
-      for (long onum : req) {
-        key.setData(toBytes(onum));
-        
-        if (prepared2.get(txn, key, data, LockMode.DEFAULT) == SUCCESS) {
-          int count = toInt(data.getData()) + 1;
-          data.setData(toBytes(count));
-          prepared2.put(txn, key, data);
-        } else {
-          data.setData(toBytes(1));
-          prepared2.put(txn, key, data);
-        }
+      for (SerializedObject o : req.written()) {
+        addPrepare(txn, o.getOnum(), true);
+      }
+      
+      for (LongIterator i = req.reads.keySet().iterator(); i.hasNext();) {
+        addPrepare(txn, i.next(), false);
       }
       
       txn.commit();
@@ -212,6 +220,21 @@ public class BdbStore implements ObjectStore {
     }
     
     return tid;
+  }
+
+  private void addPrepare(Transaction txn, long onum, boolean write)
+      throws DatabaseException {
+    DatabaseEntry key = new DatabaseEntry(toBytes(onum));
+    DatabaseEntry data = new DatabaseEntry();
+    
+    if (prepared2.get(txn, key, data, LockMode.DEFAULT) == SUCCESS) {
+      int count = toInt(data.getData()) + 1;
+      data.setData(toBytes(count));
+      prepared2.put(txn, key, data);
+    } else {
+      data.setData(toBytes(write ? -1 : 1));
+      prepared2.put(txn, key, data);
+    }
   }
 
   public SerializedObject read(Principal client, long onum)
@@ -294,7 +317,7 @@ public class BdbStore implements ObjectStore {
         if (prepared2.get(txn, key, data, LockMode.DEFAULT) == SUCCESS) {
           int count = toInt(data.getData()) - 1;
           
-          if (count == 0) {
+          if (count <= 0) {
             prepared2.delete(txn, key);
           } else {
             data.setData(toBytes(count));
@@ -425,5 +448,5 @@ public class BdbStore implements ObjectStore {
   public String getName() {
     return name;
   }
-  
+
 }

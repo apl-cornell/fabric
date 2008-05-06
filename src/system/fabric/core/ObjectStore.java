@@ -98,6 +98,26 @@ public interface ObjectStore {
    *         been committed or rolled back.
    */
   boolean isPrepared(long onum);
+
+  /**
+   * Determine whether an onum has outstanding uncommitted reads.
+   * 
+   * @param onum
+   *          the object number in question
+   * @return true if the object has been read by a transaction that hasn't
+   *         been committed or rolled back.
+   */
+  boolean isRead(long onum);
+
+  /**
+   * Determine whether an onum has outstanding uncommitted changes.
+   * 
+   * @param onum
+   *          the object number in question
+   * @return true if the object has been changed by a transaction that hasn't
+   *         been committed or rolled back.
+   */
+  boolean isWritten(long onum);
   
   /**
    * <p>

@@ -30,6 +30,7 @@ import fabric.core.store.StoreException;
  * this class.</p>
  */
 public class MemoryStore implements ObjectStore {
+  
   /**
    * The data stored for a prepared transaction
    */
@@ -150,6 +151,14 @@ public class MemoryStore implements ObjectStore {
     return pendingByOnum.containsKey(onum);
   }
 
+  public boolean isRead(long onum) {
+    return isPrepared(onum);  // TODO
+  }
+
+  public boolean isWritten(long onum) {
+    return isPrepared(onum);  // TODO
+  }
+  
   public long[] newOnums(int num) {
     final long[] result = new long[num < 0 ? 0 : num];
 
@@ -196,6 +205,7 @@ public class MemoryStore implements ObjectStore {
     oout.flush();
     oout.close();
   }
+
 }
 
 /*

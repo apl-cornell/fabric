@@ -122,7 +122,7 @@ public class TransactionManager {
           long onum    = entry.getKey();
           int  version = entry.getValue().intValue();
 
-          if (store.isPrepared(onum))
+          if (store.isWritten(onum))
             throw new TransactionPrepareFailedException(
                 "Object " + onum + " has been locked by an " +
                 "uncommitted transaction");
