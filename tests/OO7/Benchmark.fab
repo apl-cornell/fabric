@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Benchmark.fab,v 1.14 2008-04-30 19:51:28 mdgeorge Exp $
+// $Id: Benchmark.fab,v 1.15 2008-05-07 17:29:22 mdgeorge Exp $
 
 package OO7;
 
@@ -57,7 +57,7 @@ public class Benchmark {
 
   // Note: each class is responsible for maintaining its own extents.
   Map/*Integer,AtomicPart*/      atomicPartsById;
-  //Map/*Long,AtomicPart*/         atomicPartsByBuildDate;
+  //Map/*Date,AtomicPart*/         atomicPartsByBuildDate;
   Map/*Integer,CompositePart*/   compositePartsById;
   //Map/*String,Document*/         documentsByTitle;
   Map/*Integer,Document*/        documentsById;

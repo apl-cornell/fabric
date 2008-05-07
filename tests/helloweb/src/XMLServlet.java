@@ -31,7 +31,7 @@ public class XMLServlet extends HttpServlet {
 
     String action = request.getParameter("action");
     if (action == null || action.equals("viewBenchmark")) {
-      url = "/hello.jsp";
+      url = "/xml-db.jsp";
       xml = helper.dbSummary();
     }
     else if (action.equals("viewAssembly")) {

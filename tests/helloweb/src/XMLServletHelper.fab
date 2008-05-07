@@ -61,7 +61,8 @@ public class XMLServletHelper {
       ComplexAssembly ca = (ComplexAssembly) db.complexAssembliesById().get(id);
 
       Element root = result.createElement("complex-assembly");
-      root.setAttribute("parent", Integer.toString(ca.superAssembly().id()));
+      if (ca.superAssembly() != null)
+        root.setAttribute("parent", Integer.toString(ca.superAssembly().id()));
 
       Iterator i = ca.subAssemblies().iterator(local);
       while (i.hasNext()) {
