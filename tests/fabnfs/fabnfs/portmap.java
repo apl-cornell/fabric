@@ -11,7 +11,7 @@ class portmap extends java.lang.Object  implements Runnable {
     }
     
     void DoPortmap() {
-	rpcManager manager = new rpcManager(111);
+	rpcManager manager = new rpcManager(PortMapConst.PMAP_PORT);
 
 	// register the port mapper
 	portMapHandler pm = new portMapHandler();

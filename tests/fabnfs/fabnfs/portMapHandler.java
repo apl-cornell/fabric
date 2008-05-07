@@ -52,7 +52,7 @@ class portMapHandler extends rpcHandler implements RPCConsts, PortMapConst {
 	
 	mappings = new Hashtable();
 
-	Register(PM_PROG, PM_VERS, UDPProto, 111);
+	Register(PM_PROG, PM_VERS, UDPProto, PortMapConst.PMAP_PORT);
     };
 
     public void Run(UDPPacketPort port, long xid,
@@ -69,6 +69,7 @@ class portMapHandler extends rpcHandler implements RPCConsts, PortMapConst {
 	    break;
 	case (int) PMAP_UNSET:
 	    System.out.print("PMAP_UNSET called\n");
+	    PMUnset(port, xid, procedure, packet);
 	    break;
 	case (int) PMAP_GETPORT:
 	    System.out.print("PMAP_GETPORT called\n");
@@ -223,6 +224,48 @@ class portMapHandler extends rpcHandler implements RPCConsts, PortMapConst {
 
 	udp.SendPacket(packet.Source(), packet.Port(), result);
     };
+    
+    void PMUnset(UDPPacketPort udp, long xid, long procedure, XDRPacket packet) {
+      // skip past the authentication records
+      packet.ReadAuthentication();
+      packet.ReadAuthentication();
+      
+      // Collect the arguments to the procedure
+      long prog = packet.GetLong();
+      long vers = packet.GetLong();
+      
+      XDRPacket result = new XDRPacket(128);
+      result.AddReplyHeader(xid);
+      
+      // look for the chain of versions for this program
+      Long pl = new Long(prog);
+      boolean removed = false;
+      portmapMapping chain = (portmapMapping) mappings.get(pl);
+
+      // See if this version is already registered in the chain
+      portmapMapping prev = null;
+      while (chain != null) {
+        if (chain.Version() == vers) {
+          System.out.println("Unregistering prog " + prog + " vers "
+              + vers + " prot " + chain.Protocol()
+              + " port " + chain.Port());
+          removed = true;
+          if (prev == null) {
+            if (chain.Next() == null)
+              mappings.remove(pl);
+            else mappings.put(pl, chain.Next());
+          } else {
+            prev.SetNext(chain.Next());
+          }
+        }
+        
+        prev = chain;
+        chain = chain.Next();
+      }
+      
+      result.AddLong(removed ? PM_TRUE : PM_FALSE);
+      udp.SendPacket(packet.Source(), packet.Port(), result);
+    }
     
     void Register(long prog, long vers, long prot, long port) {
 	PortmapRegister pr = new PortmapRegister(prog, vers, prot, port);

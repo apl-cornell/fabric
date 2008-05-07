@@ -2,7 +2,7 @@ package fabnfs;
 
 // See rfc 1057 for the definition of these constants.
 interface PortMapConst {
-    public long PMAP_PORT = 111;
+    public short PMAP_PORT = 111;
     
     public long PMAP_NULL = 0;
     public long PMAP_SET = 1;
