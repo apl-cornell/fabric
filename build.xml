@@ -339,7 +339,7 @@
   </target>
 
   <!-- Compiles the Fabric test programs -->
-  <target name="tests" depends="init,fabric-system">
+  <target name="tests" depends="init,fabric-system,nfsserver">
     <javac target="1.5" srcdir="${src}" destdir="${classes}" debug="on" includes="tests/**">
       <classpath refid="standard.classpath"/>
     </javac>
