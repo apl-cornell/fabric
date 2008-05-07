@@ -325,4 +325,10 @@ public class RemoteCore implements Core {
   public String name() {
     return name;
   }
+
+  @Override
+  public int hashCode() {
+    return name.hashCode();
+  }
+  
 }

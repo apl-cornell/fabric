@@ -96,4 +96,9 @@ public class LocalCore implements Core {
   public String name() {
     return "local";
   }
+
+  @Override
+  public int hashCode() {
+    return 0;
+  }
 }
