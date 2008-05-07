@@ -384,6 +384,11 @@ public final class TransactionManager {
 
     // Reset the read-transaction-IDs for all the read objects.
     curFrame.setReadTIDs(-1);
+    
+    // Reset the write history for all modified objects.
+    for (List<$Impl> list : curFrame.writes.values()) {
+      for ($Impl obj : list) obj.$commit(0);
+    }
 
     curFrame = null;
   }
