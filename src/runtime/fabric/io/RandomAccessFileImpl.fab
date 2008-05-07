@@ -6,19 +6,24 @@ import java.io.IOException;
 public class RandomAccessFileImpl implements RandomAccessFile {
     FileImpl file;
     ResizableFileByteArray contents;
-    FabFile fabFile;
+    FileSystemObject fabFile;
     int currentPos;
 
     public RandomAccessFileImpl(Core remoteCore, String path) throws IOException {
         this.file = new FileImpl(remoteCore, path);
 
-        if(!file.exists()) {System.out.println("File " + path + " does not exist. Creating it...");
+        if(!file.exists()) {
+//            System.err.println("File " + path + " does not exist. Creating it...");
             if(!file.mkfile()) {
                 throw new IOException("Cannot find or create file: " + path);
             }
         }
-        fabFile = (FabFile)file.element;
-        contents = fabFile.contents;
+        fabFile = file.element;
+        if(fabFile instanceof FabFile) {
+            contents = ((FabFile)fabFile).contents;
+        } else {
+            contents = null;
+        }
         currentPos = 0;
     }
 
@@ -28,6 +33,7 @@ public class RandomAccessFileImpl implements RandomAccessFile {
 
     public void write(FileByteArray b, int off, int len) {
         atomic {
+            if(contents == null) return;
             if(contents.getLength() < currentPos + len) {
                 contents.setLength(currentPos + len);
             }
