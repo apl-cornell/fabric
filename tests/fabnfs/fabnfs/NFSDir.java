@@ -97,7 +97,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
       String dirName = GetNameFromHandle(dir.Handle(), xid);
       String fileName = pm.MakePath(dirName, entry);
 
-      System.out.println("Looking up file " + fileName);
+      System.err.println("NFSHandler: Looking up file " + fileName);
       File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, fileName); // open it to make sure it exists
       if (fd.exists() != true) {
         System.out.println("File does not exist!");

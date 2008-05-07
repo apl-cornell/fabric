@@ -52,7 +52,7 @@ class NFSHandler extends rpcHandler implements RPCConsts, NFSConsts
 
 	XDRPacket result = null;
 
-        System.out.println("Calling NFS Procedure " + procedure);
+        System.err.println("Calling NFS Procedure " + procedure);
 	//
 	// see if this packet has already been received 
 	//

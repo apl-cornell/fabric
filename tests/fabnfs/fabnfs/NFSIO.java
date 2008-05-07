@@ -38,7 +38,7 @@ class NFSIO implements NFSConsts, RPCConsts {
 	    if (fileName == null)
 	        throw new NFSException(xid, NFSERR_STALE);
 	    // XXX comment out print lines to improve performance
-	     System.out.print("Write(" + fileName + ", " + offset + ", (" + beginoffset + ", " + totalcount + ") " +
+	     System.err.print("Write(" + fileName + ", " + offset + ", (" + beginoffset + ", " + totalcount + ") " +
 	    		     datalen + ")\n");
 
 //	    RandomAccessFile fd = new RandomAccessFile(fileName, "rw");
@@ -81,7 +81,7 @@ class NFSIO implements NFSConsts, RPCConsts {
 	    if (fileName == null)
 	        throw new NFSException(xid, NFSERR_STALE);
 	    // XXX Comment out read lines to improve performance
-	     System.out.print("Read(" + fileName + ", " + count + ", " + 
+	     System.err.print("Read(" + fileName + ", " + count + ", " + 
 	    		     offset + ")\n");
 	    
 	    if (count <= 0) {
