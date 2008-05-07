@@ -91,7 +91,7 @@ public class BdbStore implements ObjectStore {
   }
 
   public void commit(Principal client, int tid) {
-    log.info("Bdb commit begin tid " + tid);
+    log.finer("Bdb commit begin tid " + tid);
     
     try {
       Transaction txn = env.beginTransaction(null, null);
@@ -100,14 +100,14 @@ public class BdbStore implements ObjectStore {
       if (req != null) {
         for (SerializedObject o : req.written()) {
           long onum = o.getOnum();
-          log.fine("Bdb committing onum " + onum);
+          log.finest("Bdb committing onum " + onum);
           DatabaseEntry key = new DatabaseEntry(toBytes(onum));
           DatabaseEntry data = new DatabaseEntry(toBytes(o));
           store.put(txn, key, data);
         }
         
         txn.commit();
-        log.info("Bdb commit success tid " + tid);
+        log.finer("Bdb commit success tid " + tid);
       } else {
         txn.abort();
         log.warning("Bdb commit not found tid " + tid);
@@ -196,7 +196,7 @@ public class BdbStore implements ObjectStore {
 
   public int prepare(Principal client, PrepareRequest req) {
     int tid = newTid();
-    log.info("Bdb prepare begin tid " + tid);
+    log.finer("Bdb prepare begin tid " + tid);
     
     try {
       Transaction txn = env.beginTransaction(null, null);
@@ -213,7 +213,7 @@ public class BdbStore implements ObjectStore {
       }
       
       txn.commit();
-      log.info("Bdb prepare success tid " + tid);
+      log.finer("Bdb prepare success tid " + tid);
     } catch (DatabaseException e) {
       log.log(Level.SEVERE, "Bdb error in prepare: ", e);
       throw new InternalError(e);
@@ -239,7 +239,7 @@ public class BdbStore implements ObjectStore {
 
   public SerializedObject read(Principal client, long onum)
       throws NoSuchElementException {
-    log.fine("Bdb read onum " + onum);
+    log.finest("Bdb read onum " + onum);
     DatabaseEntry key = new DatabaseEntry(toBytes(onum));
     DatabaseEntry data = new DatabaseEntry();
     
@@ -256,13 +256,13 @@ public class BdbStore implements ObjectStore {
   }
 
   public void rollback(Principal client, int tid) {
-    log.info("Bdb rollback begin tid " + tid);
+    log.finer("Bdb rollback begin tid " + tid);
     
     try {
       Transaction txn = env.beginTransaction(null, null);
       removePrepare(txn, tid);
       txn.commit();
-      log.info("Bdb rollback success tid " + tid);
+      log.finer("Bdb rollback success tid " + tid);
     } catch (DatabaseException e) {
       log.log(Level.SEVERE, "Bdb error in rollback: ", e);
       throw new InternalError(e);
