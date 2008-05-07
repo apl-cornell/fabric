@@ -261,7 +261,7 @@ public interface Object {
      */
     @Override
     public int hashCode() {
-      return (int) ($getCore().hashCode() ^ $getOnum());
+      return (int) $getOnum();
     }
 
     /**
