@@ -17,7 +17,9 @@ class XDRPacket extends java.lang.Object  implements RPCConsts {
     boolean debug = false;
     
     XDRPacket(DatagramPacket input) {
-	data = input.getData();
+        byte[] buf = input.getData();
+        data = new byte[buf.length];
+	System.arraycopy(buf, 0, data, 0, buf.length);
 	len = input.getLength();
 	position = 0;
 	source = input.getAddress();
