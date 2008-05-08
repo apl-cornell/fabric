@@ -70,14 +70,16 @@ public class FieldExt_c extends ExprExt_c {
     if (accessState != null) {
       ClassType ct = (ClassType) targetType;
       
-      if (accessState.resident()) {
-        target = qq.parseExpr("((" + ct.fullName() + ".$Impl) %E)", target);
-        field = field.target(target);
-      } else {
+      if (!accessState.resident()) {
         target = qq.parseExpr("(%E = (%T) %E.fetch())", target, targetType, target);
       }
       
       if (accessState.read()) {
+        if (!(target instanceof Special)) {
+          target = qq.parseExpr("((" + ct.fullName() + ".$Impl) %E)", target);
+          field = field.target(target);
+        }
+        
         return field;
       }
     }

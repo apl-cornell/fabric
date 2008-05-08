@@ -31,6 +31,15 @@ public class CallExt_c extends ExprExt_c {
     }
 
     if (rewriteTarget) target = (Receiver) call.visitChild(target, pr);
+    
+    // optimization to reduce register reads and writes
+    if (accessState != null) {
+      if (!accessState.resident()) {
+        target = pr.qq().parseExpr("(%E = (%T) %E.fetch())", 
+            target, target.type(), target);
+      }
+    }
+    
     Id name = (Id) call.visitChild(call.id(), pr);
     List<Expr> arguments = call.visitList(call.arguments(), pr);
     call = (Call) call.target(target).id(name).arguments(arguments);

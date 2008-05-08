@@ -6,7 +6,7 @@ public class ReadWriteOpt01 {
 	
 	public void foo() {
 		int a = i;
-		int b = i;  // should not have to register read again
+		int b = this.i;  // should not have to register read again
 	}
 	
 }
