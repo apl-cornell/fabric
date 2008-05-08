@@ -23,6 +23,8 @@ public interface FabricTypeSystem extends TypeSystem {
   ClassType fArrayImplOf(Type type);
 
   ClassType toFArray(ArrayType type);
+  
+  ClassType AbortException();
 
   /**
    * @return true iff the given type is a primitive, an array of Fabric types,

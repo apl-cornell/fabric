@@ -1,0 +1,34 @@
+package regression;
+
+import fabric.util.*;
+
+public class HashMap01 {
+	
+	public static atomic void main(String[] args) {
+		Core c = Client.getClient().getCore("core0");
+		Map root = (Map) c.getRoot();
+		String key = "HashMap01";
+		
+		if (args.length == 0) {
+			Map m = new HashMap@c();
+			
+			for (int i = 0; i < 1000; i++) {
+				m.put(new Object@c(), new Object@c());
+			}
+			
+			root.put(key, m);
+		} else {
+			Map m = (Map) root.get(key);
+			Iterator it = m.values().iterator(Client.getClient().getLocalCore());
+			
+			int i = 0;
+			while (it.hasNext()) {
+				it.next();
+				i++;
+			}
+			
+			System.out.println(i + " items found");
+		}
+	}
+	
+}

@@ -30,34 +30,6 @@ public class MakeSignature {
     }
   }
   
-  private void getOpts(String[] args) {
-    opts = new Options();
-    GetOpt o = new GetOpt(args, Options.OPTS);
-    
-    try {
-      for (int c = o.getNextOption(); c != -1; c = o.getNextOption()) {
-        switch (c) {
-        case 'd': opts.out = o.getOptionArg(); break;
-        case 'j': opts.java = true; break;
-        case 'f': opts.fields = true; break;
-        case 'p': opts.prots = true; break;
-        case 'r': opts.privs = true; break;
-        case 'a': opts.packs = true; break;
-        case 'i': opts.inners = true; break;
-        }
-      }
-      
-      opts.classes = o.getCmdArgs();
-      opts.out = normalize(opts.out);
-    } catch (Exception e) {
-      printUsage();
-    }
-    
-    if (opts.classes.length == 0) {
-      printUsage();
-    }
-  }
-  
   private String normalize(String s) {
     if (s == null) {
       return s;
@@ -212,12 +184,43 @@ public class MakeSignature {
     System.err.println("    -r         output private members");
     System.err.println("    -a         output package members");
     System.err.println("    -i         output inner members");
+    System.err.println("    -e         same as -fprai");
     System.exit(-1);
+  }
+
+  private void getOpts(String[] args) {
+    opts = new Options();
+    GetOpt o = new GetOpt(args, Options.OPTS);
+    
+    try {
+      for (int c = o.getNextOption(); c != -1; c = o.getNextOption()) {
+        switch (c) {
+        case 'd': opts.out = o.getOptionArg(); break;
+        case 'j': opts.java = true; break;
+        case 'f': opts.fields = true; break;
+        case 'p': opts.prots = true; break;
+        case 'r': opts.privs = true; break;
+        case 'a': opts.packs = true; break;
+        case 'i': opts.inners = true; break;
+        case 'e': opts.fields = opts.prots = opts.privs = opts.packs = 
+          opts.inners = true; break;
+        }
+      }
+      
+      opts.classes = o.getCmdArgs();
+      opts.out = normalize(opts.out);
+    } catch (Exception e) {
+      printUsage();
+    }
+    
+    if (opts.classes.length == 0) {
+      printUsage();
+    }
   }
   
   private static class Options {
     
-    public static final String OPTS = "d:jfprai";
+    public static final String OPTS = "d:jfpraie";
     
     public String[] classes;
     public String out;

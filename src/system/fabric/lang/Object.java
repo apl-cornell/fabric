@@ -41,6 +41,9 @@ public interface Object {
   /** Unwraps a wrapped Java inlineable. */
   java.lang.Object $unwrap();
 
+  /** Fetches the object if this is a proxy; returns itself if it's an impl. */
+  public $Impl fetch();
+  
   /**
    * $Proxy objects behave like regular objects by delegating to $Impl objects,
    * pointed to by a soft reference. This class abstracts away the code for
@@ -67,7 +70,7 @@ public interface Object {
       ref = new SoftReference<$Impl>(impl);
     }
 
-    protected final $Impl fetch() {
+    public final $Impl fetch() {
       $Impl result = ref.get();
 
       if (result == null) {
@@ -310,6 +313,10 @@ public interface Object {
     public final $Proxy $getProxy() {
       if ($proxy == null) $proxy = $makeProxy();
       return $proxy;
+    }
+    
+    public final $Impl fetch() {
+      return this;
     }
 
     /**

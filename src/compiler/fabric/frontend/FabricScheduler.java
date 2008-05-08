@@ -164,6 +164,24 @@ public class FabricScheduler extends JLScheduler {
     return g;
   }
 
+  public Goal ReadWriteChecked(final Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new ReadWriteChecker(job,
+        extInfo.typeSystem(), extInfo.nodeFactory())) {
+      @SuppressWarnings("unchecked")
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(WrapInlineables(job));
+        l.add(FixArrayInitializerTypes(job));
+        l.add(RewriteAtomicMethods(job));
+        l.addAll(super.prerequisiteGoals(scheduler));
+        return l;
+      }
+    });
+
+    return g;
+  }
+
   public Goal RewriteProxies(final Job job) {
     Goal g = internGoal(new VisitorGoal(job, new ProxyRewriter(extInfo)) {
       @SuppressWarnings("unchecked")
@@ -173,6 +191,7 @@ public class FabricScheduler extends JLScheduler {
         l.add(WrapInlineables(job));
         l.add(FixArrayInitializerTypes(job));
         l.add(RewriteAtomicMethods(job));
+        l.add(ReadWriteChecked(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
       }

@@ -27,6 +27,10 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
     return load("fabric.lang.WrappedJavaInlineable");
   }
 
+  public ClassType AbortException() {
+    return load("fabric.client.AbortException");
+  }
+  
   /*
    * (non-Javadoc)
    * 

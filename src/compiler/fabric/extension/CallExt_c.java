@@ -7,8 +7,11 @@ import polyglot.types.MethodInstance;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import fabric.visit.ProxyRewriter;
+import fabric.visit.ReadWriteChecker.State;
 
 public class CallExt_c extends ExprExt_c {
+
+  private State accessState;
 
   /*
    * (non-Javadoc)
@@ -67,6 +70,14 @@ public class CallExt_c extends ExprExt_c {
   @Override
   public Call node() {
     return (Call) super.node();
+  }
+
+  public void accessState(State s) {
+    this.accessState = s;
+  }
+  
+  public State accessState() {
+    return accessState;
   }
 
 }

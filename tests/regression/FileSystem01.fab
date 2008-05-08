@@ -1,0 +1,22 @@
+package regression;
+
+import fabric.util.*;
+import fabric.io.*;
+
+public class FileSystem01 {
+	
+	public static atomic void main(String[] args) {
+		Core c = Client.getClient().getCore("core0");
+		Map root = (Map) c.getRoot();
+		String key = "FileSystem01";
+		
+		if (args.length == 0) {
+			FabDirectory fd = new FabDirectory@c();
+			root.put(key, fd);
+		} else {
+			FabDirectory fd = (FabDirectory) root.get(key);
+			fd.selfDestruct();
+		}
+	}
+	
+}

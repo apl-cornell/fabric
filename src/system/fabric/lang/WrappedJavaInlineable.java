@@ -9,6 +9,7 @@ import fabric.lang.arrays.ObjectArray;
 import fabric.lang.auth.Label;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
+  
   public final T obj;
 
   private WrappedJavaInlineable(T obj) {
@@ -95,6 +96,10 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
     throw new InternalError("WrappedJavaInlineables don't have proxies.");
   }
 
+  public $Impl fetch() {
+    throw new InternalError("WrappedJavaInlineables don't have impls.");
+  }
+
   /*
    * (non-Javadoc)
    * 
@@ -148,4 +153,5 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   public String toString() {
     return obj == null ? "null" : obj.toString();
   }
+  
 }

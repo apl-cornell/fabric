@@ -1,11 +1,23 @@
 package fabric.extension;
 
-import polyglot.ast.*;
+import polyglot.ast.Call;
+import polyglot.ast.Expr;
+import polyglot.ast.Field;
+import polyglot.ast.Id;
+import polyglot.ast.Receiver;
+import polyglot.ast.Special;
 import polyglot.qq.QQ;
-import polyglot.types.*;
+import polyglot.types.ClassType;
+import polyglot.types.FieldInstance;
+import polyglot.types.Flags;
+import polyglot.types.ReferenceType;
+import polyglot.types.Type;
 import fabric.visit.ProxyRewriter;
+import fabric.visit.ReadWriteChecker.State;
 
 public class FieldExt_c extends ExprExt_c {
+  
+  private State accessState;
 
   /*
    * (non-Javadoc)
@@ -53,6 +65,22 @@ public class FieldExt_c extends ExprExt_c {
     if (container instanceof ClassType
         && ((ClassType) container).flags().isInterface())
       return super.rewriteProxiesImpl(pr);
+    
+    // optimization to reduce register reads and writes
+    if (accessState != null) {
+      ClassType ct = (ClassType) targetType;
+      
+      if (accessState.resident()) {
+        target = qq.parseExpr("((" + ct.fullName() + ".$Impl) %E)", target);
+        field = field.target(target);
+      } else {
+        target = qq.parseExpr("(%E = (%T) %E.fetch())", target, targetType, target);
+      }
+      
+      if (accessState.read()) {
+        return field;
+      }
+    }
 
     if (flags.isStatic()) {
       ClassType targetClassType = (ClassType) targetType;
@@ -80,6 +108,14 @@ public class FieldExt_c extends ExprExt_c {
   @Override
   public Field node() {
     return (Field) super.node();
+  }
+  
+  public void accessState(State s) {
+    this.accessState = s;
+  }
+  
+  public State accessState() {
+    return accessState;
   }
 
 }
