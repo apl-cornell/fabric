@@ -26,6 +26,7 @@ import polyglot.visit.DataFlow;
 import polyglot.visit.FlowGraph;
 import fabric.ast.Atomic;
 import fabric.extension.CallExt_c;
+import fabric.extension.FieldAssignExt_c;
 import fabric.extension.FieldExt_c;
 
 /**
@@ -227,6 +228,19 @@ public class ReadWriteChecker extends DataFlow {
         if (e instanceof Local) {
           Local l = (Local) e;
           ((CallExt_c) c.ext()).accessState(in.state(l.localInstance()));
+        }
+      }
+      
+      if (n instanceof FieldAssign) {
+        FieldAssign a = (FieldAssign) n;
+        Field f =  (Field) a.left();
+        Receiver e = f.target();
+        
+        if (e instanceof Local) {
+          Local l = (Local) e;
+          ((FieldAssignExt_c) a.ext()).accessState(in.state(l.localInstance()));
+        } else if (isThis(e)) {
+          ((FieldAssignExt_c) a.ext()).accessState(in.state(null));
         }
       }
     }

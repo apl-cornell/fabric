@@ -1,0 +1,12 @@
+package regression;
+
+public class ReadWriteOpt04 {
+	
+	private int i;
+	
+	public void foo(ReadWriteOpt04 o) {
+		o.i = 12;
+		o.i = 3;  // should not make resident or register write
+	}
+	
+}

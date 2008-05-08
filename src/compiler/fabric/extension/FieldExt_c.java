@@ -71,7 +71,7 @@ public class FieldExt_c extends ExprExt_c {
       ClassType ct = (ClassType) targetType;
       
       if (!accessState.resident()) {
-        target = qq.parseExpr("(%E = (%T) %E.fetch())", target, targetType, target);
+        target = qq.parseExpr("(%E = (%T) %E.fetch())", target, ct, target);
       }
       
       if (accessState.read()) {
