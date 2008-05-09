@@ -1,0 +1,97 @@
+/****************************************
+ * Cornell University
+ * Web Template with 75px Banner
+ * IE5/Win Hacks
+ ****************************************/
+ 
+/* 
+	The purpose of this stylesheet is to provide style rules to 
+	Internet Explorer v5.x on Windows only. This browser's support 
+	for CSS is somewhat limited, and it is often necessary to provide
+	it with alternate rules to achieve the same results as other 
+	browsers.
+*/
+
+/* IE5/Win does not support margin: 0 auto for centering */
+body {
+	text-align: center;
+	}
+#cu-logo, #identity h1, #navigation, #content, #footer-content {
+	text-align: left;
+	}
+	
+/* IE5.0 needs text-decoration for underlines, 
+	but IE5.5 can use border-bottom */
+/* give IE5.0 the underline */
+body a { text-decoration: underline; }
+/* remove it from IE5.5 (hide this rule from IE5.0) */
+body a/**/ { text-decoration: none; }
+
+/* fix box model for section navigation links */
+#section-navigation a {
+	width: 200px;
+	text-decoration: none;
+	}
+	
+/* IE5.x does not display dropshadow images for thumbnails */
+.thumbnail {
+	position: static;
+	padding: 0;
+	background: none;
+	top: 0;
+	left: 0;
+	margin: 0;
+	}
+	
+/* IE5.0 jumps around if this element is floated */
+.hub-section p {
+	float: none;
+	padding-left: 15px;
+	}
+	
+/* IE5.x adds extra padding to list items in hub more information boxes */
+#hub-more ul {
+	float: left;
+	margin: 0;
+	padding: 10px 0 10px 25px;
+	font-size: 1.1em;
+	}
+#hub-more li {
+	padding-left: 15px;
+	}
+	
+/* photo gallery index thumbnails do not get shadows or padding, so they need margin */	
+.gallery-thumbnail .thumbnail {
+	margin-right: 10px;
+	}	
+	
+/* previous and next links (webrings) should not have arrows in IE5, 
+	since it does not support padding on inline elements */
+#webring .prev, #webring .next {
+	background-position: -1000em -1000em;
+	}
+#webring .prev/**/ {
+	background-position: 0 0.4em;
+	}
+#webring .next/**/ {
+	background-position: 100% 0.4em;
+	}
+	
+/* header search form layout needs several minor adjustments */
+#search-form-query {
+	height: 19px;
+	}
+#search-form-submit {
+	padding-bottom: 1px;
+	}
+#search-filters label {
+	margin: 0;
+	position: relative;
+	right: 13px;
+	}
+#search-filters input {
+	vertical-align: top;
+	position: relative;
+	bottom: 4px;
+	right: 12px;
+	}
