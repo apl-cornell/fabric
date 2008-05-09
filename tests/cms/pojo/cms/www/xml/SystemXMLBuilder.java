@@ -29,7 +29,7 @@ public class SystemXMLBuilder extends XMLBuilder
 	 * @return A TAG_FILETYPES element with child nodes
 	 * @throws FinderException
 	 */
-	public static Element buildFiletypeListSubtree(Document xml) throws FinderException
+	public Element buildFiletypeListSubtree(Document xml) throws FinderException
 	{
 		Element xFileTypes= xml.createElement(TAG_FILETYPES);
 		Collection fileTypes = database.getFileTypes();
@@ -48,7 +48,7 @@ public class SystemXMLBuilder extends XMLBuilder
 	 * @return A TAG_DEBUGIDS element with child nodes
 	 * @throws FinderException
 	 */
-	public static Element buildDebugNetIDListSubtree(Document xml) throws FinderException {
+	public Element buildDebugNetIDListSubtree(Document xml) throws FinderException {
 		Profiler.enterMethod("SystemXMLBuilder.buildDebugNetIDListSubtree","");
 		Element xDebugids = xml.createElement(TAG_DEBUGIDS);
 		Element xItem = xml.createElement(TAG_ITEM);
@@ -85,7 +85,7 @@ public class SystemXMLBuilder extends XMLBuilder
 	 * @return A TAG_SYSTEMDATA element with properties set
 	 * @throws FinderException
 	 */
-	public static Element buildSystemDataSubtree(Document xml) throws FinderException {
+	public Element buildSystemDataSubtree(Document xml) throws FinderException {
 		Element xSysData = xml.createElement(TAG_SYSTEMDATA);
 		//number of courses with students enrolled in them
 		SemesterPK sem = database.findCurrentSemester();

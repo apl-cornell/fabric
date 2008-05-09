@@ -31,7 +31,7 @@ public class LogXMLBuilder extends XMLBuilder
 	 * @return A log-results element with no properties and with children for individual log entries
 	 * @throws FinderException
 	 */
-	public static Element buildFullSubtree(Principal p, Document xml, Collection logs) throws FinderException
+	public Element buildFullSubtree(Principal p, Document xml, Collection logs) throws FinderException
 	{
 		Element logRoot = xml.createElement(TAG_LOGSEARCH_RESULTS);
 		Iterator i = logs.iterator();
@@ -51,7 +51,7 @@ public class LogXMLBuilder extends XMLBuilder
 	 * @return A log element with several properties set and child nodes for detailed logs
 	 * @throws FinderException
 	 */
-	protected static Element buildLogSubtree(Document xml, LogLocal log, Map codes, Map assigns) throws FinderException {
+	protected Element buildLogSubtree(Document xml, LogLocal log, Map codes, Map assigns) throws FinderException {
 		Element logElement = xml.createElement(TAG_LOG);
 		logElement.setAttribute(A_LOGID, String.valueOf(log.getLogID()));
 		logElement.setAttribute(A_NETID, log.getActingNetID());
@@ -89,7 +89,7 @@ public class LogXMLBuilder extends XMLBuilder
 	 * @return A log-detail element with as few properties set as possible
 	 * (since we'd rather have most of the information in the high-level-log node
 	 */
-	protected static Element buildDetailedLogSubtree(Document xml, LogDetail details, Map assigns) {
+	protected Element buildDetailedLogSubtree(Document xml, LogDetail details, Map assigns) {
 		Element detailElement = xml.createElement(TAG_LOGDETAIL);
 		detailElement.setAttribute(A_DETAILS, details.getDetailString());
 		if (details.getNetID() != null) {
@@ -102,7 +102,7 @@ public class LogXMLBuilder extends XMLBuilder
 		return detailElement;
 	}
 	
-	protected static void appendReceivingNetIDSubtree(Document xml, Element e, Collection netids) {
+	protected void appendReceivingNetIDSubtree(Document xml, Element e, Collection netids) {
 	    Iterator i = netids.iterator();
 	    while (i.hasNext()) {
 	        String netid = (String) i.next();
@@ -112,7 +112,7 @@ public class LogXMLBuilder extends XMLBuilder
 	    }
 	}
 	
-	protected static void appendLogSearchCourses(Principal p, Document xml, Element root) throws FinderException, FinderException {
+	protected void appendLogSearchCourses(Principal p, Document xml, Element root) throws FinderException, FinderException {
 	    Element logSearchCourses = xml.createElement(TAG_LOGSEARCH_COURSES);
 	    Collection courses;
 	    SemesterPK curSemester = database.findCurrentSemester();
@@ -135,7 +135,7 @@ public class LogXMLBuilder extends XMLBuilder
 	
 	//TODO ADD AVAILABLE GROUPS NODE SEARCHING
 	
-	protected static void appendLogSearchNamesTypes(Document xml, Element root, boolean admin) {
+	protected void appendLogSearchNamesTypes(Document xml, Element root, boolean admin) {
 	    // TYPES:
 	    Element xTypes = xml.createElement(TAG_LOGTYPES);
 	    Element xAdmin = xml.createElement(TAG_LOGTYPE),
@@ -365,7 +365,7 @@ public class LogXMLBuilder extends XMLBuilder
 	    root.appendChild(xTypes);
 	}
 	
-	protected static void appendLogSearchAssigns(Principal p, Document xml, Element root) throws FinderException {
+	protected void appendLogSearchAssigns(Principal p, Document xml, Element root) throws FinderException {
 	    Element logSearchAssigns = xml.createElement(TAG_LOGSEARCH_ASSIGNS);
 	    Collection assigns;
 	    SemesterPK curSemester = database.findCurrentSemester();
@@ -389,7 +389,7 @@ public class LogXMLBuilder extends XMLBuilder
 	    root.appendChild(logSearchAssigns);
 	}
 	
-	protected static void appendAssignments(Principal p, Document xml, long courseID) throws FinderException {
+	protected void appendAssignments(Principal p, Document xml, long courseID) throws FinderException {
 	    Collection assigns = database.assignmentHome().findByCourseID(courseID);
 	    Iterator i = assigns.iterator();
 	    Element root = (Element) xml.getFirstChild();

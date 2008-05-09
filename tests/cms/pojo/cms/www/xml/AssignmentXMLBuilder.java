@@ -40,7 +40,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
 	 * @return The assignment element of the tree, with general properties set and several child nodes
 	 * @throws FinderException
 	 */
-	public static Element buildFullSubtree(Principal p, Document xml, AssignmentLocal assignment, Map gradeMap, Map answerMap) throws FinderException {
+	public Element buildFullSubtree(Principal p, Document xml, AssignmentLocal assignment, Map gradeMap, Map answerMap) throws FinderException {
 		Profiler.enterMethod("AssignmentXMLBuilder.buildFullSubtree", "AssignmentID: " + assignment.getAssignmentID());
 		Element xAssignment= AssignmentXMLBuilder.buildGeneralSubtree(xml, assignment, null);
 		xAssignment.appendChild(AssignmentXMLBuilder.buildAsgnItemsSubtree(xml, assignment));
@@ -63,7 +63,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
 	 * @return The assignment element of the tree, with a few general properties set
 	 * @throws FinderException
 	 */
-	public static Element buildShortSubtree(Document xml, AssignmentLocal assignment) throws FinderException {
+	public Element buildShortSubtree(Document xml, AssignmentLocal assignment) throws FinderException {
 		Element xAssignment = xml.createElement(TAG_ASSIGNMENT);
 		CourseLocal course = database.courseHome().findByPrimaryKey(new CoursePK(assignment.getCourseID()));
 		xAssignment.setAttribute(A_COURSENAME, course.getCode());
@@ -74,7 +74,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
 		return xAssignment;
 	}
 	
-	public static void addStatSubtree(Document xml, Element xAssignment, AssignmentLocal assignment) {
+	public void addStatSubtree(Document xml, Element xAssignment, AssignmentLocal assignment) {
 		Float stat;
 		if ((stat = assignment.getMean()) != null) {
 		    xAssignment.setAttribute(A_STATMEAN, StringUtil.roundToOne(""+stat.floatValue()));
@@ -90,7 +90,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
 		}
 	}
 	
-	public static void addBasicInfo(Document xml, Element xAssignment, AssignmentLocal assignment) {
+	public void addBasicInfo(Document xml, Element xAssignment, AssignmentLocal assignment) {
 		xAssignment.setAttribute(A_NAME, assignment.getName());
 		xAssignment.setAttribute(A_NAMESHORT, assignment.getNameShort());
 		xAssignment.setAttribute(A_ASSIGNID, Long.toString(assignment.getAssignmentID()));
@@ -108,7 +108,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
 	 * @return The assignment element of the tree, with general properties set
 	 * @throws FinderException
 	 */
-	public static Element buildGeneralSubtree(Document xml, AssignmentLocal assignment, Map gradeMap) throws FinderException
+	public Element buildGeneralSubtree(Document xml, AssignmentLocal assignment, Map gradeMap) throws FinderException
 	{
 		Profiler.enterMethod("AssignmentXMLBuilder.buildGeneralSubtree", "");
 		Element xAssignment = xml.createElement(TAG_ASSIGNMENT);
@@ -180,7 +180,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
  	 * @return An element holding a list of items, both visible and deleted (hidden)
  	 * @throws FinderException
  	 */
-	public static Element buildAsgnItemsSubtree(Document xml, AssignmentLocal assignment) throws FinderException {
+	public Element buildAsgnItemsSubtree(Document xml, AssignmentLocal assignment) throws FinderException {
 		Element xItems = xml.createElement(TAG_ITEMS);
 		//visible items
 		Iterator i = assignment.getAssignmentItems().iterator();
@@ -229,7 +229,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
  	 * @return An element holding a list of solution files
  	 * @throws FinderException
  	 */
-	public static Element buildSolutionFilesSubtree(Document xml, AssignmentLocal assignment) throws FinderException
+	public Element buildSolutionFilesSubtree(Document xml, AssignmentLocal assignment) throws FinderException
 	{
 		Element xSolutions = xml.createElement(TAG_SOLUTIONS);
 		if (assignment.hasSolutionFile()) {
@@ -258,7 +258,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
  	 * @return An element holding a list of submissions, both visible and deleted (hidden)
  	 * @throws FinderException
  	 */
-	public static Element buildSubmissionsSubtree(Document xml, AssignmentLocal assignment) throws FinderException {
+	public Element buildSubmissionsSubtree(Document xml, AssignmentLocal assignment) throws FinderException {
 		Element xSubmissions= xml.createElement(TAG_SUBMISSIONS);
 		//visible submissions
 		Iterator i = assignment.getRequiredSubmissions().iterator();
@@ -292,7 +292,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
  	 * @return An element holding info on a submission
  	 * @throws FinderException
  	 */
-	private static Element buildSubmissionSubtree(Document xml, RequiredSubmissionLocal submission, String submissionTypeTag) throws FinderException
+	private Element buildSubmissionSubtree(Document xml, RequiredSubmissionLocal submission, String submissionTypeTag) throws FinderException
 	{
 		Element xFile = xml.createElement(submissionTypeTag);
 		Iterator i = submission.getRequiredFileTypes().iterator();
@@ -321,7 +321,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
  	 * @return An element holding a list of subproblems
  	 * @throws FinderException
  	 */
-	public static Element buildSubproblemsSubtree(Document xml, AssignmentLocal assignment, Map gradeMap, Map answerMap) throws FinderException
+	public Element buildSubproblemsSubtree(Document xml, AssignmentLocal assignment, Map gradeMap, Map answerMap) throws FinderException
 	{				
 		Element xSubproblems = xml.createElement(TAG_SUBPROBS);
 		//TreeMap orderToSubProblem = new TreeMap();
@@ -389,7 +389,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
  	 * @throws FinderException
  	 */
 	
-	public static Element buildSubProblemChoicesSubtree(Document xml, SubProblemLocal sp) throws FinderException
+	public Element buildSubProblemChoicesSubtree(Document xml, SubProblemLocal sp) throws FinderException
 	{
 		Element xChoices = xml.createElement(TAG_CHOICES);
 		
@@ -419,7 +419,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
 		return xChoices;
 	}
 	
-	public static Element buildSurveySubtree(Document xml, Collection surveys) throws FinderException {
+	public Element buildSurveySubtree(Document xml, Collection surveys) throws FinderException {
 		Element xSurveys = xml.createElement(TAG_SURVEYS);
 		Iterator i = surveys.iterator();
 		while (i.hasNext()) {
@@ -443,7 +443,7 @@ public class AssignmentXMLBuilder extends XMLBuilder {
 		return xSurveys;
 	}
 	
-	public static Element buildSurveyResultSubtree(Document xml, AssignmentLocal assignment) throws FinderException {
+	public Element buildSurveyResultSubtree(Document xml, AssignmentLocal assignment) throws FinderException {
 		long assignID = assignment.getAssignmentID();
 		int assignType = assignment.getType();
 		CourseLocal course = database.courseHome().findByCourseID(assignment.getCourseID());

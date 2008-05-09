@@ -33,7 +33,7 @@ public class AnnouncementXMLBuilder extends XMLBuilder
 	 * @return An XML element with announcement info for the given course
 	 * @throws FinderException
 	 */
-	public static Element buildAnnouncementsSubtree(Principal p, Document xml, CourseLocal course) throws FinderException {
+	public Element buildAnnouncementsSubtree(Principal p, Document xml, CourseLocal course) throws FinderException {
 		Profiler.enterMethod("AnnouncementXMLBuilder.buildAnnouncementSubtree", "CourseID: " + course.getCourseID());
 		Element xAnnouncements = xml.createElement(TAG_COURSEANNOUNCEMENTS);
 		Iterator i = database.announcementHome().findByCourseID(course.getCourseID()).iterator();
@@ -59,7 +59,7 @@ public class AnnouncementXMLBuilder extends XMLBuilder
 		return xAnnouncements;
 	}
 	
-	public static void appendHiddenAnnouncements(Document xml, long courseID) throws FinderException {
+	public void appendHiddenAnnouncements(Document xml, long courseID) throws FinderException {
 	    Element root = (Element) xml.getFirstChild();
 	    Iterator as = database.announcementHome().findHiddenByCourseID(courseID).iterator();
 	    while (as.hasNext()) {
@@ -81,7 +81,7 @@ public class AnnouncementXMLBuilder extends XMLBuilder
 	 * @return The announcement element of the tree, with general properties set
 	 * @throws FinderException
 	 */
-	public static Element buildGeneralSubtree(Document xml, AnnouncementData announcement, Map staffNames) throws FinderException
+	public Element buildGeneralSubtree(Document xml, AnnouncementData announcement, Map staffNames) throws FinderException
 	{
 		Element xAnnouncement = xml.createElement(TAG_ANNOUNCEMENT);
 		xAnnouncement.setAttribute(A_ID, Long.toString(announcement.getAnnouncementID()));
@@ -97,7 +97,7 @@ public class AnnouncementXMLBuilder extends XMLBuilder
 		return xAnnouncement;
 	}
 	
-	public static Element buildHistorySubtree(Document xml, AnnouncementLocal announcement) throws FinderException{
+	public Element buildHistorySubtree(Document xml, AnnouncementLocal announcement) throws FinderException{
 		Element xOldAnnouncement, xHistory = xml.createElement(TAG_ANNOUNCEMENTHISTORY);
 		Collection c = announcement.getAnnouncementHistory();
 		Iterator i = c.iterator();

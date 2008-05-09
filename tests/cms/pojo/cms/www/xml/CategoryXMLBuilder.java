@@ -46,7 +46,7 @@ public class CategoryXMLBuilder extends XMLBuilder
 	 * @return A category element, with general properties set and subtrees for contents
 	 * @throws FinderException
 	 */
-	public static Element buildFullSubtree(Principal p, Document xml, CategoryLocal cat) throws FinderException
+	public Element buildFullSubtree(Principal p, Document xml, CategoryLocal cat) throws FinderException
 	{
 		Profiler.enterMethod("CategoryXMLBuilder.buildFullSubtree", "CategoryID: " + cat.getCategoryID());
 		Element xCategory = buildGeneralSubtree(p, xml, cat);
@@ -72,7 +72,7 @@ public class CategoryXMLBuilder extends XMLBuilder
 	 * @return A category element, with general properties set
 	 * @throws FinderException
 	 */
-	public static Element buildGeneralSubtree(Principal p, Document xml, CategoryLocal cat) throws FinderException
+	public Element buildGeneralSubtree(Principal p, Document xml, CategoryLocal cat) throws FinderException
 	{
 		Element xCategory= xml.createElement(TAG_CATEGORY);
 		xCategory.setAttribute(A_ID, Long.toString(cat.getCategoryID()));
@@ -93,7 +93,7 @@ public class CategoryXMLBuilder extends XMLBuilder
 	 * @param cat The category from which to take information
 	 * @return A category element with some general attributes set
 	 */
-	public static Element buildShortSubtree(Document xml, CategoryData data)
+	public Element buildShortSubtree(Document xml, CategoryData data)
 	{
 		Element xCategory = xml.createElement(TAG_CATEGORY);
 		xCategory.setAttribute(A_ID, Long.toString(data.getCategoryID()));
@@ -110,7 +110,7 @@ public class CategoryXMLBuilder extends XMLBuilder
 	 * @param xml The Document to place this element on
 	 * @return A category element with a child containing a list of legal datatypes
 	 */
-	public static Element buildDatatypesSubtree(Document xml)
+	public Element buildDatatypesSubtree(Document xml)
 	{
 		Element xCategory = xml.createElement(TAG_CATEGORY);
 		Element xType = xml.createElement(TAG_DATATYPE);
@@ -141,7 +141,7 @@ public class CategoryXMLBuilder extends XMLBuilder
 	 * @param ctgProvider The category from which to take information
 	 * @return A column-list element whose children represent lists of columns
 	 */
-	public static Element buildNonremovedColumnListsSubtree(Document xml, CategoryDataProvider ctgProvider) throws FinderException
+	public Element buildNonremovedColumnListsSubtree(Document xml, CategoryDataProvider ctgProvider) throws FinderException
 	{
 		Element xColumnList = xml.createElement(TAG_COLUMNS);
 		//the list of columns we get here will be ordered by position within the category
@@ -167,7 +167,7 @@ public class CategoryXMLBuilder extends XMLBuilder
 	 * @param ctgProvider The category from which to take information
 	 * @return A column-list element whose children represent columns
 	 */
-	public static Element buildRemovedColumnListSubtree(Document xml, CategoryDataProvider ctgProvider) throws FinderException {
+	public Element buildRemovedColumnListSubtree(Document xml, CategoryDataProvider ctgProvider) throws FinderException {
 		Element xColumnList = xml.createElement(TAG_REMOVEDCOLUMNS);
 		//the list of columns we get here will be ordered by position within the category
 		Collection c = ctgProvider.getRemovedColumnsCollection();
@@ -189,7 +189,7 @@ public class CategoryXMLBuilder extends XMLBuilder
 	/**
 	 * Used by makeRowColContentsMap() to sort column IDs by column position
 	 */
-	private static class ColIDComparator implements Comparator
+	private class ColIDComparator implements Comparator
 	{
 		private ArrayList colList; // a list of CategoryColumnDatas for a given category
 		
@@ -227,7 +227,7 @@ public class CategoryXMLBuilder extends XMLBuilder
 	 * @param cols An initialized list to be filled with all column IDs found among the contents, sorted by position in the category
 	 * @throws FinderException
 	 */
-	private static void makeRowColContentsMap(CategoryDataProvider ctgProvider, HashMap contentsMap, HashMap filesMap, ArrayList rows, ArrayList cols) throws FinderException
+	private void makeRowColContentsMap(CategoryDataProvider ctgProvider, HashMap contentsMap, HashMap filesMap, ArrayList rows, ArrayList cols) throws FinderException
 	{
 		//also build a map from content ID to Coord(row, col), so we can map row/col to file data
 		HashMap contentIDMap = new HashMap();
@@ -284,7 +284,7 @@ public class CategoryXMLBuilder extends XMLBuilder
 	 * @param xHiddenRows The element under which to list hidden rows
 	 * @throws FinderException
 	 */
-	public static void buildRowListSubtrees(Document xml, CategoryDataProvider ctgProvider, Element xVisibleRows, Element xHiddenRows) throws FinderException
+	public void buildRowListSubtrees(Document xml, CategoryDataProvider ctgProvider, Element xVisibleRows, Element xHiddenRows) throws FinderException
 	{
 		/*
 		 * map each (row, col) pair to a Content and a list of Files, 
@@ -327,7 +327,7 @@ public class CategoryXMLBuilder extends XMLBuilder
 	 * @return A TAG_CONTENT element with properties set and children representing files if necessary
 	 * @throws FinderException
 	 */
-	private static Element buildContentCellSubtree(Document xml, CategoryContentsData content, ArrayList fileList) throws FinderException
+	private Element buildContentCellSubtree(Document xml, CategoryContentsData content, ArrayList fileList) throws FinderException
 	{
 		Element xContent = xml.createElement(TAG_CONTENT);
 		String ctntType = content.getColumnType();
@@ -369,7 +369,7 @@ public class CategoryXMLBuilder extends XMLBuilder
 	 * @param fileList A NON-NULL list of CategoryFileDatas representing all files belonging to the given content
 	 * @throws FinderException
 	 */
-	private static void addContentFileLists(Document xml, Element xContent, ArrayList fileList) throws FinderException
+	private void addContentFileLists(Document xml, Element xContent, ArrayList fileList) throws FinderException
 	{
 		Element xVisibleFiles = xml.createElement(TAG_VISIBLEFILES),
 			xHiddenFiles = xml.createElement(TAG_HIDDENFILES);

@@ -21,7 +21,7 @@ import edu.cornell.csuglab.cms.base.*;
  */
 public class StudentGradesXMLBuilder extends XMLBuilder {
 
-    public static void buildStudentGradesTree(Principal p, Document xml, String netID, long courseID) throws FinderException {
+    public void buildStudentGradesTree(Principal p, Document xml, String netID, long courseID) throws FinderException {
 		Profiler.enterMethod("StudentGradesXMLBuilder.buildStudentGradesTree", "CourseID: " + courseID);
         Element root = (Element) xml.getFirstChild();
         Element xUser = xml.createElement(TAG_GRADESTUDENT);
@@ -42,7 +42,7 @@ public class StudentGradesXMLBuilder extends XMLBuilder {
 		Profiler.exitMethod("StudentGradesXMLBuilder.buildStudentGradesTree", "CourseID: " + courseID);
     }
     
-    public static void addAssignments(Document xml, long courseID, Map assignToGroup) throws FinderException {
+    public void addAssignments(Document xml, long courseID, Map assignToGroup) throws FinderException {
         Profiler.enterMethod("StudentGradesXMLBuilder.addAssignments", "");
     	Element root = (Element) xml.getFirstChild();
         Collection assigns = database.assignmentHome().findByCourseID(courseID);
@@ -94,7 +94,7 @@ public class StudentGradesXMLBuilder extends XMLBuilder {
      * @return A List of Longs (group IDs)
      * @throws FinderException
      */
-    public static List addGroups(String netid, Document xml, long courseID) throws FinderException {
+    public List addGroups(String netid, Document xml, long courseID) throws FinderException {
     	Profiler.enterMethod("StudentGradesXMLBuilder.addGroups", "");
         Element root = (Element) xml.getFirstChild();
         Collection gr = database.groupHome().findByNetIDCourseID(netid, courseID);
@@ -132,7 +132,7 @@ public class StudentGradesXMLBuilder extends XMLBuilder {
         return groupIDs;
     }
     
-    public static void addGrades(Principal p, Document xml, String netid, long courseID) throws FinderException {
+    public void addGrades(Principal p, Document xml, String netid, long courseID) throws FinderException {
         Profiler.enterMethod("StudentGradesXMLBuilder.addGrades", "");
     	Element root = (Element) xml.getFirstChild();
         Iterator grades = database.gradeHome().findRecentByNetIDCourseID(netid, courseID, p.isAdminPrivByCourseID(courseID), p.getUserID()).iterator();
@@ -162,7 +162,7 @@ public class StudentGradesXMLBuilder extends XMLBuilder {
      * @param assignToGroup A map from assignment IDs in the given course to this student's group ID
      * for that assignment
      */
-    public static void addSubmissions(Document xml, long courseID, Map assignToGroup) throws FinderException {
+    public void addSubmissions(Document xml, long courseID, Map assignToGroup) throws FinderException {
         Profiler.enterMethod("StudentGradesXMLBuilder.addSubmissions", "");
     	Element root = (Element) xml.getFirstChild();
         Iterator submissions = database.requiredSubmissionHome().findByCourseID(courseID).iterator();

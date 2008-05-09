@@ -22,7 +22,7 @@ import edu.cornell.csuglab.cms.base.*;
 public class ViewStudentsXMLBuilder extends XMLBuilder {
 
 	
-	public static void buildSelectedStudentList(long courseID, Document xml, Element studentsNode, Collection selectedIDs) throws  FinderException {
+	public void buildSelectedStudentList(long courseID, Document xml, Element studentsNode, Collection selectedIDs) throws  FinderException {
 		Iterator students = database.studentHome().findAllByCourseID(courseID).iterator();
 		Map names = database.getFirstLastNameMap(courseID);
 		Map groups = database.getGroupIDMapByCourse(courseID);
@@ -44,7 +44,7 @@ public class ViewStudentsXMLBuilder extends XMLBuilder {
 		}
 	}
 	
-	public static void buildStudentList(long courseID, Document xml, Element studentsNode, Element assignsNode) throws  FinderException {
+	public void buildStudentList(long courseID, Document xml, Element studentsNode, Element assignsNode) throws  FinderException {
 		Iterator students = database.studentHome().findAllByCourseID(courseID).iterator();
 		Map names = database.getFirstLastNameMap(courseID);
 		Map groups = database.getGroupIDMapByCourse(courseID);
@@ -102,7 +102,7 @@ public class ViewStudentsXMLBuilder extends XMLBuilder {
 		}
 	}
 	
-	public static void buildAssignmentGrades(long courseID, Element studentsNode) throws  FinderException {
+	public void buildAssignmentGrades(long courseID, Element studentsNode) throws  FinderException {
 		Iterator grades = database.gradeHome().findTotalsByCourseID(courseID).iterator();
 		while (grades.hasNext()) {
 			GradeLocal grade = (GradeLocal) grades.next();
@@ -116,7 +116,7 @@ public class ViewStudentsXMLBuilder extends XMLBuilder {
 		}
 	}
 	
-	public static void buildRegrades(long courseID, Element studentsNode) throws  FinderException {
+	public void buildRegrades(long courseID, Element studentsNode) throws  FinderException {
 		Iterator regrades = database.regradeRequestHome().findByCourseID(courseID).iterator();
 		Map groups = database.getGroupMembersMap(courseID);
 		Map assigns = database.getAssignmentIDMap(courseID);
@@ -144,7 +144,7 @@ public class ViewStudentsXMLBuilder extends XMLBuilder {
 	/*
 	 * "overmax" refers to scores above the maximum
 	 */
-	public static void markOverMaxScores(long courseID, Element studentsNode) throws  FinderException {
+	public void markOverMaxScores(long courseID, Element studentsNode) throws  FinderException {
 		Iterator overgrades = database.gradeHome().findOverMaxByCourseID(courseID).iterator();
 		while (overgrades.hasNext()) {
 			GradeLocal grade = (GradeLocal) overgrades.next();
@@ -158,7 +158,7 @@ public class ViewStudentsXMLBuilder extends XMLBuilder {
 		}
 	}
 	
-	public static void buildStudentsPage(long courseID, Document xml) throws  FinderException {
+	public void buildStudentsPage(long courseID, Document xml) throws  FinderException {
 		Profiler.enterMethod("ViewStudentsXMLBuilder.buildStudentsPage", "CourseID: " + courseID);
 		Element root = (Element) xml.getFirstChild();
 		Element studentsNode = xml.createElement(TAG_STUDENTS);

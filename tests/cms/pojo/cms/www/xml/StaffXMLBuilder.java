@@ -29,7 +29,7 @@ public class StaffXMLBuilder extends XMLBuilder
 	 * @return A list of courses, with short info, under a TAG_STAFFCOURSES element
 	 * @throws RemoteException
 	 */
-	public static Element buildCourseListSubtree(Principal p, Document xml, Long semesterID) throws FinderException {
+	public Element buildCourseListSubtree(Principal p, Document xml, Long semesterID) throws FinderException {
 		Element xStaffCourses= xml.createElement(TAG_STAFFCOURSES);
 		Iterator i = semesterID == null ? database.courseHome().findStaffCourses(p.getPrincipalID()).iterator()
 				: database.courseHome().findStaffCoursesBySemester(p.getPrincipalID(), semesterID.longValue()).iterator();

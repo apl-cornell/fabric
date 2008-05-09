@@ -36,7 +36,7 @@ public class GroupXMLBuilder extends XMLBuilder
 	 * @return A group tag with general attributes set and several child nodes
 	 * @throws FinderException
 	 */
-	public static Element buildFullSubtree(Principal p, Document xml, GroupLocal group, AssignmentLocal assignment) throws FinderException
+	public Element buildFullSubtree(Principal p, Document xml, GroupLocal group, AssignmentLocal assignment) throws FinderException
 	{
 		Profiler.enterMethod("GroupXMLBuilder.buildFullSubtree", "GroupID: " + group.getGroupID());
 		Element xGroup = xml.createElement(TAG_GROUP);
@@ -72,7 +72,7 @@ public class GroupXMLBuilder extends XMLBuilder
 	 * @return A 
 	 * @throws FinderException, IllegalArgumentException
 	 */
-	public static Element buildMembersSubtree(Document xml, GroupLocal group) throws FinderException, IllegalArgumentException {
+	public Element buildMembersSubtree(Document xml, GroupLocal group) throws FinderException, IllegalArgumentException {
 	    Element xMembers = xml.createElement(TAG_MEMBERS);
 		Iterator i = database.userHome().findByGroupIDStatus(group.getGroupID(), GroupMemberBean.ACTIVE).iterator();
 		while (i.hasNext()) {
@@ -94,7 +94,7 @@ public class GroupXMLBuilder extends XMLBuilder
 	 * @return A TAG_INVITATIONS element with child nodes
 	 * @throws FinderException
 	 */
-	public static Element buildInvitationsSubtree(Document xml, GroupLocal group) throws FinderException {
+	public Element buildInvitationsSubtree(Document xml, GroupLocal group) throws FinderException {
 		Element xInvitations = xml.createElement(TAG_INVITATIONS);
 		Iterator i = database.userHome().findByGroupIDStatus(group.getGroupID(), GroupMemberBean.INVITED).iterator();
 		while (i.hasNext()) {
@@ -117,7 +117,7 @@ public class GroupXMLBuilder extends XMLBuilder
 	 * @return A TAG_GROUPSINVITEDTO element with child nodes
 	 * @throws FinderException
 	 */
-	public static Element buildGroupsInvitedToSubtree(Principal p, Document xml, long assignmentID) throws FinderException {
+	public Element buildGroupsInvitedToSubtree(Principal p, Document xml, long assignmentID) throws FinderException {
 		Element xInvitedGroups = xml.createElement(TAG_GROUPSINVITEDTO);
 		AssignmentLocal assignment = database.assignmentHome().findByAssignmentID(assignmentID);
 		Map names = database.getNameMap(assignment.getCourseID());
@@ -145,7 +145,7 @@ public class GroupXMLBuilder extends XMLBuilder
 	 * @return A TAG_SUBMITTED element with child nodes
 	 * @throws FinderException
 	 */
-	public static Element buildSubmissionsSubtree(Document xml, GroupLocal group) throws FinderException {
+	public Element buildSubmissionsSubtree(Document xml, GroupLocal group) throws FinderException {
 		Element xSubmissions = xml.createElement(TAG_SUBMITTED);
 		Iterator i = database.submittedFileHome().findByGroupID(group.getGroupID()).iterator();
 		Map submissions = database.getSubmissionNameMap(group.getAssignmentID());
@@ -164,7 +164,7 @@ public class GroupXMLBuilder extends XMLBuilder
 		return xSubmissions;
 	}
 	
-	public static void addGroupMemberNames(Document xml, long courseID) throws FinderException {
+	public void addGroupMemberNames(Document xml, long courseID) throws FinderException {
 		Element xRoot = (Element) xml.getFirstChild();
 		Iterator users = database.userHome().findByCourseID(courseID).iterator();
 		HashMap names = new HashMap();

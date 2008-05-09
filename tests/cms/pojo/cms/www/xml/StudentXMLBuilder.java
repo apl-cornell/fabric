@@ -30,7 +30,7 @@ public class StudentXMLBuilder extends XMLBuilder
 	 * @return A list of courses, with short info, under a TAG_STUDENTCOURSES element
 	 * @throws FinderException
 	 */
-	public static Element buildCourseListSubtree(Principal p, Document xml, Long semesterID) throws FinderException {
+	public Element buildCourseListSubtree(Principal p, Document xml, Long semesterID) throws FinderException {
 		Element xStudentCourses = xml.createElement(TAG_STUDENTCOURSES);
 		Iterator i;
 		CourseLocalHome ch = XMLBuilder.database.courseHome();
@@ -55,7 +55,7 @@ public class StudentXMLBuilder extends XMLBuilder
  	 * @return An element holding a list of assignments
  	 * @throws FinderException
  	 */
-	public static Element buildDueAsgnListSubtree(Principal p, Document xml, Long semesterID) throws FinderException {
+	public Element buildDueAsgnListSubtree(Principal p, Document xml, Long semesterID) throws FinderException {
 		Element xAssignments = xml.createElement(TAG_ALLDUEASSIGNMENTS);
 		Iterator i = semesterID == null ? 
 		        database.assignmentHome().findByDateNetID(p.getPrincipalID(), new Timestamp(System.currentTimeMillis())).iterator()

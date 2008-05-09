@@ -34,7 +34,7 @@ public class AssignmentGroupsXMLBuilder extends XMLBuilder
 	/**
 	 * Build the complete XML output
 	 */
-	public static void buildGroupGradingPage(Principal p, long assignmentID, Document xml) throws FinderException {
+	public void buildGroupGradingPage(Principal p, long assignmentID, Document xml) throws FinderException {
 		Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildGroupGradingPage", "");
 		Element root = (Element) xml.getFirstChild();
 		Element groupsNode = xml.createElement(TAG_GROUPS);
@@ -68,7 +68,7 @@ public class AssignmentGroupsXMLBuilder extends XMLBuilder
 	 * @param fullaccess Whether the principal is allowed to see all entries
 	 * (basically, whether the principal has at least groups privilege)
 	 */
-	public static void buildGroups(Principal p, AssignmentLocal assign, boolean fullAccess, Document xml, Element groupsNode) throws FinderException {
+	public void buildGroups(Principal p, AssignmentLocal assign, boolean fullAccess, Document xml, Element groupsNode) throws FinderException {
 		Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildGroups", "");
 		int submissions = 0, partial = 0, complete = 0;
 		long assignmentID = assign.getAssignmentID();
@@ -134,7 +134,7 @@ public class AssignmentGroupsXMLBuilder extends XMLBuilder
 	 * the given subProbsNode element.  
 	 * Returns a mapping from SubProblemID (Long) -> MaxProblemScore (Float).
 	 */
-	public static Map buildSubproblems(long assignmentID, Document xml, Element subProbsNode) throws  FinderException {
+	public Map buildSubproblems(long assignmentID, Document xml, Element subProbsNode) throws  FinderException {
 		Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildSubproblems", "");
 		HashMap result = new HashMap();
 		
@@ -162,7 +162,7 @@ public class AssignmentGroupsXMLBuilder extends XMLBuilder
 		return result;
 	}
 	
-	public static void buildAssignedGraders(Principal p, AssignmentLocal assign, Document xml, Element groupsNode, Map staffMap) throws  FinderException {
+	public void buildAssignedGraders(Principal p, AssignmentLocal assign, Document xml, Element groupsNode, Map staffMap) throws  FinderException {
 		Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildAssignedGraders", "");
 		Iterator assignedTos = database.groupAssignedToHome().findByAssignmentID(assign.getAssignmentID()).iterator();
 		while (assignedTos.hasNext()) {
@@ -185,7 +185,7 @@ public class AssignmentGroupsXMLBuilder extends XMLBuilder
 		Profiler.exitMethod("AssignmentGroupsXMLBuilder.buildAssignedGraders", "");
 	}
 	
-	public static void buildGroupGrades(Principal p, long assignmentID, Document xml, Element groupsNode, boolean adminPriv, Map subProbScores) throws  FinderException {
+	public void buildGroupGrades(Principal p, long assignmentID, Document xml, Element groupsNode, boolean adminPriv, Map subProbScores) throws  FinderException {
 		Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildGroupGrades", "");
 		Collection grades = database.groupGradeHome().findByGraderAssignmentID(p.getUserID(), assignmentID, adminPriv, subProbScores.size());
 		Iterator groupGrades = grades.iterator();
@@ -233,7 +233,7 @@ public class AssignmentGroupsXMLBuilder extends XMLBuilder
 		Profiler.exitMethod("AssignmentGroupsXMLBuilder.buildGroupGrades", "");
 	}
 	
-	public static void buildRegrades(long assignmentID, Document xml, Element groupsNode) throws FinderException {
+	public void buildRegrades(long assignmentID, Document xml, Element groupsNode) throws FinderException {
 		Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildRegrades", "");
 		Iterator regrades = database.regradeRequestHome().findByAssignmentID(assignmentID).iterator();
 		while (regrades.hasNext()) {
@@ -249,7 +249,7 @@ public class AssignmentGroupsXMLBuilder extends XMLBuilder
 		Profiler.exitMethod("AssignmentGroupsXMLBuilder.buildRegrades","");;
 	}
 	
-	public static void buildStaffGraders(long courseID, Document xml, Map staffMap) throws FinderException {
+	public void buildStaffGraders(long courseID, Document xml, Map staffMap) throws FinderException {
 		Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildStaffGraders", "");
 		Iterator staff = database.staffHome().findByCourseID(courseID).iterator();
 		Element root = (Element) xml.getFirstChild();

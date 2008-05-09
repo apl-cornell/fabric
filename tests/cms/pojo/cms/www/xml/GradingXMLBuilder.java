@@ -31,7 +31,7 @@ import edu.cornell.csuglab.cms.log.LogDetail;
  */
 public class GradingXMLBuilder extends XMLBuilder {
 
-	public static void buildGradingSubtree(Principal p, Document xml, long assignmentID, Collection groupids) throws FinderException {
+	public void buildGradingSubtree(Principal p, Document xml, long assignmentID, Collection groupids) throws FinderException {
 		Profiler.enterMethod("GradingXMLBuilder.buildGradingSubtree", "AssignmentID: " + assignmentID);
 		AssignmentLocal assignment = database.assignmentHome().findByAssignmentID(assignmentID);
 		Map subNames = database.getSubmissionNameMap(assignmentID);
@@ -64,7 +64,7 @@ public class GradingXMLBuilder extends XMLBuilder {
 		Profiler.exitMethod("GradingXMLBuilder.buildGradingSubtree", "AssignmentID: " + assignmentID);
 	}
 	
-	public static void addGroups(String netid, Document xml, long assignmentID, Collection groupids) throws FinderException {
+	public void addGroups(String netid, Document xml, long assignmentID, Collection groupids) throws FinderException {
 		Profiler.enterMethod("GradingXMLBuilder.addGroups", "");
 		Iterator members = database.groupMemberHome().findByGroupIDsAssignedTo(netid, assignmentID, groupids).iterator();
 		Element root = (Element) xml.getFirstChild();
@@ -86,7 +86,7 @@ public class GradingXMLBuilder extends XMLBuilder {
 		Profiler.exitMethod("GradingXMLBuilder.addGroups", "");
 	}
 	
-	public static void addGradeLogs(Document xml, long courseID, Collection groupIDs) throws FinderException {
+	public void addGradeLogs(Document xml, long courseID, Collection groupIDs) throws FinderException {
 		Profiler.enterMethod("GradingXMLBuilder.addGradeLogs", "");
 		Iterator details = database.findGradeLogDetails(courseID, groupIDs).iterator();
 	    Element root = (Element) xml.getFirstChild();
@@ -107,7 +107,7 @@ public class GradingXMLBuilder extends XMLBuilder {
 		Profiler.exitMethod("GradingXMLBuilder.addGradeLogs", "");
 	}
 	
-	public static int addSubProblems(Document xml, long assignmentID, boolean canGradeAll) throws FinderException {
+	public int addSubProblems(Document xml, long assignmentID, boolean canGradeAll) throws FinderException {
 	    Profiler.enterMethod("GradingXMLBuilder.addSubProblems", "");
 		Collection subprobscol = database.subProblemHome().findByAssignmentID(assignmentID);
 	    Iterator subprobs = subprobscol.iterator();
@@ -176,7 +176,7 @@ public class GradingXMLBuilder extends XMLBuilder {
 		return numSubProbs;
 	}
 	
-	public static void addSubmissions(Document xml, long assignmentID) throws FinderException {
+	public void addSubmissions(Document xml, long assignmentID) throws FinderException {
 		Profiler.enterMethod("GradingXMLBuilder.addSubmissions", "");
 	    Iterator subs = database.requiredSubmissionHome().findByAssignmentID(assignmentID).iterator();
 	    Element root = (Element) xml.getFirstChild();
@@ -190,7 +190,7 @@ public class GradingXMLBuilder extends XMLBuilder {
 	    Profiler.exitMethod("GradingXMLBuilder.addSubmissions", "");
 	}
 	
-	public static void addGrades(Principal p, Document xml, Collection groupIDs, AssignmentLocal assignment, int numSubProbs) throws FinderException {
+	public void addGrades(Principal p, Document xml, Collection groupIDs, AssignmentLocal assignment, int numSubProbs) throws FinderException {
 		Profiler.enterMethod("GradingXMLBuilder.addGrades", "");
 		Collection c;
 		if (assignment.getAssignedGraders() && !p.isAdminPrivByCourseID(assignment.getCourseID())) {
@@ -225,7 +225,7 @@ public class GradingXMLBuilder extends XMLBuilder {
 		Profiler.exitMethod("GradingXMLBuilder.addGrades", "");
 	}
 	
-	public static void addAnswers(Principal p, Document xml, Collection groupIDs, AssignmentLocal assignment, int numSubProbs) throws FinderException {
+	public void addAnswers(Principal p, Document xml, Collection groupIDs, AssignmentLocal assignment, int numSubProbs) throws FinderException {
 		Profiler.enterMethod("GradingXMLBuilder.addAnswers", "");
 		Collection c;
 		if (assignment.getAssignedGraders() && !p.isAdminPrivByCourseID(assignment.getCourseID())) {
@@ -300,7 +300,7 @@ public class GradingXMLBuilder extends XMLBuilder {
 		Profiler.exitMethod("GradingXMLBuilder.addAnswers", "");
 	}
 	
-	public static void addSubmittedFiles(Document xml, Collection groupids, Map subNames) throws FinderException {
+	public void addSubmittedFiles(Document xml, Collection groupids, Map subNames) throws FinderException {
 		Profiler.enterMethod("GradingXMLBuilder.addSubmittedFiles", "");
 		Iterator submittedFiles = database.submittedFileHome().findAllByGroupIDs(groupids).iterator();
 		Element root = (Element) xml.getFirstChild();
@@ -324,7 +324,7 @@ public class GradingXMLBuilder extends XMLBuilder {
 		Profiler.exitMethod("GradingXMLBuilder.addSubmittedFiles", "");
 	}
 	
-	public static void addRegradeInfo(Document xml, Collection groupids, Map subNames, Map requestIDs, Map groupIDs) throws FinderException {
+	public void addRegradeInfo(Document xml, Collection groupids, Map subNames, Map requestIDs, Map groupIDs) throws FinderException {
 		Profiler.enterMethod("GradingXMLBuilder.addRegradeInfo", "");
 		Iterator regrades = database.regradeRequestHome().findByGroupIDs(groupids).iterator();
 		Iterator comments = database.commentHome().findByGroupIDs(groupids).iterator();
@@ -410,7 +410,7 @@ public class GradingXMLBuilder extends XMLBuilder {
 		Profiler.exitMethod("GradingXMLBuilder.addRegradeInfo", "");
 	}
 	
-	public static void addAssignedTos(Principal p, Document xml, long assignmentID) throws FinderException {
+	public void addAssignedTos(Principal p, Document xml, long assignmentID) throws FinderException {
 	    Profiler.enterMethod("GradingXMLBuilder.addAssignedTos", "");
 		Iterator assignedTos = database.groupAssignedToHome().findByNetIDAssignmentID(p.getUserID(), assignmentID).iterator();
 	    Collection subProbs = database.subProblemHome().findByAssignmentID(assignmentID);

@@ -24,9 +24,9 @@ import edu.cornell.csuglab.cms.base.*;
  * This subtree will be placed into the standard assignment subtree. 
  */
 public class ScheduleXMLBuilder extends XMLBuilder {
-	public static Long zero = new Long(0);
+	public Long zero = new Long(0);
 
-	public static Element buildScheduleSubtree(Principal p, Document xml, AssignmentLocal assignment) throws FinderException {
+	public Element buildScheduleSubtree(Principal p, Document xml, AssignmentLocal assignment) throws FinderException {
 		if (!assignment.getScheduled()){
 			// return a blank subtree
 			Element xSchedule = xml.createElement(XMLBuilder.TAG_SCHEDULE);
@@ -114,7 +114,7 @@ public class ScheduleXMLBuilder extends XMLBuilder {
 	}
 
 	// Subtree of the 'schedule' tree to describe a particular timeslot
-	public static Element buildTimeSlotSubtree(Document xml, AssignmentLocal assignment,
+	public Element buildTimeSlotSubtree(Document xml, AssignmentLocal assignment,
 												TimeSlotLocal ts, Principal p, String tag, boolean showMembers) throws FinderException
 	{
 		long duration = 0;
@@ -178,7 +178,7 @@ public class ScheduleXMLBuilder extends XMLBuilder {
 	}
 	
 	// small group subtree to describe a constituent group of a timeslot (or of the unscheduled-groups set)
-	public static Element buildShortGroupSubtree(Document xml, GroupLocal group, AssignmentLocal assignment, boolean showMembers) throws FinderException {
+	public Element buildShortGroupSubtree(Document xml, GroupLocal group, AssignmentLocal assignment, boolean showMembers) throws FinderException {
 		Element xGroup = xml.createElement(XMLBuilder.TAG_GROUP);
 		xGroup.setAttribute(XMLBuilder.A_ID, Long.toString(group.getGroupID()));
 		// standard 'members' subtree used in standard group trees
