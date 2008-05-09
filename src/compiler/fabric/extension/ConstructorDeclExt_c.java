@@ -17,7 +17,7 @@ import fabric.types.FabricTypeSystem;
 import fabric.visit.ProxyRewriter;
 
 public class ConstructorDeclExt_c extends ClassMemberExt_c {
-
+  
   /*
    * (non-Javadoc)
    * 

@@ -68,19 +68,10 @@ public class FieldExt_c extends ExprExt_c {
     
     // optimization to reduce register reads and writes
     if (accessState != null) {
-      ClassType ct = (ClassType) targetType;
-      
-      if (!accessState.resident()) {
-        target = qq.parseExpr("(%E = (%T) %E.fetch())", target, ct, target);
-      }
+      target = pr.replaceTarget(target, accessState);
       
       if (accessState.read()) {
-        if (!(target instanceof Special)) {
-          target = qq.parseExpr("((" + ct.fullName() + ".$Impl) %E)", target);
-          field = field.target(target);
-        }
-        
-        return field;
+        return field.target(target);
       }
     }
 

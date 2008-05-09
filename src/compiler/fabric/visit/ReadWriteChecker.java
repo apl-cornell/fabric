@@ -1,12 +1,15 @@
 package fabric.visit;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import polyglot.ast.Call;
+import polyglot.ast.CodeDecl;
 import polyglot.ast.Expr;
 import polyglot.ast.Field;
 import polyglot.ast.FieldAssign;
@@ -24,6 +27,7 @@ import polyglot.types.LocalInstance;
 import polyglot.types.TypeSystem;
 import polyglot.visit.DataFlow;
 import polyglot.visit.FlowGraph;
+import polyglot.visit.NodeVisitor;
 import fabric.ast.Atomic;
 import fabric.extension.CallExt_c;
 import fabric.extension.FieldAssignExt_c;
@@ -38,8 +42,43 @@ import fabric.extension.FieldExt_c;
  */
 public class ReadWriteChecker extends DataFlow {
   
+  private Stack<Atomic> atomics;
+  private Map<Node, Atomic> atomicMap;
+  
   public ReadWriteChecker(Job job, TypeSystem ts, NodeFactory nf) {
     super(job, ts, nf, true);
+  }
+
+  @Override
+  public NodeVisitor enter(Node parent, Node n) {
+    if (n instanceof CodeDecl) {
+      atomics = new Stack<Atomic>();
+      atomics.push(null);
+      atomicMap = new HashMap<Node, Atomic>();
+    }
+    
+    if (n instanceof Atomic) {
+      atomics.push((Atomic) n);
+    }
+    
+    return super.enter(parent, n);
+  }
+
+  @Override
+  public Node leave(Node parent, Node old, Node n, NodeVisitor v) {
+    if (atomics != null) {
+      atomicMap.put(n, atomics.peek());
+    }
+
+    if (n instanceof Atomic) {
+      atomics.pop();
+    }
+    
+    if (n instanceof CodeDecl) {
+      atomics = null;
+    }
+    
+    return super.leave(parent, old, n, v);
   }
 
   @Override

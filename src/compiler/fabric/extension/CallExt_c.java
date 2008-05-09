@@ -2,7 +2,12 @@ package fabric.extension;
 
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Call;
+import polyglot.ast.Expr;
+import polyglot.ast.Id;
+import polyglot.ast.NodeFactory;
+import polyglot.ast.Receiver;
+import polyglot.ast.Special;
 import polyglot.types.MethodInstance;
 import polyglot.types.Type;
 import polyglot.util.Position;
@@ -30,14 +35,11 @@ public class CallExt_c extends ExprExt_c {
           special.kind() != Special.THIS || special.qualifier() != null;
     }
 
-    if (rewriteTarget) target = (Receiver) call.visitChild(target, pr);
-    
     // optimization to reduce register reads and writes
     if (accessState != null) {
-      if (!accessState.resident()) {
-        target = pr.qq().parseExpr("(%E = (%T) %E.fetch())", 
-            target, target.type(), target);
-      }
+      target = pr.replaceTarget(target, accessState);
+    } else if (rewriteTarget) {
+      target = (Receiver) call.visitChild(target, pr);
     }
     
     Id name = (Id) call.visitChild(call.id(), pr);
@@ -63,7 +65,7 @@ public class CallExt_c extends ExprExt_c {
     boolean isStaticPureFabric =
         mi.flags().isStatic() && pr.typeSystem().isPureFabricType(targetType);
     if (!isStaticPureFabric) return super.rewriteProxiesImpl(pr);
-
+    
     NodeFactory nf = pr.nodeFactory();
     Receiver newTarget =
         nf.AmbReceiver(Position.compilerGenerated(), target, nf.Id(Position
