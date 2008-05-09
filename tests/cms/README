@@ -1,0 +1,17 @@
+This test is a port of cms to fabric.  It is organized as follows:
+
+1. The pojo directory contains a ``port'' of the edu.cornell.csuglab.cms.base
+   package and the corresponding dao objects and generated code.  This basically
+   removes all persistence and just models the database as a collection of java
+   objects
+
+2. The fabric directory is a copy of the pojo directory, with the pojo's
+   converted to fabric objects, atomic sections added, and other appropriate
+   changes.
+
+3. The common directory contains the common configuration, front-end interface,
+   and so on.  The intent is that this stuff will work with either
+   implementation (fabric or pojo).
+
+vim: tw=80 ai et nonumber
+
