@@ -1,5 +1,8 @@
 package cms.model;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 public class Course {
 
   //////////////////////////////////////////////////////////////////////////////
@@ -70,41 +73,41 @@ public class Course {
   public void setAssignCCAccess      (final boolean assignCCAccess)      { this.assignCCAccess      = assignCCAccess;      }
   public void setAnnounceCCAccess    (final boolean announceCCAccess)    { this.announceCCAccess    = announceCCAccess;    }
   public void setSolutionCCAccess    (final boolean solutionCCAccess)    { this.solutionCCAccess    = solutionCCAccess;    }
-  public void setMaxTotalScore       (final float maxTotalScore)         { this.maxTotalScore       = maxTotalScore;       }
-  public void setHighTotalScore      (final float highTotalScore)        { this.highTotalScore      = highTotalScore;      }
-  public void setMeanTotalScore      (final float meanTotalScore)        { this.meanTotalScore      = meanTotalScore;      }
-  public void setMedianTotalScore    (final float medianTotalScore)      { this.medianTotalScore    = medianTotalScore;    }
-  public void setStDevTotalScore     (final float stDevTotalScore)       { this.stDevTotalScore     = stDevTotalScore;     }
+  public void setMaxTotalScore       (final Float maxTotalScore)         { this.maxTotalScore       = maxTotalScore;       }
+  public void setHighTotalScore      (final Float highTotalScore)        { this.highTotalScore      = highTotalScore;      }
+  public void setMeanTotalScore      (final Float meanTotalScore)        { this.meanTotalScore      = meanTotalScore;      }
+  public void setMedianTotalScore    (final Float medianTotalScore)      { this.medianTotalScore    = medianTotalScore;    }
+  public void setStDevTotalScore     (final Float stDevTotalScore)       { this.stDevTotalScore     = stDevTotalScore;     }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public String  getCode()                { return this.code;                }
-  public String  getDisplayedCode()       { return this.displayedCode;       }
-  public String  getName()                { return this.name;                }
-  public String  getDescription()         { return this.description;         }
-  public boolean getHasSection()          { return this.hasSection;          }
-  public long    getSemester()            { return this.semester;            }
-  public boolean getShowFinalGrade()      { return this.showFinalGrade;      }
-  public boolean getShowTotalScores()     { return this.showTotalScores;     }
-  public boolean getShowAssignWeights()   { return this.showAssignWeights;   }
-  public boolean getShowGraderNetID()     { return this.showGraderNetID;     }
-  public boolean getFreezeCourse()        { return this.freezeCourse;        }
-  public long    getFileCounter()         { return this.fileCounter;         }
-  public boolean getCourseGuestAccess()   { return this.courseGuestAccess;   }
-  public boolean getAssignGuestAccess()   { return this.assignGuestAccess;   }
-  public boolean getAnnounceGuestAccess() { return this.announceGuestAccess; }
-  public boolean getSolutionGuestAccess() { return this.solutionGuestAccess; }
-  public boolean getCourseCCAccess()      { return this.courseCCAccess;      }
-  public boolean getAssignCCAccess()      { return this.assignCCAccess;      }
-  public boolean getAnnounceCCAccess()    { return this.announceCCAccess;    }
-  public boolean getSolutionCCAccess()    { return this.solutionCCAccess;    }
-  public float   getMaxTotalScore()       { return this.maxTotalScore;       }
-  public float   getHighTotalScore()      { return this.highTotalScore;      }
-  public float   getMeanTotalScore()      { return this.meanTotalScore;      }
-  public float   getMedianTotalScore()    { return this.medianTotalScore;    }
-  public float   getStDevTotalScore()     { return this.stDevTotalScore;     }
+  public String   getCode()                { return this.code;                }
+  public String   getDisplayedCode()       { return this.displayedCode;       }
+  public String   getName()                { return this.name;                }
+  public String   getDescription()         { return this.description;         }
+  public boolean  getHasSection()          { return this.hasSection;          }
+  public Semester getSemester()            { return this.semester;            }
+  public boolean  getShowFinalGrade()      { return this.showFinalGrade;      }
+  public boolean  getShowTotalScores()     { return this.showTotalScores;     }
+  public boolean  getShowAssignWeights()   { return this.showAssignWeights;   }
+  public boolean  getShowGraderNetID()     { return this.showGraderNetID;     }
+  public boolean  getFreezeCourse()        { return this.freezeCourse;        }
+  public long     getFileCounter()         { return this.fileCounter;         }
+  public boolean  getCourseGuestAccess()   { return this.courseGuestAccess;   }
+  public boolean  getAssignGuestAccess()   { return this.assignGuestAccess;   }
+  public boolean  getAnnounceGuestAccess() { return this.announceGuestAccess; }
+  public boolean  getSolutionGuestAccess() { return this.solutionGuestAccess; }
+  public boolean  getCourseCCAccess()      { return this.courseCCAccess;      }
+  public boolean  getAssignCCAccess()      { return this.assignCCAccess;      }
+  public boolean  getAnnounceCCAccess()    { return this.announceCCAccess;    }
+  public boolean  getSolutionCCAccess()    { return this.solutionCCAccess;    }
+  public Float    getMaxTotalScore()       { return this.maxTotalScore;       }
+  public Float    getHighTotalScore()      { return this.highTotalScore;      }
+  public Float    getMeanTotalScore()      { return this.meanTotalScore;      }
+  public Float    getMedianTotalScore()    { return this.medianTotalScore;    }
+  public Float    getStDevTotalScore()     { return this.stDevTotalScore;     }
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //

@@ -1,5 +1,11 @@
 package cms.model;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+
 public class Assignment {
 
   //////////////////////////////////////////////////////////////////////////////
@@ -33,7 +39,7 @@ public class Assignment {
   // managed views                                                            //
   //////////////////////////////////////////////////////////////////////////////
 
-  Collection/*SolutionFile*/       files;                // maintained by SolutionFile
+  Collection/*SolutionFile*/       solutionFiles;        // maintained by SolutionFile
   Collection/*Grade*/              grades;               // maintained by Grade
   Collection/*SubProblem*/         subProblems;          // maintained by SubProblem
   Collection/*AssignmentItem*/     items;                // maintained by AssignmentItem
@@ -51,7 +57,7 @@ public class Assignment {
     setNameShort(nameShort);
     setDueDate(due);
 
-    this.files               = new ArrayList/*SolutionFile*/();
+    this.solutionFiles       = new ArrayList/*SolutionFile*/();
     this.grades              = new ArrayList/*Grade*/();
     this.subProblems         = new ArrayList/*SubProblem*/();
     this.items               = new ArrayList/*AssignmentItem*/();
@@ -96,14 +102,14 @@ public class Assignment {
   public void setDuration         (final long duration)            { this.duration         = duration;         }
   public void setTimeslotLockTime (final Date timeslotLockTime)    { this.timeslotLockTime = timeslotLockTime; }
 
-  public atomic void setCourse(final Course course) {
+  public void setCourse(final Course course) {
     if (this.course != null)
       this.course.assignments.remove(this);
 
     this.course = course;
 
     if (this.course != null)
-      this.course.assignments.put(this);
+      this.course.assignments.add(this);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -169,7 +175,7 @@ public class Assignment {
   }
 
   public boolean hasSubProblems() {
-    return !subProblems.empty();
+    return !subProblems.isEmpty();
   }
 
   public Collection/*SubProblem*/ getHiddenSubProblems() {

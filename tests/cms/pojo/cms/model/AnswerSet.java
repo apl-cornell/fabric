@@ -1,5 +1,8 @@
 package cms.model;
 
+import java.util.Collection;
+import java.util.Date;
+
 /**
  * A set of responses to a survey.
  */

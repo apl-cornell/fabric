@@ -1,7 +1,9 @@
 package cms.model;
 
-import fabric.util.Collection;
-import fabric.util.Map;
+import java.util.Collections;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * This class is the root container for all of the objects in the CMS Database.
@@ -44,7 +46,7 @@ public class CMSRoot {
    * @return a Collection containing <code>String</code>s, each of which is the
    *         extension corresponding to an acceptable file type
    */
-  public Collectiong/*String*/ getFileTypes() {
+  public Collection/*String*/ getFileTypes() {
     return Collections.unmodifiableSet(this.fileTypes.keySet());
   }
 

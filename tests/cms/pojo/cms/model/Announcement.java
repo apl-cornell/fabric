@@ -1,5 +1,8 @@
 package cms.model;
 
+import java.util.Collection;
+import java.util.Date;
+
 public class Announcement {
 
   //////////////////////////////////////////////////////////////////////////////
@@ -17,7 +20,7 @@ public class Announcement {
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public atomic void setCourse (final Course course) {
+  public void setCourse (final Course course) {
     if (this.course != null)
       this.course.announcements.remove(this);
     this.course   = course;
@@ -56,7 +59,7 @@ public class Announcement {
     this.setAuthor (author);
     this.setText   (text);
 
-    this.setDate     (new Date());
+    this.setPosted   (new Date());
     this.setEditInfo ("");
     this.setHidden   (false);
   }
