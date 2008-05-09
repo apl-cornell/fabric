@@ -21,9 +21,15 @@ import edu.cornell.csuglab.cms.base.*;
  * Created 3 / 28 / 05
  * @author Evan
  */
-public class StudentXMLBuilder extends XMLBuilder
+public class StudentXMLBuilder
 {
-	/**
+	private XMLBuilder xmlBuilder;
+
+  public StudentXMLBuilder(XMLBuilder builder) {
+    this.xmlBuilder = builder;
+  }
+
+  /**
 	 * Generate an XML subtree with a list of the courses the given principal is a student in
 	 * @param p The Principal to generate the page for
 	 * @param xml The Document to place this element on

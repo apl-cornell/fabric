@@ -8,7 +8,16 @@ import java.util.Iterator;
 
 public class Assignment {
 
-  //////////////////////////////////////////////////////////////////////////////
+  public static final int OPEN   = 0;
+  public static final int CLOSED = 1;
+  public static final int HIDDEN = 2;
+  public static final int GRADED = 3;
+  
+  public static final int ASSIGNMENT = 0;
+  public static final int SURVEY     = 1;
+  public static final int QUIZ       = 2;
+
+  // ////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 

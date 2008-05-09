@@ -24,7 +24,13 @@ import util.category.CoursewideCategoryDataProvider;
  * 
  * @author Evan
  */
-public class CourseXMLBuilder extends XMLBuilder {
+public class CourseXMLBuilder {
+  private XMLBuilder xmlBuilder;
+  
+  public CourseXMLBuilder(XMLBuilder builder) {
+    this.xmlBuilder = builder;
+  }
+
   /**
    * Generate an XML subtree with all known info about the given Course that
    * relates to the given Principal
@@ -59,15 +65,15 @@ public class CourseXMLBuilder extends XMLBuilder {
 
   public Element buildSurveySubtree(Principal p, Document xml, Course course) {
     Collection surveys = new ArrayList();
-    Iterator i = database.assignmentHome().findByCourseID(courseID).iterator();
+    Iterator i = course.getAssignments().iterator();
     while (i.hasNext()) {
-      AssignmentLocal assignment = (AssignmentLocal) i.next();
-      boolean isOpen = assignment.getStatus().equals(AssignmentBean.OPEN);
-      boolean isSurvey = assignment.getType() == AssignmentBean.SURVEY;
-      if (isSurvey && (isOpen || p.isStaffInCourseByCourseID(courseID)))
+      Assignment assignment = (Assignment) i.next();
+      boolean isOpen = assignment.getStatus() == Assignment.OPEN;
+      boolean isSurvey = assignment.getType() == Assignment.SURVEY;
+      if (isSurvey && (isOpen || p.isStaffInCourseByCourse(course)))
         surveys.add(assignment);
     }
-    return AssignmentXMLBuilder.buildSurveySubtree(xml, surveys);
+    return xmlBuilder.assignmentXMLBuilder.buildSurveySubtree(xml, surveys);
   }
 
   /**
@@ -80,47 +86,29 @@ public class CourseXMLBuilder extends XMLBuilder {
    * @param course
    *          CourseData for the course
    */
-  private void setCoursePrivileges(Principal p, Element xCourse,
-      CourseLocal course) throws FinderException {
-    long courseID = Long.parseLong(xCourse.getAttribute(A_COURSEID));
+  private void setCoursePrivileges(Principal p, Element xCourse, Course course) {
     // the given principal's permissions for this course
     if (!p.isInStaffAsBlankMode()) {
-      if (p.isAdminPrivByCourseID(courseID))
-        xCourse.setAttribute(A_ISADMIN, "true");
-      if (p.isGroupsPrivByCourseID(courseID))
-        xCourse.setAttribute(A_ISGROUPS, "true");
-      if (p.isGradesPrivByCourseID(courseID))
-        xCourse.setAttribute(A_ISGRADES, "true");
-      if (p.isAssignPrivByCourseID(courseID))
-        xCourse.setAttribute(A_ISASSIGN, "true");
-      if (p.isCategoryPrivByCourseID(courseID))
-        xCourse.setAttribute(A_ISCATEGORY, "true");
+      if (p.isAdminPrivByCourse(course))
+        xCourse.setAttribute(XMLBuilder.A_ISADMIN, "true");
+      if (p.isGroupsPrivByCourse(course))
+        xCourse.setAttribute(XMLBuilder.A_ISGROUPS, "true");
+      if (p.isGradesPrivByCourse(course))
+        xCourse.setAttribute(XMLBuilder.A_ISGRADES, "true");
+      if (p.isAssignPrivByCourse(course))
+        xCourse.setAttribute(XMLBuilder.A_ISASSIGN, "true");
+      if (p.isCategoryPrivByCourse(course))
+        xCourse.setAttribute(XMLBuilder.A_ISCATEGORY, "true");
     } else {
-      xCourse.setAttribute(A_ISVIEWAS, "true");
+      xCourse.setAttribute(XMLBuilder.A_ISVIEWAS, "true");
     }
-    StudentLocal student = null;
-    try {
-      student =
-          database.studentHome().findByPrimaryKey(
-              new StudentPK(courseID, p.getUserID()));
-      student =
-          student.getStatus().equals(StudentBean.ENROLLED) ? student : null;
-    } catch (Exception e) {
-    }
-    if (student != null) {
-      xCourse.setAttribute(A_ISSTUDENT, "true");
-      xCourse.setAttribute(A_TOTALSCORE, StringUtil.roundToOne(String
+    
+    Student student = database.getStudent(course, p.getUserID());
+    if (student.getStatus().equals(Student.ENROLLED)) {
+      xCourse.setAttribute(XMLBuilder.A_ISSTUDENT, "true");
+      xCourse.setAttribute(XMLBuilder.A_TOTALSCORE, StringUtil.roundToOne(String
           .valueOf(student.getTotalScore())));
     }
-    /*
-     * int authLevel = p.getAuthoriznLevelByCourseID(courseID); if (authLevel <
-     * Principal.AUTHOR_STUDENT || p.isInStaffAsCornellMemMode() ||
-     * p.isInStaffAsGuestMode()) { if (course.isAnnounceGuestAccess()) {
-     * xCourse.setAttribute(A_CANSEEANNOUNCE, "true"); } if
-     * (course.isAssignGuestAccess()) { xCourse.setAttribute(A_CANSEEASSIGNS,
-     * "true"); } } else { xCourse.setAttribute(A_CANSEEANNOUNCE, "true");
-     * xCourse.setAttribute(A_CANSEEASSIGNS, "true"); }
-     */
   }
 
   /**
@@ -134,14 +122,13 @@ public class CourseXMLBuilder extends XMLBuilder {
    * @return The course element of the tree, with some general properties set
    * @throws FinderException
    */
-  public Element buildShortSubtree(Principal p, Document xml,
-      CourseLocal course) throws FinderException {
-    Element xCourse = xml.createElement(TAG_COURSE);
-    xCourse.setAttribute(A_COURSEID, Long.toString(course.getCourseID()));
-    xCourse.setAttribute(A_CODE, course.getCode());
-    xCourse.setAttribute(A_DISPLAYEDCODE, course.getDisplayedCode());
-    xCourse.setAttribute(A_COURSENAME, course.getName());
-    xCourse.setAttribute(A_COURSEFROZEN, Boolean.toString(course
+  public Element buildShortSubtree(Principal p, Document xml, Course course) {
+    Element xCourse = xml.createElement(XMLBuilder.TAG_COURSE);
+    xCourse.setAttribute(XMLBuilder.A_COURSEID,      Long.toString(course.getCourseID()));
+    xCourse.setAttribute(XMLBuilder.A_CODE,          course.getCode());
+    xCourse.setAttribute(XMLBuilder.A_DISPLAYEDCODE, course.getDisplayedCode());
+    xCourse.setAttribute(XMLBuilder.A_COURSENAME,    course.getName());
+    xCourse.setAttribute(XMLBuilder.A_COURSEFROZEN,  Boolean.toString(course
         .getFreezeCourse()));
     return xCourse;
   }
@@ -155,12 +142,11 @@ public class CourseXMLBuilder extends XMLBuilder {
    * @return
    * @throws FinderException
    */
-  public Element buildHomepageSubtree(Document xml, CourseData course)
-      throws FinderException {
-    Element xCourse = xml.createElement(TAG_COURSE);
-    xCourse.setAttribute(A_COURSEID, Long.toString(course.getCourseID()));
-    xCourse.setAttribute(A_CODE, course.getCode());
-    xCourse.setAttribute(A_COURSENAME, course.getName());
+  public Element buildHomepageSubtree(Document xml, Course course) {
+    Element xCourse = xml.createElement(XMLBuilder.TAG_COURSE);
+    xCourse.setAttribute(XMLBuilder.A_COURSEID, Long.toString(course.getCourseID()));
+    xCourse.setAttribute(XMLBuilder.A_CODE, course.getCode());
+    xCourse.setAttribute(XMLBuilder.A_COURSENAME, course.getName());
     return xCourse;
   }
 
@@ -173,27 +159,24 @@ public class CourseXMLBuilder extends XMLBuilder {
    * @return
    * @throws FinderException
    */
-  public Element buildBasicPropNode(Principal p, Document xml,
-      CourseLocal course) throws FinderException {
+  public Element buildBasicPropNode(Principal p, Document xml, Course course) {
     long courseID = course.getCourseID();
     // general course data
     Element xCourse = xml.createElement(TAG_COURSE);
-    xCourse.setAttribute(A_COURSEID, Long.toString(courseID));
-    xCourse.setAttribute(A_CODE, course.getCode());
-    xCourse.setAttribute(A_DISPLAYEDCODE, course.getDisplayedCode());
-    xCourse.setAttribute(A_COURSENAME, course.getName());
-    SemesterLocal sem =
-        database.semesterHome().findByPrimaryKey(
-            new SemesterPK(course.getSemesterID()));
-    xCourse.setAttribute(A_SEMESTER, sem.getSemesterName());
+    xCourse.setAttribute(XMLBuilder.A_COURSEID, Long.toString(courseID));
+    xCourse.setAttribute(XMLBuilder.A_CODE, course.getCode());
+    xCourse.setAttribute(XMLBuilder.A_DISPLAYEDCODE, course.getDisplayedCode());
+    xCourse.setAttribute(XMLBuilder.A_COURSENAME, course.getName());
+    Semester sem = course.getSemester();
+    xCourse.setAttribute(XMLBuilder.A_SEMESTER, sem.getName());
 
-    if (course.getHasSection()) xCourse.setAttribute(A_HASSECTION, "true");
+    if (course.getHasSection()) xCourse.setAttribute(XMLBuilder.A_HASSECTION, "true");
 
     setCoursePrivileges(p, xCourse, course);
     return xCourse;
   }
 
-  public void addTotalScoreStats(CourseLocal course, Element xCourse) {
+  public void addTotalScoreStats(Course course, Element xCourse) {
     // Float score = course.getMaxTotalScore();
 
     Float totalScore = course.getMaxTotalScore();
@@ -203,28 +186,28 @@ public class CourseXMLBuilder extends XMLBuilder {
     Float stDev = course.getStDevTotalScore();
 
     if (totalScore == null || totalScore.toString().equals("NaN"))
-      xCourse.setAttribute(A_MAXTOTALSCORE, "0.0");
-    else xCourse.setAttribute(A_MAXTOTALSCORE, StringUtil.roundToOne(totalScore
+      xCourse.setAttribute(XMLBuilder.A_MAXTOTALSCORE, "0.0");
+    else xCourse.setAttribute(XMLBuilder.A_MAXTOTALSCORE, StringUtil.roundToOne(totalScore
         .toString()));
 
     if (highTotalScore == null || highTotalScore.toString().equals("NaN"))
-      xCourse.setAttribute(A_HIGHTOTALSCORE, "0.0");
-    else xCourse.setAttribute(A_HIGHTOTALSCORE, StringUtil
+      xCourse.setAttribute(XMLBuilder.A_HIGHTOTALSCORE, "0.0");
+    else xCourse.setAttribute(XMLBuilder.A_HIGHTOTALSCORE, StringUtil
         .roundToOne(highTotalScore.toString()));
 
     if (meanTotalScore == null || meanTotalScore.toString().equals("NaN"))
-      xCourse.setAttribute(A_MEANTOTALSCORE, "0.0");
-    else xCourse.setAttribute(A_MEANTOTALSCORE, StringUtil
+      xCourse.setAttribute(XMLBuilder.A_MEANTOTALSCORE, "0.0");
+    else xCourse.setAttribute(XMLBuilder.A_MEANTOTALSCORE, StringUtil
         .roundToOne(meanTotalScore.toString()));
 
     if (medianTotalScore == null || medianTotalScore.toString().equals("NaN"))
-      xCourse.setAttribute(A_MEDIANTOTALSCORE, "0.0");
-    else xCourse.setAttribute(A_MEDIANTOTALSCORE, StringUtil
+      xCourse.setAttribute(XMLBuilder.A_MEDIANTOTALSCORE, "0.0");
+    else xCourse.setAttribute(XMLBuilder.A_MEDIANTOTALSCORE, StringUtil
         .roundToOne(medianTotalScore.toString()));
 
     if (stDev == null || stDev.toString().equals("NaN"))
-      xCourse.setAttribute(A_STDEVTOTALSCORE, "0.0");
-    else xCourse.setAttribute(A_STDEVTOTALSCORE, StringUtil.roundToOne(stDev
+      xCourse.setAttribute(XMLBuilder.A_STDEVTOTALSCORE, "0.0");
+    else xCourse.setAttribute(XMLBuilder.A_STDEVTOTALSCORE, StringUtil.roundToOne(stDev
         .toString()));
 
     // xCourse.setAttribute(A_HIGHTOTALSCORE, score == null ? "0.0" :
@@ -237,47 +220,47 @@ public class CourseXMLBuilder extends XMLBuilder {
     // StringUtil.roundToOne(score.toString()));
   }
 
-  public void addCourseProperties(CourseLocal course, Element xCourse) {
-    xCourse.setAttribute(A_COURSEFROZEN, Boolean.toString(course
+  public void addCourseProperties(Course course, Element xCourse) {
+    xCourse.setAttribute(XMLBuilder.A_COURSEFROZEN, Boolean.toString(course
         .getFreezeCourse()));
     if (course.getShowFinalGrade()) {
-      xCourse.setAttribute(A_SHOWFINALGRADES, "true");
+      xCourse.setAttribute(XMLBuilder.A_SHOWFINALGRADES, "true");
     }
     if (course.getShowTotalScores()) {
-      xCourse.setAttribute(A_SHOWTOTALSCORES, "true");
+      xCourse.setAttribute(XMLBuilder.A_SHOWTOTALSCORES, "true");
     }
     if (course.getShowAssignWeights()) {
-      xCourse.setAttribute(A_SHOWASSIGNWEIGHTS, "true");
+      xCourse.setAttribute(XMLBuilder.A_SHOWASSIGNWEIGHTS, "true");
     }
     if (course.getHasSection()) {
-      xCourse.setAttribute(A_HASSECTION, "true");
+      xCourse.setAttribute(XMLBuilder.A_HASSECTION, "true");
     }
   }
 
-  public void addAccessInfo(CourseLocal course, Element xCourse) {
+  public void addAccessInfo(Course course, Element xCourse) {
     if (course.getCourseGuestAccess()) {
-      xCourse.setAttribute(A_COURSEGUESTACCESS, "true");
+      xCourse.setAttribute(XMLBuilder.A_COURSEGUESTACCESS, "true");
     }
     if (course.getCourseCCAccess()) {
-      xCourse.setAttribute(A_COURSECCACCESS, "true");
+      xCourse.setAttribute(XMLBuilder.A_COURSECCACCESS, "true");
     }
     if (course.getAssignGuestAccess()) {
-      xCourse.setAttribute(A_ASSIGNGUESTACCESS, "true");
+      xCourse.setAttribute(XMLBuilder.A_ASSIGNGUESTACCESS, "true");
     }
     if (course.getAssignCCAccess()) {
-      xCourse.setAttribute(A_ASSIGNCCACCESS, "true");
+      xCourse.setAttribute(XMLBuilder.A_ASSIGNCCACCESS, "true");
     }
     if (course.getAnnounceGuestAccess()) {
-      xCourse.setAttribute(A_ANNOUNCEGUESTACCESS, "true");
+      xCourse.setAttribute(XMLBuilder.A_ANNOUNCEGUESTACCESS, "true");
     }
     if (course.getAnnounceCCAccess()) {
-      xCourse.setAttribute(A_ANNOUNCECCACCESS, "true");
+      xCourse.setAttribute(XMLBuilder.A_ANNOUNCECCACCESS, "true");
     }
     if (course.getSolutionGuestAccess()) {
-      xCourse.setAttribute(A_SOLUTIONGUESTACCESS, "true");
+      xCourse.setAttribute(XMLBuilder.A_SOLUTIONGUESTACCESS, "true");
     }
     if (course.getSolutionCCAccess()) {
-      xCourse.setAttribute(A_SOLUTIONCCACCESS, "true");
+      xCourse.setAttribute(XMLBuilder.A_SOLUTIONCCACCESS, "true");
     }
   }
 
@@ -293,25 +276,17 @@ public class CourseXMLBuilder extends XMLBuilder {
    * @return The course element of the tree, with general properties set
    * @throws FinderException
    */
-  public Element buildGeneralSubtree(Principal p, Document xml,
-      CourseLocal course) throws FinderException {
+  public Element buildGeneralSubtree(Principal p, Document xml, Course course) {
     Profiler.enterMethod("CourseXMLBuilder.buildGeneralSubtree", "CourseID: "
-        + course.getCourseID());
-    StudentLocal student = null;
-    long courseID = course.getCourseID();
+        + course);
     Element xCourse = buildBasicPropNode(p, xml, course);
-    Profiler.enterMethod("StudentBean.findByPrimaryKey", "");
-    try {
-      student =
-          database.studentHome().findByPrimaryKey(
-              new StudentPK(course.getCourseID(), p.getUserID()));
-      if (!student.getStatus().equals(StudentBean.ENROLLED)) student = null;
-    } catch (Exception e) {
-    }
-    Profiler.exitMethod("StudentBean.findByPrimaryKey", "");
-    if (student != null && student.getFinalGrade() != null) {
+
+    Student student = database.getStudent(course, p.getUserID());
+    if (student.getStatus().equals(Student.ENROLLED) &&
+        student.getFinalGrade() != null) {
       xCourse.setAttribute(A_FINALGRADE, student.getFinalGrade());
     }
+
     Element xDescription = xml.createElement(TAG_DESCRIPTION);
     xDescription.appendChild(xml.createTextNode(course.getDescription()));
     xCourse.appendChild(xDescription);
@@ -323,13 +298,12 @@ public class CourseXMLBuilder extends XMLBuilder {
     addTotalScoreStats(course, xCourse);
     // This info is rarely used, and only when the user is CMS Admin
     if (p.isCMSAdmin()) {
-      Collection enrolledStudents =
+      Collection/*Student*/ enrolledStudents =
           database.studentHome().findByCourseIDSortByLastName(courseID);
       xCourse.setAttribute(A_ENROLLMENT, Integer.toString(enrolledStudents
           .size()));
     }
-    Profiler.exitMethod("CourseXMLBuilder.buildGeneralSubtree", "CourseID: "
-        + course.getCourseID());
+    Profiler.exitMethod("CourseXMLBuilder.buildGeneralSubtree", "CourseID: " + course);
     return xCourse;
   }
 
@@ -345,17 +319,16 @@ public class CourseXMLBuilder extends XMLBuilder {
    * @return An XML element with a staff list for the given course
    * @throws FinderException
    */
-  public Element buildStaffListSubtree(Principal p, Document xml,
-      CourseLocal course) throws FinderException {
+  public Element buildStaffListSubtree(Principal p, Document xml, Course course) {
     Element xStaff = xml.createElement(TAG_STAFF);
     Iterator i =
         database.staffHome().findByCourseID(course.getCourseID()).iterator();
     while (i.hasNext()) {
-      StaffLocal sd = (StaffLocal) i.next();
+      Staff sd = (Staff) i.next();
       Element xItem = xml.createElement(TAG_ITEM);
       String netID = sd.getNetID();
       xItem.setAttribute(A_NETID, netID);
-      UserLocal u = database.userHome().findByUserID(netID);
+      User u = database.userHome().findByUserID(netID);
       xItem.setAttribute(A_NAME, u.getFirstName() + " " + u.getLastName());
       if (sd.getAdminPriv()) xItem.setAttribute(A_ISADMIN, "");
       if (sd.getGroupsPriv()) xItem.setAttribute(A_ISGROUPS, "");
@@ -379,22 +352,20 @@ public class CourseXMLBuilder extends XMLBuilder {
    * @return An XML element with assignment info for the given course
    * @throws FinderException
    */
-  public Element buildAssignmentsSubtree(Principal p, Document xml,
-      CourseLocal course) throws FinderException {
+  public Element buildAssignmentsSubtree(Principal p, Document xml, Course course) {
     Profiler.enterMethod("CourseXMLBuilder.buildAssignmentsSubtree", "");
-    long courseID = course.getCourseID();
-    boolean isstaff = p.isStaffInCourseByCourseID(courseID);
-    boolean isstudent = p.isStudentInCourseByCourseID(courseID);
+    boolean isstaff = p.isStaffInCourseByCourse(course);
+    boolean isstudent = p.isStudentInCourseByCourse(course);
     Element xAssignments = xml.createElement(TAG_ASSIGNMENTS);
 
-    Iterator i = database.assignmentHome().findByCourseID(courseID).iterator();
-    Collection surveys = new ArrayList();
-    Map gradeMap = database.getGradeMap(p.getUserID(), courseID);
+    Iterator/*Assignment*/ i = course.getAssignments().iterator();
+    Collection/*TODO*/ surveys = new ArrayList();
+    Map/*TODO*/ gradeMap = database.getGradeMap(p.getUserID(), courseID);
     int count = 1;
     while (i.hasNext()) {
-      AssignmentLocal assignment = (AssignmentLocal) i.next();
-      boolean show = !AssignmentBean.HIDDEN.equals(assignment.getStatus());
-      if (assignment.getType() != AssignmentBean.SURVEY && (isstaff || show)) {
+      Assignment assignment = (Assignment) i.next();
+      boolean show = assignment.getStatus() != Assignment.HIDDEN;
+      if (assignment.getType() != Assignment.SURVEY && (isstaff || show)) {
         xAssignments.appendChild(AssignmentXMLBuilder.buildGeneralSubtree(xml,
             assignment, gradeMap));
       }
@@ -407,16 +378,14 @@ public class CourseXMLBuilder extends XMLBuilder {
     return xAssignments;
   }
 
-  public Element buildHiddenAssignsSubtree(Document xml, long courseID)
-      throws FinderException {
-    Element xHiddenAssigns =
-        xml.createElement(XMLBuilder.TAG_HIDDENASSIGNMENTS);
-    Iterator i =
-        database.assignmentHome().findHiddenByCourseID(courseID).iterator();
+  public Element buildHiddenAssignsSubtree(Document xml, Course course) {
+    Element xHiddenAssigns = xml.createElement(TAG_HIDDENASSIGNMENTS);
+    Iterator i = course.getHiddenAssignments().iterator();
+
     while (i.hasNext()) {
-      AssignmentLocal assign = (AssignmentLocal) i.next();
+      Assignment assign = (Assignment) i.next();
       Element xHiddenAssign =
-          xml.createElement(XMLBuilder.TAG_HIDDENASSIGNMENT);
+          xml.createElement(TAG_HIDDENASSIGNMENT);
       xHiddenAssign.setAttribute(XMLBuilder.A_ASSIGNID, String.valueOf(assign
           .getAssignmentID()));
       xHiddenAssign.setAttribute(XMLBuilder.A_ASSIGNNAME, assign.getName());
@@ -440,8 +409,7 @@ public class CourseXMLBuilder extends XMLBuilder {
    *         in the form of child nodes
    * @throws FinderException
    */
-  public Element buildCategoriesSubtree(Principal p, Document xml,
-      CourseLocal course) throws FinderException {
+  public Element buildCategoriesSubtree(Principal p, Document xml, Course course) {
     Element xCategories = xml.createElement(TAG_CATEGORIES);
     long current = System.currentTimeMillis();
     CoursewideCategoryDataProvider courseCategoryProvider =
@@ -484,8 +452,7 @@ public class CourseXMLBuilder extends XMLBuilder {
    * @return An XML element with assignment file info for the given course
    * @throws FinderException
    */
-  public Element buildAssignmentFilesSubtree(Principal p, Document xml,
-      CourseLocal course) throws FinderException {
+  public Element buildAssignmentFilesSubtree(Principal p, Document xml, Course course) {
     Element xItems = xml.createElement(TAG_ITEMS);
     Iterator i = course.getAllAssignmentFiles().iterator();
     while (i.hasNext()) {

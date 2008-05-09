@@ -51,7 +51,8 @@ import cms.log.LogSearchParams;
  */
 public class XMLBuilder {
   // XML Attributes
-  public final String A_CODE = "code",
+  public final static String
+      A_CODE = "code",
       A_COUNT = "count",
       A_DISPLAYEDCODE = "displayedcode",
       A_COURSEID = "courseid",
@@ -310,7 +311,8 @@ public class XMLBuilder {
       A_RESTOREITEM = "restoreitem";
 
   // XML Tags
-  public final String TAG_ROOT = "root",
+  public final static String
+      TAG_ROOT = "root",
       TAG_PRINCIPAL = "principal",
       TAG_COURSESTUDENTS = "coursestudents",
       // CMS administration
@@ -455,7 +457,8 @@ public class XMLBuilder {
       TAG_HIDDENCHOICE = "hiddenchoice", TAG_CHOICE = "choice";
 
   // Downloadable file types
-  public final int T_SOLFILE = 0, // Solution
+  public final static int
+      T_SOLFILE = 0, // Solution
       T_ITEMFILE = 1, // Assignment Item
       T_FILEFILE = 2, // Assignment File
       T_GROUPFILE = 3, // Uploaded group submission
@@ -464,14 +467,14 @@ public class XMLBuilder {
 
   // various types of uploaded info whose contents need to be confirmed by some
   // admin
-  public final int CONFIRM_ASSIGNINFO = 1, // info specific to an
-                                                  // assignment
-      CONFIRM_COURSEINFO = 2, // info specific to a course
-      CONFIRM_GENERAL = 3, // systemwide info
+  public final static int
+      CONFIRM_ASSIGNINFO = 1,  // info specific to an assignment
+      CONFIRM_COURSEINFO = 2,  // info specific to a course
+      CONFIRM_GENERAL = 3,     // systemwide info
       CONFIRM_FINALGRADES = 4; // special case
 
   // status message types
-  public final int MSG_NORMAL = 0, MSG_WARNING = 1, MSG_ERROR = 2;
+  public final static int MSG_NORMAL = 0, MSG_WARNING = 1, MSG_ERROR = 2;
 
   // Misc
   protected boolean debug = true; // debug mode
@@ -479,6 +482,20 @@ public class XMLBuilder {
   protected CMSRoot database;
   protected DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 
+  CourseXMLBuilder     courseXMLBuilder;
+  AssignmentXMLBuilder assignmentXMLBuilder;
+  SystemXMLBuilder     systemXMLBuilder;
+  StudentXMLBuilder    studentXMLBuilder;
+  LogXMLBuilder        logXMLBuilder;
+
+  public XMLBuilder(CMSRoot database) {
+    this.database             = database;
+    this.courseXMLBuilder     = new CourseXMLBuilder(this);
+    this.assignmentXMLBuilder = new AssignmentXMLBuilder(this);
+    this.systemXMLBuilder     = new SystemXMLBuilder(this);
+    this.studentXMLBuilder    = new StudentXMLBuilder(this);
+  }
+  
   public Document buildHomepage() throws Exception {
     Profiler.enterMethod("XMLBuilder.buildHomepage", "");
     Document xml = db.newDocument();
@@ -490,7 +507,7 @@ public class XMLBuilder {
     Iterator i = courses.iterator();
     while (i.hasNext()) {
       Course course = (Course) i.next();
-      Element xCourse = CourseXMLBuilder.buildHomepageSubtree(xml, course);
+      Element xCourse = courseXMLBuilder.buildHomepageSubtree(xml, course);
       courseList.appendChild(xCourse);
     }
     Profiler.exitMethod("XMLBuilder.buildHomepage", "");
@@ -539,7 +556,7 @@ public class XMLBuilder {
 
     boolean seenFirst = false;
     while (emails.hasNext()) {
-      EmailLocal email = (EmailLocal) emails.next();
+      Email email = (Email) emails.next();
       Element xEmail = null;
       xEmail = xml.createElement(TAG_EMAIL);
       String sender = (String) staffNames.get(email.getSender());
@@ -613,20 +630,19 @@ public class XMLBuilder {
     return body;
   }
 
-  public Document buildFinalGradesPage(Principal p, long courseID)
-      throws FinderException {
+  public Document buildFinalGradesPage(Principal p, Course course) {
     Profiler.enterMethod("XMLBuilder.buildFinalGradesPage", "CourseID: "
-        + courseID);
-    Document xml = buildStaffNavbar(p, courseID);
+        + course);
+    Document xml = buildStaffNavbar(p, course);
     Element root = (Element) xml.getFirstChild();
-    if (p.isAdminPrivByCourseID(courseID))
+    if (p.isAdminPrivByCourse(course))
       root.setAttribute(A_ISADMIN, "true");
-    Iterator users = database.userHome().findByCourseID(courseID).iterator();
+    Iterator users = database.userHome().findByCourseID(course).iterator();
     Iterator students =
-        database.studentHome().findByCourseIDSortByLastName(courseID)
+        database.studentHome().findByCourseIDSortByLastName(course)
             .iterator();
     while (users.hasNext()) {
-      UserLocal user = (UserLocal) users.next();
+      User user = (User) users.next();
       Element xUser =
           xml.createElementNS(TAG_STUDENT + user.getUserID(), TAG_STUDENT);
       xUser.setAttribute(A_NETID, user.getUserID());
@@ -638,10 +654,10 @@ public class XMLBuilder {
       root.appendChild(xUser);
     }
     while (students.hasNext()) {
-      StudentLocal student = (StudentLocal) students.next();
+      Student student = (Student) students.next();
       Element xUser =
           (Element) root.getElementsByTagNameNS(
-              TAG_STUDENT + student.getUserID(), TAG_STUDENT).item(0);
+              TAG_STUDENT + student.getUser(), TAG_STUDENT).item(0);
       if (xUser != null) {
         xUser.setAttribute(A_LECTURE, student.getLecture() == null ? ""
             : student.getLecture().toString());
@@ -658,7 +674,7 @@ public class XMLBuilder {
       }
     }
     Profiler.exitMethod("XMLBuilder.buildFinalGradesPage", "CourseID: "
-        + courseID);
+        + course);
     return xml;
   }
 
@@ -675,7 +691,7 @@ public class XMLBuilder {
     Element root = xml.createElement(TAG_ROOT);
     xml.appendChild(root);
     // systemwide usage stats for current semester
-    root.appendChild(SystemXMLBuilder.buildSystemDataSubtree(xml));
+    root.appendChild(systemXMLBuilder.buildSystemDataSubtree(xml));
     Iterator i;
     // add list of current cms admins
     Element adminList = xml.createElement(TAG_CMSADMINLIST);
@@ -736,7 +752,7 @@ public class XMLBuilder {
     while (i.hasNext()) // assume the Collection returned assignments in
     // order by deadline
     {
-      AssignmentLocal asgn = (AssignmentLocal) i.next();
+      Assignment asgn = (Assignment) i.next();
       assignmentList.appendChild(AssignmentXMLBuilder.buildShortSubtree(xml,
           asgn));
     }
@@ -863,12 +879,11 @@ public class XMLBuilder {
     }
   }
 
-  public void appendCMSAdminLogInfo(Principal p, Document xml)
-      throws FinderException {
+  public void appendCMSAdminLogInfo(Principal p, Document xml) {
     Element root = (Element) xml.getElementsByTagName(TAG_ROOT).item(0);
-    LogXMLBuilder.appendLogSearchCourses(p, xml, root);
-    LogXMLBuilder.appendLogSearchAssigns(p, xml, root);
-    LogXMLBuilder.appendLogSearchNamesTypes(xml, root, true);
+    logXMLBuilder.appendLogSearchCourses(p, xml, root);
+    logXMLBuilder.appendLogSearchAssigns(p, xml, root);
+    logXMLBuilder.appendLogSearchNamesTypes(xml, root, true);
   }
 
   /**
@@ -879,7 +894,7 @@ public class XMLBuilder {
    * @return A new XML document
    * @throws RemoteException
    */
-  public Document buildCMSAdminCoursePropsPage(Principal p, long courseID)
+  public Document buildCMSAdminCoursePropsPage(Principal p, Course courseID)
       throws FinderException {
     Document xml = buildPageHeader(p);
     Element root = (Element) xml.getElementsByTagName(TAG_ROOT).item(0);
@@ -907,8 +922,7 @@ public class XMLBuilder {
    * @throws RemoteException
    */
   public Document buildLogSearchPage(Principal p,
-      HttpServletRequest request, Long courseID) throws FinderException,
-      FileUploadException {
+      HttpServletRequest request, Course course) throws FileUploadException {
     LogSearchParams params = new LogSearchParams();
     DiskFileUpload upload = new DiskFileUpload();
     Iterator i = upload.parseRequest(request).iterator();
@@ -982,11 +996,10 @@ public class XMLBuilder {
     return xml;
   }
 
-  public Document buildStaffLogSearchPage(Principal p, Document xml,
-      long courseID) throws FinderException {
+  public Document buildStaffLogSearchPage(Principal p, Document xml, Course course) {
     Document doc = null;
     if (xml == null) {
-      doc = buildStaffNavbar(p, courseID);
+      doc = buildStaffNavbar(p, course);
     } else {
       doc = xml;
     }
@@ -1010,7 +1023,7 @@ public class XMLBuilder {
     return doc;
   }
 
-  protected Document buildPageHeader(Principal p) throws FinderException {
+  protected Document buildPageHeader(Principal p) {
     return buildPageHeader(p, null);
   }
 
@@ -1027,17 +1040,14 @@ public class XMLBuilder {
    * @return A new XML document
    * @throws RemoteException
    */
-  protected Document buildPageHeader(Principal p, Long semesterID)
-      throws FinderException {
+  protected Document buildPageHeader(Principal p, Semester semester) {
     Profiler.enterMethod("XMLBuilder.buildPageHeader", "");
     Document xml = db.newDocument();
     Element root = xml.createElement(TAG_ROOT);
     if (debug)
-      root.appendChild(SystemXMLBuilder.buildDebugNetIDListSubtree(xml));
-    root.appendChild(StudentXMLBuilder.buildCourseListSubtree(p, xml,
-        semesterID));
-    root
-        .appendChild(StaffXMLBuilder.buildCourseListSubtree(p, xml, semesterID));
+      root.appendChild(systemXMLBuilder.buildDebugNetIDListSubtree(xml));
+    root.appendChild(studentXMLBuilder.buildCourseListSubtree(p, xml, semester));
+    root.appendChild(staffXMLBuilder.buildCourseListSubtree(p, xml, semester));
     xml.appendChild(root);
     Element princip = xml.createElement(TAG_PRINCIPAL);
     String netID = p.getPrincipalID();
@@ -1451,9 +1461,8 @@ public class XMLBuilder {
     return xml;
   }
 
-  public Document buildStaffNavbar(Principal p, long courseID)
-      throws FinderException {
-    return buildStaffNavbar(p, courseID, false);
+  public Document buildStaffNavbar(Principal p, Course course) {
+    return buildStaffNavbar(p, course, false);
   }
 
   /**
@@ -1466,23 +1475,19 @@ public class XMLBuilder {
    *          The ID of the course whose navbars are being loaded
    * @param addStats
    *          Add statistics for each assignment to subtrees
-   * @throws FinderException
    */
-  public Document buildStaffNavbar(Principal p, long courseID,
-      boolean addStats) throws FinderException {
+  public Document buildStaffNavbar(Principal p, Course course, boolean addStats) {
     Document xml = buildPageHeader(p);
     Element root = (Element) xml.getFirstChild();
-    CourseLocal course = database.courseHome().findByCourseID(courseID);
-    Element xCourse = CourseXMLBuilder.buildBasicPropNode(p, xml, course);
+    Element xCourse = courseXMLBuilder.buildBasicPropNode(p, xml, course);
     root.appendChild(xCourse);
-    Iterator assigns =
-        database.assignmentHome().findByCourseID(courseID).iterator();
+    Iterator assigns = course.getAssignments().iterator();
     Element xAssigns = xml.createElement(TAG_ASSIGNMENTS);
     xCourse.appendChild(xAssigns);
     while (assigns.hasNext()) {
-      AssignmentLocal assign = (AssignmentLocal) assigns.next();
+      Assignment assign = (Assignment) assigns.next();
 
-      if (assign.getType() != AssignmentBean.SURVEY) {
+      if (assign.getType() != Assignment.SURVEY) {
         long assignID = assign.getAssignmentID();
         Element xAssign =
             xml.createElementNS(TAG_ASSIGNMENT + assignID, TAG_ASSIGNMENT);
@@ -1495,7 +1500,7 @@ public class XMLBuilder {
     }
 
     // generate the surveys node
-    xCourse.appendChild(CourseXMLBuilder.buildSurveySubtree(p, xml, courseID));
+    xCourse.appendChild(CourseXMLBuilder.buildSurveySubtree(p, xml, course));
 
     if (p.isCategoryPrivByCourseID(courseID)) {
       Element xCategories = xml.createElement(TAG_CATEGORIES);
@@ -1513,12 +1518,8 @@ public class XMLBuilder {
     return xml;
   }
 
-  public Document refreshCoursePage(Principal p, long announceID)
-      throws FinderException {
-    AnnouncementLocal announce =
-        database.announcementHome().findByPrimaryKey(
-            new AnnouncementPK(announceID));
-    return buildCoursePage(p, announce.getCourseID());
+  public Document refreshCoursePage(Principal p, Announcement announce) {
+    return buildCoursePage(p, announce.getCourse());
   }
 
   /**
@@ -1532,10 +1533,8 @@ public class XMLBuilder {
    *          The groupID of the group just updated
    * @return XML Document containg the requested information
    */
-  public Document refreshStudentAssignmentPage(Principal p, long groupID)
-      throws FinderException {
-    GroupLocal group = (GroupLocal) database.groupHome().findByGroupID(groupID);
-    return buildStudentAssignmentPage(p, group.getAssignmentID());
+  public Document refreshStudentAssignmentPage(Principal p, Group group) {
+    return buildStudentAssignmentPage(p, group.getAssignment());
   }
 
   /**
@@ -1551,15 +1550,14 @@ public class XMLBuilder {
    * @throws RemoteException
    *           if the db connection fails
    */
-  public Document buildAssignmentCreationPage(Principal p,
-      long courseID, int assignType) throws FinderException {
-    Document xml = buildStaffNavbar(p, courseID);
+  public Document buildAssignmentCreationPage(Principal p, Course course, int assignType) {
+    Document xml = buildStaffNavbar(p, course);
     Element root = (Element) xml.getFirstChild();
     Element xAssignment = xml.createElement(TAG_ASSIGNMENT);
     xAssignment.setAttribute(A_MAXGROUP, "1");
     xAssignment.setAttribute(A_MINGROUP, "1");
     xAssignment.setAttribute(A_ASSIGNID, "0");
-    xAssignment.setAttribute(A_STATUS, AssignmentBean.HIDDEN);
+    xAssignment.setAttribute(A_STATUS, Assignment.HIDDEN);
     xAssignment.setAttribute(A_DUEDATE, DateTimeUtil.DATE.format(new Timestamp(
         System.currentTimeMillis() + 1000 * DateTimeUtil.SECS_PER_WEEK)));
     xAssignment.setAttribute(A_DUETIME, "11:59");

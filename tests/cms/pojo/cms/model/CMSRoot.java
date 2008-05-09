@@ -107,67 +107,67 @@ public class CMSRoot {
    */
 
 
-  public Collection getGradedAssignments(java.util.Collection netids,long courseID) ;
+  public Collection getGradedAssignments(java.util.Collection netids,Course course) ;
 
-  public Map getAssignmentIDMap(long courseID) ;
+  public Map getAssignmentIDMap(Course course) ;
 
-  public Map getSubmissionNameMap(long assignmentID) ;
+  public Map getSubmissionNameMap(Assignment assignment) ;
 
-  public Map getSubmissionNameMapByCourse(long courseID) ;
+  public Map getSubmissionNameMapByCourse(Course course) ;
 
-  public Map getSubProblemIDMap(long assignmentID) ;
+  public Map getSubProblemIDMap(Assignment assignment) ;
 
   public Map getCIDCourseCodeMap();
 
   public Map getAssignmentNameMap() ;
 
-  public Map getAssignmentNameMap(long courseID) ;
+  public Map getAssignmentNameMap(Course course) ;
 
-  public Map getCategoryIDMap(long courseID) ;
+  public Map getCategoryIDMap(Course course) ;
 
   public Map getCourseCodeMap() ;
 
-  public Map getRemainingSubmissionMap(long assignmentID) ;
+  public Map getRemainingSubmissionMap(Assignment assignment) ;
 
-  public Map getNameMap(long courseID) ;
+  public Map getNameMap(Course courseID) ;
 
-  public Map getFirstLastNameMap(long courseID) ;
+  public Map getFirstLastNameMap(Course course) ;
 
   public java.lang.Long hasSoloCourse(java.lang.String netID) ;
 
-  public java.lang.Long hasSoloCourseBySemester(java.lang.String netID,long semesterID) ;
+  public java.lang.Long hasSoloCourseBySemester(java.lang.String netID,Semester semester) ;
 
-  public Collection findGradeLogDetails(long courseID,java.util.Collection groupids) ;
+  public Collection findGradeLogDetails(Course course,java.util.Collection groupids) ;
 
-  public Map getSubProblemNameMap(long assignmentID) ;
+  public Map getSubProblemNameMap(Assignment assignment) ;
 
-  public Map getSubProblemNameMapByCourse(long courseID) ;
+  public Map getSubProblemNameMapByCourse(Course course) ;
 
-  public Map getGroupIDMap(long assignmentID) ;
+  public Map getGroupIDMap(Assignment assignment) ;
 
   public Map getGroupIDMap(java.lang.String netID) ;
 
-  public Map getGroupIDMapByCourse(long courseID) ;
+  public Map getGroupIDMapByCourse(Course course) ;
 
-  public Map getGroupMemberListMap(long courseID) ;
+  public Map getGroupMemberListMap(Course course) ;
 
-  public Map getGroupMembersMap(long courseID) ;
+  public Map getGroupMembersMap(Course course) ;
 
-  public Map getGroupSizeMap(long assignmentID) ;
+  public Map getGroupSizeMap(Assignment assignment) ;
 
-  public Map getCommentFileRequestIDMap(long assignmentID) ;
+  public Map getCommentFileRequestIDMap(Assignment assignment) ;
 
-  public Map getStaffNameMap(long courseID) ;
+  public Map getStaffNameMap(Course course) ;
 
-  public Map getStaffFirstLastNameMap(long courseID) ;
+  public Map getStaffFirstLastNameMap(Course course) ;
 
   public Map getStaffNameMap(java.lang.String netID) ;
 
-  public Map getCommentFileGroupIDMap(long assignmentID) ;
+  public Map getCommentFileGroupIDMap(Assignment assignment) ;
 
-  public Map getCommentFileRequestIDMapByCourse(long courseID) ;
+  public Map getCommentFileRequestIDMapByCourse(Course course) ;
 
-  public Map getCommentFileGroupIDMapByCourse(long courseID) ;
+  public Map getCommentFileGroupIDMapByCourse(Course course) ;
 
   public boolean isAssignedTo(java.lang.String netID,java.util.Collection groupIDs) ;
 

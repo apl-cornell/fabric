@@ -2,6 +2,7 @@ package cms.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 public class Course {
 
@@ -151,6 +152,13 @@ public class Course {
     setMeanTotalScore(null);
     setMedianTotalScore(null);
     setStDevTotalScore(null);
+  }
+  public Collection/*Assignment*/ getAssignments() {
+    return Collections.unmodifiableCollection(assignments);
+  }
+  public Collection getAllAssignmentFiles() {
+    // TODO Auto-generated method stub
+    return null;
   }
 }
 

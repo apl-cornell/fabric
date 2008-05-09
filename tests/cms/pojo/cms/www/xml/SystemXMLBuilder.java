@@ -21,9 +21,15 @@ import edu.cornell.csuglab.cms.base.*;
  * Created 3 / 27 / 05
  * @author Evan
  */
-public class SystemXMLBuilder extends XMLBuilder
+public class SystemXMLBuilder
 {
-	/**
+	private XMLBuilder xmlBuilder;
+
+  public SystemXMLBuilder(XMLBuilder builder) {
+    this.xmlBuilder = builder;
+  }
+
+  /**
 	 * Generate an XML subtree with a list of legal file types for upload/download
 	 * @param xml The Document to place this element on
 	 * @return A TAG_FILETYPES element with child nodes
