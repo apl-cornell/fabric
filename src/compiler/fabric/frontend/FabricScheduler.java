@@ -206,23 +206,6 @@ public class FabricScheduler extends JLScheduler {
     return g;
   }
 
-  /*
-  public Goal TypeCheckedAfterWrap(final Job job) {
-    TypeSystem ts = job.extensionInfo().typeSystem();
-    NodeFactory nf = job.extensionInfo().nodeFactory();
-
-    Goal g = internGoal(new polyglot.frontend.goals.TypeChecked(job, ts, nf) {
-      @SuppressWarnings("unchecked")
-      @Override
-      public Collection prerequisiteGoals(Scheduler scheduler) {
-        return Collections.singletonList(WrapInlineables(job));
-      }
-    });
-
-    return g;
-  }
-  */
-
   public Goal ReadWriteChecked(final Job job) {
     Goal g = internGoal(new VisitorGoal(job, new ReadWriteChecker(job,
         extInfo.typeSystem(), extInfo.nodeFactory())) {
