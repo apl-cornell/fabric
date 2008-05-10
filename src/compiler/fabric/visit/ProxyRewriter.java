@@ -210,8 +210,7 @@ public class ProxyRewriter extends NodeVisitor {
     } else {
       ClassType c = (ClassType) t;
       
-      if (c.flags().isInterface() || 
-          ts.WrappedJavaInlineable().isImplicitCastValid(c)) {
+      if (c.flags().isInterface() || !ts.isPureFabricType(c)) {
         return c.fullName();
       } else {
         return c.fullName() + ".$Impl";
