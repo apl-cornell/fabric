@@ -42,7 +42,7 @@ public interface Object {
   java.lang.Object $unwrap();
 
   /** Fetches the object if this is a proxy; returns itself if it's an impl. */
-  public $Impl fetch();
+  public Object fetch();
   
   /**
    * $Proxy objects behave like regular objects by delegating to $Impl objects,

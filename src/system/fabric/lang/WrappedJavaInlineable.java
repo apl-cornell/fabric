@@ -96,8 +96,8 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
     throw new InternalError("WrappedJavaInlineables don't have proxies.");
   }
 
-  public $Impl fetch() {
-    throw new InternalError("WrappedJavaInlineables don't have impls.");
+  public Object fetch() {
+    return this;
   }
 
   /*
