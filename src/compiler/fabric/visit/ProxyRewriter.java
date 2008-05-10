@@ -9,10 +9,13 @@ import java.util.Stack;
 import polyglot.ast.Block;
 import polyglot.ast.CodeDecl;
 import polyglot.ast.ConstructorCall;
+import polyglot.ast.Expr;
 import polyglot.ast.Local;
 import polyglot.ast.Node;
 import polyglot.ast.Receiver;
+import polyglot.ast.Special;
 import polyglot.ast.Stmt;
+import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
 import polyglot.types.ArrayType;
 import polyglot.types.ClassType;
@@ -215,6 +218,25 @@ public class ProxyRewriter extends NodeVisitor {
         return c.fullName() + ".$Impl";
       }
     }
+  }
+  
+  public Expr proxifyThis(Expr e) {
+    if (e instanceof Special) {
+      Special special = (Special) e;
+      TypeNode qualifier = special.qualifier();
+      
+      if (qualifier != null) {
+        // Tack on a ".$Impl" to the qualifier.
+        special =
+            (Special) qq.parseExpr(qualifier + ".$Impl." + special.kind()).type(
+                special.type());
+      }
+  
+      if (special.kind() != Special.THIS) return special;
+      return qq.parseExpr("(%T) %E.$getProxy()", special.type(), special);
+    }
+    
+    return e;
   }
   
 }

@@ -25,7 +25,7 @@ public class FieldAssignExt_c extends ExprExt_c {
     Flags flags = field.flags();
     Receiver target = (Receiver) field.visitChild(field.target(), pr);
     String name = ((Id) field.visitChild(field.id(), pr)).id();
-    Expr rhs = (Expr) field.visitChild(assign.right(), pr);
+    Expr rhs = pr.proxifyThis((Expr) field.visitChild(assign.right(), pr));
     
     // If we're assigning to a final field, we must be in a constructor or an
     // initializer. Keep it as an assignment, since no setters will be
