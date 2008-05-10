@@ -89,28 +89,6 @@ public class ProxyRewriter extends NodeVisitor {
       inConstructorCall = false;
     }
     
-    /*
-    if (n instanceof Return) {
-      Return r = (Return) n;
-      Expr e = r.expr();
-      
-      if (e instanceof Special) {
-        n = r.expr(proxifyThis(e));
-      }
-    }
-    
-    if (n instanceof ProcedureCall) {
-      ProcedureCall c = (ProcedureCall) n;
-      List<Expr> args = new ArrayList<Expr>(c.arguments());
-      
-      for (int i = 0; i < args.size(); i++) {
-        args.set(i, proxifyThis(args.get(i)));
-      }
-      
-      n = c.arguments(args);
-    }
-    */
-
     return n;
   }
 
@@ -232,33 +210,12 @@ public class ProxyRewriter extends NodeVisitor {
     } else {
       ClassType c = (ClassType) t;
       
-      if (c.flags().isInterface()) {
+      if (c.flags().isInterface() || c.equals(ts.FObject())) {
         return c.fullName();
       } else {
         return c.fullName() + ".$Impl";
       }
     }
   }
-  
-  /*
-  public Expr proxifyThis(Expr e) {
-    if (e instanceof Special) {
-      Special special = (Special) e;
-      TypeNode qualifier = special.qualifier();
-      
-      if (qualifier != null) {
-        // Tack on a ".$Impl" to the qualifier.
-        special =
-            (Special) qq.parseExpr(qualifier + ".$Impl." + special.kind()).type(
-                special.type());
-      }
-  
-      if (special.kind() != Special.THIS) return special;
-      return qq.parseExpr("(%T) %E.$getProxy()", special.type(), special);
-    }
-    
-    return e;
-  }
-  */
   
 }

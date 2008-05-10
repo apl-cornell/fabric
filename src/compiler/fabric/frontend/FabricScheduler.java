@@ -245,7 +245,7 @@ public class FabricScheduler extends JLScheduler {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
-        l.add(ReadWriteChecked(job));
+        l.add(WrapInlineables(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
       }
