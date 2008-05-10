@@ -5,6 +5,7 @@ import polyglot.ast.Field;
 import polyglot.ast.FieldAssign;
 import polyglot.ast.Id;
 import polyglot.ast.Receiver;
+import polyglot.ast.Special;
 import polyglot.types.Flags;
 import fabric.visit.ProxyRewriter;
 import fabric.visit.ReadWriteChecker.State;
@@ -23,9 +24,16 @@ public class FieldAssignExt_c extends ExprExt_c {
     FieldAssign assign = node();
     Field field = (Field) assign.left();
     Flags flags = field.flags();
-    Receiver target = (Receiver) field.visitChild(field.target(), pr);
+    Receiver target = field.target();
+    boolean rewriteTarget = true;
+    if (target instanceof Special) {
+      Special special = (Special) target;
+      rewriteTarget =
+          special.kind() != Special.THIS || special.qualifier() != null;
+    }
+    if (rewriteTarget) target = (Receiver) field.visitChild(target, pr);
     String name = ((Id) field.visitChild(field.id(), pr)).id();
-    Expr rhs = pr.proxifyThis((Expr) field.visitChild(assign.right(), pr));
+    Expr rhs = (Expr) field.visitChild(assign.right(), pr);
     
     // If we're assigning to a final field, we must be in a constructor or an
     // initializer. Keep it as an assignment, since no setters will be

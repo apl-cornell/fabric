@@ -26,8 +26,7 @@ public class SpecialExt_c extends ExprExt_c {
     }
 
     if (special.kind() != Special.THIS) return special;
-    //return qq.parseExpr("(%T) %E.$getProxy()", special.type(), special);
-    return special;
+    return qq.parseExpr("(%T) %E.$getProxy()", special.type(), special);
   }
 
   /*

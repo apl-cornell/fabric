@@ -9,13 +9,10 @@ import java.util.Stack;
 import polyglot.ast.Block;
 import polyglot.ast.CodeDecl;
 import polyglot.ast.ConstructorCall;
-import polyglot.ast.Expr;
 import polyglot.ast.Local;
 import polyglot.ast.Node;
 import polyglot.ast.Receiver;
-import polyglot.ast.Special;
 import polyglot.ast.Stmt;
-import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
 import polyglot.types.ArrayType;
 import polyglot.types.ClassType;
@@ -78,6 +75,7 @@ public class ProxyRewriter extends NodeVisitor {
    * @see polyglot.visit.NodeVisitor#leave(polyglot.ast.Node, polyglot.ast.Node,
    *      polyglot.visit.NodeVisitor)
    */
+  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     n = ext(n).rewriteProxies(this);
@@ -91,6 +89,28 @@ public class ProxyRewriter extends NodeVisitor {
       inConstructorCall = false;
     }
     
+    /*
+    if (n instanceof Return) {
+      Return r = (Return) n;
+      Expr e = r.expr();
+      
+      if (e instanceof Special) {
+        n = r.expr(proxifyThis(e));
+      }
+    }
+    
+    if (n instanceof ProcedureCall) {
+      ProcedureCall c = (ProcedureCall) n;
+      List<Expr> args = new ArrayList<Expr>(c.arguments());
+      
+      for (int i = 0; i < args.size(); i++) {
+        args.set(i, proxifyThis(args.get(i)));
+      }
+      
+      n = c.arguments(args);
+    }
+    */
+
     return n;
   }
 
@@ -220,6 +240,7 @@ public class ProxyRewriter extends NodeVisitor {
     }
   }
   
+  /*
   public Expr proxifyThis(Expr e) {
     if (e instanceof Special) {
       Special special = (Special) e;
@@ -238,5 +259,6 @@ public class ProxyRewriter extends NodeVisitor {
     
     return e;
   }
+  */
   
 }
