@@ -49,7 +49,8 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
       return super.implMember(pr, parent);
 
     // Make the field private and non-static, non-final.
-    flags = ProxyRewriter.toPrivate(flags).clearStatic().clearFinal();
+    // XXX why are we making the field private? breaks read/write optimization
+    flags = flags.clearStatic().clearFinal();
 
     List<ClassMember> result = new ArrayList<ClassMember>();
     for (ClassMember m : accessors(pr))

@@ -70,7 +70,7 @@ public class FieldExt_c extends ExprExt_c {
     if (accessState != null) {
       target = pr.replaceTarget(target, accessState);
       
-      if (accessState.read()) {
+      if (accessState.read() && !field.name().equals("length")) {
         return field.target(target);
       }
     }

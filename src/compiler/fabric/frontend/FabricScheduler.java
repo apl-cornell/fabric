@@ -1,6 +1,10 @@
 package fabric.frontend;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.JLScheduler;
@@ -13,12 +17,19 @@ import polyglot.frontend.goals.VisitorGoal;
 import polyglot.main.Version;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
+import polyglot.visit.ExpressionFlattener;
 import polyglot.visit.InnerClassConstructorFixer;
 import polyglot.visit.InnerClassRemover;
 import polyglot.visit.InnerClassRewriter;
 import polyglot.visit.LocalClassRemover;
+import polyglot.visit.LoopNormalizer;
 import fabric.ExtensionInfo;
-import fabric.visit.*;
+import fabric.visit.ArrayInitializerTypeFixer;
+import fabric.visit.AtomicMethodRewriter;
+import fabric.visit.AtomicRewriter;
+import fabric.visit.InlineableWrapper;
+import fabric.visit.ProxyRewriter;
+import fabric.visit.ReadWriteChecker;
 
 public class FabricScheduler extends JLScheduler {
   protected ExtensionInfo extInfo;
@@ -28,6 +39,51 @@ public class FabricScheduler extends JLScheduler {
     this.extInfo = extInfo;
   }
 
+  public Goal LoopsNormalized(final Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new LoopNormalizer(job, 
+            job.extensionInfo().typeSystem(), 
+            job.extensionInfo().nodeFactory())) {
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler s) {
+            List<Goal> l = new ArrayList<Goal>();
+            l.add(TypeChecked(job));
+            return l;
+          }
+        });
+
+    return g;
+  }
+
+  public Goal ExpressionsFlattened(final Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new ExpressionFlattener(job, 
+            job.extensionInfo().typeSystem(), 
+            job.extensionInfo().nodeFactory())) {
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler s) {
+            List<Goal> l = new ArrayList<Goal>();
+            l.add(LoopsNormalized(job));
+            return l;
+          }
+        });
+
+    return g;
+  }
+
+  public Goal TypeCheckedAfterFlatten(final Job job) {
+    TypeSystem ts = job.extensionInfo().typeSystem();
+    NodeFactory nf = job.extensionInfo().nodeFactory();
+
+    Goal g = internGoal(new polyglot.frontend.goals.TypeChecked(job, ts, nf) {
+      @SuppressWarnings("unchecked")
+      @Override
+      public Collection prerequisiteGoals(Scheduler scheduler) {
+        return Collections.singletonList(ExpressionsFlattened(job));
+      }
+    });
+
+    return g;
+  }
+
   public Goal RewriteAtomicMethods(final Job job) {
     Goal g =
         internGoal(new VisitorGoal(job, new AtomicMethodRewriter(
@@ -35,7 +91,7 @@ public class FabricScheduler extends JLScheduler {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
             List<Goal> l = new ArrayList<Goal>();
-            l.add(TypeChecked(job));
+            l.add(TypeCheckedAfterFlatten(job));
             return l;
           }
         });
@@ -109,19 +165,6 @@ public class FabricScheduler extends JLScheduler {
     return g;
   }
 
-  public Goal AssignmentsNormalized(final Job job) {
-    Goal g =
-        internGoal(new VisitorGoal(job, new AssignNormalizer(extInfo
-            .nodeFactory())) {
-          @Override
-          public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
-            return l;
-          }
-        });
-    return g;
-  }
-
   public Goal FixArrayInitializerTypes(final Job job) {
     Goal g =
         internGoal(new VisitorGoal(job, new ArrayInitializerTypeFixer(job,
@@ -134,7 +177,7 @@ public class FabricScheduler extends JLScheduler {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
             List<Goal> l = new ArrayList<Goal>();
-            l.add(TypeChecked(job));
+            l.add(InnerClassesRemoved(job));
             return l;
           }
         });
@@ -155,7 +198,6 @@ public class FabricScheduler extends JLScheduler {
             l.add(ConstructorCallsChecked(job));
             l.add(ForwardReferencesChecked(job));
             l.add(InnerClassesRemoved(job));
-            l.add(AssignmentsNormalized(job));
             l.add(FixArrayInitializerTypes(job));
             l.addAll(super.prerequisiteGoals(scheduler));
             return l;
@@ -163,6 +205,23 @@ public class FabricScheduler extends JLScheduler {
         });
     return g;
   }
+
+  /*
+  public Goal TypeCheckedAfterWrap(final Job job) {
+    TypeSystem ts = job.extensionInfo().typeSystem();
+    NodeFactory nf = job.extensionInfo().nodeFactory();
+
+    Goal g = internGoal(new polyglot.frontend.goals.TypeChecked(job, ts, nf) {
+      @SuppressWarnings("unchecked")
+      @Override
+      public Collection prerequisiteGoals(Scheduler scheduler) {
+        return Collections.singletonList(WrapInlineables(job));
+      }
+    });
+
+    return g;
+  }
+  */
 
   public Goal ReadWriteChecked(final Job job) {
     Goal g = internGoal(new VisitorGoal(job, new ReadWriteChecker(job,
@@ -172,8 +231,6 @@ public class FabricScheduler extends JLScheduler {
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
         l.add(WrapInlineables(job));
-        l.add(FixArrayInitializerTypes(job));
-        l.add(RewriteAtomicMethods(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
       }
@@ -188,9 +245,6 @@ public class FabricScheduler extends JLScheduler {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
-        l.add(WrapInlineables(job));
-        l.add(FixArrayInitializerTypes(job));
-        l.add(RewriteAtomicMethods(job));
         l.add(ReadWriteChecked(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;

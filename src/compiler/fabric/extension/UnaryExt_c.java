@@ -4,8 +4,11 @@ import java.util.Collections;
 
 import polyglot.ast.*;
 import fabric.visit.ProxyRewriter;
+import fabric.visit.ReadWriteChecker.State;
 
 public class UnaryExt_c extends ExprExt_c {
+
+  private State accessState;
 
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
@@ -17,6 +20,18 @@ public class UnaryExt_c extends ExprExt_c {
     Unary.Operator op = unary.operator();
     if (op != Unary.POST_DEC && op != Unary.POST_INC && op != Unary.PRE_DEC
         && op != Unary.PRE_INC) return null;
+    
+    if (accessState != null) {
+      Field f = (Field) expr;
+      Receiver target = f.target();
+      target = rewriter.replaceTarget(target, accessState);
+      f = f.target(target);
+      expr = f;
+      
+      if (accessState.all()) {
+        return unary.expr(expr);
+      }
+    }
 
     Call getterCall = (Call) unary.visitChild(expr, rewriter);
     if (op.isPrefix()) {
@@ -45,6 +60,14 @@ public class UnaryExt_c extends ExprExt_c {
   @Override
   public Unary node() {
     return (Unary) super.node();
+  }
+
+  public void accessState(State s) {
+    this.accessState = s;
+  }
+  
+  public State accessState() {
+    return accessState;
   }
 
 }

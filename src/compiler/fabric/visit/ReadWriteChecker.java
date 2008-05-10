@@ -10,6 +10,7 @@ import java.util.Stack;
 
 import polyglot.ast.Call;
 import polyglot.ast.CodeDecl;
+import polyglot.ast.ConstructorCall;
 import polyglot.ast.Expr;
 import polyglot.ast.Field;
 import polyglot.ast.FieldAssign;
@@ -22,6 +23,8 @@ import polyglot.ast.NodeFactory;
 import polyglot.ast.Receiver;
 import polyglot.ast.Special;
 import polyglot.ast.Term;
+import polyglot.ast.Unary;
+import polyglot.ast.Unary.Operator;
 import polyglot.frontend.Job;
 import polyglot.types.LocalInstance;
 import polyglot.types.TypeSystem;
@@ -32,6 +35,8 @@ import fabric.ast.Atomic;
 import fabric.extension.CallExt_c;
 import fabric.extension.FieldAssignExt_c;
 import fabric.extension.FieldExt_c;
+import fabric.extension.UnaryExt_c;
+import fabric.types.FabricTypeSystem;
 
 /**
  * This dataflow analysis checks whether or not a local variable (or more
@@ -45,8 +50,11 @@ public class ReadWriteChecker extends DataFlow {
   private Stack<Atomic> atomics;
   private Map<Node, Atomic> atomicMap;
   
+  private final FabricTypeSystem ts;
+  
   public ReadWriteChecker(Job job, TypeSystem ts, NodeFactory nf) {
     super(job, ts, nf, true);
+    this.ts = (FabricTypeSystem) ts;
   }
 
   @Override
@@ -143,6 +151,19 @@ public class ReadWriteChecker extends DataFlow {
         out = flowField(out, f, true);
       }
       
+      if (n instanceof Unary) {
+        Unary u = (Unary) n;
+        
+        if (isIncDec(u)) {
+          Expr e = u.expr();
+          
+          if (e instanceof Field) {
+            Field f = (Field) e;
+            out = flowField(out, f);
+          }
+        }
+      }
+      
       if (n instanceof LocalAssign) {
         LocalAssign a = (LocalAssign) n;
         Local l = (Local) a.left();
@@ -157,6 +178,13 @@ public class ReadWriteChecker extends DataFlow {
         } else {
           out = kill(out, l);
         }
+      }
+      
+      // hack: no optimizations can be done for the arguments of a constructor
+      // call (that is, this(...) or super(...)), so we basically start from
+      // bottom after the constructor call.
+      if (n instanceof ConstructorCall) {
+        out = DataFlowItem.BOTTOM;
       }
     }
     
@@ -175,29 +203,55 @@ public class ReadWriteChecker extends DataFlow {
     return n instanceof New || n instanceof NewArray;
   }
   
+  private boolean isIncDec(Unary n) {
+    Operator o = n.operator();
+    return o == Unary.POST_DEC || o == Unary.POST_INC || o == Unary.PRE_DEC ||
+      o == Unary.PRE_INC;
+  }
+  
   private DataFlowItem flowField(DataFlowItem in, Field f, boolean write) {
     DataFlowItem out = in;
     Receiver e = f.target();
     
-    if (e instanceof Local) {
-      Local l = (Local) e;
-      out = new DataFlowItem(in);
-      
-      if (write) {
-        out.write(l.localInstance());
-      } else {
-        out.read(l.localInstance());
-      }
-    } else if (isThis(e)) {
-      out = new DataFlowItem(in);
-      
-      if (write) {
-        out.write(null);
-      } else {
-        out.read(null);
+    if (!f.fieldInstance().flags().isStatic()) {
+      if (e instanceof Local) {
+        Local l = (Local) e;
+        out = new DataFlowItem(in);
+        
+        if (write) {
+          out.write(l.localInstance());
+        } else {
+          out.read(l.localInstance());
+        }
+      } else if (isThis(e)) {
+        out = new DataFlowItem(in);
+        
+        if (write) {
+          out.write(null);
+        } else {
+          out.read(null);
+        }
       }
     }
     
+    return out;
+  }
+
+  private DataFlowItem flowField(DataFlowItem in, Field f) {
+    DataFlowItem out = in;
+    Receiver e = f.target();
+
+    if (!f.fieldInstance().flags().isStatic()) {
+      if (e instanceof Local) {
+        Local l = (Local) e;
+        out = new DataFlowItem(in);
+        out.all(l.localInstance());
+      } else if (isThis(e)) {
+        out = new DataFlowItem(in);
+        out.all(null);
+      }
+    }
+
     return out;
   }
 
@@ -205,10 +259,12 @@ public class ReadWriteChecker extends DataFlow {
     DataFlowItem out = in;
     Receiver e = c.target();
     
-    if (e instanceof Local) {
-      Local l = (Local) e;
-      out = new DataFlowItem(in);
-      out.reside(l.localInstance());
+    if (!c.methodInstance().flags().isStatic()) {
+      if (e instanceof Local) {
+        Local l = (Local) e;
+        out = new DataFlowItem(in);
+        out.reside(l.localInstance());
+      }
     }
     
     return out;
@@ -230,8 +286,7 @@ public class ReadWriteChecker extends DataFlow {
   private DataFlowItem alloc(DataFlowItem in, Local l) {
     DataFlowItem out = new DataFlowItem(in);
     LocalInstance li = l.localInstance();
-    out.read(li);
-    out.write(li);
+    out.alloc(li);
     return out;
   }
   
@@ -252,21 +307,13 @@ public class ReadWriteChecker extends DataFlow {
         Field f = (Field) n;
         Receiver e = f.target();
         
-        if (e instanceof Local) {
-          Local l = (Local) e;
-          ((FieldExt_c) f.ext()).accessState(in.state(l.localInstance()));
-        } else if (isThis(e)) {
-          ((FieldExt_c) f.ext()).accessState(in.state(null));
-        }
-      }
-      
-      if (n instanceof Call) {
-        Call c = (Call) n;
-        Receiver e = c.target();
-        
-        if (e instanceof Local) {
-          Local l = (Local) e;
-          ((CallExt_c) c.ext()).accessState(in.state(l.localInstance()));
+        if (ts.isPureFabricType(e.type()) && !f.fieldInstance().flags().isStatic()) {
+          if (e instanceof Local) {
+            Local l = (Local) e;
+            ((FieldExt_c) f.ext()).accessState(in.state(l.localInstance()));
+          } else if (isThis(e)) {
+            ((FieldExt_c) f.ext()).accessState(in.state(null));
+          }
         }
       }
       
@@ -274,12 +321,48 @@ public class ReadWriteChecker extends DataFlow {
         FieldAssign a = (FieldAssign) n;
         Field f =  (Field) a.left();
         Receiver e = f.target();
+
+        if (ts.isPureFabricType(e.type()) && !f.fieldInstance().flags().isStatic()) {
+          if (e instanceof Local) {
+            Local l = (Local) e;
+            ((FieldAssignExt_c) a.ext()).accessState(in.state(l.localInstance()));
+          } else if (isThis(e)) {
+            ((FieldAssignExt_c) a.ext()).accessState(in.state(null));
+          }
+        }
+      }
+
+      if (n instanceof Call) {
+        Call c = (Call) n;
+        Receiver e = c.target();
+
+        if (ts.isPureFabricType(e.type()) && !c.methodInstance().flags().isStatic()) {
+          if (e instanceof Local) {
+            Local l = (Local) e;
+            ((CallExt_c) c.ext()).accessState(in.state(l.localInstance()));
+          }
+        }
+      }
+      
+      if (n instanceof Unary) {
+        Unary u = (Unary) n;
         
-        if (e instanceof Local) {
-          Local l = (Local) e;
-          ((FieldAssignExt_c) a.ext()).accessState(in.state(l.localInstance()));
-        } else if (isThis(e)) {
-          ((FieldAssignExt_c) a.ext()).accessState(in.state(null));
+        if (isIncDec(u)) {
+          Expr e = u.expr();
+          
+          if (e instanceof Field) {
+            Field f = (Field) e;
+            Receiver r = f.target();
+
+            if (ts.isPureFabricType(r.type()) && !f.fieldInstance().flags().isStatic()) {
+              if (r instanceof Local) {
+                Local l = (Local) r;
+                ((UnaryExt_c) u.ext()).accessState(in.state(l.localInstance()));
+              } else if (isThis(r)) {
+                ((UnaryExt_c) u.ext()).accessState(in.state(null));
+              }
+            }
+          }
         }
       }
     }
@@ -307,6 +390,10 @@ public class ReadWriteChecker extends DataFlow {
     
     public boolean written() {
       return written;
+    }
+    
+    public boolean all() {
+      return read && written;
     }
     
   }
@@ -356,16 +443,24 @@ public class ReadWriteChecker extends DataFlow {
       written.add(l);
     }
     
+    public void alloc(LocalInstance l) {
+      kill(l);
+      read.add(l);
+      written.add(l);
+    }
+    
+    public void all(LocalInstance l) {
+      resident.add(l);
+      read.add(l);
+      written.add(l);
+    }
+    
     /**
      * Destructive update for a copy operation. For the statement to = from,
      * we use information about from to set the state of to.
      */
     public void copy(LocalInstance to, LocalInstance from, DataFlowItem in) {
       kill(to);
-      
-      if (in.resident.contains(from)) {
-        resident.add(to);
-      }
       
       if (in.read.contains(from)) {
         read.add(to);

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import polyglot.ast.Block;
 import polyglot.ast.CodeDecl;
@@ -13,9 +14,11 @@ import polyglot.ast.Node;
 import polyglot.ast.Receiver;
 import polyglot.ast.Stmt;
 import polyglot.qq.QQ;
+import polyglot.types.ArrayType;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.LocalInstance;
+import polyglot.types.Type;
 import polyglot.visit.NodeVisitor;
 import fabric.ExtensionInfo;
 import fabric.ast.FabricNodeFactory;
@@ -33,7 +36,9 @@ public class ProxyRewriter extends NodeVisitor {
   protected FabricNodeFactory nf;
   protected FabricTypeSystem ts;
   
-  private Map<LocalInstance, String> shadows;
+  private final Stack<Map<LocalInstance, String>> shadowStack = 
+    new Stack<Map<LocalInstance, String>>();
+  private boolean inConstructorCall;
 
   public ProxyRewriter(ExtensionInfo extInfo) {
     this.qq = new QQ(extInfo);
@@ -44,7 +49,11 @@ public class ProxyRewriter extends NodeVisitor {
   @Override
   public NodeVisitor enter(Node parent, Node n) {
     if (n instanceof CodeDecl) {
-      shadows = new HashMap<LocalInstance, String>();
+      shadowStack.push(new HashMap<LocalInstance, String>());
+    }
+    
+    if (n instanceof ConstructorCall) {
+      inConstructorCall = true;
     }
     
     return super.enter(parent, n);
@@ -72,6 +81,11 @@ public class ProxyRewriter extends NodeVisitor {
     
     if (n instanceof CodeDecl) {
       n = produceShadowDecls((CodeDecl) n);
+      shadowStack.pop();
+    }
+    
+    if (n instanceof ConstructorCall) {
+      inConstructorCall = false;
     }
     
     return n;
@@ -115,6 +129,7 @@ public class ProxyRewriter extends NodeVisitor {
       throw new NullPointerException();
     }
     
+    Map<LocalInstance, String> shadows = shadowStack.peek();
     String s = shadows.get(l);
     
     if (s == null) {
@@ -126,7 +141,11 @@ public class ProxyRewriter extends NodeVisitor {
   }
   
   public Receiver replaceTarget(Receiver target, State accessState) {
-    ClassType ct = (ClassType) target.type();
+    if (inConstructorCall) {
+      return target;
+    }
+    
+    String t = toImplType(target.type());
     Receiver shadow = target;
     
     if (target instanceof Local) {
@@ -135,7 +154,7 @@ public class ProxyRewriter extends NodeVisitor {
     }
     
     if (!accessState.resident()) {
-      target = qq.parseExpr("(%E = (" + ct.fullName() + ".$Impl) %E.fetch())", 
+      target = qq.parseExpr("(%E = (" + t + ") %E.fetch())", 
           shadow, target);
     } else {
       target = shadow;
@@ -146,6 +165,8 @@ public class ProxyRewriter extends NodeVisitor {
   
   @SuppressWarnings("unchecked")
   private CodeDecl produceShadowDecls(CodeDecl n) {
+    Map<LocalInstance, String> shadows = shadowStack.peek();
+    
     if (shadows == null || shadows.size() == 0) {
       return n;
     }
@@ -167,17 +188,33 @@ public class ProxyRewriter extends NodeVisitor {
   }
 
   private List<Stmt> shadowDecls() {
+    Map<LocalInstance, String> shadows = shadowStack.peek();
     List<Stmt> l = new ArrayList<Stmt>(shadows.size());
     
     for (Map.Entry<LocalInstance, String> e : shadows.entrySet()) {
       LocalInstance li = e.getKey();
       String name = e.getValue();
-      ClassType ct = (ClassType) li.type();
+      String t = toImplType(li.type());
       
-      l.add(qq.parseStmt(ct.fullName() + ".$Impl " + name + ";"));
+      l.add(qq.parseStmt(t + " " + name + ";"));
     }
     
     return l;
+  }
+  
+  private String toImplType(Type t) {
+    if (t instanceof ArrayType) {
+      ArrayType a = (ArrayType) t;
+      return ts.fArrayImplOf(a.base()).fullName();
+    } else {
+      ClassType c = (ClassType) t;
+      
+      if (c.flags().isInterface()) {
+        return c.fullName();
+      } else {
+        return c.fullName() + ".$Impl";
+      }
+    }
   }
   
 }
