@@ -68,7 +68,7 @@ public interface floatArray extends Object {
      * @see fabric.lang.arrays.floatArray#getLength()
      */
     public int get$length() {
-      TransactionManager.INSTANCE.registerRead(this);
+      TransactionManager.getInstance().registerRead(this);
       return value.length;
     }
 
@@ -79,7 +79,7 @@ public interface floatArray extends Object {
      */
     @SuppressWarnings("unchecked")
     public float get(int i) {
-      TransactionManager.INSTANCE.registerRead(this);
+      TransactionManager.getInstance().registerRead(this);
       return this.value[i];
     }
 
@@ -90,9 +90,9 @@ public interface floatArray extends Object {
      */
     public float set(int i, float value) {
       boolean transactionCreated =
-          TransactionManager.INSTANCE.registerWrite(this);
+          TransactionManager.getInstance().registerWrite(this);
       float result = this.value[i] = value;
-      if (transactionCreated) TransactionManager.INSTANCE.commitTransaction();
+      if (transactionCreated) TransactionManager.getInstance().commitTransaction();
       return result;
     }
 

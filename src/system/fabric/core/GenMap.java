@@ -16,10 +16,10 @@ public interface GenMap {
         public static void main(ObjectArray<WrappedJavaInlineable<String>> args) {
             Core core = Client.getClient().getCore(args.get(0).obj);
 
-            fabric.client.TransactionManager.INSTANCE.startTransaction();
+            fabric.client.TransactionManager.getInstance().startTransaction();
             fabric.util.HashMap.$Impl m = new fabric.util.HashMap.$Impl(core);
             m.$forceRelocate(core, 0L);
-            fabric.client.TransactionManager.INSTANCE.commitTransaction();
+            fabric.client.TransactionManager.getInstance().commitTransaction();
         }
     }
 }

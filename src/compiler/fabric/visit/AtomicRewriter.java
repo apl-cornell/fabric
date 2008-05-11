@@ -24,9 +24,9 @@ public class AtomicRewriter extends NodeVisitor {
     
     FabricTypeSystem ts = extInfo.typeSystem();
     Position CG = Position.compilerGenerated();
-    this.tm = nf.Field(CG,
+    this.tm = nf.Call(CG,
                        nf.CanonicalTypeNode(CG, ts.TransactionManager()),
-                       nf.Id(CG, "INSTANCE"));
+                       nf.Id(CG, "getInstance"));
   }
 
   protected FabricExt ext(Node n) {

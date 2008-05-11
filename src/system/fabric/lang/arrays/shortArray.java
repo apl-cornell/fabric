@@ -68,7 +68,7 @@ public interface shortArray extends Object {
      * @see fabric.lang.arrays.shortArray#getLength()
      */
     public int get$length() {
-      TransactionManager.INSTANCE.registerRead(this);
+      TransactionManager.getInstance().registerRead(this);
       return value.length;
     }
 
@@ -79,7 +79,7 @@ public interface shortArray extends Object {
      */
     @SuppressWarnings("unchecked")
     public short get(int i) {
-      TransactionManager.INSTANCE.registerRead(this);
+      TransactionManager.getInstance().registerRead(this);
       return this.value[i];
     }
 
@@ -90,9 +90,9 @@ public interface shortArray extends Object {
      */
     public short set(int i, short value) {
       boolean transactionCreated =
-          TransactionManager.INSTANCE.registerWrite(this);
+          TransactionManager.getInstance().registerWrite(this);
       short result = this.value[i] = value;
-      if (transactionCreated) TransactionManager.INSTANCE.commitTransaction();
+      if (transactionCreated) TransactionManager.getInstance().commitTransaction();
       return result;
     }
 

@@ -81,7 +81,9 @@ public class LocalCore implements Core {
   protected LocalCore() {
     this.prepared = null;
     this.objects = new LongKeyHashMap<Object.$Impl>();
+    TransactionManager.getInstance().startTransaction();
     this.rootMap = new Object.$Impl(this).$getProxy();
+    TransactionManager.getInstance().commitTransaction();
   }
 
   @Override

@@ -10,7 +10,10 @@ public class NFSServer {
     public static void main(String[] args) {
         Core localCore = Client.getClient().getLocalCore();
         Core remoteCore = Client.getClient().getCore("core0");
-        FileSystemFactory factory = new FileSystemFactoryImpl@localCore();
+        FileSystemFactory factory = null;
+	atomic {
+	  factory = new FileSystemFactoryImpl@localCore();
+	}
         unixnfs.startServer(localCore, remoteCore, factory, null);
     }
 }

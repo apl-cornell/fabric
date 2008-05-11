@@ -68,7 +68,7 @@ public interface intArray extends Object {
      * @see fabric.lang.arrays.intArray#getLength()
      */
     public int get$length() {
-      TransactionManager.INSTANCE.registerRead(this);
+      TransactionManager.getInstance().registerRead(this);
       return value.length;
     }
 
@@ -79,7 +79,7 @@ public interface intArray extends Object {
      */
     @SuppressWarnings("unchecked")
     public int get(int i) {
-      TransactionManager.INSTANCE.registerRead(this);
+      TransactionManager.getInstance().registerRead(this);
       return this.value[i];
     }
 
@@ -90,9 +90,9 @@ public interface intArray extends Object {
      */
     public int set(int i, int value) {
       boolean transactionCreated =
-          TransactionManager.INSTANCE.registerWrite(this);
+          TransactionManager.getInstance().registerWrite(this);
       int result = this.value[i] = value;
-      if (transactionCreated) TransactionManager.INSTANCE.commitTransaction();
+      if (transactionCreated) TransactionManager.getInstance().commitTransaction();
       return result;
     }
 

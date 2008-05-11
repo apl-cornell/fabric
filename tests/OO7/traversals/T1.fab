@@ -17,7 +17,11 @@ public class T1 extends PrivatePartTraversal {
 
   public static void main(String[] args) {
     Core local = Client.getClient().getLocalCore();
-    new T1@local().mainImpl(args);
+    T1 t1 = null;
+    atomic {
+      t1 = new T1@local();
+    }
+    t1.mainImpl(args);
   }
 
   public void visitAtomicPart (AtomicPart current) {

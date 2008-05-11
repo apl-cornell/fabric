@@ -329,9 +329,9 @@ public class Client {
     Client c = getClient();
 
     Core local = c.getLocalCore();
-    TransactionManager.INSTANCE.startTransaction();
+    TransactionManager.getInstance().startTransaction();
     Object argsProxy = WrappedJavaInlineable.$wrap(local, newArgs);
-    TransactionManager.INSTANCE.commitTransaction();
+    TransactionManager.getInstance().commitTransaction();
 
     try {
       main.invoke(null, argsProxy);

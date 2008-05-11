@@ -20,7 +20,7 @@ import fabric.lang.auth.Label;
  * All Fabric objects implement this interface.
  */
 public interface Object {
-  
+
   /** The core where the object resides. */
   Core $getCore();
 
@@ -29,10 +29,10 @@ public interface Object {
 
   /** A proxy for this object. */
   $Proxy $getProxy();
-  
+
   /** Label for this object */
   Label get$label();
-  
+
   Label set$label(Label label);
 
   /** Whether this object is "equal" to another object. */
@@ -97,7 +97,7 @@ public interface Object {
     public final Label get$label() {
       return fetch().get$label();
     }
-    
+
     public final Label set$label(Label label) {
       return fetch().set$label(label);
     }
@@ -154,31 +154,7 @@ public interface Object {
   public static class $Impl implements Object, Cloneable {
     private Core $core;
     private long $onum;
-    private transient $Proxy $proxy;
-
-    /**
-     * Modification log. If the object has been modified by the current
-     * transaction, this field will point to the initial state of the object at
-     * the start of the transaction.
-     */
-    private transient $Impl $log;
-
-    /**
-     * The identifier for the transaction in which this object was first read.
-     * Should only be accessed from the transaction manager.
-     */
-    public transient int $readTransactionID;
-
-    /**
-     * The identifier for the transaction in which this object was created.
-     * Should only be accessed from the transaction manager.
-     */
-    public transient int $createTransactionID;
-
-    /**
-     * The identifier for the transaction modifying this object.
-     */
-    private transient int $writeTransactionID;
+    private $Proxy $proxy;
 
     /**
      * A reference to the class object. TODO Figure out class loading.
@@ -187,7 +163,60 @@ public interface Object {
 
     protected Label $label;
 
-    public transient int $version;
+    public int $version;
+
+    // *********************************************************
+    // The following fields are used for transaction management.
+    // They should stay on the client and should not be sent to
+    // the core.
+    // *********************************************************
+
+    /**
+     * The unique running transaction that can write to the object, or null if
+     * none.  (This is either null or holds the same value as $writeLockHolder.
+     */
+    public TransactionManager.Log $writer;
+    
+    /**
+     * The innermost transaction that is holding a write lock on the object.
+     */
+    public TransactionManager.Log $writeLockHolder;
+
+    /**
+     * Any transaction that has logged a read of the object, or null if none.
+     */
+    public TransactionManager.Log $reader;
+
+    /**
+     * Modification log. Holds the state of the object at the beginning of the
+     * transaction that currently holds the write lock. A transaction has
+     * acquired a write lock on an object if any entry in this history has
+     * $writer set to that transaction's log.
+     */
+    public $Impl $history;
+
+    /**
+     * A reference to the global read list for this object. This is non-null
+     * exactly when there is an entry in the global read list for this object
+     * (which occurs exactly when the object has a reader).
+     * 
+     * @see fabric.client.TransactionManager#readList
+     */
+    public TransactionManager.ReadListEntry $readListEntry;
+
+    /**
+     * A private constructor for initializing transaction-management state.
+     */
+    private $Impl(Core core, long onum, int version) {
+      this.$core = core;
+      this.$onum = onum;
+      this.$version = version;
+      this.$writer = null;
+      this.$writeLockHolder = null;
+      this.$reader = null;
+      this.$history = null;
+      this.$readListEntry = TransactionManager.getReadListEntry(this);
+    }
 
     /**
      * Creates a new Fabric object that will reside on the given Core.
@@ -206,17 +235,11 @@ public interface Object {
      *                the security label for the object
      */
     public $Impl(Core core, Label label) throws UnreachableCoreException {
-      this.$core = core;
-      this.$onum = core.createOnum();
-      this.$version = 0;
+      this(core, core.createOnum(), 0);
       this.$label = label;
-      this.$log = null;
-      this.$readTransactionID = -1;
-      this.$createTransactionID = -1;
-      this.$writeTransactionID = -1;
 
       // Register the new object with the transaction manager.
-      TransactionManager.INSTANCE.registerCreate(this);
+      TransactionManager.getInstance().registerCreate(this);
     }
 
     /**
@@ -227,11 +250,8 @@ public interface Object {
      *             object will fail.
      */
     public $Impl(Core core, long onum) {
-      this.$core = core;
-      this.$onum = onum;
-      this.$version = 0;
+      this(core, onum, 0);
       this.$label = Label.DEFAULT;
-      this.$log = null;
     }
 
     @Override
@@ -282,7 +302,11 @@ public interface Object {
      * roll-back. Subclasses should override this method and call
      * <code>super.copyStateFrom(other)</code>.
      */
-    protected void $copyStateFrom($Impl other) {
+    public void $copyStateFrom($Impl other) {
+      $writer = null;
+      $writeLockHolder = other.$writeLockHolder;
+      $reader = other.$reader;
+      $history = other.$history;
     }
 
     public final Core $getCore() {
@@ -300,7 +324,7 @@ public interface Object {
     public final Label get$label() {
       return $label;
     }
-    
+
     public final Label set$label(Label label) {
       $label = label;
       return label;
@@ -317,51 +341,6 @@ public interface Object {
     
     public final $Impl fetch() {
       return this;
-    }
-
-    /**
-     * This should only be used by the transaction manager.
-     * 
-     * @return true iff this is a new write for the current transaction.
-     */
-    public final boolean $prepareToWrite(int transactionID) {
-      if ($log == null || $writeTransactionID != transactionID) {
-        $log = clone();
-        $writeTransactionID = transactionID;
-        return true;
-      }
-
-      return false;
-    }
-
-    /**
-     * This should only be used by the transaction manager. Commits the changes
-     * in this copy of the object. Should be called whenever a transaction that
-     * has modified this object commits.
-     * 
-     * @return true iff this is a new write for the outer transaction.
-     */
-    public final boolean $commit(int outerTID) {
-      if (outerTID != $log.$writeTransactionID
-          && outerTID != $createTransactionID) {
-        $writeTransactionID = outerTID;
-        return true;
-      }
-
-      $writeTransactionID = $log.$writeTransactionID;
-      $log = $log.$log;
-      return false;
-    }
-
-    /**
-     * This should only be used by the transaction manager. Rolls back the
-     * changes in this copy of the object. Should be called whenever a
-     * transaction that has modified this object aborts.
-     */
-    public final void $abort() {
-      $copyStateFrom($log);
-      $writeTransactionID = $log.$writeTransactionID;
-      $log = $log.$log;
     }
 
     /**
@@ -423,15 +402,10 @@ public interface Object {
         ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
-      this.$core = core;
-      this.$onum = onum;
+      this(core, onum, version);
       this.$label = label == -1 ? Label.DEFAULT : new Label.$Proxy(core, label);
-      this.$version = version;
-      this.$readTransactionID = -1;
-      this.$createTransactionID = -1;
-      this.$writeTransactionID = -1;
     }
-    
+
     /**
      * A helper method for reading a pointer during object deserialization.
      * 
@@ -594,5 +568,5 @@ public interface Object {
       }
     }
   }
-  
+
 }

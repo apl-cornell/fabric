@@ -186,7 +186,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     List<ClassMember> members = new ArrayList<ClassMember>(4);
     String regRead =
         finalField ? ""
-            : "fabric.client.TransactionManager.INSTANCE.registerRead(this);";
+            : "fabric.client.TransactionManager.getInstance().registerRead(this);";
     members.add(qq.parseMember(flags + " %T get$" + name + "() {" + regRead
         + "return this." + name + "; }", typeNode));
 
@@ -194,7 +194,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
       members.add(qq.parseMember(
           flags + " %T set$" + name + "(%T val) {"
               + "fabric.client.TransactionManager tm = "
-              + "fabric.client.TransactionManager.INSTANCE;"
+              + "fabric.client.TransactionManager.getInstance();"
               + "boolean transactionCreated = tm.registerWrite(this);"
               + "this." + name + " = val;"
               + "if (transactionCreated) tm.commitTransaction();"

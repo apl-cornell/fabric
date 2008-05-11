@@ -17,18 +17,19 @@ public class TransactionManager {
    * The object store of the core for which we're managing transactions.
    */
   protected final ObjectStore store;
-  
+
   public TransactionManager(ObjectStore store) {
     this.store = store;
   }
-  
+
   /**
    * Instruct the transaction manager that the given transaction is aborting
    */
   public synchronized void abortTransaction(Principal client, int transactionID) {
     try {
       store.rollback(client, transactionID);
-    } catch (StoreException e) {}
+    } catch (StoreException e) {
+    }
   }
 
   /**
@@ -44,11 +45,11 @@ public class TransactionManager {
       throw new TransactionCommitFailedException("something went wrong");
     }
   }
-  
+
   public ObjectStore getObjectStore() {
     return store;
   }
-  
+
   /**
    * <p>
    * Execute the prepare phase of two phase commit. Validates the transaction to
@@ -71,17 +72,17 @@ public class TransactionManager {
    * </p>
    * 
    * @param client
-   *          The client requesting the prepare
+   *                The client requesting the prepare
    * @param creates
-   *          The set of objects to be created in this transaction
+   *                The set of objects to be created in this transaction
    * @param updates
-   *          The set of objects to be updated in this transaction
+   *                The set of objects to be updated in this transaction
    * @param reads
-   *          The set of objects that the transaction read
+   *                The set of objects that the transaction read
    * @return A locally unique transaction identifier
    * @throws TransactionPrepareFailedException
-   *           If the transaction would cause a conflict or if the client is
-   *           insufficiently priviledged to execute the transaction.
+   *                 If the transaction would cause a conflict or if the client
+   *                 is insufficiently priviledged to execute the transaction.
    */
   public int prepare(Principal client, PrepareRequest req)
       throws TransactionPrepareFailedException {
@@ -90,54 +91,54 @@ public class TransactionManager {
         // Check writes and update version numbers
         for (SerializedObject o : req.writes) {
           if (store.isPrepared(o.getOnum()))
-            throw new TransactionPrepareFailedException(
-                "Object " + o.getOnum() + " has been locked by an " +
-                "uncommitted transaction");
+            throw new TransactionPrepareFailedException("Object " + o.getOnum()
+                + " has been locked by an " + "uncommitted transaction");
 
           try {
             SerializedObject old = store.read(client, o.getOnum());
             o.setVersion(old.getVersion() + 1);
-          } catch(NoSuchElementException exc) {
-            throw new TransactionPrepareFailedException(
-                "Object " + o.getOnum() + " does not exist.");
-          } catch (StoreException e) {}
+          } catch (NoSuchElementException exc) {
+            throw new TransactionPrepareFailedException("Object " + o.getOnum()
+                + " does not exist.");
+          } catch (StoreException e) {
+          }
         }
-        
+
         // Check creates and initial version numbers
         for (SerializedObject o : req.creates) {
           if (store.isPrepared(o.getOnum()))
-            throw new TransactionPrepareFailedException(
-                "Object " + o.getOnum() + " has been locked by an " +
-                "uncommitted transaction");
+            throw new TransactionPrepareFailedException("Object " + o.getOnum()
+                + " has been locked by an " + "uncommitted transaction");
 
           if (store.exists(o.getOnum()))
-            throw new TransactionPrepareFailedException(
-                "Object " + o.getOnum() + " already exists");
-          
+            throw new TransactionPrepareFailedException("Object " + o.getOnum()
+                + " already exists");
+
           o.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
         }
-        
+
         // Check reads
         for (LongKeyMap.Entry<Integer> entry : req.reads.entrySet()) {
-          long onum    = entry.getKey();
-          int  version = entry.getValue().intValue();
+          long onum = entry.getKey();
+          int version = entry.getValue().intValue();
 
           if (store.isWritten(onum))
-            throw new TransactionPrepareFailedException(
-                "Object " + onum + " has been locked by an " +
-                "uncommitted transaction");
+            throw new TransactionPrepareFailedException("Object " + onum
+                + " has been locked by an " + "uncommitted transaction");
 
           SerializedObject obj = store.read(client, onum);
-          if (obj.getVersion() != version)
-            throw new TransactionPrepareFailedException(
-                "Object " + onum + " is out of date");
+          int curVersion = obj.getVersion();
+          if (curVersion != version)
+            throw new TransactionPrepareFailedException("Object " + onum
+                + " is out of date (client read v" + version
+                + " but core has v" + curVersion + ")");
         }
-        
+
         return store.prepare(client, req);
       }
-    } catch(final StoreException e) {
+    } catch (final StoreException e) {
       throw new TransactionPrepareFailedException("Insufficient privileges");
-    } catch(final NoSuchElementException e) {
+    } catch (final NoSuchElementException e) {
       throw new TransactionPrepareFailedException("Object does not exist");
     }
   }
@@ -151,5 +152,5 @@ public class TransactionManager {
       throws StoreException {
     return store.newOnums(num);
   }
-  
+
 }

@@ -69,7 +69,7 @@ public interface byteArray extends Object {
      * @see fabric.lang.arrays.byteArray#getLength()
      */
     public int get$length() {
-      TransactionManager.INSTANCE.registerRead(this);
+      TransactionManager.getInstance().registerRead(this);
       return value.length;
     }
 
@@ -80,7 +80,7 @@ public interface byteArray extends Object {
      */
     @SuppressWarnings("unchecked")
     public byte get(int i) {
-      TransactionManager.INSTANCE.registerRead(this);
+      TransactionManager.getInstance().registerRead(this);
       return this.value[i];
     }
 
@@ -91,9 +91,9 @@ public interface byteArray extends Object {
      */
     public byte set(int i, byte value) {
       boolean transactionCreated =
-          TransactionManager.INSTANCE.registerWrite(this);
+          TransactionManager.getInstance().registerWrite(this);
       byte result = this.value[i] = value;
-      if (transactionCreated) TransactionManager.INSTANCE.commitTransaction();
+      if (transactionCreated) TransactionManager.getInstance().commitTransaction();
       return result;
     }
 
