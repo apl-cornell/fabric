@@ -8,8 +8,12 @@ import fabric.io.StringArray;
 
 public class NFSServer {
     public static void main(String[] args) {
+        if(args.length != 1) {
+            System.out.println("Usage: fab fabnfs.NFSServer <corename>");
+            return;
+        }
         Core localCore = Client.getClient().getLocalCore();
-        Core remoteCore = Client.getClient().getCore("core0");
+        Core remoteCore = Client.getClient().getCore(args[0]);
         FileSystemFactory factory = null;
 	atomic {
 	  factory = new FileSystemFactoryImpl@localCore();

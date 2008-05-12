@@ -48,11 +48,11 @@ public class XDRPacketCache extends java.lang.Object  {
         }
 
         // print performance information
-        if (((attempts % 100) == 0) && (attempts != 0)) {
-            System.out.println("XDRPacketCache: " + attempts + " attempts with "
-                               + hits + " hits for hit rate of: "
-                               + ((double) hits / (double) attempts));
-        }
+//        if (((attempts % 100) == 0) && (attempts != 0)) {
+//            System.out.println("XDRPacketCache: " + attempts + " attempts with "
+//                               + hits + " hits for hit rate of: "
+//                               + ((double) hits / (double) attempts));
+//        }
         return result;
     }
 }

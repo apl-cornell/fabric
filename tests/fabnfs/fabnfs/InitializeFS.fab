@@ -8,7 +8,7 @@ import fabric.io.FabDirectory;
 public class InitializeFS {
     public static void main(String[] args) {
         atomic {
-            Core core = Client.getClient().getCore("core0");
+            Core core = Client.getClient().getCore(args[0]);
             FabDirectory rootDir = new FabDirectory@core();
 
             HashMap map = (HashMap) core.getRoot();

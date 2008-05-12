@@ -52,7 +52,7 @@ class NFSHandler extends rpcHandler implements RPCConsts, NFSConsts
 
 	XDRPacket result = null;
 
-        System.err.println("Calling NFS Procedure " + procedure);
+//        System.err.println("Calling NFS Procedure " + procedure);
 	//
 	// see if this packet has already been received 
 	//
@@ -126,12 +126,12 @@ class NFSHandler extends rpcHandler implements RPCConsts, NFSConsts
 	}
 	Date end = new Date();
 	
-	if (iteration % 10 == 0) {
-	    System.out.print("call took " + (end.getTime() - begin.getTime())
-			       + "ms");
-	    System.out.println(" memory is at "
-			       + Runtime.getRuntime().freeMemory());
-	}
+//	if (iteration % 10 == 0) {
+//	    System.out.print("call took " + (end.getTime() - begin.getTime())
+//			       + "ms");
+//	    System.out.println(" memory is at "
+//			       + Runtime.getRuntime().freeMemory());
+//	}
 
         // XXX disabled the xid queue
 	// packetQueue.SetPacket(xid, result);

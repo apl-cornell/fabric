@@ -38,8 +38,8 @@ class NFSIO implements NFSConsts, RPCConsts {
 	    if (fileName == null)
 	        throw new NFSException(xid, NFSERR_STALE);
 	    // XXX comment out print lines to improve performance
-	     System.err.print("Write(" + fileName + ", " + offset + ", (" + beginoffset + ", " + totalcount + ") " +
-	    		     datalen + ")\n");
+//	     System.err.print("Write(" + fileName + ", " + offset + ", (" + beginoffset + ", " + totalcount + ") " +
+//	    		     datalen + ")\n");
 
 //	    RandomAccessFile fd = new RandomAccessFile(fileName, "rw");
             RandomAccessFile fd = fsinfo.factory.makeRAFile(fsinfo.localCore, fsinfo.core, fileName);
@@ -81,8 +81,8 @@ class NFSIO implements NFSConsts, RPCConsts {
 	    if (fileName == null)
 	        throw new NFSException(xid, NFSERR_STALE);
 	    // XXX Comment out read lines to improve performance
-	     System.err.print("Read(" + fileName + ", " + count + ", " + 
-	    		     offset + ")\n");
+//	     System.err.print("Read(" + fileName + ", " + count + ", " + 
+//	    		     offset + ")\n");
 	    
 	    if (count <= 0) {
 		System.err.println("\tRead: invalid value for count " + count);

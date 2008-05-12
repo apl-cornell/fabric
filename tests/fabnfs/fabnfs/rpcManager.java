@@ -98,6 +98,7 @@ class rpcManager extends java.lang.Object  implements RPCConsts {
   rpcHandler lastHandler = null;
   public void RunHandler(XDRPacket packet, long xid,
       long prog, long vers, long proc) {
+    long time0 = System.currentTimeMillis();
     if (prog == lastprog && vers == lastvers) {
       // run handler from cache
       lastHandler.Run(socket, xid, proc, packet);
@@ -114,6 +115,8 @@ class rpcManager extends java.lang.Object  implements RPCConsts {
         lastHandler.Run(socket, xid, proc, packet);
       }
     }
+    long time1 = System.currentTimeMillis() - time0;
+//    System.out.println("Handler Program " + prog + " for " + xid + " took " + time1 + "ms");
   }
 
   // Find the handler for this request and return it if it exists, or
