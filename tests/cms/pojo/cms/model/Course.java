@@ -164,6 +164,19 @@ public class Course {
     // TODO Auto-generated method stub
     return null;
   }
+  public Collection getStudents() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection getRegradeRequests() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Grade*/ getTotals() {
+    // TODO Auto-generated method stub
+    // See gradeHome().findTotalsByCourseID
+    return null;
+  }
 }
 
 /*

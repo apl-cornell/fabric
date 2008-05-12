@@ -482,11 +482,12 @@ public class XMLBuilder {
   protected CMSRoot database;
   protected DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 
-  CourseXMLBuilder     courseXMLBuilder;
-  AssignmentXMLBuilder assignmentXMLBuilder;
-  SystemXMLBuilder     systemXMLBuilder;
-  StudentXMLBuilder    studentXMLBuilder;
-  LogXMLBuilder        logXMLBuilder;
+  CourseXMLBuilder       courseXMLBuilder;
+  AssignmentXMLBuilder   assignmentXMLBuilder;
+  SystemXMLBuilder       systemXMLBuilder;
+  StudentXMLBuilder      studentXMLBuilder;
+  LogXMLBuilder          logXMLBuilder;
+  ViewStudentsXMLBuilder viewStudentsXMLBuilder;
 
   public XMLBuilder(CMSRoot database) {
     this.database             = database;
@@ -573,7 +574,7 @@ public class XMLBuilder {
       root.appendChild(xEmail);
     }
     if (selectedIDs.size() > 0) {
-      ViewStudentsXMLBuilder.buildSelectedStudentList(courseID, xml,
+      viewStudentsXMLBuilder.buildSelectedStudentList(course, xml,
           studentsNode, selectedIDs);
       root.appendChild(studentsNode);
     }

@@ -1,175 +1,132 @@
 package cms.www.xml;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Map;
-
-import javax.ejb.FinderException;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-
 import cms.www.util.Profiler;
 import cms.www.util.StringUtil;
-import cms.www.util.Util;
+import cms.model.*;
 
-import edu.cornell.csuglab.cms.base.*;
+public class ViewStudentsXMLBuilder {
+  
+  XMLBuilder xmlBuilder;
+  
+  public ViewStudentsXMLBuilder(XMLBuilder builder) {
+    this.xmlBuilder = builder;
+  }
+  
+  public void buildSelectedStudentList(Course course, Document xml,
+      Element studentsNode, Collection/*User*/ selectedUsers) {
+    Iterator students = course.getStudents().iterator();
+    while (students.hasNext()) {
+      Student student = (Student) students.next();
+      User    user    = student.getUser();
+      
+      Element xStudent = xml.createElement(user.getNetID());
+      Float totalScore = student.getTotalScore();
+      xStudent.setAttribute(XMLBuilder.A_TOTALSCORE, (totalScore == null ? "" : StringUtil.roundToOne(String.valueOf(totalScore.floatValue()))));
+      xStudent.setAttribute(XMLBuilder.A_FINALGRADE, (student.getFinalGrade() == null ? "" : student.getFinalGrade()));
+      xStudent.setAttribute(XMLBuilder.A_FIRSTNAME, user.getFirstName());
+      xStudent.setAttribute(XMLBuilder.A_LASTNAME, user.getLastName());
+      xStudent.setAttribute(XMLBuilder.A_NETID, user.getNetID());
+      if (selectedUsers.contains(user)) {
+        xStudent.setAttribute(XMLBuilder.A_ENROLLED, Student.ENROLLED);
+        studentsNode.appendChild(xStudent);
+      }
+    }
+  }
 
+  public void buildStudentList(Course course, Document xml, Element studentsNode) {
+    Iterator students = course.getStudents().iterator();
+    LinkedList nonenrolled = new LinkedList();
+    while (students.hasNext()) {
+      Student student = (Student) students.next();
+      User    user    = student.getUser();
+      
+      String section = student.getSection();
+      Element xStudent = xml.createElement(user.getNetID());
+      Float totalScore = student.getTotalScore();
+      xStudent.setAttribute(XMLBuilder.A_TOTALSCORE, (totalScore == null ? "" : StringUtil
+          .roundToOne(String.valueOf(totalScore.floatValue()))));
+      xStudent.setAttribute(XMLBuilder.A_FINALGRADE, (student.getFinalGrade() == null ? ""
+          : student.getFinalGrade()));
+      xStudent.setAttribute(XMLBuilder.A_FIRSTNAME, user.getFirstName());
+      xStudent.setAttribute(XMLBuilder.A_LASTNAME, user.getLastName());
+      xStudent.setAttribute(XMLBuilder.A_NETID, user.getNetID());
+      xStudent.setAttribute(XMLBuilder.A_SECTION, section);
+      if (student.getStatus().equals(Student.ENROLLED)) {
+        xStudent.setAttribute(XMLBuilder.A_ENROLLED, Student.ENROLLED);
+        studentsNode.appendChild(xStudent);
+      } else {
+        // save for later
+        xStudent.setAttribute(XMLBuilder.A_ENROLLED, Student.DROPPED);
+        nonenrolled.addLast(xStudent);
+        continue;
+      }
 
-public class ViewStudentsXMLBuilder extends XMLBuilder {
+      Iterator assigns = course.getAssignments().iterator();
+      while (assigns.hasNext()) {
+        Assignment assign = (Assignment) assigns.next();
+        
+        Element xGrade = xml.createElement(XMLBuilder.A_ID + assign.toString());
+        xGrade.setAttribute(XMLBuilder.A_ASSIGNID, assign.toString());
+        
+        Group group = null; // TODO: find the group for this user and assignment
+        if (group != null)
+          xGrade.setAttribute(XMLBuilder.A_GROUPID, group.toString());
+        
+        Grade grade = null; // TODO: find the grade for this user and assignment
+        if (grade != null)
+          xGrade.setAttribute(XMLBuilder.A_SCORE,
+                              StringUtil.roundToOne(String.valueOf(grade.getGrade())));
+        
+        if (grade != null && grade.getGrade() > assign.getMaxScore())
+          xGrade.setAttribute(XMLBuilder.A_OVERMAX, "true");
+        
+        Iterator regrades = null; // TODO: find regrades for this group
+        RegradeRequest regrade = null;
+        while (regrades.hasNext()) {
+          RegradeRequest next = (RegradeRequest) regrades.next();
+          if (regrade == null || next.getStatus().equals(RegradeRequest.PENDING))
+            regrade = next;
+        }
+        if (regrade != null)
+          xGrade.setAttribute(XMLBuilder.A_REGRADE, regrade.getStatus());
 
-	
-	public void buildSelectedStudentList(long courseID, Document xml, Element studentsNode, Collection selectedIDs) throws  FinderException {
-		Iterator students = database.studentHome().findAllByCourseID(courseID).iterator();
-		Map names = database.getFirstLastNameMap(courseID);
-		Map groups = database.getGroupIDMapByCourse(courseID);
-		while (students.hasNext()) {
-			StudentLocal student = (StudentLocal) students.next();
-			String userID = student.getNetID();
-			String[] name = (String[]) names.get(userID);
-			Element xStudent = xml.createElement(userID);
-			Float totalScore = student.getTotalScore();
-			xStudent.setAttribute(A_TOTALSCORE, (totalScore == null ? "" : StringUtil.roundToOne(String.valueOf(totalScore.floatValue()))));
-			xStudent.setAttribute(A_FINALGRADE, (student.getFinalGrade() == null ? "" : student.getFinalGrade()));
-			xStudent.setAttribute(A_FIRSTNAME, name[0]);
-			xStudent.setAttribute(A_LASTNAME, name[1]);
-			xStudent.setAttribute(A_NETID, userID);
-			if (selectedIDs.contains(userID)) {
-				xStudent.setAttribute(A_ENROLLED, StudentBean.ENROLLED);
-				studentsNode.appendChild(xStudent);
-			}
-		}
-	}
-	
-	public void buildStudentList(long courseID, Document xml, Element studentsNode, Element assignsNode) throws  FinderException {
-		Iterator students = database.studentHome().findAllByCourseID(courseID).iterator();
-		Map names = database.getFirstLastNameMap(courseID);
-		Map groups = database.getGroupIDMapByCourse(courseID);
-		Collection assigns = database.assignmentHome().findByCourseID(courseID);
-		LinkedList nonenrolled = new LinkedList();
-		boolean seenAssigns = false;
-		while (students.hasNext()) {
-			StudentLocal student = (StudentLocal) students.next();
-			String userID = student.getNetID();
-			String[] name = (String[]) names.get(userID);
-			String section = student.getSection();
-			Element xStudent = xml.createElement(userID);
-			Float totalScore = student.getTotalScore();
-			xStudent.setAttribute(A_TOTALSCORE, (totalScore == null ? "" : StringUtil.roundToOne(String.valueOf(totalScore.floatValue()))));
-			xStudent.setAttribute(A_FINALGRADE, (student.getFinalGrade() == null ? "" : student.getFinalGrade()));
-			xStudent.setAttribute(A_FIRSTNAME, name[0]);
-			xStudent.setAttribute(A_LASTNAME, name[1]);
-			xStudent.setAttribute(A_NETID, userID);
-			xStudent.setAttribute(A_SECTION, section);
-			if (student.getStatus().equals(StudentBean.ENROLLED)) {
-				xStudent.setAttribute(A_ENROLLED, StudentBean.ENROLLED);
-				studentsNode.appendChild(xStudent);
-			} else {
-			    xStudent.setAttribute(A_ENROLLED, StudentBean.DROPPED);
-				nonenrolled.addLast(xStudent);
-			}
-			seenAssigns = true;
-		}
-		Iterator i = assigns.iterator();
-		// Add a node under each student for each assignment for assignment grades
-		while (i.hasNext()) {
-			AssignmentLocal assign = (AssignmentLocal) i.next();
-			long assignID = assign.getAssignmentID();
-			NodeList studs = studentsNode.getChildNodes();
-			for (int j=0; j < studs.getLength(); j++) {
-				Element xStudent = (Element) studs.item(j);
-				String userID = xStudent.getAttribute(A_NETID);
-				if (!seenAssigns) {
-					Element xAssign = xml.createElement(A_ID + assignID);
-					xAssign.setAttribute(A_NAMESHORT, assign.getNameShort());
-					assignsNode.appendChild(xAssign);
-				}
-		        Element xGrade = xml.createElement(A_ID + assignID);
-		        xGrade.setAttribute(A_ASSIGNID, String.valueOf(assignID));
-		        xStudent.appendChild(xGrade);
-				Long groupID = (Long) groups.get(userID + "_" + assignID);
-				if (groupID != null) {
-			        xGrade.setAttribute(A_GROUPID, groupID.toString());
-				}
-			}
-		}
-		while (nonenrolled.size() > 0) {
-			Element xStudent = (Element) nonenrolled.removeFirst();
-			studentsNode.appendChild(xStudent);
-		}
-	}
-	
-	public void buildAssignmentGrades(long courseID, Element studentsNode) throws  FinderException {
-		Iterator grades = database.gradeHome().findTotalsByCourseID(courseID).iterator();
-		while (grades.hasNext()) {
-			GradeLocal grade = (GradeLocal) grades.next();
-			Element xStudent = (Element) studentsNode.getElementsByTagName(grade.getNetID()).item(0);
-			if (xStudent != null) {
-			    Element xGrade = (Element) xStudent.getElementsByTagName(A_ID + grade.getAssignmentID()).item(0);
-			    if (xGrade != null) {
-			    	xGrade.setAttribute(A_SCORE, StringUtil.roundToOne(String.valueOf(grade.getGrade())));
-			    }
-			}
-		}
-	}
-	
-	public void buildRegrades(long courseID, Element studentsNode) throws  FinderException {
-		Iterator regrades = database.regradeRequestHome().findByCourseID(courseID).iterator();
-		Map groups = database.getGroupMembersMap(courseID);
-		Map assigns = database.getAssignmentIDMap(courseID);
-		while (regrades.hasNext()) {
-			RegradeRequestLocal regrade = (RegradeRequestLocal) regrades.next();
-			ArrayList groupmems = (ArrayList) groups.get(new Long(regrade.getGroupID()));
-			if (groupmems != null) {
-				for (int i=0; i < groupmems.size(); i++) {
-					String netID = (String) groupmems.get(i);
-					Element xStudent = (Element) studentsNode.getElementsByTagName(netID).item(0);
-					if (xStudent != null) {
-						long assignID = ((Long) assigns.get(new Long(regrade.getGroupID()))).longValue();
-						Element xGrade = (Element) xStudent.getElementsByTagName(A_ID + assignID).item(0);
-						if (xGrade != null) {
-				            if (regrade.getStatus().equals(RegradeRequestBean.PENDING) || !xGrade.hasAttribute(XMLBuilder.A_REGRADE)) {
-				                xGrade.setAttribute(XMLBuilder.A_REGRADE, regrade.getStatus());
-				            }
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	/*
-	 * "overmax" refers to scores above the maximum
-	 */
-	public void markOverMaxScores(long courseID, Element studentsNode) throws  FinderException {
-		Iterator overgrades = database.gradeHome().findOverMaxByCourseID(courseID).iterator();
-		while (overgrades.hasNext()) {
-			GradeLocal grade = (GradeLocal) overgrades.next();
-			Element xStudent = (Element) studentsNode.getElementsByTagName(grade.getNetID()).item(0);
-			if (xStudent != null) {
-				Element xGrade = (Element) xStudent.getElementsByTagName(A_ID + grade.getAssignmentID()).item(0);
-				if (xGrade != null) {
-					xGrade.setAttribute(A_OVERMAX, "true");
-				}
-			}
-		}
-	}
-	
-	public void buildStudentsPage(long courseID, Document xml) throws  FinderException {
-		Profiler.enterMethod("ViewStudentsXMLBuilder.buildStudentsPage", "CourseID: " + courseID);
-		Element root = (Element) xml.getFirstChild();
-		Element studentsNode = xml.createElement(TAG_STUDENTS);
-		Element assignsNode = xml.createElement(TAG_STUDENTASSIGNS);
-		buildStudentList(courseID, xml, studentsNode, assignsNode);
-		buildAssignmentGrades(courseID, studentsNode);
-		buildRegrades(courseID, studentsNode);
-		markOverMaxScores(courseID, studentsNode);
-		root.appendChild(studentsNode);
-		root.appendChild(assignsNode);
-		Profiler.exitMethod("ViewStudentsXMLBuilder.buildStudentsPage", "CourseID: " + courseID);
-	}
-	
+        xStudent.appendChild(xGrade);
+      }
+    }
+    
+    // add on all of the non-enrolled students
+    Iterator i = nonenrolled.iterator();
+    while (i.hasNext())
+      studentsNode.appendChild((Element) i.next());
+  }
+  
+  public void buildAssignmentList(Course course, Document xml, Element assignsNode) {
+    Iterator assigns = course.getAssignments().iterator();
+    while (assigns.hasNext()) {
+      Assignment assign = (Assignment) assigns.next();
+      Element xAssign = xml.createElement(XMLBuilder.A_ID + assign.toString());
+      xAssign.setAttribute(XMLBuilder.A_NAMESHORT, assign.getNameShort());
+      assignsNode.appendChild(xAssign);
+    }
+  }
+
+  public void buildStudentsPage(Course course, Document xml) {
+    Profiler.enterMethod("ViewStudentsXMLBuilder.buildStudentsPage",
+        "CourseID: " + course);
+    Element root = (Element) xml.getFirstChild();
+    Element studentsNode = xml.createElement(XMLBuilder.TAG_STUDENTS);
+    Element assignsNode = xml.createElement(XMLBuilder.TAG_STUDENTASSIGNS);
+    buildStudentList(course, xml, studentsNode);
+    buildAssignmentList(course, xml, assignsNode);
+    root.appendChild(studentsNode);
+    root.appendChild(assignsNode);
+    Profiler.exitMethod("ViewStudentsXMLBuilder.buildStudentsPage",
+        "CourseID: " + course);
+  }
+
 }
