@@ -160,7 +160,7 @@ public class Assignment {
     return Collections.unmodifiableCollection(this.requiredSubmissions);
   }
 
-  public Collection/*SolutionFile*/ getHiddenSolutionFiles() {
+  public Collection/*SolutionFile*/ getSolutionFiles() {
     return Collections.unmodifiableCollection(this.solutionFiles);
   }
 

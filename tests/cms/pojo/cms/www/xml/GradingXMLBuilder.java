@@ -35,7 +35,7 @@ public class GradingXMLBuilder extends XMLBuilder {
 		Profiler.enterMethod("GradingXMLBuilder.buildGradingSubtree", "AssignmentID: " + assignmentID);
 		AssignmentLocal assignment = database.assignmentHome().findByAssignmentID(assignmentID);
 		Map subNames = database.getSubmissionNameMap(assignmentID);
-		addGroups(p.getUserID(), xml, assignmentID, groupids);
+		addGroups(p.getNetID(), xml, assignmentID, groupids);
 		Profiler.enterMethod("RootBean.addGroupMemberNames", "");
 		GroupXMLBuilder.addGroupMemberNames(xml, assignment.getCourseID());
 		Profiler.exitMethod("RootBean.addGroupMemberNames", "");
@@ -412,7 +412,7 @@ public class GradingXMLBuilder extends XMLBuilder {
 	
 	public void addAssignedTos(Principal p, Document xml, long assignmentID) throws FinderException {
 	    Profiler.enterMethod("GradingXMLBuilder.addAssignedTos", "");
-		Iterator assignedTos = database.groupAssignedToHome().findByNetIDAssignmentID(p.getUserID(), assignmentID).iterator();
+		Iterator assignedTos = database.groupAssignedToHome().findByNetIDAssignmentID(p.getNetID(), assignmentID).iterator();
 	    Collection subProbs = database.subProblemHome().findByAssignmentID(assignmentID);
 	    Element root = (Element) xml.getFirstChild();
 	    while (assignedTos.hasNext()) {

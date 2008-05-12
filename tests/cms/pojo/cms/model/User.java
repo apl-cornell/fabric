@@ -16,7 +16,7 @@ public class User {
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setUserID    (final String userID)    { this.userID    = userID;    }
+  public void setNetID     (final String userID)    { this.userID    = userID;    }
   public void setFirstName (final String firstName) { this.firstName = firstName; }
   public void setLastName  (final String lastName)  { this.lastName  = lastName;  }
   public void setCUID      (final String CUID)      { this.CUID      = CUID;      }
@@ -26,7 +26,7 @@ public class User {
   // public getters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public String getUserID()    { return this.userID;    }
+  public String getNetID()     { return this.userID;    }
   public String getFirstName() { return this.firstName; }
   public String getLastName()  { return this.lastName;  }
   public String getCUID()      { return this.CUID;      }

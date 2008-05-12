@@ -100,7 +100,7 @@ public class TransactionHandler {
 	public TransactionResult acceptInvitation(Principal p, long groupid) {
 		TransactionResult result = new TransactionResult();
 		try {
-		    String netid = p.getUserID();
+		    String netid = p.getNetID();
 			GroupLocal group = null;
 			try {
 			    group = database.groupHome().findByGroupID(groupid);
@@ -755,7 +755,7 @@ public class TransactionHandler {
 					}
 					String MD5 = FileUtil.calcMD5(item);
 					item.write(file);
-					data.addSubmittedFile(assignID, fileName, new SubmittedFileData(0, groupID, groupID, p.getUserID(),
+					data.addSubmittedFile(assignID, fileName, new SubmittedFileData(0, groupID, groupID, p.getNetID(),
 					        submissionID, null, splitName[1], (int) item.getSize(), MD5, false, /*pathname*/ path.getAbsolutePath()));
 				} else if (field.startsWith(AccessController.P_REGRADERESPONSE)) {
 					String[] vals = field.split("_");
@@ -794,9 +794,9 @@ public class TransactionHandler {
 	        if (isAssign && !p.isAdminPrivByCourseID(assignment.getCourseID())) {
 	            AssignmentLocal assign = database.assignmentHome().findByAssignmentID(ID);
 	            if (assign.getAssignedGraders()) {
-	                boolean permission = database.assignedToGroups(ID, p.getUserID(), groupIDs).size() == groupIDs.size();
+	                boolean permission = database.assignedToGroups(ID, p.getNetID(), groupIDs).size() == groupIDs.size();
 	                HashSet canGrades = new HashSet();
-	                Iterator assignTos = database.groupAssignedToHome().findByNetIDAssignmentID(p.getUserID(), ID).iterator();
+	                Iterator assignTos = database.groupAssignedToHome().findByNetIDAssignmentID(p.getNetID(), ID).iterator();
 	                while (assignTos.hasNext()) {
 	                    GroupAssignedToLocal a = (GroupAssignedToLocal) assignTos.next();
 	                    canGrades.add(a.getGroupID() + "_" + a.getSubProblemID());
@@ -1061,7 +1061,7 @@ public class TransactionHandler {
 		    		    if (a.getShowSolution()) {
 		    		        return a.getStatus().equals(AssignmentBean.CLOSED) || a.getStatus().equals(AssignmentBean.GRADED);
 		    		    }
-		    		    Collection grades = database.gradeHome().findMostRecentByNetAssignmentID(p.getUserID(), a.getAssignmentID());
+		    		    Collection grades = database.gradeHome().findMostRecentByNetAssignmentID(p.getNetID(), a.getAssignmentID());
 		    		    return a.getStatus().equals(AssignmentBean.GRADED) && grades.size() > 0;
 		    		} else if (c.getSolutionCCAccess() && p.isAuthenticated()) {
 		    		    return a.getStatus().equals(AssignmentBean.GRADED);
@@ -1122,7 +1122,7 @@ public class TransactionHandler {
 		    		        boolean isAssigned = false;
 		    		        while (ats.hasNext()) {
 		    		            GroupAssignedToLocal gt = (GroupAssignedToLocal) ats.next();
-		    		            isAssigned = isAssigned || gt.getNetID().equalsIgnoreCase(p.getUserID());
+		    		            isAssigned = isAssigned || gt.getNetID().equalsIgnoreCase(p.getNetID());
 		    		        }
 		    		        return isAssigned;
 		    		    } else {
@@ -1130,7 +1130,7 @@ public class TransactionHandler {
 		    		    }
 		    		} else if (p.isStudentInCourseByCourseID(a.getCourseID())) {
 		    		    GroupMemberLocal gm = null;
-		    		    try { gm = database.groupMemberHome().findByPrimaryKey(new GroupMemberPK(g.getGroupID(), p.getUserID()));
+		    		    try { gm = database.groupMemberHome().findByPrimaryKey(new GroupMemberPK(g.getGroupID(), p.getNetID()));
 		    		    } catch (Exception e) {}
 		    		    return gm != null && gm.getStatus().equals(GroupMemberBean.ACTIVE);
 		    		} else {
@@ -1181,7 +1181,7 @@ public class TransactionHandler {
 		    		    if (a.getAssignedGraders()) {
 		    		        Vector gid = new Vector();
 		    		        gid.add(new Long(g.getGroupID()));
-		    		        return database.isAssignedTo(p.getUserID(), gid);
+		    		        return database.isAssignedTo(p.getNetID(), gid);
 		    		    } else {
 		    		        return true;
 		    		    }
@@ -1215,7 +1215,7 @@ public class TransactionHandler {
 	            return true;
 	        } else if (p.isGradesPrivByCourseID(assign.getCourseID())) {
 	            if (assign.getAssignedGraders()) {
-	                return database.isAssignedTo(p.getUserID(), groupIDs);
+	                return database.isAssignedTo(p.getNetID(), groupIDs);
 	            } else {
 	                return true;
 	            }
@@ -1237,7 +1237,7 @@ public class TransactionHandler {
 	public TransactionResult cancelInvitation(Principal p, String canceled, long groupid) {
 		TransactionResult result = new TransactionResult();
 		try {
-		    String canceler = p.getUserID();
+		    String canceler = p.getNetID();
 		    canceled = canceled.toLowerCase();
 			GroupLocal group = null;
 			AssignmentLocal assign = null;
@@ -1504,7 +1504,7 @@ public class TransactionHandler {
 			{
 				String[] header = (String[])table.get(0);
 				long[] subProbIDs = new long[header.length - 1];
-				String grader = p.getUserID();
+				String grader = p.getNetID();
 				
 				int[] colsFound = CSVFileFormatsUtil.parseColumnNamesFlexibly(header);
 				int netIDIndex = CSVFileFormatsUtil.getFlexibleColumnNum(colsFound, CSVFileFormatsUtil.NETID);
@@ -1519,7 +1519,7 @@ public class TransactionHandler {
 				}
 				
 				HashSet canGrades = new HashSet();
-				Iterator assignTos = database.groupAssignedToHome().findByNetIDAssignmentID(p.getUserID(), assignmentID).iterator();
+				Iterator assignTos = database.groupAssignedToHome().findByNetIDAssignmentID(p.getNetID(), assignmentID).iterator();
 				while (assignTos.hasNext()) {
 					GroupAssignedToLocal a = (GroupAssignedToLocal) assignTos.next();
 					canGrades.add(a.getGroupID() + "_" + a.getSubProblemID());
@@ -1839,7 +1839,7 @@ public class TransactionHandler {
 	public TransactionResult declineInvitation(Principal p, long groupid) {
 		TransactionResult result = new TransactionResult();
 		try {
-		    String netid = p.getUserID();
+		    String netid = p.getNetID();
 			GroupLocal group = null;
 			AssignmentLocal assign = null;
 			try {
@@ -2183,7 +2183,7 @@ public class TransactionHandler {
 	public TransactionResult inviteUser(Principal p, String invited, long groupid) {
 		TransactionResult result = new TransactionResult();
 		try {
-		    String inviter = p.getUserID();
+		    String inviter = p.getNetID();
 		    invited = invited == null ? "" : invited.toLowerCase(); 
 		    GroupLocal group= null;
 		    AssignmentLocal assign= null;
@@ -2279,7 +2279,7 @@ public class TransactionHandler {
 	public TransactionResult leaveGroup(Principal p, long groupid) {
 		TransactionResult result = new TransactionResult();
 		try {
-		    String netid = p.getUserID();
+		    String netid = p.getNetID();
 			GroupLocal group = null;
 			AssignmentLocal assign = null;
 			try {
@@ -2549,7 +2549,7 @@ public class TransactionHandler {
 					Iterator it = courseStudents.iterator();
 					while(it.hasNext()) {
 						UserLocal student = (UserLocal)it.next();
-						netid2cuid.put(student.getUserID(), student.getCUID());
+						netid2cuid.put(student.getNetID(), student.getCUID());
 					}
 					//if this is a course-specific upload and cuid is included, all students should have cuids in the db
 					if(courseID != 0) {
@@ -2653,7 +2653,7 @@ public class TransactionHandler {
 			while (students.hasNext())
 			{
 				StudentLocal s = (StudentLocal) students.next();
-				netids.add(s.getUserID());
+				netids.add(s.getNetID());
 			}
 			FileItem file = retrieveUploadedFile(request, AccessController.P_GRADESFILE, result);
 			if(result.hasErrors()) return result;
@@ -2774,7 +2774,7 @@ public class TransactionHandler {
 			}
 			while (students.hasNext()) {
 				StudentLocal s = (StudentLocal) students.next();
-				netids.add(s.getUserID());
+				netids.add(s.getNetID());
 			}
 			// Find the uploaded file stream
 			FileItem file = retrieveUploadedFile(request, AccessController.P_GRADESFILE, result);
@@ -3070,7 +3070,7 @@ public class TransactionHandler {
 	            Iterator students = database.studentHome().findByCourseIDSortByLastName(courseID).iterator();
 	            while (students.hasNext()) {
 	                StudentLocal student = (StudentLocal) students.next();
-	                email.addTo(student.getUserID() + "@cornell.edu");
+	                email.addTo(student.getNetID() + "@cornell.edu");
 	            }
 	        }
 	        //The decision was made that staff should always receive the email
@@ -3083,7 +3083,7 @@ public class TransactionHandler {
 	        //}
 	        String fullname = p.getFirstName();
 	        fullname += fullname.length() > 0 ? " " + p.getLastName() : p.getLastName();
-	        email.setFrom("\"" + fullname + "\"" + "<" + p.getUserID() + "@cornell.edu" + ">");
+	        email.setFrom("\"" + fullname + "\"" + "<" + p.getNetID() + "@cornell.edu" + ">");
 	        CourseLocal course = database.courseHome().findByPrimaryKey(new CoursePK(courseID));
 	        email.setSubject("[" + course.getDisplayedCode() + "] " + subject);
 	        email.setMessage(body);
@@ -3971,7 +3971,7 @@ public class TransactionHandler {
 					String netID = ((StaffData)iter.next()).getNetID();
 					String[] mapRemIDs = (String[])map.get(netID + AccessController.P_REMOVE);
 					if(mapRemIDs != null) { //the staff should be removed
-					    if (netID.equalsIgnoreCase(p.getUserID())) {
+					    if (netID.equalsIgnoreCase(p.getNetID())) {
 					        result.addError("Cannot remove yourself as a staff member");
 					        //return result;
 					    }
@@ -4379,7 +4379,7 @@ public class TransactionHandler {
 				result.addError("Course is frozen; no changes may be made to it");
 			else
 			{
-			GroupData group = database.groupHome().findByNetIDAssignmentID(p.getUserID(), assignmentid).getGroupData();
+			GroupData group = database.groupHome().findByNetIDAssignmentID(p.getNetID(), assignmentid).getGroupData();
 			// Get current time while adjusting for grace period
 			long graceperiod = assignment.getGracePeriod() * 60000;
 			Timestamp now = new Timestamp(System.currentTimeMillis() - graceperiod);
@@ -4390,7 +4390,7 @@ public class TransactionHandler {
 			}
 			else {
 				boolean isLate = (group.getExtension() == null) && assignment.getDueDate().before(now);
-				Collection files = getUploadedFiles(p.getUserID(), request, isLate);
+				Collection files = getUploadedFiles(p.getNetID(), request, isLate);
 				result.addError(transactions.submitFiles(p, assignmentid, files));
 			}
 		}
@@ -4441,7 +4441,7 @@ public class TransactionHandler {
 				result.addError("Course is frozen; no changes may be made to it");
 			else
 			{
-			GroupData group = database.groupHome().findByNetIDAssignmentID(p.getUserID(), assignmentid).getGroupData();
+			GroupData group = database.groupHome().findByNetIDAssignmentID(p.getNetID(), assignmentid).getGroupData();
 			// Get current time while adjusting for grace period
 			long graceperiod = assignment.getGracePeriod() * 60000;
 			Timestamp now = new Timestamp(System.currentTimeMillis() - graceperiod);
@@ -4564,8 +4564,8 @@ public class TransactionHandler {
 			Collection students = null, grades = null;
 			if (assignment.getAssignedGraders() && !p.isAdminPrivByCourseID(course.getCourseID()))
 			{
-			    students = database.studentHome().findByAssignmentIDAssignedTo(assignmentID, p.getUserID());
-			    grades = database.gradeHome().findMostRecentByAssignmentIDGrader(assignmentID, p.getUserID());
+			    students = database.studentHome().findByAssignmentIDAssignedTo(assignmentID, p.getNetID());
+			    grades = database.gradeHome().findMostRecentByAssignmentIDGrader(assignmentID, p.getNetID());
 			}
 			else
 			{
@@ -4609,7 +4609,7 @@ public class TransactionHandler {
 				while(i.hasNext())
 				{
 					StudentLocal student = (StudentLocal) i.next();
-					thisRow[0] = student.getUserID();
+					thisRow[0] = student.getNetID();
 					if(grade != null && grade.getNetID().equals(thisRow[0]))
 					{
 						thisRow[1] = String.valueOf(grade.getGrade());
@@ -4625,7 +4625,7 @@ public class TransactionHandler {
 				while (i.hasNext()) {
 					StudentLocal student = (StudentLocal) i.next();
 					String [] thisRow = new String[firstRow.length];
-					thisRow[0] = student.getUserID();
+					thisRow[0] = student.getNetID();
 					count = 1;
 					Float totalScore = null;
 					boolean nextRow = false;
@@ -4698,7 +4698,7 @@ public class TransactionHandler {
 			{
 				StudentLocal student = (StudentLocal)i.next();
 				String grade = student.getFinalGrade();
-				line = new String[] {student.getUserID(), grade == null ? "" : grade};
+				line = new String[] {student.getNetID(), grade == null ? "" : grade};
 				out.println(line);
 			}
 		}
@@ -4813,18 +4813,18 @@ public class TransactionHandler {
 		        UserLocal user = (UserLocal) users.next();
 		        String[] mydata = new String[numCols];
 		        output.add(mydata);
-		        netIDs.put(user.getUserID(), mydata);
+		        netIDs.put(user.getNetID(), mydata);
 		        if (courseCodeCol != -1) mydata[courseCodeCol] = course.getCode();
 		        if (lastnameCol != -1) mydata[lastnameCol] = user.getLastName();
 		        if (firstnameCol != -1) mydata[firstnameCol] = user.getFirstName();
-		        if (netidCol != -1) mydata[netidCol] = user.getUserID();
+		        if (netidCol != -1) mydata[netidCol] = user.getNetID();
 		        if (cuidCol != -1) mydata[cuidCol] = user.getCUID() == null ? "" : user.getCUID();
 		        if (collegeCol != -1) mydata[collegeCol] = user.getCollege();
 		    }
 		    //add the data that comes from the student table
 		    while (students.hasNext()) {
 		        StudentLocal student = (StudentLocal) students.next();
-		        String[] mydata = (String[]) netIDs.get(student.getUserID());
+		        String[] mydata = (String[]) netIDs.get(student.getNetID());
 		        if (mydata != null) {
 		        		if(deptCol != -1) mydata[deptCol] = student.getDepartment() == null ? "" : student.getDepartment();
 		        		if(courseNumCol != -1) mydata[courseNumCol] = student.getCourseNum() == null ? "" : student.getCourseNum();

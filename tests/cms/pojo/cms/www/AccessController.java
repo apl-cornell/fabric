@@ -1070,7 +1070,7 @@ public class AccessController extends HttpServlet {
           buildURL = HOMEPAGE_URL;
           xml = XMLBuilder.buildHomepage();
         } else {
-          String netid = p.getUserID(); // netid of appUser if in
+          String netid = p.getNetID(); // netid of appUser if in
           // staffAs_ mode, apparentID
           // of principal otherwise
           try {
@@ -1083,7 +1083,7 @@ public class AccessController extends HttpServlet {
             xml = info.getXMLDocument();
           } catch (Exception nfe) {
             // Bad input - go to overview
-            xml = XMLBuilder.buildErrorPage(p.getUserID(), action, nfe);
+            xml = XMLBuilder.buildErrorPage(p.getNetID(), action, nfe);
             buildURL = ERROR_URL;
             nfe.printStackTrace();
           }
@@ -1257,7 +1257,7 @@ public class AccessController extends HttpServlet {
               && assign.getAssignedGraders()) {
             groupIDs =
                 XMLBuilder.getDatabase().assignedToGroups(assignID,
-                    p.getUserID(),
+                    p.getNetID(),
                     Util.extractGroupIDsFromMainGradingPageRequest(request));
           } else {
             groupIDs = Util.extractGroupIDsFromMainGradingPageRequest(request);
@@ -1940,7 +1940,7 @@ public class AccessController extends HttpServlet {
             && assign.getAssignedGraders()) {
           groupIDs =
               XMLBuilder.getDatabase().assignedToGroups(assignID,
-                  p.getUserID(),
+                  p.getNetID(),
                   Util.extractGroupIDsFromMainGradingPageRequest(request));
         } else {
           groupIDs = Util.extractGroupIDsFromMainGradingPageRequest(request);
@@ -2285,7 +2285,7 @@ public class AccessController extends HttpServlet {
               new AnnouncementPK(announceID)).getCourseID();
       if (p.isCategoryPrivByCourseID(courseID)) {
         String announce = request.getParameter(P_ANNOUNCE);
-        String poster = p.getUserID();
+        String poster = p.getNetID();
         boolean remove = request.getParameter(P_REMOVEANNOUNCE) != null;
         TransactionResult result =
             transactions.editAnnouncement(p, announceID, announce, remove);
@@ -2976,11 +2976,11 @@ public class AccessController extends HttpServlet {
        * into the course page for that course.
        */
       if (semesterID == null || semesterID.equals("")) {
-        courseID = XMLBuilder.getDatabase().hasSoloCourse(p.getUserID());
+        courseID = XMLBuilder.getDatabase().hasSoloCourse(p.getNetID());
       } else {
         semID = new Long(Util.parseLong(semesterID));
         courseID =
-            XMLBuilder.getDatabase().hasSoloCourseBySemester(p.getUserID(),
+            XMLBuilder.getDatabase().hasSoloCourseBySemester(p.getNetID(),
                 semID.longValue());
       }
       if (courseID == null) {

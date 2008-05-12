@@ -503,12 +503,14 @@ public class XMLBuilder {
     xml.appendChild(root);
     Element courseList = xml.createElement(TAG_ALLCOURSES);
     root.appendChild(courseList);
-    Collection courses = database.courseHome().findGuestAccess();
+    Collection courses = database.getCurrentSemester().getCourses();
     Iterator i = courses.iterator();
     while (i.hasNext()) {
       Course course = (Course) i.next();
-      Element xCourse = courseXMLBuilder.buildHomepageSubtree(xml, course);
-      courseList.appendChild(xCourse);
+      if (course.getCourseGuestAccess()) {
+        Element xCourse = courseXMLBuilder.buildHomepageSubtree(xml, course);
+        courseList.appendChild(xCourse);
+      }
     }
     Profiler.exitMethod("XMLBuilder.buildHomepage", "");
     return xml;
@@ -538,18 +540,18 @@ public class XMLBuilder {
     Document xml = buildStaffNavbar(p, course);
     Element root = (Element) xml.getFirstChild();
     Element studentsNode = xml.createElement(TAG_STUDENTS);
-    Iterator emails = database.emailHome().findByCourseID(course).iterator();
+    Iterator emails = course.getEmails().iterator();
     Map staffNames = database.getStaffNameMap(course);
     Collection selectedIDs = new Vector();
     if (groups != null) {
       Iterator groupsIter = groups.iterator();
       while (groupsIter.hasNext()) {
         Group    group   = (Group) groupsIter.next();
-        Iterator members = group.members().iterator();
+        Iterator members = group.getMembers().iterator();
 
         while (members.hasNext()) {
           GroupMember member = (GroupMember) members.next();
-          selectedIDs.add(member.getNetID());
+          selectedIDs.add(member.getMember().getNetID());
         }
       }
     }
@@ -644,8 +646,8 @@ public class XMLBuilder {
     while (users.hasNext()) {
       User user = (User) users.next();
       Element xUser =
-          xml.createElementNS(TAG_STUDENT + user.getUserID(), TAG_STUDENT);
-      xUser.setAttribute(A_NETID, user.getUserID());
+          xml.createElementNS(TAG_STUDENT + user.getNetID(), TAG_STUDENT);
+      xUser.setAttribute(A_NETID, user.getNetID());
       xUser.setAttribute(A_CUID, user.getCUID() == null ? "" : user.getCUID()
           .toString());
       xUser.setAttribute(A_COLLEGE, user.getCollege());
@@ -685,7 +687,7 @@ public class XMLBuilder {
    * @param p
    *          The Principal object representing the current user
    */
-  public Document buildCMSAdminPage(Principal p) throws FinderException {
+  public Document buildCMSAdminPage(Principal p) {
     Profiler.enterMethod("XMLBuilder.buildCMSAdminPage", "");
     Document xml = db.newDocument();
     Element root = xml.createElement(TAG_ROOT);
@@ -699,9 +701,8 @@ public class XMLBuilder {
     i = admins.iterator();
     while (i.hasNext()) {
       Element adminNode = xml.createElement(TAG_CMSADMIN);
-      CMSAdminLocal admin = (CMSAdminLocal) i.next();
-      adminNode.setAttribute(A_NETID, admin.getNetID());
-      UserLocal user = database.userHome().findByUserID(admin.getNetID());
+      User user = (User) i.next();
+      adminNode.setAttribute(A_NETID, user.getNetID());
       adminNode.setAttribute(A_NAME, user.getFirstName() + " "
           + user.getLastName());
       adminList.appendChild(adminNode);
@@ -710,19 +711,19 @@ public class XMLBuilder {
     // add current semester and list of current courses and their
     // enrollment statistics
     Element semesterList = xml.createElement(TAG_SEMESTERS);
-    SemesterLocal curSemester = null;
+    Semester curSemester = null;
     curSemester = database.semesterHome().findCurrent();
     Collection sems = database.semesterHome().findAllSemesters();
     i = sems.iterator();
     while (i.hasNext()) {
-      SemesterLocal sem = (SemesterLocal) i.next();
+      Semester sem = (Semester) i.next();
       Element semester;
-      if (sem.getSemesterID() == curSemester.getSemesterID())
+      if (sem.equals(curSemester))
         semester = xml.createElement(TAG_CURSEMESTER);
       else semester = xml.createElement(TAG_SEMESTER);
-      semester.setAttribute(A_ID, "" + sem.getSemesterID());
-      semester.setAttribute(A_NAME, sem.getSemesterName());
-      semester.setAttribute(A_HIDDEN, "" + sem.getHidden());
+      semester.setAttribute(A_ID, sem.getSemesterID().toString());
+      semester.setAttribute(A_NAME, sem.getName());
+      semester.setAttribute(A_HIDDEN, Boolean.toString(sem.getHidden()));
       semesterList.appendChild(semester);
     }
     root.appendChild(semesterList);
@@ -732,8 +733,8 @@ public class XMLBuilder {
         database.courseHome().findBySemesterID(curSemester.getSemesterID());
     i = courses.iterator();
     while (i.hasNext()) {
-      CourseLocal c = (CourseLocal) i.next();
-      Element xCourse = CourseXMLBuilder.buildShortSubtree(p, xml, c);
+      Course c = (Course) i.next();
+      Element xCourse = courseXMLBuilder.buildShortSubtree(p, xml, c);
       xCourse.setAttribute(A_ENROLLMENT, Integer.toString(c.getActiveStudents()
           .size()));
       courseList.appendChild(xCourse);
@@ -763,9 +764,9 @@ public class XMLBuilder {
     emptyNames = database.userHome().findMissingNames().iterator();
     if (emptyNames != null) {
       while (emptyNames.hasNext()) {
-        UserLocal noname = (UserLocal) emptyNames.next();
+        User noname = (User) emptyNames.next();
         Element xNoName = xml.createElement(TAG_NAMELESSUSER);
-        xNoName.setAttribute(A_NETID, noname.getUserID());
+        xNoName.setAttribute(A_NETID, noname.getNetID());
         xNoName.setAttribute(A_FIRSTNAME, noname.getFirstName());
         xNoName.setAttribute(A_LASTNAME, noname.getLastName());
         root.appendChild(xNoName);
@@ -777,9 +778,9 @@ public class XMLBuilder {
         .getCUIDCount()));
     if (emptyCUIDs != null) {
       while (emptyCUIDs.hasNext()) {
-        UserLocal nocuid = (UserLocal) emptyCUIDs.next();
+        User nocuid = (User) emptyCUIDs.next();
         Element xNoCUID = xml.createElement(TAG_NOCUID);
-        xNoCUID.setAttribute(A_NETID, nocuid.getUserID());
+        xNoCUID.setAttribute(A_NETID, nocuid.getNetID());
         xNoCUID.setAttribute(A_FIRSTNAME, nocuid.getFirstName());
         xNoCUID.setAttribute(A_LASTNAME, nocuid.getLastName());
         root.appendChild(xNoCUID);
@@ -801,8 +802,7 @@ public class XMLBuilder {
    * @return An element containing all the publicly viewable notices
    * @throws FinderException
    */
-  public Element getViewableNoticeElement(Document xml)
-      throws FinderException {
+  public Element getViewableNoticeElement(Document xml) {
     Element curNoticeList = xml.createElement(TAG_CURSITENOTICES);
     Iterator curNoticeIter =
         database.siteNoticeHome().findCurrentShowing().iterator();
@@ -820,8 +820,7 @@ public class XMLBuilder {
    * @return An element containing all the editable notices
    * @throws FinderException
    */
-  public Element getLivingNoticeElement(Document xml)
-      throws FinderException {
+  public Element getLivingNoticeElement(Document xml) {
     Element curNoticeList = xml.createElement(TAG_CURSITENOTICES);
     Iterator curNoticeIter =
         database.siteNoticeHome().findAllLiving().iterator();
@@ -972,10 +971,10 @@ public class XMLBuilder {
       } else if (fieldName.equals(AccessController.P_LOGSEARCH_NAME)) {
         params.addLogName(param.getString());
       } else if (fieldName.equals(AccessController.P_LOGSEARCH_COURSE)) {
-        String course = param.getString();
+        String courseToSearch = param.getString();
         try {
-          params.setCourseID(course.equals("0") ? null : new Long(Long
-              .parseLong(course)));
+          params.setCourseID(courseToSearch.equals("0") ? null : new Long(Long
+              .parseLong(courseToSearch)));
         } catch (NumberFormatException e) {
         }
       } else if (fieldName.equals(AccessController.P_LOGSEARCH_ASGN)) {
@@ -988,8 +987,7 @@ public class XMLBuilder {
       }
     }
     Document xml =
-        courseID == null ? buildPageHeader(p) : buildCoursePage(p, courseID
-            .longValue());
+        course == null ? buildPageHeader(p) : buildCoursePage(p, course);
     Collection returnedLogs = database.logHome().find(params);
     Element root = (Element) xml.getElementsByTagName(TAG_ROOT).item(0);
     root.appendChild(LogXMLBuilder.buildFullSubtree(p, xml, returnedLogs));
@@ -1007,9 +1005,8 @@ public class XMLBuilder {
     if (xml == null) {
       root.setAttribute(A_INITIALSEARCH, "true");
     }
-    CourseLocal course =
-        database.courseHome().findByPrimaryKey(new CoursePK(courseID));
-    root.appendChild(CourseXMLBuilder.buildGeneralSubtree(p, doc, course));
+
+    root.appendChild(courseXMLBuilder.buildGeneralSubtree(p, doc, course));
     Element xCourse = doc.createElement(TAG_LOGSEARCH_COURSE);
     xCourse.setAttribute(A_COURSEID, String.valueOf(course.getCourseID()));
     xCourse.setAttribute(A_COURSENAME, course.getName());
@@ -1018,8 +1015,8 @@ public class XMLBuilder {
     xCourse.setAttribute(A_COURSEFROZEN, String.valueOf(course
         .getFreezeCourse()));
     root.appendChild(xCourse);
-    LogXMLBuilder.appendAssignments(p, doc, courseID);
-    LogXMLBuilder.appendLogSearchNamesTypes(doc, root, false);
+    logXMLBuilder.appendAssignments(p, doc, course);
+    logXMLBuilder.appendLogSearchNamesTypes(doc, root, false);
     return doc;
   }
 
@@ -1175,7 +1172,7 @@ public class XMLBuilder {
     Timestamp weekago =
         new Timestamp(System.currentTimeMillis() - DateTimeUtil.SECS_PER_WEEK
             * 1000);
-    Map staffNames = database.getStaffNameMap(p.getUserID());
+    Map staffNames = database.getStaffNameMap(p.getNetID());
     Collection announcements =
         hasSem ? database.announcementHome().findByNetIDDateSemester(
             p.getPrincipalID(), weekago, semesterID.longValue()) : database
@@ -1306,7 +1303,7 @@ public class XMLBuilder {
     root.appendChild(xCourse);
     StudentLocal student =
         database.studentHome().findByPrimaryKey(
-            new StudentPK(courseID, p.getUserID()));
+            new StudentPK(courseID, p.getNetID()));
     root.appendChild(getStudentPrefsElement(xml, student));
     return xml;
   }
@@ -1355,7 +1352,7 @@ public class XMLBuilder {
     root.appendChild(CourseXMLBuilder.buildGeneralSubtree(p, xml, course));
     StaffLocal staff =
         database.staffHome().findByPrimaryKey(
-            new StaffPK(courseID, p.getUserID()));
+            new StaffPK(courseID, p.getNetID()));
     Element xPrefs = xml.createElement(TAG_PREFS);
     if (staff != null) {
       if (staff.getEmailNewAssign())
@@ -1826,7 +1823,7 @@ public class XMLBuilder {
     Document xml = buildStaffNavbar(p, courseID);
     Element root = (Element) xml.getFirstChild();
     Iterator grades =
-        database.gradeHome().findMostRecentByNetAssignmentID(p.getUserID(),
+        database.gradeHome().findMostRecentByNetAssignmentID(p.getNetID(),
             assignID).iterator();
     HashMap gradeMap = new HashMap();
     while (grades.hasNext()) {
@@ -1871,7 +1868,7 @@ public class XMLBuilder {
     GroupLocal group = null;
     if (p.isStudentInCourseByCourseID(courseID)) {
       group =
-          database.groupHome().findByNetIDAssignmentID(p.getUserID(), assignID);
+          database.groupHome().findByNetIDAssignmentID(p.getNetID(), assignID);
     }
     if (group != null) {
       xAssignment.appendChild(GroupXMLBuilder.buildFullSubtree(p, xml, group,
@@ -2150,8 +2147,7 @@ public class XMLBuilder {
    * with the form values they submitted instead of having to retype everything.
    */
   public Document buildErrorAssignmentPage(Principal p,
-      Collection params, long courseID, long assignID) throws FinderException,
-      FileUploadException {
+      Collection params, Course course, Assignment assign) throws FileUploadException {
     Document xml = buildStaffNavbar(p, courseID);
     Map parameterMap = new HashMap();
     DiskFileUpload upload = new DiskFileUpload();
@@ -2482,7 +2478,7 @@ public class XMLBuilder {
    * 
    * @return The root session bean
    */
-  public RootLocal getDatabase() {
+  public CMSRoot getDatabase() {
     return database;
   }
 

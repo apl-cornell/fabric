@@ -106,7 +106,7 @@ public class SystemXMLBuilder
 			if(crsStuds.size() > 0) numCourses++;
 			Iterator iter2 = crsStuds.iterator();
 			while(iter2.hasNext()) //add netIDs; sets contain no duplicates, so dups will be filtered out
-				students.add(((StudentData)iter2.next()).getUserID());
+				students.add(((StudentData)iter2.next()).getNetID());
 		}
 		//number of courses for the currently selected semester
 		xSysData.setAttribute(A_COURSES, Integer.toString(numCourses));

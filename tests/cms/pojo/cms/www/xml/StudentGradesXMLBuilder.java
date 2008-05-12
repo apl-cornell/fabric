@@ -135,7 +135,7 @@ public class StudentGradesXMLBuilder extends XMLBuilder {
     public void addGrades(Principal p, Document xml, String netid, long courseID) throws FinderException {
         Profiler.enterMethod("StudentGradesXMLBuilder.addGrades", "");
     	Element root = (Element) xml.getFirstChild();
-        Iterator grades = database.gradeHome().findRecentByNetIDCourseID(netid, courseID, p.isAdminPrivByCourseID(courseID), p.getUserID()).iterator();
+        Iterator grades = database.gradeHome().findRecentByNetIDCourseID(netid, courseID, p.isAdminPrivByCourseID(courseID), p.getNetID()).iterator();
         Map groups = database.getGroupIDMap(netid);
         while (grades.hasNext()) {
             GradeLocal grade = (GradeLocal) grades.next();

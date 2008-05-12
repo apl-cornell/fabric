@@ -4,16 +4,15 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.ejb.FinderException;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import cms.model.Course;
 import cms.www.util.DateTimeUtil;
 
-import edu.cornell.csuglab.cms.author.Principal;
-import edu.cornell.csuglab.cms.base.*;
-import edu.cornell.csuglab.cms.log.LogDetail;
+import cms.auth.Principal;
+import cms.model.*;
+import cms.log.LogDetail;
 
 /**
  * Builds an XML subtree with information on log search results
@@ -21,7 +20,7 @@ import edu.cornell.csuglab.cms.log.LogDetail;
  * Created 5 / 19 / 05
  * @author Evan
  */
-public class LogXMLBuilder extends XMLBuilder
+public class LogXMLBuilder
 {
 	/**
 	 * Generate an XML subtree with all info on the given Logs and their associated low-level logs
@@ -119,7 +118,7 @@ public class LogXMLBuilder extends XMLBuilder
 	    if (p.isCMSAdmin()) {
 	        courses = database.courseHome().findBySemesterID(curSemester.getSemesterID());
 	    } else {
-	        courses = database.courseHome().findStaffAdminCourses(curSemester.getSemesterID(), p.getUserID());
+	        courses = database.courseHome().findStaffAdminCourses(curSemester.getSemesterID(), p.getNetID());
 	    }
 	    Iterator i = courses.iterator();
 	    while (i.hasNext()) {
@@ -373,7 +372,7 @@ public class LogXMLBuilder extends XMLBuilder
 	    if (p.isCMSAdmin()) {
 	        assigns = database.assignmentHome().findBySemesterID(curSemester.getSemesterID());
 	    } else {
-	        assigns = database.assignmentHome().findByCourseAdmin(curSemester.getSemesterID(), p.getUserID());
+	        assigns = database.assignmentHome().findByCourseAdmin(curSemester.getSemesterID(), p.getNetID());
 	    }
 	    Iterator i = assigns.iterator();
 	    while (i.hasNext()) {
@@ -389,7 +388,7 @@ public class LogXMLBuilder extends XMLBuilder
 	    root.appendChild(logSearchAssigns);
 	}
 	
-	protected void appendAssignments(Principal p, Document xml, long courseID) throws FinderException {
+	protected void appendAssignments(cms.auth.Principal p, Document xml, Course course) {
 	    Collection assigns = database.assignmentHome().findByCourseID(courseID);
 	    Iterator i = assigns.iterator();
 	    Element root = (Element) xml.getFirstChild();

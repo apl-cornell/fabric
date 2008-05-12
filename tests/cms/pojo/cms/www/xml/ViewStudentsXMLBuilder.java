@@ -28,7 +28,7 @@ public class ViewStudentsXMLBuilder extends XMLBuilder {
 		Map groups = database.getGroupIDMapByCourse(courseID);
 		while (students.hasNext()) {
 			StudentLocal student = (StudentLocal) students.next();
-			String userID = student.getUserID();
+			String userID = student.getNetID();
 			String[] name = (String[]) names.get(userID);
 			Element xStudent = xml.createElement(userID);
 			Float totalScore = student.getTotalScore();
@@ -53,7 +53,7 @@ public class ViewStudentsXMLBuilder extends XMLBuilder {
 		boolean seenAssigns = false;
 		while (students.hasNext()) {
 			StudentLocal student = (StudentLocal) students.next();
-			String userID = student.getUserID();
+			String userID = student.getNetID();
 			String[] name = (String[]) names.get(userID);
 			String section = student.getSection();
 			Element xStudent = xml.createElement(userID);

@@ -1,42 +1,43 @@
 package cms.model;
 
-import java.util.Collection;
-
-public class Semester {
+public class GroupMember {
+  public static final String
+    INVITED= "Invited",
+    REJECTED= "Rejected",
+    ACTIVE= "Active";
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private String  name;
-  private boolean hidden;
+  private Group  group;
+  private User   member;
+  private String status;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setName   (final String name)    { this.name   = name;   }
-  public void setHidden (final boolean hidden) { this.hidden = hidden; }
+  public void setGroup  (final Group group)   { this.group  = group;  }
+  public void setMember (final User member)   { this.member = member; }
+  public void setStatus (final String status) { this.status = status; }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public String  getName()   { return this.name;   }
-  public boolean getHidden() { return this.hidden; }
+  public Group  getGroup()  { return this.group;  }
+  public User   getMember() { return this.member; }
+  public String getStatus() { return this.status; }
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Semester(String name) {
-    setName(name);
-    setHidden(false);
-  }
-  
-  public Collection getCourses() {
-    // TODO Auto-generated method stub
-    return null;
+  public GroupMember(Group group, User user, String status) {
+    setGroup(group);
+    setMember(user);
+    setStatus(status);
   }
 }
 

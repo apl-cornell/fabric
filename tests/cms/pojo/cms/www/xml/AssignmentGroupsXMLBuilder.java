@@ -77,7 +77,7 @@ public class AssignmentGroupsXMLBuilder extends XMLBuilder
 		if (fullAccess) {
 			groupmems = database.groupMemberHome().findActiveByAssignmentID(assignmentID).iterator();
 		} else {
-			groupmems = database.groupMemberHome().findAssignedActiveByAssignmentID(p.getUserID(), assignmentID).iterator();
+			groupmems = database.groupMemberHome().findAssignedActiveByAssignmentID(p.getNetID(), assignmentID).iterator();
 		}
 		Set lateGroups = database.getLateGroups(assignmentID);
 		Map groupsMap = database.getGroupsMap(assignmentID);
@@ -172,7 +172,7 @@ public class AssignmentGroupsXMLBuilder extends XMLBuilder
 				Element xAssignedTo = xml.createElementNS(TAG_ASSIGNEDTO + assignedTo.getSubProblemID(), TAG_ASSIGNEDTO);
 			    String[] name = (String[]) staffMap.get(assignedTo.getNetID());
 			    // Set this attribute if the Principal is assigned to grade this group for any subproblem
-				if (p.getUserID().equals(assignedTo.getNetID())) {
+				if (p.getNetID().equals(assignedTo.getNetID())) {
 			        xGroup.setAttribute(A_CANGRADE, "true");
 			    }
 				xAssignedTo.setAttribute(A_SUBPROBID, String.valueOf(assignedTo.getSubProblemID()));
@@ -187,7 +187,7 @@ public class AssignmentGroupsXMLBuilder extends XMLBuilder
 	
 	public void buildGroupGrades(Principal p, long assignmentID, Document xml, Element groupsNode, boolean adminPriv, Map subProbScores) throws  FinderException {
 		Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildGroupGrades", "");
-		Collection grades = database.groupGradeHome().findByGraderAssignmentID(p.getUserID(), assignmentID, adminPriv, subProbScores.size());
+		Collection grades = database.groupGradeHome().findByGraderAssignmentID(p.getNetID(), assignmentID, adminPriv, subProbScores.size());
 		Iterator groupGrades = grades.iterator();
 		AssignmentLocal assignment = database.assignmentHome().findByPrimaryKey(new AssignmentPK(assignmentID));
 		Collection overMaxScore = new ArrayList();

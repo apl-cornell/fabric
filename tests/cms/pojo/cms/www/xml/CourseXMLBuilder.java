@@ -103,7 +103,7 @@ public class CourseXMLBuilder {
       xCourse.setAttribute(XMLBuilder.A_ISVIEWAS, "true");
     }
     
-    Student student = database.getStudent(course, p.getUserID());
+    Student student = database.getStudent(course, p.getNetID());
     if (student.getStatus().equals(Student.ENROLLED)) {
       xCourse.setAttribute(XMLBuilder.A_ISSTUDENT, "true");
       xCourse.setAttribute(XMLBuilder.A_TOTALSCORE, StringUtil.roundToOne(String
@@ -281,7 +281,7 @@ public class CourseXMLBuilder {
         + course);
     Element xCourse = buildBasicPropNode(p, xml, course);
 
-    Student student = database.getStudent(course, p.getUserID());
+    Student student = database.getStudent(course, p.getNetID());
     if (student.getStatus().equals(Student.ENROLLED) &&
         student.getFinalGrade() != null) {
       xCourse.setAttribute(A_FINALGRADE, student.getFinalGrade());
@@ -360,7 +360,7 @@ public class CourseXMLBuilder {
 
     Iterator/*Assignment*/ i = course.getAssignments().iterator();
     Collection/*TODO*/ surveys = new ArrayList();
-    Map/*TODO*/ gradeMap = database.getGradeMap(p.getUserID(), courseID);
+    Map/*TODO*/ gradeMap = database.getGradeMap(p.getNetID(), courseID);
     int count = 1;
     while (i.hasNext()) {
       Assignment assignment = (Assignment) i.next();

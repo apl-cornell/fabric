@@ -78,7 +78,7 @@ public class GroupXMLBuilder extends XMLBuilder
 		while (i.hasNext()) {
 			Element xMember = xml.createElement(TAG_MEMBER);
 			UserLocal member = (UserLocal) i.next();
-			xMember.setAttribute(A_NETID, member.getUserID());
+			xMember.setAttribute(A_NETID, member.getNetID());
 			String name = member.getFirstName();
 			name += name.length() == 0 ? member.getLastName() : " " + member.getLastName();
 			xMember.setAttribute(A_NAME, name);
@@ -100,7 +100,7 @@ public class GroupXMLBuilder extends XMLBuilder
 		while (i.hasNext()) {
 			UserLocal user = (UserLocal)i.next();
 			Element xInvited = xml.createElement(TAG_INVITATION);
-			xInvited.setAttribute(A_NETID, user.getUserID());
+			xInvited.setAttribute(A_NETID, user.getNetID());
 			String name = user.getFirstName();
 			name += name.length() == 0 ? user.getLastName() : " " + user.getLastName();
 			xInvited.setAttribute(A_NAME, name);
@@ -121,7 +121,7 @@ public class GroupXMLBuilder extends XMLBuilder
 		Element xInvitedGroups = xml.createElement(TAG_GROUPSINVITEDTO);
 		AssignmentLocal assignment = database.assignmentHome().findByAssignmentID(assignmentID);
 		Map names = database.getNameMap(assignment.getCourseID());
-		Iterator i = database.groupMemberHome().findInvitersByNetIDAssignmentID(p.getUserID(), assignmentID).iterator();
+		Iterator i = database.groupMemberHome().findInvitersByNetIDAssignmentID(p.getNetID(), assignmentID).iterator();
 		while (i.hasNext()) {
 			GroupMemberLocal inviter = (GroupMemberLocal) i.next();
 			Element xInvite = (Element) xInvitedGroups.getElementsByTagNameNS(TAG_INVITATION + inviter.getGroupID(), TAG_INVITATION).item(0);
@@ -171,7 +171,7 @@ public class GroupXMLBuilder extends XMLBuilder
 		while (users.hasNext()) {
 			UserLocal user = (UserLocal) users.next();
 			String[] name = new String[] {user.getFirstName(), user.getLastName()};
-			names.put(user.getUserID(), name);
+			names.put(user.getNetID(), name);
 		}
 		NodeList groups = xRoot.getElementsByTagName(XMLBuilder.TAG_GROUP);
 		for (int i=0; i < groups.getLength(); i++) {

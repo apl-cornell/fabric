@@ -160,6 +160,10 @@ public class Course {
     // TODO Auto-generated method stub
     return null;
   }
+  public Collection getEmails() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*
