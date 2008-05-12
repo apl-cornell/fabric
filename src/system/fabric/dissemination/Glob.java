@@ -47,34 +47,42 @@ public class Glob {
     return related;
   }
   
+  /** The dissemination level of the glob. 0 is replicated to all nodes. */
   public int level() {
     return level;
   }
   
+  /** Sets the level. */
   public void level(int level) {
     this.level = level;
   }
   
+  /** How many times the object has been accessed since last aggregation. */
   public int frequency() {
     return frequency;
   }
   
+  /** Sets the frequency. */
   public void frequency(int frequency) {
     this.frequency = frequency;
   }
   
+  /** Increments frequency by 1. */
   public void touch() {
     this.frequency++;
   }
   
+  /** The popularity of the glob. An exponential-decayed valued. */
   public int popularity() {
     return popularity;
   }
   
+  /** Sets the popularity. */
   public void popularity(int popularity) {
     this.popularity = popularity;
   }
   
+  /** Whether this is the home node for this glob. */
   public boolean home() {
     return home;
   }

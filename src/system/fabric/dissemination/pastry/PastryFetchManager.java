@@ -15,7 +15,7 @@ public class PastryFetchManager implements FetchManager {
   
   public PastryFetchManager() {
     try {
-      node = new Node();
+      node = new Node();  // start a new pastry node
     } catch (IOException e) {
       throw new InternalError(e);
     }

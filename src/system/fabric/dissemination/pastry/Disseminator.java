@@ -106,6 +106,7 @@ public class Disseminator implements Application {
       AGGREGATION_INTERVAL = params.getLong("aggregation_interval");
     } catch (NumberFormatException e) {}
     
+    // self-scheduled messages for period tasks
     endpoint.scheduleMessage(new ReplicateInterval(), 
         REPLICATION_INTERVAL, REPLICATION_INTERVAL);
     endpoint.scheduleMessage(new AggregateInterval(), 
@@ -196,7 +197,10 @@ public class Disseminator implements Application {
     }
   }
   
-  /** Process a Fetch.Reply. */
+  /** 
+   * Process a Fetch.Reply message. Saves the glob from the reply, and returns
+   * it to the client if it is waiting for this object.
+   */
   protected void fetch(final Fetch.Reply msg) {
     log.fine("Pastry dissem fetch reply");
     forward(msg);  // cache glob
@@ -221,7 +225,10 @@ public class Disseminator implements Application {
     });
   }
 
-  /** Process the Fetch message. */
+  /** 
+   * Process the Fetch message. See if we have the object asked for. If so,
+   * return it to sender via a Fetch.Reply message.
+   */
   protected void fetch(final Fetch msg) {
     process(new Executable() {
       public Object execute() {
@@ -240,20 +247,36 @@ public class Disseminator implements Application {
     });
   }
   
-  /** Reply to a Fetch message with given glob. */
+  /**
+   * Helper function. Reply to a Fetch message with given glob. 
+   */
   protected void reply(Glob g, Fetch msg) {
     g.touch();
     Fetch.Reply r = new Fetch.Reply(msg, g);
     route(null, r, msg.sender());
   }
 
-  /** Called once every replicate interval. */
+  /**
+   * Called once every replicate interval. This is the method responsible for
+   * contacting replication deciders for this node. The deciders then reply
+   * with the globs that they want to replicate to this node. This implements
+   * the pull protocol of beehive, since deciders don't know who they should
+   * replicate to, and depend on those node to contact them. When sending a
+   * replicate message, a list of globs that this node already has is sent to
+   * the decider, so that they are not sent again.
+   */
   protected void replicateInterval() {
     process(new Executable() {
       public Object execute() {
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
         Set<Pair<Core, Long>> skip;
         
+        // get the closest neighbors in the leafset because they are special
+        // cases in the beehive replication protocol. this is because the home
+        // node of a glob might not have the longest matching prefix (e.g.,
+        // 199 might be replicated at 200, but share more digits with 190).
+        // the leafset is used to help get a glob back to the node with the
+        // longest prefix.
         LeafSet ls = node.getLeafSet();
         NodeHandle n1 = ls.get(-1);
         
@@ -298,6 +321,13 @@ public class Disseminator implements Application {
     });
   }
   
+  /**
+   * Builds a set of oids that do not need to be sent again by a decider.
+   * 
+   * @param deciderId Pastry id of the decider.
+   * @param level Level under which globs are asked to be replicated.
+   * @return A set of oids that don't need to be replicated again.
+   */
   private Set<Pair<Core, Long>> skipSet(rice.pastry.Id deciderId, int level) {
     rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
     Set<Pair<Core, Long>> skip = new HashSet<Pair<Core, Long>>();
@@ -315,8 +345,8 @@ public class Disseminator implements Application {
   }
   
   /**
-   * Processes a Replicate message. It sends back to the sender objects that
-   * should be replicated to the sender.
+   * Processes a Replicate message. Sends back to the sender objects that
+   * should be replicated to that node.
    */
   protected void replicate(final Replicate msg) {
     process(new Executable() {
@@ -346,6 +376,8 @@ public class Disseminator implements Application {
             
             globs.put(k, g);
             
+            // XXX hack. limit reply message to 10 globs at a time. don't want
+            // the message to get so large that pastry rejects it.
             if (globs.size() == 10) {
               break;
             }
@@ -362,6 +394,16 @@ public class Disseminator implements Application {
     });
   }
   
+  /**
+   * Determines whether a glob should be replicated from a decider to a
+   * receiver based on the level at which we want to replicate the object.
+   * 
+   * @param deciderId Pastry id of the decider.
+   * @param receiverId Pastry id of the receiving node.
+   * @param oid Object to replicate.
+   * @param level Level at which we want to replicate.
+   * @return true if that object should be replicated from decider to receiver.
+   */
   private boolean shouldReplicate(rice.pastry.Id deciderId, 
       rice.pastry.Id receiverId, rice.pastry.Id oid, int level) {
     if (level != -1) {

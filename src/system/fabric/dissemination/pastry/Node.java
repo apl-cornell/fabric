@@ -25,20 +25,24 @@ public class Node {
   protected Disseminator disseminator;
 
   public Node() throws IOException {
+    // load environment/params file. ".params" is automatically added to the name
     env = new Environment("etc/pastry");
     String b = env.getParameters().getString("bootstrap");
     String[] parts = b.split(":");
     String h = parts.length > 0 ? parts[0] : null;
+    
+    // convert "localhost" into actual host name. needed to work on windows
     h = h.equals("localhost") ? InetAddress.getLocalHost().getHostName() : h;
     int p = parts.length == 2 ? Integer.parseInt(parts[1]) : 3373;
     InetSocketAddress boot = new InetSocketAddress(h, p);
     
+    // use 3373 as default port. should be in params file?
     int port = findFreePort(3373);
     NodeIdFactory idf = new RandomNodeIdFactory(env);
     pnf = new SocketPastryNodeFactory(idf, port, env);
     
     node = pnf.newNode(pnf.getNodeHandle(boot));
-    waitForReady();
+    waitForReady();  // waits until the pastry node is actually set up
 
     disseminator = new Disseminator(node);
   }
