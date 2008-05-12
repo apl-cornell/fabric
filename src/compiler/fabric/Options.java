@@ -30,6 +30,13 @@ public class Options extends polyglot.main.Options {
    * Additional classpath entries for Fabric signatures.
    */
   public List<String> addSigcp;
+  
+  /** Whether to perform optimizations. */
+  public boolean optimize;
+  
+  public static Options global() {
+    return (Options) global;
+  }
 
   public Options(ExtensionInfo extension) {
     super(extension);
@@ -47,6 +54,7 @@ public class Options extends polyglot.main.Options {
     super.setDefaultValues();
     this.fully_qualified_names = true;
     this.signatureMode = false;
+    this.optimize = false;
   }
 
   /*
@@ -68,6 +76,9 @@ public class Options extends polyglot.main.Options {
     } else if (args[index].equals("-addsigcp")) {
       index++;
       this.addSigcp.add(args[index++]);
+    } else if (args[index].equals("-O")) {
+      index++;
+      this.optimize = true;
     } else {
       return super.parseCommand(args, index, source);
     }
@@ -88,6 +99,7 @@ public class Options extends polyglot.main.Options {
         "path for Fabric signatures (e.g. for fabric.lang.Object)");
     usageForFlag(out, "-addsigcp <path>",
         "additional path for Fabric signatures; prefixed to sigcp");
+    usageForFlag(out, "-O", "turn optimizations on");
   }
 
   public String constructSignatureClasspath() {

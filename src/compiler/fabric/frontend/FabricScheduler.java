@@ -24,6 +24,7 @@ import polyglot.visit.InnerClassRewriter;
 import polyglot.visit.LocalClassRemover;
 import polyglot.visit.LoopNormalizer;
 import fabric.ExtensionInfo;
+import fabric.Options;
 import fabric.visit.ArrayInitializerTypeFixer;
 import fabric.visit.AtomicMethodRewriter;
 import fabric.visit.AtomicRewriter;
@@ -228,7 +229,12 @@ public class FabricScheduler extends JLScheduler {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
-        l.add(ReadWriteChecked(job));
+        l.add(WrapInlineables(job));
+        
+        if (Options.global().optimize) {
+          l.add(ReadWriteChecked(job));
+        }
+        
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
       }
