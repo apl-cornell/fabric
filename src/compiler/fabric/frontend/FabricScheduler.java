@@ -92,7 +92,12 @@ public class FabricScheduler extends JLScheduler {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
             List<Goal> l = new ArrayList<Goal>();
-            l.add(TypeCheckedAfterFlatten(job));
+            l.add(TypeChecked(job));
+            
+            if (Options.global().optimize) {
+              l.add(TypeCheckedAfterFlatten(job));
+            }
+            
             return l;
           }
         });
