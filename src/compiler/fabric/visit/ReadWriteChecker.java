@@ -373,6 +373,7 @@ public class ReadWriteChecker extends DataFlow {
     }
   }
   
+  /** The access state of a variable (resident, read, written). */
   public static class State {
     
     private final boolean resident;

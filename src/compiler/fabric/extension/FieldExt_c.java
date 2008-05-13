@@ -16,7 +16,11 @@ import fabric.visit.ProxyRewriter;
 import fabric.visit.ReadWriteChecker.State;
 
 public class FieldExt_c extends ExprExt_c {
-  
+
+  /**
+   * For read/write optimization.
+   * Access state of the target if it is a local variable.
+   */
   private State accessState;
 
   /*

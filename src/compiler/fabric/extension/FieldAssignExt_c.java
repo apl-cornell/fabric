@@ -12,6 +12,10 @@ import fabric.visit.ReadWriteChecker.State;
 
 public class FieldAssignExt_c extends ExprExt_c {
 
+  /**
+   * For read/write optimization.
+   * Access state of the target on the LHS if it is a local variable.
+   */
   private State accessState;
 
   /*
