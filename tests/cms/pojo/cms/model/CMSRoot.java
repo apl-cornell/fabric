@@ -95,6 +95,11 @@ public class CMSRoot {
     // TODO
     throw new UnsupportedOperationException();
   }
+  
+  public Collection/*User*/ getAllUsers() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
   /* This method doesn't seem to work, and doesn't seem to be called in CMS
    * public Collection getNonStudentNetIDs(java.util.Collection netids,long courseID) ;

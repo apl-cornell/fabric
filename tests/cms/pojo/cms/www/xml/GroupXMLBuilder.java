@@ -1,11 +1,8 @@
 package cms.www.xml;
 
-import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import javax.ejb.FinderException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -15,8 +12,8 @@ import cms.www.util.DateTimeUtil;
 import cms.www.util.FileUtil;
 import cms.www.util.Profiler;
 
-import edu.cornell.csuglab.cms.author.Principal;
-import edu.cornell.csuglab.cms.base.*;
+import cms.auth.Principal;
+import cms.model.*;
 
 /**
  * Builds an XML subtree with information about a given group 
@@ -164,7 +161,7 @@ public class GroupXMLBuilder extends XMLBuilder
 		return xSubmissions;
 	}
 	
-	public void addGroupMemberNames(Document xml, long courseID) throws FinderException {
+	public void addGroupMemberNames(Document xml, Course course) {
 		Element xRoot = (Element) xml.getFirstChild();
 		Iterator users = database.userHome().findByCourseID(courseID).iterator();
 		HashMap names = new HashMap();

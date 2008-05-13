@@ -259,6 +259,11 @@ public class Assignment {
     // TODO Auto-generated method stub
     return null;
   }
+
+  public Group findGroup(User user) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

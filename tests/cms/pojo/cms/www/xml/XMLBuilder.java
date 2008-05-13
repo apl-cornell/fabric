@@ -489,6 +489,8 @@ public class XMLBuilder {
   LogXMLBuilder          logXMLBuilder;
   ViewStudentsXMLBuilder viewStudentsXMLBuilder;
   ScheduleXMLBuilder     scheduleXMLBuilder;
+  GradingXMLBuilder      gradingXMLBuilder;
+  GroupXMLBuilder        groupXMLBuilder;
 
   public XMLBuilder(CMSRoot database) {
     this.database             = database;
@@ -496,6 +498,7 @@ public class XMLBuilder {
     this.assignmentXMLBuilder = new AssignmentXMLBuilder(this);
     this.systemXMLBuilder     = new SystemXMLBuilder(this);
     this.studentXMLBuilder    = new StudentXMLBuilder(this);
+    // TODO
   }
   
   public Document buildHomepage() throws Exception {
