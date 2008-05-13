@@ -11,6 +11,7 @@ import java.util.Stack;
 import polyglot.ast.Call;
 import polyglot.ast.CodeDecl;
 import polyglot.ast.ConstructorCall;
+import polyglot.ast.ConstructorDecl;
 import polyglot.ast.Expr;
 import polyglot.ast.Field;
 import polyglot.ast.FieldAssign;
@@ -46,11 +47,11 @@ import fabric.types.FabricTypeSystem;
  * @author xinz
  */
 public class ReadWriteChecker extends DataFlow {
+
+  private final FabricTypeSystem ts;
   
   private Stack<Atomic> atomics;
   private Map<Node, Atomic> atomicMap;
-  
-  private final FabricTypeSystem ts;
   
   public ReadWriteChecker(Job job, TypeSystem ts, NodeFactory nf) {
     super(job, ts, nf, true);
@@ -91,7 +92,11 @@ public class ReadWriteChecker extends DataFlow {
 
   @Override
   protected Item createInitialItem(FlowGraph graph, Term node, boolean entry) {
-    return DataFlowItem.BOTTOM;
+    if (node instanceof ConstructorDecl) {
+      return DataFlowItem.BOTTOM_C;
+    } else {
+      return DataFlowItem.BOTTOM;
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -114,7 +119,7 @@ public class ReadWriteChecker extends DataFlow {
       }
     }
     
-    return out != null ? out : DataFlowItem.BOTTOM;
+    return out;
   }
 
   @SuppressWarnings("unchecked")
@@ -184,7 +189,7 @@ public class ReadWriteChecker extends DataFlow {
       // call (that is, this(...) or super(...)), so we basically start from
       // bottom after the constructor call.
       if (n instanceof ConstructorCall) {
-        out = DataFlowItem.BOTTOM;
+        out = DataFlowItem.BOTTOM_C;
       }
     }
     
@@ -292,7 +297,7 @@ public class ReadWriteChecker extends DataFlow {
   
   private DataFlowItem atomic(DataFlowItem in) {
     DataFlowItem out = new DataFlowItem(in);
-    out.killWritten();
+    out.atomic();
     return out;
   }
 
@@ -400,17 +405,27 @@ public class ReadWriteChecker extends DataFlow {
   
   protected static class DataFlowItem extends DataFlow.Item {
     
+    /** Bottom item. No reads or writes, only 'this' resident. */
     public static final DataFlowItem BOTTOM = new DataFlowItem();
+    
+    /** Initial item for constructors. 'this' resident, read, and written. */
+    public static final DataFlowItem BOTTOM_C = new DataFlowItem(true);
     
     // in these sets, null means the 'this' pointer
     private final Set<LocalInstance> resident;
     public final Set<LocalInstance> read;
     public final Set<LocalInstance> written;
     
-    public DataFlowItem() {
+    private DataFlowItem() {
       resident = Collections.singleton(null);
       read = Collections.emptySet();
       written = Collections.emptySet();
+    }
+    
+    private DataFlowItem(boolean ctor) {
+      resident = Collections.singleton(null);
+      read = Collections.singleton(null);
+      written = Collections.singleton(null);
     }
     
     public DataFlowItem(DataFlowItem i) {
@@ -420,46 +435,54 @@ public class ReadWriteChecker extends DataFlow {
     }
     
     /** Destructive meet of this item with another. */
-    public void meet(DataFlowItem i) {
+    public DataFlowItem meet(DataFlowItem i) {
       resident.retainAll(i.resident);
       read.retainAll(i.read);
       written.retainAll(i.written);
+      return this;
     }
     
     /** Destructive add of a local instance to resident. */
-    public void reside(LocalInstance l) {
+    public DataFlowItem reside(LocalInstance l) {
       resident.add(l);
+      return this;
     }
     
     /** Destructive add of a local instance to read. */
-    public void read(LocalInstance l) {
+    public DataFlowItem read(LocalInstance l) {
       resident.add(l);
       read.add(l);
+      return this;
     }
     
     /** Destructive add of a local instance to written. */
-    public void write(LocalInstance l) {
+    public DataFlowItem write(LocalInstance l) {
       resident.add(l);
       written.add(l);
+      return this;
     }
     
-    public void alloc(LocalInstance l) {
+    /** Destructive update of local instance that is assigned a new object. */
+    public DataFlowItem alloc(LocalInstance l) {
       kill(l);
       read.add(l);
       written.add(l);
+      return this;
     }
     
-    public void all(LocalInstance l) {
+    /** Destructive add of local instance to resident, read, and written. */
+    public DataFlowItem all(LocalInstance l) {
       resident.add(l);
       read.add(l);
       written.add(l);
+      return this;
     }
     
     /**
      * Destructive update for a copy operation. For the statement to = from,
      * we use information about from to set the state of to.
      */
-    public void copy(LocalInstance to, LocalInstance from, DataFlowItem in) {
+    public DataFlowItem copy(LocalInstance to, LocalInstance from, DataFlowItem in) {
       kill(to);
       
       if (in.read.contains(from)) {
@@ -469,18 +492,24 @@ public class ReadWriteChecker extends DataFlow {
       if (in.written.contains(from)) {
         written.add(to);
       }
+      
+      return this;
     }
     
     /** Destructive kill of local instance l. */
-    public void kill(LocalInstance l) {
+    public DataFlowItem kill(LocalInstance l) {
       resident.remove(l);
       read.remove(l);
       written.remove(l);
+      return this;
     }
     
-    /** Destructive remove of all writes. */
-    public void killWritten() {
+    /**
+     * Destructive update on entering a (sub-)atomic block. Removes all writes.
+     */
+    public DataFlowItem atomic() {
       written.clear();
+      return this;
     }
     
     /** Returns a state object describing local instance l. */
