@@ -3,7 +3,7 @@ package cms.model;
 import java.util.Date;
 
 public class RegradeRequest {
-  // TODO
+
   public static final String
     PENDING= "Pending",
     REGRADED= "Regraded";

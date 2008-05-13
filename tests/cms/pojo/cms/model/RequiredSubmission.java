@@ -1,11 +1,55 @@
 package cms.model;
 
 public class RequiredSubmission {
-  // TODO
-  
+
+  public static final String ANY_TYPE = "accept any";
+  public static final String MATCHING_TYPE = "tgz";
+
+  //////////////////////////////////////////////////////////////////////////////
+  // private members                                                          //
+  //////////////////////////////////////////////////////////////////////////////
+
+  private Assignment assignment;
+  private String     submissionName;
+  private int        maxSize;
+  private boolean    hidden;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public setters                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public void setAssignment     (final Assignment assignment)     { this.assignment     = assignment;     }
+  public void setSubmissionName (final String submissionName)     { this.submissionName = submissionName; }
+  public void setMaxSize        (final int maxSize)               { this.maxSize        = maxSize;        }
+  public void setHidden         (final boolean hidden)            { this.hidden         = hidden;         }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public getters                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public Assignment getAssignment()     { return this.assignment;     }
+  public String     getSubmissionName() { return this.submissionName; }
+  public int        getMaxSize()        { return this.maxSize;        }
+  public boolean    getHidden()         { return this.hidden;         }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public constructors                                                      //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public RequiredSubmission(Assignment assign, String name, int maxSize) {
+    setAssignment(assign);
+    setSubmissionName(name);
+    setMaxSize(maxSize);
+    setHidden(false);
+  }
+
   public boolean isHidden() {
     // TODO Auto-generated method stub
     return false;
   }
 
 }
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
