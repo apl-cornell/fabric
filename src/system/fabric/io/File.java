@@ -1,7 +1,5 @@
 package fabric.io;
 
-import fabric.client.Core;
-
 public interface File {
   
   public boolean exists();
