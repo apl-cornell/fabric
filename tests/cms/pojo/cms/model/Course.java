@@ -3,6 +3,7 @@ package cms.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 
 public class Course {
 
@@ -172,6 +173,7 @@ public class Course {
     // TODO Auto-generated method stub
     return null;
   }
+  
   public Collection/*Grade*/ getTotals() {
     // TODO Auto-generated method stub
     // See gradeHome().findTotalsByCourseID
@@ -182,7 +184,13 @@ public class Course {
     // TODO Auto-generated method stub
     return null;
   }
+  
   public Collection/*Announcement*/ findHiddenAnnouncements() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
+  public Collection/*Staff*/ getStaff() {
     // TODO Auto-generated method stub
     return null;
   }

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Set;
 
 public class Assignment {
 
@@ -227,6 +228,36 @@ public class Assignment {
   public Collection/*Group*/ getGradedGroups(Collection/*Group*/ groups) {
     // TODO
     throw new UnsupportedOperationException();
+  }
+
+  public Set/*RegradeRequest*/ findRegradeRequests() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Set/*GroupGrades*/ findGroupGradesByGrader(User user, boolean adminPriv, int i) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public static Set/*GroupAssignedTo*/ getGroupAssignedTos() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Set/*GroupMember*/ findActiveGroupMembers() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Set/*GroupMember*/ findActiveAssignedGroupMembers(User user) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Set/*Group*/ findLateGroups() {
+    // TODO Auto-generated method stub
+    return null;
   }
 }
 

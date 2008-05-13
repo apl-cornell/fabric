@@ -48,4 +48,9 @@ public class Principal {
     // TODO Auto-generated method stub
     return false;
   }
+
+  public String getNetID() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }

@@ -63,6 +63,11 @@ public class Group {
     setFileCounter(1);
     setLatestSubmission(null);
   }
+  
+  public Student findStudent(User member) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*
