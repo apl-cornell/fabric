@@ -1,6 +1,12 @@
 package cms.model;
 
-public class User {
+import java.util.Collection;
+
+import cms.auth.Principal;
+
+// TODO: not sure if User should extend Principal
+// TODO: figure out when to use what
+public class User extends Principal {
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -31,6 +37,21 @@ public class User {
   public String getLastName()  { return this.lastName;  }
   public String getCUID()      { return this.CUID;      }
   public String getCollege()   { return this.college;   }
+  
+  
+  //////////////////////////////////////////////////////////////////////////////
+  // public methods                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public Collection/*Course*/ findStaffCourses() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
+  public Collection/*Course*/ findStaffCoursesBySemester(Semester semester) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
 }
 
