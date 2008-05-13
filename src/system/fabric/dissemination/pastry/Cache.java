@@ -16,7 +16,7 @@ import fabric.common.Pair;
 import fabric.dissemination.Glob;
 
 /**
- * The cache objects used by the disseminator to store globs. Essentially a
+ * The cache object used by the disseminator to store globs. Essentially a
  * hashtable specialized for globs; it also fetches globs directly from cores
  * when needed.
  */
@@ -104,12 +104,24 @@ public class Cache {
     }
   }
   
+  /**
+   * Returns a snapshot of the keys (oids) currently in the cache. This set
+   * is NOT backed by the underlying map. If new keys are inserted or removed
+   * from the cache, they will not be reflected by the set returned. However,
+   * no synchronization is needed for working with the set.
+   */
   public Set<Pair<Core, Long>> keys() {
     synchronized (map) {
       return new HashSet<Pair<Core, Long>>(map.keySet());
     }
   }
   
+  /**
+   * Returns a snapshot set of keys (oids) currently in the cache. The keys are
+   * sorted in descending order by the popularity of the corresponding objects.
+   * Like {@code keys()}, the returned set is not backed by the underlying
+   * table.
+   */
   public List<Pair<Core, Long>> sortedKeys() {
     List<Pair<Core, Long>> k;
     

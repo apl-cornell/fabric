@@ -107,7 +107,8 @@ public class Fetch implements RawMessage {
   }
   
   /**
-   * A reply to a Fetch message.
+   * A reply to a Fetch message. Should carry the object requested by the
+   * original fetch message.
    */
   public static class Reply implements RawMessage {
     

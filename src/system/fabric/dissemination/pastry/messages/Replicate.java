@@ -91,7 +91,9 @@ public class Replicate implements RawMessage {
   }
 
   /**
-   * A reply to a replicate message, carrying the requested objects.
+   * A reply to a replicate message, carrying the requested objects. This is
+   * sent by a decider node which decides what objects the sender of the
+   * replicate message should receive base on object popularity.
    */
   public static class Reply implements RawMessage {
     

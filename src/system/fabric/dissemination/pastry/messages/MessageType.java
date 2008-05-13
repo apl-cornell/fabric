@@ -1,5 +1,9 @@
 package fabric.dissemination.pastry.messages;
 
+/**
+ * Identifiers for each message sent over the network. Pastry uses shorts as
+ * message type ids.
+ */
 public class MessageType {
   
   public static final short FETCH = 1;

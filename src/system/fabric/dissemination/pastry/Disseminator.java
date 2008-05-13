@@ -493,8 +493,13 @@ public class Disseminator implements Application {
   }
 
   public void update(NodeHandle handle, boolean joined) {
+    // nothing to do
   }
   
+  /**
+   * Custom message deserializer for messages used by the pastry diseemination
+   * node.
+   */
   private class Deserializer implements MessageDeserializer {
 
     public Message deserialize(InputBuffer buf, short type, int priority,

@@ -7,7 +7,8 @@ import rice.p2p.commonapi.rawserialization.OutputBuffer;
 
 /**
  * A class to merge DataOutput and OutputBuffer. Unfortunately, pastry
- * introduced the OutputBuffer interface which is almost like a DataOutput.
+ * introduced the OutputBuffer interface which is almost like a DataOutput, but
+ * isn't.
  */
 public class DataOutputBuffer implements DataOutput, OutputBuffer {
   

@@ -8,7 +8,7 @@ import rice.p2p.commonapi.rawserialization.InputBuffer;
 /**
  * A class to merge DataInput and InputBuffer. Unfortunately, pastry had to
  * introduce the InputBuffer interface, which is essentially identical to
- * DataInput.
+ * DataInput, but isn't.
  */
 public class DataInputBuffer implements DataInput, InputBuffer {
   

@@ -9,6 +9,13 @@ import fabric.common.InternalError;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 
+/**
+ * A PastryFetchManager performs object fetching by consulting a pastry
+ * dissemination network to see if the object is available there. When an
+ * instance of PastryFetchManager is created, it starts a pastry node. That
+ * node will attempt to join a pastry network by contacting a bootstrap node.
+ * This is set in the pastry configuration file (by default etc/pastry.params).
+ */
 public class PastryFetchManager implements FetchManager {
   
   private Node node;
