@@ -10,7 +10,6 @@ public class Group {
   //////////////////////////////////////////////////////////////////////////////
   
   private Assignment assignment;
-  private Group      group;
   private Date       latestSubmission;
   private Date       extension;
   private int        fileCounter;
@@ -22,7 +21,6 @@ public class Group {
   //////////////////////////////////////////////////////////////////////////////
   
   public void setAssignment           (final Assignment assignment)           { this.assignment           = assignment;           }
-  public void setGroup                (final Group group)                     { this.group                = group;                }
   public void setLatestSubmission     (final Date latestSubmission)           { this.latestSubmission     = latestSubmission;     }
   public void setExtension            (final Date extension)                  { this.extension            = extension;            }
   public void setFileCounter          (final int fileCounter)                 { this.fileCounter          = fileCounter;          }
@@ -34,7 +32,6 @@ public class Group {
   //////////////////////////////////////////////////////////////////////////////
   
   public Assignment getAssignment()           { return this.assignment;           }
-  public Group      getGroup()                { return this.group;                }
   public Date       getLatestSubmission()     { return this.latestSubmission;     }
   public Date       getExtension()            { return this.extension;            }
   public int        getFileCounter()          { return this.fileCounter;          }
