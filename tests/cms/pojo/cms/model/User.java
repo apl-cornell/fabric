@@ -52,7 +52,23 @@ public class User extends Principal {
     // TODO Auto-generated method stub
     return null;
   }
+  
+  public Collection/*Course*/ findStudentCourses() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
+  public Collection/*Course*/ findStudentCoursesBySemester(Semester semester) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
+  public String canonicalName() {
+    if (getFirstName().length() > 0)
+      return getFirstName() + " " + getLastName();
+    else
+      return getLastName();
+  }
 }
 
 /*

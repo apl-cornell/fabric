@@ -8,10 +8,10 @@ import java.util.Iterator;
 
 public class Assignment {
 
-  public static final int OPEN   = 0;
-  public static final int CLOSED = 1;
-  public static final int HIDDEN = 2;
-  public static final int GRADED = 3;
+  public static final String OPEN   = "Open";
+  public static final String CLOSED = "Closed";
+  public static final String HIDDEN = "Hidden";
+  public static final String GRADED = "Graded";
   
   public static final int ASSIGNMENT = 0;
   public static final int SURVEY     = 1;
@@ -24,7 +24,7 @@ public class Assignment {
   private Course course;
   private String name, nameShort;
   private String description;
-  private int    status;
+  private String status;
 
   private float   weight, maxScore;
   private boolean studentRegrades;
@@ -84,7 +84,7 @@ public class Assignment {
   public void setName             (final String name)              { this.name             = name;             }
   public void setNameShort        (final String nameShort)         { this.nameShort        = nameShort;        }
   public void setDescription      (final String description)       { this.description      = description;      }
-  public void setStatus           (final int status)               { this.status           = status;           }
+  public void setStatus           (final String status)            { this.status           = status;           }
   public void setWeight           (final float weight)             { this.weight           = weight;           }
   public void setMaxScore         (final float maxScore)           { this.maxScore         = maxScore;         }
   public void setStudentRegrades  (final boolean studentRegrades)  { this.studentRegrades  = studentRegrades;  }
@@ -129,7 +129,7 @@ public class Assignment {
   public String  getName()             { return this.name;             }
   public String  getNameShort()        { return this.nameShort;        }
   public String  getDescription()      { return this.description;      }
-  public int     getStatus()           { return this.status;           }
+  public String  getStatus()           { return this.status;           }
   public float   getWeight()           { return this.weight;           }
   public float   getMaxScore()         { return this.maxScore;         }
   public boolean getStudentRegrades()  { return this.studentRegrades;  }

@@ -10,7 +10,7 @@ public class Announcement {
   //////////////////////////////////////////////////////////////////////////////
 
   private Course  course;
-  private String  author;
+  private User    author;
   private Date    posted;
   private String  text;
   private String  editInfo;
@@ -28,7 +28,7 @@ public class Announcement {
       course.announcements.add(this);
   }
 
-  public void setAuthor   (final String author)    { this.author   = author;   }
+  public void setAuthor   (final User author)      { this.author   = author;   }
   public void setPosted   (final Date posted)      { this.posted   = posted;   }
   public void setText     (final String text)      { this.text     = text;     }
   public void setEditInfo (final String editInfo)  { this.editInfo = editInfo; }
@@ -39,7 +39,7 @@ public class Announcement {
   //////////////////////////////////////////////////////////////////////////////
 
   public Course  getCourse()   { return this.course;   }
-  public String  getAuthor()   { return this.author;   }
+  public User    getAuthor()   { return this.author;   }
   public Date    getPosted()   { return this.posted;   }
   public String  getText()     { return this.text;     }
   public String  getEditInfo() { return this.editInfo; }
@@ -54,7 +54,7 @@ public class Announcement {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Announcement(Course course, String author, String text) {
+  public Announcement(Course course, User author, String text) {
     this.setCourse (course);
     this.setAuthor (author);
     this.setText   (text);

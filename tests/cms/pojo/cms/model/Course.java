@@ -177,6 +177,15 @@ public class Course {
     // See gradeHome().findTotalsByCourseID
     return null;
   }
+  
+  public Collection/*Announcement*/ getAnnouncements() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Announcement*/ findHiddenAnnouncements() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

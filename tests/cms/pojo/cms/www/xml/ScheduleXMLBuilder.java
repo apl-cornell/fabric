@@ -5,10 +5,9 @@
  */
 package cms.www.xml;
 
-import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Collection;
 import java.util.Iterator;
-import javax.ejb.FinderException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -16,17 +15,17 @@ import org.w3c.dom.Element;
 import cms.www.util.DateTimeUtil;
 import cms.www.util.Util;
 
-import edu.cornell.csuglab.cms.author.Principal;
-import edu.cornell.csuglab.cms.base.*;
+import cms.auth.Principal;
+import cms.model.*;
 
 /**
  * Builds a subtree containing information about a course schedule.
  * This subtree will be placed into the standard assignment subtree. 
  */
-public class ScheduleXMLBuilder extends XMLBuilder {
+public class ScheduleXMLBuilder {
 	public Long zero = new Long(0);
 
-	public Element buildScheduleSubtree(Principal p, Document xml, AssignmentLocal assignment) throws FinderException {
+	public Element buildScheduleSubtree(Principal p, Document xml, Assignment assignment) {
 		if (!assignment.getScheduled()){
 			// return a blank subtree
 			Element xSchedule = xml.createElement(XMLBuilder.TAG_SCHEDULE);

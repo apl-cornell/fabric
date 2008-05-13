@@ -168,7 +168,7 @@ public class DateTimeUtil
 	 * @param due date to count to
 	 * @return A string representing the difference
 	 */
-	public static String formatCountdown(Timestamp date, Timestamp due) {
+	public static String formatCountdown(Date date, Date due) {
 		long diff = due.getTime() - date.getTime(); //in milliseconds
 		if (diff < 0) return SHORTMONTH_DAY.format(due);
 		diff /= 1000; //ms -> sec
@@ -184,7 +184,7 @@ public class DateTimeUtil
 		return countdown + " (" + SHORTMONTH_DAY.format(due) + ")";
 	}
 	
-	public static String formatDate(Timestamp date) {
+	public static String formatDate(Date date) {
 	    return DATE_TIME_AMPM.format(date);
 	}
 }

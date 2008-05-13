@@ -488,6 +488,7 @@ public class XMLBuilder {
   StudentXMLBuilder      studentXMLBuilder;
   LogXMLBuilder          logXMLBuilder;
   ViewStudentsXMLBuilder viewStudentsXMLBuilder;
+  ScheduleXMLBuilder     scheduleXMLBuilder;
 
   public XMLBuilder(CMSRoot database) {
     this.database             = database;
