@@ -13,7 +13,7 @@ public class XMLUtil
 	 * @return A CMSNodeList of Elements. CMSNodeList extends Vector (making it writable)
 	 * and implements NodeList (to make it interchangeable with Node.getChildNodes() ).
 	 */
-	public CMSNodeList getChildrenByTagName(Element element, String tag)
+	public static CMSNodeList getChildrenByTagName(Element element, String tag)
 	{
 		NodeList children = element.getChildNodes();
 		CMSNodeList result = new CMSNodeList();
@@ -29,7 +29,7 @@ public class XMLUtil
 	 * @param tag
 	 * @return The first child Element if there is one; else null
 	 */
-	public Element getFirstChildByTagName(Element element, String tag)
+	public static Element getFirstChildByTagName(Element element, String tag)
 	{
 		NodeList n= getChildrenByTagName(element, tag);
 		if (n.getLength() == 0)
@@ -46,7 +46,7 @@ public class XMLUtil
 	 * @return A CMSNodeList of Elements. CMSNodeList extends Vector (making it writable)
 	 * and implements NodeList (to make it interchangeable with Node.getChildNodes() ).
 	 */
-	public CMSNodeList getChildrenByAttributeValue(Element element, String attribute, String value)
+	public static CMSNodeList getChildrenByAttributeValue(Element element, String attribute, String value)
 	{
 		NodeList children = element.getChildNodes();
 		CMSNodeList result = new CMSNodeList();
@@ -56,7 +56,7 @@ public class XMLUtil
 		return result;
 	}
 	
-	public CMSNodeList getChildrenByTagNameAndAttributeValue(Element element, String tag, String attribute, String value)
+	public static CMSNodeList getChildrenByTagNameAndAttributeValue(Element element, String tag, String attribute, String value)
 	{
 		NodeList children = element.getChildNodes();
 		CMSNodeList result = new CMSNodeList();
@@ -67,7 +67,7 @@ public class XMLUtil
 		return result;
 	}
 	
-	public CMSNodeList getChildrenByTagNameAndAttributeValueR(Element element, String tag, String attribute, String value)
+	public static CMSNodeList getChildrenByTagNameAndAttributeValueR(Element element, String tag, String attribute, String value)
 	{
 		NodeList children = element.getElementsByTagName(tag);
 		CMSNodeList result = new CMSNodeList();

@@ -3,6 +3,7 @@ package cms.model;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 
 public class Group {
   //////////////////////////////////////////////////////////////////////////////
@@ -62,6 +63,20 @@ public class Group {
   }
   
   public Student findStudent(User member) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Comment*/ getComments() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
+  public Collection/*RegradeRequest*/ getRegradeRequests() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
+  public Collection/*SubmittedFile*/ getSubmittedFiles() {
     // TODO Auto-generated method stub
     return null;
   }

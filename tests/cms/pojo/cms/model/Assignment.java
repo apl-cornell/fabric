@@ -264,6 +264,11 @@ public class Assignment {
     // TODO Auto-generated method stub
     return null;
   }
+
+  public Collection/*GroupAssignedTo*/ findGroupAssignedTos(User user) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

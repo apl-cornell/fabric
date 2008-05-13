@@ -1,5 +1,6 @@
 package cms.model;
 
+import java.util.Collection;
 import java.util.Date;
 
 public class Comment {
@@ -44,6 +45,16 @@ public class Comment {
     setGroup(group);
     setDateEntered(new Date());
     setHidden(false);
+  }
+  
+  public Collection/*RegradeRequest*/ findRequests() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
+  public Collection/*CommentFiles*/ getFiles() {
+    // TODO Auto-generated method stub
+    return null;
   }
 }
 
