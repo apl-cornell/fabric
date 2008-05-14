@@ -94,7 +94,7 @@ public class FabricScheduler extends JLScheduler {
             List<Goal> l = new ArrayList<Goal>();
             l.add(TypeChecked(job));
             
-            if (Options.global().optimize) {
+            if (Options.global().optLevel > 0) {
               l.add(TypeCheckedAfterFlatten(job));
             }
             
@@ -236,7 +236,7 @@ public class FabricScheduler extends JLScheduler {
         List<Goal> l = new ArrayList<Goal>();
         l.add(WrapInlineables(job));
         
-        if (Options.global().optimize) {
+        if (Options.global().optLevel > 0) {
           l.add(ReadWriteChecked(job));
         }
         

@@ -32,7 +32,7 @@ public class Options extends polyglot.main.Options {
   public List<String> addSigcp;
   
   /** Whether to perform optimizations. */
-  public boolean optimize;
+  public int optLevel;
   
   public static Options global() {
     return (Options) global;
@@ -54,7 +54,7 @@ public class Options extends polyglot.main.Options {
     super.setDefaultValues();
     this.fully_qualified_names = true;
     this.signatureMode = false;
-    this.optimize = false;
+    this.optLevel = 0;
   }
 
   /*
@@ -76,9 +76,15 @@ public class Options extends polyglot.main.Options {
     } else if (args[index].equals("-addsigcp")) {
       index++;
       this.addSigcp.add(args[index++]);
-    } else if (args[index].equals("-O")) {
+    } else if (args[index].startsWith("-O")) {
+      if (args[index].length() == 2) {
+        this.optLevel = Integer.MAX_VALUE;
+      } else {
+        try {
+          this.optLevel = Integer.parseInt(args[index].substring(2));
+        } catch (NumberFormatException e) {}
+      }
       index++;
-      this.optimize = true;
     } else {
       return super.parseCommand(args, index, source);
     }

@@ -296,7 +296,7 @@
   depends="init,fabric-compiler,fabric-signatures,client,io">
     <mkdir dir="${runtime.classes}" />
   	
-    <condition property="runtime.opt" value="">
+    <condition property="runtime.opt" value="-O0">
       <not><isset property="runtime.opt" /></not>
     </condition>
     
