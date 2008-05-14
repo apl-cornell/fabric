@@ -186,6 +186,8 @@ public class Disseminator implements Application {
     
     synchronized (f) {
       if (f.reply() == null) {
+        // XXX hack: wait at most 1 second for dissemination network. after
+        // that, we will revert to direct core fetch
         try { f.wait(1000); } catch (InterruptedException e) {}
       }
       
@@ -203,7 +205,7 @@ public class Disseminator implements Application {
    */
   protected void fetch(final Fetch.Reply msg) {
     log.fine("Pastry dissem fetch reply");
-    forward(msg);  // cache glob
+    forward(msg);  // caches glob
     
     process(new Executable() {
       public Object execute() {
@@ -295,9 +297,10 @@ public class Disseminator implements Application {
         }
         
         RoutingTable rt = node.getRoutingTable();
-        int k = rt.numRows();
+        int numDigits = rt.numRows();
 
-        for (int i = 0; i < k; i++) {
+        // find deciders for each replication level
+        for (int i = 0; i < numDigits; i++) {
           int d = me.getDigit(i, rt.baseBitLength());
 
           for (int j = 0; j < rt.numColumns(); j++) {
@@ -305,12 +308,15 @@ public class Disseminator implements Application {
               continue;
             }
 
+            // rs contains possible deciders for level numDigits - i - 1, when
+            // the next digit that differs is j
             RouteSet rs = rt.getRouteSet(i, j);
+            int level = numDigits - i - 1;
 
             if (rs != null && rs.size() > 0) {
               NodeHandle n = rs.closestNode();
-              skip = skipSet((rice.pastry.Id) n.getId(), k - i - 1);
-              Replicate msg = new Replicate(localHandle(), k - i - 1, skip);
+              skip = skipSet((rice.pastry.Id) n.getId(), level);
+              Replicate msg = new Replicate(localHandle(), level, skip);
               route(null, msg, n);
             }
           }
