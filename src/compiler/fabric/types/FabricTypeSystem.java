@@ -6,7 +6,7 @@ import polyglot.types.*;
 public interface FabricTypeSystem extends TypeSystem {
 
   // TODO: fabric.client or fabric.lang?
-  /** return the ClassType corresponding to fabric.client.TransactionManager */
+  /** return the ClassType corresponding to fabric.client.transaction.TransactionManager */
   ClassType TransactionManager();
 
   /** The ClassType of fabric.lang.Object. */

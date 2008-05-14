@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import fabric.client.Core;
-import fabric.client.TransactionManager;
+import fabric.client.transaction.TransactionManager;
 import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 import fabric.common.Util;

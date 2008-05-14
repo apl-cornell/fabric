@@ -12,7 +12,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
     FabricTypeSystem {
 
   public ClassType TransactionManager() {
-    return load("fabric.client.TransactionManager");
+    return load("fabric.client.transaction.TransactionManager");
   }
 
   public ClassType FObject() {

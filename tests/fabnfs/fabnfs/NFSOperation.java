@@ -17,10 +17,10 @@ class NFSOperation extends java.lang.Object  implements Runnable, NFSConsts, RPC
 	    //  next.xid);
             
             // wrapping this up in a transaction of its own
-            fabric.client.TransactionManager.getInstance().startTransaction();
+            fabric.client.transaction.TransactionManager.getInstance().startTransaction();
 	    handler.Run(next.port, next.xid,
 			next.procedure, next.packet);
-            fabric.client.TransactionManager.getInstance().commitTransaction();
+            fabric.client.transaction.TransactionManager.getInstance().commitTransaction();
             
 	}
     }

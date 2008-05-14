@@ -3,6 +3,7 @@ package fabric.client;
 import java.util.Collection;
 import java.util.logging.Logger;
 
+import fabric.client.transaction.TransactionManager;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;

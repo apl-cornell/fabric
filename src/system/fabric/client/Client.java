@@ -29,6 +29,7 @@ import javax.net.ssl.X509KeyManager;
 
 import com.sun.org.apache.xalan.internal.xsltc.cmdline.getopt.GetOpt;
 
+import fabric.client.transaction.TransactionManager;
 import fabric.common.InternalError;
 import fabric.common.Resources;
 import fabric.dissemination.FetchManager;

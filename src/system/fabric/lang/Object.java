@@ -8,8 +8,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import fabric.client.Core;
-import fabric.client.TransactionManager;
 import fabric.client.UnreachableCoreException;
+import fabric.client.transaction.Log;
+import fabric.client.transaction.ReadMapEntry;
+import fabric.client.transaction.TransactionManager;
 import fabric.common.FetchException;
 import fabric.common.InternalError;
 import fabric.common.Pair;
@@ -175,17 +177,17 @@ public interface Object {
      * The unique running transaction that can write to the object, or null if
      * none.  (This is either null or holds the same value as $writeLockHolder.
      */
-    public TransactionManager.Log $writer;
+    public Log $writer;
     
     /**
      * The innermost transaction that is holding a write lock on the object.
      */
-    public TransactionManager.Log $writeLockHolder;
+    public Log $writeLockHolder;
 
     /**
      * Any transaction that has logged a read of the object, or null if none.
      */
-    public TransactionManager.Log $reader;
+    public Log $reader;
 
     /**
      * Modification log. Holds the state of the object at the beginning of the
@@ -200,9 +202,14 @@ public interface Object {
      * exactly when there is an entry in the global read list for this object
      * (which occurs exactly when the object has a reader).
      * 
-     * @see fabric.client.TransactionManager#readList
+     * @see fabric.client.transaction.TransactionManager#readList
      */
-    public TransactionManager.ReadListEntry $readListEntry;
+    public ReadMapEntry $readListEntry;
+    
+    /**
+     * The number of threads waiting on this object.
+     */
+    public int $numWaiting;
 
     /**
      * A private constructor for initializing transaction-management state.
@@ -215,6 +222,7 @@ public interface Object {
       this.$writeLockHolder = null;
       this.$reader = null;
       this.$history = null;
+      this.$numWaiting = 0;
       this.$readListEntry = TransactionManager.getReadListEntry(this);
     }
 
