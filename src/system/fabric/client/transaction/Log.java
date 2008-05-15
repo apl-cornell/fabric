@@ -20,11 +20,6 @@ public final class Log {
   final Log parent;
 
   /**
-   * The set of ancestors for this log. This is created lazily.
-   */
-  private List<Log> ancestors;
-
-  /**
    * The set of sub-transactions.
    */
   private final Set<Log> children;
@@ -81,7 +76,6 @@ public final class Log {
       parent.children.add(this);
     }
 
-    this.ancestors = null;
     this.children = Collections.synchronizedSet(new HashSet<Log>());
     this.threads = new HashSet<Thread>();
     this.abortSignal = false;
@@ -89,22 +83,18 @@ public final class Log {
     this.creates = new ArrayList<$Impl>();
     this.writes = new ArrayList<$Impl>();
   }
-
-  List<Log> ancestors() {
-    synchronized (this) {
-      if (ancestors == null) {
-        List<Log> ancestors = new ArrayList<Log>();
-        Log ancestor = this;
-        while (ancestor != null) {
-          ancestors.add(ancestor);
-          ancestor = ancestor.parent;
-        }
-
-        this.ancestors = Collections.unmodifiableList(ancestors);
-      }
+  
+  /**
+   * Returns true iff the given Log is in the ancestry of this log.
+   */
+  boolean isDescendantOf(Log log) {
+    Log cur = this;
+    while (cur != null) {
+      if (cur == log) return true;
+      cur = cur.parent;
     }
-
-    return ancestors;
+    
+    return false;
   }
 
   /**

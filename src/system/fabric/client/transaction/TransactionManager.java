@@ -327,9 +327,8 @@ private static final TransactionManager aoeu = new TransactionManager();
       checkAbortSignal();
 
       // Check read condition: wait until all writers are in our ancestry.
-      List<Log> ancestors = current.ancestors();
       while (obj.$writeLockHolder != null
-          && !ancestors.contains(obj.$writeLockHolder)) {
+          && !current.isDescendantOf(obj.$writeLockHolder)) {
         try {
           obj.$numWaiting++;
           obj.wait();
@@ -386,17 +385,16 @@ private static final TransactionManager aoeu = new TransactionManager();
 
       // Check write condition: wait until writer and all readers are in our
       // ancestry.
-      List<Log> ancestors = current.ancestors();
       while (true) {
         if (obj.$writeLockHolder == null
-            || ancestors.contains(obj.$writeLockHolder)) {
+            || current.isDescendantOf(obj.$writeLockHolder)) {
           // Writer is in our ancestry. Check readers.
           ReadMapEntry readListEntry = obj.$readListEntry;
           if (readListEntry == null) break;
           synchronized (readListEntry) {
             boolean containsAll = true;
             for (Log lock : readListEntry.readLocks) {
-              if (!ancestors.contains(lock)) {
+              if (!current.isDescendantOf(lock)) {
                 containsAll = false;
                 break;
               }
