@@ -44,6 +44,8 @@ public final class ReadMapEntry {
   /**
    * Signals the object corresponding to this entry (if the object is resident
    * in memory).
+   * 
+   * After signaling, this method clears the $reader stamp of the object.
    */
   void signalObject() {
     $Impl obj = this.obj.get();
@@ -58,6 +60,7 @@ public final class ReadMapEntry {
 
     synchronized (obj) {
       if (obj.$numWaiting > 0) obj.notifyAll();
+      obj.$reader = null;
     }
   }
 }
