@@ -222,7 +222,7 @@ public interface Object {
       this.$history = null;
       this.$numWaiting = 0;
       this.$ref = new FabricSoftRef(this);
-      this.$readMapEntry = TransactionManager.getReadMapEntry(this);
+      this.$readMapEntry = this.$ref.rme;
     }
 
     /**

@@ -34,6 +34,7 @@ public class FabricSoftRef extends SoftReference<$Impl> {
     core = impl.$getCore();
     onum = impl.$getOnum();
     rme = TransactionManager.getReadMapEntry(impl);
+    rme.ref(this);
   }
   
   private static class RefCollector extends Thread {

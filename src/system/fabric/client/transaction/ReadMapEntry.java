@@ -3,6 +3,7 @@ package fabric.client.transaction;
 import java.lang.ref.SoftReference;
 
 import fabric.client.Core;
+import fabric.client.FabricSoftRef;
 import fabric.lang.Object.$Impl;
 
 public final class ReadMapEntry {
@@ -16,10 +17,17 @@ public final class ReadMapEntry {
   ReadMapEntry($Impl obj) {
     this.core = obj.$getCore();
     this.onum = obj.$getOnum();
-    this.obj = obj.$ref;
+    
+    // obj.$ref is null at this point, because obj is still being constructed
+    //this.obj = obj.$ref;
+    
     this.readLocks = new LockList<Log>();
     this.versionNumber = obj.$version;
     this.pinCount = 1;
+  }
+  
+  public void ref(FabricSoftRef ref) {
+    this.obj = ref;
   }
 
   /**
