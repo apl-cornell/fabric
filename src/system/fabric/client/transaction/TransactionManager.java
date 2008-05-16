@@ -70,19 +70,19 @@ public final class TransactionManager {
   // Proxy objects aren't used here because doing so would result in calls to
   // hashcode() and equals() on such objects, resulting in fetching the
   // corresponding Impls from the core.
-  static final OidKeyHashMap<ReadMapEntry> readList =
+  static final OidKeyHashMap<ReadMapEntry> readMap =
       new OidKeyHashMap<ReadMapEntry>();
 
-  public static ReadMapEntry getReadListEntry($Impl impl) {
+  public static ReadMapEntry getReadMapEntry($Impl impl) {
     ReadMapEntry result;
 
-    synchronized (readList) {
+    synchronized (readMap) {
       Core core = impl.$getCore();
       long onum = impl.$getOnum();
-      result = readList.get(core, onum);
+      result = readMap.get(core, onum);
       if (result == null) {
         result = new ReadMapEntry(impl);
-        readList.put(core, onum, result);
+        readMap.put(core, onum, result);
         return result;
       }
     }
@@ -346,13 +346,13 @@ public final class TransactionManager {
 
       // If we already have a read lock, return; otherwise, register a read
       // lock.
-      ReadMapEntry readListEntry = obj.$readListEntry;
+      ReadMapEntry readMapEntry = obj.$readMapEntry;
       LockList.Node<Log> lockListNode;
       boolean lockedByAncestor = false;
-      synchronized (readListEntry) {
+      synchronized (readMapEntry) {
         // Scan the list for an existing read lock. At the same time, check if
         // any of our ancestors already has a read lock.
-        LockList.Node<Log> cur = readListEntry.readLocks.head;
+        LockList.Node<Log> cur = readMapEntry.readLocks.head;
         while (cur != null) {
           if (cur.data == current) {
             // We already have a lock; nothing to do.
@@ -365,7 +365,7 @@ public final class TransactionManager {
           cur = cur.next;
         }
 
-        lockListNode = readListEntry.readLocks.add(current);
+        lockListNode = readMapEntry.readLocks.add(current);
       }
 
       if (obj.$writer != current) {
@@ -380,12 +380,12 @@ public final class TransactionManager {
         synchronized (current.reads) {
           current.reads.put(obj.$getCore(), obj.$getOnum(),
               new Pair<LockList.Node<Log>, ReadMapEntry>(lockListNode,
-                  readListEntry));
+                  readMapEntry));
         }
       } else {
         current.readsReadByParent
             .add(new Pair<LockList.Node<Log>, ReadMapEntry>(lockListNode,
-                readListEntry));
+                readMapEntry));
       }
     }
   }
@@ -412,11 +412,11 @@ public final class TransactionManager {
         if (obj.$writeLockHolder == null
             || current.isDescendantOf(obj.$writeLockHolder)) {
           // Writer is in our ancestry. Check readers.
-          ReadMapEntry readListEntry = obj.$readListEntry;
-          if (readListEntry == null) break;
-          synchronized (readListEntry) {
+          ReadMapEntry readMapEntry = obj.$readMapEntry;
+          if (readMapEntry == null) break;
+          synchronized (readMapEntry) {
             boolean containsAll = true;
-            for (Log lock : readListEntry.readLocks) {
+            for (Log lock : readMapEntry.readLocks) {
               if (!current.isDescendantOf(lock)) {
                 containsAll = false;
                 break;

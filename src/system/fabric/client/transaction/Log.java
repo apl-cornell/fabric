@@ -307,7 +307,7 @@ public final class Log {
         obj.$writer = null;
         obj.$writeLockHolder = null;
         obj.$version++;
-        obj.$readListEntry.versionNumber++;
+        obj.$readMapEntry.versionNumber++;
 
         // Discard one layer of history.
         obj.$history = obj.$history.$history;
@@ -321,7 +321,7 @@ public final class Log {
     for ($Impl obj : creates) {
       obj.$writeLockHolder = null;
       obj.$version = 1;
-      obj.$readListEntry.versionNumber = 1;
+      obj.$readMapEntry.versionNumber = 1;
     }
   }
 

@@ -32,8 +32,8 @@ public final class ReadMapEntry {
       if (readLocks.isEmpty() && pinCount == 0) {
         // There are no read locks and no references to this entry. Garbage
         // collect.
-        synchronized (TransactionManager.readList) {
-          TransactionManager.readList.remove(core, onum);
+        synchronized (TransactionManager.readMap) {
+          TransactionManager.readMap.remove(core, onum);
         }
       }
     }

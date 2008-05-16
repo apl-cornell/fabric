@@ -202,9 +202,9 @@ public interface Object {
      * exactly when there is an entry in the global read list for this object
      * (which occurs exactly when the object has a reader).
      * 
-     * @see fabric.client.transaction.TransactionManager#readList
+     * @see fabric.client.transaction.TransactionManager#readMap
      */
-    public ReadMapEntry $readListEntry;
+    public ReadMapEntry $readMapEntry;
     
     /**
      * The number of threads waiting on this object.
@@ -223,7 +223,7 @@ public interface Object {
       this.$reader = null;
       this.$history = null;
       this.$numWaiting = 0;
-      this.$readListEntry = TransactionManager.getReadListEntry(this);
+      this.$readMapEntry = TransactionManager.getReadMapEntry(this);
     }
 
     /**
