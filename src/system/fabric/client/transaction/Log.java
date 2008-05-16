@@ -3,6 +3,7 @@ package fabric.client.transaction;
 import java.util.*;
 
 import fabric.client.Core;
+import fabric.client.transaction.LockList.Node;
 import fabric.common.Pair;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -224,23 +225,10 @@ public final class Log {
    */
   void commitNested() {
     // Merge reads and transfer read locks.
-    OidKeyHashMap<Pair<LockList.Node<Log>, ReadMapEntry>> parentReads =
-        parent.reads;
-
-    synchronized (parentReads) {
+    synchronized (parent.reads) {
       for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
         for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {
-          ReadMapEntry readMapEntry = entry.second;
-
-          synchronized (readMapEntry) {
-            readMapEntry.readLocks.remove(entry.first);
-            entry.first = readMapEntry.readLocks.addOrGet(parent);
-          }
-
-          parentReads.put(readMapEntry.core, readMapEntry.onum, entry);
-
-          // Signal any readers/writers and clear the $reader stamp.
-          readMapEntry.signalObject();
+          parent.transferReadLock(entry);
         }
       }
     }
@@ -322,6 +310,99 @@ public final class Log {
       obj.$writeLockHolder = null;
       obj.$version = 1;
       obj.$readMapEntry.versionNumber = 1;
+    }
+  }
+
+  /**
+   * Transfers a read lock from a child transaction.
+   */
+  private void transferReadLock(Pair<Node<Log>, ReadMapEntry> childEntry) {
+    ReadMapEntry readMapEntry = childEntry.second;
+
+    // If we already have a read lock, return; otherwise, register a read lock.
+    boolean lockedByAncestor = false;
+    synchronized (readMapEntry) {
+      // Release child's read lock.
+      readMapEntry.readLocks.remove(childEntry.first);
+
+      // Scan the list for an existing read lock. At the same time, check if
+      // any of our ancestors already has a read lock.
+      LockList.Node<Log> cur = readMapEntry.readLocks.head;
+      while (cur != null) {
+        if (cur.data == this) {
+          // We already have a lock; nothing to do.
+          return;
+        }
+
+        if (!lockedByAncestor && isDescendantOf(cur.data))
+          lockedByAncestor = true;
+
+        cur = cur.next;
+      }
+
+      childEntry.first.data = this;
+      readMapEntry.readLocks.add(childEntry.first);
+    }
+
+    // Only record the read in this transaction if none of our ancestors have
+    // read this object.
+    if (!lockedByAncestor) {
+      synchronized (reads) {
+        reads.put(readMapEntry.core, readMapEntry.onum, childEntry);
+      }
+    } else {
+      readsReadByParent.add(childEntry);
+    }
+
+    // Signal any readers/writers and clear the $reader stamp.
+    readMapEntry.signalObject();
+  }
+
+  /**
+   * Grabs a read lock for the given object.
+   */
+  void acquireReadLock($Impl obj) {
+    // If we already have a read lock, return; otherwise, register a read
+    // lock.
+    ReadMapEntry readMapEntry = obj.$readMapEntry;
+    LockList.Node<Log> lockListNode;
+    boolean lockedByAncestor = false;
+    synchronized (readMapEntry) {
+      // Scan the list for an existing read lock. At the same time, check if
+      // any of our ancestors already has a read lock.
+      LockList.Node<Log> cur = readMapEntry.readLocks.head;
+      while (cur != null) {
+        if (cur.data == this) {
+          // We already have a lock; nothing to do.
+          return;
+        }
+
+        if (!lockedByAncestor && isDescendantOf(cur.data))
+          lockedByAncestor = true;
+
+        cur = cur.next;
+      }
+
+      lockListNode = readMapEntry.readLocks.add(this);
+    }
+
+    if (obj.$writer != this) {
+      // Clear the object's write stamp -- the writer's write condition no
+      // longer holds.
+      obj.$writer = null;
+    }
+
+    // Only record the read in this transaction if none of our ancestors have
+    // read this object.
+    if (!lockedByAncestor) {
+      synchronized (reads) {
+        reads.put(obj.$getCore(), obj.$getOnum(),
+            new Pair<LockList.Node<Log>, ReadMapEntry>(lockListNode,
+                readMapEntry));
+      }
+    } else {
+      readsReadByParent.add(new Pair<LockList.Node<Log>, ReadMapEntry>(
+          lockListNode, readMapEntry));
     }
   }
 

@@ -23,6 +23,18 @@ class LockList<T> implements Iterable<T> {
     this.head = this.tail = null;
     this.modCount = 0;
   }
+  
+  /**
+   * Adds a node to the list.
+   */
+  public void add(Node<T> node) {
+    if (tail != null) tail.next = node;
+    tail = node;
+
+    if (head == null) head = node;
+
+    modCount++;
+  }
 
   /**
    * Adds a new lock to the list.  Returns the newly created node.
@@ -32,13 +44,9 @@ class LockList<T> implements Iterable<T> {
     node.data = data;
     node.prev = tail;
     node.next = null;
+    
+    add(node);
 
-    if (tail != null) tail.next = node;
-    tail = node;
-
-    if (head == null) head = node;
-
-    modCount++;
     return node;
   }
 

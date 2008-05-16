@@ -343,50 +343,8 @@ public final class TransactionManager {
 
       // Set the object's reader stamp to the current transaction.
       obj.$reader = current;
-
-      // If we already have a read lock, return; otherwise, register a read
-      // lock.
-      ReadMapEntry readMapEntry = obj.$readMapEntry;
-      LockList.Node<Log> lockListNode;
-      boolean lockedByAncestor = false;
-      synchronized (readMapEntry) {
-        // Scan the list for an existing read lock. At the same time, check if
-        // any of our ancestors already has a read lock.
-        LockList.Node<Log> cur = readMapEntry.readLocks.head;
-        while (cur != null) {
-          if (cur.data == current) {
-            // We already have a lock; nothing to do.
-            return;
-          }
-
-          if (!lockedByAncestor && current.isDescendantOf(cur.data))
-            lockedByAncestor = true;
-
-          cur = cur.next;
-        }
-
-        lockListNode = readMapEntry.readLocks.add(current);
-      }
-
-      if (obj.$writer != current) {
-        // Clear the object's write stamp -- the writer's write condition no
-        // longer holds.
-        obj.$writer = null;
-      }
-
-      // Only record the read in this transaction if none of our ancestors have
-      // read this object.
-      if (!lockedByAncestor) {
-        synchronized (current.reads) {
-          current.reads.put(obj.$getCore(), obj.$getOnum(),
-              new Pair<LockList.Node<Log>, ReadMapEntry>(lockListNode,
-                  readMapEntry));
-        }
-      } else {
-        current.readsReadByParent
-            .add(new Pair<LockList.Node<Log>, ReadMapEntry>(lockListNode,
-                readMapEntry));
-      }
+      
+      current.acquireReadLock(obj);
     }
   }
 
