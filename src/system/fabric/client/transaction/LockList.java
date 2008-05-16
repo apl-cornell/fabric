@@ -15,7 +15,7 @@ class LockList<T> implements Iterable<T> {
     Node<T> next;
   }
 
-  private Node<T> head;
+  Node<T> head;
   private Node<T> tail;
   private int modCount;
 
@@ -25,17 +25,9 @@ class LockList<T> implements Iterable<T> {
   }
 
   /**
-   * Adds a new lock to the list, ensuring that no locks are duplicated. Returns
-   * a non-null node iff a new lock was added.
+   * Adds a new lock to the list.  Returns the newly created node.
    */
-  public Node<T> addOrNull(T data) {
-    // Make sure we're not adding a duplicate.
-    Node<T> curNode = head;
-    while (curNode != null) {
-      if (curNode.data == data) return null;
-      curNode = curNode.next;
-    }
-
+  public Node<T> add(T data) {
     Node<T> node = new Node<T>();
     node.data = data;
     node.prev = tail;

@@ -9,8 +9,8 @@ import fabric.common.util.LongKeyMap;
 /**
  * A map keyed on OIDs.
  */
-class OidKeyHashMap<V> {
-  private Map<Core, LongKeyMap<V>> map;
+class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
+  Map<Core, LongKeyMap<V>> map;
 
   OidKeyHashMap() {
     map = new HashMap<Core, LongKeyMap<V>>();
@@ -48,30 +48,7 @@ class OidKeyHashMap<V> {
     return map.keySet();
   }
 
-  public Iterator<V> valueIterator() {
-    return new Iterator<V>() {
-      Iterator<LongKeyMap<V>> outer = map.values().iterator();
-      Iterator<V> inner = null;
-
-      public boolean hasNext() {
-        if (inner != null && inner.hasNext()) return true;
-        
-        while (outer.hasNext()) {
-          inner = outer.next().values().iterator();
-          if (inner.hasNext()) return true;
-        }
-        
-        return false;
-      }
-
-      public V next() {
-        if (!hasNext()) throw new NoSuchElementException();
-        return inner.next();
-      }
-
-      public void remove() {
-        throw new UnsupportedOperationException();
-      }
-    };
+  public Iterator<LongKeyMap<V>> iterator() {
+    return map.values().iterator();
   }
 }

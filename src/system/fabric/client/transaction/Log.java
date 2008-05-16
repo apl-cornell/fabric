@@ -49,6 +49,11 @@ public final class Log {
   protected OidKeyHashMap<Pair<LockList.Node<Log>, ReadMapEntry>> reads;
 
   /**
+   * TODO: DOCO
+   */
+  protected List<Pair<LockList.Node<Log>, ReadMapEntry>> readsReadByParent;
+
+  /**
    * A collection of all objects created in this transaction or completed
    * sub-transactions. Objects created in running or aborted sub-transactions
    * don't count here.
@@ -80,10 +85,12 @@ public final class Log {
     this.threads = new HashSet<Thread>();
     this.abortSignal = false;
     this.reads = new OidKeyHashMap<Pair<LockList.Node<Log>, ReadMapEntry>>();
+    this.readsReadByParent =
+        new ArrayList<Pair<LockList.Node<Log>, ReadMapEntry>>();
     this.creates = new ArrayList<$Impl>();
     this.writes = new ArrayList<$Impl>();
   }
-  
+
   /**
    * Returns true iff the given Log is in the ancestry of this log.
    */
@@ -93,7 +100,7 @@ public final class Log {
       if (cur == log) return true;
       cur = cur.parent;
     }
-    
+
     return false;
   }
 
@@ -185,11 +192,14 @@ public final class Log {
    */
   void abort() {
     // Release read locks.
-    for (Iterator<Pair<LockList.Node<Log>, ReadMapEntry>> it =
-        reads.valueIterator(); it.hasNext();) {
-      Pair<LockList.Node<Log>, ReadMapEntry> entry = it.next();
-      entry.second.releaseLock(entry.first);
+    for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
+      for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {
+        entry.second.releaseLock(entry.first);
+      }
     }
+
+    for (Pair<LockList.Node<Log>, ReadMapEntry> entry : readsReadByParent)
+      entry.second.releaseLock(entry.first);
 
     // Roll back writes and release write locks.
     for ($Impl write : writes) {
@@ -218,21 +228,25 @@ public final class Log {
         parent.reads;
 
     synchronized (parentReads) {
-      for (Iterator<Pair<LockList.Node<Log>, ReadMapEntry>> it =
-          reads.valueIterator(); it.hasNext();) {
-        Pair<LockList.Node<Log>, ReadMapEntry> entry = it.next();
-        ReadMapEntry readMapEntry = entry.second;
+      for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
+        for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {
+          ReadMapEntry readMapEntry = entry.second;
 
-        synchronized (readMapEntry) {
-          readMapEntry.readLocks.remove(entry.first);
-          entry.first = readMapEntry.readLocks.addOrGet(parent);
+          synchronized (readMapEntry) {
+            readMapEntry.readLocks.remove(entry.first);
+            entry.first = readMapEntry.readLocks.addOrGet(parent);
+          }
+
+          parentReads.put(readMapEntry.core, readMapEntry.onum, entry);
+
+          // Signal any readers/writers and clear the $reader stamp.
+          readMapEntry.signalObject();
         }
-
-        parentReads.put(readMapEntry.core, readMapEntry.onum, entry);
-
-        // Signal any readers/writers and clear the $reader stamp.
-        readMapEntry.signalObject();
       }
+    }
+
+    for (Pair<LockList.Node<Log>, ReadMapEntry> entry : readsReadByParent) {
+      entry.second.releaseLock(entry.first);
     }
 
     // Merge writes and transfer write locks.
@@ -278,11 +292,14 @@ public final class Log {
    */
   void commitTopLevel() {
     // Release read locks.
-    for (Iterator<Pair<LockList.Node<Log>, ReadMapEntry>> it =
-        reads.valueIterator(); it.hasNext();) {
-      Pair<LockList.Node<Log>, ReadMapEntry> entry = it.next();
-      entry.second.releaseLock(entry.first);
+    for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
+      for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {
+        entry.second.releaseLock(entry.first);
+      }
     }
+
+    for (Pair<LockList.Node<Log>, ReadMapEntry> entry : readsReadByParent)
+      entry.second.releaseLock(entry.first);
 
     // Release write locks and update version numbers.
     for ($Impl obj : writes) {

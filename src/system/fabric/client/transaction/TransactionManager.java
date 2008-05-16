@@ -116,9 +116,10 @@ public final class TransactionManager {
           return new TransactionManager();
         }
       };
-private static final TransactionManager aoeu = new TransactionManager();
+  private static final TransactionManager aoeu = new TransactionManager();
+
   public static TransactionManager getInstance() {
-    return aoeu;//instance.get();
+    return aoeu;// instance.get();
   }
 
   private TransactionManager() {
@@ -347,9 +348,24 @@ private static final TransactionManager aoeu = new TransactionManager();
       // lock.
       ReadMapEntry readListEntry = obj.$readListEntry;
       LockList.Node<Log> lockListNode;
+      boolean lockedByAncestor = false;
       synchronized (readListEntry) {
-        lockListNode = readListEntry.readLocks.addOrNull(current);
-        if (lockListNode == null) return;
+        // Scan the list for an existing read lock. At the same time, check if
+        // any of our ancestors already has a read lock.
+        LockList.Node<Log> cur = readListEntry.readLocks.head;
+        while (cur != null) {
+          if (cur.data == current) {
+            // We already have a lock; nothing to do.
+            return;
+          }
+
+          if (!lockedByAncestor && current.isDescendantOf(cur.data))
+            lockedByAncestor = true;
+
+          cur = cur.next;
+        }
+
+        lockListNode = readListEntry.readLocks.add(current);
       }
 
       if (obj.$writer != current) {
@@ -358,10 +374,17 @@ private static final TransactionManager aoeu = new TransactionManager();
         obj.$writer = null;
       }
 
-      // Record the read in this transaction.
-      synchronized (current.reads) {
-        current.reads.put(obj.$getCore(), obj.$getOnum(),
-            new Pair<LockList.Node<Log>, ReadMapEntry>(lockListNode,
+      // Only record the read in this transaction if none of our ancestors have
+      // read this object.
+      if (!lockedByAncestor) {
+        synchronized (current.reads) {
+          current.reads.put(obj.$getCore(), obj.$getOnum(),
+              new Pair<LockList.Node<Log>, ReadMapEntry>(lockListNode,
+                  readListEntry));
+        }
+      } else {
+        current.readsReadByParent
+            .add(new Pair<LockList.Node<Log>, ReadMapEntry>(lockListNode,
                 readListEntry));
       }
     }
