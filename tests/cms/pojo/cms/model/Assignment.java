@@ -269,6 +269,16 @@ public class Assignment {
     // TODO Auto-generated method stub
     return null;
   }
+
+  public Collection/*Grade*/ getGrades() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Collection/*AnswerSet*/ getAnswerSets() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

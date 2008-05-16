@@ -1,5 +1,7 @@
 package cms.model;
 
+import cms.auth.Principal;
+
 public class GroupAssignedTo {
 
   public static String UNASSIGNED = "<unassigned>";
@@ -37,6 +39,11 @@ public class GroupAssignedTo {
     setGroup(group);
     setUser(user);
     setSubProblem(subProblem);
+  }
+  
+  public static boolean isAssignedTo(SubProblem subProblem, Group group, User user) {
+    // TODO Auto-generated method stub
+    return false;
   }
 }
 

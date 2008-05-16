@@ -44,12 +44,12 @@ public class GradingXMLBuilder {
     Profiler.exitMethod("RootBean.addGroupMemberNames", "");
     boolean canGradeAll = user.isAdminPrivByCourse(assignment.getCourse())
                           || !assignment.getAssignedGraders();
-    int numSubProbs = addSubProblems(xml, assignment, canGradeAll);
+    addSubProblems(xml, assignment, canGradeAll);
     addSubmissions(xml, assignment);
-    addGrades(user, xml, groupids, assignment, numSubProbs);
+    addGrades(user, xml, groupids, assignment);
     if (assignment.getType() == Assignment.QUIZ
         || assignment.getType() == Assignment.SURVEY) {
-      addAnswers(user, xml, groupids, assignment, numSubProbs);
+      addAnswers(user, xml, groupids, assignment);
     }
     addSubmittedFiles(xml, groupids);
     if (assignment.getAssignedGraders()) {
@@ -63,38 +63,43 @@ public class GradingXMLBuilder {
 
   public void addGroups(String netid, Document xml, Assignment assignment, Collection groupids){
     Profiler.enterMethod("GradingXMLBuilder.addGroups", "");
-    Iterator members =
-        database.groupMemberHome().findByGroupIDsAssignedTo(netid,
-            assignment, groupids).iterator();
     Element root = (Element) xml.getFirstChild();
-    while (members.hasNext()) {
-      GroupMember member = (GroupMember) members.next();
-      NodeList group = root.getElementsByTagNameNS(
-          XMLBuilder.TAG_GROUP + member.getGroup().toString(),
+    
+    Iterator giter = groupids.iterator();
+    while (giter.hasNext()) {
+      Group group = (Group) giter.next();      
+      
+      NodeList query = root.getElementsByTagNameNS(
+          XMLBuilder.TAG_GROUP + group.toString(),
           XMLBuilder.TAG_GROUP);
       Element xGroup = null;
-      if (group.getLength() == 0) {
+      if (query.getLength() == 0) {
         xGroup = xml.createElementNS(
-            XMLBuilder.TAG_GROUP + member.getGroup().toString(),
+            XMLBuilder.TAG_GROUP + group.toString(),
             XMLBuilder.TAG_GROUP);
-        xGroup.setAttribute(XMLBuilder.A_GROUPID, member.getGroup().toString());
+        xGroup.setAttribute(XMLBuilder.A_GROUPID, group.toString());
         root.appendChild(xGroup);
       } else {
-        xGroup = (Element) group.item(0);
+        xGroup = (Element) query.item(0);
       }
-      Element xMember = xml.createElementNS(
-          XMLBuilder.TAG_MEMBER + member.getMember().getNetID(),
-          XMLBuilder.TAG_MEMBER);
-      xMember.setAttribute(XMLBuilder.A_NETID, member.getMember().getNetID());
-      xGroup.appendChild(xMember);
+
+      Iterator members = group.getMembers().iterator();
+      while (members.hasNext()) {
+        GroupMember member = (GroupMember) members.next();
+
+        Element xMember = xml.createElementNS(
+            XMLBuilder.TAG_MEMBER + member.getMember().getNetID(),
+            XMLBuilder.TAG_MEMBER);
+        xMember.setAttribute(XMLBuilder.A_NETID, member.getMember().getNetID());
+        xGroup.appendChild(xMember);
+      }
     }
     Profiler.exitMethod("GradingXMLBuilder.addGroups", "");
   }
 
   public void addGradeLogs(Document xml, Course course, Collection groups) {
     Profiler.enterMethod("GradingXMLBuilder.addGradeLogs", "");
-    Iterator details =
-        database.findGradeLogDetails(course, groups).iterator();
+    Iterator details = xmlBuilder.database.findGradeLogDetails(course, groups).iterator();
     Element root = (Element) xml.getFirstChild();
     while (details.hasNext()) {
       LogDetail d = (LogDetail) details.next();
@@ -115,7 +120,7 @@ public class GradingXMLBuilder {
     Profiler.exitMethod("GradingXMLBuilder.addGradeLogs", "");
   }
 
-  public int addSubProblems(Document xml, Assignment assignment, boolean canGradeAll) {
+  public void addSubProblems(Document xml, Assignment assignment, boolean canGradeAll) {
     Profiler.enterMethod("GradingXMLBuilder.addSubProblems", "");
     Iterator subprobs = assignment.getSubProblems().iterator();
     Element root = (Element) xml.getFirstChild();
@@ -145,15 +150,11 @@ public class GradingXMLBuilder {
         // get the choice text of the correct answer
         // if somehow we can't find the correct answer, then this subproblem
         // has no correct answer
-        try {
-          Integer choiceID = new Integer(subprob.getAnswer());
-          Choice choice =
-              database.choiceHome().findByChoiceID(choiceID.longValue());
+        Choice choice = subprob.getAnswerChoice();
+        if (choice != null) {
           xSubProb.setAttribute(XMLBuilder.A_CORRECTANSWER, choice.getLetter()
               + ". " + choice.getText());
-        } catch (FinderException e) {
         }
-
       }
 
       root.appendChild(xSubProb);
@@ -181,7 +182,6 @@ public class GradingXMLBuilder {
       }
     }
     Profiler.exitMethod("GradingXMLBuilder.addSubProblems", "");
-    return assignment.getSubProblems().size();
   }
 
   public void addSubmissions(Document xml, Assignment assignment) {
@@ -198,21 +198,23 @@ public class GradingXMLBuilder {
     Profiler.exitMethod("GradingXMLBuilder.addSubmissions", "");
   }
 
-  public void addGrades(Principal p, Document xml, Collection groups,
-      Assignment assignment, int numSubProbs) {
+  public void addGrades(User user, Document xml, Collection groups,
+      Assignment assignment) {
     Profiler.enterMethod("GradingXMLBuilder.addGrades", "");
-    Collection c;
-    if (assignment.getAssignedGraders() && !p.isAdminPrivByCourse(assignment.getCourse())) {
-      c = database.gradeHome().findByGroupIDsAssignedTo(groups, p.getNetID(), numSubProbs);
-    } else {
-      c = database.gradeHome().findByGroupIDs(groups);
-    }
-    Iterator grades = c.iterator();
+
+    Iterator grades = assignment.getGrades().iterator();
     Element root = (Element) xml.getFirstChild();
-    boolean hasSubProbs = !assignment.getSubProblems().isEmpty();
     while (grades.hasNext()) {
       Grade grade = (Grade) grades.next();
       Group group = assignment.findGroup(grade.getUser());
+      
+      // check user's authorization to view the grade
+      // TODO: still not totally sure if this is correct wrt CMS
+      if (assignment.getAssignedGraders() &&
+         !user.isAdminPrivByCourse(assignment.getCourse()) &&
+         !GroupAssignedTo.isAssignedTo(grade.getSubProblem(), group, user))
+        continue;
+      
       Element xGroup = (Element) root.getElementsByTagNameNS(
           XMLBuilder.TAG_GROUP + group.toString(),
           XMLBuilder.TAG_GROUP).item(0);
@@ -243,28 +245,26 @@ public class GradingXMLBuilder {
     Profiler.exitMethod("GradingXMLBuilder.addGrades", "");
   }
 
-  public void addAnswers(Principal p, Document xml, Collection groups,
-      Assignment assignment, int numSubProbs) {
+  public void addAnswers(User user, Document xml, Collection groups,
+      Assignment assignment) {
     Profiler.enterMethod("GradingXMLBuilder.addAnswers", "");
-    Collection c;
-    if (assignment.getAssignedGraders()
-        && !p.isAdminPrivByCourse(assignment.getCourse())) {
-      c =
-          database.answerSetHome().findByGroupIDsAssignedTo(groupIDs,
-              p.getNetID(), numSubProbs);
-    } else {
-      c = database.answerSetHome().findByGroupIDs(groupIDs);
-    }
-    Iterator answerSets = c.iterator();
+    Iterator answerSets = assignment.getAnswerSets().iterator();
     Element root = (Element) xml.getFirstChild();
     boolean hasSubProbs = !assignment.getSubProblems().isEmpty();
     while (answerSets.hasNext()) {
       AnswerSet answerSet = (AnswerSet) answerSets.next();
-
       Iterator answers = answerSet.getAnswers().iterator();
-
+      
       while (answers.hasNext()) {
         Answer answer = (Answer) answers.next();
+
+        // check authorization for user to see answer
+        // TODO: double check that this is correct
+        if (assignment.getAssignedGraders() &&
+           !user.isAdminPrivByCourse(assignment.getCourse()) &&
+           !GroupAssignedTo.isAssignedTo(answer.getSubProblem(), answerSet.getGroup(), user))
+          continue;
+        
         Element xGroup = (Element) root.getElementsByTagNameNS(
             XMLBuilder.TAG_GROUP + answerSet.getGroup().toString(),
             XMLBuilder.TAG_GROUP).item(0);
@@ -285,18 +285,11 @@ public class GradingXMLBuilder {
               SubProblem subProb = answer.getSubProblem();
               String text        = answer.getText();
 
-              if (subProb.getType() == SubProblem.MULTIPLE_CHOICE) {
+              Choice choice = subProb.getAnswerChoice();
+              if (choice != null) {
+                String choiceText = choice.getLetter() + ". " + choice.getText();
                 xAnswer.setAttribute(XMLBuilder.A_ANSWER, "");
-                try {
-                  Choice choice =
-                      database.choiceHome()
-                          .findByChoiceID(Long.parseLong(text));
-                  String choiceText =
-                      choice.getLetter() + ". " + choice.getText();
-                  xAnswer.setAttribute(XMLBuilder.A_ANSWERTEXT, choiceText);
-                } catch (Exception e) {
-                  xAnswer.setAttribute(XMLBuilder.A_ANSWERTEXT, text);
-                }
+                xAnswer.setAttribute(XMLBuilder.A_ANSWERTEXT, choiceText);
               } else {
                 xAnswer.setAttribute(XMLBuilder.A_ANSWERTEXT, text);
               }
@@ -362,6 +355,7 @@ public class GradingXMLBuilder {
         }
         xGroup.appendChild(xSubFile);
       }
+    }
     Profiler.exitMethod("GradingXMLBuilder.addSubmittedFiles", "");
   }
 

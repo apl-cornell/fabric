@@ -2,6 +2,7 @@ package cms.model;
 
 public class SubProblem {
   
+  // TODO: subclass for multiple choice
   public static int MULTIPLE_CHOICE = 0;
   public static int FILL_IN = 1;
   public static int SHORT_ANSWER = 2;
@@ -59,6 +60,15 @@ public class SubProblem {
   public boolean isHidden() {
     // TODO Auto-generated method stub
     return false;
+  }
+  
+  /**
+   * @return the Choice object corresponding to the right answer if this is a
+   *         multiple choice problem, or null.
+   */
+  public Choice getAnswerChoice() {
+    // TODO Auto-generated method stub
+    return null;
   }
 
 }
