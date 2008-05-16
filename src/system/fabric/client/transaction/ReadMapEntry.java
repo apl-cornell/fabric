@@ -16,7 +16,7 @@ public final class ReadMapEntry {
   ReadMapEntry($Impl obj) {
     this.core = obj.$getCore();
     this.onum = obj.$getOnum();
-    this.obj = new SoftReference<$Impl>(obj);
+    this.obj = obj.$ref;
     this.readLocks = new LockList<Log>();
     this.versionNumber = obj.$version;
     this.pinCount = 1;
@@ -28,17 +28,31 @@ public final class ReadMapEntry {
   void releaseLock(LockList.Node<Log> lockNode) {
     synchronized (this) {
       readLocks.remove(lockNode);
-
-      if (readLocks.isEmpty() && pinCount == 0) {
-        // There are no read locks and no references to this entry. Garbage
-        // collect.
-        synchronized (TransactionManager.readMap) {
-          TransactionManager.readMap.remove(core, onum);
-        }
-      }
+      unpin();
     }
 
     signalObject();
+  }
+  
+  /**
+   * Does garbage collection when pin count is 0.
+   */
+  private void unpin() {
+    if (readLocks.isEmpty() && pinCount == 0) {
+      // There are no read locks and no references to this entry. Garbage
+      // collect.
+      synchronized (TransactionManager.readMap) {
+        TransactionManager.readMap.remove(core, onum);
+      }
+    }
+  }
+  
+  /**
+   * Decrements pin count by 1 and does garbage collection if possible.
+   */
+  public synchronized void depin() {
+    pinCount--;
+    unpin();
   }
 
   /**
@@ -54,7 +68,7 @@ public final class ReadMapEntry {
       if (obj == null) return;
 
       synchronized (this) {
-        this.obj = new SoftReference<$Impl>(obj);
+        this.obj = obj.$ref;
       }
     }
 

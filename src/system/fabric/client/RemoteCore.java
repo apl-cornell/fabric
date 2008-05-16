@@ -57,7 +57,7 @@ public class RemoteCore implements Core {
   /**
    * The object table: locally resident objects.
    */
-  private transient LongKeyMap<SoftReference<Object.$Impl>> objects;
+  private transient LongKeyMap<FabricSoftRef> objects;
 
   /**
    * The connection to the actual Core.
@@ -75,7 +75,7 @@ public class RemoteCore implements Core {
    */
   protected RemoteCore(String name) {
     this.name = name;
-    this.objects = new LongKeyHashMap<SoftReference<Object.$Impl>>();
+    this.objects = new LongKeyHashMap<FabricSoftRef>();
     this.fresh_ids = new LinkedList<Long>();
     this.serialized = new LongKeyHashMap<SoftReference<SerializedObject>>();
   }
@@ -246,7 +246,7 @@ public class RemoteCore implements Core {
       Surrogate surrogate = (Surrogate) result;
       result = surrogate.core.readObject(surrogate.onum);
     }
-    objects.put(onum, new SoftReference<Object.$Impl>(result));
+    objects.put(onum, new FabricSoftRef(result));
     return result;
   }
 
@@ -329,6 +329,14 @@ public class RemoteCore implements Core {
   @Override
   public int hashCode() {
     return name.hashCode();
+  }
+
+  public void notifyEvict(FabricSoftRef ref) {
+    synchronized (objects) {
+      if (objects.get(ref.onum) == ref) {
+        objects.remove(ref.onum);
+      }
+    }
   }
   
 }

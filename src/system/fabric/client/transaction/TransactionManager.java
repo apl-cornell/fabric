@@ -3,13 +3,23 @@
 
 package fabric.client.transaction;
 
-import java.lang.ref.SoftReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import fabric.client.*;
+import fabric.client.AbortException;
+import fabric.client.Core;
+import fabric.client.RemoteCore;
+import fabric.client.TransactionAtomicityViolationException;
+import fabric.client.TransactionCommitFailedException;
+import fabric.client.TransactionPrepareFailedException;
+import fabric.client.UnreachableCoreException;
 import fabric.common.InternalError;
-import fabric.common.Pair;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object.$Impl;
 
@@ -88,7 +98,7 @@ public final class TransactionManager {
     }
 
     synchronized (result) {
-      result.obj = new SoftReference<$Impl>(impl);
+      result.obj = impl.$ref;
       result.pinCount++;
       int ver = impl.$getVersion();
       if (ver == result.versionNumber) return result;

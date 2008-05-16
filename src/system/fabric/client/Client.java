@@ -249,6 +249,7 @@ public class Client {
    */
   public void shutdown() {
     fetchManager.destroy();
+    FabricSoftRef.destroy();
   }
   
   public static void initialize() throws IOException, KeyStoreException,

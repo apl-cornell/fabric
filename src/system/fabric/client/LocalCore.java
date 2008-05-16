@@ -104,4 +104,8 @@ public class LocalCore implements Core {
   public int hashCode() {
     return 0;
   }
+
+  public void notifyEvict(FabricSoftRef ref) {
+    // nothing to do
+  }
 }

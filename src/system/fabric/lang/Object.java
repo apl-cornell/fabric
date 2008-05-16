@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import fabric.client.Core;
+import fabric.client.FabricSoftRef;
 import fabric.client.UnreachableCoreException;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.ReadMapEntry;
@@ -59,21 +60,17 @@ public interface Object {
     public $Proxy(Core core, long onum) {
       this.core = core;
       this.onum = onum;
-      setRef(null);
+      this.ref = null;
     }
 
     public $Proxy($Impl impl) {
       this.core = impl.$core;
       this.onum = impl.$onum;
-      setRef(impl);
-    }
-
-    private void setRef($Impl impl) {
-      ref = new SoftReference<$Impl>(impl);
+      this.ref = impl.$ref;
     }
 
     public final $Impl fetch() {
-      $Impl result = ref.get();
+      $Impl result = (ref == null) ? null : ref.get();
 
       if (result == null) {
         // Object has been evicted.
@@ -82,7 +79,8 @@ public interface Object {
         } catch (FetchException e) {
           // TODO figure out how to communicate error
         }
-        setRef(result);
+        
+        ref = result.$ref;
       }
 
       return result;
@@ -157,6 +155,8 @@ public interface Object {
     private Core $core;
     private long $onum;
     private $Proxy $proxy;
+    
+    public final FabricSoftRef $ref;
 
     /**
      * A reference to the class object. TODO Figure out class loading.
@@ -198,9 +198,7 @@ public interface Object {
     public $Impl $history;
 
     /**
-     * A reference to the global read list for this object. This is non-null
-     * exactly when there is an entry in the global read list for this object
-     * (which occurs exactly when the object has a reader).
+     * A reference to the global read list for this object.
      * 
      * @see fabric.client.transaction.TransactionManager#readMap
      */
@@ -223,6 +221,7 @@ public interface Object {
       this.$reader = null;
       this.$history = null;
       this.$numWaiting = 0;
+      this.$ref = new FabricSoftRef(this);
       this.$readMapEntry = TransactionManager.getReadMapEntry(this);
     }
 

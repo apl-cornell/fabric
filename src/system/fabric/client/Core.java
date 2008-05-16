@@ -69,4 +69,12 @@ public interface Core {
    * Returns the root map of the Core
    */
   public fabric.lang.Object getRoot() throws UnreachableCoreException;
+  
+  /**
+   * Notifies this core that an $Impl has been evicted, so that it can perform
+   * the necessary cache maintenance.
+   * 
+   * @param ref The FabricSoftRef that was actually evicted.
+   */
+  public void notifyEvict(FabricSoftRef ref);
 }
