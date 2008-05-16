@@ -230,7 +230,7 @@ public final class Log {
 
         parentReads.put(readMapEntry.core, readMapEntry.onum, entry);
 
-        // Signal any readers/writers.
+        // Signal any readers/writers and clear the $reader stamp.
         readMapEntry.signalObject();
       }
     }
@@ -250,6 +250,7 @@ public final class Log {
             // parent and transfer our write lock.
             parentWrites.add(obj);
           }
+          obj.$writer = null;
           obj.$writeLockHolder = parent;
 
           // Signal any readers/writers.
@@ -286,6 +287,7 @@ public final class Log {
     // Release write locks and update version numbers.
     for ($Impl obj : writes) {
       synchronized (obj) {
+        obj.$writer = null;
         obj.$writeLockHolder = null;
         obj.$version++;
         obj.$readListEntry.versionNumber++;
