@@ -208,7 +208,7 @@ public interface Object {
      * The number of threads waiting on this object.
      */
     public int $numWaiting;
-
+    
     /**
      * A private constructor for initializing transaction-management state.
      */
@@ -222,7 +222,8 @@ public interface Object {
       this.$history = null;
       this.$numWaiting = 0;
       this.$ref = new FabricSoftRef(this);
-      this.$readMapEntry = this.$ref.rme;
+      this.$readMapEntry = TransactionManager.getReadMapEntry(this);
+      this.$ref.rme(this.$readMapEntry);
     }
 
     /**

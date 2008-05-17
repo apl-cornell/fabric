@@ -105,7 +105,7 @@ public class LocalCore implements Core {
     return 0;
   }
 
-  public void notifyEvict(FabricSoftRef ref) {
+  public void notifyEvict(long onum) {
     // nothing to do
   }
 }

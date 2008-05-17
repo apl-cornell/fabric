@@ -74,7 +74,7 @@ public interface Core {
    * Notifies this core that an $Impl has been evicted, so that it can perform
    * the necessary cache maintenance.
    * 
-   * @param ref The FabricSoftRef that was actually evicted.
+   * @param onum Onum of the object that was evicted.
    */
-  public void notifyEvict(FabricSoftRef ref);
+  public void notifyEvict(long onum);
 }

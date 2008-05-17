@@ -198,9 +198,11 @@ public class RemoteCore implements Core {
   }
   
   public Object.$Impl readObjectFromCache(long onum) {
-    SoftReference<Object.$Impl> ref = objects.get(onum);
-    if (ref == null) return null;
-    return ref.get();
+    synchronized (objects) {
+      FabricSoftRef ref = objects.get(onum);
+      if (ref == null) return null;
+      return ref.get();
+    }
   }
 
   /**
@@ -246,7 +248,11 @@ public class RemoteCore implements Core {
       Surrogate surrogate = (Surrogate) result;
       result = surrogate.core.readObject(surrogate.onum);
     }
-    objects.put(onum, new FabricSoftRef(result));
+    
+    synchronized (objects) {
+      objects.put(onum, result.$ref);
+    }
+    
     return result;
   }
 
@@ -331,10 +337,12 @@ public class RemoteCore implements Core {
     return name.hashCode();
   }
 
-  public void notifyEvict(FabricSoftRef ref) {
+  public void notifyEvict(long onum) {
     synchronized (objects) {
-      if (objects.get(ref.onum) == ref) {
-        objects.remove(ref.onum);
+      FabricSoftRef r = objects.get(onum);
+      
+      if (r != null && r.get() == null) {
+        objects.remove(onum);
       }
     }
   }

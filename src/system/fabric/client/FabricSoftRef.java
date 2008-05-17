@@ -4,7 +4,6 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 
 import fabric.client.transaction.ReadMapEntry;
-import fabric.client.transaction.TransactionManager;
 import fabric.lang.Object.$Impl;
 
 public class FabricSoftRef extends SoftReference<$Impl> {
@@ -19,7 +18,7 @@ public class FabricSoftRef extends SoftReference<$Impl> {
   
   public final Core core;
   public final long onum;
-  public final ReadMapEntry rme;
+  public ReadMapEntry rme;
   
   /**
    * This destroys the background thread responsible for cleaning up collected
@@ -33,8 +32,10 @@ public class FabricSoftRef extends SoftReference<$Impl> {
     super(impl, queue);
     core = impl.$getCore();
     onum = impl.$getOnum();
-    rme = TransactionManager.getReadMapEntry(impl);
-    rme.ref(this);
+  }
+  
+  public void rme(ReadMapEntry rme) {
+    this.rme = rme;
   }
   
   private static class RefCollector extends Thread {
@@ -53,7 +54,7 @@ public class FabricSoftRef extends SoftReference<$Impl> {
       while (!destroyed) {
         try {
           FabricSoftRef ref = (FabricSoftRef) queue.remove();
-          ref.core.notifyEvict(ref);
+          ref.core.notifyEvict(ref.onum);
           ref.rme.depin();
         } catch (InterruptedException e) {}
       }
