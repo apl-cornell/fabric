@@ -84,7 +84,7 @@ public class AssignmentXMLBuilder {
     xAssignment.setAttribute(XMLBuilder.A_NAME, assignment.getName());
     xAssignment.setAttribute(XMLBuilder.A_DUEDATE, DateTimeUtil.ADMIN_ASGN_DUEDATE_FORMAT
         .format(assignment.getDueDate()));
-    xAssignment.setAttribute(XMLBuilder.A_ID, Long.toString(assignment.getAssignmentID()));
+    xAssignment.setAttribute(XMLBuilder.A_ID, assignment.toString());
     return xAssignment;
   }
 
@@ -112,8 +112,7 @@ public class AssignmentXMLBuilder {
       Assignment assignment) {
     xAssignment.setAttribute(XMLBuilder.A_NAME, assignment.getName());
     xAssignment.setAttribute(XMLBuilder.A_NAMESHORT, assignment.getNameShort());
-    xAssignment.setAttribute(XMLBuilder.A_ASSIGNID, Long.toString(assignment
-        .getAssignmentID()));
+    xAssignment.setAttribute(XMLBuilder.A_ASSIGNID, assignment.toString());
     xAssignment.setAttribute(XMLBuilder.A_WEIGHT, StringUtil.roundToOne(Float
         .toString(assignment.getWeight())));
     xAssignment.setAttribute(XMLBuilder.A_TOTALSCORE, StringUtil.roundToOne(Float
@@ -150,7 +149,7 @@ public class AssignmentXMLBuilder {
         .getGroupSizeMin()));
     xAssignment.setAttribute(XMLBuilder.A_MAXGROUP, Integer.toString(assignment
         .getGroupSizeMax()));
-    xAssignment.setAttribute(XMLBuilder.A_ID, Long.toString(assignment.getAssignmentID()));
+    xAssignment.setAttribute(XMLBuilder.A_ID, assignment.toString());
     if (assignment.getShowStats()) xAssignment.setAttribute(XMLBuilder.A_SHOWSTATS, "");
     Date cmpTime =
         new Date(System.currentTimeMillis() - graceperiod * 60000);
@@ -191,7 +190,7 @@ public class AssignmentXMLBuilder {
     }
     Float grade = null;
     if (gradeMap != null)
-      grade = (Float) gradeMap.get(new Long(assignment.getAssignmentID()));
+      grade = (Float) gradeMap.get(assignment);
     if (grade != null)
       xAssignment.setAttribute(XMLBuilder.A_SCORE, StringUtil.roundToOne(""
           + grade.floatValue()));
@@ -230,40 +229,37 @@ public class AssignmentXMLBuilder {
     while (i.hasNext()) {
       AssignmentItem item = (AssignmentItem) i.next();
       AssignmentFile file = item.getAssignmentFile();
-      Collection hiddenFiles = item.getHiddenAssignmentFiles();
+      Collection hiddenFiles = item.findHiddenAssignmentFiles();
       Element xItem = xml.createElement(XMLBuilder.TAG_ITEM);
       xItem.setAttribute(XMLBuilder.A_NAME, item.getItemName());
-      xItem.setAttribute(XMLBuilder.A_ID, Long.toString(item.getAssignmentItemID()));
+      xItem.setAttribute(XMLBuilder.A_ID,   item.toString());
       Element xFile = xml.createElement(XMLBuilder.TAG_FILE);
       xItem.appendChild(xFile);
-      xFile.setAttribute(XMLBuilder.A_NAME, file.getItemName());
-      xFile.setAttribute(XMLBuilder.A_ID, Long.toString(file.getAssignmentFileID()));
+      xFile.setAttribute(XMLBuilder.A_NAME, item.getItemName());
+      xFile.setAttribute(XMLBuilder.A_ID,   file.toString());
       Iterator hid = hiddenFiles.iterator();
       while (hid.hasNext()) {
         AssignmentFile hidFile = (AssignmentFile) hid.next();
         Element xHidFile = xml.createElement(XMLBuilder.TAG_HIDDENFILE);
         xItem.appendChild(xHidFile);
         xHidFile.setAttribute(XMLBuilder.A_NAME, hidFile.getFileName());
-        xHidFile.setAttribute(XMLBuilder.A_ID, Long
-            .toString(hidFile.getAssignmentFileID()));
-        xHidFile.setAttribute(XMLBuilder.A_DATE, DateTimeUtil.NUMMONTH_DAY_TIME
-            .format(hidFile.getFileDate()));
+        xHidFile.setAttribute(XMLBuilder.A_ID,   hidFile.toString());
+        xHidFile.setAttribute(XMLBuilder.A_DATE,
+            DateTimeUtil.NUMMONTH_DAY_TIME.format(hidFile.getFileDate()));
       }
       xItems.appendChild(xItem);
     }
     // deleted items
-    i = assignment.getHiddenAssignmentItems().iterator();
+    i = assignment.findHiddenAssignmentItems().iterator();
     while (i.hasNext()) {
       AssignmentItem item = (AssignmentItem) i.next();
-      AssignmentFile file =
-          item.getAssignmentFile().getAssignmentFile();
+      AssignmentFile file = item.getAssignmentFile();
       Element xHidItem = xml.createElement(XMLBuilder.TAG_HIDDENITEM);
       xItems.appendChild(xHidItem);
       xHidItem.setAttribute(XMLBuilder.A_NAME, item.getItemName());
-      xHidItem
-          .setAttribute(XMLBuilder.A_ID, Long.toString(item.getAssignmentItemID()));
-      xHidItem.setAttribute(XMLBuilder.A_DATE, DateTimeUtil.NUMMONTH_DAY_TIME.format(file
-          .getFileDate()));
+      xHidItem.setAttribute(XMLBuilder.A_ID,   item.toString());
+      xHidItem.setAttribute(XMLBuilder.A_DATE,
+          DateTimeUtil.NUMMONTH_DAY_TIME.format(file.getFileDate()));
     }
     return xItems;
   }
@@ -282,19 +278,20 @@ public class AssignmentXMLBuilder {
       Assignment assignment) {
     Element xSolutions = xml.createElement(XMLBuilder.TAG_SOLUTIONS);
     if (assignment.hasSolutionFile()) {
-      SolutionFile sf = assignment.getSolutionFile();
+      SolutionFile sf = assignment.findSolutionFile();
       Element xSolution = xml.createElement(XMLBuilder.TAG_SOLFILE);
       xSolution.setAttribute(XMLBuilder.A_FILENAME, sf.getFileName());
       xSolution.setAttribute(XMLBuilder.A_PATH, sf.getPath());
-      xSolution.setAttribute(XMLBuilder.A_ID, Long.toString(sf.getSolutionFileID()));
+      xSolution.setAttribute(XMLBuilder.A_ID, sf.toString());
       xSolutions.appendChild(xSolution);
     }
-    Iterator i = assignment.getHiddenSolutionFiles().iterator();
+    
+    Iterator i = assignment.findHiddenSolutionFiles().iterator();
     while (i.hasNext()) {
       SolutionFile sfd = (SolutionFile) i.next();
       Element xSolution = xml.createElement(XMLBuilder.TAG_HIDDENSOLFILE);
       xSolution.setAttribute(XMLBuilder.A_FILENAME, sfd.getFileName());
-      xSolution.setAttribute(XMLBuilder.A_ID, Long.toString(sfd.getSolutionFileID()));
+      xSolution.setAttribute(XMLBuilder.A_ID, sfd.toString());
       xSolutions.appendChild(xSolution);
     }
     return xSolutions;
@@ -348,19 +345,20 @@ public class AssignmentXMLBuilder {
       RequiredSubmission submission, String submissionTypeTag) {
     Element xFile = xml.createElement(submissionTypeTag);
     Iterator i = submission.getRequiredFileTypes().iterator();
-    xFile.setAttribute(XMLBuilder.A_ID, Long.toString(submission.getSubmissionID()));
+    xFile.setAttribute(XMLBuilder.A_ID, submission.toString());
     xFile.setAttribute(XMLBuilder.A_NAME, submission.getSubmissionName());
     xFile.setAttribute(XMLBuilder.A_SIZE, Integer.toString(submission.getMaxSize()));
-    String formats = "";
+    StringBuilder formats = new StringBuilder();
     while (i.hasNext()) {
-      RequiredFileType type = (RequiredFileType) i.next();
+      String type = (String) i.next();
       Element xFormat = xml.createElement(XMLBuilder.TAG_FORMAT);
       xFile.appendChild(xFormat);
-      xFormat.setAttribute(XMLBuilder.A_TYPE, type.getFileType());
-      formats = (!formats.equals("")) ? formats + ", " : formats;
-      formats = formats + type.getFileType();
+      xFormat.setAttribute(XMLBuilder.A_TYPE, type);
+      if (formats.length() != 0)
+        formats.append(", ");
+      formats.append(type);
     }
-    xFile.setAttribute(XMLBuilder.A_TYPELIST, formats);
+    xFile.setAttribute(XMLBuilder.A_TYPELIST, formats.toString());
     return xFile;
   }
 
@@ -400,16 +398,16 @@ public class AssignmentXMLBuilder {
       xProb.setAttribute(XMLBuilder.A_NAME, sp.getSubProblemName());
       xProb.setAttribute(XMLBuilder.A_TOTALSCORE, StringUtil.trimTrailingZero(Float
           .toString(sp.getMaxScore())));
-      xProb.setAttribute(XMLBuilder.A_ID, Long.toString(sp.getSubProblemID()));
+      xProb.setAttribute(XMLBuilder.A_ID, sp.toString());
       xProb.setAttribute(XMLBuilder.A_TYPE, Long.toString(sp.getType()));
       xProb.setAttribute(XMLBuilder.A_ORDER, Long.toString(sp.getOrder()));
       if (gradeMap != null) {
-        Float grade = (Float) gradeMap.get(new Long(sp.getSubProblemID()));
+        Float grade = (Float) gradeMap.get(sp);
         if (grade != null)
           xProb.setAttribute(XMLBuilder.A_SCORE, StringUtil.roundToOne(grade.toString()));
       }
       if (answerMap != null) {
-        String answer = (String) answerMap.get(new Long(sp.getSubProblemID()));
+        String answer = (String) answerMap.get(sp);
         if (answer != null) xProb.setAttribute(XMLBuilder.A_ANSWER, answer);
       }
 
@@ -434,7 +432,7 @@ public class AssignmentXMLBuilder {
       xProb.setAttribute(XMLBuilder.A_NAME, sp.getSubProblemName());
       xProb.setAttribute(XMLBuilder.A_TOTALSCORE, StringUtil.trimTrailingZero(Float
           .toString(sp.getMaxScore())));
-      xProb.setAttribute(XMLBuilder.A_ID, Long.toString(sp.getSubProblemID()));
+      xProb.setAttribute(XMLBuilder.A_ID, sp.toString());
       xSubproblems.appendChild(xProb);
     }
     return xSubproblems;
@@ -453,27 +451,19 @@ public class AssignmentXMLBuilder {
   public Element buildSubProblemChoicesSubtree(Document xml, SubProblem sp) {
     Element xChoices = xml.createElement(XMLBuilder.TAG_CHOICES);
 
-    // visible subproblems
-    Iterator i = sp.findChoices(false).iterator();
-
+    Iterator i = sp.getChoices().iterator();
     while (i.hasNext()) {
       Choice choice = ((Choice) i.next());
-      Element xChoice = xml.createElement(XMLBuilder.TAG_CHOICE);
-      xChoice.setAttribute(XMLBuilder.A_LETTER, choice.getLetter());
-      xChoice.setAttribute(XMLBuilder.A_TEXT, choice.getText());
-      xChoice.setAttribute(XMLBuilder.A_ID, Long.toString(choice.getChoiceID()));
-      xChoice
-          .setAttribute(XMLBuilder.A_SUBPROBID, Long.toString(choice.getSubProblemID()));
-      xChoices.appendChild(xChoice);
-    }
-    // deleted (hidden) subproblems [debug]
-    i = sp.findChoices(true).iterator();
-    while (i.hasNext()) {
-      Choice choice = (Choice) i.next();
-      Element xChoice = xml.createElement(XMLBuilder.TAG_HIDDENCHOICE);
-      xChoice.setAttribute(XMLBuilder.A_LETTER, choice.getLetter());
-      xChoice.setAttribute(XMLBuilder.A_TEXT, choice.getText());
-      xChoice.setAttribute(XMLBuilder.A_ID, Long.toString(choice.getChoiceID()));
+      
+      // hidden choices returned for debugging purposes
+      String tag = choice.getHidden() ? XMLBuilder.TAG_HIDDENCHOICE
+                                      : XMLBuilder.TAG_CHOICE;
+      
+      Element xChoice = xml.createElement(tag);
+      xChoice.setAttribute(XMLBuilder.A_LETTER,    choice.getLetter());
+      xChoice.setAttribute(XMLBuilder.A_TEXT,      choice.getText());
+      xChoice.setAttribute(XMLBuilder.A_ID,        choice.toString());
+      xChoice.setAttribute(XMLBuilder.A_SUBPROBID, choice.getSubProblem().toString());
       xChoices.appendChild(xChoice);
     }
     return xChoices;
@@ -487,11 +477,11 @@ public class AssignmentXMLBuilder {
       Element xSurvey = xml.createElement(XMLBuilder.TAG_SURVEY);
 
       // include basic information and also total submissions
-      Collection answerSets = survey.findAnswerSets();
+      Collection answerSets = survey.getAnswerSets();
       int numSubmissions = (answerSets != null) ? answerSets.size() : 0;
       Date due = survey.getDueDate();
 
-      xSurvey.setAttribute(XMLBuilder.A_ASSIGNID, Long.toString(survey.getAssignmentID()));
+      xSurvey.setAttribute(XMLBuilder.A_ASSIGNID, survey.toString());
       xSurvey.setAttribute(XMLBuilder.A_NAME, survey.getName());
       xSurvey.setAttribute(XMLBuilder.A_COUNT, Integer.toString(numSubmissions));
       xSurvey.setAttribute(XMLBuilder.A_STATUS, survey.getStatus());
@@ -504,7 +494,6 @@ public class AssignmentXMLBuilder {
   }
 
   public Element buildSurveyResultSubtree(Document xml, Assignment assignment) {
-    long assignID = assignment.getAssignmentID();
     int assignType = assignment.getType();
     Course course = assignment.getCourse();
     Element xResult = xml.createElement(XMLBuilder.TAG_SURVEYRESULT);
@@ -512,14 +501,12 @@ public class AssignmentXMLBuilder {
     xResult.setAttribute(XMLBuilder.A_COURSENAME, course.getName());
 
     Element xAssignment = xml.createElement(XMLBuilder.TAG_ASSIGNMENT);
-    xAssignment.setAttribute(XMLBuilder.A_ID, Long.toString(assignID));
-    xAssignment.setAttribute(XMLBuilder.A_NAME, assignment.getName());
+    xAssignment.setAttribute(XMLBuilder.A_ID,          assignment.toString());
+    xAssignment.setAttribute(XMLBuilder.A_NAME,        assignment.getName());
     xAssignment.setAttribute(XMLBuilder.A_DESCRIPTION, assignment.getDescription());
-    xAssignment.setAttribute(XMLBuilder.A_COURSEID, Long
-        .toString(assignment.getCourseID()));
-    xAssignment.setAttribute(XMLBuilder.A_TYPE, Integer.toString(assignType));
-    xAssignment.setAttribute(XMLBuilder.A_MAXSCORE, Float.toString(assignment
-        .getMaxScore()));
+    xAssignment.setAttribute(XMLBuilder.A_COURSEID,    assignment.getCourse().toString());
+    xAssignment.setAttribute(XMLBuilder.A_TYPE,        Integer.toString(assignType));
+    xAssignment.setAttribute(XMLBuilder.A_MAXSCORE,    Float.toString(assignment.getMaxScore()));
 
     Iterator i = assignment.getSubProblems().iterator();
     TreeMap sidToOrderMap = new TreeMap();
@@ -542,9 +529,11 @@ public class AssignmentXMLBuilder {
 
       if (stype == SubProblem.MULTIPLE_CHOICE) {
         TreeMap choiceTallyMap = new TreeMap(); // maps choice text to count
-        Iterator j = subproblem.findChoices(false).iterator();
+        Iterator j = subproblem.getChoices().iterator();
         while (j.hasNext()) {
           Choice choice = (Choice) j.next();
+          if (choice.getHidden())
+            continue;
           choiceTallyMap.put(choice.getLetter(), new Integer(0));
         }
         sidToChoiceTallyMap.put(subproblem, choiceTallyMap);

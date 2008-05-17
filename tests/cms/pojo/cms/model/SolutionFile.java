@@ -1,51 +1,43 @@
 package cms.model;
 
-import java.util.Collection;
+public class SolutionFile {
 
-public class AssignmentItem {
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
   private Assignment assignment;
-  private String     itemName;
   private boolean    hidden;
+  private String     fileName;
+  private String     path;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
   public void setAssignment (final Assignment assignment) { this.assignment = assignment; }
-  public void setItemName   (final String itemName)       { this.itemName   = itemName;   }
   public void setHidden     (final boolean hidden)        { this.hidden     = hidden;     }
+  public void setFileName   (final String fileName)       { this.fileName   = fileName;   }
+  public void setPath       (final String path)           { this.path       = path;       }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
   public Assignment getAssignment() { return this.assignment; }
-  public String     getItemName()   { return this.itemName;   }
   public boolean    getHidden()     { return this.hidden;     }
+  public String     getFileName()   { return this.fileName;   }
+  public String     getPath()       { return this.path;       }
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public AssignmentItem(Assignment assign, String name) {
-    setAssignment(assignment);
-    setItemName(name);
-    setHidden(false);
-  }
-  
-  // TODO: I think it may be the case that an assignment item has a unique
-  // non-hidden file and then a collection of hidden files, but I'm not sure.
-  public AssignmentFile getAssignmentFile() {
-    // TODO Auto-generated method stub
-    return null;
-  }
-  public Collection/*AssignmentFile*/ findHiddenAssignmentFiles() {
-    // TODO Auto-generated method stub
-    return null;
+  public SolutionFile(Assignment assign, String fileName, boolean hidden, String path) {
+    setAssignment(assign);
+    setFileName(fileName);
+    setHidden(hidden);
+    setPath(path);
   }
 }
 

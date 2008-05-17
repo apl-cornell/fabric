@@ -1,5 +1,7 @@
 package cms.model;
 
+import java.util.Collection;
+
 public class RequiredSubmission {
 
   public static final String ANY_TYPE = "accept any";
@@ -46,6 +48,10 @@ public class RequiredSubmission {
   public boolean isHidden() {
     // TODO Auto-generated method stub
     return false;
+  }
+  public Collection/*String*/ getRequiredFileTypes() {
+    // TODO Auto-generated method stub
+    return null;
   }
 
 }

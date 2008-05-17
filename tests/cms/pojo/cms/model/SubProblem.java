@@ -1,5 +1,8 @@
 package cms.model;
 
+import java.util.Collection;
+import java.util.Iterator;
+
 public class SubProblem {
   
   // TODO: subclass for multiple choice
@@ -67,6 +70,10 @@ public class SubProblem {
    *         multiple choice problem, or null.
    */
   public Choice getAnswerChoice() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Choice*/ getChoices() {
     // TODO Auto-generated method stub
     return null;
   }

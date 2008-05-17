@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import cms.auth.Principal;
@@ -220,6 +221,24 @@ public class Course {
   }
   
   public Collection/*RequiredSubmission*/ getRequiredSubmissions() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
+  public Map/*SubProblem, Float*/ getGradeMap(User user) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Student getStudent(User user) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Assignment*/ findHiddenAssignments() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
+  public Collection/*Category*/ getCategories() {
     // TODO Auto-generated method stub
     return null;
   }

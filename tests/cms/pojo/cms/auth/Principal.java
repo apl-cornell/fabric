@@ -53,4 +53,9 @@ public class Principal {
     // TODO Auto-generated method stub
     return null;
   }
+
+  public int getAuthoriznLevelByCourse(Course course) {
+    // TODO Auto-generated method stub
+    return 0;
+  }
 }

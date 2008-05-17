@@ -279,6 +279,31 @@ public class Assignment {
     // TODO Auto-generated method stub
     return null;
   }
+
+  public boolean hasSolutionFile() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  public SolutionFile findSolutionFile() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Collection/*SolutionFile*/ findHiddenSolutionFiles() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Collection/*AssignmentItem*/ getAssignmentItems() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Collection/*AssignmentItems*/ findHiddenAssignmentItems() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

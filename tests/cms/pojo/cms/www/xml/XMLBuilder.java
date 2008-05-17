@@ -491,6 +491,8 @@ public class XMLBuilder {
   ScheduleXMLBuilder     scheduleXMLBuilder;
   GradingXMLBuilder      gradingXMLBuilder;
   GroupXMLBuilder        groupXMLBuilder;
+  AnnouncementXMLBuilder announcementXMLBuilder;
+  CategoryXMLBuilder     categoryXMLBuilder;
 
   public XMLBuilder(CMSRoot database) {
     this.database             = database;
