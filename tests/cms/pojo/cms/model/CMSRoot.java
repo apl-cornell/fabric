@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.Collection;
 import java.util.Map;
 
+import cms.auth.Principal;
+
 /**
  * This class is the root container for all of the objects in the CMS Database.
  * Note that comments are descriptions of the ``real'' CMS, and may not yet
@@ -102,6 +104,14 @@ public class CMSRoot {
   }
   
   public Collection/*LogDetail*/ findGradeLogDetails(Course course, Collection/*Group*/ groups) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Assignment*/ findAssignmentsBySemester(Semester curSemester) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Assignment*/ findAssignmentsByCourseAdmin(Semester curSemester, Principal p) {
     // TODO Auto-generated method stub
     return null;
   }

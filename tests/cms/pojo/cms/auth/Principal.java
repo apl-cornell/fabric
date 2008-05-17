@@ -1,5 +1,6 @@
 package cms.auth;
 
+import cms.model.Assignment;
 import cms.model.Course;
 
 public class Principal {
@@ -57,5 +58,10 @@ public class Principal {
   public int getAuthoriznLevelByCourse(Course course) {
     // TODO Auto-generated method stub
     return 0;
+  }
+
+  public boolean isAssignPrivByAssignment(Assignment assignment) {
+    // TODO Auto-generated method stub
+    return false;
   }
 }

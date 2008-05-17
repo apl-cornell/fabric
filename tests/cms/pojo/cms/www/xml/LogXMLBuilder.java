@@ -12,393 +12,414 @@ import cms.www.util.DateTimeUtil;
 
 import cms.auth.Principal;
 import cms.model.*;
-import cms.log.LogDetail;
 
 /**
- * Builds an XML subtree with information on log search results
+ * Builds an XML subtree with information on log search results Created 5 / 19 /
+ * 05
  * 
- * Created 5 / 19 / 05
  * @author Evan
  */
-public class LogXMLBuilder
-{
-	/**
-	 * Generate an XML subtree with all info on the given Logs and their associated low-level logs
-	 * @param p The Principal to generate the page for
-	 * @param xml The Document to place this element on
-	 * @param logs A Collection of Log objects from which to take information
-	 * @return A log-results element with no properties and with children for individual log entries
-	 * @throws FinderException
-	 */
-	public Element buildFullSubtree(Principal p, Document xml, Collection logs) throws FinderException
-	{
-		Element logRoot = xml.createElement(TAG_LOGSEARCH_RESULTS);
-		Iterator i = logs.iterator();
-		Map courseCodes = database.getCIDCourseCodeMap();
-		Map assignNames = database.getAssignmentNameMap();
-		while(i.hasNext())
-		{
-			logRoot.appendChild(buildLogSubtree(xml, (LogLocal)i.next(), courseCodes, assignNames));
-		}
-		return logRoot;
-	}
-	
-	/**
-	 * Generate an XML subtree with all info on the given Log and its associated LogDetails
-	 * @param xml The Document on which to create this subtree
-	 * @param log The Log from which to take information
-	 * @return A log element with several properties set and child nodes for detailed logs
-	 * @throws FinderException
-	 */
-	protected Element buildLogSubtree(Document xml, LogLocal log, Map codes, Map assigns) throws FinderException {
-		Element logElement = xml.createElement(TAG_LOG);
-		logElement.setAttribute(A_LOGID, String.valueOf(log.getLogID()));
-		logElement.setAttribute(A_NETID, log.getActingNetID());
-		if (log.getSimulatedNetID() != null)
-		    logElement.setAttribute(A_SIMNETID, log.getSimulatedNetID());
-		logElement.setAttribute(A_IPADDRESS, log.getActingIPAddress().getHostAddress());
-		logElement.setAttribute(A_DATE, DateTimeUtil.formatDate(log.getTimestamp()));
-		logElement.setAttribute(A_LOGTYPE, LogBean.logTypeToString(log.getLogType()));
-		logElement.setAttribute(A_LOGNAME, log.getLogName());
-		if (log.getCourseID() != null) 
-		    logElement.setAttribute(A_COURSENAME, (String) codes.get(log.getCourseID()));
-		Iterator i = log.getAssignmentIDs().iterator();
-		String assignments = "";
-		while (i.hasNext()){
-		    Long aid = (Long) i.next();
-		    String aname = (String) assigns.get(aid);
-		    assignments += (assignments.equals("") ? aname : ", " + aname);
-		}
-		if (!assignments.equals("")) {
-		    logElement.setAttribute(A_ASSIGNMENT, assignments);
-		}
-		appendReceivingNetIDSubtree(xml, logElement, log.getReceivingNetIDs());
-		i = log.getDetailLogs().iterator();
-		while(i.hasNext()) {
-			logElement.appendChild(buildDetailedLogSubtree(xml, (LogDetail)i.next(), assigns));
-		}
-		return logElement;
-	}
-	
-	/**
-	 * Generate an XML subtree with all info on the given low-level log, except for a reference
-	 * to the high-level log it's associated with (because we assume that log is known)
-	 * @param xml The Document on which to create this subtree
-	 * @param details The LogDetail from which to take information
-	 * @return A log-detail element with as few properties set as possible
-	 * (since we'd rather have most of the information in the high-level-log node
-	 */
-	protected Element buildDetailedLogSubtree(Document xml, LogDetail details, Map assigns) {
-		Element detailElement = xml.createElement(TAG_LOGDETAIL);
-		detailElement.setAttribute(A_DETAILS, details.getDetailString());
-		if (details.getNetID() != null) {
-		    detailElement.setAttribute(A_NETID, details.getNetID());
-		}
-		if (details.getAssignmentID() != null) {
-		   detailElement.setAttribute(A_ASSIGNID, details.getAssignmentID().toString());
-		   detailElement.setAttribute(A_ASSIGNNAME, (String) assigns.get(details.getAssignmentID()));
-		}
-		return detailElement;
-	}
-	
-	protected void appendReceivingNetIDSubtree(Document xml, Element e, Collection netids) {
-	    Iterator i = netids.iterator();
-	    while (i.hasNext()) {
-	        String netid = (String) i.next();
-	        Element xNetID = xml.createElement(TAG_RECNETID);
-	        xNetID.setAttribute(A_NETID, netid);
-	        e.appendChild(xNetID);
-	    }
-	}
-	
-	protected void appendLogSearchCourses(Principal p, Document xml, Element root) throws FinderException, FinderException {
-	    Element logSearchCourses = xml.createElement(TAG_LOGSEARCH_COURSES);
-	    Collection courses;
-	    SemesterPK curSemester = database.findCurrentSemester();
-	    if (p.isCMSAdmin()) {
-	        courses = database.courseHome().findBySemesterID(curSemester.getSemesterID());
-	    } else {
-	        courses = database.courseHome().findStaffAdminCourses(curSemester.getSemesterID(), p.getNetID());
-	    }
-	    Iterator i = courses.iterator();
-	    while (i.hasNext()) {
-	        CourseLocal c = (CourseLocal) i.next();
-	        Element xCourse = xml.createElement(TAG_LOGSEARCH_COURSE);
-	        xCourse.setAttribute(A_COURSEID, String.valueOf(c.getCourseID()));
-	        xCourse.setAttribute(A_COURSENAME, c.getName());
-	        xCourse.setAttribute(A_CODE, c.getCode());
-	        logSearchCourses.appendChild(xCourse);
-	    }
-	    root.appendChild(logSearchCourses);
-	}
-	
-	//TODO ADD AVAILABLE GROUPS NODE SEARCHING
-	
-	protected void appendLogSearchNamesTypes(Document xml, Element root, boolean admin) {
-	    // TYPES:
-	    Element xTypes = xml.createElement(TAG_LOGTYPES);
-	    Element xAdmin = xml.createElement(TAG_LOGTYPE),
-	    		xCourse = xml.createElement(TAG_LOGTYPE),
-	    		xGroup = xml.createElement(TAG_LOGTYPE),
-	    		xGrade = xml.createElement(TAG_LOGTYPE),
-	    		xCategory = xml.createElement(TAG_LOGTYPE);
-	    xAdmin.setAttribute(A_LOGTYPE, String.valueOf(LogBean.LOG_ADMIN));
-	    xAdmin.setAttribute(A_LOGTYPESTR, LogBean.ADMIN);
-	    xCourse.setAttribute(A_LOGTYPE, String.valueOf(LogBean.LOG_COURSE));
-	    xCourse.setAttribute(A_LOGTYPESTR, LogBean.COURSE);
-	    xGroup.setAttribute(A_LOGTYPE, String.valueOf(LogBean.LOG_GROUP));
-	    xGroup.setAttribute(A_LOGTYPESTR, LogBean.GROUP);
-	    xGrade.setAttribute(A_LOGTYPE, String.valueOf(LogBean.LOG_GRADE));
-	    xGrade.setAttribute(A_LOGTYPESTR, LogBean.GRADE);
-	    xCategory.setAttribute(A_LOGTYPE, String.valueOf(LogBean.LOG_CATEGORY));
-	    xCategory.setAttribute(A_LOGTYPESTR, LogBean.CATEGORY);
-	    if (admin) {
-	        xTypes.appendChild(xAdmin);
-	    }
-	    xTypes.appendChild(xCourse);
-	    xTypes.appendChild(xCategory);
-	    xTypes.appendChild(xGroup);
-	    xTypes.appendChild(xGrade);
-	    // NAMES:
-	    Element xNames = xml.createElement(TAG_LOGNAMES);
-	    Element xName = xml.createElement(TAG_LOGNAME);
-	    // Admin Types
-	    if (admin) {
-		    xName.setAttribute(A_LOGNAME, LogBean.ADD_CMS_ADMIN);
-		    xName.setAttribute(A_LOGTYPE, LogBean.ADMIN);
-		    xNames.appendChild(xName);
-		    xName = xml.createElement(TAG_LOGNAME);
-		    xName.setAttribute(A_LOGNAME, LogBean.CREATE_COURSE);
-		    xName.setAttribute(A_LOGTYPE, LogBean.ADMIN);
-		    xNames.appendChild(xName);
-		    xName = xml.createElement(TAG_LOGNAME);
-		    xName.setAttribute(A_LOGNAME, LogBean.CREATE_SEMESTER);
-		    xName.setAttribute(A_LOGTYPE, LogBean.ADMIN);
-		    xNames.appendChild(xName);
-		    xName = xml.createElement(TAG_LOGNAME);
-		    xName.setAttribute(A_LOGNAME, LogBean.EDIT_SEMESTER);
-		    xName.setAttribute(A_LOGTYPE, LogBean.ADMIN);
-		    xNames.appendChild(xName);
-		    xName = xml.createElement(TAG_LOGNAME);
-		    xName.setAttribute(A_LOGNAME, LogBean.REMOVE_CMS_ADMIN);
-		    xName.setAttribute(A_LOGTYPE, LogBean.ADMIN);
-		    xNames.appendChild(xName);
-		    xName = xml.createElement(TAG_LOGNAME);
-		    xName.setAttribute(A_LOGNAME, LogBean.SET_CUIDS);
-		    xName.setAttribute(A_LOGTYPE, LogBean.ADMIN);
-		    xNames.appendChild(xName);
-		    xName = xml.createElement(TAG_LOGNAME);
-		    xName.setAttribute(A_LOGNAME, LogBean.SET_CURRENT_SEMESTER);
-		    xName.setAttribute(A_LOGTYPE, LogBean.ADMIN);
-		    xNames.appendChild(xName);
-		    xName = xml.createElement(TAG_LOGNAME);
-		    xName.setAttribute(A_LOGNAME, LogBean.SET_USERNAMES);
-		    xName.setAttribute(A_LOGTYPE, LogBean.ADMIN);
-		    xNames.appendChild(xName);
-	    }
-	    // Course Types
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.ADD_STUDENTS);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.CHANGE_GROUP_TIMESLOT);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.COMPUTE_ASSIGNMENT_STATS);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.COMPUTE_TOTAL_SCORES);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.CREATE_ANNOUNCEMENT);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.CREATE_ASSIGNMENT);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.CREATE_TIMESLOTS);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.DROP_STUDENTS);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.EDIT_ANNOUNCEMENT);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.EDIT_ASSIGNMENT);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.EDIT_COURSE_PROPS);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.EDIT_STAFF_PREFS);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.EDIT_STUDENT_PREFS);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.REMOVE_ASSIGNMENT);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);	    
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.REMOVE_TIMESLOTS);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.RESTORE_ANNOUNCEMENT);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.RESTORE_ASSIGNMENT);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.SEND_EMAIL);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.UPLOAD_CLASSLIST);
-	    xName.setAttribute(A_LOGTYPE, LogBean.COURSE);
-	    xNames.appendChild(xName);
-	    // Category Types
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.ADDNEDIT_CONTENTS);
-	    xName.setAttribute(A_LOGTYPE, LogBean.CATEGORY);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.CREATE_CATEGORY);
-	    xName.setAttribute(A_LOGTYPE, LogBean.CATEGORY);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.EDIT_CATEGORY);
-	    xName.setAttribute(A_LOGTYPE, LogBean.CATEGORY);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.ORDER_CATEGORIES);
-	    xName.setAttribute(A_LOGTYPE, LogBean.CATEGORY);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.REMOVE_CATEGORY);
-	    xName.setAttribute(A_LOGTYPE, LogBean.CATEGORY);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.REMOVE_CATEGORY_ROW);
-	    xName.setAttribute(A_LOGTYPE, LogBean.CATEGORY);
-	    xNames.appendChild(xName);
-	    // Grade Types
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.ASSIGN_GRADER);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GRADE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.EDIT_FINAL_GRADES);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GRADE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.EDIT_GRADES);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GRADE);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.UPLOAD_GRADES_FILE);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GRADE);
-	    xNames.appendChild(xName);
-	    // Group Types
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.ACCEPT_INVITATION);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GROUP);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.CANCEL_INVITATION);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GROUP);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.CREATE_GROUP);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GROUP);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.CREATE_INVITATION);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GROUP);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.DISBAND_GROUP);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GROUP);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.GRANT_EXTENSION);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GROUP);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.LEAVE_GROUP);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GROUP);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.REJECT_INVITATION);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GROUP);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.REMOVE_EXTENSION);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GROUP);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.REQUEST_REGRADE);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GROUP);
-	    xNames.appendChild(xName);
-	    xName = xml.createElement(TAG_LOGNAME);
-	    xName.setAttribute(A_LOGNAME, LogBean.SUBMIT_FILES);
-	    xName.setAttribute(A_LOGTYPE, LogBean.GROUP);
-	    xNames.appendChild(xName);
-	    root.appendChild(xNames);
-	    root.appendChild(xTypes);
-	}
-	
-	protected void appendLogSearchAssigns(Principal p, Document xml, Element root) throws FinderException {
-	    Element logSearchAssigns = xml.createElement(TAG_LOGSEARCH_ASSIGNS);
-	    Collection assigns;
-	    SemesterPK curSemester = database.findCurrentSemester();
-	    Map codes = database.getCourseCodeMap();
-	    if (p.isCMSAdmin()) {
-	        assigns = database.assignmentHome().findBySemesterID(curSemester.getSemesterID());
-	    } else {
-	        assigns = database.assignmentHome().findByCourseAdmin(curSemester.getSemesterID(), p.getNetID());
-	    }
-	    Iterator i = assigns.iterator();
-	    while (i.hasNext()) {
-	        AssignmentLocal a = (AssignmentLocal) i.next();
-	        Element xAssign = xml.createElement(TAG_LOGSEARCH_ASSIGN);
-	        String courseCode = ((String)codes.get(new Long(a.getAssignmentID())));
-	        xAssign.setAttribute(A_ASSIGNID, String.valueOf(a.getAssignmentID()));
-	        xAssign.setAttribute(A_NAME, courseCode + ": " + a.getName());
-	        xAssign.setAttribute(A_NAMESHORT, a.getName());
-	        xAssign.setAttribute(A_COURSEID, String.valueOf(a.getCourseID()));
-	        logSearchAssigns.appendChild(xAssign);
-	    }
-	    root.appendChild(logSearchAssigns);
-	}
-	
-	protected void appendAssignments(cms.auth.Principal p, Document xml, Course course) {
-	    Collection assigns = database.assignmentHome().findByCourseID(courseID);
-	    Iterator i = assigns.iterator();
-	    Element root = (Element) xml.getFirstChild();
-	    while (i.hasNext()) {
-	        AssignmentLocal a = (AssignmentLocal) i.next();
-	        Element xAssign = xml.createElement(TAG_LOGSEARCH_ASSIGN);
-	        xAssign.setAttribute(A_ASSIGNID, String.valueOf(a.getAssignmentID()));
-	        xAssign.setAttribute(A_ASSIGNNAME, a.getName());
-	        xAssign.setAttribute(A_NAMESHORT, a.getNameShort());
-	        root.appendChild(xAssign);
-	    }
-	}
+public class LogXMLBuilder {
+  private XMLBuilder xmlBuilder;
+  
+  public LogXMLBuilder(final XMLBuilder builder) {
+    this.xmlBuilder = builder;
+  }
+
+  /**
+   * Generate an XML subtree with all info on the given Logs and their
+   * associated low-level logs
+   * 
+   * @param p
+   *          The Principal to generate the page for
+   * @param xml
+   *          The Document to place this element on
+   * @param logs
+   *          A Collection of Log objects from which to take information
+   * @return A log-results element with no properties and with children for
+   *         individual log entries
+   * @throws FinderException
+   */
+  public Element buildFullSubtree(Principal p, Document xml, Collection logs) {
+    Element logRoot = xml.createElement(XMLBuilder.TAG_LOGSEARCH_RESULTS);
+    Iterator i = logs.iterator();
+    while (i.hasNext())
+      logRoot.appendChild(buildLogSubtree(xml, (Log) i.next()));
+    return logRoot;
+  }
+
+  /**
+   * Generate an XML subtree with all info on the given Log and its associated
+   * LogDetails
+   * 
+   * @param xml
+   *          The Document on which to create this subtree
+   * @param log
+   *          The Log from which to take information
+   * @return A log element with several properties set and child nodes for
+   *         detailed logs
+   * @throws FinderException
+   */
+  protected Element buildLogSubtree(Document xml, Log log) {
+    Element logElement = xml.createElement(XMLBuilder.TAG_LOG);
+    logElement.setAttribute(XMLBuilder.A_LOGID, log.toString());
+    logElement.setAttribute(XMLBuilder.A_NETID, log.getActingNetID());
+    if (log.getSimulatedNetID() != null)
+      logElement.setAttribute(XMLBuilder.A_SIMNETID, log.getSimulatedNetID());
+    logElement.setAttribute(XMLBuilder.A_IPADDRESS, log.getActingIPAddress()
+        .getHostAddress());
+    logElement.setAttribute(XMLBuilder.A_DATE, DateTimeUtil.formatDate(log
+        .getTimestamp()));
+    logElement.setAttribute(XMLBuilder.A_LOGTYPE, Log.logTypeToString(log
+        .getLogType()));
+    logElement.setAttribute(XMLBuilder.A_LOGNAME, log.getLogName());
+    if (log.getCourse() != null)
+      logElement.setAttribute(XMLBuilder.A_COURSENAME, log.getCourse().getCode());
+    Iterator i = log.findAssignments().iterator();
+    StringBuilder assignments = new StringBuilder();
+    while (i.hasNext()) {
+      Assignment assign = (Assignment) i.next();
+      if (assignments.length() > 0)
+        assignments.append(", ");
+      assignments.append(assign.getName());
+    }
+    if (assignments.length() > 0) {
+      logElement.setAttribute(XMLBuilder.A_ASSIGNMENT, assignments.toString());
+    }
+    appendReceivingNetIDSubtree(xml, logElement, log.getReceivingUsers());
+    i = log.getDetailLogs().iterator();
+    while (i.hasNext()) {
+      logElement.appendChild(buildDetailedLogSubtree(xml, (LogDetail) i.next()));
+    }
+    return logElement;
+  }
+
+  /**
+   * Generate an XML subtree with all info on the given low-level log, except
+   * for a reference to the high-level log it's associated with (because we
+   * assume that log is known)
+   * 
+   * @param xml
+   *          The Document on which to create this subtree
+   * @param details
+   *          The LogDetail from which to take information
+   * @return A log-detail element with as few properties set as possible (since
+   *         we'd rather have most of the information in the high-level-log node
+   */
+  protected Element buildDetailedLogSubtree(Document xml, LogDetail details) {
+    Element detailElement = xml.createElement(XMLBuilder.TAG_LOGDETAIL);
+    detailElement.setAttribute(XMLBuilder.A_DETAILS, details.getDetail());
+    if (details.getUser() != null) {
+      detailElement.setAttribute(XMLBuilder.A_NETID, details.getUser().getNetID());
+    }
+    if (details.getAssignment() != null) {
+      detailElement.setAttribute(XMLBuilder.A_ASSIGNID,   details.getAssignment().toString());
+      detailElement.setAttribute(XMLBuilder.A_ASSIGNNAME, details.getAssignment().getName());
+    }
+    return detailElement;
+  }
+
+  protected void appendReceivingNetIDSubtree(Document xml, Element e,
+      Collection netids) {
+    Iterator i = netids.iterator();
+    while (i.hasNext()) {
+      String netid = (String) i.next();
+      Element xNetID = xml.createElement(XMLBuilder.TAG_RECNETID);
+      xNetID.setAttribute(XMLBuilder.A_NETID, netid);
+      e.appendChild(xNetID);
+    }
+  }
+
+  protected void appendLogSearchCourses(Principal p, Document xml, Element root) {
+    Element logSearchCourses =
+        xml.createElement(XMLBuilder.TAG_LOGSEARCH_COURSES);
+    Collection courses;
+    Semester curSemester = xmlBuilder.database.getCurrentSemester();
+    if (p.isCMSAdmin()) {
+      courses = curSemester.getCourses();
+    } else {
+      courses = curSemester.findStaffAdminCourses(p);
+    }
+    Iterator i = courses.iterator();
+    while (i.hasNext()) {
+      Course c = (Course) i.next();
+      Element xCourse = xml.createElement(XMLBuilder.TAG_LOGSEARCH_COURSE);
+      xCourse.setAttribute(XMLBuilder.A_COURSEID,   c.toString());
+      xCourse.setAttribute(XMLBuilder.A_COURSENAME, c.getName());
+      xCourse.setAttribute(XMLBuilder.A_CODE,       c.getCode());
+      logSearchCourses.appendChild(xCourse);
+    }
+    root.appendChild(logSearchCourses);
+  }
+
+  // TODO ADD AVAILABLE GROUPS NODE SEARCHING
+
+  protected void appendLogSearchNamesTypes(Document xml, Element root,
+      boolean admin) {
+    // TYPES:
+    Element xTypes = xml.createElement(XMLBuilder.TAG_LOGTYPES);
+    Element xAdmin = xml.createElement(XMLBuilder.TAG_LOGTYPE), xCourse =
+        xml.createElement(XMLBuilder.TAG_LOGTYPE), xGroup =
+        xml.createElement(XMLBuilder.TAG_LOGTYPE), xGrade =
+        xml.createElement(XMLBuilder.TAG_LOGTYPE), xCategory =
+        xml.createElement(XMLBuilder.TAG_LOGTYPE);
+    xAdmin.setAttribute(XMLBuilder.A_LOGTYPE, String.valueOf(Log.LOG_ADMIN));
+    xAdmin.setAttribute(XMLBuilder.A_LOGTYPESTR, Log.ADMIN);
+    xCourse.setAttribute(XMLBuilder.A_LOGTYPE, String.valueOf(Log.LOG_COURSE));
+    xCourse.setAttribute(XMLBuilder.A_LOGTYPESTR, Log.COURSE);
+    xGroup.setAttribute(XMLBuilder.A_LOGTYPE, String.valueOf(Log.LOG_GROUP));
+    xGroup.setAttribute(XMLBuilder.A_LOGTYPESTR, Log.GROUP);
+    xGrade.setAttribute(XMLBuilder.A_LOGTYPE, String.valueOf(Log.LOG_GRADE));
+    xGrade.setAttribute(XMLBuilder.A_LOGTYPESTR, Log.GRADE);
+    xCategory.setAttribute(XMLBuilder.A_LOGTYPE, String
+        .valueOf(Log.LOG_CATEGORY));
+    xCategory.setAttribute(XMLBuilder.A_LOGTYPESTR, Log.CATEGORY);
+    if (admin) {
+      xTypes.appendChild(xAdmin);
+    }
+    xTypes.appendChild(xCourse);
+    xTypes.appendChild(xCategory);
+    xTypes.appendChild(xGroup);
+    xTypes.appendChild(xGrade);
+    // NAMES:
+    Element xNames = xml.createElement(XMLBuilder.TAG_LOGNAMES);
+    Element xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    // Admin Types
+    if (admin) {
+      xName.setAttribute(XMLBuilder.A_LOGNAME, Log.ADD_CMS_ADMIN);
+      xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.ADMIN);
+      xNames.appendChild(xName);
+      xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+      xName.setAttribute(XMLBuilder.A_LOGNAME, Log.CREATE_COURSE);
+      xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.ADMIN);
+      xNames.appendChild(xName);
+      xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+      xName.setAttribute(XMLBuilder.A_LOGNAME, Log.CREATE_SEMESTER);
+      xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.ADMIN);
+      xNames.appendChild(xName);
+      xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+      xName.setAttribute(XMLBuilder.A_LOGNAME, Log.EDIT_SEMESTER);
+      xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.ADMIN);
+      xNames.appendChild(xName);
+      xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+      xName.setAttribute(XMLBuilder.A_LOGNAME, Log.REMOVE_CMS_ADMIN);
+      xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.ADMIN);
+      xNames.appendChild(xName);
+      xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+      xName.setAttribute(XMLBuilder.A_LOGNAME, Log.SET_CUIDS);
+      xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.ADMIN);
+      xNames.appendChild(xName);
+      xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+      xName.setAttribute(XMLBuilder.A_LOGNAME, Log.SET_CURRENT_SEMESTER);
+      xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.ADMIN);
+      xNames.appendChild(xName);
+      xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+      xName.setAttribute(XMLBuilder.A_LOGNAME, Log.SET_USERNAMES);
+      xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.ADMIN);
+      xNames.appendChild(xName);
+    }
+    // Course Types
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.ADD_STUDENTS);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.CHANGE_GROUP_TIMESLOT);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.COMPUTE_ASSIGNMENT_STATS);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.COMPUTE_TOTAL_SCORES);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.CREATE_ANNOUNCEMENT);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.CREATE_ASSIGNMENT);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.CREATE_TIMESLOTS);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.DROP_STUDENTS);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.EDIT_ANNOUNCEMENT);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.EDIT_ASSIGNMENT);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.EDIT_COURSE_PROPS);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.EDIT_STAFF_PREFS);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.EDIT_STUDENT_PREFS);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.REMOVE_ASSIGNMENT);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.REMOVE_TIMESLOTS);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.RESTORE_ANNOUNCEMENT);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.RESTORE_ASSIGNMENT);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.SEND_EMAIL);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.UPLOAD_CLASSLIST);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.COURSE);
+    xNames.appendChild(xName);
+    // Category Types
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.ADDNEDIT_CONTENTS);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.CATEGORY);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.CREATE_CATEGORY);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.CATEGORY);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.EDIT_CATEGORY);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.CATEGORY);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.ORDER_CATEGORIES);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.CATEGORY);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.REMOVE_CATEGORY);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.CATEGORY);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.REMOVE_CATEGORY_ROW);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.CATEGORY);
+    xNames.appendChild(xName);
+    // Grade Types
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.ASSIGN_GRADER);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GRADE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.EDIT_FINAL_GRADES);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GRADE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.EDIT_GRADES);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GRADE);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.UPLOAD_GRADES_FILE);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GRADE);
+    xNames.appendChild(xName);
+    // Group Types
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.ACCEPT_INVITATION);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GROUP);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.CANCEL_INVITATION);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GROUP);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.CREATE_GROUP);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GROUP);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.CREATE_INVITATION);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GROUP);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.DISBAND_GROUP);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GROUP);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.GRANT_EXTENSION);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GROUP);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.LEAVE_GROUP);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GROUP);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.REJECT_INVITATION);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GROUP);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.REMOVE_EXTENSION);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GROUP);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.REQUEST_REGRADE);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GROUP);
+    xNames.appendChild(xName);
+    xName = xml.createElement(XMLBuilder.TAG_LOGNAME);
+    xName.setAttribute(XMLBuilder.A_LOGNAME, Log.SUBMIT_FILES);
+    xName.setAttribute(XMLBuilder.A_LOGTYPE, Log.GROUP);
+    xNames.appendChild(xName);
+    root.appendChild(xNames);
+    root.appendChild(xTypes);
+  }
+
+  protected void appendLogSearchAssigns(Principal p, Document xml, Element root) {
+    Element logSearchAssigns =
+        xml.createElement(XMLBuilder.TAG_LOGSEARCH_ASSIGNS);
+    Collection assigns;
+    Semester curSemester = xmlBuilder.database.getCurrentSemester();
+    if (p.isCMSAdmin()) {
+      assigns = xmlBuilder.database.findAssignmentsBySemester(curSemester);
+    } else {
+      assigns = xmlBuilder.database.findAssignmentsByCourseAdmin(curSemester, p);
+    }
+    Iterator i = assigns.iterator();
+    while (i.hasNext()) {
+      Assignment a = (Assignment) i.next();
+      Element xAssign = xml.createElement(XMLBuilder.TAG_LOGSEARCH_ASSIGN);
+      xAssign.setAttribute(XMLBuilder.A_ASSIGNID,  a.toString());
+      xAssign.setAttribute(XMLBuilder.A_NAME,      a.getCourse().getCode() + ": " + a.getName());
+      xAssign.setAttribute(XMLBuilder.A_NAMESHORT, a.getName());
+      xAssign.setAttribute(XMLBuilder.A_COURSEID,  a.getCourse().toString());
+      logSearchAssigns.appendChild(xAssign);
+    }
+    root.appendChild(logSearchAssigns);
+  }
+
+  protected void appendAssignments(cms.auth.Principal p, Document xml,
+      Course course) {
+    Iterator i = course.getAssignments().iterator();
+    Element root = (Element) xml.getFirstChild();
+    while (i.hasNext()) {
+      Assignment a = (Assignment) i.next();
+      Element xAssign = xml.createElement(XMLBuilder.TAG_LOGSEARCH_ASSIGN);
+      xAssign.setAttribute(XMLBuilder.A_ASSIGNID, a.toString());
+      xAssign.setAttribute(XMLBuilder.A_ASSIGNNAME, a.getName());
+      xAssign.setAttribute(XMLBuilder.A_NAMESHORT, a.getNameShort());
+      root.appendChild(xAssign);
+    }
+  }
 }

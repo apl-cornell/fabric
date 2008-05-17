@@ -2,6 +2,8 @@ package cms.model;
 
 import java.util.Collection;
 
+import cms.auth.Principal;
+
 public class Semester {
 
   //////////////////////////////////////////////////////////////////////////////
@@ -35,6 +37,10 @@ public class Semester {
   }
   
   public Collection getCourses() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Course*/ findStaffAdminCourses(Principal p) {
     // TODO Auto-generated method stub
     return null;
   }

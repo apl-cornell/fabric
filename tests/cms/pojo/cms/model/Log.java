@@ -1,6 +1,7 @@
 package cms.model;
 
 import java.net.InetAddress;
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -171,6 +172,18 @@ public class Log {
 
   public Log() {
     // TODO: not obvious from logBean.ejbCreate
+  }
+  public Collection/*Assignments*/ findAssignments() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*LogDetail*/ getDetailLogs() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*User*/ getReceivingUsers() {
+    // TODO Auto-generated method stub
+    return null;
   }
 }
 

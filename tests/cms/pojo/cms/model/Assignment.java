@@ -1,5 +1,6 @@
 package cms.model;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,7 +43,7 @@ public class Assignment {
   //timeslot info
   private boolean scheduled;        // enable/disable scheduling
   private int     groupLimit;
-  private long    duration;
+  private Long    duration;
   private Date    timeslotLockTime; // time after which *students* can't change assigned timeslots (null = no deadline)
 
   //////////////////////////////////////////////////////////////////////////////
@@ -109,7 +110,7 @@ public class Assignment {
   public void setType             (final int type)                 { this.type             = type;             }
   public void setScheduled        (final boolean scheduled)        { this.scheduled        = scheduled;        }
   public void setGroupLimit       (final int groupLimit)           { this.groupLimit       = groupLimit;       }
-  public void setDuration         (final long duration)            { this.duration         = duration;         }
+  public void setDuration         (final Long duration)            { this.duration         = duration;         }
   public void setTimeslotLockTime (final Date timeslotLockTime)    { this.timeslotLockTime = timeslotLockTime; }
 
   public void setCourse(final Course course) {
@@ -154,7 +155,7 @@ public class Assignment {
   public int     getType()             { return this.type;             }
   public boolean getScheduled()        { return this.scheduled;        }
   public int     getGroupLimit()       { return this.groupLimit;       }
-  public long    getDuration()         { return this.duration;         }
+  public Long    getDuration()         { return this.duration;         }
   public Date    getTimeslotLockTime() { return this.timeslotLockTime; }
 
   public Collection/*RequiredSubmission*/ getRequiredSubmissions() {
@@ -301,6 +302,26 @@ public class Assignment {
   }
 
   public Collection/*AssignmentItems*/ findHiddenAssignmentItems() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Collection/*GroupMember*/ findInvitations(User user) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Collection/*TimeSlot*/ getTimeSlots() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Collection/*Group*/ getGroups() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Collection/*TimeSlot*/ findConflictingTimeSlots() {
     // TODO Auto-generated method stub
     return null;
   }

@@ -1,5 +1,7 @@
 package cms.model;
 
+import java.util.AbstractList;
+import java.util.Collection;
 import java.util.Date;
 
 public class TimeSlot {
@@ -48,6 +50,11 @@ public class TimeSlot {
 
   public TimeSlot() {
     // TODO: unclear from CMS what happens in corresponding ejbCreate
+  }
+  
+  public Collection/*Group*/ findGroups() {
+    // TODO Auto-generated method stub
+    return null;
   }
 }
 
