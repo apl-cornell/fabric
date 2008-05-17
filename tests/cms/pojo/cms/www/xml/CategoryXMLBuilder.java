@@ -47,21 +47,18 @@ public class CategoryXMLBuilder {
    * @throws FinderException
    */
   public Element buildFullSubtree(Principal p, Document xml, Category cat) {
-    Profiler.enterMethod("CategoryXMLBuilder.buildFullSubtree", "CategoryID: "
-        + cat.getCategoryID());
+    Profiler.enterMethod("CategoryXMLBuilder.buildFullSubtree", "CategoryID: " + cat.toString());
     Element xCategory = buildGeneralSubtree(p, xml, cat);
-    CategoryDataProvider provider = new CategoryBeanDataProvider(cat);
     // list columns
-    xCategory.appendChild(buildNonremovedColumnListsSubtree(xml, provider));
-    xCategory.appendChild(buildRemovedColumnListSubtree(xml, provider));
+    xCategory.appendChild(buildNonremovedColumnListsSubtree(xml, cat));
+    xCategory.appendChild(buildRemovedColumnListSubtree(xml, cat));
     // list rows
-    Element xVisibleRows = xml.createElement(TAG_VISIBLEROWS), xHiddenRows =
-        xml.createElement(TAG_HIDDENROWS);
-    buildRowListSubtrees(xml, provider, xVisibleRows, xHiddenRows);
+    Element xVisibleRows = xml.createElement(XMLBuilder.TAG_VISIBLEROWS), xHiddenRows =
+        xml.createElement(XMLBuilder.TAG_HIDDENROWS);
+    buildRowListSubtrees(xml, cat, xVisibleRows, xHiddenRows);
     xCategory.appendChild(xVisibleRows);
     xCategory.appendChild(xHiddenRows);
-    Profiler.exitMethod("CategoryXMLBuilder.buildFullSubtree", "CategoryID: "
-        + cat.getCategoryID());
+    Profiler.exitMethod("CategoryXMLBuilder.buildFullSubtree", "CategoryID: " + cat.toString());
     return xCategory;
   }
 
@@ -79,19 +76,19 @@ public class CategoryXMLBuilder {
    * @throws FinderException
    */
   public Element buildGeneralSubtree(Principal p, Document xml, Category cat) {
-    Element xCategory = xml.createElement(TAG_CATEGORY);
-    xCategory.setAttribute(A_ID, Long.toString(cat.getCategoryID()));
-    xCategory.setAttribute(A_NAME, cat.getCategoryName());
-    xCategory.setAttribute(A_HIDDEN, cat.getHidden() ? "true" : "false");
-    xCategory.setAttribute(A_SORTBYID, Long.toString(cat.getSortByColId()));
-    xCategory.setAttribute(A_NUMSHOW, Long.toString(cat.getNumShowContents()));
-    xCategory.setAttribute(A_AUTHORZN, "" + cat.getAuthorzn());
+    Element xCategory = xml.createElement(XMLBuilder.TAG_CATEGORY);
+    xCategory.setAttribute(XMLBuilder.A_ID,       cat.toString());
+    xCategory.setAttribute(XMLBuilder.A_NAME,     cat.getCategoryName());
+    xCategory.setAttribute(XMLBuilder.A_HIDDEN,   cat.getHidden() ? "true" : "false");
+    xCategory.setAttribute(XMLBuilder.A_SORTBYID, cat.getSortBy().toString());
+    xCategory.setAttribute(XMLBuilder.A_NUMSHOW,  Integer.toString(cat.getNumToShow()));
+    xCategory.setAttribute(XMLBuilder.A_AUTHORZN, Integer.toString(cat.getAuthLevel()));
     if (cat.getIsAnnouncements())
-      xCategory.setAttribute(A_ISANNOUNCEMENTS, ""); // does it get special
+      xCategory.setAttribute(XMLBuilder.A_ISANNOUNCEMENTS, ""); // does it get special
                                                       // treatment?
     if (cat.getAscending())
-      xCategory.setAttribute(A_ORDER, "1");
-    else xCategory.setAttribute(A_ORDER, "0");
+      xCategory.setAttribute(XMLBuilder.A_ORDER, "1");
+    else xCategory.setAttribute(XMLBuilder.A_ORDER, "0");
     return xCategory;
   }
 
@@ -106,12 +103,12 @@ public class CategoryXMLBuilder {
    * @return A category element with some general attributes set
    */
   public Element buildShortSubtree(Document xml, Category data) {
-    Element xCategory = xml.createElement(TAG_CATEGORY);
-    xCategory.setAttribute(A_ID, Long.toString(data.getCategoryID()));
-    xCategory.setAttribute(A_NAME, data.getCategoryName());
-    xCategory.setAttribute(A_HIDDEN, data.getHidden() ? "true" : "false");
-    xCategory.setAttribute(A_POSITION, Integer.toString(data.getPositn()));
-    xCategory.setAttribute(A_NUMSHOW, Long.toString(data.getNumShowContents()));
+    Element xCategory = xml.createElement(XMLBuilder.TAG_CATEGORY);
+    xCategory.setAttribute(XMLBuilder.A_ID,       data.toString());
+    xCategory.setAttribute(XMLBuilder.A_NAME,     data.getCategoryName());
+    xCategory.setAttribute(XMLBuilder.A_HIDDEN,   data.getHidden() ? "true" : "false");
+    xCategory.setAttribute(XMLBuilder.A_POSITION, Integer.toString(data.getPosition()));
+    xCategory.setAttribute(XMLBuilder.A_NUMSHOW,  Integer.toString(data.getNumToShow()));
     return xCategory;
   }
 
@@ -125,23 +122,23 @@ public class CategoryXMLBuilder {
    *         datatypes
    */
   public Element buildDatatypesSubtree(Document xml) {
-    Element xCategory = xml.createElement(TAG_CATEGORY);
-    Element xType = xml.createElement(TAG_DATATYPE);
-    Element xItem = xml.createElement(TAG_ITEM);
-    xItem.setAttribute(A_TYPE, CtgUtil.CTNT_DATE);
+    Element xCategory = xml.createElement(XMLBuilder.TAG_CATEGORY);
+    Element xType = xml.createElement(XMLBuilder.TAG_DATATYPE);
+    Element xItem = xml.createElement(XMLBuilder.TAG_ITEM);
+    xItem.setAttribute(XMLBuilder.A_TYPE, CategoryColumn.DATE);
     xType.appendChild(xItem);
-    xItem = xml.createElement(TAG_ITEM);
-    xItem.setAttribute(A_TYPE, CtgUtil.CTNT_FILE);
+    xItem = xml.createElement(XMLBuilder.TAG_ITEM);
+    xItem.setAttribute(XMLBuilder.A_TYPE, CategoryColumn.FILE);
     xType.appendChild(xItem);
-    xItem = xml.createElement(TAG_ITEM);
-    xItem.setAttribute(A_TYPE, CtgUtil.CTNT_TEXT);
+    xItem = xml.createElement(XMLBuilder.TAG_ITEM);
+    xItem.setAttribute(XMLBuilder.A_TYPE, CategoryColumn.TEXT);
     xType.appendChild(xItem);
-    xItem = xml.createElement(TAG_ITEM);
-    xItem.setAttribute(A_TYPE, CtgUtil.CTNT_URL);
+    xItem = xml.createElement(XMLBuilder.TAG_ITEM);
+    xItem.setAttribute(XMLBuilder.A_TYPE, CategoryColumn.LINK);
     xType.appendChild(xItem);
     xCategory.appendChild(xType);
-    xItem = xml.createElement(TAG_ITEM);
-    xItem.setAttribute(A_TYPE, CtgUtil.CTNT_NUMBER);
+    xItem = xml.createElement(XMLBuilder.TAG_ITEM);
+    xItem.setAttribute(XMLBuilder.A_TYPE, CategoryColumn.NUMBER);
     xType.appendChild(xItem);
     xCategory.appendChild(xType);
     return xCategory;
@@ -153,25 +150,28 @@ public class CategoryXMLBuilder {
    * 
    * @param xml
    *          The document on which to build the subtrees
-   * @param ctgProvider
+   * @param category
    *          The category from which to take information
    * @return A column-list element whose children represent lists of columns
    */
-  public Element buildNonremovedColumnListsSubtree(Document xml, Category ctgProvider) {
-    Element xColumnList = xml.createElement(TAG_COLUMNS);
+  public Element buildNonremovedColumnListsSubtree(Document xml, Category category) {
+    Element xColumnList = xml.createElement(XMLBuilder.TAG_COLUMNS);
     // the list of columns we get here will be ordered by position within the
     // category
-    Collection c = ctgProvider.getNonremovedColumnsCollection(false);
-    Iterator i = c.iterator();
+    Iterator i = category.getColumns().iterator();
     while (i.hasNext()) {
-      CategoryColData col = (CategoryColData) i.next();
-      Element xColumn = xml.createElement(TAG_COLUMN);
-      xColumn.setAttribute(A_ID, Long.toString(col.getColID()));
-      xColumn.setAttribute(A_NAME, col.getColName());
-      xColumn.setAttribute(A_POSITION, Long.toString(col.getPosition()));
-      xColumn.setAttribute(A_TYPE, col.getColType());
-      xColumn.setAttribute(A_HIDDEN, Boolean.toString(col.getHidden()));
-      xColumn.setAttribute(A_REMOVED, Boolean.toString(col.getRemoved()));
+      CategoryColumn col = (CategoryColumn) i.next();
+
+      if (col.getHidden())
+        continue;
+      
+      Element xColumn = xml.createElement(XMLBuilder.TAG_COLUMN);
+      xColumn.setAttribute(XMLBuilder.A_ID,       col.toString());
+      xColumn.setAttribute(XMLBuilder.A_NAME,     col.getName());
+      xColumn.setAttribute(XMLBuilder.A_POSITION, Integer.toString(col.getPosition()));
+      xColumn.setAttribute(XMLBuilder.A_TYPE,     col.getType());
+      xColumn.setAttribute(XMLBuilder.A_HIDDEN,   Boolean.toString(col.getHidden()));
+      xColumn.setAttribute(XMLBuilder.A_REMOVED,  Boolean.toString(col.getRemoved()));
       xColumnList.appendChild(xColumn);
     }
     return xColumnList;
@@ -182,128 +182,27 @@ public class CategoryXMLBuilder {
    * 
    * @param xml
    *          The document on which to build the subtrees
-   * @param ctgProvider
+   * @param category
    *          The category from which to take information
    * @return A column-list element whose children represent columns
    */
-  public Element buildRemovedColumnListSubtree(Document xml, Category ctgProvider) {
-    Element xColumnList = xml.createElement(TAG_REMOVEDCOLUMNS);
+  public Element buildRemovedColumnListSubtree(Document xml, Category category) {
+    Element xColumnList = xml.createElement(XMLBuilder.TAG_REMOVEDCOLUMNS);
     // the list of columns we get here will be ordered by position within the
     // category
-    Collection c = ctgProvider.getRemovedColumnsCollection();
-    Iterator i = c.iterator();
+    Iterator i = category.getRemovedColumns().iterator();
     while (i.hasNext()) {
-      CategoryColData col = (CategoryColData) i.next();
-      Element xColumn = xml.createElement(TAG_COLUMN);
-      xColumn.setAttribute(A_ID, Long.toString(col.getColID()));
-      xColumn.setAttribute(A_NAME, col.getColName());
-      xColumn.setAttribute(A_POSITION, Long.toString(col.getPosition()));
-      xColumn.setAttribute(A_TYPE, col.getColType());
-      xColumn.setAttribute(A_HIDDEN, Boolean.toString(col.getHidden()));
-      xColumn.setAttribute(A_REMOVED, Boolean.toString(col.getRemoved()));
+      CategoryColumn col = (CategoryColumn) i.next();
+      Element xColumn = xml.createElement(XMLBuilder.TAG_COLUMN);
+      xColumn.setAttribute(XMLBuilder.A_ID,       col.toString());
+      xColumn.setAttribute(XMLBuilder.A_NAME,     col.getName());
+      xColumn.setAttribute(XMLBuilder.A_POSITION, Integer.toString(col.getPosition()));
+      xColumn.setAttribute(XMLBuilder.A_TYPE,     col.getType());
+      xColumn.setAttribute(XMLBuilder.A_HIDDEN,   Boolean.toString(col.getHidden()));
+      xColumn.setAttribute(XMLBuilder.A_REMOVED,  Boolean.toString(col.getRemoved()));
       xColumnList.appendChild(xColumn);
     }
     return xColumnList;
-  }
-
-  /**
-   * Used by makeRowColContentsMap() to sort column IDs by column position
-   */
-  private class ColIDComparator implements Comparator {
-    private ArrayList colList; // a list of CategoryColumnDatas for a given
-                                // category
-
-    /**
-     * @param colList
-     *          Column IDs in a given category by order of appearance
-     */
-    public ColIDComparator(ArrayList colList) {
-      this.colList = colList;
-    }
-
-    /**
-     * obj1 and obj2 are Longs representing column IDs; tell whether obj1 comes
-     * before obj2 in whatever category we were initialized with
-     */
-    public int compare(Object obj1, Object obj2) {
-      long id1 = ((Long) obj1).longValue(), id2 = ((Long) obj2).longValue();
-      CategoryColData col1 = null, col2 = null;
-      for (int i = 0; i < colList.size(); i++)
-        if (((CategoryColData) colList.get(i)).getColID() == id1)
-          col1 = (CategoryColData) colList.get(i);
-        else if (((CategoryColData) colList.get(i)).getColID() == id2)
-          col2 = (CategoryColData) colList.get(i);
-      return (int) (col1.getPosition() - col2.getPosition());
-    }
-  }
-
-  /**
-   * Make a list of CategoryContentsDatas easier to iterate through by listing
-   * them by row and column; also build sorted lists of the row and column IDs
-   * that appear, since these are arbitrary
-   * 
-   * @param ctg
-   *          The category all of the data comes from
-   * @param contentsMap
-   *          A Map to be created from content ID to each input ContentsData
-   * @param filesMap
-   *          A Map to be created from content ID to ArrayLists of FileDatas
-   * @param rows
-   *          An initialized list to be filled with all row IDs found among the
-   *          contents, sorted increasing
-   * @param cols
-   *          An initialized list to be filled with all column IDs found among
-   *          the contents, sorted by position in the category
-   * @throws FinderException
-   */
-  private void makeRowColContentsMap(Category ctgProvider,
-      HashMap contentsMap, HashMap filesMap, ArrayList rows, ArrayList cols) {
-    // also build a map from content ID to Coord(row, col), so we can map
-    // row/col to file data
-    HashMap contentIDMap = new HashMap();
-    Collection contents = ctgProvider.getContentsCollection(false, false), files =
-        ctgProvider.getFilesCollection(), colDatas =
-        ctgProvider.getNonremovedColumnsCollection(false);
-    /*
-     * build list of column IDs in the same order in which
-     * buildColumnListSubtrees() would return them, which is the order in which
-     * we get them from the provider
-     */
-    Iterator i = colDatas.iterator();
-    while (i.hasNext()) {
-      CategoryColData col = (CategoryColData) i.next();
-      cols.add(new Long(col.getColID()));
-    }
-    // build lists of contents and row IDs
-    i = contents.iterator();
-    while (i.hasNext()) {
-      CategoryContentsData data = (CategoryContentsData) i.next();
-      contentsMap.put(new Coord(data.getRowID(), data.getColumnID()), data);
-      contentIDMap.put(new Long(data.getContentID()), new Coord(
-          data.getRowID(), data.getColumnID()));
-      if (!rows.contains(new Long(data.getRowID())))
-        rows.add(new Long(data.getRowID()));
-    }
-    i = files.iterator();
-    /*
-     * assume there are no row/col combos in the file list that weren't
-     * mentioned in the contents list (ie we can stop checking the row & column
-     * lists)
-     */
-    while (i.hasNext()) {
-      CategoryFileData data = (CategoryFileData) i.next();
-      if (filesMap.containsKey(new Long(data.getContentID())))
-        ((ArrayList) filesMap.get(new Long(data.getContentID()))).add(data);
-      else {
-        ArrayList dataList = new ArrayList();
-        dataList.add(data);
-        filesMap.put(new Long(data.getContentID()), dataList);
-      }
-    }
-    // get an indexable list of active columns belonging to this category
-    ArrayList columnList = new ArrayList();
-    columnList.addAll(ctgProvider.getNonremovedColumnsCollection(false));
-
   }
 
   /**
@@ -320,50 +219,37 @@ public class CategoryXMLBuilder {
    *          The element under which to list hidden rows
    * @throws FinderException
    */
-  public void buildRowListSubtrees(Document xml,
-      Category ctgProvider, Element xVisibleRows,
-      Element xHiddenRows) {
-    /*
-     * map each (row, col) pair to a Content and a list of Files, and list the
-     * row and col IDs we find as Longs for easy looping (lists of row and col
-     * IDs are sorted when we get them)
-     */
-    ArrayList rowIDs = new ArrayList(), colIDs = new ArrayList();
-    HashMap rowColContentsMap = new HashMap(), rowColFilesMap = new HashMap();
-    makeRowColContentsMap(ctgProvider, rowColContentsMap, rowColFilesMap,
-        rowIDs, colIDs);
+  public void buildRowListSubtrees(Document xml, Category category,
+                                   Element xVisibleRows, Element xHiddenRows) {
     // loop through row and column IDs and tack on contents one at a time
-    for (int i = 0; i < rowIDs.size(); i++) {
-      long rowID = ((Long) rowIDs.get(i)).longValue();
-      Element xRow = xml.createElement(TAG_CTGROW);
-      xRow.setAttribute(A_ID, "" + rowID);
+    Iterator rows = category.getRows().iterator();
+    while (rows.hasNext()) {
+      CategoryRow row = (CategoryRow) rows.next();
+      
+      Element xRow = xml.createElement(XMLBuilder.TAG_CTGROW);
+      xRow.setAttribute(XMLBuilder.A_ID, row.toString());
+      
       // append children, one per content in the row
-      for (int j = 0; j < colIDs.size(); j++) {
-        long colID = ((Long) colIDs.get(j)).longValue();
-        CategoryContentsData currentContent =
-            (CategoryContentsData) rowColContentsMap
-                .get(new Coord(rowID, colID));
-        if (currentContent == null) // this cell doesn't exist in the database,
-                                    // meaning it's empty
-          // assign the data an ID of -1, meaning there's no data and a jsp
-          // should be careful when submitting
-          // (note that the column type will need to be filled in when data is
-          // put into this cell)
-          currentContent =
-              new CategoryContentsData(-1, colID, ctgProvider.findColumnByID(
-                  colID).getColType(), rowID, null, null, null, null);
-        // if the content isn't in the filemap's list, the returned ArrayList
-        // will be null; we can handle that
-        xRow.appendChild(buildContentCellSubtree(xml, currentContent,
-            (ArrayList) rowColFilesMap.get(new Long(currentContent
-                .getContentID()))));
+      Iterator cols = category.getColumns().iterator();
+      while (cols.hasNext()) {
+        CategoryColumn column = (CategoryColumn) cols.next();
+        CategoryContents currentContent = row.getContents(column);
+        Element xContent = null;
+        if (currentContent != null)
+          xContent = buildContentCellSubtree(xml, currentContent);
+        else {
+          xContent = xml.createElement(XMLBuilder.TAG_CONTENT);
+          xContent.setAttribute(XMLBuilder.A_TYPE, column.getType());
+          xContent.setAttribute(XMLBuilder.A_ID,   "-1");
+          xContent.setAttribute(XMLBuilder.A_DATA, "");
+        }
+        xRow.appendChild(xContent);
       }
       // add the row to one of our two lists of rows to be sorted
-      CategoryRowLocal currentRow =
-          database.categoryRowHome().findByPrimaryKey(new CategoryRowPK(rowID));
-      if (currentRow.getHidden())
+      if (row.getHidden())
         xHiddenRows.appendChild(xRow);
-      else xVisibleRows.appendChild(xRow);
+      else
+        xVisibleRows.appendChild(xRow);
     }
   }
 
@@ -375,40 +261,40 @@ public class CategoryXMLBuilder {
    *          The document on which to build the subtree
    * @param content
    *          The current content object
-   * @param fileList
-   *          An ArrayList of CategoryFileDatas representing all files in this
-   *          content (may be null)
-   * @return A TAG_CONTENT element with properties set and children representing
+   * @return A XMLBuilder.TAG_CONTENT element with properties set and children representing
    *         files if necessary
    * @throws FinderException
    */
-  private Element buildContentCellSubtree(Document xml,
-      CategoryContents content, ArrayList fileList) {
-    Element xContent = xml.createElement(TAG_CONTENT);
-    String ctntType = content.getColumnType();
-    xContent.setAttribute(A_TYPE, ctntType);
-    xContent.setAttribute(A_ID, Long.toString(content.getContentID()));
-    if (ctntType.equals(A_DATE)) {
-      if (content.getDate() == null)
-        xContent.setAttribute(A_DATA, "");
-      else xContent.setAttribute(A_DATA, DateTimeUtil.DATE.format(content
-          .getDate()));
-    } else if (ctntType.equals(A_TEXT)) {
-      xContent.setAttribute(A_DATA, content.getText());
-    } else if (ctntType.equals(A_NUMBER)) {
-      if (content.getNumber() == null)
-        xContent.setAttribute(A_DATA, "");
-      else xContent.setAttribute(A_DATA, content.getNumber().toString());
-    } else if (ctntType.equals(A_URL)) {
-      xContent.setAttribute(A_URL, content.getText());
-      xContent.setAttribute(A_LINKNAME, (content.getLinkName() == null) ? ""
-          : content.getLinkName());
-    } else if (ctntType.equals(A_FILE)) {
-      addContentFileLists(xml, xContent, fileList);
-    } else throw new IllegalArgumentException("Unknown content datatype '"
-        + ctntType
-        + "' in CategoryXMLBuilder::buildContentCellSubtree() at col "
-        + content.getColumnID() + ", row " + content.getRowID());
+  private Element buildContentCellSubtree(final Document xml, CategoryContents content) {
+    final Element xContent = xml.createElement(XMLBuilder.TAG_CONTENT);
+    xContent.setAttribute(XMLBuilder.A_TYPE, content.getType());
+    xContent.setAttribute(XMLBuilder.A_ID,   content.toString());
+    
+    content.accept(new CategoryContents.Visitor() {
+      public void visitDateContents(CategoryContentsDate date) {
+        xContent.setAttribute(XMLBuilder.A_DATA,
+                              DateTimeUtil.DATE.format(date.getDate()));
+      }
+      
+      public void visitStringContents(CategoryContentsString text) {
+        xContent.setAttribute(XMLBuilder.A_DATA, text.getText());
+      }
+      
+      public void visitNumberContents(CategoryContentsNumber num) {
+        xContent.setAttribute(XMLBuilder.A_DATA, Integer.toString(num.getValue()));
+      }
+      
+      public void visitLinkContents(CategoryContentsLink link) {
+        xContent.setAttribute(XMLBuilder.A_URL, link.getAddress());
+        xContent.setAttribute(XMLBuilder.A_LINKNAME,
+                              (link.getLabel() == null) ? "" : link.getLabel());
+      }
+      
+      public void visitFileContents(CategoryContentsFileList file) {
+        addContentFileLists(xml, xContent, file);
+      }
+    });
+    
     return xContent;
   }
 
@@ -425,25 +311,22 @@ public class CategoryXMLBuilder {
    *          belonging to the given content
    * @throws FinderException
    */
-  private void addContentFileLists(Document xml, Element xContent,
-      ArrayList fileList) {
-    Element xVisibleFiles = xml.createElement(TAG_VISIBLEFILES), xHiddenFiles =
-        xml.createElement(TAG_HIDDENFILES);
-    // if the list is null, we want the visfiles and hiddenfiles tags but no
-    // lists under them
-    if (fileList != null)
-      for (int i = 0; i < fileList.size(); i++) {
-        CategoryFileData data = (CategoryFileData) fileList.get(i);
-        Element xFile = xml.createElement(TAG_CTGFILE);
-        xFile.setAttribute(A_FILENAME, (data.getFileName() == null) ? "" : data
-            .getFileName());
-        xFile.setAttribute(A_LINKNAME, (data.getLinkName() == null) ? "" : data
-            .getLinkName());
-        xFile.setAttribute(A_ID, Long.toString(data.getCategoryFileID()));
-        if (data.getHidden())
-          xHiddenFiles.appendChild(xFile);
-        else xVisibleFiles.appendChild(xFile);
-      }
+  private void addContentFileLists(Document xml, Element xContent, CategoryContentsFileList file) {
+    Element xVisibleFiles = xml.createElement(XMLBuilder.TAG_VISIBLEFILES),
+            xHiddenFiles  = xml.createElement(XMLBuilder.TAG_HIDDENFILES);
+    
+    Iterator files = file.getFiles().iterator();
+    while (files.hasNext()) {
+      CategoryContentsFileEntry data = (CategoryContentsFileEntry) files.next();
+      Element xFile = xml.createElement(XMLBuilder.TAG_CTGFILE);
+      xFile.setAttribute(XMLBuilder.A_FILENAME, data.getFileName());
+      xFile.setAttribute(XMLBuilder.A_LINKNAME, data.getLinkName());
+      xFile.setAttribute(XMLBuilder.A_ID,       data.toString());
+      if (data.getHidden())
+        xHiddenFiles.appendChild(xFile);
+      else
+        xVisibleFiles.appendChild(xFile);
+    }
     xContent.appendChild(xVisibleFiles);
     xContent.appendChild(xHiddenFiles);
   }

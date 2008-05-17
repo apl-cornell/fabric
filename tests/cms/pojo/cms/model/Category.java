@@ -1,5 +1,7 @@
 package cms.model;
 
+import java.util.Collection;
+
 public class Category {
 
   //////////////////////////////////////////////////////////////////////////////
@@ -66,6 +68,20 @@ public class Category {
     setPosition(position);
     setIsAnnouncements(announcements);
   }
+  
+  public Collection/*CategoryColumn*/ getColumns() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*CategoryColumn*/ getRemovedColumns() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*CategoryRow*/ getRows() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
 }
 
 /*
