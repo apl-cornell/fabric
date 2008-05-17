@@ -5,6 +5,8 @@ import cms.model.Course;
 
 public class Principal {
 
+  public static final String AUTHOR_CORNELL_COMMUNITY = null; // TODO
+
   public boolean isInStaffAsBlankMode() {
     // TODO
     return false;

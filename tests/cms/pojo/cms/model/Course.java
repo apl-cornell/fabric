@@ -242,6 +242,10 @@ public class Course {
     // TODO Auto-generated method stub
     return null;
   }
+  public Staff getStaff(User user) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

@@ -24,8 +24,10 @@ import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 // import org.apache.crimson.jaxp.DocumentBuilderFactoryImpl;
+import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -42,7 +44,6 @@ import cms.www.util.StringUtil;
 
 import cms.auth.Principal;
 import cms.model.*;
-import cms.log.LogSearchParams;
 
 /**
  * Methods for building the xml tree
@@ -318,7 +319,7 @@ public class XMLBuilder {
       // CMS administration
       TAG_CMSADMINLIST = "cmsAdminList",
       TAG_CMSADMIN = "cmsAdmin",
-      TAG_SYSTEMDATA = "systemData",
+      TAG_SYSTEMDATA = "system",
       TAG_SEMESTERS = "semesters",
       TAG_CURSEMESTER = "curSemester",
       TAG_SEMESTER = "semester",
@@ -479,8 +480,8 @@ public class XMLBuilder {
   // Misc
   protected boolean debug = true; // debug mode
   // TODO: set up database
-  protected CMSRoot database;
-  protected DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+  protected CMSRoot         database;
+  protected DocumentBuilder db;
 
   CourseXMLBuilder       courseXMLBuilder;
   AssignmentXMLBuilder   assignmentXMLBuilder;
@@ -493,14 +494,24 @@ public class XMLBuilder {
   GroupXMLBuilder        groupXMLBuilder;
   AnnouncementXMLBuilder announcementXMLBuilder;
   CategoryXMLBuilder     categoryXMLBuilder;
+  AssignmentGroupsXMLBuilder assignmentGroupsXMLBuilder;
 
-  public XMLBuilder(CMSRoot database) {
-    this.database             = database;
-    this.courseXMLBuilder     = new CourseXMLBuilder(this);
-    this.assignmentXMLBuilder = new AssignmentXMLBuilder(this);
-    this.systemXMLBuilder     = new SystemXMLBuilder(this);
-    this.studentXMLBuilder    = new StudentXMLBuilder(this);
-    // TODO
+  public XMLBuilder(CMSRoot database) throws ParserConfigurationException {
+    this.database               = database;
+    this.courseXMLBuilder       = new CourseXMLBuilder       (this);
+    this.assignmentXMLBuilder   = new AssignmentXMLBuilder   (this);
+    this.systemXMLBuilder       = new SystemXMLBuilder       (this);
+    this.studentXMLBuilder      = new StudentXMLBuilder      (this);
+    this.logXMLBuilder          = new LogXMLBuilder          (this);
+    this.viewStudentsXMLBuilder = new ViewStudentsXMLBuilder (this);
+    this.scheduleXMLBuilder     = new ScheduleXMLBuilder     (this);
+    this.gradingXMLBuilder      = new GradingXMLBuilder      (this);
+    this.groupXMLBuilder        = new GroupXMLBuilder        (this);
+    this.announcementXMLBuilder = new AnnouncementXMLBuilder (this);
+    this.categoryXMLBuilder     = new CategoryXMLBuilder     (this);
+    this.assignmentGroupsXMLBuilder = new AssignmentGroupsXMLBuilder(this);
+
+    db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
   }
   
   public Document buildHomepage() throws Exception {
@@ -700,7 +711,7 @@ public class XMLBuilder {
     Element root = xml.createElement(TAG_ROOT);
     xml.appendChild(root);
     // systemwide usage stats for current semester
-    root.appendChild(systemXMLBuilder.buildSystemDataSubtree(xml));
+    root.appendChild(systemXMLBuilder.buildSystemSubtree(xml));
     Iterator i;
     // add list of current cms admins
     Element adminList = xml.createElement(TAG_CMSADMINLIST);
@@ -761,7 +772,7 @@ public class XMLBuilder {
     // order by deadline
     {
       Assignment asgn = (Assignment) i.next();
-      assignmentList.appendChild(AssignmentXMLBuilder.buildShortSubtree(xml,
+      assignmentList.appendChild(assignmentXMLBuilder.buildShortSubtree(xml,
           asgn));
     }
     // Append searchable courses/assignments
@@ -844,8 +855,7 @@ public class XMLBuilder {
    * @return An element containing all the deleted notices
    * @throws FinderException
    */
-  public Element getDeletedNoticeElement(Document xml)
-      throws FinderException {
+  public Element getDeletedNoticeElement(Document xml) {
     Element curNoticeList = xml.createElement(TAG_DELSITENOTICES);
     Iterator curNoticeIter = database.siteNoticeHome().findDeleted().iterator();
 
@@ -856,7 +866,7 @@ public class XMLBuilder {
   private void translateChildNotices(Document xml,
       Element curNoticeList, Iterator curNoticeIter) {
     while (curNoticeIter.hasNext()) {
-      SiteNoticeLocal sn = (SiteNoticeLocal) curNoticeIter.next();
+      SiteNotice sn = (SiteNotice) curNoticeIter.next();
       Element notice = xml.createElement(TAG_SITENOTICE);
 
       notice.setAttribute(A_ID, String.valueOf(sn.getNoticeID()));
@@ -900,20 +910,19 @@ public class XMLBuilder {
    * @return A new XML document
    * @throws RemoteException
    */
-  public Document buildCMSAdminCoursePropsPage(Principal p, Course courseID)
-      throws FinderException {
+  public Document buildCMSAdminCoursePropsPage(Principal p, Course courseID) {
     Document xml = buildPageHeader(p);
     Element root = (Element) xml.getElementsByTagName(TAG_ROOT).item(0);
-    CourseLocal course =
-        database.courseHome().findByPrimaryKey(new CoursePK(courseID));
+    Course course =
+        database.courseHome().findByPrimaryKey(new Course(courseID));
     Element xCourse = CourseXMLBuilder.buildGeneralSubtree(p, xml, course);
-    xCourse.appendChild(CourseXMLBuilder.buildStaffListSubtree(p, xml, course));
+    xCourse.appendChild(courseXMLBuilder.buildStaffListSubtree(p, xml, course));
     root.appendChild(xCourse);
     return xml;
   }
 
   public Document buildLogSearchPage(Principal p, HttpServletRequest req)
-      throws FinderException, FileUploadException {
+      throws FileUploadException {
     return buildLogSearchPage(p, req, null);
   }
 
@@ -997,7 +1006,7 @@ public class XMLBuilder {
         course == null ? buildPageHeader(p) : buildCoursePage(p, course);
     Collection returnedLogs = database.logHome().find(params);
     Element root = (Element) xml.getElementsByTagName(TAG_ROOT).item(0);
-    root.appendChild(LogXMLBuilder.buildFullSubtree(p, xml, returnedLogs));
+    root.appendChild(logXMLBuilder.buildFullSubtree(p, xml, returnedLogs));
     return xml;
   }
 
@@ -1071,7 +1080,7 @@ public class XMLBuilder {
      * database.studentHome().findByStaff(p.getPrincipalID()) .iterator();
      * Profiler.exitMethod("XMLBuilder.buildPageHeader3","GetStudentsQuery");
      * Profiler.enterMethod("XMLBuilder.buildPageHeader4","GetStudentsIterate");
-     * while (students.hasNext()) { StudentLocal student = (StudentLocal)
+     * while (students.hasNext()) { Student student = (Student)
      * students.next(); long courseID = student.getCourseID(); Element xCourse =
      * (Element) root.getElementsByTagNameNS( TAG_COURSESTUDENTS + courseID,
      * TAG_COURSESTUDENTS).item(0); if (xCourse == null) { xCourse =
@@ -1143,7 +1152,7 @@ public class XMLBuilder {
     return xml;
   }
 
-  public Document buildOverview(Principal p) throws FinderException {
+  public Document buildOverview(Principal p) {
     return buildOverview(p, null);
   }
 
@@ -1158,8 +1167,7 @@ public class XMLBuilder {
    *          automatically use the current semester)
    * @return Document an xml document with display data tags for the jsp page
    */
-  public Document buildOverview(Principal p, Long semesterID)
-      throws FinderException {
+  public Document buildOverview(Principal p, Long semesterID) {
     Profiler.enterMethod("XMLBuilder.buildOverview", "SemesterID: "
         + semesterID);
     boolean hasSem = semesterID != null;
@@ -1188,7 +1196,7 @@ public class XMLBuilder {
     Element xAnnouncements = xml.createElement(TAG_ALLANNOUNCEMENTS);
     root.appendChild(xAnnouncements);
     while (i.hasNext()) {
-      AnnouncementLocal announcement = (AnnouncementLocal) i.next();
+      Announcement announcement = (Announcement) i.next();
       Element xCourse = null;
       /*
        * We create course nodes, and then append the announcements to the proper
@@ -1210,13 +1218,13 @@ public class XMLBuilder {
         xAnnouncements.appendChild(xCourse);
         long courseID = announcement.getCourseID();
         xCourse.setAttribute(A_COURSEID, Long.toString(courseID));
-        CourseLocal course =
-            database.courseHome().findByPrimaryKey(new CoursePK(courseID));
+        Course course =
+            database.courseHome().findByPrimaryKey(new Course(courseID));
         xCourse.setAttribute(A_COURSENAME, course.getCode());
       }
       // add this announcement
       xCourse.appendChild(AnnouncementXMLBuilder.buildGeneralSubtree(xml,
-          announcement.getAnnouncementData(), staffNames));
+          announcement.getAnnouncement(), staffNames));
     }
     // Append viewable courses
     Iterator guestCourses = null;
@@ -1239,7 +1247,7 @@ public class XMLBuilder {
     }
     if (guestCourses != null) {
       while (guestCourses.hasNext()) {
-        CourseLocal course = (CourseLocal) guestCourses.next();
+        Course course = (Course) guestCourses.next();
         Element xGuestCourse = xml.createElement(TAG_GUESTCOURSE);
         xGuestCourse.setAttribute(A_COURSEID, String.valueOf(course
             .getCourseID()));
@@ -1252,7 +1260,7 @@ public class XMLBuilder {
     Iterator semesters =
         database.semesterHome().findByUser(p.getPrincipalID()).iterator();
     while (semesters.hasNext()) {
-      SemesterLocal semester = (SemesterLocal) semesters.next();
+      Semester semester = (Semester) semesters.next();
       Element xSemester = xml.createElement(TAG_SEMESTER);
       xSemester.setAttribute(A_ID, String.valueOf(semester.getSemesterID()));
       xSemester.setAttribute(A_NAME, semester.getSemesterName());
@@ -1272,20 +1280,21 @@ public class XMLBuilder {
    * @throws RemoteException
    */
   private void buildAllCategories(Principal p, Document xml,
-      CourseLocal course) throws FinderException {
-    Profiler.enterMethod("XMLBuilder.buildAllCategories", "CourseID: "
-        + course.getCourseID());
+      Course course) {
+    Profiler.enterMethod("XMLBuilder.buildAllCategories", "CourseID: " + course.toString());
     Element root = (Element) xml.getFirstChild();
     Element xVisibleCtg = xml.createElement(TAG_VISIBLECTG);
     Element xHiddenCtg = xml.createElement(TAG_HIDDENCTG);
     root.appendChild(xVisibleCtg);
     root.appendChild(xHiddenCtg);
-    Collection c = course.getCategories(p);
+    Collection c = course.getCategories();
     Iterator i = c.iterator();
     int numOfCtg = 0;
     while (i.hasNext()) {
-      CategoryData ctg = (CategoryData) i.next();
-      Element xCategory = CategoryXMLBuilder.buildShortSubtree(xml, ctg);
+      Category ctg = (Category) i.next();
+      if (p.getAuthoriznLevelByCourse(course) < ctg.getAuthLevel())
+        continue;
+      Element xCategory = categoryXMLBuilder.buildShortSubtree(xml, ctg);
       if (ctg.getHidden())
         xHiddenCtg.appendChild(xCategory);
       else {
@@ -1294,23 +1303,16 @@ public class XMLBuilder {
       }
     }
     xVisibleCtg.setAttribute(XMLBuilder.A_NUMOFCTGS, numOfCtg + "");
-    Profiler.exitMethod("XMLBuilder.buildAllCategories", "CourseID: "
-        + course.getCourseID());
+    Profiler.exitMethod("XMLBuilder.buildAllCategories", "CourseID: " + course.toString());
   }
 
-  public Document buildStudentPrefsPage(Principal p, long courseID)
-      throws FinderException {
-    Document xml = buildPageHeader(p);
+  public Document buildStudentPrefsPage(User user, Course course) {
+    Document xml = buildPageHeader(user);
     Element root = (Element) xml.getFirstChild();
-    CourseLocal course =
-        database.courseHome().findByPrimaryKey(new CoursePK(courseID));
-    Element xCourse = CourseXMLBuilder.buildGeneralSubtree(p, xml, course);
-    xCourse.appendChild(CourseXMLBuilder
-        .buildAssignmentsSubtree(p, xml, course));
+    Element xCourse = courseXMLBuilder.buildGeneralSubtree(user, xml, course);
+    xCourse.appendChild(courseXMLBuilder.buildAssignmentsSubtree(user, xml, course));
     root.appendChild(xCourse);
-    StudentLocal student =
-        database.studentHome().findByPrimaryKey(
-            new StudentPK(courseID, p.getNetID()));
+    Student student = course.getStudent(user);
     root.appendChild(getStudentPrefsElement(xml, student));
     return xml;
   }
@@ -1320,14 +1322,14 @@ public class XMLBuilder {
   // throws FinderException {
   // Document xml = buildPageHeader(p);
   // Element root = (Element) xml.getFirstChild();
-  // StudentLocal student = database.studentHome().findByPrimaryKey(new
-  // StudentPK(-1, p.getUserID()));
+  // Student student = database.studentHome().findByPrimaryKey(new
+  // Student(-1, p.getUserID()));
   // root.appendChild(getStudentPrefsElement(xml, student));
   // return xml;
   // }
 
   private Element getStudentPrefsElement(Document xml,
-      StudentLocal student) {
+      Student student) {
     Element xPrefs = xml.createElement(TAG_PREFS);
     if (student != null) {
       if (student.getEmailNewAssignment())
@@ -1350,16 +1352,11 @@ public class XMLBuilder {
     return xPrefs;
   }
 
-  public Document buildStaffPrefsPage(Principal p, long courseID)
-      throws FinderException {
-    Document xml = buildStaffNavbar(p, courseID);
+  public Document buildStaffPrefsPage(User user, Course course) {
+    Document xml = buildStaffNavbar(user, course);
     Element root = (Element) xml.getFirstChild();
-    CourseLocal course =
-        database.courseHome().findByPrimaryKey(new CoursePK(courseID));
-    root.appendChild(CourseXMLBuilder.buildGeneralSubtree(p, xml, course));
-    StaffLocal staff =
-        database.staffHome().findByPrimaryKey(
-            new StaffPK(courseID, p.getNetID()));
+    root.appendChild(courseXMLBuilder.buildGeneralSubtree(user, xml, course));
+    Staff staff = course.getStaff(user);
     Element xPrefs = xml.createElement(TAG_PREFS);
     if (staff != null) {
       if (staff.getEmailNewAssign())
@@ -1385,16 +1382,13 @@ public class XMLBuilder {
    * @return
    * @throws RemoteException
    */
-  public Document buildNewCategoryPage(Principal p, long courseID)
-      throws FinderException {
-    Document xml = buildStaffNavbar(p, courseID);
+  public Document buildNewCategoryPage(Principal p, Course course) {
+    Document xml = buildStaffNavbar(p, course);
     Element root = (Element) xml.getFirstChild();
-    CourseLocal course =
-        database.courseHome().findByPrimaryKey(new CoursePK(courseID));
-    Element xCategory = CategoryXMLBuilder.buildDatatypesSubtree(xml);
-    xCategory.setAttribute(A_ID, "0");
-    xCategory.setAttribute(A_ORDER, "1");
-    xCategory.setAttribute(A_AUTHORZN, "" + Principal.AUTHOR_CORNELL_COMMUNITY);
+    Element xCategory = categoryXMLBuilder.buildDatatypesSubtree(xml);
+    xCategory.setAttribute(A_ID,       "0");
+    xCategory.setAttribute(A_ORDER,    "1");
+    xCategory.setAttribute(A_AUTHORZN, Principal.AUTHOR_CORNELL_COMMUNITY);
     root.appendChild(xCategory);
     buildAllCategories(p, xml, course);
     return xml;
@@ -1403,22 +1397,18 @@ public class XMLBuilder {
   /**
    * Builds the view for editing an existing category
    * 
-   * @param p
+   * @param user
    * @param categoryID
    * @param columnList
    * @return
    * @throws RemoteException
    */
-  public Document buildCategoryPage(Principal p, long categoryID)
-      throws FinderException {
-    Document xml = buildPageHeader(p);
+  public Document buildCategoryPage(User user, Category cat) {
+    Document xml = buildPageHeader(user);
     Element root = (Element) xml.getFirstChild();
-    CategoryLocal cat =
-        database.categoryHome().findByPrimaryKey(new CategoryPK(categoryID));
-    CourseLocal course =
-        database.courseHome().findByPrimaryKey(new CoursePK(cat.getCourseID()));
-    root.appendChild(CourseXMLBuilder.buildFullSubtree(p, xml, course));
-    root.appendChild(CategoryXMLBuilder.buildGeneralSubtree(p, xml, cat));
+    Course course = cat.getCourse();
+    root.appendChild(courseXMLBuilder.buildFullSubtree(user, xml, course));
+    root.appendChild(categoryXMLBuilder.buildGeneralSubtree(user, xml, cat));
     return xml;
   }
 
@@ -1427,21 +1417,17 @@ public class XMLBuilder {
    * for the category itself. This is used for editing the category layout as
    * well as for adding and editing contents.
    * 
-   * @param p
+   * @param user
    * @param categoryID
    * @return
    * @throws RemoteException
    */
-  public Document buildCtgContentPage(Principal p, long categoryID)
-      throws FinderException {
-    Document xml = buildPageHeader(p);
+  public Document buildCtgContentPage(User user, Category cat) {
+    Document xml = buildPageHeader(user);
     Element root = (Element) xml.getFirstChild();
-    CategoryLocal cat =
-        database.categoryHome().findByPrimaryKey(new CategoryPK(categoryID));
-    CourseLocal course =
-        database.courseHome().findByPrimaryKey(new CoursePK(cat.getCourseID()));
-    root.appendChild(CourseXMLBuilder.buildFullSubtree(p, xml, course));
-    root.appendChild(CategoryXMLBuilder.buildFullSubtree(p, xml, cat));
+    Course course = cat.getCourse();
+    root.appendChild(courseXMLBuilder.buildFullSubtree(user, xml, course));
+    root.appendChild(categoryXMLBuilder.buildFullSubtree(user, xml, cat));
     return xml;
   }
 
@@ -1455,13 +1441,10 @@ public class XMLBuilder {
    * @returnDocument an xml document with display data tags for the jsp page
    * @throws RemoteException
    */
-  public Document buildCoursePage(Principal p, long courseid)
-      throws FinderException {
-    Document xml = buildPageHeader(p);
+  public Document buildCoursePage(User user, Course course) {
+    Document xml = buildPageHeader(user);
     Element root = (Element) xml.getElementsByTagName(TAG_ROOT).item(0);
-    CourseLocal course =
-        database.courseHome().findByPrimaryKey(new CoursePK(courseid));
-    root.appendChild(CourseXMLBuilder.buildFullSubtree(p, xml, course));
+    root.appendChild(courseXMLBuilder.buildFullSubtree(user, xml, course));
     return xml;
   }
 
@@ -1473,17 +1456,17 @@ public class XMLBuilder {
    * Builds a XML skeleton with enough only enough information to fill in the
    * navigation bars for a staff member
    * 
-   * @param p
+   * @param user
    *          The principal loading the page
    * @param courseID
    *          The ID of the course whose navbars are being loaded
    * @param addStats
    *          Add statistics for each assignment to subtrees
    */
-  public Document buildStaffNavbar(Principal p, Course course, boolean addStats) {
-    Document xml = buildPageHeader(p);
+  public Document buildStaffNavbar(User user, Course course, boolean addStats) {
+    Document xml = buildPageHeader(user);
     Element root = (Element) xml.getFirstChild();
-    Element xCourse = courseXMLBuilder.buildBasicPropNode(p, xml, course);
+    Element xCourse = courseXMLBuilder.buildBasicPropNode(user, xml, course);
     root.appendChild(xCourse);
     Iterator assigns = course.getAssignments().iterator();
     Element xAssigns = xml.createElement(TAG_ASSIGNMENTS);
@@ -1492,38 +1475,39 @@ public class XMLBuilder {
       Assignment assign = (Assignment) assigns.next();
 
       if (assign.getType() != Assignment.SURVEY) {
-        long assignID = assign.getAssignmentID();
-        Element xAssign =
-            xml.createElementNS(TAG_ASSIGNMENT + assignID, TAG_ASSIGNMENT);
+        Element xAssign = xml.createElementNS(
+            TAG_ASSIGNMENT + assign.toString(),
+            TAG_ASSIGNMENT);
         xAssigns.appendChild(xAssign);
-        AssignmentXMLBuilder.addBasicInfo(xml, xAssign, assign);
+        assignmentXMLBuilder.addBasicInfo(xml, xAssign, assign);
         if (addStats)
-          AssignmentXMLBuilder.addStatSubtree(xml, xAssign, assign);
+          assignmentXMLBuilder.addStatSubtree(xml, xAssign, assign);
       }
 
     }
 
     // generate the surveys node
-    xCourse.appendChild(CourseXMLBuilder.buildSurveySubtree(p, xml, course));
+    xCourse.appendChild(courseXMLBuilder.buildSurveySubtree(user, xml, course));
 
-    if (p.isCategoryPrivByCourseID(courseID)) {
+    if (user.isCategoryPrivByCourse(course)) {
       Element xCategories = xml.createElement(TAG_CATEGORIES);
       xCourse.appendChild(xCategories);
-      Iterator cats =
-          database.categoryHome().findByCourseID(courseID, p).iterator();
+      Iterator cats = course.getCategories().iterator();
       while (cats.hasNext()) {
-        CategoryLocal cat = (CategoryLocal) cats.next();
+        Category cat = (Category) cats.next();
+        if (user.getAuthoriznLevelByCourse(course) < cat.getAuthLevel())
+          continue;
         Element xCategory = xml.createElement(TAG_CATEGORY);
         xCategories.appendChild(xCategory);
-        xCategory.setAttribute(A_ID, String.valueOf(cat.getCategoryID()));
+        xCategory.setAttribute(A_ID,   cat.toString());
         xCategory.setAttribute(A_NAME, cat.getCategoryName());
       }
     }
     return xml;
   }
 
-  public Document refreshCoursePage(Principal p, Announcement announce) {
-    return buildCoursePage(p, announce.getCourse());
+  public Document refreshCoursePage(User u, Announcement announce) {
+    return buildCoursePage(u, announce.getCourse());
   }
 
   /**
@@ -1566,7 +1550,7 @@ public class XMLBuilder {
         System.currentTimeMillis() + 1000 * DateTimeUtil.SECS_PER_WEEK)));
     xAssignment.setAttribute(A_DUETIME, "11:59");
     xAssignment.setAttribute(A_DUEAMPM, "PM");
-    if (assignType == AssignmentBean.SURVEY) {
+    if (assignType == Assignment.SURVEY) {
       xAssignment.setAttribute(A_TOTALSCORE, "0");
     } else {
       xAssignment.setAttribute(A_TOTALSCORE, "100");
@@ -1585,7 +1569,7 @@ public class XMLBuilder {
     xAssignment.appendChild(xml.createElement(TAG_SCHEDULE));
     root.appendChild(xAssignment);
     // Set known system file types
-    root.appendChild(SystemXMLBuilder.buildFiletypeListSubtree(xml));
+    root.appendChild(systemXMLBuilder.buildFiletypeListSubtree(xml));
     return xml;
   }
 
@@ -1602,18 +1586,14 @@ public class XMLBuilder {
    * @throws RemoteException
    *           If the db connection fails
    */
-  public Document buildBasicAssignmentPage(Principal p, long assignID)
-      throws FinderException {
+  public Document buildBasicAssignmentPage(Principal p, Assignment assignment) {
     Iterator i;
-    AssignmentLocal assignment =
-        database.assignmentHome().findByAssignmentID(assignID);
-    long courseID = assignment.getCourseID();
+    Course course = assignment.getCourse();
     // Build template tree
-    Document xml = buildStaffNavbar(p, courseID);
+    Document xml = buildStaffNavbar(p, course);
     Element root = (Element) xml.getFirstChild();
-    root.appendChild(SystemXMLBuilder.buildFiletypeListSubtree(xml));
-    root.appendChild(AssignmentXMLBuilder.buildFullSubtree(p, xml, assignment,
-        null, null));
+    root.appendChild(systemXMLBuilder.buildFiletypeListSubtree(xml));
+    root.appendChild(assignmentXMLBuilder.buildFullSubtree(p, xml, assignment, null, null));
     return xml;
   }
 
@@ -1621,22 +1601,21 @@ public class XMLBuilder {
    * Builds an XML tree with information about an assignment, appropriate for
    * placement in a scheduling page.
    */
-  public Document buildBasicSchedulePage(Principal p, long assignID)
-      throws FinderException {
-    Document xml = buildBasicAssignmentPage(p, assignID);
-    CourseLocal course = database.courseHome().findByAssignmentID(assignID);
+  public Document buildBasicSchedulePage(Principal p, Assignment assign) {
+    Document xml = buildBasicAssignmentPage(p, assign);
+    Course course = assign.getCourse();
     Element root = (Element) xml.getFirstChild();
     Element xCourse =
         (Element) XMLUtil.getChildrenByTagName(root, TAG_COURSE).item(0);
-    xCourse.appendChild(CourseXMLBuilder.buildStaffListSubtree(p, xml, course));
+    xCourse.appendChild(courseXMLBuilder.buildStaffListSubtree(p, xml, course));
     root.appendChild(xCourse);
     return xml;
   }
 
-  private Element buildCommentsSubtree(Principal p, Document xml,
-      long groupID, AssignmentLocal assignment) throws FinderException {
-    String COMMENT = "Grading Comment", REGRADE_REQUEST = "Regrade Request", REGRADE_REPLY =
-        "Regrade Response";
+  private Element buildCommentsSubtree(Principal p, Document xml, Group group, Assignment assignment) {
+    String COMMENT         = "Grading Comment",
+           REGRADE_REQUEST = "Regrade Request",
+           REGRADE_REPLY   = "Regrade Response";
     Element comments = xml.createElement(XMLBuilder.TAG_COMMENTS);
     Collection cComment = database.commentHome().findByGroupID(groupID);
     Collection cRegrade = database.regradeRequestHome().findByGroupID(groupID);
@@ -1649,10 +1628,10 @@ public class XMLBuilder {
     long subProblemID;
     // Merge regular grading comments and grading request under one history
     // in descending order
-    CommentLocal currentComment =
-        iComment.hasNext() ? (CommentLocal) iComment.next() : null;
-    RegradeRequestLocal currentRegrade =
-        iRegrade.hasNext() ? (RegradeRequestLocal) iRegrade.next() : null;
+    Comment currentComment =
+        iComment.hasNext() ? (Comment) iComment.next() : null;
+    RegradeRequest currentRegrade =
+        iRegrade.hasNext() ? (RegradeRequest) iRegrade.next() : null;
     Element comment = null;
     while (!(currentComment == null && currentRegrade == null)) {
       if (currentComment != null
@@ -1667,8 +1646,8 @@ public class XMLBuilder {
         comment.setAttribute(XMLBuilder.A_DATE, DateTimeUtil.DATE_TIME_AMPM
             .format(currentComment.getDateEntered()));
         comment.setAttribute(XMLBuilder.A_TEXT, currentComment.getComment());
-        CommentFileData commentFile =
-            (CommentFileData) commentFilesMap.get(new Long(currentComment
+        CommentFile commentFile =
+            (CommentFile) commentFilesMap.get(new Long(currentComment
                 .getCommentID()));
         if (commentFile != null) {
           comment.setAttribute(XMLBuilder.A_COMMENTFILEID, Long
@@ -1677,7 +1656,7 @@ public class XMLBuilder {
               .setAttribute(XMLBuilder.A_FILENAME, commentFile.getFileName());
         }
         currentComment =
-            iComment.hasNext() ? (CommentLocal) iComment.next() : null;
+            iComment.hasNext() ? (Comment) iComment.next() : null;
       } else {
         comment = xml.createElement(XMLBuilder.TAG_COMMENT);
         comment.setAttribute(XMLBuilder.A_TYPE, REGRADE_REQUEST);
@@ -1690,29 +1669,25 @@ public class XMLBuilder {
         subProblemID = currentRegrade.getSubProblemID();
         if (subProblemID != 0) { // there is a subProblem associated
           // with regrade, get the name
-          SubProblemData subProblem =
-              (SubProblemData) subProblemsMap.get(new Long(subProblemID));
+          SubProblem subProblem =
+              (SubProblem) subProblemsMap.get(new Long(subProblemID));
           if (subProblem != null)
             comment.setAttribute(XMLBuilder.A_SUBPROBNAME, subProblem
                 .getSubProblemName());
         }
         currentRegrade =
-            iRegrade.hasNext() ? (RegradeRequestLocal) iRegrade.next() : null;
+            iRegrade.hasNext() ? (RegradeRequest) iRegrade.next() : null;
       }
       comments.appendChild(comment);
     }
     return comments;
   }
 
-  public Document buildSurveyResultPage(Principal p, long assignID)
-      throws FinderException {
+  public Document buildSurveyResultPage(Principal p, Assignment assignment) {
     // Build template tree
-    AssignmentLocal assignment =
-        database.assignmentHome().findByAssignmentID(assignID);
     Document xml = buildStaffNavbar(p, assignment.getCourseID());
     Element root = (Element) xml.getFirstChild();
-    root.appendChild(AssignmentXMLBuilder.buildSurveyResultSubtree(xml,
-        assignment));
+    root.appendChild(assignmentXMLBuilder.buildSurveyResultSubtree(xml, assignment));
     return xml;
   }
 
@@ -1737,15 +1712,15 @@ public class XMLBuilder {
   }
 
   // find the answer to subID in an answerSet and return the answer text
-  private String findAnswer(long subID, int subType, AnswerSet answerSet) {
+  private String findAnswer(SubProblem subProblem, int subType, AnswerSet answerSet) {
     Iterator iterator = answerSet.getAnswers().iterator();
     while (iterator.hasNext()) {
-      AnswerData answer = (AnswerData) iterator.next();
-      if (subID == answer.getSubProblemID()) {
+      Answer answer = (Answer) iterator.next();
+      if (subProblem == answer.getSubProblem()) {
         String text = answer.getText();
-        if (subType == SubProblemBean.MULTIPLE_CHOICE) {
+        if (subType == SubProblem.MULTIPLE_CHOICE) {
           try {
-            ChoiceLocal choice =
+            Choice choice = 
                 database.choiceHome().findByChoiceID(Long.parseLong(text));
             return choice.getLetter() + ". " + choice.getText();
           } catch (Exception nfe) {
@@ -1757,24 +1732,18 @@ public class XMLBuilder {
     return "";
   }
 
-  public Collection generateSurveyResultCSV(long assignID)
-      throws FinderException {
-    ArrayList csvData = new ArrayList();
-    AssignmentLocal assignment =
-        database.assignmentHome().findByAssignmentID(assignID);
-    Collection answerSets =
-        shuffleCollectionElements(database.answerSetHome().findByAssignmentID(
-            assignID));
+  public Collection generateSurveyResultCSV(Assignment assignment) {
+    ArrayList csv = new ArrayList();
+    Collection answerSets = shuffleCollectionElements(assignment.getAnswerSets());
     String[] headerRow = new String[1];
 
     // adding the assignment name and number of submissions as header of this
     // csv file
     headerRow[0] = assignment.getName();
-    csvData.add(headerRow);
+    csv.add(headerRow);
 
-    Collection subproblems =
-        database.subProblemHome().findByAssignmentID(assignID);
-
+    Collection subproblems = assignment.getSubProblems();
+    
     // adding the subproblems name to the header row
     int numEntries = subproblems.size();
     Iterator i = subproblems.iterator();
@@ -1784,70 +1753,63 @@ public class XMLBuilder {
 
     // adding the subproblems name to the header row
     for (int count = 0; count < numEntries; count++) {
-      SubProblemLocal subproblem = (SubProblemLocal) i.next();
+      SubProblem subproblem = (SubProblem) i.next();
       boolean hidden = subproblem.getHidden();
-      long sid = subproblem.getSubProblemID();
       int type = subproblem.getType();
       String name = subproblem.getSubProblemName();
-      sidToTypeMap.put(new Long(sid), new Integer(type));
-      sidToIndexMap.put(new Long(sid), new Integer(count));
+      sidToTypeMap.put(subproblem, new Integer(type));
+      sidToIndexMap.put(subproblem, new Integer(count));
       firstRow[count] = subproblem.getSubProblemName();
     }
-    csvData.add(firstRow);
+    csv.add(firstRow);
 
     // adding all the answer sets
     Iterator j = answerSets.iterator();
     while (j.hasNext()) {
-      AnswerSetLocal answerSet = (AnswerSetLocal) j.next();
+      AnswerSet answerSet = (AnswerSet) j.next();
       String[] row = new String[numEntries];
 
       // find the answer to each recorded subproblem in this answerSet
       Iterator subIterator = sidToTypeMap.keySet().iterator();
       while (subIterator.hasNext()) {
-        Long sid = (Long) subIterator.next();
-        Integer type = (Integer) sidToTypeMap.get(sid);
-        Integer index = (Integer) sidToIndexMap.get(sid);
-        String text = findAnswer(sid.longValue(), type.intValue(), answerSet);
+        SubProblem sp = (SubProblem) subIterator.next();
+        Integer type = (Integer) sidToTypeMap.get(sp);
+        Integer index = (Integer) sidToIndexMap.get(sp);
+        String text = findAnswer(sp, type.intValue(), answerSet);
         row[index.intValue()] = text;
       }
 
-      csvData.add(row);
+      csv.add(row);
     }
-    return csvData;
+    return csv;
   }
 
   /**
    * Creates an XML document for the Student Assignment View page, containing
    * user-specific information.
    */
-  public Document buildStudentAssignmentPage(Principal p, long assignID)
-      throws FinderException {
+  public Document buildStudentAssignmentPage(User user, Assignment assignment) {
     Iterator i;
-    AssignmentLocal assignment =
-        database.assignmentHome().findByAssignmentID(assignID);
-    long courseID = assignment.getCourseID();
     // Build template tree
-    Document xml = buildStaffNavbar(p, courseID);
+    Document xml = buildStaffNavbar(user, assignment.getCourse());
     Element root = (Element) xml.getFirstChild();
     Iterator grades =
-        database.gradeHome().findMostRecentByNetAssignmentID(p.getNetID(),
+        database.gradeHome().findMostRecentByNetAssignmentID(user.getNetID(),
             assignID).iterator();
     HashMap gradeMap = new HashMap();
     while (grades.hasNext()) {
-      GradeLocal grade = (GradeLocal) grades.next();
-      gradeMap.put(new Long(grade.getSubProblemID()), grade.getGrade());
+      Grade grade = (Grade) grades.next();
+      gradeMap.put(grade.getSubProblem(), grade.getGrade());
     }
 
     Map answerMap = null;
     // Get answer data if this is a quiz or survey
     int assignType = assignment.getType();
-    if (assignType == AssignmentBean.QUIZ
-        || assignType == AssignmentBean.SURVEY) {
+    if (assignType == Assignment.QUIZ
+        || assignType == Assignment.SURVEY) {
       try {
-        long groupID =
-            database.groupHome().findByNetIDAssignmentID(p.getNetID(),
-                assignment.getAssignmentID()).getGroupID();
-        AnswerSetLocal answerSet =
+        Group group = assignment.getGroup(user);
+        AnswerSet answerSet =
             database.answerSetHome().findMostRecentByGroupAssignmentID(groupID,
                 assignment.getAssignmentID());
         Collection answers = answerSet.getAnswers();
@@ -1855,8 +1817,8 @@ public class XMLBuilder {
         answerMap = new HashMap();
 
         while (i.hasNext()) {
-          AnswerData answer = (AnswerData) i.next();
-          answerMap.put(new Long(answer.getSubProblemID()), answer.getText());
+          Answer answer = (Answer) i.next();
+          answerMap.put(answer.getSubProblem(), answer.getText());
         }
       } catch (FinderException e) {
 
@@ -1865,23 +1827,19 @@ public class XMLBuilder {
 
     // TODO don't need the full course tree
     // root.appendChild(CourseXMLBuilder.buildFullSubtree(p, xml,
-    // database.courseHome().findByPrimaryKey(new CoursePK(courseID))));
-    root.appendChild(SystemXMLBuilder.buildFiletypeListSubtree(xml));
+    // database.courseHome().findByPrimaryKey(new Course(courseID))));
+    root.appendChild(systemXMLBuilder.buildFiletypeListSubtree(xml));
     Element xAssignment =
-        AssignmentXMLBuilder.buildFullSubtree(p, xml, assignment, gradeMap,
-            answerMap);
+        assignmentXMLBuilder.buildFullSubtree(user, xml, assignment, gradeMap, answerMap);
     root.appendChild(xAssignment);
     // Generate group branch
-    GroupLocal group = null;
-    if (p.isStudentInCourseByCourseID(courseID)) {
-      group =
-          database.groupHome().findByNetIDAssignmentID(p.getNetID(), assignID);
+    Group group = null;
+    if (user.isStudentInCourseByCourse(course)) {
+      group = assignment.getGroup(user);
     }
     if (group != null) {
-      xAssignment.appendChild(GroupXMLBuilder.buildFullSubtree(p, xml, group,
-          assignment));
-      xAssignment.appendChild(buildCommentsSubtree(p, xml, group.getGroupID(),
-          assignment));
+      xAssignment.appendChild(groupXMLBuilder.buildFullSubtree(user, xml, group, assignment));
+      xAssignment.appendChild(buildCommentsSubtree(user, xml, group, assignment));
     }
     // Generate grade
     Float grade = (Float) gradeMap.get(new Long(0)); // grade for assignments
@@ -1892,19 +1850,16 @@ public class XMLBuilder {
     return xml;
   }
 
-  public Document buildGradeAssignPage(Principal p, long assignID)
-      throws FinderException {
-    return buildGradeAssignPage(p, assignID, null, false);
+  public Document buildGradeAssignPage(Principal p, Assignment assign) {
+    return buildGradeAssignPage(p, assign, null, false);
   }
 
-  public Document buildGradeAssignPage(Principal p, long assignID,
-      boolean showGradeMsg) throws FinderException {
-    return buildGradeAssignPage(p, assignID, null, showGradeMsg);
+  public Document buildGradeAssignPage(Principal p, Assignment assign, boolean showGradeMsg) {
+    return buildGradeAssignPage(p, assign, null, showGradeMsg);
   }
 
-  public Document buildGradeAssignPage(Principal p, long assignID,
-      Long groupID) throws FinderException {
-    return buildGradeAssignPage(p, assignID, groupID, false);
+  public Document buildGradeAssignPage(Principal p, Assignment assign, Group group) {
+    return buildGradeAssignPage(p, assign, group, false);
   }
 
   /**
@@ -1923,26 +1878,20 @@ public class XMLBuilder {
    * @throws RemoteException
    *           If the db connection fails
    */
-  public Document buildGradeAssignPage(Principal p, long assignID,
-      Long groupID, boolean showGradeMsg) throws FinderException {
+  public Document buildGradeAssignPage(Principal p, Assignment assign,
+      Group group, boolean showGradeMsg) {
     Profiler.enterMethod("XMLBuilder.buildGradeAssignPage", "assignid="
-        + assignID + ", groupid=" + groupID);
-    AssignmentLocal assign =
-        database.assignmentHome().findByAssignmentID(assignID);
+        + assign.toString() + ", groupid=" + group.toString());
     long courseID = assign.getCourseID();
-    Document xml = buildStaffNavbar(p, courseID);
+    Document xml = buildStaffNavbar(p, assign.getCourse());
     Element xRoot = (Element) xml.getFirstChild();
     if (showGradeMsg) xRoot.setAttribute(A_GRADEMSG, "true");
-    if (groupID != null) {
-      xRoot.setAttribute(A_JUMPTOGROUP, "cg" + groupID.toString());
+    if (group != null) {
+      xRoot.setAttribute(A_JUMPTOGROUP, "cg" + group.toString());
     }
-    xRoot.appendChild(AssignmentXMLBuilder.buildGeneralSubtree(xml, assign,
-        null));
-    CourseLocal course =
-        database.courseHome().findByPrimaryKey(new CoursePK(courseID));
-    AssignmentGroupsXMLBuilder.buildGroupGradingPage(p, assignID, xml);
-    Profiler.exitMethod("XMLBuilder.buildGradeAssignPage", "assignid="
-        + assignID + ", groupid=" + groupID);
+    xRoot.appendChild(assignmentXMLBuilder.buildGeneralSubtree(xml, assign, null));
+    assignmentGroupsXMLBuilder.buildGroupGradingPage(p, assign, xml);
+    Profiler.exitMethod("XMLBuilder.buildGradeAssignPage", "assignid=" + assign.toString() + ", groupid=" + group.toString());
     return xml;
   }
 
@@ -1959,10 +1908,9 @@ public class XMLBuilder {
    * @throws RemoteException
    *           If the db connection fails
    */
-  public Document buildGradePage(Principal p, long assignID,
-      Collection groupIDs) throws FinderException {
+  public Document buildGradePage(Principal p, long assignID, Collection groupIDs) {
     Profiler.enterMethod("XMLBuilder.buildGradePage", "");
-    AssignmentLocal assign =
+    Assignment assign =
         database.assignmentHome().findByAssignmentID(assignID);
     Document xml = buildStaffNavbar(p, assign.getCourseID());
     Element root = (Element) xml.getFirstChild();
@@ -1970,8 +1918,8 @@ public class XMLBuilder {
     // Element xAssign = AssignmentXMLBuilder.buildGeneralSubtree(xml, assign,
     // null);
     // root.appendChild(xAssign);
-    // CourseLocal course = database.courseHome().findByPrimaryKey(new
-    // CoursePK(assign.getCourseID()));
+    // Course course = database.courseHome().findByPrimaryKey(new
+    // Course(assign.getCourseID()));
     // Element xCourse = CourseXMLBuilder.buildFullSubtree(p, xml, course);
     // root.appendChild(xCourse);
     GradingXMLBuilder.buildGradingSubtree(p, xml, assignID, groupIDs);
@@ -1979,13 +1927,12 @@ public class XMLBuilder {
     return xml;
   }
 
-  public Document buildGradeStudentPage(Principal p, long courseID,
-      String netID) throws FinderException {
+  public Document buildGradeStudentPage(Principal p, long courseID, String netID) {
     Document xml = null;
     xml = buildStaffNavbar(p, courseID);
     /*
-     * Element root = (Element) xml.getFirstChild(); CourseLocal course =
-     * database.courseHome().findByPrimaryKey(new CoursePK(courseID)); Element
+     * Element root = (Element) xml.getFirstChild(); Course course =
+     * database.courseHome().findByPrimaryKey(new Course(courseID)); Element
      * xCourse = CourseXMLBuilder.buildFullSubtree(p, xml, course);
      * root.appendChild(xCourse);
      */
@@ -2007,8 +1954,8 @@ public class XMLBuilder {
   public Document buildCoursePropertiesPage(Principal p, long courseID) {
     Document xml = buildStaffNavbar(p, courseID);
     Element root = (Element) xml.getFirstChild();
-    CourseLocal course =
-        database.courseHome().findByPrimaryKey(new CoursePK(courseID));
+    Course course =
+        database.courseHome().findByPrimaryKey(new Course(courseID));
     Element xCourse =
         (Element) XMLUtil.getChildrenByTagName(root, TAG_COURSE).item(0);
     CourseXMLBuilder.addAccessInfo(course, xCourse);
@@ -2017,8 +1964,7 @@ public class XMLBuilder {
     return xml;
   }
 
-  public Document buildStudentsPage(Principal p, long courseID,
-      boolean showAddDrop) throws FinderException {
+  public Document buildStudentsPage(Principal p, long courseID, boolean showAddDrop) {
     return buildStudentsPage(p, courseID, showAddDrop, false);
   }
 
@@ -2038,11 +1984,11 @@ public class XMLBuilder {
    *           If the db connection fails
    */
   public Document buildStudentsPage(Principal p, long courseID,
-      boolean showAddDrop, boolean showGradeMsg) throws FinderException {
+      boolean showAddDrop, boolean showGradeMsg) {
     Document xml = buildStaffNavbar(p, courseID, true);
     Element xRoot = (Element) xml.getFirstChild();
     Element xCourse = XMLUtil.getFirstChildByTagName(xRoot, TAG_COURSE);
-    CourseLocal course = database.courseHome().findByCourseID(courseID);
+    Course course = database.courseHome().findByCourseID(courseID);
     CourseXMLBuilder.addTotalScoreStats(course, xCourse);
     CourseXMLBuilder.addCourseProperties(course, xCourse);
     if (showAddDrop) xRoot.setAttribute(A_SHOWADDDROP, "true");
@@ -2070,25 +2016,24 @@ public class XMLBuilder {
    *           IllegalArgumentException
    */
   public Document buildConfirmPage(Principal p, int confirm_type,
-      long ID, TransactionResult result) throws FinderException,
-      IllegalArgumentException {
+      long ID, TransactionResult result) throws IllegalArgumentException {
     Document xml = buildPageHeader(p);
     Element root = (Element) xml.getFirstChild();
     root.setAttribute(A_CONFIRMTYPE, String.valueOf(confirm_type));
     if (confirm_type == CONFIRM_ASSIGNINFO) // assignment-specific operations
     {
-      AssignmentLocal assign = database.assignmentHome().findByAssignmentID(ID);
-      CourseLocal course =
+      Assignment assign = database.assignmentHome().findByAssignmentID(ID);
+      Course course =
           database.courseHome().findByPrimaryKey(
-              new CoursePK(assign.getCourseID()));
+              new Course(assign.getCourseID()));
       Element xCourse = CourseXMLBuilder.buildFullSubtree(p, xml, course);
       root.appendChild(xCourse);
       root.setAttribute(A_ASSIGNID, String.valueOf(ID));
     } else if (confirm_type == CONFIRM_COURSEINFO
         || confirm_type == CONFIRM_FINALGRADES) // course-specific operations
     {
-      CourseLocal course =
-          database.courseHome().findByPrimaryKey(new CoursePK(ID));
+      Course course =
+          database.courseHome().findByPrimaryKey(new Course(ID));
       Element xCourse = CourseXMLBuilder.buildFullSubtree(p, xml, course);
       root.appendChild(xCourse);
       root.setAttribute(A_COURSEID, String.valueOf(ID));
@@ -2485,7 +2430,7 @@ public class XMLBuilder {
    * 
    * @return The root session bean
    */
-  public CMSRoot getDatabase() {
+  public CMSRoot getbase() {
     return database;
   }
 
