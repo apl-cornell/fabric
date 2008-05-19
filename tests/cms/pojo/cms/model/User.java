@@ -82,6 +82,10 @@ public class User extends Principal {
     // TODO Auto-generated method stub
     return null;
   }
+  public boolean hasAssignAccess(Course course, Assignment assign) {
+    // TODO Auto-generated method stub
+    return false;
+  }
 }
 
 /*

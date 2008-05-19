@@ -80,6 +80,10 @@ public class Group {
     // TODO Auto-generated method stub
     return null;
   }
+  public GroupMember findGroupMember(User user) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

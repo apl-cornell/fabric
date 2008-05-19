@@ -14,6 +14,7 @@ import java.util.*;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,13 +46,6 @@ public class AccessController extends HttpServlet {
   // Loaded from tSystemProperties during system startup
   public static boolean debug;
   public static int maxFileSize;
-
-  /*
-   * // XXX TEMPORARY TEST VARIABLE ILL PROBABLY FORGET TO REMOVE public static
-   * boolean firstRequest = true;
-   */
-
-  public static final String defaultID = "sg252";
 
   /* URLs of all main JSPs in the system (others are included JSP fragments) */
   public static final String ASSIGNADMIN_URL = "/staff/assignment/assignment.jsp", // assignment
@@ -2706,7 +2700,7 @@ public class AccessController extends HttpServlet {
       Course course = getCourse(request.getParameter(P_COURSEID));
       String studentID = request.getParameter(P_NETID);
       if (user.isInStaffAsBlankMode()) {
-        user.resetToStaffMode();
+        resetToStaff(request, user);
       }
       if (user.isAdminPrivByCourse(course)) {
         String message = null;
@@ -2759,6 +2753,15 @@ public class AccessController extends HttpServlet {
     boolean xhfg = true;
     if (debug) Profiler.endAction(action);
     return new RequestHandlerInfo(buildURL, xml);
+  }
+
+  private User assumeRole(ServletRequest request, User staff, User assumed) {
+    // TODO Auto-generated method stub
+    return staff;
+  }
+  
+  private void resetToStaff(ServletRequest request, User user) {
+    // TODO Auto-generated method stub
   }
 
   private SubProblem getSubProblem(String subProblemID) {

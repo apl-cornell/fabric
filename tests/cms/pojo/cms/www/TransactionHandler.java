@@ -779,7 +779,7 @@ public class TransactionHandler {
    *         set to just the success message.
    */
   public TransactionResult addGradesComments(Principal p, boolean isAssign,
-      long ID, HttpServletRequest request) {
+      Object data, HttpServletRequest request) {
     Profiler.enterMethod("TransactionHandler.addGradesComments", "");
     TransactionResult result = new TransactionResult();
     try {
@@ -789,9 +789,9 @@ public class TransactionHandler {
               FileUtil.TEMP_DIR);
       Iterator i = info.iterator();
       GradeCommentInfo data = new GradeCommentInfo();
-      Map assignIDs = isAssign ? null : database.getAssignmentIDMap(ID);
+      Map assignIDs = isAssign ? null : database.getAssignmentIDMap(data);
       AssignmentLocal assignment =
-          isAssign ? database.assignmentHome().findByAssignmentID(ID) : null;
+          isAssign ? database.assignmentHome().findByAssignmentID(data) : null;
       if (isAssign ? courseIsFrozen(assignment.getCourseID())
           : courseIsFrozen(ID)) {
         result.addError("Course is frozen, cannot make changes");
@@ -3453,7 +3453,7 @@ public class TransactionHandler {
   /**
    * @return 0 on error, the course ID of the category on success
    */
-  private long removeCategory(Principal p, long categoryID) {
+  private long removeCategory(Principal p, Category category) {
     Course course = 0;
     try {
       CategoryLocal cat =
