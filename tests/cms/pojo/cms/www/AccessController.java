@@ -7,13 +7,10 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.rmi.RemoteException;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.util.Date;
 import java.text.ParseException;
 import java.util.*;
 
-import javax.ejb.FinderException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -28,9 +25,9 @@ import org.w3c.dom.Document;
 import cms.www.util.*;
 import cms.www.xml.XMLBuilder;
 
-import edu.cornell.csuglab.cms.author.Principal;
-import edu.cornell.csuglab.cms.author.UserNotFoundException;
-import edu.cornell.csuglab.cms.base.*;
+import cms.auth.Principal;
+import cms.auth.UserNotFoundException;
+import cms.model.*;
 
 /**
  * @author Jon, Ray, Evan
@@ -510,7 +507,7 @@ public class AccessController extends HttpServlet {
                                 // ONE
       P_GROUPS = "groups", // group option: no groups; staff-set groups;
                             // student-set groups
-      P_GROUPSFROM = "groupsfrom", // asgn ID of assignment from which to
+      P_GROUPSFROM = "groupsfrom", // asgn  of assignment from which to
                                     // migrate groups
       P_GROUPSBYTA = "groupsbyta", // whether staff can grade groups not
                                     // assigned to them
@@ -652,7 +649,7 @@ public class AccessController extends HttpServlet {
       P_REGRADEWHOLE = "regradewhole", // on both student and staff views; if
                                         // present, regrade all subproblems
       P_REGRADESUB = "regradesub", // on both student and staff views; prepend
-                                    // to ID of subproblem to regrade
+                                    // to  of subproblem to regrade
       P_REGRADENETID = "regradenetid", // netID of staff member submitting
                                         // regrade response
       /* grading */
@@ -662,7 +659,7 @@ public class AccessController extends HttpServlet {
       P_GRADEMESSAGE = "grademsg", // whether user has selected a "Grade" link,
                                     // but yet to select students/assignments
       /* assignment grading page */
-      P_GRADEGROUP = "gradegroup_", // followed by a group ID; "checked" or not
+      P_GRADEGROUP = "gradegroup_", // followed by a group ; "checked" or not
                                     // present
       P_ASSIGNPROBNAME = "assignsubprobname", // which subproblem to grade; can
                                               // be "<All Parts>"
@@ -671,17 +668,17 @@ public class AccessController extends HttpServlet {
                                   // given assignment
       P_GRADESFILE = "gradesfile", // file associating netIDs with grades for a
                                     // particular assignment
-      P_EXTGROUPID = "extgroupid", // ID of group to receive an extension
+      P_EXTGROUPID = "extgroupid", //  of group to receive an extension
       /*
        * detailed grading pages (all students for one assignment, all
        * assignments for one student)
        */
-      P_COMMENTTEXT = "commenttext", // prepended to group ID; text of comment
+      P_COMMENTTEXT = "commenttext", // prepended to group ; text of comment
                                       // by grader
-      P_COMMENTFILE = "commentfile", // prepended to group ID; file with
+      P_COMMENTFILE = "commentfile", // prepended to group ; file with
                                       // comment by grader
-      P_REGRADERESPONSE = "regraderesponse", // prepended to group ID and
-                                              // regrade request ID; boolean
+      P_REGRADERESPONSE = "regraderesponse", // prepended to group  and
+                                              // regrade request ; boolean
       P_REMOVECOMMENT = "removecomment", //
       /* log search pages (course admin, cms admin) */
       P_LOGSEARCH_NETID = "actingnetid", // netID
@@ -692,8 +689,8 @@ public class AccessController extends HttpServlet {
       P_LOGSEARCH_END = "endtime", // date
       P_LOGSEARCH_TYPE = "logtype", // log type, integer (see LogBean)
       P_LOGSEARCH_NAME = "logname", // log subtype, text
-      P_LOGSEARCH_COURSE = "logsearchcourseid", // course ID
-      P_LOGSEARCH_ASGN = "logsearchassignid", // assignment ID
+      P_LOGSEARCH_COURSE = "logsearchcourseid", // course 
+      P_LOGSEARCH_ASGN = "logsearchassignid", // assignment 
       /* e-mail */
       P_EMAIL_NETIDS = "emailnetids",
       P_EMAIL_SUBJECT = "emailsubject", // text
@@ -721,7 +718,7 @@ public class AccessController extends HttpServlet {
       P_APPLYDEFAULT = "appldef",
       /* Assignment schedule edit page */
       // assigning groups
-      P_TIMESLOTID = "timeslotid", // ID of slot for which to add/remove group
+      P_TIMESLOTID = "timeslotid", //  of slot for which to add/remove group
       // editing schedule
       P_NEWTSNAME = "newtsname", // arbitrary timeslot name; text
       P_NEWTSSTAFF = "newtsstaff", // staff netID
@@ -731,7 +728,7 @@ public class AccessController extends HttpServlet {
       P_NEWTSSTARTAMPM = "newtsstartampm", // ditto
       P_NEWTSMULTIPLICITY = "newtsmultiplicity", // number of consecutive slots
                                                   // to create
-      P_DELETETIMESLOT = "deletetimeslot_", // prepended to timeslot ID;
+      P_DELETETIMESLOT = "deletetimeslot_", // prepended to timeslot ;
                                             // "checked" or not present
       P_NEWNETIDS = "newnetids", // adding new net ids from a file Duplicate
                                   // hidden fields for the assignment editing
@@ -884,7 +881,8 @@ public class AccessController extends HttpServlet {
     }
   }
 
-  private HashMap debugPrincipalMap;
+  private HashMap    debugPrincipalMap;
+  private XMLBuilder xmlBuilder;
 
   /**
    * Initialize the Servlet
@@ -897,15 +895,11 @@ public class AccessController extends HttpServlet {
     if (transactions == null) {
       transactions = new TransactionHandler();
     }
-    try {
-      debug = XMLBuilder.getDatabase().isDebugMode();
-      if (debug) {
-        debugPrincipalMap = new HashMap();
-      }
-      maxFileSize = XMLBuilder.getDatabase().getMaxFileSize();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+
+    debug = xmlBuilder.getDatabase().getDebugMode();
+    if (xmlBuilder.getDatabase().getDebugMode())
+      debugPrincipalMap = new HashMap();
+    maxFileSize = xmlBuilder.getDatabase().getMaxFileSize();
   }
 
   /**
@@ -961,30 +955,30 @@ public class AccessController extends HttpServlet {
           if (p == null
               && (p = (Principal) debugPrincipalMap.get(request.getLocalAddr())) == null) {
             p =
-                new Principal(XMLBuilder.getDatabase(), Principal.guestid,
-                    request.getRemoteAddr());
+              new Principal(xmlBuilder.getDatabase(), Principal.guestid,
+                  request.getRemoteAddr());
           }
         } else {
           p =
-              new Principal(XMLBuilder.getDatabase(), debugID, request
-                  .getRemoteAddr());
+            new Principal(xmlBuilder.getDatabase(), debugID, request
+                .getRemoteAddr());
           debugPrincipalMap.put(request.getLocalAddr(), p);
         }
       } else {
         String nodebugloginID = request.getHeader("remote_user"); // Authenticated
                                                                   // user
         nodebugloginID =
-            nodebugloginID == null ? Principal.guestid : nodebugloginID;
+          nodebugloginID == null ? Principal.guestid : nodebugloginID;
         if ((action != null)
             && (p == null || !p.getPrincipalID().equals(nodebugloginID))) {
           try {
             p =
-                new Principal(XMLBuilder.getDatabase(), nodebugloginID, request
-                    .getRemoteAddr());
+              new Principal(xmlBuilder.getDatabase(), nodebugloginID, request
+                  .getRemoteAddr());
           } catch (UserNotFoundException e) {
             p =
-                new Principal(XMLBuilder.getDatabase(), Principal.guestid,
-                    request.getRemoteAddr());
+              new Principal(xmlBuilder.getDatabase(), Principal.guestid,
+                  request.getRemoteAddr());
           }
         }
       }
@@ -1062,13 +1056,13 @@ public class AccessController extends HttpServlet {
        */
       if (action == null) {
         buildURL = HOMEPAGE_URL;
-        xml = XMLBuilder.buildHomepage();
+        xml = xmlBuilder.buildHomepage();
       } else {
         // Set up Principal and netID in debug mode
         p = setUpPrincipal(session, request, action);
         if (p == null) {
           buildURL = HOMEPAGE_URL;
-          xml = XMLBuilder.buildHomepage();
+          xml = xmlBuilder.buildHomepage();
         } else {
           String netid = p.getNetID(); // netid of appUser if in
           // staffAs_ mode, apparentID
@@ -1083,7 +1077,7 @@ public class AccessController extends HttpServlet {
             xml = info.getXMLDocument();
           } catch (Exception nfe) {
             // Bad input - go to overview
-            xml = XMLBuilder.buildErrorPage(p.getNetID(), action, nfe);
+            xml = xmlBuilder.buildErrorPage(p.getNetID(), action, nfe);
             buildURL = ERROR_URL;
             nfe.printStackTrace();
           }
@@ -1120,7 +1114,7 @@ public class AccessController extends HttpServlet {
    * @param request
    * @param response
    * @param session
-   * @param p
+   * @param user
    * @param xml
    * @return A RequestHandlerInfo giving all the info needed to build output, if
    *         any. The return value may have null fields (meaning there should be
@@ -1129,8 +1123,7 @@ public class AccessController extends HttpServlet {
    */
   private RequestHandlerInfo handleSpecificAction(String action,
       HttpServletRequest request, HttpServletResponse response,
-      HttpSession session, Principal p) throws FinderException, IOException,
-      RemoteException, SQLException, FileUploadException {
+      HttpSession session, User user) throws IOException, FileUploadException {
     // the values to be filled in and returned in some form
     String buildURL = null;
     Document xml = null;
@@ -1141,69 +1134,65 @@ public class AccessController extends HttpServlet {
      */
     // overview page
     if (action.equals(ACT_OVER)) {
-      Long semesterID = null;
-      try {
-        semesterID =
-            new Long(Long.parseLong(request.getParameter(P_SEMESTERID)));
-      } catch (NumberFormatException e) {
-      }
+      Semester semester = getSemester(request.getParameter(P_SEMESTERID));
+      
       // Overview resets the principal to its standard view
-      if (p.isInStaffAsBlankMode()) {
-        p.resetToStaffMode();
+      if (user.isInStaffAsBlankMode()) {
+        user.resetToStaffMode();
       }
       buildURL = OVERVIEW_URL;
-      xml = XMLBuilder.buildOverview(p, semesterID);
+      xml = xmlBuilder.buildOverview(user, semester);
     }
     // Accept a group invitation
     else if (action.equals(ACT_ACCEPT)) {
-      long groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      if (p.isStudentInCourseByGroupID(groupID)) {
+      Group group = getGroup(request.getParameter(P_GROUPID));
+      if (user.isStudentInCourseByGroup(group)) {
         buildURL = ASSIGNMENT_URL;
-        TransactionResult result = transactions.acceptInvitation(p, groupID);
-        xml = XMLBuilder.refreshStudentAssignmentPage(p, groupID);
-        xml = XMLBuilder.addStatus(xml, result);
+        TransactionResult result = transactions.acceptInvitation(user, group);
+        xml = xmlBuilder.refreshStudentAssignmentPage(user, group);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Add a CMS administrator
     else if (action.equals(ACT_ADDCMSADMIN)) {
-      if (p.isCMSAdmin()) {
+      if (user.isCMSAdmin()) {
         buildURL = CMSADMIN_URL;
         TransactionResult result =
-            transactions.addCMSAdmin(p, request.getParameter(P_NETID));
-        xml = XMLBuilder.buildCMSAdminPage(p);
-        xml = XMLBuilder.addStatus(xml, result);
+            transactions.addCMSAdmin(user, getUser(request.getParameter(P_NETID)));
+        xml = xmlBuilder.buildCMSAdminPage(user);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // View the add-and-edit-category-contents page
     else if (action.equals(ACT_ADDNEDITCONTENTS)) {
-      long categoryID = Util.parseLong(request.getParameter(P_CATID));
-      if (p.isCategoryPrivByCategoryID(categoryID)) {
+      Category category = getCategory(request.getParameter(P_CATID));
+      if (user.isCategoryPrivByCategory(category)) {
         buildURL = CTGCONTENTSADMIN_URL;
-        xml = XMLBuilder.buildCtgContentPage(p, categoryID);
+        xml = xmlBuilder.buildCtgContentPage(user, category);
       } else buildURL = FORBIDDEN_URL;
     }
     // Add a course under the current semester
     else if (action.equals(ACT_ADDCOURSE)) {
-      if (p.isCMSAdmin()) {
+      if (user.isCMSAdmin()) {
         String courseCode = request.getParameter(P_CODE), courseName =
             request.getParameter(P_COURSENAME);
         TransactionResult result =
-            transactions.addCourse(p, courseCode, courseName);
+            transactions.addCourse(user, courseCode, courseName);
         buildURL = CMSADMIN_URL;
-        xml = XMLBuilder.buildCMSAdminPage(p);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildCMSAdminPage(user);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Set a new sitewide notice
     else if (action.equals(ACT_NEWNOTICE)) {
-      if (p.isCMSAdmin()) {
-        String text = request.getParameter(P_NOTICETEXT);
-        String author = p.getNetID();
+      if (user.isCMSAdmin()) {
+        String text    = request.getParameter(P_NOTICETEXT);
+        User   author  = user;
         boolean hidden = request.getParameter(P_HIDDEN) != null;
-        String date = request.getParameter(P_NOTICEEXPDATE);
-        String time = request.getParameter(P_NOTICEEXPTIME);
-        String ampm = request.getParameter(P_NOTICEEXPAMPM);
-        Timestamp exp;
+        String date    = request.getParameter(P_NOTICEEXPDATE);
+        String time    = request.getParameter(P_NOTICEEXPTIME);
+        String ampm    = request.getParameter(P_NOTICEEXPAMPM);
+        Date exp;
         try {
           exp = DateTimeUtil.parseDate(date, time, ampm);
         } catch (ParseException e) {
@@ -1211,70 +1200,66 @@ public class AccessController extends HttpServlet {
         }
 
         TransactionResult result =
-            transactions.addNotice(p, text, author, exp, hidden);
+            transactions.addNotice(user, text, author, exp, hidden);
         buildURL = CMSADMIN_URL;
-        xml = XMLBuilder.buildCMSAdminPage(p);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildCMSAdminPage(user);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Add students to a course
     else if (action.equals(ACT_ADDSTUDENTS)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.hasStudentsPageAccess(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.hasStudentsPageAccess(course)) {
         TransactionResult result =
-            transactions.addStudentsToCourse(p, courseID, request);
+            transactions.addStudentsToCourse(user, course, request);
         buildURL = STUDENTS_URL;
-        xml = XMLBuilder.buildStudentsPage(p, courseID, true);
+        xml = xmlBuilder.buildStudentsPage(user, course, true);
         if (result.hasErrors()) {
-          xml = XMLBuilder.addStatus(xml, result);
+          xml = xmlBuilder.addStatus(xml, result);
         } else {
           xml =
-              XMLBuilder.addStatus(xml, "All students added successfully",
-                  XMLBuilder.MSG_NORMAL);
+              xmlBuilder.addStatus(xml, "All students added successfully",
+                  xmlBuilder.MSG_NORMAL);
         }
       } else buildURL = FORBIDDEN_URL;
     }
     // goto add student page
     else if (action.equals(ACT_ADDSTUDENTPAGE)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.hasStudentsPageAccess(courseID)) {
-        xml = XMLBuilder.buildStudentsPage(p, courseID, true);
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.hasStudentsPageAccess(course)) {
+        xml = xmlBuilder.buildStudentsPage(user, course, true);
         buildURL = STUDENTS_URL;
       } else buildURL = FORBIDDEN_URL;
     }
     // Apply to groups (covers most actions on the main grading page)
     else if (action.equals(ACT_APPLYTOGROUPS)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
       String gradingAction = request.getParameter(P_SUBMIT);
       gradingAction = gradingAction == null ? "" : gradingAction;
       if (gradingAction.equals(GA_GRADE)) {
-        if (p.isGradesPrivByAssignmentID(assignID)) {
-          AssignmentLocal assign =
-              XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                  assignID);
+        if (user.isGradesPrivByAssignment(assign)) {
           Collection groupIDs = null;
-          if (!p.isAssignPrivByAssignmentID(assignID)
-              && assign.getAssignedGraders()) {
+          if (!user.isAssignPrivByAssignment(assign) && assign.getAssignedGraders()) {
             groupIDs =
-                XMLBuilder.getDatabase().assignedToGroups(assignID,
-                    p.getNetID(),
+                xmlBuilder.getDatabase().assignedToGroups(assign,
+                    user,
                     Util.extractGroupIDsFromMainGradingPageRequest(request));
           } else {
             groupIDs = Util.extractGroupIDsFromMainGradingPageRequest(request);
           }
           if (groupIDs.size() > 0) {
-            xml = XMLBuilder.buildGradePage(p, assignID, groupIDs);
+            xml = xmlBuilder.buildGradePage(user, assign, groupIDs);
             buildURL = GRADESTUDENTS_URL;
           } else {
-            xml = XMLBuilder.buildGradeAssignPage(p, assignID);
-            // xml = XMLBuilder.addStatus(xml, "No groups selected",
-            // XMLBuilder.MSG_NORMAL);
+            xml = xmlBuilder.buildGradeAssignPage(user, assign);
+            // xml = xmlBuilder.addStatus(xml, "No groups selected",
+            // xmlBuilder.MSG_NORMAL);
             buildURL = GRADEASSIGN_URL;
           }
         } else buildURL = FORBIDDEN_URL;
       } else if (gradingAction.equals(GA_FILES)) {
         List groupIDs = Util.extractGroupIDsFromMainGradingPageRequest(request);
-        if (transactions.authorizeGroupFiles(p, groupIDs)) {
+        if (transactions.authorizeGroupFiles(user, groupIDs)) {
           if (groupIDs.size() > 0) {
             response.setContentType("application/zip");
             response.setHeader("Content-disposition", "attachment; filename=\""
@@ -1286,99 +1271,96 @@ public class AccessController extends HttpServlet {
           xml = null;
         } else buildURL = FORBIDDEN_URL;
       } else if (gradingAction.equals(GA_EMAIL)) {
-        long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-        if (p.isAdminPrivByCourseID(courseID)
-            || p.isGradesPrivByCourseID(courseID)
-            || p.isGroupsPrivByCourseID(courseID)) {
+        Course course = getCourse(request.getParameter(P_COURSEID));
+        if (user.isAdminPrivByCourse(course)
+            || user.isGradesPrivByCourse(course)
+            || user.isGroupsPrivByCourse(course)) {
           Collection groupIDs =
               Util.extractGroupIDsFromMainGradingPageRequest(request);
-          xml = XMLBuilder.buildEmailPage(p, courseID, groupIDs);
+          xml = xmlBuilder.buildEmailPage(user, course, groupIDs);
           buildURL = EMAIL_URL;
         } else buildURL = FORBIDDEN_URL;
-      } else if (gradingAction.equals(GA_GRANT)
-          || gradingAction.equals(GA_CHANGE)) { // grant or change an extension
-        if (p.isGradesPrivByAssignmentID(assignID)) {
-          long groupID = Util.parseLong(request.getParameter(P_EXTGROUPID));
+      } else if (gradingAction.equals(GA_GRANT) || gradingAction.equals(GA_CHANGE)) {
+        // grant or change an extension
+        if (user.isGradesPrivByAssignment(assign)) {
+          Group group = getGroup(request.getParameter(P_EXTGROUPID));
           TransactionResult result =
-              transactions.setExtension(p, groupID, request);
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID);
+              transactions.setExtension(user, group, request);
+          xml = xmlBuilder.buildGradeAssignPage(user, assign);
           buildURL = GRADEASSIGN_URL;
           if (result.hasErrors()) {
-            xml = XMLBuilder.addStatus(xml, result);
+            xml = xmlBuilder.addStatus(xml, result);
           } else {
             xml =
-                XMLBuilder.addStatus(xml, "Successfully granted extension",
-                    XMLBuilder.MSG_NORMAL);
+                xmlBuilder.addStatus(xml, "Successfully granted extension",
+                    xmlBuilder.MSG_NORMAL);
           }
         } else buildURL = FORBIDDEN_URL;
       } else if (gradingAction.equals(GA_GROUP)) { // group all students/groups
                                                     // whose checkboxes were
                                                     // selected
-        if (p.isGroupsPrivByAssignmentID(assignID)) {
+        if (user.isGroupsPrivByAssignment(assign)) {
           List groupIDs =
               Util.extractGroupIDsFromMainGradingPageRequest(request);
           // TransactionHandler makes sure they haven't already been graded
           TransactionResult result =
-              transactions.groupSelectedStudents(p, assignID, groupIDs);
+              transactions.groupSelectedStudents(user, assign, groupIDs);
           buildURL = GRADEASSIGN_URL;
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID);
+          xml = xmlBuilder.buildGradeAssignPage(user, assign);
           if (result.hasErrors())
-            xml = XMLBuilder.addStatus(xml, result);
+            xml = xmlBuilder.addStatus(xml, result);
           else xml =
-              XMLBuilder.addStatus(xml, (String) result.getValue(),
-                  XMLBuilder.MSG_NORMAL);
+              xmlBuilder.addStatus(xml, (String) result.getValue(),
+                  xmlBuilder.MSG_NORMAL);
         }
       } else if (gradingAction.equals(GA_UNGROUP)) { // ungroup all groups
                                                       // whose checkboxes were
                                                       // selected
-        if (p.isGroupsPrivByAssignmentID(assignID)) {
+        if (user.isGroupsPrivByAssignment(assign)) {
           List groupIDs =
               Util.extractGroupIDsFromMainGradingPageRequest(request);
           // TransactionHandler makes sure they haven't already been graded
           TransactionResult result =
-              transactions.ungroupSelectedStudents(p, assignID, groupIDs);
+              transactions.ungroupSelectedStudents(user, assign, groupIDs);
           buildURL = GRADEASSIGN_URL;
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID);
+          xml = xmlBuilder.buildGradeAssignPage(user, assign);
           if (result.hasErrors())
-            xml = XMLBuilder.addStatus(xml, result);
+            xml = xmlBuilder.addStatus(xml, result);
           else xml =
-              XMLBuilder.addStatus(xml, "Successfully ungrouped students",
-                  XMLBuilder.MSG_NORMAL);
+              xmlBuilder.addStatus(xml, "Successfully ungrouped students",
+                  xmlBuilder.MSG_NORMAL);
         } else buildURL = FORBIDDEN_URL;
       } else if (gradingAction.equals(GA_CREATEGROUP)) { // create group from
                                                           // netids in textbox
                                                           // contents
-        if (p.isGroupsPrivByAssignmentID(assignID)) {
+        if (user.isGroupsPrivByAssignment(assign)) {
           List netids =
               StringUtil.parseNetIDList(request.getParameter(P_NETIDLIST));
           TransactionResult result =
-              transactions.createGroup(p, netids, assignID);
+              transactions.createGroup(user, netids, assign);
           buildURL = GRADEASSIGN_URL;
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID);
+          xml = xmlBuilder.buildGradeAssignPage(user, assign);
           if (result.hasErrors())
-            xml = XMLBuilder.addStatus(xml, result);
+            xml = xmlBuilder.addStatus(xml, result);
           else xml =
-              XMLBuilder.addStatus(xml, "Successfully grouped students",
-                  XMLBuilder.MSG_NORMAL);
+              xmlBuilder.addStatus(xml, "Successfully grouped students",
+                  xmlBuilder.MSG_NORMAL);
         } else buildURL = FORBIDDEN_URL;
       } else if (gradingAction.equals(GA_ASSIGNGRADER)) { // ASSIGN GRADERS
-        AssignmentLocal assign =
-            XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                assignID);
-        if (p.isAdminPrivByCourseID(assign.getCourseID())) {
+        if (user.isAdminPrivByCourse(assign.getCourse())) {
           String subprobname = request.getParameter(P_ASSIGNPROBNAME);
           String grader = request.getParameter(P_ASSIGNGRADER);
           buildURL = GRADEASSIGN_URL;
           TransactionResult result =
-              transactions.assignGrader(p, assignID, subprobname, grader,
+              transactions.assignGrader(user, assign, subprobname, grader,
                   request.getParameterMap());
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID);
-          XMLBuilder.addStatus(xml, result);
+          xml = xmlBuilder.buildGradeAssignPage(user, assign);
+          xmlBuilder.addStatus(xml, result);
         } else buildURL = FORBIDDEN_URL;
       } else {
-        if (p.isGradesPrivByAssignmentID(assignID)
-            || p.isGroupsPrivByAssignmentID(assignID)) {
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID);
+        if (user.isGradesPrivByAssignment(assign)
+            || user.isGroupsPrivByAssignment(assign)) {
+          xml = xmlBuilder.buildGradeAssignPage(user, assign);
           buildURL = GRADEASSIGN_URL;
         } else buildURL = FORBIDDEN_URL;
       }
@@ -1386,105 +1368,100 @@ public class AccessController extends HttpServlet {
     // View student-side assignment page
     else if (action.equals(ACT_ASSIGN)) {
       System.out.println("Attempting to display assignment page");
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      CourseLocal course = null;
-      try {
-        course =
-            XMLBuilder.getDatabase().courseHome().findByAssignmentID(assignID);
-      } catch (Exception e) {
-      }
-
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      Course course = assign.getCourse();
+      
       // Check if principal is a student in this course
-      if (course != null && p.hasAssignAccess(course.getCourseID(), assignID)) {
+      if (course != null && user.hasAssignAccess(course, assign)) {
         buildURL = ASSIGNMENT_URL;
-        xml = XMLBuilder.buildStudentAssignmentPage(p, assignID);
+        xml = xmlBuilder.buildStudentAssignmentPage(user, assign);
       } else buildURL = FORBIDDEN_URL;
     }
     // View staff-side assignment page
     else if (action.equals(ACT_ASSIGNADMIN)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      if (p.isAssignPrivByAssignmentID(assignID)) {
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isAssignPrivByAssignment(assign)) {
         buildURL = ASSIGNADMIN_URL;
-        xml = XMLBuilder.buildBasicAssignmentPage(p, assignID);
+        xml = xmlBuilder.buildBasicAssignmentPage(user, assign);
       } else buildURL = FORBIDDEN_URL;
     }
     // View staff-side survey page
     else if (action.equals(ACT_SURVEYADMIN)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      if (p.isAssignPrivByAssignmentID(assignID)) {
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isAssignPrivByAssignmentID(assign)) {
         buildURL = ASSIGNADMIN_URL;
-        xml = XMLBuilder.buildBasicAssignmentPage(p, assignID);
+        xml = xmlBuilder.buildBasicAssignmentPage(user, assign);
       } else buildURL = FORBIDDEN_URL;
     }
     // View staff-side quiz page
     else if (action.equals(ACT_QUIZADMIN)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      if (p.isAssignPrivByAssignmentID(assignID)) {
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isAssignPrivByAssignmentID(assign)) {
         buildURL = ASSIGNADMIN_URL;
-        xml = XMLBuilder.buildBasicAssignmentPage(p, assignID);
+        xml = xmlBuilder.buildBasicAssignmentPage(user, assign);
       } else buildURL = FORBIDDEN_URL;
     }
     // View staff-side assignment LIST page
     else if (action.equals(ACT_ASSIGNLISTADMIN)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isStaffInCourseByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isStaffInCourseByCourse(course)) {
         buildURL = ASSIGNLISTADMIN_URL;
-        xml = XMLBuilder.buildCoursePage(p, courseID);
+        xml = xmlBuilder.buildCoursePage(user, course);
       } else buildURL = FORBIDDEN_URL;
     }
     // Cancel an unaccepted invitation
     else if (action.equals(ACT_CANCEL)) {
-      long groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      if (p.isStudentInCourseByGroupID(groupID)) {
+      Group group = getGroup(request.getParameter(P_GROUPID));
+      if (user.isStudentInCourseByGroupID(group)) {
         String cancelNetID = (String) request.getParameter(P_NETID);
         buildURL = ASSIGNMENT_URL;
         TransactionResult result =
-            transactions.cancelInvitation(p, cancelNetID, groupID);
-        xml = XMLBuilder.refreshStudentAssignmentPage(p, groupID);
-        xml = XMLBuilder.addStatus(xml, result);
+            transactions.cancelInvitation(user, cancelNetID, group);
+        xml = xmlBuilder.refreshStudentAssignmentPage(user, group);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // View one of the CMS administration pages
     else if (action.equals(ACT_CMSADMIN)) {
-      if (p.isInStaffAsBlankMode()) {
-        p.resetToStaffMode();
+      if (user.isInStaffAsBlankMode()) {
+        user.resetToStaffMode();
       }
-      if (p.isCMSAdmin()) {
+      if (user.isCMSAdmin()) {
         buildURL = CMSADMIN_URL;
-        xml = XMLBuilder.buildCMSAdminPage(p);
+        xml = xmlBuilder.buildCMSAdminPage(user);
       } else buildURL = FORBIDDEN_URL;
     }
     // View the CMS admin course-edit page
     else if (action.equals(ACT_CMSADMINCOURSEPROPS)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
+      Course course = getCourse(request.getParameter(P_COURSEID));
       // if the cms admin happens to be course staff, don't shut him/her out of
       // full access
-      if (p.isStaffInCourseByCourseID(courseID)) {
+      if (user.isStaffInCourseByCourse(course)) {
         buildURL = COURSEPROPS_URL;
-        xml = XMLBuilder.buildCoursePropertiesPage(p, courseID);
-      } else if (p.isCMSAdmin()) {
+        xml = xmlBuilder.buildCoursePropertiesPage(user, course);
+      } else if (user.isCMSAdmin()) {
         buildURL = CMSADMINCOURSEPROPS_URL;
-        xml = XMLBuilder.buildCMSAdminCoursePropsPage(p, courseID);
+        xml = xmlBuilder.buildCMSAdminCoursePropsPage(user, course);
       } else buildURL = FORBIDDEN_URL;
     }
     // Confirm the parsing of a Final Grades file and commit the grades
     else if (action.equals(ACT_CONFIRMFINALGRADES)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isGradesPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isGradesPrivByCourse(course)) {
         List table = (List) session.getAttribute(A_GRADESTABLE);
         if (table != null) {
           TransactionResult result =
-              transactions.commitFinalGradesFile(p, courseID, table);
-          xml = XMLBuilder.buildStudentsPage(p, courseID, false);
+              transactions.commitFinalGradesFile(user, course, table);
+          xml = xmlBuilder.buildStudentsPage(user, course, false);
           if (result.getSuccess()) {
             xml =
-                XMLBuilder.addStatus(xml, (String) result.getValue(),
-                    XMLBuilder.MSG_NORMAL);
+                xmlBuilder.addStatus(xml, (String) result.getValue(),
+                    xmlBuilder.MSG_NORMAL);
           } else {
-            xml = XMLBuilder.addStatus(xml, result);
+            xml = xmlBuilder.addStatus(xml, result);
           }
         } else {
-          xml = XMLBuilder.buildStudentsPage(p, courseID, false);
+          xml = xmlBuilder.buildStudentsPage(user, course, false);
         }
         buildURL = STUDENTS_URL;
       } else buildURL = FORBIDDEN_URL;
@@ -1492,29 +1469,28 @@ public class AccessController extends HttpServlet {
     // Confirm the parsing of an uploaded table of student info, and commit
     // changes
     else if (action.equals(ACT_CONFIRMSTUDENTINFO)) {
-      String courseIDs = request.getParameter(P_COURSEID);
+      Course course = getCourse(request.getParameter(P_COURSEID));
       boolean hasPermission = false;
-      if (courseIDs == null) // system-wide info
+      if (course == null) // system-wide info
       {
-        if (p.isCMSAdmin()) {
+        if (user.isCMSAdmin()) {
           List table = (List) session.getAttribute(A_PARSEDCSVINFO);
           TransactionResult result =
-              transactions.commitStudentInfo(p, table, null, false);
-          xml = XMLBuilder.buildCMSAdminPage(p);
-          xml = XMLBuilder.addStatus(xml, result);
+              transactions.commitStudentInfo(user, table, null, false);
+          xml = xmlBuilder.buildCMSAdminPage(user);
+          xml = xmlBuilder.addStatus(xml, result);
           buildURL = CMSADMIN_URL;
         } else buildURL = FORBIDDEN_URL;
       } else // course-specific info
       {
-        long courseID = Util.parseLong(courseIDs);
-        if (p.isAdminPrivByCourseID(courseID)) {
+        if (user.isAdminPrivByCourse(course)) {
           List table = (List) session.getAttribute(A_PARSEDCSVINFO);
           TransactionResult result =
-              transactions.commitStudentInfo(p, table, new Long(courseID),
+              transactions.commitStudentInfo(user, table, course,
                   ((Boolean) session.getAttribute(A_ISCLASSLIST))
                       .booleanValue());
-          xml = XMLBuilder.buildFinalGradesPage(p, courseID);
-          xml = XMLBuilder.addStatus(xml, result);
+          xml = xmlBuilder.buildFinalGradesPage(user, course);
+          xml = xmlBuilder.addStatus(xml, result);
           buildURL = FINALGRADES_URL;
         } else buildURL = FORBIDDEN_URL;
         session.removeAttribute(A_ISCLASSLIST); // we don't want to
@@ -1524,100 +1500,96 @@ public class AccessController extends HttpServlet {
     }
     // Confirm the parsing of an uploaded grades table and commit the grades
     else if (action.equals(ACT_CONFIRMTABLE)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
 
-      if (p.isGradesPrivByAssignmentID(assignID)) {
+      if (user.isGradesPrivByAssignment(assign)) {
         List table = (List) session.getAttribute(A_GRADESTABLE);
         if (table != null) {
           TransactionResult result2 = null;
           if (request.getParameter(P_NEWNETIDS) != null) {
-            CourseLocal course =
-                XMLBuilder.getDatabase().courseHome().findByAssignmentID(
-                    assignID);
-            result2 =
-                transactions.addStudentsToCourse(p, course.getCourseID(),
-                    request);
+            Course course = assign.getCourse();
+            result2 = transactions.addStudentsToCourse(user, course, request);
           }
 
           TransactionResult result =
-              transactions.commitGradesFile(p, assignID, table);
+              transactions.commitGradesFile(user, assign, table);
 
           buildURL = GRADEASSIGN_URL;
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID);
-          xml = XMLBuilder.addStatus(xml, result);
+          xml = xmlBuilder.buildGradeAssignPage(user, assign);
+          xml = xmlBuilder.addStatus(xml, result);
 
           if (result2 != null) {
             if (result2.hasErrors()) {
-              xml = XMLBuilder.addStatus(xml, result2);
+              xml = xmlBuilder.addStatus(xml, result2);
             } else {
               xml =
-                  XMLBuilder.addStatus(xml, "All students added successfully",
-                      XMLBuilder.MSG_NORMAL);
+                  xmlBuilder.addStatus(xml, "All students added successfully",
+                      xmlBuilder.MSG_NORMAL);
             }
           }
         } else {
           buildURL = GRADEASSIGN_URL;
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID);
+          xml = xmlBuilder.buildGradeAssignPage(user, assign);
         }
       } else buildURL = FORBIDDEN_URL;
     }
     // View student-side course page
     else if (action.equals(ACT_COURSE)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (request.getParameter(P_RESET) != null && p.isInStaffAsBlankMode()) {
-        p.resetToStaffMode();
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (request.getParameter(P_RESET) != null && user.isInStaffAsBlankMode()) {
+        user.resetToStaffMode();
       }
-      if (p.hasCourseAccess(courseID)) {
+      if (user.hasCourseAccess(course)) {
         buildURL = COURSE_URL;
-        xml = XMLBuilder.buildCoursePage(p, courseID);
+        xml = xmlBuilder.buildCoursePage(user, course);
       } else buildURL = FORBIDDEN_URL;
     }
     // View the staff member logsearch page
     else if (action.equals(ACT_COURSE_LOGSEARCH)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isAdminPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isAdminPrivByCourse(course)) {
         buildURL = COURSELOG_URL;
-        xml = XMLBuilder.buildStaffLogSearchPage(p, null, courseID);
+        xml = xmlBuilder.buildStaffLogSearchPage(user, null, course);
       } else buildURL = FORBIDDEN_URL;
     }
     // View staff-side course page
     else if (action.equals(ACT_COURSEADMIN)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
+      Course course = getCourse(request.getParameter(P_COURSEID));
       // Reset principal to default
-      if (p.isInStaffAsBlankMode()) {
-        p.resetToStaffMode();
+      if (user.isInStaffAsBlankMode()) {
+        user.resetToStaffMode();
       }
-      if (p.isStaffInCourseByCourseID(courseID)) {
+      if (user.isStaffInCourseByCourse(course)) {
         buildURL = COURSEADMIN_URL;
-        xml = XMLBuilder.buildCoursePage(p, courseID);
+        xml = xmlBuilder.buildCoursePage(user, course);
       } else buildURL = FORBIDDEN_URL;
     }
     // View staff-side course properties page
     else if (action.equals(ACT_COURSEPROPS)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isAdminPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isAdminPrivByCourse(course)) {
         buildURL = COURSEPROPS_URL;
-        xml = XMLBuilder.buildCoursePropertiesPage(p, courseID);
+        xml = xmlBuilder.buildCoursePropertiesPage(user, course);
       } else buildURL = FORBIDDEN_URL;
     }
     // Add a new semester
     else if (action.equals(ACT_CREATESEMESTER)) {
-      if (p.isCMSAdmin()) {
+      if (user.isCMSAdmin()) {
         buildURL = CMSADMIN_URL;
         TransactionResult result =
-            transactions.createSemester(p, request.getParameter(P_NAME));
-        xml = XMLBuilder.buildCMSAdminPage(p);
-        xml = XMLBuilder.addStatus(xml, result);
+            transactions.createSemester(user, request.getParameter(P_NAME));
+        xml = xmlBuilder.buildCMSAdminPage(user);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Decline a group invitation
     else if (action.equals(ACT_DECLINE)) {
-      long groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      if (p.isStudentInCourseByGroupID(groupID)) {
+      Group group = getGroup(request.getParameter(P_GROUPID));
+      if (user.isStudentInCourseByGroup(group)) {
         buildURL = ASSIGNMENT_URL;
-        TransactionResult result = transactions.declineInvitation(p, groupID);
-        xml = XMLBuilder.refreshStudentAssignmentPage(p, groupID);
-        xml = XMLBuilder.addStatus(xml, result);
+        TransactionResult result = transactions.declineInvitation(user, group);
+        xml = xmlBuilder.refreshStudentAssignmentPage(user, group);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Download a file
@@ -1626,7 +1598,7 @@ public class AccessController extends HttpServlet {
       try {
         int type = Integer.parseInt(request.getParameter(P_DOWNLOADTYPE));
         long id = Util.parseLong(request.getParameter(P_ID));
-        if (transactions.authorizeDownload(p, id, type)) {
+        if (transactions.authorizeDownload(user, id, type)) {
           sendFile(id, type, response);
           buildURL = null;
           xml = null;
@@ -1637,54 +1609,54 @@ public class AccessController extends HttpServlet {
       }
     } // Drop a student from a course
     else if (action.equals(ACT_DROP)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
+      Course course = getCourse(request.getParameter(P_COURSEID));
       String netID = request.getParameter(P_NETID);
-      if (p.isAdminPrivByCourseID(courseID)) {
+      if (user.isAdminPrivByCourse(course)) {
         Collection n = new ArrayList();
         n.add(netID);
-        TransactionResult result = transactions.dropStudent(p, courseID, n);
+        TransactionResult result = transactions.dropStudent(user, course, n);
         buildURL = STUDENTS_URL;
-        xml = XMLBuilder.buildStudentsPage(p, courseID, false);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildStudentsPage(user, course, false);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     } // Drop multiple students from a course
     else if (action.equals(ACT_DROPSTUDENTS)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
+      Course course = getCourse(request.getParameter(P_COURSEID));
       String netIDs = request.getParameter(P_STUDENTSLIST);
       // FIXME make work for multiple students
-      if (p.isAdminPrivByCourseID(courseID)) {
+      if (user.isAdminPrivByCourse(course)) {
         List netids = StringUtil.parseNetIDList(netIDs);
         TransactionResult result =
-            transactions.dropStudent(p, courseID, netids);
+            transactions.dropStudent(user, course, netids);
         buildURL = STUDENTS_URL;
-        xml = XMLBuilder.buildStudentsPage(p, courseID, false);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildStudentsPage(user, course, false);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Edit a course's textual description
     else if (action.equals(ACT_EDITCOURSEDESCRIPTION)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isAdminPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isAdminPrivByCourse(course)) {
         String newDescription = request.getParameter(P_DESCRIPTION);
         TransactionResult result =
-            transactions.editCourseDescription(p, courseID, newDescription);
+            transactions.editCourseDescription(user, course, newDescription);
         buildURL = COURSEADMIN_URL;
-        xml = XMLBuilder.buildCoursePage(p, courseID);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildCoursePage(user, course);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // View the general category properties page for a category
     else if (action.equals(ACT_EDITCTG)) {
-      long categoryID = Util.parseLong(request.getParameter(P_CATID));
-      if (p.isCategoryPrivByCategoryID(categoryID)) {
+      Category category = getCategory(request.getParameter(P_CATID));
+      if (user.isCategoryPrivByCategory(category)) {
         buildURL = CATEGORYADMIN_URL;
-        xml = XMLBuilder.buildCtgContentPage(p, categoryID);
+        xml = xmlBuilder.buildCtgContentPage(user, category);
       } else buildURL = FORBIDDEN_URL;
     }
     // Change an existing sitewide notice
     else if (action.equals(ACT_EDITNOTICE)) {
-      if (p.isCMSAdmin()) {
-        long noticeID = Util.parseLong(request.getParameter(P_ID));
+      if (user.isCMSAdmin()) {
+        SiteNotice notice = getNotice(request.getParameter(P_ID));
         boolean deleted = request.getParameter(P_DELNOTICE) != null;
         boolean hidden = request.getParameter(P_HIDDEN) != null;
         String text = request.getParameter(P_NOTICETEXT);
@@ -1692,7 +1664,7 @@ public class AccessController extends HttpServlet {
         String date = request.getParameter(P_NOTICEEXPDATE);
         String time = request.getParameter(P_NOTICEEXPTIME);
         String ampm = request.getParameter(P_NOTICEEXPAMPM);
-        Timestamp exp;
+        Date exp;
         try {
           exp = DateTimeUtil.parseDate(date, time, ampm);
         } catch (ParseException e) {
@@ -1700,72 +1672,61 @@ public class AccessController extends HttpServlet {
         }
 
         TransactionResult result =
-            transactions.editNotice(p, noticeID, text, exp, hidden, deleted);
+            transactions.editNotice(user, notice, text, exp, hidden, deleted);
 
         buildURL = CMSADMIN_URL;
-        xml = XMLBuilder.buildCMSAdminPage(p);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildCMSAdminPage(user);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Edit the properties of a semester
     else if (action.equals(ACT_EDITSEMESTER)) {
-      if (p.isCMSAdmin()) {
-        long semID = Util.parseLong(request.getParameter(P_ID));
-        boolean hidden =
-            request.getParameter(P_HIDDEN).equalsIgnoreCase("true");
+      if (user.isCMSAdmin()) {
+        Semester semester = getSemester(request.getParameter(P_ID));
+        boolean hidden = request.getParameter(P_HIDDEN).equalsIgnoreCase("true");
         buildURL = CMSADMIN_URL;
-        TransactionResult result = transactions.editSemester(p, semID, hidden);
-        xml = XMLBuilder.buildCMSAdminPage(p);
-        xml = XMLBuilder.addStatus(xml, result);
+        TransactionResult result = transactions.editSemester(user, semester, hidden);
+        xml = xmlBuilder.buildCMSAdminPage(user);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // View the course email page
     else if (action.equals(ACT_EMAIL)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isAdminPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isAdminPrivByCourse(course)) {
         buildURL = EMAIL_URL;
-        xml = XMLBuilder.buildEmailPage(p, courseID);
+        xml = xmlBuilder.buildEmailPage(user, course);
       } else buildURL = FORBIDDEN_URL;
     }
     // Export the full final grades table: netid, name, lecture, section,
     // grade option...
     else if (action.equals(ACT_EXPORTFINALGRADES)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.hasStudentsPageAccess(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.hasStudentsPageAccess(course)) {
         buildURL = null;
         xml = null;
-        CourseLocal course =
-            XMLBuilder.getDatabase().courseHome().findByPrimaryKey(
-                new CoursePK(courseID));
-        SemesterLocal sem =
-            XMLBuilder.getDatabase().semesterHome().findByPrimaryKey(
-                new SemesterPK(course.getSemesterID()));
+        Semester sem = course.getSemester();
         String filename =
-            course.getCode() + "_" + sem.getSemesterName()
-                + "_final_grades.csv";
+            course.getCode() + "_" + sem.getName() + "_final_grades.csv";
         filename = filename.replace(' ', '_').toLowerCase();
         response.setContentType("text/csv");
         response.setHeader("Content-disposition", "attachment; filename=\""
             + filename + "\"");
-        transactions.exportStudentInfoFinalGrades(courseID, response
+        transactions.exportStudentInfoFinalGrades(course, response
             .getOutputStream());
       } else buildURL = FORBIDDEN_URL;
     }
     // Export grades table csv file for a single assignment
     else if (action.equals(ACT_EXPORTGRADESTABLE)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      if (p.isGradesPrivByAssignmentID(assignID)) {
-        CourseLocal course =
-            XMLBuilder.getDatabase().courseHome().findByAssignmentID(assignID);
-        AssignmentLocal asgn =
-            XMLBuilder.getDatabase().assignmentHome().findByPrimaryKey(
-                new AssignmentPK(assignID));
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isGradesPrivByAssignment(assign)) {
+        Course course = assign.getCourse();
         response.setContentType("text/csv");
         response.setHeader("Content-disposition", "attachment; filename =\""
             + course.getCode().replace(' ', '_') + "_"
-            + asgn.getNameShort().replace(' ', '_') + "_"
+            + assign.getNameShort().replace(' ', '_') + "_"
             + GRADES_TABLE_FILENAME_EXTENSION + "\"");
-        transactions.exportSingleAssignmentGradesTable(p, assignID, response
+        transactions.exportSingleAssignmentGradesTable(user, assign, response
             .getOutputStream());
         buildURL = null;
         xml = null;
@@ -1773,27 +1734,23 @@ public class AccessController extends HttpServlet {
     }
     // Export csv-formatted table of assignment max scores and weights
     else if (action.equals(ACT_EXPORTRUBRIC)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isAdminPrivByCourseID(courseID)) {
-        CourseLocal course =
-            XMLBuilder.getDatabase().courseHome().findByPrimaryKey(
-                new CoursePK(courseID));
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isAdminPrivByCourse(course)) {
         response.setContentType("text/csv");
         response.setHeader("Content-disposition", "attachment; filename=\""
             + course.getCode().replace(' ', '_') + "_"
             + RUBRIC_FILENAME_EXTENSION + "\"");
-        transactions.exportGradingRubric(p, courseID, response
-            .getOutputStream());
+        transactions.exportGradingRubric(user, course, response.getOutputStream());
         buildURL = null;
         xml = null;
       } else buildURL = FORBIDDEN_URL;
     }
     // Export full template for any student-info upload
     else if (action.equals(ACT_EXPORTSTUDENTINFOTEMPLATE)) {
-      String courseIDs = request.getParameter(P_COURSEID);
-      if (courseIDs == null) // cmsadmin download
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (course == null) // cmsadmin download
       {
-        if (p.isCMSAdmin()) {
+        if (user.isCMSAdmin()) {
           response.setContentType("text/csv");
           response.setHeader("Content-disposition", "attachment; filename=\""
               + STUDENT_INFO_TEMPLATE_FILENAME + "\"");
@@ -1801,8 +1758,8 @@ public class AccessController extends HttpServlet {
               transactions.exportStudentInfoTemplate(null, response
                   .getOutputStream());
           if (!result.getSuccess()) {
-            xml = XMLBuilder.buildCMSAdminPage(p);
-            xml = XMLBuilder.addStatus(xml, result);
+            xml = xmlBuilder.buildCMSAdminPage(user);
+            xml = xmlBuilder.addStatus(xml, result);
             buildURL = UPLOAD_URL;
           } else {
             buildURL = null;
@@ -1811,21 +1768,16 @@ public class AccessController extends HttpServlet {
         } else buildURL = FORBIDDEN_URL;
       } else // course staff download
       {
-        long courseID = Util.parseLong(courseIDs);
-        if (p.isStaffInCourseByCourseID(courseID)) {
-          CourseLocal course =
-              XMLBuilder.getDatabase().courseHome().findByPrimaryKey(
-                  new CoursePK(courseID));
+        if (user.isStaffInCourseByCourse(course)) {
           response.setContentType("text/csv");
           response.setHeader("Content-disposition", "attachment; filename=\""
               + course.getCode().replace(' ', '_') + "_"
               + STUDENT_INFO_TEMPLATE_FILENAME + "\"");
           TransactionResult result =
-              transactions.exportStudentInfoTemplate(new Long(courseID),
-                  response.getOutputStream());
+              transactions.exportStudentInfoTemplate(course, response.getOutputStream());
           if (!result.getSuccess()) {
-            xml = XMLBuilder.buildCSVUploadPage(p, courseID);
-            xml = XMLBuilder.addStatus(xml, result);
+            xml = xmlBuilder.buildCSVUploadPage(user, course);
+            xml = xmlBuilder.addStatus(xml, result);
             buildURL = UPLOAD_URL;
           } else {
             buildURL = null;
@@ -1836,73 +1788,67 @@ public class AccessController extends HttpServlet {
     }
     // Export students table w/grades as csv file
     else if (action.equals(ACT_EXPORTTABLE)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isGradesPrivByCourseID(courseID)) {
-        CourseLocal course =
-            XMLBuilder.getDatabase().courseHome().findByPrimaryKey(
-                new CoursePK(courseID));
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isGradesPrivByCourse(course)) {
         response.setContentType("text/csv");
         response.setHeader("Content-disposition", "attachment; filename=\""
             + course.getCode().replace(' ', '_') + "_"
             + STUDENT_TABLE_FILENAME_EXTENSION + "\"");
-        transactions.exportGradesTable(p, courseID, response.getOutputStream());
+        transactions.exportGradesTable(user, course, response.getOutputStream());
         buildURL = null;
         xml = null;
       } else buildURL = FORBIDDEN_URL;
     }
     // Submit a file for an assignment
     else if (action.equals(ACT_FILESUBMIT)) {
-      long assignmentid = Util.parseLong(request.getParameter(P_ASSIGNID));
-      if (p.isStudentInCourseByAssignmentID(assignmentid)) {
-        TransactionResult result = transactions.submitFiles(p, request);
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isStudentInCourseByAssignment(assign)) {
+        TransactionResult result = transactions.submitFiles(user, request);
         buildURL = ASSIGNMENT_URL;
-        xml = XMLBuilder.buildStudentAssignmentPage(p, assignmentid);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildStudentAssignmentPage(user, assign);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Submit a survey
     else if (action.equals(ACT_SURVEYSUBMIT)) {
-      long assignmentid = Util.parseLong(request.getParameter(P_ASSIGNID));
-      if (p.isStudentInCourseByAssignmentID(assignmentid)) {
-        TransactionResult result = transactions.submitSurvey(p, request);
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isStudentInCourseByAssignment(assign)) {
+        TransactionResult result = transactions.submitSurvey(user, request);
 
         if (result.getSuccess())
           result.setValue("Answers submitted successfully");
 
-        AssignmentLocal assign =
-            XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                assignmentid);
         buildURL = COURSE_URL;
-        xml = XMLBuilder.buildCoursePage(p, assign.getCourseID());
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildCoursePage(user, assign.getCourse());
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // View list of administrative data and final grades for all students in
     // a course
     else if (action.equals(ACT_FINALGRADES)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isCMSAdmin() || p.isAdminPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isCMSAdmin() || user.isAdminPrivByCourse(course)) {
         buildURL = FINALGRADES_URL;
-        xml = XMLBuilder.buildFinalGradesPage(p, courseID);
+        xml = xmlBuilder.buildFinalGradesPage(user, course);
       } else buildURL = FORBIDDEN_URL;
     }
     // Parse and error-check a Final Grades CSV File
     else if (action.equals(ACT_FINALGRADESFILE)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isGradesPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isGradesPrivByCourse(course)) {
         TransactionResult result =
-            transactions.parseFinalGradesFile(courseID, request);
+            transactions.parseFinalGradesFile(course, request);
         if (!result.getSuccess() && result.getValue() == null) {
-          xml = XMLBuilder.buildStudentsPage(p, courseID, false);
+          xml = xmlBuilder.buildStudentsPage(user, course, false);
           xml =
-              XMLBuilder.addStatus(xml,
+              xmlBuilder.addStatus(xml,
                   "Could not parse grades file; format was unrecognized",
-                  XMLBuilder.MSG_ERROR);
+                  xmlBuilder.MSG_ERROR);
           buildURL = STUDENTS_URL;
         } else {
           xml =
-              XMLBuilder.buildConfirmPage(p, XMLBuilder.CONFIRM_FINALGRADES,
-                  courseID, result);
+              xmlBuilder.buildConfirmPage(user, xmlBuilder.CONFIRM_FINALGRADES,
+                  course, result);
           buildURL = CONFIRMTABLE_URL;
           if (result.getSuccess()) {
             session.setAttribute(A_GRADESTABLE, result.getValue());
@@ -1912,86 +1858,68 @@ public class AccessController extends HttpServlet {
     }
     // Download mini-template just for filling in final grades for a class
     else if (action.equals(ACT_FINALGRADESTEMPLATE)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isAdminPrivByCourseID(courseID)) {
-        CourseLocal course =
-            XMLBuilder.getDatabase().courseHome().findByPrimaryKey(
-                new CoursePK(courseID));
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isAdminPrivByCourse(course)) {
         response.setContentType("text/csv");
         response.setHeader("Content-disposition", "attachment; filename=\""
             + course.getCode().replace(' ', '_') + "_"
             + FINALGRADES_TEMPLATE_FILENAME + "\"");
-        transactions.exportFinalGradesTemplate(courseID, response
-            .getOutputStream());
+        transactions.exportFinalGradesTemplate(course, response.getOutputStream());
         buildURL = null;
         xml = null;
       } else buildURL = FORBIDDEN_URL;
     }
     // View the individual-student-grading page for a single assignment
     else if (action.equals(ACT_GRADESTUDENTS)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      AssignmentLocal assign =
-          XMLBuilder.getDatabase().assignmentHome()
-              .findByAssignmentID(assignID);
-      if (p.isGradesPrivByAssignmentID(assignID)
-          && assign.getType() != AssignmentBean.SURVEY) {
-        Collection groupIDs = null;
-        if (!p.isAdminPrivByCourseID(assign.getCourseID())
+      Assignment assign = xmlBuilder.getDatabase().getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isGradesPrivByAssignment(assign) && assign.getType() != Assignment.SURVEY) {
+        Collection groups = null;
+        if (!user.isAdminPrivByCourse(assign.getCourse())
             && assign.getAssignedGraders()) {
-          groupIDs =
-              XMLBuilder.getDatabase().assignedToGroups(assignID,
-                  p.getNetID(),
+          groups =
+              xmlBuilder.getDatabase().assignedToGroups(assign,
+                  user.getNetID(),
                   Util.extractGroupIDsFromMainGradingPageRequest(request));
         } else {
-          groupIDs = Util.extractGroupIDsFromMainGradingPageRequest(request);
+          groups = Util.extractGroupIDsFromMainGradingPageRequest(request);
         }
-        if (groupIDs.size() > 0) {
-          xml = XMLBuilder.buildGradePage(p, assignID, groupIDs);
+        if (groups.size() > 0) {
+          xml = xmlBuilder.buildGradePage(user, assign, groups);
           buildURL = GRADESTUDENTS_URL;
         } else {
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID);
-          // xml = XMLBuilder.addStatus(xml, "No groups selected",
-          // XMLBuilder.MSG_NORMAL);
+          xml = xmlBuilder.buildGradeAssignPage(user, assign);
+          // xml = xmlBuilder.addStatus(xml, "No groups selected",
+          // xmlBuilder.MSG_NORMAL);
           buildURL = GRADEASSIGN_URL;
         }
       } else buildURL = FORBIDDEN_URL;
     }
     // View assignment-grading main page
     else if (action.equals(ACT_GRADEASSIGN)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
       boolean showGradeMsg = (request.getParameter(P_GRADEMESSAGE) != null);
-      if (p.isGradesPrivByAssignmentID(assignID)
-          || p.isGroupsPrivByAssignmentID(assignID)) {
-        AssignmentLocal a =
-            XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                assignID);
-
+      if (user.isGradesPrivByAssignment(assign)
+          || user.isGroupsPrivByAssignment(assign)) {
+        
         // can't display a grades page for a survey
-        if (a.getType() == AssignmentBean.SURVEY) {
+        if (assign.getType() == Assignment.SURVEY) {
           buildURL = FORBIDDEN_URL;
         } else {
           buildURL = GRADEASSIGN_URL;
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID, showGradeMsg);
+          xml = xmlBuilder.buildGradeAssignPage(user, assign, showGradeMsg);
         }
       } else buildURL = FORBIDDEN_URL;
     }
     // Upload group submission files
     else if (action.equals(ACT_GROUPFILES)) {
-      long groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      GroupLocal group = null;
-      try {
-        group = XMLBuilder.getDatabase().groupHome().findByGroupID(groupID);
-      } catch (Exception e) {
-      }
+      Group group = getGroup(request.getParameter(P_GROUPID));
       if (group != null) {
-        ArrayList groupIDs = new ArrayList();
-        groupIDs.add(new Long(groupID));
-        if (transactions.authorizeGroupFiles(p, groupIDs)) {
+        Collection groups = Collections.singleton(group);
+        if (transactions.authorizeGroupFiles(user, groups)) {
           response.setContentType("application/zip");
           response.setHeader("Content-disposition", "attachment; filename=\""
               + SUBMISSIONS_ZIP_FILENAME + "\"");
-          transactions.uploadGroupSubmissions(groupIDs, response
-              .getOutputStream());
+          transactions.uploadGroupSubmissions(groups, response.getOutputStream());
           buildURL = null;
           xml = null;
         } else buildURL = FORBIDDEN_URL;
@@ -2002,74 +1930,73 @@ public class AccessController extends HttpServlet {
     // Invite someone to join a group
     else if (action.equals(ACT_INVITE)) {
       String invite = request.getParameter(P_INVITE);
-      long groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      if (p.isStudentInCourseByGroupID(groupID)) {
+      Group group   = getGroup(request.getParameter(P_GROUPID));
+      if (user.isStudentInCourseByGroup(group)) {
         // TODO Later add multi-invites; now one at a time
         buildURL = ASSIGNMENT_URL;
-        TransactionResult result = transactions.inviteUser(p, invite, groupID);
-        xml = XMLBuilder.refreshStudentAssignmentPage(p, groupID);
-        xml = XMLBuilder.addStatus(xml, result);
+        TransactionResult result = transactions.inviteUser(user, invite, group);
+        xml = xmlBuilder.refreshStudentAssignmentPage(user, group);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Leave a group
     else if (action.equals(ACT_LEAVE)) {
-      long groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      if (p.isStudentInCourseByGroupID(groupID)) {
+      Group group = getGroup(request.getParameter(P_GROUPID));
+      if (user.isStudentInCourseByGroup(group)) {
         buildURL = ASSIGNMENT_URL;
-        TransactionResult result = transactions.leaveGroup(p, groupID);
-        xml = XMLBuilder.refreshStudentAssignmentPage(p, groupID);
-        xml = XMLBuilder.addStatus(xml, result);
+        TransactionResult result = transactions.leaveGroup(user, group);
+        xml = xmlBuilder.refreshStudentAssignmentPage(user, group);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Post a new announcement
     else if (action.equals(ACT_NEWANNOUNCE)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isCategoryPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isCategoryPrivByCourse(course)) {
         String announce = request.getParameter(P_ANNOUNCE);
         TransactionResult result =
-            transactions.postAnnouncement(p, courseID, announce);
+            transactions.postAnnouncement(user, course, announce);
         buildURL = COURSEADMIN_URL;
-        xml = XMLBuilder.buildCoursePage(p, courseID);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildCoursePage(user, course);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // View the assignment creation page
     else if (action.equals(ACT_NEWASSIGN)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isAssignPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isAssignPrivByCourse(course)) {
         buildURL = ASSIGNADMIN_URL;
         xml =
-            XMLBuilder.buildAssignmentCreationPage(p, courseID,
-                AssignmentBean.ASSIGNMENT);
+            xmlBuilder.buildAssignmentCreationPage(user, course, Assignment.ASSIGNMENT);
       } else buildURL = FORBIDDEN_URL;
     }
     // View the survey creation page
     else if (action.equals(ACT_NEWSURVEY)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isAssignPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isAssignPrivByCourse(course)) {
         buildURL = ASSIGNADMIN_URL;
         xml =
-            XMLBuilder.buildAssignmentCreationPage(p, courseID,
-                AssignmentBean.SURVEY);
+            xmlBuilder.buildAssignmentCreationPage(user, course,
+                Assignment.SURVEY);
       } else buildURL = FORBIDDEN_URL;
     }
     // View the quiz creation page
     else if (action.equals(ACT_NEWQUIZ)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isAssignPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isAssignPrivByCourse(course)) {
         buildURL = ASSIGNADMIN_URL;
         xml =
-            XMLBuilder.buildAssignmentCreationPage(p, courseID,
-                AssignmentBean.QUIZ);
+            xmlBuilder.buildAssignmentCreationPage(user, course,
+                Assignment.QUIZ);
       } else buildURL = FORBIDDEN_URL;
     }
     // View the category creation page
     else if (action.equals(ACT_NEWCATEGORY)) {
       // check the privilege
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isCategoryPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isCategoryPrivByCourse(course)) {
         buildURL = CATEGORYADMIN_URL;
-        xml = XMLBuilder.buildNewCategoryPage(p, courseID);
+        xml = xmlBuilder.buildNewCategoryPage(user, course);
       } else buildURL = FORBIDDEN_URL;
       // Staff member accessing the printable schedule page
       /*
@@ -2080,16 +2007,11 @@ public class AccessController extends HttpServlet {
        */
     } else if (action.equals(ACT_PRINTSCHEDULE)) {
       System.out.println("Attempting to display printable schedule page");
-      long assignID = 0;
-      try {
-        assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      } catch (Exception e) {
-      }
-      CourseLocal course =
-          XMLBuilder.getDatabase().courseHome().findByAssignmentID(assignID);
-      if (p.isStaffInCourseByCourseID(course.getCourseID())) {
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      Course course = assign.getCourse();
+      if (user.isStaffInCourseByCourse(course)) {
         buildURL = PRINTSCHED_URL;
-        xml = XMLBuilder.buildBasicSchedulePage(p, assignID);
+        xml = xmlBuilder.buildBasicSchedulePage(user, assign);
       } else buildURL = FORBIDDEN_URL;
     } // Call up profiler page (only in debug mode)
     else if (action.equals(ACT_PROFILER)) {
@@ -2099,372 +2021,322 @@ public class AccessController extends HttpServlet {
       } else buildURL = FORBIDDEN_URL;
     } // Reenroll a student in the course
     else if (action.equals(ACT_REENROLL)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
+      Course course = getCourse(request.getParameter(P_COURSEID));
       String netID = request.getParameter(P_NETID);
-      if (p.isAdminPrivByCourseID(courseID)) {
+      if (user.isAdminPrivByCourse(course)) {
         TransactionResult result =
-            transactions.reenrollStudent(p, courseID, netID, request
+            transactions.reenrollStudent(user, course, netID, request
                 .getParameter(P_EMAILADDED) != null);
         buildURL = STUDENTS_URL;
-        xml = XMLBuilder.buildStudentsPage(p, courseID, false);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildStudentsPage(user, course, false);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     } // Removes an assignment from the system
     else if (action.equals(ACT_REMOVEASSIGN)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      if (p.isAssignPrivByAssignmentID(assignID)) {
-        AssignmentLocal assign =
-            XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                assignID);
-        TransactionResult result = transactions.removeAssignment(p, assignID);
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isAssignPrivByAssignment(assign)) {
+        TransactionResult result = transactions.removeAssignment(user, assign);
         buildURL = COURSEADMIN_URL;
-        xml = XMLBuilder.buildCoursePage(p, assign.getCourseID());
+        xml = xmlBuilder.buildCoursePage(user, assign.getCourse());
         if (result.getSuccess())
           result.setValue("Assignment removed successfully");
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Remove a CMS administrator
     else if (action.equals(ACT_REMOVECMSADMIN)) {
-      if (p.isCMSAdmin()) {
+      if (user.isCMSAdmin()) {
         buildURL = CMSADMIN_URL;
         TransactionResult result = new TransactionResult();
-        if (p.getNetID().equals(request.getParameter(P_NETID)))
+        if (user.getNetID().equals(request.getParameter(P_NETID)))
           result.addError("Can't remove current user");
         else result =
-            transactions.removeCMSAdmin(p, request.getParameter(P_NETID));
-        xml = XMLBuilder.buildCMSAdminPage(p);
-        xml = XMLBuilder.addStatus(xml, result);
+            transactions.removeCMSAdmin(user, request.getParameter(P_NETID));
+        xml = xmlBuilder.buildCMSAdminPage(user);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Remove a group's extension
     else if (action.equals(ACT_REMOVEEXTENSION)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      long groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      if (p.isGradesPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      Group  group  = getGroup(request.getParameter(P_GROUPID));
+      if (user.isGradesPrivByCourse(course)) {
         TransactionResult result =
-            transactions.removeExtension(p, courseID, groupID);
-        long assignID = -1;
-        try {
-          assignID =
-              XMLBuilder.getDatabase().groupHome().findByGroupID(groupID)
-                  .getAssignmentID();
-        } catch (Exception e) {
-        }
-        if (assignID > 0) {
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID);
+            transactions.removeExtension(user, course, group);
+        Assignment assign = group.getAssignment();
+        if (assign != null) {
+          xml = xmlBuilder.buildGradeAssignPage(user, assign);
           buildURL = GRADEASSIGN_URL;
         } else {
-          xml = XMLBuilder.buildCoursePage(p, courseID);
+          xml = xmlBuilder.buildCoursePage(user, course);
           buildURL = COURSEADMIN_URL;
         }
         if (result.getSuccess())
           result.setValue("Successfully removed extension");
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Remove a row of content from a category (can be done from the main
     // course page, admin side)
     else if (action.equals(ACT_REMOVEROW)) {
-      long rowID = Util.parseLong(request.getParameter(P_ID));
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isCategoryPrivByCourseID(courseID)) {
-        TransactionResult result = transactions.removeCtgRow(p, rowID);
+      CategoryRow row = getCategoryRow(request.getParameter(P_ID));
+      Course   course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isCategoryPrivByCourse(course)) {
+        TransactionResult result = transactions.removeCtgRow(user, row);
         buildURL = COURSEADMIN_URL;
-        xml = XMLBuilder.buildCoursePage(p, courseID);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildCoursePage(user, course);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     } else if (action.equals(ACT_REQUESTREGRADE)) {
-      long groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      if (p.isStudentInCourseByAssignmentID(assignID)) {
+      Group group = getGroup(request.getParameter(P_GROUPID));
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isStudentInCourseByAssignment(assign)) {
         TransactionResult result =
-            transactions.addRegradeRequest(p, groupID, request);
+            transactions.addRegradeRequest(user, group, request);
         buildURL = ASSIGNMENT_URL;
-        xml = XMLBuilder.buildStudentAssignmentPage(p, assignID);
+        xml = xmlBuilder.buildStudentAssignmentPage(user, assign);
         if (result.getSuccess())
           result.setValue("Successfully added regrade request");
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     } // Restores a previously removed announcement
     else if (action.equals(ACT_RESTOREANNOUNCE)) {
-      long announceID = Util.parseLong(request.getParameter(P_ID));
-      AnnouncementLocal announce =
-          XMLBuilder.getDatabase().announcementHome().findByPrimaryKey(
-              new AnnouncementPK(announceID));
-      if (p.isCategoryPrivByCourseID(announce.getCourseID())) {
+      Announcement announce = getAnnouncement(request.getParameter(P_ID));
+      if (user.isCategoryPrivByCourse(announce.getCourse())) {
         TransactionResult result =
-            transactions.restoreAnnouncement(p, announceID);
+            transactions.restoreAnnouncement(user, announce);
         buildURL = COURSEADMIN_URL;
-        xml = XMLBuilder.buildCoursePage(p, announce.getCourseID());
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildCoursePage(user, announce.getCourse());
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     } // Restores a previously removed assignment
     else if (action.equals(ACT_RESTOREASSIGN)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      if (p.isAssignPrivByAssignmentID(assignID)) {
-        AssignmentLocal assign =
-            XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                assignID);
-        TransactionResult result = transactions.restoreAssignment(p, assignID);
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isAssignPrivByAssignment(assign)) {
+        TransactionResult result = transactions.restoreAssignment(user, assign);
         buildURL = COURSEADMIN_URL;
-        xml = XMLBuilder.buildCoursePage(p, assign.getCourseID());
+        xml = xmlBuilder.buildCoursePage(user, assign.getCourse());
         if (result.getSuccess())
           result.setValue("Assignment restored successfully");
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // View staff-side schedule page
     else if (action.equals(ACT_SCHEDULE)) {
-      long assignID = 0;
-      try {
-        assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      } catch (Exception e) {
-      }
-      CourseLocal course =
-          XMLBuilder.getDatabase().courseHome().findByAssignmentID(assignID);
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      Course     course = assign == null ? null : assign.getCourse();
       /*
        * Since it's possible to assign any staff member to a timeslot, all staff
        * members should be able to see the schedule in case they've been
        * assigned to any slots. Previously only assignment-privileged staff
        * could view the schedule. - Evan, 5 / 25 / 06
        */
-      if (p.isStaffInCourseByCourseID(course.getCourseID())) {
+      if (user.isStaffInCourseByCourse(course)) {
         buildURL = ASSIGNSCHED_URL;
-        xml = XMLBuilder.buildBasicSchedulePage(p, assignID);
+        xml = xmlBuilder.buildBasicSchedulePage(user, assign);
       } else buildURL = FORBIDDEN_URL;
     }
     // Send an email to the students and/or staff of a course
     else if (action.equals(ACT_SENDEMAIL)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isAdminPrivByCourseID(courseID)) {
-        TransactionResult result = transactions.sendEmail(p, courseID, request);
-        xml = XMLBuilder.buildEmailPage(p, courseID);
-        xml = XMLBuilder.addStatus(xml, result);
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isAdminPrivByCourse(course)) {
+        TransactionResult result = transactions.sendEmail(user, course, request);
+        xml = xmlBuilder.buildEmailPage(user, course);
+        xml = xmlBuilder.addStatus(xml, result);
         buildURL = EMAIL_URL;
       } else buildURL = FORBIDDEN_URL;
       // Search logs as a cmsadmin
     } else if (action.equals(ACT_SEARCHLOGS_CMSADMIN)) {
-      if (p.isCMSAdmin()) {
+      if (user.isCMSAdmin()) {
         buildURL = CMSADMIN_LOGRESULTS_URL;
-        xml = XMLBuilder.buildLogSearchPage(p, request);
-        XMLBuilder.appendCMSAdminLogInfo(p, xml);
+        xml = xmlBuilder.buildLogSearchPage(user, request);
+        xmlBuilder.appendCMSAdminLogInfo(user, xml);
       } else buildURL = FORBIDDEN_URL;
     }
     // Search logs as a course admin
     else if (action.equals(ACT_SEARCHLOGS_COURSE)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isAdminPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isAdminPrivByCourse(course)) {
         buildURL = COURSELOG_URL;
-        xml = XMLBuilder.buildLogSearchPage(p, request, new Long(courseID));
-        xml = XMLBuilder.buildStaffLogSearchPage(p, xml, courseID);
+        xml = xmlBuilder.buildLogSearchPage(user, request, course);
+        xml = xmlBuilder.buildStaffLogSearchPage(user, xml, course);
       } else buildURL = FORBIDDEN_URL;
     }
     // Add and/or edit content to/in a category
     else if (action.equals(ACT_SETADDNEDITCONTENTS)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      long catID = Util.parseLong(request.getParameter(P_CATID));
-      if (p.isCategoryPrivByCategoryID(catID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      Category cat  = getCategory(request.getParameter(P_CATID));
+      if (user.isCategoryPrivByCategory(cat)) {
         TransactionResult result =
-            transactions.addNEditCtgContents(p, catID, request);
+            transactions.addNEditCtgContents(user, cat, request);
         if (result.getSuccess()) {
           buildURL = COURSEADMIN_URL;
-          xml = XMLBuilder.buildCoursePage(p, courseID);
+          xml = xmlBuilder.buildCoursePage(user, course);
         } else {
           buildURL = CTGCONTENTSADMIN_URL;
-          xml = XMLBuilder.buildCtgContentPage(p, catID);
-          xml = XMLBuilder.addStatus(xml, result);
+          xml = xmlBuilder.buildCtgContentPage(user, cat);
+          xml = xmlBuilder.addStatus(xml, result);
         }
       } else buildURL = FORBIDDEN_URL;
     }
     // Edit an announcement
     else if (action.equals(ACT_SETANNOUNCE)) {
-      long announceID = Util.parseLong(request.getParameter(P_ID));
-      long courseID =
-          XMLBuilder.getDatabase().announcementHome().findByPrimaryKey(
-              new AnnouncementPK(announceID)).getCourseID();
-      if (p.isCategoryPrivByCourseID(courseID)) {
-        String announce = request.getParameter(P_ANNOUNCE);
-        String poster = p.getNetID();
+      Announcement announce = getAnnouncement(request.getParameter(P_ID));
+      Course course = announce.getCourse();
+      if (user.isCategoryPrivByCourse(course)) {
+        String newText = request.getParameter(P_ANNOUNCE);
+        String poster  = user.getNetID();
         boolean remove = request.getParameter(P_REMOVEANNOUNCE) != null;
         TransactionResult result =
-            transactions.editAnnouncement(p, announceID, announce, remove);
+            transactions.editAnnouncement(user, announce, newText, remove);
         buildURL = COURSEADMIN_URL;
-        xml = XMLBuilder.refreshCoursePage(p, announceID);
+        xml = xmlBuilder.refreshCoursePage(user, announce);
         if (result.getSuccess())
           result.setValue("Announcement edited successfully");
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Set assignment properties/make new assignment
     else if (action.equals(ACT_SETASSIGN)) {
-      long assignID =
-          Util.parseLong((request.getParameter(P_ASSIGNID) != null) ? request
-              .getParameter(P_ASSIGNID) : "0");
-      long courseID = 0;
-      if (assignID != 0) { // existing assignment
-        AssignmentLocal assign = null;
-        try {
-          assign =
-              XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                  assignID);
-        } catch (Exception e) {
-        }
-        if (assign != null) {
-          courseID = assign.getCourseID();
-        }
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      Course     course = null;
+      if (assign != null) { // existing assignment
+        course = assign.getCourse();
       } else { // new assignment
-        courseID = Util.parseLong(request.getParameter(P_COURSEID));
+        course = getCourse(request.getParameter(P_COURSEID));
       }
-      if (courseID != 0 && p.isAssignPrivByCourseID(courseID)) {
+      if (course != null && user.isAssignPrivByCourse(course)) {
         TransactionResult result =
-            transactions.setAssignmentProps(p, courseID, assignID, request);
+            transactions.setAssignmentProps(user, course, assign, request);
         if (result.getSuccess()) {
-          xml = XMLBuilder.buildCoursePage(p, courseID);
+          xml = xmlBuilder.buildCoursePage(user, course);
           result.setValue("Assignment properties successfully set.");
           buildURL = COURSEADMIN_URL;
         } else {
-          // xml = XMLBuilder.buildErrorAssignmentPage(p,
-          // (Collection) result.getValue(), courseID, assignID);
+          // xml = xmlBuilder.buildErrorAssignmentPage(p,
+          // (Collection) result.getValue(), course, assign);
 
           /*
-           * if (assignID != 0) { xml = XMLBuilder.buildBasicAssignmentPage(p,
-           * assignID); } else { xml = XMLBuilder.buildAssignmentCreationPage(p,
-           * courseID); }
+           * if (assign != 0) { xml = xmlBuilder.buildBasicAssignmentPage(p,
+           * assign); } else { xml = xmlBuilder.buildAssignmentCreationPage(p,
+           * course); }
            */
-          if (assignID == 0) {
+          if (assign == null) {
             buildURL = ERROR_URL;
             xml =
-                XMLBuilder.buildErrorAssignmentPage(p, (Collection) result
-                    .getValue(), courseID, assignID);
+                xmlBuilder.buildErrorAssignmentPage(user, (Collection) result
+                    .getValue(), course, assign);
           } else {
             buildURL = ASSIGNADMIN_URL;
-            xml = XMLBuilder.buildBasicAssignmentPage(p, assignID);
+            xml = xmlBuilder.buildBasicAssignmentPage(user, assign);
           }
         }
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Set general properties for a category or create a new category for
     // the given course
     else if (action.equals(ACT_SETCATEGORY)) {
-      long catID =
-          Util.parseLong((request.getParameter(P_CATID) != null) ? request
-              .getParameter(P_CATID) : "0");
-      long courseID = 0;
-      if (catID != 0) {
-        CategoryLocal cat = null;
-        try {
-          cat =
-              XMLBuilder.getDatabase().categoryHome().findByPrimaryKey(
-                  new CategoryPK(catID));
-        } catch (Exception e) {
-        }
-        if (cat != null) // the category ID is valid
-        {
-          courseID = cat.getCourseID();
-        }
-      } else {
-        courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      }
-      if (courseID != 0 && p.isCategoryPrivByCourseID(courseID)) {
+      Category cat    = getCategory(request.getParameter(P_CATID));
+      Course   course = null;
+      if (cat != null)
+        course = cat.getCourse();
+      else
+        course = getCourse(request.getParameter(P_COURSEID));
+      
+      if (course != null && user.isCategoryPrivByCourse(course)) {
         TransactionResult result =
-            transactions.createNEditCategory(p, catID, courseID, request);
+            transactions.createNEditCategory(user, cat, course, request);
         if (result.getSuccess()) {
           buildURL = COURSEADMIN_URL;
-          xml = XMLBuilder.buildCoursePage(p, courseID);
+          xml = xmlBuilder.buildCoursePage(user, course);
         } else {
           buildURL = CATEGORYADMIN_URL;
-          if (catID == 0)
-            xml = XMLBuilder.buildNewCategoryPage(p, courseID);
-          else xml = XMLBuilder.buildCategoryPage(p, catID);
-          xml = XMLBuilder.addStatus(xml, result);
+          if (cat == null)
+            xml = xmlBuilder.buildNewCategoryPage(user, course);
+          else xml = xmlBuilder.buildCategoryPage(user, cat);
+          xml = xmlBuilder.addStatus(xml, result);
         }
       } else buildURL = FORBIDDEN_URL;
     }
     // Set course properties
     else if (action.equals(ACT_SETCOURSEPROPS)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isAdminPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isAdminPrivByCourse(course)) {
         TransactionResult result =
-            transactions.setCourseProps(p, courseID, request.getParameterMap());
-        if (p.isAdminPrivByCourseID(courseID) || !result.getSuccess()) {
+            transactions.setCourseProps(user, course, request.getParameterMap());
+        if (user.isAdminPrivByCourse(course) || !result.getSuccess()) {
           buildURL = COURSEPROPS_URL;
-          xml = XMLBuilder.buildCoursePropertiesPage(p, courseID);
+          xml = xmlBuilder.buildCoursePropertiesPage(user, course);
           if (result.getSuccess())
             result.setValue("Course properties successfully set");
-          xml = XMLBuilder.addStatus(xml, result);
+          xml = xmlBuilder.addStatus(xml, result);
         } else // User may have revoked their own Admin privilege
         {
           buildURL = COURSEADMIN_URL;
-          xml = XMLBuilder.buildCoursePage(p, courseID);
+          xml = xmlBuilder.buildCoursePage(user, course);
           if (result.getSuccess())
             result.setValue("Course properties successfully set");
-          xml = XMLBuilder.addStatus(xml, result);
+          xml = xmlBuilder.addStatus(xml, result);
         }
-      } else if (p.isCMSAdmin()) {
+      } else if (user.isCMSAdmin()) {
         TransactionResult result =
-            transactions.setCourseProps(p, courseID, request.getParameterMap());
+            transactions.setCourseProps(user, course, request.getParameterMap());
         buildURL = CMSADMINCOURSEPROPS_URL;
-        xml = XMLBuilder.buildCMSAdminCoursePropsPage(p, courseID);
+        xml = xmlBuilder.buildCMSAdminCoursePropsPage(user, course);
         if (result.getSuccess())
           result.setValue("Course properties successfully set");
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Set the current semester
     else if (action.equals(ACT_SETCURSEMESTER)) {
-      if (p.isCMSAdmin()) {
+      if (user.isCMSAdmin()) {
         buildURL = CMSADMIN_URL;
-        TransactionResult result =
-            transactions.setCurrentSemester(p, Util.parseLong(request
-                .getParameter(P_ID)));
-        xml = XMLBuilder.buildCMSAdminPage(p);
-        xml = XMLBuilder.addStatus(xml, result);
+        Semester semester = getSemester(request.getParameter(P_ID));
+        TransactionResult result = transactions.setCurrentSemester(user, semester);
+        xml = xmlBuilder.buildCMSAdminPage(user);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Set final grades
     else if (action.equals(ACT_SETFINALGRADES)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isGradesPrivByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isGradesPrivByCourse(course)) {
         TransactionResult result =
-            transactions.setFinalGrades(p, courseID, request);
-        xml = XMLBuilder.buildStudentsPage(p, courseID, false);
-        xml = XMLBuilder.addStatus(xml, result);
+            transactions.setFinalGrades(user, course, request);
+        xml = xmlBuilder.buildStudentsPage(user, course, false);
+        xml = xmlBuilder.addStatus(xml, result);
         buildURL = STUDENTS_URL;
       } else buildURL = FORBIDDEN_URL;
     } // Set staff member course preferences
     else if (action.equals(ACT_SETSTAFFPREFS)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isStaffInCourseByCourseID(courseID)) {
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isStaffInCourseByCourse(course)) {
         TransactionResult result =
-            transactions.setStaffPrefs(p, courseID, request);
-        xml = XMLBuilder.buildStaffPrefsPage(p, courseID);
-        xml = XMLBuilder.addStatus(xml, result);
+            transactions.setStaffPrefs(user, course, request);
+        xml = xmlBuilder.buildStaffPrefsPage(user, course);
+        xml = xmlBuilder.addStatus(xml, result);
         buildURL = STAFFPREFS_URL;
       } else buildURL = FORBIDDEN_URL;
     } // Set student grades from the view of all assignments for a single
     // student
     else if (action.equals(ACT_SETSTUDENTALLGRADES)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
+      Course course = getCourse(request.getParameter(P_COURSEID));
       String netID = request.getParameter(P_NETID);
-      if (p.isAdminPrivByCourseID(courseID)) {
+      if (user.isAdminPrivByCourse(course)) {
         TransactionResult result =
-            transactions.addGradesComments(p, false, courseID, request);
-        xml = XMLBuilder.buildGradeStudentPage(p, courseID, netID);
+            transactions.addGradesComments(user, false, course, request);
+        xml = xmlBuilder.buildGradeStudentPage(user, course, netID);
         buildURL = GRADEALLASSIGNS_URL;
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.addStatus(xml, result);
       }
     } // Set student grades
     else if (action.equals(ACT_SETSTUDENTGRADES)) {
-      String s = request.getParameter(P_ASSIGNID);
-      long assignID = Util.parseLong(s);
-      if (p.isGradesPrivByAssignmentID(assignID)) {
-        AssignmentLocal assign =
-            XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                assignID);
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isGradesPrivByAssignment(assign)) {
         TransactionResult result =
-            transactions.addGradesComments(p, true, assignID, request);
+            transactions.addGradesComments(user, true, assign, request);
         List groupids = null;
         if (result.getSuccess()) {
           Object[] val = (Object[]) result.getValue();
@@ -2474,53 +2346,50 @@ public class AccessController extends HttpServlet {
           result.setValue(val[0]);
         }
         xml =
-            XMLBuilder.buildGradeAssignPage(p, assignID,
+            xmlBuilder.buildGradeAssignPage(user, assign,
                 (groupids != null && groupids.size() > 0) ? (Long) groupids
                     .get(0) : null);
         buildURL = GRADEASSIGN_URL;
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     } // Set student course preferences
     else if (action.equals(ACT_SETSTUDENTPREFS)) {
       String scope = request.getParameter(P_APPLYSCOPE);
       if (scope == null) {
         // invalid data posted!
-        String courseParam = request.getParameter(P_COURSEID);
-        if (courseParam != null && !courseParam.equals("")) {
-          long courseID = Util.parseLong(courseParam);
-          if (p.isStudentInCourseByCourseID(courseID)) {
+        Course course = getCourse(request.getParameter(P_COURSEID));
+        if (course != null) {
+          if (user.isStudentInCourseByCourse(course)) {
             TransactionResult result = new TransactionResult();
-            result
-                .addError("No scope (which courses to apply settings to?) was received from browser.");
+            result.addError("No scope (which courses to apply settings to?) was received from browser.");
             buildURL = STUDENTPREFS_URL;
-            xml = XMLBuilder.buildStudentPrefsPage(p, courseID);
-            xml = XMLBuilder.addStatus(xml, result);
+            xml = xmlBuilder.buildStudentPrefsPage(user, course);
+            xml = xmlBuilder.addStatus(xml, result);
           } else buildURL = FORBIDDEN_URL;
         } else buildURL = FORBIDDEN_URL;
       } else if (scope.equals(P_APPLYTHIS)) {
-        long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-        if (p.isStudentInCourseByCourseID(courseID)) {
+        Course course = getCourse(request.getParameter(P_COURSEID));
+        if (user.isStudentInCourseByCourse(course)) {
           TransactionResult result =
-              transactions.setStudentPrefs(p, courseID, request);
+              transactions.setStudentPrefs(user, course, request);
           buildURL = STUDENTPREFS_URL;
-          xml = XMLBuilder.buildStudentPrefsPage(p, courseID);
-          xml = XMLBuilder.addStatus(xml, result);
+          xml = xmlBuilder.buildStudentPrefsPage(user, course);
+          xml = xmlBuilder.addStatus(xml, result);
         } else buildURL = FORBIDDEN_URL;
       } else if (scope.equals(P_APPLYALL)) {
-        TransactionResult result = transactions.setAllStudentPrefs(p, request);
+        TransactionResult result = transactions.setAllStudentPrefs(user, request);
 
-        String courseParam = request.getParameter(P_COURSEID);
-        if (courseParam != null && !courseParam.equals("")) {
+        Course course = getCourse(request.getParameter(P_COURSEID));
+        if (course != null) {
           // performed from a course's notification page
           buildURL = STUDENTPREFS_URL;
-          xml =
-              XMLBuilder.buildStudentPrefsPage(p, Util.parseLong(courseParam));
-          xml = XMLBuilder.addStatus(xml, result);
+          xml = xmlBuilder.buildStudentPrefsPage(user, course);
+          xml = xmlBuilder.addStatus(xml, result);
         } else {
           // performed from main notification page
           buildURL = FORBIDDEN_URL; // TODO
-          // xml = XMLBuilder.buildStudentPrefsPage(p, courseID);
-          // xml = XMLBuilder.addStatus(xml, result);
+          // xml = xmlBuilder.buildStudentPrefsPage(p, course);
+          // xml = xmlBuilder.addStatus(xml, result);
           // incomplete!
         }
       } else if (scope.equals(P_APPLYDEFAULT)) {
@@ -2532,34 +2401,31 @@ public class AccessController extends HttpServlet {
     }
     // View the staff course preferences page
     else if (action.equals(ACT_STAFFPREFS)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isStaffInCourseByCourseID(courseID)) {
-        xml = XMLBuilder.buildStaffPrefsPage(p, courseID);
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isStaffInCourseByCourse(course)) {
+        xml = xmlBuilder.buildStaffPrefsPage(user, course);
         buildURL = STAFFPREFS_URL;
       } else buildURL = FORBIDDEN_URL;
     } // View all assignment grades for a given student
     else if (action.equals(ACT_STUDENTALLGRADES)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      String netID = request.getParameter(P_NETID);
-      if (p.isAdminPrivByCourseID(courseID)) {
-        Collection assignments =
-            XMLBuilder.getDatabase().assignmentHome().findByCourseID(courseID);
+      Course course  = getCourse(request.getParameter(P_COURSEID));
+      User   student = getUser(request.getParameter(P_NETID));
+      if (user.isAdminPrivByCourse(course)) {
+        Collection assignments = course.getAssignments();
         if (assignments.size() > 0) {
-          xml = XMLBuilder.buildGradeStudentPage(p, courseID, netID);
+          xml = xmlBuilder.buildGradeStudentPage(user, course, student);
           buildURL = GRADEALLASSIGNS_URL;
         } else {
-          xml = XMLBuilder.buildStudentsPage(p, courseID, false);
-          xml =
-              XMLBuilder.addStatus(xml, "No assignments to list",
-                  XMLBuilder.MSG_WARNING);
+          xml = xmlBuilder.buildStudentsPage(user, course, false);
+          xml = xmlBuilder.addStatus(xml, "No assignments to list", xmlBuilder.MSG_WARNING);
           buildURL = STUDENTS_URL;
         }
       } else buildURL = FORBIDDEN_URL;
     } // View the student course preferences page
     else if (action.equals(ACT_STUDENTPREFS)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isStudentInCourseByCourseID(courseID)) {
-        xml = XMLBuilder.buildStudentPrefsPage(p, courseID);
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isStudentInCourseByCourse(course)) {
+        xml = xmlBuilder.buildStudentPrefsPage(user, course);
         buildURL = STUDENTPREFS_URL;
       } else buildURL = FORBIDDEN_URL;
     }
@@ -2569,29 +2435,29 @@ public class AccessController extends HttpServlet {
     }
     // View student listing page for a course
     else if (action.equals(ACT_STUDENTS)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
+      Course course = getCourse(request.getParameter(P_COURSEID));
       boolean showGradeMsg = (request.getParameter(P_GRADEMESSAGE) != null);
-      if (p.isAdminPrivByCourseID(courseID)) {
+      if (user.isAdminPrivByCourse(course)) {
         buildURL = STUDENTS_URL;
-        xml = XMLBuilder.buildStudentsPage(p, courseID, false, showGradeMsg);
+        xml = xmlBuilder.buildStudentsPage(user, course, false, showGradeMsg);
       } else buildURL = FORBIDDEN_URL;
     }
     // Download survey CVS
     else if (action.equals(ACT_SURVEYDOWNLOAD)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      if (p.isAdminPrivByAssignmentID(assignID)) {
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isAdminPrivByAssignmentID(assign)) {
         String filename = request.getParameter(P_FILENAME);
         response.setContentType("text/csv");
         response.setHeader("Content-disposition", "attachment; filename=\""
             + filename + "\"");
         Collection surveyResultData =
-            XMLBuilder.generateSurveyResultCSV(assignID);
+            xmlBuilder.generateSurveyResultCSV(assign);
         TransactionResult result =
             transactions.exportSurveyResult(response.getOutputStream(),
                 surveyResultData);
         if (!result.getSuccess()) {
-          // xml = XMLBuilder.buildCMSAdminPage(p);
-          // xml = XMLBuilder.addStatus(xml, result);
+          // xml = xmlBuilder.buildCMSAdminPage(p);
+          // xml = xmlBuilder.addStatus(xml, result);
           // buildURL = UPLOAD_URL;
         } else {
           // buildURL = null;
@@ -2603,235 +2469,153 @@ public class AccessController extends HttpServlet {
     }
     // Display result of a survey
     else if (action.equals(ACT_SURVEYRESULT)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      if (p.isAdminPrivByAssignmentID(assignID)) {
-        xml = XMLBuilder.buildSurveyResultPage(p, assignID);
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isAdminPrivByAssignmentID(assign)) {
+        xml = xmlBuilder.buildSurveyResultPage(user, assign);
         buildURL = SURVEYRESULT_URL;
       } else buildURL = FORBIDDEN_URL;
     }
     // Staff member manually adding a group to a timeslot
     else if (action.equals(ACT_TIMESLOTASSIGN)) {
-      long groupID = 0, assignID = 0;
-      try {
-        groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      } catch (Exception e) {
-      }
-      try {
-        assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      } catch (Exception e) {
-      }
-      long courseID = 0;
-      try {
-        AssignmentLocal assign =
-            XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                assignID);
-        courseID = assign.getCourseID();
-      } catch (Exception e) {
-      }
+      Group      group  = getGroup(request.getParameter(P_GROUPID));
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      Course     course = assign.getCourse();
+      // TODO: should there be more here?
     }
     // Staff member updating multiple timeslots at once
     else if (action.equals(ACT_TIMESLOTSUPDATE)) {
-      long assignID = 0;
-      try {
-        assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      } catch (Exception e) {
-      }
-      long courseID = 0;
-      try {
-        AssignmentLocal assign =
-            XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                assignID);
-        courseID = assign.getCourseID();
-      } catch (Exception e) {
-      }
-      if (p.isAssignPrivByCourseID(courseID)) {
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      Course     course = assign.getCourse();
+      if (user.isAssignPrivByCourse(course)) {
         buildURL = ASSIGNSCHED_URL;
-        java.util.Enumeration groups = request.getParameterNames();
         java.util.Collection results = new java.util.Vector();
-        while (groups.hasMoreElements()) {
-          String groupS = (String) groups.nextElement();
-          if (!(groupS.equals(P_ASSIGNID) || groupS.equals("action"))) {
-            long groupID = Util.parseLong(groupS);
-            long slotID = Util.parseLong(request.getParameter(groupS));
-            if (slotID > -1) {
+        Iterator entries = request.getParameterMap().entrySet().iterator();
+        while (entries.hasNext()) {
+          // entry.key   is a String representing the group
+          // entry.value is a String representing the timeslot
+          Map.Entry entry = (Map.Entry) entries.next();
+          
+          if (!(entry.getKey().equals(P_ASSIGNID) || entry.getKey().equals("action"))) {
+            Group    group = getGroup((String) entry.getKey());
+            TimeSlot slot  = getTimeSlot((String) entry.getValue());
+            if (slot != null) {
               TransactionResult result =
-                  transactions.changeGroupSlotByID(p, groupID, assignID,
-                      slotID, true, false);
+                  transactions.changeGroupSlotByID(user, group, assign, slot, true, false);
               results.add(result);
             }
           }
         }
         java.util.Iterator resultsI = results.iterator();
-        xml = XMLBuilder.buildBasicSchedulePage(p, assignID);
+        xml = xmlBuilder.buildBasicSchedulePage(user, assign);
         while (resultsI.hasNext()) {
           TransactionResult result = (TransactionResult) resultsI.next();
-          xml = XMLBuilder.addStatus(xml, result);
+          xml = xmlBuilder.addStatus(xml, result);
         }
       } else buildURL = FORBIDDEN_URL;
     }
     // Staff member creating a block of timeslots from the schedule page
     else if (action.equals(ACT_TIMESLOTSCREATE)) {
-      long assignID = 0;
-      try {
-        assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      } catch (Exception e) {
-      }
-      long courseID = 0;
-      try {
-        AssignmentLocal assign =
-            XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                assignID);
-        courseID = assign.getCourseID();
-      } catch (Exception e) {
-      }
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      Course     course = assign == null ? null : assign.getCourse();
       // check for privileges
-      if (courseID != 0 && p.isAssignPrivByCourseID(courseID)) {
+      if (course != null && user.isAssignPrivByCourse(course)) {
         buildURL = ASSIGNSCHED_URL;
         // perform timeslot creation
         TransactionResult result =
-            transactions.createTimeSlots(p, assignID, request);
+            transactions.createTimeSlots(user, assign, request);
         if (result.getSuccess())
           result.setValue("Time slot creation was successful");
         // reload the schedule page with message status
-        xml = XMLBuilder.buildBasicSchedulePage(p, assignID);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildBasicSchedulePage(user, assign);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Staff member deleting one or more checked timeslots
     else if (action.equals(ACT_TIMESLOTSDELETE)) {
-      long assignID = 0;
-      try {
-        assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      } catch (Exception e) {
-      }
-      long courseID = 0;
-      try {
-        AssignmentLocal assign =
-            XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                assignID);
-        courseID = assign.getCourseID();
-      } catch (Exception e) {
-      }
-      if (courseID != 0 && p.isAssignPrivByCourseID(courseID)) {
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      Course     course = assign == null ? null : assign.getCourse();
+      if (course != null && user.isAssignPrivByCourse(course)) {
         buildURL = ASSIGNSCHED_URL;
         TransactionResult result =
-            transactions.deleteTimeSlots(p, assignID, request);
+            transactions.deleteTimeSlots(user, assign, request);
         if (result.getSuccess())
           result.setValue("Time slot deletion was successful");
-        xml = XMLBuilder.buildBasicSchedulePage(p, assignID);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildBasicSchedulePage(user, assign);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Student adding a timeslot from the assignment page
     else if (action.equals(ACT_TIMESLOTSELECT)) {
-      long groupID = 0, assignID = 0;
-      try {
-        groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      } catch (Exception e) {
-      }
-      try {
-        assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      } catch (Exception e) {
-      }
-      GroupMemberLocal gm =
-          XMLBuilder.getDatabase().groupMemberHome().findByPrimaryKey(
-              new GroupMemberPK(groupID, p.getNetID()));
+      Group       group  = getGroup(request.getParameter(P_GROUPID));
+      Assignment  assign = getAssignment(request.getParameter(P_ASSIGNID));
+      GroupMember gm = group.findGroupMember(user);
+      
       if (gm != null) {
         buildURL = ASSIGNMENT_URL;
         boolean error = false;
         TransactionResult result =
-            transactions.changeGroupSlot(p, groupID, assignID, request, true,
-                true);
-        xml = XMLBuilder.refreshStudentAssignmentPage(p, groupID);
-        xml = XMLBuilder.addStatus(xml, result);
+            transactions.changeGroupSlot(user, group, assign, request, true, true);
+        xml = xmlBuilder.refreshStudentAssignmentPage(user, group);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Staff member manually adding a group to a timeslot
     else if (action.equals(ACT_TIMESLOTUNASSIGN)) {
-      long groupID = 0, assignID = 0;
-      try {
-        groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      } catch (Exception e) {
-      }
-      try {
-        assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      } catch (Exception e) {
-      }
-      long courseID = 0;
-      try {
-        AssignmentLocal assign =
-            XMLBuilder.getDatabase().assignmentHome().findByAssignmentID(
-                assignID);
-        courseID = assign.getCourseID();
-      } catch (Exception e) {
-      }
-      if (p.isAssignPrivByCourseID(courseID)) {
+      Group       group  = getGroup(request.getParameter(P_GROUPID));
+      Assignment  assign = getAssignment(request.getParameter(P_ASSIGNID));
+      Course     course = assign == null ? null : assign.getCourse();
+      if (user.isAssignPrivByCourse(course)) {
         buildURL = ASSIGNSCHED_URL;
         TransactionResult result =
-            transactions.changeGroupSlot(p, groupID, assignID, request, false,
-                false);
-        xml = XMLBuilder.buildBasicSchedulePage(p, assignID);
-        xml = XMLBuilder.addStatus(xml, result);
+            transactions.changeGroupSlot(user, group, assign, request, false, false);
+        xml = xmlBuilder.buildBasicSchedulePage(user, assign);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Student removing his/her group from its timeslot on the assignment
     // page
     else if (action.equals(ACT_TIMESLOTUNSELECT)) {
-      long groupID = 0, assignID = 0;
-      try {
-        groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      } catch (Exception e) {
-      }
-      try {
-        assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      } catch (Exception e) {
-      }
-      GroupMemberLocal gm =
-          XMLBuilder.getDatabase().groupMemberHome().findByPrimaryKey(
-              new GroupMemberPK(groupID, p.getNetID()));
+      Group       group  = getGroup(request.getParameter(P_GROUPID));
+      Assignment  assign = getAssignment(request.getParameter(P_ASSIGNID));
+      GroupMember gm = group.findGroupMember(user);
+      
       if (gm != null) {
         buildURL = ASSIGNMENT_URL;
         TransactionResult result =
-            transactions.changeGroupSlot(p, groupID, assignID, request, false,
-                false);
-        xml = XMLBuilder.refreshStudentAssignmentPage(p, groupID);
-        xml = XMLBuilder.addStatus(xml, result);
+            transactions.changeGroupSlot(user, group, assign, request, false, false);
+        xml = xmlBuilder.refreshStudentAssignmentPage(user, group);
+        xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
     }
     // Disband a single group (to disband multiple groups, see
     // ACT_APPLYTOGROUPS)
     else if (action.equals(ACT_UNGROUP)) {
-      long groupID = Util.parseLong(request.getParameter(P_GROUPID));
-      GroupLocal group = null;
-      try {
-        group = XMLBuilder.getDatabase().groupHome().findByGroupID(groupID);
-      } catch (Exception e) {
-      }
+      Group group = getGroup(request.getParameter(P_GROUPID));
+      
       if (group != null) {
-        long assignID = group.getAssignmentID();
-        if (p.isGroupsPrivByAssignmentID(assignID)) {
+        Assignment assign = group.getAssignment();
+        if (user.isGroupsPrivByAssignment(assign)) {
           // disbandGroup() checks whether they've already been graded
-          TransactionResult result = transactions.disbandGroup(p, groupID);
+          TransactionResult result = transactions.disbandGroup(user, group);
           buildURL = GRADEASSIGN_URL;
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID);
-          XMLBuilder.addStatus(xml, result);
+          xml = xmlBuilder.buildGradeAssignPage(user, assign);
+          xmlBuilder.addStatus(xml, result);
         } else buildURL = FORBIDDEN_URL;
       } else buildURL = FORBIDDEN_URL;
     }
     // Upload grades
     else if (action.equals(ACT_UPLOADGRADES)) {
-      long assignID = Util.parseLong(request.getParameter(P_ASSIGNID));
-      if (p.isGradesPrivByAssignmentID(assignID)) {
-        TransactionResult table =
-            transactions.parseGradesFile(assignID, request);
+      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
+      if (user.isGradesPrivByAssignment(assign)) {
+        TransactionResult table = transactions.parseGradesFile(assign, request);
         if (table.getSuccess() && table.getValue() == null) {
           buildURL = GRADEASSIGN_URL;
-          xml = XMLBuilder.buildGradeAssignPage(p, assignID);
+          xml = xmlBuilder.buildGradeAssignPage(user, assign);
         } else {
           buildURL = CONFIRMTABLE_URL;
           xml =
-              XMLBuilder.buildConfirmPage(p, XMLBuilder.CONFIRM_ASSIGNINFO,
-                  assignID, table);
+              xmlBuilder.buildConfirmPage(user, xmlBuilder.CONFIRM_ASSIGNINFO,
+                  assign, table);
           // if (table.getSuccess()) {
           session.setAttribute(A_GRADESTABLE, table.getValue());
           // }
@@ -2843,89 +2627,84 @@ public class AccessController extends HttpServlet {
     // upload CSV-format information of any kind about students, possibly
     // only for a particular course
     else if (action.equals(ACT_UPLOADSTUDENTINFO)) {
-      String courseID = request.getParameter(P_COURSEID);
+      Course course = getCourse(request.getParameter(P_COURSEID));
       boolean isClasslist = (request.getParameter(P_ISCLASSLIST) != null);
       boolean hasPermission = false;
-      if (courseID == null) // assume info is system-wide, submitted by a
+      if (course == null) // assume info is system-wide, submitted by a
         // cmsadmin
-        hasPermission = p.isCMSAdmin();
+        hasPermission = user.isCMSAdmin();
       else
       // assume info is course-specific
-      hasPermission = p.isAdminPrivByCourseID(Util.parseLong(courseID));
+      hasPermission = user.isAdminPrivByCourse(course);
       if (hasPermission) {
         TransactionResult result =
             transactions.parseCSVInfo(request,
                 isClasslist ? CSVFileFormatsUtil.CLASSLIST_FORMAT : null);
         if (result.getSuccess())
           session.setAttribute(A_PARSEDCSVINFO, result.getValue());
-        xml =
-            XMLBuilder.buildConfirmPage(p,
-                (courseID == null) ? XMLBuilder.CONFIRM_GENERAL
-                    : XMLBuilder.CONFIRM_COURSEINFO, (courseID == null) ? 0
-                    : Util.parseLong(courseID), result);
-        xml = XMLBuilder.addStatus(xml, result);
+        xml = xmlBuilder.buildConfirmPage(
+            user,
+            (course == null) ? xmlBuilder.CONFIRM_GENERAL
+                             : xmlBuilder.CONFIRM_COURSEINFO,
+            course,
+            result);
+        xml = xmlBuilder.addStatus(xml, result);
         buildURL = CONFIRMTABLE_URL;
         session.setAttribute(A_ISCLASSLIST, new Boolean(isClasslist));
       } else buildURL = FORBIDDEN_URL;
     }
     // Enter Cornell-member perspective
     else if (action.equals(ACT_VIEWCORNELLMEM)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      CourseLocal course =
-          XMLBuilder.getDatabase().courseHome().findByPrimaryKey(
-              new CoursePK(courseID));
-      if (p.isInStaffAsBlankMode()) {
-        p.resetToStaffMode();
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isInStaffAsBlankMode()) {
+        user.resetToStaffMode();
       }
-      if (p.isAdminPrivByCourseID(courseID)) {
+      if (user.isAdminPrivByCourse(course)) {
         if (course.getCourseCCAccess()) {
-          p.setStaffAsCornellMem(courseID);
+          user.setStaffAsCornellMem(course);
           buildURL = COURSE_URL;
-          xml = XMLBuilder.buildCoursePage(p, courseID);
+          xml = xmlBuilder.buildCoursePage(user, course);
         } else {
           buildURL = COURSEADMIN_URL;
-          xml = XMLBuilder.buildCoursePage(p, courseID);
+          xml = xmlBuilder.buildCoursePage(user, course);
           String error =
               "Cannot view course page as Cornell Member: that authorization level has no access to the course page<br>";
           error += "Navigate to Course Options to view/edit permissions";
-          xml = XMLBuilder.addStatus(xml, error, XMLBuilder.MSG_ERROR);
+          xml = xmlBuilder.addStatus(xml, error, xmlBuilder.MSG_ERROR);
         }
       } else buildURL = FORBIDDEN_URL;
       // Enter Guest perspective of course
     } else if (action.equals(ACT_VIEWGUEST)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      CourseLocal course =
-          XMLBuilder.getDatabase().courseHome().findByPrimaryKey(
-              new CoursePK(courseID));
-      if (p.isInStaffAsBlankMode()) {
-        p.resetToStaffMode();
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isInStaffAsBlankMode()) {
+        user.resetToStaffMode();
       }
-      if (p.isAdminPrivByCourseID(courseID)) {
+      if (user.isAdminPrivByCourse(course)) {
         if (course.getCourseGuestAccess()) {
-          p.setStaffAsGuest(courseID);
+          user.setStaffAsGuest(course);
           buildURL = COURSE_URL;
-          xml = XMLBuilder.buildCoursePage(p, courseID);
+          xml = xmlBuilder.buildCoursePage(user, course);
         } else {
           buildURL = COURSEADMIN_URL;
-          xml = XMLBuilder.buildCoursePage(p, courseID);
+          xml = xmlBuilder.buildCoursePage(user, course);
           String error =
               "Cannot view course page as Guest: "
                   + "that authorization level has no access "
                   + "to the course page<br>";
           error += "Navigate to Course Options to view/edit permissions";
-          xml = XMLBuilder.addStatus(xml, error, XMLBuilder.MSG_ERROR);
+          xml = xmlBuilder.addStatus(xml, error, xmlBuilder.MSG_ERROR);
         }
       } else buildURL = FORBIDDEN_URL;
     } else if (action.equals(ACT_VIEWRESET)) {
-      if (p.isInStaffAsBlankMode()) {
-        long courseID = p.getCourseID();
-        p.resetToStaffMode();
-        if (p.isStaffInCourseByCourseID(courseID)) {
-          p.resetToStaffMode();
+      if (user.isInStaffAsBlankMode()) {
+        Course course = user.getCourse();
+        user.resetToStaffMode();
+        if (user.isStaffInCourseByCourse(course)) {
+          user.resetToStaffMode();
         }
-        if (p.isStaffInCourseByCourseID(courseID)) {
+        if (user.isStaffInCourseByCourse(course)) {
           buildURL = COURSEADMIN_URL;
-          xml = XMLBuilder.buildCoursePage(p, courseID);
+          xml = xmlBuilder.buildCoursePage(user, course);
         } else {
           // This should only happen if the staff member is removed
           // from staff while in the "view as" mode, or if the view
@@ -2939,29 +2718,29 @@ public class AccessController extends HttpServlet {
     }
     // Enter Student perspective of course
     else if (action.equals(ACT_VIEWSTUDENT)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
+      Course course = getCourse(request.getParameter(P_COURSEID));
       String studentID = request.getParameter(P_NETID);
-      if (p.isInStaffAsBlankMode()) {
-        p.resetToStaffMode();
+      if (user.isInStaffAsBlankMode()) {
+        user.resetToStaffMode();
       }
-      if (p.isAdminPrivByCourseID(courseID)) {
+      if (user.isAdminPrivByCourse(course)) {
         String message = null;
-        message = p.setStaffAsStudent(studentID, courseID);
+        message = user.setStaffAsStudent(studentID, course);
         if (message != null) {
           xml = (Document) session.getAttribute(A_DISPLAYDATA);
-          xml = XMLBuilder.addStatus(xml, message, XMLBuilder.MSG_ERROR);
+          xml = xmlBuilder.addStatus(xml, message, xmlBuilder.MSG_ERROR);
           buildURL = (String) session.getAttribute(A_URL);
         } else {
-          xml = XMLBuilder.buildCoursePage(p, courseID);
+          xml = xmlBuilder.buildCoursePage(user, course);
           buildURL = COURSE_URL;
         }
       } else buildURL = FORBIDDEN_URL;
     }
     // View the page to upload a general CSV student info file
     else if (action.equals(ACT_VIEWUPLOAD)) {
-      long courseID = Util.parseLong(request.getParameter(P_COURSEID));
-      if (p.isStaffInCourseByCourseID(courseID)) {
-        xml = XMLBuilder.buildCSVUploadPage(p, courseID);
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      if (user.isStaffInCourseByCourse(course)) {
+        xml = xmlBuilder.buildCSVUploadPage(user, course);
         buildURL = UPLOAD_URL;
       } else buildURL = FORBIDDEN_URL;
     }
@@ -2969,26 +2748,23 @@ public class AccessController extends HttpServlet {
     // ACT_OVERLOGIN)
     else {
       // All Authenticated Principals can view their overview
-      String semesterID = request.getParameter(P_SEMESTERID);
-      Long courseID = null, semID = null;
+      Semester semester = getSemester(request.getParameter(P_SEMESTERID));
+      Course   course   = null;
+      
       /*
        * For users only involved in one course, this code jumps them directly,
        * into the course page for that course.
        */
-      if (semesterID == null || semesterID.equals("")) {
-        courseID = XMLBuilder.getDatabase().hasSoloCourse(p.getNetID());
-      } else {
-        semID = new Long(Util.parseLong(semesterID));
-        courseID =
-            XMLBuilder.getDatabase().hasSoloCourseBySemester(p.getNetID(),
-                semID.longValue());
-      }
-      if (courseID == null) {
-        xml = XMLBuilder.buildOverview(p, semID);
+      if (semester == null)
+        semester = xmlBuilder.getDatabase().getCurrentSemester();
+      course = user.getSoloCourse(semester);
+      
+      if (course == null) {
+        xml = xmlBuilder.buildOverview(user, semester);
         buildURL = OVERVIEW_URL;
       } else {
-        xml = XMLBuilder.buildCoursePage(p, courseID.longValue());
-        if (p.isStaffInCourseByCourseID(courseID.longValue())) {
+        xml = xmlBuilder.buildCoursePage(user, course);
+        if (user.isStaffInCourseByCourse(course)) {
           buildURL = COURSEADMIN_URL;
         } else {
           buildURL = COURSE_URL;
@@ -2998,6 +2774,46 @@ public class AccessController extends HttpServlet {
     boolean xhfg = true;
     if (debug) Profiler.endAction(action);
     return new RequestHandlerInfo(buildURL, xml);
+  }
+
+  private TimeSlot getTimeSlot(String slotID) {
+    return xmlBuilder.getDatabase().getTimeSlot(slotID);
+  }
+
+  private CategoryRow getCategoryRow(String rowID) {
+    return xmlBuilder.getDatabase().getCategoryRow(rowID);
+  }
+
+  private SiteNotice getNotice(String noticeID) {
+    return xmlBuilder.getDatabase().getSiteNotice(noticeID);
+  }
+
+  private Category getCategory(String catID) {
+    return xmlBuilder.getDatabase().getCategory(catID);
+  }
+
+  private Announcement getAnnouncement(String announceID) {
+    return xmlBuilder.getDatabase().getAnnouncement(announceID);
+  }
+
+  private User getUser(String netID) {
+    return xmlBuilder.getDatabase().getUser(netID);
+  }
+
+  private Course getCourse(String courseID) {
+    return xmlBuilder.getDatabase().getCourse(courseID);
+  }
+
+  private Semester getSemester(String semesterID) {
+    return xmlBuilder.getDatabase().getSemester(semesterID);
+  }
+
+  private Group getGroup(String groupID) {
+    return xmlBuilder.getDatabase().getGroup(groupID);
+  }
+
+  private Assignment getAssignment(String assignID) {
+    return xmlBuilder.getDatabase().getAssignment(assignID);
   }
 
   private void sendFile(long id, int type, HttpServletResponse response)
@@ -3033,3 +2849,7 @@ public class AccessController extends HttpServlet {
     }
   }
 }
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

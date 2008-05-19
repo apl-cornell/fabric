@@ -2373,4 +2373,8 @@ public class XMLBuilder {
     return database;
   }
 
+  public CMSRoot getDatabase() {
+    return database;
+  }
+
 }

@@ -73,6 +73,15 @@ public class User extends Principal {
     // TODO Auto-generated method stub
     return null;
   }
+  
+  /**
+   * @return the unique course for this student for the given semester, or null
+   *         if the student is enrolled in more or less than one course.
+   */
+  public Course getSoloCourse(Semester semester) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

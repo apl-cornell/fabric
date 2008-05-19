@@ -169,6 +169,46 @@ public class CMSRoot {
     // TODO Auto-generated method stub
     return null;
   }
+  public Assignment getAssignment(String assignID) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Group getGroup(String groupID) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Semester getSemester(String semesterID) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Course getCourse(String courseID) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Announcement getAnnouncement(String announceID) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public User getUser(String netID) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Category getCategory(String catID) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public SiteNotice getSiteNotice(String noticeID) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public CategoryRow getCategoryRow(String rowID) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public TimeSlot getTimeSlot(String slotID) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
   /* This method doesn't seem to work, and doesn't seem to be called in CMS
    * public Collection getNonStudentNetIDs(java.util.Collection netids,long courseID) ;
