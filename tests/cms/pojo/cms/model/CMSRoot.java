@@ -209,6 +209,14 @@ public class CMSRoot {
     // TODO Auto-generated method stub
     return null;
   }
+  public User getGuestUser() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public SubProblem getSubProblem(String subProblemID) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
   /* This method doesn't seem to work, and doesn't seem to be called in CMS
    * public Collection getNonStudentNetIDs(java.util.Collection netids,long courseID) ;

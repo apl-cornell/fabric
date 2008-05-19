@@ -26,7 +26,6 @@ import cms.www.util.*;
 import cms.www.xml.XMLBuilder;
 
 import cms.auth.Principal;
-import cms.auth.UserNotFoundException;
 import cms.model.*;
 
 /**
@@ -944,59 +943,49 @@ public class AccessController extends HttpServlet {
    * @return A Principal that's null when action is null, else initialized
    * @throws ServletException
    */
-  private Principal setUpPrincipal(HttpSession session,
-      HttpServletRequest request, String action) throws ServletException {
-    Principal p = null;
-    try {
-      p = (Principal) session.getAttribute(A_PRINCIPAL);
-      if (debug) {
-        String debugID = request.getParameter(P_DEBUGID);
-        if (debugID == null) {
-          if (p == null
-              && (p = (Principal) debugPrincipalMap.get(request.getLocalAddr())) == null) {
-            p =
-              new Principal(xmlBuilder.getDatabase(), Principal.guestid,
-                  request.getRemoteAddr());
-          }
-        } else {
-          p =
-            new Principal(xmlBuilder.getDatabase(), debugID, request
-                .getRemoteAddr());
-          debugPrincipalMap.put(request.getLocalAddr(), p);
-        }
-      } else {
-        String nodebugloginID = request.getHeader("remote_user"); // Authenticated
-                                                                  // user
-        nodebugloginID =
-          nodebugloginID == null ? Principal.guestid : nodebugloginID;
-        if ((action != null)
-            && (p == null || !p.getPrincipalID().equals(nodebugloginID))) {
-          try {
-            p =
-              new Principal(xmlBuilder.getDatabase(), nodebugloginID, request
-                  .getRemoteAddr());
-          } catch (UserNotFoundException e) {
-            p =
-              new Principal(xmlBuilder.getDatabase(), Principal.guestid,
-                  request.getRemoteAddr());
-          }
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
+  private User setUpPrincipal(HttpSession session,
+      HttpServletRequest request, boolean action) throws ServletException {
+    // there are many possible sources for the netid:
+    // - DEBUGID request parameter
+    // - stored by ip address
+    // - A_PRINCIPAL session variable
+    // - remote_user header
+    // - Guest
+    // - null
+    User result;
+    
+    if (debug && request.getParameter(P_DEBUGID) != null) {
+      result = getUser(request.getParameter(P_DEBUGID));
+      debugPrincipalMap.put(request.getLocalAddr(), result);
     }
-    return p;
+
+    else if (debug && session.getAttribute(A_PRINCIPAL) != null)
+      result = (User) session.getAttribute(A_PRINCIPAL);
+    
+    else if (debug)
+      result = (User) debugPrincipalMap.get(request.getLocalAddr());
+    
+    else if (action && request.getHeader("remote_user") != null) 
+      result = getUser(request.getHeader("remote_user"));
+    
+    else
+      result = (User) session.getAttribute(A_PRINCIPAL);
+    
+    if (action && result == null)
+      result = xmlBuilder.getDatabase().getGuestUser();
+    
+    return result;
   }
 
   /**
    * Handle Get and Post requests
    * 
    * @param request
-   *                The Servlet Request to handle
+   *          The Servlet Request to handle
    * @param response
-   *                The Servlet Response to return
+   *          The Servlet Response to return
    * @throws ServletException,
-   *                 IOException
+   *           IOException
    */
   protected void processRequest(HttpServletRequest request,
       HttpServletResponse response) throws ServletException, IOException {
@@ -1059,17 +1048,16 @@ public class AccessController extends HttpServlet {
         xml = xmlBuilder.buildHomepage();
       } else {
         // Set up Principal and netID in debug mode
-        p = setUpPrincipal(session, request, action);
-        if (p == null) {
+        User user = setUpPrincipal(session, request, action != null);
+        if (user == null) {
           buildURL = HOMEPAGE_URL;
           xml = xmlBuilder.buildHomepage();
         } else {
-          String netid = p.getNetID(); // netid of appUser if in
           // staffAs_ mode, apparentID
           // of principal otherwise
           try {
             RequestHandlerInfo info =
-                handleSpecificAction(action, request, response, session, p);
+                handleSpecificAction(action, request, response, session, user);
             if (info == null)
               throw new RuntimeException(
                   "Action handler return value should not be null!");
@@ -1348,11 +1336,11 @@ public class AccessController extends HttpServlet {
         } else buildURL = FORBIDDEN_URL;
       } else if (gradingAction.equals(GA_ASSIGNGRADER)) { // ASSIGN GRADERS
         if (user.isAdminPrivByCourse(assign.getCourse())) {
-          String subprobname = request.getParameter(P_ASSIGNPROBNAME);
-          String grader = request.getParameter(P_ASSIGNGRADER);
+          SubProblem subproblem = getSubProblem(request.getParameter(P_ASSIGNPROBNAME));
+          User grader = getUser(request.getParameter(P_ASSIGNGRADER));
           buildURL = GRADEASSIGN_URL;
           TransactionResult result =
-              transactions.assignGrader(user, assign, subprobname, grader,
+              transactions.assignGrader(user, assign, subproblem, grader,
                   request.getParameterMap());
           xml = xmlBuilder.buildGradeAssignPage(user, assign);
           xmlBuilder.addStatus(xml, result);
@@ -1412,11 +1400,11 @@ public class AccessController extends HttpServlet {
     // Cancel an unaccepted invitation
     else if (action.equals(ACT_CANCEL)) {
       Group group = getGroup(request.getParameter(P_GROUPID));
-      if (user.isStudentInCourseByGroupID(group)) {
-        String cancelNetID = (String) request.getParameter(P_NETID);
+      if (user.isStudentInCourseByGroup(group)) {
+        User cancel = getUser(request.getParameter(P_NETID));
         buildURL = ASSIGNMENT_URL;
         TransactionResult result =
-            transactions.cancelInvitation(user, cancelNetID, group);
+            transactions.cancelInvitation(user, cancel, group);
         xml = xmlBuilder.refreshStudentAssignmentPage(user, group);
         xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
@@ -1878,7 +1866,7 @@ public class AccessController extends HttpServlet {
             && assign.getAssignedGraders()) {
           groups =
               xmlBuilder.getDatabase().assignedToGroups(assign,
-                  user.getNetID(),
+                  user,
                   Util.extractGroupIDsFromMainGradingPageRequest(request));
         } else {
           groups = Util.extractGroupIDsFromMainGradingPageRequest(request);
@@ -1929,8 +1917,8 @@ public class AccessController extends HttpServlet {
     }
     // Invite someone to join a group
     else if (action.equals(ACT_INVITE)) {
-      String invite = request.getParameter(P_INVITE);
-      Group group   = getGroup(request.getParameter(P_GROUPID));
+      User invite = getUser(request.getParameter(P_INVITE));
+      Group group = getGroup(request.getParameter(P_GROUPID));
       if (user.isStudentInCourseByGroup(group)) {
         // TODO Later add multi-invites; now one at a time
         buildURL = ASSIGNMENT_URL;
@@ -2022,10 +2010,10 @@ public class AccessController extends HttpServlet {
     } // Reenroll a student in the course
     else if (action.equals(ACT_REENROLL)) {
       Course course = getCourse(request.getParameter(P_COURSEID));
-      String netID = request.getParameter(P_NETID);
+      User  student = getUser(request.getParameter(P_NETID));
       if (user.isAdminPrivByCourse(course)) {
         TransactionResult result =
-            transactions.reenrollStudent(user, course, netID, request
+            transactions.reenrollStudent(user, course, student, request
                 .getParameter(P_EMAILADDED) != null);
         buildURL = STUDENTS_URL;
         xml = xmlBuilder.buildStudentsPage(user, course, false);
@@ -2051,7 +2039,7 @@ public class AccessController extends HttpServlet {
         if (user.getNetID().equals(request.getParameter(P_NETID)))
           result.addError("Can't remove current user");
         else result =
-            transactions.removeCMSAdmin(user, request.getParameter(P_NETID));
+            transactions.removeCMSAdmin(user, getUser(request.getParameter(P_NETID)));
         xml = xmlBuilder.buildCMSAdminPage(user);
         xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
@@ -2323,11 +2311,11 @@ public class AccessController extends HttpServlet {
     // student
     else if (action.equals(ACT_SETSTUDENTALLGRADES)) {
       Course course = getCourse(request.getParameter(P_COURSEID));
-      String netID = request.getParameter(P_NETID);
+      User  student = getUser(request.getParameter(P_NETID));
       if (user.isAdminPrivByCourse(course)) {
         TransactionResult result =
             transactions.addGradesComments(user, false, course, request);
-        xml = xmlBuilder.buildGradeStudentPage(user, course, netID);
+        xml = xmlBuilder.buildGradeStudentPage(user, course, student);
         buildURL = GRADEALLASSIGNS_URL;
         xml = xmlBuilder.addStatus(xml, result);
       }
@@ -2340,15 +2328,12 @@ public class AccessController extends HttpServlet {
         List groupids = null;
         if (result.getSuccess()) {
           Object[] val = (Object[]) result.getValue();
-          groupids = val != null ? (List) val[1] : null; // a List of
-          // GroupIDs
-          // (Longs)
+          groupids = val != null ? (List) val[1] : null; // a List of Groups
           result.setValue(val[0]);
         }
-        xml =
-            xmlBuilder.buildGradeAssignPage(user, assign,
-                (groupids != null && groupids.size() > 0) ? (Long) groupids
-                    .get(0) : null);
+        xml = xmlBuilder.buildGradeAssignPage(user, assign,
+            (groupids != null && groupids.size() > 0) ? (Group) groupids.get(0)
+                                                      : null);
         buildURL = GRADEASSIGN_URL;
         xml = xmlBuilder.addStatus(xml, result);
       } else buildURL = FORBIDDEN_URL;
@@ -2774,6 +2759,10 @@ public class AccessController extends HttpServlet {
     boolean xhfg = true;
     if (debug) Profiler.endAction(action);
     return new RequestHandlerInfo(buildURL, xml);
+  }
+
+  private SubProblem getSubProblem(String subProblemID) {
+    return xmlBuilder.getDatabase().getSubProblem(subProblemID);
   }
 
   private TimeSlot getTimeSlot(String slotID) {
