@@ -25,7 +25,7 @@ public class StudentGradesXMLBuilder {
     this.xmlBuilder = builder;
   }
 
-  public void buildStudentGradesTree(Principal p, Document xml, User user,
+  public void buildStudentGradesTree(User p, Document xml, User user,
       Course course) {
     Profiler.enterMethod("StudentGradesXMLBuilder.buildStudentGradesTree",
         "CourseID: " + course.toString());
@@ -145,7 +145,7 @@ public class StudentGradesXMLBuilder {
     return result;
   }
 
-  public void addGrades(Principal p, Document xml, User user, Course course) {
+  public void addGrades(User p, Document xml, User user, Course course) {
     Profiler.enterMethod("StudentGradesXMLBuilder.addGrades", "");
     Element root = (Element) xml.getFirstChild();
     Iterator grades = course.findRecentGradesByUser(user, p.isAdminPrivByCourse(course), p).iterator();

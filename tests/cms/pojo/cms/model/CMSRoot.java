@@ -112,15 +112,15 @@ public class CMSRoot {
     // TODO Auto-generated method stub
     return null;
   }
-  public Collection/*Assignment*/ findAssignmentsByCourseAdmin(Semester curSemester, Principal p) {
+  public Collection/*Assignment*/ findAssignmentsByCourseAdmin(Semester curSemester, User user) {
     // TODO Auto-generated method stub
     return null;
   }
-  public Collection/*Announcement*/ findAnnouncementsByUserDateSemester(Principal p, Date weekago, Semester sem) {
+  public Collection/*Announcement*/ findAnnouncementsByUserDateSemester(User user, Date weekago, Semester sem) {
     // TODO Auto-generated method stub
     return null;
   }
-  public Collection/*Announcement*/ findAnnouncementsByUserDate(Principal p, Date weekago) {
+  public Collection/*Announcement*/ findAnnouncementsByUserDate(User user, Date weekago) {
     // TODO Auto-generated method stub
     return null;
   }

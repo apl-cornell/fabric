@@ -40,7 +40,7 @@ public class LogXMLBuilder {
    *         individual log entries
    * @throws FinderException
    */
-  public Element buildFullSubtree(Principal p, Document xml, Collection logs) {
+  public Element buildFullSubtree(User p, Document xml, Collection logs) {
     Element logRoot = xml.createElement(XMLBuilder.TAG_LOGSEARCH_RESULTS);
     Iterator i = logs.iterator();
     while (i.hasNext())
@@ -130,7 +130,7 @@ public class LogXMLBuilder {
     }
   }
 
-  protected void appendLogSearchCourses(Principal p, Document xml, Element root) {
+  protected void appendLogSearchCourses(User p, Document xml, Element root) {
     Element logSearchCourses =
         xml.createElement(XMLBuilder.TAG_LOGSEARCH_COURSES);
     Collection courses;
@@ -386,7 +386,7 @@ public class LogXMLBuilder {
     root.appendChild(xTypes);
   }
 
-  protected void appendLogSearchAssigns(Principal p, Document xml, Element root) {
+  protected void appendLogSearchAssigns(User p, Document xml, Element root) {
     Element logSearchAssigns =
         xml.createElement(XMLBuilder.TAG_LOGSEARCH_ASSIGNS);
     Collection assigns;
@@ -409,7 +409,7 @@ public class LogXMLBuilder {
     root.appendChild(logSearchAssigns);
   }
 
-  protected void appendAssignments(cms.auth.Principal p, Document xml,
+  protected void appendAssignments(User p, Document xml,
       Course course) {
     Iterator i = course.getAssignments().iterator();
     Element root = (Element) xml.getFirstChild();

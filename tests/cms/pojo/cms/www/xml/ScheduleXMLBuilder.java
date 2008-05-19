@@ -31,7 +31,7 @@ public class ScheduleXMLBuilder {
     this.xmlBuilder = builder;
   }
 
-  public Element buildScheduleSubtree(Principal p, Document xml, Assignment assignment) {
+  public Element buildScheduleSubtree(User p, Document xml, Assignment assignment) {
     if (!assignment.getScheduled()) {
       // return a blank subtree
       Element xSchedule = xml.createElement(XMLBuilder.TAG_SCHEDULE);
@@ -129,7 +129,7 @@ public class ScheduleXMLBuilder {
 
   // Subtree of the 'schedule' tree to describe a particular timeslot
   public Element buildTimeSlotSubtree(Document xml, Assignment assignment,
-      TimeSlot ts, Principal p, String tag, boolean showMembers) {
+      TimeSlot ts, User p, String tag, boolean showMembers) {
     long duration = 0;
     if (assignment.getDuration() != null) {
       duration = assignment.getDuration().longValue();

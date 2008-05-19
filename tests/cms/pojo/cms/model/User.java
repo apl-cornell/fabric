@@ -6,8 +6,10 @@ import cms.auth.Principal;
 
 // TODO: not sure if User should extend Principal
 // TODO: figure out when to use what
-public class User extends Principal {
+public class User implements Principal {
 
+  public static final String AUTHOR_CORNELL_COMMUNITY = null;
+  
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
@@ -84,6 +86,61 @@ public class User extends Principal {
   }
   public boolean hasAssignAccess(Course course, Assignment assign) {
     // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isInStaffAsBlankMode() {
+    // TODO
+    return false;
+  }
+  public boolean isAdminPrivByCourse(Course course) {
+    // TODO
+    return false;
+  }
+  public boolean isGroupsPrivByCourse(Course course) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isGradesPrivByCourse(Course course) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isAssignPrivByCourse(Course course) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isCategoryPrivByCourse(Course course) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isStaffInCourseByCourse(Course course) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isCMSAdmin() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isStudentInCourseByCourse(Course course) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public int getAuthoriznLevelByCourse(Course course) {
+    // TODO Auto-generated method stub
+    return 0;
+  }
+  public boolean isAssignPrivByAssignment(Assignment assignment) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isAuthenticated() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isGuest() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean delegatesTo(Principal delagatee) {
     return false;
   }
 }

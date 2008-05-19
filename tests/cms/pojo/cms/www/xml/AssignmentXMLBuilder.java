@@ -47,7 +47,7 @@ public class AssignmentXMLBuilder {
    * @return The assignment element of the tree, with general properties set and
    *         several child nodes
    */
-  public Element buildFullSubtree(Principal p, Document xml,
+  public Element buildFullSubtree(User p, Document xml,
       Assignment assignment, Map gradeMap, Map answerMap) {
     Profiler.enterMethod("AssignmentXMLBuilder.buildFullSubtree",
         "AssignmentID: " + assignment.toString());

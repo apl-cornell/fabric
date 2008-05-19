@@ -36,7 +36,7 @@ public class AnnouncementXMLBuilder {
    * @return An XML element with announcement info for the given course
    * @throws FinderException
    */
-  public Element buildAnnouncementsSubtree(Principal p, Document xml, Course course) {
+  public Element buildAnnouncementsSubtree(User p, Document xml, Course course) {
     Profiler.enterMethod("AnnouncementXMLBuilder.buildAnnouncementSubtree",
         "CourseID: " + course);
     Element xAnnouncements = xml.createElement(XMLBuilder.TAG_COURSEANNOUNCEMENTS);

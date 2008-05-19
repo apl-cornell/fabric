@@ -40,7 +40,7 @@ public class Semester {
     // TODO Auto-generated method stub
     return null;
   }
-  public Collection/*Course*/ findStaffAdminCourses(Principal p) {
+  public Collection/*Course*/ findStaffAdminCourses(User user) {
     // TODO Auto-generated method stub
     return null;
   }

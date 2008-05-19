@@ -3,11 +3,7 @@ package cms.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import cms.auth.Principal;
 
 public class Course {
 
@@ -214,7 +210,7 @@ public class Course {
     return null;
   }
   
-  public Collection/*Grade*/ findRecentGradesByUser(User user, boolean b, Principal p) {
+  public Collection/*Grade*/ findRecentGradesByUser(User user, boolean b, User p) {
     // TODO Auto-generated method stub
     // TODO: see gradeHome().findRecentByNetIDCourseID
     return null;

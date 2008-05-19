@@ -26,7 +26,6 @@ import org.w3c.dom.Document;
 import cms.www.util.*;
 import cms.www.xml.XMLBuilder;
 
-import cms.auth.Principal;
 import cms.model.*;
 
 /**
@@ -1026,7 +1025,7 @@ public class AccessController extends HttpServlet {
       session.setAttribute(A_DEBUG, new Boolean(debug));
       session.setAttribute(A_COOKIES, request.getCookies());
       Document xml = null;
-      Principal p = null;
+      User p = null;
       /*
        * no action: go to cms home page, which tells you to either go guest or
        * sign in (if action is null, there won't be a principal, so don't bother

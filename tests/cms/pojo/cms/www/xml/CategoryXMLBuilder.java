@@ -39,7 +39,7 @@ public class CategoryXMLBuilder {
    *         contents
    * @throws FinderException
    */
-  public Element buildFullSubtree(Principal p, Document xml, Category cat) {
+  public Element buildFullSubtree(User p, Document xml, Category cat) {
     Profiler.enterMethod("CategoryXMLBuilder.buildFullSubtree", "CategoryID: " + cat.toString());
     Element xCategory = buildGeneralSubtree(p, xml, cat);
     // list columns
@@ -68,7 +68,7 @@ public class CategoryXMLBuilder {
    * @return A category element, with general properties set
    * @throws FinderException
    */
-  public Element buildGeneralSubtree(Principal p, Document xml, Category cat) {
+  public Element buildGeneralSubtree(User p, Document xml, Category cat) {
     Element xCategory = xml.createElement(XMLBuilder.TAG_CATEGORY);
     xCategory.setAttribute(XMLBuilder.A_ID,       cat.toString());
     xCategory.setAttribute(XMLBuilder.A_NAME,     cat.getCategoryName());

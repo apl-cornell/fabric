@@ -58,7 +58,7 @@ public class CourseXMLBuilder {
     return xCourse;
   }
 
-  public Element buildSurveySubtree(Principal p, Document xml, Course course) {
+  public Element buildSurveySubtree(User p, Document xml, Course course) {
     Collection surveys = new ArrayList();
     Iterator i = course.getAssignments().iterator();
     while (i.hasNext()) {
@@ -117,7 +117,7 @@ public class CourseXMLBuilder {
    * @return The course element of the tree, with some general properties set
    * @throws FinderException
    */
-  public Element buildShortSubtree(Principal p, Document xml, Course course) {
+  public Element buildShortSubtree(User p, Document xml, Course course) {
     Element xCourse = xml.createElement(XMLBuilder.TAG_COURSE);
     xCourse.setAttribute(XMLBuilder.A_COURSEID,      course.toString());
     xCourse.setAttribute(XMLBuilder.A_CODE,          course.getCode());
@@ -311,7 +311,7 @@ public class CourseXMLBuilder {
    * @return An XML element with a staff list for the given course
    * @throws FinderException
    */
-  public Element buildStaffListSubtree(Principal p, Document xml, Course course) {
+  public Element buildStaffListSubtree(User p, Document xml, Course course) {
     Element xStaff = xml.createElement(XMLBuilder.TAG_STAFF);
     Iterator i = course.getStaff().iterator();
     while (i.hasNext()) {
@@ -397,7 +397,7 @@ public class CourseXMLBuilder {
    *         in the form of child nodes
    * @throws FinderException
    */
-  public Element buildCategoriesSubtree(Principal p, Document xml, Course course) {
+  public Element buildCategoriesSubtree(User p, Document xml, Course course) {
     Element xCategories = xml.createElement(XMLBuilder.TAG_CATEGORIES);
     Iterator catIter = course.getCategories().iterator();
     while (catIter.hasNext()) {
@@ -433,7 +433,7 @@ public class CourseXMLBuilder {
    * @return An XML element with assignment file info for the given course
    * @throws FinderException
    */
-  public Element buildAssignmentFilesSubtree(Principal p, Document xml, Course course) {
+  public Element buildAssignmentFilesSubtree(User p, Document xml, Course course) {
     Element xItems = xml.createElement(XMLBuilder.TAG_ITEMS);
     Iterator i = course.getAllAssignmentFiles().iterator();
     while (i.hasNext()) {

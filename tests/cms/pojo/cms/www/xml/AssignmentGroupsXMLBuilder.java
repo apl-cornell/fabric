@@ -174,7 +174,7 @@ public class AssignmentGroupsXMLBuilder {
     return result;
   }
 
-  public void buildAssignedGraders(Principal p, Assignment assign,
+  public void buildAssignedGraders(User p, Assignment assign,
       Document xml, Element groupsNode) {
     Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildAssignedGraders", "");
     Iterator assignedTos = Assignment.getGroupAssignedTos().iterator();

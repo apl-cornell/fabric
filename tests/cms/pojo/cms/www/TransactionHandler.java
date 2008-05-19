@@ -51,7 +51,6 @@ import com.Ostermiller.util.CSVPrinter;
 import com.Ostermiller.util.ExcelCSVParser;
 import com.Ostermiller.util.ExcelCSVPrinter;
 
-import cms.auth.Principal;
 import cms.model.*;
 
 /**
@@ -95,7 +94,7 @@ public class TransactionHandler {
    *          The GroupID of the group to accept into
    * @return TransactionResult
    */
-  public TransactionResult acceptInvitation(Principal p, Group group) {
+  public TransactionResult acceptInvitation(User p, Group group) {
     TransactionResult result = new TransactionResult();
     try {
       String netid = p.getNetID();
@@ -193,7 +192,7 @@ public class TransactionHandler {
    * 
    * @return TransactionResult
    */
-  public TransactionResult addCMSAdmin(Principal p, User admin) {
+  public TransactionResult addCMSAdmin(User p, User admin) {
     TransactionResult result = new TransactionResult();
     boolean success = false;
     try {
@@ -214,7 +213,7 @@ public class TransactionHandler {
    *          The course title, e.g. Intro to Java
    * @return TransactionResult
    */
-  public TransactionResult addCourse(Principal p, String courseCode,
+  public TransactionResult addCourse(User p, String courseCode,
       String courseName) {
     TransactionResult result = new TransactionResult();
     boolean success = false;
@@ -240,7 +239,7 @@ public class TransactionHandler {
    *          Whether or not the annoucement is viewable by all
    * @return TransactionResult
    */
-  public TransactionResult addNotice(Principal p, String text, User author,
+  public TransactionResult addNotice(User p, String text, User author,
       Date exp, boolean hidden) {
     TransactionResult result = new TransactionResult();
     boolean success = false;
@@ -272,7 +271,7 @@ public class TransactionHandler {
    * @ejb.interface-method view-type="local"
    * @ejb.transaction type="Required"
    */
-  public TransactionResult editNotice(Principal p, SiteNotice id, String text,
+  public TransactionResult editNotice(User p, SiteNotice id, String text,
       Date exp, boolean hidden, boolean deleted) {
     TransactionResult result = new TransactionResult();
     boolean success = false;
@@ -343,7 +342,7 @@ public class TransactionHandler {
    * 
    * @return TransactionResult
    */
-  public TransactionResult addNEditCtgContents(Principal p, Category ctgID,
+  public TransactionResult addNEditCtgContents(User p, Category ctgID,
       HttpServletRequest request) {
     Profiler.enterMethod("TransactionHandler.addNEditCtgContents",
         "CategoryID: " + ctgID);
@@ -778,7 +777,7 @@ public class TransactionHandler {
    *         successful and isAssign is false, the TransactionResult value is
    *         set to just the success message.
    */
-  public TransactionResult addGradesComments(Principal p, boolean isAssign,
+  public TransactionResult addGradesComments(User p, boolean isAssign,
       Object data, HttpServletRequest request) {
     Profiler.enterMethod("TransactionHandler.addGradesComments", "");
     TransactionResult result = new TransactionResult();
@@ -1042,7 +1041,7 @@ public class TransactionHandler {
    * @param request
    * @return TransactionResult
    */
-  public TransactionResult addRegradeRequest(Principal p, Group group,
+  public TransactionResult addRegradeRequest(User p, Group group,
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     boolean success;
@@ -1095,7 +1094,7 @@ public class TransactionHandler {
   /**
    * @return TransactionResult
    */
-  public TransactionResult addStudentsToCourse(Principal pr, Course course,
+  public TransactionResult addStudentsToCourse(User pr, Course course,
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
@@ -1163,7 +1162,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult assignGrader(Principal p, Assignment assign,
+  public TransactionResult assignGrader(User p, Assignment assign,
       SubProblem subProblem, User grader, Map requestMap) {
     TransactionResult result = new TransactionResult();
     try {
@@ -1220,14 +1219,14 @@ public class TransactionHandler {
    * given file
    * 
    * @param p
-   *          The Principal to authorize
+   *          The User to authorize
    * @param ID
    *          The ID of the file to check
    * @param type
    *          The type of the file to check
-   * @return True if the given Principal has access to download the given file
+   * @return True if the given User has access to download the given file
    */
-  public boolean authorizeDownload(Principal p, long id, int type) {
+  public boolean authorizeDownload(User p, long id, int type) {
     try {
       long ID = id;
       AssignmentLocal a = null;
@@ -1318,11 +1317,11 @@ public class TransactionHandler {
         }
         if (cg == null) return false;
         switch (cg.getAuthorzn()) {
-        case Principal.AUTHOR_GUEST:
+        case User.AUTHOR_GUEST:
           return true;
-        case Principal.AUTHOR_CORNELL_COMMUNITY:
+        case User.AUTHOR_CORNELL_COMMUNITY:
           return p.isAuthenticated();
-        case Principal.AUTHOR_STUDENT:
+        case User.AUTHOR_STUDENT:
           return p.isStudentInCourseByCourseID(cg.getCourseID())
               || p.isStaffInCourseByCourseID(cg.getCourseID());
         default:
@@ -1468,14 +1467,14 @@ public class TransactionHandler {
   }
 
   /**
-   * Returns true iff the given Principal has permission to download group
+   * Returns true iff the given User has permission to download group
    * submissions from the given groups
    * 
    * @param p
    * @param groupIDs
    * @return
    */
-  public boolean authorizeGroupFiles(Principal p, Collection groupIDs) {
+  public boolean authorizeGroupFiles(User p, Collection groupIDs) {
     try {
       AssignmentLocal assign = null;
       Long assignID = database.isValidGroupCollection(groupIDs);
@@ -1505,7 +1504,7 @@ public class TransactionHandler {
    * Cancels an invitation for a user to join a group
    * 
    * @param p
-   *          The Principal of the user canceling this invitation (must be a
+   *          The User of the user canceling this invitation (must be a
    *          member of the group in question)
    * @param canceled
    *          The NetID of the user to uninvite
@@ -1513,7 +1512,7 @@ public class TransactionHandler {
    *          The GroupID of the group
    * @return TransactionResult
    */
-  public TransactionResult cancelInvitation(Principal p, User canceled, Group group) {
+  public TransactionResult cancelInvitation(User p, User canceled, Group group) {
     TransactionResult result = new TransactionResult();
     try {
       String canceler = p.getNetID();
@@ -1588,7 +1587,7 @@ public class TransactionHandler {
 
   // This is used whenever a student or staff member adds or removes a group
   // from a slot
-  public TransactionResult changeGroupSlot(Principal p, Group group,
+  public TransactionResult changeGroupSlot(User p, Group group,
       Assignment assign, HttpServletRequest req, boolean canAssign,
       boolean canReplace) {
     TransactionResult result = new TransactionResult();
@@ -1700,7 +1699,7 @@ public class TransactionHandler {
 
   // This is used whenever a student or staff member adds or removes a group
   // from a slot
-  public TransactionResult changeGroupSlotByID(Principal p, Group group,
+  public TransactionResult changeGroupSlotByID(User p, Group group,
       Assignment assign, TimeSlot slot, boolean canAssign, boolean canReplace) {
     TransactionResult result = new TransactionResult();
     try {
@@ -1783,7 +1782,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult commitFinalGradesFile(Principal p, Course course, List table) {
+  public TransactionResult commitFinalGradesFile(User p, Course course, List table) {
     TransactionResult result = new TransactionResult();
     try {
       if (courseIsFrozen(courseID)) {
@@ -1805,7 +1804,7 @@ public class TransactionHandler {
    * @param table
    * @return TransactionResult
    */
-  public TransactionResult commitGradesFile(Principal p, Assignment assign, List table) {
+  public TransactionResult commitGradesFile(User p, Assignment assign, List table) {
     TransactionResult result = new TransactionResult();
     boolean success = false;
     try {
@@ -1899,7 +1898,7 @@ public class TransactionHandler {
    * @throws FinderException,
    *           RemoteException
    */
-  public TransactionResult commitStudentInfo(Principal p, List table,
+  public TransactionResult commitStudentInfo(User p, List table,
       Course course, boolean isClasslist) throws FinderException,
       RemoteException {
     TransactionResult result = new TransactionResult();
@@ -1952,7 +1951,7 @@ public class TransactionHandler {
    * @param assignmentID
    * @return
    */
-  public TransactionResult createGroup(Principal p, List netids,
+  public TransactionResult createGroup(User p, List netids,
       Assignment assign) {
     TransactionResult result = new TransactionResult();
     try {
@@ -2023,7 +2022,7 @@ public class TransactionHandler {
    *          A List of Longs holding the group IDs to consider
    * @return TransactionResult
    */
-  public TransactionResult groupSelectedStudents(Principal p, Assignment assign,
+  public TransactionResult groupSelectedStudents(User p, Assignment assign,
       List groups) {
     TransactionResult result = new TransactionResult();
     try {
@@ -2093,7 +2092,7 @@ public class TransactionHandler {
    *          A List of Longs holding the group IDs to consider
    * @return TransactionResult
    */
-  public TransactionResult ungroupSelectedStudents(Principal p, Assignment assign, List groups) {
+  public TransactionResult ungroupSelectedStudents(User p, Assignment assign, List groups) {
     TransactionResult result = new TransactionResult();
     try {
       if (groupIDs.isEmpty()) {
@@ -2155,7 +2154,7 @@ public class TransactionHandler {
    *          The selected name string (will be checked for legality)
    * @return TransactionResult
    */
-  public TransactionResult createSemester(Principal p, String semesterName) {
+  public TransactionResult createSemester(User p, String semesterName) {
     TransactionResult result = new TransactionResult();
     boolean success = true;
     if (!Util.isLegalSemesterName(semesterName)) {
@@ -2181,7 +2180,7 @@ public class TransactionHandler {
    *          The GroupID of the group
    * @return TransactionResult
    */
-  public TransactionResult declineInvitation(Principal p, Group group) {
+  public TransactionResult declineInvitation(User p, Group group) {
     TransactionResult result = new TransactionResult();
     try {
       String netid = p.getNetID();
@@ -2237,7 +2236,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult disbandGroup(Principal p, Group group) {
+  public TransactionResult disbandGroup(User p, Group group) {
     TransactionResult result = new TransactionResult();
     try {
       GroupLocal group = database.groupHome().findByGroupID(groupID);
@@ -2261,7 +2260,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult dropStudent(Principal p, Course course,
+  public TransactionResult dropStudent(User p, Course course,
       Collection netIDs) {
     TransactionResult result = new TransactionResult();
     try {
@@ -2300,7 +2299,7 @@ public class TransactionHandler {
    *          Person who posted the original announcement
    * @return TransactionResult
    */
-  public TransactionResult editAnnouncement(Principal p, Announcement announce,
+  public TransactionResult editAnnouncement(User p, Announcement announce,
       String newText, boolean remove) {
     TransactionResult result = new TransactionResult();
     try {
@@ -2334,7 +2333,7 @@ public class TransactionHandler {
    * @param hidden
    * @return TransactionResult
    */
-  public TransactionResult editSemester(Principal p, Semester semester, boolean hidden) {
+  public TransactionResult editSemester(User p, Semester semester, boolean hidden) {
     TransactionResult result = new TransactionResult();
     boolean success = true;
     try {
@@ -2586,7 +2585,7 @@ public class TransactionHandler {
    * Create an invitation for a user to join a group.
    * 
    * @param p
-   *          The Principal of the user inviting another user to join their
+   *          The User of the user inviting another user to join their
    *          group
    * @param invited
    *          The NetID of the user being invited to join
@@ -2594,7 +2593,7 @@ public class TransactionHandler {
    *          The GroupID of the group
    * @return An error string that's empty ("", NOT null) if no error
    */
-  public TransactionResult inviteUser(Principal p, User invited, Group group) {
+  public TransactionResult inviteUser(User p, User invited, Group group) {
     TransactionResult result = new TransactionResult();
     try {
       String inviter = p.getNetID();
@@ -2714,7 +2713,7 @@ public class TransactionHandler {
    *          The GroupID of the group
    * @return An error string that's empty ("", NOT null) if no error
    */
-  public TransactionResult leaveGroup(Principal p, Group group) {
+  public TransactionResult leaveGroup(User p, Group group) {
     TransactionResult result = new TransactionResult();
     try {
       String netid = p.getNetID();
@@ -3384,7 +3383,7 @@ public class TransactionHandler {
    *          User who posted this announcement
    * @return TransactionResult
    */
-  public TransactionResult postAnnouncement(Principal p, Course course,
+  public TransactionResult postAnnouncement(User p, Course course,
       String announce) {
     TransactionResult result = new TransactionResult();
     try {
@@ -3400,7 +3399,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult reenrollStudent(Principal p, Course course,
+  public TransactionResult reenrollStudent(User p, Course course,
       User user, boolean emailOn) {
     TransactionResult result = new TransactionResult();
     try {
@@ -3433,7 +3432,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult removeAssignment(Principal p, Assignment assign) {
+  public TransactionResult removeAssignment(User p, Assignment assign) {
     TransactionResult result = new TransactionResult();
     try {
       AssignmentLocal assignment =
@@ -3453,7 +3452,7 @@ public class TransactionHandler {
   /**
    * @return 0 on error, the course ID of the category on success
    */
-  private long removeCategory(Principal p, Category category) {
+  private long removeCategory(User p, Category category) {
     Course course = 0;
     try {
       CategoryLocal cat =
@@ -3479,7 +3478,7 @@ public class TransactionHandler {
    * 
    * @return TransactionResult
    */
-  public TransactionResult removeCMSAdmin(Principal p, User toRemove) {
+  public TransactionResult removeCMSAdmin(User p, User toRemove) {
     TransactionResult result = new TransactionResult();
     boolean success = false;
     try {
@@ -3498,7 +3497,7 @@ public class TransactionHandler {
   /**
    * @return TransactionResult
    */
-  public TransactionResult removeCtgRow(Principal p, CategoryRow row) {
+  public TransactionResult removeCtgRow(User p, CategoryRow row) {
     TransactionResult result = new TransactionResult();
     try {
       CategoryRowLocal row =
@@ -3524,7 +3523,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult removeExtension(Principal p, Course course, Group group) {
+  public TransactionResult removeExtension(User p, Course course, Group group) {
     TransactionResult result = new TransactionResult();
     try {
       GroupLocal group = database.groupHome().findByGroupID(groupID);
@@ -3550,7 +3549,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult restoreAnnouncement(Principal p, Announcement announcement) {
+  public TransactionResult restoreAnnouncement(User p, Announcement announcement) {
     TransactionResult result = new TransactionResult();
     try {
       AnnouncementLocal announce = null;
@@ -3575,7 +3574,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult restoreAssignment(Principal p, Assignment assign) {
+  public TransactionResult restoreAssignment(User p, Assignment assign) {
     TransactionResult result = new TransactionResult();
     try {
       AssignmentLocal assignment =
@@ -3592,7 +3591,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult sendEmail(Principal p, Course course, HttpServletRequest request) {
+  public TransactionResult sendEmail(User p, Course course, HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
       Emailer email = new Emailer();
@@ -3659,7 +3658,7 @@ public class TransactionHandler {
    *          The HTTP request from which to take parameters and values
    * @return TransactionResult
    */
-  public TransactionResult setAssignmentProps(Principal p, Course course,
+  public TransactionResult setAssignmentProps(User p, Course course,
       Assignment assign, HttpServletRequest request) {
     Profiler.enterMethod("TransactionHandler.setAssignmentProps",
         "AssignmentID: " + assignID);
@@ -4466,7 +4465,7 @@ public class TransactionHandler {
    * @param request
    * @return TransactionResult
    */
-  public TransactionResult createNEditCategory(Principal p, Category category,
+  public TransactionResult createNEditCategory(User p, Category category,
       Course course, HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     String ctgName = "";
@@ -4615,7 +4614,7 @@ public class TransactionHandler {
    *          set here.
    * @return TransactionResult
    */
-  public TransactionResult setCourseProps(Principal p, Course course, Map map) {
+  public TransactionResult setCourseProps(User p, Course course, Map map) {
     TransactionResult result = new TransactionResult();
     try {
       boolean isFreeze =
@@ -4714,7 +4713,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult editCourseDescription(Principal p, Course course,
+  public TransactionResult editCourseDescription(User p, Course course,
       String newDescription) {
     TransactionResult result = new TransactionResult();
     try {
@@ -4737,7 +4736,7 @@ public class TransactionHandler {
    * 
    * @return TransactionResult
    */
-  public TransactionResult setCurrentSemester(Principal p, Semester sem) {
+  public TransactionResult setCurrentSemester(User p, Semester sem) {
     TransactionResult result = new TransactionResult();
     boolean success = true;
     try {
@@ -4750,7 +4749,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult setExtension(Principal p, Group group, HttpServletRequest request) {
+  public TransactionResult setExtension(User p, Group group, HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
       GroupLocal group = database.groupHome().findByGroupID(groupID);
@@ -4790,7 +4789,7 @@ public class TransactionHandler {
    * 
    * @return TransactionResult
    */
-  public TransactionResult deleteTimeSlots(Principal p, Assignment assign,
+  public TransactionResult deleteTimeSlots(User p, Assignment assign,
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
@@ -4846,7 +4845,7 @@ public class TransactionHandler {
    * 
    * @return TransactionResult
    */
-  public TransactionResult createTimeSlots(Principal p, Assignment assign,
+  public TransactionResult createTimeSlots(User p, Assignment assign,
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
@@ -4928,7 +4927,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult setFinalGrades(Principal p, Course course,
+  public TransactionResult setFinalGrades(User p, Course course,
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     boolean success = true;
@@ -4966,7 +4965,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult setStaffPrefs(Principal p, Course course,
+  public TransactionResult setStaffPrefs(User p, Course course,
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
@@ -5006,7 +5005,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult setStudentPrefs(Principal p, Course course,
+  public TransactionResult setStudentPrefs(User p, Course course,
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
@@ -5024,7 +5023,7 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult setAllStudentPrefs(Principal p,
+  public TransactionResult setAllStudentPrefs(User p,
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
@@ -5070,7 +5069,7 @@ public class TransactionHandler {
    * @param request
    * @return TransactionResult
    */
-  public TransactionResult submitFiles(Principal p, HttpServletRequest request) {
+  public TransactionResult submitFiles(User p, HttpServletRequest request) {
     Profiler.enterMethod("TransactionHandler.submitFiles", "");
     TransactionResult result = new TransactionResult();
     try {
@@ -5136,7 +5135,7 @@ public class TransactionHandler {
    * @param request
    * @return TransactionResult
    */
-  public TransactionResult submitSurvey(Principal p, HttpServletRequest request) {
+  public TransactionResult submitSurvey(User p, HttpServletRequest request) {
     Profiler.enterMethod("TransactionHandler.submitFiles", "");
     TransactionResult result = new TransactionResult();
     List info = null;
@@ -5220,7 +5219,7 @@ public class TransactionHandler {
    * @param out
    * @return TransactionResult
    */
-  public TransactionResult exportGradingRubric(Principal p, Course course,
+  public TransactionResult exportGradingRubric(User p, Course course,
       OutputStream out) {
     TransactionResult result = new TransactionResult();
     try {
@@ -5271,7 +5270,7 @@ public class TransactionHandler {
    * @param s
    * @return TransactionResult
    */
-  public TransactionResult exportSingleAssignmentGradesTable(Principal p,
+  public TransactionResult exportSingleAssignmentGradesTable(User p,
       Assignment assign, OutputStream s) {
     TransactionResult result = new TransactionResult();
     try {
@@ -5439,7 +5438,7 @@ public class TransactionHandler {
    * @param s
    * @return TransactionResult
    */
-  public TransactionResult exportGradesTable(Principal p, Course course,
+  public TransactionResult exportGradesTable(User p, Course course,
       OutputStream s) {
     TransactionResult result = new TransactionResult();
     try {

@@ -59,7 +59,7 @@ public class StudentXMLBuilder {
    * @return An element holding a list of assignments
    * @throws FinderException
    */
-  public Element buildDueAsgnListSubtree(Principal p, Document xml, Semester semester) {
+  public Element buildDueAsgnListSubtree(User p, Document xml, Semester semester) {
     Element xAssignments = xml.createElement(XMLBuilder.TAG_ALLDUEASSIGNMENTS);
     Iterator i = null; // TODO: findByDateNetID or findByDateNetIDSemester
 
