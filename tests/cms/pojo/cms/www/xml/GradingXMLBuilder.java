@@ -5,9 +5,6 @@ package cms.www.xml;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -18,7 +15,6 @@ import cms.www.util.DateTimeUtil;
 import cms.www.util.Profiler;
 import cms.www.util.StringUtil;
 
-import cms.auth.Principal;
 import cms.model.*;
 
 /**
@@ -100,7 +96,6 @@ public class GradingXMLBuilder {
   public void addGradeLogs(Document xml, Course course, Collection groups) {
     Profiler.enterMethod("GradingXMLBuilder.addGradeLogs", "");
     Iterator details = xmlBuilder.database.findGradeLogDetails(course, groups).iterator();
-    Element root = (Element) xml.getFirstChild();
     while (details.hasNext()) {
       LogDetail d = (LogDetail) details.next();
       Group group = d.getAssignment().findGroup(d.getUser());
@@ -250,7 +245,6 @@ public class GradingXMLBuilder {
     Profiler.enterMethod("GradingXMLBuilder.addAnswers", "");
     Iterator answerSets = assignment.getAnswerSets().iterator();
     Element root = (Element) xml.getFirstChild();
-    boolean hasSubProbs = !assignment.getSubProblems().isEmpty();
     while (answerSets.hasNext()) {
       AnswerSet answerSet = (AnswerSet) answerSets.next();
       Iterator answers = answerSet.getAnswers().iterator();

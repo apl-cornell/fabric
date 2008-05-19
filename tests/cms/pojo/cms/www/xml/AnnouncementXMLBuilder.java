@@ -21,6 +21,9 @@ import cms.model.*;
  */
 public class AnnouncementXMLBuilder {
 
+  public AnnouncementXMLBuilder(XMLBuilder builder) {
+  }
+
   /**
    * Generate an XML subtree with a list of announcements for the given Course
    * 

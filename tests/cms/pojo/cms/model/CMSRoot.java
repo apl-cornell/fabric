@@ -3,6 +3,7 @@ package cms.model;
 import java.util.Collections;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 import cms.auth.Principal;
@@ -112,6 +113,59 @@ public class CMSRoot {
     return null;
   }
   public Collection/*Assignment*/ findAssignmentsByCourseAdmin(Semester curSemester, Principal p) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Announcement*/ findAnnouncementsByUserDateSemester(Principal p, Date weekago, Semester sem) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Announcement*/ findAnnouncementsByUserDate(Principal p, Date weekago) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Semester*/ getAllSemesters() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*User*/ findAllAdmins() {
+    // TODO: check on return type; might not be user
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*User*/ findActiveStudentsWithoutCUID() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Course*/ findCCAccessCourses() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Course*/ findGuestAccessCourses() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Assignment*/ findOpenAssignmentsByDeadline(Date checkDeadline) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Log*/ findLogs(LogSearchParams params) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*SiteNotice*/ findCurrentSiteNoticeShowing() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*SiteNotice*/ findAllLivingSiteNotices() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*SiteNotice*/ findDeletedSiteNotices() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*User*/ findMissingNameUsers() {
     // TODO Auto-generated method stub
     return null;
   }

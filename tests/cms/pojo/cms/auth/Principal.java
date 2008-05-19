@@ -66,4 +66,14 @@ public class Principal {
     // TODO Auto-generated method stub
     return false;
   }
+
+  public boolean isAuthenticated() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  
+  public boolean isGuest() {
+    // TODO Auto-generated method stub
+    return false;
+  }
 }

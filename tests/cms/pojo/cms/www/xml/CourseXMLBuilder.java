@@ -42,8 +42,7 @@ public class CourseXMLBuilder {
    * @throws FinderException
    * @deprecated This method is very slow and should usually be avoided
    */
-  public Element buildFullSubtree(User user, Document xml,
-      Course course) {
+  public Element buildFullSubtree(User user, Document xml, Course course) {
     Profiler.enterMethod("CourseXMLBuilder.buildFullSubtree", "Course: " + course);
     boolean isStaff = user.isStaffInCourseByCourse(course);
     Element xCourse = buildGeneralSubtree(user, xml, course);

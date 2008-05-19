@@ -9,8 +9,11 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -23,7 +26,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
-// import org.apache.crimson.jaxp.DocumentBuilderFactoryImpl;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -34,6 +36,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import cms.www.AccessController;
+import cms.www.TransactionError;
+import cms.www.TransactionResult;
 import cms.www.util.DateTimeUtil;
 import cms.www.util.Emailer;
 import cms.www.util.Profiler;
@@ -42,7 +46,6 @@ import cms.www.util.StringUtil;
 // import com.Ostermiller.util.CSVPrinter;
 // import com.sun.rsasign.u;
 
-import cms.auth.Principal;
 import cms.model.*;
 
 /**
@@ -50,6 +53,7 @@ import cms.model.*;
  * 
  * @author rd94
  */
+@SuppressWarnings("unchecked")
 public class XMLBuilder {
   // XML Attributes
   public final static String
@@ -483,33 +487,38 @@ public class XMLBuilder {
   protected CMSRoot         database;
   protected DocumentBuilder db;
 
-  CourseXMLBuilder       courseXMLBuilder;
-  AssignmentXMLBuilder   assignmentXMLBuilder;
-  SystemXMLBuilder       systemXMLBuilder;
-  StudentXMLBuilder      studentXMLBuilder;
-  LogXMLBuilder          logXMLBuilder;
-  ViewStudentsXMLBuilder viewStudentsXMLBuilder;
-  ScheduleXMLBuilder     scheduleXMLBuilder;
-  GradingXMLBuilder      gradingXMLBuilder;
-  GroupXMLBuilder        groupXMLBuilder;
-  AnnouncementXMLBuilder announcementXMLBuilder;
-  CategoryXMLBuilder     categoryXMLBuilder;
+  CourseXMLBuilder           courseXMLBuilder;
+  AssignmentXMLBuilder       assignmentXMLBuilder;
+  SystemXMLBuilder           systemXMLBuilder;
+  StudentXMLBuilder          studentXMLBuilder;
+  LogXMLBuilder              logXMLBuilder;
+  ViewStudentsXMLBuilder     viewStudentsXMLBuilder;
+  ScheduleXMLBuilder         scheduleXMLBuilder;
+  GradingXMLBuilder          gradingXMLBuilder;
+  GroupXMLBuilder            groupXMLBuilder;
+  AnnouncementXMLBuilder     announcementXMLBuilder;
+  CategoryXMLBuilder         categoryXMLBuilder;
   AssignmentGroupsXMLBuilder assignmentGroupsXMLBuilder;
+  StaffXMLBuilder            staffXMLBuilder;
+  StudentGradesXMLBuilder    studentGradesXMLBuilder;
 
   public XMLBuilder(CMSRoot database) throws ParserConfigurationException {
-    this.database               = database;
-    this.courseXMLBuilder       = new CourseXMLBuilder       (this);
-    this.assignmentXMLBuilder   = new AssignmentXMLBuilder   (this);
-    this.systemXMLBuilder       = new SystemXMLBuilder       (this);
-    this.studentXMLBuilder      = new StudentXMLBuilder      (this);
-    this.logXMLBuilder          = new LogXMLBuilder          (this);
-    this.viewStudentsXMLBuilder = new ViewStudentsXMLBuilder (this);
-    this.scheduleXMLBuilder     = new ScheduleXMLBuilder     (this);
-    this.gradingXMLBuilder      = new GradingXMLBuilder      (this);
-    this.groupXMLBuilder        = new GroupXMLBuilder        (this);
-    this.announcementXMLBuilder = new AnnouncementXMLBuilder (this);
-    this.categoryXMLBuilder     = new CategoryXMLBuilder     (this);
+    this.database = database;
+
+    this.courseXMLBuilder           = new CourseXMLBuilder          (this);
+    this.assignmentXMLBuilder       = new AssignmentXMLBuilder      (this);
+    this.systemXMLBuilder           = new SystemXMLBuilder          (this);
+    this.studentXMLBuilder          = new StudentXMLBuilder         (this);
+    this.logXMLBuilder              = new LogXMLBuilder             (this);
+    this.viewStudentsXMLBuilder     = new ViewStudentsXMLBuilder    (this);
+    this.scheduleXMLBuilder         = new ScheduleXMLBuilder        (this);
+    this.gradingXMLBuilder          = new GradingXMLBuilder         (this);
+    this.groupXMLBuilder            = new GroupXMLBuilder           (this);
+    this.announcementXMLBuilder     = new AnnouncementXMLBuilder    (this);
+    this.categoryXMLBuilder         = new CategoryXMLBuilder        (this);
     this.assignmentGroupsXMLBuilder = new AssignmentGroupsXMLBuilder(this);
+    this.staffXMLBuilder            = new StaffXMLBuilder           (this);
+    this.studentGradesXMLBuilder    = new StudentGradesXMLBuilder   (this);
 
     db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
   }
@@ -538,28 +547,27 @@ public class XMLBuilder {
    * Staff can upload csv files for a course or download a template from the CSV
    * upload page for that course
    * 
-   * @param p
+   * @param user
    * @param courseID
    * @return
    * @throws FinderException
    */
-  public Document buildCSVUploadPage(Principal p, Course course) {
+  public Document buildCSVUploadPage(User user, Course course) {
     // all we really need to know is what course we're in
-    return buildStaffNavbar(p, course);
+    return buildStaffNavbar(user, course);
   }
 
-  public Document buildEmailPage(Principal p, Course course) {
-    return buildEmailPage(p, course, null);
+  public Document buildEmailPage(User user, Course course) {
+    return buildEmailPage(user, course, null);
   }
 
-  public Document buildEmailPage(Principal p, Course course,
+  public Document buildEmailPage(User user, Course course,
       Collection/*Group*/ groups) {
     Profiler.enterMethod("XMLBuilder.buildEmailPage", "CourseID: " + course);
-    Document xml = buildStaffNavbar(p, course);
+    Document xml = buildStaffNavbar(user, course);
     Element root = (Element) xml.getFirstChild();
     Element studentsNode = xml.createElement(TAG_STUDENTS);
     Iterator emails = course.getEmails().iterator();
-    Map staffNames = database.getStaffNameMap(course);
     Collection selectedIDs = new Vector();
     if (groups != null) {
       Iterator groupsIter = groups.iterator();
@@ -574,20 +582,27 @@ public class XMLBuilder {
       }
     }
 
-    boolean seenFirst = false;
     while (emails.hasNext()) {
       Email email = (Email) emails.next();
       Element xEmail = null;
       xEmail = xml.createElement(TAG_EMAIL);
-      String sender = (String) staffNames.get(email.getSender());
-      sender +=
-          (sender.length() > 0 ? " " : "") + "(" + email.getSender() + ")";
-      xEmail.setAttribute(A_SENDER, sender);
+      
+      StringBuilder sender = new StringBuilder(email.getSender().getFirstName());
+      if (sender.length() > 0)
+        sender.append(" ");
+      sender.append(email.getSender().getLastName());
+      if (sender.length() > 0)
+        sender.append(" ");
+      sender.append(email.getSender().getNetID());
+      
+      xEmail.setAttribute(A_SENDER,  sender.toString());
       xEmail.setAttribute(A_SUBJECT, email.getSubject());
       xEmail.setAttribute(A_MESSAGE, email.getMessage());
-      xEmail.setAttribute(A_DATE, DateTimeUtil.formatDate(email.getDateSent()));
-      xEmail.setAttribute(A_RECIPIENT, String.valueOf(email.getRecipient()));
-      xEmail.setAttribute(A_ID, String.valueOf(email.getEmailID()));
+      xEmail.setAttribute(A_DATE,
+                          DateTimeUtil.formatDate(email.getDateSent()));
+      xEmail.setAttribute(A_RECIPIENT,
+                          String.valueOf(email.getRecipient()));
+      xEmail.setAttribute(A_ID, email.toString());
       root.appendChild(xEmail);
     }
     if (selectedIDs.size() > 0) {
@@ -595,7 +610,7 @@ public class XMLBuilder {
           studentsNode, selectedIDs);
       root.appendChild(studentsNode);
     }
-    Profiler.exitMethod("XMLBuilder.buildEmailPage", "CourseID: " + courseID);
+    Profiler.exitMethod("XMLBuilder.buildEmailPage", "CourseID: " + course.toString());
     return xml;
   }
 
@@ -650,21 +665,29 @@ public class XMLBuilder {
     return body;
   }
 
-  public Document buildFinalGradesPage(Principal p, Course course) {
+  public Document buildFinalGradesPage(User requester, Course course) {
     Profiler.enterMethod("XMLBuilder.buildFinalGradesPage", "CourseID: "
         + course);
-    Document xml = buildStaffNavbar(p, course);
+    Document xml = buildStaffNavbar(requester, course);
     Element root = (Element) xml.getFirstChild();
-    if (p.isAdminPrivByCourse(course))
+    if (requester.isAdminPrivByCourse(course))
       root.setAttribute(A_ISADMIN, "true");
-    Iterator users = database.userHome().findByCourseID(course).iterator();
-    Iterator students =
-        database.studentHome().findByCourseIDSortByLastName(course)
-            .iterator();
-    while (users.hasNext()) {
-      User user = (User) users.next();
+    List students = new ArrayList(course.getStudents());
+    // sort by last name
+    Collections.sort(students, new Comparator() {
+      public int compare(Object t1, Object t2) {
+        return ((Student) t1).getUser().getLastName().compareTo(
+               ((Student) t2).getUser().getLastName());
+      }
+    });
+    
+    Iterator studentsIter = students.iterator();
+    while (studentsIter.hasNext()) {
+      Student student = (Student) studentsIter.next();
+      User    user    = student.getUser();
+      
       Element xUser =
-          xml.createElementNS(TAG_STUDENT + user.getNetID(), TAG_STUDENT);
+        xml.createElementNS(TAG_STUDENT + user.getNetID(), TAG_STUDENT);
       xUser.setAttribute(A_NETID, user.getNetID());
       xUser.setAttribute(A_CUID, user.getCUID() == null ? "" : user.getCUID()
           .toString());
@@ -672,12 +695,6 @@ public class XMLBuilder {
       xUser.setAttribute(A_FIRSTNAME, user.getFirstName());
       xUser.setAttribute(A_LASTNAME, user.getLastName());
       root.appendChild(xUser);
-    }
-    while (students.hasNext()) {
-      Student student = (Student) students.next();
-      Element xUser =
-          (Element) root.getElementsByTagNameNS(
-              TAG_STUDENT + student.getUser(), TAG_STUDENT).item(0);
       if (xUser != null) {
         xUser.setAttribute(A_LECTURE, student.getLecture() == null ? ""
             : student.getLecture().toString());
@@ -702,59 +719,54 @@ public class XMLBuilder {
    * Creates the xml tree for the entire cms admin page group: includes all the
    * info an admin might want for all admin functions.
    * 
-   * @param p
-   *          The Principal object representing the current user
+   * @param user
+   *          The User object representing the current user
    */
-  public Document buildCMSAdminPage(Principal p) {
+  public Document buildCMSAdminPage(User user) {
     Profiler.enterMethod("XMLBuilder.buildCMSAdminPage", "");
     Document xml = db.newDocument();
     Element root = xml.createElement(TAG_ROOT);
     xml.appendChild(root);
     // systemwide usage stats for current semester
-    root.appendChild(systemXMLBuilder.buildSystemSubtree(xml));
+    root.appendChild(systemXMLBuilder.buildSystemDataSubtree(xml));
     Iterator i;
     // add list of current cms admins
     Element adminList = xml.createElement(TAG_CMSADMINLIST);
-    Collection admins = database.cmsAdminHome().findAllAdmins();
+    Collection admins = database.findAllAdmins();
     i = admins.iterator();
     while (i.hasNext()) {
       Element adminNode = xml.createElement(TAG_CMSADMIN);
-      User user = (User) i.next();
-      adminNode.setAttribute(A_NETID, user.getNetID());
-      adminNode.setAttribute(A_NAME, user.getFirstName() + " "
-          + user.getLastName());
+      User admin = (User) i.next();
+      adminNode.setAttribute(A_NETID, admin.getNetID());
+      adminNode.setAttribute(A_NAME,  admin.getFirstName() + " " + admin.getLastName());
       adminList.appendChild(adminNode);
     }
     root.appendChild(adminList);
     // add current semester and list of current courses and their
     // enrollment statistics
     Element semesterList = xml.createElement(TAG_SEMESTERS);
-    Semester curSemester = null;
-    curSemester = database.semesterHome().findCurrent();
-    Collection sems = database.semesterHome().findAllSemesters();
+    Semester curSemester = database.getCurrentSemester();
+    Collection sems      = database.getAllSemesters();
     i = sems.iterator();
     while (i.hasNext()) {
       Semester sem = (Semester) i.next();
       Element semester;
-      if (sem.equals(curSemester))
+      if (sem == curSemester)
         semester = xml.createElement(TAG_CURSEMESTER);
       else semester = xml.createElement(TAG_SEMESTER);
-      semester.setAttribute(A_ID, sem.getSemesterID().toString());
-      semester.setAttribute(A_NAME, sem.getName());
+      semester.setAttribute(A_ID,     sem.toString());
+      semester.setAttribute(A_NAME,   sem.getName());
       semester.setAttribute(A_HIDDEN, Boolean.toString(sem.getHidden()));
       semesterList.appendChild(semester);
     }
     root.appendChild(semesterList);
     // list current-semester courses
     Element courseList = xml.createElement(TAG_ALLCOURSES);
-    Collection courses =
-        database.courseHome().findBySemesterID(curSemester.getSemesterID());
-    i = courses.iterator();
+    i = curSemester.getCourses().iterator();
     while (i.hasNext()) {
       Course c = (Course) i.next();
-      Element xCourse = courseXMLBuilder.buildShortSubtree(p, xml, c);
-      xCourse.setAttribute(A_ENROLLMENT, Integer.toString(c.getActiveStudents()
-          .size()));
+      Element xCourse = courseXMLBuilder.buildShortSubtree(user, xml, c);
+      xCourse.setAttribute(A_ENROLLMENT, Integer.toString(c.findActiveStudents().size()));
       courseList.appendChild(xCourse);
     }
     root.appendChild(courseList);
@@ -763,10 +775,8 @@ public class XMLBuilder {
     Element assignmentList = xml.createElement(TAG_OPENASSIGNMENTS);
     // look for all assignments due within an arbitrary short period
     final long MILLISECS_PER_HOUR = 3600000;
-    Timestamp checkDeadline =
-        new Timestamp(new Date().getTime() + 48 * MILLISECS_PER_HOUR);
-    Collection openAssignments =
-        database.assignmentHome().findOpenAsgnsByDeadline(checkDeadline);
+    Date checkDeadline = new Date(System.currentTimeMillis() + 48 * MILLISECS_PER_HOUR);
+    Collection openAssignments = database.findOpenAssignmentsByDeadline(checkDeadline);
     i = openAssignments.iterator();
     while (i.hasNext()) // assume the Collection returned assignments in
     // order by deadline
@@ -776,24 +786,20 @@ public class XMLBuilder {
           asgn));
     }
     // Append searchable courses/assignments
-    appendCMSAdminLogInfo(p, xml);
+    appendCMSAdminLogInfo(user, xml);
     root.appendChild(assignmentList);
     Iterator emptyNames = null;
-    emptyNames = database.userHome().findMissingNames().iterator();
-    if (emptyNames != null) {
-      while (emptyNames.hasNext()) {
-        User noname = (User) emptyNames.next();
-        Element xNoName = xml.createElement(TAG_NAMELESSUSER);
-        xNoName.setAttribute(A_NETID, noname.getNetID());
-        xNoName.setAttribute(A_FIRSTNAME, noname.getFirstName());
-        xNoName.setAttribute(A_LASTNAME, noname.getLastName());
-        root.appendChild(xNoName);
-      }
+    emptyNames = database.findMissingNameUsers().iterator();
+    while (emptyNames.hasNext()) {
+      User noname = (User) emptyNames.next();
+      Element xNoName = xml.createElement(TAG_NAMELESSUSER);
+      xNoName.setAttribute(A_NETID, noname.getNetID());
+      xNoName.setAttribute(A_FIRSTNAME, noname.getFirstName());
+      xNoName.setAttribute(A_LASTNAME, noname.getLastName());
+      root.appendChild(xNoName);
     }
-    Iterator emptyCUIDs =
-        database.userHome().findActiveStudentsWithoutCUID().iterator();
-    root.setAttribute(XMLBuilder.A_CUIDCOUNT, String.valueOf(database
-        .getCUIDCount()));
+    Iterator emptyCUIDs = database.findActiveStudentsWithoutCUID().iterator();
+    root.setAttribute(XMLBuilder.A_CUIDCOUNT, String.valueOf(database.getCUIDCount()));
     if (emptyCUIDs != null) {
       while (emptyCUIDs.hasNext()) {
         User nocuid = (User) emptyCUIDs.next();
@@ -822,8 +828,7 @@ public class XMLBuilder {
    */
   public Element getViewableNoticeElement(Document xml) {
     Element curNoticeList = xml.createElement(TAG_CURSITENOTICES);
-    Iterator curNoticeIter =
-        database.siteNoticeHome().findCurrentShowing().iterator();
+    Iterator curNoticeIter = database.findCurrentSiteNoticeShowing().iterator();
 
     translateChildNotices(xml, curNoticeList, curNoticeIter);
     return curNoticeList;
@@ -840,8 +845,7 @@ public class XMLBuilder {
    */
   public Element getLivingNoticeElement(Document xml) {
     Element curNoticeList = xml.createElement(TAG_CURSITENOTICES);
-    Iterator curNoticeIter =
-        database.siteNoticeHome().findAllLiving().iterator();
+    Iterator curNoticeIter = database.findAllLivingSiteNotices().iterator();
 
     translateChildNotices(xml, curNoticeList, curNoticeIter);
     return curNoticeList;
@@ -857,7 +861,7 @@ public class XMLBuilder {
    */
   public Element getDeletedNoticeElement(Document xml) {
     Element curNoticeList = xml.createElement(TAG_DELSITENOTICES);
-    Iterator curNoticeIter = database.siteNoticeHome().findDeleted().iterator();
+    Iterator curNoticeIter = database.findDeletedSiteNotices().iterator();
 
     translateChildNotices(xml, curNoticeList, curNoticeIter);
     return curNoticeList;
@@ -869,24 +873,18 @@ public class XMLBuilder {
       SiteNotice sn = (SiteNotice) curNoticeIter.next();
       Element notice = xml.createElement(TAG_SITENOTICE);
 
-      notice.setAttribute(A_ID, String.valueOf(sn.getNoticeID()));
-      notice.setAttribute(A_POSTER, sn.getAuthor());
-      notice.setAttribute(A_TEXT, sn.getText());
-      Timestamp postDate = sn.getPostedDate();
-      notice.setAttribute(A_DATE, DateTimeUtil.DATE.format(postDate));
+      notice.setAttribute(A_ID,     sn.toString());
+      notice.setAttribute(A_POSTER, sn.getAuthor().getNetID());
+      notice.setAttribute(A_TEXT,   sn.getText());
+      Date postDate = sn.getPostedDate();
+      notice.setAttribute(A_DATE,   DateTimeUtil.DATE.format(postDate));
 
-      Timestamp expDate = sn.getExpireDate();
-      java.util.Date now = new java.util.Date();
+      Date expDate = sn.getExpireDate();
+      Date now     = new Date();
 
-      notice.setAttribute(A_DUEDATE, expDate == null ? "" : DateTimeUtil.DATE
-          .format(expDate));
-      notice.setAttribute(A_DUETIME, expDate == null ? "" : DateTimeUtil.TIME
-          .format(expDate));
-      notice.setAttribute(A_DUEAMPM, expDate == null ? "" : DateTimeUtil.AMPM
-          .format(expDate));
-
-      // notice.setAttribute(A_EXPIRED, expDate != null && expDate.compareTo(new
-      // java.util.Date()) < 0 ? "true" : "false");
+      notice.setAttribute(A_DUEDATE, expDate == null ? "" : DateTimeUtil.DATE.format(expDate));
+      notice.setAttribute(A_DUETIME, expDate == null ? "" : DateTimeUtil.TIME.format(expDate));
+      notice.setAttribute(A_DUEAMPM, expDate == null ? "" : DateTimeUtil.AMPM.format(expDate));
       notice.setAttribute(A_EXPIRED, expDate != null
           && now.compareTo(expDate) > 0 ? "true" : "false");
 
@@ -895,48 +893,46 @@ public class XMLBuilder {
     }
   }
 
-  public void appendCMSAdminLogInfo(Principal p, Document xml) {
+  public void appendCMSAdminLogInfo(User user, Document xml) {
     Element root = (Element) xml.getElementsByTagName(TAG_ROOT).item(0);
-    logXMLBuilder.appendLogSearchCourses(p, xml, root);
-    logXMLBuilder.appendLogSearchAssigns(p, xml, root);
+    logXMLBuilder.appendLogSearchCourses(user, xml, root);
+    logXMLBuilder.appendLogSearchAssigns(user, xml, root);
     logXMLBuilder.appendLogSearchNamesTypes(xml, root, true);
   }
 
   /**
    * Creates the xml tree for the cms admin course-edit page
    * 
-   * @param p
-   *          The Principal object representing the current user
+   * @param user
+   *          The User object representing the current user
    * @return A new XML document
    * @throws RemoteException
    */
-  public Document buildCMSAdminCoursePropsPage(Principal p, Course courseID) {
-    Document xml = buildPageHeader(p);
+  public Document buildCMSAdminCoursePropsPage(User user, Course course) {
+    Document xml = buildPageHeader(user);
     Element root = (Element) xml.getElementsByTagName(TAG_ROOT).item(0);
-    Course course =
-        database.courseHome().findByPrimaryKey(new Course(courseID));
-    Element xCourse = CourseXMLBuilder.buildGeneralSubtree(p, xml, course);
-    xCourse.appendChild(courseXMLBuilder.buildStaffListSubtree(p, xml, course));
+    Element xCourse = courseXMLBuilder.buildGeneralSubtree(user, xml, course);
+    xCourse.appendChild(courseXMLBuilder.buildStaffListSubtree(user, xml, course));
     root.appendChild(xCourse);
     return xml;
   }
 
-  public Document buildLogSearchPage(Principal p, HttpServletRequest req)
+  public Document buildLogSearchPage(User user, HttpServletRequest req)
       throws FileUploadException {
-    return buildLogSearchPage(p, req, null);
+    return buildLogSearchPage(user, req, null);
   }
 
   /**
    * Creates the xml tree for viewing searched logs as a CMS admin
    * 
-   * @param p
-   *          The Principal object representing the current user
+   * @param user
+   *          The User object representing the current user
    * @param returnedLogs
    *          A Collection of Log objects representing search results
    * @return
    * @throws RemoteException
    */
-  public Document buildLogSearchPage(Principal p,
+  public Document buildLogSearchPage(User user,
       HttpServletRequest request, Course course) throws FileUploadException {
     LogSearchParams params = new LogSearchParams();
     DiskFileUpload upload = new DiskFileUpload();
@@ -1003,17 +999,17 @@ public class XMLBuilder {
       }
     }
     Document xml =
-        course == null ? buildPageHeader(p) : buildCoursePage(p, course);
-    Collection returnedLogs = database.logHome().find(params);
+        course == null ? buildPageHeader(user) : buildCoursePage(user, course);
+    Collection returnedLogs = database.findLogs(params);
     Element root = (Element) xml.getElementsByTagName(TAG_ROOT).item(0);
-    root.appendChild(logXMLBuilder.buildFullSubtree(p, xml, returnedLogs));
+    root.appendChild(logXMLBuilder.buildFullSubtree(user, xml, returnedLogs));
     return xml;
   }
 
-  public Document buildStaffLogSearchPage(Principal p, Document xml, Course course) {
+  public Document buildStaffLogSearchPage(User user, Document xml, Course course) {
     Document doc = null;
     if (xml == null) {
-      doc = buildStaffNavbar(p, course);
+      doc = buildStaffNavbar(user, course);
     } else {
       doc = xml;
     }
@@ -1022,22 +1018,22 @@ public class XMLBuilder {
       root.setAttribute(A_INITIALSEARCH, "true");
     }
 
-    root.appendChild(courseXMLBuilder.buildGeneralSubtree(p, doc, course));
+    root.appendChild(courseXMLBuilder.buildGeneralSubtree(user, doc, course));
     Element xCourse = doc.createElement(TAG_LOGSEARCH_COURSE);
-    xCourse.setAttribute(A_COURSEID, String.valueOf(course.getCourseID()));
-    xCourse.setAttribute(A_COURSENAME, course.getName());
-    xCourse.setAttribute(A_CODE, course.getCode());
+    xCourse.setAttribute(A_COURSEID,      course.toString());
+    xCourse.setAttribute(A_COURSENAME,    course.getName());
+    xCourse.setAttribute(A_CODE,          course.getCode());
     xCourse.setAttribute(A_DISPLAYEDCODE, course.getDisplayedCode());
-    xCourse.setAttribute(A_COURSEFROZEN, String.valueOf(course
-        .getFreezeCourse()));
+    xCourse.setAttribute(A_COURSEFROZEN,
+                         String.valueOf(course.getFreezeCourse()));
     root.appendChild(xCourse);
-    logXMLBuilder.appendAssignments(p, doc, course);
+    logXMLBuilder.appendAssignments(user, doc, course);
     logXMLBuilder.appendLogSearchNamesTypes(doc, root, false);
     return doc;
   }
 
-  protected Document buildPageHeader(Principal p) {
-    return buildPageHeader(p, null);
+  protected Document buildPageHeader(User user) {
+    return buildPageHeader(user, null);
   }
 
   /**
@@ -1045,30 +1041,29 @@ public class XMLBuilder {
    * will most likely just consist of a list of NetIDs for debug and courses the
    * principal is a student or staff in.
    * 
-   * @param p
-   *          The Principal object representing the current user
+   * @param user
+   *          The User object representing the current user
    * @param semesterID
    *          the SemesterID of the semester to build a header for (null will
    *          automatically use current semester)
    * @return A new XML document
    * @throws RemoteException
    */
-  protected Document buildPageHeader(Principal p, Semester semester) {
+  protected Document buildPageHeader(User user, Semester semester) {
     Profiler.enterMethod("XMLBuilder.buildPageHeader", "");
     Document xml = db.newDocument();
     Element root = xml.createElement(TAG_ROOT);
     if (debug)
       root.appendChild(systemXMLBuilder.buildDebugNetIDListSubtree(xml));
-    root.appendChild(studentXMLBuilder.buildCourseListSubtree(p, xml, semester));
-    root.appendChild(staffXMLBuilder.buildCourseListSubtree(p, xml, semester));
+    root.appendChild(studentXMLBuilder.buildCourseListSubtree(user, xml, semester));
+    root.appendChild(staffXMLBuilder.buildCourseListSubtree(user, xml, semester));
     xml.appendChild(root);
     Element princip = xml.createElement(TAG_PRINCIPAL);
-    String netID = p.getPrincipalID();
-    if (!p.isGuest()) {
-      princip.setAttribute(A_FIRSTNAME, p.getFirstName());
-      princip.setAttribute(A_LASTNAME, p.getLastName());
-      princip.setAttribute(A_NETID, netID);
-      if (p.isAuthenticated()) {
+    if (!user.isGuest()) {
+      princip.setAttribute(A_FIRSTNAME, user.getFirstName());
+      princip.setAttribute(A_LASTNAME,  user.getLastName());
+      princip.setAttribute(A_NETID,     user.getNetID());
+      if (user.isAuthenticated()) {
         princip.setAttribute(A_ISCCMEMBER, "true");
       }
       root.appendChild(princip);
@@ -1077,7 +1072,7 @@ public class XMLBuilder {
      * Extremely unnecessary amount of work
      * Profiler.enterMethod("XMLBuilder.buildPageHeader3","GetStudentsQuery");
      * Iterator students =
-     * database.studentHome().findByStaff(p.getPrincipalID()) .iterator();
+     * database.studentHome().findByStaff(user.getPrincipalID()) .iterator();
      * Profiler.exitMethod("XMLBuilder.buildPageHeader3","GetStudentsQuery");
      * Profiler.enterMethod("XMLBuilder.buildPageHeader4","GetStudentsIterate");
      * while (students.hasNext()) { Student student = (Student)
@@ -1152,46 +1147,42 @@ public class XMLBuilder {
     return xml;
   }
 
-  public Document buildOverview(Principal p) {
-    return buildOverview(p, null);
+  public Document buildOverview(User user) {
+    return buildOverview(user, null);
   }
 
   /**
    * Creates an xml document loaded with display data for building a student
    * overview jsp page for the user
    * 
-   * @param p
-   *          The Principal who is the student we're building the page for
+   * @param user
+   *          The User who is the student we're building the page for
    * @param semesterID
    *          The semester to build the overview page for (null will
    *          automatically use the current semester)
    * @return Document an xml document with display data tags for the jsp page
    */
-  public Document buildOverview(Principal p, Long semesterID) {
-    Profiler.enterMethod("XMLBuilder.buildOverview", "SemesterID: "
-        + semesterID);
-    boolean hasSem = semesterID != null;
-    Document xml = hasSem ? buildPageHeader(p, semesterID) : buildPageHeader(p);
+  public Document buildOverview(User user, Semester sem) {
+    Profiler.enterMethod("XMLBuilder.buildOverview", "SemesterID: " + sem.toString());
+    boolean hasSem = sem != null;
+    Document xml = hasSem ? buildPageHeader(user, sem) : buildPageHeader(user);
     Element root = (Element) xml.getElementsByTagName(TAG_ROOT).item(0);
 
     // get sitewide notices
-    if (p.isCMSAdmin())
+    if (user.isCMSAdmin())
       root.appendChild(getLivingNoticeElement(xml));
-    else root.appendChild(getViewableNoticeElement(xml));
+    else
+      root.appendChild(getViewableNoticeElement(xml));
 
     Iterator i;
     // Fill in due assignment information
-    root.appendChild(StudentXMLBuilder.buildDueAsgnListSubtree(p, xml,
-        semesterID));
+    root.appendChild(studentXMLBuilder.buildDueAsgnListSubtree(user, xml, sem));
     // Fill in recent announcement information
-    Timestamp weekago =
-        new Timestamp(System.currentTimeMillis() - DateTimeUtil.SECS_PER_WEEK
-            * 1000);
-    Map staffNames = database.getStaffNameMap(p.getNetID());
+    Date weekago = new Date(
+        System.currentTimeMillis() - DateTimeUtil.SECS_PER_WEEK * 1000);
     Collection announcements =
-        hasSem ? database.announcementHome().findByNetIDDateSemester(
-            p.getPrincipalID(), weekago, semesterID.longValue()) : database
-            .announcementHome().findByNetIDDate(p.getPrincipalID(), weekago);
+        hasSem ? database.findAnnouncementsByUserDateSemester(user, weekago, sem)
+               : database.findAnnouncementsByUserDate(user, weekago);
     i = announcements.iterator();
     Element xAnnouncements = xml.createElement(TAG_ALLANNOUNCEMENTS);
     root.appendChild(xAnnouncements);
@@ -1206,8 +1197,8 @@ public class XMLBuilder {
       NodeList currentNodes = xAnnouncements.getChildNodes();
       for (int j = 0; j < currentNodes.getLength(); j++) {
         Element c = (Element) currentNodes.item(j);
-        if (Long.parseLong(c.getAttribute(A_COURSEID)) == announcement
-            .getCourseID()) {
+        // TODO: this is pretty bad [mdg]
+        if (c.getAttribute(A_COURSEID).equals(announcement.getCourse().toString())) {
           xCourse = c;
           break;
         }
@@ -1216,70 +1207,57 @@ public class XMLBuilder {
         // if none, create it
         xCourse = xml.createElement(TAG_COURSE);
         xAnnouncements.appendChild(xCourse);
-        long courseID = announcement.getCourseID();
-        xCourse.setAttribute(A_COURSEID, Long.toString(courseID));
-        Course course =
-            database.courseHome().findByPrimaryKey(new Course(courseID));
-        xCourse.setAttribute(A_COURSENAME, course.getCode());
+        xCourse.setAttribute(A_COURSEID,   announcement.getCourse().toString());
+        xCourse.setAttribute(A_COURSENAME, announcement.getCourse().getCode());
       }
       // add this announcement
-      xCourse.appendChild(AnnouncementXMLBuilder.buildGeneralSubtree(xml,
-          announcement.getAnnouncement(), staffNames));
+      xCourse.appendChild(announcementXMLBuilder.buildGeneralSubtree(xml, announcement));
     }
     // Append viewable courses
     Iterator guestCourses = null;
-    if (semesterID == null) {
-      if (p.isAuthenticated()) {
-        guestCourses = database.courseHome().findCCAccess().iterator();
-      } else {
-        guestCourses = database.courseHome().findGuestAccess().iterator();
-      }
+    if (sem == null) {
+      if (user.isAuthenticated())
+        guestCourses = database.findCCAccessCourses().iterator(); 
+      else
+        guestCourses = database.findGuestAccessCourses().iterator();
     } else {
-      if (p.isAuthenticated()) {
-        guestCourses =
-            database.courseHome()
-                .findCCAccessBySemester(semesterID.longValue()).iterator();
-      } else {
-        guestCourses =
-            database.courseHome().findGuestAccessBySemester(
-                semesterID.longValue()).iterator();
-      }
+      if (user.isAuthenticated())
+        guestCourses = sem.findCCAccessCourses().iterator();
+      else
+        guestCourses = sem.findGuestAccessCourses().iterator();
     }
     if (guestCourses != null) {
       while (guestCourses.hasNext()) {
         Course course = (Course) guestCourses.next();
         Element xGuestCourse = xml.createElement(TAG_GUESTCOURSE);
-        xGuestCourse.setAttribute(A_COURSEID, String.valueOf(course
-            .getCourseID()));
+        xGuestCourse.setAttribute(A_COURSEID,   course.toString());
         xGuestCourse.setAttribute(A_COURSENAME, course.getName());
-        xGuestCourse.setAttribute(A_CODE, course.getCode());
+        xGuestCourse.setAttribute(A_CODE,       course.getCode());
         root.appendChild(xGuestCourse);
       }
     }
     // Append past semester information if available
-    Iterator semesters =
-        database.semesterHome().findByUser(p.getPrincipalID()).iterator();
+    Iterator semesters = user.findSemesters().iterator();
     while (semesters.hasNext()) {
       Semester semester = (Semester) semesters.next();
       Element xSemester = xml.createElement(TAG_SEMESTER);
-      xSemester.setAttribute(A_ID, String.valueOf(semester.getSemesterID()));
-      xSemester.setAttribute(A_NAME, semester.getSemesterName());
+      xSemester.setAttribute(A_ID,   semester.toString());
+      xSemester.setAttribute(A_NAME, semester.getName());
       root.appendChild(xSemester);
     }
-    Profiler
-        .exitMethod("XMLBuilder.buildOverview", "SemesterID: " + semesterID);
+    Profiler.exitMethod("XMLBuilder.buildOverview", "SemesterID: " + sem.toString());
     return xml;
   }
 
   /**
    * Add all category short subtrees for the given course to xml
    * 
-   * @param p
+   * @param user
    * @param xml
    * @param course
    * @throws RemoteException
    */
-  private void buildAllCategories(Principal p, Document xml,
+  private void buildAllCategories(User user, Document xml,
       Course course) {
     Profiler.enterMethod("XMLBuilder.buildAllCategories", "CourseID: " + course.toString());
     Element root = (Element) xml.getFirstChild();
@@ -1292,7 +1270,7 @@ public class XMLBuilder {
     int numOfCtg = 0;
     while (i.hasNext()) {
       Category ctg = (Category) i.next();
-      if (p.getAuthoriznLevelByCourse(course) < ctg.getAuthLevel())
+      if (user.getAuthoriznLevelByCourse(course) < ctg.getAuthLevel())
         continue;
       Element xCategory = categoryXMLBuilder.buildShortSubtree(xml, ctg);
       if (ctg.getHidden())
@@ -1318,12 +1296,12 @@ public class XMLBuilder {
   }
 
   // for use later, to create "defaults for new courses" prefs page
-  // public Document buildStudentPrefsPage(Principal p)
+  // public Document buildStudentPrefsPage(User user)
   // throws FinderException {
-  // Document xml = buildPageHeader(p);
+  // Document xml = buildPageHeader(user);
   // Element root = (Element) xml.getFirstChild();
   // Student student = database.studentHome().findByPrimaryKey(new
-  // Student(-1, p.getUserID()));
+  // Student(-1, user.getUserID()));
   // root.appendChild(getStudentPrefsElement(xml, student));
   // return xml;
   // }
@@ -1377,20 +1355,20 @@ public class XMLBuilder {
   /**
    * Builds the view for creating a new category
    * 
-   * @param p
+   * @param user
    * @param courseid
    * @return
    * @throws RemoteException
    */
-  public Document buildNewCategoryPage(Principal p, Course course) {
-    Document xml = buildStaffNavbar(p, course);
+  public Document buildNewCategoryPage(User user, Course course) {
+    Document xml = buildStaffNavbar(user, course);
     Element root = (Element) xml.getFirstChild();
     Element xCategory = categoryXMLBuilder.buildDatatypesSubtree(xml);
     xCategory.setAttribute(A_ID,       "0");
     xCategory.setAttribute(A_ORDER,    "1");
-    xCategory.setAttribute(A_AUTHORZN, Principal.AUTHOR_CORNELL_COMMUNITY);
+    xCategory.setAttribute(A_AUTHORZN, User.AUTHOR_CORNELL_COMMUNITY);
     root.appendChild(xCategory);
-    buildAllCategories(p, xml, course);
+    buildAllCategories(user, xml, course);
     return xml;
   }
 
@@ -1435,8 +1413,8 @@ public class XMLBuilder {
    * Creates an xml document loaded with display data for a course view (student
    * or staff) page
    * 
-   * @param p
-   *          The Principal who is the student we're building the page for
+   * @param user
+   *          The User who is the student we're building the page for
    * @param courseid
    * @returnDocument an xml document with display data tags for the jsp page
    * @throws RemoteException
@@ -1448,8 +1426,8 @@ public class XMLBuilder {
     return xml;
   }
 
-  public Document buildStaffNavbar(Principal p, Course course) {
-    return buildStaffNavbar(p, course, false);
+  public Document buildStaffNavbar(User user, Course course) {
+    return buildStaffNavbar(user, course, false);
   }
 
   /**
@@ -1515,14 +1493,14 @@ public class XMLBuilder {
    * the proper assignment page. This method is used after updating group
    * information to reload the assignmetn page.
    * 
-   * @param p
+   * @param user
    *          User looking up this information
    * @param groupID
    *          The groupID of the group just updated
    * @return XML Document containg the requested information
    */
-  public Document refreshStudentAssignmentPage(Principal p, Group group) {
-    return buildStudentAssignmentPage(p, group.getAssignment());
+  public Document refreshStudentAssignmentPage(User user, Group group) {
+    return buildStudentAssignmentPage(user, group.getAssignment());
   }
 
   /**
@@ -1530,7 +1508,7 @@ public class XMLBuilder {
    * new assignment. All data is blank or default. The assignment element will
    * have an ID attribute of 0.
    * 
-   * @param p
+   * @param user
    *          User accessing this page
    * @param courseID
    *          ID of the course the assignment is being created in
@@ -1538,8 +1516,8 @@ public class XMLBuilder {
    * @throws RemoteException
    *           if the db connection fails
    */
-  public Document buildAssignmentCreationPage(Principal p, Course course, int assignType) {
-    Document xml = buildStaffNavbar(p, course);
+  public Document buildAssignmentCreationPage(User user, Course course, int assignType) {
+    Document xml = buildStaffNavbar(user, course);
     Element root = (Element) xml.getFirstChild();
     Element xAssignment = xml.createElement(TAG_ASSIGNMENT);
     xAssignment.setAttribute(A_MAXGROUP, "1");
@@ -1578,7 +1556,7 @@ public class XMLBuilder {
    * data. Returns same as buildEmptyAssignmentView(), but with assignment data
    * filled in
    * 
-   * @param p
+   * @param user
    *          User accessing this page
    * @param assignID
    *          ID if the assignment to get info about
@@ -1586,14 +1564,13 @@ public class XMLBuilder {
    * @throws RemoteException
    *           If the db connection fails
    */
-  public Document buildBasicAssignmentPage(Principal p, Assignment assignment) {
-    Iterator i;
+  public Document buildBasicAssignmentPage(User user, Assignment assignment) {
     Course course = assignment.getCourse();
     // Build template tree
-    Document xml = buildStaffNavbar(p, course);
+    Document xml = buildStaffNavbar(user, course);
     Element root = (Element) xml.getFirstChild();
     root.appendChild(systemXMLBuilder.buildFiletypeListSubtree(xml));
-    root.appendChild(assignmentXMLBuilder.buildFullSubtree(p, xml, assignment, null, null));
+    root.appendChild(assignmentXMLBuilder.buildFullSubtree(user, xml, assignment, null, null));
     return xml;
   }
 
@@ -1601,31 +1578,28 @@ public class XMLBuilder {
    * Builds an XML tree with information about an assignment, appropriate for
    * placement in a scheduling page.
    */
-  public Document buildBasicSchedulePage(Principal p, Assignment assign) {
-    Document xml = buildBasicAssignmentPage(p, assign);
+  public Document buildBasicSchedulePage(User user, Assignment assign) {
+    Document xml = buildBasicAssignmentPage(user, assign);
     Course course = assign.getCourse();
     Element root = (Element) xml.getFirstChild();
     Element xCourse =
         (Element) XMLUtil.getChildrenByTagName(root, TAG_COURSE).item(0);
-    xCourse.appendChild(courseXMLBuilder.buildStaffListSubtree(p, xml, course));
+    xCourse.appendChild(courseXMLBuilder.buildStaffListSubtree(user, xml, course));
     root.appendChild(xCourse);
     return xml;
   }
 
-  private Element buildCommentsSubtree(Principal p, Document xml, Group group, Assignment assignment) {
+  private Element buildCommentsSubtree(User user, Document xml, Group group, Assignment assignment) {
     String COMMENT         = "Grading Comment",
            REGRADE_REQUEST = "Regrade Request",
            REGRADE_REPLY   = "Regrade Response";
     Element comments = xml.createElement(XMLBuilder.TAG_COMMENTS);
-    Collection cComment = database.commentHome().findByGroupID(groupID);
-    Collection cRegrade = database.regradeRequestHome().findByGroupID(groupID);
-    Map commentFilesMap = database.getCommentFileMap(groupID);
+    Collection cComment = group.getComments();
+    Collection cRegrade = group.getRegradeRequests();
     Iterator iComment = cComment.iterator();
     Iterator iRegrade = cRegrade.iterator();
-    HashMap subProblemsMap = assignment.getSubProblemsMap();
-    HashMap regradeCommentIDs = new HashMap(); // collection of comment ID
-    // that are regrade replies.
-    long subProblemID;
+    HashSet regradeCommentIDs = new HashSet(); // collection of comment ID
+                                               // that are regrade replies.
     // Merge regular grading comments and grading request under one history
     // in descending order
     Comment currentComment =
@@ -1638,54 +1612,46 @@ public class XMLBuilder {
           && (currentRegrade == null || currentComment.getDateEntered()
               .compareTo(currentRegrade.getDateEntered()) <= 0)) {
         comment = xml.createElement(XMLBuilder.TAG_COMMENT);
-        if (regradeCommentIDs.containsKey(new Long(currentComment
-            .getCommentID())))
+        if (regradeCommentIDs.contains(currentComment))
           comment.setAttribute(XMLBuilder.A_TYPE, REGRADE_REPLY);
         else comment.setAttribute(XMLBuilder.A_TYPE, COMMENT);
-        comment.setAttribute(XMLBuilder.A_USER, currentComment.getNetID());
+        comment.setAttribute(XMLBuilder.A_USER, currentComment.getUser().getNetID());
         comment.setAttribute(XMLBuilder.A_DATE, DateTimeUtil.DATE_TIME_AMPM
             .format(currentComment.getDateEntered()));
         comment.setAttribute(XMLBuilder.A_TEXT, currentComment.getComment());
-        CommentFile commentFile =
-            (CommentFile) commentFilesMap.get(new Long(currentComment
-                .getCommentID()));
+        CommentFile commentFile = currentComment.getCommentFile();
         if (commentFile != null) {
-          comment.setAttribute(XMLBuilder.A_COMMENTFILEID, Long
-              .toString(commentFile.getCommentFileID()));
-          comment
-              .setAttribute(XMLBuilder.A_FILENAME, commentFile.getFileName());
+          comment.setAttribute(XMLBuilder.A_COMMENTFILEID, commentFile.toString());
+          comment.setAttribute(XMLBuilder.A_FILENAME,      commentFile.getFileName());
         }
         currentComment =
             iComment.hasNext() ? (Comment) iComment.next() : null;
       } else {
         comment = xml.createElement(XMLBuilder.TAG_COMMENT);
         comment.setAttribute(XMLBuilder.A_TYPE, REGRADE_REQUEST);
-        comment.setAttribute(XMLBuilder.A_USER, currentRegrade.getNetID());
-        comment.setAttribute(XMLBuilder.A_DATE, DateTimeUtil.DATE_TIME_AMPM
-            .format(currentRegrade.getDateEntered()));
-        comment.setAttribute(XMLBuilder.A_TEXT, StringUtil
-            .formatNoHTMLString(currentRegrade.getRequest()));
-        regradeCommentIDs.put(currentRegrade.getCommentID(), null);
-        subProblemID = currentRegrade.getSubProblemID();
-        if (subProblemID != 0) { // there is a subProblem associated
-          // with regrade, get the name
-          SubProblem subProblem =
-              (SubProblem) subProblemsMap.get(new Long(subProblemID));
-          if (subProblem != null)
-            comment.setAttribute(XMLBuilder.A_SUBPROBNAME, subProblem
-                .getSubProblemName());
+        comment.setAttribute(XMLBuilder.A_USER,
+            currentRegrade.getUser().getNetID());
+        comment.setAttribute(XMLBuilder.A_DATE,
+            DateTimeUtil.DATE_TIME_AMPM.format(currentRegrade.getDateEntered()));
+        comment.setAttribute(XMLBuilder.A_TEXT,
+            StringUtil.formatNoHTMLString(currentRegrade.getRequest()));
+        regradeCommentIDs.add(currentRegrade);
+        SubProblem subProblem = currentRegrade.getSubProblem();
+        if (subProblem != null) {
+          // there is a subProblem associated with regrade, get the name
+          comment.setAttribute(XMLBuilder.A_SUBPROBNAME, subProblem.getSubProblemName());
         }
-        currentRegrade =
-            iRegrade.hasNext() ? (RegradeRequest) iRegrade.next() : null;
+        currentRegrade = iRegrade.hasNext() ? (RegradeRequest) iRegrade.next()
+                                            : null;
       }
       comments.appendChild(comment);
     }
     return comments;
   }
 
-  public Document buildSurveyResultPage(Principal p, Assignment assignment) {
+  public Document buildSurveyResultPage(User user, Assignment assignment) {
     // Build template tree
-    Document xml = buildStaffNavbar(p, assignment.getCourseID());
+    Document xml = buildStaffNavbar(user, assignment.getCourse());
     Element root = (Element) xml.getFirstChild();
     root.appendChild(assignmentXMLBuilder.buildSurveyResultSubtree(xml, assignment));
     return xml;
@@ -1712,24 +1678,17 @@ public class XMLBuilder {
   }
 
   // find the answer to subID in an answerSet and return the answer text
-  private String findAnswer(SubProblem subProblem, int subType, AnswerSet answerSet) {
-    Iterator iterator = answerSet.getAnswers().iterator();
-    while (iterator.hasNext()) {
-      Answer answer = (Answer) iterator.next();
-      if (subProblem == answer.getSubProblem()) {
-        String text = answer.getText();
-        if (subType == SubProblem.MULTIPLE_CHOICE) {
-          try {
-            Choice choice = 
-                database.choiceHome().findByChoiceID(Long.parseLong(text));
-            return choice.getLetter() + ". " + choice.getText();
-          } catch (Exception nfe) {
-            return text;
-          }
-        } else return text;
-      }
-    }
-    return "";
+  private String findAnswer(SubProblem subProblem, AnswerSet answerSet) {
+    Answer answer = answerSet.getAnswer(subProblem);
+    if (answer == null)
+      return "";
+    
+    String text   = answer.getText();
+    Choice choice = subProblem.getChoice(text); 
+    if (choice != null)
+      return choice.getLetter() + ". " + choice.getText();
+    else
+      return text;
   }
 
   public Collection generateSurveyResultCSV(Assignment assignment) {
@@ -1754,9 +1713,7 @@ public class XMLBuilder {
     // adding the subproblems name to the header row
     for (int count = 0; count < numEntries; count++) {
       SubProblem subproblem = (SubProblem) i.next();
-      boolean hidden = subproblem.getHidden();
       int type = subproblem.getType();
-      String name = subproblem.getSubProblemName();
       sidToTypeMap.put(subproblem, new Integer(type));
       sidToIndexMap.put(subproblem, new Integer(count));
       firstRow[count] = subproblem.getSubProblemName();
@@ -1773,9 +1730,8 @@ public class XMLBuilder {
       Iterator subIterator = sidToTypeMap.keySet().iterator();
       while (subIterator.hasNext()) {
         SubProblem sp = (SubProblem) subIterator.next();
-        Integer type = (Integer) sidToTypeMap.get(sp);
         Integer index = (Integer) sidToIndexMap.get(sp);
-        String text = findAnswer(sp, type.intValue(), answerSet);
+        String text = findAnswer(sp, answerSet);
         row[index.intValue()] = text;
       }
 
@@ -1789,13 +1745,10 @@ public class XMLBuilder {
    * user-specific information.
    */
   public Document buildStudentAssignmentPage(User user, Assignment assignment) {
-    Iterator i;
     // Build template tree
     Document xml = buildStaffNavbar(user, assignment.getCourse());
     Element root = (Element) xml.getFirstChild();
-    Iterator grades =
-        database.gradeHome().findMostRecentByNetAssignmentID(user.getNetID(),
-            assignID).iterator();
+    Iterator grades = assignment.findMostRecentGrades(user).iterator();
     HashMap gradeMap = new HashMap();
     while (grades.hasNext()) {
       Grade grade = (Grade) grades.next();
@@ -1807,26 +1760,21 @@ public class XMLBuilder {
     int assignType = assignment.getType();
     if (assignType == Assignment.QUIZ
         || assignType == Assignment.SURVEY) {
-      try {
-        Group group = assignment.getGroup(user);
-        AnswerSet answerSet =
-            database.answerSetHome().findMostRecentByGroupAssignmentID(groupID,
-                assignment.getAssignmentID());
-        Collection answers = answerSet.getAnswers();
-        i = answers.iterator();
+      Group group = assignment.findGroup(user);
+      AnswerSet answerSet = assignment.findMostRecentAnswerSet(group);
+      if (answerSet != null) {
+        Iterator i = answerSet.getAnswers().iterator();
         answerMap = new HashMap();
 
         while (i.hasNext()) {
           Answer answer = (Answer) i.next();
           answerMap.put(answer.getSubProblem(), answer.getText());
         }
-      } catch (FinderException e) {
-
       }
     }
 
     // TODO don't need the full course tree
-    // root.appendChild(CourseXMLBuilder.buildFullSubtree(p, xml,
+    // root.appendChild(CourseXMLBuilder.buildFullSubtree(user, xml,
     // database.courseHome().findByPrimaryKey(new Course(courseID))));
     root.appendChild(systemXMLBuilder.buildFiletypeListSubtree(xml));
     Element xAssignment =
@@ -1834,8 +1782,8 @@ public class XMLBuilder {
     root.appendChild(xAssignment);
     // Generate group branch
     Group group = null;
-    if (user.isStudentInCourseByCourse(course)) {
-      group = assignment.getGroup(user);
+    if (user.isStudentInCourseByCourse(assignment.getCourse())) {
+      group = assignment.findGroup(user);
     }
     if (group != null) {
       xAssignment.appendChild(groupXMLBuilder.buildFullSubtree(user, xml, group, assignment));
@@ -1850,22 +1798,22 @@ public class XMLBuilder {
     return xml;
   }
 
-  public Document buildGradeAssignPage(Principal p, Assignment assign) {
-    return buildGradeAssignPage(p, assign, null, false);
+  public Document buildGradeAssignPage(User user, Assignment assign) {
+    return buildGradeAssignPage(user, assign, null, false);
   }
 
-  public Document buildGradeAssignPage(Principal p, Assignment assign, boolean showGradeMsg) {
-    return buildGradeAssignPage(p, assign, null, showGradeMsg);
+  public Document buildGradeAssignPage(User user, Assignment assign, boolean showGradeMsg) {
+    return buildGradeAssignPage(user, assign, null, showGradeMsg);
   }
 
-  public Document buildGradeAssignPage(Principal p, Assignment assign, Group group) {
-    return buildGradeAssignPage(p, assign, group, false);
+  public Document buildGradeAssignPage(User user, Assignment assign, Group group) {
+    return buildGradeAssignPage(user, assign, group, false);
   }
 
   /**
    * Builds the grade students page for the assignment Returns
    * 
-   * @param p
+   * @param user
    *          User accessing this page
    * @param assignID
    *          ID if the assignment to get info about
@@ -1878,19 +1826,18 @@ public class XMLBuilder {
    * @throws RemoteException
    *           If the db connection fails
    */
-  public Document buildGradeAssignPage(Principal p, Assignment assign,
+  public Document buildGradeAssignPage(User user, Assignment assign,
       Group group, boolean showGradeMsg) {
     Profiler.enterMethod("XMLBuilder.buildGradeAssignPage", "assignid="
         + assign.toString() + ", groupid=" + group.toString());
-    long courseID = assign.getCourseID();
-    Document xml = buildStaffNavbar(p, assign.getCourse());
+    Document xml = buildStaffNavbar(user, assign.getCourse());
     Element xRoot = (Element) xml.getFirstChild();
     if (showGradeMsg) xRoot.setAttribute(A_GRADEMSG, "true");
     if (group != null) {
       xRoot.setAttribute(A_JUMPTOGROUP, "cg" + group.toString());
     }
     xRoot.appendChild(assignmentXMLBuilder.buildGeneralSubtree(xml, assign, null));
-    assignmentGroupsXMLBuilder.buildGroupGradingPage(p, assign, xml);
+    assignmentGroupsXMLBuilder.buildGroupGradingPage(user, assign, xml);
     Profiler.exitMethod("XMLBuilder.buildGradeAssignPage", "assignid=" + assign.toString() + ", groupid=" + group.toString());
     return xml;
   }
@@ -1898,7 +1845,7 @@ public class XMLBuilder {
   /**
    * Builds the grade page for one student for the assignment Returns
    * 
-   * @param p
+   * @param user
    *          User accessing this page
    * @param assignID
    *          ID of the assignment to get info about
@@ -1908,42 +1855,40 @@ public class XMLBuilder {
    * @throws RemoteException
    *           If the db connection fails
    */
-  public Document buildGradePage(Principal p, long assignID, Collection groupIDs) {
+  public Document buildGradePage(User user, Assignment assign, Collection groups) {
     Profiler.enterMethod("XMLBuilder.buildGradePage", "");
-    Assignment assign =
-        database.assignmentHome().findByAssignmentID(assignID);
-    Document xml = buildStaffNavbar(p, assign.getCourseID());
+    Document xml = buildStaffNavbar(user, assign.getCourse());
     Element root = (Element) xml.getFirstChild();
-    root.setAttribute(A_ASSIGNID, String.valueOf(assignID));
+    root.setAttribute(A_ASSIGNID, assign.toString());
     // Element xAssign = AssignmentXMLBuilder.buildGeneralSubtree(xml, assign,
     // null);
     // root.appendChild(xAssign);
     // Course course = database.courseHome().findByPrimaryKey(new
     // Course(assign.getCourseID()));
-    // Element xCourse = CourseXMLBuilder.buildFullSubtree(p, xml, course);
+    // Element xCourse = CourseXMLBuilder.buildFullSubtree(user, xml, course);
     // root.appendChild(xCourse);
-    GradingXMLBuilder.buildGradingSubtree(p, xml, assignID, groupIDs);
+    gradingXMLBuilder.buildGradingSubtree(user, xml, assign, groups);
     Profiler.exitMethod("XMLBuilder.buildGradePage", "");
     return xml;
   }
 
-  public Document buildGradeStudentPage(Principal p, long courseID, String netID) {
+  public Document buildGradeStudentPage(User user, Course course, User netID) {
     Document xml = null;
-    xml = buildStaffNavbar(p, courseID);
+    xml = buildStaffNavbar(user, course);
     /*
      * Element root = (Element) xml.getFirstChild(); Course course =
      * database.courseHome().findByPrimaryKey(new Course(courseID)); Element
-     * xCourse = CourseXMLBuilder.buildFullSubtree(p, xml, course);
+     * xCourse = CourseXMLBuilder.buildFullSubtree(user, xml, course);
      * root.appendChild(xCourse);
      */
-    StudentGradesXMLBuilder.buildStudentGradesTree(p, xml, netID, courseID);
+    studentGradesXMLBuilder.buildStudentGradesTree(user, xml, netID, course);
     return xml;
   }
 
   /**
    * Generates an XML Document for the course properties page.
    * 
-   * @param p
+   * @param user
    *          The principal accessing this page (for header)
    * @param courseID
    *          The course whose properties to retrieve
@@ -1951,28 +1896,27 @@ public class XMLBuilder {
    * @throws RemoteException
    *           If the db connection fails
    */
-  public Document buildCoursePropertiesPage(Principal p, long courseID) {
-    Document xml = buildStaffNavbar(p, courseID);
+  public Document buildCoursePropertiesPage(User user, Course course) {
+    Document xml = buildStaffNavbar(user, course);
     Element root = (Element) xml.getFirstChild();
-    Course course =
-        database.courseHome().findByPrimaryKey(new Course(courseID));
+
     Element xCourse =
         (Element) XMLUtil.getChildrenByTagName(root, TAG_COURSE).item(0);
-    CourseXMLBuilder.addAccessInfo(course, xCourse);
-    CourseXMLBuilder.addCourseProperties(course, xCourse);
-    xCourse.appendChild(CourseXMLBuilder.buildStaffListSubtree(p, xml, course));
+    courseXMLBuilder.addAccessInfo(course, xCourse);
+    courseXMLBuilder.addCourseProperties(course, xCourse);
+    xCourse.appendChild(courseXMLBuilder.buildStaffListSubtree(user, xml, course));
     return xml;
   }
 
-  public Document buildStudentsPage(Principal p, long courseID, boolean showAddDrop) {
-    return buildStudentsPage(p, courseID, showAddDrop, false);
+  public Document buildStudentsPage(User user, Course course, boolean showAddDrop) {
+    return buildStudentsPage(user, course, showAddDrop, false);
   }
 
   /**
    * Retrieve XML data for the students page
    * 
-   * @param p
-   *          Principal requesting this information
+   * @param user
+   *          User requesting this information
    * @param courseID
    *          ID of the course for which to get the list of enrolled students
    * @param showAddDrop
@@ -1983,17 +1927,16 @@ public class XMLBuilder {
    * @throws RemoteException
    *           If the db connection fails
    */
-  public Document buildStudentsPage(Principal p, long courseID,
+  public Document buildStudentsPage(User user, Course course,
       boolean showAddDrop, boolean showGradeMsg) {
-    Document xml = buildStaffNavbar(p, courseID, true);
+    Document xml = buildStaffNavbar(user, course, true);
     Element xRoot = (Element) xml.getFirstChild();
     Element xCourse = XMLUtil.getFirstChildByTagName(xRoot, TAG_COURSE);
-    Course course = database.courseHome().findByCourseID(courseID);
-    CourseXMLBuilder.addTotalScoreStats(course, xCourse);
-    CourseXMLBuilder.addCourseProperties(course, xCourse);
+    courseXMLBuilder.addTotalScoreStats(course, xCourse);
+    courseXMLBuilder.addCourseProperties(course, xCourse);
     if (showAddDrop) xRoot.setAttribute(A_SHOWADDDROP, "true");
     if (showGradeMsg) xRoot.setAttribute(A_GRADEMSG, "true");
-    ViewStudentsXMLBuilder.buildStudentsPage(courseID, xml);
+    viewStudentsXMLBuilder.buildStudentsPage(course, xml);
     return xml;
   }
 
@@ -2002,7 +1945,7 @@ public class XMLBuilder {
    * the values read from one row of a CSV file in the appropriate format. The
    * header row of the file should be the first entry in the List.
    * 
-   * @param p
+   * @param user
    * @param confirm_type
    *          XMLBuilder.CONFIRM_SOMETHINGOROTHER; ASSIGNINFO is for
    *          assignment-specific info and COURSEINFO is for course-specific
@@ -2015,28 +1958,25 @@ public class XMLBuilder {
    * @throws FinderException,
    *           IllegalArgumentException
    */
-  public Document buildConfirmPage(Principal p, int confirm_type,
-      long ID, TransactionResult result) throws IllegalArgumentException {
-    Document xml = buildPageHeader(p);
+  public Document buildConfirmPage(User user, int confirm_type,
+      Object data, TransactionResult result) throws IllegalArgumentException {
+    Document xml = buildPageHeader(user);
     Element root = (Element) xml.getFirstChild();
     root.setAttribute(A_CONFIRMTYPE, String.valueOf(confirm_type));
-    if (confirm_type == CONFIRM_ASSIGNINFO) // assignment-specific operations
+    if(confirm_type == CONFIRM_ASSIGNINFO) //assignment-specific operations
     {
-      Assignment assign = database.assignmentHome().findByAssignmentID(ID);
-      Course course =
-          database.courseHome().findByPrimaryKey(
-              new Course(assign.getCourseID()));
-      Element xCourse = CourseXMLBuilder.buildFullSubtree(p, xml, course);
+      Assignment assign = (Assignment) data;
+      Course course     = assign.getCourse();
+      Element xCourse   = courseXMLBuilder.buildFullSubtree(user, xml, course);
       root.appendChild(xCourse);
-      root.setAttribute(A_ASSIGNID, String.valueOf(ID));
-    } else if (confirm_type == CONFIRM_COURSEINFO
-        || confirm_type == CONFIRM_FINALGRADES) // course-specific operations
+      root.setAttribute(A_ASSIGNID, assign.toString());
+    }
+    else if(confirm_type == CONFIRM_COURSEINFO || confirm_type == CONFIRM_FINALGRADES) //course-specific operations
     {
-      Course course =
-          database.courseHome().findByPrimaryKey(new Course(ID));
-      Element xCourse = CourseXMLBuilder.buildFullSubtree(p, xml, course);
+      Course course = (Course) data;
+      Element xCourse = courseXMLBuilder.buildFullSubtree(user, xml, course);
       root.appendChild(xCourse);
-      root.setAttribute(A_COURSEID, String.valueOf(ID));
+      root.setAttribute(A_COURSEID, course.toString());
     }
 
     List table = (List) result.getValue();
@@ -2098,11 +2038,10 @@ public class XMLBuilder {
    * occurs in setting assignment properties, this will allow users to continue
    * with the form values they submitted instead of having to retype everything.
    */
-  public Document buildErrorAssignmentPage(Principal p,
-      Collection params, Course course, Assignment assign) throws FileUploadException {
-    Document xml = buildStaffNavbar(p, courseID);
+  public Document buildErrorAssignmentPage(User user,
+      Collection params, Course course, Assignment assign) {
+    Document xml = buildStaffNavbar(user, course);
     Map parameterMap = new HashMap();
-    DiskFileUpload upload = new DiskFileUpload();
     Iterator i = params.iterator();
     Vector oldSubIDs = new Vector(), hiddenOldSubIDs = new Vector();
     Vector newSubIDs = new Vector(), oldItemIDs = new Vector();
@@ -2419,7 +2358,7 @@ public class XMLBuilder {
         .get(AccessController.P_SCHEDULE_LOCKAMPM));
     xAssignment.appendChild(xSchedule);
     // Set known system file types
-    root.appendChild(SystemXMLBuilder.buildFiletypeListSubtree(xml));
+    root.appendChild(systemXMLBuilder.buildFiletypeListSubtree(xml));
     return xml;
   }
 

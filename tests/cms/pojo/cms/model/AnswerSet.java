@@ -57,6 +57,10 @@ public class AnswerSet {
     // TODO Auto-generated method stub
     return null;
   }
+  public Answer getAnswer(SubProblem subProblem) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

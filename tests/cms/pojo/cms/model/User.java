@@ -69,6 +69,10 @@ public class User extends Principal {
     else
       return getLastName();
   }
+  public Collection/*Semester*/ findSemesters() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

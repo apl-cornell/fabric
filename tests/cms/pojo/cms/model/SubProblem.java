@@ -77,6 +77,10 @@ public class SubProblem {
     // TODO Auto-generated method stub
     return null;
   }
+  public Choice getChoice(String text) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
 }
 

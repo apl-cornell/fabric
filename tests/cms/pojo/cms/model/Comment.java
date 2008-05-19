@@ -56,6 +56,11 @@ public class Comment {
     // TODO Auto-generated method stub
     return null;
   }
+  
+  public CommentFile getCommentFile() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

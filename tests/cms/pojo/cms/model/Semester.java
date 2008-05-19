@@ -44,6 +44,14 @@ public class Semester {
     // TODO Auto-generated method stub
     return null;
   }
+  public Collection/*Course*/ findCCAccessCourses() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*Course*/ findGuestAccessCourses() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

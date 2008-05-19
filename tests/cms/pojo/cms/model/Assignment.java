@@ -325,6 +325,16 @@ public class Assignment {
     // TODO Auto-generated method stub
     return null;
   }
+
+  public Collection/*Grade*/ findMostRecentGrades(User user) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public AnswerSet findMostRecentAnswerSet(Group group) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

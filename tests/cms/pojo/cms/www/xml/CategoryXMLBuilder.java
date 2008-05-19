@@ -1,24 +1,12 @@
 package cms.www.xml;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.text.DateFormat;
-import java.text.ParseException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
 import cms.www.util.DateTimeUtil;
 import cms.www.util.Profiler;
-import cms.www.util.Util;
 
 import cms.auth.Principal;
 import cms.model.*;
@@ -30,6 +18,11 @@ import cms.model.*;
  * @author Evan
  */
 public class CategoryXMLBuilder {
+  
+  public CategoryXMLBuilder(XMLBuilder builder) {
+    // TODO Auto-generated constructor stub
+  }
+
   /**
    * Generate an XML subtree with all known info about the given Category,
    * including its contents

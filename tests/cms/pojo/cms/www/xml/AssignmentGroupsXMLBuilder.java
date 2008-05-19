@@ -26,6 +26,9 @@ import cms.model.*;
  * available grades, and information about extensions.
  */
 public class AssignmentGroupsXMLBuilder {
+  public AssignmentGroupsXMLBuilder(XMLBuilder builder) {
+  }
+
   /**
    * Build the complete XML output
    */
