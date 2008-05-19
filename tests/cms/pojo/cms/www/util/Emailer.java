@@ -6,7 +6,7 @@ import java.util.Vector;
 import javax.mail.*;
 import javax.mail.internet.*;
 
-import edu.cornell.csuglab.cms.www.AccessController;
+import cms.www.AccessController;
 
 /**
  * @author jfg32

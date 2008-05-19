@@ -7,7 +7,7 @@ import org.apache.commons.fileupload.FileUploadException;
 
 import com.Ostermiller.util.MD5;
 
-import edu.cornell.csuglab.cms.www.AccessController;
+import cms.www.AccessController;
 
 /**
  * FileUtil: utilities for downloading files from users to the system and for displaying files once on the server.

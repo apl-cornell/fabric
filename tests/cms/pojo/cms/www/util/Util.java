@@ -1,6 +1,6 @@
 package cms.www.util;
 
-import edu.cornell.csuglab.cms.www.AccessController;
+import cms.www.AccessController;
 
 import java.util.ArrayList;
 import java.util.Collection;

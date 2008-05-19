@@ -6,7 +6,6 @@
  */
 package cms.www.util;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -20,7 +19,7 @@ import org.w3c.dom.*;
 
 import cms.www.xml.XMLBuilder;
 
-import edu.cornell.csuglab.cms.www.AccessController;
+import cms.www.AccessController;
 
 /**
  * @author jfg32
