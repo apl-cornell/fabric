@@ -240,7 +240,9 @@ public final class Log {
     // Merge writes and transfer write locks.
     List<$Impl> parentWrites = parent.writes;
     synchronized (parentWrites) {
-      for ($Impl obj : writes) {
+      int size = writes.size();
+      for (int i = 0; i < size; i++) {
+        $Impl obj = writes.get(i);
         synchronized (obj) {
           if (obj.$history.$writeLockHolder == parent) {
             // The parent transaction already wrote to the object. Discard one
@@ -264,7 +266,9 @@ public final class Log {
     // Merge creates and transfer write locks.
     List<$Impl> parentCreates = parent.creates;
     synchronized (parentCreates) {
-      for ($Impl obj : creates) {
+      int size = creates.size();
+      for (int i = 0; i < size; i++) {
+        $Impl obj = creates.get(i);
         parentCreates.add(obj);
         obj.$writeLockHolder = parent;
       }

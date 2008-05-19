@@ -84,11 +84,11 @@ public final class TransactionManager {
       new OidKeyHashMap<ReadMapEntry>();
 
   public static ReadMapEntry getReadMapEntry($Impl impl) {
-    ReadMapEntry result;
+    Core core = impl.$getCore();
+    long onum = impl.$getOnum();
 
+    ReadMapEntry result;
     synchronized (readMap) {
-      Core core = impl.$getCore();
-      long onum = impl.$getOnum();
       result = readMap.get(core, onum);
       if (result == null) {
         result = new ReadMapEntry(impl);
