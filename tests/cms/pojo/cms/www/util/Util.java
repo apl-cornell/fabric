@@ -19,126 +19,101 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class Util
 {
-	/**
-	 * @return A string containing all the string representations of elements in the collection,
-	 * separated by commas
-	 */
-	public static String listElements(Collection c) {
-		if(c == null) return "<null Collection>";
-		Iterator i = c.iterator();
-		String result = "";
-		while (i.hasNext()) {
-			result += i.next().toString();
-			if (i.hasNext()) {
-				result += ", ";
-			}
-		}
-		return result;
-	}
-	public static String listElements(long[] c) {
-		if(c == null) return "<null array>";
-		String result = "";
-		for(int i = 0; i < c.length - 1; i++)
-			result += c[i] + ", ";
-		return result + c[c.length - 1];
-	}
-	
-	/**
-	 * @return A string containing the string representations of all distinct elements in the collection,
-	 * separated by commas
-	 */
-	public static String listUniqueElements(Collection c)
-	{
-		if(c == null) return "<null Collection>";
-		Set s = new HashSet();
-		s.addAll(c);
-		Iterator i = s.iterator();
-		String result = "";
-		while (i.hasNext()) {
-			result += i.next().toString();
-			if (i.hasNext()) {
-				result += ", ";
-			}
-		}
-		return result;
-	}
-	
-	/**
-	 * Return true if they're equal by .equals() OR by both being null
-	 * @param one
-	 * @param two
-	 * @return
-	 */
-	public static boolean equalNull(Comparable one, Comparable two) {
-	    if (one == null && two == null) return true;
-	    if (one == null && two != null) return false;
-	    if (one != null && two == null) return false;
-	    return one.equals(two);
-	}
+  /**
+   * @return A string containing all the string representations of elements in the collection,
+   * separated by commas
+   */
+  public static String listElements(Collection c) {
+    if(c == null) return "<null Collection>";
+    Iterator i = c.iterator();
+    String result = "";
+    while (i.hasNext()) {
+      result += i.next().toString();
+      if (i.hasNext()) {
+        result += ", ";
+      }
+    }
+    return result;
+  }
+  public static String listElements(long[] c) {
+    if(c == null) return "<null array>";
+    String result = "";
+    for(int i = 0; i < c.length - 1; i++)
+      result += c[i] + ", ";
+    return result + c[c.length - 1];
+  }
 
-	/**
-	 * Parse a long (but return 0 if parse fails)
-	 */
-	public static long parseLong(String s) {
-		try {
-			return Long.parseLong(s);
-		} catch (NumberFormatException e) {
-			return 0;
-		}
-	}
-	
-	/**
-	 * Return a valid grade string if we can find one in the input string, otherwise null
-	 * @param grade
-	 * @return A String representing a grade
-	 */
-	public static String validGrade(String grade) {
-	    String nospace = StringUtil.removeSpaces(grade);
-	    final String gradeStrings[] = new String[]
-		{
-	    		"A+", "A", "A-", "B+", "B", "B-",
-				"C+", "C", "C-", "D+", "D", "D-",
-				"F", "S", "U", "W", "INC", "AUD"
-		};
-	    for(int i = 0; i < gradeStrings.length; i++)
-	    	if(nospace.equalsIgnoreCase(gradeStrings[i]))
-	    		return gradeStrings[i];
-	    return null;
-	}
-	
-	/**
-	 * Look for a full semester name (eg "Spring 2017")
-	 * @param semesterName
-	 * @return
-	 */
-	public static boolean isLegalSemesterName(String semesterName)
-	{
-		return semesterName.matches("(Spring|Summer|Fall) 20\\d\\d");
-	}
-	
-	/**
-	 * Parse the request parameters to get all selected netIDs
-	 * (the main grading page is the one with a checkbox next to each group for a given assignment)
-	 * @param request
-	 * @return A List of Longs (group IDs)
-	 */
-	public static List extractGroupIDsFromMainGradingPageRequest(HttpServletRequest request) {
-		List ids = new ArrayList();
-		for(Iterator i= request.getParameterMap().keySet().iterator(); i.hasNext();) {
-			String param = ((String)i.next()).trim();
-			if(param.startsWith(AccessController.P_GRADEGROUP)) {
-				String groupID = param.split(AccessController.P_GRADEGROUP)[1];
-				try {
-					long id = Long.parseLong(groupID);
-					ids.add(new Long(id));
-				}
-				catch(NumberFormatException e) {} //just don't add it
-			}
-		}
-		String gID = request.getParameter(AccessController.P_GROUPID);
-		if (gID != null) {
-			ids.add(new Long(gID));
-		}
-		return ids;
-	}
+  /**
+   * @return A string containing the string representations of all distinct elements in the collection,
+   * separated by commas
+   */
+  public static String listUniqueElements(Collection c)
+  {
+    if(c == null) return "<null Collection>";
+    Set s = new HashSet();
+    s.addAll(c);
+    Iterator i = s.iterator();
+    String result = "";
+    while (i.hasNext()) {
+      result += i.next().toString();
+      if (i.hasNext()) {
+        result += ", ";
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Return true if they're equal by .equals() OR by both being null
+   * @param one
+   * @param two
+   * @return
+   */
+  public static boolean equalNull(Comparable one, Comparable two) {
+    if (one == null && two == null) return true;
+    if (one == null && two != null) return false;
+    if (one != null && two == null) return false;
+    return one.equals(two);
+  }
+
+  /**
+   * Parse a long (but return 0 if parse fails)
+   */
+  public static long parseLong(String s) {
+    try {
+      return Long.parseLong(s);
+    } catch (NumberFormatException e) {
+      return 0;
+    }
+  }
+
+  /**
+   * Return a valid grade string if we can find one in the input string, otherwise null
+   * @param grade
+   * @return A String representing a grade
+   */
+  public static String validGrade(String grade) {
+    String nospace = StringUtil.removeSpaces(grade);
+    final String gradeStrings[] = new String[]
+                                             {
+        "A+", "A", "A-", "B+", "B", "B-",
+        "C+", "C", "C-", "D+", "D", "D-",
+        "F", "S", "U", "W", "INC", "AUD"
+                                             };
+    for(int i = 0; i < gradeStrings.length; i++)
+      if(nospace.equalsIgnoreCase(gradeStrings[i]))
+        return gradeStrings[i];
+    return null;
+  }
+
+  /**
+   * Look for a full semester name (eg "Spring 2017")
+   * @param semesterName
+   * @return
+   */
+  public static boolean isLegalSemesterName(String semesterName)
+  {
+    return semesterName.matches("(Spring|Summer|Fall) 20\\d\\d");
+  }
+
 }

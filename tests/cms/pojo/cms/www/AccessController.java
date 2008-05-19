@@ -7,7 +7,10 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.text.ParseException;
 import java.util.*;
 
@@ -1119,7 +1122,7 @@ public class AccessController extends HttpServlet {
       
       // Overview resets the principal to its standard view
       if (user.isInStaffAsBlankMode()) {
-        user.resetToStaffMode();
+        resetToStaff(request, user);
       }
       buildURL = OVERVIEW_URL;
       xml = xmlBuilder.buildOverview(user, semester);
@@ -1219,17 +1222,17 @@ public class AccessController extends HttpServlet {
       gradingAction = gradingAction == null ? "" : gradingAction;
       if (gradingAction.equals(GA_GRADE)) {
         if (user.isGradesPrivByAssignment(assign)) {
-          Collection groupIDs = null;
+          Collection groups = null;
           if (!user.isAssignPrivByAssignment(assign) && assign.getAssignedGraders()) {
-            groupIDs =
+            groups =
                 xmlBuilder.getDatabase().assignedToGroups(assign,
                     user,
-                    Util.extractGroupIDsFromMainGradingPageRequest(request));
+                    extractGroupsFromMainGradingPageRequest(request));
           } else {
-            groupIDs = Util.extractGroupIDsFromMainGradingPageRequest(request);
+            groups = extractGroupsFromMainGradingPageRequest(request);
           }
-          if (groupIDs.size() > 0) {
-            xml = xmlBuilder.buildGradePage(user, assign, groupIDs);
+          if (groups.size() > 0) {
+            xml = xmlBuilder.buildGradePage(user, assign, groups);
             buildURL = GRADESTUDENTS_URL;
           } else {
             xml = xmlBuilder.buildGradeAssignPage(user, assign);
@@ -1239,13 +1242,13 @@ public class AccessController extends HttpServlet {
           }
         } else buildURL = FORBIDDEN_URL;
       } else if (gradingAction.equals(GA_FILES)) {
-        List groupIDs = Util.extractGroupIDsFromMainGradingPageRequest(request);
-        if (transactions.authorizeGroupFiles(user, groupIDs)) {
-          if (groupIDs.size() > 0) {
+        List groups = extractGroupsFromMainGradingPageRequest(request);
+        if (transactions.authorizeGroupFiles(user, groups)) {
+          if (groups.size() > 0) {
             response.setContentType("application/zip");
             response.setHeader("Content-disposition", "attachment; filename=\""
                 + SUBMISSIONS_ZIP_FILENAME + "\"");
-            transactions.uploadGroupSubmissions(groupIDs, response
+            transactions.uploadGroupSubmissions(groups, response
                 .getOutputStream());
           }
           buildURL = null;
@@ -1256,9 +1259,9 @@ public class AccessController extends HttpServlet {
         if (user.isAdminPrivByCourse(course)
             || user.isGradesPrivByCourse(course)
             || user.isGroupsPrivByCourse(course)) {
-          Collection groupIDs =
-              Util.extractGroupIDsFromMainGradingPageRequest(request);
-          xml = xmlBuilder.buildEmailPage(user, course, groupIDs);
+          Collection groups =
+              extractGroupsFromMainGradingPageRequest(request);
+          xml = xmlBuilder.buildEmailPage(user, course, groups);
           buildURL = EMAIL_URL;
         } else buildURL = FORBIDDEN_URL;
       } else if (gradingAction.equals(GA_GRANT) || gradingAction.equals(GA_CHANGE)) {
@@ -1281,11 +1284,10 @@ public class AccessController extends HttpServlet {
                                                     // whose checkboxes were
                                                     // selected
         if (user.isGroupsPrivByAssignment(assign)) {
-          List groupIDs =
-              Util.extractGroupIDsFromMainGradingPageRequest(request);
+          List groups = extractGroupsFromMainGradingPageRequest(request);
           // TransactionHandler makes sure they haven't already been graded
           TransactionResult result =
-              transactions.groupSelectedStudents(user, assign, groupIDs);
+              transactions.groupSelectedStudents(user, assign, groups);
           buildURL = GRADEASSIGN_URL;
           xml = xmlBuilder.buildGradeAssignPage(user, assign);
           if (result.hasErrors())
@@ -1298,11 +1300,10 @@ public class AccessController extends HttpServlet {
                                                       // whose checkboxes were
                                                       // selected
         if (user.isGroupsPrivByAssignment(assign)) {
-          List groupIDs =
-              Util.extractGroupIDsFromMainGradingPageRequest(request);
+          List groups = extractGroupsFromMainGradingPageRequest(request);
           // TransactionHandler makes sure they haven't already been graded
           TransactionResult result =
-              transactions.ungroupSelectedStudents(user, assign, groupIDs);
+              transactions.ungroupSelectedStudents(user, assign, groups);
           buildURL = GRADEASSIGN_URL;
           xml = xmlBuilder.buildGradeAssignPage(user, assign);
           if (result.hasErrors())
@@ -1315,8 +1316,7 @@ public class AccessController extends HttpServlet {
                                                           // netids in textbox
                                                           // contents
         if (user.isGroupsPrivByAssignment(assign)) {
-          List netids =
-              StringUtil.parseNetIDList(request.getParameter(P_NETIDLIST));
+          List netids = StringUtil.parseNetIDList(request.getParameter(P_NETIDLIST));
           TransactionResult result =
               transactions.createGroup(user, netids, assign);
           buildURL = GRADEASSIGN_URL;
@@ -1369,7 +1369,7 @@ public class AccessController extends HttpServlet {
     // View staff-side survey page
     else if (action.equals(ACT_SURVEYADMIN)) {
       Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
-      if (user.isAssignPrivByAssignmentID(assign)) {
+      if (user.isAssignPrivByAssignment(assign)) {
         buildURL = ASSIGNADMIN_URL;
         xml = xmlBuilder.buildBasicAssignmentPage(user, assign);
       } else buildURL = FORBIDDEN_URL;
@@ -1377,7 +1377,7 @@ public class AccessController extends HttpServlet {
     // View staff-side quiz page
     else if (action.equals(ACT_QUIZADMIN)) {
       Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
-      if (user.isAssignPrivByAssignmentID(assign)) {
+      if (user.isAssignPrivByAssignment(assign)) {
         buildURL = ASSIGNADMIN_URL;
         xml = xmlBuilder.buildBasicAssignmentPage(user, assign);
       } else buildURL = FORBIDDEN_URL;
@@ -1405,7 +1405,7 @@ public class AccessController extends HttpServlet {
     // View one of the CMS administration pages
     else if (action.equals(ACT_CMSADMIN)) {
       if (user.isInStaffAsBlankMode()) {
-        user.resetToStaffMode();
+        resetToStaff(request, user);
       }
       if (user.isCMSAdmin()) {
         buildURL = CMSADMIN_URL;
@@ -1518,7 +1518,7 @@ public class AccessController extends HttpServlet {
     else if (action.equals(ACT_COURSE)) {
       Course course = getCourse(request.getParameter(P_COURSEID));
       if (request.getParameter(P_RESET) != null && user.isInStaffAsBlankMode()) {
-        user.resetToStaffMode();
+        resetToStaff(request, user);
       }
       if (user.hasCourseAccess(course)) {
         buildURL = COURSE_URL;
@@ -1538,7 +1538,7 @@ public class AccessController extends HttpServlet {
       Course course = getCourse(request.getParameter(P_COURSEID));
       // Reset principal to default
       if (user.isInStaffAsBlankMode()) {
-        user.resetToStaffMode();
+        resetToStaff(request, user);
       }
       if (user.isStaffInCourseByCourse(course)) {
         buildURL = COURSEADMIN_URL;
@@ -1860,9 +1860,9 @@ public class AccessController extends HttpServlet {
           groups =
               xmlBuilder.getDatabase().assignedToGroups(assign,
                   user,
-                  Util.extractGroupIDsFromMainGradingPageRequest(request));
+                  extractGroupsFromMainGradingPageRequest(request));
         } else {
-          groups = Util.extractGroupIDsFromMainGradingPageRequest(request);
+          groups = extractGroupsFromMainGradingPageRequest(request);
         }
         if (groups.size() > 0) {
           xml = xmlBuilder.buildGradePage(user, assign, groups);
@@ -2423,7 +2423,7 @@ public class AccessController extends HttpServlet {
     // Download survey CVS
     else if (action.equals(ACT_SURVEYDOWNLOAD)) {
       Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
-      if (user.isAdminPrivByAssignmentID(assign)) {
+      if (user.isAdminPrivByAssignment(assign)) {
         String filename = request.getParameter(P_FILENAME);
         response.setContentType("text/csv");
         response.setHeader("Content-disposition", "attachment; filename=\""
@@ -2448,7 +2448,7 @@ public class AccessController extends HttpServlet {
     // Display result of a survey
     else if (action.equals(ACT_SURVEYRESULT)) {
       Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
-      if (user.isAdminPrivByAssignmentID(assign)) {
+      if (user.isAdminPrivByAssignment(assign)) {
         xml = xmlBuilder.buildSurveyResultPage(user, assign);
         buildURL = SURVEYRESULT_URL;
       } else buildURL = FORBIDDEN_URL;
@@ -2635,11 +2635,11 @@ public class AccessController extends HttpServlet {
     else if (action.equals(ACT_VIEWCORNELLMEM)) {
       Course course = getCourse(request.getParameter(P_COURSEID));
       if (user.isInStaffAsBlankMode()) {
-        user.resetToStaffMode();
+        resetToStaff(request, user);
       }
       if (user.isAdminPrivByCourse(course)) {
         if (course.getCourseCCAccess()) {
-          user.setStaffAsCornellMem(course);
+          assumeMemberRole(request, user, course);
           buildURL = COURSE_URL;
           xml = xmlBuilder.buildCoursePage(user, course);
         } else {
@@ -2655,11 +2655,11 @@ public class AccessController extends HttpServlet {
     } else if (action.equals(ACT_VIEWGUEST)) {
       Course course = getCourse(request.getParameter(P_COURSEID));
       if (user.isInStaffAsBlankMode()) {
-        user.resetToStaffMode();
+        resetToStaff(request, user);
       }
       if (user.isAdminPrivByCourse(course)) {
         if (course.getCourseGuestAccess()) {
-          user.setStaffAsGuest(course);
+          assumeGuestRole(request, user, course);
           buildURL = COURSE_URL;
           xml = xmlBuilder.buildCoursePage(user, course);
         } else {
@@ -2675,11 +2675,8 @@ public class AccessController extends HttpServlet {
       } else buildURL = FORBIDDEN_URL;
     } else if (action.equals(ACT_VIEWRESET)) {
       if (user.isInStaffAsBlankMode()) {
-        Course course = user.getCourse();
-        user.resetToStaffMode();
-        if (user.isStaffInCourseByCourse(course)) {
-          user.resetToStaffMode();
-        }
+        Course course = getAssumedCourse(request, user);
+        resetToStaff(request, user);
         if (user.isStaffInCourseByCourse(course)) {
           buildURL = COURSEADMIN_URL;
           xml = xmlBuilder.buildCoursePage(user, course);
@@ -2702,11 +2699,10 @@ public class AccessController extends HttpServlet {
         resetToStaff(request, user);
       }
       if (user.isAdminPrivByCourse(course)) {
-        String message = null;
-        message = user.setStaffAsStudent(studentID, course);
-        if (message != null) {
+        user = assumeStudentRole(request, user, getUser(studentID), course);
+        if (user == null) {
           xml = (Document) session.getAttribute(A_DISPLAYDATA);
-          xml = xmlBuilder.addStatus(xml, message, xmlBuilder.MSG_ERROR);
+          xml = xmlBuilder.addStatus(xml, "failed to change role", xmlBuilder.MSG_ERROR);
           buildURL = (String) session.getAttribute(A_URL);
         } else {
           xml = xmlBuilder.buildCoursePage(user, course);
@@ -2754,8 +2750,23 @@ public class AccessController extends HttpServlet {
     return new RequestHandlerInfo(buildURL, xml);
   }
 
-  private User assumeRole(ServletRequest request, User staff, User assumed) {
+  private Course getAssumedCourse(HttpServletRequest request, User user) {
     // TODO Auto-generated method stub
+    return null;
+  }
+
+  private User assumeStudentRole(ServletRequest request, User staff, User assumed, Course course) {
+    // TODO Auto-generated method stub
+    return staff;
+  }
+  
+  private User assumeGuestRole(ServletRequest request, User staff, Course course) {
+    // TODO
+    return staff;
+  }
+  
+  private User assumeMemberRole(ServletRequest request, User staff, Course course) {
+    // TODO
     return staff;
   }
   
@@ -2807,6 +2818,31 @@ public class AccessController extends HttpServlet {
     return xmlBuilder.getDatabase().getAssignment(assignID);
   }
 
+  /**
+   * Parse the request parameters to get all selected netIDs
+   * (the main grading page is the one with a checkbox next to each group for a given assignment)
+   * @param request
+   * @return A List of Groups
+   */
+  private List extractGroupsFromMainGradingPageRequest(HttpServletRequest request) {
+    List result = new ArrayList();
+    Iterator i = request.getParameterMap().keySet().iterator();
+    while(i.hasNext()) {
+      String param = ((String)i.next()).trim();
+      if(param.startsWith(P_GRADEGROUP)) {
+        Group group = getGroup(param.split(P_GRADEGROUP)[1]);
+        if (group != null)
+          result.add(group);
+      }
+    }
+    
+    Group group = getGroup(request.getParameter(P_GROUPID));
+    if (group != null) {
+      result.add(group);
+    }
+    return result;
+  }
+  
   private void sendFile(long id, int type, HttpServletResponse response)
       throws IOException, IllegalArgumentException {
     DownloadFile file = null;

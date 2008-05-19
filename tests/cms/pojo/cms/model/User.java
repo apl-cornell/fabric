@@ -143,6 +143,38 @@ public class User implements Principal {
   public boolean delegatesTo(Principal delagatee) {
     return false;
   }
+  public boolean hasCourseAccess(Course course) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean hasStudentsPageAccess(Course course) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isAdminPrivByAssignment(Assignment assign) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isCategoryPrivByCategory(Category category) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isGradesPrivByAssignment(Assignment assign) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isGroupsPrivByAssignment(Assignment assign) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isStudentInCourseByAssignment(Assignment assign) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isStudentInCourseByGroup(Group group) {
+    // TODO Auto-generated method stub
+    return false;
+  }
 }
 
 /*

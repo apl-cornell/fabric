@@ -4,6 +4,7 @@ import java.util.Collections;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import cms.auth.Principal;
@@ -214,6 +215,11 @@ public class CMSRoot {
     return null;
   }
   public SubProblem getSubProblem(String subProblemID) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  
+  public Collection assignedToGroups(Assignment assign, User user, List/*Group*/ list) {
     // TODO Auto-generated method stub
     return null;
   }
