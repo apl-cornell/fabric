@@ -126,10 +126,9 @@ public final class TransactionManager {
           return new TransactionManager();
         }
       };
-  private static final TransactionManager aoeu = new TransactionManager();
 
   public static TransactionManager getInstance() {
-    return aoeu;// instance.get();
+    return instance.get();
   }
 
   private TransactionManager() {
