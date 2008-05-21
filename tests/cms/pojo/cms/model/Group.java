@@ -3,6 +3,7 @@ package cms.model;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.Iterator;
 
 public class Group {
@@ -62,10 +63,6 @@ public class Group {
     setLatestSubmission(null);
   }
   
-  public Student findStudent(User member) {
-    // TODO Auto-generated method stub
-    return null;
-  }
   public Collection/*Comment*/ getComments() {
     // TODO Auto-generated method stub
     return null;
@@ -81,6 +78,10 @@ public class Group {
     return null;
   }
   public GroupMember findGroupMember(User user) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Collection/*GroupMember*/ findActiveMembers() {
     // TODO Auto-generated method stub
     return null;
   }

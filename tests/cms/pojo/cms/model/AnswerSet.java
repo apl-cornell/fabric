@@ -53,10 +53,11 @@ public class AnswerSet {
     setSubmissionDate(submitted);
   }
 
-  public Collection getAnswers() {
+  public Collection/*Answer*/ getAnswers() {
     // TODO Auto-generated method stub
     return null;
   }
+
   public Answer getAnswer(SubProblem subProblem) {
     // TODO Auto-generated method stub
     return null;

@@ -10,33 +10,33 @@ public class GroupMember {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private Group  group;
-  private User   member;
-  private String status;
+  private Group   group;
+  private Student member;
+  private String  status;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setGroup  (final Group group)   { this.group  = group;  }
-  public void setMember (final User member)   { this.member = member; }
-  public void setStatus (final String status) { this.status = status; }
+  public void setGroup   (final Group group)      { this.group  = group;  }
+  public void setStudent (final Student member)   { this.member = member; }
+  public void setStatus  (final String status)    { this.status = status; }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Group  getGroup()  { return this.group;  }
-  public User   getMember() { return this.member; }
-  public String getStatus() { return this.status; }
+  public Group   getGroup()   { return this.group;  }
+  public Student getStudent() { return this.member; }
+  public String  getStatus()  { return this.status; }
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public GroupMember(Group group, User user, String status) {
+  public GroupMember(Group group, Student user, String status) {
     setGroup(group);
-    setMember(user);
+    setStudent(user);
     setStatus(status);
   }
 }

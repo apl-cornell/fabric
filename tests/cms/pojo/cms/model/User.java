@@ -71,6 +71,7 @@ public class User implements Principal {
     else
       return getLastName();
   }
+  
   public Collection/*Semester*/ findSemesters() {
     // TODO Auto-generated method stub
     return null;

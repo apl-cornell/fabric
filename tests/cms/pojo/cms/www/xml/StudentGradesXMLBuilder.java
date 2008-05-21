@@ -132,9 +132,9 @@ public class StudentGradesXMLBuilder {
               .item(0);
       if (xGroup != null) {
         Element xMember =
-            xml.createElementNS(XMLBuilder.TAG_MEMBER + m.getMember().getNetID(),
+            xml.createElementNS(XMLBuilder.TAG_MEMBER + m.getStudent().getUser().getNetID(),
                 XMLBuilder.TAG_MEMBER);
-        xMember.setAttribute(XMLBuilder.A_NETID, m.getMember().getNetID());
+        xMember.setAttribute(XMLBuilder.A_NETID, m.getStudent().getUser().getNetID());
         xGroup.appendChild(xMember);
       }
     }

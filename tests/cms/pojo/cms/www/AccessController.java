@@ -888,7 +888,7 @@ public class AccessController extends HttpServlet {
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
     if (transactions == null) {
-      transactions = new TransactionHandler();
+      transactions = new TransactionHandler(xmlBuilder.getDatabase());
     }
 
     debug = xmlBuilder.getDatabase().getDebugMode();
@@ -2478,7 +2478,7 @@ public class AccessController extends HttpServlet {
             TimeSlot slot  = getTimeSlot((String) entry.getValue());
             if (slot != null) {
               TransactionResult result =
-                  transactions.changeGroupSlotByID(user, group, assign, slot, true, false);
+                  transactions.changeGroupSlotBy(user, group, assign, slot, true, false);
               results.add(result);
             }
           }

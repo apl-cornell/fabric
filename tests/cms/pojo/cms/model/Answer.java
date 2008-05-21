@@ -6,38 +6,38 @@ package cms.model;
  */
 public class Answer {
 
-  AnswerSet  answerSet;
-  SubProblem subProblem;
-  String     text;
+  //////////////////////////////////////////////////////////////////////////////
+  // private members                                                          //
+  //////////////////////////////////////////////////////////////////////////////
+
+  private AnswerSet  answerSet;
+  private SubProblem subProblem;
+  private String     text;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public setters                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public void setAnswerSet  (final AnswerSet answerSet)   { this.answerSet  = answerSet;  }
+  public void setSubProblem (final SubProblem subProblem) { this.subProblem = subProblem; }
+  public void setText       (final String text)           { this.text       = text;       }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public getters                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public AnswerSet  getAnswerSet()  { return this.answerSet;  }
+  public SubProblem getSubProblem() { return this.subProblem; }
+  public String     getText()       { return this.text;       }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public constructors                                                      //
+  //////////////////////////////////////////////////////////////////////////////
 
   public Answer(AnswerSet answerSet, SubProblem sub, String text) {
     this.answerSet  = answerSet;
     this.subProblem = sub;
     this.text       = text;
-  }
-
-  public AnswerSet getAnswerSet() {
-    return answerSet;
-  }
-
-  public void setAnswerSet(AnswerSet answerSet) {
-    this.answerSet = answerSet;
-  }
-
-  public SubProblem getSubProblem() {
-    return subProblem;
-  }
-
-  public void setSubProblem(SubProblem sp) {
-    this.subProblem = sp;
-  }
-
-  public String getText() {
-    return text;
-  }
-
-  public void setText(String text) {
-    this.text = text;
   }
 }
   

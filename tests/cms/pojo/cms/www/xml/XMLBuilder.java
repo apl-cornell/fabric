@@ -577,7 +577,7 @@ public class XMLBuilder {
 
         while (members.hasNext()) {
           GroupMember member = (GroupMember) members.next();
-          selectedIDs.add(member.getMember().getNetID());
+          selectedIDs.add(member.getStudent().getUser().getNetID());
         }
       }
     }

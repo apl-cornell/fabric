@@ -1,6 +1,5 @@
 package cms.model;
 
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,7 +18,7 @@ public class Assignment {
   public static final int SURVEY     = 1;
   public static final int QUIZ       = 2;
 
-  // ////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
@@ -42,7 +41,7 @@ public class Assignment {
   
   //timeslot info
   private boolean scheduled;        // enable/disable scheduling
-  private int     groupLimit;
+  private Integer groupLimit;
   private Long    duration;
   private Date    timeslotLockTime; // time after which *students* can't change assigned timeslots (null = no deadline)
 
@@ -109,7 +108,7 @@ public class Assignment {
   public void setGroupSizeMin     (final int groupSizeMin)         { this.groupSizeMin     = groupSizeMin;     }
   public void setType             (final int type)                 { this.type             = type;             }
   public void setScheduled        (final boolean scheduled)        { this.scheduled        = scheduled;        }
-  public void setGroupLimit       (final int groupLimit)           { this.groupLimit       = groupLimit;       }
+  public void setGroupLimit       (final Integer groupLimit)       { this.groupLimit       = groupLimit;       }
   public void setDuration         (final Long duration)            { this.duration         = duration;         }
   public void setTimeslotLockTime (final Date timeslotLockTime)    { this.timeslotLockTime = timeslotLockTime; }
 
@@ -154,7 +153,7 @@ public class Assignment {
   public int     getGroupSizeMin()     { return this.groupSizeMin;     }
   public int     getType()             { return this.type;             }
   public boolean getScheduled()        { return this.scheduled;        }
-  public int     getGroupLimit()       { return this.groupLimit;       }
+  public Integer getGroupLimit()       { return this.groupLimit;       }
   public Long    getDuration()         { return this.duration;         }
   public Date    getTimeslotLockTime() { return this.timeslotLockTime; }
 

@@ -117,16 +117,16 @@ public class AssignmentGroupsXMLBuilder {
           xGroup.setAttribute(XMLBuilder.A_LATESUBMISSION, "true");
         }
       }
-      Student student = group.findStudent(groupmem.getMember());
+      Student student = groupmem.getStudent();
       String section = student.getSection();
 
       Element xGroupMember = xml.createElement(XMLBuilder.TAG_MEMBER);
       xGroupMember.setAttribute(XMLBuilder.A_NETID, 
-                                groupmem.getMember().getNetID());
+                                student.getUser().getNetID());
       xGroupMember.setAttribute(XMLBuilder.A_FIRSTNAME,
-                                groupmem.getMember().getFirstName());
+                                student.getUser().getFirstName());
       xGroupMember.setAttribute(XMLBuilder.A_LASTNAME,
-                                groupmem.getMember().getLastName());
+                                student.getUser().getLastName());
       xGroupMember.setAttribute(XMLBuilder.A_SECTION, section);
       xGroup.appendChild(xGroupMember);
     }

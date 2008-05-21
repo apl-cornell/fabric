@@ -94,7 +94,7 @@ public class GroupXMLBuilder {
       GroupMember member = (GroupMember) i.next();
       if (member.getStatus() != GroupMember.ACTIVE)
         continue;
-      User user = member.getMember();
+      User user = member.getStudent().getUser();
       
       Element xMember = xml.createElement(XMLBuilder.TAG_MEMBER);
       xMember.setAttribute(XMLBuilder.A_NETID, user.getNetID());
@@ -127,7 +127,7 @@ public class GroupXMLBuilder {
       GroupMember member = (GroupMember) i.next();
       if (member.getStatus() != GroupMember.INVITED)
         continue;
-      User user = member.getMember();
+      User user = member.getStudent().getUser();
       
       Element xInvited = xml.createElement(XMLBuilder.TAG_INVITATION);
       xInvited.setAttribute(XMLBuilder.A_NETID, user.getNetID());
@@ -178,12 +178,12 @@ public class GroupXMLBuilder {
           xInvitedGroups.appendChild(xInvite);
         }
         Element xUser = xml.createElement(XMLBuilder.TAG_ITEM);
-        StringBuilder name = new StringBuilder(inviter.getMember().getFirstName());
+        StringBuilder name = new StringBuilder(inviter.getStudent().getUser().getFirstName());
         if (name.length() > 0)
           name.append(" ");
-        name.append(inviter.getMember().getLastName());
+        name.append(inviter.getStudent().getUser().getLastName());
         xUser.setAttribute(XMLBuilder.A_NAME, name.toString());
-        xUser.setAttribute(XMLBuilder.A_ID, inviter.getMember().getNetID());
+        xUser.setAttribute(XMLBuilder.A_ID, inviter.getStudent().getUser().getNetID());
         xInvite.appendChild(xUser);
       }
     }

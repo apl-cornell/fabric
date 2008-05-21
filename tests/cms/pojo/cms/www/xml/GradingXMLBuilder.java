@@ -84,9 +84,9 @@ public class GradingXMLBuilder {
         GroupMember member = (GroupMember) members.next();
 
         Element xMember = xml.createElementNS(
-            XMLBuilder.TAG_MEMBER + member.getMember().getNetID(),
+            XMLBuilder.TAG_MEMBER + member.getStudent().getUser().getNetID(),
             XMLBuilder.TAG_MEMBER);
-        xMember.setAttribute(XMLBuilder.A_NETID, member.getMember().getNetID());
+        xMember.setAttribute(XMLBuilder.A_NETID, member.getStudent().getUser().getNetID());
         xGroup.appendChild(xMember);
       }
     }

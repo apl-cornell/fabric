@@ -54,7 +54,7 @@ import com.Ostermiller.util.ExcelCSVPrinter;
 import cms.model.*;
 
 /**
- * TransactionHandler is a wrapper class for TransactionBean. For each
+ * TransactionHandler is a wrapper class for Transaction. For each
  * transaction the system supports, the servlet passes the transaction
  * parameters to the methods in this class, the validity of the arguments is
  * verified, and meaningful error messages are produced to be displayed to the
@@ -63,24 +63,14 @@ import cms.model.*;
  * @author Jon
  */
 public class TransactionHandler {
-  private static CMSRoot database = null;
-
-  private static TransactionsLocal transactions = null;
+  private CMSRoot      database     = null;
+  private Transactions transactions = null;
   private DocumentBuilder db = null;
   private Properties env;
 
-  public TransactionHandler() {
-    try {
-      if (transactions == null) {
-        transactions = getHome().create();
-      }
-      if (database == null) {
-        database = transactions.getRoot();
-      }
-      db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public TransactionHandler(final CMSRoot database) {
+    this.database     = database;
+    this.transactions = new Transactions(database); 
   }
 
   /**
@@ -89,106 +79,69 @@ public class TransactionHandler {
    * other groups they are currently active in.
    * 
    * @param netid
-   *          The NetID of the user
+   *          The Net of the user
    * @param groupid
-   *          The GroupID of the group to accept into
+   *          The Group of the group to accept into
    * @return TransactionResult
    */
   public TransactionResult acceptInvitation(User p, Group group) {
     TransactionResult result = new TransactionResult();
-    try {
-      String netid = p.getNetID();
-      GroupLocal group = null;
-      try {
-        group = database.groupHome().findByGroupID(groupid);
-      } catch (Exception e) {
+    Assignment assignment = group.getAssignment();
+    Student student = assignment == null ? null
+        : assignment.getCourse().getStudent(p);
+    GroupMember member  = group.findGroupMember(p);
+    GroupMember current =
+        database.groupMemberHome().findActiveByNetAssignment(p,group.getAssignment());
+    if (group == null) {
+      result.addError("Invalid group entered, does not exist");
+      return result;
+    }
+    if (assignment == null || assignment.getHidden()) {
+      result.addError("No corresponding assignment exists");
+      return result;
+    } else if (!assignment.getStatus().equals(Assignment.OPEN)) {
+      result.addError("Group management is not currently available for this assignment");
+      return result;
+    }
+    if (courseIsFrozen(assignment.getCourse())) {
+      result.addError("Course is frozen, no changes may be made to it");
+      return result;
+    }
+    if (student == null || !student.getStatus().equals(Student.ENROLLED)) {
+      result.addError("Must be an enrolled student in this course to accept invitations");
+      return result;
+    }
+    if (member == null || !member.getStatus().equals(GroupMember.INVITED)) {
+      if (member != null && member.getStatus().equals(GroupMember.ACTIVE)) {
+        result.addError("Already an active member of this group");
+      } else {
+        result.addError("No invitation to join this group exists");
       }
-      AssignmentLocal assignment = null;
-      try {
-        assignment = database.assignmentHome().findByGroupID(groupid);
-      } catch (Exception e) {
-      }
-      StudentLocal student = null;
-      try {
-        student =
-            assignment == null ? null : database.studentHome()
-                .findByPrimaryKey(
-                    new StudentPK(assignment.getCourseID(), netid));
-      } catch (Exception e) {
-      }
-      GroupMemberLocal member = null, current = null;
-      try {
-        member =
-            database.groupMemberHome().findByPrimaryKey(
-                new GroupMemberPK(groupid, netid));
-      } catch (Exception e) {
-      }
-      try {
-        current =
-            database.groupMemberHome().findActiveByNetIDAssignmentID(netid,
-                group.getAssignmentID());
-      } catch (Exception e) {
-      }
-      if (group == null) {
-        result.addError("Invalid group entered, does not exist");
-        return result;
-      }
-      if (assignment == null || assignment.getHidden()) {
-        result.addError("No corresponding assignment exists");
-        return result;
-      } else if (!assignment.getStatus().equals(AssignmentBean.OPEN)) {
-        result
-            .addError("Group management is not currently available for this assignment");
-        return result;
-      }
-      if (courseIsFrozen(assignment.getCourseID())) {
-        result.addError("Course is frozen, no changes may be made to it");
-        return result;
-      }
-      if (student == null || !student.getStatus().equals(StudentBean.ENROLLED)) {
-        result
-            .addError("Must be an enrolled student in this course to accept invitations");
-        return result;
-      }
-      if (member == null || !member.getStatus().equals(GroupMemberBean.INVITED)) {
-        if (member != null && member.getStatus().equals(GroupMemberBean.ACTIVE)) {
-          result.addError("Already an active member of this group");
-        } else {
-          result.addError("No invitation to join this group exists");
-        }
-      }
-      Collection grades =
-          (current == null ? null : database.gradeHome()
-              .findMostRecentByNetAssignmentID(current.getNetID(),
-                  group.getAssignmentID()));
-      if (grades != null && grades.size() > 0) {
-        result.addError("Cannot change groups for this assignment");
+    }
+    Collection grades = current == null ? null
+                                        : assignment.findMostRecentGrades(p);
+    if (grades != null && grades.size() > 0) {
+      result.addError("Cannot change groups for this assignment");
+    }
+    if (!result.hasErrors()) {
+      int numMembers = group.findActiveMembers().size();
+      int maxSize = assignment.getGroupSizeMax();
+      if (numMembers >= maxSize) {
+        result.addError("Cannot join group, it is already full");
       }
       if (!result.hasErrors()) {
-        int numMembers =
-            database.groupMemberHome().findActiveByGroupID(groupid).size();
-        int maxSize = assignment.getGroupSizeMax();
-        if (numMembers >= maxSize) {
-          result.addError("Cannot join group, it is already full");
-        }
-        if (!result.hasErrors()) {
-          if (transactions.acceptInvitation(p, groupid)) {
-            result.setValue("Successfully joined group");
-          } else {
-            result.addError("Database failed to update invite acceptance");
-          }
+        if (transactions.acceptInvitation(p, group)) {
+          result.setValue("Successfully joined group");
+        } else {
+          result.addError("Database failed to update invite acceptance");
         }
       }
-
-    } catch (Exception e) {
-      result.addError("Database failed to update invite acceptance");
-      e.printStackTrace();
     }
     return result;
   }
 
   /**
-   * Add a current user's NetID to the list of those given CMS admin access
+   * Add a current user's Net to the list of those given CMS admin access
    * 
    * @return TransactionResult
    */
@@ -196,7 +149,7 @@ public class TransactionHandler {
     TransactionResult result = new TransactionResult();
     boolean success = false;
     try {
-      success = transactions.addCMSAdmin(p, netID.toLowerCase());
+      success = transactions.addCMSAdmin(p, admin);
     } catch (Exception e) {
       result.addError("Database failed to add CMS admin");
       e.printStackTrace();
@@ -289,13 +242,13 @@ public class TransactionHandler {
    * addCtgContents(), editCtgContents())
    * 
    * @param item
-   * @param categoryID
+   * @param category
    * @param cellCount
    *          The index of this file within its (row, col) cell
    * @param fileCount
    *          The number of files currently stored in this category
-   * @param rowID
-   * @param colID
+   * @param row
+   * @param col
    * @return A CtgFileInfo representing the file, which is now stored on disk on
    *         the server
    * @throws FileUploadException
@@ -303,19 +256,19 @@ public class TransactionHandler {
    */
   private CtgFileInfo downloadCategoryFile(FileItem item, Category category,
       int cellCount, int fileCount, CategoryRow row, CategoryColumn col) throws FileUploadException {
-    fileCount += 1; // the folder with ID fileCount will already have been
-                    // created; let's use the next ID
+    fileCount += 1; // the folder with  fileCount will already have been
+                    // created; let's use the next 
     String fullFileName = FileUtil.trimFilePath(item.getName()); // title +
                                                                   // extension
     /*
-     * TODO category ID is independent of course, so we don't really need course
-     * ID here; but note that removing it will require changing the CMS
-     * filesystem structure. For now use course ID 0 for everything
+     * TODO category  is independent of course, so we don't really need course
+     *  here; but note that removing it will require changing the CMS
+     * filesystem structure. For now use course  0 for everything
      */
-    Course course = 0;
+    Course course = null;
     java.io.File file =
-        new File(FileUtil.getCategoryFileSystemPath(courseID, categoryID,
-            rowID, colID, fileCount, fullFileName)), parent =
+        new File(FileUtil.getCategoryFileSystemPath(course, category,
+            row, col, fileCount, fullFileName)), parent =
         file.getParentFile();
     if (parent.exists())
       throw new FileUploadException("Failed to create a unique file path");
@@ -326,13 +279,13 @@ public class TransactionHandler {
           "Failed to create a new file in local directory");
     item.write(file); // actually copy the file data to a specified place in the
                       // filesystem
-    return new CtgFileInfo(categoryID, fullFileName, cellCount, file
+    return new CtgFileInfo(category, fullFileName, cellCount, file
         .getParent());
   }
 
   /**
    * Put together a CategoryCtntsOption structure describing all changes to make
-   * to the given category, and pass it to TransactionsBean for actual DB
+   * to the given category, and pass it to Transactions for actual DB
    * changes. Space efficiency in the database: When a cell is created it isn't
    * entered into the database because there's no data in it yet. It is editable
    * from the content-edit page; when non-empty data is entered there for the
@@ -342,34 +295,32 @@ public class TransactionHandler {
    * 
    * @return TransactionResult
    */
-  public TransactionResult addNEditCtgContents(User p, Category ctgID,
+  public TransactionResult addNEditCtgContents(User p, Category cat,
       HttpServletRequest request) {
     Profiler.enterMethod("TransactionHandler.addNEditCtgContents",
-        "CategoryID: " + ctgID);
+        "Category: " + cat.toString());
     TransactionResult result = new TransactionResult();
     try {
-      CategoryLocal cat =
-          database.categoryHome().findByPrimaryKey(new CategoryPK(ctgID));
-      if (courseIsFrozen(cat.getCourseID()))
-        result.addError("Course is frozen; no changes may be made to it");
-      else if (cat == null)
+      if (cat == null)
         result.addError("Couldn't find content in database");
+      else if (courseIsFrozen(cat.getCourse()))
+        result.addError("Course is frozen; no changes may be made to it");
       else {
-        CategoryCtntsOption contents = new CategoryCtntsOption(ctgID);
+        CategoryCtntsOption contents = new CategoryCtntsOption(cat);
         DiskFileUpload upload = new DiskFileUpload();
         List params =
-            upload.parseRequest(request, 1024, AccessController.maxFileSize,
-                FileUtil.TEMP_DIR);
+          upload.parseRequest(request, 1024, AccessController.maxFileSize,
+              FileUtil.TEMP_DIR);
         /*
-         * Create a map from the row ID used by the JSP to an ArrayList with all
+         * Create a map from the row  used by the JSP to an ArrayList with all
          * FileItems representing content adds that need to be be put into that
          * row, so we can create each row as a unit instead of haphazardly
          */
         Iterator i = params.iterator();
-        HashMap rowMap = new HashMap(); // map rowID from JSP to ArrayList of
-                                        // FileItems
+        HashMap rowMap = new HashMap(); // map row from JSP to ArrayList of
+        // FileItems
         ArrayList editItems = new ArrayList(); // the FileItems that won't be
-                                                // processed through rowMap
+        // processed through rowMap
         while (i.hasNext()) {
           FileItem item = (FileItem) i.next();
           // list the category rows we'll need to create new db entries for
@@ -377,11 +328,11 @@ public class TransactionHandler {
               AccessController.P_PREFIX_NEW_CONTENT)) {
             // '_' separates info bits in the request param
             String[] msgParts = item.getFieldName().split("_");
-            long rowID = Long.parseLong(msgParts[1]);
-            if (!rowMap.containsKey(new Long(rowID))) // need to create a record
-                                                      // for this row
-              rowMap.put(new Long(rowID), new ArrayList());
-            ((ArrayList) rowMap.get(new Long(rowID))).add(item);
+            long row = Long.parseLong(msgParts[1]);
+            if (!rowMap.containsKey(new Long(row))) // need to create a record
+              // for this row
+              rowMap.put(new Long(row), new ArrayList());
+            ((ArrayList) rowMap.get(new Long(row))).add(item);
           } else editItems.add(item);
         }
         /*
@@ -391,26 +342,26 @@ public class TransactionHandler {
          * format of edit request param: <TYPE>_<CONTENT>[_<FILE_INDEX>] to
          * change data or download a file OR <TYPE>_<ROW>_<COL>[_<FILE_INDEX>]
          * to change data that isn't in the db yet because its cell is currently
-         * empty OR <TYPE>_<ROW> or <TYPE>_<FILEID> to hide/unhide a row or
+         * empty OR <TYPE>_<ROW> or <TYPE>_<FILE> to hide/unhide a row or
          * file
          * **************************************************************************
-         * <COL> is the column ID in the database; <ROW> is a unique row ID just
-         * for the HTML form <CONTENT> is the content ID in the database <ROW>
-         * is the row ID in the database (not generated by the JSP, as when
+         * <COL> is the column  in the database; <ROW> is a unique row  just
+         * for the HTML form <CONTENT> is the content  in the database <ROW>
+         * is the row  in the database (not generated by the JSP, as when
          * adding content) <FILE_INDEX> is the index of a file within its
          * content cell
          */
         long curCtgFileCount = cat.getFileCount(); // will be updated at each
-                                                    // new file download
+        // new file download
         // go through our map and add the data for each row in turn to the
         // contents info structure
-        Set rowIDs = rowMap.keySet();
-        i = rowIDs.iterator();
+        Set rows = rowMap.keySet();
+        i = rows.iterator();
         System.out.println("NOW ADDING");
         while (i.hasNext()) {
-          Long jspRowID = (Long) i.next();
-          long rowID = contents.createNewRow(jspRowID.longValue());
-          ArrayList itemList = (ArrayList) rowMap.get(jspRowID);
+          Long jspRow = (Long) i.next();
+          long row = contents.createNewRow(jspRow.longValue());
+          ArrayList itemList = (ArrayList) rowMap.get(jspRow);
           for (int j = 0; j < itemList.size(); j++) {
             FileItem item = (FileItem) itemList.get(j);
             if (item.isFormField())
@@ -424,96 +375,96 @@ public class TransactionHandler {
              * match those used by categoryscript.js in web/staff/category
              */
             if (msgParts[0].equals(AccessController.P_NEW_CONTENT_TEXT)) // add
-                                                                          // arbitrary
-                                                                          // text/html
+              // arbitrary
+              // text/html
             {
-              long colID = Long.parseLong(msgParts[2]);
+              long col = Long.parseLong(msgParts[2]);
               // don't add a db entry if there's no information yet
               if (item.getString().length() > 0)
-                contents.addNewCtntText(colID, rowID, item.getString());
+                contents.addNewCtntText(col, row, item.getString());
             } else if (msgParts[0].equals(AccessController.P_NEW_CONTENT_DATE)) // add
-                                                                                // a
-                                                                                // date
+              // a
+              // date
             {
-              long colID = Long.parseLong(msgParts[2]);
+              long col = Long.parseLong(msgParts[2]);
               String dateStr = item.getString();
               Date date =
-                  dateStr.equals("") ? null : DateTimeUtil.parseDate(dateStr,
-                      DateTimeUtil.DATE);
+                dateStr.equals("") ? null : DateTimeUtil.parseDate(dateStr,
+                    DateTimeUtil.DATE);
               // don't add a db entry if there's no information yet
-              if (date != null) contents.addNewCtntDate(colID, rowID, date);
+              if (date != null) contents.addNewCtntDate(col, row, date);
             } else if (msgParts[0]
-                .equals(AccessController.P_NEW_CONTENT_NUMBER)) // add an index
-                                                                // for the
-                                                                // content row
+                                .equals(AccessController.P_NEW_CONTENT_NUMBER)) // add an index
+              // for the
+              // content row
             {
               try {
                 Long number = new Long(item.getString());
-                long colID = Long.parseLong(msgParts[2]);
-                contents.addNewCtntNumber(colID, rowID, number);
+                long col = Long.parseLong(msgParts[2]);
+                contents.addNewCtntNumber(col, row, number);
               } catch (NumberFormatException x) // shouldn't happen; we check
-                                                // string format on the JSP
+              // string format on the JSP
               {
                 System.out
-                    .println("shouldn't happen: NumFmtXcp in XHdlr::addNEditCtnts()!");
+                .println("shouldn't happen: NumFmtXcp in XHdlr::addNEditCtnts()!");
               }
             } else if (msgParts[0].equals(AccessController.P_NEW_CONTENT_FILE)) // add
-                                                                                // an
-                                                                                // actual
-                                                                                // file
+              // an
+              // actual
+              // file
             {
-              long colID = Long.parseLong(msgParts[2]), fileNum =
-                  Long.parseLong(msgParts[3]); // index of file within content
+              long col = Long.parseLong(msgParts[2]), fileNum =
+                Long.parseLong(msgParts[3]); // index of file within content
               CtgFileInfo fileInfo;
               // check for whether a file was uploaded by whether its name
               // exists
               if (item.getName() != null && item.getName().length() > 0)
                 fileInfo =
-                    downloadCategoryFile(item, ctgID, fileNum,
-                        ++curCtgFileCount, rowID, colID);
-              else fileInfo = new CtgFileInfo(ctgID, null, fileNum, null); // no
-                                                                            // actual
-                                                                            // file
-              contents.addNewCtntFile(colID, rowID, fileNum, fileInfo);
+                  downloadCategoryFile(item, cat, fileNum,
+                      ++curCtgFileCount, row, col);
+              else fileInfo = new CtgFileInfo(cat, null, fileNum, null); // no
+              // actual
+              // file
+              contents.addNewCtntFile(col, row, fileNum, fileInfo);
             } else if (msgParts[0]
-                .equals(AccessController.P_NEW_CONTENT_FILELABEL)) // add file
-                                                                    // to
-                                                                    // content
-                                                                    // in row
-                                                                    // about to
-                                                                    // be
-                                                                    // created
+                                .equals(AccessController.P_NEW_CONTENT_FILELABEL)) // add file
+              // to
+              // content
+              // in row
+              // about to
+              // be
+              // created
             {
-              long colID = Long.parseLong(msgParts[2]), fileNum =
-                  Long.parseLong(msgParts[3]); // index of file within content
+              long col = Long.parseLong(msgParts[2]), fileNum =
+                Long.parseLong(msgParts[3]); // index of file within content
               // don't make sure string is non-empty; that will be done later
-              contents.addNewCtntFileLabel(colID, rowID, fileNum, item
+              contents.addNewCtntFileLabel(col, row, fileNum, item
                   .getString());
             } else if (msgParts[0]
-                .equals(AccessController.P_NEW_CONTENT_URLADDRESS)) // add an
-                                                                    // address
-                                                                    // link
-                                                                    // points to
+                                .equals(AccessController.P_NEW_CONTENT_URLADDRESS)) // add an
+              // address
+              // link
+              // points to
             {
-              long colID = Long.parseLong(msgParts[2]);
+              long col = Long.parseLong(msgParts[2]);
               // don't add a db entry if there's no information yet
               if (item.getString().length() > 0)
-                contents.addNewCtntURL(colID, rowID, item.getString());
+                contents.addNewCtntURL(col, row, item.getString());
             } else if (msgParts[0]
-                .equals(AccessController.P_NEW_CONTENT_URLLABEL)) // add a
-                                                                  // displayed
-                                                                  // name for
-                                                                  // link
+                                .equals(AccessController.P_NEW_CONTENT_URLLABEL)) // add a
+              // displayed
+              // name for
+              // link
             {
-              long colID = Long.parseLong(msgParts[2]);
+              long col = Long.parseLong(msgParts[2]);
               // don't add a db entry if there's no information yet
               if (item.getString().length() > 0)
-                contents.addNewCtntURLLabel(colID, rowID, item.getString());
+                contents.addNewCtntURLLabel(col, row, item.getString());
             }
           }
         }
         System.out.println("NOW EDITING");
-        // process items that work on existing content and so whose row IDs
+        // process items that work on existing content and so whose row s
         // refer to existing db entries
         for (int j = 0; j < editItems.size(); j++) {
           FileItem item = (FileItem) editItems.get(j);
@@ -529,215 +480,212 @@ public class TransactionHandler {
              * match those used by categoryscript.js in web/staff/category
              */
             if (msgParts[0].equals(AccessController.P_CONTENT_TEXT)) // edit
-                                                                      // existing
-                                                                      // text/html
+              // existing
+              // text/html
             {
               if (msgParts.length == 2) // this content exists in the db
               {
-                long contentID = Long.parseLong(msgParts[1]);
-                contents.changeCtntText(contentID, item.getString());
+                long content = Long.parseLong(msgParts[1]);
+                contents.changeCtntText(content, item.getString());
               } else if (msgParts.length == 3) // this content doesn't yet
-                                                // exist in the db
+                // exist in the db
               {
-                long rowID = Long.parseLong(msgParts[1]), colID =
-                    Long.parseLong(msgParts[2]);
+                long row = Long.parseLong(msgParts[1]), col =
+                  Long.parseLong(msgParts[2]);
                 // don't add a db entry if there's no information yet
                 if (item.getString().length() > 0)
-                  contents.addNewCtntText(colID, rowID, item.getString());
+                  contents.addNewCtntText(col, row, item.getString());
               }
             } else if (msgParts[0].equals(AccessController.P_CONTENT_DATE)) // edit
-                                                                            // an
-                                                                            // existing
-                                                                            // date
+              // an
+              // existing
+              // date
             {
               String dateStr = item.getString();
               Date date =
-                  dateStr.equals("") ? null : DateTimeUtil.parseDate(dateStr,
-                      DateTimeUtil.DATE);
+                dateStr.equals("") ? null : DateTimeUtil.parseDate(dateStr,
+                    DateTimeUtil.DATE);
               if (msgParts.length == 2) // this content exists in the db
               {
-                long contentID = Long.parseLong(msgParts[1]);
-                contents.changeCtntDate(contentID, date);
+                long content = Long.parseLong(msgParts[1]);
+                contents.changeCtntDate(content, date);
               } else if (msgParts.length == 3) // this content doesn't yet
-                                                // exist in the db
+                // exist in the db
               {
-                long rowID = Long.parseLong(msgParts[1]), colID =
-                    Long.parseLong(msgParts[2]);
+                long row = Long.parseLong(msgParts[1]), col =
+                  Long.parseLong(msgParts[2]);
                 // don't add a db entry if there's no information yet
-                if (date != null) contents.addNewCtntDate(colID, rowID, date);
+                if (date != null) contents.addNewCtntDate(col, row, date);
               }
             } else if (msgParts[0].equals(AccessController.P_CONTENT_NUMBER)) // edit
-                                                                              // an
-                                                                              // index
-                                                                              // for
-                                                                              // the
-                                                                              // content
-                                                                              // row
+              // an
+              // index
+              // for
+              // the
+              // content
+              // row
             {
               Long number;
               try {
                 number = new Long(item.getString());
               } catch (NumberFormatException x) // shouldn't happen; we check
-                                                // string format on the JSP
+              // string format on the JSP
               {
                 number = null;
               }
               if (msgParts.length == 2) // this content exists in the db
               {
-                long contentID = Long.parseLong(msgParts[1]);
+                long content = Long.parseLong(msgParts[1]);
                 // don't add a db entry if there's no information yet
                 if (number != null)
-                  contents.changeCtntNumber(contentID, number);
+                  contents.changeCtntNumber(content, number);
               } else if (msgParts.length == 3) // this content doesn't yet
-                                                // exist in the db
+                // exist in the db
               {
-                long rowID = Long.parseLong(msgParts[1]), colID =
-                    Long.parseLong(msgParts[2]);
+                long row = Long.parseLong(msgParts[1]), col =
+                  Long.parseLong(msgParts[2]);
                 // don't add a db entry if there's no information yet
                 if (number != null)
-                  contents.addNewCtntNumber(colID, rowID, number);
+                  contents.addNewCtntNumber(col, row, number);
               }
             } else if (msgParts[0].equals(AccessController.P_CONTENT_FILELABEL)) // edit
-                                                                                  // or
-                                                                                  // add
-                                                                                  // a
-                                                                                  // displayed
-                                                                                  // name
-                                                                                  // for
-                                                                                  // a
-                                                                                  // file
+              // or
+              // add
+              // a
+              // displayed
+              // name
+              // for
+              // a
+              // file
             {
               if (msgParts.length == 2) // edit label of existing file
               {
-                long fileID = Long.parseLong(msgParts[1]);
-                contents.changeCtntFileLabel(fileID, item.getString());
+                long file = Long.parseLong(msgParts[1]);
+                contents.changeCtntFileLabel(file, item.getString());
               } else if (msgParts.length == 3) // add file to existing content
               {
-                long contentID = Long.parseLong(msgParts[1]);
+                long content = Long.parseLong(msgParts[1]);
                 int fileNum = Integer.parseInt(msgParts[2]); // index of file
-                                                              // within content
+                // within content
                 // don't make sure string is non-empty; that will be done later
-                contents.addCtntFileLabel(contentID, fileNum, item.getString());
+                contents.addCtntFileLabel(content, fileNum, item.getString());
               } else if (msgParts.length == 4) // add file to empty content in
-                                                // existing row
+                // existing row
               {
-                long rowID = Long.parseLong(msgParts[1]), colID =
-                    Long.parseLong(msgParts[2]), fileNum =
+                long row = Long.parseLong(msgParts[1]), col =
+                  Long.parseLong(msgParts[2]), fileNum =
                     Long.parseLong(msgParts[3]); // index of file within
-                                                  // content
+                // content
                 // don't make sure string is non-empty; that will be done later
-                contents.addNewCtntFileLabel(colID, rowID, fileNum, item
+                contents.addNewCtntFileLabel(col, row, fileNum, item
                     .getString());
               }
             } else if (msgParts[0]
-                .equals(AccessController.P_CONTENT_URLADDRESS)) // edit the
-                                                                // address link
-                                                                // points to
+                                .equals(AccessController.P_CONTENT_URLADDRESS)) // edit the
+              // address link
+              // points to
             {
               if (msgParts.length == 2) // this content exists in the db
               {
-                long contentID = Long.parseLong(msgParts[1]);
-                contents.changeCtntURL(contentID, item.getString());
+                long content = Long.parseLong(msgParts[1]);
+                contents.changeCtntURL(content, item.getString());
               } else if (msgParts.length == 3) // this content doesn't yet
-                                                // exist in the db
+                // exist in the db
               {
-                long rowID = Long.parseLong(msgParts[1]), colID =
-                    Long.parseLong(msgParts[2]);
+                long row = Long.parseLong(msgParts[1]), col =
+                  Long.parseLong(msgParts[2]);
                 // don't add a db entry if there's no information yet
                 if (item.getString().length() > 0)
-                  contents.addNewCtntURL(colID, rowID, item.getString());
+                  contents.addNewCtntURL(col, row, item.getString());
               }
             } else if (msgParts[0].equals(AccessController.P_CONTENT_URLLABEL)) // edit
-                                                                                // a
-                                                                                // displayed
-                                                                                // name
-                                                                                // for
-                                                                                // link
+              // a
+              // displayed
+              // name
+              // for
+              // link
             {
               if (msgParts.length == 2) // this content exists in the db
               {
-                long contentID = Long.parseLong(msgParts[1]);
-                contents.changeCtntURLLabel(contentID, item.getString());
+                long content = Long.parseLong(msgParts[1]);
+                contents.changeCtntURLLabel(content, item.getString());
               } else if (msgParts.length == 3) // this content doesn't yet
-                                                // exist in the db
+                // exist in the db
               {
-                long rowID = Long.parseLong(msgParts[1]), colID =
-                    Long.parseLong(msgParts[2]);
+                long row = Long.parseLong(msgParts[1]), col =
+                  Long.parseLong(msgParts[2]);
                 // don't add a db entry if there's no information yet
                 if (item.getString().length() > 0)
-                  contents.addNewCtntURLLabel(colID, rowID, item.getString());
+                  contents.addNewCtntURLLabel(col, row, item.getString());
               }
             } else // not a content-edit change; check for hide/unhide
             {
               if (msgParts[0].equals(AccessController.P_REMOVEROW)) {
-                long rowID = Long.parseLong(msgParts[1]);
-                contents.removeRow(rowID);
+                long row = Long.parseLong(msgParts[1]);
+                contents.removeRow(row);
               } else if (msgParts[0].equals(AccessController.P_RESTOREROW)) {
-                long rowID = Long.parseLong(msgParts[1]);
-                contents.restoreRow(rowID);
+                long row = Long.parseLong(msgParts[1]);
+                contents.restoreRow(row);
               } else if (msgParts[0].equals(AccessController.P_REMOVEFILE)) {
                 /*
                  * note: can only remove an existing file here; removal of files
                  * not yet created is done by Javascript on the client side
                  */
-                long fileID = Long.parseLong(msgParts[1]);
-                contents.removeFile(fileID);
+                long file = Long.parseLong(msgParts[1]);
+                contents.removeFile(file);
               }
             }
           } else // a file upload (a new file in an existing cell or an empty
-                  // cell in an existing row)
+            // cell in an existing row)
           {
             if (msgParts[0].equals(AccessController.P_CONTENT_FILE)) {
               if (msgParts.length == 3) // add a new file to an existing cell
               {
-                long contentID = Long.parseLong(msgParts[1]);
-                CategoryContentsLocal content =
-                    database.categoryContentsHome().findByPrimaryKey(
-                        new CategoryContentsPK(contentID));
+                CategoryContents content = database.getCategoryContents(msgParts[1]);
                 long fileNum = Long.parseLong(msgParts[2]); // index of file
-                                                            // within content
+                // within content
                 CtgFileInfo fileInfo;
                 // check whether a file was uploaded
                 if (item.getName() != null && item.getName().length() > 0) // make
-                                                                            // sure
-                                                                            // the
-                                                                            // filename
-                                                                            // exists
+                  // sure
+                  // the
+                  // filename
+                  // exists
                   fileInfo =
-                      downloadCategoryFile(item, ctgID, fileNum,
-                          ++curCtgFileCount, content.getRowID(), content
-                              .getColumnID());
-                else fileInfo = new CtgFileInfo(ctgID, null, fileNum, null); // no
-                                                                              // actual
-                                                                              // file
-                contents.addCtntFile(contentID, fileNum, fileInfo);
+                    downloadCategoryFile(item, cat, fileNum,
+                        ++curCtgFileCount, content.getRow(), content
+                        .getColumn());
+                else fileInfo = new CtgFileInfo(cat, null, fileNum, null); // no
+                // actual
+                // file
+                contents.addCtntFile(content, fileNum, fileInfo);
               } else if (msgParts.length == 4) // add a file to an empty cell
-                                                // in an existing row
+                // in an existing row
               {
-                long rowID = Long.parseLong(msgParts[1]), colID =
-                    Long.parseLong(msgParts[2]), fileNum =
+                long row = Long.parseLong(msgParts[1]), col =
+                  Long.parseLong(msgParts[2]), fileNum =
                     Long.parseLong(msgParts[3]); // index of file within
-                                                  // content
+                // content
                 CtgFileInfo fileInfo;
                 // check whether a file was uploaded
                 if (item.getName() != null && item.getName().length() > 0) // make
-                                                                            // sure
-                                                                            // the
-                                                                            // filename
-                                                                            // exists
+                  // sure
+                  // the
+                  // filename
+                  // exists
                   fileInfo =
-                      downloadCategoryFile(item, ctgID, fileNum,
-                          ++curCtgFileCount, rowID, colID);
-                else fileInfo = new CtgFileInfo(ctgID, null, fileNum, null); // no
-                                                                              // actual
-                                                                              // file
-                contents.addNewCtntFile(colID, rowID, fileNum, fileInfo);
+                    downloadCategoryFile(item, cat, fileNum,
+                        ++curCtgFileCount, row, col);
+                else fileInfo = new CtgFileInfo(cat, null, fileNum, null); // no
+                // actual
+                // file
+                contents.addNewCtntFile(col, row, fileNum, fileInfo);
               }
             }
           }
         }
         contents.removeEmptyFiles(); // make sure we don't add any files where
-                                      // all the input was empty
+        // all the input was empty
         if (!transactions.addNEditCtgContents(p, contents, curCtgFileCount))
           result.addError("Unexpected error while trying to add/edit data");
       }
@@ -752,7 +700,7 @@ public class TransactionHandler {
       result.addError("Unexpected error while trying to add/edit data");
     }
     Profiler.exitMethod("TransactionHandler.addNEditCtgContents",
-        "CategoryID: " + ctgID);
+        "Category: " + cat.toString());
     return result;
   }
 
@@ -765,15 +713,15 @@ public class TransactionHandler {
    *          True if this transaction request comes from the single Assignment
    *          Grade page as opposed to the setting grades for a student in all
    *          assignments page.
-   * @param ID
-   *          If isAssign is true, an assignment ID; else a course ID
+   * @param 
+   *          If isAssign is true, an assignment ; else a course 
    * @param request
    * @return TransactionResult containing with success set false and with
    *         appended errors if the transaction failed. If it completed
    *         successfully and isAssign is true, then success is true, and the
    *         value object of the TransactionResult is set to a length 2 object
    *         array containing the success message, followed by a List of
-   *         GroupIDs (for reloading the page). If the transaction was
+   *         Groups (for reloading the page). If the transaction was
    *         successful and isAssign is false, the TransactionResult value is
    *         set to just the success message.
    */
@@ -787,46 +735,44 @@ public class TransactionHandler {
           upload.parseRequest(request, 1024, AccessController.maxFileSize,
               FileUtil.TEMP_DIR);
       Iterator i = info.iterator();
-      GradeCommentInfo data = new GradeCommentInfo();
-      Map assignIDs = isAssign ? null : database.getAssignmentIDMap(data);
-      AssignmentLocal assignment =
-          isAssign ? database.assignmentHome().findByAssignmentID(data) : null;
-      if (isAssign ? courseIsFrozen(assignment.getCourseID())
-          : courseIsFrozen(ID)) {
+      GradeCommentInfo gradeInfo = new GradeCommentInfo();
+      Map assigns = isAssign ? null : database.getAssignmentMap(data);
+      Assignment assignment = isAssign ? (Assignment) data : null;
+      Course     course     = isAssign ? assignment.getCourse() : (Course) data;
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen, cannot make changes");
         return result;
       }
-      Map subProbNames =
-          isAssign ? database.getSubProblemNameMap(ID) : database
-              .getSubProblemNameMapByCourse(ID);
-      ArrayList groupIDs = new ArrayList();
+      
+      ArrayList groups = new ArrayList();
       while (i.hasNext()) {
         FileItem item = (FileItem) i.next();
         String field = item.getFieldName();
         if (field.startsWith(AccessController.P_GRADE)) {
           String[] vals = field.split("_");
-          long subProbID = Long.parseLong(vals[2]);
-          Group group = Long.parseLong(vals[3]);
+          SubProblem subProb = database.getSubProblem(vals[2]);
+          Group      group   = database.getGroup(vals[3]);
           try {
             String scoreStr = item.getString().trim();
             if (!scoreStr.equals("")) {
               float score = Float.parseFloat(scoreStr);
-              data.addScore(vals[1], subProbID, new Float(score), groupID);
-            } else data.addScore(vals[1], subProbID, null, groupID);
+              gradeInfo.addScore(vals[1], subProb, new Float(score), group);
+            } else
+              gradeInfo.addScore(vals[1], subProb, null, group);
           } catch (NumberFormatException e) {
             result.addError("Grade for '" + vals[1] + "' on problem '"
-                + ((String) subProbNames.get(new Long(subProbID)))
+                + subProb.getSubProblemName()
                 + "' is not a valid floating point number.");
           }
         } else if (field.startsWith(AccessController.P_OLDGRADE)) {
           String[] vals = field.split("_");
-          long subProbID = Long.parseLong(vals[2]);
-          Group group = Long.parseLong(vals[3]);
+          SubProblem subProb = database.getSubProblem(vals[2]);
+          Group      group   = database.getGroup(vals[3]);
           try {
             String scoreStr = item.getString().trim();
             if (!scoreStr.equals("")) {
               float score = StringUtil.parseFloat(scoreStr);
-              data.addOldScore(vals[1], subProbID, score, groupID);
+              gradeInfo.addOldScore(vals[1], subProb, score, group);
             }
           } catch (NumberFormatException e) {
             /*
@@ -835,29 +781,25 @@ public class TransactionHandler {
              * certainly know about it if it happens to though.
              */
             e.printStackTrace();
-            result
-                .addError("An unexpected error occurred and grades could not be committed.  Contact CMS staff.");
+            result.addError("An unexpected error occurred and grades could not be committed.  Contact CMS staff.");
           }
         } else if (field.startsWith(AccessController.P_COMMENTTEXT)) {
           Group group =
-              Long.parseLong(field.split(AccessController.P_COMMENTTEXT)[1]);
-          data.addCommentText(groupID, item.getString());
+            database.getGroup(field.split(AccessController.P_COMMENTTEXT)[1]);
+          gradeInfo.addCommentText(group, item.getString());
         } else if (field.startsWith(AccessController.P_COMMENTFILE)) {
           String fileName = FileUtil.trimFilePath(item.getName());
           if (fileName.equals("")) {
             continue;
           }
           Group group =
-              Long.parseLong(field.split(AccessController.P_COMMENTFILE)[1]);
-          int fileCounter = transactions.getGroupFileCounter(groupID);
+              database.getGroup(field.split(AccessController.P_COMMENTFILE)[1]);
+          int fileCounter = transactions.getGroupFileCounter(group);
           java.io.File path, file;
-          Course course = isAssign ? assignment.getCourseID() : ID;
-          Assignment assign =
-              isAssign ? ID : ((Long) assignIDs.get(new Long(groupID)))
-                  .longValue();
+          Assignment assign = isAssign ? assignment : group.getAssignment();
           file =
-              new java.io.File(FileUtil.getCommentFileSystemPath(courseID,
-                  assignID, groupID, fileCounter, fileName));
+              new java.io.File(FileUtil.getCommentFileSystemPath(course,
+                  assign, group, fileCounter, fileName));
           path = file.getParentFile();
           if (path.exists() || !path.mkdirs()) {
             result.addError("Could not get unique path for new comment file.");
@@ -869,26 +811,23 @@ public class TransactionHandler {
             continue;
           }
           item.write(file);
-          data.addCommentFile(groupID, new CommentFileData(0, 0, fileName, path
+          data.addCommentFile(group, new CommentFile(0, 0, fileName, path
               .getAbsolutePath()));
         } else if (field.startsWith(AccessController.P_SUBMITTEDFILE)) {
           String[] vals = field.split("_");
-          Group group = Long.parseLong(vals[1]);
-          long submissionID = Long.parseLong(vals[2]);
+          Group group = database.getGroup(vals[1]);
+          RequiredSubmission submission = database.getRequiredSubmission(vals[2]);
           String fileName = FileUtil.trimFilePath(item.getName());
           String[] splitName = FileUtil.splitFileNameType(fileName);
           if (fileName.equals("")) {
             continue;
           }
-          int fileCounter = transactions.getGroupFileCounter(groupID);
+          int fileCounter = transactions.getGroupFileCounter(group);
           java.io.File path, file;
-          Course course = isAssign ? assignment.getCourseID() : ID;
-          Assignment assign =
-              isAssign ? ID : ((Long) assignIDs.get(new Long(groupID)))
-                  .longValue();
+          Assignment assign = isAssign ? assignment : group.getAssignment();
           file =
-              new java.io.File(FileUtil.getSubmittedFileSystemPath(courseID,
-                  assignID, groupID, fileCounter, submissionID, splitName[1]));
+              new java.io.File(FileUtil.getSubmittedFileSystemPath(course,
+                  assign, group, fileCounter, submission, splitName[1]));
           path = file.getParentFile();
           if (path.exists() || !path.mkdirs()) {
             result
@@ -902,39 +841,39 @@ public class TransactionHandler {
           }
           String MD5 = FileUtil.calcMD5(item);
           item.write(file);
-          data.addSubmittedFile(assignID, fileName, new SubmittedFileData(0,
-              groupID, groupID, p.getNetID(), submissionID, null, splitName[1],
+          data.addSubmittedFile(assign, fileName, new SubmittedFile(0,
+              group, group, p, submission, null, splitName[1],
               (int) item.getSize(), MD5, false, /* pathname */path
                   .getAbsolutePath()));
         } else if (field.startsWith(AccessController.P_REGRADERESPONSE)) {
           String[] vals = field.split("_");
-          long requestID = Long.parseLong(vals[1]);
-          Group group = Long.parseLong(vals[2]);
-          data.addRegradeResponse(groupID, requestID);
+          long request = Long.parseLong(vals[1]);
+          Group group = database.getGroup(vals[2]);
+          data.addRegradeResponse(group, request);
         } else if (field.startsWith(AccessController.P_REGRADESUB)) {
           String[] vals = field.split("_");
-          long subProbID = Long.parseLong(vals[1]);
-          Group group = Long.parseLong(vals[2]);
-          data.addNewRegradeSubProb(groupID, subProbID);
+          long subProb = Long.parseLong(vals[1]);
+          Group group = database.getGroup(vals[2]);
+          data.addNewRegradeSubProb(group, subProb);
         } else if (field.startsWith(AccessController.P_REGRADEWHOLE)) {
-          Group group = Long.parseLong((field.split("_"))[1]);
-          data.addNewRegradeSubProb(groupID, 0);
+          Group group = database.getGroup(field.split("_")[1]);
+          data.addNewRegradeSubProb(group, 0);
         } else if (field.startsWith(AccessController.P_REGRADEREQUEST)) {
-          Group group = Long.parseLong((field.split("_"))[1]);
-          data.addNewRegrade(groupID, item.getString());
+          Group group = database.getGroup(field.split("_")[1]);
+          data.addNewRegrade(group, item.getString());
         } else if (field.startsWith(AccessController.P_REGRADENETID)) {
-          Group group = Long.parseLong((field.split("_"))[1]);
-          data.addNewRegradeNetID(groupID, item.getString());
-        } else if (field.startsWith(AccessController.P_GROUPID)) {
-          groupIDs.add(new Long(Long.parseLong(item.getString())));
+          Group group = database.getGroup((field.split("_"))[1]);
+          data.addNewRegradeNet(group, item.getString());
+        } else if (field.startsWith(AccessController.P_GROUP)) {
+          groups.add(new Long(database.getGroup(item.getString())));
         } else if (field.startsWith(AccessController.P_REMOVECOMMENT)) {
-          long commentID =
+          long comment =
               Long.parseLong(field.substring(AccessController.P_REMOVECOMMENT
                   .length()));
-          data.addRemovedComment(commentID);
+          data.addRemovedComment(comment);
         }
       }
-      if (isAssign) result.setValue(new Object[] { null, groupIDs });
+      if (isAssign) result.setValue(new Object[] { null, groups });
       /*
        * If this is an Assignment-level transaction and the assignment is set to
        * assigned graders only, we must check that the grader is not setting
@@ -942,20 +881,20 @@ public class TransactionHandler {
        * form elements the grader doesn't have permission for should be disabled
        * or missing, but just in case)
        */
-      if (isAssign && !p.isAdminPrivByCourseID(assignment.getCourseID())) {
-        AssignmentLocal assign =
-            database.assignmentHome().findByAssignmentID(ID);
+      if (isAssign && !p.isAdminPrivByCourse(assignment.getCourse())) {
+        Assignment assign =
+            database.assignmentHome().findByAssignment(data);
         if (assign.getAssignedGraders()) {
           boolean permission =
-              database.assignedToGroups(ID, p.getNetID(), groupIDs).size() == groupIDs
+              database.assignedToGroups(data, p.getNet(), groups).size() == groups
                   .size();
           HashSet canGrades = new HashSet();
           Iterator assignTos =
-              database.groupAssignedToHome().findByNetIDAssignmentID(
-                  p.getNetID(), ID).iterator();
+              database.groupAssignedToHome().findByNetAssignment(
+                  p.getNet(), data).iterator();
           while (assignTos.hasNext()) {
-            GroupAssignedToLocal a = (GroupAssignedToLocal) assignTos.next();
-            canGrades.add(a.getGroupID() + "_" + a.getSubProblemID());
+            GroupAssignedTo a = (GroupAssignedTo) assignTos.next();
+            canGrades.add(a.getGroup() + "_" + a.getSubProblem());
           }
           for (int j = 0; j < data.getScores().size(); j++) {
             Object[] grade = (Object[]) data.getScores().get(j);
@@ -972,14 +911,14 @@ public class TransactionHandler {
       }
       if (!result.hasErrors()) {
         if (isAssign) {
-          result = transactions.addGradesComments(p, ID, data);
+          result = transactions.addGradesComments(p, data, data);
           // If commit went through successfully and updates were made, update
           // statistics
           if (result.getSuccess()
               && ((Boolean) result.getValue()).booleanValue()) {
             try {
-              transactions.computeAssignmentStats(p, ID, (LogData) null);
-              transactions.computeTotalScores(p, assignment.getCourseID(),
+              transactions.computeAssignmentStats(p, data, (LogData) null);
+              transactions.computeTotalScores(p, assignment.getCourse(),
                   (LogData) null);
             } catch (Exception e) {
               e.printStackTrace();
@@ -988,16 +927,16 @@ public class TransactionHandler {
             }
           }
         } else {
-          result = transactions.addAllAssignsGrades(p, ID, data);
+          result = transactions.addAllAssignsGrades(p, data, data);
           if (result.getSuccess()) {
             try {
               Iterator assigns = (Iterator) result.getValue();
               while (assigns.hasNext()) {
-                Long assignID = (Long) assigns.next();
-                transactions.computeAssignmentStats(p, assignID.longValue(),
+                Long assign = (Long) assigns.next();
+                transactions.computeAssignmentStats(p, assign.longValue(),
                     (LogData) null);
               }
-              transactions.computeTotalScores(p, ID, (LogData) null);
+              transactions.computeTotalScores(p, data, (LogData) null);
             } catch (Exception e) {
               e.printStackTrace();
               result
@@ -1011,7 +950,7 @@ public class TransactionHandler {
         if (isAssign) {
           Object[] pack = new Object[2];
           pack[0] = msg;
-          pack[1] = groupIDs;
+          pack[1] = groups;
           result.setValue(pack);
         } else {
           result.setValue(msg);
@@ -1032,12 +971,12 @@ public class TransactionHandler {
   /**
    * Submits a regrade request for a student in specified group
    * 
-   * @param groupID -
-   *          ID of the group
-   * @param assignID -
-   *          ID of assignment regrade if for
-   * @param netID -
-   *          ID of student submitting the regrade
+   * @param group -
+   *           of the group
+   * @param assign -
+   *           of assignment regrade if for
+   * @param net -
+   *           of student submitting the regrade
    * @param request
    * @return TransactionResult
    */
@@ -1046,20 +985,18 @@ public class TransactionHandler {
     TransactionResult result = new TransactionResult();
     boolean success;
     try {
-      GroupLocal group = database.groupHome().findByGroupID(groupID);
-      AssignmentLocal assignment =
-          database.assignmentHome().findByAssignmentID(group.getAssignmentID());
-      if (courseIsFrozen(assignment.getCourseID())) {
+      Assignment assignment = group.getAssignment();
+      if (courseIsFrozen(assignment.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Collection subProblemIDs = new ArrayList();
+      Collection subProblems = new ArrayList();
       String requestText = null;
       for (Enumeration e = request.getParameterNames(); e.hasMoreElements();) {
         String parameter = (String) e.nextElement();
         if (parameter.startsWith(AccessController.P_REGRADESUB)) {
-          String subProbID = parameter.split(AccessController.P_REGRADESUB)[1];
-          subProblemIDs.add(new Long(Long.parseLong(subProbID)));
+          String subProb = parameter.split(AccessController.P_REGRADESUB)[1];
+          subProblems.add(new Long(database.getSubProblem(subProb)));
         } else if (parameter.equals(AccessController.P_REGRADEREQUEST)) {
           requestText = request.getParameter(parameter);
         }
@@ -1068,17 +1005,17 @@ public class TransactionHandler {
                                                                             // doesn't
                                                                             // have
                                                                             // subProblems
-        subProblemIDs.add(new Long(0));
-        if (!transactions.addRegradeRequest(p, groupID, subProblemIDs,
+        subProblems.add(new Long(0));
+        if (!transactions.addRegradeRequest(p, group, subProblems,
             requestText)) {
           result.addError("Unexpected error; regrade could not be committed");
         }
       } else { // assignment has subProblems
-        if (subProblemIDs.size() == 0) {
+        if (subProblems.size() == 0) {
           result
               .addError("Please check the problems you would like to submit request for");
         } else {
-          if (!transactions.addRegradeRequest(p, groupID, subProblemIDs,
+          if (!transactions.addRegradeRequest(p, group, subProblems,
               requestText)) {
             result.addError("Unexpected error; regrade could not be committed");
           }
@@ -1098,7 +1035,7 @@ public class TransactionHandler {
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
-      if (courseIsFrozen(courseID)) {
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
         Vector netids = new Vector();
@@ -1136,7 +1073,7 @@ public class TransactionHandler {
           return result;
         }
         if (isList) {
-          netids.addAll(StringUtil.parseNetIDList(list));
+          netids.addAll(StringUtil.parseNetList(list));
         } else // isFile
         {
           InputStream stream = file.getInputStream();
@@ -1151,7 +1088,7 @@ public class TransactionHandler {
           }
         }
         result =
-            transactions.addStudentsToCourse(pr, netids, courseID, emailOn);
+            transactions.addStudentsToCourse(pr, netids, course, emailOn);
       }
     } catch (FileUploadException e) {
       result.addError(FileUtil.checkFileException(e));
@@ -1166,15 +1103,14 @@ public class TransactionHandler {
       SubProblem subProblem, User grader, Map requestMap) {
     TransactionResult result = new TransactionResult();
     try {
-      CourseLocal course =
-          database.courseHome().findByAssignmentID(assignmentID);
-      if (courseIsFrozen(course.getCourseID())) {
+      Course course = assign.getCourse();
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Map probids = database.getSubProblemIDMap(assignmentID);
+      Map probids = database.getSubProblemMap(assignment);
       Long probid;
-      if (subproblemName.equalsIgnoreCase(GroupAssignedToBean.ALLPARTS)) {
+      if (subproblemName.equalsIgnoreCase(GroupAssignedTo.ALLPARTS)) {
         // -1 signifies that this grader should be assigned to all SubProblems
         probid = new Long(-1);
       } else if (subproblemName == null) {
@@ -1183,21 +1119,21 @@ public class TransactionHandler {
       } else {
         probid = (Long) probids.get(subproblemName);
         if (probid == null)
-          throw new FinderException("Subproblem ID not in map");
+          throw new FinderException("Subproblem  not in map");
       }
-      long subProblemID = probid.longValue();
+      long subProblem = probid.longValue();
       Collection groups = new LinkedList();
       Iterator i = requestMap.keySet().iterator();
       while (i.hasNext()) {
         String key = (String) i.next();
         if (key.startsWith(AccessController.P_GRADEGROUP)) {
-          groups.add(new Long(Long.parseLong(key
+          groups.add(new Long(database.getGroup(key
               .split(AccessController.P_GRADEGROUP)[1])));
         }
       }
       if (groups.size() > 0) {
         boolean success =
-            transactions.assignGrader(p, assignmentID, subProblemID, grader
+            transactions.assignGrader(p, assignment, subProblem, grader
                 .toLowerCase(), groups);
         if (!success) {
           result.addError("Database failed to update TA grading assignment");
@@ -1220,67 +1156,66 @@ public class TransactionHandler {
    * 
    * @param p
    *          The User to authorize
-   * @param ID
-   *          The ID of the file to check
+   * @param 
+   *          The  of the file to check
    * @param type
    *          The type of the file to check
    * @return True if the given User has access to download the given file
    */
   public boolean authorizeDownload(User p, long id, int type) {
     try {
-      long ID = id;
-      AssignmentLocal a = null;
-      GroupLocal g = null;
-      CourseLocal c = null;
+      Assignment a = null;
+      Group g = null;
+      Course c = null;
       switch (type) {
       case XMLBuilder.T_SOLFILE:
-        SolutionFileLocal sf = null;
+        SolutionFile sf = null;
         try {
           sf =
               database.solutionFileHome().findByPrimaryKey(
-                  new SolutionFilePK(ID));
+                  new SolutionFilePK(id));
         } catch (Exception e) {
         }
         if (sf == null) return false;
         try {
           a =
               database.assignmentHome()
-                  .findByAssignmentID(sf.getAssignmentID());
+                  .findByAssignment(sf.getAssignment());
         } catch (Exception e) {
         }
         if (a == null) return false;
         try {
           c =
               database.courseHome().findByPrimaryKey(
-                  new CoursePK(a.getCourseID()));
+                  new CoursePK(a.getCourse()));
         } catch (Exception e) {
         }
         if (c == null) return false;
-        if (p.isStaffInCourseByCourseID(a.getCourseID())) {
+        if (p.isStaffInCourseByCourse(a.getCourse())) {
           return true;
-        } else if (p.isStudentInCourseByCourseID(a.getCourseID())) {
+        } else if (p.isStudentInCourseByCourse(a.getCourse())) {
           if (a.getShowSolution()) {
-            return a.getStatus().equals(AssignmentBean.CLOSED)
-                || a.getStatus().equals(AssignmentBean.GRADED);
+            return a.getStatus().equals(Assignment.CLOSED)
+                || a.getStatus().equals(Assignment.GRADED);
           }
           Collection grades =
-              database.gradeHome().findMostRecentByNetAssignmentID(
-                  p.getNetID(), a.getAssignmentID());
-          return a.getStatus().equals(AssignmentBean.GRADED)
+              database.gradeHome().findMostRecentByNetAssignment(
+                  p.getNet(), a.getAssignment());
+          return a.getStatus().equals(Assignment.GRADED)
               && grades.size() > 0;
         } else if (c.getSolutionCCAccess() && p.isAuthenticated()) {
-          return a.getStatus().equals(AssignmentBean.GRADED);
+          return a.getStatus().equals(Assignment.GRADED);
         } else if (c.getSolutionGuestAccess() && p.isGuest()) {
-          return a.getStatus().equals(AssignmentBean.GRADED);
+          return a.getStatus().equals(Assignment.GRADED);
         } else {
           return false;
         }
       case XMLBuilder.T_CATFILE:
-        CategoryFileLocal cf = null;
+        CategoryFile cf = null;
         try {
           cf =
               database.categoryFileHome().findByPrimaryKey(
-                  new CategoryFilePK(ID));
+                  new CategoryFilePK(id));
         } catch (Exception e) {
         }
         if (cf == null) return false;
@@ -1292,27 +1227,27 @@ public class TransactionHandler {
                                                                         // actual
                                                                         // file
           return false;
-        CategoryContentsLocal ct = null;
+        CategoryContents ct = null;
         try {
           ct =
               database.categoryContentsHome().findByPrimaryKey(
-                  new CategoryContentsPK(cf.getContentID()));
+                  new CategoryContentsPK(cf.getContent()));
         } catch (Exception e) {
         }
         if (ct == null) return false;
-        CategoryRowLocal cr = null;
+        CategoryRow cr = null;
         try {
           cr =
               database.categoryRowHome().findByPrimaryKey(
-                  new CategoryRowPK(ct.getRowID()));
+                  new CategoryRowPK(ct.getRow()));
         } catch (Exception e) {
         }
         if (cr == null) return false;
-        CategoryLocal cg = null;
+        Category cg = null;
         try {
           cg =
               database.categoryHome().findByPrimaryKey(
-                  new CategoryPK(cr.getCategoryID()));
+                  new CategoryPK(cr.getCategory()));
         } catch (Exception e) {
         }
         if (cg == null) return false;
@@ -1322,137 +1257,137 @@ public class TransactionHandler {
         case User.AUTHOR_CORNELL_COMMUNITY:
           return p.isAuthenticated();
         case User.AUTHOR_STUDENT:
-          return p.isStudentInCourseByCourseID(cg.getCourseID())
-              || p.isStaffInCourseByCourseID(cg.getCourseID());
+          return p.isStudentInCourseByCourse(cg.getCourse())
+              || p.isStaffInCourseByCourse(cg.getCourse());
         default:
-          return p.isStaffInCourseByCourseID(cg.getCourseID());
+          return p.isStaffInCourseByCourse(cg.getCourse());
         }
       case XMLBuilder.T_COMMENTFILE:
-        CommentFileLocal cmf = null;
+        CommentFile cmf = null;
         try {
           cmf =
               database.commentFileHome()
-                  .findByPrimaryKey(new CommentFilePK(ID));
+                  .findByPrimaryKey(new CommentFilePK(id));
         } catch (Exception e) {
         }
         if (cmf == null) return false;
-        CommentLocal cm = null;
+        Comment cm = null;
         try {
           cm =
               database.commentHome().findByPrimaryKey(
-                  new CommentPK(cmf.getCommentID()));
+                  new CommentPK(cmf.getComment()));
         } catch (Exception e) {
         }
         if (cm == null) return false;
         try {
-          g = database.groupHome().findByGroupID(cm.getGroupID());
+          g = database.groupHome().findByGroup(cm.getGroup());
         } catch (Exception e) {
         }
         if (g == null) return false;
         try {
-          a = database.assignmentHome().findByAssignmentID(g.getAssignmentID());
+          a = database.assignmentHome().findByAssignment(g.getAssignment());
         } catch (Exception e) {
         }
         if (a == null) return false;
-        if (p.isAdminPrivByCourseID(a.getCourseID())) {
+        if (p.isAdminPrivByCourse(a.getCourse())) {
           return true;
-        } else if (p.isGradesPrivByCourseID(a.getCourseID())) {
+        } else if (p.isGradesPrivByCourse(a.getCourse())) {
           if (a.getAssignedGraders()) {
             Iterator ats =
-                database.groupAssignedToHome().findByGroupID(g.getGroupID())
+                database.groupAssignedToHome().findByGroup(g.getGroup())
                     .iterator();
             boolean isAssigned = false;
             while (ats.hasNext()) {
-              GroupAssignedToLocal gt = (GroupAssignedToLocal) ats.next();
+              GroupAssignedTo gt = (GroupAssignedTo) ats.next();
               isAssigned =
-                  isAssigned || gt.getNetID().equalsIgnoreCase(p.getNetID());
+                  isAssigned || gt.getNet().equalsIgnoreCase(p.getNet());
             }
             return isAssigned;
           } else {
             return true;
           }
-        } else if (p.isStudentInCourseByCourseID(a.getCourseID())) {
-          GroupMemberLocal gm = null;
+        } else if (p.isStudentInCourseByCourse(a.getCourse())) {
+          GroupMember gm = null;
           try {
             gm =
                 database.groupMemberHome().findByPrimaryKey(
-                    new GroupMemberPK(g.getGroupID(), p.getNetID()));
+                    new GroupMemberPK(g.getGroup(), p.getNet()));
           } catch (Exception e) {
           }
-          return gm != null && gm.getStatus().equals(GroupMemberBean.ACTIVE);
+          return gm != null && gm.getStatus().equals(GroupMember.ACTIVE);
         } else {
           return false;
         }
       case XMLBuilder.T_FILEFILE:
-        AssignmentFileLocal af = null;
+        AssignmentFile af = null;
         try {
           af =
               database.assignmentFileHome().findByPrimaryKey(
-                  new AssignmentFilePK(ID));
+                  new AssignmentFilePK(id));
         } catch (Exception e) {
         }
         if (af == null) return false;
-        ID = af.getAssignmentItemID();
+        id = af.getAssignmentItem();
       case XMLBuilder.T_ITEMFILE:
-        AssignmentItemLocal ai = null;
+        AssignmentItem ai = null;
         try {
           ai =
               database.assignmentItemHome().findByPrimaryKey(
-                  new AssignmentItemPK(ID));
+                  new AssignmentItemPK(id));
         } catch (Exception e) {
         }
         if (ai == null) return false;
         try {
           a =
               database.assignmentHome()
-                  .findByAssignmentID(ai.getAssignmentID());
+                  .findByAssignment(ai.getAssignment());
         } catch (Exception e) {
         }
         if (a == null) return false;
         try {
           c =
               database.courseHome().findByPrimaryKey(
-                  new CoursePK(a.getCourseID()));
+                  new CoursePK(a.getCourse()));
         } catch (Exception e) {
         }
         if (c == null) return false;
-        if (p.isStaffInCourseByCourseID(a.getCourseID())) {
+        if (p.isStaffInCourseByCourse(a.getCourse())) {
           return true;
-        } else if (p.isStudentInCourseByCourseID(a.getCourseID())) {
-          return !(a.getHidden() || a.getStatus().equals(AssignmentBean.HIDDEN));
+        } else if (p.isStudentInCourseByCourse(a.getCourse())) {
+          return !(a.getHidden() || a.getStatus().equals(Assignment.HDEN));
         } else if (c.getAssignCCAccess() && p.isAuthenticated()) {
-          return !(a.getHidden() || a.getStatus().equals(AssignmentBean.HIDDEN));
+          return !(a.getHidden() || a.getStatus().equals(Assignment.HDEN));
         } else if (c.getAssignGuestAccess() && p.isGuest()) {
-          return !(a.getHidden() || a.getStatus().equals(AssignmentBean.HIDDEN));
+          return !(a.getHidden() || a.getStatus().equals(Assignment.HDEN));
         } else {
           return false;
         }
       case XMLBuilder.T_GROUPFILE:
-        SubmittedFileLocal sbf = null;
+        SubmittedFile sbf = null;
         try {
           sbf =
               database.submittedFileHome().findByPrimaryKey(
-                  new SubmittedFilePK(ID));
+                  new SubmittedFilePK(id));
         } catch (Exception e) {
         }
         if (sbf == null) return false;
         try {
-          g = database.groupHome().findByGroupID(sbf.getGroupID());
+          g = database.groupHome().findByGroup(sbf.getGroup());
         } catch (Exception e) {
         }
         if (g == null) return false;
         try {
-          a = database.assignmentHome().findByAssignmentID(g.getAssignmentID());
+          a = database.assignmentHome().findByAssignment(g.getAssignment());
         } catch (Exception e) {
         }
         if (a == null) return false;
-        if (p.isAdminPrivByCourseID(a.getCourseID())) {
+        if (p.isAdminPrivByCourse(a.getCourse())) {
           return true;
-        } else if (p.isGradesPrivByCourseID(a.getCourseID())) {
+        } else if (p.isGradesPrivByCourse(a.getCourse())) {
           if (a.getAssignedGraders()) {
             Vector gid = new Vector();
-            gid.add(new Long(g.getGroupID()));
-            return database.isAssignedTo(p.getNetID(), gid);
+            gid.add(new Long(g.getGroup()));
+            return database.isAssignedTo(p.getNet(), gid);
           } else {
             return true;
           }
@@ -1471,25 +1406,20 @@ public class TransactionHandler {
    * submissions from the given groups
    * 
    * @param p
-   * @param groupIDs
+   * @param groups
    * @return
    */
-  public boolean authorizeGroupFiles(User p, Collection groupIDs) {
+  public boolean authorizeGroupFiles(User p, Collection groups) {
     try {
-      AssignmentLocal assign = null;
-      Long assignID = database.isValidGroupCollection(groupIDs);
-      if (assignID == null) return false;
-      try {
-        assign =
-            database.assignmentHome().findByAssignmentID(assignID.longValue());
-      } catch (Exception e) {
-      }
+      Assignment assign = database.isValidGroupCollection(groups);
       if (assign == null) return false;
-      if (p.isAdminPrivByCourseID(assign.getCourseID())) {
+      
+      if (assign == null) return false;
+      if (p.isAdminPrivByCourse(assign.getCourse())) {
         return true;
-      } else if (p.isGradesPrivByCourseID(assign.getCourseID())) {
+      } else if (p.isGradesPrivByCourse(assign.getCourse())) {
         if (assign.getAssignedGraders()) {
-          return database.isAssignedTo(p.getNetID(), groupIDs);
+          return database.isAssignedTo(p.getNet(), groups);
         } else {
           return true;
         }
@@ -1507,26 +1437,15 @@ public class TransactionHandler {
    *          The User of the user canceling this invitation (must be a
    *          member of the group in question)
    * @param canceled
-   *          The NetID of the user to uninvite
+   *          The Net of the user to uninvite
    * @param groupid
-   *          The GroupID of the group
+   *          The Group of the group
    * @return TransactionResult
    */
   public TransactionResult cancelInvitation(User p, User canceled, Group group) {
     TransactionResult result = new TransactionResult();
     try {
-      String canceler = p.getNetID();
-      canceled = canceled.toLowerCase();
-      GroupLocal group = null;
-      AssignmentLocal assign = null;
-      try {
-        group = database.groupHome().findByGroupID(groupid);
-      } catch (Exception e) {
-      }
-      try {
-        assign = database.assignmentHome().findByGroupID(groupid);
-      } catch (Exception e) {
-      }
+      Assignment assign = group == null ? null : group.getAssignment();
       if (group == null) {
         result.addError("Invalid group entered, does not exist");
         return result;
@@ -1534,41 +1453,25 @@ public class TransactionHandler {
       if (assign == null || assign.getHidden()) {
         result.addError("No corresponding assignment exists");
         return result;
-      } else if (!assign.getStatus().equals(AssignmentBean.OPEN)) {
+      } else if (!assign.getStatus().equals(Assignment.OPEN)) {
         result
             .addError("Group management is not currently available for this assignment");
         return result;
       }
-      if (courseIsFrozen(assign.getCourseID())) {
+      if (courseIsFrozen(assign.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      GroupMemberLocal memCanceller = null, memCancelled = null;
-      try {
-        memCanceller =
-            database.groupMemberHome().findByPrimaryKey(
-                new GroupMemberPK(groupid, canceler));
-      } catch (Exception e) {
+      GroupMember memCanceller = group.findGroupMember(p),
+                  memCancelled = group.findGroupMember(canceled);
+      if (memCanceller == null || !memCanceller.getStatus().equals(GroupMember.ACTIVE)) {
+        result.addError("Must be an active group member to cancel an invitation");
       }
-      try {
-        memCancelled =
-            database.groupMemberHome().findByPrimaryKey(
-                new GroupMemberPK(groupid, canceled));
-      } catch (Exception e) {
-      }
-      if (memCanceller == null
-          || !memCanceller.getStatus().equals(GroupMemberBean.ACTIVE)) {
-        result
-            .addError("Must be an active group member to cancel an invitation");
-      }
-      if (memCancelled == null
-          || !memCancelled.getStatus().equals(GroupMemberBean.INVITED)) {
-        if (memCancelled != null
-            && memCancelled.getStatus().equals(GroupMemberBean.ACTIVE)) {
+      if (memCancelled == null || !memCancelled.getStatus().equals(GroupMember.INVITED)) {
+        if (memCancelled != null && memCancelled.getStatus().equals(GroupMember.ACTIVE)) {
           result.addError(canceled + " is already an active group member");
         } else {
-          result
-              .addError(canceled + " has not been invited to join this group");
+          result.addError(canceled + " has not been invited to join this group");
         }
       }
       if (!result.hasErrors()) {
@@ -1591,14 +1494,14 @@ public class TransactionHandler {
       Assignment assign, HttpServletRequest req, boolean canAssign,
       boolean canReplace) {
     TransactionResult result = new TransactionResult();
+    TimeSlot slot = null;
     try {
-      Long slotID = null;
       boolean addGroup = false;
       // look for slot id in servlet request
       if (canAssign) {
         String slotParam = req.getParameter(AccessController.P_TIMESLOTID);
         if (slotParam != null) {
-          slotID = new Long(Long.parseLong(slotParam));
+          slot = database.getTimeSlot(slotParam);
           addGroup = true;
         }
       }
@@ -1613,20 +1516,10 @@ public class TransactionHandler {
           FileItem item = (FileItem) i.next();
           String field = item.getFieldName();
           if (item.isFormField() && field.equals(AccessController.P_TIMESLOTID)) {
-            slotID = new Long(Long.parseLong(item.getString()));
+            slot = database.getTimeSlot(item.getString());
             addGroup = true;
           }
         }
-      }
-      AssignmentLocal assign = null;
-      TimeSlotLocal slot = null;
-      GroupLocal group = null;
-      try {
-        group = database.groupHome().findByGroupID(groupid);
-        assign = database.assignmentHome().findByAssignmentID(assignid);
-        if (addGroup)
-          slot = database.timeSlotHome().findByTimeSlotID(slotID.longValue());
-      } catch (Exception e) {
       }
       // handle potential errors
       if (group == null) {
@@ -1634,16 +1527,14 @@ public class TransactionHandler {
         return result;
       }
       if (addGroup && (slot == null || slot.getHidden())) {
-        result
-            .addError("Invalid time slot entered: does not exist or is hidden");
+        result.addError("Invalid time slot entered: does not exist or is hidden");
         return result;
       }
       if (assign == null || assign.getHidden() || (!assign.getScheduled())) {
-        result
-            .addError("Invalid assignment entered: does not exist or does not use schedule");
+        result.addError("Invalid assignment entered: does not exist or does not use schedule");
         return result;
       }
-      if (courseIsFrozen(assign.getCourseID())) {
+      if (courseIsFrozen(assign.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
@@ -1660,32 +1551,30 @@ public class TransactionHandler {
       }
       // check for an already assigned group
       if ((!canReplace) && addGroup) {
-        Long currentTSid = group.getTimeSlotID();
-        if (currentTSid != null && !(currentTSid.longValue() == 0)) {
-          result
-              .addError("Unauthorized reassignment of an already assigned group");
+        TimeSlot currentSlot = group.getTimeSlot();
+        if (currentSlot != null) {
+          result.addError("Unauthorized reassignment of an already assigned group");
           return result;
         }
       }
       // check for locked schedule on this assignment (only important if change
       // is being requested by a student)
-      if (!p.isStaffInCourseByCourseID(assign.getCourseID())
+      if (!p.isStaffInCourseByCourse(assign.getCourse())
           && assign.getTimeslotLockTime() != null
           && new Date().after(assign.getTimeslotLockTime())) {
-        result
-            .addError("Assignment schedule is currently locked; students may not make changes");
+        result.addError("Assignment schedule is currently locked; students may not make changes");
         return result;
       }
       if (!result.hasErrors()) {
 
-        long slotNum = 0;
-        if (addGroup && slotID != null) slotNum = slotID.longValue();
+        TimeSlot slotNum = null;
+        if (addGroup && slot != null) slotNum = slot;
 
-        if (transactions.changeGroupSlot(p, groupid, assignid, slotNum,
-            addGroup)) {
+        if (transactions.changeGroupSlot(p, groupid, assignid, slotNum, addGroup)) {
           if (addGroup)
             result.setValue("Successfully added group to time slot");
-          else result.setValue("Successfully removed group from time slot");
+          else
+            result.setValue("Successfully removed group from time slot");
         } else {
           result.addError("Database failed to make time slot change");
         }
@@ -1699,36 +1588,25 @@ public class TransactionHandler {
 
   // This is used whenever a student or staff member adds or removes a group
   // from a slot
-  public TransactionResult changeGroupSlotByID(User p, Group group,
+  public TransactionResult changeGroupSlotBy(User p, Group group,
       Assignment assign, TimeSlot slot, boolean canAssign, boolean canReplace) {
     TransactionResult result = new TransactionResult();
     try {
       boolean addGroup = true;
-      AssignmentLocal assign = null;
-      TimeSlotLocal slot = null;
-      GroupLocal group = null;
-      try {
-        group = database.groupHome().findByGroupID(groupid);
-        assign = database.assignmentHome().findByAssignmentID(assignid);
-        if (addGroup) slot = database.timeSlotHome().findByTimeSlotID(slotID);
-      } catch (Exception e) {
-      }
       // handle potential errors
       if (group == null) {
         result.addError("Invalid group entered: does not exist");
         return result;
       }
       if (addGroup && (slot == null || slot.getHidden())) {
-        result
-            .addError("Invalid time slot entered: does not exist or is hidden");
+        result.addError("Invalid time slot entered: does not exist or is hidden");
         return result;
       }
       if (assign == null || assign.getHidden() || (!assign.getScheduled())) {
-        result
-            .addError("Invalid assignment entered: does not exist or does not use schedule");
+        result.addError("Invalid assignment entered: does not exist or does not use schedule");
         return result;
       }
-      if (courseIsFrozen(assign.getCourseID())) {
+      if (courseIsFrozen(assign.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
@@ -1745,32 +1623,30 @@ public class TransactionHandler {
       }
       // check for an already assigned group
       if ((!canReplace) && addGroup) {
-        Long currentTSid = group.getTimeSlotID();
-        if (currentTSid != null && !(currentTSid.longValue() == 0)) {
-          result
-              .addError("Unauthorized reassignment of an already assigned group");
+        TimeSlot currentSlot = group.getTimeSlot();
+        if (currentSlot != null) {
+          result.addError("Unauthorized reassignment of an already assigned group");
           return result;
         }
       }
       // check for locked schedule on this assignment (only important if change
       // is being requested by a student)
-      if (!p.isStaffInCourseByCourseID(assign.getCourseID())
+      if (!p.isStaffInCourseByCourse(assign.getCourse())
           && assign.getTimeslotLockTime() != null
           && new Date().after(assign.getTimeslotLockTime())) {
-        result
-            .addError("Assignment schedule is currently locked; students may not make changes");
+        result.addError("Assignment schedule is currently locked; students may not make changes");
         return result;
       }
       if (!result.hasErrors()) {
 
-        long slotNum = 0;
-        if (addGroup) slotNum = slotID;
+        TimeSlot slotNum = null;
+        if (addGroup) slotNum = slot;
 
-        if (transactions.changeGroupSlot(p, groupid, assignid, slotNum,
-            addGroup)) {
+        if (transactions.changeGroupSlot(p, group, assign, slotNum, addGroup)) {
           if (addGroup)
             result.setValue("Successfully added group to time slot");
-          else result.setValue("Successfully removed group from time slot");
+          else
+            result.setValue("Successfully removed group from time slot");
         } else {
           result.addError("Database failed to make time slot change");
         }
@@ -1785,10 +1661,10 @@ public class TransactionHandler {
   public TransactionResult commitFinalGradesFile(User p, Course course, List table) {
     TransactionResult result = new TransactionResult();
     try {
-      if (courseIsFrozen(courseID)) {
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes can be made to it");
       } else {
-        result = transactions.commitFinalGradesFile(p, courseID, table);
+        result = transactions.commitFinalGradesFile(p, course, table);
       }
     } catch (Exception e) {
       result
@@ -1799,62 +1675,60 @@ public class TransactionHandler {
   }
 
   /**
-   * @param assignmentID
+   * @param assignment
    * @param grader
    * @param table
    * @return TransactionResult
    */
-  public TransactionResult commitGradesFile(User p, Assignment assign, List table) {
+  public TransactionResult commitGradesFile(User p, Assignment assignment, List table) {
     TransactionResult result = new TransactionResult();
     boolean success = false;
     try {
-      AssignmentLocal assignment =
-          database.assignmentHome().findByAssignmentID(assignmentID);
-      if (courseIsFrozen(assignment.getCourseID())) {
+      if (courseIsFrozen(assignment.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Map subProbIDMap = database.getSubProblemIDMap(assignmentID);
-      Map groupIDs = database.getGroupIDMap(assignmentID);
+      Map subProbMap = database.getSubProblemMap(assignment);
+      Map groups = database.getGroupMap(assignment);
       boolean checkCanGrade =
-          !p.isAssignPrivByAssignmentID(assignmentID)
+          !p.isAssignPrivByAssignment(assignment)
               && assignment.getAssignedGraders();
       if (checkCanGrade) {
         String[] header = (String[]) table.get(0);
-        long[] subProbIDs = new long[header.length - 1];
-        String grader = p.getNetID();
+        long[] subProbs = new long[header.length - 1];
+        String grader = p.getNet();
 
         int[] colsFound = CSVFileFormatsUtil.parseColumnNamesFlexibly(header);
-        int netIDIndex =
+        int netIndex =
             CSVFileFormatsUtil.getFlexibleColumnNum(colsFound,
-                CSVFileFormatsUtil.NETID);
+                CSVFileFormatsUtil.NET);
 
         for (int i = 0; i < header.length; i++) {
-          if (i != netIDIndex) {
+          if (i != netIndex) {
             String[] data = (String[]) table.get(i);
-            subProbIDs[i - 1] =
-                ((Long) subProbIDMap.get(header[i])).longValue();
+            subProbs[i - 1] =
+                ((Long) subProbMap.get(header[i])).longValue();
           }
         }
 
         HashSet canGrades = new HashSet();
         Iterator assignTos =
-            database.groupAssignedToHome().findByNetIDAssignmentID(
-                p.getNetID(), assignmentID).iterator();
+            database.groupAssignedToHome().findByNetAssignment(
+                p.getNet(), assignment).iterator();
         while (assignTos.hasNext()) {
-          GroupAssignedToLocal a = (GroupAssignedToLocal) assignTos.next();
-          canGrades.add(a.getGroupID() + "_" + a.getSubProblemID());
+          GroupAssignedTo a = (GroupAssignedTo) assignTos.next();
+          canGrades.add(a.getGroup() + "_" + a.getSubProblem());
         }
         for (int i = 1; i < table.size(); i++) {
           String[] data = (String[]) table.get(i);
-          String netid = (String) data[netIDIndex];
-          Group group = ((Long) groupIDs.get(netid)).longValue();
+          String netid = (String) data[netIndex];
+          Group group = ((Long) groups.get(netid)).longValue();
           for (int j = 0; j < data.length; j++) {
-            if (j != netIDIndex) {
+            if (j != netIndex) {
               try {
                 float grade = StringUtil.parseFloat(data[j]);
-                long subProbID = subProbIDs[j - 1];
-                if (!canGrades.contains(groupID + "_" + subProbID)) {
+                long subProb = subProbs[j - 1];
+                if (!canGrades.contains(group + "_" + subProb)) {
                   result.addError("No permission to grade " + netid
                       + " in column '" + (j + 1) + "'");
                 }
@@ -1868,7 +1742,7 @@ public class TransactionHandler {
         }
       }
       if (!result.hasErrors()) {
-        success = transactions.commitGradesFile(p, assignmentID, table);
+        success = transactions.commitGradesFile(p, assignment, table);
       }
     } catch (Exception e) {
       success = false;
@@ -1888,10 +1762,10 @@ public class TransactionHandler {
    *          A List of String[]s, one per student mentioned in the uploaded
    *          file; the first element holds the header strings, and all the data
    *          have been verified
-   * @param courseID
-   *          The ID of the particular course involved if any, else null
+   * @param course
+   *          The  of the particular course involved if any, else null
    * @param isClasslist
-   *          Whether we'll need to read but ignore a CUID column (usually NetID
+   *          Whether we'll need to read but ignore a CU column (usually Net
    *          is used instead to identify records; the classlist format is a
    *          special case)
    * @return TransactionResult
@@ -1899,22 +1773,15 @@ public class TransactionHandler {
    *           RemoteException
    */
   public TransactionResult commitStudentInfo(User p, List table,
-      Course course, boolean isClasslist) throws FinderException,
-      RemoteException {
+      Course course, boolean isClasslist) throws RemoteException {
     TransactionResult result = new TransactionResult();
     boolean success = false;
-    CourseLocal course = null;
-    if (courseID != null) {
-      course =
-          database.courseHome().findByPrimaryKey(
-              new CoursePK(courseID.longValue()));
-      if (courseIsFrozen(course.getCourseID())) {
-        result.addError("Course is frozen; no changes may be made to it");
-        return result;
-      }
+    if (courseIsFrozen(course)) {
+      result.addError("Course is frozen; no changes may be made to it");
+      return result;
     }
     try {
-      success = transactions.commitStudentInfo(p, table, courseID, isClasslist);
+      success = transactions.commitStudentInfo(p, table, course, isClasslist);
     } catch (Exception e) {
       success = false;
       e.printStackTrace();
@@ -1931,50 +1798,44 @@ public class TransactionHandler {
    * 
    * @return Whether the course being dealt with is available for changes
    */
-  private boolean courseIsFrozen(Course course) throws RemoteException,
-      FinderException {
-    CourseLocal course =
-        database.courseHome().findByPrimaryKey(new CoursePK(courseID));
-    if (course == null)
-      throw new FinderException("Course " + courseID + " not found in database");
+  private boolean courseIsFrozen(Course course) throws RemoteException {
+    // TODO: check if course is null
     return course.getFreezeCourse();
   }
 
   /**
    * Staff-level method for putting a group of students into a group together in
    * the given assignment. Requires that each student in the collection of
-   * NetIDs is currently in a group by him/herself.
+   * Nets is currently in a group by him/herself.
    * 
    * @param p
    * @param netids
-   *          A List of Strings in correct NetID format
-   * @param assignmentID
+   *          A List of Strings in correct Net format
+   * @param assignment
    * @return
    */
   public TransactionResult createGroup(User p, List netids,
-      Assignment assign) {
+      Assignment assignment) {
     TransactionResult result = new TransactionResult();
     try {
       if (netids.size() < 2) // list has correct format but no, or not enough,
-                              // netIDs
+                              // nets
       {
-        result.addError("You must specify at least two NetIDs");
+        result.addError("You must specify at least two Nets");
         return result;
       }
-      AssignmentLocal assignment =
-          database.assignmentHome().findByAssignmentID(assignmentID);
       Collection nonStudents =
-          database.getNonStudentNetIDs(netids, ((assignment == null) ? 0
-              : assignment.getCourseID()));
+          database.getNonStudentNets(netids, ((assignment == null) ? 0
+              : assignment.getCourse()));
       Collection nonSoloMembers =
-          database.getNonSoloGroupMembers(netids, assignmentID);
+          database.getNonSoloGroupMembers(netids, assignment);
       Collection gradedMembers =
-          database.getGradedStudents(netids, assignmentID);
+          database.getGradedStudents(netids, assignment);
       if (assignment == null) {
         result.addError("Assignment does not exist in the database");
         return result;
       }
-      if (courseIsFrozen(assignment.getCourseID())) {
+      if (courseIsFrozen(assignment.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
@@ -2000,7 +1861,7 @@ public class TransactionHandler {
         result.addError(error);
       }
       if (!result.hasErrors()) {
-        boolean success = transactions.createGroup(p, netids, assignmentID);
+        boolean success = transactions.createGroup(p, netids, assignment);
         if (!success) {
           result.addError("Database failed to group students");
         } else {
@@ -2017,45 +1878,43 @@ public class TransactionHandler {
    * Merge all indicated students/groups into one group for the given assignment
    * 
    * @param p
-   * @param asgnID
-   * @param groupIDs
-   *          A List of Longs holding the group IDs to consider
+   * @param asgn
+   * @param groups
+   *          A List of Longs holding the group s to consider
    * @return TransactionResult
    */
-  public TransactionResult groupSelectedStudents(User p, Assignment assign,
+  public TransactionResult groupSelectedStudents(User p, Assignment assignment,
       List groups) {
     TransactionResult result = new TransactionResult();
     try {
-      if (groupIDs.isEmpty()) {
+      if (groups.isEmpty()) {
         result.setValue("No groups selected");
         return result;
-      } else if (groupIDs.size() == 1) {
+      } else if (groups.size() == 1) {
         result.setValue("Only one group selected");
         return result;
       }
-      AssignmentLocal assignment =
-          database.assignmentHome().findByAssignmentID(asgnID);
       if (assignment == null) {
         result.addError("Assignment does not exist in the database");
         return result;
       }
-      if (courseIsFrozen(assignment.getCourseID())) {
+      if (courseIsFrozen(assignment.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Collection gradedGroups = database.getGradedGroups(groupIDs, asgnID);
+      Collection gradedGroups = database.getGradedGroups(groups, assignment);
       if (gradedGroups.size() > 0) {
         String error = "Group", groupStr = "";
         Iterator i = gradedGroups.iterator();
         while (i.hasNext()) {
           Long groupid = (Long) i.next();
           Collection members =
-              database.groupMemberHome().findActiveByGroupID(
+              database.groupMemberHome().findActiveByGroup(
                   groupid.longValue());
           Collection netids = new ArrayList();
           Iterator i2 = members.iterator();
           while (i2.hasNext())
-            netids.add(((GroupMemberLocal) i2.next()).getNetID());
+            netids.add(((GroupMember) i2.next()).getNet());
           groupStr += " (" + Util.listElements(netids) + ")";
         }
         error +=
@@ -2067,7 +1926,7 @@ public class TransactionHandler {
         result.addError(error);
       }
       if (!result.hasErrors()) {
-        boolean success = transactions.mergeGroups(p, groupIDs, asgnID);
+        boolean success = transactions.mergeGroups(p, groups, asgn);
         if (!success) {
           result.addError("Database failed to merge groups");
         } else {
@@ -2084,44 +1943,42 @@ public class TransactionHandler {
   /**
    * Break up all indicated groups and put their members into individual groups
    * for the given assignment; ignore all selected single students (this last is
-   * done in XactionsBean)
+   * done in Xactions)
    * 
    * @param p
-   * @param asgnID
-   * @param groupIDs
-   *          A List of Longs holding the group IDs to consider
+   * @param asgn
+   * @param groups
+   *          A List of Longs holding the group s to consider
    * @return TransactionResult
    */
-  public TransactionResult ungroupSelectedStudents(User p, Assignment assign, List groups) {
+  public TransactionResult ungroupSelectedStudents(User p, Assignment assignment, List groups) {
     TransactionResult result = new TransactionResult();
     try {
-      if (groupIDs.isEmpty()) {
+      if (groups.isEmpty()) {
         result.setValue("No students selected");
         return result;
       }
-      AssignmentLocal assignment =
-          database.assignmentHome().findByAssignmentID(asgnID);
       if (assignment == null) {
         result.addError("Assignment does not exist in the database");
         return result;
       }
-      if (courseIsFrozen(assignment.getCourseID())) {
+      if (courseIsFrozen(assignment.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Collection gradedGroups = database.getGradedGroups(groupIDs, asgnID);
+      Collection gradedGroups = database.getGradedGroups(groups, assignment);
       if (gradedGroups.size() > 0) {
         String error = "Group", groupStr = "";
         Iterator i = gradedGroups.iterator();
         while (i.hasNext()) {
           Long groupid = (Long) i.next();
           Collection members =
-              database.groupMemberHome().findActiveByGroupID(
+              database.groupMemberHome().findActiveByGroup(
                   groupid.longValue());
           Collection netids = new ArrayList();
           Iterator i2 = members.iterator();
           while (i2.hasNext())
-            netids.add(((GroupMemberLocal) i2.next()).getNetID());
+            netids.add(((GroupMember) i2.next()).getNet());
           groupStr += " (" + Util.listElements(netids) + ")";
         }
         error +=
@@ -2133,7 +1990,7 @@ public class TransactionHandler {
         result.addError(error);
       }
       if (!result.hasErrors()) {
-        boolean success = transactions.disbandGroups(p, groupIDs, asgnID);
+        boolean success = transactions.disbandGroups(p, groups, asgn);
         if (!success) {
           result.addError("Database failed to disband group(s)");
         } else {
@@ -2175,25 +2032,16 @@ public class TransactionHandler {
    * Declines an invitation to a user to join a group.
    * 
    * @param netid
-   *          The NetID of the user whose invitation is being declined
+   *          The Net of the user whose invitation is being declined
    * @param groupid
-   *          The GroupID of the group
+   *          The Group of the group
    * @return TransactionResult
    */
   public TransactionResult declineInvitation(User p, Group group) {
     TransactionResult result = new TransactionResult();
     try {
-      String netid = p.getNetID();
-      GroupLocal group = null;
-      AssignmentLocal assign = null;
-      try {
-        group = database.groupHome().findByGroupID(groupid);
-      } catch (Exception e) {
-      }
-      try {
-        assign = database.assignmentHome().findByGroupID(groupid);
-      } catch (Exception e) {
-      }
+      String netid = p.getNet();
+      Assignment assign = group.getAssignment();
       if (group == null) {
         result.addError("Invalid group entered: does not exist");
         return result;
@@ -2201,24 +2049,24 @@ public class TransactionHandler {
       if (assign == null || assign.getHidden()) {
         result.addError("No corresponding assignment exists");
         return result;
-      } else if (!assign.getStatus().equals(AssignmentBean.OPEN)) {
+      } else if (!assign.getStatus().equals(Assignment.OPEN)) {
         result
             .addError("Group management is not currently available for this assignment");
         return result;
       }
-      if (courseIsFrozen(assign.getCourseID())) {
+      if (courseIsFrozen(assign.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      GroupMemberLocal member = null;
+      GroupMember member = null;
       try {
         member =
             database.groupMemberHome().findByPrimaryKey(
                 new GroupMemberPK(groupid, netid));
       } catch (Exception e) {
       }
-      if (member == null || !member.getStatus().equals(GroupMemberBean.INVITED)) {
-        if (member != null && member.getStatus().equals(GroupMemberBean.ACTIVE)) {
+      if (member == null || !member.getStatus().equals(GroupMember.INVITED)) {
+        if (member != null && member.getStatus().equals(GroupMember.ACTIVE)) {
           result.addError("Already an active member of this group");
         } else {
           result.addError("No invitation to join this group exists");
@@ -2239,18 +2087,16 @@ public class TransactionHandler {
   public TransactionResult disbandGroup(User p, Group group) {
     TransactionResult result = new TransactionResult();
     try {
-      GroupLocal group = database.groupHome().findByGroupID(groupID);
       if (group == null) {
         result.addError("Group does not exist in database.");
         // FIXME check for group members already graded
       } else {
-        AssignmentLocal assignment =
-            database.assignmentHome().findByGroupID(groupID);
-        if (courseIsFrozen(assignment.getCourseID())) {
+        Assignment assignment = group.getAssignment();
+        if (courseIsFrozen(assignment.getCourse())) {
           result.addError("Course is frozen; no changes may be made to it");
           return result;
         }
-        boolean success = transactions.disbandGroup(p, groupID);
+        boolean success = transactions.disbandGroup(p, group);
         if (!success)
           result.addError("Database failed to ungroup selected groups");
       }
@@ -2261,20 +2107,20 @@ public class TransactionHandler {
   }
 
   public TransactionResult dropStudent(User p, Course course,
-      Collection netIDs) {
+      Collection nets) {
     TransactionResult result = new TransactionResult();
     try {
-      if (courseIsFrozen(courseID)) {
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
-        Collection nonExist = database.getNonStudentNetIDs(netIDs, courseID);
+        Collection nonExist = database.getNonStudentNets(nets, course);
         if (nonExist.size() > 0) {
           result.addError(Util.listElements(nonExist)
               + (nonExist.size() == 1 ? " is not an enrolled student"
                   : " are not enrolled students") + " in the course");
         } else {
-          if (transactions.dropStudents(p, netIDs, courseID)) {
-            result.setValue("Student" + (netIDs.size() > 1 ? "s" : "")
+          if (transactions.dropStudents(p, nets, course)) {
+            result.setValue("Student" + (nets.size() > 1 ? "s" : "")
                 + " successfully dropped");
           } else {
             result.addError("Unexpected error while trying to drop student");
@@ -2291,35 +2137,25 @@ public class TransactionHandler {
   /**
    * Edits an already existing announcement
    * 
-   * @param announceID
-   *          ID of the annoucement to edit
+   * @param announce
+   *           of the annoucement to edit
    * @param announce
    *          Text of the revised announcement
    * @param poster
    *          Person who posted the original announcement
    * @return TransactionResult
    */
-  public TransactionResult editAnnouncement(User p, Announcement announce,
+  public TransactionResult editAnnouncement(User p, Announcement annt,
       String newText, boolean remove) {
     TransactionResult result = new TransactionResult();
-    try {
-      AnnouncementLocal annt =
-          database.announcementHome().findByPrimaryKey(
-              new AnnouncementPK(announceID));
-      if (annt == null)
-        result.addError("Couldn't find announcement in database");
-      else {
-        if (courseIsFrozen(annt.getCourseID()))
-          result.addError("Course is frozen; no changes may be made to it");
-        else {
-          if (!transactions.editAnnouncement(p, announceID, announce, remove))
-            result
-                .addError("Could not edit announcement due to database error");
-        }
-      }
+    if (annt == null)
+      result.addError("Couldn't find announcement in database");
+    else if (courseIsFrozen(annt.getCourse()))
+      result.addError("Course is frozen; no changes may be made to it");
+    else try {
+      transactions.editAnnouncement(p, annt, newText, remove);
     } catch (Exception e) {
-      result.addError("Unexpected error while trying to edit announcement");
-      e.printStackTrace();
+      result.addError("Could not edit announcement due to database error");
     }
     return result;
   }
@@ -2329,7 +2165,7 @@ public class TransactionHandler {
    * because hopefully hiddenness will always be the only settable semester
    * property.
    * 
-   * @param semesterID
+   * @param semester
    * @param hidden
    * @return TransactionResult
    */
@@ -2337,15 +2173,9 @@ public class TransactionHandler {
     TransactionResult result = new TransactionResult();
     boolean success = true;
     try {
-      SemesterLocal semester =
-          database.semesterHome().findByPrimaryKey(new SemesterPK(semesterID));
-      success =
-          transactions.editSemester(p, new SemesterData(semesterID, semester
-              .getSemesterName(), hidden));
+      transactions.editSemester(p, semester, hidden);
     } catch (Exception e) {
-      success = false;
-      result.addError("Database failed to edit semester");
-      e.printStackTrace();
+      result.addError("Database failed to edit semester", e);
     }
     return result;
   }
@@ -2370,12 +2200,12 @@ public class TransactionHandler {
   /**
    * Write a full template for student data, including all columns the
    * flexible-upload feature can accept. The user should remove the columns that
-   * aren't wanted. If there isn't a course ID, only write cmsadmin columns; if
-   * there is one, write all columns except CUID, which only cmsadmin should
+   * aren't wanted. If there isn't a course , only write cmsadmin columns; if
+   * there is one, write all columns except CU, which only cmsadmin should
    * touch.
    * 
-   * @param courseID
-   *          A Long giving the course ID for a course-specific download, or
+   * @param course
+   *          A Long giving the course  for a course-specific download, or
    *          null for a cmsadmin download
    * @param out
    *          The stream to which to write the resulting CSV file
@@ -2386,7 +2216,7 @@ public class TransactionHandler {
     CSVPrinter printer = new CSVPrinter(out);
     List headers = new ArrayList(); // will hold objects of type
                                     // CSVFileFormatsUtil.ColumnInfo
-    if (courseID == null) // admin info only
+    if (course == null) // admin info only
     {
       for (int i = 0; i < CSVFileFormatsUtil.ALLOWED_COLUMNS.length; i++)
         if (CSVFileFormatsUtil.ALLOWED_COLUMNS[i].isForAdmin())
@@ -2437,21 +2267,10 @@ public class TransactionHandler {
   }
 
   /**
-   * @return The Session Bean home interface
-   * @throws NamingException
-   *           If the RootHome cannot be found
-   */
-  private TransactionsLocalHome getHome() throws NamingException {
-    Object result = getContext().lookup(TransactionsLocalHome.JNDI_NAME);
-    return ((TransactionsLocalHome) PortableRemoteObject.narrow(result,
-        TransactionsLocalHome.class));
-  }
-
-  /**
    * Returns a DownloadFile object representing a file on the CMS system
    * 
    * @param id
-   *          ID of the file; relative to specified type
+   *           of the file; relative to specified type
    * @param type
    *          Specifies type of file to search database for; see T_* fields in
    *          this class for valid types.
@@ -2461,18 +2280,18 @@ public class TransactionHandler {
    * @throws IllegalArgumentException
    *           Undefined type given
    */
-  public DownloadFile getJavaFile(long id, int type) throws FinderException,
-      RemoteException, IllegalArgumentException {
+  public DownloadFile getJavaFile(long id, int type)
+      throws  RemoteException, IllegalArgumentException {
     switch (type) {
     case XMLBuilder.T_SOLFILE:
-      SolutionFileLocal sf =
+      SolutionFile sf =
           database.solutionFileHome().findByPrimaryKey(new SolutionFilePK(id));
       return new DownloadFile(sf.getPath(), sf.getFileName());
     case XMLBuilder.T_ITEMFILE:
-      AssignmentItemLocal ai =
+      AssignmentItem ai =
           database.assignmentItemHome().findByPrimaryKey(
               new AssignmentItemPK(id));
-      AssignmentFileLocal af = ai.getAssignmentFile();
+      AssignmentFile af = ai.getAssignmentFile();
       return new DownloadFile(af.getPath(), af.getFileName(), af.getItemName());
     case XMLBuilder.T_FILEFILE:
       af =
@@ -2480,21 +2299,21 @@ public class TransactionHandler {
               new AssignmentFilePK(id));
       return new DownloadFile(af.getPath(), af.getFileName(), af.getItemName());
     case XMLBuilder.T_GROUPFILE:
-      SubmittedFileLocal mf =
+      SubmittedFile mf =
           database.submittedFileHome()
               .findByPrimaryKey(new SubmittedFilePK(id));
-      RequiredSubmissionLocal sub =
+      RequiredSubmission sub =
           database.requiredSubmissionHome().findByPrimaryKey(
-              new RequiredSubmissionPK(mf.getSubmissionID()));
+              new RequiredSubmissionPK(mf.getSubmission()));
       String fileName = mf.appendFileType(sub.getSubmissionName());
       return new DownloadFile(mf.getPath(), mf.appendFileType(String.valueOf(mf
-          .getSubmissionID())), fileName);
+          .getSubmission())), fileName);
     case XMLBuilder.T_CATFILE:
-      CategoryFileLocal ctgFile =
+      CategoryFile ctgFile =
           database.categoryFileHome().findByPrimaryKey(new CategoryFilePK(id));
       return new DownloadFile(ctgFile.getPath(), ctgFile.getFileName());
     case XMLBuilder.T_COMMENTFILE:
-      CommentFileLocal commentFile =
+      CommentFile commentFile =
           database.commentFileHome().findByPrimaryKey(new CommentFilePK(id));
       return new DownloadFile(commentFile.getPath(), commentFile.getFileName());
     default:
@@ -2510,48 +2329,44 @@ public class TransactionHandler {
    *          The servlet request with uploaded files
    * @return Returns a Collection of FileItems
    */
-  private Collection getUploadedFiles(String netid, HttpServletRequest request,
+  private Collection getUploadedFiles(User user, HttpServletRequest request,
       boolean isLate) throws FileUploadException {
     Profiler.enterMethod("TransactionHandler.getUploadedFiles", "");
     DiskFileUpload upload = new DiskFileUpload();
     Collection result = new ArrayList();
     java.io.File mkDir = new java.io.File(FileUtil.TEMP_DIR);
     if (!mkDir.exists()) mkDir.mkdirs();
-    long assignmentid =
-        Long.parseLong(request.getParameter(AccessController.P_ASSIGNID));
     try {
-      AssignmentLocal assignment =
-          database.assignmentHome().findByAssignmentID(assignmentid);
-      GroupLocal group =
-          database.groupHome().findByNetIDAssignmentID(netid, assignmentid);
+      Assignment assignment = database.getAssignment(request.getParameter(AccessController.P_ASSIGNID));
+      Group group = assignment.findGroup(user);
       List files =
           upload.parseRequest(request, 1024, AccessController.maxFileSize,
               FileUtil.TEMP_DIR);
       Iterator i = files.iterator();
       while (i.hasNext()) {
         FileItem file = (FileItem) i.next();
-        long submissionID =
-            Long.parseLong((file.getFieldName().split("file_"))[1]);
+        long submission =
+            database.getRequiredSubmission((file.getFieldName().split("file_"))[1]);
         if (!file.getName().equals("")) {
           String fullFileName = FileUtil.trimFilePath(file.getName()), givenFileName =
               null, givenFileType = null;
           String[] split = FileUtil.splitFileNameType(fullFileName);
           givenFileName = split[0];
           givenFileType = split[1];
-          RequiredSubmissionLocal submission =
+          RequiredSubmission submission =
               database.requiredSubmissionHome().findByPrimaryKey(
-                  new RequiredSubmissionPK(submissionID));
+                  new RequiredSubmissionPK(submission));
           RequiredFileTypeData match = submission.matchFileType(givenFileType);
           if (match == null)
             throw new FileUploadException("match fail:" + fullFileName);
           if (file.getSize() / 1024 > submission.getMaxSize())
             throw new FileUploadException("size violation:" + fullFileName);
-          int fileCount = transactions.getGroupFileCounter(group.getGroupID());
+          int fileCount = transactions.getGroupFileCounter(group.getGroup());
           java.io.File movedFile, path;
           movedFile =
               new java.io.File(FileUtil.getSubmittedFileSystemPath(assignment
-                  .getCourseID(), submission.getAssignmentID(), group
-                  .getGroupID(), fileCount, match.getSubmissionID(), match
+                  .getCourse(), submission.getAssignment(), group
+                  .getGroup(), fileCount, match.getSubmission(), match
                   .getFileType()));
           path = movedFile.getParentFile();
           if (path.exists())
@@ -2588,109 +2403,71 @@ public class TransactionHandler {
    *          The User of the user inviting another user to join their
    *          group
    * @param invited
-   *          The NetID of the user being invited to join
+   *          The Net of the user being invited to join
    * @param groupid
-   *          The GroupID of the group
+   *          The Group of the group
    * @return An error string that's empty ("", NOT null) if no error
    */
-  public TransactionResult inviteUser(User p, User invited, Group group) {
+  public TransactionResult inviteUser(User inviter, User invited, Group group) {
     TransactionResult result = new TransactionResult();
     try {
-      String inviter = p.getNetID();
-      invited = invited == null ? "" : invited.toLowerCase();
-      GroupLocal group = null;
-      AssignmentLocal assign = null;
-      try {
-        group = database.groupHome().findByGroupID(groupid);
-        assign = database.assignmentHome().findByGroupID(groupid);
-      } catch (Exception e) {
-        if (group == null) {
-          result.addError("Group does not exist in the database");
-        } else {
-          result.addError("No assignment corresponding to the given group");
-        }
+      Assignment assign = group.getAssignment();
+      if (group == null) {
+        result.addError("Group does not exist in the database");
+        return result;
+      }
+      if (assign == null) {
+        result.addError("No assignment corresponding to the given group");
         return result;
       }
       if (assign.getHidden()) {
         result.addError("No assignment corresponding to the given group");
         return result;
       }
-      if (!assign.getStatus().equals(AssignmentBean.OPEN)) {
-        result
-            .addError("Group management is not currently available for this assignment");
+      if (!assign.getStatus().equals(Assignment.OPEN)) {
+        result.addError("Group management is not currently available for this assignment");
         return result;
       }
-      if (courseIsFrozen(assign.getCourseID())) {
+      if (courseIsFrozen(assign.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      int numMembers =
-          database.groupMemberHome().findActiveByGroupID(groupid).size();
       if (assign.getAssignedGroups()) {
-        result
-            .addError("Students are not allowed to create their own groups for this assignment");
+        result.addError("Students are not allowed to create their own groups for this assignment");
       }
+      int numMembers = group.findActiveMembers().size();
       if (numMembers >= assign.getGroupSizeMax()) {
         result.addError("Cannot invite students; group is already full");
       }
-      GroupMemberLocal memInviter = null, memInvited = null;
-      try {
-        memInviter =
-            database.groupMemberHome().findByPrimaryKey(
-                new GroupMemberPK(groupid, inviter));
-      } catch (Exception e) {
-      }
-      try {
-        memInvited =
-            database.groupMemberHome().findByPrimaryKey(
-                new GroupMemberPK(groupid, invited));
-      } catch (Exception e) {
-      }
-      StudentLocal studentInviter = null, studentInvited = null;
-      try {
-        studentInviter =
-            database.studentHome().findByPrimaryKey(
-                new StudentPK(assign.getCourseID(), inviter));
-      } catch (Exception e) {
-      }
-      try {
-        studentInvited =
-            database.studentHome().findByPrimaryKey(
-                new StudentPK(assign.getCourseID(), invited));
-      } catch (Exception e) {
-      }
-      if (memInviter == null
-          || !memInviter.getStatus().equals(GroupMemberBean.ACTIVE)) {
+      GroupMember memInviter = group.findGroupMember(inviter),
+                  memInvited = group.findGroupMember(invited);
+      Student studentInviter = memInviter.getStudent(),
+              studentInvited = memInvited.getStudent();
+      if (memInviter == null || !memInviter.getStatus().equals(GroupMember.ACTIVE)) {
         result.addError("Must be an active member in a group to invite");
       }
-      if (studentInviter == null
-          || !studentInviter.getStatus().equals(StudentBean.ENROLLED)) {
-        result
-            .addError("Must be an enrolled student in this course to create group invitations");
+      if (studentInviter == null || !studentInviter.getStatus().equals(Student.ENROLLED)) {
+        result.addError("Must be an enrolled student in this course to create group invitations");
       }
-      if (studentInvited == null
-          || !studentInvited.getStatus().equals(StudentBean.ENROLLED)) {
-        result
-            .addError("Invited NetID is not an enrolled student in this course");
+      if (studentInvited == null || !studentInvited.getStatus().equals(Student.ENROLLED)) {
+        result.addError("Invited Net is not an enrolled student in this course");
       }
       if (!result.hasErrors()) {
         if (memInvited != null) {
-          if (memInvited.getStatus().equalsIgnoreCase(GroupMemberBean.INVITED)) {
-            result
-                .addError("This student has already been invited to join this group");
-          } else if (memInvited.getStatus().equalsIgnoreCase(
-              GroupMemberBean.ACTIVE)) {
+          if (memInvited.getStatus().equalsIgnoreCase(GroupMember.INVITED)) {
+            result.addError("This student has already been invited to join this group");
+          } else if (memInvited.getStatus().equalsIgnoreCase(GroupMember.ACTIVE)) {
             result.addError("This student is already a member of this group");
           } else {
             if (transactions.inviteUser(p, invited, groupid)) {
-              result.setValue("Invited " + invited + " to join the group");
+              result.setValue("Invited " + invited.getNetID() + " to join the group");
             } else {
               result.addError("Database failed to invite student");
             }
           }
         } else {
           if (transactions.inviteUser(p, invited, groupid)) {
-            result.setValue("Invited " + invited + " to join the group");
+            result.setValue("Invited " + invited.getNetID() + " to join the group");
           } else {
             result.addError("Database failed to invite student");
           }
@@ -2708,25 +2485,16 @@ public class TransactionHandler {
    * group in the same assignment and adding the user to it.
    * 
    * @param netid
-   *          The NetID of the user to remove
+   *          The Net of the user to remove
    * @param groupid
-   *          The GroupID of the group
+   *          The Group of the group
    * @return An error string that's empty ("", NOT null) if no error
    */
   public TransactionResult leaveGroup(User p, Group group) {
     TransactionResult result = new TransactionResult();
     try {
-      String netid = p.getNetID();
-      GroupLocal group = null;
-      AssignmentLocal assign = null;
-      try {
-        group = database.groupHome().findByGroupID(groupid);
-      } catch (Exception e) {
-      }
-      try {
-        assign = database.assignmentHome().findByGroupID(groupid);
-      } catch (Exception e) {
-      }
+      String netid = p.getNet();
+      Assignment assign = group == null ? null : group.getAssignment();
       if (group == null) {
         result.addError("Invalid group entered: does not exist");
         return result;
@@ -2734,34 +2502,34 @@ public class TransactionHandler {
       if (assign == null || assign.getHidden()) {
         result.addError("No corresponding assignment exists");
         return result;
-      } else if (!assign.getStatus().equals(AssignmentBean.OPEN)) {
+      } else if (!assign.getStatus().equals(Assignment.OPEN)) {
         result
             .addError("Group management is not currently available for this assignment");
         return result;
       }
-      if (courseIsFrozen(assign.getCourseID())) {
+      if (courseIsFrozen(assign.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      GroupMemberLocal member = null;
+      GroupMember member = null;
       try {
         member =
             database.groupMemberHome().findByPrimaryKey(
                 new GroupMemberPK(groupid, netid));
       } catch (Exception e) {
       }
-      if (member == null || !member.getStatus().equals(GroupMemberBean.ACTIVE)) {
+      if (member == null || !member.getStatus().equals(GroupMember.ACTIVE)) {
         result.addError("Not an active member of this group");
       }
       Collection grades =
-          database.gradeHome().findMostRecentByNetAssignmentID(netid,
-              assign.getAssignmentID());
+          database.gradeHome().findMostRecentByNetAssignment(netid,
+              assign.getAssignment());
       if (grades != null && grades.size() > 0) {
         result
             .addError("Cannot leave this group because grades have been entered");
       }
       int numMembers =
-          database.groupMemberHome().findActiveByGroupID(groupid).size();
+          database.groupMemberHome().findActiveByGroup(groupid).size();
       if (numMembers < 2) {
         result.addError("Cannot leave a solo group");
       }
@@ -2854,14 +2622,14 @@ public class TransactionHandler {
   /**
    * Flexibly parse the included CSV file and return the data found in it, which
    * should provide at least one predefined kind of information for a group of
-   * students. There must be a NetID column unless we're adhering to a specific
-   * file format (the second argument). Check to make sure that if a NetID and
-   * CUID are provided for a student and they're already in the database, the
+   * students. There must be a Net column unless we're adhering to a specific
+   * file format (the second argument). Check to make sure that if a Net and
+   * CU are provided for a student and they're already in the database, the
    * values in the file check with those in the db. Check that all students
    * listed in the file exist in the database. If this is an upload for a
    * course, check that all students listed in the file are enrolled in the
    * course. (In the case of a class-specific upload with a required format
-   * without NetID, this means checking that all included CUIDs belong to
+   * without Net, this means checking that all included CUs belong to
    * students enrolled in the class.) Check that no columns not
    * permission-appropriate for the upload type (course, system) are included
    * (just ignore them if they are). Don't require that all students in the
@@ -2883,13 +2651,9 @@ public class TransactionHandler {
     TransactionResult result = new TransactionResult();
     List values = new ArrayList();
     try {
-      Course course = 0;
-      // if there is a course ID, this is a staff upload
-      try {
-        courseID =
-            Long.parseLong(request.getParameter(AccessController.P_COURSEID));
-      } catch (NumberFormatException x) {
-      } // no course; cmsadmin upload
+      Course course = database.getCourse(request.getParameter(AccessController.P_COURSEID));
+      // if course == null, this is a staff upload
+      // otherwise it is a cmsadmin upload
       FileItem file =
           retrieveUploadedFile(request, AccessController.P_UPLOADEDCSV, result);
       if (result.hasErrors()) return result;
@@ -2912,12 +2676,12 @@ public class TransactionHandler {
         result.addError("Header line does not match required format");
         return result;
       }
-      // if no format is specified, require that NetID appear
+      // if no format is specified, require that Net appear
       int netidCol =
           CSVFileFormatsUtil.getFlexibleColumnNum(infoFound,
-              CSVFileFormatsUtil.NETID);
+              CSVFileFormatsUtil.NET);
       if (requiredFormat == null && netidCol == -1) {
-        result.addError("NetID column must appear in uploaded file");
+        result.addError("Net column must appear in uploaded file");
         return result;
       }
       // parse all further lines using assumed format
@@ -2935,15 +2699,15 @@ public class TransactionHandler {
                 + expectedLineLength + " columns");
             return result;
           }
-          // if no format requirement, always require NetID
+          // if no format requirement, always require Net
           if (requiredFormat == null) {
             if (!line[netidCol].matches(CSVFileFormatsUtil.netidRegexp)) {
-              result.addError("NetID on line " + lineNum + " does not parse");
+              result.addError("Net on line " + lineNum + " does not parse");
             }
             if (result.hasErrors()) return result;
-            // require *existing* NetID
+            // require *existing* Net
             try {
-              UserLocal user =
+              User user =
                   database.userHome().findByPrimaryKey(
                       new UserPK(line[netidCol]));
             } catch (FinderException x) {
@@ -2997,43 +2761,43 @@ public class TransactionHandler {
       /* data integrity & security checks */
       int cuidCol =
           CSVFileFormatsUtil.getFlexibleColumnNum(infoFound,
-              CSVFileFormatsUtil.CUID);
+              CSVFileFormatsUtil.CU);
       if (netidCol != -1) {
         // if this is a course-specific upload, make sure all users included are
         // students in the course
-        if (courseID != 0)
+        if (course != 0)
           for (int i = 1; i < values.size(); i++) {
             String netid = ((String[]) values.get(i))[netidCol];
             try {
-              StudentLocal student =
+              Student student =
                   database.studentHome().findByPrimaryKey(
-                      new StudentPK(courseID, netid));
+                      new StudentPK(course, netid));
             } catch (FinderException x) {
               result.addError("User '" + netid
                   + "' is not a student in this course");
             }
           }
         if (result.hasErrors()) return result;
-        // CUID-related checks
+        // CU-related checks
         if (cuidCol != -1) {
           HashMap netid2cuid = new HashMap(); // for all students in course
           Collection courseStudents =
-              database.userHome().findByCourseID(courseID);
+              database.userHome().findByCourse(course);
           Iterator it = courseStudents.iterator();
           while (it.hasNext()) {
-            UserLocal student = (UserLocal) it.next();
-            netid2cuid.put(student.getNetID(), student.getCUID());
+            User student = (User) it.next();
+            netid2cuid.put(student.getNet(), student.getCU());
           }
           // if this is a course-specific upload and cuid is included, all
           // students should have cuids in the db
-          if (courseID != 0) {
+          if (course != 0) {
             for (int i = 1; i < values.size(); i++) {
               line = (String[]) values.get(i);
               if (!netid2cuid.containsKey(line[netidCol])
                   || netid2cuid.get(line[netidCol]) == null
                   || netid2cuid.get(line[netidCol]).equals(""))
                 result.addError("Student on line " + (i + 1)
-                    + " has no CUID in CMS");
+                    + " has no CU in CMS");
             }
           }
           if (result.hasErrors()) return result;
@@ -3044,7 +2808,7 @@ public class TransactionHandler {
             String netid = line[netidCol], cuid = line[cuidCol];
             if (netid2cuid.get(netid) != null) {
               if (!cuid.equals("") && !netid2cuid.get(netid).equals(cuid))
-                result.addError("NetID and CUID on line " + (i + 1)
+                result.addError("Net and CU on line " + (i + 1)
                     + " are not a match");
             }
           }
@@ -3052,21 +2816,21 @@ public class TransactionHandler {
         if (result.hasErrors()) return result;
       } else { // no netid (there's a required format and it doesn't contain
                 // netid)
-        // CUID-related checks
-        if (courseID != 0) { // class-specific upload
-          // make sure each CUID corresponds to a student in the class
+        // CU-related checks
+        if (course != 0) { // class-specific upload
+          // make sure each CU corresponds to a student in the class
           HashSet cuids = new HashSet(); // for all students in course
           Collection courseStudents =
-              database.userHome().findByCourseID(courseID);
+              database.userHome().findByCourse(course);
           Iterator it = courseStudents.iterator();
           while (it.hasNext()) {
-            UserLocal student = (UserLocal) it.next();
-            cuids.add(student.getCUID());
+            User student = (User) it.next();
+            cuids.add(student.getCU());
           }
           for (int i = 1; i < values.size(); i++) { // run through data rows
             line = (String[]) values.get(i);
             if (!cuids.contains(line[cuidCol]))
-              result.addError("CUID on line " + (i + 1)
+              result.addError("CU on line " + (i + 1)
                   + " does not belong to a student in this class");
           }
           if (result.hasErrors()) return result;
@@ -3079,16 +2843,16 @@ public class TransactionHandler {
       boolean[] colsOK = new boolean[infoFound.length];
       int numColsOK = 0;
       for (int i = 0; i < infoFound.length; i++) {
-        if (courseID == 0) // cmsadmin upload
+        if (course == 0) // cmsadmin upload
           colsOK[i] =
               CSVFileFormatsUtil.ALLOWED_COLUMNS[infoFound[i]].isForAdmin();
         else colsOK[i] =
             CSVFileFormatsUtil.ALLOWED_COLUMNS[infoFound[i]].isForStaff();
         numColsOK += (colsOK[i] ? 1 : 0);
       }
-      // special case: for a course-specific upload, leave in the CUID (we'll
+      // special case: for a course-specific upload, leave in the CU (we'll
       // need to remove it later)
-      if (courseID != 0 && cuidCol != -1 && !colsOK[cuidCol]) {
+      if (course != 0 && cuidCol != -1 && !colsOK[cuidCol]) {
         numColsOK++;
         colsOK[cuidCol] = true;
       }
@@ -3114,7 +2878,7 @@ public class TransactionHandler {
   }
 
   /**
-   * @param courseID
+   * @param course
    * @param request
    * @return A TransactionResult. If the upload is successful, the TR's data
    *         object will be a List of String[]s with one entry for each student
@@ -3130,16 +2894,16 @@ public class TransactionHandler {
     final String[] format = CSVFileFormatsUtil.FINALGRADES_TEMPLATE_FORMAT;
     List values = new ArrayList();
     try {
-      if (courseIsFrozen(courseID)) {
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
       Iterator students =
-          database.studentHome().findByCourseIDSortByLastName(courseID)
+          database.studentHome().findByCourseSortByLastName(course)
               .iterator();
       while (students.hasNext()) {
-        StudentLocal s = (StudentLocal) students.next();
-        netids.add(s.getNetID());
+        Student s = (Student) students.next();
+        netids.add(s.getNet());
       }
       FileItem file =
           retrieveUploadedFile(request, AccessController.P_GRADESFILE, result);
@@ -3149,13 +2913,13 @@ public class TransactionHandler {
           new BufferedReader(new InputStreamReader(file.getInputStream()));
       ExcelCSVParser csvParser = new ExcelCSVParser(listlines);
       int netidCol =
-          CSVFileFormatsUtil.getColumnNumber(format, CSVFileFormatsUtil.NETID);
+          CSVFileFormatsUtil.getColumnNumber(format, CSVFileFormatsUtil.NET);
       int gradeCol =
           CSVFileFormatsUtil.getColumnNumber(format,
               CSVFileFormatsUtil.FINAL_GRADE);
       String[] line = readCSVHeaderLine(csvParser, format, result);
       if (result.hasErrors()) return result;
-      String[] fileValues = new String[] { "NetID", "Final Grade" };
+      String[] fileValues = new String[] { "Net", "Final Grade" };
       values.add(fileValues); // regardless of the file format, this is all the
                               // info we need
       int lineSize = fileValues.length;
@@ -3172,20 +2936,20 @@ public class TransactionHandler {
         try {
           // make sure that there is a grade entered
           String[] checkedLine = new String[lineSize];
-          String netID = "", grade = "";
+          String net = "", grade = "";
           if (netidCol < line.length) {
-            netID = line[netidCol].toLowerCase().trim();
+            net = line[netidCol].toLowerCase().trim();
           }
 
           if (gradeCol < line.length) {
             grade = line[gradeCol].trim();
           }
 
-          if (!netids.contains(netID)) {
-            result.addError(netID
+          if (!netids.contains(net)) {
+            result.addError(net
                 + " is not an enrolled student in this course", lineNum);
           }
-          checkedLine[0] = netID;
+          checkedLine[0] = net;
           if (grade.equals("")) {
             checkedLine[1] = "";
           } else {
@@ -3230,25 +2994,23 @@ public class TransactionHandler {
    *         columns read in (null in each case if no data). The first list
    *         entry will contain the data in the header row of the file.
    */
-  public TransactionResult parseGradesFile(Assignment assign, HttpServletRequest request) {
-    Profiler.enterMethod("TransactionHandler.parseGradesFile", "AssignmentID: "
-        + assignmentID);
+  public TransactionResult parseGradesFile(Assignment assignment, HttpServletRequest request) {
+    Profiler.enterMethod("TransactionHandler.parseGradesFile", "Assignment: "
+        + assignment.toString());
     TransactionResult result = new TransactionResult();
     boolean hasSubProbs = false;
     List values = new ArrayList();
     Iterator i = null;
     try {
-      AssignmentLocal assignment =
-          database.assignmentHome().findByAssignmentID(assignmentID);
-      if (courseIsFrozen(assignment.getCourseID())) {
+      if (courseIsFrozen(assignment.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
       Collection subProbs =
-          database.subProblemHome().findByAssignmentID(assignmentID);
+          database.subProblemHome().findByAssignment(assignment);
       Iterator students =
-          database.studentHome().findByCourseIDSortByLastName(
-              assignment.getCourseID()).iterator();
+          database.studentHome().findByCourseSortByLastName(
+              assignment.getCourse()).iterator();
       /*
        * Create these hash sets for easily telling later whether or not a value
        * we parsed is valid
@@ -3261,13 +3023,13 @@ public class TransactionHandler {
         hasSubProbs = true;
         i = subProbs.iterator();
         while (i.hasNext()) {
-          SubProblemLocal s = (SubProblemLocal) i.next();
+          SubProblem s = (SubProblem) i.next();
           subProbNames.add(s.getSubProblemName());
         }
       }
       while (students.hasNext()) {
-        StudentLocal s = (StudentLocal) students.next();
-        netids.add(s.getNetID());
+        Student s = (Student) students.next();
+        netids.add(s.getNet());
       }
       // Find the uploaded file stream
       FileItem file =
@@ -3291,9 +3053,9 @@ public class TransactionHandler {
       }
       if (colsFound != null) {
         if (hasSubProbs) {
-          // Make sure we have netID at least
+          // Make sure we have net at least
           if (CSVFileFormatsUtil.getFlexibleColumnNum(colsFound,
-              CSVFileFormatsUtil.NETID) == -1) {
+              CSVFileFormatsUtil.NET) == -1) {
             result.addError(
                 "The file is misformatted: it must contain a net id", 0);
           }
@@ -3314,9 +3076,9 @@ public class TransactionHandler {
       values.add(line);
       int lineno = 2;
 
-      int netIDIndex =
+      int netIndex =
           CSVFileFormatsUtil.getFlexibleColumnNum(colsFound,
-              CSVFileFormatsUtil.NETID);
+              CSVFileFormatsUtil.NET);
       int gradeIndex =
           CSVFileFormatsUtil.getFlexibleColumnNum(colsFound,
               CSVFileFormatsUtil.GRADE);
@@ -3330,13 +3092,13 @@ public class TransactionHandler {
 
           for (int j = 0; j < line.length; j++)
             line[j] = line[j].trim();
-          // Check that the NetID that begins this line is a student in the
+          // Check that the Net that begins this line is a student in the
           // course
-          if (!netids.contains(line[netIDIndex])) {
-            result.addError("'" + line[netIDIndex]
+          if (!netids.contains(line[netIndex])) {
+            result.addError("'" + line[netIndex]
                 + "' is not an enrolled student in this course", lineno);
           }
-          checkedLine[netIDIndex] = line[netIDIndex];
+          checkedLine[netIndex] = line[netIndex];
 
           /*
            * For each element after the first on a line, check that it properly
@@ -3344,7 +3106,7 @@ public class TransactionHandler {
            * entry in checkedLine with a Float instead of a String
            */
           for (int j = 0; j < line.length; j++) {
-            if (j != netIDIndex) {
+            if (j != netIndex) {
               try {
                 if (line[j].equals(""))
                   checkedLine[j] = "";
@@ -3367,15 +3129,15 @@ public class TransactionHandler {
       result
           .addError("An unexpected exception occurred while trying to parse the file");
     }
-    Profiler.exitMethod("TransactionHandler.parseGradesFile", "AssignmentID: "
-        + assignmentID);
+    Profiler.exitMethod("TransactionHandler.parseGradesFile", "Assignment: "
+        + assignment);
     return result;
   }
 
   /**
    * Posts a new announcement
    * 
-   * @param courseID
+   * @param course
    *          The course in which to post the announcement
    * @param announce
    *          Text of the announcement
@@ -3387,10 +3149,10 @@ public class TransactionHandler {
       String announce) {
     TransactionResult result = new TransactionResult();
     try {
-      if (courseIsFrozen(courseID))
+      if (courseIsFrozen(course))
         result.addError("Course is frozen; no changes may be made to it");
       else {
-        if (!transactions.postAnnouncement(p, courseID, announce))
+        if (!transactions.postAnnouncement(p, course, announce))
           result.addError("Could not post announcement due to database error");
       }
     } catch (Exception e) {
@@ -3403,25 +3165,19 @@ public class TransactionHandler {
       User user, boolean emailOn) {
     TransactionResult result = new TransactionResult();
     try {
-      if (courseIsFrozen(courseID)) {
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
-        StudentLocal s = null;
-        try {
-          s =
-              database.studentHome().findByPrimaryKey(
-                  new StudentPK(courseID, netID));
-        } catch (Exception e) {
-        }
+        Student s = course.getStudent(user);
         if (s == null) {
-          result.addError(netID
+          result.addError(user.getNetID()
               + " has not been previously enrolled in this class");
         } else {
           Vector n = new Vector();
-          n.add(netID);
-          result = transactions.addStudentsToCourse(p, n, courseID, emailOn);
+          n.add(user);
+          result = transactions.addStudentsToCourse(p, n, course, emailOn);
           if (!result.hasErrors()) {
-            result.setValue(netID + " has been successfully reenrolled");
+            result.setValue(net + " has been successfully reenrolled");
           }
         }
       }
@@ -3432,15 +3188,13 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult removeAssignment(User p, Assignment assign) {
+  public TransactionResult removeAssignment(User p, Assignment assignment) {
     TransactionResult result = new TransactionResult();
     try {
-      AssignmentLocal assignment =
-          database.assignmentHome().findByAssignmentID(assignmentID);
-      if (courseIsFrozen(assignment.getCourseID())) {
+      if (courseIsFrozen(assignment.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
-        result = transactions.removeAssignment(p, assignmentID);
+        result = transactions.removeAssignment(p, assignment);
       }
     } catch (Exception e) {
       result.addError("Unexpected error while trying to remove assignment");
@@ -3450,31 +3204,29 @@ public class TransactionHandler {
   }
 
   /**
-   * @return 0 on error, the course ID of the category on success
+   * @return 0 on error, the course  of the category on success
    */
-  private long removeCategory(User p, Category category) {
-    Course course = 0;
+  private Course removeCategory(User p, Category category) {
+    Course course = null;
     try {
-      CategoryLocal cat =
-          database.categoryHome().findByPrimaryKey(new CategoryPK(categoryID));
-      if (cat == null)
-        return 0;
-      else if (courseIsFrozen(cat.getCourseID())) {
-        return 0;
-      } else if (transactions.removeCategory(p, categoryID)) {
-        return cat.getCourseID();
+      if (category == null)
+        return null;
+      else if (courseIsFrozen(category.getCourse())) {
+        return null;
+      } else if (transactions.removeCategory(p, category)) {
+        return cat.getCourse();
       } else {
-        return 0;
+        return null;
       }
     } catch (Exception e) {
       System.out.println("Database failed to find content with id "
-          + categoryID);
+          + category);
     }
-    return courseID;
+    return course;
   }
 
   /**
-   * Remove a NetID from the list of those given CMS admin access
+   * Remove a Net from the list of those given CMS admin access
    * 
    * @return TransactionResult
    */
@@ -3482,11 +3234,9 @@ public class TransactionHandler {
     TransactionResult result = new TransactionResult();
     boolean success = false;
     try {
-      CMSAdminLocal admin =
-          database.cmsAdminHome().findByPrimaryKey(new CMSAdminPK(netID));
-      if (admin == null)
+      if (!p.isCMSAdmin())
         result.addError("Couldn't find CMS admin in database");
-      else success = transactions.removeCMSAdmin(p, netID);
+      else success = transactions.removeCMSAdmin(p);
     } catch (Exception e) {
       result.addError("Database failed to remove CMS admin");
       e.printStackTrace();
@@ -3500,25 +3250,23 @@ public class TransactionHandler {
   public TransactionResult removeCtgRow(User p, CategoryRow row) {
     TransactionResult result = new TransactionResult();
     try {
-      CategoryRowLocal row =
-          database.categoryRowHome().findByPrimaryKey(new CategoryRowPK(rowID));
       if (row == null)
-        result.addError("Couldn't find content row with id: " + rowID);
+        result.addError("Couldn't find content row with id: " + row);
       else {
-        CategoryLocal cat =
+        Category cat = row.getCategory();
             database.categoryHome().findByPrimaryKey(
-                new CategoryPK(row.getCategoryID()));
+                new CategoryPK(row.getCategory()));
         if (cat == null)
           result.addError("Couldn't find content with id "
-              + row.getCategoryID());
-        else if (courseIsFrozen(cat.getCourseID()))
+              + row.getCategory());
+        else if (courseIsFrozen(cat.getCourse()))
           result.addError("Course is frozen; no changes may be made to it");
-        else if (transactions.removeCtgRow(p, rowID)) {
+        else if (transactions.removeCtgRow(p, row)) {
           return result;
         }
       }
     } catch (Exception e) {
-      result.addError("Database failed to find row with id " + rowID);
+      result.addError("Database failed to find row with id " + row);
     }
     return result;
   }
@@ -3526,21 +3274,19 @@ public class TransactionHandler {
   public TransactionResult removeExtension(User p, Course course, Group group) {
     TransactionResult result = new TransactionResult();
     try {
-      GroupLocal group = database.groupHome().findByGroupID(groupID);
-      AssignmentLocal assign =
-          database.assignmentHome().findByAssignmentID(group.getAssignmentID());
+      Assignment assign = group.getAssignment();
       /*
-       * Authentication happens by CourseID, must check that the GroupID is
+       * Authentication happens by Course, must check that the Group is
        * actually a group within the given course.
        */
-      if (courseID != assign.getCourseID()) {
+      if (course != assign.getCourse()) {
         result.addError("Illegal request: group is not in this course");
       }
-      if (courseIsFrozen(assign.getCourseID())) {
+      if (courseIsFrozen(assign.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
       }
       if (!result.hasErrors()) {
-        result = transactions.removeExtension(p, groupID);
+        result = transactions.removeExtension(p, group);
       }
     } catch (Exception e) {
       result.addError("Unexpected error; could not remove extension");
@@ -3549,23 +3295,16 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult restoreAnnouncement(User p, Announcement announcement) {
+  public TransactionResult restoreAnnouncement(User p, Announcement announce) {
     TransactionResult result = new TransactionResult();
     try {
-      AnnouncementLocal announce = null;
-      try {
-        announce =
-            database.announcementHome().findByPrimaryKey(
-                new AnnouncementPK(announceID));
-      } catch (Exception e) {
-      }
       if (announce == null) {
         result.addError("Announcement does not exist in database");
-      } else if (courseIsFrozen(announce.getAnnouncementID())) {
+      } else if (courseIsFrozen(announce.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
       }
       if (!result.hasErrors()) {
-        result = transactions.restoreAnnouncement(p, announceID);
+        result = transactions.restoreAnnouncement(p, announce);
       }
     } catch (Exception e) {
       result.addError("Unexpected error; could not restore announcement");
@@ -3574,15 +3313,13 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult restoreAssignment(User p, Assignment assign) {
+  public TransactionResult restoreAssignment(User p, Assignment assignment) {
     TransactionResult result = new TransactionResult();
     try {
-      AssignmentLocal assignment =
-          database.assignmentHome().findByAssignmentID(assignmentID);
-      if (courseIsFrozen(assignment.getCourseID())) {
+      if (courseIsFrozen(assignment.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
-        result = transactions.restoreAssignment(p, assignmentID);
+        result = transactions.restoreAssignment(p, assignment);
       }
     } catch (Exception e) {
       result.addError("Unexpected error while trying to restore assignment");
@@ -3614,33 +3351,33 @@ public class TransactionHandler {
       }
       if (recipient.equals("all") || recipient.equals("students")) {
         Iterator students =
-            database.studentHome().findByCourseIDSortByLastName(courseID)
+            database.studentHome().findByCourseSortByLastName(course)
                 .iterator();
         while (students.hasNext()) {
-          StudentLocal student = (StudentLocal) students.next();
-          email.addTo(student.getNetID() + "@cornell.edu");
+          Student student = (Student) students.next();
+          email.addTo(student.getNet() + "@cornell.edu");
         }
       }
       // The decision was made that staff should always receive the email
       // if (recipient.equals("all") || recipient.equals("staff")) {
       Iterator staffs =
-          database.staffHome().findByCourseID(courseID).iterator();
+          database.staffHome().findByCourse(course).iterator();
       while (staffs.hasNext()) {
-        StaffLocal staff = (StaffLocal) staffs.next();
-        email.addTo(staff.getNetID() + "@cornell.edu");
+        Staff staff = (Staff) staffs.next();
+        email.addTo(staff.getNet() + "@cornell.edu");
       }
       // }
       String fullname = p.getFirstName();
       fullname +=
           fullname.length() > 0 ? " " + p.getLastName() : p.getLastName();
-      email.setFrom("\"" + fullname + "\"" + "<" + p.getNetID()
+      email.setFrom("\"" + fullname + "\"" + "<" + p.getNet()
           + "@cornell.edu" + ">");
-      CourseLocal course =
-          database.courseHome().findByPrimaryKey(new CoursePK(courseID));
+      Course course =
+          database.courseHome().findByPrimaryKey(new CoursePK(course));
       email.setSubject("[" + course.getDisplayedCode() + "] " + subject);
       email.setMessage(body);
       email.setRecipient(recipient);
-      result = transactions.sendEmail(p, courseID, email);
+      result = transactions.sendEmail(p, course, email);
     } catch (Exception e) {
       e.printStackTrace();
       result.addError("Unexpected error; could not send e-mail");
@@ -3652,8 +3389,8 @@ public class TransactionHandler {
    * Set the properties of an existing assignment or create a new assignment
    * 
    * @param p
-   * @param assignID
-   *          ID of the assignment to set, or 0 to create a new one
+   * @param assign
+   *           of the assignment to set, or 0 to create a new one
    * @param request
    *          The HTTP request from which to take parameters and values
    * @return TransactionResult
@@ -3661,7 +3398,7 @@ public class TransactionHandler {
   public TransactionResult setAssignmentProps(User p, Course course,
       Assignment assign, HttpServletRequest request) {
     Profiler.enterMethod("TransactionHandler.setAssignmentProps",
-        "AssignmentID: " + assignID);
+        "Assignment: " + assign.toString());
     TransactionResult result = new TransactionResult();
     String name = "", nameshort = "", status = "", description = "";
     String duedate = null, duetime = null, dueampm = null, latedate = null, latetime =
@@ -3671,7 +3408,7 @@ public class TransactionHandler {
     boolean latesubmissions = false, assignedgroups = false, assignedgraders =
         false, studentregrades = false, showstats = false, showsolution = false;
     int graceperiod = 0, groupmin = 0, groupmax = 0, groupoption = 0, regradeoption =
-        0, numOfAssignedFiles = 0, type = AssignmentBean.ASSIGNMENT;
+        0, numOfAssignedFiles = 0, type = Assignment.ASSIGNMENT;
     float score = 0, weight = 0;
     int order = 1;
     char letter = 'a';
@@ -3691,8 +3428,10 @@ public class TransactionHandler {
     long importID = 0;
     DiskFileUpload upload = new DiskFileUpload();
     AssignmentOptions options = new AssignmentOptions();
-    HashSet filenames = new HashSet(), probnames = new HashSet(), subnames =
-        new HashSet(), questnames = new HashSet();
+    HashSet filenames  = new HashSet(),
+            probnames  = new HashSet(),
+            subnames   = new HashSet(),
+            questnames = new HashSet();
     HashMap probScores = new HashMap(); // for ensuring totalscore = sum of
                                         // problem scores
     List info = null;
@@ -3700,7 +3439,7 @@ public class TransactionHandler {
       info =
           upload.parseRequest(request, 1024, AccessController.maxFileSize,
               FileUtil.TEMP_DIR);
-      if (courseIsFrozen(courseID)) {
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
         result.setValue(info);
         return result;
@@ -3714,7 +3453,7 @@ public class TransactionHandler {
             name = item.getString();
           } else if (field.equals(AccessController.P_NAMESHORT)) {
             nameshort = item.getString();
-          } else if (field.equals(AccessController.P_ASSIGNMENTTYPE)) {
+          } else if (field.equals(AccessController.P_ASSIGNIDMENTTYPE)) {
             type = Integer.parseInt(item.getString());
             options.setAssignmentType(type);
           } else if (field.equals(AccessController.P_DUEDATE)) {
@@ -3935,10 +3674,10 @@ public class TransactionHandler {
             String itemfile =
                 field.split(AccessController.P_RESTOREITEMFILE)[1];
             String[] itemfiles = itemfile.split("_");
-            long itemID = Long.parseLong(itemfiles[0]);
-            long fileID = Long.parseLong(itemfiles[1]);
+            long item = Long.parseLong(itemfiles[0]);
+            long file = Long.parseLong(itemfiles[1]);
             try {
-              options.restoreAssignmentFile(itemID, fileID);
+              options.restoreAssignmentFile(item, file);
             } catch (FileUploadException e) {
               result.addError(e.getMessage());
               proceed = false;
@@ -3950,16 +3689,16 @@ public class TransactionHandler {
           } else if (field.equals(AccessController.P_REMOVESOL)) {
             options.removeCurrentSolutionFile();
           } else if (field.startsWith(AccessController.P_RESTORESOL)) {
-            long solID =
+            long sol =
                 Long.parseLong(field.split(AccessController.P_RESTORESOL)[1]);
             try {
-              options.restoreSolutionFile(solID);
+              options.restoreSolutionFile(sol);
             } catch (FileUploadException e) {
               result.addError(e.getMessage());
               proceed = false;
             }
           } else if (field.startsWith(AccessController.P_SUBPROBNAME)) {
-            long subID =
+            long sub =
                 Long.parseLong(field.split(AccessController.P_SUBPROBNAME)[1]);
             /*
              * if (probnames.contains(item.getString())) { // if there exists
@@ -3971,18 +3710,18 @@ public class TransactionHandler {
             } else {
               // Assign subproblem orders in the order that they appear in the
               // form
-              options.addSubProblemOrder(order, subID);
-              options.addSubProblemName(item.getString(), subID);
+              options.addSubProblemOrder(order, sub);
+              options.addSubProblemName(item.getString(), sub);
               probnames.add(item.getString());
               order++;
 
               // reset the choice lettering
               letter = 'a';
               choices = new SubProblemOptions();
-              options.addSubProblemChoices(choices, subID);
+              options.addSubProblemChoices(choices, sub);
             }
           } else if (field.startsWith(AccessController.P_SUBPROBSCORE)) {
-            long subID =
+            long sub =
                 Long.parseLong(field.split(AccessController.P_SUBPROBSCORE)[1]);
             float maxscore = 0.0f;
             try {
@@ -3992,67 +3731,66 @@ public class TransactionHandler {
               result.addError("Problem scores must be positive numbers");
               proceed = false;
             }
-            Long key = new Long(subID);
+            Long key = new Long(sub);
             if (!probScores.containsKey(key)) {
               probScores.put(key, new Float(maxscore));
             }
-            options.addSubProblemScore(maxscore, subID);
+            options.addSubProblemScore(maxscore, sub);
           } else if (field.startsWith(AccessController.P_REMOVECHOICE)) {
-            long choiceID =
+            long choice =
                 Long.parseLong(field.split(AccessController.P_REMOVECHOICE)[1]);
-            choices.removeChoice(choiceID);
+            choices.removeChoice(choice);
           } else if (field.startsWith(AccessController.P_NEWSUBPROBNAME)) {
-            int ID =
+            int subProblem =
                 Integer
                     .parseInt(field.split(AccessController.P_NEWSUBPROBNAME)[1]);
             if (probnames.contains(item.getString())) {
-              result.addError("A subproblem with name '" + item.getString()
-                  + "' already exists");
+              result.addError("A subproblem with name '" + item.getString() + "' already exists");
               proceed = false;
             } else if (item.getString().equals("")) {
               emptyProbName = true;
             } else {
               // Assign subproblem orders in the order that they appear in the
               // form
-              options.addNewSubProblemName(item.getString(), ID);
-              options.addNewSubProblemOrder(order, ID);
+              options.addNewSubProblemName(item.getString(), subProblem);
+              options.addNewSubProblemOrder(order, subProblem);
               probnames.add(item.getString());
               order++;
 
               // reset the choice lettering
               letter = 'a';
               choices = new SubProblemOptions();
-              options.addNewSubProblemChoices(choices, ID);
+              options.addNewSubProblemChoices(choices, subProblem);
             }
           } else if (field.startsWith(AccessController.P_NEWSUBPROBSCORE)) {
-            int ID =
+            int subProblem =
                 Integer.parseInt(field
                     .split(AccessController.P_NEWSUBPROBSCORE)[1]);
             float maxscore = 0;
             try {
               maxscore = StringUtil.parseFloat(item.getString());
               if (maxscore < 0.0f) throw new NumberFormatException();
-              probScores.put(new Long(-ID), new Float(maxscore));
+              probScores.put(new Long(-subProblem), new Float(maxscore));
             } catch (NumberFormatException e) {
               result.addError("Problem scores must be positive numbers");
               proceed = false;
             }
-            options.addNewSubProblemScore(maxscore, ID);
+            options.addNewSubProblemScore(maxscore, subProblem);
           } else if (field.startsWith(AccessController.P_RESTORESUBPROB)) {
-            long subID =
+            long sub =
                 Long
                     .parseLong(field.split(AccessController.P_RESTORESUBPROB)[1]);
-            options.restoreSubProblem(subID);
+            options.restoreSubProblem(sub);
           } else if (field.startsWith(AccessController.P_REMOVESUBPROB)) {
-            long subID =
+            long sub =
                 Long
                     .parseLong(field.split(AccessController.P_REMOVESUBPROB)[1]);
-            probScores.put(new Long(subID), new Float(0));
-            options.removeSubProblem(subID);
+            probScores.put(new Long(sub), new Float(0));
+            options.removeSubProblem(sub);
           }
           // Surveys
           else if (field.startsWith(AccessController.P_CORRECTCHOICE)) {
-            int ID =
+            int answer =
                 Integer
                     .parseInt(field.split(AccessController.P_CORRECTCHOICE)[1]);
             int correctChoice = -1;
@@ -4063,9 +3801,9 @@ public class TransactionHandler {
               result.addError("Correct choices must be positive numbers");
               proceed = false;
             }
-            options.addSubProblemAnswer(correctChoice, ID);
+            options.addSubProblemAnswer(correctChoice, answer);
           } else if (field.startsWith(AccessController.P_SUBPROBTYPE)) {
-            long questID =
+            long quest =
                 Long.parseLong(field.split(AccessController.P_SUBPROBTYPE)[1]);
             int questtype = -1;
             try {
@@ -4075,17 +3813,17 @@ public class TransactionHandler {
               result.addError("Question types must be positive numbers");
               proceed = false;
             }
-            options.addSubProblemType(questtype, questID);
+            options.addSubProblemType(questtype, quest);
           } else if (field.startsWith(AccessController.P_CHOICE)) {
             String[] tokens = field.split("_");
-            long questID = Long.parseLong(tokens[1]);
-            long choiceID = Long.parseLong(tokens[2]);
+            long quest = Long.parseLong(tokens[1]);
+            long choice = Long.parseLong(tokens[2]);
 
-            choices.addChoiceText(item.getString(), choiceID);
-            choices.addChoiceLetter(Character.toString(letter), choiceID);
+            choices.addChoiceText(item.getString(), choice);
+            choices.addChoiceLetter(Character.toString(letter), choice);
             letter++;
           } else if (field.startsWith(AccessController.P_NEWCORRECTCHOICE)) {
-            int ID =
+            int answer =
                 Integer.parseInt(field
                     .split(AccessController.P_NEWCORRECTCHOICE)[1]);
             int correctChoice = -1;
@@ -4096,9 +3834,9 @@ public class TransactionHandler {
               result.addError("Correct choices must be positive numbers");
               proceed = false;
             }
-            options.addNewSubProblemAnswer(correctChoice, ID);
+            options.addNewSubProblemAnswer(correctChoice, answer);
           } else if (field.startsWith(AccessController.P_NEWSUBPROBTYPE)) {
-            int ID =
+            int type =
                 Integer
                     .parseInt(field.split(AccessController.P_NEWSUBPROBTYPE)[1]);
             int questtype = -1;
@@ -4109,11 +3847,8 @@ public class TransactionHandler {
               result.addError("Question types must be positive numbers");
               proceed = false;
             }
-            options.addNewSubProblemType(questtype, ID);
+            options.addNewSubProblemType(questtype, type);
           } else if (field.startsWith(AccessController.P_NEWSUBPROBORDER)) {
-            int ID =
-                Integer.parseInt(field
-                    .split(AccessController.P_NEWSUBPROBORDER)[1]);
             int questorder = -1;
             try {
               questorder = Integer.parseInt(item.getString());
@@ -4126,10 +3861,10 @@ public class TransactionHandler {
 
             String[] tokens = field.split("_");
 
-            int questID = Integer.parseInt(tokens[1]);
-            int choiceID = Integer.parseInt(tokens[2]);
-            choices.addNewChoiceText(item.getString(), choiceID);
-            choices.addNewChoiceLetter(Character.toString(letter), choiceID);
+            int quest = Integer.parseInt(tokens[1]);
+            int choice = Integer.parseInt(tokens[2]);
+            choices.addNewChoiceText(item.getString(), choice);
+            choices.addNewChoiceLetter(Character.toString(letter), choice);
             letter++;
           } else {
             System.out.println("Not parsed: " + item.getString());
@@ -4275,21 +4010,21 @@ public class TransactionHandler {
       }
       // don't check this for quizzes for now
       if (probScores.size() > 0 && total != score
-          && type != AssignmentBean.QUIZ) {
+          && type != Assignment.QUIZ) {
         result.addError("Problem scores sum (" + total
             + ") does not equal the Total Score (" + score + ")");
       }
-      CourseLocal course =
-          database.courseHome().findByPrimaryKey(new CoursePK(courseID));
-      long itemID = -1;
-      int ID = -1;
-      Iterator itemIDs = options.getReplacedAssignmentItemIDs().iterator();
-      Iterator IDs = options.getNewAssignmentItemIDs().iterator();
-      while (itemIDs.hasNext() || IDs.hasNext()
+      Course course =
+          database.courseHome().findByPrimaryKey(new CoursePK(course));
+      long item = -1;
+      int ob = -1;
+      Iterator items = options.getReplacedAssignmentItems().iterator();
+      Iterator s = options.getNewAssignmentItems().iterator();
+      while (items.hasNext() || s.hasNext()
           || options.hasUncheckedSolutionFile()) {
         try {
-          boolean oldFile = itemIDs.hasNext(); // itemID > 0;
-          boolean solFile = !oldFile && !IDs.hasNext(); // ID < 0;
+          boolean oldFile = items.hasNext(); // item > 0;
+          boolean solFile = !oldFile && !s.hasNext(); //  < 0;
           FileItem data;
           String fileName = null;
           String[] givenName;
@@ -4300,16 +4035,16 @@ public class TransactionHandler {
                     .trimFilePath(data.getName()));
             fileName = givenName[0];
           } else if (oldFile) {
-            itemID = ((Long) itemIDs.next()).longValue();
-            data = options.getFileItemByID(itemID);
-            fileName = options.getItemNameByID(itemID);
+            item = ((Long) items.next()).longValue();
+            data = options.getFileItemBy(item);
+            fileName = options.getItemNameBy(item);
             givenName =
                 data == null ? null : FileUtil.splitFileNameType(FileUtil
                     .trimFilePath(data.getName()));
           } else {
-            ID = ((Integer) IDs.next()).intValue();
-            data = options.getNewFileItemByID(ID);
-            fileName = options.getNewItemNameByID(ID);
+            ob = ((Integer) s.next()).intValue();
+            data = options.getNewFileItemBy(ob);
+            fileName = options.getNewItemNameBy(ob);
             givenName =
                 data == null ? null : FileUtil.splitFileNameType(FileUtil
                     .trimFilePath(data.getName()));
@@ -4333,16 +4068,16 @@ public class TransactionHandler {
           givenFileName = FileUtil.trimFilePath(givenFileName);
           long fileCounter;
           java.io.File path, file;
-          fileCounter = transactions.getCourseFileCounter(course.getCourseID());
+          fileCounter = transactions.getCourseFileCounter(course);
           if (solFile)
             file =
                 new java.io.File(
                     FileUtil
                         .getSolutionFileSystemPath(
-                            course.getSemesterID(),
-                            course.getCourseID(),
+                            course.getSemester(),
+                            course,
                             -1 /*
-                                 * TODO use asgn ID (doesn't matter until we
+                                 * TODO use asgn  (doesn't matter until we
                                  * change the filesystem format)
                                  */,
                             fileCounter, givenFileName));
@@ -4350,10 +4085,10 @@ public class TransactionHandler {
               new java.io.File(
                   FileUtil
                       .getAssignmentFileSystemPath(
-                          course.getSemesterID(),
-                          course.getCourseID(),
+                          course.getSemester(),
+                          course,
                           -1 /*
-                               * TODO use asgn ID (doesn't matter until we
+                               * TODO use asgn  (doesn't matter until we
                                * change the filesystem format)
                                */,
                           fileCounter, givenFileName));
@@ -4372,10 +4107,10 @@ public class TransactionHandler {
             options.addFinalSolutionFile(new SolutionFileData(0, 0,
                 givenFileName, false, path.getAbsolutePath()));
           } else if (oldFile) {
-            options.setReplacementFinalFileByID(itemID, new AssignmentFileData(
-                0, itemID, givenFileName, null, false, path.getAbsolutePath()));
+            options.setReplacementFinalFileBy(item, new AssignmentFileData(
+                0, item, givenFileName, null, false, path.getAbsolutePath()));
           } else {
-            options.setNewFinalFileByID(ID, new AssignmentFileData(0, 0,
+            options.setNewFinalFileBy(ob, new AssignmentFileData(0, 0,
                 givenFileName, null, false, path.getAbsolutePath()));
           }
         } catch (FileUploadException e) {
@@ -4386,9 +4121,9 @@ public class TransactionHandler {
       if (importID != 0) {
         options.setGroupMigration(importID);
         try {
-          AssignmentLocal importAssign =
-              database.assignmentHome().findByAssignmentID(importID);
-          if (importAssign.getCourseID() != courseID) {
+          Assignment importAssign =
+              database.assignmentHome().findByAssignment(importID);
+          if (importAssign.getCourse() != course) {
             result
                 .addError("Cannot import groups: assignments are not in the same course");
             proceed = false;
@@ -4401,8 +4136,8 @@ public class TransactionHandler {
       }
       if (proceed && !result.hasErrors()) {
         AssignmentData data = new AssignmentData();
-        data.setAssignmentID(assignID);
-        data.setCourseID(courseID);
+        data.setAssignment(assign);
+        data.setCourse(course);
         data.setName(name);
         data.setNameShort(nameshort);
         data.setDescription(description);
@@ -4434,7 +4169,7 @@ public class TransactionHandler {
         data.setGroupLimit(new Integer(TSMaxGroups));
         data.setTimeslotLockTime(TSLockedTime);
         data.setType(type);
-        if ((assignID == 0)) { // new assignment
+        if ((assign == 0)) { // new assignment
           result = transactions.createNewAssignment(p, data, options);
         } else {
           result = transactions.setAssignmentProps(p, data, options);
@@ -4445,11 +4180,11 @@ public class TransactionHandler {
     } catch (Exception e) {
       e.printStackTrace();
       result.addError("Unexpected error while trying to "
-          + (assignID == 0 ? "create" : "edit") + " this assignment");
+          + (assign == 0 ? "create" : "edit") + " this assignment");
       result.setException(e);
     }
     Profiler.exitMethod("TransactionHandler.setAssignmentProps",
-        "AssignmentID: " + assignID);
+        "Assignment: " + assign);
     result.setValue(info);
     return result;
   }
@@ -4459,9 +4194,9 @@ public class TransactionHandler {
    * course
    * 
    * @param p
-   * @param categoryID
-   *          0 to create a new category; else the ID of the category to edit
-   * @param courseID
+   * @param category
+   *          0 to create a new category; else the  of the category to edit
+   * @param course
    * @param request
    * @return TransactionResult
    */
@@ -4470,7 +4205,7 @@ public class TransactionHandler {
     TransactionResult result = new TransactionResult();
     String ctgName = "";
     CategoryTemplate ctgTempl = new CategoryTemplate();
-    ctgTempl.setCourseID(courseID);
+    ctgTempl.setCourse(course);
     CategoriesOption option = new CategoriesOption();
     DiskFileUpload upload = new DiskFileUpload();
     long colId;
@@ -4479,7 +4214,7 @@ public class TransactionHandler {
       List info =
           upload.parseRequest(request, 1024, AccessController.maxFileSize,
               FileUtil.TEMP_DIR);
-      if (courseIsFrozen(courseID)) {
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
@@ -4496,7 +4231,7 @@ public class TransactionHandler {
             newCategory = true;
           } else if (field.startsWith(AccessController.P_CTGNAME)) {
             String id = (field.split(AccessController.P_CTGNAME))[1];
-            ctgTempl.setCategoryID(Long.parseLong(id));
+            ctgTempl.setCategory(Long.parseLong(id));
             ctgName = item.getString();
             ctgTempl.setCategoryName(ctgName);
           } else if (field.equals(AccessController.P_ORDER)) {
@@ -4508,10 +4243,10 @@ public class TransactionHandler {
             if (id.startsWith(AccessController.P_PREFIX_NEW_CONTENT)) {
               id = (id.split(AccessController.P_PREFIX_NEW_CONTENT)[1]);
               colId = Long.parseLong(id);
-              ctgTempl.addNewSortByColID(colId);
+              ctgTempl.addNewSortByCol(colId);
             } else {
               colId = Long.parseLong(id);
-              ctgTempl.addOldSortByColID(colId);
+              ctgTempl.addOldSortByCol(colId);
             }
           } else if (field.equals(AccessController.P_NUMSHOWITEMS)) {
             try {
@@ -4533,8 +4268,8 @@ public class TransactionHandler {
             String id = (field.split(AccessController.P_NEWCOLTYPE))[1];
             colId = Long.parseLong(id);
             ctgTempl.addNewColumnType(item.getString(), colId);
-          } else if (field.startsWith(AccessController.P_NEWCOLHIDDEN)) {
-            String id = (field.split(AccessController.P_NEWCOLHIDDEN))[1];
+          } else if (field.startsWith(AccessController.P_NEWCOLHDEN)) {
+            String id = (field.split(AccessController.P_NEWCOLHDEN))[1];
             colId = Long.parseLong(id);
             // if we're seeing this field at all, its value is equivalent to
             // true
@@ -4553,8 +4288,8 @@ public class TransactionHandler {
             colId = Long.parseLong(id);
             ctgTempl.addOldColumnPosition(Long.parseLong(item.getString()),
                 colId);
-          } else if (field.startsWith(AccessController.P_COLHIDDEN)) {
-            String id = (field.split(AccessController.P_COLHIDDEN)[1]);
+          } else if (field.startsWith(AccessController.P_COLHDEN)) {
+            String id = (field.split(AccessController.P_COLHDEN)[1]);
             colId = Long.parseLong(id);
             ctgTempl.addOldColumnHidden(Boolean.valueOf(item.getString())
                 .booleanValue(), colId);
@@ -4568,20 +4303,20 @@ public class TransactionHandler {
             ctgTempl.updateRemoved(colId, false);
           } else if (field.startsWith(AccessController.P_CTGPOSITION)) {
             String id = (field.split(AccessController.P_CTGPOSITION))[1];
-            long ctgID = Long.parseLong(id);
+            long ctg = Long.parseLong(id);
             int ctgPosition = Integer.parseInt(item.getString());
-            option.setCtgPositn(ctgID, ctgPosition);
+            option.setCtgPositn(ctg, ctgPosition);
           } else if (field.startsWith(AccessController.P_NEWCTGPOSITION)) {
             int ctgPosition = Integer.parseInt(item.getString());
             ctgTempl.setPositn(ctgPosition);
           } else if (field.startsWith(AccessController.P_REMOVECTG)) {
             String id = (field.split(AccessController.P_REMOVECTG))[1];
-            long ctgID = Long.parseLong(id);
-            option.setCtgRemove(ctgID);
+            long ctg = Long.parseLong(id);
+            option.setCtgRemove(ctg);
           } else if (field.startsWith(AccessController.P_RESTORECTG)) {
             String id = (field.split(AccessController.P_RESTORECTG))[1];
-            long ctgID = Long.parseLong(id);
-            option.setCtgRestore(ctgID);
+            long ctg = Long.parseLong(id);
+            option.setCtgRestore(ctg);
           }
         }
       }
@@ -4605,11 +4340,11 @@ public class TransactionHandler {
    * Set course properties and course staff member permissions; add and remove
    * staff members
    * 
-   * @param courseID
-   *          The ID of the course to work on
+   * @param course
+   *          The  of the course to work on
    * @param map
    *          A map of various AccessController-defined property strings to
-   *          String values. Current staff NetIDs not present in the map are
+   *          String values. Current staff Nets not present in the map are
    *          removed from the course; current and new staff have permissions
    *          set here.
    * @return TransactionResult
@@ -4619,11 +4354,9 @@ public class TransactionHandler {
     try {
       boolean isFreeze =
           ((String[]) map.get(AccessController.P_FREEZECOURSE)) != null;
-      if (isFreeze && courseIsFrozen(courseID))
+      if (isFreeze && courseIsFrozen(course))
         result.addError("Course is frozen; no changes may be made to it");
       else {
-        CourseLocal course =
-            database.courseHome().findByPrimaryKey(new CoursePK(courseID));
         boolean isAdmin, hasAdmin = false;
         // put request data into a nicer form
         Vector staff2remove = new Vector(); // netid
@@ -4633,40 +4366,40 @@ public class TransactionHandler {
         // permissions
         Iterator iter = course.getStaff().iterator();
         while (iter.hasNext()) {
-          String netID = ((StaffData) iter.next()).getNetID();
-          String[] mapRemIDs =
-              (String[]) map.get(netID + AccessController.P_REMOVE);
-          if (mapRemIDs != null) { // the staff should be removed
-            if (netID.equalsIgnoreCase(p.getNetID())) {
+          String net = ((Staff) iter.next()).getNet();
+          String[] mapRems =
+              (String[]) map.get(net + AccessController.P_REMOVE);
+          if (mapRems != null) { // the staff should be removed
+            if (net.equalsIgnoreCase(p.getNet())) {
               result.addError("Cannot remove yourself as a staff member");
               // return result;
             }
-            staff2remove.add(netID);
+            staff2remove.add(net);
           } else { // set staff permissions
-            isAdmin = map.containsKey(netID + AccessController.P_ISADMIN);
+            isAdmin = map.containsKey(net + AccessController.P_ISADMIN);
             hasAdmin = hasAdmin || isAdmin;
-            staffPerms.put(netID, new CourseAdminPermissions(isAdmin, map
-                .containsKey(netID + AccessController.P_ISASSIGN), map
-                .containsKey(netID + AccessController.P_ISGROUPS), map
-                .containsKey(netID + AccessController.P_ISGRADES), map
-                .containsKey(netID + AccessController.P_ISCATEGORY)));
+            staffPerms.put(net, new CourseAdminPermissions(isAdmin, map
+                .containsKey(net + AccessController.P_ISASSIGNID), map
+                .containsKey(net + AccessController.P_ISGROUPS), map
+                .containsKey(net + AccessController.P_ISGRADES), map
+                .containsKey(net + AccessController.P_ISCATEGORY)));
           }
         }
         // add new staff
         int i = 0;
         String[] newnetids =
-            (String[]) map.get(AccessController.P_NEWNETID + i);
+            (String[]) map.get(AccessController.P_NEWNET + i);
         while (newnetids != null) {
           isAdmin = map.containsKey(AccessController.P_NEWADMIN + i);
           hasAdmin = hasAdmin || isAdmin;
           staffPerms.put(newnetids[0].toLowerCase().trim(),
               new CourseAdminPermissions(isAdmin, map
-                  .containsKey(AccessController.P_NEWASSIGN + i), map
+                  .containsKey(AccessController.P_NEWASSIGNID + i), map
                   .containsKey(AccessController.P_NEWGROUPS + i), map
                   .containsKey(AccessController.P_NEWGRADES + i), map
                   .containsKey(AccessController.P_NEWCATEGORY + i)));
           ++i;
-          newnetids = (String[]) map.get(AccessController.P_NEWNETID + i);
+          newnetids = (String[]) map.get(AccessController.P_NEWNET + i);
         }
         if (!hasAdmin) {
           result
@@ -4688,22 +4421,22 @@ public class TransactionHandler {
                  * ((String[])map.get(AccessController.P_DESCRIPTION))[0],
                  */
                 course.getDescription(),
-                ((String[]) map.get(AccessController.P_FREEZECOURSE)) != null,
+                ((String[]) map.get(AccessController.P_FREEZECOURSEID)) != null,
                 ((String[]) map.get(AccessController.P_FINALGRADES)) != null,
                 ((String[]) map.get(AccessController.P_SHOWTOTALSCORES)) != null,
-                ((String[]) map.get(AccessController.P_SHOWASSIGNWEIGHTS)) != null,
-                ((String[]) map.get(AccessController.P_SHOWGRADERID)) != null,
+                ((String[]) map.get(AccessController.P_SHOWASSIGNIDWEIGHTS)) != null,
+                ((String[]) map.get(AccessController.P_SHOWGRADER)) != null,
                 ((String[]) map.get(AccessController.P_HASSECTION)) != null,
-                ((String[]) map.get(AccessController.P_COURSEGUESTACCESS)) != null,
-                ((String[]) map.get(AccessController.P_ASSIGNGUESTACCESS)) != null,
+                ((String[]) map.get(AccessController.P_COURSEIDGUESTACCESS)) != null,
+                ((String[]) map.get(AccessController.P_ASSIGNIDGUESTACCESS)) != null,
                 ((String[]) map.get(AccessController.P_ANNOUNCEGUESTACCESS)) != null,
                 ((String[]) map.get(AccessController.P_SOLUTIONGUESTACCESS)) != null,
-                ((String[]) map.get(AccessController.P_COURSECCACCESS)) != null,
-                ((String[]) map.get(AccessController.P_ASSIGNCCACCESS)) != null,
+                ((String[]) map.get(AccessController.P_COURSEIDCCACCESS)) != null,
+                ((String[]) map.get(AccessController.P_ASSIGNIDCCACCESS)) != null,
                 ((String[]) map.get(AccessController.P_ANNOUNCECCACCESS)) != null,
                 ((String[]) map.get(AccessController.P_SOLUTIONCCACCESS)) != null);
         result =
-            transactions.setAllCourseProperties(p, courseID, staff2remove,
+            transactions.setAllCourseProperties(p, course, staff2remove,
                 staffPerms, generalProperties);
       }
     } catch (Exception e) {
@@ -4717,10 +4450,10 @@ public class TransactionHandler {
       String newDescription) {
     TransactionResult result = new TransactionResult();
     try {
-      if (courseIsFrozen(courseID))
+      if (courseIsFrozen(course))
         result.addError("Course is frozen; no changes may be made to it");
       else {
-        result.appendErrors(transactions.editCourseDescription(p, courseID,
+        result.appendErrors(transactions.editCourseDescription(p, course,
             newDescription));
       }
     } catch (Exception x) {
@@ -4740,7 +4473,7 @@ public class TransactionHandler {
     TransactionResult result = new TransactionResult();
     boolean success = true;
     try {
-      success = transactions.setCurrentSemester(p, semesterID);
+      success = transactions.setCurrentSemester(p, sem);
     } catch (Exception e) {
       success = false;
       result.addError("Database failed to set current semester");
@@ -4752,18 +4485,16 @@ public class TransactionHandler {
   public TransactionResult setExtension(User p, Group group, HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
-      GroupLocal group = database.groupHome().findByGroupID(groupID);
-      AssignmentLocal assign =
-          database.assignmentHome().findByAssignmentID(group.getAssignmentID());
-      if (courseIsFrozen(assign.getCourseID())) {
+      Assignment assign = group.getAssignment();
+      if (courseIsFrozen(assign.getCourse())) {
         result.addError("Course is frozen; no changes may be made to it");
       }
       if (!result.hasErrors()) {
         String duedate = null, duetime = null, dueampm = null;
         Date extension = null;
-        duedate = request.getParameter(AccessController.P_DUEDATE + groupID);
-        duetime = request.getParameter(AccessController.P_DUETIME + groupID);
-        dueampm = request.getParameter(AccessController.P_DUEAMPM + groupID);
+        duedate = request.getParameter(AccessController.P_DUEDATE + group.toString());
+        duetime = request.getParameter(AccessController.P_DUETIME + group.toString());
+        dueampm = request.getParameter(AccessController.P_DUEAMPM + group.toString());
         if (duedate == null || duetime == null || dueampm == null)
           result.addError("Extension date is not in the proper format");
         else {
@@ -4774,7 +4505,7 @@ public class TransactionHandler {
           } catch (IllegalArgumentException iae) {
             result.addError("Extension date is not in the proper format");
           }
-          result = transactions.setExtension(p, groupID, extension);
+          result = transactions.setExtension(p, group, extension);
         }
       }
     } catch (Exception e) {
@@ -4789,15 +4520,12 @@ public class TransactionHandler {
    * 
    * @return TransactionResult
    */
-  public TransactionResult deleteTimeSlots(User p, Assignment assign,
+  public TransactionResult deleteTimeSlots(User p, Assignment assignment,
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
-      AssignmentLocal assignment =
-          database.assignmentHome()
-              .findByPrimaryKey(new AssignmentPK(assignID));
-      Course course = assignment.getCourseID();
-      if (courseIsFrozen(courseID)) {
+      Course course = assignment.getCourse();
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
@@ -4809,27 +4537,19 @@ public class TransactionHandler {
         FileItem item = (FileItem) i.next();
         String field = item.getFieldName();
         if (field.startsWith(AccessController.P_DELETETIMESLOT)) {
-          long id =
-              Long
-                  .parseLong((field.split(AccessController.P_DELETETIMESLOT))[1]);
-          TimeSlotLocal ts = database.timeSlotHome().findByTimeSlotID(id);
-          if (ts.getHidden()) {
+          TimeSlot ts = database.getTimeSlot(field.split(AccessController.P_DELETETIMESLOT)[1]);
+          if (ts.getHidden())
             result.addError("Timeslot has already been deleted");
-          } else {
-            if (ts.getStaff().equals(p.getNetID())
-                || p.isAdminPrivByCourseID(database.assignmentHome()
-                    .findByAssignmentID(assignID).getCourseID()))
+          else if (ts.getStaff().equals(p.getNet()) || p.isAdminPrivByAssignment(assignment))
               toDelete.add(ts);
-            else {
-              result
-                  .addError("User lacks permission to remove selected timeslot");
-            }
-          }
+          else
+              result.addError("User lacks permission to remove selected timeslot");
         }
       }
-      boolean success = transactions.removeTimeSlots(p, assignID, toDelete);
-      if (!success) {
-        result.addError("Database failed to delete selected time slots");
+      try {
+        transactions.removeTimeSlots(p, assignment, toDelete);
+      } catch (final Exception e) {
+        result.addError("Database failed to delete selected time slots", e);
       }
     } catch (FileUploadException e) {
       result.addError(FileUtil.checkFileException(e));
@@ -4849,15 +4569,12 @@ public class TransactionHandler {
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
-      AssignmentLocal assign =
-          database.assignmentHome().findByAssignmentID(assignID);
-      Course course = assign.getCourseID();
-      if (courseIsFrozen(courseID)) {
+      Course course = assign.getCourse();
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
       if (!assign.getScheduled()) {
-        // scheduling not enabled for this assignment
         result.addError("Scheduling not enabled for this assignment");
         return result;
       }
@@ -4909,8 +4626,8 @@ public class TransactionHandler {
       // store the information in a TimeSlotData structure containing the
       // timestamp of the
       // first timeslot in the block
-      TimeSlotData tsd =
-          new TimeSlotData((long) 0, assignID, courseID, name, location, staff,
+      TimeSlot tsd =
+          new TimeSlot((long) 0, assign, course, name, location, staff,
               startTime, false, 0);
       // perform transaction
       boolean success = transactions.createTimeSlots(p, tsd, multiplicity);
@@ -4934,7 +4651,7 @@ public class TransactionHandler {
     DiskFileUpload upload = new DiskFileUpload();
     Iterator list = null;
     try {
-      if (courseIsFrozen(courseID)) {
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
@@ -4954,7 +4671,7 @@ public class TransactionHandler {
       }
     }
     try {
-      success = transactions.setFinalGrades(p, courseID, grades);
+      success = transactions.setFinalGrades(p, course, grades);
     } catch (Exception e) {
       e.printStackTrace();
       success = false;
@@ -4969,10 +4686,10 @@ public class TransactionHandler {
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
-      if (courseIsFrozen(courseID)) {
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
-        StaffData data = new StaffData();
+        Staff data = new Staff();
         data.setEmailDueDate(false);
         data.setEmailFinalGrade(false);
         data.setEmailNewAssign(false);
@@ -4985,17 +4702,17 @@ public class TransactionHandler {
           String field = item.getFieldName();
           if (field.equals(AccessController.P_PREF_DATECHANGE)) {
             data.setEmailDueDate(true);
-          } else if (field.equals(AccessController.P_PREF_NEWASSIGN)) {
+          } else if (field.equals(AccessController.P_PREF_NEWASSIGNID)) {
             data.setEmailNewAssign(true);
           } else if (field.equals(AccessController.P_PREF_FINALGRADES)) {
             data.setEmailFinalGrade(true);
-          } else if (field.equals(AccessController.P_PREF_ASSIGNEDTO)) {
+          } else if (field.equals(AccessController.P_PREF_ASSIGNIDEDTO)) {
             data.setEmailAssignedTo(true);
           } else if (field.equals(AccessController.P_PREF_REGRADEREQUEST)) {
             data.setEmailRequest(true);
           }
         }
-        result = transactions.setStaffPrefs(p, courseID, data);
+        result = transactions.setStaffPrefs(p, course, data);
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -5009,11 +4726,11 @@ public class TransactionHandler {
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
-      if (courseIsFrozen(courseID)) {
+      if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
-        StudentData data = buildStudentData(request);
-        result = transactions.setStudentPrefs(p, courseID, data);
+        Student data = buildStudent(request);
+        result = transactions.setStudentPrefs(p, course, data);
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -5027,7 +4744,7 @@ public class TransactionHandler {
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
-      StudentData data = buildStudentData(request);
+      Student data = buildStudent(request);
       result = transactions.setAllStudentPrefs(p, data);
     } catch (Exception e) {
       e.printStackTrace();
@@ -5037,9 +4754,9 @@ public class TransactionHandler {
     return result;
   }
 
-  private Student buildStudentData(HttpServletRequest request)
+  private Student buildStudent(HttpServletRequest request)
       throws FileUploadException {
-    StudentData data = new StudentData();
+    Student data = new Student();
     data.setEmailDueDate(request
         .getParameter(AccessController.P_PREF_DATECHANGE) != null);
     data
@@ -5049,7 +4766,7 @@ public class TransactionHandler {
     data
         .setEmailGroup(request.getParameter(AccessController.P_PREF_INVITATION) != null);
     data.setEmailNewAssignment(request
-        .getParameter(AccessController.P_PREF_NEWASSIGN) != null);
+        .getParameter(AccessController.P_PREF_NEWASSIGNID) != null);
     data.setEmailNewGrade(request
         .getParameter(AccessController.P_PREF_GRADERELEASE) != null);
     data.setEmailRegrade(request
@@ -5073,32 +4790,25 @@ public class TransactionHandler {
     Profiler.enterMethod("TransactionHandler.submitFiles", "");
     TransactionResult result = new TransactionResult();
     try {
-      long assignmentid =
-          Long.parseLong(request.getParameter(AccessController.P_ASSIGNID));
-      AssignmentData assignment =
-          database.assignmentHome().findByAssignmentID(assignmentid)
-              .getAssignmentData();
-      if (courseIsFrozen(assignment.getCourseID()))
+      String assignmentid = request.getParameter(AccessController.P_ASSIGNID);
+      Assignment assignment = database.getAssignment(assignmentid);
+      if (courseIsFrozen(assignment.getCourse()))
         result.addError("Course is frozen; no changes may be made to it");
       else {
-        GroupData group =
-            database.groupHome().findByNetIDAssignmentID(p.getNetID(),
-                assignmentid).getGroupData();
+        Group group = assignment.findGroup(p);
         // Get current time while adjusting for grace period
         long graceperiod = assignment.getGracePeriod() * 60000;
         Date now = new Date(System.currentTimeMillis() - graceperiod);
-        if (now.after(assignment.getDueDate())
-            && (!assignment.getAllowLate() || now.after(assignment
-                .getLateDeadline()))
-            && (group.getExtension() == null || now.after(group.getExtension()))) {
-          result
-              .addError("Submissions for this assignment are no longer being accepted");
+        if (now.after(assignment.getDueDate()) &&
+            (!assignment.getAllowLate() || now.after(assignment.getLateDeadline())) &&
+            (group.getExtension() == null || now.after(group.getExtension()))) {
+          result.addError("Submissions for this assignment are no longer being accepted");
         } else {
           boolean isLate =
               (group.getExtension() == null)
                   && assignment.getDueDate().before(now);
-          Collection files = getUploadedFiles(p.getNetID(), request, isLate);
-          result.addError(transactions.submitFiles(p, assignmentid, files));
+          Collection files = getUploadedFiles(p, request, isLate);
+          result.addError(transactions.submitFiles(p, assignment, files));
         }
       }
     } catch (FileUploadException e) {
@@ -5117,7 +4827,7 @@ public class TransactionHandler {
         result.addError("File '" + fileName
             + "' violated the maximum size limitation");
       } else {
-        result.addError(e.getLocalizedMessage());
+        result.addError(e.getizedMessage());
       }
     } catch (Exception e) {
       result.addError("Error accessing database; files could not be submitted");
@@ -5142,26 +4852,20 @@ public class TransactionHandler {
     List answers = null;
     DiskFileUpload upload = new DiskFileUpload();
     try {
-      long assignmentid =
-          Long.parseLong(request.getParameter(AccessController.P_ASSIGNID));
-      AssignmentData assignment =
-          database.assignmentHome().findByAssignmentID(assignmentid)
-              .getAssignmentData();
-      if (courseIsFrozen(assignment.getCourseID()))
+      String assignmentid = request.getParameter(AccessController.P_ASSIGNID);
+      Assignment assignment = database.getAssignment(assignmentid);
+      if (courseIsFrozen(assignment.getCourse()))
         result.addError("Course is frozen; no changes may be made to it");
       else {
-        GroupData group =
-            database.groupHome().findByNetIDAssignmentID(p.getNetID(),
-                assignmentid).getGroupData();
+        Group group = assignment.findGroup(p);
+
         // Get current time while adjusting for grace period
         long graceperiod = assignment.getGracePeriod() * 60000;
         Date now = new Date(System.currentTimeMillis() - graceperiod);
         if (now.after(assignment.getDueDate())
-            && (!assignment.getAllowLate() || now.after(assignment
-                .getLateDeadline()))
+            && (!assignment.getAllowLate() || now.after(assignment.getLateDeadline()))
             && (group.getExtension() == null || now.after(group.getExtension()))) {
-          result
-              .addError("Submissions for this assignment are no longer being accepted");
+          result.addError("Submissions for this assignment are no longer being accepted");
         } else {
           info =
               upload.parseRequest(request, 1024, AccessController.maxFileSize,
@@ -5173,11 +4877,10 @@ public class TransactionHandler {
             String field = item.getFieldName();
             if (item.isFormField()) {
               if (field.startsWith(AccessController.P_SUBPROBNAME)) {
-                long subID =
+                long sub =
                     Long
                         .parseLong(field.split(AccessController.P_SUBPROBNAME)[1]);
-                AnswerData answerData =
-                    new AnswerData(-1, -1, subID, item.getString());
+                Answer answerData = new Answer(null, null, sub, item.getString());
                 answers.add(answerData);
               }
             }
@@ -5201,7 +4904,7 @@ public class TransactionHandler {
         result.addError("File '" + fileName
             + "' violated the maximum size limitation");
       } else {
-        result.addError(e.getLocalizedMessage());
+        result.addError(e.getizedMessage());
       }
     } catch (Exception e) {
       result.addError("Error accessing database; files could not be submitted");
@@ -5215,7 +4918,7 @@ public class TransactionHandler {
    * given course
    * 
    * @param p
-   * @param courseID
+   * @param course
    * @param out
    * @return TransactionResult
    */
@@ -5224,12 +4927,12 @@ public class TransactionHandler {
     TransactionResult result = new TransactionResult();
     try {
       CSVPrinter printer = new CSVPrinter(out);
-      Collection asgns = database.assignmentHome().findByCourseID(courseID);
+      Collection asgns = course.getAssignments();
       List data = new ArrayList(); // a String[3] in each slot; temporary asgn
                                     // info storage
       Iterator i = asgns.iterator();
       while (i.hasNext()) {
-        AssignmentLocal asgn = (AssignmentLocal) i.next();
+        Assignment asgn = (Assignment) i.next();
         String[] info = new String[3];
         info[0] = asgn.getName();
         info[1] = String.valueOf(asgn.getMaxScore());
@@ -5266,37 +4969,33 @@ public class TransactionHandler {
    * aren't.)
    * 
    * @param p
-   * @param assignmentID
+   * @param assignment
    * @param s
    * @return TransactionResult
    */
   public TransactionResult exportSingleAssignmentGradesTable(User p,
-      Assignment assign, OutputStream s) {
+      Assignment assignment, OutputStream s) {
     TransactionResult result = new TransactionResult();
     try {
-      AssignmentLocal assignment =
-          database.assignmentHome().findByAssignmentID(assignmentID);
-      CourseLocal course =
-          database.courseHome().findByAssignmentID(assignmentID);
-      Collection subProbs =
-          database.subProblemHome().findByAssignmentID(assignmentID);
+      Course course = assignment.getCourse();
+      Collection subProbs = assignment.getSubProblems();
       Collection students = null, grades = null;
       if (assignment.getAssignedGraders()
-          && !p.isAdminPrivByCourseID(course.getCourseID())) {
+          && !p.isAdminPrivByCourse(course)) {
         students =
-            database.studentHome().findByAssignmentIDAssignedTo(assignmentID,
-                p.getNetID());
+            database.studentHome().findByAssignmentAssignedTo(assignment,
+                p.getNet());
         grades =
-            database.gradeHome().findMostRecentByAssignmentIDGrader(
-                assignmentID, p.getNetID());
+            database.gradeHome().findMostRecentByAssignmentGrader(
+                assignment, p.getNet());
       } else {
-        // both students and grades are sorted by NetID; grades only has entries
+        // both students and grades are sorted by Net; grades only has entries
         // where the grade exists
         students =
-            database.studentHome().findByCourseIDSortByNetID(
-                assignment.getCourseID());
+            database.studentHome().findByCourseSortByNet(
+                assignment.getCourse());
         grades =
-            database.gradeHome().findMostRecentByAssignmentID(assignmentID);
+            database.gradeHome().findMostRecentByAssignment(assignment);
       }
       CSVPrinter out = new CSVPrinter(s);
       int numSubprobs = subProbs.size();
@@ -5307,34 +5006,34 @@ public class TransactionHandler {
       int count = 0;
       if (numSubprobs == 0) {
         firstRow = new String[2];
-        firstRow[0] = "NetID";
+        firstRow[0] = "Net";
         firstRow[1] = "Grade";
       } else {
         firstRow = new String[2 + numSubprobs];
         subProbLocs = new long[1 + numSubprobs];
-        firstRow[0] = "NetID";
+        firstRow[0] = "Net";
         while (i.hasNext()) {
-          SubProblemLocal subProb = (SubProblemLocal) i.next();
+          SubProblem subProb = (SubProblem) i.next();
           firstRow[1 + (count++)] = subProb.getSubProblemName();
-          subProbLocs[count] = subProb.getSubProblemID();
+          subProbLocs[count] = subProb.getSubProblem();
         }
         firstRow[firstRow.length - 1] = "Total";
       }
       out.println(firstRow);
       i = students.iterator();
-      GradeLocal grade = null;
+      Grade grade = null;
       // No subproblems
       if (subProbLocs == null) {
         String[] thisRow = new String[2];
         if (j.hasNext()) {
-          grade = (GradeLocal) j.next();
+          grade = (Grade) j.next();
         }
         while (i.hasNext()) {
-          StudentLocal student = (StudentLocal) i.next();
-          thisRow[0] = student.getNetID();
-          if (grade != null && grade.getNetID().equals(thisRow[0])) {
+          Student student = (Student) i.next();
+          thisRow[0] = student.getNet();
+          if (grade != null && grade.getNet().equals(thisRow[0])) {
             thisRow[1] = String.valueOf(grade.getGrade());
-            if (j.hasNext()) grade = (GradeLocal) j.next();
+            if (j.hasNext()) grade = (Grade) j.next();
           } else // either we're not yet at the netid of this grade, or we're
                   // at a netid past all existing grades or there are no grades
           thisRow[1] = "";
@@ -5343,25 +5042,25 @@ public class TransactionHandler {
       } else // Subproblems
       {
         while (i.hasNext()) {
-          StudentLocal student = (StudentLocal) i.next();
+          Student student = (Student) i.next();
           String[] thisRow = new String[firstRow.length];
-          thisRow[0] = student.getNetID();
+          thisRow[0] = student.getNet();
           count = 1;
           Float totalScore = null;
           boolean nextRow = false;
           while (!nextRow && j.hasNext()) {
-            if (grade == null) grade = (GradeLocal) j.next();
-            if (grade.getNetID().equals(thisRow[0])) {
-              if (grade.getSubProblemID() == 0) {
+            if (grade == null) grade = (Grade) j.next();
+            if (grade.getNet().equals(thisRow[0])) {
+              if (grade.getSubProblem() == 0) {
                 totalScore = grade.getGrade();
                 grade = null;
-              } else if (grade.getSubProblemID() == subProbLocs[count]) {
+              } else if (grade.getSubProblem() == subProbLocs[count]) {
                 thisRow[count++] = String.valueOf(grade.getGrade());
                 grade = null;
               } else {
                 thisRow[count++] = "";
               }
-            } else if (thisRow[0].compareTo(grade.getNetID()) < 0) {
+            } else if (thisRow[0].compareTo(grade.getNet()) < 0) {
               for (int k = count; k < thisRow.length; k++) {
                 if (k == thisRow.length - 1 && totalScore != null) {
                   thisRow[k] = totalScore.toString();
@@ -5394,10 +5093,10 @@ public class TransactionHandler {
   }
 
   /**
-   * Output a CSV file containing NetID and final grade columns for all students
+   * Output a CSV file containing Net and final grade columns for all students
    * in the given course to the OutputStream
    * 
-   * @param courseID
+   * @param course
    * @param s
    * @return
    */
@@ -5406,20 +5105,20 @@ public class TransactionHandler {
     TransactionResult result = new TransactionResult();
     try {
       Collection students =
-          database.studentHome().findByCourseIDSortByNetID(courseID);
+          database.studentHome().findByCourseSortByNet(course);
       CSVPrinter out = new CSVPrinter(s);
       String[] line = null;
       // header line
       line =
-          new String[] { CSVFileFormatsUtil.NETID,
+          new String[] { CSVFileFormatsUtil.NET,
               CSVFileFormatsUtil.FINAL_GRADE };
       out.println(line);
       // data lines
       Iterator i = students.iterator();
       while (i.hasNext()) {
-        StudentLocal student = (StudentLocal) i.next();
+        Student student = (Student) i.next();
         String grade = student.getFinalGrade();
-        line = new String[] { student.getNetID(), grade == null ? "" : grade };
+        line = new String[] { student.getNet(), grade == null ? "" : grade };
         out.println(line);
       }
     } catch (Exception x) {
@@ -5434,7 +5133,7 @@ public class TransactionHandler {
    * the OutputStream
    * 
    * @param p
-   * @param assignmentID
+   * @param assignment
    * @param s
    * @return TransactionResult
    */
@@ -5442,27 +5141,27 @@ public class TransactionHandler {
       OutputStream s) {
     TransactionResult result = new TransactionResult();
     try {
-      Document doc = XMLBuilder.buildStudentsPage(p, courseID, false, false);
+      Document doc = XMLBuilder.buildStudentsPage(p, course, false, false);
       // Element root = doc.createElement("root");
       // doc.appendChild(root);
-      // ViewStudentsXMLBuilder.buildStudentsPage(courseID, doc);
+      // ViewStudentsXMLBuilder.buildStudentsPage(course, doc);
       CSVPrinter out = new CSVPrinter(s);
       Element root = (Element) doc.getFirstChild();
       Element xCourse =
-          XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
+          XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSEID);
       NodeList assigns =
-          (xCourse.getElementsByTagName(XMLBuilder.TAG_ASSIGNMENTS).item(0))
+          (xCourse.getElementsByTagName(XMLBuilder.TAG_ASSIGNIDMENTS).item(0))
               .getChildNodes();
       int aCount = assigns.getLength();
-      long[] assignIDs = new long[aCount];
+      long[] assigns = new long[aCount];
       String[] firstRow = new String[5 + aCount];
       firstRow[0] = "Last Name";
       firstRow[1] = "First Name";
-      firstRow[2] = "NetID";
+      firstRow[2] = "Net";
       for (int i = 0; i < aCount; i++) {
         Element assign = (Element) assigns.item(i);
         firstRow[3 + i] = assign.getAttribute(XMLBuilder.A_NAMESHORT);
-        assignIDs[i] =
+        assigns[i] =
             Long.valueOf(assign.getAttribute(XMLBuilder.A_ASSIGNID))
                 .longValue();
       }
@@ -5476,7 +5175,7 @@ public class TransactionHandler {
         String[] thisRow = new String[firstRow.length];
         Element student = (Element) students.item(j);
         if (!student.getAttribute(XMLBuilder.A_ENROLLED).equals(
-            StudentBean.ENROLLED)) {
+            Student.ENROLLED)) {
           continue;
         }
         thisRow[0] = student.getAttribute(XMLBuilder.A_LASTNAME);
@@ -5484,7 +5183,7 @@ public class TransactionHandler {
         thisRow[2] = student.getNodeName();
         for (int k = 0; k < aCount; k++) {
           Element grade =
-              (Element) student.getElementsByTagName("id" + assignIDs[k]).item(
+              (Element) student.getElementsByTagName("id" + assigns[k]).item(
                   0);
           if (!grade.hasAttribute(XMLBuilder.A_SCORE))
             thisRow[3 + k] = "";
@@ -5502,11 +5201,11 @@ public class TransactionHandler {
 
   /**
    * Output a CSV file containing all students in the class with basic
-   * information for each student including CUIDs and final grades to the
+   * information for each student including CUs and final grades to the
    * OutputStream
    * 
    * @param p
-   * @param assignmentID
+   * @param assignment
    * @param s
    * @return TransactionResult
    */
@@ -5514,12 +5213,12 @@ public class TransactionHandler {
       OutputStream s) {
     TransactionResult result = new TransactionResult();
     try {
-      // get lists of Users and Students, both sorted by NetID
-      Iterator users = database.userHome().findByCourseID(courseID).iterator();
+      // get lists of Users and Students, both sorted by Net
+      Iterator users = database.userHome().findByCourse(course).iterator();
       Iterator students =
-          database.studentHome().findByCourseIDSortByNetID(courseID).iterator();
+          database.studentHome().findByCourseSortByNet(course).iterator();
       CSVPrinter out = new CSVPrinter(s);
-      HashMap netIDs = new HashMap();
+      HashMap nets = new HashMap();
       Vector output = new Vector();
       final int numCols =
           CSVFileFormatsUtil
@@ -5531,9 +5230,9 @@ public class TransactionHandler {
               CSVFileFormatsUtil.FINALGRADES_FORMAT,
               CSVFileFormatsUtil.FIRSTNAME), netidCol =
           CSVFileFormatsUtil.getColumnNumber(
-              CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.NETID), cuidCol =
+              CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.NET), cuidCol =
           CSVFileFormatsUtil.getColumnNumber(
-              CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.CUID), collegeCol =
+              CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.CU), collegeCol =
           CSVFileFormatsUtil
               .getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT,
                   CSVFileFormatsUtil.COLLEGE), deptCol =
@@ -5542,10 +5241,10 @@ public class TransactionHandler {
               CSVFileFormatsUtil.DEPARTMENT), courseNumCol =
           CSVFileFormatsUtil.getColumnNumber(
               CSVFileFormatsUtil.FINALGRADES_FORMAT,
-              CSVFileFormatsUtil.COURSE_NUM), courseCodeCol =
+              CSVFileFormatsUtil.COURSEID_NUM), courseCodeCol =
           CSVFileFormatsUtil.getColumnNumber(
               CSVFileFormatsUtil.FINALGRADES_FORMAT,
-              CSVFileFormatsUtil.COURSE_CODE), lecCol =
+              CSVFileFormatsUtil.COURSEID_CODE), lecCol =
           CSVFileFormatsUtil
               .getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT,
                   CSVFileFormatsUtil.LECTURE), secCol =
@@ -5563,28 +5262,26 @@ public class TransactionHandler {
           CSVFileFormatsUtil.getColumnNumber(
               CSVFileFormatsUtil.FINALGRADES_FORMAT,
               CSVFileFormatsUtil.FINAL_GRADE);
-      CourseLocal course =
-          database.courseHome().findByPrimaryKey(new CoursePK(courseID));
       String[] firstRow = CSVFileFormatsUtil.FINALGRADES_FORMAT;
       output.add(firstRow); // file header row
       // add the data that comes from the user table
       while (users.hasNext()) {
-        UserLocal user = (UserLocal) users.next();
+        User user = (User) users.next();
         String[] mydata = new String[numCols];
         output.add(mydata);
-        netIDs.put(user.getNetID(), mydata);
+        nets.put(user.getNet(), mydata);
         if (courseCodeCol != -1) mydata[courseCodeCol] = course.getCode();
         if (lastnameCol != -1) mydata[lastnameCol] = user.getLastName();
         if (firstnameCol != -1) mydata[firstnameCol] = user.getFirstName();
-        if (netidCol != -1) mydata[netidCol] = user.getNetID();
+        if (netidCol != -1) mydata[netidCol] = user.getNet();
         if (cuidCol != -1)
-          mydata[cuidCol] = user.getCUID() == null ? "" : user.getCUID();
+          mydata[cuidCol] = user.getCU() == null ? "" : user.getCU();
         if (collegeCol != -1) mydata[collegeCol] = user.getCollege();
       }
       // add the data that comes from the student table
       while (students.hasNext()) {
-        StudentLocal student = (StudentLocal) students.next();
-        String[] mydata = (String[]) netIDs.get(student.getNetID());
+        Student student = (Student) students.next();
+        String[] mydata = (String[]) nets.get(student.getNet());
         if (mydata != null) {
           if (deptCol != -1)
             mydata[deptCol] =
@@ -5628,7 +5325,7 @@ public class TransactionHandler {
    * ZipOutputStream
    * 
    * @param p
-   * @param assignmentID
+   * @param assignment
    * @param s
    * @return TransactionResult
    */
@@ -5636,9 +5333,8 @@ public class TransactionHandler {
       ZipOutputStream out, Map submissionNames) {
     TransactionResult result = new TransactionResult();
     try {
-      GroupLocal group = database.groupHome().findByGroupID(groupID);
       Collection members =
-          database.groupMemberHome().findActiveByGroupID(groupID);
+          database.groupMemberHome().findActiveByGroup(group);
       String folder = "Submissions/";
       if (members.size() > 1) {
         folder += "group_of_";
@@ -5646,12 +5342,12 @@ public class TransactionHandler {
       Iterator i = members.iterator();
       Assignment assign = 0;
       while (i.hasNext()) {
-        GroupMemberLocal member = (GroupMemberLocal) i.next();
-        folder += member.getNetID() + (i.hasNext() ? "_" : "");
+        GroupMember member = (GroupMember) i.next();
+        folder += member.getNet() + (i.hasNext() ? "_" : "");
       }
       folder += "/";
       Iterator files =
-          database.submittedFileHome().findByGroupID(groupID).iterator();
+          database.submittedFileHome().findByGroup(group).iterator();
       if (!files.hasNext()) {
         // Add empty folder if there are no submitted files
         out.putNextEntry(new ZipEntry(folder));
@@ -5659,7 +5355,7 @@ public class TransactionHandler {
       }
       byte[] buff = new byte[1024];
       while (files.hasNext()) {
-        SubmittedFileLocal file = (SubmittedFileLocal) files.next();
+        SubmittedFile file = (SubmittedFile) files.next();
         String filePath = file.getPath();
         /*
          * next line handles missing DB_SLASH at end of path in database, caused
@@ -5667,10 +5363,10 @@ public class TransactionHandler {
          */
         if (!filePath.endsWith("" + FileUtil.SYS_SLASH))
           filePath += FileUtil.SYS_SLASH;
-        filePath += file.appendFileType(String.valueOf(file.getSubmissionID()));
+        filePath += file.appendFileType(String.valueOf(file.getSubmission()));
         FileInputStream in = new FileInputStream(filePath);
         String fileName =
-            (String) submissionNames.get(new Long(file.getSubmissionID()));
+            (String) submissionNames.get(new Long(file.getSubmission()));
         if (fileName == null)
           throw new RemoteException("Submission name map was incomplete.");
         fileName = file.appendFileType(fileName);
@@ -5692,30 +5388,27 @@ public class TransactionHandler {
 
   /**
    * Output a zip file containing all the most recently submitted files for all
-   * groups given in the groupIDs Collection to the OutputStream
+   * groups given in the groups Collection to the OutputStream
    * 
-   * @param groupIDs
+   * @param groups
    * @param s
    * @return TransactionResult
    */
-  public TransactionResult uploadGroupSubmissions(Collection groupIDs,
+  public TransactionResult uploadGroupSubmissions(Collection groups,
       OutputStream s) {
     TransactionResult result = new TransactionResult();
     Profiler.enterMethod("TransactionHandler.uploadGroupSubmissions",
-        "Uploading files for " + groupIDs.size() + " groups");
+        "Uploading files for " + groups.size() + " groups");
     try {
       ZipOutputStream out = new ZipOutputStream(s);
-      Iterator groups = groupIDs.iterator();
+      Iterator i = groups.iterator();
       Map submissionNames = null;
-      while (groups.hasNext()) {
-        Long groupID = (Long) groups.next();
+      while (i.hasNext()) {
+        Group group = (Group) i.next();
         if (submissionNames == null) {
-          GroupLocal group =
-              database.groupHome().findByGroupID(groupID.longValue());
-          submissionNames =
-              database.getSubmissionNameMap(group.getAssignmentID());
+          submissionNames = database.getSubmissionNameMap(group.getAssignment());
         }
-        uploadGroupSubmission(groupID.longValue(), out, submissionNames);
+        uploadGroupSubmission(group.longValue(), out, submissionNames);
       }
       out.close();
     } catch (Exception e) {
@@ -5723,7 +5416,7 @@ public class TransactionHandler {
       result.addError(e.getMessage());
     }
     Profiler.exitMethod("TransactionHandler.uploadGroupSubmissions",
-        "Uploading files for " + groupIDs.size() + " groups");
+        "Uploading files for " + groups.size() + " groups");
     return result;
   }
 }
