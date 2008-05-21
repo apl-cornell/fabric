@@ -351,9 +351,7 @@ public final class Log {
     // Only record the read in this transaction if none of our ancestors have
     // read this object.
     if (!lockedByAncestor) {
-      synchronized (reads) {
-        reads.put(readMapEntry.core, readMapEntry.onum, childEntry);
-      }
+      reads.put(readMapEntry.core, readMapEntry.onum, childEntry);
     } else {
       readsReadByParent.add(childEntry);
     }

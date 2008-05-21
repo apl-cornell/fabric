@@ -3,22 +3,10 @@
 
 package fabric.client.transaction;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import fabric.client.AbortException;
-import fabric.client.Core;
-import fabric.client.RemoteCore;
-import fabric.client.TransactionAtomicityViolationException;
-import fabric.client.TransactionCommitFailedException;
-import fabric.client.TransactionPrepareFailedException;
-import fabric.client.UnreachableCoreException;
+import fabric.client.*;
 import fabric.common.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object.$Impl;
@@ -87,30 +75,37 @@ public final class TransactionManager {
     Core core = impl.$getCore();
     long onum = impl.$getOnum();
 
-    ReadMapEntry result;
-    synchronized (readMap) {
-      result = readMap.get(core, onum);
-      if (result == null) {
-        result = new ReadMapEntry(impl);
-        readMap.put(core, onum, result);
-        return result;
-      }
-    }
-
-    synchronized (result) {
-      result.obj = impl.$ref;
-      result.pinCount++;
-      int ver = impl.$getVersion();
-      if (ver == result.versionNumber) return result;
-
-      // Version numbers don't match. Abort all other transactions.
-      // XXX What if we just read in an older copy of the object?
-      for (Log reader : result.readLocks) {
-        reader.flagAbort();
+    while (true) {
+      ReadMapEntry result;
+      synchronized (readMap) {
+        result = readMap.get(core, onum);
+        if (result == null) {
+          result = new ReadMapEntry(impl);
+          readMap.put(core, onum, result);
+          return result;
+        }
       }
 
-      result.versionNumber = ver;
-      return result;
+      synchronized (result) {
+        synchronized (readMap) {
+          // Make sure we still have the right entry.
+          if (result != readMap.get(core, onum)) continue;
+          
+          result.obj = impl.$ref;
+          result.pinCount++;
+          int ver = impl.$getVersion();
+          if (ver == result.versionNumber) return result;
+
+          // Version numbers don't match. Abort all other transactions.
+          // XXX What if we just read in an older copy of the object?
+          for (Log reader : result.readLocks) {
+            reader.flagAbort();
+          }
+
+          result.versionNumber = ver;
+          return result;
+        }
+      }
     }
   }
 
@@ -306,12 +301,6 @@ public final class TransactionManager {
     if (current == null)
       throw new InternalError("Cannot create objects outside a transaction");
 
-    // Ensure we're in a transaction if we're creating a remote object.
-    if (current == null && obj.$getCore() instanceof RemoteCore) {
-      throw new InternalError(
-          "Cannot create a remote object outside of a transactional context.");
-    }
-
     // Make sure we're not supposed to abort.
     checkAbortSignal();
 
@@ -329,10 +318,10 @@ public final class TransactionManager {
     // Nothing to do if we're not in a transaction.
     if (current == null) return;
 
-    // Nothing to do if the object's $reader is us.
-    if (obj.$reader == current) return;
-
     synchronized (obj) {
+      // Nothing to do if the object's $reader is us.
+      if (obj.$reader == current) return;
+
       // Make sure we're not supposed to abort.
       checkAbortSignal();
 
@@ -352,7 +341,7 @@ public final class TransactionManager {
 
       // Set the object's reader stamp to the current transaction.
       obj.$reader = current;
-      
+
       current.acquireReadLock(obj);
     }
   }
@@ -366,10 +355,10 @@ public final class TransactionManager {
     boolean needTransaction = current == null;
     if (needTransaction) startTransaction();
 
-    // Nothing to do if the write stamp is us.
-    if (obj.$writer == current) return needTransaction;
-
     synchronized (obj) {
+      // Nothing to do if the write stamp is us.
+      if (obj.$writer == current) return needTransaction;
+
       // Make sure we're not supposed to abort.
       if (!needTransaction) checkAbortSignal();
 
