@@ -847,7 +847,7 @@ public class TransactionHandler {
                   .getAbsolutePath()));
         } else if (field.startsWith(AccessController.P_REGRADERESPONSE)) {
           String[] vals = field.split("_");
-          long request = Long.parseLong(vals[1]);
+          RegradeRequest regrade = database.getRegradeRequest(vals[1]);
           Group group = database.getGroup(vals[2]);
           data.addRegradeResponse(group, request);
         } else if (field.startsWith(AccessController.P_REGRADESUB)) {
@@ -864,7 +864,7 @@ public class TransactionHandler {
         } else if (field.startsWith(AccessController.P_REGRADENETID)) {
           Group group = database.getGroup((field.split("_"))[1]);
           data.addNewRegradeNet(group, item.getString());
-        } else if (field.startsWith(AccessController.P_GROUP)) {
+        } else if (field.startsWith(AccessController.P_GROUPID)) {
           groups.add(new Long(database.getGroup(item.getString())));
         } else if (field.startsWith(AccessController.P_REMOVECOMMENT)) {
           long comment =
@@ -1108,7 +1108,7 @@ public class TransactionHandler {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Map probids = database.getSubProblemMap(assignment);
+      Map probids = database.getSubProblemMap(assign);
       Long probid;
       if (subproblemName.equalsIgnoreCase(GroupAssignedTo.ALLPARTS)) {
         // -1 signifies that this grader should be assigned to all SubProblems
@@ -1354,11 +1354,11 @@ public class TransactionHandler {
         if (p.isStaffInCourseByCourse(a.getCourse())) {
           return true;
         } else if (p.isStudentInCourseByCourse(a.getCourse())) {
-          return !(a.getHidden() || a.getStatus().equals(Assignment.HDEN));
+          return !(a.getHidden() || a.getStatus().equals(Assignment.HIDDEN));
         } else if (c.getAssignCCAccess() && p.isAuthenticated()) {
-          return !(a.getHidden() || a.getStatus().equals(Assignment.HDEN));
+          return !(a.getHidden() || a.getStatus().equals(Assignment.HIDDEN));
         } else if (c.getAssignGuestAccess() && p.isGuest()) {
-          return !(a.getHidden() || a.getStatus().equals(Assignment.HDEN));
+          return !(a.getHidden() || a.getStatus().equals(Assignment.HIDDEN));
         } else {
           return false;
         }
@@ -4188,6 +4188,19 @@ public class TransactionHandler {
     result.setValue(info);
     return result;
   }
+  
+  /**
+   * Helper method for keeping track of created columns. Returns
+   * created.get(key), creating it if it doesn't exist.
+   */
+  private CategoryColumn getNewColumn(Map/*String, Column*/ created, String key, Category parent) {
+    CategoryColumn result = (CategoryColumn) created.get(key);
+    if (result == null) {
+      result = null; // TODO: new CategoryColumn(parent);
+      created.put(key, result);
+    }
+    return result;
+  }
 
   /**
    * Set properties for an existing category or create a category for the given
@@ -4200,129 +4213,105 @@ public class TransactionHandler {
    * @param request
    * @return TransactionResult
    */
-  public TransactionResult createNEditCategory(User p, Category category,
-      Course course, HttpServletRequest request) {
+  public TransactionResult createNEditCategory(User p, Course course, HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
-    String ctgName = "";
-    CategoryTemplate ctgTempl = new CategoryTemplate();
-    ctgTempl.setCourse(course);
-    CategoriesOption option = new CategoriesOption();
-    DiskFileUpload upload = new DiskFileUpload();
-    long colId;
-    boolean newCategory = false, success = true;
     try {
-      List info =
-          upload.parseRequest(request, 1024, AccessController.maxFileSize,
-              FileUtil.TEMP_DIR);
       if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Iterator i = info.iterator();
+      
+      Category category;
+      boolean  newCategory = request.getParameter(AccessController.P_NEWCTGNAME) != null;
+      if (newCategory)
+        category = null; // TODO: new Category(course);
+      else
+        category = database.getCategory(request.getParameter(AccessController.P_CTGNAME));
+      
+      if (category == null) {
+        result.addError("Invalid or missing category identifier");
+        return result;
+      }
+      if (category.getCourse() != course) {
+        result.addError("Cannot change the course of an existing category");
+        return result;
+      }
+
+      Map/*String, CategoryColumn*/ newColumns = new HashMap();
+      Iterator i = request.getParameterMap().entrySet().iterator();
       while (i.hasNext()) {
-        FileItem item = (FileItem) i.next();
-        String field = item.getFieldName();
-        System.out.println("createNEditCtg: item: " + item.getFieldName() + "="
-            + item.getString());
-        if (item.isFormField()) {
-          if (field.equals(AccessController.P_NEWCTGNAME)) {
-            ctgName = item.getString();
-            ctgTempl.setCategoryName(ctgName);
-            newCategory = true;
-          } else if (field.startsWith(AccessController.P_CTGNAME)) {
-            String id = (field.split(AccessController.P_CTGNAME))[1];
-            ctgTempl.setCategory(Long.parseLong(id));
-            ctgName = item.getString();
-            ctgTempl.setCategoryName(ctgName);
-          } else if (field.equals(AccessController.P_ORDER)) {
-            if (item.getString().equals(CategoryTemplate.ASCENDING))
-              ctgTempl.setAscending(true);
-            else ctgTempl.setAscending(false);
-          } else if (field.equals(AccessController.P_COLSORTBY)) {
-            String id = item.getString();
-            if (id.startsWith(AccessController.P_PREFIX_NEW_CONTENT)) {
-              id = (id.split(AccessController.P_PREFIX_NEW_CONTENT)[1]);
-              colId = Long.parseLong(id);
-              ctgTempl.addNewSortByCol(colId);
-            } else {
-              colId = Long.parseLong(id);
-              ctgTempl.addOldSortByCol(colId);
-            }
-          } else if (field.equals(AccessController.P_NUMSHOWITEMS)) {
-            try {
-              if (item.getString().equals(""))
-                ctgTempl.setNumShowItems(CategoryTemplate.SHOWALL);
-              else ctgTempl.setNumShowItems(Long.parseLong(item.getString()));
-            } catch (NumberFormatException e) {
-              e.printStackTrace();
-              result.addError("Max items to show must be a positive number");
-            }
-          } else if (field.equals(AccessController.P_AUTHORZN)) {
-            int authorzn = Integer.parseInt(item.getString());
-            ctgTempl.setAuthorzn(authorzn);
-          } else if (field.startsWith(AccessController.P_NEWCOLNAME)) {
-            String id = (field.split(AccessController.P_NEWCOLNAME))[1];
-            colId = Long.parseLong(id);
-            ctgTempl.addNewColumnName(item.getString(), colId);
-          } else if (field.startsWith(AccessController.P_NEWCOLTYPE)) {
-            String id = (field.split(AccessController.P_NEWCOLTYPE))[1];
-            colId = Long.parseLong(id);
-            ctgTempl.addNewColumnType(item.getString(), colId);
-          } else if (field.startsWith(AccessController.P_NEWCOLHDEN)) {
-            String id = (field.split(AccessController.P_NEWCOLHDEN))[1];
-            colId = Long.parseLong(id);
-            // if we're seeing this field at all, its value is equivalent to
-            // true
-            ctgTempl.addNewColumnHidden(true, colId);
-          } else if (field.startsWith(AccessController.P_NEWCOLPOSITION)) {
-            String id = (field.split(AccessController.P_NEWCOLPOSITION))[1];
-            colId = Long.parseLong(id);
-            ctgTempl.addNewColumnPosition(Long.parseLong(item.getString()),
-                colId);
-          } else if (field.startsWith(AccessController.P_COLNAME)) {
-            String id = (field.split(AccessController.P_COLNAME))[1];
-            colId = Long.parseLong(id);
-            ctgTempl.addOldColumnName(item.getString(), colId);
-          } else if (field.startsWith(AccessController.P_COLPOSITION)) {
-            String id = (field.split(AccessController.P_COLPOSITION)[1]);
-            colId = Long.parseLong(id);
-            ctgTempl.addOldColumnPosition(Long.parseLong(item.getString()),
-                colId);
-          } else if (field.startsWith(AccessController.P_COLHDEN)) {
-            String id = (field.split(AccessController.P_COLHDEN)[1]);
-            colId = Long.parseLong(id);
-            ctgTempl.addOldColumnHidden(Boolean.valueOf(item.getString())
-                .booleanValue(), colId);
-          } else if (field.startsWith(AccessController.P_REMOVECOL)) {
-            String id = (field.split(AccessController.P_REMOVECOL)[1]);
-            colId = Long.parseLong(id);
-            ctgTempl.updateRemoved(colId, true);
-          } else if (field.startsWith(AccessController.P_RESTORECOL)) {
-            String id = (field.split(AccessController.P_RESTORECOL)[1]);
-            colId = Long.parseLong(id);
-            ctgTempl.updateRemoved(colId, false);
-          } else if (field.startsWith(AccessController.P_CTGPOSITION)) {
-            String id = (field.split(AccessController.P_CTGPOSITION))[1];
-            long ctg = Long.parseLong(id);
-            int ctgPosition = Integer.parseInt(item.getString());
-            option.setCtgPositn(ctg, ctgPosition);
-          } else if (field.startsWith(AccessController.P_NEWCTGPOSITION)) {
-            int ctgPosition = Integer.parseInt(item.getString());
-            ctgTempl.setPositn(ctgPosition);
-          } else if (field.startsWith(AccessController.P_REMOVECTG)) {
-            String id = (field.split(AccessController.P_REMOVECTG))[1];
-            long ctg = Long.parseLong(id);
-            option.setCtgRemove(ctg);
-          } else if (field.startsWith(AccessController.P_RESTORECTG)) {
-            String id = (field.split(AccessController.P_RESTORECTG))[1];
-            long ctg = Long.parseLong(id);
-            option.setCtgRestore(ctg);
+        Map.Entry item = (Map.Entry) i.next();
+        String field = (String) item.getKey();
+        String value = (String) item.getValue();
+        System.out.println("createNEditCtg: item: " + field + "=" + value);
+        if (field.equals(AccessController.P_NEWCTGNAME)) {
+          category.setName(value);
+        } else if (field.startsWith(AccessController.P_CTGNAME)) {
+          String id = field.split(AccessController.P_CTGNAME)[1];
+          category.setName(value);
+        } else if (field.equals(AccessController.P_ORDER)) {
+          category.setAscending(value.equals(Category.ASCENDING));
+        } else if (field.equals(AccessController.P_COLSORTBY)) {
+          if (value.startsWith(AccessController.P_PREFIX_NEW_CONTENT)) {
+            value = value.split(AccessController.P_PREFIX_NEW_CONTENT)[1];
+            category.setSortBy(getNewColumn(newColumns, value, category));
+          } else {
+            category.setSortBy(database.getCategoryColumn(value));
           }
+        } else if (field.equals(AccessController.P_NUMSHOWITEMS)) {
+          try {
+            if (value.equals(""))
+              category.setNumToShow(Category.SHOWALL);
+            else category.setNumToShow(Integer.parseInt(value));
+          } catch (NumberFormatException e) {
+            e.printStackTrace();
+            result.addError("Max items to show must be a positive number");
+          }
+        } else if (field.equals(AccessController.P_AUTHORZN)) {
+          int authorzn = Integer.parseInt(value);
+          category.setAuthLevel(authorzn);
+        } else if (field.startsWith(AccessController.P_NEWCOLNAME)) {
+          String id = (field.split(AccessController.P_NEWCOLNAME))[1];
+          getNewColumn(newColumns, id, category).setName(value);
+        } else if (field.startsWith(AccessController.P_NEWCOLTYPE)) {
+          String id = (field.split(AccessController.P_NEWCOLTYPE))[1];
+          getNewColumn(newColumns, id, category).setType(value);
+        } else if (field.startsWith(AccessController.P_NEWCOLHIDDEN)) {
+          String id = (field.split(AccessController.P_NEWCOLHIDDEN))[1];
+          // if we're seeing this field at all, its value is equivalent to
+          // true
+          getNewColumn(newColumns, id, category).setHidden(true);
+        } else if (field.startsWith(AccessController.P_NEWCOLPOSITION)) {
+          String id = (field.split(AccessController.P_NEWCOLPOSITION))[1];
+          getNewColumn(newColumns, id, category).setPosition(Integer.parseInt(value));
+        } else if (field.startsWith(AccessController.P_COLNAME)) {
+          String id = (field.split(AccessController.P_COLNAME))[1];
+          database.getCategoryColumn(id).setName(value);
+        } else if (field.startsWith(AccessController.P_COLPOSITION)) {
+          String id = (field.split(AccessController.P_COLPOSITION)[1]);
+          database.getCategoryColumn(id).setPosition(Integer.parseInt(value));
+        } else if (field.startsWith(AccessController.P_COLHIDDEN)) {
+          String id = (field.split(AccessController.P_COLHIDDEN)[1]);
+          database.getCategoryColumn(id).setHidden(Boolean.parseBoolean(value));
+        } else if (field.startsWith(AccessController.P_REMOVECOL)) {
+          String id = (field.split(AccessController.P_REMOVECOL)[1]);
+          database.getCategoryColumn(id).setRemoved(true);
+        } else if (field.startsWith(AccessController.P_RESTORECOL)) {
+          String id = (field.split(AccessController.P_RESTORECOL)[1]);
+          database.getCategoryColumn(id).setRemoved(false);
+        } else if (field.startsWith(AccessController.P_CTGPOSITION)) {
+          category.setPosition(Integer.parseInt(value));
+        } else if (field.startsWith(AccessController.P_NEWCTGPOSITION)) {
+          category.setPosition(Integer.parseInt(value));
+        } else if (field.startsWith(AccessController.P_REMOVECTG)) {
+          category.setRemoved(true);
+        } else if (field.startsWith(AccessController.P_RESTORECTG)) {
+          category.setRemoved(false);
         }
       }
       if (newCategory)
-        success = transactions.createCategory(p, ctgTempl, option);
-      else transactions.updateCategory(p, ctgTempl);
+        success = transactions.createCategory(p, category, option);
+      else transactions.updateCategory(p, category);
       if (!success)
         result
             .addError("Unexpected error while trying to create/edit content properties");
@@ -5137,33 +5126,32 @@ public class TransactionHandler {
    * @param s
    * @return TransactionResult
    */
-  public TransactionResult exportGradesTable(User p, Course course,
+  public TransactionResult exportGradesTable(XMLBuilder builder, User p, Course course,
       OutputStream s) {
     TransactionResult result = new TransactionResult();
     try {
-      Document doc = XMLBuilder.buildStudentsPage(p, course, false, false);
+      Document doc = builder.buildStudentsPage(p, course, false, false);
       // Element root = doc.createElement("root");
       // doc.appendChild(root);
       // ViewStudentsXMLBuilder.buildStudentsPage(course, doc);
       CSVPrinter out = new CSVPrinter(s);
       Element root = (Element) doc.getFirstChild();
       Element xCourse =
-          XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSEID);
-      NodeList assigns =
-          (xCourse.getElementsByTagName(XMLBuilder.TAG_ASSIGNIDMENTS).item(0))
+          XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
+      NodeList assignsNode =
+          (xCourse.getElementsByTagName(XMLBuilder.TAG_ASSIGNMENTS).item(0))
               .getChildNodes();
-      int aCount = assigns.getLength();
-      long[] assigns = new long[aCount];
+      int aCount = assignsNode.getLength();
+      Assignment[] assigns = new Assignment[aCount];
       String[] firstRow = new String[5 + aCount];
       firstRow[0] = "Last Name";
       firstRow[1] = "First Name";
       firstRow[2] = "Net";
       for (int i = 0; i < aCount; i++) {
-        Element assign = (Element) assigns.item(i);
+        Element assign = (Element) assignsNode.item(i);
         firstRow[3 + i] = assign.getAttribute(XMLBuilder.A_NAMESHORT);
         assigns[i] =
-            Long.valueOf(assign.getAttribute(XMLBuilder.A_ASSIGNID))
-                .longValue();
+            database.getAssignment(assign.getAttribute(XMLBuilder.A_ASSIGNID));
       }
       firstRow[3 + aCount] = "Total Score";
       firstRow[4 + aCount] = "Final Grade";
@@ -5183,7 +5171,7 @@ public class TransactionHandler {
         thisRow[2] = student.getNodeName();
         for (int k = 0; k < aCount; k++) {
           Element grade =
-              (Element) student.getElementsByTagName("id" + assigns[k]).item(
+              (Element) student.getElementsByTagName("id" + assignsNode[k]).item(
                   0);
           if (!grade.hasAttribute(XMLBuilder.A_SCORE))
             thisRow[3 + k] = "";

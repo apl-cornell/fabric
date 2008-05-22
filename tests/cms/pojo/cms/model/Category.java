@@ -3,6 +3,16 @@ package cms.model;
 import java.util.Collection;
 
 public class Category {
+  
+  public static final String
+    ASCENDING     = "asc",
+    DESCENDING    = "desc",
+    ANNOUNCEMENTS = "Announcements",
+    DATE          = "Date",
+    ANNOUNCEMENT  = "Announcement";
+  
+  public static final int 
+    SHOWALL = Integer.MAX_VALUE;
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //

@@ -759,7 +759,8 @@ public class AccessController extends HttpServlet {
                                                                                 // form
                                                                                 // after
                                                                                 // error
-      P_NEWITEMFILEPATH = "newitemfilepath_";
+      P_NEWITEMFILEPATH = "newitemfilepath_",
+      P_ASCENDING       = "ascending";
 
   // Session attributes
   public static final String A_TIME = "time", // time taken to render the page;
@@ -845,7 +846,6 @@ public class AccessController extends HttpServlet {
 
   public static final int TEXTAREA_MAX_LENGTH = 8000; // Maximum size for a text
                                                       // area
-
   private TransactionHandler transactions;
 
   /*
@@ -1775,7 +1775,7 @@ public class AccessController extends HttpServlet {
         response.setHeader("Content-disposition", "attachment; filename=\""
             + course.getCode().replace(' ', '_') + "_"
             + STUDENT_TABLE_FILENAME_EXTENSION + "\"");
-        transactions.exportGradesTable(user, course, response.getOutputStream());
+        transactions.exportGradesTable(xmlBuilder, user, course, response.getOutputStream());
         buildURL = null;
         xml = null;
       } else buildURL = FORBIDDEN_URL;
@@ -2227,7 +2227,7 @@ public class AccessController extends HttpServlet {
       
       if (course != null && user.isCategoryPrivByCourse(course)) {
         TransactionResult result =
-            transactions.createNEditCategory(user, cat, course, request);
+            transactions.createNEditCategory(user, course, request);
         if (result.getSuccess()) {
           buildURL = COURSEADMIN_URL;
           xml = xmlBuilder.buildCoursePage(user, course);
