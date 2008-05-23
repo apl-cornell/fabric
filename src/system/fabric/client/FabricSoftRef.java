@@ -16,9 +16,9 @@ public class FabricSoftRef extends SoftReference<$Impl> {
     collector.start();
   }
   
-  public final Core core;
-  public final long onum;
-  public ReadMapEntry rme;
+  public Core core;
+  public long onum;
+  public ReadMapEntry readMapEntry;
   
   /**
    * This destroys the background thread responsible for cleaning up collected
@@ -28,18 +28,17 @@ public class FabricSoftRef extends SoftReference<$Impl> {
     collector.destroy();
   }
 
-  public FabricSoftRef($Impl impl) {
+  public FabricSoftRef(Core core, long onum, $Impl impl) {
     super(impl, queue);
-    core = impl.$getCore();
-    onum = impl.$getOnum();
+    this.core = core;
+    this.onum = onum;
   }
   
-  public void rme(ReadMapEntry rme) {
-    this.rme = rme;
+  public void readMapEntry(ReadMapEntry readMapEntry) {
+    this.readMapEntry = readMapEntry;
   }
   
   private static class RefCollector extends Thread {
-    
     private boolean destroyed;
     
     @Override
@@ -55,11 +54,10 @@ public class FabricSoftRef extends SoftReference<$Impl> {
         try {
           FabricSoftRef ref = (FabricSoftRef) queue.remove();
           ref.core.notifyEvict(ref.onum);
-          ref.rme.depin();
+          ref.readMapEntry.depin();
         } catch (InterruptedException e) {}
       }
     }
-    
   }
 
 }

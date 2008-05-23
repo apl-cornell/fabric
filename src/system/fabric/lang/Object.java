@@ -3,7 +3,6 @@ package fabric.lang;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.lang.ref.SoftReference;
 import java.util.Iterator;
 import java.util.List;
 
@@ -53,29 +52,23 @@ public interface Object {
    * maintaining that soft reference.
    */
   public static class $Proxy implements Object {
-    private final Core core;
-    private final long onum;
-    private transient SoftReference<$Impl> ref;
+    private transient FabricSoftRef ref;
 
     public $Proxy(Core core, long onum) {
-      this.core = core;
-      this.onum = onum;
-      this.ref = null;
+      this.ref = new FabricSoftRef(core, onum, null);
     }
 
     public $Proxy($Impl impl) {
-      this.core = impl.$core;
-      this.onum = impl.$onum;
       this.ref = impl.$ref;
     }
 
     public final $Impl fetch() {
-      $Impl result = (ref == null) ? null : ref.get();
+      $Impl result = ref.get();
 
       if (result == null) {
         // Object has been evicted.
         try {
-          result = core.readObject(onum);
+          result = ref.core.readObject(ref.onum);
         } catch (FetchException e) {
           // TODO figure out how to communicate error
         }
@@ -87,11 +80,11 @@ public interface Object {
     }
 
     public final Core $getCore() {
-      return core;
+      return ref.core;
     }
 
     public final long $getOnum() {
-      return onum;
+      return ref.onum;
     }
 
     public final Label get$label() {
@@ -152,8 +145,6 @@ public interface Object {
    * evicted from memory.
    */
   public static class $Impl implements Object, Cloneable {
-    private Core $core;
-    private long $onum;
     private $Proxy $proxy;
     
     public final FabricSoftRef $ref;
@@ -213,17 +204,15 @@ public interface Object {
      * A private constructor for initializing transaction-management state.
      */
     private $Impl(Core core, long onum, int version) {
-      this.$core = core;
-      this.$onum = onum;
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
       this.$reader = null;
       this.$history = null;
       this.$numWaiting = 0;
-      this.$ref = new FabricSoftRef(this);
+      this.$ref = new FabricSoftRef(core, onum, this);
       this.$readMapEntry = TransactionManager.getReadMapEntry(this);
-      this.$ref.rme(this.$readMapEntry);
+      this.$ref.readMapEntry(this.$readMapEntry);
     }
 
     /**
@@ -318,11 +307,11 @@ public interface Object {
     }
 
     public final Core $getCore() {
-      return $core;
+      return $ref.core;
     }
 
     public final long $getOnum() {
-      return $onum;
+      return $ref.onum;
     }
 
     public final $Proxy $getClass() {
@@ -512,16 +501,16 @@ public interface Object {
       }
 
       $Proxy p = ($Proxy) obj;
-      if (p.core.equals(core)) {
+      if (p.ref.core.equals(core)) {
         // Intracore reference.
         refType.add(RefTypeEnum.ONUM);
-        intracoreRefs.add(p.onum);
+        intracoreRefs.add(p.ref.onum);
         return;
       }
 
       // Remote reference.
       refType.add(RefTypeEnum.REMOTE);
-      intercoreRefs.add(new Pair<String, Long>(p.core.name(), p.onum));
+      intercoreRefs.add(new Pair<String, Long>(p.ref.core.name(), p.ref.onum));
     }
 
     /**
@@ -542,8 +531,8 @@ public interface Object {
      * @deprecated
      */
     public final void $forceRelocate(Core c, long onum) {
-      this.$core = c;
-      this.$onum = onum;
+      this.$ref.core = c;
+      this.$ref.onum = onum;
     }
   }
 

@@ -1,5 +1,4 @@
 // TODO check lock ordering
-// TODO somehow hook this into everything
 
 package fabric.client.transaction;
 
@@ -72,16 +71,15 @@ public final class TransactionManager {
       new OidKeyHashMap<ReadMapEntry>();
 
   public static ReadMapEntry getReadMapEntry($Impl impl) {
-    Core core = impl.$getCore();
-    long onum = impl.$getOnum();
+    FabricSoftRef ref = impl.$ref;
 
     while (true) {
       ReadMapEntry result;
       synchronized (readMap) {
-        result = readMap.get(core, onum);
+        result = readMap.get(ref.core, ref.onum);
         if (result == null) {
           result = new ReadMapEntry(impl);
-          readMap.put(core, onum, result);
+          readMap.put(ref.core, ref.onum, result);
           return result;
         }
       }
@@ -89,7 +87,7 @@ public final class TransactionManager {
       synchronized (result) {
         synchronized (readMap) {
           // Make sure we still have the right entry.
-          if (result != readMap.get(core, onum)) continue;
+          if (result != readMap.get(ref.core, ref.onum)) continue;
           
           result.obj = impl.$ref;
           result.pinCount++;

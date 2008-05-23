@@ -1,21 +1,15 @@
 package fabric.client.transaction;
 
-import java.lang.ref.SoftReference;
-
-import fabric.client.Core;
+import fabric.client.FabricSoftRef;
 import fabric.lang.Object.$Impl;
 
 public final class ReadMapEntry {
-  Core core;
-  long onum;
-  SoftReference<$Impl> obj;
+  FabricSoftRef obj;
   LockList<Log> readLocks;
   int versionNumber;
   int pinCount;
 
   ReadMapEntry($Impl obj) {
-    this.core = obj.$getCore();
-    this.onum = obj.$getOnum();
     this.obj = obj.$ref;
     this.readLocks = new LockList<Log>();
     this.versionNumber = obj.$version;
@@ -42,7 +36,7 @@ public final class ReadMapEntry {
       // There are no read locks and no references to this entry. Garbage
       // collect.
       synchronized (TransactionManager.readMap) {
-        TransactionManager.readMap.remove(core, onum);
+        TransactionManager.readMap.remove(obj.core, obj.onum);
       }
     }
   }
@@ -64,7 +58,7 @@ public final class ReadMapEntry {
   void signalObject() {
     $Impl obj = this.obj.get();
     if (obj == null) {
-      obj = core.readObjectFromCache(onum);
+      obj = this.obj.core.readObjectFromCache(this.obj.onum);
       if (obj == null) return;
 
       synchronized (this) {

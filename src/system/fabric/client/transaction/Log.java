@@ -225,11 +225,9 @@ public final class Log {
    */
   void commitNested() {
     // Merge reads and transfer read locks.
-    synchronized (parent.reads) {
-      for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
-        for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {
-          parent.transferReadLock(entry);
-        }
+    for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
+      for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {
+        parent.transferReadLock(entry);
       }
     }
 
@@ -239,34 +237,34 @@ public final class Log {
 
     // Merge writes and transfer write locks.
     List<$Impl> parentWrites = parent.writes;
-    synchronized (parentWrites) {
-      int size = writes.size();
-      for (int i = 0; i < size; i++) {
-        $Impl obj = writes.get(i);
-        synchronized (obj) {
-          if (obj.$history.$writeLockHolder == parent) {
-            // The parent transaction already wrote to the object. Discard one
-            // layer of history. In doing so, we also end up releasing this
-            // transaction's write lock.
-            obj.$history = obj.$history.$history;
-          } else {
-            // The parent transaction didn't write to the object. Add write to
-            // parent and transfer our write lock.
+    int size = writes.size();
+    for (int i = 0; i < size; i++) {
+      $Impl obj = writes.get(i);
+      synchronized (obj) {
+        if (obj.$history.$writeLockHolder == parent) {
+          // The parent transaction already wrote to the object. Discard one
+          // layer of history. In doing so, we also end up releasing this
+          // transaction's write lock.
+          obj.$history = obj.$history.$history;
+        } else {
+          // The parent transaction didn't write to the object. Add write to
+          // parent and transfer our write lock.
+          synchronized (parentWrites) {
             parentWrites.add(obj);
           }
-          obj.$writer = null;
-          obj.$writeLockHolder = parent;
-
-          // Signal any readers/writers.
-          if (obj.$numWaiting > 0) obj.notifyAll();
         }
+        obj.$writer = null;
+        obj.$writeLockHolder = parent;
+
+        // Signal any readers/writers.
+        if (obj.$numWaiting > 0) obj.notifyAll();
       }
     }
 
     // Merge creates and transfer write locks.
     List<$Impl> parentCreates = parent.creates;
+    size = creates.size();
     synchronized (parentCreates) {
-      int size = creates.size();
       for (int i = 0; i < size; i++) {
         $Impl obj = creates.get(i);
         parentCreates.add(obj);
@@ -351,7 +349,9 @@ public final class Log {
     // Only record the read in this transaction if none of our ancestors have
     // read this object.
     if (!lockedByAncestor) {
-      reads.put(readMapEntry.core, readMapEntry.onum, childEntry);
+      synchronized (reads) {
+        reads.put(readMapEntry.obj.core, readMapEntry.obj.onum, childEntry);
+      }
     } else {
       readsReadByParent.add(childEntry);
     }
@@ -398,7 +398,7 @@ public final class Log {
     // read this object.
     if (!lockedByAncestor) {
       synchronized (reads) {
-        reads.put(obj.$getCore(), obj.$getOnum(),
+        reads.put(obj.$ref.core, obj.$ref.onum,
             new Pair<LockList.Node<Log>, ReadMapEntry>(lockListNode,
                 readMapEntry));
       }
