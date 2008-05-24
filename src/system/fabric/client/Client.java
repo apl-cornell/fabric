@@ -45,7 +45,7 @@ import fabric.lang.auth.Label;
  * Objects.
  */
 public class Client {
-  
+
   // A map from core hostnames to Core objects
   protected final Map<String, RemoteCore> cores;
 
@@ -59,7 +59,7 @@ public class Client {
 
   // Whether SSL encryption is desired.
   protected final boolean useSSL;
-  
+
   // The logger
   public static final Logger log = Logger.getLogger("fabric.client");
 
@@ -75,9 +75,9 @@ public class Client {
 
   // The manager to use for fetching objects from cores.
   protected final FetchManager fetchManager;
-  
+
   protected final ThreadLocal<Label> label;
-  
+
   public static final Random RAND = new Random();
   private static final int DEFAULT_TIMEOUT = 2;
 
@@ -117,7 +117,7 @@ public class Client {
       throw new IllegalStateException(
           "The Fabric client has already been initialized");
     log.info("Initializing Fabric client");
-    //logger.info(logger.getLevel().toString());
+    // logger.info(logger.getLevel().toString());
     log.config("maximum connections: " + maxConnections);
     log.config("timeout:             " + timeout);
     log.config("retries:             " + retries);
@@ -134,7 +134,7 @@ public class Client {
   protected static Client instance;
 
   protected Client(KeyStore keyStore, char[] passwd, KeyStore trustStore,
-      int maxConnections, int timeout, int retries, boolean useSSL, 
+      int maxConnections, int timeout, int retries, boolean useSSL,
       String fetcher) throws InternalError, UnrecoverableKeyException {
     // Sanitise input.
     if (timeout < 1) timeout = DEFAULT_TIMEOUT;
@@ -168,11 +168,11 @@ public class Client {
     this.timeout = 1000 * timeout;
     this.retries = retries;
     this.useSSL = useSSL;
-    
+
     this.nameService = new NameService();
     this.cores = new HashMap<String, RemoteCore>();
     this.localCore = new LocalCore();
-    
+
     this.label = new ThreadLocal<Label>();
 
     try {
@@ -207,7 +207,7 @@ public class Client {
     if (name == null) {
       throw new NullPointerException();
     }
-    
+
     RemoteCore result = cores.get(name);
     if (result == null) {
       result = new RemoteCore(name);
@@ -226,20 +226,21 @@ public class Client {
   public FetchManager fetchManager() {
     return fetchManager;
   }
-  
+
   public Principal getPrincipal() {
     return principal;
   }
-  
+
   /**
    * Sets the principal of the currently executing thread.
    * 
-   * @param p The principal to use.
+   * @param p
+   *                The principal to use.
    */
   public void setLabel(Label l) {
     label.set(l);
   }
-  
+
   public Label getLabel() {
     return label.get();
   }
@@ -251,13 +252,13 @@ public class Client {
     fetchManager.destroy();
     FabricSoftRef.destroy();
   }
-  
+
   public static void initialize() throws IOException, KeyStoreException,
       NoSuchAlgorithmException, CertificateException,
       UnrecoverableKeyException, IllegalStateException, InternalError {
     initialize(null);
   }
-  
+
   public static void initialize(String name) throws IOException,
       KeyStoreException, NoSuchAlgorithmException, CertificateException,
       UnrecoverableKeyException, IllegalStateException, InternalError {
@@ -267,14 +268,15 @@ public class Client {
     p.load(in);
     in.close();
     System.setProperties(p);
-    
+
     if (name != null) {
       try {
         in = Resources.readFile("etc", "client", name + ".properties");
         p = new Properties(System.getProperties());
         p.load(in);
         in.close();
-      } catch (IOException e) {}
+      } catch (IOException e) {
+      }
     }
 
     KeyStore keyStore = KeyStore.getInstance("JKS");
@@ -298,7 +300,8 @@ public class Client {
     int timeout = Integer.parseInt(p.getProperty("fabric.client.timeout", "2"));
     int retries = Integer.parseInt(p.getProperty("fabric.client.retries", "5"));
 
-    String fetcher = p.getProperty("fabric.client.fetchmanager",
+    String fetcher =
+        p.getProperty("fabric.client.fetchmanager",
             "fabric.client.DirectFetchManager");
 
     boolean useSSL =
@@ -354,37 +357,39 @@ public class Client {
       StackTraceElement[] traceArray = new StackTraceElement[trace.size()];
       cause.setStackTrace(trace.toArray(traceArray));
       throw cause;
+    } finally {
+      c.shutdown();
     }
-
-    c.shutdown();
   }
-  
+
   private static Options getOpts(String[] args) throws IllegalArgumentException {
     Options opts = new Options();
     GetOpt o = new GetOpt(args, Options.OPTS);
-    
+
     try {
       for (int c = o.getNextOption(); c != -1; c = o.getNextOption()) {
         switch (c) {
-        case 'n': opts.name = o.getOptionArg(); break;
+        case 'n':
+          opts.name = o.getOptionArg();
+          break;
         }
       }
-      
+
       opts.main = o.getCmdArgs();
     } catch (Exception e) {
       throw new IllegalArgumentException();
     }
-    
+
     return opts;
   }
-  
+
   private static class Options {
-    
+
     public static final String OPTS = "n:";
-    
+
     public String[] main;
     public String name;
-    
+
   }
-  
+
 }
