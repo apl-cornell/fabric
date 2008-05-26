@@ -41,6 +41,15 @@ public class CategoryRow {
     // TODO
     return null;
   }
+  
+  /**
+   * Create a and return new entry in this row for the given column. The type of
+   * the created contents will be determined by the type of the column.
+   */
+  public CategoryContents createContents(CategoryColumn col) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*
