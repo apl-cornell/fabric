@@ -312,7 +312,7 @@ public class CategoryXMLBuilder {
     while (files.hasNext()) {
       CategoryContentsFileEntry data = (CategoryContentsFileEntry) files.next();
       Element xFile = xml.createElement(XMLBuilder.TAG_CTGFILE);
-      xFile.setAttribute(XMLBuilder.A_FILENAME, data.getFileName());
+      xFile.setAttribute(XMLBuilder.A_FILENAME, data.getFile().getName());
       xFile.setAttribute(XMLBuilder.A_LINKNAME, data.getLinkName());
       xFile.setAttribute(XMLBuilder.A_ID,       data.toString());
       if (data.getHidden())

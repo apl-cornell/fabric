@@ -441,7 +441,7 @@ public class GradingXMLBuilder {
                   XMLBuilder.TAG_RESPONSE).item(0);
               Element xCommentFile = xml.createElement(XMLBuilder.TAG_COMMENTFILE);
               xCommentFile.setAttribute(XMLBuilder.A_COMMENTFILEID, commentFile.toString());
-              xCommentFile.setAttribute(XMLBuilder.A_FILENAME,      commentFile.getFileName());
+              xCommentFile.setAttribute(XMLBuilder.A_FILENAME,      commentFile.getFile().getName());
               xComment.appendChild(xCommentFile);
             }
           }

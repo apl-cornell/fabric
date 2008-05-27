@@ -8,8 +8,7 @@ public class SolutionFile {
 
   private Assignment assignment;
   private boolean    hidden;
-  private String     fileName;
-  private String     path;
+  private FileData   file;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
@@ -17,8 +16,7 @@ public class SolutionFile {
 
   public void setAssignment (final Assignment assignment) { this.assignment = assignment; }
   public void setHidden     (final boolean hidden)        { this.hidden     = hidden;     }
-  public void setFileName   (final String fileName)       { this.fileName   = fileName;   }
-  public void setPath       (final String path)           { this.path       = path;       }
+  public void setFile       (final FileData file)         { this.file       = file;       }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //
@@ -26,18 +24,16 @@ public class SolutionFile {
 
   public Assignment getAssignment() { return this.assignment; }
   public boolean    getHidden()     { return this.hidden;     }
-  public String     getFileName()   { return this.fileName;   }
-  public String     getPath()       { return this.path;       }
+  public FileData   getFile()       { return this.file;       }
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public SolutionFile(Assignment assign, String fileName, boolean hidden, String path) {
+  public SolutionFile(Assignment assign, boolean hidden, FileData data) {
     setAssignment(assign);
-    setFileName(fileName);
     setHidden(hidden);
-    setPath(path);
+    setFile(data);
   }
 }
 

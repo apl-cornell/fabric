@@ -131,7 +131,6 @@ public class XMLBuilder {
       A_ISNEW = "isnew",
       A_MD5 = "md5",
       A_FILENAME = "filename",
-      A_PATH = "path",
       A_ASSIGNMENT = "assignment",
       A_GRACEPERIOD = "graceperiod",
       A_MAXTOTALSCORE = "maxtotalscore",
@@ -1622,7 +1621,7 @@ public class XMLBuilder {
         CommentFile commentFile = currentComment.getCommentFile();
         if (commentFile != null) {
           comment.setAttribute(XMLBuilder.A_COMMENTFILEID, commentFile.toString());
-          comment.setAttribute(XMLBuilder.A_FILENAME,      commentFile.getFileName());
+          comment.setAttribute(XMLBuilder.A_FILENAME,      commentFile.getFile().getName());
         }
         currentComment =
             iComment.hasNext() ? (Comment) iComment.next() : null;

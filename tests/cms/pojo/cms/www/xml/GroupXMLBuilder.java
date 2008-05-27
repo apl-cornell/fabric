@@ -10,7 +10,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import cms.www.util.DateTimeUtil;
-import cms.www.util.FileUtil;
 import cms.www.util.Profiler;
 
 import cms.auth.Principal;
@@ -212,8 +211,8 @@ public class GroupXMLBuilder {
       xFile.setAttribute(XMLBuilder.A_DATE,
                          DateTimeUtil.DATE_TIME_AMPM.format(file.getFileDate()));
       xFile.setAttribute(XMLBuilder.A_SIZE,
-                         FileUtil.formatFileSize(file.getFileSize()));
-      xFile.setAttribute(XMLBuilder.A_MD5,  file.getMD5());
+                         file.getFile().formatFileSize());
+      xFile.setAttribute(XMLBuilder.A_MD5,  file.getFile().getMD5());
       xFile.setAttribute(XMLBuilder.A_USER, file.getUser().getNetID());
       xFile.setAttribute(XMLBuilder.A_SUBMITTEDFILEID, file.toString());
       xSubmissions.appendChild(xFile);

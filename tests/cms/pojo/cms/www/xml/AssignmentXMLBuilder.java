@@ -242,7 +242,7 @@ public class AssignmentXMLBuilder {
         AssignmentFile hidFile = (AssignmentFile) hid.next();
         Element xHidFile = xml.createElement(XMLBuilder.TAG_HIDDENFILE);
         xItem.appendChild(xHidFile);
-        xHidFile.setAttribute(XMLBuilder.A_NAME, hidFile.getFileName());
+        xHidFile.setAttribute(XMLBuilder.A_NAME, hidFile.getFile().getName());
         xHidFile.setAttribute(XMLBuilder.A_ID,   hidFile.toString());
         xHidFile.setAttribute(XMLBuilder.A_DATE,
             DateTimeUtil.NUMMONTH_DAY_TIME.format(hidFile.getFileDate()));
@@ -280,8 +280,7 @@ public class AssignmentXMLBuilder {
     if (assignment.hasSolutionFile()) {
       SolutionFile sf = assignment.findSolutionFile();
       Element xSolution = xml.createElement(XMLBuilder.TAG_SOLFILE);
-      xSolution.setAttribute(XMLBuilder.A_FILENAME, sf.getFileName());
-      xSolution.setAttribute(XMLBuilder.A_PATH, sf.getPath());
+      xSolution.setAttribute(XMLBuilder.A_FILENAME, sf.getFile().getName());
       xSolution.setAttribute(XMLBuilder.A_ID, sf.toString());
       xSolutions.appendChild(xSolution);
     }
@@ -290,7 +289,7 @@ public class AssignmentXMLBuilder {
     while (i.hasNext()) {
       SolutionFile sfd = (SolutionFile) i.next();
       Element xSolution = xml.createElement(XMLBuilder.TAG_HIDDENSOLFILE);
-      xSolution.setAttribute(XMLBuilder.A_FILENAME, sfd.getFileName());
+      xSolution.setAttribute(XMLBuilder.A_FILENAME, sfd.getFile().getName());
       xSolution.setAttribute(XMLBuilder.A_ID, sfd.toString());
       xSolutions.appendChild(xSolution);
     }

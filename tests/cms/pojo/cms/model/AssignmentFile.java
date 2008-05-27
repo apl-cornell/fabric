@@ -7,9 +7,8 @@ public class AssignmentFile {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private String         path;
-  private String         fileName;
   private Date           fileDate;
+  private FileData       file;
   private AssignmentItem assignmentItem;
   private boolean        hidden;
 
@@ -17,8 +16,7 @@ public class AssignmentFile {
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setPath           (final String path)                   { this.path           = path;           }
-  public void setFileName       (final String fileName)               { this.fileName       = fileName;       }
+  public void setFile           (final FileData file)                 { this.file           = file;           }
   public void setFileDate       (final Date fileDate)                 { this.fileDate       = fileDate;       }
   public void setAssignmentItem (final AssignmentItem assignmentItem) { this.assignmentItem = assignmentItem; }
   public void setHidden         (final boolean hidden)                { this.hidden         = hidden;         }
@@ -27,8 +25,7 @@ public class AssignmentFile {
   // public getters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public String         getPath()           { return this.path;           }
-  public String         getFileName()       { return this.fileName;       }
+  public FileData       getFile()           { return this.file;           }
   public Date           getFileDate()       { return this.fileDate;       }
   public AssignmentItem getAssignmentItem() { return this.assignmentItem; }
   public boolean        getHidden()         { return this.hidden;         }
@@ -37,11 +34,10 @@ public class AssignmentFile {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public AssignmentFile(AssignmentItem item, String fileName, boolean isHidden, String path) {
+  public AssignmentFile(AssignmentItem item, boolean isHidden, FileData file) {
     setAssignmentItem(item);
-    setFileName(fileName);
     setFileDate(new Date());
-    setPath(path);
+    setFile(file);
   }
 }
 

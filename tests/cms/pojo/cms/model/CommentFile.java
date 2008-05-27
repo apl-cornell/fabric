@@ -6,34 +6,30 @@ public class CommentFile {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private Comment comment;
-  private String  fileName;
-  private String  path;
+  private Comment  comment;
+  private FileData file;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
   public void setComment  (final Comment comment)  { this.comment  = comment;  }
-  public void setFileName (final String fileName)  { this.fileName = fileName; }
-  public void setPath     (final String path)      { this.path     = path;     }
+  public void setFile     (final FileData file)    { this.file     = file;     }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Comment getComment()  { return this.comment;  }
-  public String  getFileName() { return this.fileName; }
-  public String  getPath()     { return this.path;     }
+  public Comment  getComment()  { return this.comment;  }
+  public FileData getFile()     { return this.file;     }
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public CommentFile(Comment comment, String fileName, String path) {
+  public CommentFile(Comment comment, FileData file) {
     setComment(comment);
-    setFileName(fileName);
-    setPath(path);
+    setFile(file);
   }
 }
 

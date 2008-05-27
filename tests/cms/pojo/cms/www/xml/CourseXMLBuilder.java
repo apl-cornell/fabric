@@ -440,7 +440,7 @@ public class CourseXMLBuilder {
       Element xFile = xml.createElement(XMLBuilder.TAG_ITEM);
       xItems.appendChild(xFile);
       AssignmentFile data = (AssignmentFile) i.next();
-      xFile.setAttribute(XMLBuilder.A_NAME, data.getFileName());
+      xFile.setAttribute(XMLBuilder.A_NAME, data.getFile().getName());
       // TODO Fix after AssignmentFiles are implemented fully
       // xFile.setAttribute(XMLBuilder.A_DATE, Util.formatDate(data.getDate(),
       // Util.SMALL));

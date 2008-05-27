@@ -10,9 +10,8 @@ public class CategoryContentsFileEntry {
   //////////////////////////////////////////////////////////////////////////////
 
   private CategoryContentsFileList list;
-  private String                   fileName;
   private boolean                  hidden;
-  private String                   path;
+  private FileData                 file;
   private String                   linkName;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -20,9 +19,8 @@ public class CategoryContentsFileEntry {
   //////////////////////////////////////////////////////////////////////////////
 
   public void setList     (final CategoryContentsFileList list)     { this.list     = list;     }
-  public void setFileName (final String fileName)                   { this.fileName = fileName; }
   public void setHidden   (final boolean hidden)                    { this.hidden   = hidden;   }
-  public void setPath     (final String path)                       { this.path     = path;     }
+  public void setFile     (final FileData file)                     { this.file     = file;     }
   public void setLinkName (final String linkName)                   { this.linkName = linkName; }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -30,9 +28,8 @@ public class CategoryContentsFileEntry {
   //////////////////////////////////////////////////////////////////////////////
 
   public CategoryContentsFileList getList()     { return this.list;     }
-  public String                   getFileName() { return this.fileName; }
   public boolean                  getHidden()   { return this.hidden;   }
-  public String                   getPath()     { return this.path;     }
+  public FileData                 getFile()     { return this.file;     }
   public String                   getLinkName() { return this.linkName; }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -40,11 +37,10 @@ public class CategoryContentsFileEntry {
   //////////////////////////////////////////////////////////////////////////////
 
   public CategoryContentsFileEntry(CategoryContentsFileList list,
-      String fileName, boolean hidden, String path, String linkName) {
+      boolean hidden, FileData file, String linkName) {
     setList(list);
-    setFileName(fileName);
     setHidden(hidden);
-    setPath(path);
+    setFile(file);
     setLinkName(linkName);
   }
 }
