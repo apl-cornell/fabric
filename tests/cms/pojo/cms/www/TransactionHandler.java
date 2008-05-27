@@ -25,7 +25,10 @@ import javax.xml.parsers.DocumentBuilder;
 
 import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemIterator;
+import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 // import org.apache.crimson.jaxp.DocumentBuilderFactoryImpl;
 import javax.xml.parsers.DocumentBuilderFactory; // java 5 replacement for
                                                   // DocumentBuilderFactoryImpl
@@ -39,7 +42,6 @@ import cms.www.util.CSVParseException;
 import cms.www.util.DateTimeUtil;
 import cms.www.util.DownloadFile;
 import cms.www.util.Emailer;
-import cms.www.util.FileUtil;
 import cms.www.util.Profiler;
 import cms.www.util.StringUtil;
 import cms.www.util.Util;
@@ -67,6 +69,12 @@ public class TransactionHandler {
   private Transactions transactions = null;
   private DocumentBuilder db = null;
   private Properties env;
+  
+  private static class UploadTooBigException extends IOException {
+    public UploadTooBigException() {
+      super("Upload exceeds maximum file size");
+    }
+  }
 
   public TransactionHandler(final CMSRoot database) {
     this.database     = database;
@@ -90,8 +98,7 @@ public class TransactionHandler {
     Student student = assignment == null ? null
         : assignment.getCourse().getStudent(p);
     GroupMember member  = group.findGroupMember(p);
-    GroupMember current =
-        database.groupMemberHome().findActiveByNetAssignment(p,group.getAssignment());
+    GroupMember current = assignment.findActiveGroupMember(p);
     if (group == null) {
       result.addError("Invalid group entered, does not exist");
       return result;
@@ -111,12 +118,12 @@ public class TransactionHandler {
       result.addError("Must be an enrolled student in this course to accept invitations");
       return result;
     }
+
     if (member == null || !member.getStatus().equals(GroupMember.INVITED)) {
-      if (member != null && member.getStatus().equals(GroupMember.ACTIVE)) {
-        result.addError("Already an active member of this group");
-      } else {
-        result.addError("No invitation to join this group exists");
-      }
+      result.addError("No invitation to join this group exists");
+    }
+    if (member != null && member.getStatus().equals(GroupMember.ACTIVE)) {
+      result.addError("Already an active member of this group");
     }
     Collection grades = current == null ? null
                                         : assignment.findMostRecentGrades(p);
@@ -237,50 +244,49 @@ public class TransactionHandler {
     return result;
   }
 
+  private FileData downloadFile(FileItemStream item) throws IOException {
+    String fileName = item.getName();
+    // strip off any directory names that may have been sent by the browser
+    fileName = fileName.substring(fileName.lastIndexOf("/"));
+    fileName = fileName.substring(fileName.lastIndexOf("\\"));
+    
+    FileData result = new FileData(fileName);
+    
+    InputStream  in  = item.openStream();
+    OutputStream out = result.write();
+    for (int i = 0; i < AccessController.maxFileSize; i++) {
+      int next = in.read();
+      if (next == -1)
+        break;
+      if (i == AccessController.maxFileSize) 
+        throw new UploadTooBigException();
+      out.write(next);
+    }
+    out.close();
+    
+    
+    return result;
+  }
+  
   /**
-   * download (TO cms server) files for a given category (auxiliary to
-   * addCtgContents(), editCtgContents())
+   * Reads the form field data from a FileItemStream. Similar to
+   * FileItem.getString().
    * 
-   * @param item
-   * @param category
-   * @param cellCount
-   *          The index of this file within its (row, col) cell
-   * @param fileCount
-   *          The number of files currently stored in this category
-   * @param row
-   * @param col
-   * @return A CtgFileInfo representing the file, which is now stored on disk on
-   *         the server
-   * @throws FileUploadException
-   *           on any number of yucky conditions; IOException; ...?
+   * @return a String containing the value of the item if it is a simple form
+   *         field, or null if it is a file upload.
+   * @throws IOException if the FileItemStream can't be read for any reason.
    */
-  private CtgFileInfo downloadCategoryFile(FileItem item, Category category,
-      int cellCount, int fileCount, CategoryRow row, CategoryColumn col) throws FileUploadException {
-    fileCount += 1; // the folder with  fileCount will already have been
-                    // created; let's use the next 
-    String fullFileName = FileUtil.trimFilePath(item.getName()); // title +
-                                                                  // extension
-    /*
-     * TODO category  is independent of course, so we don't really need course
-     *  here; but note that removing it will require changing the CMS
-     * filesystem structure. For now use course  0 for everything
-     */
-    Course course = null;
-    java.io.File file =
-        new File(FileUtil.getCategoryFileSystemPath(course, category,
-            row, col, fileCount, fullFileName)), parent =
-        file.getParentFile();
-    if (parent.exists())
-      throw new FileUploadException("Failed to create a unique file path");
-    if (!parent.mkdirs())
-      throw new FileUploadException("Failed to create new local directories");
-    if (!file.createNewFile())
-      throw new FileUploadException(
-          "Failed to create a new file in local directory");
-    item.write(file); // actually copy the file data to a specified place in the
-                      // filesystem
-    return new CtgFileInfo(category, fullFileName, cellCount, file
-        .getParent());
+  private String getString(FileItemStream item) throws IOException {
+    String result = null;
+    if (item.isFormField()) {
+      StringBuilder builder = new StringBuilder();
+      InputStream   stream  = item.openStream();
+      int next;
+      while ((next = stream.read()) != -1)
+        builder.append((char) next);
+      result = builder.toString();
+    }    
+    return result;
   }
 
   /**
@@ -317,10 +323,7 @@ public class TransactionHandler {
       else if (courseIsFrozen(cat.getCourse()))
         result.addError("Course is frozen; no changes may be made to it");
       else {
-        DiskFileUpload upload = new DiskFileUpload();
-        List params = upload.parseRequest(request, 1024,
-                                          AccessController.maxFileSize,
-                                          FileUtil.TEMP_DIR);
+        ServletFileUpload upload = new ServletFileUpload();
         /*
          * **************************************************************************
          * format of add request param: <TYPE>_<ROW>_<COL>[_<FILE_INDEX>]
@@ -339,11 +342,13 @@ public class TransactionHandler {
          *              when adding content)
          * <FILE_INDEX> is the index of a file within its content cell
          */
-        Iterator i = params.iterator();
+        FileItemIterator i = upload.getItemIterator(request);
         while (i.hasNext()) {
-          FileItem item = (FileItem) i.next();
+          FileItemStream item = i.next();
           String[] msgParts = item.getFieldName().split("_");
           String   type     = msgParts[0];
+          String   value    = getString(item);
+
           
           CategoryRow      row = null;
           CategoryColumn   col = null;
@@ -396,28 +401,29 @@ public class TransactionHandler {
           //
           if (type.equals(AccessController.P_NEW_CONTENT_DATE) ||
               type.equals(AccessController.P_CONTENT_DATE)) {
-            String dateStr = item.getString();
+            String dateStr = value;
             Date date = dateStr.equals("") ? null
                                            : DateTimeUtil.parseDate(dateStr, DateTimeUtil.DATE);
             ((CategoryContentsDate) contents).setDate(date);
           } else if (type.equals(AccessController.P_NEW_CONTENT_FILE) ||
                      type.equals(AccessController.P_CONTENT_FILE)) {
             // TODO: download file and put it in entry
+            FileData file = downloadFile(item);
           } else if (type.equals(AccessController.P_NEW_CONTENT_FILELABEL) ||
                      type.equals(AccessController.P_CONTENT_FILELABEL)) {
             // TODO: find file entry and update the label
           } else if (type.equals(AccessController.P_NEW_CONTENT_NUMBER) ||
                      type.equals(AccessController.P_CONTENT_NUMBER)) {
-            ((CategoryContentsNumber) contents).setValue(Integer.parseInt(item.getString()));
+            ((CategoryContentsNumber) contents).setValue(Integer.parseInt(value));
           } else if (type.equals(AccessController.P_NEW_CONTENT_TEXT) ||
                      type.equals(AccessController.P_CONTENT_TEXT)) {
-            ((CategoryContentsString) contents).setText(item.getString());
+            ((CategoryContentsString) contents).setText(value);
           } else if (type.equals(AccessController.P_NEW_CONTENT_URLADDRESS) ||
                      type.equals(AccessController.P_CONTENT_URLADDRESS)) {
-            ((CategoryContentsLink) contents).setAddress(item.getString());
+            ((CategoryContentsLink) contents).setAddress(value);
           } else if (type.equals(AccessController.P_NEW_CONTENT_URLADDRESS) ||
                      type.equals(AccessController.P_CONTENT_URLLABEL)) {
-            ((CategoryContentsLink) contents).setLabel(item.getString());
+            ((CategoryContentsLink) contents).setLabel(value);
           } else if (type.equals(AccessController.P_REMOVEROW)) {
             row = database.getCategoryRow(msgParts[1]);
             row.setHidden(true);
@@ -431,15 +437,12 @@ public class TransactionHandler {
           }
         }
       }
-    } catch (FileUploadException e) {
-      result.addError(FileUtil.checkFileException(e));
-      e.printStackTrace();
+    } catch (UploadTooBigException e) {
+      result.addError(e.getMessage(), e);
     } catch (ParseException e) {
-      e.printStackTrace();
       result.addError("Error: Date contents must be of the form MMMM DD, YYYY");
     } catch (Exception e) {
-      e.printStackTrace();
-      result.addError("Unexpected error while trying to add/edit data");
+      result.addError("Unexpected error while trying to add/edit data", e);
     }
     Profiler.exitMethod("TransactionHandler.addNEditCtgContents",
         "Category: " + cat.toString());
@@ -472,13 +475,9 @@ public class TransactionHandler {
     Profiler.enterMethod("TransactionHandler.addGradesComments", "");
     TransactionResult result = new TransactionResult();
     try {
-      DiskFileUpload upload = new DiskFileUpload();
-      List info =
-          upload.parseRequest(request, 1024, AccessController.maxFileSize,
-              FileUtil.TEMP_DIR);
-      Iterator i = info.iterator();
-      GradeCommentInfo gradeInfo = new GradeCommentInfo();
-      Map assigns = isAssign ? null : database.getAssignmentMap(data);
+      ServletFileUpload upload = new ServletFileUpload();
+      FileItemIterator i = upload.getItemIterator(request);
+      
       Assignment assignment = isAssign ? (Assignment) data : null;
       Course     course     = isAssign ? assignment.getCourse() : (Course) data;
       if (courseIsFrozen(course)) {
@@ -488,14 +487,15 @@ public class TransactionHandler {
       
       ArrayList groups = new ArrayList();
       while (i.hasNext()) {
-        FileItem item = (FileItem) i.next();
+        FileItemStream item = (FileItemStream) i.next();
         String field = item.getFieldName();
+        String value = getString(item);
         if (field.startsWith(AccessController.P_GRADE)) {
           String[] vals = field.split("_");
           SubProblem subProb = database.getSubProblem(vals[2]);
           Group      group   = database.getGroup(vals[3]);
           try {
-            String scoreStr = item.getString().trim();
+            String scoreStr = value.trim();
             if (!scoreStr.equals("")) {
               float score = Float.parseFloat(scoreStr);
               gradeInfo.addScore(vals[1], subProb, new Float(score), group);
@@ -511,7 +511,7 @@ public class TransactionHandler {
           SubProblem subProb = database.getSubProblem(vals[2]);
           Group      group   = database.getGroup(vals[3]);
           try {
-            String scoreStr = item.getString().trim();
+            String scoreStr = value.trim();
             if (!scoreStr.equals("")) {
               float score = StringUtil.parseFloat(scoreStr);
               gradeInfo.addOldScore(vals[1], subProb, score, group);
@@ -528,7 +528,7 @@ public class TransactionHandler {
         } else if (field.startsWith(AccessController.P_COMMENTTEXT)) {
           Group group =
             database.getGroup(field.split(AccessController.P_COMMENTTEXT)[1]);
-          gradeInfo.addCommentText(group, item.getString());
+          gradeInfo.addCommentText(group, value);
         } else if (field.startsWith(AccessController.P_COMMENTFILE)) {
           String fileName = FileUtil.trimFilePath(item.getName());
           if (fileName.equals("")) {
@@ -537,22 +537,8 @@ public class TransactionHandler {
           Group group =
               database.getGroup(field.split(AccessController.P_COMMENTFILE)[1]);
           int fileCounter = transactions.getGroupFileCounter(group);
-          java.io.File path, file;
           Assignment assign = isAssign ? assignment : group.getAssignment();
-          file =
-              new java.io.File(FileUtil.getCommentFileSystemPath(course,
-                  assign, group, fileCounter, fileName));
-          path = file.getParentFile();
-          if (path.exists() || !path.mkdirs()) {
-            result.addError("Could not get unique path for new comment file.");
-            continue;
-          }
-          if (!file.createNewFile()) {
-            result
-                .addError("Could not create a new file location on the local file system.");
-            continue;
-          }
-          item.write(file);
+          FileData file = downloadFile(item); 
           data.addCommentFile(group, new CommentFile(0, 0, fileName, path
               .getAbsolutePath()));
         } else if (field.startsWith(AccessController.P_SUBMITTEDFILE)) {
@@ -602,12 +588,12 @@ public class TransactionHandler {
           data.addNewRegradeSubProb(group, 0);
         } else if (field.startsWith(AccessController.P_REGRADEREQUEST)) {
           Group group = database.getGroup(field.split("_")[1]);
-          data.addNewRegrade(group, item.getString());
+          data.addNewRegrade(group, value);
         } else if (field.startsWith(AccessController.P_REGRADENETID)) {
           Group group = database.getGroup((field.split("_"))[1]);
-          data.addNewRegradeNet(group, item.getString());
+          data.addNewRegradeNet(group, value);
         } else if (field.startsWith(AccessController.P_GROUPID)) {
-          groups.add(new Long(database.getGroup(item.getString())));
+          groups.add(new Long(database.getGroup(value)));
         } else if (field.startsWith(AccessController.P_REMOVECOMMENT)) {
           long comment =
               Long.parseLong(field.substring(AccessController.P_REMOVECOMMENT
@@ -1540,7 +1526,7 @@ public class TransactionHandler {
    * 
    * @return Whether the course being dealt with is available for changes
    */
-  private boolean courseIsFrozen(Course course) throws RemoteException {
+  private boolean courseIsFrozen(Course course) {
     // TODO: check if course is null
     return course.getFreezeCourse();
   }
@@ -4083,33 +4069,30 @@ public class TransactionHandler {
   public TransactionResult setCourseProps(User p, Course course, Map map) {
     TransactionResult result = new TransactionResult();
     try {
-      boolean isFreeze =
-          ((String[]) map.get(AccessController.P_FREEZECOURSE)) != null;
+      boolean isFreeze = map.containsKey(AccessController.P_FREEZECOURSE);
       if (isFreeze && courseIsFrozen(course))
         result.addError("Course is frozen; no changes may be made to it");
       else {
         boolean isAdmin, hasAdmin = false;
         // put request data into a nicer form
-        Vector staff2remove = new Vector(); // netid
-        Hashtable staffPerms = new Hashtable(); // netid ->
+        Vector staff2remove = new Vector();     // staff
+        Hashtable staffPerms = new Hashtable(); // Staff ->
                                                 // CourseAdminPermissions
         // remove current staff members and set remaining staff member
         // permissions
         Iterator iter = course.getStaff().iterator();
         while (iter.hasNext()) {
-          String net = ((Staff) iter.next()).getNet();
-          String[] mapRems =
-              (String[]) map.get(net + AccessController.P_REMOVE);
-          if (mapRems != null) { // the staff should be removed
-            if (net.equalsIgnoreCase(p.getNet())) {
+          Staff staff = ((Staff) iter.next());
+          if (map.containsKey(staff.getUser().getNetID() + AccessController.P_REMOVE)) {
+            // the staff should be removed
+            if (staff.getUser().equals(p))
               result.addError("Cannot remove yourself as a staff member");
-              // return result;
-            }
-            staff2remove.add(net);
+            else  
+              staff2remove.add(staff);
           } else { // set staff permissions
-            isAdmin = map.containsKey(net + AccessController.P_ISADMIN);
+            isAdmin = map.containsKey(staff.getUser().getNetID() + AccessController.P_ISADMIN);
             hasAdmin = hasAdmin || isAdmin;
-            staffPerms.put(net, new CourseAdminPermissions(isAdmin, map
+            staffPerms.put(staff, new CourseAdminPermissions(isAdmin, map
                 .containsKey(net + AccessController.P_ISASSIGNID), map
                 .containsKey(net + AccessController.P_ISGROUPS), map
                 .containsKey(net + AccessController.P_ISGRADES), map

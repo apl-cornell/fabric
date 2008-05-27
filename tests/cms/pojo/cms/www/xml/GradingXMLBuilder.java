@@ -427,7 +427,7 @@ public class GradingXMLBuilder {
 
         Iterator commentfiles = comment.getFiles().iterator();
         while (commentfiles.hasNext()) {
-          CommentFile commentFile = (CommentFile) commentfiles.next();
+          FileData commentFile = (FileData) commentfiles.next();
           Iterator requests = comment.findRequests().iterator();
           while (requests.hasNext()) {
             RegradeRequest request = (RegradeRequest) requests.next();
@@ -437,11 +437,11 @@ public class GradingXMLBuilder {
             Element xComment = null;
             if (xRegrade != null) {
               xComment = (Element) xRegrade.getElementsByTagNameNS(
-                  XMLBuilder.TAG_RESPONSE + commentFile.getComment().toString(),
+                  XMLBuilder.TAG_RESPONSE + comment.toString(),
                   XMLBuilder.TAG_RESPONSE).item(0);
               Element xCommentFile = xml.createElement(XMLBuilder.TAG_COMMENTFILE);
               xCommentFile.setAttribute(XMLBuilder.A_COMMENTFILEID, commentFile.toString());
-              xCommentFile.setAttribute(XMLBuilder.A_FILENAME,      commentFile.getFile().getName());
+              xCommentFile.setAttribute(XMLBuilder.A_FILENAME,      commentFile.getName());
               xComment.appendChild(xCommentFile);
             }
           }

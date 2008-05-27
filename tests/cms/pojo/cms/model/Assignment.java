@@ -334,6 +334,15 @@ public class Assignment {
     // TODO Auto-generated method stub
     return null;
   }
+
+  /**
+   * Return the (unique) GroupMember with ACTIVE status associated with this
+   * user and this assignment, or null if none exists.
+   */
+  public GroupMember findActiveGroupMember(User p) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*
