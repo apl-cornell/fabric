@@ -52,12 +52,12 @@ public class Comment {
     return null;
   }
   
-  public Collection/*CommentFiles*/ getFiles() {
+  public Collection/*FileData*/ getFiles() {
     // TODO Auto-generated method stub
     return null;
   }
   
-  public CommentFile getCommentFile() {
+  public FileData getCommentFile() {
     // TODO Auto-generated method stub
     return null;
   }
