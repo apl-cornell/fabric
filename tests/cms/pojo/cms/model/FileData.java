@@ -1,5 +1,6 @@
 package cms.model;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -146,21 +147,21 @@ public class FileData {
   }
   
   private final class Writing implements State {
-    public final DigestOutputStream  stream;
+    public final OutputStream  stream;
+    public final MessageDigest digest;
     
     public Writing() throws IOException {
-      MessageDigest digest;
       try {
         digest = MessageDigest.getInstance("MD5");
       } catch (NoSuchAlgorithmException e) {
         throw new IOException("Could not create MD5 Computation", e);
       }
-      stream = new DigestOutputStream(new FileOutputStream(file), digest);
+      stream = new BufferedOutputStream(new DigestOutputStream(new FileOutputStream(file), digest));
     }
     
     public String md5() throws IOException {
       stream.close();
-      String md5 = new String(stream.getMessageDigest().digest());
+      String md5 = new String(digest.digest());
       
       state = new Written(md5);
       return md5;
