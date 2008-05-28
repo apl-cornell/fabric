@@ -821,24 +821,31 @@ public class TransactionHandler {
    * @return
    */
   public boolean authorizeGroupFiles(User p, Collection groups) {
-    try {
-      Assignment assign = database.isValidGroupCollection(groups);
-      if (assign == null) return false;
-      
-      if (assign == null) return false;
-      if (p.isAdminPrivByCourse(assign.getCourse())) {
-        return true;
-      } else if (p.isGradesPrivByCourse(assign.getCourse())) {
-        if (assign.getAssignedGraders()) {
-          return database.isAssignedTo(p.getNet(), groups);
-        } else {
-          return true;
-        }
+    Assignment assign = null;
+    Iterator i = groups.iterator();
+    while (i.hasNext()) {
+      Group group = (Group) i.next();
+      if (assign == null)
+        assign = group.getAssignment();
+
+      // check that all groups are for the same assignment
+      if (assign != group.getAssignment())
+        return false;
+
+      // check if this particular group is visible
+      boolean auth = false;
+      if (p.isGradesPrivByCourse(assign.getCourse()))
+        auth = true;
+      if (!assign.getAssignedGraders())
+        auth = true;
+      if (assign.getAssignedGraders() && group.isAssignedTo(p))
+        auth = true;
+      if (!auth)
+        return false;
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return false;
+    if (assign == null)
+      return false;
+    return true;
   }
 
   /**
@@ -856,17 +863,16 @@ public class TransactionHandler {
   public TransactionResult cancelInvitation(User p, User canceled, Group group) {
     TransactionResult result = new TransactionResult();
     try {
-      Assignment assign = group == null ? null : group.getAssignment();
       if (group == null) {
         result.addError("Invalid group entered, does not exist");
         return result;
       }
+      Assignment assign = group.getAssignment();
       if (assign == null || assign.getHidden()) {
         result.addError("No corresponding assignment exists");
         return result;
       } else if (!assign.getStatus().equals(Assignment.OPEN)) {
-        result
-            .addError("Group management is not currently available for this assignment");
+        result.addError("Group management is not currently available for this assignment");
         return result;
       }
       if (courseIsFrozen(assign.getCourse())) {
@@ -886,7 +892,7 @@ public class TransactionHandler {
         }
       }
       if (!result.hasErrors()) {
-        if (transactions.cancelInvitation(p, canceled, groupid)) {
+        if (transactions.cancelInvitation(p, canceled, group)) {
           result.setValue("Successfully canceled invitation");
         } else {
           result.addError("Database failed to cancel invitation");
@@ -916,22 +922,7 @@ public class TransactionHandler {
           addGroup = true;
         }
       }
-      // if not found, search postdata
-      if ((!addGroup) && canAssign) {
-        DiskFileUpload u = new DiskFileUpload();
-        List info =
-            u.parseRequest(req, 1024, AccessController.maxFileSize,
-                FileUtil.TEMP_DIR);
-        Iterator i = info.iterator();
-        while (i.hasNext()) {
-          FileItem item = (FileItem) i.next();
-          String field = item.getFieldName();
-          if (item.isFormField() && field.equals(AccessController.P_TIMESLOTID)) {
-            slot = database.getTimeSlot(item.getString());
-            addGroup = true;
-          }
-        }
-      }
+
       // handle potential errors
       if (group == null) {
         result.addError("Invalid group entered: does not exist");
@@ -981,7 +972,7 @@ public class TransactionHandler {
         TimeSlot slotNum = null;
         if (addGroup && slot != null) slotNum = slot;
 
-        if (transactions.changeGroupSlot(p, groupid, assignid, slotNum, addGroup)) {
+        if (transactions.changeGroupSlot(p, group, assign, slotNum, addGroup)) {
           if (addGroup)
             result.setValue("Successfully added group to time slot");
           else
@@ -4071,8 +4062,7 @@ public class TransactionHandler {
       if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
-        Student data = buildStudent(request);
-        result = transactions.setStudentPrefs(p, course, data);
+        Student data = updateStudent(course.getStudent(p), request);
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -4085,37 +4075,31 @@ public class TransactionHandler {
   public TransactionResult setAllStudentPrefs(User p,
       HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
-    try {
-      Student data = buildStudent(request);
-      result = transactions.setAllStudentPrefs(p, data);
-    } catch (Exception e) {
-      e.printStackTrace();
-      result
-          .addError("Unexpected error while trying to set course preferences");
+    Iterator i = p.findStudentCourses().iterator();
+    while (i.hasNext()) {
+      Student student = (Student) i.next();
+      updateStudent(student, request);
     }
     return result;
   }
 
-  private Student buildStudent(HttpServletRequest request)
-      throws FileUploadException {
-    Student data = new Student();
-    data.setEmailDueDate(request
-        .getParameter(AccessController.P_PREF_DATECHANGE) != null);
-    data
-        .setEmailFile(request.getParameter(AccessController.P_PREF_FILESUBMIT) != null);
-    data.setEmailFinalGrade(request
-        .getParameter(AccessController.P_PREF_FINALGRADES) != null);
-    data
-        .setEmailGroup(request.getParameter(AccessController.P_PREF_INVITATION) != null);
-    data.setEmailNewAssignment(request
-        .getParameter(AccessController.P_PREF_NEWASSIGNID) != null);
-    data.setEmailNewGrade(request
-        .getParameter(AccessController.P_PREF_GRADERELEASE) != null);
-    data.setEmailRegrade(request
-        .getParameter(AccessController.P_PREF_GRADECHANGE) != null);
-    data.setEmailTimeSlot(request
-        .getParameter(AccessController.P_PREF_TIMESLOTCHANGE) != null);
-    return data;
+  private void updateStudent(Student data, HttpServletRequest request) {
+    data.setEmailDueDate(
+        request.getParameter(AccessController.P_PREF_DATECHANGE) != null);
+    data.setEmailFile(
+        request.getParameter(AccessController.P_PREF_FILESUBMIT) != null);
+    data.setEmailFinalGrade(
+        request.getParameter(AccessController.P_PREF_FINALGRADES) != null);
+    data.setEmailGroup(
+        request.getParameter(AccessController.P_PREF_INVITATION) != null);
+    data.setEmailNewAssignment(
+        request.getParameter(AccessController.P_PREF_NEWASSIGN) != null);
+    data.setEmailNewGrade(
+        request.getParameter(AccessController.P_PREF_GRADERELEASE) != null);
+    data.setEmailRegrade(
+        request.getParameter(AccessController.P_PREF_GRADECHANGE) != null);
+    data.setEmailTimeSlot(
+        request.getParameter(AccessController.P_PREF_TIMESLOTCHANGE) != null);
   }
 
   /**

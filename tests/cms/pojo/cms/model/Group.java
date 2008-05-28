@@ -85,6 +85,10 @@ public class Group {
     // TODO Auto-generated method stub
     return null;
   }
+  public boolean isAssignedTo(User p) {
+    // TODO Auto-generated method stub
+    return false;
+  }
 }
 
 /*
