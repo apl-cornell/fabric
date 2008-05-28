@@ -1,0 +1,20 @@
+package system;
+
+import fabric.client.*;
+
+public class Array01 {
+  public static void main(String[] args) {
+    atomic {
+      Core core = Client.getClient().getCore("core0");
+      Object[] foo = new Object[]@core {};
+      Object[] bar = new Object[][]@core {foo, foo};
+      Object[][] baz = (Object[][]) bar;
+      foo = baz[0];
+    }
+    System.out.println("TEST PASSED.");
+  }
+}
+
+/*
+** vim: ts=2 sw=2 cindent cino=\:0 syntax=java et
+*/

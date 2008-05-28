@@ -1,0 +1,10 @@
+package compiler;
+import fabric.client.Core;
+class Array07 {
+	public void f () throws Exception {
+		Class k = Array07.class;
+		k.getConstructor(new Class[] {Core.class});
+	}
+
+}
+

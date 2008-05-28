@@ -1,0 +1,42 @@
+package system;
+
+import fabric.client.Core;
+import fabric.util.Map;
+
+public class Instanceof01 {
+  static final String key = "instanceof01";
+  
+  public static class Init {
+    public static void main(String[] args) {
+      Object o = null;
+      atomic {
+        Core c = Client.getClient().getCore("core0");
+        Map root = (Map) c.getRoot();
+        root.put(key, o = new Instanceof01@c());
+      }
+
+      if (o instanceof Instanceof01) {
+        System.out.println("TEST PASSED.");
+      } else {
+        System.out.println("TEST FAILED.");
+      }
+    }
+  }
+
+  public static class Run {
+    public static void main(String[] args) {
+      Object o = null;
+      atomic {
+        Core c = Client.getClient().getCore("core0");
+        Map root = (Map) c.getRoot();
+        o = root.get(key);
+      }
+
+      if (o instanceof Instanceof01) {
+        System.out.println("TEST PASSED.");
+      } else {
+        System.out.println("TEST FAILED.");
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+package compiler;
+
+import java.util.AbstractList;
+
+public abstract class ExtendsJava01 extends AbstractList {
+  int i;
+
+  ExtendsJava01() {
+    i = 0;
+  }
+}
+

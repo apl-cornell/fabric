@@ -1,0 +1,16 @@
+package system;
+
+import fabric.client.Core;
+import fabric.client.Client;
+
+class Inlineable04 {
+  public static void main(String[] args) {
+    atomic {
+      Core local = Client.getClient().getLocalCore();
+      String[] foo = new String[10]@local;
+    }
+    
+    System.out.println("TEST PASSED.");
+  }
+}
+

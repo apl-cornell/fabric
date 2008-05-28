@@ -1,0 +1,12 @@
+package compiler;
+
+public class ReadWriteOpt02 {
+	
+	private int i;
+	
+	public void foo(ReadWriteOpt02 o) {
+		int a = o.i;  // should make o resident
+		int b = o.i;  // should not register read again
+	}
+	
+}

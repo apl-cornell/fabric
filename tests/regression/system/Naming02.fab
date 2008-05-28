@@ -1,0 +1,37 @@
+package system;
+
+import fabric.client.*;
+import fabric.util.HashMap;
+
+public class Naming02 {
+  static final String name = "regression/Naming02";
+  public static class Init {
+    public static void main(String[] args) {
+      atomic {
+        Core core = fabric.client.Client.getClient().getCore("core0");
+        HashMap root = (HashMap) core.getRoot();
+        root.put(name, new Naming02@core());
+      }
+      System.out.println("TEST PASSED.");
+    }
+  }
+  
+  public static class Run {
+    public static void main(String[] args) {
+      Object o = null;
+      atomic {
+        Core core = Client.getClient().getCore("core0");
+        HashMap root = (HashMap) core.getRoot();
+        o = root.get(name);
+      }
+      
+      if (o instanceof Naming02) {
+        System.out.println("TEST PASSED.");
+      } else {
+        System.out.println("TEST FAILED: Expected a Naming02 object, but got "
+            + o.toString());
+      }
+    }
+  }
+}
+

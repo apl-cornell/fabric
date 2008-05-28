@@ -1,0 +1,19 @@
+/**
+ * Checks to make sure we can use String, Integer, and friends as
+ * fabric.lang.Objects.
+ */
+package compiler;
+
+public class Inlineable01 {
+  String s;
+  Integer i;
+  Long l;
+  Boolean b;
+  void m() {
+    Object o = s;
+    o = i;
+    o = l;
+    o = b;
+  }
+}
+

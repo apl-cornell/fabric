@@ -1,0 +1,33 @@
+package system;
+
+import fabric.util.*;
+import fabric.io.*;
+
+public class FileSystem01 {
+  static String key = "FileSystem01";
+  public static class Init {
+    public static void main(String[] args) {
+      atomic {
+        Core c = Client.getClient().getCore("core0");
+        Map root = (Map) c.getRoot();
+  
+        FabDirectory fd = new FabDirectory@c();
+        root.put(key, fd);
+      }
+      System.out.println("TEST PASSED.");
+    }
+  }
+
+  public static class Run {
+    public static void main(String[] args) {
+      atomic {
+        Core c = Client.getClient().getCore("core0");
+        Map root = (Map) c.getRoot();
+  
+        FabDirectory fd = (FabDirectory) root.get(key);
+        fd.selfDestruct();
+      }
+      System.out.println("TEST PASSED.");
+    }
+  }
+}

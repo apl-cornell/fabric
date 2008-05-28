@@ -1,8 +1,0 @@
-package regression;
-
-public class StmtExpr01 {
-  void m() {
-    new StmtExpr01();
-  }
-}
-

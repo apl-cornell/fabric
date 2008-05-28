@@ -1,8 +1,0 @@
-package regression;
-
-public class This01 {
-  void m(Object o) {
-    this.m(this);
-  }
-}
-
