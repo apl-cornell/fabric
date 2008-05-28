@@ -8,6 +8,7 @@ import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -24,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.util.Streams;
 import org.w3c.dom.Document;
 
 import cms.www.util.*;
@@ -1577,10 +1579,32 @@ public class AccessController extends HttpServlet {
     else if (action.equals(ACT_DOWNLOAD)) {
       buildURL = FORBIDDEN_URL; // default unless valid & authorized
       try {
-        int type = Integer.parseInt(request.getParameter(P_DOWNLOADTYPE));
-        long id = Util.parseLong(request.getParameter(P_ID));
-        if (transactions.authorizeDownload(user, id, type)) {
-          sendFile(id, type, response);
+        int  type = Integer.parseInt(request.getParameter(P_DOWNLOADTYPE));
+        String id = request.getParameter(P_ID);
+        CMSRoot database = xmlBuilder.getDatabase();
+        FileEntry entry = null;
+        switch (type) {
+        case XMLBuilder.T_SOLFILE:
+          entry = database.getSolutionFile(id);
+          break;
+        case XMLBuilder.T_ITEMFILE:
+          entry = database.getAssignmentItem(id).getAssignmentFile();
+          break;
+        case XMLBuilder.T_FILEFILE:
+          entry = database.getAssignmentFile(id);
+          break;
+        case XMLBuilder.T_GROUPFILE:
+          entry = database.getSubmittedFile(id);
+          break;
+        case XMLBuilder.T_CATFILE:
+          entry = database.getCategoryContentsFileEntry(id);
+          break;
+        case XMLBuilder.T_COMMENTFILE:
+          entry = database.getCommentFile(id);
+          break;
+        }
+        if (entry.isFileAuthorized(user)) {
+          sendFile(entry.getFile(), response);
           buildURL = null;
           xml = null;
         }
@@ -2843,37 +2867,12 @@ public class AccessController extends HttpServlet {
     return result;
   }
   
-  private void sendFile(long id, int type, HttpServletResponse response)
+  private void sendFile(FileData file, HttpServletResponse response)
       throws IOException, IllegalArgumentException {
-    DownloadFile file = null;
-    try {
-      file = transactions.getJavaFile(id, type);
-    } catch (Exception e) {
-      throw new IOException(e.getMessage());
-    }
     response.setContentType("application/download");
     response.setHeader("Content-disposition", "attachment; filename=\""
-        + file.getDownloadName() + "\"");
-    BufferedInputStream bis = null;
-    BufferedOutputStream bos = null;
-    FileInputStream fis = null;
-    try {
-      fis = new FileInputStream(file);
-      bis = new BufferedInputStream(fis);
-      bos = new BufferedOutputStream(response.getOutputStream());
-      byte[] buff = new byte[2048];
-      int bytesread;
-      while (-1 != (bytesread = bis.read(buff, 0, buff.length))) {
-        bos.write(buff, 0, bytesread);
-      }
-    } catch (final IOException e) {
-      System.out.println("IOException.");
-      throw e;
-    } finally {
-      if (bis != null) bis.close();
-      if (bos != null) bos.close();
-      if (fis != null) fis.close();
-    }
+        + file.getName() + "\"");
+    Streams.copy(file.read(), new BufferedOutputStream(response.getOutputStream()), true);
   }
 }
 

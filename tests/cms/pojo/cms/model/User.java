@@ -176,6 +176,11 @@ public class User implements Principal {
     // TODO Auto-generated method stub
     return false;
   }
+  public boolean canView(SolutionFile sol) {
+    // TODO Auto-generated method stub
+    // See TransactionHandler.authorizeDownload
+    return false;
+  }
 }
 
 /*

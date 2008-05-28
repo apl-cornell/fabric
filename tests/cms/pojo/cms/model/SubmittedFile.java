@@ -2,7 +2,7 @@ package cms.model;
 
 import java.util.Date;
 
-public class SubmittedFile {
+public class SubmittedFile implements FileEntry {
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -62,6 +62,11 @@ public class SubmittedFile {
     setFileType(fileType);
     setLateSubmission(lateSubmission);
     setFile(file);
+  }
+  public boolean isFileAuthorized(User user) {
+    // TODO Auto-generated method stub
+    // See TransactionHandler.authorizeDownload
+    return false;
   }
 }
 

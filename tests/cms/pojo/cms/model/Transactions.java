@@ -1,5 +1,6 @@
 package cms.model;
 
+import java.util.Collection;
 import java.util.Date;
 
 public class Transactions {
@@ -28,6 +29,16 @@ public class Transactions {
   }
 
   public boolean editSiteNotice(User p, SiteNotice id, String text, Date exp, boolean hidden, boolean deleted) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  public boolean addRegradeRequest(User p, Group group, Collection subProblems, String requestText) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  public boolean assignGrader(User p, Assignment assign, SubProblem subProblem, User grader, Collection groups) {
     // TODO Auto-generated method stub
     return false;
   }

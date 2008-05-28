@@ -29,6 +29,7 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.fileupload.util.Streams;
 // import org.apache.crimson.jaxp.DocumentBuilderFactoryImpl;
 import javax.xml.parsers.DocumentBuilderFactory; // java 5 replacement for
                                                   // DocumentBuilderFactoryImpl
@@ -254,14 +255,7 @@ public class TransactionHandler {
     
     InputStream  in  = item.openStream();
     OutputStream out = result.write();
-    for (int i = 0; i < AccessController.maxFileSize; i++) {
-      int next = in.read();
-      if (next == -1)
-        break;
-      if (i == AccessController.maxFileSize) 
-        throw new UploadTooBigException();
-      out.write(next);
-    }
+    Streams.copy(in, out, true);
     out.close();
     
     
@@ -277,16 +271,7 @@ public class TransactionHandler {
    * @throws IOException if the FileItemStream can't be read for any reason.
    */
   private String getString(FileItemStream item) throws IOException {
-    String result = null;
-    if (item.isFormField()) {
-      StringBuilder builder = new StringBuilder();
-      InputStream   stream  = item.openStream();
-      int next;
-      while ((next = stream.read()) != -1)
-        builder.append((char) next);
-      result = builder.toString();
-    }    
-    return result;
+    return Streams.asString(item.openStream());
   }
 
   /**
@@ -545,34 +530,15 @@ public class TransactionHandler {
           String[] vals = field.split("_");
           Group group = database.getGroup(vals[1]);
           RequiredSubmission submission = database.getRequiredSubmission(vals[2]);
-          String fileName = FileUtil.trimFilePath(item.getName());
-          String[] splitName = FileUtil.splitFileNameType(fileName);
+          String fileName    = FileUtil.trimFilePath(item.getName());
+          String extension   = fileName.substring(fileName.lastIndexOf("."));
           if (fileName.equals("")) {
             continue;
           }
-          int fileCounter = transactions.getGroupFileCounter(group);
-          java.io.File path, file;
           Assignment assign = isAssign ? assignment : group.getAssignment();
-          file =
-              new java.io.File(FileUtil.getSubmittedFileSystemPath(course,
-                  assign, group, fileCounter, submission, splitName[1]));
-          path = file.getParentFile();
-          if (path.exists() || !path.mkdirs()) {
-            result
-                .addError("Could not get unique path for new submitted file.");
-            continue;
-          }
-          if (!file.createNewFile()) {
-            result
-                .addError("Could not create a new file location on the local file system.");
-            continue;
-          }
-          String MD5 = FileUtil.calcMD5(item);
-          item.write(file);
-          data.addSubmittedFile(assign, fileName, new SubmittedFile(0,
-              group, group, p, submission, null, splitName[1],
-              (int) item.getSize(), MD5, false, /* pathname */path
-                  .getAbsolutePath()));
+          FileData file = downloadFile(item);
+          group.addSubmittedFile(new SubmittedFile(group, group, p, submission, extension,
+              false, null/* date */, file));
         } else if (field.startsWith(AccessController.P_REGRADERESPONSE)) {
           String[] vals = field.split("_");
           RegradeRequest regrade = database.getRegradeRequest(vals[1]);
@@ -610,12 +576,9 @@ public class TransactionHandler {
        * or missing, but just in case)
        */
       if (isAssign && !p.isAdminPrivByCourse(assignment.getCourse())) {
-        Assignment assign =
-            database.assignmentHome().findByAssignment(data);
         if (assign.getAssignedGraders()) {
           boolean permission =
-              database.assignedToGroups(data, p.getNet(), groups).size() == groups
-                  .size();
+              database.assignedToGroups(data, p.getNet(), groups).size() == groups.size();
           HashSet canGrades = new HashSet();
           Iterator assignTos =
               database.groupAssignedToHome().findByNetAssignment(
@@ -632,8 +595,7 @@ public class TransactionHandler {
                 permission && canGrades.contains(groupid + "_" + subprobid);
           }
           if (!permission) {
-            result
-                .addError("Permission violation: You are not allowed to set these grades");
+            result.addError("Permission violation: You are not allowed to set these grades");
           }
         }
       }
@@ -724,30 +686,20 @@ public class TransactionHandler {
         String parameter = (String) e.nextElement();
         if (parameter.startsWith(AccessController.P_REGRADESUB)) {
           String subProb = parameter.split(AccessController.P_REGRADESUB)[1];
-          subProblems.add(new Long(database.getSubProblem(subProb)));
+          subProblems.add(database.getSubProblem(subProb));
         } else if (parameter.equals(AccessController.P_REGRADEREQUEST)) {
           requestText = request.getParameter(parameter);
         }
       }
-      if (request.getParameter(AccessController.P_REGRADEWHOLE) != null) { // assignment
-                                                                            // doesn't
-                                                                            // have
-                                                                            // subProblems
-        subProblems.add(new Long(0));
-        if (!transactions.addRegradeRequest(p, group, subProblems,
-            requestText)) {
-          result.addError("Unexpected error; regrade could not be committed");
-        }
-      } else { // assignment has subProblems
-        if (subProblems.size() == 0) {
-          result
-              .addError("Please check the problems you would like to submit request for");
-        } else {
-          if (!transactions.addRegradeRequest(p, group, subProblems,
-              requestText)) {
-            result.addError("Unexpected error; regrade could not be committed");
-          }
-        }
+      if (request.getParameter(AccessController.P_REGRADEWHOLE) != null) {         
+        subProblems = null;
+      } else if (subProblems.size() == 0) {
+        result.addError("Please check the problems you would like to submit request for");
+        return result;
+      }
+      
+      if (!transactions.addRegradeRequest(p, group, subProblems, requestText)) {
+        result.addError("Unexpected error; regrade could not be committed");
       }
     } catch (Exception e) {
       result.addError("Unexpected error; failed to submit regrade request");
@@ -775,8 +727,7 @@ public class TransactionHandler {
         String list = null;
         DiskFileUpload upload = new DiskFileUpload();
         List info =
-            upload.parseRequest(request, 1024, AccessController.maxFileSize,
-                FileUtil.TEMP_DIR);
+            upload.parseRequest(request, 1024, AccessController.maxFileSize);
         Iterator i = info.iterator();
         while (i.hasNext()) {
           FileItem item = (FileItem) i.next();
@@ -836,33 +787,16 @@ public class TransactionHandler {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Map probids = database.getSubProblemMap(assign);
-      Long probid;
-      if (subproblemName.equalsIgnoreCase(GroupAssignedTo.ALLPARTS)) {
-        // -1 signifies that this grader should be assigned to all SubProblems
-        probid = new Long(-1);
-      } else if (subproblemName == null) {
-        // 0 signifies that there are no sub problems for this assignment
-        probid = new Long(0);
-      } else {
-        probid = (Long) probids.get(subproblemName);
-        if (probid == null)
-          throw new FinderException("Subproblem  not in map");
-      }
-      long subProblem = probid.longValue();
       Collection groups = new LinkedList();
       Iterator i = requestMap.keySet().iterator();
       while (i.hasNext()) {
         String key = (String) i.next();
         if (key.startsWith(AccessController.P_GRADEGROUP)) {
-          groups.add(new Long(database.getGroup(key
-              .split(AccessController.P_GRADEGROUP)[1])));
+          groups.add(database.getGroup(key.split(AccessController.P_GRADEGROUP)[1]));
         }
       }
       if (groups.size() > 0) {
-        boolean success =
-            transactions.assignGrader(p, assignment, subProblem, grader
-                .toLowerCase(), groups);
+        boolean success = transactions.assignGrader(p, assign, subProblem, grader, groups);
         if (!success) {
           result.addError("Database failed to update TA grading assignment");
         } else {
@@ -876,257 +810,6 @@ public class TransactionHandler {
       result.addError("Database failed to update TA grading assignment");
     }
     return result;
-  }
-
-  /**
-   * Returns true only if the given principal has authorization to download the
-   * given file
-   * 
-   * @param p
-   *          The User to authorize
-   * @param 
-   *          The  of the file to check
-   * @param type
-   *          The type of the file to check
-   * @return True if the given User has access to download the given file
-   */
-  public boolean authorizeDownload(User p, long id, int type) {
-    try {
-      Assignment a = null;
-      Group g = null;
-      Course c = null;
-      switch (type) {
-      case XMLBuilder.T_SOLFILE:
-        SolutionFile sf = null;
-        try {
-          sf =
-              database.solutionFileHome().findByPrimaryKey(
-                  new SolutionFilePK(id));
-        } catch (Exception e) {
-        }
-        if (sf == null) return false;
-        try {
-          a =
-              database.assignmentHome()
-                  .findByAssignment(sf.getAssignment());
-        } catch (Exception e) {
-        }
-        if (a == null) return false;
-        try {
-          c =
-              database.courseHome().findByPrimaryKey(
-                  new CoursePK(a.getCourse()));
-        } catch (Exception e) {
-        }
-        if (c == null) return false;
-        if (p.isStaffInCourseByCourse(a.getCourse())) {
-          return true;
-        } else if (p.isStudentInCourseByCourse(a.getCourse())) {
-          if (a.getShowSolution()) {
-            return a.getStatus().equals(Assignment.CLOSED)
-                || a.getStatus().equals(Assignment.GRADED);
-          }
-          Collection grades =
-              database.gradeHome().findMostRecentByNetAssignment(
-                  p.getNet(), a.getAssignment());
-          return a.getStatus().equals(Assignment.GRADED)
-              && grades.size() > 0;
-        } else if (c.getSolutionCCAccess() && p.isAuthenticated()) {
-          return a.getStatus().equals(Assignment.GRADED);
-        } else if (c.getSolutionGuestAccess() && p.isGuest()) {
-          return a.getStatus().equals(Assignment.GRADED);
-        } else {
-          return false;
-        }
-      case XMLBuilder.T_CATFILE:
-        CategoryFile cf = null;
-        try {
-          cf =
-              database.categoryFileHome().findByPrimaryKey(
-                  new CategoryFilePK(id));
-        } catch (Exception e) {
-        }
-        if (cf == null) return false;
-        if (cf.getFileName() == null || cf.getFileName().length() == 0) // there's
-                                                                        // a
-                                                                        // label
-                                                                        // but
-                                                                        // no
-                                                                        // actual
-                                                                        // file
-          return false;
-        CategoryContents ct = null;
-        try {
-          ct =
-              database.categoryContentsHome().findByPrimaryKey(
-                  new CategoryContentsPK(cf.getContent()));
-        } catch (Exception e) {
-        }
-        if (ct == null) return false;
-        CategoryRow cr = null;
-        try {
-          cr =
-              database.categoryRowHome().findByPrimaryKey(
-                  new CategoryRowPK(ct.getRow()));
-        } catch (Exception e) {
-        }
-        if (cr == null) return false;
-        Category cg = null;
-        try {
-          cg =
-              database.categoryHome().findByPrimaryKey(
-                  new CategoryPK(cr.getCategory()));
-        } catch (Exception e) {
-        }
-        if (cg == null) return false;
-        switch (cg.getAuthorzn()) {
-        case User.AUTHOR_GUEST:
-          return true;
-        case User.AUTHOR_CORNELL_COMMUNITY:
-          return p.isAuthenticated();
-        case User.AUTHOR_STUDENT:
-          return p.isStudentInCourseByCourse(cg.getCourse())
-              || p.isStaffInCourseByCourse(cg.getCourse());
-        default:
-          return p.isStaffInCourseByCourse(cg.getCourse());
-        }
-      case XMLBuilder.T_COMMENTFILE:
-        CommentFile cmf = null;
-        try {
-          cmf =
-              database.commentFileHome()
-                  .findByPrimaryKey(new CommentFilePK(id));
-        } catch (Exception e) {
-        }
-        if (cmf == null) return false;
-        Comment cm = null;
-        try {
-          cm =
-              database.commentHome().findByPrimaryKey(
-                  new CommentPK(cmf.getComment()));
-        } catch (Exception e) {
-        }
-        if (cm == null) return false;
-        try {
-          g = database.groupHome().findByGroup(cm.getGroup());
-        } catch (Exception e) {
-        }
-        if (g == null) return false;
-        try {
-          a = database.assignmentHome().findByAssignment(g.getAssignment());
-        } catch (Exception e) {
-        }
-        if (a == null) return false;
-        if (p.isAdminPrivByCourse(a.getCourse())) {
-          return true;
-        } else if (p.isGradesPrivByCourse(a.getCourse())) {
-          if (a.getAssignedGraders()) {
-            Iterator ats =
-                database.groupAssignedToHome().findByGroup(g.getGroup())
-                    .iterator();
-            boolean isAssigned = false;
-            while (ats.hasNext()) {
-              GroupAssignedTo gt = (GroupAssignedTo) ats.next();
-              isAssigned =
-                  isAssigned || gt.getNet().equalsIgnoreCase(p.getNet());
-            }
-            return isAssigned;
-          } else {
-            return true;
-          }
-        } else if (p.isStudentInCourseByCourse(a.getCourse())) {
-          GroupMember gm = null;
-          try {
-            gm =
-                database.groupMemberHome().findByPrimaryKey(
-                    new GroupMemberPK(g.getGroup(), p.getNet()));
-          } catch (Exception e) {
-          }
-          return gm != null && gm.getStatus().equals(GroupMember.ACTIVE);
-        } else {
-          return false;
-        }
-      case XMLBuilder.T_FILEFILE:
-        AssignmentFile af = null;
-        try {
-          af =
-              database.assignmentFileHome().findByPrimaryKey(
-                  new AssignmentFilePK(id));
-        } catch (Exception e) {
-        }
-        if (af == null) return false;
-        id = af.getAssignmentItem();
-      case XMLBuilder.T_ITEMFILE:
-        AssignmentItem ai = null;
-        try {
-          ai =
-              database.assignmentItemHome().findByPrimaryKey(
-                  new AssignmentItemPK(id));
-        } catch (Exception e) {
-        }
-        if (ai == null) return false;
-        try {
-          a =
-              database.assignmentHome()
-                  .findByAssignment(ai.getAssignment());
-        } catch (Exception e) {
-        }
-        if (a == null) return false;
-        try {
-          c =
-              database.courseHome().findByPrimaryKey(
-                  new CoursePK(a.getCourse()));
-        } catch (Exception e) {
-        }
-        if (c == null) return false;
-        if (p.isStaffInCourseByCourse(a.getCourse())) {
-          return true;
-        } else if (p.isStudentInCourseByCourse(a.getCourse())) {
-          return !(a.getHidden() || a.getStatus().equals(Assignment.HIDDEN));
-        } else if (c.getAssignCCAccess() && p.isAuthenticated()) {
-          return !(a.getHidden() || a.getStatus().equals(Assignment.HIDDEN));
-        } else if (c.getAssignGuestAccess() && p.isGuest()) {
-          return !(a.getHidden() || a.getStatus().equals(Assignment.HIDDEN));
-        } else {
-          return false;
-        }
-      case XMLBuilder.T_GROUPFILE:
-        SubmittedFile sbf = null;
-        try {
-          sbf =
-              database.submittedFileHome().findByPrimaryKey(
-                  new SubmittedFilePK(id));
-        } catch (Exception e) {
-        }
-        if (sbf == null) return false;
-        try {
-          g = database.groupHome().findByGroup(sbf.getGroup());
-        } catch (Exception e) {
-        }
-        if (g == null) return false;
-        try {
-          a = database.assignmentHome().findByAssignment(g.getAssignment());
-        } catch (Exception e) {
-        }
-        if (a == null) return false;
-        if (p.isAdminPrivByCourse(a.getCourse())) {
-          return true;
-        } else if (p.isGradesPrivByCourse(a.getCourse())) {
-          if (a.getAssignedGraders()) {
-            Vector gid = new Vector();
-            gid.add(new Long(g.getGroup()));
-            return database.isAssignedTo(p.getNet(), gid);
-          } else {
-            return true;
-          }
-        } else {
-          return false;
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return false;
   }
 
   /**
@@ -1992,61 +1675,6 @@ public class TransactionHandler {
     props.put(InitialContext.PROVIDER_URL, "jnp://localhost:1099");
     InitialContext ic = new InitialContext(props);
     return ic;
-  }
-
-  /**
-   * Returns a DownloadFile object representing a file on the CMS system
-   * 
-   * @param id
-   *           of the file; relative to specified type
-   * @param type
-   *          Specifies type of file to search database for; see T_* fields in
-   *          this class for valid types.
-   * @return representation of the file on the CMS system
-   * @throws RemoteException
-   *           Database Error
-   * @throws IllegalArgumentException
-   *           Undefined type given
-   */
-  public DownloadFile getJavaFile(long id, int type)
-      throws  RemoteException, IllegalArgumentException {
-    switch (type) {
-    case XMLBuilder.T_SOLFILE:
-      SolutionFile sf =
-          database.solutionFileHome().findByPrimaryKey(new SolutionFilePK(id));
-      return new DownloadFile(sf.getPath(), sf.getFileName());
-    case XMLBuilder.T_ITEMFILE:
-      AssignmentItem ai =
-          database.assignmentItemHome().findByPrimaryKey(
-              new AssignmentItemPK(id));
-      AssignmentFile af = ai.getAssignmentFile();
-      return new DownloadFile(af.getPath(), af.getFileName(), af.getItemName());
-    case XMLBuilder.T_FILEFILE:
-      af =
-          database.assignmentFileHome().findByPrimaryKey(
-              new AssignmentFilePK(id));
-      return new DownloadFile(af.getPath(), af.getFileName(), af.getItemName());
-    case XMLBuilder.T_GROUPFILE:
-      SubmittedFile mf =
-          database.submittedFileHome()
-              .findByPrimaryKey(new SubmittedFilePK(id));
-      RequiredSubmission sub =
-          database.requiredSubmissionHome().findByPrimaryKey(
-              new RequiredSubmissionPK(mf.getSubmission()));
-      String fileName = mf.appendFileType(sub.getSubmissionName());
-      return new DownloadFile(mf.getPath(), mf.appendFileType(String.valueOf(mf
-          .getSubmission())), fileName);
-    case XMLBuilder.T_CATFILE:
-      CategoryFile ctgFile =
-          database.categoryFileHome().findByPrimaryKey(new CategoryFilePK(id));
-      return new DownloadFile(ctgFile.getPath(), ctgFile.getFileName());
-    case XMLBuilder.T_COMMENTFILE:
-      CommentFile commentFile =
-          database.commentFileHome().findByPrimaryKey(new CommentFilePK(id));
-      return new DownloadFile(commentFile.getPath(), commentFile.getFileName());
-    default:
-      throw new IllegalArgumentException("Invalid file type");
-    }
   }
 
   /**

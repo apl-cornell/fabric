@@ -1,6 +1,6 @@
 package cms.model;
 
-public class SolutionFile {
+public class SolutionFile implements FileEntry {
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -34,6 +34,11 @@ public class SolutionFile {
     setAssignment(assign);
     setHidden(hidden);
     setFile(data);
+  }
+  public boolean isFileAuthorized(User user) {
+    // TODO Auto-generated method stub
+    //  See TransactionHandler.authorizeDownload
+    return false;
   }
 }
 

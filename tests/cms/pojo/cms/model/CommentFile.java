@@ -1,42 +1,34 @@
 package cms.model;
 
-import java.util.Date;
+public class CommentFile implements FileEntry {
 
-public class AssignmentFile implements FileEntry {
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private Date           fileDate;
-  private FileData       file;
-  private AssignmentItem assignmentItem;
-  private boolean        hidden;
+  private Comment  comment;
+  private FileData file;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setFile           (final FileData file)                 { this.file           = file;           }
-  public void setFileDate       (final Date fileDate)                 { this.fileDate       = fileDate;       }
-  public void setAssignmentItem (final AssignmentItem assignmentItem) { this.assignmentItem = assignmentItem; }
-  public void setHidden         (final boolean hidden)                { this.hidden         = hidden;         }
+  public void setComment  (final Comment comment)  { this.comment  = comment;  }
+  public void setFile     (final FileData file)    { this.file     = file;     }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public FileData       getFile()           { return this.file;           }
-  public Date           getFileDate()       { return this.fileDate;       }
-  public AssignmentItem getAssignmentItem() { return this.assignmentItem; }
-  public boolean        getHidden()         { return this.hidden;         }
+  public Comment  getComment()  { return this.comment;  }
+  public FileData getFile()     { return this.file;     }
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public AssignmentFile(AssignmentItem item, boolean isHidden, FileData file) {
-    setAssignmentItem(item);
-    setFileDate(new Date());
+  public CommentFile(Comment comment, FileData file) {
+    setComment(comment);
     setFile(file);
   }
   public boolean isFileAuthorized(User user) {
