@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
  * Encapsulates a list of locks. This is a linked list where the list nodes are
  * exposed for performance.
  */
-class LockList<T> implements Iterable<T> {
+final class LockList<T> implements Iterable<T> {
   public static class Node<T> {
     T data;
     Node<T> prev;

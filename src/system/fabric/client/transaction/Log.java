@@ -231,13 +231,15 @@ public final class Log {
       }
     }
 
-    for (Pair<LockList.Node<Log>, ReadMapEntry> entry : readsReadByParent) {
+    int size = readsReadByParent.size();
+    for (int i = 0; i < size; i++) {
+      Pair<LockList.Node<Log>, ReadMapEntry> entry = readsReadByParent.get(i);
       entry.second.releaseLock(entry.first);
     }
 
     // Merge writes and transfer write locks.
     List<$Impl> parentWrites = parent.writes;
-    int size = writes.size();
+    size = writes.size();
     for (int i = 0; i < size; i++) {
       $Impl obj = writes.get(i);
       synchronized (obj) {

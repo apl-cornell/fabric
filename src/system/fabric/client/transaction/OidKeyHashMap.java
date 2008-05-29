@@ -12,7 +12,7 @@ import fabric.common.util.LongKeyMap;
 /**
  * A map keyed on OIDs.
  */
-class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
+final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   Map<Core, LongKeyMap<V>> map;
 
   OidKeyHashMap() {

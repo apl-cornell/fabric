@@ -1,5 +1,3 @@
-// TODO check lock ordering
-
 package fabric.client.transaction;
 
 import java.util.*;
