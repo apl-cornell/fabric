@@ -311,12 +311,10 @@ public final class TransactionManager {
   }
 
   public void registerRead($Impl obj) {
-    // Nothing to do if we're not in a transaction.
-    if (current == null) return;
-
     synchronized (obj) {
-      // Nothing to do if the object's $reader is us.
-      if (obj.$reader == current) return;
+      // Nothing to do if the object's $reader is us or we're not in a
+      // transaction.
+      if (obj.$reader == current || current == null) return;
 
       // Make sure we're not supposed to abort.
       checkAbortSignal();

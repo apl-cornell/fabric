@@ -35,7 +35,7 @@ public final class Log {
    * A flag indicating whether this transaction should abort. This flag should
    * be checked before each operation.
    */
-  boolean abortSignal;
+  volatile boolean abortSignal;
 
   /**
    * Maps OIDs to <code>readMap</code> entries for objects read in this
