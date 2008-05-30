@@ -2,30 +2,16 @@ package fabric.client;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.Principal;
-import java.security.UnrecoverableKeyException;
+import java.security.*;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509KeyManager;
+import javax.net.ssl.*;
 
 import com.sun.org.apache.xalan.internal.xsltc.cmdline.getopt.GetOpt;
 
@@ -339,24 +325,7 @@ public class Client {
     TransactionManager.getInstance().commitTransaction();
 
     try {
-      main.invoke(null, argsProxy);
-    } catch (InvocationTargetException e) {
-      Throwable cause = e.getCause();
-      // Trim the stack trace to omit stuff dealing with the client framework.
-      List<StackTraceElement> trace = new ArrayList<StackTraceElement>();
-      for (StackTraceElement elt : cause.getStackTrace())
-        trace.add(elt);
-
-      for (ListIterator<StackTraceElement> it =
-          trace.listIterator(trace.size()); it.hasPrevious();) {
-        StackTraceElement elt = it.previous();
-        if (elt.getClassName().equals(opts.main[0] + "$$Impl")) break;
-        it.remove();
-      }
-
-      StackTraceElement[] traceArray = new StackTraceElement[trace.size()];
-      cause.setStackTrace(trace.toArray(traceArray));
-      throw cause;
+      MainThread.invoke(opts, main, argsProxy);
     } finally {
       c.shutdown();
     }
@@ -383,7 +352,7 @@ public class Client {
     return opts;
   }
 
-  private static class Options {
+  static class Options {
 
     public static final String OPTS = "n:";
 

@@ -86,7 +86,7 @@ public final class TransactionManager {
         synchronized (readMap) {
           // Make sure we still have the right entry.
           if (result != readMap.get(ref.core, ref.onum)) continue;
-          
+
           result.obj = impl.$ref;
           result.pinCount++;
           int ver = impl.$getVersion();
@@ -105,21 +105,31 @@ public final class TransactionManager {
     }
   }
 
-  private static final ThreadLocal<TransactionManager> instance =
-      new InheritableThreadLocal<TransactionManager>() {
-        @Override
-        protected TransactionManager childValue(TransactionManager parentValue) {
-          return new TransactionManager(parentValue);
-        }
-
-        @Override
-        protected TransactionManager initialValue() {
-          return new TransactionManager();
-        }
-      };
+  private static final Map<Thread, TransactionManager> instanceMap =
+      new WeakHashMap<Thread, TransactionManager>();
 
   public static TransactionManager getInstance() {
-    return instance.get();
+    Thread thread = Thread.currentThread();
+
+    if (thread instanceof FabricThread) {
+      FabricThread ft = (FabricThread) thread;
+      TransactionManager result = ft.getTransactionManager();
+      if (result == null) {
+        result = new TransactionManager();
+        ft.setTransactionManager(result);
+      }
+      return result;
+    }
+
+    synchronized (instanceMap) {
+      TransactionManager result = instanceMap.get(thread);
+      if (result == null) {
+        result = new TransactionManager();
+        instanceMap.put(thread, result);
+      }
+
+      return result;
+    }
   }
 
   private TransactionManager() {
@@ -127,7 +137,8 @@ public final class TransactionManager {
   }
 
   /**
-   * A copy constructor.
+   * Creates a transaction manager that is a child of the given transaction
+   * manager.
    */
   private TransactionManager(TransactionManager tm) {
     this.current = tm.current;
@@ -424,18 +435,35 @@ public final class TransactionManager {
   }
 
   /**
-   * Registers that a new thread has been started.
+   * Registers the given thread with the current transaction and starts it
+   * running.
    */
-  public void registerThread(Thread thread) {
-    synchronized (current.threads) {
-      current.threads.add(thread);
+  public void startThread(Thread thread) {
+    TransactionManager child = new TransactionManager(this);
+    
+    if (thread instanceof FabricThread) {
+      ((FabricThread) thread).setTransactionManager(child);
+    } else {
+      synchronized (instanceMap) {
+        instanceMap.put(thread, child);
+      }
     }
+
+    if (current != null) {
+      synchronized (current.threads) {
+        current.threads.add(thread);
+      }
+    }
+
+    thread.start();
   }
 
   /**
-   * Registers that a thread has finished.
+   * Registers that the given thread has finished.
    */
   public void deregisterThread(Thread thread) {
+    if (current == null) return;
+
     synchronized (current.threads) {
       current.threads.remove(thread);
     }
