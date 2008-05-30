@@ -43,6 +43,7 @@ import cms.www.util.CSVParseException;
 import cms.www.util.DateTimeUtil;
 import cms.www.util.DownloadFile;
 import cms.www.util.Emailer;
+import cms.www.util.FileUtil;
 import cms.www.util.Profiler;
 import cms.www.util.StringUtil;
 import cms.www.util.Util;
@@ -246,11 +247,7 @@ public class TransactionHandler {
   }
 
   private FileData downloadFile(FileItemStream item) throws IOException {
-    String fileName = item.getName();
-    // strip off any directory names that may have been sent by the browser
-    fileName = fileName.substring(fileName.lastIndexOf("/"));
-    fileName = fileName.substring(fileName.lastIndexOf("\\"));
-    
+    String fileName = FileUtil.trimFilePath(item.getName());
     FileData result = new FileData(fileName);
     
     InputStream  in  = item.openStream();
@@ -727,7 +724,7 @@ public class TransactionHandler {
         String list = null;
         DiskFileUpload upload = new DiskFileUpload();
         List info =
-            upload.parseRequest(request, 1024, AccessController.maxFileSize);
+            upload.parseRequest(request, 1024, AccessController.maxFileSize, null);
         Iterator i = info.iterator();
         while (i.hasNext()) {
           FileItem item = (FileItem) i.next();
@@ -752,7 +749,7 @@ public class TransactionHandler {
           return result;
         }
         if (isList) {
-          netids.addAll(StringUtil.parseNetList(list));
+          netids.addAll(StringUtil.parseNetIDList(list));
         } else // isFile
         {
           InputStream stream = file.getInputStream();
@@ -769,8 +766,10 @@ public class TransactionHandler {
         result =
             transactions.addStudentsToCourse(pr, netids, course, emailOn);
       }
+    } catch (UploadTooBigException e) {
+      result.addError("Upload is too big", e);
     } catch (FileUploadException e) {
-      result.addError(FileUtil.checkFileException(e));
+      result.addError(e.getMessage(), e);
     } catch (Exception e) {
       e.printStackTrace();
       result.addError("Unexpected error; could not add students");
@@ -1090,20 +1089,17 @@ public class TransactionHandler {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Map subProbMap = database.getSubProblemMap(assignment);
-      Map groups = database.getGroupMap(assignment);
       boolean checkCanGrade =
           !p.isAssignPrivByAssignment(assignment)
               && assignment.getAssignedGraders();
       if (checkCanGrade) {
         String[] header = (String[]) table.get(0);
         long[] subProbs = new long[header.length - 1];
-        String grader = p.getNet();
-
+        
         int[] colsFound = CSVFileFormatsUtil.parseColumnNamesFlexibly(header);
         int netIndex =
             CSVFileFormatsUtil.getFlexibleColumnNum(colsFound,
-                CSVFileFormatsUtil.NET);
+                CSVFileFormatsUtil.NETID);
 
         for (int i = 0; i < header.length; i++) {
           if (i != netIndex) {
@@ -1114,16 +1110,16 @@ public class TransactionHandler {
         }
 
         HashSet canGrades = new HashSet();
-        Iterator assignTos =
-            database.groupAssignedToHome().findByNetAssignment(
-                p.getNet(), assignment).iterator();
+        Iterator assignTos = assignment.getGroupAssignedTos().iterator();
         while (assignTos.hasNext()) {
           GroupAssignedTo a = (GroupAssignedTo) assignTos.next();
-          canGrades.add(a.getGroup() + "_" + a.getSubProblem());
+          if (a.getUser() == p)
+            canGrades.add(a.getGroup() + "_" + a.getSubProblem());
         }
+        
         for (int i = 1; i < table.size(); i++) {
           String[] data = (String[]) table.get(i);
-          String netid = (String) data[netIndex];
+          String netid = data[netIndex];
           Group group = ((Long) groups.get(netid)).longValue();
           for (int j = 0; j < data.length; j++) {
             if (j != netIndex) {
@@ -1679,58 +1675,29 @@ public class TransactionHandler {
   private Collection getUploadedFiles(User user, HttpServletRequest request,
       boolean isLate) throws FileUploadException {
     Profiler.enterMethod("TransactionHandler.getUploadedFiles", "");
-    DiskFileUpload upload = new DiskFileUpload();
+    ServletFileUpload upload = new ServletFileUpload();
     Collection result = new ArrayList();
-    java.io.File mkDir = new java.io.File(FileUtil.TEMP_DIR);
-    if (!mkDir.exists()) mkDir.mkdirs();
     try {
       Assignment assignment = database.getAssignment(request.getParameter(AccessController.P_ASSIGNID));
       Group group = assignment.findGroup(user);
-      List files =
-          upload.parseRequest(request, 1024, AccessController.maxFileSize,
-              FileUtil.TEMP_DIR);
-      Iterator i = files.iterator();
+      FileItemIterator i = upload.getItemIterator(request);
       while (i.hasNext()) {
-        FileItem file = (FileItem) i.next();
-        long submission =
-            database.getRequiredSubmission((file.getFieldName().split("file_"))[1]);
-        if (!file.getName().equals("")) {
-          String fullFileName = FileUtil.trimFilePath(file.getName()), givenFileName =
-              null, givenFileType = null;
-          String[] split = FileUtil.splitFileNameType(fullFileName);
-          givenFileName = split[0];
-          givenFileType = split[1];
-          RequiredSubmission submission =
-              database.requiredSubmissionHome().findByPrimaryKey(
-                  new RequiredSubmissionPK(submission));
-          RequiredFileTypeData match = submission.matchFileType(givenFileType);
+        FileItemStream item = i.next();
+        String name = item.getFieldName().split("file_")[1];
+        RequiredSubmission submission = database.getRequiredSubmission(name);
+        FileData file = downloadFile(item);
+        if (!item.getName().equals("")) {
+          String fullFileName  = FileUtil.trimFilePath(item.getName());
+          String[] split       = FileUtil.splitFileNameType(fullFileName);
+          String givenFileName = split[0];
+          String givenFileType = split[1];
+          
+          String match = submission.matchFileType(givenFileType);
           if (match == null)
             throw new FileUploadException("match fail:" + fullFileName);
-          if (file.getSize() / 1024 > submission.getMaxSize())
+          if ((file.getSize() >> 10) > submission.getMaxSize())
             throw new FileUploadException("size violation:" + fullFileName);
-          int fileCount = transactions.getGroupFileCounter(group.getGroup());
-          java.io.File movedFile, path;
-          movedFile =
-              new java.io.File(FileUtil.getSubmittedFileSystemPath(assignment
-                  .getCourse(), submission.getAssignment(), group
-                  .getGroup(), fileCount, match.getSubmission(), match
-                  .getFileType()));
-          path = movedFile.getParentFile();
-          if (path.exists())
-            throw new FileUploadException(
-                "Failed to create a unique file path for uploaded file.");
-          if (!path.mkdirs())
-            throw new FileUploadException(
-                "Failed to create new directory on the file system");
-          if (!movedFile.createNewFile()) {
-            throw new FileUploadException(
-                "System failed to accept submitted file");
-          }
-          String md5 = FileUtil.calcMD5(file);
-          file.write(movedFile);
-          result.add(new SubmissionInfo(submission.getRequiredSubmissionData(),
-              match.getFileType(), fileCount, md5, (int) file.getSize(),
-              fullFileName, isLate));
+          result.add(new SubmittedFile(group, group, user, submission, match, isLate, null, file));
         }
       }
     } catch (FileUploadException e) {
@@ -1806,14 +1773,14 @@ public class TransactionHandler {
           } else if (memInvited.getStatus().equalsIgnoreCase(GroupMember.ACTIVE)) {
             result.addError("This student is already a member of this group");
           } else {
-            if (transactions.inviteUser(p, invited, groupid)) {
+            if (transactions.inviteUser(inviter, invited, group)) {
               result.setValue("Invited " + invited.getNetID() + " to join the group");
             } else {
               result.addError("Database failed to invite student");
             }
           }
         } else {
-          if (transactions.inviteUser(p, invited, groupid)) {
+          if (transactions.inviteUser(inviter, invited, group)) {
             result.setValue("Invited " + invited.getNetID() + " to join the group");
           } else {
             result.addError("Database failed to invite student");
@@ -1840,7 +1807,6 @@ public class TransactionHandler {
   public TransactionResult leaveGroup(User p, Group group) {
     TransactionResult result = new TransactionResult();
     try {
-      String netid = p.getNet();
       Assignment assign = group == null ? null : group.getAssignment();
       if (group == null) {
         result.addError("Invalid group entered: does not exist");
@@ -1860,28 +1826,23 @@ public class TransactionHandler {
       }
       GroupMember member = null;
       try {
-        member =
-            database.groupMemberHome().findByPrimaryKey(
-                new GroupMemberPK(groupid, netid));
+        member = group.findGroupMember(p);
       } catch (Exception e) {
       }
       if (member == null || !member.getStatus().equals(GroupMember.ACTIVE)) {
         result.addError("Not an active member of this group");
       }
-      Collection grades =
-          database.gradeHome().findMostRecentByNetAssignment(netid,
-              assign.getAssignment());
+      Collection grades = assign.findMostRecentGrades(p);
       if (grades != null && grades.size() > 0) {
         result
             .addError("Cannot leave this group because grades have been entered");
       }
-      int numMembers =
-          database.groupMemberHome().findActiveByGroup(groupid).size();
+      int numMembers = group.findActiveMembers().size();
       if (numMembers < 2) {
         result.addError("Cannot leave a solo group");
       }
       if (!result.hasErrors()) {
-        if (transactions.leaveGroup(p, groupid)) {
+        if (transactions.leaveGroup(p, group)) {
           result.setValue("Successfully left group");
         } else {
           result.addError("Database failed to remove group member");

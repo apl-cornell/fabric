@@ -3,6 +3,7 @@ package cms.model;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Vector;
 
 import cms.www.TransactionResult;
 
@@ -59,5 +60,20 @@ public class Transactions {
   public TransactionResult commitFinalGradesFile(User p, Course course, List table) {
     // TODO Auto-generated method stub
     return null;
+  }
+
+  public TransactionResult addStudentsToCourse(User pr, Vector netids, Course course, boolean emailOn) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public boolean inviteUser(User inviter, User invited, Group group) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  public boolean leaveGroup(User p, Group group) {
+    // TODO Auto-generated method stub
+    return false;
   }
 }

@@ -53,6 +53,10 @@ public class RequiredSubmission {
     // TODO Auto-generated method stub
     return null;
   }
+  public String matchFileType(String givenFileType) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
 }
 
