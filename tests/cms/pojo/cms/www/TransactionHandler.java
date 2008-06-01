@@ -89,7 +89,7 @@ public class TransactionHandler {
    * other groups they are currently active in.
    * 
    * @param netid
-   *          The Net of the user
+   *          The NetID of the user
    * @param groupid
    *          The Group of the group to accept into
    * @return TransactionResult
@@ -150,7 +150,7 @@ public class TransactionHandler {
   }
 
   /**
-   * Add a current user's Net to the list of those given CMS admin access
+   * Add a current user's NetID to the list of those given CMS admin access
    * 
    * @return TransactionResult
    */
@@ -662,8 +662,6 @@ public class TransactionHandler {
    *           of the group
    * @param assign -
    *           of assignment regrade if for
-   * @param net -
-   *           of student submitting the regrade
    * @param request
    * @return TransactionResult
    */
@@ -854,7 +852,7 @@ public class TransactionHandler {
    *          The User of the user canceling this invitation (must be a
    *          member of the group in question)
    * @param canceled
-   *          The Net of the user to uninvite
+   *          The NetID of the user to uninvite
    * @param groupid
    *          The Group of the group
    * @return TransactionResult
@@ -1163,7 +1161,7 @@ public class TransactionHandler {
    * @param course
    *          The  of the particular course involved if any, else null
    * @param isClasslist
-   *          Whether we'll need to read but ignore a CU column (usually Net
+   *          Whether we'll need to read but ignore a CU column (usually NetID
    *          is used instead to identify records; the classlist format is a
    *          special case)
    * @return TransactionResult
@@ -1208,7 +1206,7 @@ public class TransactionHandler {
    * 
    * @param p
    * @param netids
-   *          A List of Strings in correct Net format
+   *          A List of Strings in correct NetID format
    * @param assignment
    * @return
    */
@@ -1222,13 +1220,6 @@ public class TransactionHandler {
         result.addError("You must specify at least two Nets");
         return result;
       }
-      Collection nonStudents =
-          database.getNonStudentNets(netids, ((assignment == null) ? 0
-              : assignment.getCourse()));
-      Collection nonSoloMembers =
-          database.getNonSoloGroupMembers(netids, assignment);
-      Collection gradedMembers =
-          database.getGradedStudents(netids, assignment);
       if (assignment == null) {
         result.addError("Assignment does not exist in the database");
         return result;
@@ -1237,27 +1228,46 @@ public class TransactionHandler {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
+      
+      // find students who can't be put into a group
+      Iterator i = netids.iterator();
+      Set nonStudents = new TreeSet(),
+          nonSolo     = new TreeSet(),
+          graded      = new TreeSet();
+      while (i.hasNext()) {
+        User    user    = (User) i.next();
+        if (assignment.getCourse().getStudent(user) == null)
+          nonStudents.add(user);
+        if (assignment.findActiveGroupMember(user) != null)
+          nonSolo.add(user);
+        if (!assignment.findMostRecentGrades(user).isEmpty())
+          graded.add(user);
+      }
+      
       if (nonStudents.size() > 0) {
         String error = Util.listUniqueElements(nonStudents);
-        error +=
-            (nonStudents.size() > 1 ? " are not students in this course or have been dropped"
-                : " is not a student in this course or has been dropped");
+        error += nonStudents.size() > 1
+            ? " are not students in this course or have been dropped"
+            : " is not a student in this course or has been dropped";
         result.addError(error);
       }
-      if (nonSoloMembers.size() > 0) {
-        String error = Util.listUniqueElements(nonSoloMembers);
-        error +=
-            (nonSoloMembers.size() > 1 ? " are already in groups for this assignment"
-                : " is already in a group for this assignment");
+      
+      if (nonSolo.size() > 0) {
+        String error = Util.listUniqueElements(nonSolo);
+        error += nonSolo.size() > 1
+            ? " are already in groups for this assignment"
+            : " is already in a group for this assignment";
         result.addError(error);
       }
-      if (gradedMembers.size() > 0) {
-        String error = Util.listUniqueElements(gradedMembers);
-        error +=
-            (gradedMembers.size() > 1 ? " have already received grades for this assignment. Their groups may not be altered."
-                : " has already received a grade for this assignment. His/her group may not be altered.");
+      
+      if (graded.size() > 0) {
+        String error = Util.listUniqueElements(graded);
+        error += graded.size() > 1
+            ? " have already received grades for this assignment. Their groups may not be altered."
+            : " has already received a grade for this assignment. His/her group may not be altered.";
         result.addError(error);
       }
+      
       if (!result.hasErrors()) {
         boolean success = transactions.createGroup(p, netids, assignment);
         if (!success) {
@@ -1324,7 +1334,7 @@ public class TransactionHandler {
         result.addError(error);
       }
       if (!result.hasErrors()) {
-        boolean success = transactions.mergeGroups(p, groups, asgn);
+        boolean success = transactions.mergeGroups(p, groups, assignment);
         if (!success) {
           result.addError("Database failed to merge groups");
         } else {
@@ -1430,7 +1440,7 @@ public class TransactionHandler {
    * Declines an invitation to a user to join a group.
    * 
    * @param netid
-   *          The Net of the user whose invitation is being declined
+   *          The NetID of the user whose invitation is being declined
    * @param groupid
    *          The Group of the group
    * @return TransactionResult
@@ -1438,7 +1448,6 @@ public class TransactionHandler {
   public TransactionResult declineInvitation(User p, Group group) {
     TransactionResult result = new TransactionResult();
     try {
-      String netid = p.getNet();
       Assignment assign = group.getAssignment();
       if (group == null) {
         result.addError("Invalid group entered: does not exist");
@@ -1456,13 +1465,7 @@ public class TransactionHandler {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      GroupMember member = null;
-      try {
-        member =
-            database.groupMemberHome().findByPrimaryKey(
-                new GroupMemberPK(groupid, netid));
-      } catch (Exception e) {
-      }
+      GroupMember member = group.findGroupMember(p);
       if (member == null || !member.getStatus().equals(GroupMember.INVITED)) {
         if (member != null && member.getStatus().equals(GroupMember.ACTIVE)) {
           result.addError("Already an active member of this group");
@@ -1470,7 +1473,7 @@ public class TransactionHandler {
           result.addError("No invitation to join this group exists");
         }
       }
-      if (transactions.declineInvitation(p, groupid)) {
+      if (transactions.declineInvitation(p, group)) {
         result.setValue("Successfully declined invitation");
       } else {
         result.addError("Database failed to update declined invitation");
@@ -1504,21 +1507,27 @@ public class TransactionHandler {
     return result;
   }
 
-  public TransactionResult dropStudent(User p, Course course,
-      Collection nets) {
+  public TransactionResult dropStudent(User p, Course course, Collection users) {
     TransactionResult result = new TransactionResult();
     try {
       if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
-        Collection nonExist = database.getNonStudentNets(nets, course);
+        Iterator i = users.iterator();
+        TreeSet  nonExist = new TreeSet();
+        while (i.hasNext()) {
+          User user = (User) i.next();
+          if (course.getStudent(user) == null)
+            nonExist.add(user);
+        }
+        
         if (nonExist.size() > 0) {
           result.addError(Util.listElements(nonExist)
               + (nonExist.size() == 1 ? " is not an enrolled student"
                   : " are not enrolled students") + " in the course");
         } else {
-          if (transactions.dropStudents(p, nets, course)) {
-            result.setValue("Student" + (nets.size() > 1 ? "s" : "")
+          if (transactions.dropStudents(p, users, course)) {
+            result.setValue("Student" + (users.size() > 1 ? "s" : "")
                 + " successfully dropped");
           } else {
             result.addError("Unexpected error while trying to drop student");
@@ -1717,7 +1726,7 @@ public class TransactionHandler {
    *          The User of the user inviting another user to join their
    *          group
    * @param invited
-   *          The Net of the user being invited to join
+   *          The NetID of the user being invited to join
    * @param groupid
    *          The Group of the group
    * @return An error string that's empty ("", NOT null) if no error
@@ -1764,7 +1773,7 @@ public class TransactionHandler {
         result.addError("Must be an enrolled student in this course to create group invitations");
       }
       if (studentInvited == null || !studentInvited.getStatus().equals(Student.ENROLLED)) {
-        result.addError("Invited Net is not an enrolled student in this course");
+        result.addError("Invited NetID is not an enrolled student in this course");
       }
       if (!result.hasErrors()) {
         if (memInvited != null) {
@@ -1799,7 +1808,7 @@ public class TransactionHandler {
    * group in the same assignment and adding the user to it.
    * 
    * @param netid
-   *          The Net of the user to remove
+   *          The NetID of the user to remove
    * @param groupid
    *          The Group of the group
    * @return An error string that's empty ("", NOT null) if no error
@@ -1872,7 +1881,7 @@ public class TransactionHandler {
     try {
       Iterator items =
           upload.parseRequest(request, 1024, AccessController.maxFileSize,
-              FileUtil.TEMP_DIR).iterator();
+              null).iterator();
       while (items.hasNext()) {
         FileItem item = (FileItem) items.next();
         if (item.getFieldName().equals(paramName)) {
@@ -1930,14 +1939,14 @@ public class TransactionHandler {
   /**
    * Flexibly parse the included CSV file and return the data found in it, which
    * should provide at least one predefined kind of information for a group of
-   * students. There must be a Net column unless we're adhering to a specific
-   * file format (the second argument). Check to make sure that if a Net and
+   * students. There must be a NetID column unless we're adhering to a specific
+   * file format (the second argument). Check to make sure that if a NetID and
    * CU are provided for a student and they're already in the database, the
    * values in the file check with those in the db. Check that all students
    * listed in the file exist in the database. If this is an upload for a
    * course, check that all students listed in the file are enrolled in the
    * course. (In the case of a class-specific upload with a required format
-   * without Net, this means checking that all included CUs belong to
+   * without NetID, this means checking that all included CUs belong to
    * students enrolled in the class.) Check that no columns not
    * permission-appropriate for the upload type (course, system) are included
    * (just ignore them if they are). Don't require that all students in the
@@ -1984,12 +1993,12 @@ public class TransactionHandler {
         result.addError("Header line does not match required format");
         return result;
       }
-      // if no format is specified, require that Net appear
+      // if no format is specified, require that NetID appear
       int netidCol =
           CSVFileFormatsUtil.getFlexibleColumnNum(infoFound,
-              CSVFileFormatsUtil.NET);
+              CSVFileFormatsUtil.NETID);
       if (requiredFormat == null && netidCol == -1) {
-        result.addError("Net column must appear in uploaded file");
+        result.addError("NetID column must appear in uploaded file");
         return result;
       }
       // parse all further lines using assumed format
@@ -2007,22 +2016,19 @@ public class TransactionHandler {
                 + expectedLineLength + " columns");
             return result;
           }
-          // if no format requirement, always require Net
+          // if no format requirement, always require NetID
           if (requiredFormat == null) {
             if (!line[netidCol].matches(CSVFileFormatsUtil.netidRegexp)) {
-              result.addError("Net on line " + lineNum + " does not parse");
+              result.addError("NetID on line " + lineNum + " does not parse");
             }
             if (result.hasErrors()) return result;
-            // require *existing* Net
-            try {
-              User user =
-                  database.userHome().findByPrimaryKey(
-                      new UserPK(line[netidCol]));
-            } catch (FinderException x) {
-              result.addError("User '" + line[netidCol] + "' does not exist",
-                  lineNum);
+            
+            // require *existing* NetID
+            User user = database.getUser(line[netidCol]);
+            if (user == null) {
+              result.addError("User '" + line[netidCol] + "' does not exist", lineNum);
+              return result;
             }
-            if (result.hasErrors()) return result;
           }
           // check data formatting
           String[] checkedLine = new String[expectedLineLength];
@@ -2068,44 +2074,39 @@ public class TransactionHandler {
       result.setValue(values);
       /* data integrity & security checks */
       int cuidCol =
-          CSVFileFormatsUtil.getFlexibleColumnNum(infoFound,
-              CSVFileFormatsUtil.CU);
+          CSVFileFormatsUtil.getFlexibleColumnNum(infoFound, CSVFileFormatsUtil.CUID);
       if (netidCol != -1) {
         // if this is a course-specific upload, make sure all users included are
         // students in the course
-        if (course != 0)
+        if (course != null)
           for (int i = 1; i < values.size(); i++) {
-            String netid = ((String[]) values.get(i))[netidCol];
-            try {
-              Student student =
-                  database.studentHome().findByPrimaryKey(
-                      new StudentPK(course, netid));
-            } catch (FinderException x) {
-              result.addError("User '" + netid
-                  + "' is not a student in this course");
+            String  netid   = ((String[]) values.get(i))[netidCol];
+            User    user    = database.getUser(netid);
+            Student student = course.getStudent(user); 
+            if (student == null) {
+              result.addError("User '" + netid + "' is not a student in this course");
             }
           }
         if (result.hasErrors()) return result;
         // CU-related checks
         if (cuidCol != -1) {
           HashMap netid2cuid = new HashMap(); // for all students in course
-          Collection courseStudents =
-              database.userHome().findByCourse(course);
+          Collection courseStudents = course.getStudents();
           Iterator it = courseStudents.iterator();
           while (it.hasNext()) {
-            User student = (User) it.next();
-            netid2cuid.put(student.getNet(), student.getCU());
+            User student = ((Student) it.next()).getUser();
+            netid2cuid.put(student.getNetID(), student.getCUID());
           }
           // if this is a course-specific upload and cuid is included, all
           // students should have cuids in the db
-          if (course != 0) {
+          if (course != null) {
             for (int i = 1; i < values.size(); i++) {
               line = (String[]) values.get(i);
               if (!netid2cuid.containsKey(line[netidCol])
                   || netid2cuid.get(line[netidCol]) == null
                   || netid2cuid.get(line[netidCol]).equals(""))
                 result.addError("Student on line " + (i + 1)
-                    + " has no CU in CMS");
+                    + " has no CUID in CMS");
             }
           }
           if (result.hasErrors()) return result;
@@ -2116,7 +2117,7 @@ public class TransactionHandler {
             String netid = line[netidCol], cuid = line[cuidCol];
             if (netid2cuid.get(netid) != null) {
               if (!cuid.equals("") && !netid2cuid.get(netid).equals(cuid))
-                result.addError("Net and CU on line " + (i + 1)
+                result.addError("NetID and CU on line " + (i + 1)
                     + " are not a match");
             }
           }
@@ -2125,15 +2126,14 @@ public class TransactionHandler {
       } else { // no netid (there's a required format and it doesn't contain
                 // netid)
         // CU-related checks
-        if (course != 0) { // class-specific upload
+        if (course != null) { // class-specific upload
           // make sure each CU corresponds to a student in the class
           HashSet cuids = new HashSet(); // for all students in course
-          Collection courseStudents =
-              database.userHome().findByCourse(course);
+          Collection courseStudents = course.getStudents();
           Iterator it = courseStudents.iterator();
           while (it.hasNext()) {
-            User student = (User) it.next();
-            cuids.add(student.getCU());
+            User student = ((Student) it.next()).getUser();
+            cuids.add(student.getCUID());
           }
           for (int i = 1; i < values.size(); i++) { // run through data rows
             line = (String[]) values.get(i);
@@ -2151,16 +2151,15 @@ public class TransactionHandler {
       boolean[] colsOK = new boolean[infoFound.length];
       int numColsOK = 0;
       for (int i = 0; i < infoFound.length; i++) {
-        if (course == 0) // cmsadmin upload
-          colsOK[i] =
-              CSVFileFormatsUtil.ALLOWED_COLUMNS[infoFound[i]].isForAdmin();
-        else colsOK[i] =
-            CSVFileFormatsUtil.ALLOWED_COLUMNS[infoFound[i]].isForStaff();
+        if (course == null) // cmsadmin upload
+          colsOK[i] = CSVFileFormatsUtil.ALLOWED_COLUMNS[infoFound[i]].isForAdmin();
+        else
+          colsOK[i] = CSVFileFormatsUtil.ALLOWED_COLUMNS[infoFound[i]].isForStaff();
         numColsOK += (colsOK[i] ? 1 : 0);
       }
       // special case: for a course-specific upload, leave in the CU (we'll
       // need to remove it later)
-      if (course != 0 && cuidCol != -1 && !colsOK[cuidCol]) {
+      if (course != null && cuidCol != -1 && !colsOK[cuidCol]) {
         numColsOK++;
         colsOK[cuidCol] = true;
       }
@@ -2198,7 +2197,6 @@ public class TransactionHandler {
     TransactionResult result = new TransactionResult();
     Collection lines = new ArrayList();
     boolean hasSubProbs = false;
-    HashSet netids = new HashSet();
     final String[] format = CSVFileFormatsUtil.FINALGRADES_TEMPLATE_FORMAT;
     List values = new ArrayList();
     try {
@@ -2206,13 +2204,7 @@ public class TransactionHandler {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Iterator students =
-          database.studentHome().findByCourseSortByLastName(course)
-              .iterator();
-      while (students.hasNext()) {
-        Student s = (Student) students.next();
-        netids.add(s.getNet());
-      }
+      
       FileItem file =
           retrieveUploadedFile(request, AccessController.P_GRADESFILE, result);
       if (result.hasErrors()) return result;
@@ -2221,13 +2213,12 @@ public class TransactionHandler {
           new BufferedReader(new InputStreamReader(file.getInputStream()));
       ExcelCSVParser csvParser = new ExcelCSVParser(listlines);
       int netidCol =
-          CSVFileFormatsUtil.getColumnNumber(format, CSVFileFormatsUtil.NET);
+          CSVFileFormatsUtil.getColumnNumber(format, CSVFileFormatsUtil.NETID);
       int gradeCol =
-          CSVFileFormatsUtil.getColumnNumber(format,
-              CSVFileFormatsUtil.FINAL_GRADE);
+          CSVFileFormatsUtil.getColumnNumber(format, CSVFileFormatsUtil.FINAL_GRADE);
       String[] line = readCSVHeaderLine(csvParser, format, result);
       if (result.hasErrors()) return result;
-      String[] fileValues = new String[] { "Net", "Final Grade" };
+      String[] fileValues = new String[] { "NetID", "Final Grade" };
       values.add(fileValues); // regardless of the file format, this is all the
                               // info we need
       int lineSize = fileValues.length;
@@ -2244,20 +2235,21 @@ public class TransactionHandler {
         try {
           // make sure that there is a grade entered
           String[] checkedLine = new String[lineSize];
-          String net = "", grade = "";
+          String grade = "";
+          User   user  = null;
           if (netidCol < line.length) {
-            net = line[netidCol].toLowerCase().trim();
+            user = database.getUser(line[netidCol].toLowerCase().trim());
           }
 
           if (gradeCol < line.length) {
             grade = line[gradeCol].trim();
           }
 
-          if (!netids.contains(net)) {
-            result.addError(net
+          if (course.getStudent(user) == null) {
+            result.addError(user.getNetID()
                 + " is not an enrolled student in this course", lineNum);
           }
-          checkedLine[0] = net;
+          checkedLine[0] = user.getNetID();
           if (grade.equals("")) {
             checkedLine[1] = "";
           } else {
@@ -2314,34 +2306,16 @@ public class TransactionHandler {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Collection subProbs =
-          database.subProblemHome().findByAssignment(assignment);
-      Iterator students =
-          database.studentHome().findByCourseSortByLastName(
-              assignment.getCourse()).iterator();
+      Collection subProbs = assignment.getSubProblems();
+      
       /*
        * Create these hash sets for easily telling later whether or not a value
        * we parsed is valid
        */
-      Vector subProbNames = new Vector();
-      HashSet netids = new HashSet();
-      if (subProbs.size() == 0) {
-        hasSubProbs = false;
-      } else {
-        hasSubProbs = true;
-        i = subProbs.iterator();
-        while (i.hasNext()) {
-          SubProblem s = (SubProblem) i.next();
-          subProbNames.add(s.getSubProblemName());
-        }
-      }
-      while (students.hasNext()) {
-        Student s = (Student) students.next();
-        netids.add(s.getNet());
-      }
+      
       // Find the uploaded file stream
-      FileItem file =
-          retrieveUploadedFile(request, AccessController.P_GRADESFILE, result);
+      FileItem file = retrieveUploadedFile(request, AccessController.P_GRADESFILE, result);
+      
       if (result.hasErrors()) return result;
       // read the file
       BufferedReader listlines =
@@ -2354,18 +2328,17 @@ public class TransactionHandler {
       try {
         colsFound = CSVFileFormatsUtil.parseColumnNamesFlexibly(line);
         subproblemColsFound =
-            CSVFileFormatsUtil.parseSubProblemColumnNamesFlexibly(line,
-                subProbNames);
+            CSVFileFormatsUtil.parseSubProblemColumnNamesFlexibly(line, subProbNames);
       } catch (CSVParseException e) {
         result.addError(e.getMessage());
       }
       if (colsFound != null) {
         if (hasSubProbs) {
-          // Make sure we have net at least
+          // Make sure we have netID at least
           if (CSVFileFormatsUtil.getFlexibleColumnNum(colsFound,
-              CSVFileFormatsUtil.NET) == -1) {
+              CSVFileFormatsUtil.NETID) == -1) {
             result.addError(
-                "The file is misformatted: it must contain a net id", 0);
+                "The file is misformatted: it must contain a netID id", 0);
           }
         } else {
           // make sure the header line looks vaguely right
@@ -2386,7 +2359,7 @@ public class TransactionHandler {
 
       int netIndex =
           CSVFileFormatsUtil.getFlexibleColumnNum(colsFound,
-              CSVFileFormatsUtil.NET);
+              CSVFileFormatsUtil.NETID);
       int gradeIndex =
           CSVFileFormatsUtil.getFlexibleColumnNum(colsFound,
               CSVFileFormatsUtil.GRADE);
@@ -2400,7 +2373,7 @@ public class TransactionHandler {
 
           for (int j = 0; j < line.length; j++)
             line[j] = line[j].trim();
-          // Check that the Net that begins this line is a student in the
+          // Check that the NetID that begins this line is a student in the
           // course
           if (!netids.contains(line[netIndex])) {
             result.addError("'" + line[netIndex]
@@ -2485,7 +2458,7 @@ public class TransactionHandler {
           n.add(user);
           result = transactions.addStudentsToCourse(p, n, course, emailOn);
           if (!result.hasErrors()) {
-            result.setValue(net + " has been successfully reenrolled");
+            result.setValue(user.getNetID() + " has been successfully reenrolled");
           }
         }
       }
@@ -2522,7 +2495,7 @@ public class TransactionHandler {
       else if (courseIsFrozen(category.getCourse())) {
         return null;
       } else if (transactions.removeCategory(p, category)) {
-        return cat.getCourse();
+        return category.getCourse();
       } else {
         return null;
       }
@@ -2534,7 +2507,7 @@ public class TransactionHandler {
   }
 
   /**
-   * Remove a Net from the list of those given CMS admin access
+   * Remove a NetID from the list of those given CMS admin access
    * 
    * @return TransactionResult
    */
@@ -2561,13 +2534,7 @@ public class TransactionHandler {
       if (row == null)
         result.addError("Couldn't find content row with id: " + row);
       else {
-        Category cat = row.getCategory();
-            database.categoryHome().findByPrimaryKey(
-                new CategoryPK(row.getCategory()));
-        if (cat == null)
-          result.addError("Couldn't find content with id "
-              + row.getCategory());
-        else if (courseIsFrozen(cat.getCourse()))
+        if (courseIsFrozen(row.getCategory().getCourse()))
           result.addError("Course is frozen; no changes may be made to it");
         else if (transactions.removeCtgRow(p, row)) {
           return result;
@@ -2642,7 +2609,7 @@ public class TransactionHandler {
       Emailer email = new Emailer();
       DiskFileUpload upload = new DiskFileUpload();
       Iterator i = upload.parseRequest(request).iterator();
-      String subject = null, body = null, recipient = null, netid = null;
+      String subject = null, body = null, recipient = null;
       while (i.hasNext()) {
         FileItem item = (FileItem) i.next();
         if (item.getFieldName().equals(AccessController.P_EMAIL_SUBJECT)) {
@@ -2653,35 +2620,25 @@ public class TransactionHandler {
             AccessController.P_EMAIL_RECIPIENTS)) {
           recipient = item.getString();
         } else if (item.getFieldName().equals(AccessController.P_EMAIL_NETIDS)) {
-          netid = item.getString();
-          email.addTo(netid + "@cornell.edu");
+          email.addTo(item.getString() + "@cornell.edu");
         }
       }
       if (recipient.equals("all") || recipient.equals("students")) {
-        Iterator students =
-            database.studentHome().findByCourseSortByLastName(course)
-                .iterator();
+        Iterator students = course.getStudents().iterator();
         while (students.hasNext()) {
           Student student = (Student) students.next();
-          email.addTo(student.getNet() + "@cornell.edu");
+          email.addTo(student.getUser().getNetID() + "@cornell.edu");
         }
       }
       // The decision was made that staff should always receive the email
       // if (recipient.equals("all") || recipient.equals("staff")) {
-      Iterator staffs =
-          database.staffHome().findByCourse(course).iterator();
+      Iterator staffs = course.getStaff().iterator();
       while (staffs.hasNext()) {
         Staff staff = (Staff) staffs.next();
-        email.addTo(staff.getNet() + "@cornell.edu");
+        email.addTo(staff.getUser().getNetID() + "@cornell.edu");
       }
       // }
-      String fullname = p.getFirstName();
-      fullname +=
-          fullname.length() > 0 ? " " + p.getLastName() : p.getLastName();
-      email.setFrom("\"" + fullname + "\"" + "<" + p.getNet()
-          + "@cornell.edu" + ">");
-      Course course =
-          database.courseHome().findByPrimaryKey(new CoursePK(course));
+      email.setFrom(p.canonicalName() + "<" + p.getNetID() + "@cornell.edu" + ">");
       email.setSubject("[" + course.getDisplayedCode() + "] " + subject);
       email.setMessage(body);
       email.setRecipient(recipient);
@@ -2745,8 +2702,7 @@ public class TransactionHandler {
     List info = null;
     try {
       info =
-          upload.parseRequest(request, 1024, AccessController.maxFileSize,
-              FileUtil.TEMP_DIR);
+          upload.parseRequest(request, 1024, AccessController.maxFileSize, null);
       if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
         result.setValue(info);
@@ -2761,7 +2717,7 @@ public class TransactionHandler {
             name = item.getString();
           } else if (field.equals(AccessController.P_NAMESHORT)) {
             nameshort = item.getString();
-          } else if (field.equals(AccessController.P_ASSIGNIDMENTTYPE)) {
+          } else if (field.equals(AccessController.P_ASSIGNMENTTYPE)) {
             type = Integer.parseInt(item.getString());
             options.setAssignmentType(type);
           } else if (field.equals(AccessController.P_DUEDATE)) {
@@ -3322,8 +3278,6 @@ public class TransactionHandler {
         result.addError("Problem scores sum (" + total
             + ") does not equal the Total Score (" + score + ")");
       }
-      Course course =
-          database.courseHome().findByPrimaryKey(new CoursePK(course));
       long item = -1;
       int ob = -1;
       Iterator items = options.getReplacedAssignmentItems().iterator();
@@ -3443,8 +3397,7 @@ public class TransactionHandler {
         }
       }
       if (proceed && !result.hasErrors()) {
-        AssignmentData data = new AssignmentData();
-        data.setAssignment(assign);
+        Assignment data = new Assignment();
         data.setCourse(course);
         data.setName(name);
         data.setNameShort(nameshort);
@@ -3471,13 +3424,13 @@ public class TransactionHandler {
         data.setAssignedGroups(assignedgroups);
         data.setShowStats(showstats);
         data.setShowSolution(showsolution);
-        data.setNumOfAssignedFiles(numOfAssignedFiles);
+        data.setNumassignedfiles(numOfAssignedFiles);
         data.setScheduled(useSchedule);
         data.setDuration(new Long(TSDuration));
         data.setGroupLimit(new Integer(TSMaxGroups));
         data.setTimeslotLockTime(TSLockedTime);
         data.setType(type);
-        if ((assign == 0)) { // new assignment
+        if ((assign == null)) { // new assignment
           result = transactions.createNewAssignment(p, data, options);
         } else {
           result = transactions.setAssignmentProps(p, data, options);
@@ -3488,7 +3441,7 @@ public class TransactionHandler {
     } catch (Exception e) {
       e.printStackTrace();
       result.addError("Unexpected error while trying to "
-          + (assign == 0 ? "create" : "edit") + " this assignment");
+          + (assign == null ? "create" : "edit") + " this assignment");
       result.setException(e);
     }
     Profiler.exitMethod("TransactionHandler.setAssignmentProps",
@@ -3612,23 +3565,21 @@ public class TransactionHandler {
         } else if (field.startsWith(AccessController.P_NEWCTGPOSITION)) {
           category.setPosition(Integer.parseInt(value));
         } else if (field.startsWith(AccessController.P_REMOVECTG)) {
-          category.setRemoved(true);
+          category.setHidden(true);
         } else if (field.startsWith(AccessController.P_RESTORECTG)) {
-          category.setRemoved(false);
+          category.setHidden(false);
         }
       }
+      boolean success;
       if (newCategory)
-        success = transactions.createCategory(p, category, option);
-      else transactions.updateCategory(p, category);
+        success = transactions.createCategory(p, category);
+      else
+        success = transactions.updateCategory(p, category);
       if (!success)
-        result
-            .addError("Unexpected error while trying to create/edit content properties");
-    } catch (FileUploadException e) {
-      result.addError(FileUtil.checkFileException(e));
+        result.addError("Unexpected error while trying to create/edit content properties");
     } catch (Exception e) {
       e.printStackTrace();
-      result
-          .addError("Unexpected error while trying to create/edit content properties");
+      result.addError("Unexpected error while trying to create/edit content properties");
     }
     return result;
   }
@@ -3673,27 +3624,27 @@ public class TransactionHandler {
             isAdmin = map.containsKey(staff.getUser().getNetID() + AccessController.P_ISADMIN);
             hasAdmin = hasAdmin || isAdmin;
             staffPerms.put(staff, new CourseAdminPermissions(isAdmin, map
-                .containsKey(net + AccessController.P_ISASSIGNID), map
-                .containsKey(net + AccessController.P_ISGROUPS), map
-                .containsKey(net + AccessController.P_ISGRADES), map
-                .containsKey(net + AccessController.P_ISCATEGORY)));
+                .containsKey(netID + AccessController.P_ISASSIGN), map
+                .containsKey(netID + AccessController.P_ISGROUPS), map
+                .containsKey(netID + AccessController.P_ISGRADES), map
+                .containsKey(netID + AccessController.P_ISCATEGORY)));
           }
         }
         // add new staff
         int i = 0;
         String[] newnetids =
-            (String[]) map.get(AccessController.P_NEWNET + i);
+            (String[]) map.get(AccessController.P_NEWNETID + i);
         while (newnetids != null) {
           isAdmin = map.containsKey(AccessController.P_NEWADMIN + i);
           hasAdmin = hasAdmin || isAdmin;
           staffPerms.put(newnetids[0].toLowerCase().trim(),
               new CourseAdminPermissions(isAdmin, map
-                  .containsKey(AccessController.P_NEWASSIGNID + i), map
+                  .containsKey(AccessController.P_NEWASSIGN + i), map
                   .containsKey(AccessController.P_NEWGROUPS + i), map
                   .containsKey(AccessController.P_NEWGRADES + i), map
                   .containsKey(AccessController.P_NEWCATEGORY + i)));
           ++i;
-          newnetids = (String[]) map.get(AccessController.P_NEWNET + i);
+          newnetids = (String[]) map.get(AccessController.P_NEWNETID + i);
         }
         if (!hasAdmin) {
           result
@@ -3715,18 +3666,18 @@ public class TransactionHandler {
                  * ((String[])map.get(AccessController.P_DESCRIPTION))[0],
                  */
                 course.getDescription(),
-                ((String[]) map.get(AccessController.P_FREEZECOURSEID)) != null,
+                ((String[]) map.get(AccessController.P_FREEZECOURSE)) != null,
                 ((String[]) map.get(AccessController.P_FINALGRADES)) != null,
                 ((String[]) map.get(AccessController.P_SHOWTOTALSCORES)) != null,
-                ((String[]) map.get(AccessController.P_SHOWASSIGNIDWEIGHTS)) != null,
-                ((String[]) map.get(AccessController.P_SHOWGRADER)) != null,
+                ((String[]) map.get(AccessController.P_SHOWASSIGNWEIGHTS)) != null,
+                ((String[]) map.get(AccessController.P_SHOWGRADERID)) != null,
                 ((String[]) map.get(AccessController.P_HASSECTION)) != null,
-                ((String[]) map.get(AccessController.P_COURSEIDGUESTACCESS)) != null,
-                ((String[]) map.get(AccessController.P_ASSIGNIDGUESTACCESS)) != null,
+                ((String[]) map.get(AccessController.P_COURSEGUESTACCESS)) != null,
+                ((String[]) map.get(AccessController.P_ASSIGNGUESTACCESS)) != null,
                 ((String[]) map.get(AccessController.P_ANNOUNCEGUESTACCESS)) != null,
                 ((String[]) map.get(AccessController.P_SOLUTIONGUESTACCESS)) != null,
-                ((String[]) map.get(AccessController.P_COURSEIDCCACCESS)) != null,
-                ((String[]) map.get(AccessController.P_ASSIGNIDCCACCESS)) != null,
+                ((String[]) map.get(AccessController.P_COURSECCACCESS)) != null,
+                ((String[]) map.get(AccessController.P_ASSIGNCCACCESS)) != null,
                 ((String[]) map.get(AccessController.P_ANNOUNCECCACCESS)) != null,
                 ((String[]) map.get(AccessController.P_SOLUTIONCCACCESS)) != null);
         result =
@@ -3996,11 +3947,11 @@ public class TransactionHandler {
           String field = item.getFieldName();
           if (field.equals(AccessController.P_PREF_DATECHANGE)) {
             data.setEmailDueDate(true);
-          } else if (field.equals(AccessController.P_PREF_NEWASSIGNID)) {
+          } else if (field.equals(AccessController.P_PREF_NEWASSIGN)) {
             data.setEmailNewAssign(true);
           } else if (field.equals(AccessController.P_PREF_FINALGRADES)) {
             data.setEmailFinalGrade(true);
-          } else if (field.equals(AccessController.P_PREF_ASSIGNIDEDTO)) {
+          } else if (field.equals(AccessController.P_PREF_ASSIGNEDTO)) {
             data.setEmailAssignedTo(true);
           } else if (field.equals(AccessController.P_PREF_REGRADEREQUEST)) {
             data.setEmailRequest(true);
@@ -4023,12 +3974,11 @@ public class TransactionHandler {
       if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
-        Student data = updateStudent(course.getStudent(p), request);
+        updateStudent(course.getStudent(p), request);
       }
     } catch (Exception e) {
       e.printStackTrace();
-      result
-          .addError("Unexpected error while trying to set course preferences");
+      result.addError("Unexpected error while trying to set course preferences");
     }
     return result;
   }
@@ -4155,8 +4105,7 @@ public class TransactionHandler {
           result.addError("Submissions for this assignment are no longer being accepted");
         } else {
           info =
-              upload.parseRequest(request, 1024, AccessController.maxFileSize,
-                  FileUtil.TEMP_DIR);
+              upload.parseRequest(request, 1024, AccessController.maxFileSize, null);
           Iterator i = info.iterator();
           answers = new Vector();
           while (i.hasNext()) {
@@ -4276,7 +4225,7 @@ public class TransactionHandler {
             database.gradeHome().findMostRecentByAssignmentGrader(
                 assignment, p.getNet());
       } else {
-        // both students and grades are sorted by Net; grades only has entries
+        // both students and grades are sorted by NetID; grades only has entries
         // where the grade exists
         students =
             database.studentHome().findByCourseSortByNet(
@@ -4293,12 +4242,12 @@ public class TransactionHandler {
       int count = 0;
       if (numSubprobs == 0) {
         firstRow = new String[2];
-        firstRow[0] = "Net";
+        firstRow[0] = "NetID";
         firstRow[1] = "Grade";
       } else {
         firstRow = new String[2 + numSubprobs];
         subProbLocs = new long[1 + numSubprobs];
-        firstRow[0] = "Net";
+        firstRow[0] = "NetID";
         while (i.hasNext()) {
           SubProblem subProb = (SubProblem) i.next();
           firstRow[1 + (count++)] = subProb.getSubProblemName();
@@ -4338,7 +4287,7 @@ public class TransactionHandler {
           while (!nextRow && j.hasNext()) {
             if (grade == null) grade = (Grade) j.next();
             if (grade.getNet().equals(thisRow[0])) {
-              if (grade.getSubProblem() == 0) {
+              if (grade.getSubProblem() == null) {
                 totalScore = grade.getGrade();
                 grade = null;
               } else if (grade.getSubProblem() == subProbLocs[count]) {
@@ -4380,7 +4329,7 @@ public class TransactionHandler {
   }
 
   /**
-   * Output a CSV file containing Net and final grade columns for all students
+   * Output a CSV file containing NetID and final grade columns for all students
    * in the given course to the OutputStream
    * 
    * @param course
@@ -4391,21 +4340,27 @@ public class TransactionHandler {
       OutputStream s) {
     TransactionResult result = new TransactionResult();
     try {
-      Collection students =
-          database.studentHome().findByCourseSortByNet(course);
+      List students = new ArrayList(course.getStudents());
+      // sort based on netID
+      Collections.sort(students, new Comparator() {
+        public int compare(Object s1, Object s2) {
+          return ((Student) s1).getUser().getNetID().compareTo(
+                 ((Student) s2).getUser().getNetID());
+        }
+      });
+      
       CSVPrinter out = new CSVPrinter(s);
       String[] line = null;
+      
       // header line
-      line =
-          new String[] { CSVFileFormatsUtil.NET,
-              CSVFileFormatsUtil.FINAL_GRADE };
+      line = new String[] { CSVFileFormatsUtil.NETID, CSVFileFormatsUtil.FINAL_GRADE };
       out.println(line);
       // data lines
       Iterator i = students.iterator();
       while (i.hasNext()) {
         Student student = (Student) i.next();
         String grade = student.getFinalGrade();
-        line = new String[] { student.getNet(), grade == null ? "" : grade };
+        line = new String[] { student.getUser().getNetID(), grade == null ? "" : grade };
         out.println(line);
       }
     } catch (Exception x) {
@@ -4444,7 +4399,7 @@ public class TransactionHandler {
       String[] firstRow = new String[5 + aCount];
       firstRow[0] = "Last Name";
       firstRow[1] = "First Name";
-      firstRow[2] = "Net";
+      firstRow[2] = "NetID";
       for (int i = 0; i < aCount; i++) {
         Element assign = (Element) assignsNode.item(i);
         firstRow[3 + i] = assign.getAttribute(XMLBuilder.A_NAMESHORT);
@@ -4469,7 +4424,7 @@ public class TransactionHandler {
         thisRow[2] = student.getNodeName();
         for (int k = 0; k < aCount; k++) {
           Element grade =
-              (Element) student.getElementsByTagName("id" + assignsNode[k]).item(
+              (Element) student.getElementsByTagName("id" + assigns[k].toString()).item(
                   0);
           if (!grade.hasAttribute(XMLBuilder.A_SCORE))
             thisRow[3 + k] = "";
@@ -4495,109 +4450,51 @@ public class TransactionHandler {
    * @param s
    * @return TransactionResult
    */
-  public TransactionResult exportStudentInfoFinalGrades(Course course,
-      OutputStream s) {
+  public TransactionResult exportStudentInfoFinalGrades(Course course, OutputStream s) {
     TransactionResult result = new TransactionResult();
     try {
-      // get lists of Users and Students, both sorted by Net
-      Iterator users = database.userHome().findByCourse(course).iterator();
-      Iterator students =
-          database.studentHome().findByCourseSortByNet(course).iterator();
+      final int
+        numCols       = CSVFileFormatsUtil.getNumColumns(CSVFileFormatsUtil.FINALGRADES_FORMAT),
+        lastnameCol   = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.LASTNAME),
+        firstnameCol  = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.FIRSTNAME),
+        netidCol      = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.NETID),
+        cuidCol       = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.CUID),
+        collegeCol    = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.COLLEGE),
+        deptCol       = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.DEPARTMENT),
+        courseNumCol  = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.COURSE_NUM),
+        courseCodeCol = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.COURSE_CODE),
+        lecCol        = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.LECTURE),
+        secCol        = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.SECTION),
+        labCol        = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.LAB),
+        creditsCol    = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.CREDITS),
+        gradeOptCol   = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.GRADE_OPTION),
+        finalGradeCol = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.FINAL_GRADE);
+
       CSVPrinter out = new CSVPrinter(s);
-      HashMap nets = new HashMap();
-      Vector output = new Vector();
-      final int numCols =
-          CSVFileFormatsUtil
-              .getNumColumns(CSVFileFormatsUtil.FINALGRADES_FORMAT), lastnameCol =
-          CSVFileFormatsUtil.getColumnNumber(
-              CSVFileFormatsUtil.FINALGRADES_FORMAT,
-              CSVFileFormatsUtil.LASTNAME), firstnameCol =
-          CSVFileFormatsUtil.getColumnNumber(
-              CSVFileFormatsUtil.FINALGRADES_FORMAT,
-              CSVFileFormatsUtil.FIRSTNAME), netidCol =
-          CSVFileFormatsUtil.getColumnNumber(
-              CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.NET), cuidCol =
-          CSVFileFormatsUtil.getColumnNumber(
-              CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.CU), collegeCol =
-          CSVFileFormatsUtil
-              .getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT,
-                  CSVFileFormatsUtil.COLLEGE), deptCol =
-          CSVFileFormatsUtil.getColumnNumber(
-              CSVFileFormatsUtil.FINALGRADES_FORMAT,
-              CSVFileFormatsUtil.DEPARTMENT), courseNumCol =
-          CSVFileFormatsUtil.getColumnNumber(
-              CSVFileFormatsUtil.FINALGRADES_FORMAT,
-              CSVFileFormatsUtil.COURSEID_NUM), courseCodeCol =
-          CSVFileFormatsUtil.getColumnNumber(
-              CSVFileFormatsUtil.FINALGRADES_FORMAT,
-              CSVFileFormatsUtil.COURSEID_CODE), lecCol =
-          CSVFileFormatsUtil
-              .getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT,
-                  CSVFileFormatsUtil.LECTURE), secCol =
-          CSVFileFormatsUtil
-              .getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT,
-                  CSVFileFormatsUtil.SECTION), labCol =
-          CSVFileFormatsUtil.getColumnNumber(
-              CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.LAB), creditsCol =
-          CSVFileFormatsUtil
-              .getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT,
-                  CSVFileFormatsUtil.CREDITS), gradeOptCol =
-          CSVFileFormatsUtil.getColumnNumber(
-              CSVFileFormatsUtil.FINALGRADES_FORMAT,
-              CSVFileFormatsUtil.GRADE_OPTION), finalGradeCol =
-          CSVFileFormatsUtil.getColumnNumber(
-              CSVFileFormatsUtil.FINALGRADES_FORMAT,
-              CSVFileFormatsUtil.FINAL_GRADE);
-      String[] firstRow = CSVFileFormatsUtil.FINALGRADES_FORMAT;
-      output.add(firstRow); // file header row
-      // add the data that comes from the user table
-      while (users.hasNext()) {
-        User user = (User) users.next();
-        String[] mydata = new String[numCols];
-        output.add(mydata);
-        nets.put(user.getNet(), mydata);
-        if (courseCodeCol != -1) mydata[courseCodeCol] = course.getCode();
-        if (lastnameCol != -1) mydata[lastnameCol] = user.getLastName();
-        if (firstnameCol != -1) mydata[firstnameCol] = user.getFirstName();
-        if (netidCol != -1) mydata[netidCol] = user.getNet();
-        if (cuidCol != -1)
-          mydata[cuidCol] = user.getCU() == null ? "" : user.getCU();
-        if (collegeCol != -1) mydata[collegeCol] = user.getCollege();
-      }
-      // add the data that comes from the student table
+      out.println(CSVFileFormatsUtil.FINALGRADES_FORMAT);
+
+      Iterator students = course.getStudents().iterator();
       while (students.hasNext()) {
         Student student = (Student) students.next();
-        String[] mydata = (String[]) nets.get(student.getNet());
-        if (mydata != null) {
-          if (deptCol != -1)
-            mydata[deptCol] =
-                student.getDepartment() == null ? "" : student.getDepartment();
-          if (courseNumCol != -1)
-            mydata[courseNumCol] =
-                student.getCourseNum() == null ? "" : student.getCourseNum();
-          if (lecCol != -1)
-            mydata[lecCol] =
-                student.getLecture() == null ? "" : student.getLecture();
-          if (labCol != -1)
-            mydata[labCol] = student.getLab() == null ? "" : student.getLab();
-          if (secCol != -1)
-            mydata[secCol] =
-                student.getSection() == null ? "" : student.getSection();
-          if (creditsCol != -1)
-            mydata[creditsCol] =
-                student.getCredits() == null ? "" : student.getCredits();
-          if (gradeOptCol != -1)
-            mydata[gradeOptCol] =
-                student.getGradeOption() == null ? "" : student
-                    .getGradeOption();
-          if (finalGradeCol != -1)
-            mydata[finalGradeCol] =
-                student.getFinalGrade() == null ? "" : student.getFinalGrade();
-        }
-      }
-      for (int i = 0; i < output.size(); i++) {
-        String[] thisRow = (String[]) output.get(i);
-        out.println(thisRow);
+        User    user    = student.getUser();
+        String[] mydata = new String[numCols];
+
+        if (courseCodeCol != -1) mydata[courseCodeCol] = course.getCode();
+        if (lastnameCol   != -1) mydata[lastnameCol]   = user.getLastName();
+        if (firstnameCol  != -1) mydata[firstnameCol]  = user.getFirstName();
+        if (netidCol      != -1) mydata[netidCol]      = user.getNetID();
+        if (cuidCol       != -1) mydata[cuidCol]       = user.getCUID()           == null ? "" : user.getCUID();
+        if (collegeCol    != -1) mydata[collegeCol]    = user.getCollege();
+        if (deptCol       != -1) mydata[deptCol]       = student.getDepartment()  == null ? "" : student.getDepartment();
+        if (courseNumCol  != -1) mydata[courseNumCol]  = student.getCourseNum()   == null ? "" : student.getCourseNum();
+        if (lecCol        != -1) mydata[lecCol]        = student.getLecture()     == null ? "" : student.getLecture();
+        if (labCol        != -1) mydata[labCol]        = student.getLab()         == null ? "" : student.getLab();
+        if (secCol        != -1) mydata[secCol]        = student.getSection()     == null ? "" : student.getSection();
+        if (creditsCol    != -1) mydata[creditsCol]    = student.getCredits()     == null ? "" : student.getCredits();
+        if (gradeOptCol   != -1) mydata[gradeOptCol]   = student.getGradeOption() == null ? "" : student.getGradeOption();
+        if (finalGradeCol != -1) mydata[finalGradeCol] = student.getFinalGrade()  == null ? "" : student.getFinalGrade();
+
+        out.println(mydata);
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -4615,53 +4512,37 @@ public class TransactionHandler {
    * @param s
    * @return TransactionResult
    */
-  public TransactionResult uploadGroupSubmission(Group group,
-      ZipOutputStream out, Map submissionNames) {
+  public TransactionResult uploadGroupSubmission(Group group, ZipOutputStream out) {
     TransactionResult result = new TransactionResult();
     try {
-      Collection members =
-          database.groupMemberHome().findActiveByGroup(group);
-      String folder = "Submissions/";
+      Collection   members = group.findActiveMembers();
+      StringBuilder folder = new StringBuilder("Submissions/");
       if (members.size() > 1) {
-        folder += "group_of_";
+        folder.append("group_of_");
       }
       Iterator i = members.iterator();
-      Assignment assign = 0;
+      Assignment assign = null;
       while (i.hasNext()) {
         GroupMember member = (GroupMember) i.next();
-        folder += member.getNet() + (i.hasNext() ? "_" : "");
+        folder.append(member.getStudent().getUser().getNetID());
+        if (i.hasNext())
+          folder.append("_");
       }
-      folder += "/";
-      Iterator files =
-          database.submittedFileHome().findByGroup(group).iterator();
+      folder.append("/");
+      Iterator files = group.getSubmittedFiles().iterator();
       if (!files.hasNext()) {
         // Add empty folder if there are no submitted files
-        out.putNextEntry(new ZipEntry(folder));
+        out.putNextEntry(new ZipEntry(folder.toString()));
         out.closeEntry();
       }
-      byte[] buff = new byte[1024];
       while (files.hasNext()) {
         SubmittedFile file = (SubmittedFile) files.next();
-        String filePath = file.getPath();
-        /*
-         * next line handles missing DB_SLASH at end of path in database, caused
-         * by update on 2/28/06 -- Evan
-         */
-        if (!filePath.endsWith("" + FileUtil.SYS_SLASH))
-          filePath += FileUtil.SYS_SLASH;
-        filePath += file.appendFileType(String.valueOf(file.getSubmission()));
-        FileInputStream in = new FileInputStream(filePath);
-        String fileName =
-            (String) submissionNames.get(new Long(file.getSubmission()));
-        if (fileName == null)
-          throw new RemoteException("Submission name map was incomplete.");
-        fileName = file.appendFileType(fileName);
-        out.putNextEntry(new ZipEntry(folder + fileName));
-        int len, sum = 0;
-        while ((len = in.read(buff)) > 0) {
-          sum += len;
-          out.write(buff, 0, len);
-        }
+        
+        InputStream in  = file.getFile().read();
+        String fileName = file.getFile().getName();
+        
+        out.putNextEntry(new ZipEntry(folder.toString() + fileName));
+        Streams.copy(in, out, false);
         out.closeEntry();
         in.close();
       }
@@ -4688,13 +4569,9 @@ public class TransactionHandler {
     try {
       ZipOutputStream out = new ZipOutputStream(s);
       Iterator i = groups.iterator();
-      Map submissionNames = null;
       while (i.hasNext()) {
         Group group = (Group) i.next();
-        if (submissionNames == null) {
-          submissionNames = database.getSubmissionNameMap(group.getAssignment());
-        }
-        uploadGroupSubmission(group.longValue(), out, submissionNames);
+        uploadGroupSubmission(group, out);
       }
       out.close();
     } catch (Exception e) {
