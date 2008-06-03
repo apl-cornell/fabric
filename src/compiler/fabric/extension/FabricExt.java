@@ -7,6 +7,7 @@ import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import fabric.visit.AtomicRewriter;
 import fabric.visit.ProxyRewriter;
+import fabric.visit.ThreadRewriter;
 
 /**
  * The interface for all Fabric extension nodes.
@@ -30,4 +31,10 @@ public interface FabricExt extends Ext {
    * <code>atomic</code> statements.
    */
   public Node rewriteAtomic(AtomicRewriter ar);
+
+  /**
+   * Used by <code>ThreadRewriter</code> to hook Threads into the client's
+   * transaction manager.
+   */
+  public Node rewriteThreads(ThreadRewriter tr);
 }

@@ -224,6 +224,7 @@ public final class Log {
    * parent.
    */
   void commitNested() {
+    // TODO See if lazy merging of logs helps performance.
     // Merge reads and transfer read locks.
     for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
       for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {

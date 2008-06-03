@@ -2,23 +2,20 @@ package fabric.extension;
 
 import java.util.List;
 
-import polyglot.ast.Call;
-import polyglot.ast.Expr;
-import polyglot.ast.Id;
-import polyglot.ast.NodeFactory;
-import polyglot.ast.Receiver;
-import polyglot.ast.Special;
+import polyglot.ast.*;
 import polyglot.types.MethodInstance;
 import polyglot.types.Type;
 import polyglot.util.Position;
+import fabric.types.FabricTypeSystem;
 import fabric.visit.ProxyRewriter;
+import fabric.visit.ThreadRewriter;
 import fabric.visit.ReadWriteChecker.State;
 
 public class CallExt_c extends ExprExt_c {
 
   /**
-   * For read/write optimization.
-   * Access state of the target if it is a local variable.
+   * For read/write optimization. Access state of the target if it is a local
+   * variable.
    */
   private State accessState;
 
@@ -45,7 +42,7 @@ public class CallExt_c extends ExprExt_c {
     } else if (rewriteTarget) {
       target = (Receiver) call.visitChild(target, pr);
     }
-    
+
     Id name = (Id) call.visitChild(call.id(), pr);
     List<Expr> arguments = call.visitList(call.arguments(), pr);
     call = (Call) call.target(target).id(name).arguments(arguments);
@@ -69,12 +66,28 @@ public class CallExt_c extends ExprExt_c {
     boolean isStaticPureFabric =
         mi.flags().isStatic() && pr.typeSystem().isPureFabricType(targetType);
     if (!isStaticPureFabric) return super.rewriteProxiesImpl(pr);
-    
+
     NodeFactory nf = pr.nodeFactory();
     Receiver newTarget =
         nf.AmbReceiver(Position.compilerGenerated(), target, nf.Id(Position
             .compilerGenerated(), "$Impl"));
     return call.target(newTarget).targetImplicit(false);
+  }
+
+  @Override
+  public Node rewriteThreads(ThreadRewriter tr) {
+    // Replace calls to Thread.start() with
+    // fabric.client.transaction.TransactionManager.startThread(Thread).
+    Call call = node();
+    if (!call.name().equals("start")) return super.rewriteThreads(tr);
+
+    FabricTypeSystem ts = tr.typeSystem();
+    Receiver target = call.target();
+    Type targetType = target.type();
+    if (!ts.isThread(targetType)) return super.rewriteThreads(tr);
+
+    return tr.qq().parseExpr(
+        "fabric.client.transaction.TransactionManager.startThread(%E)", target);
   }
 
   /*
@@ -90,7 +103,7 @@ public class CallExt_c extends ExprExt_c {
   public void accessState(State s) {
     this.accessState = s;
   }
-  
+
   public State accessState() {
     return accessState;
   }

@@ -11,6 +11,7 @@ import polyglot.types.Type;
 import polyglot.util.Position;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.ProxyRewriter;
+import fabric.visit.ThreadRewriter;
 
 public class ClassDeclExt_c extends ClassMemberExt_c {
 
@@ -45,7 +46,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     ClassDecl classDecl = node();
 
     // Only translate if we're processing a Fabric class.
-    if (!pr.typeSystem().isFabricClass(classDecl.type())) return classDecl;
+    if (!pr.typeSystem().isFabricClass(classDecl.type()))
+    // Tag for type serialization.
+      return classDecl.ext(shouldSerializeType(true));
 
     NodeFactory nf = pr.nodeFactory();
     FabricTypeSystem ts = pr.typeSystem();
@@ -544,6 +547,53 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   @Override
   public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
     return Collections.singletonList((ClassMember) node());
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public Node rewriteThreads(ThreadRewriter tr) {
+    ClassDecl decl = node();
+    ClassType type = decl.type();
+    if (type == null || !tr.shouldRewrite(type))
+      return super.rewriteThreads(tr);
+
+    // Rewrite to implement fabric.client.FabricThread.
+    QQ qq = tr.qq();
+    NodeFactory nf = tr.nodeFactory();
+    FabricTypeSystem ts = tr.typeSystem();
+    List<TypeNode> interfaces = new ArrayList<TypeNode>(decl.interfaces());
+    interfaces.add(nf.CanonicalTypeNode(Position.compilerGenerated(), ts
+        .FabricThread()));
+    ClassDecl result = decl.interfaces(interfaces);
+
+    // Add the transaction manager field and accessors.
+    ClassBody body = result.body();
+    body =
+        body
+            .addMember(qq
+                .parseMember("private fabric.client.transaction.TransactionManager $tm;"));
+    body =
+        body
+            .addMember(qq
+                .parseMember("public final fabric.client.transaction.TransactionManager "
+                    + "getTransactionManager() { return $tm; }"));
+    body =
+        body
+            .addMember(qq
+                .parseMember("public final void "
+                    + "setTransactionManager(fabric.client.transaction.TransactionManager tm) "
+                    + "{$tm = tm;}"));
+
+    // Add the start() method if one doesn't yet exist.
+    if (type.methods("start", Collections.emptyList()).isEmpty()) {
+      body =
+          body.addMember(qq.parseMember("public void start() {"
+              + "fabric.client.transaction.TransactionManager.getInstance()"
+              + ".registerThread(this); super.start();}"));
+    }
+    result = result.body(body);
+
+    return result;
   }
 
   /*

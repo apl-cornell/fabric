@@ -3,11 +3,12 @@ package fabric.extension;
 import java.util.Collections;
 import java.util.List;
 
-import polyglot.ast.ClassDecl;
-import polyglot.ast.ClassMember;
-import polyglot.ast.MethodDecl;
+import polyglot.ast.*;
+import polyglot.qq.QQ;
+import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import fabric.visit.ProxyRewriter;
+import fabric.visit.ThreadRewriter;
 
 public class MethodDeclExt_c extends ClassMemberExt_c {
 
@@ -60,6 +61,24 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     // type, not on the methods declared. This handles the case where interfaces
     // and abstract classes don't explicitly declare all of their methods.
     return Collections.emptyList();
+  }
+
+  @Override
+  public Node rewriteThreads(ThreadRewriter tr) {
+    MethodDecl method = node();
+    if (!method.name().equals("start")) return super.rewriteThreads(tr);
+
+    ClassType ct = (ClassType) method.methodInstance().container();
+    if (!tr.shouldRewrite(ct)) return super.rewriteThreads(tr);
+
+    QQ qq = tr.qq();
+    Block body = method.body();
+    body =
+        body.prepend(qq
+            .parseStmt("fabric.client.transaction.TransactionManager"
+                + ".getInstance().registerThread(this);"));
+
+    return method.body(body);
   }
 
   /*

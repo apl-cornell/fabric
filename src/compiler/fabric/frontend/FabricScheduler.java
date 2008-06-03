@@ -25,12 +25,7 @@ import polyglot.visit.LocalClassRemover;
 import polyglot.visit.LoopNormalizer;
 import fabric.ExtensionInfo;
 import fabric.Options;
-import fabric.visit.ArrayInitializerTypeFixer;
-import fabric.visit.AtomicMethodRewriter;
-import fabric.visit.AtomicRewriter;
-import fabric.visit.InlineableWrapper;
-import fabric.visit.ProxyRewriter;
-import fabric.visit.ReadWriteChecker;
+import fabric.visit.*;
 
 public class FabricScheduler extends JLScheduler {
   protected ExtensionInfo extInfo;
@@ -41,9 +36,9 @@ public class FabricScheduler extends JLScheduler {
   }
 
   public Goal LoopsNormalized(final Job job) {
-    Goal g = internGoal(new VisitorGoal(job, new LoopNormalizer(job, 
-            job.extensionInfo().typeSystem(), 
-            job.extensionInfo().nodeFactory())) {
+    Goal g =
+        internGoal(new VisitorGoal(job, new LoopNormalizer(job, job
+            .extensionInfo().typeSystem(), job.extensionInfo().nodeFactory())) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
             List<Goal> l = new ArrayList<Goal>();
@@ -56,9 +51,9 @@ public class FabricScheduler extends JLScheduler {
   }
 
   public Goal ExpressionsFlattened(final Job job) {
-    Goal g = internGoal(new VisitorGoal(job, new ExpressionFlattener(job, 
-            job.extensionInfo().typeSystem(), 
-            job.extensionInfo().nodeFactory())) {
+    Goal g =
+        internGoal(new VisitorGoal(job, new ExpressionFlattener(job, job
+            .extensionInfo().typeSystem(), job.extensionInfo().nodeFactory())) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
             List<Goal> l = new ArrayList<Goal>();
@@ -93,11 +88,11 @@ public class FabricScheduler extends JLScheduler {
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
             List<Goal> l = new ArrayList<Goal>();
             l.add(TypeChecked(job));
-            
+
             if (Options.global().optLevel > 0) {
               l.add(TypeCheckedAfterFlatten(job));
             }
-            
+
             return l;
           }
         });
@@ -213,17 +208,18 @@ public class FabricScheduler extends JLScheduler {
   }
 
   public Goal ReadWriteChecked(final Job job) {
-    Goal g = internGoal(new VisitorGoal(job, new ReadWriteChecker(job,
-        extInfo.typeSystem(), extInfo.nodeFactory())) {
-      @SuppressWarnings("unchecked")
-      @Override
-      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
-        l.add(WrapInlineables(job));
-        l.addAll(super.prerequisiteGoals(scheduler));
-        return l;
-      }
-    });
+    Goal g =
+        internGoal(new VisitorGoal(job, new ReadWriteChecker(job, extInfo
+            .typeSystem(), extInfo.nodeFactory())) {
+          @SuppressWarnings("unchecked")
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+            List<Goal> l = new ArrayList<Goal>();
+            l.add(WrapInlineables(job));
+            l.addAll(super.prerequisiteGoals(scheduler));
+            return l;
+          }
+        });
 
     return g;
   }
@@ -235,11 +231,11 @@ public class FabricScheduler extends JLScheduler {
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
         l.add(WrapInlineables(job));
-        
+
         if (Options.global().optLevel > 0) {
           l.add(ReadWriteChecked(job));
         }
-        
+
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
       }
@@ -248,11 +244,26 @@ public class FabricScheduler extends JLScheduler {
     return g;
   }
 
+  public Goal InstrumentThreads(final Job job) {
+    Goal g =
+        internGoal(new VisitorGoal(job, new ThreadRewriter((ExtensionInfo) job
+            .extensionInfo())) {
+              @Override
+              public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+                List<Goal> l = new ArrayList<Goal>();
+                l.add(RewriteProxies(job));
+                return l;
+              }
+          
+        });
+
+    return g;
+  }
+
   public Goal RewriteAtomic(final Job job) {
     Goal g =
         internGoal(new VisitorGoal(job, new AtomicRewriter((ExtensionInfo) job
             .extensionInfo())) {
-          @SuppressWarnings("unchecked")
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
             List<Goal> l = new ArrayList<Goal>();
@@ -273,8 +284,9 @@ public class FabricScheduler extends JLScheduler {
         List<Goal> l = new ArrayList<Goal>();
         l.addAll(super.prerequisiteGoals(scheduler));
         if (!extInfo.getOptions().signatureMode) {
-          l.add(RewriteAtomic(job));
           l.add(RewriteProxies(job));
+          l.add(RewriteAtomic(job));
+          l.add(InstrumentThreads(job));
         }
         return l;
       }

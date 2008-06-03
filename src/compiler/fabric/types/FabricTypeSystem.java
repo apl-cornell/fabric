@@ -6,7 +6,10 @@ import polyglot.types.*;
 public interface FabricTypeSystem extends TypeSystem {
 
   // TODO: fabric.client or fabric.lang?
-  /** return the ClassType corresponding to fabric.client.transaction.TransactionManager */
+  /**
+   * return the ClassType corresponding to
+   * fabric.client.transaction.TransactionManager
+   */
   ClassType TransactionManager();
 
   /** The ClassType of fabric.lang.Object. */
@@ -17,13 +20,19 @@ public interface FabricTypeSystem extends TypeSystem {
 
   /** The ClassType of fabric.lang.WrappedJavaInlineable. */
   ClassType WrappedJavaInlineable();
+  
+  /** The ClassType of fabric.client.FabricThread. */
+  ClassType FabricThread();
+  
+  /** The ClassType of java.lang.Thread. */
+  ClassType Thread();
 
   ClassType fArrayOf(Type type);
 
   ClassType fArrayImplOf(Type type);
 
   ClassType toFArray(ArrayType type);
-  
+
   ClassType AbortException();
 
   /**
@@ -37,6 +46,16 @@ public interface FabricTypeSystem extends TypeSystem {
    *         or is a class type that is a subtype of fabric.lang.Object.
    */
   boolean isFabricType(TypeNode type);
+
+  /**
+   * @return true iff the given type is a subtype of java.lang.Thread.
+   */
+  boolean isThread(Type type);
+
+  /**
+   * @return true iff the given type is a subtype of java.lang.Thread.
+   */
+  boolean isThread(TypeNode type);
 
   /**
    * Determines whether the given type is a "pure" Fabric type. Fabric types are
@@ -99,4 +118,9 @@ public interface FabricTypeSystem extends TypeSystem {
   boolean isJavaInlineable(Type type);
 
   boolean isJavaInlineable(TypeNode type);
+  
+  /**
+   * Determines whether the given ClassType was compiled with fabc.
+   */
+  boolean isCompiledByFabc(ClassType ct);
 }

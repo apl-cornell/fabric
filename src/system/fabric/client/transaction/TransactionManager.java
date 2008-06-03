@@ -435,12 +435,22 @@ public final class TransactionManager {
   }
 
   /**
-   * Registers the given thread with the current transaction and starts it
-   * running.
+   * Starts the given thread, registering it as necessary.
    */
-  public void startThread(Thread thread) {
-    TransactionManager child = new TransactionManager(this);
+  public static void startThread(Thread thread) {
+    if (!(thread instanceof FabricThread))
+      getInstance().registerThread(thread);
     
+    thread.start();
+  }
+
+  /**
+   * Registers the given thread with the current transaction. This should be
+   * called before the thread is started.
+   */
+  public void registerThread(Thread thread) {
+    TransactionManager child = new TransactionManager(this);
+
     if (thread instanceof FabricThread) {
       ((FabricThread) thread).setTransactionManager(child);
     } else {
@@ -454,8 +464,6 @@ public final class TransactionManager {
         current.threads.add(thread);
       }
     }
-
-    thread.start();
   }
 
   /**

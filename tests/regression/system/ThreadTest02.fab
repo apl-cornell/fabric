@@ -6,18 +6,20 @@ import fabric.client.Core;
 /**
  * Tests two top-level transactions with conflicting accesses.
  */
-public class ThreadTest01 {
+public class ThreadTest02 {
   int i = 0;
 
   public static void main(String[] args) {
     Core core = Client.getClient().getCore("core0");
-    ThreadTest01 state;
+    ThreadTest02 state;
+    T thread;
 
     atomic {
-      state = new ThreadTest01@core();
+      state = new ThreadTest02@core();
+      thread = new T@core(state);
     }
 
-    new T(state).start();
+    fabric.client.transaction.TransactionManager.getInstance().startThread(thread);
 
     atomic {
       System.out.println("Thread 1: writing shared state.");
@@ -26,29 +28,38 @@ public class ThreadTest01 {
       sleep(2);
       System.out.println("Thread 1: committing.");
     }
+
+    sleep(1);
+
+    int i = 0;
+    atomic {
+      System.out.println("Thread 1: attempting to read shared state.");
+      i = state.i;
+    }
+
+    if (i == 42)
+      System.out.println("TEST PASSED.");
+    else
+      System.out.println("TEST FAILED.");
   }
 
   public static class T extends Thread {
-    protected ThreadTest01 state;
+    protected ThreadTest02 state;
 
-    T(ThreadTest01 state) {
+    T(ThreadTest02 state) {
       this.state = state;
     }
 
     public void run() {
-      int i = 0;
       atomic {
 	System.out.println("Thread 2: waiting for 1 second.");
-	ThreadTest01.sleep(1);
-	System.out.println("Thread 2: attempting to read shared state.");
-	i = state.i;
+	ThreadTest02.sleep(1);
+	System.out.println("Thread 2: attempting to write shared state.");
+	state.i = 42;
+	System.out.println("Thread 2: waiting 2 seconds.");
+	ThreadTest02.sleep(2);
+	System.out.println("Thread 2: committing.");
       }
-      
-      if (i == 1)
-        System.out.println("TEST PASSED.");
-      else
-        System.out.println("TEST FAILED: Expected value of 1, got " + i
-            + " instead.");
     }
   }
 

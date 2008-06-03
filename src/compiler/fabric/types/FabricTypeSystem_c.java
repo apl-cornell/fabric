@@ -30,7 +30,15 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   public ClassType AbortException() {
     return load("fabric.client.AbortException");
   }
-  
+
+  public ClassType FabricThread() {
+    return load("fabric.client.FabricThread");
+  }
+
+  public ClassType Thread() {
+    return load("java.lang.Thread");
+  }
+
   /*
    * (non-Javadoc)
    * 
@@ -154,6 +162,24 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
+   * @see fabric.types.FabricTypeSystem#isFabricThread(polyglot.types.Type)
+   */
+  public boolean isThread(Type type) {
+    return isSubtype(type, Thread());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see fabric.types.FabricTypeSystem#isFabricThread(polyglot.ast.TypeNode)
+   */
+  public boolean isThread(TypeNode type) {
+    return isThread(type.type());
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
    * @see fabric.types.FabricTypeSystem#isPureFabricType(polyglot.types.Type)
    */
   public boolean isPureFabricType(Type type) {
@@ -252,5 +278,23 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
 
   public boolean isJavaInlineable(TypeNode type) {
     return isJavaInlineable(type.type());
+  }
+
+  /**
+   * Determines whether a type was compiled by fabc.
+   */
+  public boolean isCompiledByFabc(ClassType ct) {
+    if (ct instanceof ParsedClassType) {
+      ParsedClassType pct = (ParsedClassType) ct;
+      
+      // Check whether the class is compiled from source in this run.
+      if (pct.job() != null) return true;
+      
+      // Check whether the class came from a Java source file.
+      LazyInitializer init = pct.initializer();
+      return init instanceof DeserializedClassInitializer;
+    }
+
+    return false;
   }
 }
