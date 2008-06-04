@@ -13,8 +13,14 @@ public class LocalCore implements Core {
   private int freshTID = 0;
   private long freshOID = 0;
 
-  private PendingTransaction prepared;
+  /**
+   * Maps transaction IDs of prepared transactions to
+   * <code>PendingTransaction</code> objects.
+   */
+  private LongKeyMap<PendingTransaction> prepared;
+
   private LongKeyMap<Object.$Impl> objects;
+
   // TODO: should be a fabric.util.HashMap
   private Object rootMap;
 
@@ -23,53 +29,45 @@ public class LocalCore implements Core {
   private class PendingTransaction {
     public int id;
     public Collection<Object.$Impl> toCreate;
-    public Collection<Object.$Impl> writes;
 
-    public PendingTransaction(int id, Collection<Object.$Impl> toCreate,
-        Collection<Object.$Impl> writes) {
+    public PendingTransaction(int id, Collection<Object.$Impl> toCreate) {
       this.id = id;
       this.toCreate = toCreate;
-      this.writes = writes;
     }
   }
 
-  public int prepareTransaction(Collection<Object.$Impl> toCreate,
+  public synchronized int prepareTransaction(Collection<Object.$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object.$Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     log.fine("Local transaction " + freshTID + " preparing");
-    // TODO: more robust checking
-    assert prepared == null;
 
-    prepared = new PendingTransaction(freshTID, toCreate, writes);
+    prepared.put(freshTID, new PendingTransaction(freshTID, toCreate));
     return freshTID++;
   }
 
-  public void abortTransaction(int transactionID) {
+  public synchronized void abortTransaction(int transactionID) {
     log.fine("Local transaction " + transactionID + " aborting");
-    assert (prepared != null);
-    prepared = null;
+    prepared.remove(transactionID);
   }
 
-  public void commitTransaction(int transactionID) {
+  public synchronized void commitTransaction(int transactionID) {
     log.fine("Local transaction " + transactionID + " committing");
-    assert prepared.id == transactionID;
+    
+    PendingTransaction xact = prepared.remove(transactionID);
 
-    if (prepared.writes != null) for (Object.$Impl obj : prepared.writes)
+    if (xact.toCreate != null) for (Object.$Impl obj : xact.toCreate)
       this.objects.put(obj.$getOnum(), obj);
-    if (prepared.toCreate != null) for (Object.$Impl obj : prepared.toCreate)
-      this.objects.put(obj.$getOnum(), obj);
-    prepared = null;
   }
 
-  public long createOnum() {
+  public synchronized long createOnum() {
     return freshOID++;
   }
 
-  public Object.$Impl readObject(long onum) {
+  public synchronized Object.$Impl readObject(long onum) {
     return objects.get(onum);
   }
-  
+
   public Object.$Impl readObjectFromCache(long onum) {
     return readObject(onum);
   }
@@ -80,7 +78,7 @@ public class LocalCore implements Core {
    * @see fabric.client.Client.getLocalCore
    */
   protected LocalCore() {
-    this.prepared = null;
+    this.prepared = new LongKeyHashMap<PendingTransaction>();
     this.objects = new LongKeyHashMap<Object.$Impl>();
     TransactionManager.getInstance().startTransaction();
     this.rootMap = new Object.$Impl(this).$getProxy();
@@ -92,7 +90,7 @@ public class LocalCore implements Core {
     return "LocalCore";
   }
 
-  public Object getRoot() throws UnreachableCoreException {
+  public Object getRoot() {
     return rootMap;
   }
 

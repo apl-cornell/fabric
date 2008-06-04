@@ -163,7 +163,7 @@ public class RemoteCore implements Core {
     return conn != null && !conn.isClosed();
   }
 
-  public long createOnum() throws UnreachableCoreException {
+  public synchronized long createOnum() throws UnreachableCoreException {
     reserve(1);
     return fresh_ids.poll();
   }
@@ -191,12 +191,17 @@ public class RemoteCore implements Core {
    * @throws FabricException
    */
   public Object.$Impl readObject(long onum) throws FetchException {
-    // Check object table
-    Object.$Impl result = readObjectFromCache(onum);
-    if (result != null) return result;
-    return fetchObject(onum);
+    // Check object table. Lock it to avoid a race condition when the object is
+    // not in the cache and another thread attempts to read the same object.
+    
+    // XXX Deadlock if we simultaneously fetch surrogates from two cores that refer to each other.
+    synchronized (objects) {
+      Object.$Impl result = readObjectFromCache(onum);
+      if (result != null) return result;
+      return fetchObject(onum);
+    }
   }
-  
+
   public Object.$Impl readObjectFromCache(long onum) {
     synchronized (objects) {
       FabricSoftRef ref = objects.get(onum);
@@ -217,7 +222,7 @@ public class RemoteCore implements Core {
   private Object.$Impl fetchObject(long onum) throws FetchException {
     Object.$Impl result = null;
     SoftReference<SerializedObject> serialRef = serialized.remove(onum);
-    
+
     if (serialRef != null) {
       SerializedObject serial = serialRef.get();
       try {
@@ -231,16 +236,18 @@ public class RemoteCore implements Core {
     if (result == null) {
       // no serial copy --- fetch from dissemination
       Glob g = Client.getClient().fetchManager().fetch(this, onum);
-      
+
       try {
         result = g.obj().deserialize(this);
       } catch (ClassNotFoundException e) {
         throw new InternalError(e);
       }
-      
-      for (LongKeyMap.Entry<SerializedObject> entry : g.related().entrySet())
+
+      for (LongKeyMap.Entry<SerializedObject> entry : g.related().entrySet()) {
+        // Add to the cache if object not already in memory.
         serialized.put(entry.getKey(), new SoftReference<SerializedObject>(
             entry.getValue()));
+      }
     }
 
     while (result instanceof Surrogate) {
@@ -248,11 +255,11 @@ public class RemoteCore implements Core {
       Surrogate surrogate = (Surrogate) result;
       result = surrogate.core.readObject(surrogate.onum);
     }
-    
+
     synchronized (objects) {
       objects.put(onum, result.$ref);
     }
-    
+
     return result;
   }
 
@@ -269,7 +276,7 @@ public class RemoteCore implements Core {
     Glob g = new Glob(response.serializedResult, response.related);
     return g;
   }
-  
+
   /**
    * Looks up the actual Core object when this core is deserialized. While this
    * method is not explicitly called in the code, it is used by the Java
@@ -337,14 +344,17 @@ public class RemoteCore implements Core {
     return name.hashCode();
   }
 
+  /**
+   * Notifies that an object has been evicted from cache.
+   */
   public void notifyEvict(long onum) {
     synchronized (objects) {
       FabricSoftRef r = objects.get(onum);
-      
+
       if (r != null && r.get() == null) {
         objects.remove(onum);
       }
     }
   }
-  
+
 }
