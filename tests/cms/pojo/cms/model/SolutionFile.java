@@ -35,6 +35,7 @@ public class SolutionFile implements FileEntry {
     setHidden(hidden);
     setFile(data);
   }
+  
   public boolean isFileAuthorized(User user) {
     // TODO Auto-generated method stub
     //  See TransactionHandler.authorizeDownload

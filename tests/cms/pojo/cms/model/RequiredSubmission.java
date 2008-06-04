@@ -45,6 +45,9 @@ public class RequiredSubmission {
     setHidden(false);
   }
 
+  public RequiredSubmission(Assignment assign) {
+    // TODO Auto-generated constructor stub
+  }
   public boolean isHidden() {
     // TODO Auto-generated method stub
     return false;
@@ -56,6 +59,10 @@ public class RequiredSubmission {
   public String matchFileType(String givenFileType) {
     // TODO Auto-generated method stub
     return null;
+  }
+  public void addRequiredFileType(String value) {
+    // TODO Auto-generated method stub
+    
   }
 
 }

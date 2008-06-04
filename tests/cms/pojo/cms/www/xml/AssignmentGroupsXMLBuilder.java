@@ -177,7 +177,7 @@ public class AssignmentGroupsXMLBuilder {
   public void buildAssignedGraders(User p, Assignment assign,
       Document xml, Element groupsNode) {
     Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildAssignedGraders", "");
-    Iterator assignedTos = Assignment.getGroupAssignedTos().iterator();
+    Iterator assignedTos = assign.getGroupAssignedTos().iterator();
 
     while (assignedTos.hasNext()) {
       GroupAssignedTo assignedTo = (GroupAssignedTo) assignedTos.next();

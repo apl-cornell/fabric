@@ -60,6 +60,9 @@ public class SubProblem {
     setAnswer(answer);
   }
 
+  public SubProblem(Assignment assign) {
+    // TODO Auto-generated constructor stub
+  }
   public boolean isHidden() {
     // TODO Auto-generated method stub
     return false;

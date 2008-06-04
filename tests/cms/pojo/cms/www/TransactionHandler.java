@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.rmi.RemoteException;
 import java.util.Date;
+import java.util.Map;
 import java.text.ParseException;
 import java.util.*;
 import java.util.zip.ZipEntry;
@@ -27,6 +28,7 @@ import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
@@ -66,18 +68,27 @@ import cms.model.*;
  * 
  * @author Jon
  */
+@SuppressWarnings("unchecked")
 public class TransactionHandler {
   private CMSRoot      database     = null;
   private Transactions transactions = null;
-  private DocumentBuilder db = null;
-  private Properties env;
   
   private static class UploadTooBigException extends IOException {
     public UploadTooBigException() {
       super("Upload exceeds maximum file size");
     }
+
+    public UploadTooBigException(String fileName) {
+      super(fileName + "exceeds maximum file size");
+    }
   }
 
+  private static class MatchFailException extends FileUploadException {
+    public MatchFailException(String message) {
+      super(message);
+    }
+  }
+  
   public TransactionHandler(final CMSRoot database) {
     this.database     = database;
     this.transactions = new Transactions(database); 
@@ -1092,7 +1103,7 @@ public class TransactionHandler {
               && assignment.getAssignedGraders();
       if (checkCanGrade) {
         String[] header = (String[]) table.get(0);
-        long[] subProbs = new long[header.length - 1];
+        SubProblem[] subProbs = new SubProblem[header.length - 1];
         
         int[] colsFound = CSVFileFormatsUtil.parseColumnNamesFlexibly(header);
         int netIndex =
@@ -1102,8 +1113,7 @@ public class TransactionHandler {
         for (int i = 0; i < header.length; i++) {
           if (i != netIndex) {
             String[] data = (String[]) table.get(i);
-            subProbs[i - 1] =
-                ((Long) subProbMap.get(header[i])).longValue();
+            subProbs[i - 1] = database.getSubProblem(header[i]);
           }
         }
 
@@ -1117,20 +1127,20 @@ public class TransactionHandler {
         
         for (int i = 1; i < table.size(); i++) {
           String[] data = (String[]) table.get(i);
-          String netid = data[netIndex];
-          Group group = ((Long) groups.get(netid)).longValue();
+          User  user  = database.getUser(data[netIndex]);
+          Group group = assignment.findGroup(user);
           for (int j = 0; j < data.length; j++) {
             if (j != netIndex) {
               try {
                 float grade = StringUtil.parseFloat(data[j]);
-                long subProb = subProbs[j - 1];
+                SubProblem subProb = subProbs[j - 1];
                 if (!canGrades.contains(group + "_" + subProb)) {
-                  result.addError("No permission to grade " + netid
+                  result.addError("No permission to grade " + user.getNetID()
                       + " in column '" + (j + 1) + "'");
                 }
               } catch (NumberFormatException x) {
                 if (!data[j].equals("")) // empty string is ok
-                  result.addError("Badly formatted grade for " + netid
+                  result.addError("Badly formatted grade for " + user.getNetID()
                       + " in column '" + (j + 1) + "'");
               }
             }
@@ -1283,6 +1293,56 @@ public class TransactionHandler {
   }
 
   /**
+   * Determine whether any of the listed groups have been graded already. Create
+   * an appropriate error message if they have.
+   * 
+   * @param groups A List of Group objects to consider
+   * @param result the Results object to collect the error message.
+   */
+  public void checkGradedGroups(List groups, TransactionResult result) {
+    // [I wish for lambda]
+    // Build an error string containing all of the already graded groups:
+    // groupStr = "(netid1, netid2, netid3), (netid4, netid5), ..."
+    // where netids 1, 2, and 3 are in a graded group, 4 and 5 are in a graded
+    // group, and so on
+    Iterator i = groups.iterator();
+    StringBuilder groupStr = new StringBuilder();
+    boolean plural = false;
+    while (i.hasNext()) {
+      Group group = (Group) i.next();
+      if (group.getGrade() != null) {
+        if (groupStr.length() > 0) {
+          groupStr.append(", ");
+          plural = true;
+        }
+        groupStr.append("(");
+        
+        // netidstr = "netid1, netid2, ..."
+        Iterator members = group.findActiveMembers().iterator();
+        StringBuilder netidStr = new StringBuilder();
+        while (members.hasNext()) {
+          GroupMember member = (GroupMember) members.next();
+          if (netidStr.length() > 0)
+            netidStr.append(", ");
+          netidStr.append(member.getStudent().getUser().getNetID());
+        }
+        
+        groupStr.append("(");
+        groupStr.append(netidStr);
+        groupStr.append(")");
+      }
+    }
+    
+    if (groupStr.length() > 0) {
+      StringBuilder message = new StringBuilder();
+      if (plural)
+        result.addError("Groups " + groupStr + " have already been graded and may not be altered");
+      else
+        result.addError("Group "  + groupStr + " has already been graded and may not be altered");
+    }
+  }
+  
+  /**
    * Merge all indicated students/groups into one group for the given assignment
    * 
    * @param p
@@ -1291,8 +1351,7 @@ public class TransactionHandler {
    *          A List of Longs holding the group s to consider
    * @return TransactionResult
    */
-  public TransactionResult groupSelectedStudents(User p, Assignment assignment,
-      List groups) {
+  public TransactionResult groupSelectedStudents(User p, Assignment assignment, List groups) {
     TransactionResult result = new TransactionResult();
     try {
       if (groups.isEmpty()) {
@@ -1310,36 +1369,17 @@ public class TransactionHandler {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Collection gradedGroups = database.getGradedGroups(groups, assignment);
-      if (gradedGroups.size() > 0) {
-        String error = "Group", groupStr = "";
-        Iterator i = gradedGroups.iterator();
-        while (i.hasNext()) {
-          Long groupid = (Long) i.next();
-          Collection members =
-              database.groupMemberHome().findActiveByGroup(
-                  groupid.longValue());
-          Collection netids = new ArrayList();
-          Iterator i2 = members.iterator();
-          while (i2.hasNext())
-            netids.add(((GroupMember) i2.next()).getNet());
-          groupStr += " (" + Util.listElements(netids) + ")";
-        }
-        error +=
-            (gradedGroups.size() > 1 ? "s"
-                + groupStr
-                + " have already received grades for this assignment and may not be altered"
-                : groupStr
-                    + " has already received a grade for this assignment and may not be altered");
-        result.addError(error);
-      }
-      if (!result.hasErrors()) {
-        boolean success = transactions.mergeGroups(p, groups, assignment);
-        if (!success) {
-          result.addError("Database failed to merge groups");
-        } else {
-          result.setValue("Groups were successfully merged");
-        }
+      
+      checkGradedGroups(groups, result);
+      if (result.hasErrors())
+        return result;
+      
+      // perform the merge
+      boolean success = transactions.mergeGroups(p, groups, assignment);
+      if (!success) {
+        result.addError("Database failed to merge groups");
+      } else {
+        result.setValue("Groups were successfully merged");
       }
     } catch (Exception e) {
       result.addError("Database failed to merge groups");
@@ -1374,31 +1414,10 @@ public class TransactionHandler {
         result.addError("Course is frozen; no changes may be made to it");
         return result;
       }
-      Collection gradedGroups = database.getGradedGroups(groups, assignment);
-      if (gradedGroups.size() > 0) {
-        String error = "Group", groupStr = "";
-        Iterator i = gradedGroups.iterator();
-        while (i.hasNext()) {
-          Long groupid = (Long) i.next();
-          Collection members =
-              database.groupMemberHome().findActiveByGroup(
-                  groupid.longValue());
-          Collection netids = new ArrayList();
-          Iterator i2 = members.iterator();
-          while (i2.hasNext())
-            netids.add(((GroupMember) i2.next()).getNet());
-          groupStr += " (" + Util.listElements(netids) + ")";
-        }
-        error +=
-            (gradedGroups.size() > 1 ? "s"
-                + groupStr
-                + " have already received grades for this assignment and may not be altered"
-                : groupStr
-                    + " has already received a grade for this assignment and may not be altered");
-        result.addError(error);
-      }
+      
+      checkGradedGroups(groups, result);
       if (!result.hasErrors()) {
-        boolean success = transactions.disbandGroups(p, groups, asgn);
+        boolean success = transactions.disbandGroups(p, groups, assignment);
         if (!success) {
           result.addError("Database failed to disband group(s)");
         } else {
@@ -1703,9 +1722,9 @@ public class TransactionHandler {
           
           String match = submission.matchFileType(givenFileType);
           if (match == null)
-            throw new FileUploadException("match fail:" + fullFileName);
+            throw new MatchFailException("match fail:" + fullFileName);
           if ((file.getSize() >> 10) > submission.getMaxSize())
-            throw new FileUploadException("size violation:" + fullFileName);
+            throw new UploadTooBigException(fullFileName);
           result.add(new SubmittedFile(group, group, user, submission, match, isLate, null, file));
         }
       }
@@ -2326,6 +2345,11 @@ public class TransactionHandler {
       int maxWidth = line.length;
       int[] colsFound = null, subproblemColsFound = null;
       try {
+        Vector subProbNames = new Vector();
+        Iterator j = assignment.getSubProblems().iterator();
+        while(j.hasNext())
+          subProbNames.add(((SubProblem) j.next()).getSubProblemName());
+        
         colsFound = CSVFileFormatsUtil.parseColumnNamesFlexibly(line);
         subproblemColsFound =
             CSVFileFormatsUtil.parseSubProblemColumnNamesFlexibly(line, subProbNames);
@@ -2375,9 +2399,9 @@ public class TransactionHandler {
             line[j] = line[j].trim();
           // Check that the NetID that begins this line is a student in the
           // course
-          if (!netids.contains(line[netIndex])) {
+          if (assignment.getCourse().getStudent(database.getUser(line[netIndex])) == null) {
             result.addError("'" + line[netIndex]
-                + "' is not an enrolled student in this course", lineno);
+                                       + "' is not an enrolled student in this course", lineno);
           }
           checkedLine[netIndex] = line[netIndex];
 
@@ -2392,7 +2416,7 @@ public class TransactionHandler {
                 if (line[j].equals(""))
                   checkedLine[j] = "";
                 else checkedLine[j] =
-                    new Float(StringUtil.parseFloat(line[j])).toString();
+                  new Float(StringUtil.parseFloat(line[j])).toString();
               } catch (NumberFormatException e) {
                 result.addError("'" + line[j] + "' is not a valid score",
                     lineno);
@@ -2407,8 +2431,7 @@ public class TransactionHandler {
       result.setValue(values);
     } catch (Exception e) {
       e.printStackTrace();
-      result
-          .addError("An unexpected exception occurred while trying to parse the file");
+      result.addError("An unexpected exception occurred while trying to parse the file");
     }
     Profiler.exitMethod("TransactionHandler.parseGradesFile", "Assignment: "
         + assignment);
@@ -2662,565 +2685,529 @@ public class TransactionHandler {
    */
   public TransactionResult setAssignmentProps(User p, Course course,
       Assignment assign, HttpServletRequest request) {
-    Profiler.enterMethod("TransactionHandler.setAssignmentProps",
-        "Assignment: " + assign.toString());
+    Profiler.enterMethod("TransactionHandler.setAssignmentProps", "AssignmentID: " + assign.toString());
     TransactionResult result = new TransactionResult();
-    String name = "", nameshort = "", status = "", description = "";
-    String duedate = null, duetime = null, dueampm = null, latedate = null, latetime =
-        null, lateampm = null, regradedate = null, regradetime = null, regradeampm =
-        null, tslockdate = null, tslocktime = null, tslockampm = null;
-    Date due = null, late = null, regradedeadline = null;
-    boolean latesubmissions = false, assignedgroups = false, assignedgraders =
-        false, studentregrades = false, showstats = false, showsolution = false;
-    int graceperiod = 0, groupmin = 0, groupmax = 0, groupoption = 0, regradeoption =
-        0, numOfAssignedFiles = 0, type = Assignment.ASSIGNMENT;
-    float score = 0, weight = 0;
+    
+    String name = "",
+           nameshort = "",
+           status = "",
+           description = "";
+    
+    String duedate     = null, duetime     = null, dueampm     = null,
+           latedate    = null, latetime    = null, lateampm    = null,
+           regradedate = null, regradetime = null, regradeampm = null,
+           tslockdate  = null, tslocktime  = null, tslockampm  = null;
+    
+    boolean latesubmissions = false,
+            assignedgroups  = false,
+            assignedgraders = false,
+            studentregrades = false,
+            showstats       = false,
+            showsolution    = false;
+    
+    Assignment groupsFrom = null;
+    
+    int graceperiod        = 0,
+        groupmin           = 0,
+        groupmax           = 0,
+        groupoption        = 0,
+        regradeoption      = 0,
+        numOfAssignedFiles = 0,
+        type               = Assignment.ASSIGNMENT; 
+    float score  = 0,
+          weight = 0;
     int order = 1;
     char letter = 'a';
-    SubProblemOptions choices = null;
-    boolean useSchedule = false; // flag indicating whether scheduling is in
-                                  // use
-    boolean emptyProbName = false, emptyItemName = false, emptySubmissionName =
-        false; // flag indicating empty names, so only one such error is shown
-    boolean emptyQuestName = false; // flag indicating an empty problem name was
-                                    // submitted
-    String TSTimeStr = null; // string indicating the duration of a timeslot in
-                              // h:mm:ss format
+    boolean useSchedule = false; // flag indicating whether scheduling is in use
+    boolean emptyQuestName = false; // flag indicating an empty problem name was submitted
+    String TSTimeStr = null; // string indicating the duration of a timeslot in h:mm:ss format
     long TSDuration = 0; // duration of a timeslot in seconds
     int TSMaxGroups = 0; // maximum number of groups in a timeslot
-    Date TSLockedTime = null; // deadline for students to change slots
-    boolean proceed = true; // success flag (not an assignment property)
+    boolean proceed= true; //success flag (not an assignment property)
     long importID = 0;
-    DiskFileUpload upload = new DiskFileUpload();
-    AssignmentOptions options = new AssignmentOptions();
-    HashSet filenames  = new HashSet(),
-            probnames  = new HashSet(),
-            subnames   = new HashSet(),
-            questnames = new HashSet();
-    HashMap probScores = new HashMap(); // for ensuring totalscore = sum of
-                                        // problem scores
+    
+    HashSet filenames= new HashSet(), probnames= new HashSet(), subnames= new HashSet(), questnames = new HashSet();
+    HashMap newReqs     = new HashMap();
+    HashMap newItems    = new HashMap();
+    HashMap newSubProbs = new HashMap();
+    HashMap newChoices  = new HashMap();
+    HashMap probScores  = new HashMap(); // for ensuring totalscore = sum of problem scores
     List info = null;
     try {
-      info =
-          upload.parseRequest(request, 1024, AccessController.maxFileSize, null);
-      if (courseIsFrozen(course)) {
+      if(courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
         result.setValue(info);
         return result;
       }
-      Iterator i = info.iterator();
+      
+      if (assign == null)
+        assign = new Assignment(course, null, null, null);
+      
+      ServletFileUpload upload = new ServletFileUpload();
+      Map params = new HashMap();
+      Map files  = new HashMap();
+      
+      FileItemIterator items = upload.getItemIterator(request);
+      while (items.hasNext()) {
+        FileItemStream item = items.next();
+        if (item.isFormField())
+          params.put(item.getName(), Streams.asString(item.openStream()));
+        else
+          files.put(item.getFieldName(), downloadFile(item));
+      }
+      
+      Iterator i = params.entrySet().iterator();
       while (i.hasNext()) {
-        FileItem item = (FileItem) i.next();
-        String field = item.getFieldName();
-        if (item.isFormField()) {
-          if (field.equals(AccessController.P_NAME)) {
-            name = item.getString();
-          } else if (field.equals(AccessController.P_NAMESHORT)) {
-            nameshort = item.getString();
-          } else if (field.equals(AccessController.P_ASSIGNMENTTYPE)) {
-            type = Integer.parseInt(item.getString());
-            options.setAssignmentType(type);
-          } else if (field.equals(AccessController.P_DUEDATE)) {
-            duedate = item.getString();
-          } else if (field.equals(AccessController.P_DUETIME)) {
-            duetime = item.getString();
-          } else if (field.equals(AccessController.P_DUEAMPM)) {
-            dueampm = item.getString();
-          } else if (field.equals(AccessController.P_GRACEPERIOD)) {
-            try {
-              graceperiod = Integer.parseInt(item.getString());
-            } catch (NumberFormatException nfe) {
-              result.addError("Grace period must be an integer");
-              proceed = false;
-            }
-          } else if (field.equals(AccessController.P_LATEALLOWED)) {
-            latesubmissions = item.getString().equals(AccessController.ONE);
-          } else if (field.equals(AccessController.P_LATEDATE)) {
-            latedate = item.getString();
-          } else if (field.equals(AccessController.P_LATETIME)) {
-            latetime = item.getString();
-          } else if (field.equals(AccessController.P_LATEAMPM)) {
-            lateampm = item.getString();
-          } else if (field.equals(AccessController.P_USESCHEDULE)) {
-            try {
-              useSchedule = item.getString().equals("on"); // changed to
-                                                            // support "on"
-                                                            // checkbox value,
-                                                            // EPW 02-24-06
-            } catch (Exception e) {
-              useSchedule = true;
-            }
-          } else if (field.equals(AccessController.P_TSDURATIONSTR)) {
-            TSTimeStr = item.getString();
-          } else if (field.equals(AccessController.P_TSMAXGROUPS)) {
-            // Try-catch block added in case empty string sent, EPW 02-24-06
-            try {
-              TSMaxGroups = Integer.parseInt(item.getString());
-            } catch (NumberFormatException nfe) {
-              TSMaxGroups = 0;
-            }
-          } else if (field.equals(AccessController.P_SCHEDULE_LOCKDATE)) {
-            tslockdate = item.getString();
-          } else if (field.equals(AccessController.P_SCHEDULE_LOCKTIME)) {
-            tslocktime = item.getString();
-          } else if (field.equals(AccessController.P_SCHEDULE_LOCKAMPM)) {
-            tslockampm = item.getString();
-          } else if (field.equals(AccessController.P_STATUS)) {
-            status = item.getString();
-          } else if (field.equals(AccessController.P_DESCRIPTION)) {
-            description = item.getString();
-          } else if (field.equals(AccessController.P_GROUPS)) {
-            groupoption = Integer.parseInt(item.getString());
-          } else if (field.equals(AccessController.P_GROUPSMIN)) {
-            try {
-              groupmin = Integer.parseInt(item.getString());
-            } catch (NumberFormatException nfe) {
-              groupmin = -1;
-            }
-          } else if (field.equals(AccessController.P_GROUPSMAX)) {
-            try {
-              groupmax = Integer.parseInt(item.getString());
-            } catch (NumberFormatException nfe) {
-              groupmax = -1;
-            }
-          } else if (field.equals(AccessController.P_GROUPSBYTA)) {
-            assignedgraders = item.getString().equals(AccessController.ONE);
-          } else if (field.equals(AccessController.P_REGRADES)) {
-            regradeoption = Integer.parseInt(item.getString());
-          } else if (field.equals(AccessController.P_REGRADEDATE)) {
-            regradedate = item.getString();
-          } else if (field.equals(AccessController.P_REGRADETIME)) {
-            regradetime = item.getString();
-          } else if (field.equals(AccessController.P_REGRADEAMPM)) {
-            regradeampm = item.getString();
-          } else if (field.equals(AccessController.P_TOTALSCORE)) {
-            try {
-              score = StringUtil.parseFloat(item.getString());
-              if (score <= 0) throw new NumberFormatException();
-            } catch (NumberFormatException nfe) {
-              result.addError("Max score must be a positive number");
-              proceed = false;
-            }
-          } else if (field.equals(AccessController.P_WEIGHT)) {
-            try {
-              weight = StringUtil.parseFloat(item.getString());
-              if (weight < 0) throw new NumberFormatException();
-            } catch (NumberFormatException nfe) {
-              result.addError("Weight must be a positive number");
-              proceed = false;
-            }
-          } else if (field.equals(AccessController.P_SHOWSTATS)) {
-            showstats = true;
-          } else if (field.equals(AccessController.P_SHOWSOLUTION)) {
-            showsolution = true;
-          } else if (field.equals(AccessController.P_GROUPSFROM)) {
-            importID = Long.parseLong(item.getString());
-          } else if (field.startsWith(AccessController.P_REQFILENAME)) {
-            long id =
-                Long
-                    .parseLong((field.split(AccessController.P_REQFILENAME))[1]);
-            if (subnames.contains(item.getString())) {
-              result.addError("A required submission with name '"
-                  + item.getString() + "' already exists");
-              proceed = false;
-            } else {
-              if (item.getString().equals("")) {
-                emptySubmissionName = true;
-              } else {
-                subnames.add(item.getString());
-                options.addRequiredFileName(item.getString(), id);
-                numOfAssignedFiles++;
-              }
-            }
-          } else if (field.startsWith(AccessController.P_REQFILETYPE)) {
-            long id =
-                Long
-                    .parseLong((field.split(AccessController.P_REQFILETYPE))[1]);
-            options.addRequiredFileType(item.getString(), id);
-          } else if (field.startsWith(AccessController.P_REQSIZE)) {
-            long id =
-                Long.parseLong((field.split(AccessController.P_REQSIZE))[1]);
-            try {
-              int size = Integer.parseInt(item.getString());
-              if (size <= 0) throw new NumberFormatException();
-              options.addRequiredFileMaxSize(size, id);
-            } catch (NumberFormatException e) {
-              result.addError("Max submission size must be a positive integer");
-              proceed = false;
-            }
-          } else if (field.startsWith(AccessController.P_NEWREQFILENAME)) {
-            int id =
-                Integer.parseInt((field
-                    .split(AccessController.P_NEWREQFILENAME))[1]);
-            if (subnames.contains(item.getString())) {
-              result.addError("A required submission with name '"
-                  + item.getString() + "' already exists");
-              proceed = false;
-            } else {
-              if (item.getString().equals("")) {
-                emptySubmissionName = true;
-              } else {
-                subnames.add(item.getString());
-                options.addNewRequiredFileName(item.getString(), id);
-                numOfAssignedFiles++;
-              }
-            }
-          } else if (field.startsWith(AccessController.P_NEWREQFILETYPE)) {
-            int id =
-                Integer.parseInt((field
-                    .split(AccessController.P_NEWREQFILETYPE))[1]);
-            options.addNewRequiredFileType(item.getString(), id);
-          } else if (field.startsWith(AccessController.P_NEWREQSIZE)) {
-            int id =
-                Integer
-                    .parseInt((field.split(AccessController.P_NEWREQSIZE))[1]);
-            try {
-              int size = Integer.parseInt(item.getString());
-              if (size <= 0) throw new NumberFormatException();
-              options.addNewRequiredMaxSize(size, id);
-            } catch (NumberFormatException e) {
-              result.addError("Max submission size must be a positive integer");
-              proceed = false;
-            }
-
-          } else if (field.startsWith(AccessController.P_NEWITEMNAME)) {
-            int id =
-                Integer
-                    .parseInt((field.split(AccessController.P_NEWITEMNAME))[1]);
-            if (filenames.contains(item.getString())) {
-              result.addError("An assignment file with name '"
-                  + item.getString() + "' already exists");
-              proceed = false;
-            } else {
-              if (item.getString().equals("")) {
-                emptyItemName = true;
-              } else {
-                filenames.add(item.getString());
-                options.addNewAssignmentItemName(item.getString(), id);
-              }
-            }
-          } else if (field.startsWith(AccessController.P_ITEMNAME)) {
-            long id =
-                Long.parseLong((field.split(AccessController.P_ITEMNAME))[1]);
-            if (filenames.contains(item.getString())) {
-              result.addError("An assignment file with name '"
-                  + item.getString() + "' already exists");
-              proceed = false;
-            } else {
-              if (item.getString().equals("")) {
-                emptyItemName = true;
-              } else {
-                filenames.add(item.getString());
-                options.addAssignmentItemName(item.getString(), id);
-              }
-            }
-          } else if (field.startsWith(AccessController.P_REMOVEITEM)) {
-            long id =
-                Long.parseLong((field.split(AccessController.P_REMOVEITEM))[1]);
-            options.removeAssignmentItem(id);
-          } else if (field.startsWith(AccessController.P_RESTOREREQ)) {
-            long id =
-                Long.parseLong((field.split(AccessController.P_RESTOREREQ))[1]);
-            options.restoreSubmission(id);
-            numOfAssignedFiles++;
-          } else if (field.startsWith(AccessController.P_RESTOREITEM)) {
-            /*
-             * XXX This next line breaks eclipse's Content Assist for me for
-             * some unfathomable reason. When it's commented out, everything is
-             * fine. Any type of new variable declaration has the same effect as
-             * long as it's in this exact position in the code -Jon
-             */
-            long id =
-                Long
-                    .parseLong((field.split(AccessController.P_RESTOREITEM))[1]);
-            options.restoreAssignmentItem(id);
-          } else if (field.startsWith(AccessController.P_RESTOREITEMFILE)) {
-            String itemfile =
-                field.split(AccessController.P_RESTOREITEMFILE)[1];
-            String[] itemfiles = itemfile.split("_");
-            long item = Long.parseLong(itemfiles[0]);
-            long file = Long.parseLong(itemfiles[1]);
-            try {
-              options.restoreAssignmentFile(item, file);
-            } catch (FileUploadException e) {
-              result.addError(e.getMessage());
-              proceed = false;
-            }
-          } else if (field.startsWith(AccessController.P_REMOVEREQ)) {
-            options.removeSubmission(Long.parseLong(field
-                .split(AccessController.P_REMOVEREQ)[1]));
-            numOfAssignedFiles--;
-          } else if (field.equals(AccessController.P_REMOVESOL)) {
-            options.removeCurrentSolutionFile();
-          } else if (field.startsWith(AccessController.P_RESTORESOL)) {
-            long sol =
-                Long.parseLong(field.split(AccessController.P_RESTORESOL)[1]);
-            try {
-              options.restoreSolutionFile(sol);
-            } catch (FileUploadException e) {
-              result.addError(e.getMessage());
-              proceed = false;
-            }
-          } else if (field.startsWith(AccessController.P_SUBPROBNAME)) {
-            long sub =
-                Long.parseLong(field.split(AccessController.P_SUBPROBNAME)[1]);
-            /*
-             * if (probnames.contains(item.getString())) { // if there exists
-             * another subporblem with the same name result.addError("A
-             * subproblem with name '" + item.getString() + "' already exists");
-             * proceed= false; } else
-             */if (item.getString().equals("")) {
-              emptyProbName = true;
-            } else {
-              // Assign subproblem orders in the order that they appear in the
-              // form
-              options.addSubProblemOrder(order, sub);
-              options.addSubProblemName(item.getString(), sub);
-              probnames.add(item.getString());
-              order++;
-
-              // reset the choice lettering
-              letter = 'a';
-              choices = new SubProblemOptions();
-              options.addSubProblemChoices(choices, sub);
-            }
-          } else if (field.startsWith(AccessController.P_SUBPROBSCORE)) {
-            long sub =
-                Long.parseLong(field.split(AccessController.P_SUBPROBSCORE)[1]);
-            float maxscore = 0.0f;
-            try {
-              maxscore = StringUtil.parseFloat(item.getString());
-              if (maxscore < 0.0f) throw new NumberFormatException();
-            } catch (NumberFormatException e) {
-              result.addError("Problem scores must be positive numbers");
-              proceed = false;
-            }
-            Long key = new Long(sub);
-            if (!probScores.containsKey(key)) {
-              probScores.put(key, new Float(maxscore));
-            }
-            options.addSubProblemScore(maxscore, sub);
-          } else if (field.startsWith(AccessController.P_REMOVECHOICE)) {
-            long choice =
-                Long.parseLong(field.split(AccessController.P_REMOVECHOICE)[1]);
-            choices.removeChoice(choice);
-          } else if (field.startsWith(AccessController.P_NEWSUBPROBNAME)) {
-            int subProblem =
-                Integer
-                    .parseInt(field.split(AccessController.P_NEWSUBPROBNAME)[1]);
-            if (probnames.contains(item.getString())) {
-              result.addError("A subproblem with name '" + item.getString() + "' already exists");
-              proceed = false;
-            } else if (item.getString().equals("")) {
-              emptyProbName = true;
-            } else {
-              // Assign subproblem orders in the order that they appear in the
-              // form
-              options.addNewSubProblemName(item.getString(), subProblem);
-              options.addNewSubProblemOrder(order, subProblem);
-              probnames.add(item.getString());
-              order++;
-
-              // reset the choice lettering
-              letter = 'a';
-              choices = new SubProblemOptions();
-              options.addNewSubProblemChoices(choices, subProblem);
-            }
-          } else if (field.startsWith(AccessController.P_NEWSUBPROBSCORE)) {
-            int subProblem =
-                Integer.parseInt(field
-                    .split(AccessController.P_NEWSUBPROBSCORE)[1]);
-            float maxscore = 0;
-            try {
-              maxscore = StringUtil.parseFloat(item.getString());
-              if (maxscore < 0.0f) throw new NumberFormatException();
-              probScores.put(new Long(-subProblem), new Float(maxscore));
-            } catch (NumberFormatException e) {
-              result.addError("Problem scores must be positive numbers");
-              proceed = false;
-            }
-            options.addNewSubProblemScore(maxscore, subProblem);
-          } else if (field.startsWith(AccessController.P_RESTORESUBPROB)) {
-            long sub =
-                Long
-                    .parseLong(field.split(AccessController.P_RESTORESUBPROB)[1]);
-            options.restoreSubProblem(sub);
-          } else if (field.startsWith(AccessController.P_REMOVESUBPROB)) {
-            long sub =
-                Long
-                    .parseLong(field.split(AccessController.P_REMOVESUBPROB)[1]);
-            probScores.put(new Long(sub), new Float(0));
-            options.removeSubProblem(sub);
+        Map.Entry item = (Map.Entry) i.next();
+        String field   = (String) item.getKey();
+        String value   = (String) item.getValue();
+        
+        if (field.equals(AccessController.P_NAME)) {
+          name = value;
+        } else if (field.equals(AccessController.P_NAMESHORT)) {
+          nameshort = value;
+        } else if (field.equals(AccessController.P_ASSIGNMENTTYPE)) {
+          type = Integer.parseInt(value);
+          assign.setType(type);
+        } else if (field.equals(AccessController.P_DUEDATE)) {
+          duedate= value;
+        } else if (field.equals(AccessController.P_DUETIME)) {
+          duetime= value;
+        } else if (field.equals(AccessController.P_DUEAMPM)) {
+          dueampm= value;
+        } else if (field.equals(AccessController.P_GRACEPERIOD)) {
+          try {
+            graceperiod = Integer.parseInt(value);
+          } catch (NumberFormatException nfe) {
+            result.addError("Grace period must be an integer");
+            proceed = false;
           }
-          // Surveys
-          else if (field.startsWith(AccessController.P_CORRECTCHOICE)) {
-            int answer =
-                Integer
-                    .parseInt(field.split(AccessController.P_CORRECTCHOICE)[1]);
-            int correctChoice = -1;
-            try {
-              correctChoice = Integer.parseInt(item.getString());
-              if (correctChoice < 0) throw new NumberFormatException();
-            } catch (NumberFormatException e) {
-              result.addError("Correct choices must be positive numbers");
-              proceed = false;
-            }
-            options.addSubProblemAnswer(correctChoice, answer);
-          } else if (field.startsWith(AccessController.P_SUBPROBTYPE)) {
-            long quest =
-                Long.parseLong(field.split(AccessController.P_SUBPROBTYPE)[1]);
-            int questtype = -1;
-            try {
-              questtype = Integer.parseInt(item.getString());
-              if (questtype < 0) throw new NumberFormatException();
-            } catch (NumberFormatException e) {
-              result.addError("Question types must be positive numbers");
-              proceed = false;
-            }
-            options.addSubProblemType(questtype, quest);
-          } else if (field.startsWith(AccessController.P_CHOICE)) {
-            String[] tokens = field.split("_");
-            long quest = Long.parseLong(tokens[1]);
-            long choice = Long.parseLong(tokens[2]);
-
-            choices.addChoiceText(item.getString(), choice);
-            choices.addChoiceLetter(Character.toString(letter), choice);
-            letter++;
-          } else if (field.startsWith(AccessController.P_NEWCORRECTCHOICE)) {
-            int answer =
-                Integer.parseInt(field
-                    .split(AccessController.P_NEWCORRECTCHOICE)[1]);
-            int correctChoice = -1;
-            try {
-              correctChoice = Integer.parseInt(item.getString());
-              if (correctChoice < 0) throw new NumberFormatException();
-            } catch (NumberFormatException e) {
-              result.addError("Correct choices must be positive numbers");
-              proceed = false;
-            }
-            options.addNewSubProblemAnswer(correctChoice, answer);
-          } else if (field.startsWith(AccessController.P_NEWSUBPROBTYPE)) {
-            int type =
-                Integer
-                    .parseInt(field.split(AccessController.P_NEWSUBPROBTYPE)[1]);
-            int questtype = -1;
-            try {
-              questtype = Integer.parseInt(item.getString());
-              if (questtype < 0) throw new NumberFormatException();
-            } catch (NumberFormatException e) {
-              result.addError("Question types must be positive numbers");
-              proceed = false;
-            }
-            options.addNewSubProblemType(questtype, type);
-          } else if (field.startsWith(AccessController.P_NEWSUBPROBORDER)) {
-            int questorder = -1;
-            try {
-              questorder = Integer.parseInt(item.getString());
-              if (questorder < 0) throw new NumberFormatException();
-            } catch (NumberFormatException e) {
-              result.addError("Question orders must be positive numbers");
-              proceed = false;
-            }
-          } else if (field.startsWith(AccessController.P_NEWCHOICE)) {
-
-            String[] tokens = field.split("_");
-
-            int quest = Integer.parseInt(tokens[1]);
-            int choice = Integer.parseInt(tokens[2]);
-            choices.addNewChoiceText(item.getString(), choice);
-            choices.addNewChoiceLetter(Character.toString(letter), choice);
-            letter++;
-          } else {
-            System.out.println("Not parsed: " + item.getString());
+        } else if (field.equals(AccessController.P_LATEALLOWED)) {
+          latesubmissions = value.equals(AccessController.ONE);
+        } else if (field.equals(AccessController.P_LATEDATE)) {
+          latedate= value;
+        } else if (field.equals(AccessController.P_LATETIME)) {
+          latetime= value;
+        } else if (field.equals(AccessController.P_LATEAMPM)) {
+          lateampm= value;
+        } else if (field.equals(AccessController.P_USESCHEDULE)){
+          try {
+            useSchedule = value.equals("on"); // changed to support "on" checkbox value, EPW 02-24-06
+          } catch (Exception e) {
+            useSchedule = true;
           }
-        } else if (!item.getName().equals("")) { // file to be downloaded
-          if (field.equals(AccessController.P_SOLFILE)) {
-            options.addSolutionFile(item);
+        } else if (field.equals(AccessController.P_TSDURATIONSTR)){
+          TSTimeStr = value;
+        } else if (field.equals(AccessController.P_TSMAXGROUPS)){
+          // Try-catch block added in case empty string sent, EPW 02-24-06
+          try {
+            TSMaxGroups = Integer.parseInt(value);
+          } catch (NumberFormatException nfe) {
+            TSMaxGroups = 0;
+          }
+        } else if(field.equals(AccessController.P_SCHEDULE_LOCKDATE)) {
+          tslockdate = value;
+        } else if(field.equals(AccessController.P_SCHEDULE_LOCKTIME)) {
+          tslocktime = value;
+        } else if(field.equals(AccessController.P_SCHEDULE_LOCKAMPM)) {
+          tslockampm = value;
+        } else if (field.equals(AccessController.P_STATUS)) {
+          status = value;
+        } else if (field.equals(AccessController.P_DESCRIPTION)) {
+          description = value;
+        } else if (field.equals(AccessController.P_GROUPS)) {
+          groupoption = Integer.parseInt(value);
+        } else if (field.equals(AccessController.P_GROUPSMIN)) {
+          try {
+            groupmin= Integer.parseInt(value);
+          } catch (NumberFormatException nfe) {
+            groupmin= -1;
+          }
+        } else if (field.equals(AccessController.P_GROUPSMAX)) {
+          try {
+            groupmax= Integer.parseInt(value);
+          } catch (NumberFormatException nfe) {
+            groupmax= -1;
+          }
+        } else if (field.equals(AccessController.P_GROUPSBYTA)) {
+          assignedgraders = value.equals(AccessController.ONE);
+        } else if (field.equals(AccessController.P_REGRADES)) {
+          regradeoption = Integer.parseInt(value);
+        } else if (field.equals(AccessController.P_REGRADEDATE)) {
+          regradedate= value;
+        } else if (field.equals(AccessController.P_REGRADETIME)) {
+          regradetime= value;
+        } else if (field.equals(AccessController.P_REGRADEAMPM)) {
+          regradeampm= value;
+        } else if (field.equals(AccessController.P_TOTALSCORE)) {
+          try {
+            score = StringUtil.parseFloat(value);
+            if (score <= 0) throw new NumberFormatException();
+          } catch (NumberFormatException nfe) {
+            result.addError("Max score must be a positive number");
+            proceed= false;
+          }
+        } else if (field.equals(AccessController.P_WEIGHT)) {
+          try {
+            weight= StringUtil.parseFloat(value);
+            if (weight < 0) throw new NumberFormatException();
+          } catch (NumberFormatException nfe) {
+            result.addError("Weight must be a positive number");
+            proceed= false;
+          }
+        } else if (field.equals(AccessController.P_SHOWSTATS)) {
+          showstats = true;
+        } else if (field.equals(AccessController.P_SHOWSOLUTION)) {
+          showsolution = true;
+        } else if (field.equals(AccessController.P_GROUPSFROM)) {
+          groupsFrom = database.getAssignment(value);
+        } else if (field.startsWith(AccessController.P_REQFILENAME)) {
+          String id = field.split(AccessController.P_REQFILENAME)[1];
+          RequiredSubmission req = database.getRequiredSubmission(id);
+          req.setSubmissionName(value);
+        } else if (field.startsWith(AccessController.P_REQFILETYPE)) {
+          String id = field.split(AccessController.P_REQFILETYPE)[1];
+          RequiredSubmission req = database.getRequiredSubmission(id);
+          req.addRequiredFileType(value);
+        } else if (field.startsWith(AccessController.P_REQSIZE)) {
+          String id = field.split(AccessController.P_REQSIZE)[1];
+          RequiredSubmission req = database.getRequiredSubmission(id);
+          try {
+            int size = Integer.parseInt(value);
+            if (size <= 0) throw new NumberFormatException();
+            req.setMaxSize(size);
+          } catch (NumberFormatException e) {
+            result.addError("Max submission size must be a positive integer");
+            proceed= false;
+          }					
+        } else if (field.startsWith(AccessController.P_NEWREQFILENAME)) {
+          String id = field.split(AccessController.P_NEWREQFILENAME)[1];
+          RequiredSubmission req = (RequiredSubmission) newReqs.get(id);
+          if (req == null) {
+            req = new RequiredSubmission(assign);
+            newReqs.put(id, req);
+          }
+          req.setSubmissionName(value);
+        } else if (field.startsWith(AccessController.P_NEWREQFILETYPE)) {
+          String id = field.split(AccessController.P_NEWREQFILETYPE)[1];
+          RequiredSubmission req = (RequiredSubmission) newReqs.get(id);
+          if (req == null) {
+            req = new RequiredSubmission(assign);
+            newReqs.put(id, req);
+          }
+          req.addRequiredFileType(value);
+        } else if (field.startsWith(AccessController.P_NEWREQSIZE)) {
+          String id = field.split(AccessController.P_NEWREQSIZE)[1];
+          RequiredSubmission req = (RequiredSubmission) newReqs.get(id);
+          if (req == null) {
+            req = new RequiredSubmission(assign);
+            newReqs.put(id, req);
+          }
+          try {
+            int size = Integer.parseInt(value);
+            if (size <= 0) throw new NumberFormatException();
+            req.setMaxSize(size);
+          } catch (NumberFormatException e) {
+            result.addError("Max submission size must be a positive integer");
+            proceed= false;
+          }
 
-          } else if (field.startsWith(AccessController.P_NEWITEMFILE)) {
-            int id =
-                Integer.parseInt(item.getFieldName().split(
-                    AccessController.P_NEWITEMFILE)[1]);
-            options.addNewAssignmentFile(item, id);
-          } else if (field.startsWith(AccessController.P_ITEMFILE)) {
-            long id =
-                Long.parseLong(item.getFieldName().split(
-                    AccessController.P_ITEMFILE)[1]);
-            options.addReplacementAssignmentFile(item, id);
-          } else {
-            System.out.println("Not parsed (file): " + field);
+        } else if (field.startsWith(AccessController.P_NEWITEMNAME)) {
+          String id = field.split(AccessController.P_NEWITEMNAME)[1];
+          AssignmentItem ai = (AssignmentItem) newItems.get(id);
+          if (ai == null) {
+            ai = new AssignmentItem(assign);
+            newItems.put(id, ai);
+          }
+          ai.setItemName(value);
+        } else if (field.startsWith(AccessController.P_ITEMNAME)) {
+          String id = field.split(AccessController.P_ITEMNAME)[1];
+          AssignmentItem ai = database.getAssignmentItem(id);
+          ai.setItemName(value);
+        } else if (field.startsWith(AccessController.P_REMOVEREQ)) {
+          String id = field.split(AccessController.P_REMOVEREQ)[1];
+          RequiredSubmission req = database.getRequiredSubmission(id);
+          req.setHidden(true);
+        } else if (field.startsWith(AccessController.P_REMOVEITEM)) {
+          String id = field.split(AccessController.P_REMOVEITEM)[1];
+          AssignmentItem ai = database.getAssignmentItem(id);
+          ai.setHidden(true);
+        } else if (field.startsWith(AccessController.P_RESTOREREQ)) {
+          String id = field.split(AccessController.P_RESTOREREQ)[1];
+          RequiredSubmission req = database.getRequiredSubmission(id);
+          req.setHidden(false);
+        } else if (field.startsWith(AccessController.P_RESTOREITEM)) {
+          String id = field.split(AccessController.P_RESTOREITEM)[1];
+          AssignmentItem ai = database.getAssignmentItem(id);
+          ai.setHidden(false);
+        } else if (field.startsWith(AccessController.P_RESTOREITEMFILE)) {
+          String itemfile = field.split(AccessController.P_RESTOREITEMFILE)[1];
+          String[] itemfiles = itemfile.split("_");
+
+          // TODO: ai not used.
+          AssignmentItem ai = database.getAssignmentItem(itemfiles[0]);
+          AssignmentFile af = database.getAssignmentFile(itemfiles[1]);
+          af.setHidden(false);
+        } else if (field.equals(AccessController.P_REMOVESOL)) {
+          assign.removeCurrentSolutionFile();
+        } else if (field.startsWith(AccessController.P_RESTORESOL)) {
+          String id = field.split(AccessController.P_RESTORESOL)[1];
+          SolutionFile sol = database.getSolutionFile(id);
+          sol.setHidden(false);
+        } else if (field.startsWith(AccessController.P_SUBPROBNAME)) {
+          String id = field.split(AccessController.P_SUBPROBNAME)[1];
+          SubProblem subProblem = database.getSubProblem(id);
+          //Assign subproblem orders in the order that they appear in the form
+          subProblem.setOrder(order++);
+          subProblem.setSubProblemName(value);
+
+          //reset the choice lettering
+          letter = 'a';
+        } else if (field.startsWith(AccessController.P_SUBPROBSCORE)) {
+          String id = field.split(AccessController.P_SUBPROBSCORE)[1];
+          SubProblem subProblem = database.getSubProblem(id);
+
+          try {
+            float maxscore = StringUtil.parseFloat(value);
+            if (maxscore < 0.0f) throw new NumberFormatException();
+            subProblem.setMaxScore(maxscore);
+          } catch (NumberFormatException e) {
+            result.addError("Problem scores must be positive numbers");
+            proceed= false;
+          }
+        } else if (field.startsWith(AccessController.P_REMOVECHOICE)) {
+          String id = field.split(AccessController.P_REMOVECHOICE)[1];
+          Choice choice = database.getChoice(id);
+          choice.remove();
+        } else if (field.startsWith(AccessController.P_NEWSUBPROBNAME)) {
+          String id = field.split(AccessController.P_NEWSUBPROBNAME)[1];
+          SubProblem sp = (SubProblem) newSubProbs.get(id);
+          if (sp == null) {
+            sp = new SubProblem(assign);
+            newSubProbs.put(id, sp);
+          }
+
+          //Assign subproblem orders in the order that they appear in the form
+          sp.setOrder(order++);
+          sp.setSubProblemName(value);
+
+          //reset the choice lettering
+          letter = 'a';
+        } else if (field.startsWith(AccessController.P_NEWSUBPROBSCORE)) {
+          String id = field.split(AccessController.P_NEWSUBPROBSCORE)[1];
+          SubProblem sp = (SubProblem) newSubProbs.get(id);
+          if (sp == null) {
+            sp = new SubProblem(assign);
+            newSubProbs.put(id, sp);
+          }
+
+          try {
+            float maxscore = StringUtil.parseFloat(value);
+            if (maxscore < 0.0f) throw new NumberFormatException();
+            sp.setMaxScore(maxscore);
+          } catch (NumberFormatException e) {
+            result.addError("Problem scores must be positive numbers");
+            proceed= false;
+          }
+        } else if (field.startsWith(AccessController.P_RESTORESUBPROB)) {
+          String id = field.split(AccessController.P_RESTORESUBPROB)[1];
+          SubProblem sp = database.getSubProblem(id);
+          sp.setHidden(false);
+        } else if (field.startsWith(AccessController.P_REMOVESUBPROB)) {
+          String id = field.split(AccessController.P_REMOVESUBPROB)[1];
+          SubProblem sp = database.getSubProblem(id);
+          sp.setHidden(true);
+        }
+        //Surveys
+        else if (field.startsWith(AccessController.P_CORRECTCHOICE)) {
+          String id = field.split(AccessController.P_CORRECTCHOICE)[1];
+          SubProblem sp = database.getSubProblem(id);
+
+          int correctChoice = -1;
+          try {
+            correctChoice = Integer.parseInt(value);
+            if (correctChoice < 0) throw new NumberFormatException();
+          } catch (NumberFormatException e) {
+            result.addError("Correct choices must be positive numbers");
+            proceed= false;
+          }
+          sp.setAnswer(correctChoice);
+        }
+        else if (field.startsWith(AccessController.P_SUBPROBTYPE)) {
+          String id = field.split(AccessController.P_SUBPROBTYPE)[1];
+          SubProblem sp = database.getSubProblem(id);
+          try {
+            int questtype = Integer.parseInt(value);
+            if (questtype < 0) throw new NumberFormatException();
+            sp.setType(questtype);
+          } catch (NumberFormatException e) {
+            result.addError("Question types must be positive numbers");
+            proceed= false;
+          }
+        } else if (field.startsWith(AccessController.P_CHOICE)) {
+          String[] tokens = field.split("_");
+          String questID  = tokens[1];
+          String choiceID = tokens[2];
+
+          // TODO: questID not used
+          Choice choice = database.getChoice(choiceID);
+          choice.setText(value);
+          choice.setLetter(Character.toString(letter++));
+        }
+        else if (field.startsWith(AccessController.P_NEWCORRECTCHOICE)) {
+          String id = field.split(AccessController.P_NEWCORRECTCHOICE)[1];
+          SubProblem sp = (SubProblem) newSubProbs.get(id);
+          if (sp == null) {
+            sp = new SubProblem(assign);
+            newSubProbs.put(id, sp);
+          }
+
+          try {
+            int correctChoice = Integer.parseInt(value);
+            if (correctChoice < 0) throw new NumberFormatException();
+            sp.setAnswer(correctChoice);
+          } catch (NumberFormatException e) {
+            result.addError("Correct choices must be positive numbers");
+            proceed= false;
           }
         }
+        else if (field.startsWith(AccessController.P_NEWSUBPROBTYPE)) {
+          String id = field.split(AccessController.P_NEWSUBPROBTYPE)[1];
+          SubProblem sp = (SubProblem) newSubProbs.get(id);
+          if (sp == null) {
+            sp = new SubProblem(assign);
+            newSubProbs.put(id, sp);
+          }
+
+          try {
+            int questtype = Integer.parseInt(value);
+            if (questtype < 0) throw new NumberFormatException();
+            sp.setType(questtype);
+          } catch (NumberFormatException e) {
+            result.addError("Question types must be positive numbers");
+            proceed= false;
+          }
+        } else if (field.startsWith(AccessController.P_NEWSUBPROBORDER)) {
+          String id = field.split(AccessController.P_NEWSUBPROBTYPE)[1];
+          SubProblem sp = (SubProblem) newSubProbs.get(id);
+          if (sp == null) {
+            sp = new SubProblem(assign);
+            newSubProbs.put(id, sp);
+          }
+
+          try {
+            int questorder = Integer.parseInt(value);
+            if (questorder < 0) throw new NumberFormatException();
+            sp.setOrder(questorder);
+          } catch (NumberFormatException e) {
+            result.addError("Question orders must be positive numbers");
+            proceed= false;
+          }
+        } else if (field.startsWith(AccessController.P_NEWCHOICE)) {
+          String[] tokens = field.split("_");
+          String questID  = tokens[1];
+          String choiceID = tokens[2];
+          Choice choice = (Choice) newChoices.get(choiceID);
+          if (choice == null) {
+            SubProblem sp = database.getSubProblem(questID);
+            choice = new Choice(sp);
+            newChoices.put(choiceID, choice);
+          }
+
+          choice.setText(value);
+          choice.setLetter(Character.toString(letter++));
+        }
+        else {
+          System.out.println("Not parsed: " + value);
+        }
       }
+
+      i = files.entrySet().iterator();
+      while (i.hasNext()) {
+        Map.Entry entry = (Map.Entry) i.next();
+        String    field = (String) entry.getKey();
+        FileData  value = (FileData) entry.getValue();
+
+        if (field.equals(AccessController.P_SOLFILE)) {
+          SolutionFile file = new SolutionFile(assign, false, value);
+        }
+        else if (field.startsWith(AccessController.P_NEWITEMFILE)) {
+          String id = field.split(AccessController.P_NEWITEMFILE)[1];
+          AssignmentItem ai   = (AssignmentItem) newItems.get(id);
+          AssignmentFile file = new AssignmentFile(ai, false, value); 
+        }
+        else if (field.startsWith(AccessController.P_ITEMFILE)) {
+          String id = field.split(AccessController.P_ITEMFILE)[1];
+          AssignmentItem ai = database.getAssignmentItem(id);
+          AssignmentFile file = new AssignmentFile(ai, false, value);
+        } else {
+          System.out.println("Not parsed (file): " + field);
+        }
+      }
+      
+      //
+      // validation
+      //
+      
       if (name == null || name.equals("")) {
         result.addError("Name must be non-empty");
       }
       if (nameshort == null || nameshort.equals("")) {
         result.addError("Name short must be non-empty");
       }
-      if (duedate == null || duetime == null || dueampm == null)
+      
+      Date due = null;
+      try {
+        if (duedate == null || duetime == null || dueampm == null)
+          throw new ParseException("", 0);
+        due= DateTimeUtil.parseDate(duedate, duetime, dueampm);
+      } catch (ParseException pe) {
         result.addError("Due date is not in the proper format");
-      else {
-        try {
-          due = DateTimeUtil.parseDate(duedate, duetime, dueampm);
-        } catch (ParseException pe) {
-          result.addError("Due date is not in the proper format");
-          proceed = false;
-        } catch (IllegalArgumentException iae) {
-          result.addError("Due date " + iae.getMessage());
-          proceed = false;
-        }
+        proceed= false;
+      } catch (IllegalArgumentException iae) {
+        result.addError("Due date " + iae.getMessage());
+        proceed= false;
       }
-      if (emptyProbName) {
-        result.addError("Problem names cannot be empty");
-        proceed = false;
-      }
-      if (emptyItemName) {
-        result.addError("Assignment file names must not be empty");
-      }
-      if (emptySubmissionName) {
-        result.addError("Required submission names must not be empty");
-      }
+      
+      Date late = null;
       if (latesubmissions) {
         if (latedate == null || latetime == null || lateampm == null)
-          result
-              .addError("Late submission deadline is not in the proper format");
+          result.addError("Late submission deadline is not in the proper format");
         else {
           try {
-            late = DateTimeUtil.parseDate(latedate, latetime, lateampm);
+            late= DateTimeUtil.parseDate(latedate, latetime, lateampm);
           } catch (ParseException pe) {
-            result
-                .addError("Late submission deadline is not in the proper format");
-            proceed = false;
+            result.addError("Late submission deadline is not in the proper format");
+            proceed= false;
           } catch (IllegalArgumentException iae) {
             result.addError("Late submission deadline " + iae.getMessage());
-            proceed = false;
+            proceed= false;
           }
         }
       }
-      if (useSchedule) {
+      
+      Date TSLockedTime = null;
+      if (useSchedule){
         if (TSTimeStr == null)
           result.addError("Timeslot duration is not in the proper format");
         else {
           try {
             TSDuration = Long.parseLong(TSTimeStr);
-          } catch (Exception e) {
+          } catch (Exception e){
             result.addError("Timeslot duration is not in the proper format");
           }
         }
         if (tslockdate.equals("") || tslocktime.equals("")) {
-          TSLockedTime = null; // empty input means no deadline to set schedule
+          TSLockedTime = null; //empty input means no deadline to set schedule
         } else {
           try {
-            TSLockedTime =
-                DateTimeUtil.parseDate(tslockdate, tslocktime, tslockampm);
+            TSLockedTime = DateTimeUtil.parseDate(tslockdate, tslocktime, tslockampm);
           } catch (ParseException pe) {
-            result
-                .addError("Schedule change deadline is not in the proper format");
-            proceed = false;
+            result.addError("Schedule change deadline is not in the proper format");
+            proceed= false;
           } catch (IllegalArgumentException iae) {
             result.addError("Schedule change deadline " + iae.getMessage());
-            proceed = false;
+            proceed= false;
           }
         }
       }
@@ -3234,218 +3221,75 @@ public class TransactionHandler {
       } else if (groupoption == 1) {
         if (groupmin < 1) {
           result.addError("Minimum group size must be a positive integer");
-          proceed = false;
+          proceed= false;
         }
         if (groupmax < 1) {
           result.addError("Maximum group size must be a positive integer");
-          proceed = false;
+          proceed= false;
         }
         if (!(groupmin <= groupmax)) {
           result.addError("Please specify a valid group size range");
           proceed = false;
         }
       }
+      
+      Date regradedeadline = null;
       if (regradeoption == 0) {
         studentregrades = false;
       } else if (regradeoption == 1) {
         studentregrades = true;
         if (regradedate == null || regradetime == null || regradeampm == null)
-          result
-              .addError("Regrade submission deadline is not in the proper format");
+          result.addError("Regrade submission deadline is not in the proper format");
         else {
           try {
-            regradedeadline =
-                DateTimeUtil.parseDate(regradedate, regradetime, regradeampm);
+            regradedeadline= DateTimeUtil.parseDate(regradedate, regradetime, regradeampm);
           } catch (ParseException pe) {
-            result
-                .addError("Regrade submission deadline is not in the proper format");
-            proceed = false;
+            result.addError("Regrade submission deadline is not in the proper format");
+            proceed= false;
           } catch (IllegalArgumentException iae) {
             result.addError("Regrade submission deadline " + iae.getMessage());
-            proceed = false;
+            proceed= false;
           }
         }
       }
-      Iterator pScores = probScores.values().iterator();
-      float total = 0.0f;
-      while (pScores.hasNext()) {
-        Float val = (Float) pScores.next();
-        total += val.floatValue();
-      }
-      // don't check this for quizzes for now
-      if (probScores.size() > 0 && total != score
-          && type != Assignment.QUIZ) {
-        result.addError("Problem scores sum (" + total
-            + ") does not equal the Total Score (" + score + ")");
-      }
-      long item = -1;
-      int ob = -1;
-      Iterator items = options.getReplacedAssignmentItems().iterator();
-      Iterator s = options.getNewAssignmentItems().iterator();
-      while (items.hasNext() || s.hasNext()
-          || options.hasUncheckedSolutionFile()) {
-        try {
-          boolean oldFile = items.hasNext(); // item > 0;
-          boolean solFile = !oldFile && !s.hasNext(); //  < 0;
-          FileItem data;
-          String fileName = null;
-          String[] givenName;
-          if (solFile) {
-            data = options.getSolutionFile();
-            givenName =
-                FileUtil.splitFileNameType(FileUtil
-                    .trimFilePath(data.getName()));
-            fileName = givenName[0];
-          } else if (oldFile) {
-            item = ((Long) items.next()).longValue();
-            data = options.getFileItemBy(item);
-            fileName = options.getItemNameBy(item);
-            givenName =
-                data == null ? null : FileUtil.splitFileNameType(FileUtil
-                    .trimFilePath(data.getName()));
-          } else {
-            ob = ((Integer) s.next()).intValue();
-            data = options.getNewFileItemBy(ob);
-            fileName = options.getNewItemNameBy(ob);
-            givenName =
-                data == null ? null : FileUtil.splitFileNameType(FileUtil
-                    .trimFilePath(data.getName()));
-          }
-          if (data == null && (fileName == null || fileName.equals(""))) {
-            continue;
-          } else if (fileName == null || fileName.equals("")) {
-            throw new FileUploadException(
-                "Must provide a name for assignment file " + givenName[0]
-                    + (givenName[1].equals("") ? "" : "." + givenName[1]));
-          } else if (data == null) {
-            throw new FileUploadException(
-                "No file provided for assignment file " + fileName);
-          }
-          String givenFileName =
-              fileName + (givenName[1].equals("") ? "" : ("." + givenName[1]));
-          /*
-           * Some browsers will return an entire path name with the file name,
-           * so we trim that here
-           */
-          givenFileName = FileUtil.trimFilePath(givenFileName);
-          long fileCounter;
-          java.io.File path, file;
-          fileCounter = transactions.getCourseFileCounter(course);
-          if (solFile)
-            file =
-                new java.io.File(
-                    FileUtil
-                        .getSolutionFileSystemPath(
-                            course.getSemester(),
-                            course,
-                            -1 /*
-                                 * TODO use asgn  (doesn't matter until we
-                                 * change the filesystem format)
-                                 */,
-                            fileCounter, givenFileName));
-          else file =
-              new java.io.File(
-                  FileUtil
-                      .getAssignmentFileSystemPath(
-                          course.getSemester(),
-                          course,
-                          -1 /*
-                               * TODO use asgn  (doesn't matter until we
-                               * change the filesystem format)
-                               */,
-                          fileCounter, givenFileName));
-          path = file.getParentFile();
-          if (path.exists())
-            throw new FileUploadException(
-                "Failed to find a unique path on the file system");
-          if (!path.mkdirs())
-            throw new FileUploadException(
-                "Failed to create new directory in the file system");
-          if (!file.createNewFile())
-            throw new FileUploadException(
-                "Failed to create new file in file system");
-          data.write(file);
-          if (solFile) {
-            options.addFinalSolutionFile(new SolutionFileData(0, 0,
-                givenFileName, false, path.getAbsolutePath()));
-          } else if (oldFile) {
-            options.setReplacementFinalFileBy(item, new AssignmentFileData(
-                0, item, givenFileName, null, false, path.getAbsolutePath()));
-          } else {
-            options.setNewFinalFileBy(ob, new AssignmentFileData(0, 0,
-                givenFileName, null, false, path.getAbsolutePath()));
-          }
-        } catch (FileUploadException e) {
-          result.addError(e.getMessage());
-          proceed = false;
-        }
-      }
-      if (importID != 0) {
-        options.setGroupMigration(importID);
-        try {
-          Assignment importAssign =
-              database.assignmentHome().findByAssignment(importID);
-          if (importAssign.getCourse() != course) {
-            result
-                .addError("Cannot import groups: assignments are not in the same course");
-            proceed = false;
-          }
-        } catch (FinderException e) {
-          result
-              .addError("Assignment used for importing groups does not exist");
-          proceed = false;
-        }
-      }
+      
       if (proceed && !result.hasErrors()) {
-        Assignment data = new Assignment();
-        data.setCourse(course);
-        data.setName(name);
-        data.setNameShort(nameshort);
-        data.setDescription(description);
-        data.setDueDate(due);
-        data.setGracePeriod(graceperiod);
-        data.setAllowLate(latesubmissions);
-        data.setLateDeadline(late);
-        data.setStatus(status);
-        data.setGroupSizeMax(groupmax);
-        data.setGroupSizeMin(groupmin);
-        data.setAssignedGroups(assignedgroups);
-        data.setAssignedGraders(assignedgraders);
-        data.setStudentRegrades(studentregrades);
-        data.setRegradeDeadline(regradedeadline);
+        assign.setName(name);
+        assign.setNameShort(nameshort);
+        assign.setDescription(description);
+        assign.setDueDate(due);
+        assign.setGracePeriod(graceperiod);
+        assign.setAllowLate(latesubmissions);
+        assign.setLateDeadline(late);
+        assign.setStatus(status);
+        assign.setGroupSizeMax(groupmax);
+        assign.setGroupSizeMin(groupmin);
+        assign.setAssignedGroups(assignedgroups);
+        assign.setAssignedGraders(assignedgraders);
+        assign.setStudentRegrades(studentregrades);
+        assign.setRegradeDeadline(regradedeadline);
 
-        // if score was not set, compute maxScore by adding all subproblem
-        // scores
-        if (score < 0.01)
-          data.setMaxScore(options.getMaxScore());
-        else data.setMaxScore(score);
+        assign.setWeight(weight);
+        assign.setAssignedGroups(assignedgroups);
+        assign.setShowStats(showstats);
+        assign.setShowSolution(showsolution);
+        assign.setNumassignedfiles(numOfAssignedFiles);
+        assign.setScheduled(useSchedule);
+        assign.setDuration(new Long (TSDuration));
+        assign.setGroupLimit(new Integer (TSMaxGroups));
+        assign.setTimeslotLockTime(TSLockedTime);
+        assign.setType(type);
 
-        data.setWeight(weight);
-        data.setAssignedGroups(assignedgroups);
-        data.setShowStats(showstats);
-        data.setShowSolution(showsolution);
-        data.setNumassignedfiles(numOfAssignedFiles);
-        data.setScheduled(useSchedule);
-        data.setDuration(new Long(TSDuration));
-        data.setGroupLimit(new Integer(TSMaxGroups));
-        data.setTimeslotLockTime(TSLockedTime);
-        data.setType(type);
-        if ((assign == null)) { // new assignment
-          result = transactions.createNewAssignment(p, data, options);
-        } else {
-          result = transactions.setAssignmentProps(p, data, options);
-        }
+        assign.importGroups(groupsFrom);
       }
     } catch (FileUploadException e) {
       result.addError(FileUtil.checkFileException(e));
     } catch (Exception e) {
       e.printStackTrace();
-      result.addError("Unexpected error while trying to "
-          + (assign == null ? "create" : "edit") + " this assignment");
+      result.addError("Unexpected error while trying to " + (assignID == 0 ? "create" : "edit") + " this assignment");
       result.setException(e);
     }
-    Profiler.exitMethod("TransactionHandler.setAssignmentProps",
-        "Assignment: " + assign);
+    Profiler.exitMethod("TransactionHandler.setAssignmentProps", "AssignmentID: " + assignID);
     result.setValue(info);
     return result;
   }
@@ -3597,18 +3441,18 @@ public class TransactionHandler {
    *          set here.
    * @return TransactionResult
    */
-  public TransactionResult setCourseProps(User p, Course course, Map map) {
+  public TransactionResult setCourseProps(User p, Course course, HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
+      Map map = request.getParameterMap();
       boolean isFreeze = map.containsKey(AccessController.P_FREEZECOURSE);
       if (isFreeze && courseIsFrozen(course))
         result.addError("Course is frozen; no changes may be made to it");
       else {
         boolean isAdmin, hasAdmin = false;
         // put request data into a nicer form
-        Vector staff2remove = new Vector();     // staff
-        Hashtable staffPerms = new Hashtable(); // Staff ->
-                                                // CourseAdminPermissions
+        Vector staff2remove = new Vector(); // staff
+        Vector staffPerms   = new Vector(); // Staff
         // remove current staff members and set remaining staff member
         // permissions
         Iterator iter = course.getStaff().iterator();
@@ -3618,71 +3462,59 @@ public class TransactionHandler {
             // the staff should be removed
             if (staff.getUser().equals(p))
               result.addError("Cannot remove yourself as a staff member");
-            else  
+            else
               staff2remove.add(staff);
           } else { // set staff permissions
-            isAdmin = map.containsKey(staff.getUser().getNetID() + AccessController.P_ISADMIN);
-            hasAdmin = hasAdmin || isAdmin;
-            staffPerms.put(staff, new CourseAdminPermissions(isAdmin, map
-                .containsKey(netID + AccessController.P_ISASSIGN), map
-                .containsKey(netID + AccessController.P_ISGROUPS), map
-                .containsKey(netID + AccessController.P_ISGRADES), map
-                .containsKey(netID + AccessController.P_ISCATEGORY)));
+            String netID = staff.getUser().getNetID();
+            staff.setAdminPriv(      map.containsKey(netID + AccessController.P_ISADMIN));
+            staff.setAssignmentsPriv(map.containsKey(netID + AccessController.P_ISASSIGN));
+            staff.setGroupsPriv(     map.containsKey(netID + AccessController.P_ISGROUPS));
+            staff.setGradesPriv(     map.containsKey(netID + AccessController.P_ISGRADES));
+            staff.setCategoryPriv(   map.containsKey(netID + AccessController.P_ISCATEGORY));
+            
+            hasAdmin = hasAdmin || staff.getAdminPriv();
           }
         }
         // add new staff
         int i = 0;
-        String[] newnetids =
-            (String[]) map.get(AccessController.P_NEWNETID + i);
-        while (newnetids != null) {
-          isAdmin = map.containsKey(AccessController.P_NEWADMIN + i);
-          hasAdmin = hasAdmin || isAdmin;
-          staffPerms.put(newnetids[0].toLowerCase().trim(),
-              new CourseAdminPermissions(isAdmin, map
-                  .containsKey(AccessController.P_NEWASSIGN + i), map
-                  .containsKey(AccessController.P_NEWGROUPS + i), map
-                  .containsKey(AccessController.P_NEWGRADES + i), map
-                  .containsKey(AccessController.P_NEWCATEGORY + i)));
-          ++i;
-          newnetids = (String[]) map.get(AccessController.P_NEWNETID + i);
+        String newnetid = request.getParameter(AccessController.P_NEWNETID + i);
+        while (newnetid != null) {
+          User  newUser  = database.getUser(newnetid);
+          Staff newStaff = new Staff(newUser, course);
+          
+          newStaff.setAdminPriv(      map.containsKey(AccessController.P_NEWADMIN    + i));
+          newStaff.setAssignmentsPriv(map.containsKey(AccessController.P_NEWASSIGN   + i));
+          newStaff.setGroupsPriv(     map.containsKey(AccessController.P_NEWGROUPS   + i));
+          newStaff.setGradesPriv(     map.containsKey(AccessController.P_NEWGRADES   + i));
+          newStaff.setCategoryPriv(   map.containsKey(AccessController.P_NEWCATEGORY + i));
+
+          hasAdmin = hasAdmin || newStaff.getAdminPriv();
+          newnetid = request.getParameter(AccessController.P_NEWNETID + (++i));
         }
         if (!hasAdmin) {
-          result
-              .addError("Must have at least one staff member with admin privilege");
+          result.addError("Must have at least one staff member with admin privilege");
         }
         if (result.hasErrors()) {
           return result;
         }
         // set course general properties
-        CourseProperties generalProperties =
-            new CourseProperties(
-                ((String[]) map.get(AccessController.P_NAME))[0],
-                ((String[]) map.get(AccessController.P_CODE))[0],
-                ((String[]) map.get(AccessController.P_DISPLAYEDCODE))[0],
-                /*
-                 * note course description is now edited from main course page,
-                 * so editing it is a separate action; see
-                 * TransactionHandler::editCourseDescription()
-                 * ((String[])map.get(AccessController.P_DESCRIPTION))[0],
-                 */
-                course.getDescription(),
-                ((String[]) map.get(AccessController.P_FREEZECOURSE)) != null,
-                ((String[]) map.get(AccessController.P_FINALGRADES)) != null,
-                ((String[]) map.get(AccessController.P_SHOWTOTALSCORES)) != null,
-                ((String[]) map.get(AccessController.P_SHOWASSIGNWEIGHTS)) != null,
-                ((String[]) map.get(AccessController.P_SHOWGRADERID)) != null,
-                ((String[]) map.get(AccessController.P_HASSECTION)) != null,
-                ((String[]) map.get(AccessController.P_COURSEGUESTACCESS)) != null,
-                ((String[]) map.get(AccessController.P_ASSIGNGUESTACCESS)) != null,
-                ((String[]) map.get(AccessController.P_ANNOUNCEGUESTACCESS)) != null,
-                ((String[]) map.get(AccessController.P_SOLUTIONGUESTACCESS)) != null,
-                ((String[]) map.get(AccessController.P_COURSECCACCESS)) != null,
-                ((String[]) map.get(AccessController.P_ASSIGNCCACCESS)) != null,
-                ((String[]) map.get(AccessController.P_ANNOUNCECCACCESS)) != null,
-                ((String[]) map.get(AccessController.P_SOLUTIONCCACCESS)) != null);
-        result =
-            transactions.setAllCourseProperties(p, course, staff2remove,
-                staffPerms, generalProperties);
+        course.setName(               request.getParameter(AccessController.P_NAME));
+        course.setCode(               request.getParameter(AccessController.P_CODE));
+        course.setDisplayedCode(      request.getParameter(AccessController.P_DISPLAYEDCODE));
+        course.setFreezeCourse(            map.containsKey(AccessController.P_FREEZECOURSE));
+        course.setShowFinalGrade(          map.containsKey(AccessController.P_FINALGRADES));
+        course.setShowTotalScores(         map.containsKey(AccessController.P_SHOWTOTALSCORES));
+        course.setShowAssignWeights(       map.containsKey(AccessController.P_SHOWASSIGNWEIGHTS));
+        course.setShowGraderNetID(         map.containsKey(AccessController.P_SHOWGRADERID));
+        course.setHasSection(              map.containsKey(AccessController.P_HASSECTION));
+        course.setCourseGuestAccess(       map.containsKey(AccessController.P_COURSEGUESTACCESS));
+        course.setAssignGuestAccess(       map.containsKey(AccessController.P_ASSIGNGUESTACCESS));
+        course.setAnnounceGuestAccess(     map.containsKey(AccessController.P_ANNOUNCEGUESTACCESS));
+        course.setSolutionGuestAccess(     map.containsKey(AccessController.P_SOLUTIONGUESTACCESS));
+        course.setCourseCCAccess(          map.containsKey(AccessController.P_COURSECCACCESS));
+        course.setAssignCCAccess(          map.containsKey(AccessController.P_ASSIGNCCACCESS));
+        course.setAnnounceCCAccess(        map.containsKey(AccessController.P_ANNOUNCECCACCESS));
+        course.setSolutionCCAccess(        map.containsKey(AccessController.P_SOLUTIONCCACCESS));
       }
     } catch (Exception e) {
       result.addError("Error while trying to set course properties");
@@ -3698,12 +3530,10 @@ public class TransactionHandler {
       if (courseIsFrozen(course))
         result.addError("Course is frozen; no changes may be made to it");
       else {
-        result.appendErrors(transactions.editCourseDescription(p, course,
-            newDescription));
+        result.appendErrors(transactions.editCourseDescription(p, course, newDescription));
       }
     } catch (Exception x) {
-      result
-          .addError("Unexpected error while trying to set course description");
+      result.addError("Unexpected error while trying to set course description");
       x.printStackTrace();
     }
     return result;
@@ -3785,7 +3615,7 @@ public class TransactionHandler {
           TimeSlot ts = database.getTimeSlot(field.split(AccessController.P_DELETETIMESLOT)[1]);
           if (ts.getHidden())
             result.addError("Timeslot has already been deleted");
-          else if (ts.getStaff().equals(p.getNet()) || p.isAdminPrivByAssignment(assignment))
+          else if (ts.getStaff().equals(p) || p.isAdminPrivByAssignment(assignment))
               toDelete.add(ts);
           else
               result.addError("User lacks permission to remove selected timeslot");
@@ -3797,7 +3627,7 @@ public class TransactionHandler {
         result.addError("Database failed to delete selected time slots", e);
       }
     } catch (FileUploadException e) {
-      result.addError(FileUtil.checkFileException(e));
+      result.addError(e.getMessage(), e);
     } catch (Exception e) {
       e.printStackTrace();
       result.addError("Unexpected error while trying to remvoe timeslot(s)");
@@ -3871,9 +3701,7 @@ public class TransactionHandler {
       // store the information in a TimeSlotData structure containing the
       // timestamp of the
       // first timeslot in the block
-      TimeSlot tsd =
-          new TimeSlot((long) 0, assign, course, name, location, staff,
-              startTime, false, 0);
+      TimeSlot tsd = new TimeSlot();
       // perform transaction
       boolean success = transactions.createTimeSlots(p, tsd, multiplicity);
       if (!success) {
@@ -3881,7 +3709,7 @@ public class TransactionHandler {
       }
 
     } catch (FileUploadException e) {
-      result.addError(FileUtil.checkFileException(e));
+      result.addError(e.getMessage(), e);
     } catch (Exception e) {
       e.printStackTrace();
       result.addError("Unexpected error while trying to add to schedule");
@@ -3934,7 +3762,7 @@ public class TransactionHandler {
       if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
-        Staff data = new Staff();
+        Staff data = course.getStaff(p);
         data.setEmailDueDate(false);
         data.setEmailFinalGrade(false);
         data.setEmailNewAssign(false);
@@ -3961,8 +3789,7 @@ public class TransactionHandler {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      result
-          .addError("Unexpected error while trying to set course preferences");
+      result.addError("Unexpected error while trying to set course preferences");
     }
     return result;
   }
@@ -4048,24 +3875,13 @@ public class TransactionHandler {
           result.addError(transactions.submitFiles(p, assignment, files));
         }
       }
+    } catch (FileUploadBase.SizeLimitExceededException e) {
+      result.addError("A submitted file violates the CMS maximum file size of "
+          + AccessController.maxFileSize + " bytes");
+    } catch (MatchFailException e) {
+      result.addError(e.getMessage(), e);
     } catch (FileUploadException e) {
-      if (e.getMessage().equalsIgnoreCase(FileUtil.SIZE_VIOLATION))
-        result
-            .addError("A submitted file violates the CMS maximum file size of "
-                + AccessController.maxFileSize + " bytes");
-      else if (e.getMessage().startsWith("match fail")) {
-        String err = e.getMessage();
-        String fileName = err.substring(err.indexOf(":") + 1);
-        result.addError("File '" + fileName
-            + "' failed to match an accepted type");
-      } else if (e.getMessage().startsWith("size violation")) {
-        String err = e.getMessage();
-        String fileName = err.substring(err.indexOf(":") + 1);
-        result.addError("File '" + fileName
-            + "' violated the maximum size limitation");
-      } else {
-        result.addError(e.getizedMessage());
-      }
+      result.addError(e.getMessage(), e);
     } catch (Exception e) {
       result.addError("Error accessing database; files could not be submitted");
     }
@@ -4116,7 +3932,7 @@ public class TransactionHandler {
                 long sub =
                     Long
                         .parseLong(field.split(AccessController.P_SUBPROBNAME)[1]);
-                Answer answerData = new Answer(null, null, sub, item.getString());
+                Answer answerData = new Answer(null, null, item.getString());
                 answers.add(answerData);
               }
             }
@@ -4124,24 +3940,13 @@ public class TransactionHandler {
           result.addError(transactions.submitSurvey(p, assignmentid, answers));
         }
       }
+    } catch (FileUploadBase.SizeLimitExceededException e) {
+      result.addError("A submitted file violates the CMS maximum file size of "
+          + AccessController.maxFileSize + " bytes");
+    } catch (MatchFailException e) {
+      result.addError(e.getMessage(), e);
     } catch (FileUploadException e) {
-      if (e.getMessage().equalsIgnoreCase(FileUtil.SIZE_VIOLATION))
-        result
-            .addError("A submitted file violates the CMS maximum file size of "
-                + AccessController.maxFileSize + " bytes");
-      else if (e.getMessage().startsWith("match fail")) {
-        String err = e.getMessage();
-        String fileName = err.substring(err.indexOf(":") + 1);
-        result.addError("File '" + fileName
-            + "' failed to match an accepted type");
-      } else if (e.getMessage().startsWith("size violation")) {
-        String err = e.getMessage();
-        String fileName = err.substring(err.indexOf(":") + 1);
-        result.addError("File '" + fileName
-            + "' violated the maximum size limitation");
-      } else {
-        result.addError(e.getizedMessage());
-      }
+      result.addError(e.getMessage(), e);
     } catch (Exception e) {
       result.addError("Error accessing database; files could not be submitted");
     }
@@ -4583,3 +4388,7 @@ public class TransactionHandler {
     return result;
   }
 }
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0
+*/

@@ -243,7 +243,7 @@ public class CMSRoot {
     // TODO Auto-generated method stub
     return null;
   }
-  public SubmittedFile getAssignmentFile(String id) {
+  public AssignmentFile getAssignmentFile(String id) {
     // TODO Auto-generated method stub
     return null;
   }
@@ -264,6 +264,10 @@ public class CMSRoot {
     return null;
   }
   public RequiredSubmission getRequiredSubmission(String string) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+  public Choice getChoice(String id) {
     // TODO Auto-generated method stub
     return null;
   }

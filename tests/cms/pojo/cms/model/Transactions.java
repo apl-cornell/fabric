@@ -1,10 +1,12 @@
 package cms.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
+import cms.www.TransactionError;
 import cms.www.TransactionResult;
 import cms.www.util.Emailer;
 
@@ -191,5 +193,45 @@ public class Transactions {
   public boolean setFinalGrades(User p, Course course, Collection grades) {
     // TODO Auto-generated method stub
     return false;
+  }
+
+  public boolean mergeGroups(User p, List groups, Assignment assignment) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  public boolean disbandGroups(User p, List groups, Assignment assignment) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  public void removeTimeSlots(User p, Assignment assignment, ArrayList toDelete) {
+    // TODO Auto-generated method stub
+    
+  }
+
+  public boolean createTimeSlots(User p, TimeSlot tsd, int multiplicity) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  public TransactionResult editCourseDescription(User p, Course course, String newDescription) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public TransactionError submitFiles(User p, Assignment assignment, Collection files) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public TransactionError submitSurvey(User p, String assignmentid, List answers) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public TransactionResult setStaffPrefs(User p, Course course, Staff data) {
+    // TODO Auto-generated method stub
+    return null;
   }
 }

@@ -240,7 +240,7 @@ public class Assignment {
     return null;
   }
 
-  public static Set/*GroupAssignedTo*/ getGroupAssignedTos() {
+  public Set/*GroupAssignedTo*/ getGroupAssignedTos() {
     // TODO Auto-generated method stub
     return null;
   }
@@ -342,6 +342,28 @@ public class Assignment {
   public GroupMember findActiveGroupMember(User p) {
     // TODO Auto-generated method stub
     return null;
+  }
+
+  public void removeCurrentSolutionFile() {
+    // TODO Auto-generated method stub
+    
+  }
+
+  /**
+   * check that the total score of all of the subproblems equals the total score
+   */
+  public void checkScores() {
+    // TODO Auto-generated method stub
+    
+  }
+
+  /**
+   * import the groups from another assignment.
+   * @param groupsFrom
+   */
+  public void importGroups(Assignment groupsFrom) {
+    // TODO Auto-generated method stub
+    
   }
 }
 

@@ -39,6 +39,13 @@ public class Choice {
     setText(text);
     setHidden(hidden);
   }
+  public Choice(SubProblem sp) {
+    // TODO Auto-generated constructor stub
+  }
+  public void remove() {
+    // TODO Auto-generated method stub
+    
+  }
 }
 
 /*

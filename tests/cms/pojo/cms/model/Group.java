@@ -89,6 +89,10 @@ public class Group {
     // TODO Auto-generated method stub
     return false;
   }
+  public GroupGrade getGrade() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
 
 /*

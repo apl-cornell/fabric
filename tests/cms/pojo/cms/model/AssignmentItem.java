@@ -37,6 +37,9 @@ public class AssignmentItem {
     setHidden(false);
   }
   
+  public AssignmentItem(Assignment assign) {
+    // TODO Auto-generated constructor stub
+  }
   // TODO: I think it may be the case that an assignment item has a unique
   // non-hidden file and then a collection of hidden files, but I'm not sure.
   public AssignmentFile getAssignmentFile() {
