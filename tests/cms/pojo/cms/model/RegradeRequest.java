@@ -57,6 +57,10 @@ public class RegradeRequest {
     setStatus(PENDING);
     setComment(null);
   }
+  public void addResponse(String value) {
+    // TODO Auto-generated method stub
+    
+  }
 }
 
 /*

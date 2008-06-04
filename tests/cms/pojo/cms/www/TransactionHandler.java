@@ -138,9 +138,7 @@ public class TransactionHandler {
     if (member != null && member.getStatus().equals(GroupMember.ACTIVE)) {
       result.addError("Already an active member of this group");
     }
-    Collection grades = current == null ? null
-                                        : assignment.findMostRecentGrades(p);
-    if (grades != null && grades.size() > 0) {
+    if (current != null && assignment.hasGrades(p)) {
       result.addError("Cannot change groups for this assignment");
     }
     if (!result.hasErrors()) {
@@ -468,9 +466,6 @@ public class TransactionHandler {
     Profiler.enterMethod("TransactionHandler.addGradesComments", "");
     TransactionResult result = new TransactionResult();
     try {
-      ServletFileUpload upload = new ServletFileUpload();
-      FileItemIterator i = upload.getItemIterator(request);
-      
       Assignment assignment = isAssign ? (Assignment) data : null;
       Course     course     = isAssign ? assignment.getCourse() : (Course) data;
       if (courseIsFrozen(course)) {
@@ -478,22 +473,35 @@ public class TransactionHandler {
         return result;
       }
       
+      ServletFileUpload upload = new ServletFileUpload();
+      FileItemIterator i = upload.getItemIterator(request);
+      
       ArrayList groups = new ArrayList();
       while (i.hasNext()) {
-        FileItemStream item = (FileItemStream) i.next();
+        FileItemStream item = i.next();
         String field = item.getFieldName();
         String value = getString(item);
         if (field.startsWith(AccessController.P_GRADE)) {
           String[] vals = field.split("_");
           SubProblem subProb = database.getSubProblem(vals[2]);
           Group      group   = database.getGroup(vals[3]);
+          Assignment assign  = isAssign ? assignment : group.getAssignment();
+          
+          if (assign.getAssignedGraders()       &&
+             !p.isAdminPrivByAssignment(assign) &&
+             !p.isAssignedTo(group, assignment)) {
+            result.addError("You are not allowed to grade these problems");
+            return result;
+          }
+          
           try {
             String scoreStr = value.trim();
             if (!scoreStr.equals("")) {
               float score = Float.parseFloat(scoreStr);
-              gradeInfo.addScore(vals[1], subProb, new Float(score), group);
-            } else
-              gradeInfo.addScore(vals[1], subProb, null, group);
+              assignment.addGrade(group, subProb, new Float(score));
+            } else {
+              assignment.addGrade(group, subProb, null);
+            }
           } catch (NumberFormatException e) {
             result.addError("Grade for '" + vals[1] + "' on problem '"
                 + subProb.getSubProblemName()
@@ -503,37 +511,20 @@ public class TransactionHandler {
           String[] vals = field.split("_");
           SubProblem subProb = database.getSubProblem(vals[2]);
           Group      group   = database.getGroup(vals[3]);
-          try {
-            String scoreStr = value.trim();
-            if (!scoreStr.equals("")) {
-              float score = StringUtil.parseFloat(scoreStr);
-              gradeInfo.addOldScore(vals[1], subProb, score, group);
-            }
-          } catch (NumberFormatException e) {
-            /*
-             * This shouldn't happen as P_OLDGRADE represents the score from the
-             * database as of the time the user loaded the web page. We should
-             * certainly know about it if it happens to though.
-             */
-            e.printStackTrace();
-            result.addError("An unexpected error occurred and grades could not be committed.  Contact CMS staff.");
-          }
+          GroupGrade grade   = database.getGroupGrade(vals[1]);
+          
+          if (grade != group.findMostRecentGrade(subProb))
+            result.addError("A conflicting grade has been entered");
         } else if (field.startsWith(AccessController.P_COMMENTTEXT)) {
           Group group =
             database.getGroup(field.split(AccessController.P_COMMENTTEXT)[1]);
-          gradeInfo.addCommentText(group, value);
+          Comment comment = new Comment(value, p, group);
         } else if (field.startsWith(AccessController.P_COMMENTFILE)) {
-          String fileName = FileUtil.trimFilePath(item.getName());
-          if (fileName.equals("")) {
-            continue;
-          }
           Group group =
-              database.getGroup(field.split(AccessController.P_COMMENTFILE)[1]);
-          int fileCounter = transactions.getGroupFileCounter(group);
-          Assignment assign = isAssign ? assignment : group.getAssignment();
-          FileData file = downloadFile(item); 
-          data.addCommentFile(group, new CommentFile(0, 0, fileName, path
-              .getAbsolutePath()));
+            database.getGroup(field.split(AccessController.P_COMMENTFILE)[1]);
+          FileData file = downloadFile(item);
+          // TODO: refactor comments and comment files
+          new CommentFile(new Comment("", p, group), file);
         } else if (field.startsWith(AccessController.P_SUBMITTEDFILE)) {
           String[] vals = field.split("_");
           Group group = database.getGroup(vals[1]);
@@ -545,34 +536,36 @@ public class TransactionHandler {
           }
           Assignment assign = isAssign ? assignment : group.getAssignment();
           FileData file = downloadFile(item);
-          group.addSubmittedFile(new SubmittedFile(group, group, p, submission, extension,
-              false, null/* date */, file));
+          new SubmittedFile(group, group, p, submission, extension, false,
+              null/* date */, file);
         } else if (field.startsWith(AccessController.P_REGRADERESPONSE)) {
+          // TODO: not sure this is right
           String[] vals = field.split("_");
           RegradeRequest regrade = database.getRegradeRequest(vals[1]);
           Group group = database.getGroup(vals[2]);
-          data.addRegradeResponse(group, request);
+          regrade.addResponse(value);
         } else if (field.startsWith(AccessController.P_REGRADESUB)) {
+          // TODO: not sure this is right
           String[] vals = field.split("_");
-          long subProb = Long.parseLong(vals[1]);
+          SubProblem subProb = database.getSubProblem(vals[1]);
           Group group = database.getGroup(vals[2]);
-          data.addNewRegradeSubProb(group, subProb);
+          new RegradeRequest(subProb, group, p, value);
         } else if (field.startsWith(AccessController.P_REGRADEWHOLE)) {
+          // TODO: not sure this is right
           Group group = database.getGroup(field.split("_")[1]);
-          data.addNewRegradeSubProb(group, 0);
+          new RegradeRequest(null, group, p, value);
         } else if (field.startsWith(AccessController.P_REGRADEREQUEST)) {
+          // TODO
           Group group = database.getGroup(field.split("_")[1]);
-          data.addNewRegrade(group, value);
+          new RegradeRequest(null, group, p, value);
         } else if (field.startsWith(AccessController.P_REGRADENETID)) {
+          // TODO
           Group group = database.getGroup((field.split("_"))[1]);
-          data.addNewRegradeNet(group, value);
         } else if (field.startsWith(AccessController.P_GROUPID)) {
-          groups.add(new Long(database.getGroup(value)));
+          groups.add(database.getGroup(value));
         } else if (field.startsWith(AccessController.P_REMOVECOMMENT)) {
-          long comment =
-              Long.parseLong(field.substring(AccessController.P_REMOVECOMMENT
-                  .length()));
-          data.addRemovedComment(comment);
+          Comment comment = database.getComment(field.split(AccessController.P_REMOVECOMMENT)[1]);
+          comment.setHidden(true);
         }
       }
       if (isAssign) result.setValue(new Object[] { null, groups });
@@ -583,81 +576,37 @@ public class TransactionHandler {
        * form elements the grader doesn't have permission for should be disabled
        * or missing, but just in case)
        */
-      if (isAssign && !p.isAdminPrivByCourse(assignment.getCourse())) {
-        if (assign.getAssignedGraders()) {
-          boolean permission =
-              database.assignedToGroups(data, p.getNet(), groups).size() == groups.size();
-          HashSet canGrades = new HashSet();
-          Iterator assignTos =
-              database.groupAssignedToHome().findByNetAssignment(
-                  p.getNet(), data).iterator();
-          while (assignTos.hasNext()) {
-            GroupAssignedTo a = (GroupAssignedTo) assignTos.next();
-            canGrades.add(a.getGroup() + "_" + a.getSubProblem());
+      // TODO: I have no Idea if this stuff is right
+      result = transactions.addAllAssignsGrades(p, data, data);
+      if (result.getSuccess()) {
+        try {
+          Iterator assigns = (Iterator) result.getValue();
+          while (assigns.hasNext()) {
+            Assignment assign = (Assignment) assigns.next();
+            transactions.computeAssignmentStats(p, assign, null);
           }
-          for (int j = 0; j < data.getScores().size(); j++) {
-            Object[] grade = (Object[]) data.getScores().get(j);
-            Long groupid = (Long) grade[3];
-            Long subprobid = (Long) grade[1];
-            permission =
-                permission && canGrades.contains(groupid + "_" + subprobid);
-          }
-          if (!permission) {
-            result.addError("Permission violation: You are not allowed to set these grades");
-          }
+          transactions.computeTotalScores(p, data, null);
+        } catch (Exception e) {
+          e.printStackTrace();
+          result
+          .addError("Grades committed, but failed to compute updated statistics");
         }
       }
-      if (!result.hasErrors()) {
-        if (isAssign) {
-          result = transactions.addGradesComments(p, data, data);
-          // If commit went through successfully and updates were made, update
-          // statistics
-          if (result.getSuccess()
-              && ((Boolean) result.getValue()).booleanValue()) {
-            try {
-              transactions.computeAssignmentStats(p, data, (LogData) null);
-              transactions.computeTotalScores(p, assignment.getCourse(),
-                  (LogData) null);
-            } catch (Exception e) {
-              e.printStackTrace();
-              result
-                  .addError("Grades committed, but failed to compute updated statistics");
-            }
-          }
-        } else {
-          result = transactions.addAllAssignsGrades(p, data, data);
-          if (result.getSuccess()) {
-            try {
-              Iterator assigns = (Iterator) result.getValue();
-              while (assigns.hasNext()) {
-                Long assign = (Long) assigns.next();
-                transactions.computeAssignmentStats(p, assign.longValue(),
-                    (LogData) null);
-              }
-              transactions.computeTotalScores(p, data, (LogData) null);
-            } catch (Exception e) {
-              e.printStackTrace();
-              result
-                  .addError("Grades committed, but failed to compute updated statistics");
-            }
-          }
-        }
-        String msg =
-            result.getSuccess() ? "Grades/comments updated successfully"
-                : "Database did not update grades and comments";
-        if (isAssign) {
-          Object[] pack = new Object[2];
-          pack[0] = msg;
-          pack[1] = groups;
-          result.setValue(pack);
-        } else {
-          result.setValue(msg);
-        }
+      String msg =
+        result.getSuccess() ? "Grades/comments updated successfully"
+            : "Database did not update grades and comments";
+      if (isAssign) {
+        Object[] pack = new Object[2];
+        pack[0] = msg;
+        pack[1] = groups;
+        result.setValue(pack);
       } else {
-        result.addError("Database did not update grades and comments");
+        result.setValue(msg);
       }
+    } catch (UploadTooBigException e) {
+      result.addError(e.getMessage(), e);
     } catch (FileUploadException e) {
-      result.addError(FileUtil.checkFileException(e));
+      result.addError(e.getMessage(), e);
     } catch (Exception e) {
       result.addError("Database did not update grades and comments");
       e.printStackTrace();
@@ -1179,7 +1128,7 @@ public class TransactionHandler {
    *           RemoteException
    */
   public TransactionResult commitStudentInfo(User p, List table,
-      Course course, boolean isClasslist) throws RemoteException {
+      Course course, boolean isClasslist) {
     TransactionResult result = new TransactionResult();
     boolean success = false;
     if (courseIsFrozen(course)) {
@@ -1250,7 +1199,7 @@ public class TransactionHandler {
           nonStudents.add(user);
         if (assignment.findActiveGroupMember(user) != null)
           nonSolo.add(user);
-        if (!assignment.findMostRecentGrades(user).isEmpty())
+        if (!assignment.hasGrades(user))
           graded.add(user);
       }
       
@@ -1860,10 +1809,8 @@ public class TransactionHandler {
       if (member == null || !member.getStatus().equals(GroupMember.ACTIVE)) {
         result.addError("Not an active member of this group");
       }
-      Collection grades = assign.findMostRecentGrades(p);
-      if (grades != null && grades.size() > 0) {
-        result
-            .addError("Cannot leave this group because grades have been entered");
+      if (assign.hasGrades(p)) {
+        result.addError("Cannot leave this group because grades have been entered");
       }
       int numMembers = group.findActiveMembers().size();
       if (numMembers < 2) {
@@ -2731,7 +2678,9 @@ public class TransactionHandler {
     HashMap newItems    = new HashMap();
     HashMap newSubProbs = new HashMap();
     HashMap newChoices  = new HashMap();
-    HashMap probScores  = new HashMap(); // for ensuring totalscore = sum of problem scores
+    
+    boolean newAssign = (assign == null);
+    
     List info = null;
     try {
       if(courseIsFrozen(course)) {
@@ -2740,7 +2689,7 @@ public class TransactionHandler {
         return result;
       }
       
-      if (assign == null)
+      if (newAssign)
         assign = new Assignment(course, null, null, null);
       
       ServletFileUpload upload = new ServletFileUpload();
@@ -3282,14 +3231,16 @@ public class TransactionHandler {
 
         assign.importGroups(groupsFrom);
       }
+    } catch (UploadTooBigException e) {
+      result.addError(e.getMessage(), e);
     } catch (FileUploadException e) {
-      result.addError(FileUtil.checkFileException(e));
+      result.addError(e.getMessage(), e);
     } catch (Exception e) {
       e.printStackTrace();
-      result.addError("Unexpected error while trying to " + (assignID == 0 ? "create" : "edit") + " this assignment");
+      result.addError("Unexpected error while trying to " + (newAssign ? "create" : "edit") + " this assignment");
       result.setException(e);
     }
-    Profiler.exitMethod("TransactionHandler.setAssignmentProps", "AssignmentID: " + assignID);
+    Profiler.exitMethod("TransactionHandler.setAssignmentProps", "AssignmentID: " + assign.toString());
     result.setValue(info);
     return result;
   }
@@ -3301,7 +3252,7 @@ public class TransactionHandler {
   private CategoryColumn getNewColumn(Map/*String, Column*/ created, String key, Category parent) {
     CategoryColumn result = (CategoryColumn) created.get(key);
     if (result == null) {
-      result = null; // TODO: new CategoryColumn(parent);
+      result = new CategoryColumn(parent);
       created.put(key, result);
     }
     return result;
@@ -4018,113 +3969,55 @@ public class TransactionHandler {
       Assignment assignment, OutputStream s) {
     TransactionResult result = new TransactionResult();
     try {
-      Course course = assignment.getCourse();
+      CSVPrinter out      = new CSVPrinter(s);
+      Course     course   = assignment.getCourse();
       Collection subProbs = assignment.getSubProblems();
-      Collection students = null, grades = null;
-      if (assignment.getAssignedGraders()
-          && !p.isAdminPrivByCourse(course)) {
-        students =
-            database.studentHome().findByAssignmentAssignedTo(assignment,
-                p.getNet());
-        grades =
-            database.gradeHome().findMostRecentByAssignmentGrader(
-                assignment, p.getNet());
-      } else {
-        // both students and grades are sorted by NetID; grades only has entries
-        // where the grade exists
-        students =
-            database.studentHome().findByCourseSortByNet(
-                assignment.getCourse());
-        grades =
-            database.gradeHome().findMostRecentByAssignment(assignment);
-      }
-      CSVPrinter out = new CSVPrinter(s);
-      int numSubprobs = subProbs.size();
-      String[] firstRow;
-      long[] subProbLocs = null;
-      Iterator i = subProbs.iterator();
-      Iterator j = grades.iterator();
-      int count = 0;
-      if (numSubprobs == 0) {
-        firstRow = new String[2];
-        firstRow[0] = "NetID";
-        firstRow[1] = "Grade";
-      } else {
-        firstRow = new String[2 + numSubprobs];
-        subProbLocs = new long[1 + numSubprobs];
-        firstRow[0] = "NetID";
-        while (i.hasNext()) {
-          SubProblem subProb = (SubProblem) i.next();
-          firstRow[1 + (count++)] = subProb.getSubProblemName();
-          subProbLocs[count] = subProb.getSubProblem();
+      
+      String[] row = new String[2 + subProbs.size()];
+      int      n   = row.length - 1;
+      
+      // generate header
+      row[0] = "NetID";
+      Iterator iter = subProbs.iterator();
+      for (int i = 1; i < n; i++)
+        row[i] = ((SubProblem) iter.next()).getSubProblemName();
+      row[n] = subProbs.isEmpty() ? "Grade" : "Total";
+      out.println(row);
+      
+      // sort students by netID
+      List students = new ArrayList(course.getStudents());
+      Collections.sort(students, new Comparator() {
+        public int compare(Object o1, Object o2) {
+          return ((Student) o1).getUser().getNetID().compareTo(
+                 ((Student) o2).getUser().getNetID());
         }
-        firstRow[firstRow.length - 1] = "Total";
-      }
-      out.println(firstRow);
-      i = students.iterator();
-      Grade grade = null;
-      // No subproblems
-      if (subProbLocs == null) {
-        String[] thisRow = new String[2];
-        if (j.hasNext()) {
-          grade = (Grade) j.next();
+      });
+      
+      // add student rows
+      iter = students.iterator();
+      while (iter.hasNext()) {
+        Student student = (Student) iter.next();
+        
+        // check permission
+        if (assignment.getAssignedGraders()       &&
+           !p.isAdminPrivByAssignment(assignment) &&
+           !p.isAssignedTo(student, assignment))
+          continue;
+        
+        // build row
+        row[0]      = student.getUser().getNetID();
+        Grade grade = assignment.findMostRecentGrade(student);
+
+        Iterator sps   = subProbs.iterator();
+        float    total = subProbs.isEmpty() ? grade.getGrade().floatValue() : 0;
+        for (int i = 1; i < n; i++) {
+          SubProblem sp = (SubProblem) sps.next();
+          grade = assignment.findMostRecentGrade(student, sp);
+          total += grade.getGrade().floatValue();
         }
-        while (i.hasNext()) {
-          Student student = (Student) i.next();
-          thisRow[0] = student.getNet();
-          if (grade != null && grade.getNet().equals(thisRow[0])) {
-            thisRow[1] = String.valueOf(grade.getGrade());
-            if (j.hasNext()) grade = (Grade) j.next();
-          } else // either we're not yet at the netid of this grade, or we're
-                  // at a netid past all existing grades or there are no grades
-          thisRow[1] = "";
-          out.println(thisRow);
-        }
-      } else // Subproblems
-      {
-        while (i.hasNext()) {
-          Student student = (Student) i.next();
-          String[] thisRow = new String[firstRow.length];
-          thisRow[0] = student.getNet();
-          count = 1;
-          Float totalScore = null;
-          boolean nextRow = false;
-          while (!nextRow && j.hasNext()) {
-            if (grade == null) grade = (Grade) j.next();
-            if (grade.getNet().equals(thisRow[0])) {
-              if (grade.getSubProblem() == null) {
-                totalScore = grade.getGrade();
-                grade = null;
-              } else if (grade.getSubProblem() == subProbLocs[count]) {
-                thisRow[count++] = String.valueOf(grade.getGrade());
-                grade = null;
-              } else {
-                thisRow[count++] = "";
-              }
-            } else if (thisRow[0].compareTo(grade.getNet()) < 0) {
-              for (int k = count; k < thisRow.length; k++) {
-                if (k == thisRow.length - 1 && totalScore != null) {
-                  thisRow[k] = totalScore.toString();
-                } else {
-                  thisRow[k] = "";
-                }
-              }
-              nextRow = true;
-            } else {
-              grade = null;
-            }
-          }
-          if (totalScore != null) {
-            for (int k = count; k < thisRow.length; k++) {
-              if (k == thisRow.length - 1) {
-                thisRow[k] = totalScore.toString();
-              } else {
-                thisRow[k] = "";
-              }
-            }
-          }
-          out.println(thisRow);
-        }
+        row[n] = String.valueOf(total);
+       
+        out.println(row);
       }
     } catch (Exception e) {
       e.printStackTrace();

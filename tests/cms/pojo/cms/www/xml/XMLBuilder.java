@@ -1569,7 +1569,7 @@ public class XMLBuilder {
     Document xml = buildStaffNavbar(user, course);
     Element root = (Element) xml.getFirstChild();
     root.appendChild(systemXMLBuilder.buildFiletypeListSubtree(xml));
-    root.appendChild(assignmentXMLBuilder.buildFullSubtree(user, xml, assignment, null, null));
+    root.appendChild(assignmentXMLBuilder.buildFullSubtree(user, xml, assignment, null));
     return xml;
   }
 
@@ -1747,12 +1747,6 @@ public class XMLBuilder {
     // Build template tree
     Document xml = buildStaffNavbar(user, assignment.getCourse());
     Element root = (Element) xml.getFirstChild();
-    Iterator grades = assignment.findMostRecentGrades(user).iterator();
-    HashMap gradeMap = new HashMap();
-    while (grades.hasNext()) {
-      Grade grade = (Grade) grades.next();
-      gradeMap.put(grade.getSubProblem(), grade.getGrade());
-    }
 
     Map answerMap = null;
     // Get answer data if this is a quiz or survey
@@ -1777,7 +1771,7 @@ public class XMLBuilder {
     // database.courseHome().findByPrimaryKey(new Course(courseID))));
     root.appendChild(systemXMLBuilder.buildFiletypeListSubtree(xml));
     Element xAssignment =
-        assignmentXMLBuilder.buildFullSubtree(user, xml, assignment, gradeMap, answerMap);
+        assignmentXMLBuilder.buildFullSubtree(user, xml, assignment, answerMap);
     root.appendChild(xAssignment);
     // Generate group branch
     Group group = null;
@@ -1789,8 +1783,8 @@ public class XMLBuilder {
       xAssignment.appendChild(buildCommentsSubtree(user, xml, group, assignment));
     }
     // Generate grade
-    Float grade = (Float) gradeMap.get(new Long(0)); // grade for assignments
-                                                      // w/o subproblems
+    Student student = assignment.getCourse().getStudent(user);
+    Float grade = assignment.findMostRecentGrade(student).getGrade();
     if (grade != null) {
       xAssignment.setAttribute(A_SCORE, grade.toString());
     }

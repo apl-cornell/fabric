@@ -2269,7 +2269,7 @@ public class AccessController extends HttpServlet {
       Course course = getCourse(request.getParameter(P_COURSEID));
       if (user.isAdminPrivByCourse(course)) {
         TransactionResult result =
-            transactions.setCourseProps(user, course, request.getParameterMap());
+            transactions.setCourseProps(user, course, request);
         if (user.isAdminPrivByCourse(course) || !result.getSuccess()) {
           buildURL = COURSEPROPS_URL;
           xml = xmlBuilder.buildCoursePropertiesPage(user, course);
@@ -2286,7 +2286,7 @@ public class AccessController extends HttpServlet {
         }
       } else if (user.isCMSAdmin()) {
         TransactionResult result =
-            transactions.setCourseProps(user, course, request.getParameterMap());
+            transactions.setCourseProps(user, course, request);
         buildURL = CMSADMINCOURSEPROPS_URL;
         xml = xmlBuilder.buildCMSAdminCoursePropsPage(user, course);
         if (result.getSuccess())

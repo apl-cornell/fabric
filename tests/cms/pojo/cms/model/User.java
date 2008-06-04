@@ -181,6 +181,20 @@ public class User implements Principal {
     // See TransactionHandler.authorizeDownload
     return false;
   }
+  /**
+   * return true if this user is a staff member assigned to grade a given student.
+   * @param student
+   * @param assignment
+   * @return
+   */
+  public boolean isAssignedTo(Student student, Assignment assignment) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+  public boolean isAssignedTo(Group group, Assignment assignment) {
+    // TODO Auto-generated method stub
+    return false;
+  }
 }
 
 /*

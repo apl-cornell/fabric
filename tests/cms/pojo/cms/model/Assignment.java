@@ -325,11 +325,16 @@ public class Assignment {
     return null;
   }
 
-  public Collection/*Grade*/ findMostRecentGrades(User user) {
-    // TODO Auto-generated method stub
-    return null;
+  /**
+   * return true if the user has already had some grades entered for this assignment.
+   * @param user
+   * @return
+   */
+  public boolean hasGrades(User user) {
+    // TODO: Auto-generated method stub
+    return false;
   }
-
+  
   public AnswerSet findMostRecentAnswerSet(Group group) {
     // TODO Auto-generated method stub
     return null;
@@ -362,6 +367,25 @@ public class Assignment {
    * @param groupsFrom
    */
   public void importGroups(Assignment groupsFrom) {
+    // TODO Auto-generated method stub
+    
+  }
+
+  /**
+   * Find the most recent grade for the student for the entire assignment (i.e.
+   * not associated with a particular subproblem.
+   */
+  public Grade findMostRecentGrade(Student student) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Grade findMostRecentGrade(Student student, SubProblem sp) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public void addGrade(Group group, SubProblem subProb, Float float1) {
     // TODO Auto-generated method stub
     
   }

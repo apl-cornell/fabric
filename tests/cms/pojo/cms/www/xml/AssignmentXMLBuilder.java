@@ -48,14 +48,15 @@ public class AssignmentXMLBuilder {
    *         several child nodes
    */
   public Element buildFullSubtree(User p, Document xml,
-      Assignment assignment, Map gradeMap, Map answerMap) {
+      Assignment assignment, Map answerMap) {
     Profiler.enterMethod("AssignmentXMLBuilder.buildFullSubtree",
         "AssignmentID: " + assignment.toString());
+    Student student = assignment.getCourse().getStudent(p);
     Element xAssignment =   buildGeneralSubtree(xml, assignment, null);
     xAssignment.appendChild(buildAsgnItemsSubtree(xml, assignment));
     xAssignment.appendChild(buildSolutionFilesSubtree(xml, assignment));
     xAssignment.appendChild(buildSubmissionsSubtree(xml, assignment));
-    xAssignment.appendChild(buildSubproblemsSubtree(xml, assignment, gradeMap, answerMap));
+    xAssignment.appendChild(buildSubproblemsSubtree(xml, student, assignment, answerMap));
     xAssignment.appendChild(xmlBuilder.scheduleXMLBuilder.buildScheduleSubtree(p, xml, assignment));
     if (assignment.getScheduled()) {
       xAssignment.setAttribute(XMLBuilder.A_USESCHEDULE, "");
@@ -374,8 +375,8 @@ public class AssignmentXMLBuilder {
    *          if method used for building nonstudent page
    * @return An element holding a list of subproblems
    */
-  public Element buildSubproblemsSubtree(Document xml,
-      Assignment assignment, Map gradeMap, Map answerMap) {
+  public Element buildSubproblemsSubtree(Document xml, Student student,
+      Assignment assignment, Map answerMap) {
     Element xSubproblems = xml.createElement(XMLBuilder.TAG_SUBPROBS);
     // TreeMap orderToSubProblem = new TreeMap();
     // visible subproblems
@@ -400,11 +401,9 @@ public class AssignmentXMLBuilder {
       xProb.setAttribute(XMLBuilder.A_ID, sp.toString());
       xProb.setAttribute(XMLBuilder.A_TYPE, Long.toString(sp.getType()));
       xProb.setAttribute(XMLBuilder.A_ORDER, Long.toString(sp.getOrder()));
-      if (gradeMap != null) {
-        Float grade = (Float) gradeMap.get(sp);
-        if (grade != null)
-          xProb.setAttribute(XMLBuilder.A_SCORE, StringUtil.roundToOne(grade.toString()));
-      }
+      Float grade = assignment.findMostRecentGrade(student, sp).getGrade();
+      if (grade != null)
+        xProb.setAttribute(XMLBuilder.A_SCORE, StringUtil.roundToOne(grade.toString()));
       if (answerMap != null) {
         String answer = (String) answerMap.get(sp);
         if (answer != null) xProb.setAttribute(XMLBuilder.A_ANSWER, answer);

@@ -55,6 +55,9 @@ public class CategoryColumn {
     setRemoved(removed);
     setPosition(position);
   }
+  public CategoryColumn(Category parent) {
+    // TODO Auto-generated constructor stub
+  }
 }
 
 /*

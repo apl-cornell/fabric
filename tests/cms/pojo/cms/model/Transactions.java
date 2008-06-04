@@ -234,4 +234,19 @@ public class Transactions {
     // TODO Auto-generated method stub
     return null;
   }
+
+  public TransactionResult addAllAssignsGrades(User p, Object data, Object data2) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public void computeAssignmentStats(User p, Assignment assign, Object object) {
+    // TODO Auto-generated method stub
+    
+  }
+
+  public void computeTotalScores(User p, Object data, Object object) {
+    // TODO Auto-generated method stub
+    
+  }
 }
