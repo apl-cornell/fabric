@@ -12,241 +12,198 @@ import cms.www.util.Emailer;
 
 public class Transactions {
   public Transactions(CMSRoot database) {
-    // TODO
+    throw new NotImplementedException();
   }
 
   public boolean acceptInvitation(User user, Group group) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean addCMSAdmin(User p, User admin) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean createCourse(User p, String courseCode, String courseName) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean addSiteNotice(User p, String text, User author, Date exp, boolean hidden) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean editSiteNotice(User p, SiteNotice id, String text, Date exp, boolean hidden, boolean deleted) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean addRegradeRequest(User p, Group group, Collection subProblems, String requestText) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean assignGrader(User p, Assignment assign, SubProblem subProblem, User grader, Collection groups) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean cancelInvitation(User p, User canceled, Group group) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean changeGroupSlot(User p, Group group, Assignment assign, TimeSlot slotNum, boolean addGroup) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public TransactionResult commitFinalGradesFile(User p, Course course, List table) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public TransactionResult addStudentsToCourse(User pr, Vector netids, Course course, boolean emailOn) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public boolean inviteUser(User inviter, User invited, Group group) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean leaveGroup(User p, Group group) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean createCategory(User p, Category category) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean updateCategory(User p, Category category) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean postAnnouncement(User p, Course course, String announce) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public TransactionResult removeAssignment(User p, Assignment assignment) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public boolean removeCategory(User p, Category category) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean removeCMSAdmin(User p) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean removeCtgRow(User p, CategoryRow row) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public TransactionResult removeExtension(User p, Group group) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public TransactionResult restoreAnnouncement(User p, Announcement announce) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public TransactionResult restoreAssignment(User p, Assignment assignment) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public TransactionResult sendEmail(User p, Course course, Emailer email) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public boolean commitGradesFile(User p, Assignment assignment, List table) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean commitStudentInfo(User p, List table, Course course, boolean isClasslist) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean createGroup(User p, List netids, Assignment assignment) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean createSemester(User p, String semesterName) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean declineInvitation(User p, Group group) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean disbandGroup(User p, Group group) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean dropStudents(User p, Collection users, Course course) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public void editAnnouncement(User p, Announcement annt, String newText, boolean remove) {
-    // TODO Auto-generated method stub
-    
+    throw new NotImplementedException();
   }
 
   public void editSemester(User p, Semester semester, boolean hidden) {
-    // TODO Auto-generated method stub
-    
+    throw new NotImplementedException();
   }
 
   public boolean setCurrentSemester(User p, Semester sem) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public TransactionResult setExtension(User p, Group group, Date extension) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public boolean setFinalGrades(User p, Course course, Collection grades) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean mergeGroups(User p, List groups, Assignment assignment) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public boolean disbandGroups(User p, List groups, Assignment assignment) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public void removeTimeSlots(User p, Assignment assignment, ArrayList toDelete) {
-    // TODO Auto-generated method stub
-    
+    throw new NotImplementedException();
   }
 
   public boolean createTimeSlots(User p, TimeSlot tsd, int multiplicity) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public TransactionResult editCourseDescription(User p, Course course, String newDescription) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public TransactionError submitFiles(User p, Assignment assignment, Collection files) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public TransactionError submitSurvey(User p, String assignmentid, List answers) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public TransactionResult setStaffPrefs(User p, Course course, Staff data) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public TransactionResult addAllAssignsGrades(User p, Object data, Object data2) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public void computeAssignmentStats(User p, Assignment assign, Object object) {
-    // TODO Auto-generated method stub
-    
+    throw new NotImplementedException();
   }
 
   public void computeTotalScores(User p, Object data, Object object) {
-    // TODO Auto-generated method stub
-    
+    throw new NotImplementedException();
   }
 }
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

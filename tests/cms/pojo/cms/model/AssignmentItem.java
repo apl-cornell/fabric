@@ -38,17 +38,15 @@ public class AssignmentItem {
   }
   
   public AssignmentItem(Assignment assign) {
-    // TODO Auto-generated constructor stub
+    throw new NotImplementedException();
   }
-  // TODO: I think it may be the case that an assignment item has a unique
+  // Note: I think it may be the case that an assignment item has a unique
   // non-hidden file and then a collection of hidden files, but I'm not sure.
   public AssignmentFile getAssignmentFile() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*AssignmentFile*/ findHiddenAssignmentFiles() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 }
 

@@ -58,8 +58,7 @@ public class RegradeRequest {
     setComment(null);
   }
   public void addResponse(String value) {
-    // TODO Auto-generated method stub
-    
+    throw new NotImplementedException();
   }
 }
 

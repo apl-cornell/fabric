@@ -46,23 +46,19 @@ public class RequiredSubmission {
   }
 
   public RequiredSubmission(Assignment assign) {
-    // TODO Auto-generated constructor stub
+    throw new NotImplementedException();
   }
   public boolean isHidden() {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public Collection/*String*/ getRequiredFileTypes() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public String matchFileType(String givenFileType) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public void addRequiredFileType(String value) {
-    // TODO Auto-generated method stub
-    
+    throw new NotImplementedException();
   }
 
 }

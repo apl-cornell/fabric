@@ -88,281 +88,154 @@ public class CMSRoot {
    *    <li>Adobe Acrobat portable document file: pdf</li> </ul> </li> </ol>
    */
   public void ensureStartupSettings() {
-    // TODO
-    throw new UnsupportedOperationException();
+    throw new NotImplementedException();
   }
 
   /**
    * @return the number of distinct CUIDs found in the user table
    */
   public int getCUIDCount() {
-    // TODO
-    throw new UnsupportedOperationException();
+    throw new NotImplementedException();
   }
   
   public Collection/*User*/ getAllUsers() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*LogDetail*/ findGradeLogDetails(Course course, Collection/*Group*/ groups) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Assignment*/ findAssignmentsBySemester(Semester curSemester) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Assignment*/ findAssignmentsByCourseAdmin(Semester curSemester, User user) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Announcement*/ findAnnouncementsByUserDateSemester(User user, Date weekago, Semester sem) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Announcement*/ findAnnouncementsByUserDate(User user, Date weekago) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Semester*/ getAllSemesters() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*User*/ findAllAdmins() {
     // TODO: check on return type; might not be user
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*User*/ findActiveStudentsWithoutCUID() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Course*/ findCCAccessCourses() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Course*/ findGuestAccessCourses() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Assignment*/ findOpenAssignmentsByDeadline(Date checkDeadline) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Log*/ findLogs(LogSearchParams params) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*SiteNotice*/ findCurrentSiteNoticeShowing() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*SiteNotice*/ findAllLivingSiteNotices() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*SiteNotice*/ findDeletedSiteNotices() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*User*/ findMissingNameUsers() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Assignment getAssignment(String assignID) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Group getGroup(String groupID) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Semester getSemester(String semesterID) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Course getCourse(String courseID) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Announcement getAnnouncement(String announceID) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public User getUser(String netID) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Category getCategory(String catID) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public SiteNotice getSiteNotice(String noticeID) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public CategoryRow getCategoryRow(String rowID) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public TimeSlot getTimeSlot(String slotID) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public User getGuestUser() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public SubProblem getSubProblem(String subProblemID) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection assignedToGroups(Assignment assign, User user, List/*Group*/ list) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public CategoryContents getCategoryContents(String contentsID) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public RegradeRequest getRegradeRequest(String string) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public CategoryColumn getCategoryColumn(String value) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public SolutionFile getSolutionFile(String id) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public AssignmentItem getAssignmentItem(String id) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public AssignmentFile getAssignmentFile(String id) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public SubmittedFile getSubmittedFile(String id) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public SubmittedFile getCategoryContentsFileEntry(String id) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public FileData getFileData(String id) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public CommentFile getCommentFile(String id) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public RequiredSubmission getRequiredSubmission(String string) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Choice getChoice(String id) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Grade getGrade(String string) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public GroupGrade getGroupGrade(String string) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Comment getComment(String string) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
-
-  /* This method doesn't seem to work, and doesn't seem to be called in CMS
-   * public Collection getNonStudentNetIDs(java.util.Collection netids,long courseID) ;
-   */
-
-  /* These methods have been moved to the assignment class:
-   * public Collection<String> getNonSoloGroupMembers(Collection<String> netids, long assignmentID);
-   * public Collection<String> getGradedStudents(Collection<String> netids,long assignmentID) ;
-   * public Collection<long> getGradedGroups(Collection<long> groupIDs,long asgnID) ;
-   */
-
-
-  /* TODO
-  public Collection getGradedAssignments(java.util.Collection netids,Course course) ;
-
-  public Map getAssignmentIDMap(Course course) ;
-
-  public Map getSubmissionNameMap(Assignment assignment) ;
-
-  public Map getSubmissionNameMapByCourse(Course course) ;
-
-  public Map getSubProblemIDMap(Assignment assignment) ;
-
-  public Map getCIDCourseCodeMap();
-
-  public Map getAssignmentNameMap() ;
-
-  public Map getAssignmentNameMap(Course course) ;
-
-  public Map getCategoryIDMap(Course course) ;
-
-  public Map getCourseCodeMap() ;
-
-  public Map getRemainingSubmissionMap(Assignment assignment) ;
-
-  public Map getNameMap(Course courseID) ;
-
-  public Map getFirstLastNameMap(Course course) ;
-
-  public java.lang.Long hasSoloCourse(java.lang.String netID) ;
-
-  public java.lang.Long hasSoloCourseBySemester(java.lang.String netID,Semester semester) ;
-
-  public Collection findGradeLogDetails(Course course,java.util.Collection groupids) ;
-
-  public Map getSubProblemNameMap(Assignment assignment) ;
-
-  public Map getSubProblemNameMapByCourse(Course course) ;
-
-  public Map getGroupIDMap(Assignment assignment) ;
-
-  public Map getGroupIDMap(java.lang.String netID) ;
-
-  public Map getGroupIDMapByCourse(Course course) ;
-
-  public Map getGroupMemberListMap(Course course) ;
-
-  public Map getGroupMembersMap(Course course) ;
-
-  public Map getGroupSizeMap(Assignment assignment) ;
-
-  public Map getCommentFileRequestIDMap(Assignment assignment) ;
-
-  public Map getStaffNameMap(Course course) ;
-
-  public Map getStaffFirstLastNameMap(Course course) ;
-
-  public Map getStaffNameMap(java.lang.String netID) ;
-
-  public Map getCommentFileGroupIDMap(Assignment assignment) ;
-
-  public Map getCommentFileRequestIDMapByCourse(Course course) ;
-
-  public Map getCommentFileGroupIDMapByCourse(Course course) ;
-
-  public boolean isAssignedTo(java.lang.String netID,java.util.Collection groupIDs) ;
-
-  public Collection getAllUsers() ;
-
-  */
 }
 
 /*

@@ -174,16 +174,13 @@ public class Log {
     // TODO: not obvious from logBean.ejbCreate
   }
   public Collection/*Assignments*/ findAssignments() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*LogDetail*/ getDetailLogs() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*User*/ getReceivingUsers() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 }
 

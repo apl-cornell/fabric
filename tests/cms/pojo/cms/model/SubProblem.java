@@ -61,11 +61,10 @@ public class SubProblem {
   }
 
   public SubProblem(Assignment assign) {
-    // TODO Auto-generated constructor stub
+    throw new NotImplementedException();
   }
   public boolean isHidden() {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   
   /**
@@ -73,16 +72,13 @@ public class SubProblem {
    *         multiple choice problem, or null.
    */
   public Choice getAnswerChoice() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Choice*/ getChoices() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Choice getChoice(String text) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
 }

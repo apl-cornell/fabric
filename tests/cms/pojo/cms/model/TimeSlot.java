@@ -53,8 +53,7 @@ public class TimeSlot {
   }
   
   public Collection/*Group*/ findGroups() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 }
 

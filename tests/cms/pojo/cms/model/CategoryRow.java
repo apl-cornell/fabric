@@ -38,8 +38,7 @@ public class CategoryRow {
   }
 
   public CategoryContents getContents(CategoryColumn column) {
-    // TODO
-    return null;
+    throw new NotImplementedException();
   }
   
   /**
@@ -47,8 +46,7 @@ public class CategoryRow {
    * the created contents will be determined by the type of the column.
    */
   public CategoryContents createContents(CategoryColumn col) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 }
 

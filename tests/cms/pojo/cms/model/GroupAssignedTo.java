@@ -42,8 +42,7 @@ public class GroupAssignedTo {
   }
   
   public static boolean isAssignedTo(SubProblem subProblem, Group group, User user) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 }
 

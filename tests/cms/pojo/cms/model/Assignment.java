@@ -206,8 +206,7 @@ public class Assignment {
    * @return a subcollection of netids (Collection of User)
    */
   public Collection/*User*/ getNonSoloGroupMembers(Collection/*User*/ netids) {
-    // TODO
-    throw new UnsupportedOperationException();
+    throw new NotImplementedException();
   }
 
   /**
@@ -216,8 +215,7 @@ public class Assignment {
    * @return the subcollection of netids (Collection of User)
    */
   public Collection/*User*/ getGradedStudents(Collection/*User*/ netids) {
-    // TODO
-    throw new UnsupportedOperationException();
+    throw new NotImplementedException();
   }
 
   /**
@@ -226,103 +224,83 @@ public class Assignment {
    * @param the subcollection of groups (Collection of Group)
    */
   public Collection/*Group*/ getGradedGroups(Collection/*Group*/ groups) {
-    // TODO
-    throw new UnsupportedOperationException();
+    throw new NotImplementedException();
   }
 
   public Set/*RegradeRequest*/ findRegradeRequests() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Set/*GroupGrades*/ findGroupGradesByGrader(User user, boolean adminPriv, int i) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Set/*GroupAssignedTo*/ getGroupAssignedTos() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Set/*GroupMember*/ findActiveGroupMembers() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Set/*GroupMember*/ findActiveAssignedGroupMembers(User user) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Set/*Group*/ findLateGroups() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Group findGroup(User user) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Collection/*GroupAssignedTo*/ findGroupAssignedTos(User user) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Collection/*Grade*/ getGrades() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Collection/*AnswerSet*/ getAnswerSets() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public boolean hasSolutionFile() {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 
   public SolutionFile findSolutionFile() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Collection/*SolutionFile*/ findHiddenSolutionFiles() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Collection/*AssignmentItem*/ getAssignmentItems() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Collection/*AssignmentItems*/ findHiddenAssignmentItems() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Collection/*GroupMember*/ findInvitations(User user) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Collection/*TimeSlot*/ getTimeSlots() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Collection/*Group*/ getGroups() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Collection/*TimeSlot*/ findConflictingTimeSlots() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   /**
@@ -331,13 +309,11 @@ public class Assignment {
    * @return
    */
   public boolean hasGrades(User user) {
-    // TODO: Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   
   public AnswerSet findMostRecentAnswerSet(Group group) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   /**
@@ -345,21 +321,18 @@ public class Assignment {
    * user and this assignment, or null if none exists.
    */
   public GroupMember findActiveGroupMember(User p) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public void removeCurrentSolutionFile() {
-    // TODO Auto-generated method stub
-    
+    throw new NotImplementedException();
   }
 
   /**
    * check that the total score of all of the subproblems equals the total score
    */
   public void checkScores() {
-    // TODO Auto-generated method stub
-    
+    throw new NotImplementedException();
   }
 
   /**
@@ -367,8 +340,7 @@ public class Assignment {
    * @param groupsFrom
    */
   public void importGroups(Assignment groupsFrom) {
-    // TODO Auto-generated method stub
-    
+    throw new NotImplementedException();
   }
 
   /**
@@ -376,18 +348,15 @@ public class Assignment {
    * not associated with a particular subproblem.
    */
   public Grade findMostRecentGrade(Student student) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Grade findMostRecentGrade(Student student, SubProblem sp) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public void addGrade(Group group, SubProblem subProb, Float float1) {
-    // TODO Auto-generated method stub
-    
+    throw new NotImplementedException();
   }
 }
 

@@ -80,16 +80,13 @@ public class Category {
   }
   
   public Collection/*CategoryColumn*/ getColumns() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*CategoryColumn*/ getRemovedColumns() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*CategoryRow*/ getRows() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
 }

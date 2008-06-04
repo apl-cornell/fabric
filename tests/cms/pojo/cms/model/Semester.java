@@ -37,20 +37,16 @@ public class Semester {
   }
   
   public Collection getCourses() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Course*/ findStaffAdminCourses(User user) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Course*/ findCCAccessCourses() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Course*/ findGuestAccessCourses() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 }
 

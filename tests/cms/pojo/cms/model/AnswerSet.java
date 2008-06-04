@@ -54,13 +54,11 @@ public class AnswerSet {
   }
 
   public Collection/*Answer*/ getAnswers() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public Answer getAnswer(SubProblem subProblem) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 }
 

@@ -46,23 +46,19 @@ public class User implements Principal {
   //////////////////////////////////////////////////////////////////////////////
 
   public Collection/*Course*/ findStaffCourses() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*Course*/ findStaffCoursesBySemester(Semester semester) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*Course*/ findStudentCourses() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*Course*/ findStudentCoursesBySemester(Semester semester) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 
   public String canonicalName() {
@@ -73,8 +69,7 @@ public class User implements Principal {
   }
   
   public Collection/*Semester*/ findSemesters() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   /**
@@ -82,104 +77,80 @@ public class User implements Principal {
    *         if the student is enrolled in more or less than one course.
    */
   public Course getSoloCourse(Semester semester) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public boolean hasAssignAccess(Course course, Assignment assign) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isInStaffAsBlankMode() {
-    // TODO
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isAdminPrivByCourse(Course course) {
-    // TODO
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isGroupsPrivByCourse(Course course) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isGradesPrivByCourse(Course course) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isAssignPrivByCourse(Course course) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isCategoryPrivByCourse(Course course) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isStaffInCourseByCourse(Course course) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isCMSAdmin() {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isStudentInCourseByCourse(Course course) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public int getAuthoriznLevelByCourse(Course course) {
-    // TODO Auto-generated method stub
-    return 0;
+    throw new NotImplementedException();
   }
   public boolean isAssignPrivByAssignment(Assignment assignment) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isAuthenticated() {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isGuest() {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean delegatesTo(Principal delagatee) {
     return false;
   }
   public boolean hasCourseAccess(Course course) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean hasStudentsPageAccess(Course course) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isAdminPrivByAssignment(Assignment assign) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isCategoryPrivByCategory(Category category) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isGradesPrivByAssignment(Assignment assign) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isGroupsPrivByAssignment(Assignment assign) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isStudentInCourseByAssignment(Assignment assign) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isStudentInCourseByGroup(Group group) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean canView(SolutionFile sol) {
-    // TODO Auto-generated method stub
     // See TransactionHandler.authorizeDownload
-    return false;
+    throw new NotImplementedException();
   }
   /**
    * return true if this user is a staff member assigned to grade a given student.
@@ -188,12 +159,10 @@ public class User implements Principal {
    * @return
    */
   public boolean isAssignedTo(Student student, Assignment assignment) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public boolean isAssignedTo(Group group, Assignment assignment) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
 }
 

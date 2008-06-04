@@ -32,9 +32,8 @@ public class CommentFile implements FileEntry {
     setFile(file);
   }
   public boolean isFileAuthorized(User user) {
-    // TODO Auto-generated method stub
     // See TransactionHandler.authorizeDownload
-    return false;
+    throw new NotImplementedException();
   }
 }
 

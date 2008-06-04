@@ -25,8 +25,7 @@ public class CategoryContentsFileList extends CategoryContents {
   }
   
   public Collection/*CategoryContentsFileEntry*/ getFiles() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 }
 

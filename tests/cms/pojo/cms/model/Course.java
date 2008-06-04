@@ -158,89 +158,71 @@ public class Course {
     return Collections.unmodifiableCollection(assignments);
   }
   public Collection getAllAssignmentFiles() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection getEmails() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection getStudents() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection getRegradeRequests() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*Grade*/ getTotals() {
-    // TODO Auto-generated method stub
     // See gradeHome().findTotalsByCourseID
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*Announcement*/ getAnnouncements() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*Announcement*/ findHiddenAnnouncements() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*Staff*/ getStaff() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*Student*/ findActiveStudents() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*Group*/ findGroupsByUser(User user) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*GroupMember*/ findGroupMembersByUser(User user) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*Grade*/ findRecentGradesByUser(User user, boolean b, User p) {
-    // TODO Auto-generated method stub
-    // TODO: see gradeHome().findRecentByNetIDCourseID
+    // see gradeHome().findRecentByNetIDCourseID
     return null;
   }
   
   public Collection/*RequiredSubmission*/ getRequiredSubmissions() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Map/*SubProblem, Float*/ getGradeMap(User user) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Student getStudent(User user) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*Assignment*/ findHiddenAssignments() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*Category*/ getCategories() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Staff getStaff(User user) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 }
 

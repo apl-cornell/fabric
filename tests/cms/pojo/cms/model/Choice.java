@@ -40,11 +40,10 @@ public class Choice {
     setHidden(hidden);
   }
   public Choice(SubProblem sp) {
-    // TODO Auto-generated constructor stub
+    throw new NotImplementedException();
   }
   public void remove() {
-    // TODO Auto-generated method stub
-    
+    throw new NotImplementedException();
   }
 }
 

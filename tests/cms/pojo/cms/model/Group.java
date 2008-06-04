@@ -64,38 +64,30 @@ public class Group {
   }
   
   public Collection/*Comment*/ getComments() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*RegradeRequest*/ getRegradeRequests() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*SubmittedFile*/ getSubmittedFiles() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public GroupMember findGroupMember(User user) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public Collection/*GroupMember*/ findActiveMembers() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public boolean isAssignedTo(User p) {
-    // TODO Auto-generated method stub
-    return false;
+    throw new NotImplementedException();
   }
   public GroupGrade getGrade() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   public GroupGrade findMostRecentGrade(SubProblem subProb) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 }
 

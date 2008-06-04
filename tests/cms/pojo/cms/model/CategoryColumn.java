@@ -56,7 +56,7 @@ public class CategoryColumn {
     setPosition(position);
   }
   public CategoryColumn(Category parent) {
-    // TODO Auto-generated constructor stub
+    throw new NotImplementedException();
   }
 }
 

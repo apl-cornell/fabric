@@ -46,8 +46,7 @@ public class Announcement {
   public boolean getHidden()   { return this.hidden;   }
 
   public Collection getAnnouncementHistory() {
-    // TODO
-    return null;
+    throw new NotImplementedException();
   }
 
   //////////////////////////////////////////////////////////////////////////////

@@ -48,18 +48,15 @@ public class Comment {
   }
   
   public Collection/*RegradeRequest*/ findRequests() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public Collection/*CommentFiles*/ getFiles() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
   
   public CommentFile getCommentFile() {
-    // TODO Auto-generated method stub
-    return null;
+    throw new NotImplementedException();
   }
 }
 
