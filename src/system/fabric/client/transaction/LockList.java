@@ -28,6 +28,8 @@ final class LockList<T> implements Iterable<T> {
    * Adds a node to the list.
    */
   public void add(Node<T> node) {
+    node.prev = tail;
+    
     if (tail != null) tail.next = node;
     tail = node;
 
