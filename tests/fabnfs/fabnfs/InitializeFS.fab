@@ -6,14 +6,19 @@ import fabric.util.HashMap;
 import fabric.io.FabDirectory;
 
 public class InitializeFS {
-    public static void main(String[] args) {
-        atomic {
-            Core core = Client.getClient().getCore(args[0]);
-            FabDirectory rootDir = new FabDirectory@core();
+  public static void main(String[] args) {
+    atomic {
+      if (args.length < 1) {
+	System.out.println("Usage: fabnfs.InitializeFS <core>");
+	return;
+      }
 
-            HashMap map = (HashMap) core.getRoot();
+      Core core = Client.getClient().getCore(args[0]);
+      FabDirectory rootDir = new FabDirectory@core();
 
-            map.put("fileSystem", rootDir);
-        }
+      HashMap map = (HashMap) core.getRoot();
+
+      map.put("fileSystem", rootDir);
     }
+  }
 }

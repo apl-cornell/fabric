@@ -67,8 +67,6 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
         // truncate by deleting and recreating the file
         File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, fileName);
         fd.reset();
-//      RandomAccessFile ra = new RandomAccessFile(fileName, "rw");
-//      ra.close();
       }
 
       // make the reply
@@ -149,7 +147,6 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
       if (dirfiles == null)
         throw new NFSException(xid, NFSERR_NOENT);
 //      System.out.println("dir has " + dirfiles.length + " entries");
-//    if (dirfiles.length <= 0)
       if (dirfiles.length < 0)
         throw new NFSException(xid, NFSERR_NOENT);
 
@@ -226,7 +223,6 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
         throw new NFSException(xid, NFSERR_EXIST);
 
       // TODO attributes not supported yet
-//    RandomAccessFile ra = new RandomAccessFile(path, "rw");
       RandomAccessFile ra = fsinfo.factory.makeRAFile(fsinfo.localCore, fsinfo.core, path);
       ra.close();
 

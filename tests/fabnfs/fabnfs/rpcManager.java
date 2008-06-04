@@ -24,8 +24,7 @@ class rpcManager extends java.lang.Object  implements RPCConsts {
   public void MainLoop() {
     // Create some threads to collect packets from the net
     MTList packets = new MTList();
-  for (int i = 0; i < 20; i++) 
-//    for (int i = 0; i < 4; i++) 
+    for (int i = 0; i < 4; i++) 
     {
       PacketCollector pc = new PacketCollector(socket, packets);
       new Thread(pc).start();

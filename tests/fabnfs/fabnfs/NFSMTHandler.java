@@ -12,10 +12,10 @@ class NFSMTHandler extends rpcHandler implements RPCConsts, NFSConsts
 
     handler = new NFSHandler(handles, pm, fsi, tm);
     packetq = new MTList();
-//  for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 30; i++) {
       NFSOperation op = new NFSOperation(packetq, handler);
       new Thread(op).start();
-//    }
+    }
   }
 
   public void Run(UDPPacketPort port, long xid,
