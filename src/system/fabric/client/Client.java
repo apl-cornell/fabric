@@ -47,7 +47,7 @@ public class Client {
   protected final boolean useSSL;
 
   // The logger
-  public static final Logger log = Logger.getLogger("fabric.client");
+  public static Logger log;
 
   // The timeout (in milliseconds) to use whilst attempting to connect to a core
   // node.
@@ -102,8 +102,10 @@ public class Client {
     if (instance != null)
       throw new IllegalStateException(
           "The Fabric client has already been initialized");
+
+    log = Logger.getLogger("fabric.client");
+
     log.info("Initializing Fabric client");
-    // logger.info(logger.getLevel().toString());
     log.config("maximum connections: " + maxConnections);
     log.config("timeout:             " + timeout);
     log.config("retries:             " + retries);

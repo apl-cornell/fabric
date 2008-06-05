@@ -2,6 +2,7 @@ package fabric.client.transaction;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 import fabric.client.*;
 import fabric.common.InternalError;
@@ -54,6 +55,8 @@ public final class TransactionManager {
    * The innermost running transaction for the thread being managed.
    */
   private Log current;
+
+  static final Logger logger = Logger.getLogger("fabric.client.transaction");
 
   /**
    * A map from OIDs to a version number and a list of logs for transactions
@@ -322,6 +325,9 @@ public final class TransactionManager {
   }
 
   public void registerRead($Impl obj) {
+    logger
+        .finest(current + " reading " + obj.$getCore() + "/" + obj.$getOnum());
+
     synchronized (obj) {
       // Nothing to do if the object's $reader is us or we're not in a
       // transaction.
@@ -334,6 +340,7 @@ public final class TransactionManager {
       while (obj.$writeLockHolder != null
           && !current.isDescendantOf(obj.$writeLockHolder)) {
         try {
+          logger.finest(current + " waiting on writer " + obj.$writeLockHolder);
           obj.$numWaiting++;
           obj.wait();
         } catch (InterruptedException e) {
@@ -348,6 +355,7 @@ public final class TransactionManager {
       obj.$reader = current;
 
       current.acquireReadLock(obj);
+      logger.finest(current + " got read lock");
     }
   }
 
@@ -357,6 +365,9 @@ public final class TransactionManager {
    * @return whether a new (top-level) transaction was created.
    */
   public boolean registerWrite($Impl obj) {
+    logger
+        .finest(current + " writing " + obj.$getCore() + "/" + obj.$getOnum());
+
     boolean needTransaction = current == null;
     if (needTransaction) startTransaction();
 
@@ -379,6 +390,7 @@ public final class TransactionManager {
             boolean containsAll = true;
             for (Log lock : readMapEntry.readLocks) {
               if (!current.isDescendantOf(lock)) {
+                logger.finest(current + " waiting on reader " + lock);
                 containsAll = false;
                 break;
               }
@@ -386,7 +398,8 @@ public final class TransactionManager {
 
             if (containsAll) break;
           }
-        }
+        } else logger.finest(current + " waiting on writer "
+            + obj.$writeLockHolder);
 
         try {
           obj.$numWaiting++;
@@ -401,6 +414,8 @@ public final class TransactionManager {
 
       // Set the write stamp.
       obj.$writer = current;
+      
+      logger.finest(current + " got write lock");
 
       if (obj.$writeLockHolder == current) return needTransaction;
 
@@ -440,7 +455,7 @@ public final class TransactionManager {
   public static void startThread(Thread thread) {
     if (!(thread instanceof FabricThread))
       getInstance().registerThread(thread);
-    
+
     thread.start();
   }
 
