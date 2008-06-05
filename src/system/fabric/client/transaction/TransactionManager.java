@@ -169,6 +169,7 @@ public final class TransactionManager {
   }
 
   public void commitTransaction() throws AbortException {
+    logger.finest(current + " committing");
     // Assume only one thread will be executing this.
 
     // XXX This is a long and ugly method. Refactor?
