@@ -57,7 +57,12 @@ public class XMLServlet extends HttpServlet {
     super.init(context);
     try {
       System.setProperty("fabric.prefix", context.getInitParameter("fabric-prefix"));
-      Client.initialize();
+      try {
+        Client.initialize();
+      } catch(IllegalStateException e) {
+        // TODO: need to fix this up
+        // do nothing, client already initialized.
+      }
       Client client = Client.getClient();
       Core   local  = client.getLocalCore();
 

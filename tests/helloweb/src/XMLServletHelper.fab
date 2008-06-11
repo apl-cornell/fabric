@@ -112,7 +112,9 @@ public class XMLServletHelper {
   }
   
   public static XMLServletHelper create(Core core, String uri) throws Exception {
-    return new XMLServletHelper@core(uri);
+    atomic {
+      return new XMLServletHelper@core(uri);
+    }
   }
 }
 
