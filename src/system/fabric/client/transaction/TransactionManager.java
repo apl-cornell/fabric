@@ -149,6 +149,7 @@ public final class TransactionManager {
 
   private void checkAbortSignal() {
     if (current.abortSignal) {
+      logger.finest(current + " got abort signal");
       // Abort the transaction.
       // TODO Provide a reason for the abort.
       throw new AbortException(null);
@@ -156,6 +157,7 @@ public final class TransactionManager {
   }
 
   public void abortTransaction() {
+    logger.finest(current + " aborting");
     // Assume only one thread will be executing this.
 
     // Set the abort flag in all our children.
@@ -169,7 +171,7 @@ public final class TransactionManager {
   }
 
   public void commitTransaction() throws AbortException {
-    logger.finest(current + " committing");
+    logger.finest(current + " attempting to commit");
     // Assume only one thread will be executing this.
 
     // XXX This is a long and ugly method. Refactor?
@@ -179,6 +181,8 @@ public final class TransactionManager {
 
     // Make sure we're not supposed to abort.
     checkAbortSignal();
+
+    logger.finest(current + " committing");
 
     Log parent = current.parent;
     if (parent != null) {
@@ -326,8 +330,8 @@ public final class TransactionManager {
   }
 
   public void registerRead($Impl obj) {
-    logger
-        .finest(current + " reading " + obj.$getCore() + "/" + obj.$getOnum());
+    logger.finest(current + " reading " + obj.$getCore() + "/" + obj.$getOnum()
+        + ":" + obj.getClass());
 
     synchronized (obj) {
       // Nothing to do if the object's $reader is us or we're not in a
@@ -366,8 +370,8 @@ public final class TransactionManager {
    * @return whether a new (top-level) transaction was created.
    */
   public boolean registerWrite($Impl obj) {
-    logger
-        .finest(current + " writing " + obj.$getCore() + "/" + obj.$getOnum());
+    logger.finest(current + " writing " + obj.$getCore() + "/" + obj.$getOnum()
+        + ":" + obj.getClass());
 
     boolean needTransaction = current == null;
     if (needTransaction) startTransaction();
@@ -391,9 +395,9 @@ public final class TransactionManager {
             boolean containsAll = true;
             for (Log lock : readMapEntry.readLocks) {
               if (!current.isDescendantOf(lock)) {
-                logger.finest(current + " waiting on reader " + lock);
+                logger.finest(current + " aborting reader " + lock);
+                lock.flagAbort();
                 containsAll = false;
-                break;
               }
             }
 
@@ -415,7 +419,7 @@ public final class TransactionManager {
 
       // Set the write stamp.
       obj.$writer = current;
-      
+
       logger.finest(current + " got write lock");
 
       if (obj.$writeLockHolder == current) return needTransaction;
@@ -439,7 +443,7 @@ public final class TransactionManager {
 
   /**
    * Starts a new transaction. The sub-transaction runs in the same thread as
-   * the parent transaction.
+   * the caller.
    */
   public void startTransaction() throws AbortException {
     if (current != null && current.abortSignal) {
@@ -448,6 +452,8 @@ public final class TransactionManager {
       throw new AbortException(null);
     }
     current = new Log(current);
+    logger.finest(current.parent + " started subtx " + current + " in thread "
+        + Thread.currentThread());
   }
 
   /**

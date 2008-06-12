@@ -26,6 +26,11 @@ public final class Log {
   private final Set<Log> children;
 
   /**
+   * The thread that started this transaction.
+   */
+  final Thread thread;
+
+  /**
    * The set of threads started at this transaction level (and are still
    * running).
    */
@@ -83,6 +88,7 @@ public final class Log {
     }
 
     this.children = Collections.synchronizedSet(new HashSet<Log>());
+    this.thread = Thread.currentThread();
     this.threads = new HashSet<Thread>();
     this.abortSignal = false;
     this.reads = new OidKeyHashMap<Pair<LockList.Node<Log>, ReadMapEntry>>();
@@ -183,6 +189,7 @@ public final class Log {
       synchronized (log) {
         toFlag.addAll(log.children);
         log.abortSignal = true;
+        log.thread.interrupt();
       }
     }
   }
@@ -422,6 +429,7 @@ public final class Log {
         thread = threads.iterator().next();
       }
       try {
+        TransactionManager.logger.finest(this + " waiting on thread " + thread);
         thread.join();
         synchronized (threads) {
           threads.remove(thread);
