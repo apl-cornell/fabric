@@ -167,9 +167,13 @@ public final class TransactionManager {
     current.waitForThreads();
 
     current.abort();
+    logger.finest(current + " aborted");
     current = current.parent;
   }
 
+  /**
+   * Commits the transaction if possible; otherwise, aborts the transaction.
+   */
   public void commitTransaction() throws AbortException {
     logger.finest(current + " attempting to commit");
     // Assume only one thread will be executing this.
@@ -180,7 +184,12 @@ public final class TransactionManager {
     current.waitForThreads();
 
     // Make sure we're not supposed to abort.
-    checkAbortSignal();
+    try {
+      checkAbortSignal();
+    } catch (AbortException e) {
+      abortTransaction();
+      throw e;
+    }
 
     logger.finest(current + " committing");
 
@@ -188,6 +197,7 @@ public final class TransactionManager {
     if (parent != null) {
       // Update data structures to reflect the commit.
       current.commitNested();
+      logger.finest(current + " committed");
       current = parent;
       return;
     }
@@ -295,6 +305,9 @@ public final class TransactionManager {
       }
 
       if (!(unreachable.isEmpty() && failed.isEmpty())) {
+        logger.finest(current
+            + " error committing: atomicity violation -- failed:" + failed
+            + " unreachable:" + unreachable);
         throw new TransactionAtomicityViolationException(failed, unreachable);
       }
     } catch (TransactionPrepareFailedException e) {
@@ -302,13 +315,15 @@ public final class TransactionManager {
       for (Map.Entry<Core, Integer> entry : tids.entrySet()) {
         entry.getKey().abortTransaction(entry.getValue());
       }
-      // frames.push(null);
+      logger.finest(current + " error committing: abort exception: " + e);
       abortTransaction();
       throw new AbortException(e);
     }
 
     // Update data structures to reflect successful commit.
+    logger.finest(current + " committed at cores...updating data structures");
     current.commitTopLevel();
+    logger.finest(current + " committed");
     current = null;
   }
 
@@ -330,9 +345,6 @@ public final class TransactionManager {
   }
 
   public void registerRead($Impl obj) {
-    logger.finest(current + " reading " + obj.$getCore() + "/" + obj.$getOnum()
-        + ":" + obj.getClass());
-
     synchronized (obj) {
       // Nothing to do if the object's $reader is us or we're not in a
       // transaction.
@@ -342,10 +354,14 @@ public final class TransactionManager {
       checkAbortSignal();
 
       // Check read condition: wait until all writers are in our ancestry.
+      boolean hadToWait = false;
       while (obj.$writeLockHolder != null
           && !current.isDescendantOf(obj.$writeLockHolder)) {
         try {
-          logger.finest(current + " waiting on writer " + obj.$writeLockHolder);
+          logger.finest(current + " wants to read " + obj.$getCore() + "/"
+              + obj.$getOnum() + " (" + obj.getClass()
+              + "); waiting on writer " + obj.$writeLockHolder);
+          hadToWait = true;
           obj.$numWaiting++;
           obj.wait();
         } catch (InterruptedException e) {
@@ -360,7 +376,7 @@ public final class TransactionManager {
       obj.$reader = current;
 
       current.acquireReadLock(obj);
-      logger.finest(current + " got read lock");
+      if (hadToWait) logger.finest(current + " got read lock");
     }
   }
 
@@ -370,9 +386,6 @@ public final class TransactionManager {
    * @return whether a new (top-level) transaction was created.
    */
   public boolean registerWrite($Impl obj) {
-    logger.finest(current + " writing " + obj.$getCore() + "/" + obj.$getOnum()
-        + ":" + obj.getClass());
-
     boolean needTransaction = current == null;
     if (needTransaction) startTransaction();
 
@@ -383,28 +396,37 @@ public final class TransactionManager {
       // Make sure we're not supposed to abort.
       if (!needTransaction) checkAbortSignal();
 
-      // Check write condition: wait until writer and all readers are in our
-      // ancestry.
+      // Check write condition: wait until writer is in our ancestry and all
+      // readers are in our ancestry.
+      boolean hadToWait = false;
       while (true) {
-        if (obj.$writeLockHolder == null
-            || current.isDescendantOf(obj.$writeLockHolder)) {
-          // Writer is in our ancestry. Check readers.
+        // Make sure writer is in our ancestry.
+        if (obj.$writeLockHolder != null
+            && !current.isDescendantOf(obj.$writeLockHolder)) {
+          logger.finest(current + " wants to write " + obj.$getCore() + "/"
+              + obj.$getOnum() + " (" + obj.getClass()
+              + "); waiting on writer " + obj.$writeLockHolder);
+          hadToWait = true;
+        } else {
+          // Abort any incompatible readers.
           ReadMapEntry readMapEntry = obj.$readMapEntry;
-          if (readMapEntry == null) break;
-          synchronized (readMapEntry) {
-            boolean containsAll = true;
-            for (Log lock : readMapEntry.readLocks) {
-              if (!current.isDescendantOf(lock)) {
-                logger.finest(current + " aborting reader " + lock);
-                lock.flagAbort();
-                containsAll = false;
+          if (readMapEntry != null) {
+            synchronized (readMapEntry) {
+              boolean allReadersInAncestry = true;
+              for (Log lock : readMapEntry.readLocks) {
+                if (!current.isDescendantOf(lock)) {
+                  logger.finest(current + " wants to write " + obj.$getCore()
+                      + "/" + obj.$getOnum() + " (" + obj.getClass()
+                      + "); aborting reader " + lock);
+                  lock.flagAbort();
+                  allReadersInAncestry = false;
+                }
               }
+              
+              if (allReadersInAncestry) break;
             }
-
-            if (containsAll) break;
           }
-        } else logger.finest(current + " waiting on writer "
-            + obj.$writeLockHolder);
+        }
 
         try {
           obj.$numWaiting++;
@@ -420,7 +442,7 @@ public final class TransactionManager {
       // Set the write stamp.
       obj.$writer = current;
 
-      logger.finest(current + " got write lock");
+      if (hadToWait) logger.finest(current + " got write lock");
 
       if (obj.$writeLockHolder == current) return needTransaction;
 
