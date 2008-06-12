@@ -1,0 +1,59 @@
+package system;
+
+import fabric.client.Core;
+import fabric.client.Client;
+
+public class ThreadTest03 {
+  int x = 0;
+
+  public static void main(String[] args) throws InterruptedException {
+    Core core = Client.getClient().getLocalCore();
+    T thread;
+    ThreadTest03 obj;
+
+    atomic {
+      obj = new ThreadTest03@core();
+      thread = new T(obj);
+    }
+
+    thread.start();
+
+    atomic {
+      // Wait for the thread to start reading.
+      sleep(1);
+
+      // Attempt to write.
+      obj.x = 1;
+    }
+  }
+
+  static class T extends Thread {
+    final ThreadTest03 obj;
+
+    T(ThreadTest03 obj) {
+      this.obj = obj;
+    }
+
+    public void run() {
+      try {
+	atomic {
+	  // Start reading.
+	  int x = obj.x;
+
+	  atomic {
+	    while (true) {
+	      ThreadTest03.sleep(1);
+	    }
+	  }
+	}
+      } catch (Exception e) {
+	e.printStackTrace();
+      }
+    }
+  }
+
+  public static void sleep(int secs) throws InterruptedException {
+    Thread.sleep(1000*secs);
+  }
+}
+
