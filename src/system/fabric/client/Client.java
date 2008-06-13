@@ -192,6 +192,8 @@ public class Client {
    * @return The corresponding <code>Core</code> object.
    */
   public RemoteCore getCore(String name) {
+    name = NameService.resolveAlias(name);
+    
     if (name == null) {
       throw new NullPointerException();
     }

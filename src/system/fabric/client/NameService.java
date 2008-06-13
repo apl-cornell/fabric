@@ -12,6 +12,21 @@ import javax.security.auth.x500.X500Principal;
  * addresses and X500 principals.
  */
 public class NameService {
+  private static final Map<String, String> aliases;
+  
+  static {
+    aliases = new HashMap<String, String>();
+    aliases.put("core00", "core00.u.cs.cornell.edu");
+  }
+  
+  /**
+   * This saves our fingers during testing.
+   */
+  static String resolveAlias(String name) {
+    String result = aliases.get(name);
+    return result == null ? name : result;
+  }
+  
   /**
    * Returns a list of core node addresses for the given core.
    */
