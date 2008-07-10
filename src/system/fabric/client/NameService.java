@@ -16,7 +16,7 @@ public class NameService {
   
   static {
     aliases = new HashMap<String, String>();
-    aliases.put("core00", "core00.u.cs.cornell.edu");
+    aliases.put("core00", "core00.systems.cs.cornell.edu");
   }
   
   /**
