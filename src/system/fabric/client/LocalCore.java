@@ -4,60 +4,33 @@ import java.util.Collection;
 import java.util.logging.Logger;
 
 import fabric.client.transaction.TransactionManager;
-import fabric.common.util.LongKeyHashMap;
+import fabric.common.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;
 
 public class LocalCore implements Core {
 
-  private int freshTID = 0;
   private long freshOID = 0;
-
-  /**
-   * Maps transaction IDs of prepared transactions to
-   * <code>PendingTransaction</code> objects.
-   */
-  private LongKeyMap<PendingTransaction> prepared;
-
-  private LongKeyMap<Object.$Impl> objects;
 
   // TODO: should be a fabric.util.HashMap
   private Object rootMap;
 
   private static final Logger log = Logger.getLogger("fabric.client.LocalCore");
 
-  private class PendingTransaction {
-    public int id;
-    public Collection<Object.$Impl> toCreate;
-
-    public PendingTransaction(int id, Collection<Object.$Impl> toCreate) {
-      this.id = id;
-      this.toCreate = toCreate;
-    }
-  }
-
   public synchronized int prepareTransaction(Collection<Object.$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object.$Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
-    log.fine("Local transaction " + freshTID + " preparing");
-
-    prepared.put(freshTID, new PendingTransaction(freshTID, toCreate));
-    return freshTID++;
+    log.fine("Local transaction preparing");
+    return 0;
   }
 
   public synchronized void abortTransaction(int transactionID) {
-    log.fine("Local transaction " + transactionID + " aborting");
-    prepared.remove(transactionID);
+    log.fine("Local transaction aborting");
   }
 
   public synchronized void commitTransaction(int transactionID) {
-    log.fine("Local transaction " + transactionID + " committing");
-    
-    PendingTransaction xact = prepared.remove(transactionID);
-
-    if (xact.toCreate != null) for (Object.$Impl obj : xact.toCreate)
-      this.objects.put(obj.$getOnum(), obj);
+    log.fine("Local transaction committing");
   }
 
   public synchronized long createOnum() {
@@ -65,7 +38,7 @@ public class LocalCore implements Core {
   }
 
   public synchronized Object.$Impl readObject(long onum) {
-    return objects.get(onum);
+    throw new InternalError("Not supported.");
   }
 
   public Object.$Impl readObjectFromCache(long onum) {
@@ -78,8 +51,6 @@ public class LocalCore implements Core {
    * @see fabric.client.Client.getLocalCore
    */
   protected LocalCore() {
-    this.prepared = new LongKeyHashMap<PendingTransaction>();
-    this.objects = new LongKeyHashMap<Object.$Impl>();
     TransactionManager.getInstance().startTransaction();
     this.rootMap = new Object.$Impl(this).$getProxy();
     TransactionManager.getInstance().commitTransaction();

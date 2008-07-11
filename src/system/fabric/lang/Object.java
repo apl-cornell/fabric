@@ -8,6 +8,7 @@ import java.util.List;
 
 import fabric.client.Core;
 import fabric.client.FabricSoftRef;
+import fabric.client.LocalCore;
 import fabric.client.UnreachableCoreException;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.ReadMapEntry;
@@ -45,7 +46,7 @@ public interface Object {
 
   /** Fetches the object if this is a proxy; returns itself if it's an impl. */
   public Object fetch();
-  
+
   /**
    * $Proxy objects behave like regular objects by delegating to $Impl objects,
    * pointed to by a soft reference. This class abstracts away the code for
@@ -54,12 +55,28 @@ public interface Object {
   public static class $Proxy implements Object {
     private transient FabricSoftRef ref;
 
+    /**
+     * This is used only to pin the $Impl in the case where it's a object on the
+     * local core.
+     */
+    @SuppressWarnings("unused")
+    private transient final $Impl anchor;
+
     public $Proxy(Core core, long onum) {
+      if (core instanceof LocalCore)
+        throw new InternalError(
+            "Attempted to create unresolved reference to a local object.");
+
       this.ref = new FabricSoftRef(core, onum, null);
+      this.anchor = null;
     }
 
     public $Proxy($Impl impl) {
       this.ref = impl.$ref;
+      Core core = impl.$getCore();
+      if (core instanceof LocalCore)
+        this.anchor = impl;
+      else this.anchor = null;
     }
 
     public final $Impl fetch() {
@@ -72,7 +89,7 @@ public interface Object {
         } catch (FetchException e) {
           // TODO figure out how to communicate error
         }
-        
+
         ref = result.$ref;
       }
 
@@ -146,7 +163,7 @@ public interface Object {
    */
   public static class $Impl implements Object, Cloneable {
     private $Proxy $proxy;
-    
+
     public final FabricSoftRef $ref;
 
     /**
@@ -166,10 +183,10 @@ public interface Object {
 
     /**
      * The unique running transaction that can write to the object, or null if
-     * none.  (This is either null or holds the same value as $writeLockHolder.
+     * none. (This is either null or holds the same value as $writeLockHolder.
      */
     public Log $writer;
-    
+
     /**
      * The innermost transaction that is holding a write lock on the object.
      */
@@ -194,12 +211,12 @@ public interface Object {
      * @see fabric.client.transaction.TransactionManager#readMap
      */
     public ReadMapEntry $readMapEntry;
-    
+
     /**
      * The number of threads waiting on this object.
      */
     public int $numWaiting;
-    
+
     /**
      * A private constructor for initializing transaction-management state.
      */
@@ -335,7 +352,7 @@ public interface Object {
       if ($proxy == null) $proxy = $makeProxy();
       return $proxy;
     }
-    
+
     public final $Impl fetch() {
       return this;
     }
