@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.www.*, java.util.Date, edu.cornell.csuglab.cms.www.util.*, edu.cornell.csuglab.cms.www.xml.*, edu.cornell.csuglab.cms.author.*" %>
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, java.util.Date, cms.www.util.*, cms.www.xml.*, edu.cornell.csuglab.cms.author.*" %>
 <% Document displayData = (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 Principal p = (Principal)session.getAttribute(AccessController.A_PRINCIPAL);
 Element root = (Element)displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).item(0);

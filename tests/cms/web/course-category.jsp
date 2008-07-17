@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.author.Principal, edu.cornell.csuglab.cms.www.*, edu.cornell.csuglab.cms.www.xml.*,edu.cornell.csuglab.cms.util.category.*" %>
+<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.author.Principal, cms.www.*, cms.www.xml.*,edu.cornell.csuglab.cms.util.category.*" %>
 <%
 /**********************************************************
 * display a single category on the main course page

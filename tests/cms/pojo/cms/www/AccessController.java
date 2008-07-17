@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.util.Streams;
@@ -887,10 +888,22 @@ public class AccessController extends HttpServlet {
    * @param config
    *                Configuration info for the servlet
    */
+  @Override
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
+    
+    // TODO: fetch CMS root
+    CMSRoot database = new CMSRoot();
+    
+    if (xmlBuilder == null) {
+      try {
+        xmlBuilder = new XMLBuilder(database);
+      } catch (ParserConfigurationException e) {
+        throw new ServletException(e);
+      }
+    }
     if (transactions == null) {
-      transactions = new TransactionHandler(xmlBuilder.getDatabase());
+      transactions = new TransactionHandler(database);
     }
 
     debug = xmlBuilder.getDatabase().getDebugMode();
@@ -959,7 +972,7 @@ public class AccessController extends HttpServlet {
 
     else if (debug && session.getAttribute(A_PRINCIPAL) != null)
       result = (User) session.getAttribute(A_PRINCIPAL);
-    
+      
     else if (debug)
       result = (User) debugPrincipalMap.get(request.getLocalAddr());
     
@@ -990,12 +1003,13 @@ public class AccessController extends HttpServlet {
     String action = request.getParameter(P_ACTION);
     response.setCharacterEncoding("iso-8859-1");
     String path = request.getPathInfo();
+    System.out.println("processRequest");
     if (path == null) {
       response.sendRedirect(request.getContextPath() + request.getServletPath()
           + "/");
       return;
     }
-    if (path != null && !path.equals("/")) {
+    if (!path.equals("/")) {
       if (path.endsWith("/")
           || (!path.endsWith(".js.jsp") && path.endsWith(".jsp"))) {
         response.sendRedirect(request.getContextPath()
@@ -1008,7 +1022,7 @@ public class AccessController extends HttpServlet {
         return;
       }
     }
-
+  
     String buildURL = "";
     HttpSession session = request.getSession(true);
     session.setAttribute(TIME, new Long(System.currentTimeMillis()));
@@ -1031,6 +1045,7 @@ public class AccessController extends HttpServlet {
       session.setAttribute(A_COOKIES, request.getCookies());
       Document xml = null;
       User p = null;
+
       /*
        * no action: go to cms home page, which tells you to either go guest or
        * sign in (if action is null, there won't be a principal, so don't bother
@@ -1076,12 +1091,17 @@ public class AccessController extends HttpServlet {
        * is null; see my fixme just above this. - Evan
        */
       session.setAttribute(A_PRINCIPAL, p);
+
       if (buildURL != null) {
+
         redirectTo(buildURL, request, response);
       }
+    } catch (ServletException e) {
+      throw e;
     } catch (Exception e) {
       System.out.println("Error in AccessController.processRequest(): " + e);
       e.printStackTrace();
+      throw new ServletException(e);
     }
   }
 
@@ -2616,7 +2636,7 @@ public class AccessController extends HttpServlet {
         } else {
           buildURL = CONFIRMTABLE_URL;
           xml =
-              xmlBuilder.buildConfirmPage(user, xmlBuilder.CONFIRM_ASSIGNINFO,
+              xmlBuilder.buildConfirmPage(user, XMLBuilder.CONFIRM_ASSIGNINFO,
                   assign, table);
           // if (table.getSuccess()) {
           session.setAttribute(A_GRADESTABLE, table.getValue());

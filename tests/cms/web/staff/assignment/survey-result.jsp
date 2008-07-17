@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*,edu.cornell.csuglab.cms.author.*, edu.cornell.csuglab.cms.base.*, edu.cornell.csuglab.cms.www.*, edu.cornell.csuglab.cms.www.xml.*" %>
+<%@ page language="java" import="org.w3c.dom.*,edu.cornell.csuglab.cms.author.*, edu.cornell.csuglab.cms.base.*, cms.www.*, cms.www.xml.*" %>
 <%
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getChildNodes().item(0);

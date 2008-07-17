@@ -1,4 +1,4 @@
-<%@ page language="java" import="edu.cornell.csuglab.cms.www.*" %>
+<%@ page language="java" import="cms.www.*" %>
 <%-- CMS welcome/sign-in page, with logos and not much else --%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -28,7 +28,7 @@
 			<center>
 			Welcome to Computer Science Department<br>Course Management System
 			<br><br>
-			<small>Please <a href="https://<%=request.getServerName()%>/web/auth/?<%=AccessController.P_ACTION%>=<%=AccessController.ACT_OVERLOGIN %>">sign in</a> 
+			<small>Please <a href="/web/auth/?<%=AccessController.P_ACTION%>=<%=AccessController.ACT_OVERLOGIN %>">sign in</a> 
 			using your Cornell NetID and password 
 			<br>or visit this site as a <a href="/web/guest/?<%=AccessController.P_ACTION%>=<%=AccessController.ACT_OVERLOGIN %>">guest</a>.
 			</small>

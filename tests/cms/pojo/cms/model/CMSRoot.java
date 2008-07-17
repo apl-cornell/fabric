@@ -64,7 +64,10 @@ public class CMSRoot {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  // TODO
+  public CMSRoot() {
+    setCurrentSemester(new Semester("Summer 2008"));
+    this.debugMode = true;
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // public methods                                                           //
@@ -151,89 +154,120 @@ public class CMSRoot {
   public Collection/*User*/ findMissingNameUsers() {
     throw new NotImplementedException();
   }
-  public Assignment getAssignment(String assignID) {
-    throw new NotImplementedException();
-  }
-  public Group getGroup(String groupID) {
-    throw new NotImplementedException();
-  }
-  public Semester getSemester(String semesterID) {
-    throw new NotImplementedException();
-  }
-  public Course getCourse(String courseID) {
-    throw new NotImplementedException();
-  }
-  public Announcement getAnnouncement(String announceID) {
-    throw new NotImplementedException();
-  }
-  public User getUser(String netID) {
-    throw new NotImplementedException();
-  }
-  public Category getCategory(String catID) {
-    throw new NotImplementedException();
-  }
-  public SiteNotice getSiteNotice(String noticeID) {
-    throw new NotImplementedException();
-  }
-  public CategoryRow getCategoryRow(String rowID) {
-    throw new NotImplementedException();
-  }
-  public TimeSlot getTimeSlot(String slotID) {
+  public Collection assignedToGroups(Assignment assign, User user, List/*Group*/ list) {
     throw new NotImplementedException();
   }
   public User getGuestUser() {
     throw new NotImplementedException();
   }
+  
+  /*
+  ******** Methods below this line are index methods getX : String -> X ********
+  * These should be left-inverses of toString(), i.e.
+  * db.getFoo(o.toString()) == o
+  */
+  
+  public Assignment getAssignment(String assignID) {
+    throw new NotImplementedException();
+  }
+  
+  public Group getGroup(String groupID) {
+    throw new NotImplementedException();
+  }
+  
+  public Semester getSemester(String semesterID) {
+    throw new NotImplementedException();
+  }
+  
+  public Course getCourse(String courseID) {
+    throw new NotImplementedException();
+  }
+  
+  public Announcement getAnnouncement(String announceID) {
+    throw new NotImplementedException();
+  }
+  
+  public User getUser(String netID) {
+    throw new NotImplementedException();
+  }
+  
+  public Category getCategory(String catID) {
+    throw new NotImplementedException();
+  }
+  
+  public SiteNotice getSiteNotice(String noticeID) {
+    throw new NotImplementedException();
+  }
+  
+  public CategoryRow getCategoryRow(String rowID) {
+    throw new NotImplementedException();
+  }
+  
+  public TimeSlot getTimeSlot(String slotID) {
+    throw new NotImplementedException();
+  }
+  
   public SubProblem getSubProblem(String subProblemID) {
     throw new NotImplementedException();
   }
   
-  public Collection assignedToGroups(Assignment assign, User user, List/*Group*/ list) {
-    throw new NotImplementedException();
-  }
   public CategoryContents getCategoryContents(String contentsID) {
     throw new NotImplementedException();
   }
-  public RegradeRequest getRegradeRequest(String string) {
+  
+  public RegradeRequest getRegradeRequest(String regradeID) {
     throw new NotImplementedException();
   }
-  public CategoryColumn getCategoryColumn(String value) {
+  
+  public CategoryColumn getCategoryColumn(String columnID) {
     throw new NotImplementedException();
   }
+  
   public SolutionFile getSolutionFile(String id) {
     throw new NotImplementedException();
   }
+  
   public AssignmentItem getAssignmentItem(String id) {
     throw new NotImplementedException();
   }
+  
   public AssignmentFile getAssignmentFile(String id) {
     throw new NotImplementedException();
   }
+  
   public SubmittedFile getSubmittedFile(String id) {
     throw new NotImplementedException();
   }
+  
   public SubmittedFile getCategoryContentsFileEntry(String id) {
     throw new NotImplementedException();
   }
+  
   public FileData getFileData(String id) {
     throw new NotImplementedException();
   }
+  
   public CommentFile getCommentFile(String id) {
     throw new NotImplementedException();
   }
-  public RequiredSubmission getRequiredSubmission(String string) {
+  
+  public RequiredSubmission getRequiredSubmission(String id) {
     throw new NotImplementedException();
   }
+  
   public Choice getChoice(String id) {
     throw new NotImplementedException();
   }
-  public Grade getGrade(String string) {
+  
+  public Grade getGrade(String id) {
     throw new NotImplementedException();
   }
-  public GroupGrade getGroupGrade(String string) {
+  
+  public GroupGrade getGroupGrade(String id) {
     throw new NotImplementedException();
   }
-  public Comment getComment(String string) {
+  
+  public Comment getComment(String id) {
     throw new NotImplementedException();
   }
 }

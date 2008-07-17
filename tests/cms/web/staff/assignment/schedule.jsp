@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.www.*, edu.cornell.csuglab.cms.www.xml.*, java.util.*"%><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, java.util.*"%><%
 /***************************************************
 edit the available timeslots for an assignment
 

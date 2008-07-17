@@ -1,4 +1,4 @@
-<%@ page language="Java" import="edu.cornell.csuglab.cms.www.*, edu.cornell.csuglab.cms.author.*" %>
+<%@ page language="Java" import="cms.www.*, edu.cornell.csuglab.cms.author.*" %>
 <% boolean debug= ((Boolean)session.getAttribute(AccessController.A_DEBUG)).booleanValue();
 Principal p= (Principal) session.getAttribute(AccessController.A_PRINCIPAL);
 String NetID = p.getUserID(); %>

@@ -19,9 +19,12 @@
 	<!--     </servlet-mapping>                                  -->
 	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
 
+	<display-name>CMS</display-name>
+	<description>Cornell Course Management Server (POJO port)</description>
+
 	<servlet>
 	    <servlet-name>Web</servlet-name>
-	    <servlet-class>edu.cornell.csuglab.cms.www.AccessController</servlet-class>
+	    <servlet-class>cms.www.AccessController</servlet-class>
 	</servlet>
 	
 	<servlet-mapping>

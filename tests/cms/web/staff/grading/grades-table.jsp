@@ -1,4 +1,4 @@
-<%@page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.www.*, edu.cornell.csuglab.cms.base.AssignmentBean, edu.cornell.csuglab.cms.base.RegradeRequestBean, edu.cornell.csuglab.cms.www.xml.*"%><%
+<%@page language="java" import="org.w3c.dom.*, cms.www.*, edu.cornell.csuglab.cms.base.AssignmentBean, edu.cornell.csuglab.cms.base.RegradeRequestBean, cms.www.xml.*"%><%
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
 Element assign= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT); 

@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.www.*, edu.cornell.csuglab.cms.www.xml.*" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*" %><%
 /************************************************************************
 * display name, course options (lecture number, credit hours, etc),
 * and final grade for each student in a course

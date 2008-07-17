@@ -1,6 +1,8 @@
 package cms.model;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
 
 import cms.auth.Principal;
 
@@ -12,6 +14,8 @@ public class Semester {
 
   private String  name;
   private boolean hidden;
+  
+  private Collection courses;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
@@ -34,10 +38,12 @@ public class Semester {
   public Semester(String name) {
     setName(name);
     setHidden(false);
+    
+    courses = new LinkedList();
   }
   
   public Collection getCourses() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(courses);
   }
   public Collection/*Course*/ findStaffAdminCourses(User user) {
     throw new NotImplementedException();

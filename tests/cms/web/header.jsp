@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.www.*"%>
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*"%>
 <% /* The top of all CMS pages. */
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);

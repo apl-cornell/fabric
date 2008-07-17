@@ -11,8 +11,10 @@ import cms.www.TransactionResult;
 import cms.www.util.Emailer;
 
 public class Transactions {
+  private CMSRoot database;
+
   public Transactions(CMSRoot database) {
-    throw new NotImplementedException();
+    this.database = database;
   }
 
   public boolean acceptInvitation(User user, Group group) {

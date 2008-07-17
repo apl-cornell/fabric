@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.www.*, edu.cornell.csuglab.cms.www.xml.*, java.util.*, edu.cornell.csuglab.cms.base.RegradeRequestBean, edu.cornell.csuglab.cms.author.Principal, edu.cornell.csuglab.cms.util.*" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, java.util.*, edu.cornell.csuglab.cms.base.RegradeRequestBean, edu.cornell.csuglab.cms.author.Principal, edu.cornell.csuglab.cms.util.*" %><%
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
 String meNetID = ((Principal) session.getAttribute(AccessController.A_PRINCIPAL)).getUserID();

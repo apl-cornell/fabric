@@ -1,4 +1,4 @@
-<%@page language="java" import="edu.cornell.csuglab.cms.www.*"%>
+<%@page language="java" import="cms.www.*"%>
 <script type="text/javascript">
 /**************************************************************************************************
 * categoryscript.js: all necessary category-related Javascript

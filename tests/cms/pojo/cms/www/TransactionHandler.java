@@ -4,13 +4,10 @@
 package cms.www;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.rmi.RemoteException;
 import java.util.Date;
 import java.util.Map;
 import java.text.ParseException;
@@ -20,9 +17,7 @@ import java.util.zip.ZipOutputStream;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.rmi.PortableRemoteObject;
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.parsers.DocumentBuilder;
 
 import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
@@ -32,9 +27,6 @@ import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
-// import org.apache.crimson.jaxp.DocumentBuilderFactoryImpl;
-import javax.xml.parsers.DocumentBuilderFactory; // java 5 replacement for
-                                                  // DocumentBuilderFactoryImpl
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -43,7 +35,6 @@ import org.w3c.dom.NodeList;
 import cms.www.util.CSVFileFormatsUtil;
 import cms.www.util.CSVParseException;
 import cms.www.util.DateTimeUtil;
-import cms.www.util.DownloadFile;
 import cms.www.util.Emailer;
 import cms.www.util.FileUtil;
 import cms.www.util.Profiler;

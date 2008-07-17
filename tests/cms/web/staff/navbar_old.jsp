@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.www.*, edu.cornell.csuglab.cms.author.*, edu.cornell.csuglab.cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %>
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, edu.cornell.csuglab.cms.author.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %>
 <% 
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 String URL= request.getServletPath(); 

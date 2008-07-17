@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*,edu.cornell.csuglab.cms.author.*, edu.cornell.csuglab.cms.www.*, edu.cornell.csuglab.cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %><%
+<%@ page language="java" import="org.w3c.dom.*,edu.cornell.csuglab.cms.author.*, cms.www.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %><%
 /*********************************************
 display table of assignments on staff-side
 main course page

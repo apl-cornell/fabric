@@ -1,4 +1,4 @@
-<%@page language="java" import="edu.cornell.csuglab.cms.www.*"%>
+<%@page language="java" import="cms.www.*"%>
 <script type="text/javascript">
 /*
 code to fiddle with staff permission checkboxes and create new permission-table rows,
