@@ -3,7 +3,7 @@ package fabric.core;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.lang.WrappedJavaInlineable;
-import fabric.lang.arrays.ObjectArray;
+import fabric.lang.arrays.internal.ObjectArray;
 
 /**
  * This class is intended to generate serialized object mappings. It should be

@@ -1,4 +1,4 @@
-package fabric.lang.arrays;
+package fabric.lang.arrays.internal;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -12,18 +12,18 @@ import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 import fabric.lang.Object;
 
-public interface booleanArray extends Object {
+public interface intArray extends Object {
   int get$length();
 
-  boolean set(int i, boolean value);
+  int set(int i, int value);
 
-  boolean get(int i);
+  int get(int i);
 
-  public static class $Impl extends Object.$Impl implements booleanArray {
-    private boolean[] value;
+  public static class $Impl extends Object.$Impl implements intArray {
+    private int[] value;
 
     /**
-     * Creates a new boolean array at the given Core with the given length.
+     * Creates a new int array at the given Core with the given length.
      * 
      * @param core
      *                The core on which to allocate the array.
@@ -32,11 +32,11 @@ public interface booleanArray extends Object {
      */
     public $Impl(Core core, int length) {
       super(core);
-      value = new boolean[length];
+      value = new int[length];
     }
 
     /**
-     * Creates a new boolean array at the given Core using the given backing
+     * Creates a new int array at the given Core using the given backing
      * array.
      * 
      * @param core
@@ -44,7 +44,7 @@ public interface booleanArray extends Object {
      * @param value
      *                The backing array to use.
      */
-    public $Impl(Core core, boolean[] value) {
+    public $Impl(Core core, int[] value) {
       super(core);
       this.value = value;
     }
@@ -57,15 +57,15 @@ public interface booleanArray extends Object {
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
       super(core, onum, version, label, in, refTypes, intracoreRefs);
-      value = new boolean[in.readInt()];
+      value = new int[in.readInt()];
       for (int i = 0; i < value.length; i++)
-        value[i] = in.readBoolean();
+        value[i] = in.readInt();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.booleanArray#getLength()
+     * @see fabric.lang.arrays.internal.intArray#getLength()
      */
     public int get$length() {
       TransactionManager.getInstance().registerRead(this);
@@ -75,10 +75,10 @@ public interface booleanArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.booleanArray#get(int)
+     * @see fabric.lang.arrays.internal.intArray#get(int)
      */
     @SuppressWarnings("unchecked")
-    public boolean get(int i) {
+    public int get(int i) {
       TransactionManager.getInstance().registerRead(this);
       return this.value[i];
     }
@@ -86,12 +86,12 @@ public interface booleanArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.booleanArray#set(int, boolean)
+     * @see fabric.lang.arrays.internal.intArray#set(int, int)
      */
-    public boolean set(int i, boolean value) {
+    public int set(int i, int value) {
       boolean transactionCreated =
           TransactionManager.getInstance().registerWrite(this);
-      boolean result = this.value[i] = value;
+      int result = this.value[i] = value;
       if (transactionCreated) TransactionManager.getInstance().commitTransaction();
       return result;
     }
@@ -105,8 +105,8 @@ public interface booleanArray extends Object {
     @Override
     public void $copyStateFrom(Object.$Impl other) {
       super.$copyStateFrom(other);
-      booleanArray.$Impl src = (booleanArray.$Impl) other;
-      value = new boolean[src.value.length];
+      intArray.$Impl src = (intArray.$Impl) other;
+      value = new int[src.value.length];
       System.arraycopy(src.value, 0, value, 0, src.value.length);
     }
 
@@ -116,8 +116,8 @@ public interface booleanArray extends Object {
      * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    protected booleanArray.$Proxy $makeProxy() {
-      return new booleanArray.$Proxy(this);
+    protected intArray.$Proxy $makeProxy() {
+      return new intArray.$Proxy(this);
     }
 
     /*
@@ -132,45 +132,45 @@ public interface booleanArray extends Object {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
       out.writeInt(value.length);
       for (int i = 0; i < value.length; i++)
-        out.writeBoolean(value[i]);
+        out.writeInt(value[i]);
     }
   }
 
-  public static class $Proxy extends Object.$Proxy implements booleanArray {
+  public static class $Proxy extends Object.$Proxy implements intArray {
 
     public $Proxy(Core core, long onum) {
       super(core, onum);
     }
 
-    public $Proxy(booleanArray.$Impl impl) {
+    public $Proxy(intArray.$Impl impl) {
       super(impl);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.booleanArray#getLength()
+     * @see fabric.lang.arrays.internal.intArray#getLength()
      */
     public int get$length() {
-      return ((booleanArray) fetch()).get$length();
+      return ((intArray) fetch()).get$length();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.booleanArray#get(int)
+     * @see fabric.lang.arrays.internal.intArray#get(int)
      */
-    public boolean get(int i) {
-      return ((booleanArray) fetch()).get(i);
+    public int get(int i) {
+      return ((intArray) fetch()).get(i);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.booleanArray#set(int, boolean)
+     * @see fabric.lang.arrays.internal.intArray#set(int, int)
      */
-    public boolean set(int i, boolean value) {
-      return ((booleanArray) fetch()).set(i, value);
+    public int set(int i, int value) {
+      return ((intArray) fetch()).set(i, value);
     }
   }
 }

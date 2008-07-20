@@ -94,8 +94,11 @@
   </target>
 
   <!-- Create appropriate executables in the bin directory -->
-  <uptodate property="bin.up-to-date" srcfile="bin/defs.in" targetfile="bin/defs"/>
-  <target name="bin" depends="configure" unless="bin.up-to-date">
+  <target name="bin-check">
+    <uptodate property="bin.up-to-date" srcfile="bin/defs.in" targetfile="bin/defs" />
+  </target>
+
+  <target name="bin" depends="configure,bin-check" unless="bin.up-to-date">
     <fail message="Failed to find polyglot.  Make sure that your POLYGLOT environment variable is set, and that you have built polyglot.">
       <condition> <not> <and>
         <isset property="polyglot.dir" />
@@ -125,7 +128,7 @@
 
   <!-- Compiles Fabric -->
   <target name="all"
-    depends="bin,fabric-compiler,fabric-system,fabric-signatures,client-debug,tests"
+    depends="fabric-compiler,fabric-system,client-debug,tests"
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
@@ -161,7 +164,7 @@
   <target name="native-check"> 
     <uptodate property="native.up-to-date">
       <srcfiles dir="${system.src}" includes="fabric/lang/**" />
-      <srcfiles dir="${system.src}" includes="fabric/common/**" />
+      <srcfiles dir="${system.src}" includes="fabric/common/util/**" />
       <globmapper from="*.java" to="../../classes/*.class" />
     </uptodate>
   </target>
@@ -176,7 +179,7 @@
   	
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/lang/**" />
-      <include name="fabric/common/**" />
+      <include name="fabric/common/util/**" />
       <classpath refid="standard.classpath"/>
     </javac>
   	
@@ -245,14 +248,14 @@
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/client/debug/**" />
       <classpath>
-        <path refid="standard.classpath"/>
+        <path refid="standard.classpath" />
         <pathelement location="${runtime.classes}" />
       </classpath>
     </javac>
   </target>
 
   <!-- Compiles the Fabric compiler -->
-  <target name="fabric-compiler" depends="init,configure">
+  <target name="fabric-compiler" depends="init">
     <antcall target="standard-ext">
       <param name="ext" value="fabric" />
       <param name="ext.pkg" value="fabric" />
@@ -358,7 +361,7 @@
   <target name="jars" depends="jar-base,jar-runtime,jar-sig"
     description="Builds all jars" />
 
-  <target name="jar-base" depends="fabric-compiler,core">
+  <target name="jar-base" depends="fabric-compiler,fabric-system">
     <jar jarfile="${base.jar}" basedir="${classes}" excludes="**/*.java" />
   </target>
 

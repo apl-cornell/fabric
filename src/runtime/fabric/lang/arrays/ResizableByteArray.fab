@@ -1,6 +1,8 @@
 package fabric.lang.arrays;
 
 import fabric.client.Core;
+import fabric.lang.arrays.internal.byteArray;
+import fabric.lang.arrays.internal.ObjectArray;
 
 /**
  * author: kvikram

@@ -1,4 +1,4 @@
-package fabric.lang.arrays;
+package fabric.lang.arrays.internal;
 
 public class ObjectArray {
   public native Object set(int i, Object value);

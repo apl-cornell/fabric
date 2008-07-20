@@ -1,4 +1,4 @@
-package fabric.lang.arrays;
+package fabric.lang.arrays.internal;
 
 public class byteArray {
   public native byte set(int i, byte value);

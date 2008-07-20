@@ -1,4 +1,4 @@
-package fabric.lang.arrays;
+package fabric.lang.arrays.internal;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -12,18 +12,18 @@ import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 import fabric.lang.Object;
 
-public interface longArray extends Object {
+public interface shortArray extends Object {
   int get$length();
 
-  long set(int i, long value);
+  short set(int i, short value);
 
-  long get(int i);
+  short get(int i);
 
-  public static class $Impl extends Object.$Impl implements longArray {
-    private long[] value;
+  public static class $Impl extends Object.$Impl implements shortArray {
+    private short[] value;
 
     /**
-     * Creates a new long array at the given Core with the given length.
+     * Creates a new short array at the given Core with the given length.
      * 
      * @param core
      *                The core on which to allocate the array.
@@ -32,11 +32,11 @@ public interface longArray extends Object {
      */
     public $Impl(Core core, int length) {
       super(core);
-      value = new long[length];
+      value = new short[length];
     }
 
     /**
-     * Creates a new long array at the given Core using the given backing
+     * Creates a new short array at the given Core using the given backing
      * array.
      * 
      * @param core
@@ -44,7 +44,7 @@ public interface longArray extends Object {
      * @param value
      *                The backing array to use.
      */
-    public $Impl(Core core, long[] value) {
+    public $Impl(Core core, short[] value) {
       super(core);
       this.value = value;
     }
@@ -57,15 +57,15 @@ public interface longArray extends Object {
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
       super(core, onum, version, label, in, refTypes, intracoreRefs);
-      value = new long[in.readInt()];
+      value = new short[in.readInt()];
       for (int i = 0; i < value.length; i++)
-        value[i] = in.readLong();
+        value[i] = in.readShort();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.longArray#getLength()
+     * @see fabric.lang.arrays.internal.shortArray#getLength()
      */
     public int get$length() {
       TransactionManager.getInstance().registerRead(this);
@@ -75,10 +75,10 @@ public interface longArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.longArray#get(int)
+     * @see fabric.lang.arrays.internal.shortArray#get(int)
      */
     @SuppressWarnings("unchecked")
-    public long get(int i) {
+    public short get(int i) {
       TransactionManager.getInstance().registerRead(this);
       return this.value[i];
     }
@@ -86,12 +86,12 @@ public interface longArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.longArray#set(int, long)
+     * @see fabric.lang.arrays.internal.shortArray#set(int, short)
      */
-    public long set(int i, long value) {
+    public short set(int i, short value) {
       boolean transactionCreated =
           TransactionManager.getInstance().registerWrite(this);
-      long result = this.value[i] = value;
+      short result = this.value[i] = value;
       if (transactionCreated) TransactionManager.getInstance().commitTransaction();
       return result;
     }
@@ -105,8 +105,8 @@ public interface longArray extends Object {
     @Override
     public void $copyStateFrom(Object.$Impl other) {
       super.$copyStateFrom(other);
-      longArray.$Impl src = (longArray.$Impl) other;
-      value = new long[src.value.length];
+      shortArray.$Impl src = (shortArray.$Impl) other;
+      value = new short[src.value.length];
       System.arraycopy(src.value, 0, value, 0, src.value.length);
     }
 
@@ -116,8 +116,8 @@ public interface longArray extends Object {
      * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    protected longArray.$Proxy $makeProxy() {
-      return new longArray.$Proxy(this);
+    protected shortArray.$Proxy $makeProxy() {
+      return new shortArray.$Proxy(this);
     }
 
     /*
@@ -132,45 +132,45 @@ public interface longArray extends Object {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
       out.writeInt(value.length);
       for (int i = 0; i < value.length; i++)
-        out.writeLong(value[i]);
+        out.writeShort(value[i]);
     }
   }
 
-  public static class $Proxy extends Object.$Proxy implements longArray {
+  public static class $Proxy extends Object.$Proxy implements shortArray {
 
     public $Proxy(Core core, long onum) {
       super(core, onum);
     }
 
-    public $Proxy(longArray.$Impl impl) {
+    public $Proxy(shortArray.$Impl impl) {
       super(impl);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.longArray#getLength()
+     * @see fabric.lang.arrays.internal.shortArray#getLength()
      */
     public int get$length() {
-      return ((longArray) fetch()).get$length();
+      return ((shortArray) fetch()).get$length();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.longArray#get(int)
+     * @see fabric.lang.arrays.internal.shortArray#get(int)
      */
-    public long get(int i) {
-      return ((longArray) fetch()).get(i);
+    public short get(int i) {
+      return ((shortArray) fetch()).get(i);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.longArray#set(int, long)
+     * @see fabric.lang.arrays.internal.shortArray#set(int, short)
      */
-    public long set(int i, long value) {
-      return ((longArray) fetch()).set(i, value);
+    public short set(int i, short value) {
+      return ((shortArray) fetch()).set(i, value);
     }
   }
 }

@@ -21,7 +21,7 @@ import fabric.common.Resources;
 import fabric.dissemination.FetchManager;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
-import fabric.lang.arrays.ObjectArray;
+import fabric.lang.arrays.internal.ObjectArray;
 import fabric.lang.auth.Label;
 
 /**

@@ -1,4 +1,4 @@
-package fabric.lang.arrays;
+package fabric.lang.arrays.internal;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -10,42 +10,33 @@ import fabric.client.Core;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
-import fabric.common.Util;
 import fabric.lang.Object;
 
-public interface ObjectArray<T extends Object> extends Object {
+public interface longArray extends Object {
   int get$length();
 
-  T set(int i, T value);
+  long set(int i, long value);
 
-  T get(int i);
+  long get(int i);
 
-  public static class $Impl<T extends Object> extends Object.$Impl implements
-      ObjectArray<T> {
-    /**
-     * The class representing the proxy type for the array elements.
-     */
-    private /*final*/ Class<? extends Object.$Proxy> proxyType;
-
-    private Object[] value;
+  public static class $Impl extends Object.$Impl implements longArray {
+    private long[] value;
 
     /**
-     * Creates a new object array at the given Core with the given length.
+     * Creates a new long array at the given Core with the given length.
      * 
      * @param core
      *                The core on which to allocate the array.
      * @param length
      *                The length of the array.
      */
-    @SuppressWarnings("unchecked")
-    public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, int length) {
+    public $Impl(Core core, int length) {
       super(core);
-      this.proxyType = Util.getProxy(proxyType);
-      value = new Object[length];
+      value = new long[length];
     }
 
     /**
-     * Creates a new object array at the given Core using the given backing
+     * Creates a new long array at the given Core using the given backing
      * array.
      * 
      * @param core
@@ -53,33 +44,28 @@ public interface ObjectArray<T extends Object> extends Object {
      * @param value
      *                The backing array to use.
      */
-    public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, T[] value) {
+    public $Impl(Core core, long[] value) {
       super(core);
-      this.proxyType = Util.getProxy(proxyType);
       this.value = value;
     }
 
     /**
      * Used for deserializing.
      */
-    @SuppressWarnings("unchecked")
     public $Impl(Core core, long onum, int version, long label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
       super(core, onum, version, label, in, refTypes, intracoreRefs);
-      proxyType = (Class<? extends Object.$Proxy>) Class.forName(in.readUTF());
-      value = new Object[in.readInt()];
-      for (int i = 0; i < value.length; i++) {
-        value[i] =
-            $readRef(proxyType, refTypes.next(), in, core, intracoreRefs);
-      }
+      value = new long[in.readInt()];
+      for (int i = 0; i < value.length; i++)
+        value[i] = in.readLong();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.ObjectArray#getLength()
+     * @see fabric.lang.arrays.internal.longArray#getLength()
      */
     public int get$length() {
       TransactionManager.getInstance().registerRead(this);
@@ -89,24 +75,23 @@ public interface ObjectArray<T extends Object> extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.ObjectArray#get(int)
+     * @see fabric.lang.arrays.internal.longArray#get(int)
      */
     @SuppressWarnings("unchecked")
-    public T get(int i) {
+    public long get(int i) {
       TransactionManager.getInstance().registerRead(this);
-      return (T) value[i];
+      return this.value[i];
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.ObjectArray#set(int, fabric.lang.Object)
+     * @see fabric.lang.arrays.internal.longArray#set(int, long)
      */
-    @SuppressWarnings("unchecked")
-    public T set(int i, T value) {
+    public long set(int i, long value) {
       boolean transactionCreated =
           TransactionManager.getInstance().registerWrite(this);
-      T result = (T) (this.value[i] = value);
+      long result = this.value[i] = value;
       if (transactionCreated) TransactionManager.getInstance().commitTransaction();
       return result;
     }
@@ -120,8 +105,8 @@ public interface ObjectArray<T extends Object> extends Object {
     @Override
     public void $copyStateFrom(Object.$Impl other) {
       super.$copyStateFrom(other);
-      ObjectArray.$Impl<T> src = (ObjectArray.$Impl<T>) other;
-      value = new Object[src.value.length];
+      longArray.$Impl src = (longArray.$Impl) other;
+      value = new long[src.value.length];
       System.arraycopy(src.value, 0, value, 0, src.value.length);
     }
 
@@ -131,8 +116,8 @@ public interface ObjectArray<T extends Object> extends Object {
      * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    protected ObjectArray.$Proxy<T> $makeProxy() {
-      return new ObjectArray.$Proxy<T>(this);
+    protected longArray.$Proxy $makeProxy() {
+      return new longArray.$Proxy(this);
     }
 
     /*
@@ -145,53 +130,47 @@ public interface ObjectArray<T extends Object> extends Object {
         List<Long> intracoreRefs, List<Pair<String, Long>> intercoreRefs)
         throws IOException {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
-      out.writeUTF(proxyType.getName());
       out.writeInt(value.length);
       for (int i = 0; i < value.length; i++)
-        $writeRef($getCore(), value[i], refTypes, out, intracoreRefs,
-            intercoreRefs);
+        out.writeLong(value[i]);
     }
   }
 
-  public static class $Proxy<T extends Object> extends Object.$Proxy implements
-      ObjectArray<T> {
+  public static class $Proxy extends Object.$Proxy implements longArray {
 
     public $Proxy(Core core, long onum) {
       super(core, onum);
     }
 
-    public $Proxy(ObjectArray.$Impl<T> impl) {
+    public $Proxy(longArray.$Impl impl) {
       super(impl);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.ObjectArray#getLength()
+     * @see fabric.lang.arrays.internal.longArray#getLength()
      */
-    @SuppressWarnings("unchecked")
     public int get$length() {
-      return ((ObjectArray<T>) fetch()).get$length();
+      return ((longArray) fetch()).get$length();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.ObjectArray#get(int)
+     * @see fabric.lang.arrays.internal.longArray#get(int)
      */
-    @SuppressWarnings("unchecked")
-    public T get(int i) {
-      return ((ObjectArray<T>) fetch()).get(i);
+    public long get(int i) {
+      return ((longArray) fetch()).get(i);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.ObjectArray#set(int, fabric.lang.Object)
+     * @see fabric.lang.arrays.internal.longArray#set(int, long)
      */
-    @SuppressWarnings("unchecked")
-    public T set(int i, T value) {
-      return ((ObjectArray<T>) fetch()).set(i, value);
+    public long set(int i, long value) {
+      return ((longArray) fetch()).set(i, value);
     }
   }
 }
