@@ -47,8 +47,13 @@ public class ResizableArrayTest01 {
         startWriteIteration, startResize, endTime;
         float creation=0, initialization=0, reading=0, replacing=0, resizing=0;
 
-        ResizableArrayTest01 element1 = new ResizableArrayTest01@core('f');
-        ResizableArrayTest01 element2 = new ResizableArrayTest01@core('o'); 
+        ResizableArrayTest01 element1;
+        ResizableArrayTest01 element2;
+        
+        atomic {
+            element1 = new ResizableArrayTest01@core('f');
+            element2 = new ResizableArrayTest01@core('o');
+        }
 
         int percentage = 0;
         int step = 5;
