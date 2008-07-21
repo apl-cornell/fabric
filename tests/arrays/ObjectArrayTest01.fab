@@ -43,8 +43,12 @@ public class ObjectArrayTest01 {
         long startTime, startInitialize, startReadIteration, startWriteIteration, startResize, endTime;
         float creation=0, initialization=0, reading=0, replacing=0, resizing=0;
 
-        ObjectArrayTest01 element1 = new ObjectArrayTest01@core('f');
-        ObjectArrayTest01 element2 = new ObjectArrayTest01@core('o'); 
+        ObjectArrayTest01 element1;
+        ObjectArrayTest01 element2;
+	atomic {
+	  element1 = new ObjectArrayTest01@core('f');
+	  element2 = new ObjectArrayTest01@core('o'); 
+	}
 
         int percentage = 0;
         int step = 5;
