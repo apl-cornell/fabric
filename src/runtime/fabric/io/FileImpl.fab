@@ -203,7 +203,7 @@ public class FileImpl implements File {
                 return false;
             }
             FabFile file = (FabFile)element;
-            file.contents.setZeroLength();
+            file.contents.setLength(0);
             return true;
         }
     }
