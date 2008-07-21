@@ -82,7 +82,7 @@ public class ResizableObjectArray {
     this.length = length;
 
     // Compute required height (height starts at 1).
-    this.height = getCounter(length - 1) + 1;
+    this.height = length == 0 ? 1 : getCounter(length - 1) + 1;
     if (height == 1)
       root = new ObjectArray(proxyType, CHUNK_SIZE);
     else root = new ObjectArray(ObjectArray.class, CHUNK_SIZE);

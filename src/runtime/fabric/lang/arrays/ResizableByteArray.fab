@@ -72,7 +72,7 @@ public class ResizableByteArray {
     this.length = length;
 
     // Compute required height (height starts at 1).
-    this.height = getCounter(length - 1) + 1;
+    this.height = length == 0 ? 1 : getCounter(length - 1) + 1;
 
     switch (height) {
     case 1:
