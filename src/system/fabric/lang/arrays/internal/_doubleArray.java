@@ -12,18 +12,18 @@ import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 import fabric.lang.Object;
 
-public interface intArray extends Object {
+public interface _doubleArray extends Object {
   int get$length();
 
-  int set(int i, int value);
+  double set(int i, double value);
 
-  int get(int i);
+  double get(int i);
 
-  public static class $Impl extends Object.$Impl implements intArray {
-    private int[] value;
+  public static class $Impl extends Object.$Impl implements _doubleArray {
+    private double[] value;
 
     /**
-     * Creates a new int array at the given Core with the given length.
+     * Creates a new double array at the given Core with the given length.
      * 
      * @param core
      *                The core on which to allocate the array.
@@ -32,11 +32,11 @@ public interface intArray extends Object {
      */
     public $Impl(Core core, int length) {
       super(core);
-      value = new int[length];
+      value = new double[length];
     }
 
     /**
-     * Creates a new int array at the given Core using the given backing
+     * Creates a new double array at the given Core using the given backing
      * array.
      * 
      * @param core
@@ -44,7 +44,7 @@ public interface intArray extends Object {
      * @param value
      *                The backing array to use.
      */
-    public $Impl(Core core, int[] value) {
+    public $Impl(Core core, double[] value) {
       super(core);
       this.value = value;
     }
@@ -57,15 +57,15 @@ public interface intArray extends Object {
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
       super(core, onum, version, label, in, refTypes, intracoreRefs);
-      value = new int[in.readInt()];
+      value = new double[in.readInt()];
       for (int i = 0; i < value.length; i++)
-        value[i] = in.readInt();
+        value[i] = in.readDouble();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.internal.intArray#getLength()
+     * @see fabric.lang.arrays.internal.doubleArray#getLength()
      */
     public int get$length() {
       TransactionManager.getInstance().registerRead(this);
@@ -75,10 +75,10 @@ public interface intArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.internal.intArray#get(int)
+     * @see fabric.lang.arrays.internal.doubleArray#get(int)
      */
     @SuppressWarnings("unchecked")
-    public int get(int i) {
+    public double get(int i) {
       TransactionManager.getInstance().registerRead(this);
       return this.value[i];
     }
@@ -86,12 +86,12 @@ public interface intArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.internal.intArray#set(int, int)
+     * @see fabric.lang.arrays.internal.doubleArray#set(int, double)
      */
-    public int set(int i, int value) {
+    public double set(int i, double value) {
       boolean transactionCreated =
           TransactionManager.getInstance().registerWrite(this);
-      int result = this.value[i] = value;
+      double result = this.value[i] = value;
       if (transactionCreated) TransactionManager.getInstance().commitTransaction();
       return result;
     }
@@ -105,8 +105,8 @@ public interface intArray extends Object {
     @Override
     public void $copyStateFrom(Object.$Impl other) {
       super.$copyStateFrom(other);
-      intArray.$Impl src = (intArray.$Impl) other;
-      value = new int[src.value.length];
+      _doubleArray.$Impl src = (_doubleArray.$Impl) other;
+      value = new double[src.value.length];
       System.arraycopy(src.value, 0, value, 0, src.value.length);
     }
 
@@ -116,8 +116,8 @@ public interface intArray extends Object {
      * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    protected intArray.$Proxy $makeProxy() {
-      return new intArray.$Proxy(this);
+    protected _doubleArray.$Proxy $makeProxy() {
+      return new _doubleArray.$Proxy(this);
     }
 
     /*
@@ -132,45 +132,45 @@ public interface intArray extends Object {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
       out.writeInt(value.length);
       for (int i = 0; i < value.length; i++)
-        out.writeInt(value[i]);
+        out.writeDouble(value[i]);
     }
   }
 
-  public static class $Proxy extends Object.$Proxy implements intArray {
+  public static class $Proxy extends Object.$Proxy implements _doubleArray {
 
     public $Proxy(Core core, long onum) {
       super(core, onum);
     }
 
-    public $Proxy(intArray.$Impl impl) {
+    public $Proxy(_doubleArray.$Impl impl) {
       super(impl);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.internal.intArray#getLength()
+     * @see fabric.lang.arrays.internal.doubleArray#getLength()
      */
     public int get$length() {
-      return ((intArray) fetch()).get$length();
+      return ((_doubleArray) fetch()).get$length();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.internal.intArray#get(int)
+     * @see fabric.lang.arrays.internal.doubleArray#get(int)
      */
-    public int get(int i) {
-      return ((intArray) fetch()).get(i);
+    public double get(int i) {
+      return ((_doubleArray) fetch()).get(i);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.internal.intArray#set(int, int)
+     * @see fabric.lang.arrays.internal.doubleArray#set(int, double)
      */
-    public int set(int i, int value) {
-      return ((intArray) fetch()).set(i, value);
+    public double set(int i, double value) {
+      return ((_doubleArray) fetch()).set(i, value);
     }
   }
 }

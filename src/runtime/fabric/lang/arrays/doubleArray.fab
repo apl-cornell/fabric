@@ -1,34 +1,31 @@
 package fabric.lang.arrays;
 
 import fabric.client.Core;
-import fabric.lang.arrays.internal.ObjectArray;
+import fabric.lang.arrays.internal._doubleArray;
+import fabric.lang.arrays.internal._ObjectArray;
 
 /**
  * <p>
  * This class implements a resizable array using
- * fabric.lang.arrays.internal.ObjectArray as a primitive. The smaller array
+ * fabric.lang.arrays.internal._doubleArray as a primitive. The smaller array
  * pieces are arranged as a tree so as to support efficient indexing operations.
- * This version of ResizableArray assumes elements are Object instances.
  * </p>
  * <p>
- * Possible optimizations:
- * <ol>
- * <li>Convert the length to a base 128 representation will make it easier to
- * take logs then.</li>
- * </ol>
+ * This is an array for doubles, and is adapted from byteArray.
  * </p>
  * <p>
- * Bugs:
+ * Optimizations:
  * <ol>
- * <li>If the array is indeed of ObjectArray instance, then things could get
- * messed up. We're assuming for now that this case won't arise.</li>
+ * <li>Remove the call to getProxy in the generated Java file</li>
  * </ol>
  * </p>
+ * XXX For simplicity the double arrays are also of CHUNK_SIZE size
  * 
  * @author kvikram
  */
-
-public class ResizableObjectArray {
+public class doubleArray {
+  private static final double DEFAULT_VALUE = 0.0;
+  
   /**
    * The number of elements in each little array. Dependent on the MTU?
    * Analogous to a block in a file system. Also directly determines the fanout.
@@ -51,16 +48,11 @@ public class ResizableObjectArray {
   private int length;
 
   /**
-   * The class representing the proxy type for the array elements.
-   */
-  private final Class proxyType;
-
-  /**
    * The root of the tree of little arrays. The runtime type of root is a Fabric
    * array of Fabric Objects. Each object in the array is either a further array
    * of objects or is an array element if this array is at the leaf level
    */
-  private ObjectArray root;
+  private Object root;
 
   /**
    * Creates a new object array at the given Core with the given length.
@@ -70,22 +62,29 @@ public class ResizableObjectArray {
    * @param length
    *                The length of the array.
    */
-  public ResizableObjectArray(Class proxyType, int length) {
+  public doubleArray(int length) {
     // Default chunk size is 256.
-    this(proxyType, length, 8);
+    this(length, 8);
   }
 
-  public ResizableObjectArray(Class proxyType, int length, int CHUNK_SIZE_LOG2) {
+  public doubleArray(int length, int CHUNK_SIZE_LOG2) {
     this.CHUNK_SIZE_LOG2 = CHUNK_SIZE_LOG2;
     this.CHUNK_SIZE = (1 << CHUNK_SIZE_LOG2);
-    this.proxyType = proxyType;
     this.length = length;
 
     // Compute required height (height starts at 1).
     this.height = length == 0 ? 1 : getCounter(length - 1) + 1;
-    if (height == 1)
-      root = new ObjectArray(proxyType, CHUNK_SIZE);
-    else root = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
+
+    switch (height) {
+    case 1:
+      root = new _doubleArray(CHUNK_SIZE);
+      break;
+    case 2:
+      root = new _ObjectArray(_doubleArray.class, CHUNK_SIZE);
+      break;
+    default:
+      root = new _ObjectArray(_ObjectArray.class, CHUNK_SIZE);
+    }
   }
 
   public int getLength() {
@@ -101,11 +100,11 @@ public class ResizableObjectArray {
     counter--;
     return counter;
   }
-  
+
   private void setZeroLength() {
     this.length = 0;
     this.height = 1;
-    root = new ObjectArray(proxyType, CHUNK_SIZE);
+    root = new _doubleArray(CHUNK_SIZE);
   }
 
   public void setLength(int newSize) {
@@ -114,86 +113,109 @@ public class ResizableObjectArray {
     
     int counter = getCounter(newSize - 1);
     int newHeight = counter + 1;
-    int difference = newHeight - this.height;
+    int oldHeight = this.height;
+    int difference = newHeight - oldHeight;
     this.height = newHeight;
     this.length = newSize;
 
     // Set root and null out unnecessary stuff.
     if (difference > 0) {
       // Make sure the leaves are at the right level - push down the root.
+      if (oldHeight == 1) {
+        _ObjectArray newRoot = new _ObjectArray(_doubleArray.class, CHUNK_SIZE);
+        newRoot.set(0, root);
+        root = newRoot;
+        difference--;
+      }
       for (int count = 0; count < difference; count++) {
-        ObjectArray newRoot = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
+        _ObjectArray newRoot = new _ObjectArray(_ObjectArray.class, CHUNK_SIZE);
         newRoot.set(0, root);
         root = newRoot;
       }
     } else if (difference < 0) {
       // Truncate the last so many array slots.
+      if (newHeight == 1) difference++;
       for (int count = 0; count < -difference; count++) {
-        ObjectArray rootArray = (ObjectArray) root.get(0);
+        _ObjectArray rootArray = (_ObjectArray) ((_ObjectArray) root).get(0);
+        root = rootArray;
+      }
+      if (newHeight == 1) {
+        _doubleArray rootArray = (_doubleArray) ((_ObjectArray) root).get(0);
         root = rootArray;
       }
 
-      // Null out the part of the tree that shouldn't exist anymore.
-      ObjectArray curNode = root;
-      int curIndex = newSize - 1;
-      int curHeight = newHeight;
-      int firstDigit;
-      while (curHeight >= 1 && curNode != null) {
-        firstDigit = (curIndex >> (counter * this.CHUNK_SIZE_LOG2));
-        for (int count = firstDigit + 1; count < this.CHUNK_SIZE; count++) {
-          curNode.set(count, null);
+      if (newHeight != 1) {
+        // Null out the part of the tree that shouldn't exist anymore.
+        _ObjectArray curNode = (_ObjectArray) root;
+        int curIndex = newSize - 1;
+        int curHeight = newHeight;
+        int firstDigit;
+        while (curHeight > 1 && curNode != null) {
+          firstDigit = (curIndex >> (counter * this.CHUNK_SIZE_LOG2));
+          for (int count = firstDigit + 1; count < this.CHUNK_SIZE; count++) {
+            curNode.set(count, null);
+          }
+          curNode = (_ObjectArray) curNode.get(firstDigit);
+          curIndex = (curIndex & ((1 << counter * this.CHUNK_SIZE_LOG2) - 1));
+          counter -= this.CHUNK_SIZE_LOG2;
+          curHeight--;
         }
-        curNode = (ObjectArray) curNode.get(firstDigit);
-        curIndex = (curIndex & ((1 << counter * this.CHUNK_SIZE_LOG2) - 1));
-        counter -= this.CHUNK_SIZE_LOG2;
-        curHeight--;
       }
     }
   }
 
-  public Object get(int i) {
+  public double get(int i) {
     if (i >= length) throw new ArrayIndexOutOfBoundsException();
-    ObjectArray node = root;
+    Object node = root;
     int level = height;
     int c = this.CHUNK_SIZE_LOG2;
     int counter = (level - 1) * c;
     int firstDigit;
     while (level > 1) {
       firstDigit = (i >> counter);
-      node = (ObjectArray) node.get(firstDigit);
+      node = ((_ObjectArray) node).get(firstDigit);
       if (node == null) {
-        return null;
+        return DEFAULT_VALUE;
       }
       i = (i & ((1 << counter) - 1));
       counter -= c;
       level--;
     }
-    return node.get(i);
+    return ((_doubleArray) node).get(i);
   }
 
-  public Object set(int i, Object data) {
+  public double set(int i, double data) {
     if (i >= length) throw new ArrayIndexOutOfBoundsException();
-    ObjectArray node = root;
+    Object node = root;
     int level = height;
     int c = this.CHUNK_SIZE_LOG2;
     int counter = (level - 1) * c;
     int firstDigit;
     Object nextObject;
+    _ObjectArray oArray;
     while (level > 1) {
       firstDigit = (i >> counter);
-      nextObject = node.get(firstDigit);
+      oArray = (_ObjectArray) node;
+      nextObject = oArray.get(firstDigit);
       if (nextObject == null) {
         // Writing to a node that doesn't exist yet. Time to create it.
-        if (level == 2)
-          nextObject = new ObjectArray(proxyType, CHUNK_SIZE);
-        else nextObject = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
-        node.set(firstDigit, nextObject);
+        switch (level) {
+        case 3:
+          nextObject = new _ObjectArray(_doubleArray.class, CHUNK_SIZE);
+          break;
+        case 2:
+          nextObject = new _doubleArray(CHUNK_SIZE);
+          break;
+        default:
+          nextObject = new _ObjectArray(_ObjectArray.class, CHUNK_SIZE);
+        }
+        oArray.set(firstDigit, nextObject);
       }
-      node = (ObjectArray) nextObject;
+      node = nextObject;
       i = (i & ((1 << counter) - 1));
       counter -= c;
       level--;
     }
-    return node.set(i, data);
+    return ((_doubleArray) node).set(i, data);
   }
 }

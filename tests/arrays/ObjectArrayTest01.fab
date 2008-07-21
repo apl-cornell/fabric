@@ -5,7 +5,7 @@ import java.text.NumberFormat;
 
 import fabric.client.Core;
 import fabric.client.Client;
-import fabric.lang.arrays.internal.ObjectArray;
+import fabric.lang.arrays.internal._ObjectArray;
 
 public class ObjectArrayTest01 {
     char c;
@@ -69,8 +69,8 @@ public class ObjectArrayTest01 {
 
                 // create array
                 startTime = System.currentTimeMillis();
-                ObjectArray testArray;
-                testArray = new ObjectArray@core(ObjectArrayTest01.class, SIZE1);
+                _ObjectArray testArray;
+                testArray = new _ObjectArray@core(ObjectArrayTest01.class, SIZE1);
 
                 // initialize array with element 1
                 startInitialize = System.currentTimeMillis();
@@ -96,7 +96,7 @@ public class ObjectArrayTest01 {
 
                 // resize array
                 startResize = System.currentTimeMillis();
-//              ObjectArray testArrayNew = new ObjectArray@core(ObjectArrayTest01.class, SIZE2);
+//              _ObjectArray testArrayNew = new _ObjectArray@core(ObjectArrayTest01.class, SIZE2);
 //              for(int i = 0; i < SIZE1; i++) {
 //              testArrayNew.set(i, testArray.get(i));
 //              }

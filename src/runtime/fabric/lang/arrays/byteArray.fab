@@ -1,17 +1,17 @@
 package fabric.lang.arrays;
 
 import fabric.client.Core;
-import fabric.lang.arrays.internal.byteArray;
-import fabric.lang.arrays.internal.ObjectArray;
+import fabric.lang.arrays.internal._byteArray;
+import fabric.lang.arrays.internal._ObjectArray;
 
 /**
  * <p>
  * This class implements a resizable array using
- * fabric.lang.arrays.internal.byteArray as a primitive. The smaller array
+ * fabric.lang.arrays.internal._byteArray as a primitive. The smaller array
  * pieces are arranged as a tree so as to support efficient indexing operations.
  * </p>
  * <p>
- * This is an array for bytes, and is adapted from ResizableObjectArray
+ * This is an array for bytes, and is adapted from ObjectArray
  * </p>
  * <p>
  * Optimizations:
@@ -23,8 +23,9 @@ import fabric.lang.arrays.internal.ObjectArray;
  * 
  * @author kvikram
  */
-
-public class ResizableByteArray {
+public class byteArray {
+  private static final byte DEFAULT_VALUE = 0;
+  
   /**
    * The number of elements in each little array. Dependent on the MTU?
    * Analogous to a block in a file system. Also directly determines the fanout.
@@ -61,12 +62,12 @@ public class ResizableByteArray {
    * @param length
    *                The length of the array.
    */
-  public ResizableByteArray(int length) {
+  public byteArray(int length) {
     // Default chunk size is 256.
     this(length, 8);
   }
 
-  public ResizableByteArray(int length, int CHUNK_SIZE_LOG2) {
+  public byteArray(int length, int CHUNK_SIZE_LOG2) {
     this.CHUNK_SIZE_LOG2 = CHUNK_SIZE_LOG2;
     this.CHUNK_SIZE = (1 << CHUNK_SIZE_LOG2);
     this.length = length;
@@ -76,13 +77,13 @@ public class ResizableByteArray {
 
     switch (height) {
     case 1:
-      root = new byteArray(CHUNK_SIZE);
+      root = new _byteArray(CHUNK_SIZE);
       break;
     case 2:
-      root = new ObjectArray(byteArray.class, CHUNK_SIZE);
+      root = new _ObjectArray(_byteArray.class, CHUNK_SIZE);
       break;
     default:
-      root = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
+      root = new _ObjectArray(_ObjectArray.class, CHUNK_SIZE);
     }
   }
 
@@ -103,7 +104,7 @@ public class ResizableByteArray {
   private void setZeroLength() {
     this.length = 0;
     this.height = 1;
-    root = new byteArray(CHUNK_SIZE);
+    root = new _byteArray(CHUNK_SIZE);
   }
 
   public void setLength(int newSize) {
@@ -121,13 +122,13 @@ public class ResizableByteArray {
     if (difference > 0) {
       // Make sure the leaves are at the right level - push down the root.
       if (oldHeight == 1) {
-        ObjectArray newRoot = new ObjectArray(byteArray.class, CHUNK_SIZE);
+        _ObjectArray newRoot = new _ObjectArray(_byteArray.class, CHUNK_SIZE);
         newRoot.set(0, root);
         root = newRoot;
         difference--;
       }
       for (int count = 0; count < difference; count++) {
-        ObjectArray newRoot = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
+        _ObjectArray newRoot = new _ObjectArray(_ObjectArray.class, CHUNK_SIZE);
         newRoot.set(0, root);
         root = newRoot;
       }
@@ -135,17 +136,17 @@ public class ResizableByteArray {
       // Truncate the last so many array slots.
       if (newHeight == 1) difference++;
       for (int count = 0; count < -difference; count++) {
-        ObjectArray rootArray = (ObjectArray) ((ObjectArray) root).get(0);
+        _ObjectArray rootArray = (_ObjectArray) ((_ObjectArray) root).get(0);
         root = rootArray;
       }
       if (newHeight == 1) {
-        byteArray rootArray = (byteArray) ((ObjectArray) root).get(0);
+        _byteArray rootArray = (_byteArray) ((_ObjectArray) root).get(0);
         root = rootArray;
       }
 
       if (newHeight != 1) {
         // Null out the part of the tree that shouldn't exist anymore.
-        ObjectArray curNode = (ObjectArray) root;
+        _ObjectArray curNode = (_ObjectArray) root;
         int curIndex = newSize - 1;
         int curHeight = newHeight;
         int firstDigit;
@@ -154,7 +155,7 @@ public class ResizableByteArray {
           for (int count = firstDigit + 1; count < this.CHUNK_SIZE; count++) {
             curNode.set(count, null);
           }
-          curNode = (ObjectArray) curNode.get(firstDigit);
+          curNode = (_ObjectArray) curNode.get(firstDigit);
           curIndex = (curIndex & ((1 << counter * this.CHUNK_SIZE_LOG2) - 1));
           counter -= this.CHUNK_SIZE_LOG2;
           curHeight--;
@@ -172,15 +173,15 @@ public class ResizableByteArray {
     int firstDigit;
     while (level > 1) {
       firstDigit = (i >> counter);
-      node = ((ObjectArray) node).get(firstDigit);
+      node = ((_ObjectArray) node).get(firstDigit);
       if (node == null) {
-        return 0;
+        return DEFAULT_VALUE;
       }
       i = (i & ((1 << counter) - 1));
       counter -= c;
       level--;
     }
-    return ((byteArray) node).get(i);
+    return ((_byteArray) node).get(i);
   }
 
   public byte set(int i, byte data) {
@@ -191,22 +192,22 @@ public class ResizableByteArray {
     int counter = (level - 1) * c;
     int firstDigit;
     Object nextObject;
-    ObjectArray oArray;
+    _ObjectArray oArray;
     while (level > 1) {
       firstDigit = (i >> counter);
-      oArray = (ObjectArray) node;
+      oArray = (_ObjectArray) node;
       nextObject = oArray.get(firstDigit);
       if (nextObject == null) {
         // Writing to a node that doesn't exist yet. Time to create it.
         switch (level) {
         case 3:
-          nextObject = new ObjectArray(byteArray.class, CHUNK_SIZE);
+          nextObject = new _ObjectArray(_byteArray.class, CHUNK_SIZE);
           break;
         case 2:
-          nextObject = new byteArray(CHUNK_SIZE);
+          nextObject = new _byteArray(CHUNK_SIZE);
           break;
         default:
-          nextObject = new ObjectArray(ObjectArray.class, CHUNK_SIZE);
+          nextObject = new _ObjectArray(_ObjectArray.class, CHUNK_SIZE);
         }
         oArray.set(firstDigit, nextObject);
       }
@@ -215,6 +216,6 @@ public class ResizableByteArray {
       counter -= c;
       level--;
     }
-    return ((byteArray) node).set(i, data);
+    return ((_byteArray) node).set(i, data);
   }
 }

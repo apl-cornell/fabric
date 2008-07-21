@@ -1,7 +1,7 @@
 package arrays;
 
 import fabric.client.Core;
-import fabric.lang.arrays.ResizableObjectArray;
+import fabric.lang.arrays.ObjectArray;
 import fabric.util.HashMap;
 
 
@@ -17,7 +17,7 @@ public class ArrayTest3 {
             ArrayTest3 another2 = new ArrayTest3@core(2);
             ArrayTest3 another3 = new ArrayTest3@core(3);
             
-            ResizableObjectArray testArray = new ResizableObjectArray@core(ArrayTest3.class, 1000);
+            ObjectArray testArray = new ObjectArray@core(ArrayTest3.class, 1000);
             testArray.set(0, another1);
             testArray.set(999, another2);
 

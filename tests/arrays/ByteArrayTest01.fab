@@ -1,7 +1,7 @@
 package arrays;
 
 import fabric.client.Core;
-import fabric.lang.arrays.ResizableByteArray;
+import fabric.lang.arrays.byteArray;
 import fabric.util.HashMap;
 
 import java.io.File;
@@ -35,7 +35,7 @@ public class ByteArrayTest01 {
         System.out.println("Starting test");
         atomic {
             try {
-                ResizableByteArray byteArray = new ResizableByteArray@core(length);
+                byteArray byteArray = new byteArray@core(length);
                 System.out.println("Array created");
 
                 int counter = 0;

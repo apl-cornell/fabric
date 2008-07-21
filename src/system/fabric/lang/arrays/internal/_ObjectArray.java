@@ -13,7 +13,7 @@ import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 import fabric.lang.Object;
 
-public interface ObjectArray<T extends Object> extends Object {
+public interface _ObjectArray<T extends Object> extends Object {
   int get$length();
 
   T set(int i, T value);
@@ -21,7 +21,7 @@ public interface ObjectArray<T extends Object> extends Object {
   T get(int i);
 
   public static class $Impl<T extends Object> extends Object.$Impl implements
-      ObjectArray<T> {
+      _ObjectArray<T> {
     /**
      * The class representing the proxy type for the array elements.
      */
@@ -142,7 +142,7 @@ public interface ObjectArray<T extends Object> extends Object {
     @Override
     public void $copyStateFrom(Object.$Impl other) {
       super.$copyStateFrom(other);
-      ObjectArray.$Impl<T> src = (ObjectArray.$Impl<T>) other;
+      _ObjectArray.$Impl<T> src = (_ObjectArray.$Impl<T>) other;
       value = new Object[src.value.length];
       System.arraycopy(src.value, 0, value, 0, src.value.length);
     }
@@ -153,8 +153,8 @@ public interface ObjectArray<T extends Object> extends Object {
      * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    protected ObjectArray.$Proxy<T> $makeProxy() {
-      return new ObjectArray.$Proxy<T>(this);
+    protected _ObjectArray.$Proxy<T> $makeProxy() {
+      return new _ObjectArray.$Proxy<T>(this);
     }
 
     /*
@@ -176,13 +176,13 @@ public interface ObjectArray<T extends Object> extends Object {
   }
 
   public static class $Proxy<T extends Object> extends Object.$Proxy implements
-      ObjectArray<T> {
+      _ObjectArray<T> {
 
     public $Proxy(Core core, long onum) {
       super(core, onum);
     }
 
-    public $Proxy(ObjectArray.$Impl<T> impl) {
+    public $Proxy(_ObjectArray.$Impl<T> impl) {
       super(impl);
     }
 
@@ -193,7 +193,7 @@ public interface ObjectArray<T extends Object> extends Object {
      */
     @SuppressWarnings("unchecked")
     public int get$length() {
-      return ((ObjectArray<T>) fetch()).get$length();
+      return ((_ObjectArray<T>) fetch()).get$length();
     }
 
     /*
@@ -203,7 +203,7 @@ public interface ObjectArray<T extends Object> extends Object {
      */
     @SuppressWarnings("unchecked")
     public T get(int i) {
-      return ((ObjectArray<T>) fetch()).get(i);
+      return ((_ObjectArray<T>) fetch()).get(i);
     }
 
     /*
@@ -213,7 +213,7 @@ public interface ObjectArray<T extends Object> extends Object {
      */
     @SuppressWarnings("unchecked")
     public T set(int i, T value) {
-      return ((ObjectArray<T>) fetch()).set(i, value);
+      return ((_ObjectArray<T>) fetch()).set(i, value);
     }
   }
 }

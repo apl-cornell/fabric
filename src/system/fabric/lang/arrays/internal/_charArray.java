@@ -12,18 +12,18 @@ import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 import fabric.lang.Object;
 
-public interface floatArray extends Object {
+public interface _charArray extends Object {
   int get$length();
 
-  float set(int i, float value);
+  char set(int i, char value);
 
-  float get(int i);
+  char get(int i);
 
-  public static class $Impl extends Object.$Impl implements floatArray {
-    private float[] value;
+  public static class $Impl extends Object.$Impl implements _charArray {
+    private char[] value;
 
     /**
-     * Creates a new float array at the given Core with the given length.
+     * Creates a new char array at the given Core with the given length.
      * 
      * @param core
      *                The core on which to allocate the array.
@@ -32,11 +32,11 @@ public interface floatArray extends Object {
      */
     public $Impl(Core core, int length) {
       super(core);
-      value = new float[length];
+      value = new char[length];
     }
 
     /**
-     * Creates a new float array at the given Core using the given backing
+     * Creates a new char array at the given Core using the given backing
      * array.
      * 
      * @param core
@@ -44,7 +44,7 @@ public interface floatArray extends Object {
      * @param value
      *                The backing array to use.
      */
-    public $Impl(Core core, float[] value) {
+    public $Impl(Core core, char[] value) {
       super(core);
       this.value = value;
     }
@@ -57,15 +57,15 @@ public interface floatArray extends Object {
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
       super(core, onum, version, label, in, refTypes, intracoreRefs);
-      value = new float[in.readInt()];
+      value = new char[in.readInt()];
       for (int i = 0; i < value.length; i++)
-        value[i] = in.readFloat();
+        value[i] = in.readChar();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.internal.floatArray#getLength()
+     * @see fabric.lang.arrays.internal.charArray#getLength()
      */
     public int get$length() {
       TransactionManager.getInstance().registerRead(this);
@@ -75,10 +75,10 @@ public interface floatArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.internal.floatArray#get(int)
+     * @see fabric.lang.arrays.internal.charArray#get(int)
      */
     @SuppressWarnings("unchecked")
-    public float get(int i) {
+    public char get(int i) {
       TransactionManager.getInstance().registerRead(this);
       return this.value[i];
     }
@@ -86,12 +86,12 @@ public interface floatArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.internal.floatArray#set(int, float)
+     * @see fabric.lang.arrays.internal.charArray#set(int, char)
      */
-    public float set(int i, float value) {
+    public char set(int i, char value) {
       boolean transactionCreated =
           TransactionManager.getInstance().registerWrite(this);
-      float result = this.value[i] = value;
+      char result = this.value[i] = value;
       if (transactionCreated) TransactionManager.getInstance().commitTransaction();
       return result;
     }
@@ -105,8 +105,8 @@ public interface floatArray extends Object {
     @Override
     public void $copyStateFrom(Object.$Impl other) {
       super.$copyStateFrom(other);
-      floatArray.$Impl src = (floatArray.$Impl) other;
-      value = new float[src.value.length];
+      _charArray.$Impl src = (_charArray.$Impl) other;
+      value = new char[src.value.length];
       System.arraycopy(src.value, 0, value, 0, src.value.length);
     }
 
@@ -116,8 +116,8 @@ public interface floatArray extends Object {
      * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    protected floatArray.$Proxy $makeProxy() {
-      return new floatArray.$Proxy(this);
+    protected _charArray.$Proxy $makeProxy() {
+      return new _charArray.$Proxy(this);
     }
 
     /*
@@ -132,45 +132,45 @@ public interface floatArray extends Object {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
       out.writeInt(value.length);
       for (int i = 0; i < value.length; i++)
-        out.writeFloat(value[i]);
+        out.writeChar(value[i]);
     }
   }
 
-  public static class $Proxy extends Object.$Proxy implements floatArray {
+  public static class $Proxy extends Object.$Proxy implements _charArray {
 
     public $Proxy(Core core, long onum) {
       super(core, onum);
     }
 
-    public $Proxy(floatArray.$Impl impl) {
+    public $Proxy(_charArray.$Impl impl) {
       super(impl);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.internal.floatArray#getLength()
+     * @see fabric.lang.arrays.internal.charArray#getLength()
      */
     public int get$length() {
-      return ((floatArray) fetch()).get$length();
+      return ((_charArray) fetch()).get$length();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.internal.floatArray#get(int)
+     * @see fabric.lang.arrays.internal.charArray#get(int)
      */
-    public float get(int i) {
-      return ((floatArray) fetch()).get(i);
+    public char get(int i) {
+      return ((_charArray) fetch()).get(i);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.arrays.internal.floatArray#set(int, float)
+     * @see fabric.lang.arrays.internal.charArray#set(int, char)
      */
-    public float set(int i, float value) {
-      return ((floatArray) fetch()).set(i, value);
+    public char set(int i, char value) {
+      return ((_charArray) fetch()).set(i, value);
     }
   }
 }

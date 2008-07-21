@@ -21,7 +21,7 @@ import fabric.common.Resources;
 import fabric.dissemination.FetchManager;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
-import fabric.lang.arrays.internal.ObjectArray;
+import fabric.lang.arrays.internal._ObjectArray;
 import fabric.lang.auth.Label;
 
 /**
@@ -316,7 +316,7 @@ public class Client {
 
     Class<?> mainClass = Class.forName(opts.main[0] + "$$Impl");
     Method main =
-        mainClass.getMethod("main", new Class[] { ObjectArray.class });
+        mainClass.getMethod("main", new Class[] { _ObjectArray.class });
     String[] newArgs = new String[opts.main.length - 1];
     for (int i = 0; i < newArgs.length; i++)
       newArgs[i] = opts.main[i + 1];

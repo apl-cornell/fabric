@@ -5,7 +5,7 @@ import java.util.WeakHashMap;
 
 import fabric.client.Core;
 import fabric.common.InternalError;
-import fabric.lang.arrays.internal.ObjectArray;
+import fabric.lang.arrays.internal._ObjectArray;
 import fabric.lang.auth.Label;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
@@ -53,11 +53,11 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * system's point of view.
    */
   @SuppressWarnings("unchecked")
-  public static ObjectArray<Object> $wrap(Core core, java.lang.Object[] array) {
+  public static _ObjectArray<Object> $wrap(Core core, java.lang.Object[] array) {
     Object[] result = new Object[array.length];
     for (int i = 0; i < array.length; i++)
       result[i] = $wrap(array[i]);
-    return (ObjectArray<Object>) new ObjectArray.$Impl<Object>(core,
+    return (_ObjectArray<Object>) new _ObjectArray.$Impl<Object>(core,
         Object.$Proxy.class, result).$getProxy();
   }
 

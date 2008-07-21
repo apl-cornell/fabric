@@ -6,7 +6,7 @@ import java.lang.InterruptedException;
 
 import fabric.client.Core;
 import fabric.client.Client;
-import fabric.lang.arrays.ResizableObjectArray;
+import fabric.lang.arrays.ObjectArray;
 
 public class ResizableArrayTest01 {
     char c;
@@ -73,8 +73,8 @@ public class ResizableArrayTest01 {
 
                 // create array
                 startTime = System.currentTimeMillis();
-                ResizableObjectArray testArray;
-                testArray = new ResizableObjectArray@core(ResizableArrayTest01.class,
+                ObjectArray testArray;
+                testArray = new ObjectArray@core(ResizableArrayTest01.class,
                     SIZE1, chunkSize);
 
                 // initialize array with element 1

@@ -12,14 +12,14 @@ import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 import fabric.lang.Object;
 
-public interface booleanArray extends Object {
+public interface _booleanArray extends Object {
   int get$length();
 
   boolean set(int i, boolean value);
 
   boolean get(int i);
 
-  public static class $Impl extends Object.$Impl implements booleanArray {
+  public static class $Impl extends Object.$Impl implements _booleanArray {
     private boolean[] value;
 
     /**
@@ -105,7 +105,7 @@ public interface booleanArray extends Object {
     @Override
     public void $copyStateFrom(Object.$Impl other) {
       super.$copyStateFrom(other);
-      booleanArray.$Impl src = (booleanArray.$Impl) other;
+      _booleanArray.$Impl src = (_booleanArray.$Impl) other;
       value = new boolean[src.value.length];
       System.arraycopy(src.value, 0, value, 0, src.value.length);
     }
@@ -116,8 +116,8 @@ public interface booleanArray extends Object {
      * @see fabric.lang.Object.$Impl#$makeProxy()
      */
     @Override
-    protected booleanArray.$Proxy $makeProxy() {
-      return new booleanArray.$Proxy(this);
+    protected _booleanArray.$Proxy $makeProxy() {
+      return new _booleanArray.$Proxy(this);
     }
 
     /*
@@ -136,13 +136,13 @@ public interface booleanArray extends Object {
     }
   }
 
-  public static class $Proxy extends Object.$Proxy implements booleanArray {
+  public static class $Proxy extends Object.$Proxy implements _booleanArray {
 
     public $Proxy(Core core, long onum) {
       super(core, onum);
     }
 
-    public $Proxy(booleanArray.$Impl impl) {
+    public $Proxy(_booleanArray.$Impl impl) {
       super(impl);
     }
 
@@ -152,7 +152,7 @@ public interface booleanArray extends Object {
      * @see fabric.lang.arrays.internal.booleanArray#getLength()
      */
     public int get$length() {
-      return ((booleanArray) fetch()).get$length();
+      return ((_booleanArray) fetch()).get$length();
     }
 
     /*
@@ -161,7 +161,7 @@ public interface booleanArray extends Object {
      * @see fabric.lang.arrays.internal.booleanArray#get(int)
      */
     public boolean get(int i) {
-      return ((booleanArray) fetch()).get(i);
+      return ((_booleanArray) fetch()).get(i);
     }
 
     /*
@@ -170,7 +170,7 @@ public interface booleanArray extends Object {
      * @see fabric.lang.arrays.internal.booleanArray#set(int, boolean)
      */
     public boolean set(int i, boolean value) {
-      return ((booleanArray) fetch()).set(i, value);
+      return ((_booleanArray) fetch()).set(i, value);
     }
   }
 }
