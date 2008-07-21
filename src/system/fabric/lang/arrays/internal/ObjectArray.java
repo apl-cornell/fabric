@@ -8,9 +8,9 @@ import java.util.List;
 
 import fabric.client.Core;
 import fabric.client.transaction.TransactionManager;
+import fabric.common.InternalError;
 import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
-import fabric.common.Util;
 import fabric.lang.Object;
 
 public interface ObjectArray<T extends Object> extends Object {
@@ -25,7 +25,7 @@ public interface ObjectArray<T extends Object> extends Object {
     /**
      * The class representing the proxy type for the array elements.
      */
-    private /*final*/ Class<? extends Object.$Proxy> proxyType;
+    private final Class<? extends Object.$Proxy> proxyType;
 
     private Object[] value;
 
@@ -40,7 +40,7 @@ public interface ObjectArray<T extends Object> extends Object {
     @SuppressWarnings("unchecked")
     public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, int length) {
       super(core);
-      this.proxyType = Util.getProxy(proxyType);
+      this.proxyType = getProxy(proxyType);
       value = new Object[length];
     }
 
@@ -55,7 +55,7 @@ public interface ObjectArray<T extends Object> extends Object {
      */
     public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, T[] value) {
       super(core);
-      this.proxyType = Util.getProxy(proxyType);
+      this.proxyType = getProxy(proxyType);
       this.value = value;
     }
 
@@ -63,10 +63,9 @@ public interface ObjectArray<T extends Object> extends Object {
      * Used for deserializing.
      */
     @SuppressWarnings("unchecked")
-    public $Impl(Core core, long onum, int version, long label,
-        ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intracoreRefs) throws IOException,
-        ClassNotFoundException {
+    public $Impl(Core core, long onum, int version, long label, ObjectInput in,
+        Iterator<RefTypeEnum> refTypes, Iterator<Long> intracoreRefs)
+        throws IOException, ClassNotFoundException {
       super(core, onum, version, label, in, refTypes, intracoreRefs);
       proxyType = (Class<? extends Object.$Proxy>) Class.forName(in.readUTF());
       value = new Object[in.readInt()];
@@ -74,6 +73,28 @@ public interface ObjectArray<T extends Object> extends Object {
         value[i] =
             $readRef(proxyType, refTypes.next(), in, core, intracoreRefs);
       }
+    }
+
+    /**
+     * Given a Fabric class, returns the corresponding $Proxy class. If the
+     * given class is already a $Proxy class, it is returned back to the caller.
+     * This is a hack -- we need a value for the <code>proxyType</code> field
+     * (used during deserialization), but the array classes in
+     * fabric.lang.arrays are implemented in Fabric, which isn't able to talk
+     * about the $Proxy classes.
+     */
+    @SuppressWarnings("unchecked")
+    private Class<? extends fabric.lang.Object.$Proxy> getProxy(Class<?> c) {
+      if (c.getSimpleName().equals("$Proxy"))
+        return (Class<? extends fabric.lang.Object.$Proxy>) c;
+
+      Class<?>[] classes = c.getClasses();
+      for (Class<?> c_ : classes) {
+        if (c_.getSimpleName().equals("$Proxy"))
+          return (Class<? extends fabric.lang.Object.$Proxy>) c_;
+      }
+
+      throw new InternalError("Error finding $Proxy class in " + c);
     }
 
     /*
@@ -107,7 +128,8 @@ public interface ObjectArray<T extends Object> extends Object {
       boolean transactionCreated =
           TransactionManager.getInstance().registerWrite(this);
       T result = (T) (this.value[i] = value);
-      if (transactionCreated) TransactionManager.getInstance().commitTransaction();
+      if (transactionCreated)
+        TransactionManager.getInstance().commitTransaction();
       return result;
     }
 

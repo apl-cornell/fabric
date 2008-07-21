@@ -73,25 +73,4 @@ public final class Util {
       }
     };
   }
-
-  /**
-   * Gets the proxy class of a given class. If the given class is already a
-   * proxy class, it is returned back to the caller.
-   * 
-   * @deprecated Hack for testing and developing ResizableArray. Remove once
-   * that's done.
-   */
-  @SuppressWarnings("unchecked")
-  @Deprecated
-  public static Class<? extends fabric.lang.Object.$Proxy> getProxy(Class<?> c) {
-    if (c.getSimpleName().equals("$Proxy"))
-      return (Class<? extends fabric.lang.Object.$Proxy>) c;
-
-    Class<?>[] classes = c.getClasses();
-    for (Class<?> c_ : classes)
-      if (c_.getSimpleName().equals("$Proxy"))
-        return (Class<? extends fabric.lang.Object.$Proxy>) c_;
-
-    throw new InternalError("Error finding proxy type in " + c);
-  }
 }
