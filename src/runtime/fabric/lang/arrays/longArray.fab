@@ -23,7 +23,7 @@ import fabric.lang.arrays.internal._ObjectArray;
  * 
  * @author kvikram
  */
-public class longArray {
+public final class longArray {
   private static final long DEFAULT_VALUE = 0L;
   
   /**

@@ -12,7 +12,10 @@
   <property environment="env" />
 
   <!-- Polyglot installation -->
-  <!-- If it is not defined in the properties file, use the environment variable $POLYGLOT. -->
+  <!--
+    If it is not defined in the properties file, use the environment variable
+    $POLYGLOT.
+  -->
   <condition property="polyglot.dir" value="${env.POLYGLOT}">
     <and>
       <isset property="env.POLYGLOT" />
@@ -21,7 +24,7 @@
       </not>
     </and>
   </condition>
-  
+
   <!-- As a last resort, try to use polyglot.jar from distribution -->
   <condition property="polyglot.dir" value="${basedir}">
     <not><isset property="polyglot.dir" /></not>
@@ -31,21 +34,29 @@
   <property name="src" location="${basedir}/src"/>
   <property name="system.src" location="${src}/system"/>
   <property name="compiler.src" location="${src}/compiler"/>
+  <property name="bootstrap.src" location="${src}/bootstrap"/>
   <property name="runtime.src" location="${src}/runtime"/>
   <property name="tests.fabnfs" location="${basedir}/tests/fabnfs"/>
   <property name="signatures.src" location="${src}/signatures"/>
 
   <!-- Directory for class file targets -->
   <property name="classes" location="${basedir}/classes"/>
+  <property name="bootstrap.classes" location="${basedir}/bs-classes"/>
   <property name="runtime.classes" location="${basedir}/rt-classes"/>
   <property name="tests.classes" location="${basedir}/tests/classes"/>
   <property name="signatures.classes" location="${basedir}/sig-classes"/>
+
+  <!-- Timestamp file for bootstrap classes. -->
+  <property name="bootstrap.tstamp" location="${bootstrap.classes}/.tstamp"/>
 
   <!-- Distribution directory -->
   <property name="dist" location="${basedir}/dist"/>
 
   <!-- Binaries directory -->
   <property name="bin" location="${basedir}/bin"/>
+
+  <!-- Configuration directory -->
+  <property name="etc" location="${basedir}/etc"/>
 
   <!-- Library directory -->
   <property name="lib" location="${basedir}/lib"/>
@@ -95,15 +106,19 @@
 
   <!-- Create appropriate executables in the bin directory -->
   <target name="bin-check">
-    <uptodate property="bin.up-to-date" srcfile="bin/defs.in" targetfile="bin/defs" />
+    <uptodate property="bin.up-to-date" srcfile="bin/defs.in"
+	targetfile="bin/defs" />
   </target>
 
   <target name="bin" depends="configure,bin-check" unless="bin.up-to-date">
     <fail message="Failed to find polyglot.  Make sure that your POLYGLOT environment variable is set, and that you have built polyglot.">
-      <condition> <not> <and>
-        <isset property="polyglot.dir" />
-        <available classname="polyglot.main.Version" classpathref="standard.classpath" />
-      </and> </not> </condition>
+      <condition>
+	<not><and>
+	  <isset property="polyglot.dir" />
+	  <available classname="polyglot.main.Version"
+	      classpathref="standard.classpath" />
+	</and></not>
+      </condition>
     </fail>
 
     <copy file="${bin}/defs.in" tofile="${bin}/defs">
@@ -121,6 +136,7 @@
     <tstamp/>
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${classes}"/>
+    <mkdir dir="${bootstrap.classes}"/>
     <mkdir dir="${runtime.classes}"/>
     <mkdir dir="${tests.classes}"/>
     <mkdir dir="${signatures.classes}"/>
@@ -132,18 +148,20 @@
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
-  <target name="fabric-system" depends="core,client" description="Builds Fabric"/>
+  <target name="fabric-system" depends="core,client"
+      description="Builds Fabric"/>
 
-  <target name="dust" description="Cleans up the generated runtime and signatures">
+  <target name="dust"
+      description="Cleans up the generated runtime and signatures">
     <delete dir="${runtime.classes}"/>
     <delete dir="${signatures.classes}"/>
   </target>
 
-  <target name="clean" description="Cleans up the directory tree: deletes the distribution directory and the classes directories">
+  <target name="clean" depends="dust"
+      description="Cleans up the directory tree: deletes the distribution directory and the classes directories">
     <!-- Delete the ${classes} and ${dist} directory trees -->
     <delete dir="${classes}"/>
-    <delete dir="${runtime.classes}"/>
-    <delete dir="${signatures.classes}"/>
+    <delete dir="${bootstrap.classes}"/>
     <delete dir="${tests.classes}"/>
     <delete dir="${dist}"/>
     <delete dir="${var}"/>
@@ -160,31 +178,54 @@
       </fileset>
     </delete>
   </target>
-	
-  <target name="native-check"> 
+
+  <target name="bootstrap-check">
+    <uptodate property="bootstrap.up-to-date" targetfile="${bootstrap.tstamp}">
+      <srcfiles dir="${bootstrap.src}" includes="**" />
+    </uptodate>
+  </target>
+
+  <!-- Compiles the bootstrap classes. -->
+  <target name="bootstrap" depends="init,bootstrap-check" unless="bootstrap.up-to-date">
+    <touch file="${bootstrap.tstamp}"/>
+    <javac target="1.5" srcdir="${bootstrap.src}"
+	destdir="${bootstrap.classes}" debug="on">
+      <include name="**" />
+      <sourcepath path="${system.src}"/>
+      <classpath refid="standard.classpath"/>
+    </javac>
+
+    <!--
+      The bootstrap classes pull in stuff from the system.  Give all class
+      files in ${bootstrap.classes} an ancient timestamp so they get recompiled
+      when we build things for real.
+    -->
+    <touch millis="0">
+      <fileset dir="${bootstrap.classes}">
+	<include name="**/*.class"/>
+      </fileset>
+    </touch>
+  </target>
+
+  <target name="native-check">
     <uptodate property="native.up-to-date">
       <srcfiles dir="${system.src}" includes="fabric/lang/**" />
       <srcfiles dir="${system.src}" includes="fabric/common/util/**" />
       <globmapper from="*.java" to="../../classes/*.class" />
     </uptodate>
   </target>
-	
+
   <!-- Compiles the Fabric native runtime classes -->
-  <target name="native" depends="init,native-check" unless="native.up-to-date">
-  	<!-- compile the fake Label class to allow rest of compilation thru  -->
-    <!-- javac target="1.5" srcdir="${signatures.src}" destdir="${classes}" debug="on">
-      <include name="fabric/lang/auth/Label.java" />
-      <classpath refid="standard.classpath"/>
-    </javac -->
-  	
+  <target name="native" depends="bootstrap,native-check"
+      unless="native.up-to-date">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/lang/**" />
       <include name="fabric/common/util/**" />
-      <classpath refid="standard.classpath"/>
+      <classpath>
+	<path refid="standard.classpath"/>
+	<pathelement location="${bootstrap.classes}" />
+      </classpath>
     </javac>
-  	
-  	<!-- remove fake Label class -->
-  	<!-- delete file="${classes}/fabric/lang/auth/Label.class" /-->
   </target>
 
   <!-- Compiles the Fabric core -->
@@ -205,10 +246,13 @@
       <include name="fabric/client/**" />
       <include name="fabric/messages/**" />
       <exclude name="fabric/client/debug/**" />
-      <classpath refid="standard.classpath"/>
+      <classpath>
+	<path refid="standard.classpath"/>
+	<pathelement location="${bootstrap.classes}" />
+      </classpath>
     </javac>
   </target>
-	
+
   <target name="io" depends="client">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/io/**" />
@@ -216,8 +260,9 @@
     </javac>
   </target>
 
-  <target name="nfsserver" depends="client, fabric-runtime">
-    <javac target="1.5" srcdir="${tests.fabnfs}" destdir="${tests.classes}" debug="on">
+  <target name="nfsserver" depends="client,fabric-runtime">
+    <javac target="1.5" srcdir="${tests.fabnfs}" destdir="${tests.classes}"
+	debug="on">
       <include name="fabnfs/**" />
       <classpath refid="standard.classpath"/>
     </javac>
@@ -240,10 +285,10 @@
       <fileset dir="${basedir}/tests/fabnfs"
           includes="fabnfs/*.fab" />
       <globmapper from="*.fab" to="*.class" />
-    </apply>  	
+    </apply>
   </target>
 
-	<!-- Compiles the Fabric system-debugging tools -->
+  <!-- Compiles the Fabric system-debugging tools -->
   <target name="client-debug" depends="client,fabric-runtime">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/client/debug/**" />
@@ -266,7 +311,7 @@
   <!-- Compiles the Fabric signatures -->
   <target name="fabric-signatures" depends="init,fabric-compiler,bin">
     <mkdir dir="${signatures.classes}" />
-        
+
     <apply executable="bash"
         parallel="true"
         failonerror="true"
@@ -285,7 +330,7 @@
       <arg value="-sigcp" />
       <arg value="sig-classes" />
       <srcfile />
-      <fileset dir="${basedir}/src/signatures" includes="**/*.fab" />
+      <fileset dir="${signatures.src}" includes="**/*.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
   </target>
@@ -294,20 +339,61 @@
     <property name="runtime.opt" value="-O" />
   </target>
 
-  <!-- Compiles the Fabric runtime -->
-  <target name="fabric-runtime"
-  depends="init,fabric-compiler,fabric-signatures,client,io">
+  <!--
+    Compiles the Fabric array classes.
+
+    Though these are technically part of fabric-runtime, they need to be
+    compiled separately because the compiler uses the generated class files for
+    typing information.  Things are done this way because we don't want to
+    hardcode this typing information in the compiler in case it changes due to
+    a change in the Fabric translation.
+  -->
+  <target name="fabric-arrays"
+      depends="bin,fabric-compiler,fabric-signatures,client">
     <mkdir dir="${runtime.classes}" />
-  	
+
     <condition property="runtime.opt" value="-O0">
       <not><isset property="runtime.opt" /></not>
     </condition>
-    
+
     <apply executable="bash"
         parallel="true"
         failonerror="true"
         dir="${basedir}"
-    dest="${runtime.classes}"
+        dest="${runtime.classes}"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${fabc}" />
+      <arg value="${runtime.opt}" />
+      <arg value="-d" />
+      <arg value="rt-classes" />
+      <arg value="-sigcp" />
+      <arg value="sig-classes" />
+      <arg value="-sourcepath" />
+      <arg value="src/runtime" />
+      <arg value="-noserial" />
+      <srcfile />
+      <fileset dir="${runtime.src}"
+          includes="fabric/lang/arrays/*.fab"/>
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+  </target>
+
+  <!-- Compiles the Fabric runtime -->
+  <target name="fabric-runtime"
+      depends="init,fabric-compiler,fabric-signatures,fabric-arrays,client,io">
+    <mkdir dir="${runtime.classes}" />
+
+    <condition property="runtime.opt" value="-O0">
+      <not><isset property="runtime.opt" /></not>
+    </condition>
+
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${basedir}"
+        dest="${runtime.classes}"
         relative="false"
         skipemptyfilesets="true"
         vmlauncher="false">
@@ -320,12 +406,12 @@
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
       <srcfile />
-      <fileset dir="${basedir}/src/runtime"
+      <fileset dir="${runtime.src}"
           includes="**/*.fab"
-          excludes="fabric/util/*.fab" />
-      <fileset dir="${basedir}/src/runtime"
-      includes="fabric/util/HashMap.fab,fabric/util/LinkedList.fab,
-      	fabric/util/HashSet.fab" />
+          excludes="fabric/util/*.fab,fabric/lang/arrays/*.fab,fabric/io/*.fab" />
+      <fileset dir="${runtime.src}"
+	  includes="fabric/util/HashMap.fab,fabric/util/LinkedList.fab,
+	    fabric/util/HashSet.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
   </target>
@@ -334,7 +420,7 @@
   <target name="var" depends="bin,fabric-system">
     <apply executable="bash"
            dir="${basedir}"
-           dest="${basedir}/var"
+           dest="${var}"
            failonerror="true"
            vmlauncher="false"
            relative="true"
@@ -343,7 +429,7 @@
            addsourcefile="false">
       <arg value="${genmap}" />
       <targetfile />
-      <fileset dir="${basedir}/etc/keys"
+      <fileset dir="${etc}/keys"
                includes="*.keystore"
                excludes="trust.keystore" />
       <globmapper from="*.keystore" to="*" />
@@ -352,7 +438,8 @@
 
   <!-- Compiles the Fabric test programs -->
   <target name="tests" depends="init,fabric-system,nfsserver">
-    <javac target="1.5" srcdir="${src}" destdir="${classes}" debug="on" includes="tests/**">
+    <javac target="1.5" srcdir="${src}" destdir="${classes}" debug="on"
+	includes="tests/**">
       <classpath refid="standard.classpath"/>
     </javac>
   </target>
@@ -366,11 +453,13 @@
   </target>
 
   <target name="jar-runtime" depends="fabric-runtime">
-    <jar jarfile="${runtime.jar}" basedir="${runtime.classes}" excludes="**/*.java" />
+    <jar jarfile="${runtime.jar}" basedir="${runtime.classes}"
+	excludes="**/*.java" />
   </target>
 
   <target name="jar-sig" depends="fabric-signatures">
-    <jar jarfile="${signature.jar}" basedir="${signatures.classes}" excludes="**/*.java" />
+    <jar jarfile="${signature.jar}" basedir="${signatures.classes}"
+	excludes="**/*.java" />
   </target>
 
   <!--

@@ -123,4 +123,10 @@ public interface FabricTypeSystem extends TypeSystem {
    * Determines whether the given ClassType was compiled with fabc.
    */
   boolean isCompiledByFabc(ClassType ct);
+
+  /**
+   * Sets the LoadedClassResolver to use when looking for Fabric runtime
+   * classes.
+   */
+  void setRuntimeClassResolver(LoadedClassResolver lcr);
 }

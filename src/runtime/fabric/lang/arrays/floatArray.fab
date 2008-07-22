@@ -23,7 +23,7 @@ import fabric.lang.arrays.internal._ObjectArray;
  * 
  * @author kvikram
  */
-public class floatArray {
+public final class floatArray {
   private static final float DEFAULT_VALUE = 0.0f;
   
   /**

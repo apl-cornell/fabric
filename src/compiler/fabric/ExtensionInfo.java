@@ -92,6 +92,23 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
     return "fab";
   }
 
+  @Override
+  protected void initTypeSystem() {
+    super.initTypeSystem();
+
+    // Also give the Fabric type system a resolver that ignores source files.
+    // This is needed for the type system to resolve types like
+    // fabric.lang.arrays.ObjectArray that
+    // are compiled from Fabric. For these types, we want to see the Java
+    // translation of the class, not the original Fabric source.
+    // See fabric.types.FabricTypeSystem_c.fArrayImplOf(polyglot.types.Type)
+    Options options = getOptions();
+    String classpath = options.constructFabricClasspath();
+    LoadedClassResolver lcr = new LoadedClassResolver(ts, classpath,
+        compiler.loader(), version(), true);
+    ((FabricTypeSystem) ts).setRuntimeClassResolver(lcr);
+  }
+
   /*
    * (non-Javadoc)
    * 

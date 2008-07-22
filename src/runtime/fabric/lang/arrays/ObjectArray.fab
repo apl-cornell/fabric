@@ -28,7 +28,7 @@ import fabric.lang.arrays.internal._ObjectArray;
  * @author kvikram
  */
 
-public class ObjectArray {
+public final class ObjectArray {
   private static final Object DEFAULT_VALUE = null;
   
   /**

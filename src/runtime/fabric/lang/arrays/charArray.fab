@@ -23,7 +23,7 @@ import fabric.lang.arrays.internal._ObjectArray;
  * 
  * @author kvikram
  */
-public class charArray {
+public final class charArray {
   private static final char DEFAULT_VALUE = 0;
   
   /**

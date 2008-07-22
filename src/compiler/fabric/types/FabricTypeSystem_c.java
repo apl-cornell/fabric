@@ -6,10 +6,13 @@ import polyglot.ast.TypeNode;
 import polyglot.frontend.Source;
 import polyglot.types.*;
 import polyglot.types.Package;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 
 public class FabricTypeSystem_c extends TypeSystem_c implements
     FabricTypeSystem {
+
+  private CachingResolver runtimeClassResolver;
 
   public ClassType TransactionManager() {
     return load("fabric.client.transaction.TransactionManager");
@@ -90,15 +93,14 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
 
   public ClassType fArrayOf(Type type) {
     if (type.isReference())
-      return load("fabric.lang.arrays.internal._ObjectArray");
-    return load("fabric.lang.arrays.internal._" + type.toString() + "Array");
+      return loadRuntime("fabric.lang.arrays.ObjectArray");
+    return loadRuntime("fabric.lang.arrays." + type.toString() + "Array");
   }
 
   public ClassType fArrayImplOf(Type type) {
     if (type.isReference())
-      return load("fabric.lang.arrays.internal._ObjectArray.$Impl");
-    return load("fabric.lang.arrays.internal._" + type.toString()
-        + "Array.$Impl");
+      return loadRuntime("fabric.lang.arrays.ObjectArray.$Impl");
+    return loadRuntime("fabric.lang.arrays." + type.toString() + "Array.$Impl");
   }
 
   /*
@@ -288,15 +290,31 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   public boolean isCompiledByFabc(ClassType ct) {
     if (ct instanceof ParsedClassType) {
       ParsedClassType pct = (ParsedClassType) ct;
-      
+
       // Check whether the class is compiled from source in this run.
       if (pct.job() != null) return true;
-      
+
       // Check whether the class came from a Java source file.
       LazyInitializer init = pct.initializer();
       return init instanceof DeserializedClassInitializer;
     }
 
     return false;
+  }
+
+  public void setRuntimeClassResolver(LoadedClassResolver lcr) {
+    this.runtimeClassResolver = new CachingResolver(lcr);
+  }
+
+  /**
+   * Same as load(), but ignores source files.
+   */
+  private ClassType loadRuntime(String name) {
+    try {
+      return (ClassType) forName(runtimeClassResolver, name);
+    } catch (SemanticException e) {
+      throw new InternalCompilerError("Cannot find runtime class \"" + name
+          + "\"; " + e.getMessage(), e);
+    }
   }
 }

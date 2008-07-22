@@ -3,7 +3,7 @@ package fabric.core;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.lang.WrappedJavaInlineable;
-import fabric.lang.arrays.internal._ObjectArray;
+import fabric.lang.arrays.ObjectArray;
 
 /**
  * This class is intended to generate serialized object mappings. It should be
@@ -12,9 +12,9 @@ import fabric.lang.arrays.internal._ObjectArray;
 public interface GenMap {
     public static class $Impl {
 
-        @SuppressWarnings("deprecation")
-        public static void main(_ObjectArray<WrappedJavaInlineable<String>> args) {
-            Core core = Client.getClient().getCore(args.get(0).obj);
+        @SuppressWarnings({ "deprecation", "unchecked" })
+        public static void main(ObjectArray args) {
+            Core core = Client.getClient().getCore(((WrappedJavaInlineable<String>) args.get(0)).obj);
 
             fabric.client.transaction.TransactionManager.getInstance().startTransaction();
             fabric.util.HashMap.$Impl m = new fabric.util.HashMap.$Impl(core);

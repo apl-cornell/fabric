@@ -23,7 +23,7 @@ import fabric.lang.arrays.internal._ObjectArray;
  * 
  * @author kvikram
  */
-public class shortArray {
+public final class shortArray {
   private static final short DEFAULT_VALUE = 0;
   
   /**

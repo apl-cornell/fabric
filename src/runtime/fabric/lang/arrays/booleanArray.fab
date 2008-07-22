@@ -23,7 +23,7 @@ import fabric.lang.arrays.internal._ObjectArray;
  * 
  * @author kvikram
  */
-public class booleanArray {
+public final class booleanArray {
   private static final boolean DEFAULT_VALUE = false;
   
   /**

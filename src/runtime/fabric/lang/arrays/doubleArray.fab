@@ -23,7 +23,7 @@ import fabric.lang.arrays.internal._ObjectArray;
  * 
  * @author kvikram
  */
-public class doubleArray {
+public final class doubleArray {
   private static final double DEFAULT_VALUE = 0.0;
   
   /**
