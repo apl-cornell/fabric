@@ -8,26 +8,36 @@
   <!-- Project name -->
   <property name="name" value="fabric" />
 
+  <property file="${basedir}/config.properties" />
+
   <!-- set the prefix for accessing environment variables -->
   <property environment="env" />
 
   <!-- Polyglot installation -->
-  <!--
-    If it is not defined in the properties file, use the environment variable
-    $POLYGLOT.
-  -->
-  <condition property="polyglot.dir" value="${env.POLYGLOT}">
+  <!-- If it is not defined in the properties file, use the environment variable $POLYGLOT. -->
+  <condition property="polyglot.home" value="${env.POLYGLOT}">
     <and>
       <isset property="env.POLYGLOT" />
       <not>
-        <isset property="polyglot.dir" />
+        <isset property="polyglot.home" />
+      </not>
+    </and>
+  </condition>
+
+  <!-- Jif installation -->
+  <!-- If it is not defined in the properties file, use the environment variable $POLYGLOT. -->
+  <condition property="jif.home" value="${env.JIF}">
+    <and>
+      <isset property="env.JIF" />
+      <not>
+        <isset property="jif.home" />
       </not>
     </and>
   </condition>
 
   <!-- As a last resort, try to use polyglot.jar from distribution -->
-  <condition property="polyglot.dir" value="${basedir}">
-    <not><isset property="polyglot.dir" /></not>
+  <condition property="polyglot.home" value="${basedir}">
+    <not><isset property="polyglot.home" /></not>
   </condition>
 
   <!-- Source directory -->
@@ -86,11 +96,20 @@
     </fileset>
 
     <!-- the Polyglot classes -->
-    <pathelement path="${polyglot.dir}/classes" />
-    <pathelement path="${polyglot.dir}/lib/polyglot.jar" />
-    <pathelement path="${polyglot.dir}/lib/ppg.jar" />
-    <pathelement path="${polyglot.dir}/lib/java_cup.jar" />
-    <pathelement path="${polyglot.dir}/lib/JFlex.jar" />
+    <pathelement path="${polyglot.home}/classes" />
+    <pathelement path="${polyglot.home}/lib/polyglot.jar" />
+    <pathelement path="${polyglot.home}/lib/ppg.jar" />
+    <pathelement path="${polyglot.home}/lib/java_cup.jar" />
+    <pathelement path="${polyglot.home}/lib/JFlex.jar" />
+
+    <!-- the Jif classes -->
+    <pathelement location="${jif.home}/rt-classes" />
+    <pathelement location="${jif.home}/lib-classes" />
+    <pathelement location="${jif.home}/classes" />
+    <fileset dir="${jif.home}/lib">
+      <include name="*.jar" />
+    </fileset>
+    <pathelement location="${jif.home}/src" />
   </path>
 
   <target name="configure" description="Configures Fabric"
@@ -99,7 +118,8 @@
     <echo message="java version is ${java.version}"/>
     <echo message="current directory is ${user.dir}"/>
     <echo message="Java home directory is ${java.home}"/>
-    <echo message="polglot home directory is ${polyglot.dir}"/>
+    <echo message="Polglot home directory is ${polyglot.home}"/>
+    <echo message="Jif home directory is ${jif.home}" />
 
     <property name="configure.up-to-date" value="true"/>
   </target>
@@ -112,20 +132,17 @@
 
   <target name="bin" depends="configure,bin-check" unless="bin.up-to-date">
     <fail message="Failed to find polyglot.  Make sure that your POLYGLOT environment variable is set, and that you have built polyglot.">
-      <condition>
-	<not><and>
-	  <isset property="polyglot.dir" />
-	  <available classname="polyglot.main.Version"
-	      classpathref="standard.classpath" />
-	</and></not>
-      </condition>
+      <condition> <not> <and>
+        <isset property="polyglot.home" />
+        <available classname="polyglot.main.Version" classpathref="standard.classpath" />
+      </and> </not> </condition>
     </fail>
 
     <copy file="${bin}/defs.in" tofile="${bin}/defs">
       <filterset>
         <filter token="JAVA_HOME" value="${java.home}"    />
         <filter token="TOP"       value="${basedir}"      />
-        <filter token="POLYGLOT"  value="${polyglot.dir}" />
+        <filter token="POLYGLOT"  value="${polyglot.home}" />
       </filterset>
     </copy>
   </target>
@@ -505,7 +522,7 @@
   <target name="ppg-parser" depends="ppg-parser-deps"
       unless="ppg.parser.up-to-date">
     <java classname="ppg.PPG" fork="true" dir="${parser.dir}"
-        output="${parser.dir}/${cup.file}" failonerror="true">
+        output="${parser.dir}/${cup.file}" failonerror="true" logError="true">
       <classpath refid="standard.classpath" />
       <arg value="${ppg.file}" />
     </java>
