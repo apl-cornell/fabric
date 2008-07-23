@@ -253,13 +253,6 @@
     </javac>
   </target>
 
-  <target name="io" depends="client">
-    <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
-      <include name="fabric/io/**" />
-      <classpath refid="standard.classpath"/>
-    </javac>
-  </target>
-
   <target name="nfsserver" depends="client,fabric-runtime">
     <javac target="1.5" srcdir="${tests.fabnfs}" destdir="${tests.classes}"
 	debug="on">
@@ -372,7 +365,7 @@
       <arg value="sig-classes" />
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
-      <arg value="-noserial" />
+      <!--arg value="-noserial" /-->
       <srcfile />
       <fileset dir="${runtime.src}"
           includes="fabric/lang/arrays/*.fab"/>
@@ -382,7 +375,7 @@
 
   <!-- Compiles the Fabric runtime -->
   <target name="fabric-runtime"
-      depends="init,fabric-compiler,fabric-signatures,fabric-arrays,client,io">
+      depends="init,fabric-compiler,fabric-signatures,fabric-arrays,client">
     <mkdir dir="${runtime.classes}" />
 
     <condition property="runtime.opt" value="-O0">

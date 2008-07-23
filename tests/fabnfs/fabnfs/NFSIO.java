@@ -1,10 +1,10 @@
 package fabnfs;
 
-import fabric.io.FileInputStream;
+import fabnfs.util.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import fabric.io.RandomAccessFile;
-import fabric.io.FileByteArray;
+import fabnfs.util.RandomAccessFile;
+import fabnfs.util.FileByteArray;
 
 
 class NFSIO implements NFSConsts, RPCConsts {

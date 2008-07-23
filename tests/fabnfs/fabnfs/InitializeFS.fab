@@ -3,7 +3,7 @@ package fabnfs;
 import fabric.client.Core;
 import fabric.client.Client;
 import fabric.util.HashMap;
-import fabric.io.FabDirectory;
+import fabnfs.util.FabDirectory;
 
 public class InitializeFS {
   public static void main(String[] args) {

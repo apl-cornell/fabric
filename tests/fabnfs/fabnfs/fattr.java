@@ -1,10 +1,10 @@
 package fabnfs;
 
-import fabric.io.File;
+import fabnfs.util.File;
 import fabric.client.Core;
 import java.io.FileNotFoundException;
 
-/* replacing java.io.File by fabric.io.File , etc. */
+/* replacing java.io.File by fabnfs.util.File , etc. */
 
 // The file attributes that NFS needs.
 //

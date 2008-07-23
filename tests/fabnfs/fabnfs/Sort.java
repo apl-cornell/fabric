@@ -1,6 +1,6 @@
 package fabnfs;
 
-import fabric.io.File;
+import fabnfs.util.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Date;

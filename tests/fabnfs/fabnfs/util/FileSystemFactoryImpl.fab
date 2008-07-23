@@ -1,4 +1,4 @@
-package fabric.io;
+package fabnfs.util;
 
 import fabric.client.Core;
 import java.io.IOException;

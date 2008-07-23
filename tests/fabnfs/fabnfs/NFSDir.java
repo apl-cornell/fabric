@@ -3,8 +3,8 @@ package fabnfs;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import fabric.io.RandomAccessFile;
-import fabric.io.File;
+import fabnfs.util.RandomAccessFile;
+import fabnfs.util.File;
 
 
 class NFSDir extends java.lang.Object  implements NFSConsts {

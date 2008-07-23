@@ -1,7 +1,7 @@
 package fabnfs;
 
 import fabric.client.Core;
-import fabric.io.FileSystemFactory;
+import fabnfs.util.FileSystemFactory;
 
 //
 // Copyright 1997, 1998 Steven James Procter

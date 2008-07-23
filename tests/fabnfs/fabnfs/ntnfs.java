@@ -20,8 +20,7 @@ package fabnfs;
 //
 
 import fabric.client.Core;
-import fabric.io.FileSystemFactory;
-import fabric.io.StringArray;
+import fabnfs.util.FileSystemFactory;
 
 class ntnfs extends nfs implements NFSConsts, MountdConsts, RPCConsts {
 

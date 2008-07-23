@@ -2,7 +2,7 @@ package fabnfs;
 
 import fabric.client.Core;
 
-import fabric.io.FileSystemFactory;
+import fabnfs.util.FileSystemFactory;
 
 // this class is used to encapsulate all of the file system information.  The
 //   idea is that it be replaced by native code to get better NFS behavior.

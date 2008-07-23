@@ -2,9 +2,8 @@ package fabnfs;
 
 import fabric.client.Core;
 import fabric.client.Client;
-import fabric.io.FileSystemFactory;
-import fabric.io.FileSystemFactoryImpl;
-import fabric.io.StringArray;
+import fabnfs.util.FileSystemFactory;
+import fabnfs.util.FileSystemFactoryImpl;
 
 public class NFSServer {
     public static void main(String[] args) {

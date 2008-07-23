@@ -1,4 +1,4 @@
-package fabric.io;
+package fabnfs.util;
 
 public class StringArray {
 

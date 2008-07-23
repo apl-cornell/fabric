@@ -1,5 +1,6 @@
-package fabric.io;
+package fabnfs.util;
 
+import fabnfs.util.ResizableFileByteArray;
 import fabric.client.Core;
 import java.io.IOException;
 

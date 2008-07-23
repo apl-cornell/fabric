@@ -1,4 +1,6 @@
-package fabric.io;
+package fabnfs.util;
+
+import fabnfs.util.ResizableFileByteArray;
 
 public class FabFile extends FileSystemObject {
     
