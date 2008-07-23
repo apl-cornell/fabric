@@ -408,7 +408,7 @@
       <srcfile />
       <fileset dir="${runtime.src}"
           includes="**/*.fab"
-          excludes="fabric/util/*.fab,fabric/lang/arrays/*.fab,fabric/io/*.fab" />
+          excludes="fabric/util/*.fab,fabric/lang/arrays/*.fab" />
       <fileset dir="${runtime.src}"
 	  includes="fabric/util/HashMap.fab,fabric/util/LinkedList.fab,
 	    fabric/util/HashSet.fab" />

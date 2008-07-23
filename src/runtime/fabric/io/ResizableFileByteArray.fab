@@ -2,15 +2,36 @@ package fabric.io;
 
 import fabric.lang.arrays.byteArray;
 
-public class ResizableFileByteArray extends byteArray {
+public class ResizableFileByteArray {
+  /**
+   * The backing array.
+   */
+  private byteArray data;
+  
   public ResizableFileByteArray() {
-    super(0);
+    data = new byteArray(0);
+  }
+  
+  public int getLength() {
+    return data.getLength();
+  }
+  
+  public void setLength(int length) {
+    data.setLength(length);
+  }
+  
+  public byte get(int i) {
+    return data.get(i);
+  }
+  
+  public byte set(int i, byte val) {
+    return data.set(i, val);
   }
 
   /* This method really needs to be optimized */
   public int get(int i, fabric.io.FileByteArray barray) {
     for (int j = i; j < i + barray.length(); j++) {
-      barray.set(j - i, get(j));
+      barray.set(j - i, data.get(j));
     }
     return barray.length();
   }
