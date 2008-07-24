@@ -1,3 +1,7 @@
+<!--
+  This is the Apache Ant build file for Fabric.
+  See doc/ant-dep-graph.png to visualize the inter-target dependencies.
+-->
 <project name="fabric" default="all" basedir=".">
   <description>
     Fabric build file
