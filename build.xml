@@ -385,7 +385,7 @@
       <!--arg value="-noserial" /-->
       <srcfile />
       <fileset dir="${runtime.src}"
-          includes="fabric/lang/arrays/*.fab"/>
+          includes="fabric/lang/arrays/*.fab,fabric/lang/auth/Label.fab"/>
       <globmapper from="*.fab" to="*.class" />
     </apply>
   </target>

@@ -162,6 +162,9 @@ public interface Object {
    * evicted from memory.
    */
   public static class $Impl implements Object, Cloneable {
+    /**
+     * The cached exact proxy for this object.
+     */
     private $Proxy $proxy;
 
     public final FabricSoftRef $ref;
@@ -220,8 +223,9 @@ public interface Object {
     /**
      * A private constructor for initializing transaction-management state.
      */
-    private $Impl(Core core, long onum, int version) {
+    private $Impl(Core core, long onum, int version, Label label) {
       this.$version = version;
+      this.$label = label;
       this.$writer = null;
       this.$writeLockHolder = null;
       this.$reader = null;
@@ -234,14 +238,6 @@ public interface Object {
 
     /**
      * Creates a new Fabric object that will reside on the given Core.
-     */
-    public $Impl(Core core) throws UnreachableCoreException {
-      // TODO Determine how Label objects should be managed.
-      this(core, null);
-    }
-
-    /**
-     * Creates a new Fabric object that will reside on the given Core.
      * 
      * @param core
      *                the location for the object
@@ -249,8 +245,7 @@ public interface Object {
      *                the security label for the object
      */
     public $Impl(Core core, Label label) throws UnreachableCoreException {
-      this(core, core.createOnum(), 0);
-      this.$label = label;
+      this(core, core.createOnum(), 0, label);
 
       // Register the new object with the transaction manager.
       TransactionManager.getInstance().registerCreate(this);
@@ -263,9 +258,8 @@ public interface Object {
      *             not contact the core and thus any attempt to commit this
      *             object will fail.
      */
-    public $Impl(Core core, long onum) {
-      this(core, onum, 0);
-      this.$label = Label.DEFAULT;
+    public $Impl(Core core, long onum, Label label) {
+      this(core, onum, 0, label);
     }
 
     @Override
@@ -382,6 +376,8 @@ public interface Object {
     public void $serialize(ObjectOutput serializedOutput,
         List<RefTypeEnum> refTypes, List<Long> intracoreRefs,
         List<Pair<String, Long>> intercoreRefs) throws IOException {
+      // Nothing to output here. SerializedObject.write($Impl, DataOutput) takes
+      // care of writing the onum, version, label onum, and type information.
       return;
     }
 
@@ -416,8 +412,7 @@ public interface Object {
         ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
-      this(core, onum, version);
-      this.$label = label == -1 ? Label.DEFAULT : new Label.$Proxy(core, label);
+      this(core, onum, version, new Label.$Proxy(core, label));
     }
 
     /**
@@ -570,10 +565,6 @@ public interface Object {
     public static class $Impl extends Object.$Impl implements $Static {
       public $Impl(Core core, Label label) throws UnreachableCoreException {
         super(core, label);
-      }
-
-      public $Impl(Core core) throws UnreachableCoreException {
-        super(core);
       }
 
       @Override

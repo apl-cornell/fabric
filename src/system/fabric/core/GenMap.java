@@ -17,7 +17,8 @@ public interface GenMap {
             Core core = Client.getClient().getCore(((WrappedJavaInlineable<String>) args.get(0)).obj);
 
             fabric.client.transaction.TransactionManager.getInstance().startTransaction();
-            fabric.util.HashMap.$Impl m = new fabric.util.HashMap.$Impl(core);
+            // XXX Replace with a real label.
+            fabric.util.HashMap.$Impl m = new fabric.util.HashMap.$Impl(core, null);
             m.$forceRelocate(core, 0L);
             fabric.client.transaction.TransactionManager.getInstance().commitTransaction();
         }

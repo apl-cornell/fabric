@@ -29,6 +29,8 @@ public class ConstructorCallExt_c extends FabricExt_c {
     List<Expr> args = new LinkedList<Expr>(call.arguments());
     args.add(0, nf.AmbExpr(Position.compilerGenerated(), nf.Id(Position
         .compilerGenerated(), "$location")));
+    args.add(1, nf.AmbExpr(Position.compilerGenerated(), nf.Id(Position
+        .compilerGenerated(), "$label")));
     return call.arguments(args);
   }
 

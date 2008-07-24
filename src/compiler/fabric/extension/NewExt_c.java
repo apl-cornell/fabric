@@ -34,6 +34,10 @@ public class NewExt_c extends LocatedExt_c {
           nf.Call(call.position(), nf.Id(Position.compilerGenerated(),
               "$getCore"));
     newargs.add(0, location);
+    
+    // XXX Replace with a real label.
+    Expr label = nf.NullLit(Position.compilerGenerated());
+    newargs.add(1, label);
 
     TypeNode implType =
         nf.TypeNodeFromQualifiedName(typeNode.position(), type.fullName()

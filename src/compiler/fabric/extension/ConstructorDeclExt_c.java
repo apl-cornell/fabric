@@ -54,6 +54,8 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
     List<Formal> formals = new LinkedList<Formal>(decl.formals());
     formals.add(0, nf.Formal(pos, Flags.NONE, nf.TypeNodeFromQualifiedName(pos,
         "fabric.client.Core"), nf.Id(pos, "$location")));
+    formals.add(1, nf.Formal(pos, Flags.NONE, nf.TypeNodeFromQualifiedName(pos,
+        "fabric.lang.auth.Label"), nf.Id(pos, "$label")));
     return decl.formals(formals);
   }
 

@@ -1,0 +1,5 @@
+package fabric.lang.auth;
+
+public interface Label {
+
+}

@@ -11,6 +11,7 @@ import fabric.client.transaction.TransactionManager;
 import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 import fabric.lang.Object;
+import fabric.lang.auth.Label;
 
 public interface _shortArray extends Object {
   int get$length();
@@ -30,9 +31,8 @@ public interface _shortArray extends Object {
      * @param length
      *                The length of the array.
      */
-    public $Impl(Core core, int length) {
-      super(core);
-      value = new short[length];
+    public $Impl(Core core, Label label, int length) {
+      this(core, label, new short[length]);
     }
 
     /**
@@ -44,8 +44,8 @@ public interface _shortArray extends Object {
      * @param value
      *                The backing array to use.
      */
-    public $Impl(Core core, short[] value) {
-      super(core);
+    public $Impl(Core core, Label label, short[] value) {
+      super(core, label);
       this.value = value;
     }
 

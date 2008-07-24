@@ -386,11 +386,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the impl constructor declarations and add them to the list of
     // static impl members.
     ClassMember implConstructorDecl =
-        qq.parseMember("public $Impl(fabric.client.Core core) "
-            + "throws fabric.client.UnreachableCoreException {"
-            + "super(core); }");
-    implMembers.add(implConstructorDecl);
-    implConstructorDecl =
         qq.parseMember("public $Impl(fabric.client.Core core, "
             + "fabric.lang.auth.Label label) "
             + "throws fabric.client.UnreachableCoreException {"
@@ -419,11 +414,12 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Create the field declaration for $static.
     // TODO Where should the static object be located when it's created?
+    // TODO What should be the label on the static object?
     FieldDecl fieldDecl =
         (FieldDecl) qq.parseMember(classType.fullName()
             + ".$Static $static = new " + classType.fullName()
             + ".$Static.$Impl(fabric.client.Client.getClient()"
-            + ".getCore(\"core0\"));");
+            + ".getCore(\"core0\"), null);");
 
     List<ClassMember> result = new ArrayList<ClassMember>(2);
     result.add(interfaceDecl);

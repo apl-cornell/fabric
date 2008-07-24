@@ -5,7 +5,6 @@ import java.util.*;
 import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.core.store.StoreException;
-import fabric.lang.auth.Label;
 
 /**
  * This is a simple surrogate policy. It keeps no state between requests, and
@@ -62,7 +61,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
               throw new InternalError(e);
             }
             // TODO: policy?
-            surrogates.add(new SerializedObject(onum, Label.DEFAULT, ref));
+            surrogates.add(new SerializedObject(onum, obj.getLabel(), ref));
             cache.put(ref, onum);
           }
           hadRemotes = true;

@@ -72,11 +72,11 @@ public final class SerializedObject implements FastSerializable {
    * @param onum
    *                The local object number for the surrogate.
    * @param label
-   *                The policy for the surrogate.
+   *                The onum for the surrogate's label object.
    * @param remoteRef
    *                The name of the remote object being referred to.
    */
-  public SerializedObject(long onum, Label label, Pair<String, Long> remoteRef) {
+  public SerializedObject(long onum, long label, Pair<String, Long> remoteRef) {
     try {
       // Create a byte array containing the surrogate object's serialized data.
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -98,7 +98,7 @@ public final class SerializedObject implements FastSerializable {
       out.writeInt(0);
 
       // Label's onum.
-      out.writeLong(getLabel(label));
+      out.writeLong(label);
 
       // Class name.
       out.writeUTF(Surrogate.class.getName());
@@ -353,7 +353,10 @@ public final class SerializedObject implements FastSerializable {
     return getOnum() + "v" + getVersion();
   }
 
-  private static long getLabel(Label l) {
+  /**
+   * XXX HACK This should disappear once we have real labels in place.
+   */
+  private static long getLabelOnum(Label l) {
     if (l == null) {
       return -1;
     } else {
@@ -373,7 +376,7 @@ public final class SerializedObject implements FastSerializable {
     // Write out the object header.
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
-    out.writeLong(getLabel(impl.get$label()));
+    out.writeLong(getLabelOnum(impl.get$label()));
     out.writeUTF(impl.getClass().getName());
 
     // Get the object to serialize itself into a bunch of buffers.

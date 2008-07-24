@@ -53,7 +53,8 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * system's point of view.
    */
   public static ObjectArray $wrap(Core core, java.lang.Object[] array) {
-    ObjectArray result = new ObjectArray.$Impl(core, Object.$Proxy.class,
+    // XXX fill in a real label
+    ObjectArray result = new ObjectArray.$Impl(core, null, Object.$Proxy.class,
         array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, $wrap(array[i]));

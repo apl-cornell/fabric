@@ -52,7 +52,8 @@ public class LocalCore implements Core {
    */
   protected LocalCore() {
     TransactionManager.getInstance().startTransaction();
-    this.rootMap = new Object.$Impl(this).$getProxy();
+    // XXX Use a proper label.
+    this.rootMap = new Object.$Impl(this, null).$getProxy();
     TransactionManager.getInstance().commitTransaction();
   }
 

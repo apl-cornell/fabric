@@ -12,6 +12,7 @@ import fabric.common.InternalError;
 import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 import fabric.lang.Object;
+import fabric.lang.auth.Label;
 
 public interface _ObjectArray<T extends Object> extends Object {
   int get$length();
@@ -38,8 +39,9 @@ public interface _ObjectArray<T extends Object> extends Object {
      *                The length of the array.
      */
     @SuppressWarnings("unchecked")
-    public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, int length) {
-      super(core);
+    public $Impl(Core core, Label label,
+        Class<? extends Object.$Proxy> proxyType, int length) {
+      super(core, label);
       this.proxyType = getProxy(proxyType);
       value = new Object[length];
     }
@@ -53,8 +55,9 @@ public interface _ObjectArray<T extends Object> extends Object {
      * @param value
      *                The backing array to use.
      */
-    public $Impl(Core core, Class<? extends Object.$Proxy> proxyType, T[] value) {
-      super(core);
+    public $Impl(Core core, Label label,
+        Class<? extends Object.$Proxy> proxyType, T[] value) {
+      super(core, label);
       this.proxyType = getProxy(proxyType);
       this.value = value;
     }

@@ -24,6 +24,9 @@ public class NewArrayExt_c extends LocatedExt_c {
     if (!ts.isFabricArray(newArray.type())) return newArray;
 
     if (location == null) location = qq.parseExpr("$getCore()");
+    
+    // XXX Replace with a real label.
+    Expr label = qq.parseExpr("null");
 
     if (newArray.dims().size() > 1)
       throw new InternalCompilerError("Multidimensional arrays not supported.");
@@ -42,8 +45,8 @@ public class NewArrayExt_c extends LocatedExt_c {
       if (ts.isPureFabricType(baseType)) typeArg += ".$Proxy";
       typeArg += ".class, ";
     }
-    return qq.parseExpr("(%T) new %T(%E, " + typeArg + "%E).$getProxy()",
-        arrayType, arrayImplType, location, size);
+    return qq.parseExpr("(%T) new %T(%E, %E, " + typeArg + "%E).$getProxy()",
+        arrayType, arrayImplType, location, label, size);
   }
 
   /*
