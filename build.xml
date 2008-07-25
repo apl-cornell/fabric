@@ -27,9 +27,13 @@
       </not>
     </and>
   </condition>
+  <!-- As a last resort, try to use polyglot.jar from distribution -->
+  <condition property="polyglot.home" value="${basedir}">
+    <not><isset property="polyglot.home" /></not>
+  </condition>
 
   <!-- Jif installation -->
-  <!-- If it is not defined in the properties file, use the environment variable $POLYGLOT. -->
+  <!-- If it is not defined in the properties file, use the environment variable $JIF. -->
   <condition property="jif.home" value="${env.JIF}">
     <and>
       <isset property="env.JIF" />
@@ -38,10 +42,9 @@
       </not>
     </and>
   </condition>
-
-  <!-- As a last resort, try to use polyglot.jar from distribution -->
-  <condition property="polyglot.home" value="${basedir}">
-    <not><isset property="polyglot.home" /></not>
+  <!-- As a last resort, try to use jif.jar from distribution -->
+  <condition property="jif.home" value="${basedir}">
+    <not><isset property="jif.home" /></not>
   </condition>
 
   <!-- Source directory -->
@@ -135,10 +138,17 @@
   </target>
 
   <target name="bin" depends="configure,bin-check" unless="bin.up-to-date">
-    <fail message="Failed to find polyglot.  Make sure that your POLYGLOT environment variable is set, and that you have built polyglot.">
+    <fail message="Failed to find Polyglot.  Make sure that your POLYGLOT environment variable is set, and that you have built Polyglot.">
       <condition> <not> <and>
         <isset property="polyglot.home" />
         <available classname="polyglot.main.Version" classpathref="standard.classpath" />
+      </and> </not> </condition>
+    </fail>
+
+    <fail message="Failed to find Jif.  Make sure that your JIF environment variable is set and that you have built Jif.">
+      <condition> <not> <and>
+        <isset property="jif.home" />
+        <available classname="jif.Version" classpathref="standard.classpath" />
       </and> </not> </condition>
     </fail>
 
@@ -147,6 +157,7 @@
         <filter token="JAVA_HOME" value="${java.home}"    />
         <filter token="TOP"       value="${basedir}"      />
         <filter token="POLYGLOT"  value="${polyglot.home}" />
+        <filter token="JIF"       value="${jif.home}" />
       </filterset>
     </copy>
   </target>

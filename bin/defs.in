@@ -71,6 +71,7 @@ JAVA_HOME=$(unixfilename "@JAVA_HOME@")
 JAVA="${JAVA_HOME}/bin/java"
 TOP=$(unixfilename "@TOP@")
 POLYGLOT=$(unixfilename "@POLYGLOT@")
+JIF=$(unixfilename "@JIF@")
 
 classpath=$(unixpath ${CLASSPATH})
 
