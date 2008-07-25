@@ -39,11 +39,6 @@ import java.math.BigInteger;
     ErrorQueue eq;
     HashMap keywords;
 
-    public Lexer_c(java.io.InputStream in, FileSource file, ErrorQueue eq) {
-        this(new java.io.BufferedReader(new java.io.InputStreamReader(in)),
-             file, eq);
-    }
-
     public Lexer_c(java.io.Reader reader, FileSource file, ErrorQueue eq) {
         this(reader);
         this.file = file.name();
@@ -104,29 +99,14 @@ import java.math.BigInteger;
         keywords.put("volatile",      new Integer(sym.VOLATILE));
         keywords.put("while",         new Integer(sym.WHILE));
 
-        /* Jif-specific keywords */    
-        keywords.put("actsFor",       new Integer(sym.ACTSFOR));
-        keywords.put("actsfor",       new Integer(sym.ACTSFOR_LOWER));
-        keywords.put("equiv",         new Integer(sym.EQUIV));
-        keywords.put("authority",     new Integer(sym.AUTHORITY));
-        keywords.put("caller",        new Integer(sym.CALLER));
-        keywords.put("covariant",     new Integer(sym.COVARIANT));
-        keywords.put("invariant",     new Integer(sym.INVARIANT));
-        keywords.put("declassify",    new Integer(sym.DECLASSIFY));
-        keywords.put("endorse",       new Integer(sym.ENDORSE));
-        keywords.put("to",            new Integer(sym.TO));
-        keywords.put("label",         new Integer(sym.LABEL));
-        keywords.put("principal",     new Integer(sym.PRINCIPAL));
-        keywords.put("where",         new Integer(sym.WHERE));
-        keywords.put("meet",          new Integer(sym.MEET));
-
-        /* Fabric-specific keywords */
-        keywords.put("atomic",        new Integer(sym.ATOMIC));
+		/* Fabric extension */
+		keywords.put("atomic",        new Integer(sym.ATOMIC));
     }
 
     public String file() {
         return file;
     }
+
     public String path() {
         return path;
     }
@@ -180,18 +160,18 @@ import java.math.BigInteger;
     private Token float_lit(String s) {
         try {
             Float x = Float.valueOf(s);
-        boolean zero = true;
-        for (int i = 0; i < s.length(); i++) {
-        if ('1' <= s.charAt(i) && s.charAt(i) <= '9') {
-            zero = false;
-            break;
-        }
+	    boolean zero = true;
+	    for (int i = 0; i < s.length(); i++) {
+		if ('1' <= s.charAt(i) && s.charAt(i) <= '9') {
+		    zero = false;
+		    break;
+		}
                 if (s.charAt(i) == 'e' || s.charAt(i) == 'E') {
                     break; // 0e19 is still 0
                 }
-        }
-        if (x.isInfinite() || x.isNaN() || (x.floatValue() == 0 && ! zero)) {
-        eq.enqueue(ErrorInfo.LEXICAL_ERROR,
+	    }
+	    if (x.isInfinite() || x.isNaN() || (x.floatValue() == 0 && ! zero)) {
+		eq.enqueue(ErrorInfo.LEXICAL_ERROR,
 			   "Illegal float literal \"" + yytext() + "\"", pos());
 	    }
             return new FloatLiteral(pos(), x.floatValue(), sym.FLOAT_LITERAL);
@@ -206,18 +186,18 @@ import java.math.BigInteger;
     private Token double_lit(String s) {
         try {
             Double x = Double.valueOf(s);
-        boolean zero = true;
-        for (int i = 0; i < s.length(); i++) {
-        if ('1' <= s.charAt(i) && s.charAt(i) <= '9') {
-            zero = false;
-            break;
-        }
+	    boolean zero = true;
+	    for (int i = 0; i < s.length(); i++) {
+		if ('1' <= s.charAt(i) && s.charAt(i) <= '9') {
+		    zero = false;
+		    break;
+		}
                 if (s.charAt(i) == 'e' || s.charAt(i) == 'E') {
                     break; // 0e19 is still 0
                 }
-        }
-        if (x.isInfinite() || x.isNaN() || (x.doubleValue() == 0 && ! zero)) {
-        eq.enqueue(ErrorInfo.LEXICAL_ERROR,
+	    }
+	    if (x.isInfinite() || x.isNaN() || (x.doubleValue() == 0 && ! zero)) {
+		eq.enqueue(ErrorInfo.LEXICAL_ERROR,
 			   "Illegal double literal \"" + yytext() + "\"", pos());
 	    }
             return new DoubleLiteral(pos(), x.doubleValue(), sym.DOUBLE_LITERAL);
@@ -406,12 +386,6 @@ OctalEscape = \\ [0-7]
 
     /* 3.6 White Space */
     {WhiteSpace}                 { /* ignore */ }
-
-    /* Jif extensions */
-    "\u2293" { return op(sym.MEET); }
-    "\u2294" { return op(sym.JOIN); }
-    "\u2190" { return op(sym.LEFTARROW); }
-    "\u2192" { return op(sym.RIGHTARROW); }
 }
 
 <TRADITIONAL_COMMENT> {
