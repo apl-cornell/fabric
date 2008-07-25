@@ -89,6 +89,9 @@
   <!-- fabc executable -->
   <property name="fabc" location="${bin}/fabc" />
 
+  <!-- fabilc executable -->
+  <property name="fabilc" location="${bin}/fabilc" />
+
   <!-- genmap executable -->
   <property name="genmap" location="${bin}/genmap" />
 
@@ -299,7 +302,7 @@
         relative="false"
         skipemptyfilesets="true"
         vmlauncher="false">
-      <arg value="${fabc}" />
+      <arg value="${fabilc}" />
       <arg value="-d" />
       <arg value="tests/classes" />
       <arg value="-sourcepath" />
@@ -327,8 +330,8 @@
   <!-- Compiles the Fabric compiler -->
   <target name="fabric-compiler" depends="init">
     <antcall target="standard-ext">
-      <param name="ext" value="fabric" />
-      <param name="ext.pkg" value="fabric" />
+      <param name="ext" value="fabil" />
+      <param name="ext.pkg" value="fabil" />
       <param name="parser.type" value="ppg" />
     </antcall>
   </target>
@@ -338,14 +341,14 @@
     <mkdir dir="${signatures.classes}" />
 
     <apply executable="bash"
-        parallel="true"
-        failonerror="true"
-        dir="${basedir}"
-    dest="${signatures.classes}"
-        relative="false"
-        skipemptyfilesets="true"
-        vmlauncher="false">
-      <arg value="${fabc}" />
+           parallel="true"
+           failonerror="true"
+           dir="${basedir}"
+           dest="${signatures.classes}"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabilc}" />
       <arg value="-nooutput" />
       <arg value="-sig" />
       <arg value="-d" />
@@ -360,7 +363,7 @@
     </apply>
   </target>
 
-  <target name="opt" description="Pass -O to fabc for runtime">
+  <target name="opt" description="Pass -O to fabilc for runtime">
     <property name="runtime.opt" value="-O" />
   </target>
 
@@ -389,7 +392,7 @@
         relative="false"
         skipemptyfilesets="true"
         vmlauncher="false">
-      <arg value="${fabc}" />
+      <arg value="${fabilc}" />
       <arg value="${runtime.opt}" />
       <arg value="-d" />
       <arg value="rt-classes" />
@@ -422,7 +425,7 @@
         relative="false"
         skipemptyfilesets="true"
         vmlauncher="false">
-      <arg value="${fabc}" />
+      <arg value="${fabilc}" />
       <arg value="${runtime.opt}" />
       <arg value="-d" />
       <arg value="rt-classes" />
