@@ -24,7 +24,7 @@ killchildren () {
 }
 
 # create core command
-classpath="$classpath:${TOP}/classes:${TOP}/rt-classes:${TOP}/lib/fabric.jar:${TOP}/lib/je-3.2.68.jar"
+classpath="$classpath:${TOP}/classes:${TOP}/rt-classes:${TOP}/lib/fabric.jar:${TOP}/lib/je-3.2.68.jar:${JIF}/rt-classes"
 command="\"$JAVA\" -classpath \"$(fixpath $classpath)\" fabric.core.Main"
 
 for i in "$@"; do

@@ -89,8 +89,8 @@
   <!-- fabc executable -->
   <property name="fabc" location="${bin}/fabc" />
 
-  <!-- fabilc executable -->
-  <property name="fabilc" location="${bin}/fabilc" />
+  <!-- filc executable -->
+  <property name="filc" location="${bin}/filc" />
 
   <!-- genmap executable -->
   <property name="genmap" location="${bin}/genmap" />
@@ -302,7 +302,7 @@
         relative="false"
         skipemptyfilesets="true"
         vmlauncher="false">
-      <arg value="${fabilc}" />
+      <arg value="${filc}" />
       <arg value="-d" />
       <arg value="tests/classes" />
       <arg value="-sourcepath" />
@@ -348,7 +348,7 @@
            relative="false"
            skipemptyfilesets="true"
            vmlauncher="false">
-      <arg value="${fabilc}" />
+      <arg value="${filc}" />
       <arg value="-nooutput" />
       <arg value="-sig" />
       <arg value="-d" />
@@ -363,7 +363,7 @@
     </apply>
   </target>
 
-  <target name="opt" description="Pass -O to fabilc for runtime">
+  <target name="opt" description="Pass -O to filc for runtime">
     <property name="runtime.opt" value="-O" />
   </target>
 
@@ -392,7 +392,7 @@
         relative="false"
         skipemptyfilesets="true"
         vmlauncher="false">
-      <arg value="${fabilc}" />
+      <arg value="${filc}" />
       <arg value="${runtime.opt}" />
       <arg value="-d" />
       <arg value="rt-classes" />
@@ -425,7 +425,7 @@
         relative="false"
         skipemptyfilesets="true"
         vmlauncher="false">
-      <arg value="${fabilc}" />
+      <arg value="${filc}" />
       <arg value="${runtime.opt}" />
       <arg value="-d" />
       <arg value="rt-classes" />
