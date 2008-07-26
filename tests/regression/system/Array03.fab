@@ -1,0 +1,55 @@
+package system;
+
+import fabric.client.Client;
+import fabric.client.Core;
+
+public class Array03 {
+  public static void main(String[] args) {
+    Core core = Client.getClient().getLocalCore();
+    int[] array;
+    atomic {
+      array = new int[5]@core;
+    }
+
+    if (array.length != 5) {
+      System.out.println("TEST FAILED: expected length 5 but got "
+	+ array.length);
+      return;
+    }
+
+    array[4] = 1;
+    array.length = 4;
+    try {
+      array[4] = 1;
+      System.out.println("TEST FAILED: array index error not caught (1).");
+      return;
+    } catch (ArrayIndexOutOfBoundsException e) {
+    }
+
+    array[3] = 1;
+
+    if (array.length != 4) {
+      System.out.println("TEST FAILED: expected length 4 but got "
+	+ array.length);
+      return;
+    }
+
+    array.length = 7;
+    array[6] = 1;
+    try {
+      array[7] = 1;
+      System.out.println("TEST FAILED: array index error not caught (2).");
+      return;
+    } catch (ArrayIndexOutOfBoundsException e) {
+    }
+
+    if (array.length != 7) {
+      System.out.println("TEST FAILED: expected length 7 but got "
+	+ array.length);
+      return;
+    }
+
+    System.out.println("TEST PASSED.");
+  }
+}
+
