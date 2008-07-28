@@ -37,6 +37,7 @@ public class ArrayInitExt_c extends LocatedExt_c {
     FabricTypeSystem ts = rewriter.typeSystem();
 
     ArrayInit arrayInit = node();
+    Expr location = location();
     if (location == null) location = qq.parseExpr("$getCore()");
 
     List<Expr> newElements = new ArrayList<Expr>(arrayInit.elements().size());

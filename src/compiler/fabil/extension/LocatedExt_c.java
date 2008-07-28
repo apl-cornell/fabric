@@ -19,5 +19,5 @@ public abstract class LocatedExt_c extends ExprExt_c {
     return node().ext(result);
   }
 
-  protected Expr location;
+  private Expr location;
 }

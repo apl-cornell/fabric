@@ -23,6 +23,7 @@ public class NewArrayExt_c extends LocatedExt_c {
     FabricTypeSystem ts = pr.typeSystem();
     if (!ts.isFabricArray(newArray.type())) return newArray;
 
+    Expr location = location();
     if (location == null) location = qq.parseExpr("$getCore()");
     
     // XXX Replace with a real label.
@@ -64,7 +65,7 @@ public class NewArrayExt_c extends LocatedExt_c {
 
     if (newArray.init() != null) {
       ArrayInit init = newArray.init();
-      init = ((ArrayInitExt_c) init.ext()).location(location);
+      init = ((ArrayInitExt_c) init.ext()).location(location());
       newArray = newArray.init(init);
 
       // Translation of initializer will be the array itself.
