@@ -149,12 +149,7 @@ public class ArrayList extends AbstractList
   {
     // Not a structural change from the perspective of iterators on this list,
     // so don't update modCount.
-    if (size != data.length)
-      {
-        Object[] newData = new Object[size];
-        System.arraycopy(data, 0, newData, 0, size);
-        data = newData;
-      }
+    data.length = size;
   }
 
   /**
@@ -171,12 +166,7 @@ public class ArrayList extends AbstractList
   {
     int current = data.length;
 
-    if (minCapacity > current)
-      {
-        Object[] newData = new Object[Math.max(current * 2, minCapacity)];
-        System.arraycopy(data, 0, newData, 0, size);
-        data = newData;
-      }
+    if (minCapacity > current) data.length = Math.max(current * 2, minCapacity);
   }
 
   /**
@@ -260,43 +250,43 @@ public class ArrayList extends AbstractList
 //    return clone;
 //  }
 
-  /**
-   * Returns an Object array containing all of the elements in this ArrayList.
-   * The array is independent of this list.
-   *
-   * @return an array representation of this list
-   */
-  public Object[] toArray()
-  {
-    Object[] array = new Object[size];
-    System.arraycopy(data, 0, array, 0, size);
-    return array;
-  }
+//  /**
+//   * Returns an Object array containing all of the elements in this ArrayList.
+//   * The array is independent of this list.
+//   *
+//   * @return an array representation of this list
+//   */
+//  public Object[] toArray()
+//  {
+//    Object[] array = new Object[size];
+//    System.arraycopy(data, 0, array, 0, size);
+//    return array;
+//  }
 
-  /**
-   * Returns an Array whose component type is the runtime component type of
-   * the passed-in Array.  The returned Array is populated with all of the
-   * elements in this ArrayList.  If the passed-in Array is not large enough
-   * to store all of the elements in this List, a new Array will be created
-   * and returned; if the passed-in Array is <i>larger</i> than the size
-   * of this List, then size() index will be set to null.
-   *
-   * @param a the passed-in Array
-   * @return an array representation of this list
-   * @throws ArrayStoreException if the runtime type of a does not allow
-   *         an element in this list
-   * @throws NullPointerException if a is null
-   */
-  public Object[] toArray(Object[] a)
-  {
-    if (a.length < size)
-      a = (Object[]) Array.newInstance(a.getClass().getComponentType(),
-                                       size);
-    else if (a.length > size)
-      a[size] = null;
-    System.arraycopy(data, 0, a, 0, size);
-    return a;
-  }
+//  /**
+//   * Returns an Array whose component type is the runtime component type of
+//   * the passed-in Array.  The returned Array is populated with all of the
+//   * elements in this ArrayList.  If the passed-in Array is not large enough
+//   * to store all of the elements in this List, a new Array will be created
+//   * and returned; if the passed-in Array is <i>larger</i> than the size
+//   * of this List, then size() index will be set to null.
+//   *
+//   * @param a the passed-in Array
+//   * @return an array representation of this list
+//   * @throws ArrayStoreException if the runtime type of a does not allow
+//   *         an element in this list
+//   * @throws NullPointerException if a is null
+//   */
+//  public Object[] toArray(Object[] a)
+//  {
+//    if (a.length < size)
+//      a = (Object[]) Array.newInstance(a.getClass().getComponentType(),
+//                                       size);
+//    else if (a.length > size)
+//      a[size] = null;
+//    System.arraycopy(data, 0, a, 0, size);
+//    return a;
+//  }
 
   /**
    * Retrieves the element at the user-supplied index.
@@ -342,6 +332,21 @@ public class ArrayList extends AbstractList
     data[size++] = e;
     return true;
   }
+  
+  private static void arraycopy(Object[] src, int srcPos, Object[] dest,
+      int destPos, int length) {
+    if (srcPos < destPos) {
+      // Copy down.
+      for (int i = length-1; i <= 0; i--) {
+        dest[srcPos + i] = src[destPos + i];
+      }
+    } else {
+      // Copy up.
+      for (int i = 0; i < length; i++) {
+        dest[srcPos + i] = src[destPos + i];
+      }
+    }
+  }
 
   /**
    * Adds the supplied element at the specified index, shifting all
@@ -359,7 +364,7 @@ public class ArrayList extends AbstractList
     if (size == data.length)
       ensureCapacity(size + 1);
     if (index != size)
-      System.arraycopy(data, index, data, index + 1, size - index);
+      arraycopy(data, index, data, index + 1, size - index);
     data[index] = e;
     size++;
   }
@@ -377,7 +382,7 @@ public class ArrayList extends AbstractList
     Object r = data[index];
     modCount++;
     if (index != --size)
-      System.arraycopy(data, index + 1, data, index, size - index);
+      arraycopy(data, index + 1, data, index, size - index);
     // Aid for garbage collection by releasing this pointer.
     data[size] = null;
     return r;
@@ -392,7 +397,7 @@ public class ArrayList extends AbstractList
       {
         modCount++;
         // Allow for garbage collection.
-        Arrays.fill(data, 0, size, null);
+        for (int i = 0; i < size; i++) data[i] = null;
         size = 0;
       }
   }
@@ -433,7 +438,7 @@ public class ArrayList extends AbstractList
       ensureCapacity(size + csize);
     int end = index + csize;
     if (size > 0 && index != size)
-      System.arraycopy(data, index, data, end, size - index);
+      arraycopy(data, index, data, end, size - index);
     size += csize;
     for ( ; index < end; index++)
       data[index] = itr.next();
@@ -454,7 +459,7 @@ public class ArrayList extends AbstractList
     if (change > 0)
       {
         modCount++;
-        System.arraycopy(data, toIndex, data, fromIndex, size - toIndex);
+        arraycopy(data, toIndex, data, fromIndex, size - toIndex);
         size -= change;
       }
     else if (change < 0)

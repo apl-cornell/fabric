@@ -409,9 +409,7 @@ public abstract class AbstractCollection implements Collection
   public Object[] toArray(Object[] a)
   {
     int size = size();
-    if (a.length < size)
-      a = (Object[]) Array.newInstance(a.getClass().getComponentType(),
-                                       size);
+    if (a.length < size) a.length = size;
     else if (a.length > size)
       a[size] = null;
 
