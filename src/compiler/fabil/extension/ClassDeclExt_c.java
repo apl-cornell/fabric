@@ -542,7 +542,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
    */
   @Override
   public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
-    return Collections.singletonList((ClassMember) node());
+    ClassDecl decl = node();
+    decl = decl.flags(ProxyRewriter.toPublic(decl.flags()));
+    return Collections.singletonList((ClassMember) decl);
   }
 
   @SuppressWarnings("unchecked")
