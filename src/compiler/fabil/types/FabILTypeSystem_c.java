@@ -9,8 +9,8 @@ import polyglot.types.Package;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 
-public class FabricTypeSystem_c extends TypeSystem_c implements
-    FabricTypeSystem {
+public class FabILTypeSystem_c extends TypeSystem_c implements
+    FabILTypeSystem {
 
   private CachingResolver runtimeClassResolver;
 
@@ -50,7 +50,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
    */
   @Override
   protected ArrayType createArrayType(Position pos, Type type) {
-    return new FabricArrayType_c(this, pos, type);
+    return new FabILArrayType_c(this, pos, type);
   }
 
   /*
@@ -62,7 +62,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   @Override
   public ParsedClassType createClassType(LazyClassInitializer init,
       Source fromSource) {
-    return new FabricParsedClassType_c(this, init, fromSource);
+    return new FabILParsedClassType_c(this, init, fromSource);
   }
 
   @SuppressWarnings("unchecked")
@@ -106,7 +106,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#toFArray(polyglot.types.ArrayType)
+   * @see fabil.types.FabILTypeSystem#toFArray(polyglot.types.ArrayType)
    */
   public ClassType toFArray(ArrayType type) {
     return fArrayOf(type.base());
@@ -119,7 +119,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
    */
   @Override
   public ImportTable importTable(Package pkg) {
-    return new FabricImportTable(this, pkg);
+    return new FabILImportTable(this, pkg);
   }
 
   /*
@@ -130,12 +130,12 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
    */
   @Override
   public ImportTable importTable(String sourceName, Package pkg) {
-    return new FabricImportTable(this, pkg, sourceName);
+    return new FabILImportTable(this, pkg, sourceName);
   }
 
   @Override
   public Flags legalMethodFlags() {
-    return super.legalMethodFlags().set(FabricFlags.ATOMIC);
+    return super.legalMethodFlags().set(FabILFlags.ATOMIC);
   }
 
   @Override
@@ -147,7 +147,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isFabricType(polyglot.types.Type)
+   * @see fabil.types.FabILTypeSystem#isFabricType(polyglot.types.Type)
    */
   public boolean isFabricType(Type type) {
     if (type.isPrimitive()) return true;
@@ -157,7 +157,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isFabricType(polyglot.ast.TypeNode)
+   * @see fabil.types.FabILTypeSystem#isFabricType(polyglot.ast.TypeNode)
    */
   public boolean isFabricType(TypeNode type) {
     return isFabricType(type.type());
@@ -166,7 +166,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isFabricThread(polyglot.types.Type)
+   * @see fabil.types.FabILTypeSystem#isFabricThread(polyglot.types.Type)
    */
   public boolean isThread(Type type) {
     return isSubtype(type, Thread());
@@ -175,7 +175,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isFabricThread(polyglot.ast.TypeNode)
+   * @see fabil.types.FabILTypeSystem#isFabricThread(polyglot.ast.TypeNode)
    */
   public boolean isThread(TypeNode type) {
     return isThread(type.type());
@@ -184,7 +184,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isPureFabricType(polyglot.types.Type)
+   * @see fabil.types.FabILTypeSystem#isPureFabricType(polyglot.types.Type)
    */
   public boolean isPureFabricType(Type type) {
     return isFabricType(type) && !isJavaInlineable(type);
@@ -193,7 +193,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isPureFabricType(polyglot.ast.TypeNode)
+   * @see fabil.types.FabILTypeSystem#isPureFabricType(polyglot.ast.TypeNode)
    */
   public boolean isPureFabricType(TypeNode type) {
     return isPureFabricType(type.type());
@@ -202,7 +202,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isFabricReference(polyglot.types.Type)
+   * @see fabil.types.FabILTypeSystem#isFabricReference(polyglot.types.Type)
    */
   public boolean isFabricReference(Type type) {
     return isFabricArray(type) || isFabricClass(type);
@@ -211,7 +211,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isFabricReference(polyglot.ast.TypeNode)
+   * @see fabil.types.FabILTypeSystem#isFabricReference(polyglot.ast.TypeNode)
    */
   public boolean isFabricReference(TypeNode type) {
     return isFabricReference(type.type());
@@ -220,7 +220,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isFabricClass(polyglot.types.ClassType)
+   * @see fabil.types.FabILTypeSystem#isFabricClass(polyglot.types.ClassType)
    */
   public boolean isFabricClass(ClassType type) {
     return isSubtype(type, FObject());
@@ -229,7 +229,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isFabricClass(polyglot.types.Type)
+   * @see fabil.types.FabILTypeSystem#isFabricClass(polyglot.types.Type)
    */
   public boolean isFabricClass(Type type) {
     return type.isClass() && isFabricClass(type.toClass());
@@ -238,7 +238,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isFabricClass(polyglot.ast.TypeNode)
+   * @see fabil.types.FabILTypeSystem#isFabricClass(polyglot.ast.TypeNode)
    */
   public boolean isFabricClass(TypeNode type) {
     return isFabricClass(type.type());
@@ -247,7 +247,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isFabricArray(polyglot.types.ArrayType)
+   * @see fabil.types.FabILTypeSystem#isFabricArray(polyglot.types.ArrayType)
    */
   public boolean isFabricArray(ArrayType type) {
     return isFabricType(type.ultimateBase());
@@ -256,7 +256,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isFabricArray(polyglot.types.Type)
+   * @see fabil.types.FabILTypeSystem#isFabricArray(polyglot.types.Type)
    */
   public boolean isFabricArray(Type type) {
     return type.isArray() && isFabricArray(type.toArray());
@@ -265,7 +265,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isFabricArray(polyglot.ast.TypeNode)
+   * @see fabil.types.FabILTypeSystem#isFabricArray(polyglot.ast.TypeNode)
    */
   public boolean isFabricArray(TypeNode type) {
     return isFabricArray(type.type());
@@ -274,7 +274,7 @@ public class FabricTypeSystem_c extends TypeSystem_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.types.FabricTypeSystem#isJavaInlineable(polyglot.types.Type)
+   * @see fabil.types.FabILTypeSystem#isJavaInlineable(polyglot.types.Type)
    */
   public boolean isJavaInlineable(Type type) {
     return isSubtype(type, JavaInlineable());

@@ -13,7 +13,7 @@ import fabil.visit.ThreadRewriter;
 /**
  * The interface for all Fabric extension nodes.
  */
-public interface FabricExt extends Ext {
+public interface FabILExt extends Ext {
 
   /**
    * Used by LocationAssigner to assign locations to all <code>new</code>

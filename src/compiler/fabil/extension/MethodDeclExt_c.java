@@ -15,7 +15,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#implMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#implMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override
@@ -30,7 +30,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#interfaceMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#interfaceMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override
@@ -52,7 +52,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#proxyMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#proxyMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override

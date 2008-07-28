@@ -6,7 +6,7 @@ import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import fabil.visit.ProxyRewriter;
 
-public interface ClassMemberExt extends FabricExt {
+public interface ClassMemberExt extends FabILExt {
   /**
    * Returns the $Proxy translation of the class member. The result is a list of
    * class members to be included in the $Proxy class.

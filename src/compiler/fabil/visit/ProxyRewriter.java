@@ -21,20 +21,20 @@ import polyglot.types.LocalInstance;
 import polyglot.types.Type;
 import polyglot.visit.NodeVisitor;
 import fabil.ExtensionInfo;
-import fabil.ast.FabricNodeFactory;
-import fabil.extension.FabricExt;
-import fabil.types.FabricTypeSystem;
+import fabil.ast.FabILNodeFactory;
+import fabil.extension.FabILExt;
+import fabil.types.FabILTypeSystem;
 import fabil.visit.ReadWriteChecker.State;
 
 /**
- * Rewrites Fabric classes into classes that implement
+ * Rewrites FabIL classes into classes that implement
  * <code>fabric.lang.Object</code>.
  */
 public class ProxyRewriter extends NodeVisitor {
   
   protected QQ qq;
-  protected FabricNodeFactory nf;
-  protected FabricTypeSystem ts;
+  protected FabILNodeFactory nf;
+  protected FabILTypeSystem ts;
   
   private final Stack<Map<LocalInstance, String>> shadowStack = 
     new Stack<Map<LocalInstance, String>>();
@@ -92,19 +92,19 @@ public class ProxyRewriter extends NodeVisitor {
     return n;
   }
 
-  private FabricExt ext(Node n) {
-    return (FabricExt) n.ext();
+  private FabILExt ext(Node n) {
+    return (FabILExt) n.ext();
   }
 
   public QQ qq() {
     return qq;
   }
 
-  public FabricNodeFactory nodeFactory() {
+  public FabILNodeFactory nodeFactory() {
     return nf;
   }
 
-  public FabricTypeSystem typeSystem() {
+  public FabILTypeSystem typeSystem() {
     return ts;
   }
   

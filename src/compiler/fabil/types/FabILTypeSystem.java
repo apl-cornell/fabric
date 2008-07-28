@@ -3,7 +3,7 @@ package fabil.types;
 import polyglot.ast.TypeNode;
 import polyglot.types.*;
 
-public interface FabricTypeSystem extends TypeSystem {
+public interface FabILTypeSystem extends TypeSystem {
 
   // TODO: fabric.client or fabric.lang?
   /**

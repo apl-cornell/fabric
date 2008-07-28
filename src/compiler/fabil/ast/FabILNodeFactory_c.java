@@ -9,23 +9,23 @@ import polyglot.types.Flags;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 
-import fabil.extension.FabricExtFactory;
-import fabil.extension.FabricExtFactory_c;
+import fabil.extension.FabILExtFactory;
+import fabil.extension.FabILExtFactory_c;
 import fabil.extension.LocatedExt_c;
 
 /**
- * NodeFactory for fabric extension.
+ * NodeFactory for FabIL extension.
  */
-public class FabricNodeFactory_c extends NodeFactory_c implements
-    FabricNodeFactory {
+public class FabILNodeFactory_c extends NodeFactory_c implements
+    FabILNodeFactory {
 
-  public FabricNodeFactory_c() {
-    super(new FabricExtFactory_c());
+  public FabILNodeFactory_c() {
+    super(new FabILExtFactory_c());
   }
 
   @Override
-  public FabricExtFactory extFactory() {
-    return (FabricExtFactory) super.extFactory();
+  public FabILExtFactory extFactory() {
+    return (FabILExtFactory) super.extFactory();
   }
 
   /*

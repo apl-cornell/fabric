@@ -17,7 +17,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#implMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#implMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override
@@ -28,7 +28,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt_c#staticImplMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt_c#staticImplMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override
@@ -62,7 +62,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#interfaceMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#interfaceMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override
@@ -79,7 +79,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#proxyMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#proxyMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override
@@ -90,7 +90,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt_c#staticProxyMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt_c#staticProxyMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override
@@ -145,7 +145,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt_c#staticInterfaceMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt_c#staticInterfaceMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override

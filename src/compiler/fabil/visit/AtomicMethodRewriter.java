@@ -9,8 +9,8 @@ import polyglot.types.Flags;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import fabil.ExtensionInfo;
-import fabil.ast.FabricNodeFactory;
-import fabil.types.FabricFlags;
+import fabil.ast.FabILNodeFactory;
+import fabil.types.FabILFlags;
 
 /**
  * Removes atomic keyword from method flags and makes body an atomic block.
@@ -18,7 +18,7 @@ import fabil.types.FabricFlags;
 public class AtomicMethodRewriter extends NodeVisitor {
 
   protected QQ qq;
-  protected FabricNodeFactory nf;
+  protected FabILNodeFactory nf;
 
   public AtomicMethodRewriter(ExtensionInfo extInfo) {
     this.qq = new QQ(extInfo);
@@ -32,8 +32,8 @@ public class AtomicMethodRewriter extends NodeVisitor {
       MethodDecl md = (MethodDecl) n;
       Flags f = md.flags();
       
-      if (f.contains(FabricFlags.ATOMIC)) {
-        f = f.clear(FabricFlags.ATOMIC);
+      if (f.contains(FabILFlags.ATOMIC)) {
+        f = f.clear(FabILFlags.ATOMIC);
         md = md.flags(f);
         md.methodInstance().setFlags(f);
         Block b = nf.Atomic(Position.compilerGenerated(), md.body().statements());
@@ -47,8 +47,8 @@ public class AtomicMethodRewriter extends NodeVisitor {
       ConstructorDecl cd = (ConstructorDecl) n;
       Flags f = cd.flags();
       
-      if (f.contains(FabricFlags.ATOMIC)) {
-        f = f.clear(FabricFlags.ATOMIC);
+      if (f.contains(FabILFlags.ATOMIC)) {
+        f = f.clear(FabILFlags.ATOMIC);
         cd = cd.flags(f);
         cd.constructorInstance().setFlags(f);
         Block b = nf.Atomic(Position.compilerGenerated(), cd.body().statements());

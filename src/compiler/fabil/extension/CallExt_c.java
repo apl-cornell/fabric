@@ -6,7 +6,7 @@ import polyglot.ast.*;
 import polyglot.types.MethodInstance;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ThreadRewriter;
 import fabil.visit.ReadWriteChecker.State;
@@ -22,7 +22,7 @@ public class CallExt_c extends ExprExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
    */
   @SuppressWarnings("unchecked")
   @Override
@@ -53,7 +53,7 @@ public class CallExt_c extends ExprExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ExprExt_c#rewriteProxiesImpl(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
    */
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
@@ -81,7 +81,7 @@ public class CallExt_c extends ExprExt_c {
     Call call = node();
     if (!call.name().equals("start")) return super.rewriteThreads(tr);
 
-    FabricTypeSystem ts = tr.typeSystem();
+    FabILTypeSystem ts = tr.typeSystem();
     Receiver target = call.target();
     Type targetType = target.type();
     if (!ts.isThread(targetType)) return super.rewriteThreads(tr);

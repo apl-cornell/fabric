@@ -5,7 +5,7 @@ import polyglot.frontend.Job;
 import polyglot.qq.QQ;
 import polyglot.visit.ContextVisitor;
 import fabil.ExtensionInfo;
-import fabil.extension.FabricExt;
+import fabil.extension.FabILExt;
 
 /**
  * Assigns object locations to all <code>new</code> expressions.
@@ -28,8 +28,8 @@ public class LocationAssigner extends ContextVisitor {
     return ext(n).assignLocations(this);
   }
 
-  private FabricExt ext(Node n) {
-    return (FabricExt) n.ext();
+  private FabILExt ext(Node n) {
+    return (FabILExt) n.ext();
   }
 
 }

@@ -3,13 +3,13 @@ package fabil.types;
 import polyglot.types.*;
 import polyglot.types.Package;
 
-public class FabricImportTable extends ImportTable {
+public class FabILImportTable extends ImportTable {
 
-  public FabricImportTable(TypeSystem ts, Package pkg, String src) {
+  public FabILImportTable(TypeSystem ts, Package pkg, String src) {
     super(ts, pkg, src);
   }
 
-  public FabricImportTable(TypeSystem ts, Package pkg) {
+  public FabILImportTable(TypeSystem ts, Package pkg) {
     super(ts, pkg);
   }
 

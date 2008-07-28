@@ -4,19 +4,19 @@ include "polyglot/parse/java12.cup"
 package fabil.parse;
 
 import fabil.ast.Atomic;
-import fabil.ast.FabricNodeFactory;
+import fabil.ast.FabILNodeFactory;
 import polyglot.parse.*;
-import fabil.types.FabricTypeSystem;
-import fabil.types.FabricFlags;
+import fabil.types.FabILTypeSystem;
+import fabil.types.FabILFlags;
 
 parser Grm extends polyglot.parse.Grm {:
-    public final FabricTypeSystem ts;
-    public final FabricNodeFactory nf;
+    public final FabILTypeSystem ts;
+    public final FabILNodeFactory nf;
 
     public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q) {
         super(l, t, n, q);
-        ts = (FabricTypeSystem) t;
-        nf = (FabricNodeFactory) n;
+        ts = (FabILTypeSystem) t;
+        nf = (FabILNodeFactory) n;
     }
 :};
 
@@ -153,5 +153,5 @@ extend explicit_constructor_invocation ::=
 
 extend modifier ::=
         ATOMIC:a
-            {: RESULT = FabricFlags.ATOMIC; :}
+            {: RESULT = FabILFlags.ATOMIC; :}
     ;

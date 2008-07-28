@@ -2,7 +2,7 @@ package fabil.ast;
 
 import java.util.List;
 
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 
 import polyglot.ast.ClassBody;
 import polyglot.ast.Id;
@@ -30,7 +30,7 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
   @Override
   protected void setSuperClass(AmbiguityRemover ar, TypeNode superClass)
       throws SemanticException {
-    FabricTypeSystem ts = (FabricTypeSystem) ar.typeSystem();
+    FabILTypeSystem ts = (FabILTypeSystem) ar.typeSystem();
     String fullName = type.fullName();
 
     if (superClass != null || type.equals(ts.Object())

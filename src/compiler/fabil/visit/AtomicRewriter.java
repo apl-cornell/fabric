@@ -1,8 +1,8 @@
 package fabil.visit;
 
 import fabil.ExtensionInfo;
-import fabil.extension.FabricExt;
-import fabil.types.FabricTypeSystem;
+import fabil.extension.FabILExt;
+import fabil.types.FabILTypeSystem;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.Receiver;
@@ -22,15 +22,15 @@ public class AtomicRewriter extends NodeVisitor {
     this.qq = new QQ(extInfo);
     this.nf = extInfo.nodeFactory();
     
-    FabricTypeSystem ts = extInfo.typeSystem();
+    FabILTypeSystem ts = extInfo.typeSystem();
     Position CG = Position.compilerGenerated();
     this.tm = nf.Call(CG,
                        nf.CanonicalTypeNode(CG, ts.TransactionManager()),
                        nf.Id(CG, "getInstance"));
   }
 
-  protected FabricExt ext(Node n) {
-    return (FabricExt) n.ext();
+  protected FabILExt ext(Node n) {
+    return (FabILExt) n.ext();
   }
 
   /*

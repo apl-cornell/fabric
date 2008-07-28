@@ -2,7 +2,7 @@ package fabil.ast;
 
 import java.util.List;
 
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
@@ -36,7 +36,7 @@ public class New_c extends polyglot.ast.New_c {
     if (nn.body() != null && nn.objectType().isDisambiguated()
         && nn.objectType().type().toClass().flags().isInterface()) {
       ParsedClassType anonType = nn.anonType();
-      anonType.superType(((FabricTypeSystem) ar.typeSystem()).FObject());
+      anonType.superType(((FabILTypeSystem) ar.typeSystem()).FObject());
     }
 
     return nn;

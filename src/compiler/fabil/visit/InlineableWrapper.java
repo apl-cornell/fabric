@@ -8,18 +8,18 @@ import polyglot.types.*;
 import polyglot.util.Position;
 import polyglot.visit.AscriptionVisitor;
 import polyglot.visit.NodeVisitor;
-import fabil.ast.FabricNodeFactory;
-import fabil.types.FabricTypeSystem;
+import fabil.ast.FabILNodeFactory;
+import fabil.types.FabILTypeSystem;
 
 /**
  * Traverses the AST and wraps/unwraps JavaInlineables as necessary.
  */
 public class InlineableWrapper extends AscriptionVisitor {
 
-  protected FabricNodeFactory nf;
-  protected FabricTypeSystem ts;
+  protected FabILNodeFactory nf;
+  protected FabILTypeSystem ts;
 
-  public InlineableWrapper(Job job, FabricTypeSystem ts, FabricNodeFactory nf) {
+  public InlineableWrapper(Job job, FabILTypeSystem ts, FabILNodeFactory nf) {
     super(job, ts, nf);
     this.nf = nf;
     this.ts = ts;

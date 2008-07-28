@@ -11,7 +11,7 @@ public class SpecialExt_c extends ExprExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ExprExt_c#rewriteProxiesImpl(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
    */
   @Override
   protected Expr rewriteProxiesImpl(ProxyRewriter pr) {
@@ -32,7 +32,7 @@ public class SpecialExt_c extends ExprExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ExprExt_c#node()
+   * @see fabil.extension.ExprExt_c#node()
    */
   @Override
   public Special node() {

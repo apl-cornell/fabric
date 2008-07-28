@@ -9,7 +9,7 @@ import polyglot.types.Flags;
 import polyglot.types.MethodInstance;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ThreadRewriter;
 
@@ -38,7 +38,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   /**
    * Returns the interface translation of the class declaration.
    * 
-   * @see fabil.extension.FabricExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
+   * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
    */
   @SuppressWarnings("unchecked")
   @Override
@@ -51,7 +51,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       return classDecl.ext(shouldSerializeType(true));
 
     NodeFactory nf = pr.nodeFactory();
-    FabricTypeSystem ts = pr.typeSystem();
+    FabILTypeSystem ts = pr.typeSystem();
 
     if (classDecl.flags().isInterface()) {
       // Already an interface. Leave existing members alone, but insert a proxy
@@ -241,7 +241,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
    */
   @SuppressWarnings("unchecked")
   private ClassMember makeProxyMethod(ProxyRewriter pr, MethodInstance mi) {
-    FabricTypeSystem ts = pr.typeSystem();
+    FabILTypeSystem ts = pr.typeSystem();
 
     // The end result will be quasiquoted. Construct the quasiquoted string and
     // list of substitution arguments in tandem.
@@ -429,7 +429,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
   private List<ClassMember> makeSerializers(ProxyRewriter pr,
       List<ClassMember> members) {
-    FabricTypeSystem ts = pr.typeSystem();
+    FabILTypeSystem ts = pr.typeSystem();
     List<ClassMember> result = new ArrayList<ClassMember>(3);
     List<FieldDecl> fields = new LinkedList<FieldDecl>();
 
@@ -537,7 +537,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#interfaceMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#interfaceMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override
@@ -558,7 +558,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Rewrite to implement fabric.client.FabricThread.
     QQ qq = tr.qq();
     NodeFactory nf = tr.nodeFactory();
-    FabricTypeSystem ts = tr.typeSystem();
+    FabILTypeSystem ts = tr.typeSystem();
     List<TypeNode> interfaces = new ArrayList<TypeNode>(decl.interfaces());
     interfaces.add(nf.CanonicalTypeNode(Position.compilerGenerated(), ts
         .FabricThread()));

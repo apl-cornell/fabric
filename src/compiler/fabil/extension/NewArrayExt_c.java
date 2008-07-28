@@ -4,7 +4,7 @@ import polyglot.ast.*;
 import polyglot.qq.QQ;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
 public class NewArrayExt_c extends LocatedExt_c {
@@ -12,7 +12,7 @@ public class NewArrayExt_c extends LocatedExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ExprExt_c#rewriteProxiesImpl(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
    */
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
@@ -20,7 +20,7 @@ public class NewArrayExt_c extends LocatedExt_c {
     NewArray newArray = node();
 
     // Only rewrite if we have a Fabric array.
-    FabricTypeSystem ts = pr.typeSystem();
+    FabILTypeSystem ts = pr.typeSystem();
     if (!ts.isFabricArray(newArray.type())) return newArray;
     
     // XXX Replace with a real label.
@@ -50,14 +50,14 @@ public class NewArrayExt_c extends LocatedExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
    */
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     NewArray newArray = node();
 
     // Only rewrite if we have a Fabric array.
-    FabricTypeSystem ts = rewriter.typeSystem();
+    FabILTypeSystem ts = rewriter.typeSystem();
     if (!ts.isFabricArray(newArray.type())) return null;
 
     if (newArray.init() != null) {

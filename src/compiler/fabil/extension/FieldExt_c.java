@@ -26,7 +26,7 @@ public class FieldExt_c extends ExprExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
    */
   @Override
   protected Expr rewriteProxiesOverrideImpl(ProxyRewriter pr) {
@@ -49,7 +49,7 @@ public class FieldExt_c extends ExprExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ExprExt_c#rewriteProxiesImpl(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
    */
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {

@@ -6,12 +6,12 @@ import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import fabil.visit.ProxyRewriter;
 
-public class EvalExt_c extends FabricExt_c {
+public class EvalExt_c extends FabILExt_c {
 
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.FabricExt_c#rewriteProxies(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
    */
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {

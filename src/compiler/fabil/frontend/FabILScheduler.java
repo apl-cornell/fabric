@@ -27,10 +27,10 @@ import fabil.ExtensionInfo;
 import fabil.Options;
 import fabil.visit.*;
 
-public class FabricScheduler extends JLScheduler {
+public class FabILScheduler extends JLScheduler {
   protected ExtensionInfo extInfo;
 
-  public FabricScheduler(ExtensionInfo extInfo) {
+  public FabILScheduler(ExtensionInfo extInfo) {
     super(extInfo);
     this.extInfo = extInfo;
   }

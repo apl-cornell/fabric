@@ -22,12 +22,12 @@ public class Options extends polyglot.main.Options {
   public boolean signatureMode;
 
   /**
-   * The classpath for the Fabric signatures of Java objects.
+   * The classpath for the FabIL signatures of Java objects.
    */
   public String sigcp;
 
   /**
-   * Additional classpath entries for Fabric signatures.
+   * Additional classpath entries for FabIL signatures.
    */
   public List<String> addSigcp;
   
@@ -102,9 +102,9 @@ public class Options extends polyglot.main.Options {
     super.usage(out);
     usageForFlag(out, "-sig", "compile sources to signatures");
     usageForFlag(out, "-sigcp <path>",
-        "path for Fabric signatures (e.g. for fabric.lang.Object)");
+        "path for FabIL signatures (e.g. for fabric.lang.Object)");
     usageForFlag(out, "-addsigcp <path>",
-        "additional path for Fabric signatures; prefixed to sigcp");
+        "additional path for FabIL signatures; prefixed to sigcp");
     usageForFlag(out, "-O", "turn optimizations on");
   }
 
@@ -119,7 +119,7 @@ public class Options extends polyglot.main.Options {
     return scp;
   }
 
-  public String constructFabricClasspath() {
+  public String constructFabILClasspath() {
     return constructSignatureClasspath() + File.pathSeparator
         + constructFullClasspath();
   }

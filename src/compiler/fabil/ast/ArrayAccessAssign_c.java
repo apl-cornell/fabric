@@ -1,6 +1,6 @@
 package fabil.ast;
 
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 import polyglot.ast.ArrayAccess;
 import polyglot.ast.Expr;
 import polyglot.types.Type;
@@ -23,7 +23,7 @@ public class ArrayAccessAssign_c extends polyglot.ast.ArrayAccessAssign_c {
   @Override
   public Type childExpectedType(Expr child, AscriptionVisitor av) {
     if (child == right) {
-      FabricTypeSystem ts = (FabricTypeSystem) av.typeSystem();
+      FabILTypeSystem ts = (FabILTypeSystem) av.typeSystem();
       Type base = ((ArrayAccess) left).array().type().toArray().ultimateBase();
       if (ts.isJavaInlineable(base)) return ts.FObject();
     }

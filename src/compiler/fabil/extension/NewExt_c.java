@@ -9,7 +9,7 @@ import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
 import polyglot.types.ClassType;
 import polyglot.util.Position;
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
 public class NewExt_c extends LocatedExt_c {
@@ -24,7 +24,7 @@ public class NewExt_c extends LocatedExt_c {
     ClassType type = (ClassType) typeNode.type();
 
     // Only rewrite if instantiating a pure Fabric type.
-    FabricTypeSystem ts = pr.typeSystem();
+    FabILTypeSystem ts = pr.typeSystem();
     if (!ts.isPureFabricType(typeNode))
       return super.rewriteProxiesImpl(pr);
 

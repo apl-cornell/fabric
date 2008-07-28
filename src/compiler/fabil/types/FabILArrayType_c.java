@@ -6,12 +6,12 @@ import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 
-public class FabricArrayType_c extends ArrayType_c {
+public class FabILArrayType_c extends ArrayType_c {
 
-  protected FabricArrayType_c() {
+  protected FabILArrayType_c() {
   }
 
-  public FabricArrayType_c(TypeSystem ts, Position pos, Type base) {
+  public FabILArrayType_c(TypeSystem ts, Position pos, Type base) {
     super(ts, pos, base);
   }
 
@@ -38,7 +38,7 @@ public class FabricArrayType_c extends ArrayType_c {
   @Override
   public boolean descendsFromImpl(Type ancestor) {
     // Fabric arrays are subtypes of fabric.lang.Object.
-    FabricTypeSystem ts = (FabricTypeSystem) this.ts;
+    FabILTypeSystem ts = (FabILTypeSystem) this.ts;
     if (ancestor.isCanonical() && !ancestor.isNull()
         && !ts.typeEquals(this, ancestor) && ancestor.isReference()
         && ts.typeEquals(ancestor, ts.FObject()) && ts.isFabricArray(this))

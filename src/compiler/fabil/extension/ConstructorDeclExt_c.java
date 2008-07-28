@@ -13,7 +13,7 @@ import polyglot.ast.NodeFactory;
 import polyglot.types.Flags;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
 public class ConstructorDeclExt_c extends ClassMemberExt_c {
@@ -21,7 +21,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#implMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#implMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override
@@ -35,7 +35,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.FabricExt_c#rewriteProxies(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
    */
   @SuppressWarnings("unchecked")
   @Override
@@ -43,7 +43,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
     // Need to add a $location argument to the constructor declaration if the
     // containing class is a Fabric class.
     ConstructorDecl decl = (ConstructorDecl) node();
-    FabricTypeSystem ts = pr.typeSystem();
+    FabILTypeSystem ts = pr.typeSystem();
 
     // Ensure that we're translating a Fabric type.
     Type containerType = decl.constructorInstance().container();

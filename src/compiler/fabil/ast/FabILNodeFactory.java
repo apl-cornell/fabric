@@ -13,9 +13,9 @@ import polyglot.ast.TypeNode;
 import polyglot.util.Position;
 
 /**
- * NodeFactory for fabric extension.
+ * NodeFactory for FabIL extension.
  */
-public interface FabricNodeFactory extends NodeFactory {
+public interface FabILNodeFactory extends NodeFactory {
   Atomic Atomic(Position pos, List<Stmt> statements);
   
   New New(Position pos, TypeNode type, Expr location, List<Expr> args);

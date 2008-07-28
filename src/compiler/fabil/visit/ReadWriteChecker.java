@@ -33,7 +33,7 @@ import fabil.extension.CallExt_c;
 import fabil.extension.FieldAssignExt_c;
 import fabil.extension.FieldExt_c;
 import fabil.extension.UnaryExt_c;
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 
 /**
  * This dataflow analysis checks whether or not a local variable (or more
@@ -44,11 +44,11 @@ import fabil.types.FabricTypeSystem;
  */
 public class ReadWriteChecker extends DataFlow {
 
-  private final FabricTypeSystem ts;
+  private final FabILTypeSystem ts;
   
   public ReadWriteChecker(Job job, TypeSystem ts, NodeFactory nf) {
     super(job, ts, nf, true);
-    this.ts = (FabricTypeSystem) ts;
+    this.ts = (FabILTypeSystem) ts;
   }
 
   @Override

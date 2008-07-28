@@ -6,15 +6,15 @@ import polyglot.ast.TypeNode;
 import polyglot.types.ArrayType;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
-public class TypeNodeExt_c extends FabricExt_c {
+public class TypeNodeExt_c extends FabILExt_c {
 
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.FabricExt_c#rewriteProxies(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
    */
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {
@@ -25,7 +25,7 @@ public class TypeNodeExt_c extends FabricExt_c {
     if (!type.isArray()) return tn;
     
     // Only rewrite Fabric arrays.
-    FabricTypeSystem ts = pr.typeSystem();
+    FabILTypeSystem ts = pr.typeSystem();
     ArrayType at = type.toArray();
     if (!ts.isPureFabricType(at)) return tn;
     

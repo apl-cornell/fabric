@@ -7,7 +7,7 @@ import fabil.visit.LocationAssigner;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ThreadRewriter;
 
-public class FabricExt_c extends Ext_c implements FabricExt {
+public class FabILExt_c extends Ext_c implements FabILExt {
   
   public Node assignLocations(LocationAssigner la) {
     return node();

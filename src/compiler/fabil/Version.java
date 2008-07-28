@@ -1,12 +1,12 @@
 package fabil;
 
 /**
- * Version information for Fabric extension
+ * Version information for FabIL extension
  */
 public class Version extends polyglot.main.Version {
   @Override
   public String name() {
-    return "fabric";
+    return "fabil";
   }
 
   @Override

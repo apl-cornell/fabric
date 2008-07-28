@@ -1,9 +1,9 @@
 package fabil.visit;
 
 import fabil.ExtensionInfo;
-import fabil.ast.FabricNodeFactory;
-import fabil.extension.FabricExt;
-import fabil.types.FabricTypeSystem;
+import fabil.ast.FabILNodeFactory;
+import fabil.extension.FabILExt;
+import fabil.types.FabILTypeSystem;
 import polyglot.ast.Node;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
@@ -14,8 +14,8 @@ import polyglot.visit.NodeVisitor;
  */
 public class ThreadRewriter extends NodeVisitor {
   private QQ qq;
-  private FabricTypeSystem ts;
-  private FabricNodeFactory nf;
+  private FabILTypeSystem ts;
+  private FabILNodeFactory nf;
 
   public ThreadRewriter(ExtensionInfo extInfo) {
     this.qq = new QQ(extInfo);
@@ -23,11 +23,11 @@ public class ThreadRewriter extends NodeVisitor {
     this.nf = extInfo.nodeFactory();
   }
 
-  public FabricNodeFactory nodeFactory() {
+  public FabILNodeFactory nodeFactory() {
     return nf;
   }
 
-  public FabricTypeSystem typeSystem() {
+  public FabILTypeSystem typeSystem() {
     return ts;
   }
 
@@ -40,8 +40,8 @@ public class ThreadRewriter extends NodeVisitor {
     return ext(n).rewriteThreads(this);
   }
 
-  private FabricExt ext(Node n) {
-    return (FabricExt) n.ext();
+  private FabILExt ext(Node n) {
+    return (FabILExt) n.ext();
   }
 
   /**

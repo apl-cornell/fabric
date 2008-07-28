@@ -21,7 +21,7 @@ public class FieldAssignExt_c extends ExprExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
    */
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter pr) {

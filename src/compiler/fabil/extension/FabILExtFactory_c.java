@@ -4,16 +4,16 @@ import polyglot.ast.AbstractExtFactory_c;
 import polyglot.ast.Ext;
 
 /**
- * Factory for Fabric extension nodes.
+ * Factory for FabIL extension nodes.
  */
-public class FabricExtFactory_c extends AbstractExtFactory_c implements
-    FabricExtFactory {
+public class FabILExtFactory_c extends AbstractExtFactory_c implements
+    FabILExtFactory {
 
   /** Factory method for Atomic objects */
   public final Ext extAtomic() {
     Ext e = extAtomicImpl();
 
-    FabricExtFactory nextExtFactory = (FabricExtFactory) nextExtFactory();
+    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
     if (nextExtFactory != null) {
       Ext e2 = nextExtFactory.extAtomic();
       e = composeExts(e, e2);
@@ -116,7 +116,7 @@ public class FabricExtFactory_c extends AbstractExtFactory_c implements
 
   @Override
   protected Ext extNodeImpl() {
-    return new FabricExt_c();
+    return new FabILExt_c();
   }
 
   @Override

@@ -8,7 +8,7 @@ import polyglot.util.Position;
 import fabil.ast.Atomic;
 import fabil.visit.AtomicRewriter;
 
-public class AtomicExt_c extends FabricExt_c {
+public class AtomicExt_c extends FabILExt_c {
   @SuppressWarnings("unchecked")
   @Override
   public Node rewriteAtomic(AtomicRewriter ar) {    

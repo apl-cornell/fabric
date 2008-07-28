@@ -12,16 +12,16 @@ import polyglot.types.LoadedClassResolver;
 import polyglot.types.SourceClassResolver;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
-import fabil.ast.FabricNodeFactory;
-import fabil.ast.FabricNodeFactory_c;
-import fabil.frontend.FabricScheduler;
+import fabil.ast.FabILNodeFactory;
+import fabil.ast.FabILNodeFactory_c;
+import fabil.frontend.FabILScheduler;
 import fabil.parse.Grm;
 import fabil.parse.Lexer_c;
-import fabil.types.FabricTypeSystem;
-import fabil.types.FabricTypeSystem_c;
+import fabil.types.FabILTypeSystem;
+import fabil.types.FabILTypeSystem_c;
 
 /**
- * Extension information for fabric extension.
+ * Extension information for FabIL extension.
  */
 public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   static {
@@ -39,7 +39,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
 
   @Override
   protected NodeFactory createNodeFactory() {
-    return new FabricNodeFactory_c();
+    return new FabILNodeFactory_c();
   }
 
   @Override
@@ -49,12 +49,12 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
 
   @Override
   protected Scheduler createScheduler() {
-    return new FabricScheduler(this);
+    return new FabILScheduler(this);
   }
 
   @Override
   protected TypeSystem createTypeSystem() {
-    return new FabricTypeSystem_c();
+    return new FabILTypeSystem_c();
   }
 
   /*
@@ -73,8 +73,8 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
    * @see polyglot.frontend.AbstractExtensionInfo#typeSystem()
    */
   @Override
-  public FabricTypeSystem typeSystem() {
-    return (FabricTypeSystem) super.typeSystem();
+  public FabILTypeSystem typeSystem() {
+    return (FabILTypeSystem) super.typeSystem();
   }
 
   /*
@@ -83,8 +83,8 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
    * @see polyglot.frontend.AbstractExtensionInfo#nodeFactory()
    */
   @Override
-  public FabricNodeFactory nodeFactory() {
-    return (FabricNodeFactory) super.nodeFactory();
+  public FabILNodeFactory nodeFactory() {
+    return (FabILNodeFactory) super.nodeFactory();
   }
 
   @Override
@@ -96,17 +96,17 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   protected void initTypeSystem() {
     super.initTypeSystem();
 
-    // Also give the Fabric type system a resolver that ignores source files.
+    // Also give the FabIL type system a resolver that ignores source files.
     // This is needed for the type system to resolve types like
     // fabric.lang.arrays.ObjectArray that
     // are compiled from Fabric. For these types, we want to see the Java
     // translation of the class, not the original Fabric source.
-    // See fabric.types.FabricTypeSystem_c.fArrayImplOf(polyglot.types.Type)
+    // See fabil.types.FabILTypeSystem_c.fArrayImplOf(polyglot.types.Type)
     Options options = getOptions();
-    String classpath = options.constructFabricClasspath();
+    String classpath = options.constructFabILClasspath();
     LoadedClassResolver lcr = new LoadedClassResolver(ts, classpath,
         compiler.loader(), version(), true);
-    ((FabricTypeSystem) ts).setRuntimeClassResolver(lcr);
+    ((FabILTypeSystem) ts).setRuntimeClassResolver(lcr);
   }
 
   /*
@@ -117,7 +117,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   @Override
   protected LoadedClassResolver makeLoadedClassResolver() {
     Options options = getOptions();
-    String cp = options.constructFabricClasspath();
+    String cp = options.constructFabILClasspath();
     return new SourceClassResolver(compiler, this, cp, compiler.loader(), true,
         options.compile_command_line_only, options.ignore_mod_times);
   }

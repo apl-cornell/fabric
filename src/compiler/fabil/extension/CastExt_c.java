@@ -3,18 +3,18 @@ package fabil.extension;
 import polyglot.ast.Cast;
 import polyglot.ast.Expr;
 import polyglot.qq.QQ;
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
 public class CastExt_c extends ExprExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ExprExt_c#rewriteProxiesImpl(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
    */
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
-    FabricTypeSystem ts = pr.typeSystem();
+    FabILTypeSystem ts = pr.typeSystem();
     Cast cast = (Cast) node();
     if (!ts.isFabricReference(cast.castType())) return cast;
 

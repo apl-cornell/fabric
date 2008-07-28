@@ -3,13 +3,13 @@ package fabil.types;
 import polyglot.frontend.Source;
 import polyglot.types.*;
 
-public class FabricParsedClassType_c extends ParsedClassType_c {
+public class FabILParsedClassType_c extends ParsedClassType_c {
 
-  public FabricParsedClassType_c() {
+  public FabILParsedClassType_c() {
     super();
   }
 
-  public FabricParsedClassType_c(TypeSystem ts, LazyClassInitializer init,
+  public FabILParsedClassType_c(TypeSystem ts, LazyClassInitializer init,
       Source fromSource) {
     super(ts, init, fromSource);
   }
@@ -22,9 +22,9 @@ public class FabricParsedClassType_c extends ParsedClassType_c {
   @SuppressWarnings("unchecked")
   @Override
   public boolean descendsFromImpl(Type ancestor) {
-    FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
+    FabILTypeSystem ts = (FabILTypeSystem) typeSystem();
 
-    // All Fabric interface types descend from Fabric.lang.Object.
+    // All Fabric interface types descend from fabric.lang.Object.
     if (ancestor.isCanonical() && !ancestor.isNull()
         && !ts.typeEquals(this, ancestor) && ancestor.isReference()
         && ts.typeEquals(ancestor, ts.FObject()) && flags().isInterface()) {

@@ -10,7 +10,7 @@ import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
 public class ArrayInitExt_c extends LocatedExt_c {
@@ -18,7 +18,7 @@ public class ArrayInitExt_c extends LocatedExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.LocatedExt_c#location(polyglot.ast.Expr)
+   * @see fabil.extension.LocatedExt_c#location(polyglot.ast.Expr)
    */
   @Override
   public ArrayInit location(Expr location) {
@@ -28,13 +28,13 @@ public class ArrayInitExt_c extends LocatedExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
    */
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     NodeFactory nf = rewriter.nodeFactory();
     QQ qq = rewriter.qq();
-    FabricTypeSystem ts = rewriter.typeSystem();
+    FabILTypeSystem ts = rewriter.typeSystem();
 
     ArrayInit arrayInit = node();
     Expr location = location();

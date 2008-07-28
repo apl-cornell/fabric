@@ -3,7 +3,7 @@ package fabil.extension;
 import polyglot.ast.ArrayAccess;
 import polyglot.ast.Expr;
 import polyglot.types.Type;
-import fabil.types.FabricTypeSystem;
+import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
 public class ArrayAccessExt_c extends ExprExt_c {
@@ -11,14 +11,14 @@ public class ArrayAccessExt_c extends ExprExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ExprExt_c#rewriteProxiesImpl(fabric.visit.ProxyRewriter)
+   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
    */
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     ArrayAccess aa = node();
 
     // Only rewrite Fabric arrays.
-    FabricTypeSystem ts = pr.typeSystem();
+    FabILTypeSystem ts = pr.typeSystem();
     Expr array = aa.array();
     if (!ts.isFabricType(array.type())) return aa;
 

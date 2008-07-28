@@ -99,8 +99,8 @@ import java.math.BigInteger;
         keywords.put("volatile",      new Integer(sym.VOLATILE));
         keywords.put("while",         new Integer(sym.WHILE));
 
-		/* Fabric extension */
-		keywords.put("atomic",        new Integer(sym.ATOMIC));
+	/* FabIL extension */
+	keywords.put("atomic",        new Integer(sym.ATOMIC));
     }
 
     public String file() {

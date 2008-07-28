@@ -2,14 +2,11 @@ package fabil;
 
 import polyglot.main.Report;
 
-/**
- * Extension information for fabric extension.
- */
 @SuppressWarnings("unchecked")
 public class Topics {
-  public static final String fabric = "fabric";
+  public static final String fabil = "fabil";
 
   static {
-    Report.topics.add(fabric);
+    Report.topics.add(fabil);
   }
 }

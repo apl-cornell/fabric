@@ -14,7 +14,7 @@ public class InitializerExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt_c#implMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt_c#implMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override
@@ -28,7 +28,7 @@ public class InitializerExt_c extends ClassMemberExt_c {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt_c#staticImplMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt_c#staticImplMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   @Override

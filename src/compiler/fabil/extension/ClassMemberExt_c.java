@@ -7,13 +7,13 @@ import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import fabil.visit.ProxyRewriter;
 
-public abstract class ClassMemberExt_c extends FabricExt_c implements
+public abstract class ClassMemberExt_c extends FabILExt_c implements
     ClassMemberExt {
 
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#implMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#implMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
@@ -23,7 +23,7 @@ public abstract class ClassMemberExt_c extends FabricExt_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#interfaceMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#interfaceMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
@@ -33,7 +33,7 @@ public abstract class ClassMemberExt_c extends FabricExt_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#proxyMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#proxyMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   public List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent) {
@@ -43,7 +43,7 @@ public abstract class ClassMemberExt_c extends FabricExt_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#staticImplMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#staticImplMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   public List<ClassMember> staticImplMember(ProxyRewriter pr,
@@ -54,7 +54,7 @@ public abstract class ClassMemberExt_c extends FabricExt_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#staticInterfaceMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#staticInterfaceMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   public List<ClassMember> staticInterfaceMember(ProxyRewriter pr,
@@ -65,7 +65,7 @@ public abstract class ClassMemberExt_c extends FabricExt_c implements
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.extension.ClassMemberExt#staticProxyMember(fabric.visit.ProxyRewriter,
+   * @see fabil.extension.ClassMemberExt#staticProxyMember(fabil.visit.ProxyRewriter,
    *      polyglot.ast.ClassDecl)
    */
   public List<ClassMember> staticProxyMember(ProxyRewriter pr,
