@@ -38,7 +38,6 @@ public class ArrayInitExt_c extends LocatedExt_c {
 
     ArrayInit arrayInit = node();
     Expr location = location();
-    if (location == null) location = qq.parseExpr("$getCore()");
 
     List<Expr> newElements = new ArrayList<Expr>(arrayInit.elements().size());
     for (Object e : arrayInit.elements()) {
@@ -68,8 +67,10 @@ public class ArrayInitExt_c extends LocatedExt_c {
       if (ts.isPureFabricType(oldBase)) typeArg += ".$Proxy";
       typeArg += ".class, ";
     }
-    return qq.parseExpr("new %T(%E, " + typeArg + "%E)", newType, location,
-        init);
+    
+    // XXX Need a real label.
+    return qq.parseExpr("new %T(%E, " + typeArg + "null, %E)", newType,
+        location, init);
   }
 
   /*
