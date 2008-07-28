@@ -3,16 +3,17 @@ package fabil.extension;
 import java.util.LinkedList;
 import java.util.List;
 
-import fabil.types.FabricTypeSystem;
-import fabil.visit.ProxyRewriter;
 import polyglot.ast.Expr;
 import polyglot.ast.New;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
 import polyglot.types.ClassType;
 import polyglot.util.Position;
+import fabil.types.FabricTypeSystem;
+import fabil.visit.ProxyRewriter;
 
 public class NewExt_c extends LocatedExt_c {
+
   @SuppressWarnings("unchecked")
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
@@ -28,12 +29,7 @@ public class NewExt_c extends LocatedExt_c {
       return super.rewriteProxiesImpl(pr);
 
     List<Expr> newargs = new LinkedList<Expr>(call.arguments());
-    Expr location = location();
-    if (location == null)
-      location =
-          nf.Call(call.position(), nf.Id(Position.compilerGenerated(),
-              "$getCore"));
-    newargs.add(0, location);
+    newargs.add(0, location());
     
     // XXX Replace with a real label.
     Expr label = nf.NullLit(Position.compilerGenerated());

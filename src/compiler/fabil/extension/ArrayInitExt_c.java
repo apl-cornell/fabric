@@ -45,7 +45,7 @@ public class ArrayInitExt_c extends LocatedExt_c {
       if (e instanceof ArrayInit) {
         ArrayInit ai = (ArrayInit) e;
         LocatedExt_c ext = (LocatedExt_c) ai.ext();
-        newElements.add((Expr) ext.location(location));
+        newElements.add(ext.location(location));
       } else {
         newElements.add((Expr) e);
       }

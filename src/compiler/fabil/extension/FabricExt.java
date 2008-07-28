@@ -6,6 +6,7 @@ package fabil.extension;
 import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import fabil.visit.AtomicRewriter;
+import fabil.visit.LocationAssigner;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ThreadRewriter;
 
@@ -13,6 +14,12 @@ import fabil.visit.ThreadRewriter;
  * The interface for all Fabric extension nodes.
  */
 public interface FabricExt extends Ext {
+
+  /**
+   * Used by LocationAssigner to assign locations to all <code>new</code>
+   * expressions.
+   */
+  public Node assignLocations(LocationAssigner la);
 
   /**
    * Used by ProxyRewriter to override the default visitor behaviour.

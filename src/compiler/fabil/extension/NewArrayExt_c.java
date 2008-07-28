@@ -22,9 +22,6 @@ public class NewArrayExt_c extends LocatedExt_c {
     // Only rewrite if we have a Fabric array.
     FabricTypeSystem ts = pr.typeSystem();
     if (!ts.isFabricArray(newArray.type())) return newArray;
-
-    Expr location = location();
-    if (location == null) location = qq.parseExpr("$getCore()");
     
     // XXX Replace with a real label.
     Expr label = qq.parseExpr("null");
@@ -47,7 +44,7 @@ public class NewArrayExt_c extends LocatedExt_c {
       typeArg += ".class, ";
     }
     return qq.parseExpr("(%T) new %T(%E, %E, " + typeArg + "%E).$getProxy()",
-        arrayType, arrayImplType, location, label, size);
+        arrayType, arrayImplType, location(), label, size);
   }
 
   /*

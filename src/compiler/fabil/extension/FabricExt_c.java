@@ -3,16 +3,16 @@ package fabil.extension;
 import polyglot.ast.Ext_c;
 import polyglot.ast.Node;
 import fabil.visit.AtomicRewriter;
+import fabil.visit.LocationAssigner;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ThreadRewriter;
 
 public class FabricExt_c extends Ext_c implements FabricExt {
+  
+  public Node assignLocations(LocationAssigner la) {
+    return node();
+  }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.extension.FabricExt#rewriteProxiesOverride(fabric.visit.ProxyRewriter)
-   */
   public Node rewriteProxiesOverride(ProxyRewriter rewriter) {
     return null;
   }

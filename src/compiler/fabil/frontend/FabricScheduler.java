@@ -223,6 +223,25 @@ public class FabricScheduler extends JLScheduler {
 
     return g;
   }
+  
+  /**
+   * Ensures all objects have their locations assigned.
+   */
+  public Goal LocationsAssigned(final Job job) {
+    Goal g =
+      internGoal(new VisitorGoal(job, new LocationAssigner(job, extInfo)) {
+        @Override
+        @SuppressWarnings("unchecked")
+        public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+          List<Goal> l = new ArrayList<Goal>();
+          l.add(InnerClassesRemoved(job));
+          l.addAll(super.prerequisiteGoals(scheduler));
+          return l;
+        }
+      });
+    
+    return g;
+  }
 
   public Goal RewriteProxies(final Job job) {
     Goal g = internGoal(new VisitorGoal(job, new ProxyRewriter(extInfo)) {
@@ -231,6 +250,7 @@ public class FabricScheduler extends JLScheduler {
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
         l.add(WrapInlineables(job));
+        l.add(LocationsAssigned(job));
 
         if (Options.global().optLevel > 0) {
           l.add(ReadWriteChecked(job));
