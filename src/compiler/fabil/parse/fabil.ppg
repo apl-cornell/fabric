@@ -23,24 +23,6 @@ parser Grm extends polyglot.parse.Grm {:
 terminal Token AT;
 terminal Token ATOMIC;
 
-terminal Token ACTSFOR;
-terminal Token ACTSFOR_LOWER;
-terminal Token AUTHORITY;
-terminal Token CALLER;
-terminal Token COVARIANT;
-terminal Token DECLASSIFY;
-terminal Token ENDORSE;
-terminal Token EQUIV;
-terminal Token INVARIANT;
-terminal Token JOIN;
-terminal Token LABEL;
-terminal Token LEFTARROW;
-terminal Token MEET;
-terminal Token PRINCIPAL;
-terminal Token RIGHTARROW;
-terminal Token TO;
-terminal Token WHERE;
-
 non terminal Atomic atomic_statement;
 non terminal Expr   location_expr_opt;
 

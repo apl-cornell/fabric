@@ -179,7 +179,7 @@
 
   <!-- Compiles Fabric -->
   <target name="all"
-    depends="fabric-compiler,fabric-system,client-debug,tests"
+    depends="fabil-compiler,fabric-system,client-debug,tests"
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
@@ -210,6 +210,13 @@
     <delete>
       <fileset dir="${bin}">
         <include name="defs"/>
+      </fileset>
+
+      <fileset dir="${compiler.src}">
+	  <include name="**/Grm.java" />
+	  <include name="**/sym.java" />
+	  <include name="**/Lexer_c.java" />
+	  <include name="**/*_ppg.cup" />
       </fileset>
     </delete>
   </target>
@@ -330,6 +337,15 @@
   <!-- Compiles the Fabric compiler -->
   <target name="fabric-compiler" depends="init">
     <antcall target="standard-ext">
+      <param name="ext" value="fabric" />
+      <param name="ext.pkg" value="fabric" />
+      <param name="parser.type" value="ppg" />
+    </antcall>
+  </target>
+
+  <!-- Compiles the Filc compiler -->
+  <target name="fabil-compiler" depends="init">
+    <antcall target="standard-ext">
       <param name="ext" value="fabil" />
       <param name="ext.pkg" value="fabil" />
       <param name="parser.type" value="ppg" />
@@ -337,7 +353,7 @@
   </target>
 
   <!-- Compiles the Fabric signatures -->
-  <target name="fabric-signatures" depends="init,fabric-compiler,bin">
+  <target name="fabric-signatures" depends="init,fabil-compiler,bin">
     <mkdir dir="${signatures.classes}" />
 
     <apply executable="bash"
@@ -377,7 +393,7 @@
     a change in the Fabric translation.
   -->
   <target name="fabric-arrays"
-      depends="bin,fabric-compiler,fabric-signatures,client">
+      depends="bin,fabil-compiler,fabric-signatures,client">
     <mkdir dir="${runtime.classes}" />
 
     <condition property="runtime.opt" value="-O0">
@@ -410,7 +426,7 @@
 
   <!-- Compiles the Fabric runtime -->
   <target name="fabric-runtime"
-      depends="init,fabric-compiler,fabric-signatures,fabric-arrays,client">
+      depends="init,fabil-compiler,fabric-signatures,fabric-arrays,client">
     <mkdir dir="${runtime.classes}" />
 
     <condition property="runtime.opt" value="-O0">
@@ -476,7 +492,7 @@
   <target name="jars" depends="jar-base,jar-runtime,jar-sig"
     description="Builds all jars" />
 
-  <target name="jar-base" depends="fabric-compiler,fabric-system">
+  <target name="jar-base" depends="fabil-compiler,fabric-system">
     <jar jarfile="${base.jar}" basedir="${classes}" excludes="**/*.java" />
   </target>
 
@@ -571,8 +587,7 @@
 
   <target name="cup-parser-using-jar" depends="cup-parser-deps"
       unless="cup.parser.up-to-date">
-    <java classname="java_cup.Main" fork="true" dir="${parser.dir}"
-        failonerror="true">
+    <java classname="java_cup.Main" fork="true" dir="${parser.dir}" failonerror="true">
       <classpath refid="standard.classpath" />
       <arg value="-parser"/>
       <arg value="${parser.class}"/>
