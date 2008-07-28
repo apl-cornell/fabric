@@ -52,95 +52,28 @@ location_expr_opt ::=
             {: RESULT = a.toExpr(); :}
     ;
 
-// override class_instance_creation_expression ::=
-//                     // Expr
-//         NEW:n class_type:a location_expr_opt:loc LPAREN argument_list_opt:b RPAREN:d
-//             {: RESULT = parser.nf.New(parser.pos(n, d), a, loc, b); :}
-//     |   NEW:n class_type:a location_expr_opt:loc LPAREN argument_list_opt:b RPAREN class_body:c
-//             {: RESULT = parser.nf.New(parser.pos(n, c), a, loc, b, c); :}
-//     |   primary_no_new_array:a DOT NEW simple_name:b location_expr_opt:loc LPAREN argument_list_opt:c RPAREN:d
-//             {: RESULT = parser.nf.New(parser.pos(a, d), a, b.toType(), loc, c); :}
-//     |   primary_no_new_array:a DOT NEW simple_name:b location_expr_opt:loc LPAREN argument_list_opt:c RPAREN class_body:d
-//             {: RESULT = parser.nf.New(parser.pos(a, d), a, b.toType(), loc, c, d); :}
-//     |   name:a DOT NEW simple_name:b location_expr_opt:loc LPAREN argument_list_opt:c RPAREN:d
-//             {: RESULT = parser.nf.New(parser.pos(a, d), a.toExpr(), b.toType(), loc, c); :}
-//     |   name:a DOT NEW simple_name:b location_expr_opt:loc LPAREN argument_list_opt:c RPAREN class_body:d
-//             {: RESULT = parser.nf.New(parser.pos(a, d), a.toExpr(), b.toType(), loc, c, d); :}
-//     ;
-// 
-override array_creation_expression ::=
-                    // NewArray
-        NEW:n primitive_type:a dim_exprs:b dims_opt:c location_expr_opt:loc
-            {: RESULT = parser.nf.NewArray(parser.pos(n, b), a, loc, b,
-                c.intValue()); :}
-    |   NEW:n class_or_interface_type:a dim_exprs:b dims_opt:c location_expr_opt:loc
-            {: RESULT = parser.nf.NewArray(parser.pos(n, b), a, loc, b,
-                c.intValue()); :}
-    |   NEW:n primitive_type:a dims:b location_expr_opt:loc array_initializer:c
-            {: RESULT = parser.nf.NewArray(parser.pos(n, c), a, loc,
-                b.intValue(), c); :}
-    |   NEW:n class_or_interface_type:a dims:b location_expr_opt:loc array_initializer:c
-            {: RESULT = parser.nf.NewArray(parser.pos(n, c), a, loc,
-                b.intValue(), c); :}
+override class_instance_creation_expression ::=
+                    // Expr
+            NEW:x objtype_or_expr:a label_opt:lab location_expr_opt:loc LPAREN argument_list_opt:b RPAREN:y
+                {:  TypeNode tn = a.toUnlabeledType();
+                    if (l != null)
+                        tn = parser.nf.LabeledTypeNode(parser.pos(a,l), tn, l);
+                    RESULT = parser.nf.New(parser.pos(x,y), tn, loc, b); :}
     ;
 
+override array_creation_expression ::=
+        NEW:n objtype_or_expr:a dims:b location_expr_opt:loc array_initializer:c
+            {: RESULT = parser.nf.NewArray(parser.pos(n,c), a.toType(),
+                                       b.intValue(), loc, c); :}
+    |   NEW:n primitive_type:a dim_exprs:b dims_opt:c location_expr_opt:loc
+            {: RESULT = parser.nf.NewArray(parser.pos(n,b), a, b,
+                                           c.intValue(), loc); :}
+    |   NEW:n primitive_type:a dims:b location_expr_opt:loc array_initializer:c
+            {: RESULT = parser.nf.NewArray(parser.pos(n,c), a,
+                                           b.intValue(), loc, c); :}
+    ;
 
-////////////////////////////////////////////////////////////////////////////////
-// ambiguity resolution                                                       //
-////////////////////////////////////////////////////////////////////////////////
-
-//
-// In order to prevent ambiguity, we disallow dereferencing (.) a new array:
-//   new Foo[]@a.b means new Foo[]@(a.b) rather than (new Foo[]@a).b
-// Note that this also disallows new Foo[].length which we could allow
-//
-// The following updated productions are to enforce this.
-//
-
-// class_instance_creation_expression modified above
-
-// Note: Jif already makes this change.
-// field_access
-// drop {
-//    field_access ::=
-//            primary:a DOT IDENTIFIER:b
-//        ;
-// }
-// extend field_access ::=
-//        primary_no_new_array:a DOT IDENTIFIER:b
-//            {: RESULT = parser.nf.Field(parser.pos(a, b, b), a,
-//                parser.nf.Id(parser.pos(b), b.getIdentifier())); :}
-//    ;
-
-// Note: Jif already makes this change.
-// method_invocation
-// drop {
-//    method_invocation ::=
-//            primary DOT IDENTIFIER LPAREN argument_list_opt RPAREN
-//        ;
-//}
-//extend method_invocation ::=
-//        primary_no_new_array:a DOT IDENTIFIER:b LPAREN argument_list_opt:c RPAREN:d
-//            {: RESULT = parser.nf.Call(parser.pos(b,d), a,
-//                parser.nf.Id(parser.pos(b), b.getIdentifier()), c); :}
-//    ;
-
-// explicit_constructor_invocation
-// TODO: this doesn't seem right.
-// drop {
-//     explicit_constructor_invocation ::=
-//             primary DOT THIS LPAREN argument_list_opt RPAREN SEMICOLON
-//         |   primary DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-//         ;
-// }
-// extend explicit_constructor_invocation ::=
-//         primary_no_new_array:a DOT THIS:n LPAREN argument_list_opt:b RPAREN SEMICOLON:c
-//             {: RESULT = parser.nf.ThisCall(parser.pos(a, c, n), a, b); :}
-//     |   primary_no_new_array:a DOT SUPER:n LPAREN argument_list_opt:b RPAREN SEMICOLON:c
-//             {: RESULT = parser.nf.SuperCall(parser.pos(a, c, n), a, b); :}
-//     ;
-// 
-// extend modifier ::=
-//         ATOMIC:a
-//             {: RESULT = FabricFlags.ATOMIC; :}
-//     ;
+extend modifier ::=
+        ATOMIC:a
+            {: RESULT = FabricFlags.ATOMIC; :}
+    ;
