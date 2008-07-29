@@ -69,8 +69,9 @@ public class ArrayInitExt_c extends LocatedExt_c {
     }
     
     // XXX Need a real label.
-    return qq.parseExpr("new %T(%E, " + typeArg + "null, %E)", newType,
-        location, init);
+    return qq.parseExpr(
+        "fabric.lang.arrays.internal.Compat.convert(%E, null, %E)", location,
+        init);
   }
 
   /*
