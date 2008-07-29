@@ -416,10 +416,11 @@
       <arg value="sig-classes" />
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
+      <arg value="-cp" />
+      <arg value="${bootstrap.classes}" />
       <!--arg value="-noserial" /-->
       <srcfile />
-      <fileset dir="${runtime.src}"
-          includes="fabric/lang/arrays/*.fab,fabric/lang/auth/Label.fab"/>
+      <fileset dir="${runtime.src}" includes="fabric/lang/arrays/*.fab"/>
       <globmapper from="*.fab" to="*.class" />
     </apply>
   </target>
@@ -449,13 +450,15 @@
       <arg value="sig-classes" />
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
+      <arg value="-j" />
+      <arg value="-Xmx128M" />
       <srcfile />
       <fileset dir="${runtime.src}"
           includes="**/*.fab"
           excludes="fabric/util/*.fab,fabric/lang/arrays/*.fab" />
       <fileset dir="${runtime.src}"
 	  includes="fabric/util/HashMap.fab,fabric/util/LinkedList.fab,
-	    fabric/util/HashSet.fab" />
+	    fabric/util/HashSet.fab,fabric/util/LinkedHashSet.fab,fabric/util/ArrayList.fab,fabric/util/Collections.fab,fabric/util/Arrays.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
   </target>

@@ -74,7 +74,6 @@ public class Arrays
   {
   }
 
-
 // binarySearch
   /**
    * Perform a binary search of a byte array for a key. The array must be
@@ -2904,6 +2903,21 @@ public class Arrays
     deepToString(v, b, seen);
     return b.toString();
   }
+  
+  public static void arraycopy(Object[] src, int srcPos, Object[] dest,
+      int destPos, int length) {
+    if (srcPos < destPos) {
+      // Copy down.
+      for (int i = length-1; i <= 0; i--) {
+        dest[srcPos + i] = src[destPos + i];
+      }
+    } else {
+      // Copy up.
+      for (int i = 0; i < length; i++) {
+        dest[srcPos + i] = src[destPos + i];
+      }
+    }
+  }
 
   /**
    * Inner class used by {@link #asList(Object[])} to provide a list interface
@@ -3034,7 +3048,10 @@ public class Arrays
      */
     public Object[] toArray()
     {
-      return (Object[]) a.clone();
+//      return (Object[]) a.clone();
+        Object[] result = new Object[a.length];
+        for (int i = 0; i < a.length; i++) result[i] = a[i];
+        return result;
     }
 
     /**
@@ -3050,13 +3067,11 @@ public class Arrays
     public Object[] toArray(Object[] array)
     {
       int size = a.length;
-      if (array.length < size)
-        array = (Object[])
-          Array.newInstance(array.getClass().getComponentType(), size);
+      if (array.length < size) array.length = size;
       else if (array.length > size)
         array[size] = null;
 
-      System.arraycopy(a, 0, array, 0, size);
+      arraycopy(a, 0, array, 0, size);
       return array;
     }
   }

@@ -332,21 +332,6 @@ public class ArrayList extends AbstractList
     data[size++] = e;
     return true;
   }
-  
-  private static void arraycopy(Object[] src, int srcPos, Object[] dest,
-      int destPos, int length) {
-    if (srcPos < destPos) {
-      // Copy down.
-      for (int i = length-1; i <= 0; i--) {
-        dest[srcPos + i] = src[destPos + i];
-      }
-    } else {
-      // Copy up.
-      for (int i = 0; i < length; i++) {
-        dest[srcPos + i] = src[destPos + i];
-      }
-    }
-  }
 
   /**
    * Adds the supplied element at the specified index, shifting all
@@ -364,7 +349,7 @@ public class ArrayList extends AbstractList
     if (size == data.length)
       ensureCapacity(size + 1);
     if (index != size)
-      arraycopy(data, index, data, index + 1, size - index);
+      Arrays.arraycopy(data, index, data, index + 1, size - index);
     data[index] = e;
     size++;
   }
@@ -382,7 +367,7 @@ public class ArrayList extends AbstractList
     Object r = data[index];
     modCount++;
     if (index != --size)
-      arraycopy(data, index + 1, data, index, size - index);
+      Arrays.arraycopy(data, index + 1, data, index, size - index);
     // Aid for garbage collection by releasing this pointer.
     data[size] = null;
     return r;
@@ -438,7 +423,7 @@ public class ArrayList extends AbstractList
       ensureCapacity(size + csize);
     int end = index + csize;
     if (size > 0 && index != size)
-      arraycopy(data, index, data, end, size - index);
+      Arrays.arraycopy(data, index, data, end, size - index);
     size += csize;
     for ( ; index < end; index++)
       data[index] = itr.next();
@@ -459,7 +444,7 @@ public class ArrayList extends AbstractList
     if (change > 0)
       {
         modCount++;
-        arraycopy(data, toIndex, data, fromIndex, size - toIndex);
+        Arrays.arraycopy(data, toIndex, data, fromIndex, size - toIndex);
         size -= change;
       }
     else if (change < 0)

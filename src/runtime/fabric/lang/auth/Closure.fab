@@ -1,0 +1,12 @@
+package fabric.lang.auth;
+
+/**
+ * This code is mostly copied from Jif.
+ */
+public interface Closure {
+  Object invoke();
+
+  Principal jif$getjif_lang_Closure_P();
+
+  Label jif$getjif_lang_Closure_L();
+}
