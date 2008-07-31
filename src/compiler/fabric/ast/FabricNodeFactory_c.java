@@ -1,15 +1,12 @@
 package fabric.ast;
 
-import polyglot.ast.*;
-import polyglot.types.Flags;
-import polyglot.types.Package;
-import polyglot.types.Type;
-import polyglot.types.Qualifier;
-import polyglot.util.*;
-
-import java.util.*;
+import java.util.List;
 
 import jif.ast.JifNodeFactory_c;
+import polyglot.ast.Expr;
+import polyglot.ast.Stmt;
+import polyglot.ast.TypeNode;
+import polyglot.util.Position;
 
 /**
  * NodeFactory for ../../fabric extension.
