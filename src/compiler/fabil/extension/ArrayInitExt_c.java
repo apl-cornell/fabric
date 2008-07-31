@@ -7,7 +7,6 @@ import polyglot.ast.ArrayInit;
 import polyglot.ast.Expr;
 import polyglot.ast.NodeFactory;
 import polyglot.qq.QQ;
-import polyglot.types.ClassType;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import fabil.types.FabILTypeSystem;
@@ -54,19 +53,10 @@ public class ArrayInitExt_c extends LocatedExt_c {
     arrayInit = (ArrayInit) arrayInit.visitChildren(rewriter);
 
     Type oldBase = arrayInit.type().toArray().base();
-    ClassType newType = ts.fArrayImplOf(oldBase);
     Type newBase = oldBase.isPrimitive() ? oldBase : ts.FObject();
     Expr init =
         nf.NewArray(Position.compilerGenerated(), nf.CanonicalTypeNode(Position
             .compilerGenerated(), newBase), 1, arrayInit);
-    String typeArg = "";
-    if (oldBase.isReference()) {
-      if (oldBase.isArray())
-        typeArg = newBase.toString();
-      else typeArg = oldBase.toString();
-      if (ts.isPureFabricType(oldBase)) typeArg += ".$Proxy";
-      typeArg += ".class, ";
-    }
     
     // XXX Need a real label.
     return qq.parseExpr(
