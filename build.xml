@@ -179,7 +179,7 @@
 
   <!-- Compiles Fabric -->
   <target name="all"
-    depends="fabil-compiler,fabric-system,client-debug,tests"
+    depends="fabric-compiler,fabil-compiler,fabric-system,client-debug,tests"
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
@@ -335,7 +335,7 @@
   </target>
 
   <!-- Compiles the Fabric compiler -->
-  <target name="fabric-compiler" depends="init">
+  <target name="fabric-compiler" depends="init,fabil-compiler">
     <antcall target="standard-ext">
       <param name="ext" value="fabric" />
       <param name="ext.pkg" value="fabric" />
