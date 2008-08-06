@@ -1,16 +1,11 @@
 package fabil.frontend;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.JLScheduler;
 import polyglot.frontend.Job;
 import polyglot.frontend.Scheduler;
-import polyglot.frontend.goals.Barrier;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.Serialized;
 import polyglot.frontend.goals.VisitorGoal;
@@ -18,10 +13,7 @@ import polyglot.main.Version;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
 import polyglot.visit.ExpressionFlattener;
-import polyglot.visit.InnerClassConstructorFixer;
 import polyglot.visit.InnerClassRemover;
-import polyglot.visit.InnerClassRewriter;
-import polyglot.visit.LocalClassRemover;
 import polyglot.visit.LoopNormalizer;
 import fabil.ExtensionInfo;
 import fabil.Options;
@@ -100,58 +92,6 @@ public class FabILScheduler extends JLScheduler {
     return g;
   }
 
-  public Goal LocalClassesRemoved(final Job job) {
-    Goal g =
-        internGoal(new VisitorGoal(job, new LocalClassRemover(job, extInfo
-            .typeSystem(), extInfo.nodeFactory())) {
-          @Override
-          public Collection<Goal> prerequisiteGoals(Scheduler s) {
-            List<Goal> l = new ArrayList<Goal>();
-            l.add(RewriteAtomicMethods(job));
-            return l;
-          }
-        });
-    return g;
-  }
-
-  public Goal InnerClassesRewritten(final Job job) {
-    Goal g =
-        internGoal(new VisitorGoal(job, new InnerClassRewriter(job, extInfo
-            .typeSystem(), extInfo.nodeFactory())) {
-          @Override
-          public Collection<Goal> prerequisiteGoals(Scheduler s) {
-            List<Goal> l = new ArrayList<Goal>();
-            l.add(LocalClassesRemoved(job));
-            return l;
-          }
-        });
-    return g;
-  }
-
-  public Goal InnerClassConstructorsFixed(final Job job) {
-    Goal g =
-        internGoal(new VisitorGoal(job, new InnerClassConstructorFixer(job,
-            extInfo.typeSystem(), extInfo.nodeFactory())) {
-          @Override
-          public Collection<Goal> prerequisiteGoals(Scheduler s) {
-            List<Goal> l = new ArrayList<Goal>();
-            l.add(InnerClassesRewritten(job));
-            return l;
-          }
-        });
-    return g;
-  }
-
-  public Goal InnerClassConstructorsFixedBarrier() {
-    Goal g = internGoal(new Barrier(this) {
-      @Override
-      public Goal goalForJob(Job job) {
-        return InnerClassConstructorsFixed(job);
-      }
-    });
-    return g;
-  }
-
   public Goal InnerClassesRemoved(final Job job) {
     Goal g =
         internGoal(new VisitorGoal(job, new InnerClassRemover(job, extInfo
@@ -159,7 +99,7 @@ public class FabILScheduler extends JLScheduler {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
             List<Goal> l = new ArrayList<Goal>();
-            l.add(InnerClassConstructorsFixedBarrier());
+            l.add(RewriteAtomicMethods(job));
             return l;
           }
         });
