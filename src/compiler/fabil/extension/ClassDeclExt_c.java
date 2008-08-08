@@ -386,11 +386,40 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the impl constructor declarations and add them to the list of
     // static impl members.
     ClassMember implConstructorDecl =
-        qq.parseMember("public $Impl(fabric.client.Core core, "
+        qq.parseMember("private $Impl(fabric.client.Core core, "
             + "fabric.lang.auth.Label label) "
             + "throws fabric.client.UnreachableCoreException {"
             + "super(core, label); }");
     implMembers.add(implConstructorDecl);
+
+    // Create a $create method for instantiating a $Static.  This is needed
+    // because the instantiation needs to be done in a transaction. The
+    // singleton instance is created in an interface and for some reason, Java
+    // doesn't permit static initializers in interfaces.
+    String staticImpl = classType.fullName() + ".$Static.$Impl";
+    ClassMember createDecl =
+        qq.parseMember("private static " + staticImpl
+            + " $create(fabric.client.Core core, "
+            + "fabric.lang.auth.Label label) "
+            + "throws fabric.client.UnreachableCoreException {"
+            + "fabric.client.transaction.TransactionManager tm ="
+            + "  fabric.client.transaction.TransactionManager.getInstance();"
+            + "boolean commit = true;"
+            + "tm.startTransaction();"
+            + "try {"
+            + staticImpl + " result = new " + staticImpl + "(core, label);"
+            + "return result;"
+            + "} catch (Throwable t) {"
+            + "  commit = false;"
+            + "  throw new fabric.client.AbortException(t);"
+            + "} finally {"
+            + "  if (commit)"
+            + "    tm.commitTransaction();"
+            + "  else"
+            + "    tm.abortTransaction();"
+            + "}"
+            + "}");
+    implMembers.add(createDecl);
 
     // Create the $makeProxy method declaration and add it to the list of static
     // impl members.
@@ -416,9 +445,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // TODO Where should the static object be located when it's created?
     // TODO What should be the label on the static object?
     FieldDecl fieldDecl =
-        (FieldDecl) qq.parseMember(classType.fullName()
-            + ".$Static $static = new " + classType.fullName()
-            + ".$Static.$Impl(fabric.client.Client.getClient()"
+        (FieldDecl) qq.parseMember(classType.fullName() + ".$Static $static = "
+            + classType.fullName()
+            + ".$Static.$Impl.$create(fabric.client.Client.getClient()"
             + ".getCore(\"core0\"), null);");
 
     List<ClassMember> result = new ArrayList<ClassMember>(2);
