@@ -1,11 +1,9 @@
 package fabil.extension;
 
-import polyglot.ast.Expr;
-import polyglot.ast.Field;
-import polyglot.ast.FieldAssign;
-import polyglot.ast.Id;
-import polyglot.ast.Receiver;
-import polyglot.ast.Special;
+import java.util.ArrayList;
+import java.util.List;
+
+import polyglot.ast.*;
 import polyglot.types.Flags;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ReadWriteChecker.State;
@@ -58,11 +56,17 @@ public class FieldAssignExt_c extends ExprExt_c {
     }
 
     String quote = "%T";
-    if (target instanceof Expr) quote = "%E";
+    List<Object> subs = new ArrayList<Object>(2);
+    if (flags.isStatic()) {
+      quote += ".$Static.$Proxy.$instance";
+      subs.add(field.fieldInstance().container());
+    } else {
+      if (target instanceof Expr) quote = "%E";
+      subs.add(target);
+    }
+    subs.add(rhs);
 
-    if (flags.isStatic()) quote += ".$static";
-
-    return pr.qq().parseExpr(quote + ".set$" + name + "(%E)", target, rhs);
+    return pr.qq().parseExpr(quote + ".set$" + name + "(%E)", subs);
   }
 
   /*

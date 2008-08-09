@@ -35,7 +35,8 @@ public abstract class LocatedExt_c extends ExprExt_c {
     // Need a location. By default, we colocate with the context.
     Expr defaultLocation;
     if (la.context().inStaticContext()) {
-      defaultLocation = qq.parseExpr("$static.$getCore()");
+      defaultLocation = qq.parseExpr("%T.$Static.$Proxy.$instance.$getCore()",
+          la.context().currentClass());
     } else {
       defaultLocation =
           nf.Call(expr.position(), nf.Id(Position.compilerGenerated(),
