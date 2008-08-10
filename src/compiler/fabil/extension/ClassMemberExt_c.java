@@ -5,8 +5,12 @@ import java.util.List;
 
 import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
+import polyglot.ast.Stmt;
 import fabil.visit.ProxyRewriter;
 
+/**
+ * 
+ */
 public abstract class ClassMemberExt_c extends FabILExt_c implements
     ClassMemberExt {
 
@@ -48,6 +52,15 @@ public abstract class ClassMemberExt_c extends FabILExt_c implements
    */
   public List<ClassMember> staticImplMember(ProxyRewriter pr,
       ClassDecl classDecl) {
+    return Collections.emptyList();
+  }
+  
+  /*
+   * (non-Javadoc)
+   *
+   * @see fabil.extension.ClassMemberExt#staticImplInitMember(fabil.visit.ProxyRewriter)
+   */
+  public List<Stmt> staticImplInitMember(ProxyRewriter pr) {
     return Collections.emptyList();
   }
 

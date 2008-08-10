@@ -4,6 +4,7 @@ import java.util.List;
 
 import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
+import polyglot.ast.Stmt;
 import fabil.visit.ProxyRewriter;
 
 public interface ClassMemberExt extends FabILExt {
@@ -42,4 +43,10 @@ public interface ClassMemberExt extends FabILExt {
    * list of class members to be included in the $Static.$Impl class.
    */
   List<ClassMember> staticImplMember(ProxyRewriter pr, ClassDecl classDecl);
+  
+  /**
+   * Returns the $Static.$Impl.$init translation of the class member. The result
+   * is a list of statements to be included in the $Static.$Impl.$init method.
+   */
+  List<Stmt> staticImplInitMember(ProxyRewriter pr);
 }

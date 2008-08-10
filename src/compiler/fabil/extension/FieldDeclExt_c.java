@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import polyglot.ast.ClassDecl;
-import polyglot.ast.ClassMember;
-import polyglot.ast.FieldDecl;
-import polyglot.ast.TypeNode;
+import polyglot.ast.*;
 import polyglot.qq.QQ;
 import polyglot.types.Flags;
 import fabil.visit.ProxyRewriter;
@@ -48,15 +45,37 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     if (doStatic != flags.isStatic() || doStatic && flags.isFinal())
       return super.implMember(pr, parent);
 
-    // Make the field private and non-static, non-final.
-    // XXX why are we making the field private? breaks read/write optimization
+    // Make the field non-static and non-final.
     flags = flags.clearStatic().clearFinal();
+    
+    // Clear any initializers on static fields. They get moved into the $init()
+    // method.
+    if (doStatic) fieldDecl = fieldDecl.init(null);
 
     List<ClassMember> result = new ArrayList<ClassMember>();
     for (ClassMember m : accessors(pr))
       result.addAll(ext(m).implMember(pr, parent));
     result.add(fieldDecl.flags(flags).name(fieldName));
     return result;
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see fabil.extension.ClassMemberExt_c#staticImplInitMember(fabil.visit.ProxyRewriter)
+   */
+  @Override
+  public List<Stmt> staticImplInitMember(ProxyRewriter pr) {
+    FieldDecl fieldDecl = node();
+    String fieldName = fieldDecl.name();
+    Expr init = fieldDecl.init();
+    Flags flags = fieldDecl.flags();
+    
+    if (init == null || !flags.isStatic() || flags.isFinal())
+      return super.staticImplInitMember(pr);
+    
+    QQ qq = pr.qq();
+    return Collections.singletonList(qq.parseStmt(fieldName + " = %E ;", init));
   }
 
   /*

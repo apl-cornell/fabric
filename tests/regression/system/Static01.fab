@@ -1,0 +1,20 @@
+package system;
+
+public class Static01 {
+  static int m = 42;
+  static Integer n = new Integer(Static01_C.m);
+  static Long l;
+  static {
+    l = new Long(m);
+  }
+  public static void main(String[] a) {
+    if (m != n.intValue()) System.out.println("TEST FAILED.");
+    if (m != l.intValue()) System.out.println("TEST FAILED.");
+    System.out.println("TEST PASSED.");
+  }
+}
+
+class Static01_C {
+  static int m = Static01.m;
+}
+

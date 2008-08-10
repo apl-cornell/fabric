@@ -6,6 +6,7 @@ import java.util.List;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import polyglot.ast.Initializer;
+import polyglot.ast.Stmt;
 import polyglot.types.Flags;
 import fabil.visit.ProxyRewriter;
 
@@ -27,20 +28,17 @@ public class InitializerExt_c extends ClassMemberExt_c {
 
   /*
    * (non-Javadoc)
-   * 
-   * @see fabil.extension.ClassMemberExt_c#staticImplMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
+   *
+   * @see fabil.extension.ClassMemberExt_c#staticImplInitMember(fabil.visit.ProxyRewriter)
    */
   @Override
-  public List<ClassMember> staticImplMember(ProxyRewriter pr,
-      ClassDecl classDecl) {
+  public List<Stmt> staticImplInitMember(ProxyRewriter pr) {
     Initializer init = node();
     Flags flags = init.flags();
 
-    if (!flags.isStatic()) return super.staticImplMember(pr, classDecl);
+    if (!flags.isStatic()) return super.staticImplInitMember(pr);
     
-    flags = flags.clearStatic();
-    return Collections.singletonList((ClassMember) init.flags(flags));
+    return Collections.singletonList((Stmt) init.body());
   }
 
   /*

@@ -357,11 +357,13 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         new ArrayList<ClassMember>(oldMembers.size());
     List<ClassMember> implMembers =
         new ArrayList<ClassMember>(oldMembers.size());
+    List<Stmt> implInitMembers = new ArrayList<Stmt>(oldMembers.size());
 
     for (ClassMember m : oldMembers) {
       interfaceMembers.addAll(ext(m).staticInterfaceMember(pr, classDecl));
       proxyMembers.addAll(ext(m).staticProxyMember(pr, classDecl));
       implMembers.addAll(ext(m).staticImplMember(pr, classDecl));
+      implInitMembers.addAll(ext(m).staticImplInitMember(pr));
     }
 
     // Create the proxy constructor declarations and add them to the list of
@@ -387,10 +389,12 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the static initializer for initializing $instance.
     Initializer init =
         (Initializer) qq.parseMember("static {"
-            + "$instance = "
-            + "  (" + staticIfaceName + ")"
+            + staticIfaceName + ".$Impl impl = "
+            + "  (" + staticIfaceName + ".$Impl)"
             + "    fabric.lang.Object.$Static.$Proxy.$makeStaticInstance("
             + "      " + staticIfaceName + ".$Impl.class);"
+            + "$instance = (" + staticIfaceName + ") impl.$getProxy();"
+            + "impl.$init();"
             + "}");
     proxyMembers.add(init);
 
@@ -404,7 +408,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the impl constructor declarations and add them to the list of
     // static impl members.
     ClassMember implConstructorDecl =
-        qq.parseMember("protected $Impl(fabric.client.Core core, "
+        qq.parseMember("public $Impl(fabric.client.Core core, "
             + "fabric.lang.auth.Label label) "
             + "throws fabric.client.UnreachableCoreException {"
             + "super(core, label); }");
@@ -417,6 +421,13 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             + "$makeProxy() { return new " + classType.fullName()
             + ".$Static.$Proxy(this); }");
     implMembers.add(makeProxyDecl);
+    
+    // Create the $init method declaration and add it to the list of static impl
+    // members.
+    ClassMember initDecl =
+        qq.parseMember("private void $init() { %LS }",
+            (Object) implInitMembers);
+    implMembers.add(initDecl);
 
     // Create the impl declaration and add it to the list of interface members.
     ClassDecl implDecl =

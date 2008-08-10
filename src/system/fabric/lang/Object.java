@@ -577,8 +577,7 @@ public interface Object {
         try {
           Constructor<? extends Object.$Impl> constr =
               c.getConstructor(Core.class, Label.class);
-          Object.$Impl impl = constr.newInstance(core, label);
-          return impl.$getProxy();
+          return constr.newInstance(core, label);
         } catch (Throwable t) {
           commit = false;
           throw new AbortException(t);
