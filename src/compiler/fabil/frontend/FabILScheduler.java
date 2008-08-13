@@ -3,6 +3,7 @@ package fabil.frontend;
 import java.util.*;
 
 import polyglot.ast.NodeFactory;
+import polyglot.ast.TypeNode;
 import polyglot.frontend.JLScheduler;
 import polyglot.frontend.Job;
 import polyglot.frontend.Scheduler;
@@ -12,9 +13,8 @@ import polyglot.frontend.goals.VisitorGoal;
 import polyglot.main.Version;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
-import polyglot.visit.ExpressionFlattener;
-import polyglot.visit.InnerClassRemover;
-import polyglot.visit.LoopNormalizer;
+import polyglot.util.Position;
+import polyglot.visit.*;
 import fabil.ExtensionInfo;
 import fabil.Options;
 import fabil.visit.*;
@@ -93,9 +93,20 @@ public class FabILScheduler extends JLScheduler {
   }
 
   public Goal InnerClassesRemoved(final Job job) {
+    InnerClassRemover icr =
+      new InnerClassRemover(job, extInfo.typeSystem(), extInfo.nodeFactory()) {
+      @Override
+      protected ContextVisitor localClassRemover() {
+        return new LocalClassRemover(job, ts, nf) {
+          @Override
+          protected TypeNode defaultSuperType(Position pos) {
+            return null;
+          }
+        };
+      }
+    };
     Goal g =
-        internGoal(new VisitorGoal(job, new InnerClassRemover(job, extInfo
-            .typeSystem(), extInfo.nodeFactory())) {
+        internGoal(new VisitorGoal(job, icr) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
             List<Goal> l = new ArrayList<Goal>();
