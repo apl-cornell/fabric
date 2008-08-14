@@ -97,7 +97,6 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return n;
   }
 
-  @SuppressWarnings("unchecked")
   public NewArray NewArray(Position pos, TypeNode base, Expr location,
       List<Expr> dims, int addDims, ArrayInit init) {
     NewArray result =

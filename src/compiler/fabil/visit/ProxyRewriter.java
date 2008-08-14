@@ -75,7 +75,6 @@ public class ProxyRewriter extends NodeVisitor {
    * @see polyglot.visit.NodeVisitor#leave(polyglot.ast.Node, polyglot.ast.Node,
    *      polyglot.visit.NodeVisitor)
    */
-  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     n = ext(n).rewriteProxies(this);

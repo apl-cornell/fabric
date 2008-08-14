@@ -10,7 +10,6 @@ public interface Label extends Object {
       super(core, onum);
     }
 
-    @SuppressWarnings("unchecked")
     public native boolean relabelsTo(Label l, Set s);
 
     public native Label join(Label l);

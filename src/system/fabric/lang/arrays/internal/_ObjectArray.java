@@ -38,7 +38,6 @@ public interface _ObjectArray<T extends Object> extends Object {
      * @param length
      *                The length of the array.
      */
-    @SuppressWarnings("unchecked")
     public $Impl(Core core, Label label,
         Class<? extends Object.$Proxy> proxyType, int length) {
       super(core, label);

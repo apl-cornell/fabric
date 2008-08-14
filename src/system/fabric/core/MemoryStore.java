@@ -71,7 +71,6 @@ public class MemoryStore implements ObjectStore {
    * Opens the core contained in file "var/coreName" if it exists, or an empty
    * core otherwise. 
    */
-  @SuppressWarnings("unchecked")
   public MemoryStore(String name) {
     this.pendingByTid  = new HashMap<Integer, PendingTransaction>();
     this.pendingByOnum = new LongKeyHashMap<Collection<PendingTransaction>> ();

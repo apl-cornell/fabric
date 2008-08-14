@@ -480,7 +480,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
    *
    * @return the clone
    */
-  @SuppressWarnings({ "unchecked", "null" })
+  @SuppressWarnings("unchecked")
   @Override
   public Object clone()
   {
@@ -983,7 +983,6 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
      * @throws ConcurrentModificationException if the HashMap was modified
      * @throws NoSuchElementException if there is none
      */
-    @SuppressWarnings("unchecked")
     public long next()
     {
       if (knownMod != modCount)

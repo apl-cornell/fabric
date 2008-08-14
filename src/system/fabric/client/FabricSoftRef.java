@@ -47,7 +47,6 @@ public class FabricSoftRef extends SoftReference<$Impl> {
       interrupt();
     }
     
-    @SuppressWarnings("unchecked")
     @Override
     public void run() {
       while (!destroyed) {

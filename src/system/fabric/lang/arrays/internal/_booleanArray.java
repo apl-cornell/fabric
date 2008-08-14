@@ -77,7 +77,6 @@ public interface _booleanArray extends Object {
      * 
      * @see fabric.lang.arrays.internal.booleanArray#get(int)
      */
-    @SuppressWarnings("unchecked")
     public boolean get(int i) {
       TransactionManager.getInstance().registerRead(this);
       return this.value[i];
@@ -101,7 +100,6 @@ public interface _booleanArray extends Object {
      * 
      * @see fabric.lang.Object.$Impl#$copyStateFrom(fabric.lang.Object.$Impl)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void $copyStateFrom(Object.$Impl other) {
       super.$copyStateFrom(other);

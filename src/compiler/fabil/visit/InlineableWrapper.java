@@ -45,7 +45,6 @@ public class InlineableWrapper extends AscriptionVisitor {
    * @see polyglot.visit.AscriptionVisitor#ascribe(polyglot.ast.Expr,
    *      polyglot.types.Type)
    */
-  @SuppressWarnings("unchecked")
   @Override
   public Expr ascribe(Expr e, Type toType) {
     Position CG = Position.compilerGenerated();

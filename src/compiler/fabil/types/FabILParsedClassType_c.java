@@ -19,7 +19,6 @@ public class FabILParsedClassType_c extends ParsedClassType_c {
    * 
    * @see polyglot.types.ClassType_c#descendsFromImpl(polyglot.types.Type)
    */
-  @SuppressWarnings("unchecked")
   @Override
   public boolean descendsFromImpl(Type ancestor) {
     FabILTypeSystem ts = (FabILTypeSystem) typeSystem();
