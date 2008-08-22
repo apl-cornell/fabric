@@ -2,6 +2,7 @@ package fabric.ast;
 
 import java.util.List;
 
+
 import jif.ast.JifNodeFactory_c;
 import polyglot.ast.Expr;
 import polyglot.ast.Stmt;
@@ -13,9 +14,28 @@ import polyglot.util.Position;
  */
 public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeFactory {
 
+  //////////////////////////////////////////////////////////////////////////////
+  // public constructors                                                      //
+  //////////////////////////////////////////////////////////////////////////////
+  
+  public FabricNodeFactory_c() {
+    this(new FabricJifExtFactory_c(new FabricFabExtFactory_c()));
+  }
+  
+  public FabricNodeFactory_c(FabricExtFactory extFactory) {
+    this(extFactory, new FabricDelFactory_c());
+  }
+
+  public FabricNodeFactory_c(FabricExtFactory extFactory, FabricDelFactory delFactory) {
+    super(extFactory, delFactory);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // factory methods                                                          //
+  //////////////////////////////////////////////////////////////////////////////  
+  
   public fabric.ast.Atomic Atomic(Position pos, List<Stmt> statements) {
-    // TODO Auto-generated method stub
-    return null;
+    return new Atomic_c(pos, statements);
   }
 
   public polyglot.ast.New New(Position pos, TypeNode type, Expr location, List<Expr> args) {
