@@ -10,7 +10,7 @@ import polyglot.ast.TypeNode;
 import polyglot.util.Position;
 
 /**
- * NodeFactory for ../../fabric extension.
+ * NodeFactory for fabric extension.
  */
 public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeFactory {
 

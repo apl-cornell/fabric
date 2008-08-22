@@ -3,6 +3,7 @@ package fabric.ast;
 import jif.ast.JifDelFactory_c;
 import polyglot.ast.JL;
 
+/** Factory class for creating delegates for fabric types. */
 public class FabricDelFactory_c extends JifDelFactory_c implements
     FabricDelFactory {
 

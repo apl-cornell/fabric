@@ -8,7 +8,7 @@ import fabric.extension.*;
  * @author mdgeorge
  *
  */
-public class FabricFabExtFactory_c extends AbstractFabricExtFactory_c {
+public class FabricFabExtFactory_c extends AbstractFabExtFactory_c {
   
   // TODO: construct appropriate fabric extensions
   

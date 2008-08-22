@@ -7,7 +7,7 @@ import polyglot.ast.*;
 import polyglot.util.Position;
 
 /**
- * NodeFactory for ../../fabric extension.
+ * NodeFactory for fabric extension.
  */
 public interface FabricNodeFactory extends JifNodeFactory {
   Atomic Atomic(Position pos, List<Stmt> statements);
