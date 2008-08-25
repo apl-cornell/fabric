@@ -1508,7 +1508,7 @@ call postExtNode()#</dia:string>
         <dia:point val="31.5888,15.8"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="30.7387,15.75;32.4387,22.05"/>
+        <dia:rectangle val="30.7388,15.75;32.4388,22.05"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
         <dia:point val="31.5888,15.8"/>
@@ -4163,13 +4163,13 @@ call postExtStmt()#</dia:string>
         <dia:point val="37.6638,38"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="37.6138,37.95;43.8638,39.55"/>
+        <dia:rectangle val="37.6138,37.95;44.1263,39.55"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
         <dia:point val="37.6638,38"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
-        <dia:real val="6.1500000000000004"/>
+        <dia:real val="6.4125000000000005"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
         <dia:real val="1.5"/>
@@ -4183,7 +4183,7 @@ call postExtStmt()#</dia:string>
       <dia:attribute name="text">
         <dia:composite type="text">
           <dia:attribute name="string">
-            <dia:string>#return extExprImpl()#</dia:string>
+            <dia:string>#return extBlockImpl()#</dia:string>
           </dia:attribute>
           <dia:attribute name="font">
             <dia:font family="monospace" style="0" name="Courier"/>
