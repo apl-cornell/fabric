@@ -97,19 +97,19 @@
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O1">
       <dia:attribute name="obj_pos">
-        <dia:point val="42,4"/>
+        <dia:point val="42.8,3.9"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="41.95,3.95;47.8,8.05"/>
+        <dia:rectangle val="42.75,3.85;49.2175,10.05"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="42,4"/>
+        <dia:point val="42.8,3.9"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
-        <dia:real val="5.75"/>
+        <dia:real val="6.3674999999999997"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
-        <dia:real val="4"/>
+        <dia:real val="6.0999999999999996"/>
       </dia:attribute>
       <dia:attribute name="name">
         <dia:string>#ExtFactory#</dia:string>
@@ -118,7 +118,7 @@
         <dia:string>##</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
-        <dia:string>##</dia:string>
+        <dia:string>#factory that can create Ext objects for every Java AST Node#</dia:string>
       </dia:attribute>
       <dia:attribute name="abstract">
         <dia:boolean val="true"/>
@@ -136,7 +136,7 @@
         <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="visible_comments">
-        <dia:boolean val="false"/>
+        <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="wrap_operations">
         <dia:boolean val="false"/>
@@ -145,7 +145,7 @@
         <dia:int val="40"/>
       </dia:attribute>
       <dia:attribute name="comment_line_length">
-        <dia:int val="17"/>
+        <dia:int val="25"/>
       </dia:attribute>
       <dia:attribute name="comment_tagging">
         <dia:boolean val="false"/>
@@ -510,19 +510,19 @@
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O4">
       <dia:attribute name="obj_pos">
-        <dia:point val="27,6"/>
+        <dia:point val="25.85,3.9"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="26.95,5.95;36.2275,15.85"/>
+        <dia:rectangle val="25.8,3.85;37.3525,15.85"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="27,6"/>
+        <dia:point val="25.85,3.9"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
-        <dia:real val="9.1775000000000002"/>
+        <dia:real val="11.452500000000001"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
-        <dia:real val="9.7999999999999989"/>
+        <dia:real val="11.899999999999999"/>
       </dia:attribute>
       <dia:attribute name="name">
         <dia:string>#AbstractExtFactory_c#</dia:string>
@@ -531,7 +531,7 @@
         <dia:string>##</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
-        <dia:string>##</dia:string>
+        <dia:string>#Skeleton factory implementation.  Handles factory chaining and delegates Ext creation to superclass Ext creation method#</dia:string>
       </dia:attribute>
       <dia:attribute name="abstract">
         <dia:boolean val="false"/>
@@ -549,7 +549,7 @@
         <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="visible_comments">
-        <dia:boolean val="false"/>
+        <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="wrap_operations">
         <dia:boolean val="true"/>
@@ -558,7 +558,7 @@
         <dia:int val="40"/>
       </dia:attribute>
       <dia:attribute name="comment_line_length">
-        <dia:int val="17"/>
+        <dia:int val="45"/>
       </dia:attribute>
       <dia:attribute name="comment_tagging">
         <dia:boolean val="false"/>
@@ -913,16 +913,16 @@
     </dia:object>
     <dia:object type="UML - Realizes" version="1" id="O5">
       <dia:attribute name="obj_pos">
-        <dia:point val="42,4.7"/>
+        <dia:point val="42.8,5.65"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="36.1275,3.85;42.05,6.75"/>
+        <dia:rectangle val="37.2525,4.8;42.85,6.5"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="42,4.7"/>
-        <dia:point val="39,4.7"/>
-        <dia:point val="39,6.7"/>
-        <dia:point val="36.1775,6.7"/>
+        <dia:point val="42.8,5.65"/>
+        <dia:point val="39,5.65"/>
+        <dia:point val="39,5.65"/>
+        <dia:point val="37.3025,5.65"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -1169,19 +1169,19 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O11">
       <dia:attribute name="obj_pos">
-        <dia:point val="41.125,20"/>
+        <dia:point val="42.225,19.65"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="41.075,19.95;48.675,22.45"/>
+        <dia:rectangle val="42.175,19.6;49.775,24.2"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="41.125,20"/>
+        <dia:point val="42.225,19.65"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="7.5"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
-        <dia:real val="2.3999999999999999"/>
+        <dia:real val="4.5"/>
       </dia:attribute>
       <dia:attribute name="name">
         <dia:string>#JifExtFactory#</dia:string>
@@ -1190,7 +1190,7 @@ call postExtNode()#</dia:string>
         <dia:string>##</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
-        <dia:string>##</dia:string>
+        <dia:string>#factory that can create Ext objects for every Jif AST Node#</dia:string>
       </dia:attribute>
       <dia:attribute name="abstract">
         <dia:boolean val="true"/>
@@ -1208,7 +1208,7 @@ call postExtNode()#</dia:string>
         <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="visible_comments">
-        <dia:boolean val="false"/>
+        <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="wrap_operations">
         <dia:boolean val="false"/>
@@ -1217,7 +1217,7 @@ call postExtNode()#</dia:string>
         <dia:int val="40"/>
       </dia:attribute>
       <dia:attribute name="comment_line_length">
-        <dia:int val="17"/>
+        <dia:int val="25"/>
       </dia:attribute>
       <dia:attribute name="comment_tagging">
         <dia:boolean val="false"/>
@@ -1307,13 +1307,13 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O12">
       <dia:attribute name="obj_pos">
-        <dia:point val="26.9787,22"/>
+        <dia:point val="26.9787,23.65"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="26.9287,21.95;36.2487,26.05"/>
+        <dia:rectangle val="26.9287,23.6;36.2487,27.7"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="26.9787,22"/>
+        <dia:point val="26.9787,23.65"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="9.2200000000000006"/>
@@ -1505,16 +1505,16 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Generalization" version="1" id="O13">
       <dia:attribute name="obj_pos">
-        <dia:point val="31.5888,15.8"/>
+        <dia:point val="31.5763,15.8"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="30.7388,15.75;32.4388,22.05"/>
+        <dia:rectangle val="30.7263,15.75;32.4263,23.7"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="31.5888,15.8"/>
-        <dia:point val="31.5888,18.9"/>
-        <dia:point val="31.5887,18.9"/>
-        <dia:point val="31.5887,22"/>
+        <dia:point val="31.5763,15.8"/>
+        <dia:point val="31.5763,19.725"/>
+        <dia:point val="31.5887,19.725"/>
+        <dia:point val="31.5887,23.65"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="1"/>
@@ -1543,16 +1543,16 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Realizes" version="1" id="O14">
       <dia:attribute name="obj_pos">
-        <dia:point val="41.125,20.7"/>
+        <dia:point val="42.225,21.4"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="36.1487,19.85;41.175,22.75"/>
+        <dia:rectangle val="36.1487,20.55;42.275,24.4"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="41.125,20.7"/>
-        <dia:point val="39,20.7"/>
-        <dia:point val="39,22.7"/>
-        <dia:point val="36.1987,22.7"/>
+        <dia:point val="42.225,21.4"/>
+        <dia:point val="39,21.4"/>
+        <dia:point val="39,24.35"/>
+        <dia:point val="36.1987,24.35"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -1582,19 +1582,19 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O15">
       <dia:attribute name="obj_pos">
-        <dia:point val="4.11375,22"/>
+        <dia:point val="4.06375,22.95"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="4.06375,21.95;10.9638,26.05"/>
+        <dia:rectangle val="4.01375,22.9;10.9138,28.4"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="4.11375,22"/>
+        <dia:point val="4.06375,22.95"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="6.7999999999999998"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
-        <dia:real val="4"/>
+        <dia:real val="5.4000000000000004"/>
       </dia:attribute>
       <dia:attribute name="name">
         <dia:string>#JifExtFactory_c#</dia:string>
@@ -1603,7 +1603,7 @@ call postExtNode()#</dia:string>
         <dia:string>##</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
-        <dia:string>##</dia:string>
+        <dia:string>#creates Jif extensions for Jif nodes#</dia:string>
       </dia:attribute>
       <dia:attribute name="abstract">
         <dia:boolean val="false"/>
@@ -1621,7 +1621,7 @@ call postExtNode()#</dia:string>
         <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="visible_comments">
-        <dia:boolean val="false"/>
+        <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="wrap_operations">
         <dia:boolean val="true"/>
@@ -1630,7 +1630,7 @@ call postExtNode()#</dia:string>
         <dia:int val="40"/>
       </dia:attribute>
       <dia:attribute name="comment_line_length">
-        <dia:int val="17"/>
+        <dia:int val="25"/>
       </dia:attribute>
       <dia:attribute name="comment_tagging">
         <dia:boolean val="false"/>
@@ -1781,16 +1781,16 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Generalization" version="1" id="O16">
       <dia:attribute name="obj_pos">
-        <dia:point val="26.9787,22.7"/>
+        <dia:point val="26.9787,24.35"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="10.8431,21.9;27.0787,23.5"/>
+        <dia:rectangle val="10.8137,23.5;27.0287,25.2"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="26.9787,22.7"/>
-        <dia:point val="26.9787,22.7"/>
-        <dia:point val="10.9138,22.7"/>
-        <dia:point val="10.9138,22.7"/>
+        <dia:point val="26.9787,24.35"/>
+        <dia:point val="19.4,24.35"/>
+        <dia:point val="19.4,24.35"/>
+        <dia:point val="10.8637,24.35"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -1798,7 +1798,7 @@ call postExtNode()#</dia:string>
         <dia:enum val="0"/>
       </dia:attribute>
       <dia:attribute name="orth_autoroute">
-        <dia:boolean val="true"/>
+        <dia:boolean val="false"/>
       </dia:attribute>
       <dia:attribute name="text_colour">
         <dia:color val="#000000"/>
@@ -1820,22 +1820,26 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Realizes" version="1" id="O17">
       <dia:attribute name="obj_pos">
-        <dia:point val="41.125,20.7"/>
+        <dia:point val="42.225,21.4"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="7.46375,19.85;41.175,22.05"/>
+        <dia:rectangle val="7.41375,20.55;42.275,23"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="41.125,20.7"/>
-        <dia:point val="7.51375,20.7"/>
-        <dia:point val="7.51375,22"/>
+        <dia:point val="42.225,21.4"/>
+        <dia:point val="40.125,21.4"/>
+        <dia:point val="40.125,21.4"/>
+        <dia:point val="7.46375,21.4"/>
+        <dia:point val="7.46375,22.95"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
         <dia:enum val="1"/>
+        <dia:enum val="0"/>
+        <dia:enum val="1"/>
       </dia:attribute>
       <dia:attribute name="orth_autoroute">
-        <dia:boolean val="true"/>
+        <dia:boolean val="false"/>
       </dia:attribute>
       <dia:attribute name="line_colour">
         <dia:color val="#000000"/>
@@ -1857,13 +1861,13 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Note" version="0" id="O18">
       <dia:attribute name="obj_pos">
-        <dia:point val="19.85,23.45"/>
+        <dia:point val="37.25,25.6"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="19.8,23.4;26.05,25"/>
+        <dia:rectangle val="37.2,25.55;43.45,27.15"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="19.85,23.45"/>
+        <dia:point val="37.25,25.6"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="6.1500000000000004"/>
@@ -1889,7 +1893,7 @@ call postExtNode()#</dia:string>
             <dia:real val="0.59999999999999998"/>
           </dia:attribute>
           <dia:attribute name="pos">
-            <dia:point val="20.2,24.5075"/>
+            <dia:point val="37.6,26.6575"/>
           </dia:attribute>
           <dia:attribute name="color">
             <dia:color val="#000000"/>
@@ -1902,13 +1906,13 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O19">
       <dia:attribute name="obj_pos">
-        <dia:point val="51,23"/>
+        <dia:point val="51,24.15"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="50.95,22.95;55.1625,24.45"/>
+        <dia:rectangle val="50.95,24.1;55.1625,25.6"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="51,23"/>
+        <dia:point val="51,24.15"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="4.1124999999999998"/>
@@ -2119,18 +2123,18 @@ call postExtNode()#</dia:string>
         <dia:point val="53.0562,14.4"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="53.0062,14.4;53.1562,23.0203"/>
+        <dia:rectangle val="52.2062,14.35;53.9062,24.1496"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
         <dia:point val="53.0562,14.4"/>
-        <dia:point val="53.0562,14.4"/>
-        <dia:point val="53.0562,22.9496"/>
-        <dia:point val="53.0562,22.9496"/>
+        <dia:point val="53.0562,19.2498"/>
+        <dia:point val="53.0562,19.2498"/>
+        <dia:point val="53.0562,24.0996"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
-        <dia:enum val="0"/>
         <dia:enum val="1"/>
         <dia:enum val="0"/>
+        <dia:enum val="1"/>
       </dia:attribute>
       <dia:attribute name="orth_autoroute">
         <dia:boolean val="true"/>
@@ -2264,21 +2268,21 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Generalization" version="1" id="O25">
       <dia:attribute name="obj_pos">
-        <dia:point val="44.875,8.05025"/>
+        <dia:point val="45.9838,10.0504"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="44.825,8.05025;44.975,20.0204"/>
+        <dia:rectangle val="45.1337,10.0004;46.8338,19.6497"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="44.875,8.05025"/>
-        <dia:point val="44.875,8.05025"/>
-        <dia:point val="44.875,19.9497"/>
-        <dia:point val="44.875,19.9497"/>
+        <dia:point val="45.9838,10.0504"/>
+        <dia:point val="45.9838,14.825"/>
+        <dia:point val="45.975,14.825"/>
+        <dia:point val="45.975,19.5997"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
-        <dia:enum val="0"/>
         <dia:enum val="1"/>
         <dia:enum val="0"/>
+        <dia:enum val="1"/>
       </dia:attribute>
       <dia:attribute name="orth_autoroute">
         <dia:boolean val="true"/>
@@ -2302,19 +2306,19 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O26">
       <dia:attribute name="obj_pos">
-        <dia:point val="41.22,33"/>
+        <dia:point val="42.32,32.65"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="41.17,32.95;48.58,35.45"/>
+        <dia:rectangle val="42.27,32.6;49.68,37.2"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="41.22,33"/>
+        <dia:point val="42.32,32.65"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="7.3099999999999996"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
-        <dia:real val="2.3999999999999999"/>
+        <dia:real val="4.5"/>
       </dia:attribute>
       <dia:attribute name="name">
         <dia:string>#FabricExtFactory#</dia:string>
@@ -2323,7 +2327,7 @@ call postExtNode()#</dia:string>
         <dia:string>##</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
-        <dia:string>##</dia:string>
+        <dia:string>#factory that can create Ext objects for every Fabric AST Node#</dia:string>
       </dia:attribute>
       <dia:attribute name="abstract">
         <dia:boolean val="true"/>
@@ -2341,7 +2345,7 @@ call postExtNode()#</dia:string>
         <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="visible_comments">
-        <dia:boolean val="false"/>
+        <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="wrap_operations">
         <dia:boolean val="true"/>
@@ -2350,7 +2354,7 @@ call postExtNode()#</dia:string>
         <dia:int val="40"/>
       </dia:attribute>
       <dia:attribute name="comment_line_length">
-        <dia:int val="17"/>
+        <dia:int val="25"/>
       </dia:attribute>
       <dia:attribute name="comment_tagging">
         <dia:boolean val="false"/>
@@ -2441,16 +2445,16 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Generalization" version="1" id="O27">
       <dia:attribute name="obj_pos">
-        <dia:point val="44.875,22.4503"/>
+        <dia:point val="45.975,24.2003"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="44.825,22.4503;44.975,33.0707"/>
+        <dia:rectangle val="45.925,24.2003;46.075,32.7207"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="44.875,22.4503"/>
-        <dia:point val="44.875,22.4503"/>
-        <dia:point val="44.875,33"/>
-        <dia:point val="44.875,33"/>
+        <dia:point val="45.975,24.2003"/>
+        <dia:point val="45.975,24.2003"/>
+        <dia:point val="45.975,32.65"/>
+        <dia:point val="45.975,32.65"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -2624,13 +2628,13 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O30">
       <dia:attribute name="obj_pos">
-        <dia:point val="26.6638,35"/>
+        <dia:point val="26.6638,36.25"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="26.6138,34.95;36.5638,39.05"/>
+        <dia:rectangle val="26.6138,36.2;36.5638,40.3"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="26.6638,35"/>
+        <dia:point val="26.6638,36.25"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="9.8499999999999996"/>
@@ -2822,21 +2826,21 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Generalization" version="1" id="O31">
       <dia:attribute name="obj_pos">
-        <dia:point val="31.5887,26.0503"/>
+        <dia:point val="31.5887,27.7003"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="31.5387,26.0503;31.6887,35.0204"/>
+        <dia:rectangle val="30.7387,27.6503;32.4387,36.2497"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="31.5887,26.0503"/>
-        <dia:point val="31.5887,26.0503"/>
-        <dia:point val="31.5888,34.9497"/>
-        <dia:point val="31.5888,34.9497"/>
+        <dia:point val="31.5887,27.7003"/>
+        <dia:point val="31.5887,31.95"/>
+        <dia:point val="31.5888,31.95"/>
+        <dia:point val="31.5888,36.1997"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
-        <dia:enum val="0"/>
         <dia:enum val="1"/>
         <dia:enum val="0"/>
+        <dia:enum val="1"/>
       </dia:attribute>
       <dia:attribute name="orth_autoroute">
         <dia:boolean val="true"/>
@@ -2860,19 +2864,19 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O32">
       <dia:attribute name="obj_pos">
-        <dia:point val="3,37"/>
+        <dia:point val="2.95,33"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="2.95,36.95;12.0775,41.05"/>
+        <dia:rectangle val="2.9,32.95;12.0275,38.45"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="3,37"/>
+        <dia:point val="2.95,33"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="9.0274999999999999"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
-        <dia:real val="4"/>
+        <dia:real val="5.4000000000000004"/>
       </dia:attribute>
       <dia:attribute name="name">
         <dia:string>#FabricJifExtFactory_c#</dia:string>
@@ -2881,7 +2885,7 @@ call postExtNode()#</dia:string>
         <dia:string>##</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
-        <dia:string>##</dia:string>
+        <dia:string>#creates Jif extensions for Fabric nodes#</dia:string>
       </dia:attribute>
       <dia:attribute name="abstract">
         <dia:boolean val="false"/>
@@ -2899,7 +2903,7 @@ call postExtNode()#</dia:string>
         <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="visible_comments">
-        <dia:boolean val="false"/>
+        <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="wrap_operations">
         <dia:boolean val="true"/>
@@ -2908,7 +2912,7 @@ call postExtNode()#</dia:string>
         <dia:int val="40"/>
       </dia:attribute>
       <dia:attribute name="comment_line_length">
-        <dia:int val="17"/>
+        <dia:int val="25"/>
       </dia:attribute>
       <dia:attribute name="comment_tagging">
         <dia:boolean val="false"/>
@@ -3059,19 +3063,19 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Class" version="0" id="O33">
       <dia:attribute name="obj_pos">
-        <dia:point val="15,37"/>
+        <dia:point val="14.4919,35.55"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="14.95,36.95;24.7075,40.25"/>
+        <dia:rectangle val="14.4419,35.5;24.1994,41"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="15,37"/>
+        <dia:point val="14.4919,35.55"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="9.6575000000000006"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
-        <dia:real val="3.2000000000000002"/>
+        <dia:real val="5.4000000000000004"/>
       </dia:attribute>
       <dia:attribute name="name">
         <dia:string>#FabricFabExtFactory_c#</dia:string>
@@ -3080,7 +3084,7 @@ call postExtNode()#</dia:string>
         <dia:string>##</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
-        <dia:string>##</dia:string>
+        <dia:string>#creates Fabric extensions for Fabric nodes#</dia:string>
       </dia:attribute>
       <dia:attribute name="abstract">
         <dia:boolean val="false"/>
@@ -3098,7 +3102,7 @@ call postExtNode()#</dia:string>
         <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="visible_comments">
-        <dia:boolean val="false"/>
+        <dia:boolean val="true"/>
       </dia:attribute>
       <dia:attribute name="wrap_operations">
         <dia:boolean val="true"/>
@@ -3107,7 +3111,7 @@ call postExtNode()#</dia:string>
         <dia:int val="40"/>
       </dia:attribute>
       <dia:attribute name="comment_line_length">
-        <dia:int val="17"/>
+        <dia:int val="28"/>
       </dia:attribute>
       <dia:attribute name="comment_tagging">
         <dia:boolean val="false"/>
@@ -3159,6 +3163,36 @@ call postExtNode()#</dia:string>
       </dia:attribute>
       <dia:attribute name="attributes"/>
       <dia:attribute name="operations">
+        <dia:composite type="umloperation">
+          <dia:attribute name="name">
+            <dia:string>#extNodeImpl#</dia:string>
+          </dia:attribute>
+          <dia:attribute name="stereotype">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="type">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="visibility">
+            <dia:enum val="2"/>
+          </dia:attribute>
+          <dia:attribute name="comment">
+            <dia:string>##</dia:string>
+          </dia:attribute>
+          <dia:attribute name="abstract">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="inheritance_type">
+            <dia:enum val="2"/>
+          </dia:attribute>
+          <dia:attribute name="query">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="class_scope">
+            <dia:boolean val="false"/>
+          </dia:attribute>
+          <dia:attribute name="parameters"/>
+        </dia:composite>
         <dia:composite type="umloperation">
           <dia:attribute name="name">
             <dia:string>#extNewImpl#</dia:string>
@@ -3228,16 +3262,16 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Generalization" version="1" id="O34">
       <dia:attribute name="obj_pos">
-        <dia:point val="26.6638,35.7"/>
+        <dia:point val="26.6638,36.95"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="24.6075,34.85;26.7138,37.75"/>
+        <dia:rectangle val="24.0994,36.1;26.7138,37.8"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="26.6638,35.7"/>
-        <dia:point val="25.3001,35.7"/>
-        <dia:point val="25.3001,37.7"/>
-        <dia:point val="24.6575,37.7"/>
+        <dia:point val="26.6638,36.95"/>
+        <dia:point val="24.95,36.95"/>
+        <dia:point val="24.95,36.95"/>
+        <dia:point val="24.1494,36.95"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -3267,16 +3301,16 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="UML - Generalization" version="1" id="O35">
       <dia:attribute name="obj_pos">
-        <dia:point val="7.51375,26.0503"/>
+        <dia:point val="7.46375,28.4003"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="7.46375,26.0503;7.61375,37.0204"/>
+        <dia:rectangle val="7.41375,28.4003;7.56375,33.0204"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="7.51375,26.0503"/>
-        <dia:point val="7.51375,26.0503"/>
-        <dia:point val="7.51375,36.9497"/>
-        <dia:point val="7.51375,36.9497"/>
+        <dia:point val="7.46375,28.4003"/>
+        <dia:point val="7.46375,28.4003"/>
+        <dia:point val="7.46375,32.9497"/>
+        <dia:point val="7.46375,32.9497"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -3305,13 +3339,13 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="Standard - Line" version="0" id="O36">
       <dia:attribute name="obj_pos">
-        <dia:point val="27,8.9"/>
+        <dia:point val="25.85,8.9"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="23.0821,5.91349;27.0697,8.96972"/>
+        <dia:rectangle val="23.0165,5.96837;25.9207,8.97069"/>
       </dia:attribute>
       <dia:attribute name="conn_endpoints">
-        <dia:point val="27,8.9"/>
+        <dia:point val="25.85,8.9"/>
         <dia:point val="23.4125,6.35"/>
       </dia:attribute>
       <dia:attribute name="numcp">
@@ -3334,13 +3368,13 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="Standard - Line" version="0" id="O37">
       <dia:attribute name="obj_pos">
-        <dia:point val="27,11.3"/>
+        <dia:point val="25.85,11.3"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="11.9825,10.9495;27.0505,11.9505"/>
+        <dia:rectangle val="11.9821,10.9495;25.9005,11.9505"/>
       </dia:attribute>
       <dia:attribute name="conn_endpoints">
-        <dia:point val="27,11.3"/>
+        <dia:point val="25.85,11.3"/>
         <dia:point val="12.0375,11.45"/>
       </dia:attribute>
       <dia:attribute name="numcp">
@@ -3363,13 +3397,13 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="Standard - Line" version="0" id="O38">
       <dia:attribute name="obj_pos">
-        <dia:point val="27,12.1"/>
+        <dia:point val="25.85,12.1"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="15.3053,12.0414;27.0586,14.8503"/>
+        <dia:rectangle val="15.2954,12.0406;25.9094,14.8493"/>
       </dia:attribute>
       <dia:attribute name="conn_endpoints">
-        <dia:point val="27,12.1"/>
+        <dia:point val="25.85,12.1"/>
         <dia:point val="15.45,14.35"/>
       </dia:attribute>
       <dia:attribute name="numcp">
@@ -3392,13 +3426,13 @@ call postExtNode()#</dia:string>
     </dia:object>
     <dia:object type="Standard - Line" version="0" id="O39">
       <dia:attribute name="obj_pos">
-        <dia:point val="27,12.9"/>
+        <dia:point val="25.85,12.9"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="22.8123,12.8301;27.0699,16.1816"/>
+        <dia:rectangle val="22.7526,12.8293;25.9207,16.1302"/>
       </dia:attribute>
       <dia:attribute name="conn_endpoints">
-        <dia:point val="27,12.9"/>
+        <dia:point val="25.85,12.9"/>
         <dia:point val="23.15,15.75"/>
       </dia:attribute>
       <dia:attribute name="numcp">
@@ -3419,44 +3453,15 @@ call postExtNode()#</dia:string>
       </dia:connections>
       <dia:childnode parent="O0"/>
     </dia:object>
-    <dia:object type="Standard - Line" version="0" id="O40">
+    <dia:object type="UML - Note" version="0" id="O40">
       <dia:attribute name="obj_pos">
-        <dia:point val="26.9787,24.7"/>
+        <dia:point val="12.05,27.05"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="25.728,23.732;27.046,24.7673"/>
-      </dia:attribute>
-      <dia:attribute name="conn_endpoints">
-        <dia:point val="26.9787,24.7"/>
-        <dia:point val="26,24.2"/>
-      </dia:attribute>
-      <dia:attribute name="numcp">
-        <dia:int val="1"/>
-      </dia:attribute>
-      <dia:attribute name="end_arrow">
-        <dia:enum val="1"/>
-      </dia:attribute>
-      <dia:attribute name="end_arrow_length">
-        <dia:real val="0.5"/>
-      </dia:attribute>
-      <dia:attribute name="end_arrow_width">
-        <dia:real val="0.5"/>
-      </dia:attribute>
-      <dia:connections>
-        <dia:connection handle="0" to="O12" connection="10"/>
-        <dia:connection handle="1" to="O18" connection="4"/>
-      </dia:connections>
-      <dia:childnode parent="O6"/>
-    </dia:object>
-    <dia:object type="UML - Note" version="0" id="O41">
-      <dia:attribute name="obj_pos">
-        <dia:point val="12,25.6"/>
-      </dia:attribute>
-      <dia:attribute name="obj_bb">
-        <dia:rectangle val="11.95,25.55;18.9875,27.15"/>
+        <dia:rectangle val="12,27;19.0375,28.6"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="12,25.6"/>
+        <dia:point val="12.05,27.05"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="6.9375"/>
@@ -3482,7 +3487,7 @@ call postExtNode()#</dia:string>
             <dia:real val="0.59999999999999998"/>
           </dia:attribute>
           <dia:attribute name="pos">
-            <dia:point val="12.35,26.6575"/>
+            <dia:point val="12.4,28.1075"/>
           </dia:attribute>
           <dia:attribute name="color">
             <dia:color val="#000000"/>
@@ -3493,16 +3498,16 @@ call postExtNode()#</dia:string>
         </dia:composite>
       </dia:attribute>
     </dia:object>
-    <dia:object type="Standard - Line" version="0" id="O42">
+    <dia:object type="Standard - Line" version="0" id="O41">
       <dia:attribute name="obj_pos">
-        <dia:point val="10.9138,25.5"/>
+        <dia:point val="10.8637,27.85"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="10.8436,25.4298;12.3475,26.7746"/>
+        <dia:rectangle val="10.8117,27.2983;12.121,28.3017"/>
       </dia:attribute>
       <dia:attribute name="conn_endpoints">
-        <dia:point val="10.9138,25.5"/>
-        <dia:point val="12,26.35"/>
+        <dia:point val="10.8637,27.85"/>
+        <dia:point val="12.05,27.8"/>
       </dia:attribute>
       <dia:attribute name="numcp">
         <dia:int val="1"/>
@@ -3518,11 +3523,11 @@ call postExtNode()#</dia:string>
       </dia:attribute>
       <dia:connections>
         <dia:connection handle="0" to="O15" connection="13"/>
-        <dia:connection handle="1" to="O41" connection="3"/>
+        <dia:connection handle="1" to="O40" connection="3"/>
       </dia:connections>
       <dia:childnode parent="O6"/>
     </dia:object>
-    <dia:object type="UML - Note" version="0" id="O43">
+    <dia:object type="UML - Note" version="0" id="O42">
       <dia:attribute name="obj_pos">
         <dia:point val="9,6.7"/>
       </dia:attribute>
@@ -3569,15 +3574,15 @@ call postExtStmt()#</dia:string>
         </dia:composite>
       </dia:attribute>
     </dia:object>
-    <dia:object type="Standard - Line" version="0" id="O44">
+    <dia:object type="Standard - Line" version="0" id="O43">
       <dia:attribute name="obj_pos">
-        <dia:point val="27,9.7"/>
+        <dia:point val="25.85,9.7"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="15.2925,7.54794;27.0565,9.75655"/>
+        <dia:rectangle val="15.285,7.54833;25.9072,9.75719"/>
       </dia:attribute>
       <dia:attribute name="conn_endpoints">
-        <dia:point val="27,9.7"/>
+        <dia:point val="25.85,9.7"/>
         <dia:point val="15.4125,8.05"/>
       </dia:attribute>
       <dia:attribute name="numcp">
@@ -3594,22 +3599,22 @@ call postExtStmt()#</dia:string>
       </dia:attribute>
       <dia:connections>
         <dia:connection handle="0" to="O4" connection="12"/>
-        <dia:connection handle="1" to="O43" connection="4"/>
+        <dia:connection handle="1" to="O42" connection="4"/>
       </dia:connections>
       <dia:childnode parent="O0"/>
     </dia:object>
-    <dia:object type="UML - Realizes" version="1" id="O45">
+    <dia:object type="UML - Realizes" version="1" id="O44">
       <dia:attribute name="obj_pos">
-        <dia:point val="41.22,33.7"/>
+        <dia:point val="42.32,34.4"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="36.4638,32.85;41.27,35.75"/>
+        <dia:rectangle val="36.4638,33.55;42.37,37"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="41.22,33.7"/>
-        <dia:point val="39,33.7"/>
-        <dia:point val="39,35.7"/>
-        <dia:point val="36.5138,35.7"/>
+        <dia:point val="42.32,34.4"/>
+        <dia:point val="39,34.4"/>
+        <dia:point val="39,36.95"/>
+        <dia:point val="36.5138,36.95"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -3637,17 +3642,17 @@ call postExtStmt()#</dia:string>
       </dia:connections>
       <dia:childnode parent="O24"/>
     </dia:object>
-    <dia:object type="UML - Realizes" version="1" id="O46">
+    <dia:object type="UML - Realizes" version="1" id="O45">
       <dia:attribute name="obj_pos">
-        <dia:point val="41.22,33.7"/>
+        <dia:point val="42.32,34.4"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="19.7787,32.85;41.27,37.05"/>
+        <dia:rectangle val="19.2706,33.55;42.37,35.6"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="41.22,33.7"/>
-        <dia:point val="19.8287,33.7"/>
-        <dia:point val="19.8287,37"/>
+        <dia:point val="42.32,34.4"/>
+        <dia:point val="19.3207,34.4"/>
+        <dia:point val="19.3207,35.55"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -3674,18 +3679,18 @@ call postExtStmt()#</dia:string>
       </dia:connections>
       <dia:childnode parent="O24"/>
     </dia:object>
-    <dia:object type="UML - Realizes" version="1" id="O47">
+    <dia:object type="UML - Realizes" version="1" id="O46">
       <dia:attribute name="obj_pos">
-        <dia:point val="41.22,33.7"/>
+        <dia:point val="42.32,34.4"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="11.9775,32.85;41.27,37.75"/>
+        <dia:rectangle val="11.9275,33.55;42.37,35.25"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="41.22,33.7"/>
-        <dia:point val="14,33.7"/>
-        <dia:point val="14,37.7"/>
-        <dia:point val="12.0275,37.7"/>
+        <dia:point val="42.32,34.4"/>
+        <dia:point val="14,34.4"/>
+        <dia:point val="14,34.4"/>
+        <dia:point val="11.9775,34.4"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
         <dia:enum val="0"/>
@@ -3713,7 +3718,7 @@ call postExtStmt()#</dia:string>
       </dia:connections>
       <dia:childnode parent="O24"/>
     </dia:object>
-    <dia:object type="UML - Object" version="0" id="O48">
+    <dia:object type="UML - Object" version="0" id="O47">
       <dia:attribute name="obj_pos">
         <dia:point val="1,44"/>
       </dia:attribute>
@@ -3798,7 +3803,7 @@ call postExtStmt()#</dia:string>
         <dia:boolean val="false"/>
       </dia:attribute>
     </dia:object>
-    <dia:object type="UML - Object" version="0" id="O49">
+    <dia:object type="UML - Object" version="0" id="O48">
       <dia:attribute name="obj_pos">
         <dia:point val="6.27375,44"/>
       </dia:attribute>
@@ -3883,15 +3888,15 @@ call postExtStmt()#</dia:string>
         <dia:boolean val="false"/>
       </dia:attribute>
     </dia:object>
-    <dia:object type="UML - Object" version="0" id="O50">
+    <dia:object type="UML - Object" version="0" id="O49">
       <dia:attribute name="obj_pos">
-        <dia:point val="18,44"/>
+        <dia:point val="17.45,43.95"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="17.95,43.95;21.7225,45.85"/>
+        <dia:rectangle val="17.4,43.9;21.1725,45.8"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="18,44"/>
+        <dia:point val="17.45,43.95"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="3.6724999999999999"/>
@@ -3920,7 +3925,7 @@ call postExtStmt()#</dia:string>
             <dia:real val="0.80000000000000004"/>
           </dia:attribute>
           <dia:attribute name="pos">
-            <dia:point val="19.8362,45.0425"/>
+            <dia:point val="19.2863,44.9925"/>
           </dia:attribute>
           <dia:attribute name="color">
             <dia:color val="#000000"/>
@@ -3968,7 +3973,7 @@ call postExtStmt()#</dia:string>
         <dia:boolean val="false"/>
       </dia:attribute>
     </dia:object>
-    <dia:object type="Standard - Line" version="0" id="O51">
+    <dia:object type="Standard - Line" version="0" id="O50">
       <dia:attribute name="obj_pos">
         <dia:point val="3.525,44.9"/>
       </dia:attribute>
@@ -3992,20 +3997,20 @@ call postExtStmt()#</dia:string>
         <dia:real val="0.5"/>
       </dia:attribute>
       <dia:connections>
-        <dia:connection handle="0" to="O48" connection="4"/>
-        <dia:connection handle="1" to="O49" connection="3"/>
+        <dia:connection handle="0" to="O47" connection="4"/>
+        <dia:connection handle="1" to="O48" connection="3"/>
       </dia:connections>
     </dia:object>
-    <dia:object type="Standard - Line" version="0" id="O52">
+    <dia:object type="Standard - Line" version="0" id="O51">
       <dia:attribute name="obj_pos">
         <dia:point val="8.75375,44.9"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="8.70375,44.4;18.05,45.4"/>
+        <dia:rectangle val="8.70346,44.3497;17.5029,45.3503"/>
       </dia:attribute>
       <dia:attribute name="conn_endpoints">
         <dia:point val="8.75375,44.9"/>
-        <dia:point val="18,44.9"/>
+        <dia:point val="17.45,44.85"/>
       </dia:attribute>
       <dia:attribute name="numcp">
         <dia:int val="1"/>
@@ -4020,16 +4025,16 @@ call postExtStmt()#</dia:string>
         <dia:real val="0.5"/>
       </dia:attribute>
       <dia:connections>
-        <dia:connection handle="0" to="O49" connection="4"/>
-        <dia:connection handle="1" to="O50" connection="3"/>
+        <dia:connection handle="0" to="O48" connection="4"/>
+        <dia:connection handle="1" to="O49" connection="3"/>
       </dia:connections>
     </dia:object>
-    <dia:object type="Standard - Text" version="1" id="O53">
+    <dia:object type="Standard - Text" version="1" id="O52">
       <dia:attribute name="obj_pos">
-        <dia:point val="13.3769,44.9"/>
+        <dia:point val="13.1019,44.875"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="12.9156,43.96;13.8381,44.9"/>
+        <dia:rectangle val="12.6406,43.935;13.5631,44.875"/>
       </dia:attribute>
       <dia:attribute name="text">
         <dia:composite type="text">
@@ -4043,7 +4048,7 @@ call postExtStmt()#</dia:string>
             <dia:real val="0.80000000000000004"/>
           </dia:attribute>
           <dia:attribute name="pos">
-            <dia:point val="13.3769,44.5025"/>
+            <dia:point val="13.1019,44.4775"/>
           </dia:attribute>
           <dia:attribute name="color">
             <dia:color val="#000000"/>
@@ -4057,10 +4062,10 @@ call postExtStmt()#</dia:string>
         <dia:enum val="1"/>
       </dia:attribute>
       <dia:connections>
-        <dia:connection handle="0" to="O52" connection="0"/>
+        <dia:connection handle="0" to="O51" connection="0"/>
       </dia:connections>
     </dia:object>
-    <dia:object type="Standard - Text" version="1" id="O54">
+    <dia:object type="Standard - Text" version="1" id="O53">
       <dia:attribute name="obj_pos">
         <dia:point val="4.89938,44.9"/>
       </dia:attribute>
@@ -4093,18 +4098,18 @@ call postExtStmt()#</dia:string>
         <dia:enum val="1"/>
       </dia:attribute>
       <dia:connections>
-        <dia:connection handle="0" to="O51" connection="0"/>
+        <dia:connection handle="0" to="O50" connection="0"/>
       </dia:connections>
     </dia:object>
-    <dia:object type="UML - Message" version="0" id="O55">
+    <dia:object type="UML - Message" version="0" id="O54">
       <dia:attribute name="obj_pos">
-        <dia:point val="7.51375,41"/>
+        <dia:point val="7.46375,38.4"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="7.11375,40.95;10.0787,44.05"/>
+        <dia:rectangle val="7.11332,38.3496;10.1287,44.0536"/>
       </dia:attribute>
       <dia:attribute name="conn_endpoints">
-        <dia:point val="7.51375,41"/>
+        <dia:point val="7.46375,38.4"/>
         <dia:point val="7.51375,44"/>
       </dia:attribute>
       <dia:attribute name="text_colour">
@@ -4120,23 +4125,23 @@ call postExtStmt()#</dia:string>
         <dia:enum val="0"/>
       </dia:attribute>
       <dia:attribute name="text_pos">
-        <dia:point val="9,43"/>
+        <dia:point val="9.05,43.2"/>
       </dia:attribute>
       <dia:connections>
         <dia:connection handle="0" to="O32" connection="6"/>
-        <dia:connection handle="1" to="O49" connection="1"/>
+        <dia:connection handle="1" to="O48" connection="1"/>
       </dia:connections>
     </dia:object>
-    <dia:object type="UML - Message" version="0" id="O56">
+    <dia:object type="UML - Message" version="0" id="O55">
       <dia:attribute name="obj_pos">
-        <dia:point val="19.8287,40.2"/>
+        <dia:point val="19.3207,40.95"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="19.4361,40.1499;22.3788,44.0508"/>
+        <dia:rectangle val="18.8857,40.8994;21.8788,44.0046"/>
       </dia:attribute>
       <dia:attribute name="conn_endpoints">
-        <dia:point val="19.8287,40.2"/>
-        <dia:point val="19.8362,44"/>
+        <dia:point val="19.3207,40.95"/>
+        <dia:point val="19.2863,43.95"/>
       </dia:attribute>
       <dia:attribute name="text_colour">
         <dia:color val="#000000"/>
@@ -4151,22 +4156,22 @@ call postExtStmt()#</dia:string>
         <dia:enum val="0"/>
       </dia:attribute>
       <dia:attribute name="text_pos">
-        <dia:point val="21.3001,42.95"/>
+        <dia:point val="20.8,43.05"/>
       </dia:attribute>
       <dia:connections>
         <dia:connection handle="0" to="O33" connection="6"/>
-        <dia:connection handle="1" to="O50" connection="1"/>
+        <dia:connection handle="1" to="O49" connection="1"/>
       </dia:connections>
     </dia:object>
-    <dia:object type="UML - Note" version="0" id="O57">
+    <dia:object type="UML - Note" version="0" id="O56">
       <dia:attribute name="obj_pos">
-        <dia:point val="37.6638,38"/>
+        <dia:point val="37.8638,38.15"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="37.6138,37.95;44.1263,39.55"/>
+        <dia:rectangle val="37.8138,38.1;44.3263,39.7"/>
       </dia:attribute>
       <dia:attribute name="elem_corner">
-        <dia:point val="37.6638,38"/>
+        <dia:point val="37.8638,38.15"/>
       </dia:attribute>
       <dia:attribute name="elem_width">
         <dia:real val="6.4125000000000005"/>
@@ -4192,7 +4197,7 @@ call postExtStmt()#</dia:string>
             <dia:real val="0.59999999999999998"/>
           </dia:attribute>
           <dia:attribute name="pos">
-            <dia:point val="38.0138,39.0575"/>
+            <dia:point val="38.2138,39.2075"/>
           </dia:attribute>
           <dia:attribute name="color">
             <dia:color val="#000000"/>
@@ -4203,16 +4208,16 @@ call postExtStmt()#</dia:string>
         </dia:composite>
       </dia:attribute>
     </dia:object>
-    <dia:object type="Standard - Line" version="0" id="O58">
+    <dia:object type="Standard - Line" version="0" id="O57">
       <dia:attribute name="obj_pos">
-        <dia:point val="36.5138,37.7"/>
+        <dia:point val="36.5138,38.95"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="36.4432,37.6294;38.0379,39.153"/>
+        <dia:rectangle val="36.462,38.3985;37.9323,39.4015"/>
       </dia:attribute>
       <dia:attribute name="conn_endpoints">
-        <dia:point val="36.5138,37.7"/>
-        <dia:point val="37.6638,38.75"/>
+        <dia:point val="36.5138,38.95"/>
+        <dia:point val="37.8638,38.9"/>
       </dia:attribute>
       <dia:attribute name="numcp">
         <dia:int val="1"/>
@@ -4228,9 +4233,38 @@ call postExtStmt()#</dia:string>
       </dia:attribute>
       <dia:connections>
         <dia:connection handle="0" to="O30" connection="11"/>
-        <dia:connection handle="1" to="O57" connection="3"/>
+        <dia:connection handle="1" to="O56" connection="3"/>
       </dia:connections>
       <dia:childnode parent="O24"/>
+    </dia:object>
+    <dia:object type="Standard - Line" version="0" id="O58">
+      <dia:attribute name="obj_pos">
+        <dia:point val="36.1987,26.35"/>
+      </dia:attribute>
+      <dia:attribute name="obj_bb">
+        <dia:rectangle val="36.1487,25.85;37.3,26.85"/>
+      </dia:attribute>
+      <dia:attribute name="conn_endpoints">
+        <dia:point val="36.1987,26.35"/>
+        <dia:point val="37.25,26.35"/>
+      </dia:attribute>
+      <dia:attribute name="numcp">
+        <dia:int val="1"/>
+      </dia:attribute>
+      <dia:attribute name="end_arrow">
+        <dia:enum val="1"/>
+      </dia:attribute>
+      <dia:attribute name="end_arrow_length">
+        <dia:real val="0.5"/>
+      </dia:attribute>
+      <dia:attribute name="end_arrow_width">
+        <dia:real val="0.5"/>
+      </dia:attribute>
+      <dia:connections>
+        <dia:connection handle="0" to="O12" connection="11"/>
+        <dia:connection handle="1" to="O18" connection="3"/>
+      </dia:connections>
+      <dia:childnode parent="O6"/>
     </dia:object>
   </dia:layer>
 </dia:diagram>
