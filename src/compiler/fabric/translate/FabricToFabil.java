@@ -1,16 +1,7 @@
 package fabric.translate;
 
-import polyglot.ast.Node;
-import polyglot.types.SemanticException;
-import jif.translate.JifToJavaRewriter;
-import jif.translate.ToJavaExt_c;
+import jif.translate.ToJavaExt;
 
-public class FabricToFabil extends ToJavaExt_c {
-
-  @Override
-  public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    // TODO Auto-generated method stub
-    return null;
-  }
+public interface FabricToFabil extends ToJavaExt {
 
 }
