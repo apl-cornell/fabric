@@ -35,7 +35,7 @@ public class Semester {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Semester(String name) {
+  Semester(String name) {
     setName(name);
     setHidden(false);
     

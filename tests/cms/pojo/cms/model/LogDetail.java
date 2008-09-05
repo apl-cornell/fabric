@@ -33,15 +33,15 @@ public class LogDetail {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public LogDetail (Log log) {
+  LogDetail (Log log) {
     this(log, null, null, null);
   }
 
-  public LogDetail (Log log, String detail) {
+  LogDetail (Log log, String detail) {
     this(log, detail, null, null);
   }
 
-  public LogDetail (Log log, String detail, User user, Assignment assign) {
+  LogDetail (Log log, String detail, User user, Assignment assign) {
     setLog(log);
     setDetail(detail);
     setUser(user);

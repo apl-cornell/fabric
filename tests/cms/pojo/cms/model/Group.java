@@ -54,7 +54,7 @@ public class Group {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Group(Assignment assign, int remainingSubmissions) {
+  Group(Assignment assign, int remainingSubmissions) {
     setAssignment(assign);
     setTimeSlot(null);
     setRemainingSubmissions(remainingSubmissions);

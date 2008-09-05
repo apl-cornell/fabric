@@ -34,11 +34,12 @@ public class AssignmentFile implements FileEntry {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public AssignmentFile(AssignmentItem item, boolean isHidden, FileData file) {
+  AssignmentFile(AssignmentItem item, boolean isHidden, FileData file) {
     setAssignmentItem(item);
     setFileDate(new Date());
     setFile(file);
   }
+
   public boolean isFileAuthorized(User user) {
     // See TransactionHandler.authorizeDownload
     throw new NotImplementedException();

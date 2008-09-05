@@ -7,7 +7,7 @@ public class CategoryContentsNumber extends CategoryContents {
   public int  getValue() { return this.value; }
   public void setValue(final int value) { this.value = value; }
   
-  public CategoryContentsNumber(CategoryColumn col, CategoryRow row, int value) {
+  CategoryContentsNumber(CategoryColumn col, CategoryRow row, int value) {
     super(col, row);
     setValue(value);
   }

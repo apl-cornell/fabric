@@ -83,7 +83,7 @@ public class Student {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Student(Course course, User user) {
+  Student(Course course, User user) {
     setUser(user);
     setCourse(course);
     setCredits(null);

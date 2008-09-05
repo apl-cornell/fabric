@@ -48,7 +48,7 @@ public class TimeSlot {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public TimeSlot() {
+  TimeSlot() {
     // TODO: unclear from CMS what happens in corresponding ejbCreate
   }
   

@@ -27,7 +27,7 @@ public abstract class CategoryContents {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public CategoryContents(CategoryColumn column, CategoryRow row) {
+  protected CategoryContents(CategoryColumn column, CategoryRow row) {
   }
 
   //////////////////////////////////////////////////////////////////////////////

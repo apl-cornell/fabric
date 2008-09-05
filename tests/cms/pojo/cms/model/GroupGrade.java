@@ -33,7 +33,7 @@ public class GroupGrade {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public GroupGrade(Group group, float score, boolean isAveraged, SubProblem subproblem) {
+  GroupGrade(Group group, float score, boolean isAveraged, SubProblem subproblem) {
     setGroup(group);
     setScore(score);
     setAveraged(isAveraged);

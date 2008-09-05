@@ -11,7 +11,7 @@ public class CategoryContentsLink extends CategoryContents {
   public void setAddress(final String address) { this.address = address; }
   public void setLabel(final String label)     { this.label   = label;   }
   
-  public CategoryContentsLink(CategoryRow row, CategoryColumn col, String address, String label) {
+  CategoryContentsLink(CategoryRow row, CategoryColumn col, String address, String label) {
     super(col, row);
     setAddress(address);
     setLabel(label);

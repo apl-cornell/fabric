@@ -48,7 +48,7 @@ public class RegradeRequest {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public RegradeRequest(SubProblem subProblem, Group group, User user, String request) {
+  RegradeRequest(SubProblem subProblem, Group group, User user, String request) {
     setDateEntered(new Date());
     setSubProblem(subProblem);
     setGroup(group);

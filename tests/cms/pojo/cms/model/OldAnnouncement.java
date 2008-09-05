@@ -27,7 +27,7 @@ public class OldAnnouncement {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public OldAnnouncement(Announcement announcement, String text) {
+  OldAnnouncement(Announcement announcement, String text) {
     setAnnouncement(announcement);
     setText(text);
   }

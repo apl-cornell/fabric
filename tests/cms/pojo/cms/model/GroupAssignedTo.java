@@ -35,7 +35,7 @@ public class GroupAssignedTo {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public GroupAssignedTo(Group group, User user, SubProblem subProblem) {
+  GroupAssignedTo(Group group, User user, SubProblem subProblem) {
     setGroup(group);
     setUser(user);
     setSubProblem(subProblem);

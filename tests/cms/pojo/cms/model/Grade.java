@@ -41,7 +41,7 @@ public class Grade {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Grade(Assignment assign, SubProblem subProblem, Float grade, User user, User grader) {
+  Grade(Assignment assign, SubProblem subProblem, Float grade, User user, User grader) {
     setAssignment(assign);
     setSubProblem(subProblem);
     setGrade(grade);

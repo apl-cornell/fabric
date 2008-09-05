@@ -41,7 +41,7 @@ public class Email {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Email(Course course, User sender, String subject, String message, int recipient) {
+  Email(Course course, User sender, String subject, String message, int recipient) {
     setCourse(course);
     setSender(sender);
     setSubject(subject);

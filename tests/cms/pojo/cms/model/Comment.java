@@ -39,7 +39,7 @@ public class Comment {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Comment(String comment, User user, Group group) {
+  Comment(String comment, User user, Group group) {
     setComment(comment);
     setUser(user);
     setGroup(group);

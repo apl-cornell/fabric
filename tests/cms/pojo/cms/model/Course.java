@@ -115,7 +115,7 @@ public class Course {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Course(String name, String description, String code, Semester semester) {
+  Course(String name, String description, String code, Semester semester) {
     setName(name);
     setDescription(description);
     setCode(code);

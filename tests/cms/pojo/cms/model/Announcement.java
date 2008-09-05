@@ -53,7 +53,7 @@ public class Announcement {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Announcement(Course course, User author, String text) {
+  Announcement(Course course, User author, String text) {
     this.setCourse (course);
     this.setAuthor (author);
     this.setText   (text);
