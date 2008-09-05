@@ -42,6 +42,9 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
   
   public Atomic Atomic(Position pos, List<Stmt> statements) {
     Atomic result = new Atomic_c(pos, statements);
+    // note: this is correct.  fabricExtFactory() is a factory that returns Jif
+    // extension objects with their ext() pointers referring to Fabric Ext
+    // objects, which is as it should be.
     result = (Atomic) result.ext(fabricExtFactory().extAtomic());
     result = (Atomic) result.del(fabricDelFactory().delAtomic());
     return result;
