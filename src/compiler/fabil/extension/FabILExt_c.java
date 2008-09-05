@@ -28,4 +28,9 @@ public class FabILExt_c extends Ext_c implements FabILExt {
   public Node rewriteThreads(ThreadRewriter tr) {
     return node();
   }
+  
+  /** Return the Fabric extension object associated with a node. */
+  public static FabILExt ext(Node n) {
+    return (FabILExt) n.ext().ext();
+  }
 }
