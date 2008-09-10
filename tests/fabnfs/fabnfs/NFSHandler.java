@@ -25,7 +25,7 @@ class NFSHandler extends rpcHandler implements RPCConsts, NFSConsts
     NFSHandler(Handle handles, PathMapper pm, FileSystemInfo fsi, TimeMapper tm) {
 	// tell parent about me
 	super(NFS_PROG, NFS_VERS);
-	
+
 	// assign state variables
 	fileHandles = handles; // file handle to file name mapping class
 	pathmapper = pm; // maps network paths to local paths
@@ -34,7 +34,7 @@ class NFSHandler extends rpcHandler implements RPCConsts, NFSConsts
 
 	// directory helper, does readdir
 	dirService = new NFSDir(fileHandles, pathmapper, timemapper, fsinfo);
-	
+
 	// io helper, does file read and write
 	ioService = new NFSIO(fileHandles, timemapper, fsinfo);
 
@@ -42,7 +42,7 @@ class NFSHandler extends rpcHandler implements RPCConsts, NFSConsts
 	// packetQueue = new XIDCache();
         packetCache = new XDRPacketCache();
     };
-    
+
     // process a packet and send a reply packet.
     int iteration = 0;
     public void Run(UDPPacketPort port, long xid,
@@ -54,7 +54,7 @@ class NFSHandler extends rpcHandler implements RPCConsts, NFSConsts
 
 //        System.err.println("Calling NFS Procedure " + procedure);
 	//
-	// see if this packet has already been received 
+	// see if this packet has already been received
 	//
         // XXX Turn off the XIDCache - is this thing really helpful?
         //
@@ -113,7 +113,7 @@ class NFSHandler extends rpcHandler implements RPCConsts, NFSConsts
 	      result = dirService.StatFS(xid, packet);
 	      break;
 	    default:
-	      System.err.print("Unsupported NFS procedure called (" 
+	      System.err.print("Unsupported NFS procedure called ("
                                + procedure + ") from "
                                + packet.Source().getHostAddress() + "\n");
 	      throw new NFSException(xid, NFSERR_IO);
@@ -125,7 +125,7 @@ class NFSHandler extends rpcHandler implements RPCConsts, NFSConsts
 	    result.AddLong(e.GetError());
 	}
 	Date end = new Date();
-	
+
 //	if (iteration % 10 == 0) {
 //	    System.out.print("call took " + (end.getTime() - begin.getTime())
 //			       + "ms");
@@ -151,15 +151,15 @@ class NFSHandler extends rpcHandler implements RPCConsts, NFSConsts
     };
 
     // report to the client that the requested proc is not supported
-    XDRPacket NFSProtoNotSupported(UDPPacketPort port, long xid, 
+    XDRPacket NFSProtoNotSupported(UDPPacketPort port, long xid,
 				   long procedure, XDRPacket packet) {
 	// Put together an XDR reply packet
 	XDRPacket result = new XDRPacket(128);
 	result.AddReplyHeader(xid);
 	result.AddLong(NFSERR_STALE);
-	
+
 	return result;
     };
 
 };
-	    
+

@@ -1,7 +1,7 @@
 package fabnfs.util;
 
 public interface File {
-  
+
   public boolean exists();
 
   public boolean isFile();
@@ -27,7 +27,7 @@ public interface File {
   public boolean renameTo(File dest);
 
   public boolean reset();
-  
+
   public long length();
 
 }

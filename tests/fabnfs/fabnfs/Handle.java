@@ -62,7 +62,7 @@ class Handle extends java.lang.Object  {
 	while (numberToName.size() <= (int) id)
 	    numberToName.addElement(null);
 	numberToName.setElementAt(name, (int) id);
-	
+
 	// update sequence number to be bigger than id
 	if (sequence <= id)
 	    sequence = id + 1;

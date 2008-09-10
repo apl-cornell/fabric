@@ -4,7 +4,7 @@ interface NFSConsts {
     public long NFS_PORT = 2049;
     public long NFS_VERS = 2;
     public long NFS_PROG = 100003;
-    
+
     // nfs procedures
     public long NFS_NULL = 0;
     public long NFS_GETATTR = 1;
@@ -48,7 +48,7 @@ interface NFSConsts {
     // boolean types
     public long NFS_TRUE = 1;
     public long NFS_FALSE = 0;
-    
+
     // file types - values for the ftype field in the attributes struct
     public long FT_NFNON = 0;
     public long FT_NFREG = 1;

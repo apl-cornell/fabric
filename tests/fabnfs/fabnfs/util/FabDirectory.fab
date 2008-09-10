@@ -6,7 +6,7 @@ import fabric.util.Iterator;
 
 public class FabDirectory extends FileSystemObject {
 
-    /** 
+    /**
      * Elements of this directory. Could be files or other directories
      */
     private HashMap dirElements;
@@ -25,7 +25,7 @@ public class FabDirectory extends FileSystemObject {
     public FileSystemObject getFile(String name) {
 //        System.out.println(this.toString() + ": Looking up " + name + " in " + fileName + "(" + fullPath + ")" + ": " + listString());
         FileSystemObject fso = (FileSystemObject)dirElements.get(name);
-        if(fso == null) {
+        if (fso == null) {
 //            System.err.println("Found nothing!");
         }
         return fso;
@@ -35,7 +35,7 @@ public class FabDirectory extends FileSystemObject {
         atomic {
 //            System.out.println(this.toString() + ": Removing " + name + " from " + fileName + "(" + fullPath + ")" + ": " + listString());
             FileSystemObject fso = (FileSystemObject)dirElements.remove(name);
-            if(fso == null) {
+            if (fso == null) {
                 throw new NullPointerException();
             }
 //            System.out.println(this.toString() + ": Removed " + name + " from " + fileName + "(" + fullPath + ")" + ": " + listString());

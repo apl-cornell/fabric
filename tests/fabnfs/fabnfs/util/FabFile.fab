@@ -3,11 +3,11 @@ package fabnfs.util;
 import fabnfs.util.ResizableFileByteArray;
 
 public class FabFile extends FileSystemObject {
-    
+
     // file attributes should be here
-    
+
     ResizableFileByteArray contents;
-    
+
     public FabFile(String name, FabDirectory parent, String fullPath) {
         super(name, parent, fullPath);
         contents = new ResizableFileByteArray();

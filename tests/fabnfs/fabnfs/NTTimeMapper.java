@@ -6,12 +6,12 @@ class NTTimeMapper extends TimeMapper {
 
     // computed constant - the NT local time for jan 1 1970
     long startTime;
-    
+
     NTTimeMapper() {
 	// gotta load in a 64 bit number
 	startTime = 27111902 << 32 + 54590 << 16 + 32768;
     }
-    
+
     long Seconds(long lt) {
 	long delta = lt - startTime;
 	delta /= 1000;
@@ -23,4 +23,4 @@ class NTTimeMapper extends TimeMapper {
 	return delta;
     }
 };
- 
+

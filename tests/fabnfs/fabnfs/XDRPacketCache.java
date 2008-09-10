@@ -27,11 +27,11 @@ public class XDRPacketCache extends java.lang.Object  {
 
     XDRPacket find(int desiredLen) {
         attempts++;
-        
+
         Integer key = new Integer(desiredLen);
         Vector bucket = (Vector) cache.get(key);
         XDRPacket result = null;
-        
+
         // make sure the packet is reinitialized
         if (bucket != null && bucket.size() > 0) {
             hits++;

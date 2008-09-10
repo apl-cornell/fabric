@@ -11,13 +11,13 @@ class portmapMapping extends java.lang.Object  {
     long port;
     portmapMapping next;
 
-    portmapMapping(long pg, long vr, long pr) { 
+    portmapMapping(long pg, long vr, long pr) {
 	prog = pg;
 	vers = vr;
 	prot = pr;
-	next = null; 
+	next = null;
     }
-    
+
     // some accessor functions
     long Program() { return prog; }
     long Version() { return vers; }
@@ -49,7 +49,7 @@ class portMapHandler extends rpcHandler implements RPCConsts, PortMapConst {
 
     portMapHandler() {
 	super(PM_PROG, PM_VERS);
-	
+
 	mappings = new Hashtable();
 
 	Register(PM_PROG, PM_VERS, UDPProto, PortMapConst.PMAP_PORT);
@@ -92,7 +92,7 @@ class portMapHandler extends rpcHandler implements RPCConsts, PortMapConst {
 	// Put together an XDR reply packet
 	XDRPacket result = new XDRPacket(128);
 	result.Reset();
-	
+
 	result.AddLong(xid);
 	result.AddLong(RPCReply);
 	result.AddLong(RPCMsgAccepted);
@@ -146,7 +146,7 @@ class portMapHandler extends rpcHandler implements RPCConsts, PortMapConst {
 	    long versmax = chain.Version();
 	    while (chain != null) {
 		if (chain.Version() == vers) {
-		    System.out.print("Found program/version on port " + 
+		    System.out.print("Found program/version on port " +
 				     chain.Port() + "\n");
 		    result.AddLong(RPCSuccess);
 		    result.AddLong(chain.Port());
@@ -156,7 +156,7 @@ class portMapHandler extends rpcHandler implements RPCConsts, PortMapConst {
 		    versmin = chain.Version();
 		else if (chain.Version() > versmax)
 		    versmax = chain.Version();
-		
+
 		chain = chain.Next();
 	    }
 	    if (chain == null) { // didn't find the correct version
@@ -177,7 +177,7 @@ class portMapHandler extends rpcHandler implements RPCConsts, PortMapConst {
         long end = System.currentTimeMillis(); // XXX GROT
         System.err.println("PMGetPort took " + (end - begin) + "ms"); //XXX GROT
     };
-    
+
     void PMSet(UDPPacketPort udp, long xid, long procedure,
 		   XDRPacket packet) {
 	// skip past the authentication records
@@ -194,7 +194,7 @@ class portMapHandler extends rpcHandler implements RPCConsts, PortMapConst {
 
 	XDRPacket result = new XDRPacket(128);
 	result.AddReplyHeader(xid);
-	
+
 	// look for the chain of versions for this program
 	Long pl = new Long(prog);
 	portmapMapping chain = (portmapMapping) mappings.get(pl);
@@ -219,24 +219,24 @@ class portMapHandler extends rpcHandler implements RPCConsts, PortMapConst {
 	}
 
 	System.out.print("Registering prog " + prog + " vers "
-			 + vers + " prot " + prot + 
+			 + vers + " prot " + prot +
 			 " port " + port + "\n");
 
 	udp.SendPacket(packet.Source(), packet.Port(), result);
     };
-    
+
     void PMUnset(UDPPacketPort udp, long xid, long procedure, XDRPacket packet) {
       // skip past the authentication records
       packet.ReadAuthentication();
       packet.ReadAuthentication();
-      
+
       // Collect the arguments to the procedure
       long prog = packet.GetLong();
       long vers = packet.GetLong();
-      
+
       XDRPacket result = new XDRPacket(128);
       result.AddReplyHeader(xid);
-      
+
       // look for the chain of versions for this program
       Long pl = new Long(prog);
       boolean removed = false;
@@ -258,15 +258,15 @@ class portMapHandler extends rpcHandler implements RPCConsts, PortMapConst {
             prev.SetNext(chain.Next());
           }
         }
-        
+
         prev = chain;
         chain = chain.Next();
       }
-      
+
       result.AddLong(removed ? PM_TRUE : PM_FALSE);
       udp.SendPacket(packet.Source(), packet.Port(), result);
     }
-    
+
     void Register(long prog, long vers, long prot, long port) {
 	PortmapRegister pr = new PortmapRegister(prog, vers, prot, port);
     }
@@ -279,26 +279,26 @@ class PortmapRegister implements RPCConsts, PortMapConst {
     //
     PortmapRegister(long procid, long vers, long proto, long port) {
 	XDRPacket packet = new XDRPacket(128);
-	
+
 	packet.AddLong(0);      // xid
 	packet.AddLong(RPCCall);// type
-	
+
 	packet.AddLong(2);      // rpc version
 	packet.AddLong(PM_PROG); // portmapper program number
 	packet.AddLong(2);      // portmapper version
 	packet.AddLong(PMAP_SET); // PM_SET
-	
+
 	packet.AddNullAuthentication();
 	packet.AddNullAuthentication();
-	
+
 	packet.AddLong(procid); // program to register
 	packet.AddLong(vers);   // version to register
 	packet.AddLong(proto);  // protocol to register
 	packet.AddLong(port);   // port portmapper listens on
-	
+
 	UDPPacketPort udp = new UDPPacketPort(-1);
 	udp.InitializePort();
-	
+
 	try {
 	    InetAddress ia;
 	    ia = InetAddress.getLocalHost();
@@ -306,7 +306,7 @@ class PortmapRegister implements RPCConsts, PortMapConst {
 	} catch(UnknownHostException e) {
 	    System.err.print("Couldn't get address for localhost\n");
 	}
-	
+
     };
 };
 

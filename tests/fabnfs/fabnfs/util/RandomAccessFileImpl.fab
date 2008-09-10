@@ -13,14 +13,14 @@ public class RandomAccessFileImpl implements RandomAccessFile {
     public RandomAccessFileImpl(Core remoteCore, String path) throws IOException {
         this.file = new FileImpl(remoteCore, path);
 
-        if(!file.exists()) {
+        if (!file.exists()) {
 //            System.err.println("File " + path + " does not exist. Creating it...");
-            if(!file.mkfile()) {
+            if (!file.mkfile()) {
                 throw new IOException("Cannot find or create file: " + path);
             }
         }
         fabFile = file.element;
-        if(fabFile instanceof FabFile) {
+        if (fabFile instanceof FabFile) {
             contents = ((FabFile)fabFile).contents;
         } else {
             contents = null;
@@ -34,8 +34,8 @@ public class RandomAccessFileImpl implements RandomAccessFile {
 
     public void write(FileByteArray b, int off, int len) {
         atomic {
-            if(contents == null) return;
-            if(contents.getLength() < currentPos + len) {
+            if (contents == null) return;
+            if (contents.getLength() < currentPos + len) {
                 contents.setLength(currentPos + len);
             }
             for(int i = 0; i < len; i++) {

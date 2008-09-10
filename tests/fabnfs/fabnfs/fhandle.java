@@ -17,7 +17,7 @@ class fhandle extends java.lang.Object  {
     long root;     // handle of the root of this mount point
     long handle;   // handle of the file
     long readonly; // is the mount read only?
-    
+
     // Initialize this fhandle from the packet, leave the position in the
     //   packet just past the fhandle.
     fhandle(XDRPacket source) {
@@ -31,7 +31,7 @@ class fhandle extends java.lang.Object  {
     long Root() { return root; }
     long Handle() { return handle; }
     long ReadOnly() { return readonly; }
-    
+
     boolean Read(XDRPacket source) {
 	// the first long in the packet is the handle of the root
 	root = source.GetLong();
@@ -46,32 +46,32 @@ class fhandle extends java.lang.Object  {
 
 	return true;
     };
-    
+
     boolean Set(long toroot, long tohandle, long toreadonly) {
 	root = toroot;
 	handle = tohandle;
 	readonly = toreadonly;
-	
+
 	return true;
     };
-    
+
     // Put this handle into a packet as an XDR fhandle that the client
     //   side can read.
     boolean Emit(XDRPacket to) {
 	to.AddLong(root);
 	to.AddLong(handle);
 	to.AddLong(readonly);
-	// the rest of the words of the handle should be 0.  Since there 
+	// the rest of the words of the handle should be 0.  Since there
 	//   are 32 bytes in a handle, there are 8 words and the above
 	//   consumed 3 of them, so there are 5 left.
-	for (int i = 0; i < 5; i++) 
+	for (int i = 0; i < 5; i++)
 	    to.AddLong(0);
-	
+
 	return true;
     };
 
     void Print() {
-	System.out.print("File handle root=" + root + 
+	System.out.print("File handle root=" + root +
 			 " handle=" + handle +
 			 " readonly=" + readonly + "\n");
     }

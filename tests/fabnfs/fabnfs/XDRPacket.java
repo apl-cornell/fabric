@@ -12,10 +12,10 @@ class XDRPacket extends java.lang.Object  implements RPCConsts {
     // store information about where the packet came from
     InetAddress source;
     int port;
-    
+
     // control debugging output
     boolean debug = false;
-    
+
     XDRPacket(DatagramPacket input) {
         byte[] buf = input.getData();
         data = new byte[buf.length];
@@ -25,9 +25,9 @@ class XDRPacket extends java.lang.Object  implements RPCConsts {
 	source = input.getAddress();
 	port = input.getPort();
     };
-    
+
     XDRPacket(int size) {
-	len = size; 
+	len = size;
 	data = new byte[len];
 	position = 0;
     }
@@ -61,10 +61,10 @@ class XDRPacket extends java.lang.Object  implements RPCConsts {
      	long len = GetLong();
 
 	char [] buf = new char[(int) len];
-	for (int i = 0; i < len; i++) 
+	for (int i = 0; i < len; i++)
 	    buf[i] = (char) data[i + position];
 	String result = new String(buf);
-	
+
 	Advance(len);
 	return result;
     };
@@ -80,7 +80,7 @@ class XDRPacket extends java.lang.Object  implements RPCConsts {
 	}
 	position += 4;
     };
-    
+
     public long AddString(String s) {
 	long length = (long) s.length();
 
@@ -88,7 +88,7 @@ class XDRPacket extends java.lang.Object  implements RPCConsts {
 	for (long l = 0; l < length; l++)
 	    data[(int) l + position] = (byte) s.charAt((int) l);
 	Advance(length);
-	
+
 	return 4 + 4 * ((length + 3) / 4);
     }
 
@@ -118,7 +118,7 @@ class XDRPacket extends java.lang.Object  implements RPCConsts {
 	Advance(plen);
 	return plen;
     };
-    
+
     // Add the standard procedure you requested was called reply header
     public void AddReplyHeader(long xid) {
 	AddLong(xid);
@@ -132,13 +132,13 @@ class XDRPacket extends java.lang.Object  implements RPCConsts {
 	AddLong(0); /* the type */
 	AddLong(0); /* the length */
     };
-    
+
     public void ReadAuthentication() {
 	long type = GetLong();
 	long length = GetLong();
 	Advance(length);
     };
-    
+
     public void Advance(long length) {
 	long words = (length + 3) / 4;
 	long delta = 4 * words;

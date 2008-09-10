@@ -3,35 +3,35 @@ package fabnfs;
 //
 // Copyright 1997, 1998 Steven James Procter
 // All rights under copyright reserved.
-//  
+//
 // Everyone is granted permission to copy, modify and redistribute this code.
 // Modification or redistribution for profit is expressely disallowed.
 // The copyright notice and this notice must be preserved on all copies.
-// 
+//
 // This software is distributed as-is.  No warranty of merchantability or
 // fitness for any purpose is stated or implied.
-// 
+//
 // It is my intention that anyone be able to use this software but not
 // incorporate it or any part of it into any product or any software which
 // is sold without first obtaining a licensing agreement from me the author.
-// 
+//
 // 							Steven James Procter
 // 							steven@void.org
 // 							March 1997
 //
 
-class nfs implements NFSConsts, MountdConsts, RPCConsts { 
+class nfs implements NFSConsts, MountdConsts, RPCConsts {
     rpcManager rpcmanager; // rpc packet dispatcher
     MountdHandler mountd;  // class to get and dispatch mountd requests
     NFSMTHandler nfs;	   // like mountdhandler for NFS requests
     Thread pmThread = null;// the portmapper thread
-    
+
     // parameters
     String cacheFileName = "cache";
     String exportsFileName = "exports";
     boolean runPortmap = true; // run portmapper in another thread?
 
-    // 
+    //
     // Prepare to run the NFS server.  The server is actually started with
     //   the method Run(), but this loads in all of the information and
     //   prepares everything to run.
@@ -58,7 +58,7 @@ class nfs implements NFSConsts, MountdConsts, RPCConsts {
 	PortmapRegister nfsreg = new PortmapRegister(nfs.Program(),
 						     nfs.Version(),
 						     UDPProto, NFS_PORT);
-	
+
 	// load in the exports file - if it doesn't exist all mount
 	//   requests will be refused
 	Exports exports = new Exports(exportsFileName, pm);
@@ -68,7 +68,7 @@ class nfs implements NFSConsts, MountdConsts, RPCConsts {
 			       " - no mounts will be allowed.");
 	}
 	System.out.println("  done");
-	
+
 	// create and register a mountd handler
 	mountd = new MountdHandler(handles, exports, pm);
 	rpcmanager.RegisterHandler(mountd);
@@ -82,7 +82,7 @@ class nfs implements NFSConsts, MountdConsts, RPCConsts {
     //   from the user and sets flags (like runPortmap or exportsFileName).
     //
     boolean ProcessArguments(String args[]) {
-      if(args != null)
+      if (args != null)
 	for (int i = 0; i < args.length; i++) {
 	    if (args[i].equals("-p")) {
 	        runPortmap = false;
@@ -114,11 +114,11 @@ class nfs implements NFSConsts, MountdConsts, RPCConsts {
     };
     // print out a usage message
     void Usage() {
-	System.err.println("Usage: ntnfs [-p]" + 
+	System.err.println("Usage: ntnfs [-p]" +
 			   " [-c cache-file-name]" +
 			   " [-e exports-file-name]");
     }
-    
+
     //
     // If the portmapper is to run in this process, create a thread for it and
     //   start it in that thread.
@@ -147,7 +147,7 @@ class nfs implements NFSConsts, MountdConsts, RPCConsts {
 	// get packets and dispatch them forever
 	rpcmanager.MainLoop();
     };
-    
+
     public static void main(String args[]) {
 	System.err.println("You cannot run NFS directly.  You need to specify");
 	System.err.println("which platform you want to run on by starting the");

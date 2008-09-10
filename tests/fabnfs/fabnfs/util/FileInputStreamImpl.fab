@@ -7,34 +7,34 @@ import java.io.IOException;
 public class FileInputStreamImpl implements FileInputStream {
     FileImpl file;
     ResizableFileByteArray barray;
-    
+
     int currentPos = 0;
-    
+
     public FileInputStreamImpl(Core remoteCore, String fileName) throws IOException {
         file = new FileImpl(remoteCore, fileName);
-        if(!file.exists()) {
+        if (!file.exists()) {
             throw new IOException("File " + fileName + " does not exist");
         }
-        if(!(file.element instanceof FabFile)) {
+        if (!(file.element instanceof FabFile)) {
             throw new IOException("File " + fileName + " is a directory");
         }
         barray = ((FabFile)file.element).contents;
     }
-    
+
     public long skip(long n) {
         currentPos = currentPos + (int)n;
         return n;
     }
-    
+
     public int read(FileByteArray fbarray) {
         return barray.get(currentPos, fbarray);
-        
+
     }
-    
+
     public int read() {
         return barray.get(currentPos++);
     }
-    
+
     public void close() {
         // hopefully this will be garbage collected
         barray = null;

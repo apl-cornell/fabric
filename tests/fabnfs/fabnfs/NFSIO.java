@@ -74,15 +74,15 @@ class NFSIO implements NFSConsts, RPCConsts {
 	    long offset = packet.GetLong();
 	    long count = packet.GetLong();
 	    long totalCount = packet.GetLong(); // not used
-	    
+
 	    // do the operation
 	    String fileName = handles.Lookup(fh.Handle());
 	    if (fileName == null)
 	        throw new NFSException(xid, NFSERR_STALE);
 	    // XXX Comment out read lines to improve performance
-//	     System.err.print("Read(" + fileName + ", " + count + ", " + 
+//	     System.err.print("Read(" + fileName + ", " + count + ", " +
 //	    		     offset + ")\n");
-	    
+
 	    if (count <= 0) {
 		System.err.println("\tRead: invalid value for count " + count);
 		throw new NFSException(xid, NFSERR_IO);
@@ -95,14 +95,14 @@ class NFSIO implements NFSConsts, RPCConsts {
 	    fd.close();
 	    // XXX comment out prints to improve performance
 	    // System.err.println("Read: got " + numberRead + " bytes");
-	    
+
 	    // Make sure something was read in */
 	    if (numberRead < 0) {
-		System.err.println("\tRead error: number read is " 
+		System.err.println("\tRead error: number read is "
 				   + numberRead);
 		numberRead = 0;
 	    }
-	    
+
 	    // load in file attributes.
 	    fattr fa = new fattr(fsinfo, handles, tm);
 	    fa.Load(fileName);
@@ -116,7 +116,7 @@ class NFSIO implements NFSConsts, RPCConsts {
 	    reply.AddData(numberRead, readbuf.contents);
 
 	    return reply;
-	    
+
 	} catch(FileNotFoundException e) {
 	    throw new NFSException(xid, NFSERR_NOENT);
 	} catch(IOException e) {

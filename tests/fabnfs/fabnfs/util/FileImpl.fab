@@ -9,7 +9,7 @@ import java.util.StringTokenizer;
  * This tries to mimic java.io.File. However, the spirit is different, since
  * java.io.File is just a layer over the actual file in the filesystem, whereas
  * fabnfs.util.File is the file itself
- * 
+ *
  * Also, let's say all paths are absolute
  */
 public class FileImpl implements File {
@@ -33,7 +33,7 @@ public class FileImpl implements File {
     // all the methods in java.io.File
     private void searchFile() {
         atomic {
-            if(parentDir != null || element != null || lastName != null) return;
+            if (parentDir != null || element != null || lastName != null) return;
             HashMap root = (HashMap)remoteCore.getRoot();
             FabDirectory rootDir = (FabDirectory)root.get("fileSystem");
             FabDirectory dir = rootDir;
@@ -46,8 +46,8 @@ public class FileImpl implements File {
                 obj = dir.getFile(token);
                 boolean moreToks = tokenizer.hasMoreTokens();
                 boolean isDir = (obj instanceof FabDirectory);
-                if(moreToks) {
-                    if(!isDir) {
+                if (moreToks) {
+                    if (!isDir) {
                         return;
                     }
                     dir = (FabDirectory)obj;
@@ -70,12 +70,12 @@ public class FileImpl implements File {
 
     public boolean isFile() {
         atomic {
-            if(element == null) {
-                if(!exists()) {
+            if (element == null) {
+                if (!exists()) {
                     return false;
                 }
             }
-            if(element instanceof FabFile) {
+            if (element instanceof FabFile) {
                 return true;
             }
             return false;
@@ -84,12 +84,12 @@ public class FileImpl implements File {
 
     public boolean isDirectory() {
         atomic {
-            if(element == null) {
-                if(!exists()) {
+            if (element == null) {
+                if (!exists()) {
                     return false;
                 }
             }
-            if(element instanceof FabDirectory) {
+            if (element instanceof FabDirectory) {
                 return true;
             }
             return false;
@@ -110,7 +110,7 @@ public class FileImpl implements File {
     public long lastModified() {
         atomic {
                 searchFile();
-            if(element == null) {
+            if (element == null) {
                 return 0;
             }
             return element.lastModifiedDate;
@@ -128,7 +128,7 @@ public class FileImpl implements File {
 
     public StringArray list() {
         atomic {
-            if(!isDirectory()) {
+            if (!isDirectory()) {
                 return null;
             }
             FabDirectory dir = (FabDirectory)element;
@@ -138,15 +138,15 @@ public class FileImpl implements File {
 
     public boolean mkdir() {
         atomic {
-            if(element != null) {
+            if (element != null) {
                 return false;
             }
-            if(parentDir == null) {
+            if (parentDir == null) {
                 searchFile();
             }
 
             element = parentDir.mkdir(lastName, name);
-            if(element == null) {
+            if (element == null) {
                 return false;
             }
             return true;
@@ -155,16 +155,16 @@ public class FileImpl implements File {
 
     public boolean mkfile() {
         atomic {
-            if(element != null) {
+            if (element != null) {
                 return false;
             }
-            if(parentDir == null) {
+            if (parentDir == null) {
                 searchFile();
             }
 
 //            System.out.println("Going to add file to parent");
             element = parentDir.mkfile(lastName, name);
-            if(element == null) {
+            if (element == null) {
                 return false;
             }
             return true;
@@ -173,11 +173,11 @@ public class FileImpl implements File {
 
     public boolean renameTo(File dest) {
         atomic {
-//          XXX Allowing rename even if dest exists            
-//          if(dest.exists()) {
+//          XXX Allowing rename even if dest exists
+//          if (dest.exists()) {
 //          return false;
 //          }
-            
+
             // setup the dest file
             FileImpl destImpl = (FileImpl)dest;
             destImpl.searchFile();
@@ -189,17 +189,17 @@ public class FileImpl implements File {
             this.parentDir.deleteFile(lastName);
             this.element = null;
             this.parentDir = null;
-            
+
             return true;
         }
     }
 
     public boolean reset() {
         atomic {
-            if(!exists()) {
+            if (!exists()) {
                 return false;
             }
-            if(!(element instanceof FabFile)) {
+            if (!(element instanceof FabFile)) {
                 return false;
             }
             FabFile file = (FabFile)element;
@@ -210,10 +210,10 @@ public class FileImpl implements File {
 
     public long length() {
         atomic {
-            if(!exists()) {
+            if (!exists()) {
                 return 0;
             }
-            if(!(element instanceof FabFile)) {
+            if (!(element instanceof FabFile)) {
                 return 0;
             }
             FabFile file = (FabFile)element;

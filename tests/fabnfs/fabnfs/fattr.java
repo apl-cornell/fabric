@@ -27,21 +27,21 @@ class fattr implements NFSConsts, UnixPermissions {
     timeval      atime;
     timeval      mtime;
     timeval      ctime;
-    
+
     static boolean debug = false;
     static TimeMapper tm;
     Handle fileHandles;
-    
+
     Core core;
     Core localCore;
     FileSystemInfo fsinfo;
-    
+
     fattr(FileSystemInfo finfo, Handle h, TimeMapper t) {
       this.fsinfo = finfo;
       fileHandles = h;
       tm = t;
     }
-    
+
     fattr(boolean controlDebug) { debug = controlDebug; }
 
     /* Never called */
@@ -64,7 +64,7 @@ class fattr implements NFSConsts, UnixPermissions {
 	    return false;
 	if (ctime.Read(from) == false)
 	    return false;
-	
+
 	return true;
     };
 
@@ -80,14 +80,14 @@ class fattr implements NFSConsts, UnixPermissions {
 	to.AddLong(blocks);
 	to.AddLong(fsid);
 	to.AddLong(fileid);
-	
+
 	if (atime.Emit(to) == false)
 	    return false;
 	if (mtime.Emit(to) == false)
 	    return false;
 	if (ctime.Emit(to) == false)
 	    return false;
-	
+
 	return true;
     };
 
@@ -127,7 +127,7 @@ class fattr implements NFSConsts, UnixPermissions {
 	}
 	if (fd.canWrite())
 	    mode |= UP_OWRITE | UP_GWRITE | UP_WWRITE;
-	
+
 	// from now on assume either file or directory
 	if (fd.isFile())
 	    nlink = 1;
@@ -137,7 +137,7 @@ class fattr implements NFSConsts, UnixPermissions {
 	uid = 0;
 	gid = 0;
 	// java.io.File seems to report the length of directories as 0
-	//   always which upsets some clients, so make directory size 
+	//   always which upsets some clients, so make directory size
 	//   always 512.
 	if (fd.isDirectory()) {
 	    size = 512;
@@ -161,7 +161,7 @@ class fattr implements NFSConsts, UnixPermissions {
 	atime = new timeval(tm.Seconds(lastmod), tm.MilliSeconds(lastmod));
 	ctime = new timeval(0, 0);
 	mtime = new timeval(tm.Seconds(lastmod), tm.MilliSeconds(lastmod));
-	
+
 	if (debug) {
 	    System.out.print("fattr: Mtime(" + lastmod + "): ");
 	    mtime.Print();

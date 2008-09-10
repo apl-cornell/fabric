@@ -11,12 +11,12 @@ class PacketCollector extends java.lang.Object  implements Runnable {
     MTList packets;
     UDPPacketPort socket;
     DatagramPacket packet;
-    
-    PacketCollector(UDPPacketPort udpport, MTList tolist) { 
+
+    PacketCollector(UDPPacketPort udpport, MTList tolist) {
 	socket = udpport;
 	packets = tolist;
     }
-    
+
     public synchronized void run() {
 	byte [] buf = new byte[10240]; // bigger than max nfs packet
 	for (;;) {
@@ -40,17 +40,17 @@ class PacketCollector extends java.lang.Object  implements Runnable {
 	//   can be reused.
 	notify();
     }
-    
+
     public PacketCollector Get() {
 	Object o = packets.Get();
 	if (o instanceof PacketCollector)
 	    return (PacketCollector) o;
-	
+
 	System.err.print("PacketCollector Get: packet queue contains"
 			 + " non-packet\n");
 	return null;
     }
-    
+
     // accessor method
     public DatagramPacket Packet() {
 	return packet;

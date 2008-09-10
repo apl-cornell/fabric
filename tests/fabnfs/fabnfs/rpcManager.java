@@ -24,7 +24,7 @@ class rpcManager extends java.lang.Object  implements RPCConsts {
   public void MainLoop() {
     // Create some threads to collect packets from the net
     MTList packets = new MTList();
-    for (int i = 0; i < 4; i++) 
+    for (int i = 0; i < 4; i++)
     {
       PacketCollector pc = new PacketCollector(socket, packets);
       new Thread(pc).start();
@@ -46,7 +46,7 @@ class rpcManager extends java.lang.Object  implements RPCConsts {
     bf.append('[');
     for(int i = offset; i < offset + length; i++) {
       bf.append(Integer.toString((int)array[i]));
-      if(i<offset + length) bf.append(',');
+      if (i<offset + length) bf.append(',');
     }
     bf.append(']');
     return bf.toString();
@@ -138,7 +138,7 @@ class rpcManager extends java.lang.Object  implements RPCConsts {
 
     // look for the handler for the requested version in the chain of
     //   handlers for this program number
-    rpcHandler handler = chain; 
+    rpcHandler handler = chain;
     long minvers = handler.Version();
     long maxvers = handler.Version();
     while (handler != null) {
@@ -172,12 +172,12 @@ class rpcManager extends java.lang.Object  implements RPCConsts {
     rpcHandler chain = (rpcHandler) handlers.get(l);
 
     // If there is no handler then this is the head of a new chain
-    if (chain == null) { 
+    if (chain == null) {
       handlers.put(l, handler);
       return 0;
     }
 
-    // Search the chain for the end or another handler for this 
+    // Search the chain for the end or another handler for this
     //   program, version pair.  If end found, append this handler
     //   to the chain.
     for (;;) {
@@ -196,7 +196,7 @@ class rpcManager extends java.lang.Object  implements RPCConsts {
     }
   };
 
-  public void ReportMismatch(XDRPacket packet, long xid, long proc, 
+  public void ReportMismatch(XDRPacket packet, long xid, long proc,
       long vers, long minvers, long maxvers) {
     XDRPacket reply = new XDRPacket(128);
     reply.AddLong(xid);
@@ -210,7 +210,7 @@ class rpcManager extends java.lang.Object  implements RPCConsts {
     socket.SendPacket(packet.Source(), packet.Port(), reply);
   };
 
-  public void ReportUnavail(XDRPacket packet, long xid, 
+  public void ReportUnavail(XDRPacket packet, long xid,
       long proc, long vers) {
     XDRPacket reply = new XDRPacket(128);
     reply.AddLong(xid);

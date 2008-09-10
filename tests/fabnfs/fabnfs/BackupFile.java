@@ -20,7 +20,7 @@ public class BackupFile {
     BackupFile(Handle handles, String cacheName) {
 	backupFileName = cacheName;
 	if (LoadCache(handles) == false)
-	    System.err.print("cache file: error loading file " + 
+	    System.err.print("cache file: error loading file " +
 			     backupFileName + "\n");
 	// create a way to add data to the cache file
 	try {
@@ -41,7 +41,7 @@ public class BackupFile {
 	}
 	return true;
     }
-    
+
     boolean ParseFile(Handle handles) throws FileNotFoundException, IOException{
 	FileInputStream fi = new FileInputStream("cache");
 	BufferedInputStream buf = new BufferedInputStream(fi, 8192);
@@ -52,19 +52,19 @@ public class BackupFile {
 	str.wordChars(17, 126);
 
         parseLoop:
-	  for (;;) { 
+	  for (;;) {
 	      String path;
 	      long value;
-	      
+
 	      //
 	      // the first token should be a word which is the name of the file
 	      //
 	      int next = str.nextToken();
 	      switch(next) {
 	      case StreamTokenizer.TT_EOF:
-		  if (str.lineno() > 0) 
+		  if (str.lineno() > 0)
 		      System.out.print("\n");
-		  System.out.print("end of cache found at line " 
+		  System.out.print("end of cache found at line "
 				   + str.lineno() + "\n");
 		  break parseLoop;
 	      case StreamTokenizer.TT_NUMBER:
@@ -75,7 +75,7 @@ public class BackupFile {
 				   str.lineno() + "\n");
 		  break parseLoop;
 	      }
-	    
+
 	      //
 	      // the next item should be handle number for this file name
 	      //
@@ -103,7 +103,7 @@ public class BackupFile {
 
 	return true;
     }
-    
+
     // store a binding in the backup file
     public boolean StoreItem(String path, long id) {
 	try {

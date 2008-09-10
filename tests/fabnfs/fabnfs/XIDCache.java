@@ -11,30 +11,30 @@ class XIDCache implements Runnable {
 
     XIDCache() {
 	items = new Hashtable();
-        // start the garbage collector 
+        // start the garbage collector
         Thread thd = new Thread(this);
         thd.start();
     }
-    
+
     // start a new xid in the queue
     boolean Start(long xid) {
 	if (Find(xid) != null) {
 	    System.err.print("Start xid=" + xid + " already queued\n");
 	    return false;
 	}
-	
+
 	// make a new xid queue item that isn't complete
 	XIDCacheItem qi = new XIDCacheItem();
 	qi.xid = xid;
 	qi.timeInQueueMS = System.currentTimeMillis();
 	qi.inprogress = true;
 	qi.packet = null;
-	
+
 	// and put it in the queue
 	Add(qi);
 	return true;
     }
-    
+
     // set the reply packet for this xid and turn off inprogress
     synchronized boolean SetPacket(long xid, XDRPacket packet) {
 	XIDCacheItem qi = Find(xid);
@@ -51,7 +51,7 @@ class XIDCache implements Runnable {
         // put this item into the hashtable
 	items.put(new Long(qi.xid), qi);
     }
-    
+
     synchronized XIDCacheItem Find(long xid) {
         return (XIDCacheItem) items.get(new Long(xid));
     }
@@ -100,7 +100,7 @@ class XIDCache implements Runnable {
         System.err.println("Warning: XIDCache garbage collector exited.");
         System.err.println("  Don't expect the system to keep running very long");
     }
-    
+
     public static void main(String args[]) {
 	XIDCache q = new XIDCache();
 
@@ -116,7 +116,7 @@ class XIDCache implements Runnable {
 	q.Clean();
 
 	XIDCacheItem qi = q.Find(36);
-	if (qi == null) 
+	if (qi == null)
             System.out.print("no item 36 found\n");
 	else
             qi.Print();
@@ -127,7 +127,7 @@ class XIDCache implements Runnable {
         long timeInQueueMS; // time it has been in the queue
         boolean inprogress; // is this packet in progress or done
         XDRPacket packet;
-    
+
         void Print() {
             System.out.print("XIDCacheItem(xid=" + xid + ", timeInQueue="
                              + timeInQueueMS + ", inprogress=" + inprogress

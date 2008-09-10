@@ -7,23 +7,23 @@ public class ResizableFileByteArray {
    * The backing array.
    */
   private byteArray data;
-  
+
   public ResizableFileByteArray() {
     data = new byteArray(0);
   }
-  
+
   public int getLength() {
     return data.getLength();
   }
-  
+
   public void setLength(int length) {
     data.setLength(length);
   }
-  
+
   public byte get(int i) {
     return data.get(i);
   }
-  
+
   public byte set(int i, byte val) {
     return data.set(i, val);
   }

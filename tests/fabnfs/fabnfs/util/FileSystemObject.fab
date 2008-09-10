@@ -1,60 +1,60 @@
 package fabnfs.util;
 
 public class FileSystemObject {
-    
+
     public static final String separatorChar = "/";
     String fullPath;
     String fileName;
     private FabDirectory parent;
-    
+
     private boolean deleted = false;
-    
+
     // have a bunch of attributes here
     public long lastModifiedDate;
-    
+
     public void moveTo(String fileName, FabDirectory parent, String fullPath) {
         this.fileName = fileName;
         this.parent = parent;
         this.fullPath = fullPath;
-        if(parent == null) {
+        if (parent == null) {
             throw new NullPointerException();
         }
     }
-    
+
 //    public void setParent(FabDirectory parent) {
 //        this.parent = parent;
-//        if(parent == null) {
+//        if (parent == null) {
 //            throw new NullPointerException();
-//        }        
+//        }
 //    }
 
-    
+
     public FileSystemObject(String name, FabDirectory parent, String fullPath) {
         this.fileName = name;
         this.parent = parent;
         this.fullPath = fullPath;
         this.lastModifiedDate = System.currentTimeMillis();
-        if(parent == null) {
+        if (parent == null) {
             throw new NullPointerException();
         }
     }
-    
+
     FileSystemObject(String name) {
         this.fileName = name;
         this.parent = (FabDirectory)this;
         this.fullPath = separatorChar;
         this.lastModifiedDate = System.currentTimeMillis();
-        if(parent == null) {
+        if (parent == null) {
             throw new NullPointerException();
         }
     }
-    
+
     public void selfDestruct() {
-        if(deleted) {
+        if (deleted) {
             System.out.println("Inode: Deleting an already deleted file!!");
             throw new NullPointerException();
         }
-        if(parent == null) {
+        if (parent == null) {
             System.out.println("Inode: Parent is unexpectedly null");
         }
         parent.deleteFile(fileName);

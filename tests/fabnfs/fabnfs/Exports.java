@@ -31,7 +31,7 @@ class Exports {
 				 + " source=" + Long.toString(ip, 16)
 				 + " config=" + Long.toString(ei.ipaddr, 16)
 				 + "\n");
-		if ((ip & mask) == (ei.ipaddr & mask)) 
+		if ((ip & mask) == (ei.ipaddr & mask))
 		    return true;
 	    }
 	}
@@ -43,10 +43,10 @@ class Exports {
 	    return Parse(exportsFile);
 	} catch (IOException e) {
 	    return false;
-	} 
+	}
     }
-    
-    boolean Parse(String fileName) 
+
+    boolean Parse(String fileName)
       throws FileNotFoundException, IOException {
 	FileInputStream in = new FileInputStream(fileName);
 	StreamTokenizer tok = new StreamTokenizer(in);
@@ -76,7 +76,7 @@ class Exports {
 		System.err.print("token=" + tok.ttype + "\n");
 		return false;
 	    }
-	
+
 	    tok.nextToken();
 	    if (tok.ttype == StreamTokenizer.TT_WORD) {
 		String ip = tok.sval;
@@ -87,7 +87,7 @@ class Exports {
 		}
 	    }
 	    else {
-		System.err.print("parse error on line " + tok.lineno() 
+		System.err.print("parse error on line " + tok.lineno()
 				 + " trying to read ip addr after path\n");
 		return false;
 	    }
@@ -104,7 +104,7 @@ class Exports {
 	    ei.Print();
 	}
     }
-    
+
 
     boolean ParseIP(String spec, int lineno, ExportsItem expitem) {
 	int position = 0; // offset in string, points to current character
@@ -119,7 +119,7 @@ class Exports {
 	        nextPosition++;
 	    if (nextPosition == position)
 	        break;
-	    
+
 	    // add this number to the ip address being constructed
 	    String num = spec.substring(position, nextPosition);
 	    long l = Long.parseLong(num);
@@ -129,15 +129,15 @@ class Exports {
 		return false;
 	    }
 	    if (octet > 3) {
-		System.err.print("too many octets in ip address line " 
+		System.err.print("too many octets in ip address line "
 				 + lineno + "\n");
 		return false;
 	    }
 	    ipaddr += l << (8 * (3 - octet));
 	    position = nextPosition;
-	    
+
 	    // if the next char is a . then expect some more ip address
-	    if (position < spec.length() && spec.charAt(position) == '.') 
+	    if (position < spec.length() && spec.charAt(position) == '.')
 		position++;
 	    else
 	        break;
@@ -161,12 +161,12 @@ class Exports {
 	    }
 	    else if (Character.isSpace(spec.charAt(position)) == false) {
 		System.err.print("illegal char (" + spec.charAt(position)
-				 + ") offset " + position 
+				 + ") offset " + position
 				 + " in the ip address line " + lineno + "\n");
 		return false;
 	    }
 	}
-	
+
 	expitem.ipaddr = ipaddr;
 	expitem.bits = bits;
 	return true;
@@ -179,7 +179,7 @@ class Exports {
 	result <<= (int) (32 - bits);
 	return result;
     }
-        
+
     // convert an array of bytes as returned from InetAddress.getAddress()
     //   into a long.
     long ToIPLong(byte [] addr) {
@@ -216,8 +216,8 @@ class ExportsItem {
 	path = null;
 	next = null;
     }
-    void Print() { 
-	System.out.print("ExportsItem(path=" + path + ", ipaddr=" 
+    void Print() {
+	System.out.print("ExportsItem(path=" + path + ", ipaddr="
 			 + Long.toString(ipaddr, 16)
 			 + ", bits=" + bits + ")\n");
     }

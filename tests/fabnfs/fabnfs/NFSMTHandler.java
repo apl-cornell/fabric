@@ -5,7 +5,7 @@ class NFSMTHandler extends rpcHandler implements RPCConsts, NFSConsts
   MTList packetq;
   NFSHandler handler;
 
-  NFSMTHandler(Handle handles, PathMapper pm, FileSystemInfo fsi, 
+  NFSMTHandler(Handle handles, PathMapper pm, FileSystemInfo fsi,
       TimeMapper tm) {
     // tell parent about me
     super(NFS_PROG, NFS_VERS);

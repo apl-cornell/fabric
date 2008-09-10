@@ -17,11 +17,11 @@ class UDPPacketPort extends java.lang.Object  {
 
     // debugging flag, shared amoug all instances of this class
     static boolean debug = false;
-    
+
     UDPPacketPort(int port) {
 	portNumber = port;
 	InitializePort();
-	
+
 	// create the buffer to hold incoming packet data
 	bufLen = 10240; // make sure it is big enough for an 8K write packet
 	buf = null;
@@ -43,12 +43,12 @@ class UDPPacketPort extends java.lang.Object  {
     public int Port() {
 	return input.getLocalPort();
     };
-    
+
     // Collect the next packet from the network
     public DatagramPacket GetPacket(byte [] buf) {
 	DatagramPacket packet;
 	try {
-	    if (debug) 
+	    if (debug)
 		System.out.print("Waiting on socket for packet\n");
 	    packet = new DatagramPacket(buf, buf.length);
 	    input.receive(packet);
@@ -56,7 +56,7 @@ class UDPPacketPort extends java.lang.Object  {
 	    System.out.print("Couldn't get packet off of socket.\n");
 	    return null;
 	}
-	if (debug) 
+	if (debug)
 	    System.out.print("Got a packet size " + packet.getLength() +
 			     "\n");
 

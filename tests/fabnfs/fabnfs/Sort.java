@@ -25,8 +25,8 @@ class Sort extends java.lang.Object  {
 	if (verifyResults) {
 	    // make sure the result is correct
 	    for (int i = 0; i < list.length - 1; i++) {
-		if (list[i].compareTo(list[i + 1]) > 0) 
-		  System.err.print("bubblesort sequence error " + list[i] + " " 
+		if (list[i].compareTo(list[i + 1]) > 0)
+		  System.err.print("bubblesort sequence error " + list[i] + " "
 				   + list[i + 1] + "\n");
 	    }
 	}
@@ -35,7 +35,7 @@ class Sort extends java.lang.Object  {
 	// if there are 0 or 1 elements in the list, don't try to sort it
 	if ((list == null) || ((end - begin) <= 1))
 	    return;
-	
+
 	boolean changed;
 	do {
 	    changed = false;
@@ -74,8 +74,8 @@ class Sort extends java.lang.Object  {
 	if (verifyResults) {
 	    // make sure the result is correct
 	    for (int i = 0; i < list.length - 1; i++) {
-		if (list[i].compareTo(list[i + 1]) > 0) 
-		  System.err.print("quicksort sequence error " + list[i] + " " 
+		if (list[i].compareTo(list[i + 1]) > 0)
+		  System.err.print("quicksort sequence error " + list[i] + " "
 				   + list[i + 1] + "\n");
 	    }
 	}
@@ -115,7 +115,7 @@ class Sort extends java.lang.Object  {
 	    quicksort(list, bottom, end);
 	}
     }
-    
+
 //    public static void main(String args[])
 //      throws FileNotFoundException, IOException {
 //	File fd = new File(args[0]);
@@ -140,7 +140,7 @@ class Sort extends java.lang.Object  {
 //	begin = new Date();
 //	sorter.quicksort(files);
 //	end = new Date();
-//	System.out.print("qsort " + (end.getTime() - begin.getTime()) 
+//	System.out.print("qsort " + (end.getTime() - begin.getTime())
 //			 + "ms\n");
 //    }
 };

@@ -62,7 +62,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
       timeval mtime = new timeval(packet);
 
       // do the work - the only attribute that can be set is the size can
-      //   be set to 0 to truncate the file 
+      //   be set to 0 to truncate the file
       if (size == 0) {
         // truncate by deleting and recreating the file
         File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, fileName);
@@ -101,7 +101,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 //        System.out.println("File does not exist!");
         throw new NFSException(xid, NFSERR_NOENT);
       }
-        
+
       fattr childFA = new fattr(fsinfo, handles, tm);
       childFA.Load(fileName);
 
@@ -123,7 +123,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     }
   }
 
-  // keep these between calls so subsequent calls getting the rest of the 
+  // keep these between calls so subsequent calls getting the rest of the
   //   contents of a directory are fast.
   String cachedDirName;
   String [] cachedFiles;
@@ -152,7 +152,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 
       // sort the files by name
       Sort s = new Sort();
-      // turns out my bubblesort implementation is faster than my 
+      // turns out my bubblesort implementation is faster than my
       //   qsort for the numbers of files that listdir gets
       s.BubbleSort(dirfiles);
 
@@ -160,7 +160,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
       String [] files = new String[dirfiles.length + 2];
       files[0] = new String(".");
       files[1] = new String("..");
-      for (int i = 0; i < dirfiles.length; i++) 
+      for (int i = 0; i < dirfiles.length; i++)
         files[i + 2] = dirfiles[i];
 
       cachedFiles = files;
@@ -180,7 +180,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     if (cachedFiles != null && cachedFiles.length > 0) {
       for (int i = (int) cookie; i < cachedFiles.length; i++) {
         // see if there is enough room for another file - 3 longs of id,
-        //   the name (rounded up to 4 bytes) and a trailing long 
+        //   the name (rounded up to 4 bytes) and a trailing long
         //   indicating whether there are more files to get
         int needed = 3 * 4 + (cachedFiles[i].length() + 3) + 8;
         if (needed + current >= count) {
@@ -202,7 +202,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     reply.AddLong(NFS_FALSE); // no more entries in this packet
 
     // tell the client if this packet has returned the last of the files
-    if (more) 
+    if (more)
       reply.AddLong(NFS_FALSE);
     else
       reply.AddLong(NFS_TRUE);
@@ -219,7 +219,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 
       // make the file
       File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, path);
-      if (fd.exists()) 
+      if (fd.exists())
         throw new NFSException(xid, NFSERR_EXIST);
 
       // TODO attributes not supported yet
@@ -260,10 +260,10 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     String dirName = GetNameFromHandle(dirFH.Handle(), xid);
     File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, dirName + fsinfo.separatorChar + entry);
 //    System.out.println("Trying to delete the file " + dirName + fsinfo.separatorChar + entry);
-    if (fd.exists() == false) 
+    if (fd.exists() == false)
       throw new NFSException(xid, NFSERR_NOENT);
 //    System.out.println("Deleting the file " + dirName + fsinfo.separatorChar + entry);
-    if (fd.delete() == false) 
+    if (fd.delete() == false)
       throw new NFSException(xid, NFSERR_IO);
 
     // create the reply packet
@@ -282,7 +282,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
       String newdir = pm.MakePath(dirName, entry);
       File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, newdir);
 
-      if (fd.exists() == true) 
+      if (fd.exists() == true)
         throw new NFSException(xid, NFSERR_EXIST);
       fd.mkdir();
 
@@ -314,13 +314,13 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     String dirname = GetNameFromHandle(dirFH.Handle(), xid);
     File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, dirname + fsinfo.separatorChar + name);
     // do some correctness checking
-//    System.out.println("Trying to delete the directory " + dirname + fsinfo.separatorChar + name);    
+//    System.out.println("Trying to delete the directory " + dirname + fsinfo.separatorChar + name);
     if (fd.exists() == false)
       throw new NFSException(xid, NFSERR_NOENT);
-    if (fd.isDirectory() == false) 
+    if (fd.isDirectory() == false)
       throw new NFSException(xid, NFSERR_NOTDIR);
     // try to remove the directory
-//    System.out.println("Deleting the directory " + dirname + fsinfo.separatorChar + name);    
+//    System.out.println("Deleting the directory " + dirname + fsinfo.separatorChar + name);
     if (fd.delete() == false)
       throw new NFSException(xid, NFSERR_IO);
 
@@ -348,13 +348,13 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 
 
   XDRPacket Rename(long xid, XDRPacket packet) throws NFSException {
-    
+
     //  collect arguments from RPC packet
     fhandle srcFH = new fhandle(packet);
     String srcentry = packet.GetString();
     fhandle destFH = new fhandle(packet);
     String destentry = packet.GetString();
-    
+
     //  compute the path names specified
     String srcdir = GetNameFromHandle(srcFH.Handle(), xid);
     String destdir = GetNameFromHandle(destFH.Handle(), xid);
@@ -364,20 +364,20 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     File dest = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, destdir + fsinfo.separatorChar + destentry);
 
 
-// XXX Disabling this feature. e.g. "$mv src dest" should work even if dest exists     
-//    if (dest.exists()) 
+// XXX Disabling this feature. e.g. "$mv src dest" should work even if dest exists
+//    if (dest.exists())
 //      throw new NFSException(xid, NFSERR_EXIST);
-    
+
     //  do the rename operation
     if (src.renameTo(dest) == false)
       throw new NFSException(xid, NFSERR_IO);
     XDRPacket reply = new XDRPacket(128);
     reply.AddReplyHeader(xid);
     reply.AddLong(NFS_OK);
-    
+
 //    System.out.println("Just renamed " + srcdir + fsinfo.separatorChar + srcentry + " to " + destdir + fsinfo.separatorChar + destentry);
     return reply;
-    
+
   }
 
   // local procedure to get the associated with a handle, throws an exception
