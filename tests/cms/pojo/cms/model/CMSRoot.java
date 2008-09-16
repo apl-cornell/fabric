@@ -66,7 +66,7 @@ public class CMSRoot {
   //////////////////////////////////////////////////////////////////////////////
 
   public CMSRoot() {
-    setCurrentSemester(new Semester("Summer 2008"));
+    setCurrentSemester(addSemester("Summer 2008"));
     this.debugMode = true;
   }
 

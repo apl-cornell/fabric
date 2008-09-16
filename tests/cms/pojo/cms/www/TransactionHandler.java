@@ -248,7 +248,7 @@ public class TransactionHandler {
 
   private FileData downloadFile(FileItemStream item) throws IOException {
     String fileName = FileUtil.trimFilePath(item.getName());
-    FileData result = new FileData(fileName);
+    FileData result = database.addFileData(fileName);
     
     InputStream  in  = item.openStream();
     OutputStream out = result.write();
@@ -509,13 +509,13 @@ public class TransactionHandler {
         } else if (field.startsWith(AccessController.P_COMMENTTEXT)) {
           Group group =
             database.getGroup(field.split(AccessController.P_COMMENTTEXT)[1]);
-          Comment comment = new Comment(value, p, group);
+          Comment comment = database.addComment(value, p, group);
         } else if (field.startsWith(AccessController.P_COMMENTFILE)) {
           Group group =
             database.getGroup(field.split(AccessController.P_COMMENTFILE)[1]);
           FileData file = downloadFile(item);
           // TODO: refactor comments and comment files
-          new CommentFile(new Comment("", p, group), file);
+          database.addCommentFile(database.addComment("", p, group), file);
         } else if (field.startsWith(AccessController.P_SUBMITTEDFILE)) {
           String[] vals = field.split("_");
           Group group = database.getGroup(vals[1]);
@@ -527,7 +527,7 @@ public class TransactionHandler {
           }
           Assignment assign = isAssign ? assignment : group.getAssignment();
           FileData file = downloadFile(item);
-          new SubmittedFile(group, group, p, submission, extension, false,
+          database.addSubmittedFile(group, group, p, submission, extension, false,
               null/* date */, file);
         } else if (field.startsWith(AccessController.P_REGRADERESPONSE)) {
           // TODO: not sure this is right
@@ -540,15 +540,15 @@ public class TransactionHandler {
           String[] vals = field.split("_");
           SubProblem subProb = database.getSubProblem(vals[1]);
           Group group = database.getGroup(vals[2]);
-          new RegradeRequest(subProb, group, p, value);
+          database.addRegradeRequest(subProb, group, p, value);
         } else if (field.startsWith(AccessController.P_REGRADEWHOLE)) {
           // TODO: not sure this is right
           Group group = database.getGroup(field.split("_")[1]);
-          new RegradeRequest(null, group, p, value);
+          database.addRegradeRequest(null, group, p, value);
         } else if (field.startsWith(AccessController.P_REGRADEREQUEST)) {
           // TODO
           Group group = database.getGroup(field.split("_")[1]);
-          new RegradeRequest(null, group, p, value);
+          database.addRegradeRequest(null, group, p, value);
         } else if (field.startsWith(AccessController.P_REGRADENETID)) {
           // TODO
           Group group = database.getGroup((field.split("_"))[1]);
@@ -1665,7 +1665,7 @@ public class TransactionHandler {
             throw new MatchFailException("match fail:" + fullFileName);
           if ((file.getSize() >> 10) > submission.getMaxSize())
             throw new UploadTooBigException(fullFileName);
-          result.add(new SubmittedFile(group, group, user, submission, match, isLate, null, file));
+          result.add(database.addSubmittedFile(group, group, user, submission, match, isLate, null, file));
         }
       }
     } catch (FileUploadException e) {
@@ -2681,7 +2681,7 @@ public class TransactionHandler {
       }
       
       if (newAssign)
-        assign = new Assignment(course, null, null, null);
+        assign = database.addAssignment(course, null, null, null);
       
       ServletFileUpload upload = new ServletFileUpload();
       Map params = new HashMap();
@@ -3069,17 +3069,17 @@ public class TransactionHandler {
         FileData  value = (FileData) entry.getValue();
 
         if (field.equals(AccessController.P_SOLFILE)) {
-          SolutionFile file = new SolutionFile(assign, false, value);
+          SolutionFile file = database.addSolutionFile(assign, false, value);
         }
         else if (field.startsWith(AccessController.P_NEWITEMFILE)) {
           String id = field.split(AccessController.P_NEWITEMFILE)[1];
           AssignmentItem ai   = (AssignmentItem) newItems.get(id);
-          AssignmentFile file = new AssignmentFile(ai, false, value); 
+          AssignmentFile file = database.addAssignmentFile(ai, false, value); 
         }
         else if (field.startsWith(AccessController.P_ITEMFILE)) {
           String id = field.split(AccessController.P_ITEMFILE)[1];
           AssignmentItem ai = database.getAssignmentItem(id);
-          AssignmentFile file = new AssignmentFile(ai, false, value);
+          AssignmentFile file = database.addAssignmentFile(ai, false, value);
         } else {
           System.out.println("Not parsed (file): " + field);
         }
@@ -3243,7 +3243,8 @@ public class TransactionHandler {
   private CategoryColumn getNewColumn(Map/*String, Column*/ created, String key, Category parent) {
     CategoryColumn result = (CategoryColumn) created.get(key);
     if (result == null) {
-      result = new CategoryColumn(parent);
+      // TODO: generated stub call.
+      result = database.addCategoryColumn(null, null, parent, false, false, 0);
       created.put(key, result);
     }
     return result;
@@ -3422,7 +3423,7 @@ public class TransactionHandler {
         String newnetid = request.getParameter(AccessController.P_NEWNETID + i);
         while (newnetid != null) {
           User  newUser  = database.getUser(newnetid);
-          Staff newStaff = new Staff(newUser, course);
+          Staff newStaff = database.addStaff(newUser, course);
           
           newStaff.setAdminPriv(      map.containsKey(AccessController.P_NEWADMIN    + i));
           newStaff.setAssignmentsPriv(map.containsKey(AccessController.P_NEWASSIGN   + i));
@@ -3643,7 +3644,7 @@ public class TransactionHandler {
       // store the information in a TimeSlotData structure containing the
       // timestamp of the
       // first timeslot in the block
-      TimeSlot tsd = new TimeSlot();
+      TimeSlot tsd = database.addTimeSlot();
       // perform transaction
       boolean success = transactions.createTimeSlots(p, tsd, multiplicity);
       if (!success) {
@@ -3874,7 +3875,7 @@ public class TransactionHandler {
                 long sub =
                     Long
                         .parseLong(field.split(AccessController.P_SUBPROBNAME)[1]);
-                Answer answerData = new Answer(null, null, item.getString());
+                Answer answerData = database.addAnswer(null, null, item.getString());
                 answers.add(answerData);
               }
             }
