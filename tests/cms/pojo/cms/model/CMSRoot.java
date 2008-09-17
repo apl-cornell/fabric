@@ -3,6 +3,7 @@ package cms.model;
 import java.io.IOException;
 import java.util.Collections;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -30,6 +31,9 @@ public class CMSRoot {
   private boolean              debugMode;
   private Semester             currentSemester;
 
+  private Collection           semesters;
+  private Collection           courses;
+  
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
@@ -66,6 +70,9 @@ public class CMSRoot {
   //////////////////////////////////////////////////////////////////////////////
 
   public CMSRoot() {
+    this.semesters = new ArrayList/*Semester*/();
+    
+    // TODO: default stuff
     setCurrentSemester(addSemester("Summer 2008"));
     this.debugMode = true;
   }
@@ -122,7 +129,7 @@ public class CMSRoot {
     throw new NotImplementedException();
   }
   public Collection/*Semester*/ getAllSemesters() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(this.semesters);
   }
   public Collection/*User*/ findAllAdmins() {
     // TODO: check on return type; might not be user
@@ -354,7 +361,10 @@ public class CMSRoot {
   }
 
   public Course addCourse(String name, String description, String code, Semester semester) {
-    throw new NotImplementedException();
+    Course result = new Course(this, name, description, code, semester);
+    this.courses.add(result);
+    semester.addCourse(result);
+    return result;
   }
 
   public Email addEmail(Course course, User sender, String subject, String message, int recipient) {
@@ -406,7 +416,9 @@ public class CMSRoot {
   }
 
   public Semester addSemester(String name) {
-    throw new NotImplementedException();
+    Semester result = new Semester(this, name);
+    semesters.add(result);
+    return result;
   }
 
   public SiteNotice addSiteNotice(User author, String text, Date exp, boolean hidden) {
