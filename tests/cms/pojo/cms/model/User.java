@@ -14,6 +14,7 @@ public class User implements Principal {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
+  private final CMSRoot db;
   private String userID;
   private String firstName;
   private String lastName;
@@ -24,7 +25,20 @@ public class User implements Principal {
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setNetID     (final String userID)    { this.userID    = userID;    }
+  public void setNetID     (final String userID)    {
+    // guarantee uniqueness of NetIDs
+    if (db.users.containsKey(userID))
+      throw new IllegalArgumentException();
+    
+    // remove under old netID
+    if (userID != null)
+      db.users.remove(userID);
+    
+    // add under new netID
+    this.userID    = userID;
+    db.users.put(userID, this);
+  }
+  
   public void setFirstName (final String firstName) { this.firstName = firstName; }
   public void setLastName  (final String lastName)  { this.lastName  = lastName;  }
   public void setCUID      (final String CUID)      { this.CUID      = CUID;      }
@@ -40,6 +54,15 @@ public class User implements Principal {
   public String getCUID()      { return this.CUID;      }
   public String getCollege()   { return this.college;   }
   
+  public User (CMSRoot db, String netID, String firstName, String lastName, String CUID, String college) {
+    this.db = db;
+    
+    setNetID(netID); // adds this to db
+    setFirstName(firstName);
+    setLastName(lastName);
+    setCUID(CUID);
+    setCollege(college);
+  }
   
   //////////////////////////////////////////////////////////////////////////////
   // public methods                                                           //

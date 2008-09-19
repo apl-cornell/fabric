@@ -4,6 +4,7 @@ import java.util.Collections;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,7 +59,7 @@ public class CMSRoot {
   // managed fields                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  Collection/*User*/ users;
+  Map/*String, User*/ users; // managed by User
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
@@ -67,6 +68,8 @@ public class CMSRoot {
   public CMSRoot() {
     setCurrentSemester(new Semester("Summer 2008"));
     this.debugMode = true;
+    
+    this.users = new HashMap/*String, User*/();
   }
 
   //////////////////////////////////////////////////////////////////////////////

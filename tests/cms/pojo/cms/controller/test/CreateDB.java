@@ -2,11 +2,10 @@ package cms.controller.test;
 
 import java.util.Iterator;
 
-import cms.model.CMSRoot;
-import cms.model.Semester;
+import cms.model.*;
 
 public class CreateDB {
-  public void create(CMSRoot database) {
+  public static void create(CMSRoot database) {
     // create semesters    
     Semester oldSem = database.addSemester("Spring 2008");
     Semester newSem = database.addSemester("Fall 2008");
@@ -25,10 +24,15 @@ public class CreateDB {
     newSem.addCourse("Programming Languages", "PL theory", "COM S 611");
     
     // create users
-    database.addUser("mg");
-    database.addUser("am");
-    database.addUser("jl");
-    database.addUser("kv");
-    database.addUser("xq");
+    new User(database, "mg", "Michael", "George", "11111", "Eng");
+    new User(database, "am", "Andrew",  "Myers",  "22222", "Eng");
+    new User(database, "jl", "Jed",     "Liu",    "33333", "Eng");
+    new User(database, "kv", "Vikram",  "K",      "44444", "Eng");
+    new User(database, "xq", "Xin",     "Qi",     "55555", "Eng");
+  }
+  
+  public static void main(String[] args) {
+    CMSRoot db = new CMSRoot();
+    create(db);
   }
 }
