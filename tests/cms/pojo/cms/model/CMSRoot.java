@@ -1,9 +1,7 @@
 package cms.model;
 
-import java.io.IOException;
 import java.util.Collections;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -31,9 +29,6 @@ public class CMSRoot {
   private boolean              debugMode;
   private Semester             currentSemester;
 
-  private Collection           semesters;
-  private Collection           courses;
-  
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
@@ -70,10 +65,7 @@ public class CMSRoot {
   //////////////////////////////////////////////////////////////////////////////
 
   public CMSRoot() {
-    this.semesters = new ArrayList/*Semester*/();
-    
-    // TODO: default stuff
-    setCurrentSemester(addSemester("Summer 2008"));
+    setCurrentSemester(new Semester("Summer 2008"));
     this.debugMode = true;
   }
 
@@ -129,7 +121,7 @@ public class CMSRoot {
     throw new NotImplementedException();
   }
   public Collection/*Semester*/ getAllSemesters() {
-    return Collections.unmodifiableCollection(this.semesters);
+    throw new NotImplementedException();
   }
   public Collection/*User*/ findAllAdmins() {
     // TODO: check on return type; might not be user
@@ -169,12 +161,11 @@ public class CMSRoot {
     throw new NotImplementedException();
   }
   
-  //////////////////////////////////////////////////////////////////////////////
-  // index methods                                                            //
-  //  these methods are index methods getX : String -> X                      //
-  //  These should be left-inverses of toString(), i.e.                       //
-  //  db.getFoo(o.toString()) == o                                            //
-  //////////////////////////////////////////////////////////////////////////////
+  /*
+  ******** Methods below this line are index methods getX : String -> X ********
+  * These should be left-inverses of toString(), i.e.
+  * db.getFoo(o.toString()) == o
+  */
   
   public Assignment getAssignment(String assignID) {
     throw new NotImplementedException();
@@ -279,181 +270,6 @@ public class CMSRoot {
   public Comment getComment(String id) {
     throw new NotImplementedException();
   }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // database creation methods                                                //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Announcement addAnnouncement(Course course, User author, String text) {
-    throw new NotImplementedException();
-  }
-
-  public Answer addAnswer(AnswerSet answerSet, SubProblem sub, String text) {
-    throw new NotImplementedException();
-  }
-
-  public AnswerSet addAnswerSet(Assignment assignment, Group group, Group originalGroup, User user, Date submitted) {
-    throw new NotImplementedException();
-  }
-
-  public Assignment addAssignment(Course course, String name, String nameShort, Date due) {
-    throw new NotImplementedException();
-  }
-
-  public AssignmentFile addAssignmentFile(AssignmentItem item, boolean isHidden, FileData file) {
-    throw new NotImplementedException();
-  }
-
-  public AssignmentItem addAssignmentItem(Assignment assign, String name) {
-    throw new NotImplementedException();
-  }
-
-  public Category addCategory(Course course, String name, boolean ascending,
-                              CategoryColumn sortBy, int numToShow,
-                              boolean hidden, int fileCount,
-                              int authorizationLevel, int position,
-                              boolean announcements) {
-    throw new NotImplementedException();
-  }
-
-  public CategoryColumn addCategoryColumn(String name, String type, Category category, boolean hidden, boolean removed, int position) {
-    throw new NotImplementedException();
-  }
-
-  public CategoryContentsDate addCategoryContentsDate(CategoryColumn column, CategoryRow row, Date value) {
-    throw new NotImplementedException();
-  }
-
-  public CategoryContentsFileEntry addCategoryContentsFileEntry(CategoryContentsFileList list, boolean hidden, FileData file, String linkName) {
-    throw new NotImplementedException();
-  }
-
-  public CategoryContentsFileList addCategoryContentsFileList(CategoryRow row, CategoryColumn col) {
-    throw new NotImplementedException();
-  }
-
-  public CategoryContentsLink addCategoryContentsLink(CategoryRow row, CategoryColumn col, String address, String label) {
-    throw new NotImplementedException();
-  }
-
-  public CategoryContentsNumber addCategoryContentsNumber(CategoryColumn col, CategoryRow row, int value) {
-    throw new NotImplementedException();
-  }
-
-  public CategoryContentsString addCategoryContentsString(CategoryColumn col, CategoryRow row, String value) {
-    throw new NotImplementedException();
-  }
-
-  public CategoryRow addCategoryRow(Category category, boolean hidden, Date releaseDate) {
-    throw new NotImplementedException();
-  }
-
-  public Choice addChoice(SubProblem subproblem, String letter, String text, boolean hidden) {
-    throw new NotImplementedException();
-  }
-
-  public Comment addComment(String comment, User user, Group group) {
-    throw new NotImplementedException();
-  }
-
-  public CommentFile addCommentFile(Comment comment, FileData file) {
-    throw new NotImplementedException();
-  }
-
-  public Course addCourse(String name, String description, String code, Semester semester) {
-    Course result = new Course(this, name, description, code, semester);
-    this.courses.add(result);
-    semester.addCourse(result);
-    return result;
-  }
-
-  public Email addEmail(Course course, User sender, String subject, String message, int recipient) {
-    throw new NotImplementedException();
-  }
-
-  public FileData addFileData(String fileName) throws IOException {
-    throw new NotImplementedException();
-  }
-
-  public Grade addGrade(Assignment assign, SubProblem subProblem, Float grade, User user, User grader) {
-    throw new NotImplementedException();
-  }
-
-  public Group addGroup(Assignment assign, int remainingSubmissions) {
-    throw new NotImplementedException();
-  }
-
-  public GroupAssignedTo addGroupAssignedTo(Group group, User user, SubProblem subProblem) {
-    throw new NotImplementedException();
-  }
-
-  public GroupGrade addGroupGrade(Group group, float score, boolean isAveraged, SubProblem subproblem) {
-    throw new NotImplementedException();
-  }
-
-  public GroupMember addGroupMember(Group group, Student user, String status) {
-    throw new NotImplementedException();
-  }
-
-  public Log addLog() {
-    throw new NotImplementedException();
-  }
-
-  public LogDetail addLogDetail (Log log, String detail, User user, Assignment assign) {
-    throw new NotImplementedException();
-  }
-
-  public OldAnnouncement addOldAnnouncement(Announcement announcement, String text) {
-    throw new NotImplementedException();
-  }
-
-  public RegradeRequest addRegradeRequest(SubProblem subProblem, Group group, User user, String request) {
-    throw new NotImplementedException();
-  }
-
-  public RequiredSubmission addRequiredSubmission(Assignment assign, String name, int maxSize) {
-    throw new NotImplementedException();
-  }
-
-  public Semester addSemester(String name) {
-    Semester result = new Semester(this, name);
-    semesters.add(result);
-    return result;
-  }
-
-  public SiteNotice addSiteNotice(User author, String text, Date exp, boolean hidden) {
-    throw new NotImplementedException();
-  }
-
-  public SolutionFile addSolutionFile(Assignment assign, boolean hidden, FileData data) {
-    throw new NotImplementedException();
-  }
-
-  public Staff addStaff(User user, Course course) {
-    throw new NotImplementedException();
-  }
-
-  public Student addStudent(Course course, User user) {
-    throw new NotImplementedException();
-  }
-
-  public SubProblem addSubProblem(Assignment assign, String name, float maxScore, int type, int order, int answer) {
-    throw new NotImplementedException();
-  }
-
-  public SubmittedFile addSubmittedFile(Group group, Group originalGroup, User user, RequiredSubmission submission, String fileType, boolean lateSubmission, Date fileDate, FileData file) {
-    throw new NotImplementedException();
-  }
-
-  public TimeSlot addTimeSlot() {
-    throw new NotImplementedException();
-  }
-
-  public User addUser(String netID, String firstName, String lastName, String CUID, String college) {
-    throw new NotImplementedException();
-  }
-
-
 }
 
 /*

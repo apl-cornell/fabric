@@ -63,9 +63,10 @@ public class Category {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  Category(Course course, String name, boolean ascending, CategoryColumn sortBy,
-           int numToShow, boolean hidden, int fileCount, int authorizationLevel,
-           int position, boolean announcements) {
+  public Category(Course course, String name, boolean ascending,
+                  CategoryColumn sortBy, int numToShow, boolean hidden,
+                  int fileCount, int authorizationLevel, int position,
+                  boolean announcements) {
     setCourse(course);
     setName(name);
     setAscending(ascending);

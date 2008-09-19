@@ -31,7 +31,7 @@ public class AssignmentItem {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  AssignmentItem(Assignment assign, String name) {
+  public AssignmentItem(Assignment assign, String name) {
     setAssignment(assignment);
     setItemName(name);
     setHidden(false);

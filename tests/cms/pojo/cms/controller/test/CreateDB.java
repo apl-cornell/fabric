@@ -6,7 +6,7 @@ import cms.model.CMSRoot;
 import cms.model.Semester;
 
 public class CreateDB {
-  public static void create(CMSRoot database) {
+  public void create(CMSRoot database) {
     // create semesters    
     Semester oldSem = database.addSemester("Spring 2008");
     Semester newSem = database.addSemester("Fall 2008");
@@ -25,15 +25,10 @@ public class CreateDB {
     newSem.addCourse("Programming Languages", "PL theory", "COM S 611");
     
     // create users
-    database.addUser("mg", "Michael", "George", "11111", "Eng");
-    database.addUser("am", "Andrew",  "Myers",  "22222", "Eng");
-    database.addUser("jl", "Jed",     "Liu",    "33333", "Eng");
-    database.addUser("kv", "Vikram",  "K",      "44444", "Eng");
-    database.addUser("xq", "Xin",     "Qi",     "55555", "Eng");
-  }
-  
-  public static void main(String[] args) {
-    CMSRoot db = new CMSRoot();
-    create(db);
+    database.addUser("mg");
+    database.addUser("am");
+    database.addUser("jl");
+    database.addUser("kv");
+    database.addUser("xq");
   }
 }

@@ -41,7 +41,7 @@ public class SiteNotice {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  SiteNotice(User author, String text, Date exp, boolean hidden) {
+  public SiteNotice(User author, String text, Date exp, boolean hidden) {
     setAuthor(author);
     setText(text);
     setPostedDate(new Date());

@@ -50,7 +50,7 @@ public class SubProblem {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  SubProblem(Assignment assign, String name, float maxScore, int type, int order, int answer) {
+  public SubProblem(Assignment assign, String name, float maxScore, int type, int order, int answer) {
     setAssignment(assignment);
     setSubProblemName(name);
     setMaxScore(maxScore);

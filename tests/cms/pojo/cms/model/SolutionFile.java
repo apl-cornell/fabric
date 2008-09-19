@@ -30,7 +30,7 @@ public class SolutionFile implements FileEntry {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  SolutionFile(Assignment assign, boolean hidden, FileData data) {
+  public SolutionFile(Assignment assign, boolean hidden, FileData data) {
     setAssignment(assign);
     setHidden(hidden);
     setFile(data);

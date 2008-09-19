@@ -47,7 +47,7 @@ public class SubmittedFile implements FileEntry {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  SubmittedFile(Group group, Group originalGroup, User user,
+  public SubmittedFile(Group group, Group originalGroup, User user,
       RequiredSubmission submission, String fileType, boolean lateSubmission,
       Date fileDate, FileData file) {
     setGroup(group);

@@ -61,7 +61,7 @@ public class Assignment {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  Assignment(Course course, String name, String nameShort, Date due) {
+  public Assignment(Course course, String name, String nameShort, Date due) {
     setCourse(course);
     setName(name);
     setNameShort(nameShort);

@@ -11,8 +11,6 @@ public class Course {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private CMSRoot  db;
-  
   private String   code;          // the official code, e.g. "COM S 211"
   private String   displayedCode; // what the professor wants, e.g. "CS 211"
   private String   name;          // e.g. "Intro to Programming"
@@ -117,9 +115,7 @@ public class Course {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  Course(CMSRoot db, String name, String description, String code, Semester semester) {
-    this.db = db;
-    
+  public Course(String name, String description, String code, Semester semester) {
     setName(name);
     setDescription(description);
     setCode(code);

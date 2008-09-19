@@ -38,7 +38,7 @@ public class RequiredSubmission {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  RequiredSubmission(Assignment assign, String name, int maxSize) {
+  public RequiredSubmission(Assignment assign, String name, int maxSize) {
     setAssignment(assign);
     setSubmissionName(name);
     setMaxSize(maxSize);

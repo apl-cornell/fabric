@@ -45,7 +45,7 @@ public class AnswerSet {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  AnswerSet(Assignment assignment, Group group, Group originalGroup, User user, Date submitted) {
+  public AnswerSet(Assignment assignment, Group group, Group originalGroup, User user, Date submitted) {
     setAssignment(assignment);
     setGroup(group);
     setOriginalGroup(originalGroup);

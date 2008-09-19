@@ -31,7 +31,7 @@ public class CategoryRow {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  CategoryRow(Category category, boolean hidden, Date releaseDate) {
+  public CategoryRow(Category category, boolean hidden, Date releaseDate) {
     this.setCategory(category);
     this.setHidden(hidden);
     this.setReleaseDate(releaseDate);

@@ -8,7 +8,7 @@ public class CategoryContentsFileList extends CategoryContents {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  CategoryContentsFileList(CategoryRow row, CategoryColumn col) {
+  public CategoryContentsFileList(CategoryRow row, CategoryColumn col) {
     super(col, row);
   }
 

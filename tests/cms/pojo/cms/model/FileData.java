@@ -43,7 +43,7 @@ public class FileData {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  FileData(String fileName) throws IOException {
+  public FileData(String fileName) throws IOException {
     String prefix = fileName;
     if (prefix == null || prefix.length() < 4)
       prefix = "file";

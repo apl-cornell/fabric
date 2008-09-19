@@ -17,7 +17,7 @@ public class CategoryContentsDate extends CategoryContents {
     return CategoryColumn.DATE;
   }
   
-  CategoryContentsDate(CategoryColumn column, CategoryRow row, Date value) {
+  public CategoryContentsDate(CategoryColumn column, CategoryRow row, Date value) {
     super(column, row);
     setDate(value);
   }

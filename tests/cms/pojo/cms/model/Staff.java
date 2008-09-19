@@ -63,7 +63,7 @@ public class Staff {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  Staff(User user, Course course) {
+  public Staff(User user, Course course) {
     setUser(user);
     setCourse(course);
     setStatus(ACTIVE);

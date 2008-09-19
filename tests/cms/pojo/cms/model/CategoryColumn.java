@@ -47,7 +47,7 @@ public class CategoryColumn {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  CategoryColumn(String name, String type, Category category, boolean hidden, boolean removed, int position) {
+  public CategoryColumn(String name, String type, Category category, boolean hidden, boolean removed, int position) {
     setName(name);
     setType(type);
     setCategory(category);
@@ -55,8 +55,7 @@ public class CategoryColumn {
     setRemoved(removed);
     setPosition(position);
   }
-
-  CategoryColumn(Category parent) {
+  public CategoryColumn(Category parent) {
     throw new NotImplementedException();
   }
 }

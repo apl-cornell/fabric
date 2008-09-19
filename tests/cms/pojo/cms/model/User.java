@@ -145,7 +145,6 @@ public class User implements Principal {
   public boolean isStudentInCourseByAssignment(Assignment assign) {
     throw new NotImplementedException();
   }
-
   public boolean isStudentInCourseByGroup(Group group) {
     throw new NotImplementedException();
   }

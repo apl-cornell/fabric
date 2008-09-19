@@ -36,7 +36,7 @@ public class CategoryContentsFileEntry {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  CategoryContentsFileEntry(CategoryContentsFileList list,
+  public CategoryContentsFileEntry(CategoryContentsFileList list,
       boolean hidden, FileData file, String linkName) {
     setList(list);
     setHidden(hidden);

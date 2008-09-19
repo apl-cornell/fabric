@@ -27,7 +27,7 @@ public class CommentFile implements FileEntry {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  CommentFile(Comment comment, FileData file) {
+  public CommentFile(Comment comment, FileData file) {
     setComment(comment);
     setFile(file);
   }

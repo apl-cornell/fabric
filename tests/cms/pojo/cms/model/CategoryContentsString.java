@@ -7,7 +7,7 @@ public class CategoryContentsString extends CategoryContents {
   public String getText() { return this.text; }
   public void setText(final String text) { this.text = text; }
   
-  CategoryContentsString(CategoryColumn col, CategoryRow row, String value) {
+  public CategoryContentsString(CategoryColumn col, CategoryRow row, String value) {
     super(col, row);
     setText(value);
   }

@@ -12,8 +12,6 @@ public class Semester {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private CMSRoot db;
-  
   private String  name;
   private boolean hidden;
   
@@ -37,19 +35,13 @@ public class Semester {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  Semester(CMSRoot db, String name) {
-    this.db = db;
-    
+  public Semester(String name) {
     setName(name);
     setHidden(false);
     
     courses = new LinkedList();
   }
   
-  //////////////////////////////////////////////////////////////////////////////
-  // public methods                                                           //
-  //////////////////////////////////////////////////////////////////////////////
-
   public Collection getCourses() {
     return Collections.unmodifiableCollection(courses);
   }
@@ -61,15 +53,6 @@ public class Semester {
   }
   public Collection/*Course*/ findGuestAccessCourses() {
     throw new NotImplementedException();
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////
-  // convenience methods                                                      //
-  //////////////////////////////////////////////////////////////////////////////
-
-  /** Convenience method for database.addCourse(name, desc, code, this) */
-  public Course addCourse(String name, String description, String code) {
-    return db.addCourse(name, description, code, this);
   }
 }
 

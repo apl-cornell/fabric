@@ -34,7 +34,7 @@ public class Answer {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  Answer(AnswerSet answerSet, SubProblem sub, String text) {
+  public Answer(AnswerSet answerSet, SubProblem sub, String text) {
     this.answerSet  = answerSet;
     this.subProblem = sub;
     this.text       = text;

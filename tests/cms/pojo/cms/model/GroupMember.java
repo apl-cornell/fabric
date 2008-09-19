@@ -34,7 +34,7 @@ public class GroupMember {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  GroupMember(Group group, Student user, String status) {
+  public GroupMember(Group group, Student user, String status) {
     setGroup(group);
     setStudent(user);
     setStatus(status);

@@ -33,7 +33,7 @@ public class Choice {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  Choice(SubProblem subproblem, String letter, String text, boolean hidden) {
+  public Choice(SubProblem subproblem, String letter, String text, boolean hidden) {
     setSubProblem(subproblem);
     setLetter(letter);
     setText(text);
