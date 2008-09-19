@@ -60,7 +60,11 @@ public class Course {
   public void setName                (final String name)                 { this.name                = name;                }
   public void setDescription         (final String description)          { this.description         = description;         }
   public void setHasSection          (final boolean hasSection)          { this.hasSection          = hasSection;          }
-  public void setSemester            (final Semester semester)           { this.semester            = semester;            }
+  public void setSemester            (final Semester semester)           {
+    if (this.semester != null) this.semester.courses.remove(this);
+    this.semester = semester;
+    this.semester.courses.add(this);
+  }
   public void setShowFinalGrade      (final boolean showFinalGrade)      { this.showFinalGrade      = showFinalGrade;      }
   public void setShowTotalScores     (final boolean showTotalScores)     { this.showTotalScores     = showTotalScores;     }
   public void setShowAssignWeights   (final boolean showAssignWeights)   { this.showAssignWeights   = showAssignWeights;   }
@@ -115,7 +119,7 @@ public class Course {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Course(String name, String description, String code, Semester semester) {
+  public Course(Semester semester, String name, String description, String code) {
     setName(name);
     setDescription(description);
     setCode(code);

@@ -7,9 +7,9 @@ import cms.model.*;
 public class CreateDB {
   public static void create(CMSRoot database) {
     // create semesters    
-    Semester oldSem = database.addSemester("Spring 2008");
-    Semester newSem = database.addSemester("Fall 2008");
-    Semester curSem = database.addSemester("Summer 2008");
+    Semester oldSem = new Semester(database, "Spring 2008");
+    Semester newSem = new Semester(database, "Fall 2008");
+    Semester curSem = new Semester(database, "Summer 2008");
     newSem.setHidden(true);
     database.setCurrentSemester(curSem);
     
@@ -17,11 +17,11 @@ public class CreateDB {
     Iterator sems = database.getAllSemesters().iterator();
     while(sems.hasNext()) {
       Semester next = (Semester) sems.next();
-      next.addCourse("Intro to Programming II", "In this course you will program a lot", "COM S 211");
-      next.addCourse("Intro to Programming", "In this course you will learn to program", "COM S 100");
+      new Course(next, "Intro to Programming II", "In this course you will program a lot", "COM S 211");
+      new Course(next, "Intro to Programming", "In this course you will learn to program", "COM S 100");
     }
-    oldSem.addCourse("Intro to Programming III", "Yet more programming", "COM S 312");
-    newSem.addCourse("Programming Languages", "PL theory", "COM S 611");
+    new Course(oldSem, "Intro to Programming III", "Yet more programming", "COM S 312");
+    new Course(newSem, "Programming Languages", "PL theory", "COM S 611");
     
     // create users
     new User(database, "mg", "Michael", "George", "11111", "Eng");

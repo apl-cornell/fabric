@@ -12,10 +12,15 @@ public class Semester {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
+  private final CMSRoot database;
   private String  name;
   private boolean hidden;
   
-  private Collection courses;
+  //////////////////////////////////////////////////////////////////////////////
+  // managed fields
+  //////////////////////////////////////////////////////////////////////////////
+  
+  Collection courses; // Managed by Course.
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
@@ -35,11 +40,13 @@ public class Semester {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Semester(String name) {
+  public Semester(CMSRoot database, String name) {
     setName(name);
     setHidden(false);
     
-    courses = new LinkedList();
+    this.database = database;
+    this.courses = new LinkedList();
+    database.semesters.add(this);
   }
   
   public Collection getCourses() {

@@ -2,11 +2,7 @@ package cms.model;
 
 import java.util.Collections;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import cms.auth.Principal;
 
@@ -59,17 +55,19 @@ public class CMSRoot {
   // managed fields                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  Map/*String, User*/ users; // managed by User
+  Map/*String, User*/ users; // Managed by User.
+  Collection/*Semester*/ semesters; // Managed by Semester.
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
   public CMSRoot() {
-    setCurrentSemester(new Semester("Summer 2008"));
+    setCurrentSemester(new Semester(this, "Summer 2008"));
     this.debugMode = true;
     
     this.users = new HashMap/*String, User*/();
+    this.semesters = new HashSet/*Semester*/();
   }
 
   //////////////////////////////////////////////////////////////////////////////
