@@ -14,16 +14,18 @@ import fabric.lang.Object.$Impl;
  * its own TransactionManager.
  * <p>
  * We say that a transaction has acquired a write lock on an object if any entry
- * in the object's <code>$history</code> list has
- * <code>$writeLockHolder</code> set to that transaction. We say that a
- * transaction has acquired a read lock if it is in the <code>readList</code>
- * for that object.
+ * in the object's <code>$history</code> list has <code>$writeLockHolder</code>
+ * set to that transaction.  @see fabric.lang.Object.$Impl
  * </p>
  * <p>
- * When a transaction acquires a read lock, we ensure that the <i>read condition</i>
- * holds: that the holder of the write lock is an ancestor of that transaction.
- * Before reading an object, we ensure that the transaction holds a read lock
- * and that the read condition still holds.
+ * We say that a transaction has acquired a read lock if it is in the
+ * "read list" for that object.  @see fabric.lang.Object.$Impl.$readMapEntry
+ * </p>
+ * <p>
+ * When a transaction acquires a read lock, we ensure that the <i>read
+ * condition</i> holds: that the holder of the write lock is an ancestor of that
+ * transaction. Before reading an object, we ensure that the transaction holds a
+ * read lock and that the read condition still holds.
  * </p>
  * <p>
  * When a transaction acquires a write lock, we ensure that the <i>write
@@ -45,8 +47,8 @@ import fabric.lang.Object.$Impl;
  * <ul>
  * <li>Log.children - for signalling that all sub-transactions of a given
  * transaction have finished.</li>
- * <li>Impl objects - for signalling to readers and writers that a read or
- * write lock on that object has been released.
+ * <li>Impl objects - for signalling to readers and writers that a read or write
+ * lock on that object has been released.
  * </ul>
  * </p>
  */

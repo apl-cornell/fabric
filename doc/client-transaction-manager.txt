@@ -22,10 +22,6 @@ Requirements
 Assumptions
 ===========
 
- - In the tree of subtransactions, only leaves are executing concurrently.
-   Stated differently, when a thread forks, both branches must be
-   subtransactions of the parent.
-
  - once the top-level transaction within a thread aborts or commits, that thread
    will terminate without performing further operations on the transaction
    manager.
@@ -45,7 +41,7 @@ We store the following information per transaction:
       subtransactions
 
  - creates 
-      a collection of all objects read in this transaction or completed
+      a collection of all objects created in this transaction or completed
       subtransactions
 
  - parent
