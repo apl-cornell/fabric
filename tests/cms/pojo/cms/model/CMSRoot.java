@@ -25,6 +25,7 @@ public class CMSRoot {
   private Map/*String,String*/ fileTypes;
   private boolean              debugMode;
   private Semester             currentSemester;
+  private final User           guestUser;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
@@ -69,6 +70,7 @@ public class CMSRoot {
     this.semesters = new HashSet/*Semester*/();
 
     setCurrentSemester(new Semester(this, "Summer 2008"));
+    this.guestUser = new User(this, "guest", "Guest", "User", "0", "none");
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -160,14 +162,15 @@ public class CMSRoot {
     throw new NotImplementedException();
   }
   public User getGuestUser() {
-    throw new NotImplementedException();
+    return this.guestUser;
   }
   
-  /*
-  ******** Methods below this line are index methods getX : String -> X ********
-  * These should be left-inverses of toString(), i.e.
-  * db.getFoo(o.toString()) == o
-  */
+  //////////////////////////////////////////////////////////////////////////////
+  // index methods                                                            //
+  //  these methods are index methods getX : String -> X                      //
+  //  These should be left-inverses of toString(), i.e.                       //
+  //  db.getFoo(o.toString()) == o                                            //
+  //////////////////////////////////////////////////////////////////////////////
   
   public Assignment getAssignment(String assignID) {
     throw new NotImplementedException();
@@ -190,7 +193,7 @@ public class CMSRoot {
   }
   
   public User getUser(String netID) {
-    throw new NotImplementedException();
+    return (User) users.get(netID);
   }
   
   public Category getCategory(String catID) {

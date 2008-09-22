@@ -1043,9 +1043,9 @@ public class AccessController extends HttpServlet {
       }
       session.setAttribute(A_DEBUG, new Boolean(debug));
       session.setAttribute(A_COOKIES, request.getCookies());
-      Document xml = null;
-      User p = null;
-
+      Document xml  = null;
+      User     user = null;
+      
       /*
        * no action: go to cms home page, which tells you to either go guest or
        * sign in (if action is null, there won't be a principal, so don't bother
@@ -1061,7 +1061,7 @@ public class AccessController extends HttpServlet {
         xml = xmlBuilder.buildHomepage();
       } else {
         // Set up Principal and netID in debug mode
-        User user = setUpPrincipal(session, request, action != null);
+        user = setUpPrincipal(session, request, action != null);
         if (user == null) {
           buildURL = HOMEPAGE_URL;
           xml = xmlBuilder.buildHomepage();
@@ -1078,7 +1078,7 @@ public class AccessController extends HttpServlet {
             xml = info.getXMLDocument();
           } catch (Exception nfe) {
             // Bad input - go to overview
-            xml = xmlBuilder.buildErrorPage(p.getNetID(), action, nfe);
+            xml = xmlBuilder.buildErrorPage(user.getNetID(), action, nfe);
             buildURL = ERROR_URL;
             nfe.printStackTrace();
           }
@@ -1090,7 +1090,7 @@ public class AccessController extends HttpServlet {
        * will this cause problems in JSPs? The principal is null when the action
        * is null; see my fixme just above this. - Evan
        */
-      session.setAttribute(A_PRINCIPAL, p);
+      session.setAttribute(A_PRINCIPAL, user);
 
       if (buildURL != null) {
 
