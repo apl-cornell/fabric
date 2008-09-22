@@ -79,42 +79,42 @@ public class Emailer {
     
     public boolean sendEmail(String toAddr)
     {
-    	//if(AccessController.debug) return true; //TODO shouldn't this replace the "e-mail dora" bit below?
-        try {
-            Transport transport = mailSession.getTransport();
-            MimeMessage message = new MimeMessage(mailSession);
-            
-            if (AccessController.debug) {
-                message.addRecipient(Message.RecipientType.TO, new InternetAddress(DEBUG_EMAIL));
-            } else {
-	            if (toAddr != null) {
-	            	
-	            	message.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddr));
-	            } else {
-		            for (int i=0; i < to.size(); i++) {
-		                message.addRecipient(Message.RecipientType.BCC, new InternetAddress((String) to.get(i)));
-		            }
-	            }
-            }
-
-            if (replyTo != null && !replyTo.equals("")) {
-            	Address[] addrArray = new Address[1];
-                addrArray[0] = new InternetAddress(replyTo);
-                message.setReplyTo(addrArray);
-            }
-            
-            Address[] recipients = message.getAllRecipients();
-            if (recipients == null || recipients.length == 0) return true;  // no receivers
-            message.setText(messageBody);
-            message.setSubject(subject);
-            message.setFrom(new InternetAddress(fromaddress));
-            transport.connect();
-            transport.sendMessage(message, recipients);
-            transport.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+//    	//if(AccessController.debug) return true; //TODO shouldn't this replace the "e-mail dora" bit below?
+//        try {
+//            Transport transport = mailSession.getTransport();
+//            MimeMessage message = new MimeMessage(mailSession);
+//            
+//            if (AccessController.debug) {
+//                message.addRecipient(Message.RecipientType.TO, new InternetAddress(DEBUG_EMAIL));
+//            } else {
+//	            if (toAddr != null) {
+//	            	
+//	            	message.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddr));
+//	            } else {
+//		            for (int i=0; i < to.size(); i++) {
+//		                message.addRecipient(Message.RecipientType.BCC, new InternetAddress((String) to.get(i)));
+//		            }
+//	            }
+//            }
+//
+//            if (replyTo != null && !replyTo.equals("")) {
+//            	Address[] addrArray = new Address[1];
+//                addrArray[0] = new InternetAddress(replyTo);
+//                message.setReplyTo(addrArray);
+//            }
+//            
+//            Address[] recipients = message.getAllRecipients();
+//            if (recipients == null || recipients.length == 0) return true;  // no receivers
+//            message.setText(messageBody);
+//            message.setSubject(subject);
+//            message.setFrom(new InternetAddress(fromaddress));
+//            transport.connect();
+//            transport.sendMessage(message, recipients);
+//            transport.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return false;
+//        }
         return true;
     }
     
