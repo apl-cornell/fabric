@@ -1,8 +1,6 @@
 package cms.model;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.*;
 
 import cms.auth.Principal;
 
@@ -59,7 +57,19 @@ public class Semester {
     throw new NotImplementedException();
   }
   public Collection/*Course*/ findGuestAccessCourses() {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet(new Comparator() {
+      public int compare(Object o1, Object o2) {
+        Course c1 = (Course) o1;
+        Course c2 = (Course) o2;
+        return c1.getCode().compareTo(c2.getCode());
+      }
+    });
+    
+    for (Iterator cit = courses.iterator(); cit.hasNext();) {
+      Course course = (Course) cit.next();
+      if (course.getCourseGuestAccess()) result.add(course);
+    }
+    return result;
   }
 }
 

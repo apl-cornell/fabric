@@ -1180,8 +1180,8 @@ public class XMLBuilder {
     Date weekago = new Date(
         System.currentTimeMillis() - DateTimeUtil.SECS_PER_WEEK * 1000);
     Collection announcements =
-        hasSem ? database.findAnnouncementsByUserDateSemester(user, weekago, sem)
-               : database.findAnnouncementsByUserDate(user, weekago);
+        hasSem ? user.findAnnouncementsByDateAndSemester(weekago, sem)
+               : user.findAnnouncementsByDate(weekago);
     i = announcements.iterator();
     Element xAnnouncements = xml.createElement(TAG_ALLANNOUNCEMENTS);
     root.appendChild(xAnnouncements);

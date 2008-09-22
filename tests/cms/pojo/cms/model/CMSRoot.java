@@ -56,8 +56,9 @@ public class CMSRoot {
   // managed fields                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  Map/*String, User*/ users; // Managed by User.
-  Collection/*Semester*/ semesters; // Managed by Semester.
+  final Map/*String, User*/ users; // Managed by User.
+  final Collection/*Semester*/ semesters; // Managed by Semester.
+  final Collection/*SiteNotice*/ notices; // Managed by SiteNotice.
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
@@ -68,6 +69,7 @@ public class CMSRoot {
     
     this.users = new HashMap/*String, User*/();
     this.semesters = new HashSet/*Semester*/();
+    this.notices = new HashSet/*SiteNotice*/();
 
     setCurrentSemester(new Semester(this, "Summer 2008"));
     this.guestUser = new User(this, "guest", "Guest", "User", "0", "none");
@@ -118,12 +120,6 @@ public class CMSRoot {
   public Collection/*Assignment*/ findAssignmentsByCourseAdmin(Semester curSemester, User user) {
     throw new NotImplementedException();
   }
-  public Collection/*Announcement*/ findAnnouncementsByUserDateSemester(User user, Date weekago, Semester sem) {
-    throw new NotImplementedException();
-  }
-  public Collection/*Announcement*/ findAnnouncementsByUserDate(User user, Date weekago) {
-    throw new NotImplementedException();
-  }
   public Collection/*Semester*/ getAllSemesters() {
     return Collections.unmodifiableCollection(semesters);
   }
@@ -147,7 +143,22 @@ public class CMSRoot {
     throw new NotImplementedException();
   }
   public Collection/*SiteNotice*/ findCurrentSiteNoticeShowing() {
-    throw new NotImplementedException();
+    Date now = new Date();
+    
+    SortedSet result = new TreeSet(new Comparator() {
+      public int compare(Object o1, Object o2) {
+        return -((SiteNotice) o1).getPostedDate().compareTo(
+            ((SiteNotice) o2).getPostedDate());
+      }
+    });
+    
+    for (Iterator it = notices.iterator(); it.hasNext();) {
+      SiteNotice notice = (SiteNotice) it.next();
+      if (!notice.getHidden() && !notice.getDeleted() && notice.getExpireDate().after(now))
+        result.add(notice);
+    }
+    
+    return result;
   }
   public Collection/*SiteNotice*/ findAllLivingSiteNotices() {
     throw new NotImplementedException();

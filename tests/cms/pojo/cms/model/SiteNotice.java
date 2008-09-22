@@ -8,6 +8,7 @@ public class SiteNotice {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
+  private CMSRoot db;
   private User    author;
   private Date    postedDate;
   private Date    expireDate;
@@ -41,13 +42,16 @@ public class SiteNotice {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public SiteNotice(User author, String text, Date exp, boolean hidden) {
+  public SiteNotice(CMSRoot db, User author, String text, Date exp, boolean hidden) {
+    this.db = db;
     setAuthor(author);
     setText(text);
     setPostedDate(new Date());
     setExpireDate(exp);
     setHidden(hidden);
     setDeleted(false);
+    
+    db.notices.add(this);
   }
 }
 

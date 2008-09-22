@@ -1,5 +1,6 @@
 package cms.www.xml;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -61,9 +62,11 @@ public class StudentXMLBuilder {
    */
   public Element buildDueAsgnListSubtree(User p, Document xml, Semester semester) {
     Element xAssignments = xml.createElement(XMLBuilder.TAG_ALLDUEASSIGNMENTS);
-    Iterator i = null; // TODO: findByDateNetID or findByDateNetIDSemester
+    Collection c = semester == null ?
+        p.findAssignmentsByDate(new Date())
+        : p.findAssignmentsByDateAndSemester(new Date(), semester);
 
-    while (i.hasNext()) {
+    for (Iterator i = c.iterator(); i.hasNext();) {
       Assignment assignment = (Assignment) i.next();
       Element xAssignment =
           xmlBuilder.assignmentXMLBuilder.buildShortSubtree(xml, assignment);

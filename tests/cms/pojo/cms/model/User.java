@@ -1,8 +1,6 @@
 package cms.model;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 
 import cms.auth.Principal;
 
@@ -17,6 +15,7 @@ public class User implements Principal {
   //////////////////////////////////////////////////////////////////////////////
 
   private final CMSRoot db;
+  private boolean isAdmin;
   private String userID;
   private String firstName;
   private String lastName;
@@ -65,6 +64,7 @@ public class User implements Principal {
   
   public User (CMSRoot db, String netID, String firstName, String lastName, String CUID, String college) {
     this.db = db;
+    this.isAdmin = false;
     this.studentCourses = new ArrayList/*Student*/();
     this.staffCourses   = new ArrayList/*Staff*/  ();
     
@@ -84,7 +84,19 @@ public class User implements Principal {
   }
   
   public Collection/*Course*/ findStaffCoursesBySemester(Semester semester) {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet(new Comparator(){
+      public int compare(Object o1, Object o2) {
+        return ((String) o1).compareTo((String) o2);
+      }
+    });
+    
+    for (Iterator it = staffCourses.iterator(); it.hasNext();) {
+      Staff staff = (Staff) it.next();
+      Course course = staff.getCourse();
+      if (staff.getStatus().equals(Staff.ACTIVE) && course.getSemester() == semester)
+        result.add(course);
+    }
+    return result;
   }
   
   public Collection/*Course*/ findStudentCourses() {
@@ -92,7 +104,65 @@ public class User implements Principal {
   }
   
   public Collection/*Course*/ findStudentCoursesBySemester(Semester semester) {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet(new Comparator() {
+      public int compare(Object o1, Object o2) {
+        return ((String) o1).compareTo((String) o2);
+      }
+    });
+    
+    for (Iterator it = studentCourses.iterator(); it.hasNext();) {
+      Student student = (Student) it.next();
+      Course course = student.getCourse();
+      if (student.getStatus().equals(Student.ENROLLED) && course.getSemester() == semester)
+        result.add(course);
+    }
+    return result;
+  }
+  
+  public Collection/*Assignment*/ findAssignmentsByDate(Date current) {
+    return findAssignmentsByDateAndSemester(current, db.getCurrentSemester());
+  }
+  
+  public Collection/* Assignment */findAssignmentsByDateAndSemester(
+      Date current, Semester semester) {
+    Set result = new HashSet();
+    for (Iterator cit = findStudentCoursesBySemester(semester).iterator(); cit.hasNext();) {
+      Course course = (Course) cit.next();
+      for (Iterator ait = course.getAssignments().iterator(); ait.hasNext();) {
+        Assignment assign = (Assignment) ait.next();
+        if (!assign.getHidden() && assign.getStatus().equals(Assignment.OPEN) && assign.getDueDate().after(current)) {
+          result.add(assign);
+        }
+      }
+    }
+    
+    return result;
+  }
+  
+  public Collection/*Announcement*/ findAnnouncementsByDate(Date fromDate) {
+    return findAnnouncementsByDateAndSemester(fromDate, db.getCurrentSemester());
+  }
+  
+  public Collection/*Announcement*/findAnnouncementsByDateAndSemester(
+      Date fromDate, Semester semester) {
+    SortedSet result = new TreeSet(new Comparator() {
+      public int compare(Object o1, Object o2) {
+        Announcement a1 = (Announcement) o1;
+        Announcement a2 = (Announcement) o2;
+        return -a1.getPosted().compareTo(a2.getPosted());
+      }
+    });
+    
+    for (Iterator cit = findStudentCoursesBySemester(semester).iterator(); cit.hasNext();) {
+      Course course = (Course) cit.next();
+      for (Iterator ait = course.getAnnouncements().iterator(); ait.hasNext();) {
+        Announcement announcement = (Announcement) ait.next();
+        if (!announcement.getHidden() && announcement.getPosted().after(fromDate))
+          result.add(announcement);
+      }
+    }
+    
+    return result;
   }
 
   public String canonicalName() {
@@ -170,7 +240,7 @@ public class User implements Principal {
     throw new NotImplementedException();
   }
   public boolean isCMSAdmin() {
-    throw new NotImplementedException();
+    return isAdmin;
   }
   public boolean isStudentInCourseByCourse(Course course) {
     throw new NotImplementedException();
@@ -182,10 +252,10 @@ public class User implements Principal {
     throw new NotImplementedException();
   }
   public boolean isAuthenticated() {
-    throw new NotImplementedException();
+    return this != db.getGuestUser();
   }
   public boolean isGuest() {
-    throw new NotImplementedException();
+    return this == db.getGuestUser();
   }
   public boolean delegatesTo(Principal delagatee) {
     return false;
