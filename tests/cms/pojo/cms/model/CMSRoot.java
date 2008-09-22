@@ -63,11 +63,12 @@ public class CMSRoot {
   //////////////////////////////////////////////////////////////////////////////
 
   public CMSRoot() {
-    setCurrentSemester(new Semester(this, "Summer 2008"));
     this.debugMode = true;
     
     this.users = new HashMap/*String, User*/();
     this.semesters = new HashSet/*Semester*/();
+
+    setCurrentSemester(new Semester(this, "Summer 2008"));
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -122,7 +123,7 @@ public class CMSRoot {
     throw new NotImplementedException();
   }
   public Collection/*Semester*/ getAllSemesters() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(semesters);
   }
   public Collection/*User*/ findAllAdmins() {
     // TODO: check on return type; might not be user
