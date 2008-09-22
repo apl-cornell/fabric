@@ -1,6 +1,8 @@
 package cms.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 import cms.auth.Principal;
 
@@ -21,6 +23,13 @@ public class User implements Principal {
   private String CUID;
   private String college;
 
+  //////////////////////////////////////////////////////////////////////////////
+  // managed fields                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  Collection/*Student*/ studentCourses; // managed by student class
+  Collection/*Staff*/   staffCourses;   // managed by staff   class
+  
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
@@ -56,6 +65,8 @@ public class User implements Principal {
   
   public User (CMSRoot db, String netID, String firstName, String lastName, String CUID, String college) {
     this.db = db;
+    this.studentCourses = new ArrayList/*Student*/();
+    this.staffCourses   = new ArrayList/*Staff*/  ();
     
     setNetID(netID); // adds this to db
     setFirstName(firstName);
@@ -96,12 +107,44 @@ public class User implements Principal {
   }
   
   /**
-   * @return the unique course for this student for the given semester, or null
-   *         if the student is enrolled in more or less than one course.
+   * @return the unique course for this user (as staff or student) for the given
+   *         semester, or null if the student is enrolled in more or less than
+   *         one course.
    */
   public Course getSoloCourse(Semester semester) {
-    throw new NotImplementedException();
+    Course result = null;
+
+    // loop through students
+    Iterator/*Student*/ i = studentCourses.iterator();
+    while(i.hasNext()) {
+      Student s = (Student) i.next();
+     
+      if (s.getCourse().getSemester() != semester)
+        continue;
+      else if (result != null)
+        // course is not unique
+        return null;
+      else
+        result = s.getCourse();
+    }
+    
+    // loop through staff
+    Iterator/*Staff*/ j = staffCourses.iterator();
+    while (j.hasNext()) {
+      Staff s = (Staff) j.next();
+      
+      if (s.getCourse().getSemester() != semester)
+        continue;
+      else if (result != null)
+        // course is not unique
+        return null;
+      else
+        result = s.getCourse();
+    }
+    
+    return result;
   }
+  
   public boolean hasAssignAccess(Course course, Assignment assign) {
     throw new NotImplementedException();
   }

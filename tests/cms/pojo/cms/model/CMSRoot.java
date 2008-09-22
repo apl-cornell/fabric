@@ -181,6 +181,8 @@ public class CMSRoot {
   }
   
   public Semester getSemester(String semesterID) {
+    if (semesterID == null)
+      return null;
     throw new NotImplementedException();
   }
   
