@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*,edu.cornell.csuglab.cms.author.*, cms.www.xml.*" %>
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*" %>
 <% 
 /****************************************************************
 * CMS overview page: high-level view of everything useful
@@ -6,7 +6,7 @@
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
 Node l = root.getElementsByTagName(XMLBuilder.TAG_ALLDUEASSIGNMENTS).item(0); 
-boolean isGuest= ((Principal) session.getAttribute(AccessController.A_PRINCIPAL)).isGuest();
+boolean isGuest= ((User) session.getAttribute(AccessController.A_PRINCIPAL)).isGuest();
 NodeList semesters = root.getElementsByTagName(XMLBuilder.TAG_SEMESTER);
 %>
 <jsp:include page="header.jsp" />

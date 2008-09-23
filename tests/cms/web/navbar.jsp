@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, edu.cornell.csuglab.cms.author.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.*" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.*" %><%
  Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
  Element root = (Element) displayData.getChildNodes().item(0);
  Element course = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
@@ -43,18 +43,18 @@ if (courseid != null) {%>
 		/* it could also be a survey/quiz... Panut needs to commit!  This was crashing me - Alex*/
 		if (xAssign.getNodeName().equals(XMLBuilder.A_ASSIGNMENT)) {
 			String status = xAssign.getAttribute(XMLBuilder.A_STATUS);
-		    boolean isHidden = status.equals(AssignmentBean.HIDDEN);
+		    boolean isHidden = status.equals(Assignment.HIDDEN);
 			int type = Integer.parseInt(xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE));
 			String action = "";
 			
-			if (type == AssignmentBean.ASSIGNMENT)
+			if (type == Assignment.ASSIGNMENT)
 				action = AccessController.ACT_ASSIGN;
-			else if (type == AssignmentBean.SURVEY)
+			else if (type == Assignment.SURVEY)
 				action = AccessController.ACT_SURVEY;
-			else if (type == AssignmentBean.QUIZ)
+			else if (type == Assignment.QUIZ)
 				action = AccessController.ACT_QUIZ;
 			
-			isHidden = status.equals(AssignmentBean.HIDDEN);
+			isHidden = status.equals(Assignment.HIDDEN);
 			if (!isHidden) {%>
 	<li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_ASSIGN%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xAssign.getAttribute(XMLBuilder.A_ASSIGNID)%>">
 	  &bull; <%= xAssign.getAttribute(XMLBuilder.A_NAME) %>

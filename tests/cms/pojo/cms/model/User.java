@@ -263,6 +263,9 @@ public class User implements Principal {
   public boolean isInStaffAsBlankMode() {
     throw new NotImplementedException();
   }
+  public boolean isAdminPrivByCourseID(String courseID) {
+    return isAdminPrivByCourse(db.getCourse(courseID));
+  }
   public boolean isAdminPrivByCourse(Course course) {
     throw new NotImplementedException();
   }

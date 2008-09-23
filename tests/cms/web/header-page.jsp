@@ -1,7 +1,7 @@
-<%@ page language="Java" import="org.w3c.dom.*, cms.www.*, edu.cornell.csuglab.cms.author.*, cms.www.xml.*" %>
+<%@ page language="Java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*" %>
 <% Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
-Principal p = (Principal)session.getAttribute(AccessController.A_PRINCIPAL);
+User p = (User)session.getAttribute(AccessController.A_PRINCIPAL);
 String NetID = p.getNetID();
 boolean debug= ((Boolean)session.getAttribute(AccessController.A_DEBUG)).booleanValue(); 
 String URL= request.getServletPath(); 
@@ -82,9 +82,9 @@ if(p.isCMSAdmin())
 <%
 Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
 boolean showViewAs= false;
-long courseid=0;
+String courseid=null;
 if (course!=null) {
-    courseid= Long.parseLong(course.getAttribute(XMLBuilder.A_COURSEID));
+    courseid= course.getAttribute(XMLBuilder.A_COURSEID);
     showViewAs= p.isAdminPrivByCourseID(courseid) || p.isInStaffAsBlankMode(); 
 }
 %>
