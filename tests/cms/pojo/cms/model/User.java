@@ -173,7 +173,49 @@ public class User implements Principal {
   }
   
   public Collection/*Semester*/ findSemesters() {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet(new Comparator() {
+      public int compare(Object o1, Object o2) {
+        String name1 = ((Semester) o1).getName();
+        String name2 = ((Semester) o2).getName();
+        
+        int year1 = Integer.parseInt(name1.substring(name1.indexOf(' ')+1));
+        int year2 = Integer.parseInt(name2.substring(name2.indexOf(' ')+1));
+        if (year1 != year2) return year1 - year2;
+        
+        String session1 = name1.substring(0, name1.indexOf(' '));
+        String session2 = name2.substring(0, name2.indexOf(' '));
+        if (session1.equalsIgnoreCase(session2)) return 0;
+        
+        if (session1.equalsIgnoreCase("Spring")) return -1;
+        if (session2.equalsIgnoreCase("Spring")) return 1;
+        if (session1.equalsIgnoreCase("Summer")) return 1;
+        if (session2.equalsIgnoreCase("Summer")) return 1;
+        if (session1.equalsIgnoreCase("Fall")) return -1;
+        if (session2.equalsIgnoreCase("Fall")) return 1;
+        if (session1.equalsIgnoreCase("Winter")) return 1;
+        if (session2.equalsIgnoreCase("Winter")) return 1;
+        
+        return 0;
+      }
+    });
+
+    for (Iterator it = studentCourses.iterator(); it.hasNext();) {
+      Student student = (Student) it.next();
+      if (student.getStatus().equals(Student.ENROLLED)) {
+        Semester semester = student.getCourse().getSemester();
+        if (!semester.getHidden()) result.add(semester);
+      }
+    }
+
+    for (Iterator it = staffCourses.iterator(); it.hasNext();) {
+      Staff staff = (Staff) it.next();
+      if (staff.getStatus().equals(Staff.ACTIVE)) {
+        Semester semester = staff.getCourse().getSemester();
+        if (!semester.getHidden()) result.add(semester);
+      }
+    }
+    
+    return result;
   }
   
   /**
