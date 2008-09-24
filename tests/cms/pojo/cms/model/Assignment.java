@@ -1,11 +1,6 @@
 package cms.model;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 public class Assignment {
 
@@ -56,6 +51,7 @@ public class Assignment {
   Collection/*AnswerSet*/          answerSets;           // maintained by AnswerSet
   Collection/*TimeSlot*/           timeSlots;            // maintained by TimeSlot
   Collection/*RequiredSubmission*/ requiredSubmissions;  // maintained by RequiredSubmission
+  Collection/*Group*/              groups;               // maintained by Group
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
@@ -74,6 +70,7 @@ public class Assignment {
     this.answerSets          = new ArrayList/*AnswerSet*/();
     this.timeSlots           = new ArrayList/*TimeSlot*/();
     this.requiredSubmissions = new ArrayList/*RequiredSubmission*/();
+    this.groups              = new ArrayList/*Group*/();
 
     // TODO: set up other fields
   }

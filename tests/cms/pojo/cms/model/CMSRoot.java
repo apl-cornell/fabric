@@ -4,8 +4,6 @@ import java.util.Collections;
 
 import java.util.*;
 
-import cms.auth.Principal;
-
 /**
  * This class is the root container for all of the objects in the CMS Database.
  * Note that comments are descriptions of the ``real'' CMS, and may not yet
@@ -57,8 +55,9 @@ public class CMSRoot {
   //////////////////////////////////////////////////////////////////////////////
 
   final Map/*String, User*/ users; // Managed by User.
-  final Collection/*Semester*/ semesters; // Managed by Semester.
+  final Map/*String, Semester*/ semesters; // Managed by Semester.
   final Collection/*SiteNotice*/ notices; // Managed by SiteNotice.
+  final Map/*String, Course*/ courses; // Managed by Course.  Maps CourseIDs to Courses.
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
@@ -68,11 +67,33 @@ public class CMSRoot {
     this.debugMode = true;
     
     this.users = new HashMap/*String, User*/();
-    this.semesters = new HashSet/*Semester*/();
+    this.semesters = new HashMap/*String, Semester*/();
     this.notices = new HashSet/*SiteNotice*/();
+    this.courses = new HashMap/*String, Course*/();
 
     setCurrentSemester(new Semester(this, "Summer 2008"));
     this.guestUser = new User(this, "guest", "Guest", "User", "0", "none");
+    
+    // Populate the database for testing.
+    Semester oldSem = new Semester(this, "Spring 2008");
+    Semester newSem = new Semester(this, "Fall 2008");
+    Semester curSem = new Semester(this, "Summer 2008");
+    newSem.setHidden(true);
+    User mike = new User(this, "mg1", "Michael", "George", "11111", "Eng");
+    User andru = new User(this, "am1", "Andrew",  "Myers",  "22222", "Eng");
+    User jed = new User(this, "ml1", "Jed",     "Liu",    "33333", "Eng");
+    User vikram = new User(this, "kv1", "Vikram",  "K",      "44444", "Eng");
+    User xin = new User(this, "xq1", "Xin",     "Qi",     "55555", "Eng");
+    for (Iterator sems = getAllSemesters().iterator(); sems.hasNext();) {
+      Semester next = (Semester) sems.next();
+      Course c = new Course(this, next, "Intro to Programming II", "In this course you will program a lot", "COM S 211");
+      new Student(c, jed);
+      
+      new Course(this, next, "Intro to Programming", "In this course you will learn to program", "COM S 100");
+    }
+    new Course(this, oldSem, "Intro to Programming III", "Yet more programming", "COM S 312");
+    Course c = new Course(this, newSem, "Programming Languages", "PL theory", "COM S 611");
+    new Student(c, jed);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -121,7 +142,7 @@ public class CMSRoot {
     throw new NotImplementedException();
   }
   public Collection/*Semester*/ getAllSemesters() {
-    return Collections.unmodifiableCollection(semesters);
+    return Collections.unmodifiableCollection(semesters.values());
   }
   public Collection/*User*/ findAllAdmins() {
     // TODO: check on return type; might not be user
@@ -131,10 +152,10 @@ public class CMSRoot {
     throw new NotImplementedException();
   }
   public Collection/*Course*/ findCCAccessCourses() {
-    throw new NotImplementedException();
+    return getCurrentSemester().findCCAccessCourses();
   }
   public Collection/*Course*/ findGuestAccessCourses() {
-    throw new NotImplementedException();
+    return getCurrentSemester().findGuestAccessCourses();
   }
   public Collection/*Assignment*/ findOpenAssignmentsByDeadline(Date checkDeadline) {
     throw new NotImplementedException();
@@ -192,13 +213,12 @@ public class CMSRoot {
   }
   
   public Semester getSemester(String semesterID) {
-    if (semesterID == null)
-      return null;
-    throw new NotImplementedException();
+    if (semesterID == null) return null;
+    return (Semester) semesters.get(semesterID);
   }
   
   public Course getCourse(String courseID) {
-    throw new NotImplementedException();
+    return (Course) courses.get(courseID);
   }
   
   public Announcement getAnnouncement(String announceID) {

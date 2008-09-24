@@ -1061,7 +1061,7 @@ public class TransactionHandler {
         Iterator assignTos = assignment.getGroupAssignedTos().iterator();
         while (assignTos.hasNext()) {
           GroupAssignedTo a = (GroupAssignedTo) assignTos.next();
-          if (a.getUser() == p)
+          if (a.getGrader() == p)
             canGrades.add(a.getGroup() + "_" + a.getSubProblem());
         }
         

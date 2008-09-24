@@ -44,7 +44,7 @@ public class Semester {
     
     this.database = database;
     this.courses = new LinkedList();
-    database.semesters.add(this);
+    database.semesters.put(toString(), this);
   }
   
   public Collection getCourses() {
@@ -54,7 +54,19 @@ public class Semester {
     throw new NotImplementedException();
   }
   public Collection/*Course*/ findCCAccessCourses() {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet(new Comparator() {
+      public int compare(Object o1, Object o2) {
+        Course c1 = (Course) o1;
+        Course c2 = (Course) o2;
+        return c1.getCode().compareTo(c2.getCode());
+      }
+    });
+    
+    for (Iterator cit = courses.iterator(); cit.hasNext();) {
+      Course course = (Course) cit.next();
+      if (course.getCourseCCAccess()) result.add(course);
+    }
+    return result;
   }
   public Collection/*Course*/ findGuestAccessCourses() {
     SortedSet result = new TreeSet(new Comparator() {

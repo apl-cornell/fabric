@@ -3,7 +3,7 @@ package cms.model;
 import java.util.Collection;
 import java.util.Date;
 
-public class Announcement {
+public class Announcement implements Comparable {
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -61,6 +61,11 @@ public class Announcement {
     this.setPosted   (new Date());
     this.setEditInfo ("");
     this.setHidden   (false);
+  }
+
+  public int compareTo(Object o) {
+    if (!(o instanceof Announcement)) return 0;
+    return -posted.compareTo(((Announcement) o).posted);
   }
 }
 

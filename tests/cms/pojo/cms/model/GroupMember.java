@@ -34,10 +34,12 @@ public class GroupMember {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public GroupMember(Group group, Student user, String status) {
+  public GroupMember(Group group, Student student, String status) {
     setGroup(group);
-    setStudent(user);
+    setStudent(student);
     setStatus(status);
+    
+    group.members.put(student.getUser(), this);
   }
 }
 

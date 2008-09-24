@@ -1,10 +1,6 @@
 package cms.model;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Hashtable;
-import java.util.Iterator;
+import java.util.*;
 
 public class Group {
   //////////////////////////////////////////////////////////////////////////////
@@ -41,14 +37,14 @@ public class Group {
   public TimeSlot   getTimeSlot()             { return this.timeSlot;             }
 
   public Collection/*GroupMember*/ getMembers() {
-    return Collections.unmodifiableCollection(this.members);
+    return Collections.unmodifiableCollection(this.members.values());
   }
 
   //////////////////////////////////////////////////////////////////////////////
   // managed views                                                            //
   //////////////////////////////////////////////////////////////////////////////
 
-  Collection/*GroupMember*/ members;
+  Map/*User, GroupMember*/ members;  // by GroupMember
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
@@ -61,6 +57,8 @@ public class Group {
     setExtension(null);
     setFileCounter(1);
     setLatestSubmission(null);
+    
+    assign.groups.add(this);
   }
   
   public Collection/*Comment*/ getComments() {

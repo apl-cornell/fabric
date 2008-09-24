@@ -2,6 +2,9 @@ package cms.model;
 
 import cms.auth.Principal;
 
+/**
+ * Represents the assignment of a group/subproblem pair to a grader.
+ */
 public class GroupAssignedTo {
 
   public static String UNASSIGNED = "<unassigned>";
@@ -13,7 +16,7 @@ public class GroupAssignedTo {
 
   private Group      group;
   private SubProblem subProblem;
-  private User       user;
+  private User       grader;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
@@ -21,7 +24,7 @@ public class GroupAssignedTo {
 
   public void setGroup      (final Group group)           { this.group      = group;      }
   public void setSubProblem (final SubProblem subProblem) { this.subProblem = subProblem; }
-  public void setUser       (final User user)             { this.user       = user;       }
+  public void setGrader     (final User user)             { this.grader     = user;       }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //
@@ -29,15 +32,15 @@ public class GroupAssignedTo {
 
   public Group      getGroup()      { return this.group;      }
   public SubProblem getSubProblem() { return this.subProblem; }
-  public User       getUser()       { return this.user;       }
+  public User       getGrader()     { return this.grader;     }
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public GroupAssignedTo(Group group, User user, SubProblem subProblem) {
+  public GroupAssignedTo(Group group, User grader, SubProblem subProblem) {
     setGroup(group);
-    setUser(user);
+    setGrader(grader);
     setSubProblem(subProblem);
   }
   

@@ -77,6 +77,10 @@ public class Staff {
     setEmailRequest(false);
     setGradesPriv(false);
     setGroupsPriv(false);
+    
+    course.staff.put(user, this);
+    user.staffCourses.add(this);
+    user.staffIndex.put(course, this);
   }
 }
 

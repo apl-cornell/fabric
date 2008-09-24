@@ -1,9 +1,7 @@
 package cms.model;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class Course {
 
@@ -42,8 +40,8 @@ public class Course {
   //////////////////////////////////////////////////////////////////////////////
 
   final Collection/*Assignment*/       assignments;
-  final Collection/*Students*/         students;
-  final Collection/*Staff*/            staff;
+  final Map/*User,Student*/            students;
+  final Map/*User,Staff*/              staff;
   final Collection/*Announcement*/     announcements;
   final Collection/*Category*/         categories;
   final Collection/*CategoryCol*/      ctgCols;
@@ -119,7 +117,8 @@ public class Course {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Course(Semester semester, String name, String description, String code) {
+  public Course(CMSRoot db, Semester semester, String name, String description,
+      String code) {
     setName(name);
     setDescription(description);
     setCode(code);
@@ -128,8 +127,8 @@ public class Course {
     setFileCounter(1);
 
     assignments   = new ArrayList/*Assignment*/       ();
-    students      = new ArrayList/*Students*/         ();
-    staff         = new ArrayList/*Staff*/            ();
+    students      = new HashMap/*User,Student*/       ();
+    staff         = new HashMap/*User,Staff*/         ();
     announcements = new ArrayList/*Announcement*/     ();
     categories    = new ArrayList/*Category*/         ();
     ctgCols       = new ArrayList/*CategoryCol*/      ();
@@ -157,6 +156,8 @@ public class Course {
     setMeanTotalScore(null);
     setMedianTotalScore(null);
     setStDevTotalScore(null);
+    
+    db.courses.put(toString(), this);
   }
   public Collection/*Assignment*/ getAssignments() {
     return Collections.unmodifiableCollection(assignments);
@@ -180,11 +181,25 @@ public class Course {
   }
   
   public Collection/*Announcement*/ getAnnouncements() {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet();
+    
+    for (Iterator it = announcements.iterator(); it.hasNext();) {
+      Announcement announcement = (Announcement) it.next();
+      if (!announcement.getHidden()) result.add(announcement);
+    }
+    
+    return result;
   }
   
   public Collection/*Announcement*/ findHiddenAnnouncements() {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet();
+    
+    for (Iterator it = announcements.iterator(); it.hasNext();) {
+      Announcement announcement = (Announcement) it.next();
+      if (announcement.getHidden()) result.add(announcement);
+    }
+    
+    return result;
   }
   
   public Collection/*Staff*/ getStaff() {
@@ -203,30 +218,107 @@ public class Course {
     throw new NotImplementedException();
   }
   
-  public Collection/*Grade*/ findRecentGradesByUser(User user, boolean b, User p) {
-    // see gradeHome().findRecentByNetIDCourseID
-    return null;
+  public Collection/*Grade*/ findRecentGradesByUser(User user, boolean admin, User grader) {
+    // XXX This method could probably be done more efficiently by creating appropriate indices.
+    
+    Map/*SubProblem, Grade*/ result = new HashMap/*SubProblem, Grade*/();
+    
+    for (Iterator ait = assignments.iterator(); ait.hasNext();) {
+      Assignment assignment = (Assignment) ait.next();
+      
+      if (assignment.getHidden()) continue;
+      boolean assignedGraders = assignment.getAssignedGraders();
+      
+      // Find the user's group for the assignment.
+      Group group = null;
+      for (Iterator git = assignment.groups.iterator(); git.hasNext();) {
+        Group curGroup = (Group) git.next();
+        GroupMember member = (GroupMember) curGroup.members.get(user);
+        if (member != null && member.getStatus().equals(GroupMember.ACTIVE)) {
+          group = curGroup;
+          break;
+        }
+      }
+      
+      // Build up a set of partners for the assignment.
+      Set/*User*/ partners = new HashSet();
+      for (Iterator eit = group.members.entrySet().iterator(); eit.hasNext();) {
+        Map.Entry entry = (Entry) eit.next();
+        if (((GroupMember) entry.getValue()).getStatus().equals(GroupMember.ACTIVE)) {
+          partners.add(entry.getKey());
+        }
+      }
+
+      for (Iterator git = assignment.grades.iterator(); git.hasNext();) {
+        Grade grade = (Grade) git.next();
+        if (grade.getGrade() == null) continue;
+        if (!partners.contains(grade.getUser())) continue;
+        
+        SubProblem subProblem = grade.getSubProblem();
+        if (assignedGraders && !admin) {
+          // TODO Check that the grader is allowed to see the grade for this group/subproblem pair.
+        }
+        
+        Grade oldGrade = (Grade) result.get(subProblem);
+        if (oldGrade == null || oldGrade.getEntered().before(grade.getEntered()))
+          result.put(subProblem, grade);
+      }
+    }
+    
+    return result.values();
   }
   
   public Collection/*RequiredSubmission*/ getRequiredSubmissions() {
     throw new NotImplementedException();
   }
   
-  public Map/*SubProblem, Float*/ getGradeMap(User user) {
-    throw new NotImplementedException();
+  public Map/*Assignment, Float*/ getGradeMap(User user) {
+    // XXX This method could probably be done more efficiently by creating appropriate indices.
+    Map result = new HashMap();
+    
+    for (Iterator ait = assignments.iterator(); ait.hasNext();) {
+      Assignment assignment = (Assignment) ait.next();
+      
+      if (assignment.getHidden()) continue;
+      
+      for (Iterator git = assignment.grades.iterator(); git.hasNext();) {
+        Grade grade = (Grade) git.next();
+        if (grade.getUser() != user || grade.getGrade() == null) continue;
+        
+        SubProblem subProblem = grade.getSubProblem();
+        // TODO Do the equivalent of checking that subproblemid == 0
+        
+        Grade oldGrade = (Grade) result.get(assignment);
+        if (oldGrade == null || oldGrade.getEntered().before(grade.getEntered()))
+          result.put(assignment, grade);
+      }
+    }
+    
+    // Extract actual grades.
+    for (Iterator it = result.entrySet().iterator(); it.hasNext();) {
+      Entry entry = (Entry) it.next();
+      entry.setValue(((Grade) entry.getValue()).getGrade());
+    }
+    
+    return result;
   }
   public Student getStudent(User user) {
-    throw new NotImplementedException();
+    return (Student) students.get(user);
   }
   public Collection/*Assignment*/ findHiddenAssignments() {
-    throw new NotImplementedException();
+    Set result = new HashSet();
+    for (Iterator it = assignments.iterator(); it.hasNext();) {
+      Assignment assignment = (Assignment) it.next();
+      if (assignment.getHidden()) result.add(assignment);
+    }
+    return result;
   }
   
   public Collection/*Category*/ getCategories() {
     throw new NotImplementedException();
   }
   public Staff getStaff(User user) {
-    throw new NotImplementedException();
+    return (Staff) staff.get(user);
   }
 }
 

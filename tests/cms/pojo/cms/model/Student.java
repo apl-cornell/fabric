@@ -102,5 +102,9 @@ public class Student {
     setSection(null);
     setStatus(ENROLLED);
     setTotalScore(null);
+    
+    course.students.put(user, this);
+    user.studentCourses.add(this);
+    user.studentIndex.put(course, this);
   }
 }

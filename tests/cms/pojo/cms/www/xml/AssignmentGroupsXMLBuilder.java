@@ -185,19 +185,19 @@ public class AssignmentGroupsXMLBuilder {
           (Element) groupsNode.getElementsByTagNameNS(
               XMLBuilder.TAG_GROUP + assignedTo.getGroup().toString(),
               XMLBuilder.TAG_GROUP).item(0);
-      if (xGroup != null && assignedTo.getUser().getNetID() != null) {
+      if (xGroup != null && assignedTo.getGrader().getNetID() != null) {
         Element xAssignedTo =
             xml.createElementNS(XMLBuilder.TAG_ASSIGNEDTO
                 + assignedTo.getSubProblem().toString(), XMLBuilder.TAG_ASSIGNEDTO);
         // Set this attribute if the Principal is assigned to grade this group
         // for any subproblem
-        if (p.getNetID().equals(assignedTo.getUser().getNetID())) {
+        if (p.getNetID().equals(assignedTo.getGrader().getNetID())) {
           xGroup.setAttribute(XMLBuilder.A_CANGRADE, "true");
         }
         xAssignedTo.setAttribute(XMLBuilder.A_SUBPROBID, assignedTo.getSubProblem().toString());
-        xAssignedTo.setAttribute(XMLBuilder.A_NETID,     assignedTo.getUser().getNetID());
-        xAssignedTo.setAttribute(XMLBuilder.A_FIRSTNAME, assignedTo.getUser().getFirstName());
-        xAssignedTo.setAttribute(XMLBuilder.A_LASTNAME,  assignedTo.getUser().getLastName());
+        xAssignedTo.setAttribute(XMLBuilder.A_NETID,     assignedTo.getGrader().getNetID());
+        xAssignedTo.setAttribute(XMLBuilder.A_FIRSTNAME, assignedTo.getGrader().getFirstName());
+        xAssignedTo.setAttribute(XMLBuilder.A_LASTNAME,  assignedTo.getGrader().getLastName());
         xGroup.appendChild(xAssignedTo);
       }
     }

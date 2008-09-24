@@ -27,7 +27,9 @@ public class User implements Principal {
   //////////////////////////////////////////////////////////////////////////////
 
   Collection/*Student*/ studentCourses; // managed by student class
+  Map/*Course, Student*/ studentIndex;  // managed by student class
   Collection/*Staff*/   staffCourses;   // managed by staff   class
+  Map/*Course, Staff*/  staffIndex;     // managed by staff   class
   
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
@@ -67,6 +69,8 @@ public class User implements Principal {
     this.isAdmin = false;
     this.studentCourses = new ArrayList/*Student*/();
     this.staffCourses   = new ArrayList/*Staff*/  ();
+    this.studentIndex   = new HashMap/*Course, Student*/();
+    this.staffIndex     = new HashMap/*Course, Staff*/();
     
     setNetID(netID); // adds this to db
     setFirstName(firstName);
@@ -80,7 +84,7 @@ public class User implements Principal {
   //////////////////////////////////////////////////////////////////////////////
 
   public Collection/*Course*/ findStaffCourses() {
-    throw new NotImplementedException();
+    return findStaffCoursesBySemester(db.getCurrentSemester());
   }
   
   public Collection/*Course*/ findStaffCoursesBySemester(Semester semester) {
@@ -100,7 +104,7 @@ public class User implements Principal {
   }
   
   public Collection/*Course*/ findStudentCourses() {
-    throw new NotImplementedException();
+    return findStudentCoursesBySemester(db.getCurrentSemester());
   }
   
   public Collection/*Course*/ findStudentCoursesBySemester(Semester semester) {
@@ -261,34 +265,46 @@ public class User implements Principal {
     throw new NotImplementedException();
   }
   public boolean isInStaffAsBlankMode() {
-    throw new NotImplementedException();
+    return false; // XXX
   }
   public boolean isAdminPrivByCourseID(String courseID) {
     return isAdminPrivByCourse(db.getCourse(courseID));
   }
   public boolean isAdminPrivByCourse(Course course) {
-    throw new NotImplementedException();
+    Staff staff = (Staff) staffIndex.get(course);
+    return staff != null && staff.getStatus().equals(Staff.ACTIVE)
+        && staff.getAdminPriv();
   }
   public boolean isGroupsPrivByCourse(Course course) {
-    throw new NotImplementedException();
+    Staff staff = (Staff) staffIndex.get(course);
+    return staff != null && staff.getStatus().equals(Staff.ACTIVE)
+        && staff.getGroupsPriv();
   }
   public boolean isGradesPrivByCourse(Course course) {
-    throw new NotImplementedException();
+    Staff staff = (Staff) staffIndex.get(course);
+    return staff != null && staff.getStatus().equals(Staff.ACTIVE)
+        && staff.getGradesPriv();
   }
   public boolean isAssignPrivByCourse(Course course) {
-    throw new NotImplementedException();
+    Staff staff = (Staff) staffIndex.get(course);
+    return staff != null && staff.getStatus().equals(Staff.ACTIVE)
+        && staff.getAssignmentsPriv();
   }
   public boolean isCategoryPrivByCourse(Course course) {
-    throw new NotImplementedException();
+    Staff staff = (Staff) staffIndex.get(course);
+    return staff != null && staff.getStatus().equals(Staff.ACTIVE)
+        && staff.getCategoryPriv();
   }
   public boolean isStaffInCourseByCourse(Course course) {
-    throw new NotImplementedException();
+    Staff staff = (Staff) staffIndex.get(course);
+    return staff != null && staff.getStatus().equals(Staff.ACTIVE);
   }
   public boolean isCMSAdmin() {
     return isAdmin;
   }
   public boolean isStudentInCourseByCourse(Course course) {
-    throw new NotImplementedException();
+    Student student = (Student) studentIndex.get(course);
+    return student != null && student.getStatus().equals(Student.ENROLLED);
   }
   public int getAuthoriznLevelByCourse(Course course) {
     throw new NotImplementedException();
@@ -306,7 +322,12 @@ public class User implements Principal {
     return false;
   }
   public boolean hasCourseAccess(Course course) {
-    throw new NotImplementedException();
+    if (isStaffInCourseByCourse(course) || isStudentInCourseByCourse(course))
+      return true;
+    
+    if (isAuthenticated()) return course.getCourseCCAccess();
+    
+    return course.getCourseGuestAccess();
   }
   public boolean hasStudentsPageAccess(Course course) {
     throw new NotImplementedException();
