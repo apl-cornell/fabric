@@ -8,7 +8,10 @@ import cms.auth.Principal;
 // TODO: figure out when to use what
 public class User implements Principal {
 
-  public static final String AUTHOR_CORNELL_COMMUNITY = null;
+  public static final int AUTHORIZATION_LEVEL_STAFF = 1;
+  public static final int AUTHORIZATION_LEVEL_STUDENT = 2;
+  public static final int AUTHORIZATION_LEVEL_CORNELL_COMMUNITY = 3;
+  public static final int AUTHORIZATION_LEVEL_GUEST = 3;
   
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -306,9 +309,14 @@ public class User implements Principal {
     Student student = (Student) studentIndex.get(course);
     return student != null && student.getStatus().equals(Student.ENROLLED);
   }
+  
   public int getAuthoriznLevelByCourse(Course course) {
-    throw new NotImplementedException();
+    if (isGuest()) return AUTHORIZATION_LEVEL_GUEST;
+    if (isStudentInCourseByCourse(course)) return AUTHORIZATION_LEVEL_STUDENT;
+    if (isStaffInCourseByCourse(course)) return AUTHORIZATION_LEVEL_STAFF;
+    return AUTHORIZATION_LEVEL_CORNELL_COMMUNITY;
   }
+  
   public boolean isAssignPrivByAssignment(Assignment assignment) {
     throw new NotImplementedException();
   }

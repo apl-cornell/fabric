@@ -1,7 +1,9 @@
 package cms.model;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 public class SubProblem {
   
@@ -47,10 +49,18 @@ public class SubProblem {
   public int        getAnswer()         { return this.answer;         }
 
   //////////////////////////////////////////////////////////////////////////////
+  // managed fields                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  Map/*Group, User*/ assignedTo;  // Managed by GroupAssignedTo
+
+  //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
   public SubProblem(Assignment assign, String name, float maxScore, int type, int order, int answer) {
+    assignedTo = new HashMap/*Group, User*/();
+    
     setAssignment(assignment);
     setSubProblemName(name);
     setMaxScore(maxScore);

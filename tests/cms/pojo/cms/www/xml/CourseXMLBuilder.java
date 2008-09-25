@@ -387,7 +387,7 @@ public class CourseXMLBuilder {
    * Generate an XML subtree with info on all visible and hidden categories in
    * the given Course
    * 
-   * @param p
+   * @param user
    *          The Principal to generate the page for
    * @param xml
    *          The Document to place this element on
@@ -397,13 +397,13 @@ public class CourseXMLBuilder {
    *         in the form of child nodes
    * @throws FinderException
    */
-  public Element buildCategoriesSubtree(User p, Document xml, Course course) {
+  public Element buildCategoriesSubtree(User user, Document xml, Course course) {
     Element xCategories = xml.createElement(XMLBuilder.TAG_CATEGORIES);
-    Iterator catIter = course.getCategories().iterator();
+    Iterator catIter = course.getCategories(user).iterator();
     while (catIter.hasNext()) {
       Category ctg = (Category) catIter.next();
       
-      if (p.getAuthoriznLevelByCourse(course) >= ctg.getAuthLevel())
+      if (user.getAuthoriznLevelByCourse(course) >= ctg.getAuthLevel())
         continue;
       
       Element xCategory = xmlBuilder.categoryXMLBuilder.buildShortSubtree(xml, ctg);

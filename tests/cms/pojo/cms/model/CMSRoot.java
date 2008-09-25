@@ -79,11 +79,11 @@ public class CMSRoot {
     Semester newSem = new Semester(this, "Fall 2008");
     Semester curSem = new Semester(this, "Summer 2008");
     newSem.setHidden(true);
-    User mike = new User(this, "mg1", "Michael", "George", "11111", "Eng");
-    User andru = new User(this, "am1", "Andrew",  "Myers",  "22222", "Eng");
-    User jed = new User(this, "ml1", "Jed",     "Liu",    "33333", "Eng");
-    User vikram = new User(this, "kv1", "Vikram",  "K",      "44444", "Eng");
-    User xin = new User(this, "xq1", "Xin",     "Qi",     "55555", "Eng");
+    User mike = new User(this, "mdg39", "Michael", "George", "11111", "Eng");
+    User andru = new User(this, "acm22", "Andrew",  "Myers",  "22222", "Eng");
+    User jed = new User(this, "ml103", "Jed",     "Liu",    "33333", "Eng");
+    User vikram = new User(this, "kv48", "Vikram",  "K",      "44444", "Eng");
+    User xin = new User(this, "xq24", "Xin",     "Qi",     "55555", "Eng");
     for (Iterator sems = getAllSemesters().iterator(); sems.hasNext();) {
       Semester next = (Semester) sems.next();
       Course c = new Course(this, next, "Intro to Programming II", "In this course you will program a lot", "COM S 211");

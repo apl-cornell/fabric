@@ -2,7 +2,7 @@ package cms.model;
 
 import java.util.Collection;
 
-public class Category {
+public class Category implements Comparable {
   
   public static final String
     ASCENDING     = "asc",
@@ -77,6 +77,8 @@ public class Category {
     setAuthLevel(authorizationLevel);
     setPosition(position);
     setIsAnnouncements(announcements);
+    
+    course.categories.add(this);
   }
   
   public Collection/*CategoryColumn*/ getColumns() {
@@ -89,6 +91,13 @@ public class Category {
     throw new NotImplementedException();
   }
   
+  public int compareTo(Object o) {
+    if (!(o instanceof Category)) return 0;
+    
+    Category category = (Category) o;
+    if (position != category.position) return position - category.position;
+    return toString().compareTo(category.toString());
+  }
 }
 
 /*

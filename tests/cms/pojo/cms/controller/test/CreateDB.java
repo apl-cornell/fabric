@@ -17,11 +17,11 @@ public class CreateDB {
     Iterator sems = database.getAllSemesters().iterator();
     while(sems.hasNext()) {
       Semester next = (Semester) sems.next();
-      new Course(next, "Intro to Programming II", "In this course you will program a lot", "COM S 211");
-      new Course(next, "Intro to Programming", "In this course you will learn to program", "COM S 100");
+      new Course(database, next, "Intro to Programming II", "In this course you will program a lot", "COM S 211");
+      new Course(database, next, "Intro to Programming", "In this course you will learn to program", "COM S 100");
     }
-    new Course(oldSem, "Intro to Programming III", "Yet more programming", "COM S 312");
-    new Course(newSem, "Programming Languages", "PL theory", "COM S 611");
+    new Course(database, oldSem, "Intro to Programming III", "Yet more programming", "COM S 312");
+    new Course(database, newSem, "Programming Languages", "PL theory", "COM S 611");
     
     // create users
     new User(database, "mg", "Michael", "George", "11111", "Eng");

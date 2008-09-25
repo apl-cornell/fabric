@@ -122,6 +122,7 @@ public class Course {
     setName(name);
     setDescription(description);
     setCode(code);
+    setDisplayedCode(code);
     setSemester(semester);
 
     setFileCounter(1);
@@ -163,7 +164,7 @@ public class Course {
     return Collections.unmodifiableCollection(assignments);
   }
   public Collection getAllAssignmentFiles() {
-    throw new NotImplementedException();
+    return new ArrayList();
   }
   public Collection getEmails() {
     throw new NotImplementedException();
@@ -255,9 +256,9 @@ public class Course {
         if (!partners.contains(grade.getUser())) continue;
         
         SubProblem subProblem = grade.getSubProblem();
-        if (assignedGraders && !admin) {
-          // TODO Check that the grader is allowed to see the grade for this group/subproblem pair.
-        }
+        if (assignedGraders && !admin
+            && !GroupAssignedTo.isAssignedTo(subProblem, group, user))
+          continue;
         
         Grade oldGrade = (Grade) result.get(subProblem);
         if (oldGrade == null || oldGrade.getEntered().before(grade.getEntered()))
@@ -283,10 +284,8 @@ public class Course {
       
       for (Iterator git = assignment.grades.iterator(); git.hasNext();) {
         Grade grade = (Grade) git.next();
-        if (grade.getUser() != user || grade.getGrade() == null) continue;
-        
-        SubProblem subProblem = grade.getSubProblem();
-        // TODO Do the equivalent of checking that subproblemid == 0
+        if (grade.getUser() != user || grade.getGrade() == null
+            || grade.getSubProblem() != null) continue;
         
         Grade oldGrade = (Grade) result.get(assignment);
         if (oldGrade == null || oldGrade.getEntered().before(grade.getEntered()))
@@ -314,8 +313,17 @@ public class Course {
     return result;
   }
   
-  public Collection/*Category*/ getCategories() {
-    throw new NotImplementedException();
+  public Collection/*Category*/ getCategories(User user) {
+    int authLevel = user.getAuthoriznLevelByCourse(this);
+    SortedSet result = new TreeSet();
+    
+    for (Iterator it = categories.iterator(); it.hasNext();) {
+      Category category = (Category) it.next();
+      if (!category.getHidden() && category.getAuthLevel() >= authLevel)
+        result.add(category);
+    }
+    
+    return result;
   }
   public Staff getStaff(User user) {
     return (Staff) staff.get(user);

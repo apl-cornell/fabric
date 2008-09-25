@@ -56,19 +56,19 @@ public class SystemXMLBuilder {
     Profiler.enterMethod("SystemXMLBuilder.buildDebugNetIDListSubtree", "");
     Element xDebugids = xml.createElement(XMLBuilder.TAG_DEBUGIDS);
     Element xItem = xml.createElement(XMLBuilder.TAG_ITEM);
-    xItem.setAttribute(XMLBuilder.A_DEBUGID, "da10");
+    xItem.setAttribute(XMLBuilder.A_DEBUGID, "acm22");
     xDebugids.appendChild(xItem);
     xItem = xml.createElement(XMLBuilder.TAG_ITEM);
-    xItem.setAttribute(XMLBuilder.A_DEBUGID, "jfg32");
+    xItem.setAttribute(XMLBuilder.A_DEBUGID, "kv48");
     xDebugids.appendChild(xItem);
     xItem = xml.createElement(XMLBuilder.TAG_ITEM);
-    xItem.setAttribute(XMLBuilder.A_DEBUGID, "osb5");
+    xItem.setAttribute(XMLBuilder.A_DEBUGID, "mdg39");
     xDebugids.appendChild(xItem);
     xItem = xml.createElement(XMLBuilder.TAG_ITEM);
-    xItem.setAttribute(XMLBuilder.A_DEBUGID, "kaa32");
+    xItem.setAttribute(XMLBuilder.A_DEBUGID, "ml103");
     xDebugids.appendChild(xItem);
     xItem = xml.createElement(XMLBuilder.TAG_ITEM);
-    xItem.setAttribute(XMLBuilder.A_DEBUGID, "sg252");
+    xItem.setAttribute(XMLBuilder.A_DEBUGID, "xq24");
     xDebugids.appendChild(xItem);
     /*
      * Collection users = database.userHome().findAll(); //users =

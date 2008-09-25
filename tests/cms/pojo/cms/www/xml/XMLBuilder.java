@@ -1264,7 +1264,7 @@ public class XMLBuilder {
     Element xHiddenCtg = xml.createElement(TAG_HIDDENCTG);
     root.appendChild(xVisibleCtg);
     root.appendChild(xHiddenCtg);
-    Collection c = course.getCategories();
+    Collection c = course.getCategories(user);
     Iterator i = c.iterator();
     int numOfCtg = 0;
     while (i.hasNext()) {
@@ -1365,7 +1365,7 @@ public class XMLBuilder {
     Element xCategory = categoryXMLBuilder.buildDatatypesSubtree(xml);
     xCategory.setAttribute(A_ID,       "0");
     xCategory.setAttribute(A_ORDER,    "1");
-    xCategory.setAttribute(A_AUTHORZN, User.AUTHOR_CORNELL_COMMUNITY);
+    xCategory.setAttribute(A_AUTHORZN, ""+User.AUTHORIZATION_LEVEL_CORNELL_COMMUNITY);
     root.appendChild(xCategory);
     buildAllCategories(user, xml, course);
     return xml;
@@ -1469,7 +1469,7 @@ public class XMLBuilder {
     if (user.isCategoryPrivByCourse(course)) {
       Element xCategories = xml.createElement(TAG_CATEGORIES);
       xCourse.appendChild(xCategories);
-      Iterator cats = course.getCategories().iterator();
+      Iterator cats = course.getCategories(user).iterator();
       while (cats.hasNext()) {
         Category cat = (Category) cats.next();
         if (user.getAuthoriznLevelByCourse(course) < cat.getAuthLevel())

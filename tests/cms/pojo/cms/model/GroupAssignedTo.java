@@ -42,10 +42,12 @@ public class GroupAssignedTo {
     setGroup(group);
     setGrader(grader);
     setSubProblem(subProblem);
+    
+    subProblem.assignedTo.put(group, grader);
   }
   
   public static boolean isAssignedTo(SubProblem subProblem, Group group, User user) {
-    throw new NotImplementedException();
+    return subProblem.assignedTo.get(group) == user;
   }
 }
 
