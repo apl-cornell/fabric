@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.author.Principal, cms.www.*, cms.www.util.*, cms.www.xml.*" %>
+<%@ page language="java" import="org.w3c.dom.*, cms.auth.Principal, cms.www.*, cms.www.util.*, cms.www.xml.*" %>
 <%
 /***************************************************************************************************
 * upload a file with any kind of student info, or download a template for a final-grade upload

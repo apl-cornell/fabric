@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, edu.cornell.csuglab.cms.author.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %>
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*" %>
 <% 
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 String URL= request.getServletPath(); 
@@ -36,7 +36,7 @@ NodeList allcats = (isAdmin || isCategory) ? XMLUtil.getFirstChildByTagName(cour
 allassigns = (allassigns == null ? new CMSNodeList() : allassigns);
 allsurveys = (allsurveys == null ? new CMSNodeList() : allsurveys);
 allcats = (allcats == null ? new CMSNodeList() : allcats);
-long courseid= Long.parseLong(course.getAttribute(XMLBuilder.A_COURSEID));
+String courseid= course.getAttribute(XMLBuilder.A_COURSEID);
 %>
 <td class="staff_navigation" rowspan="3" width="224px">
  <table border="0" cellpadding="0" cellspacing="0" width="224px">
@@ -170,11 +170,11 @@ if (allassigns.getLength() == 0) { %>
     Element xAssign = (Element) allassigns.item(i);
     String assignType = xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE); %>
         <li><a href="?<%= AccessController.P_ACTION%>=<%
-	if (assignType.equals(Integer.toString(AssignmentBean.ASSIGNMENT)))
+	if (assignType.equals(Integer.toString(Assignment.ASSIGNMENT)))
 		{%><%=AccessController.ACT_ASSIGNADMIN%><%}
-	else if (assignType.equals(Integer.toString(AssignmentBean.SURVEY)))
+	else if (assignType.equals(Integer.toString(Assignment.SURVEY)))
 		{%><%=AccessController.ACT_SURVEYADMIN%><%} 
-	else if (assignType.equals(Integer.toString(AssignmentBean.QUIZ)))
+	else if (assignType.equals(Integer.toString(Assignment.QUIZ)))
 		{%><%=AccessController.ACT_QUIZADMIN%><%}
 	/*still not done with this link...*/%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xAssign.getAttribute(XMLBuilder.A_ASSIGNID)%>">
 	      &bull;&nbsp;<%=xAssign.getAttribute(XMLBuilder.A_NAME)%>

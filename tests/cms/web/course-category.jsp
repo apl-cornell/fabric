@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.author.Principal, cms.www.*, cms.www.xml.*,edu.cornell.csuglab.cms.util.category.*" %>
+<%@ page language="java" import="org.w3c.dom.*, cms.model.*, cms.www.*, cms.www.xml.*" %>
 <%
 /**********************************************************
 * display a single category on the main course page
@@ -9,7 +9,7 @@
    String courseID= (course != null) ? course.getAttribute(XMLBuilder.A_COURSEID):"0"; 
    NodeList categoryList = root.getElementsByTagName(XMLBuilder.TAG_CATEGORY);
    String URL= request.getServletPath();
-   Principal p= (Principal) session.getAttribute(AccessController.A_PRINCIPAL);
+   User p= (User) session.getAttribute(AccessController.A_PRINCIPAL);
    boolean isAdmin = false, isCategory = false;
    if (!p.isInStaffAsBlankMode()) {
      isAdmin= course.hasAttribute(XMLBuilder.A_ISADMIN);
@@ -28,7 +28,7 @@
 	  		{
 			  	String categoryID = cat.getAttribute(XMLBuilder.A_ID);
 			  	int num2Show = Integer.parseInt(cat.getAttribute(XMLBuilder.A_NUMSHOW));
-			  	String display = num2Show < CategoryTemplate.SHOWALL ? "": "style = \"display:none\" ";
+			  	String display = num2Show < Category.SHOWALL ? "": "style = \"display:none\" ";
 			  	NodeList columnList = CategoryXMLUtil.getVisibleColumnList(cat);
 			  	NodeList rowList = CategoryXMLUtil.getVisibleRowList(cat);
 			  	boolean showExpand = num2Show < rowList.getLength();%>
@@ -118,7 +118,7 @@
 <% 			}%>
   	 <br>
   </div>
-<%				if(num2Show < CategoryTemplate.SHOWALL)
+<%				if(num2Show < Category.SHOWALL)
 				{%>
   <!-- show only top items in the above category table -->
   <script type="text/javascript">

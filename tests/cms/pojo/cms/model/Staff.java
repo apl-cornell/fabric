@@ -1,6 +1,6 @@
 package cms.model;
 
-public class Staff {
+public class Staff implements Comparable {
 
   //possible statuses
   public static String ACTIVE = "Active", INACTIVE = "Inactive";
@@ -81,6 +81,11 @@ public class Staff {
     course.staff.put(user, this);
     user.staffCourses.add(this);
     user.staffIndex.put(course, this);
+  }
+  
+  public int compareTo(Object o) {
+    if (!(o instanceof Staff)) return 0;
+    return user.getNetID().compareTo(((Staff) o).user.getNetID());
   }
 }
 

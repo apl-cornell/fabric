@@ -204,7 +204,12 @@ public class Course {
   }
   
   public Collection/*Staff*/ getStaff() {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet();
+    for (Iterator it = staff.values().iterator(); it.hasNext();) {
+      Staff staff = (Staff) it.next();
+      if (staff.getStatus().equals(Staff.ACTIVE)) result.add(staff);
+    }
+    return result;
   }
   
   public Collection/*Student*/ findActiveStudents() {

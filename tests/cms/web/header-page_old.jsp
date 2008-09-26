@@ -1,4 +1,4 @@
-<%@ page language="Java" import="org.w3c.dom.*, cms.www.*, edu.cornell.csuglab.cms.author.*, cms.www.xml.*" %>
+<%@ page language="Java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*" %>
 <% Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
 Principal p = (Principal)session.getAttribute(AccessController.A_PRINCIPAL);

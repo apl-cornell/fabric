@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, edu.cornell.csuglab.cms.author.*, cms.www.xml.*" %>
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*" %>
 <%
 /***********************************************************************************
 * if staff, show the "view as" construction on the right side of the red bar

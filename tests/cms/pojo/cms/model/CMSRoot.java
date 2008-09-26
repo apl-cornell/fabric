@@ -88,6 +88,7 @@ public class CMSRoot {
       Semester next = (Semester) sems.next();
       Course c = new Course(this, next, "Intro to Programming II", "In this course you will program a lot", "COM S 211");
       new Student(c, jed);
+      new Staff(andru, c);
       
       new Course(this, next, "Intro to Programming", "In this course you will learn to program", "COM S 100");
     }

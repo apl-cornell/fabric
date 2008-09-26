@@ -99,7 +99,7 @@ public class CourseXMLBuilder {
     }
     
     Student student = course.getStudent(user);
-    if (student.getStatus().equals(Student.ENROLLED)) {
+    if (student != null && student.getStatus().equals(Student.ENROLLED)) {
       xCourse.setAttribute(XMLBuilder.A_ISSTUDENT, "true");
       xCourse.setAttribute(XMLBuilder.A_TOTALSCORE, StringUtil.roundToOne(String
           .valueOf(student.getTotalScore())));
@@ -275,7 +275,7 @@ public class CourseXMLBuilder {
     Element xCourse = buildBasicPropNode(user, xml, course);
 
     Student student = course.getStudent(user);
-    if (student.getStatus().equals(Student.ENROLLED) &&
+    if (student != null && student.getStatus().equals(Student.ENROLLED) &&
         student.getFinalGrade() != null) {
       xCourse.setAttribute(XMLBuilder.A_FINALGRADE, student.getFinalGrade());
     }

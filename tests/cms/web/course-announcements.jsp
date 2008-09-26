@@ -1,8 +1,8 @@
-<%@ page language="java" import="org.w3c.dom.*,edu.cornell.csuglab.cms.author.*, cms.www.*, cms.www.xml.*" %><%
+<%@ page language="java" import="org.w3c.dom.*,cms.auth.*, cms.model.*, cms.www.*, cms.www.xml.*" %><%
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 String URL= request.getServletPath();
-Principal p= (Principal) session.getAttribute(AccessController.A_PRINCIPAL);
-String netid= p.getUserID();
+User p= (User) session.getAttribute(AccessController.A_PRINCIPAL);
+String netid= p.getNetID();
 Element root= (Element) displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).item(0);
 Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
 String courseid= course.getAttribute(XMLBuilder.A_COURSEID); 

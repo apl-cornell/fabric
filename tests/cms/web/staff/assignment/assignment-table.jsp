@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*,edu.cornell.csuglab.cms.author.*, cms.www.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %><%
+<%@ page language="java" import="org.w3c.dom.*,cms.auth.*, cms.model.*, cms.www.*, cms.www.xml.*" %><%
 /*********************************************
 display table of assignments on staff-side
 main course page
@@ -59,7 +59,7 @@ if (length == 0) { %>
   for (int i= 0; i != length; i++) { 
     Element item= (Element) list.item(i); 
     int assignType = Integer.parseInt(item.getAttribute(XMLBuilder.A_ASSIGNTYPE));
-    if (assignType == AssignmentBean.SURVEY) continue;
+    if (assignType == Assignment.SURVEY) continue;
     
     String assignid= item.getAttribute(XMLBuilder.A_ID); 
     String total = item.getAttribute(XMLBuilder.A_TOTALSCORE),
@@ -70,8 +70,8 @@ if (length == 0) { %>
       weight = item.hasAttribute(XMLBuilder.A_WEIGHT) ? item.getAttribute(XMLBuilder.A_WEIGHT) : null;
   	int type = item.hasAttribute(XMLBuilder.A_ASSIGNTYPE) ? Integer.parseInt(item.getAttribute(XMLBuilder.A_ASSIGNTYPE)) : -1;     
 	String action = AccessController.ACT_ASSIGNADMIN;
-	if (type == AssignmentBean.QUIZ) action = AccessController.ACT_QUIZADMIN;
-	else if (type == AssignmentBean.SURVEY) action = AccessController.ACT_SURVEYADMIN;
+	if (type == Assignment.QUIZ) action = AccessController.ACT_QUIZADMIN;
+	else if (type == Assignment.SURVEY) action = AccessController.ACT_SURVEYADMIN;
   %>
             <tr>
               <td nowrap>
@@ -96,7 +96,7 @@ if (isadmin || isassign) {
 }
 if (isadmin || isgrades || isgroups) {
 	String groupAction = AccessController.ACT_GRADEASSIGN;
-	if (type == AssignmentBean.SURVEY) {
+	if (type == Assignment.SURVEY) {
 		groupAction = AccessController.ACT_SURVEYRESULT;
 		groupAnchor = "result";
 	}
