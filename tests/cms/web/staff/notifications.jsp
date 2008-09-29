@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.util.Util, cms.www.*, edu.cornell.csuglab.cms.base.EmailBean, cms.www.xml.*" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.util.Util, cms.www.*, cms.www.xml.*" %><%
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA); 
 Element root= (Element) displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).item(0);
 NodeList cs = root.getElementsByTagName(XMLBuilder.TAG_COURSE);

@@ -190,7 +190,8 @@ public class Transactions {
   }
 
   public TransactionResult setStaffPrefs(User p, Course course, Staff data) {
-    throw new NotImplementedException();
+    // TODO: I think this is right...the TransactionManager does the updates.
+    return new TransactionResult();
   }
 
   public TransactionResult addAllAssignsGrades(User p, Object data, Object data2) {
