@@ -9,6 +9,7 @@ import polyglot.frontend.Parser;
 import polyglot.lex.Lexer;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
+import fabil.extension.FabILExt_c;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
 import fabric.parse.Grm;
@@ -54,4 +55,8 @@ public class ExtensionInfo extends jif.ExtensionInfo {
         return new FabricTypeSystem_c(targetExt.typeSystem());
     }
 
+    public ExtensionInfo() {
+      super();
+      targetExt = new fabil.ExtensionInfo();
+    }
 }
