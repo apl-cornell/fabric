@@ -56,7 +56,7 @@ public class CMSRoot {
 
   final Map/*String, User*/ users; // Managed by User.
   final Map/*String, Semester*/ semesters; // Managed by Semester.
-  final Collection/*SiteNotice*/ notices; // Managed by SiteNotice.
+  final Map/*String, SiteNotice*/ notices; // Managed by SiteNotice.
   final Map/*String, Course*/ courses; // Managed by Course.  Maps CourseIDs to Courses.
 
   //////////////////////////////////////////////////////////////////////////////
@@ -68,7 +68,7 @@ public class CMSRoot {
     
     this.users = new HashMap/*String, User*/();
     this.semesters = new HashMap/*String, Semester*/();
-    this.notices = new HashSet/*SiteNotice*/();
+    this.notices = new HashMap/*String, SiteNotice*/();
     this.courses = new HashMap/*String, Course*/();
 
     setCurrentSemester(new Semester(this, "Summer 2008"));
@@ -104,7 +104,13 @@ public class CMSRoot {
    * @return the number of distinct CUIDs found in the user table
    */
   public int getCUIDCount() {
-    throw new NotImplementedException();
+    Set cuidSet = new HashSet();
+    for (Iterator it = users.values().iterator(); it.hasNext();) {
+      User user = (User) it.next();
+      if (!user.missingCUID()) cuidSet.add(user.getCUID());
+    }
+    
+    return cuidSet.size();
   }
   
   public Collection/*User*/ getAllUsers() {
@@ -134,8 +140,7 @@ public class CMSRoot {
     
     for (Iterator uit = users.values().iterator(); uit.hasNext();) {
       User user = (User) uit.next();
-      String cuid = user.getCUID();
-      if (cuid != null && !cuid.isEmpty() && !cuid.equals("0")) continue;
+      if (!user.missingCUID()) continue;
       
       // Ensure the user is actively enrolled in a course as a student.
       boolean enrolled = false;
@@ -182,7 +187,7 @@ public class CMSRoot {
     
     SortedSet result = new TreeSet();
     
-    for (Iterator it = notices.iterator(); it.hasNext();) {
+    for (Iterator it = notices.values().iterator(); it.hasNext();) {
       SiteNotice notice = (SiteNotice) it.next();
       if (!notice.getHidden() && !notice.getDeleted() && notice.getExpireDate().after(now))
         result.add(notice);
@@ -193,7 +198,7 @@ public class CMSRoot {
   public Collection/*SiteNotice*/ findAllLivingSiteNotices() {
     SortedSet result = new TreeSet();
     
-    for (Iterator it = notices.iterator(); it.hasNext();) {
+    for (Iterator it = notices.values().iterator(); it.hasNext();) {
       SiteNotice notice = (SiteNotice) it.next();
       if (!notice.getDeleted()) result.add(notice);
     }
@@ -201,7 +206,13 @@ public class CMSRoot {
     return result;
   }
   public Collection/*SiteNotice*/ findDeletedSiteNotices() {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet();
+    for (Iterator it = notices.values().iterator(); it.hasNext();) {
+      SiteNotice notice = (SiteNotice) it.next();
+      if (notice.getDeleted()) result.add(notice);
+    }
+    
+    return result;
   }
   
   public Collection/*User*/ findMissingNameUsers() {
@@ -258,7 +269,7 @@ public class CMSRoot {
   }
   
   public SiteNotice getSiteNotice(String noticeID) {
-    throw new NotImplementedException();
+    return (SiteNotice) notices.get(noticeID);
   }
   
   public CategoryRow getCategoryRow(String rowID) {

@@ -1,7 +1,7 @@
 <%@ page language="Java" import="cms.www.*, cms.auth.*, cms.model.*" %>
 <% boolean debug= ((Boolean)session.getAttribute(AccessController.A_DEBUG)).booleanValue();
-Principal p= (Principal) session.getAttribute(AccessController.A_PRINCIPAL);
-String NetID = p.getUserID(); %>
+User p= (User) session.getAttribute(AccessController.A_PRINCIPAL);
+String NetID = p.getNetID(); %>
 </head>
 <body>
 

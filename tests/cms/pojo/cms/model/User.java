@@ -105,6 +105,10 @@ public class User implements Principal {
   //////////////////////////////////////////////////////////////////////////////
   // public methods                                                           //
   //////////////////////////////////////////////////////////////////////////////
+  
+  public boolean missingCUID() {
+    return CUID == null || CUID.isEmpty() || CUID.equals("0");
+  }
 
   public Collection/*Course*/ findStaffCourses() {
     return findStaffCoursesBySemester(db.getCurrentSemester());

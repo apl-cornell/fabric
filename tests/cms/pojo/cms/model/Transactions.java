@@ -30,11 +30,16 @@ public class Transactions {
   }
 
   public boolean addSiteNotice(User p, String text, User author, Date exp, boolean hidden) {
-    throw new NotImplementedException();
+    new SiteNotice(database, p, text, exp, hidden);
+    return true;
   }
 
-  public boolean editSiteNotice(User p, SiteNotice id, String text, Date exp, boolean hidden, boolean deleted) {
-    throw new NotImplementedException();
+  public boolean editSiteNotice(User p, SiteNotice notice, String text, Date exp, boolean hidden, boolean deleted) {
+    notice.setText(text);
+    notice.setExpireDate(exp);
+    notice.setHidden(hidden);
+    notice.setDeleted(deleted);
+    return true;
   }
 
   public boolean addRegradeRequest(User p, Group group, Collection subProblems, String requestText) {

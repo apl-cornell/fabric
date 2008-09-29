@@ -51,7 +51,7 @@ public class SiteNotice implements Comparable {
     setHidden(hidden);
     setDeleted(false);
     
-    db.notices.add(this);
+    db.notices.put(toString(), this);
   }
   
   public int compareTo(Object o) {
