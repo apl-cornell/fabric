@@ -114,9 +114,6 @@ public class CMSRoot {
   public Collection/*LogDetail*/ findGradeLogDetails(Course course, Collection/*Group*/ groups) {
     throw new NotImplementedException();
   }
-  public Collection/*Assignment*/ findAssignmentsBySemester(Semester curSemester) {
-    throw new NotImplementedException();
-  }
   public Collection/*Assignment*/ findAssignmentsByCourseAdmin(Semester curSemester, User user) {
     throw new NotImplementedException();
   }
@@ -133,7 +130,24 @@ public class CMSRoot {
     return result;
   }
   public Collection/*User*/ findActiveStudentsWithoutCUID() {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet();
+    
+    for (Iterator uit = users.values().iterator(); uit.hasNext();) {
+      User user = (User) uit.next();
+      String cuid = user.getCUID();
+      if (cuid != null && !cuid.isEmpty() && !cuid.equals("0")) continue;
+      
+      // Ensure the user is actively enrolled in a course as a student.
+      boolean enrolled = false;
+      for (Iterator sit = user.studentCourses.iterator(); !enrolled
+          && sit.hasNext();) {
+        enrolled = ((Student) sit.next()).getStatus().equals(Student.ENROLLED);
+      }
+      
+      if (enrolled) result.add(user);
+    }
+    
+    return result;
   }
   public Collection/*Course*/ findCCAccessCourses() {
     return getCurrentSemester().findCCAccessCourses();
@@ -189,9 +203,18 @@ public class CMSRoot {
   public Collection/*SiteNotice*/ findDeletedSiteNotices() {
     throw new NotImplementedException();
   }
+  
   public Collection/*User*/ findMissingNameUsers() {
-    throw new NotImplementedException();
+    List result = new ArrayList();
+    for (Iterator it = users.values().iterator(); it.hasNext();) {
+      User user = (User) it.next();
+      if (user.getFirstName().isEmpty() || user.getLastName().isEmpty())
+        result.add(user);
+    }
+    
+    return result;
   }
+  
   public Collection assignedToGroups(Assignment assign, User user, List/*Group*/ list) {
     throw new NotImplementedException();
   }

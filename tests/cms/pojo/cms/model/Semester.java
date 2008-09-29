@@ -74,6 +74,23 @@ public class Semester implements Comparable {
     }
     return result;
   }
+
+  /**
+   * Returns a collection of all unhidden assignments in the semester, sorted by
+   * course code.
+   */
+  public Collection/*Assignment*/ findAssignments() {
+    SortedSet result = new TreeSet();
+    for (Iterator cit = courses.iterator(); cit.hasNext();) {
+      Course course = (Course) cit.next();
+      for (Iterator ait = course.assignments.iterator(); ait.hasNext();) {
+        Assignment assignment = (Assignment) ait.next();
+        if (!assignment.getHidden()) result.add(assignment);
+      }
+    }
+    
+    return result;
+  }
   
   public int compareTo(Object o) {
     if (!(o instanceof Semester)) return 0;

@@ -392,7 +392,7 @@ public class LogXMLBuilder {
     Collection assigns;
     Semester curSemester = xmlBuilder.database.getCurrentSemester();
     if (p.isCMSAdmin()) {
-      assigns = xmlBuilder.database.findAssignmentsBySemester(curSemester);
+      assigns = curSemester.findAssignments();
     } else {
       assigns = xmlBuilder.database.findAssignmentsByCourseAdmin(curSemester, p);
     }

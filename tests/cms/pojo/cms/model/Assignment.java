@@ -2,7 +2,7 @@ package cms.model;
 
 import java.util.*;
 
-public class Assignment {
+public class Assignment implements Comparable {
 
   public static final String OPEN   = "Open";
   public static final String CLOSED = "Closed";
@@ -354,6 +354,17 @@ public class Assignment {
 
   public void addGrade(Group group, SubProblem subProb, Float float1) {
     throw new NotImplementedException();
+  }
+
+  public int compareTo(Object o) {
+    if (!(o instanceof Assignment)) return 0;
+    
+    Assignment a = (Assignment) o;
+    int result = course.compareTo(a.course);
+    if (result != 0) return result;
+    
+    // TODO determine an ordering for assignments within a course.
+    return 0;
   }
 }
 
