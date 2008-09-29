@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*" %>
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.model.*, cms.www.xml.*" %>
 <%
 /***********************************************************************************
 * if staff, show the "view as" construction on the right side of the red bar
@@ -6,13 +6,13 @@
 String URL= request.getServletPath(); 
 session.setAttribute(AccessController.A_URL, URL);
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
-Principal p = (Principal)session.getAttribute(AccessController.A_PRINCIPAL);
+User p = (User)session.getAttribute(AccessController.A_PRINCIPAL);
 Element root= (Element)displayData.getFirstChild();
 Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
 boolean showViewAs= false;
-long courseid=0;
+String courseid = null;
 if (course!=null) {
-    courseid= Long.parseLong(course.getAttribute(XMLBuilder.A_COURSEID));
+    courseid= course.getAttribute(XMLBuilder.A_COURSEID);
     showViewAs= p.isAdminPrivByCourseID(courseid) || p.isInStaffAsBlankMode(); 
 }%>
 

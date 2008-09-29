@@ -28,7 +28,9 @@ public class CreateDB {
       Semester next = (Semester) sems.next();
       Course c = new Course(database, next, "Intro to Programming II", "In this course you will program a lot", "COM S 211");
       new Student(c, jed);
-      new Staff(andru, c);
+      Staff s = new Staff(andru, c);
+      s = new Staff(mike, c);
+      s.setAdminPriv(true);
       
       new Course(database, next, "Intro to Programming", "In this course you will learn to program", "COM S 100");
     }
