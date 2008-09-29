@@ -6,29 +6,34 @@ import cms.model.*;
 
 public class CreateDB {
   public static void create(CMSRoot database) {
-    // create semesters    
+    // Populate the database for testing.
+
+    // create semesters
     Semester oldSem = new Semester(database, "Spring 2008");
     Semester newSem = new Semester(database, "Fall 2008");
     Semester curSem = new Semester(database, "Summer 2008");
     newSem.setHidden(true);
-    database.setCurrentSemester(curSem);
-    
-    // create courses
-    Iterator sems = database.getAllSemesters().iterator();
-    while(sems.hasNext()) {
-      Semester next = (Semester) sems.next();
-      new Course(database, next, "Intro to Programming II", "In this course you will program a lot", "COM S 211");
-      new Course(database, next, "Intro to Programming", "In this course you will learn to program", "COM S 100");
-    }
-    new Course(database, oldSem, "Intro to Programming III", "Yet more programming", "COM S 312");
-    new Course(database, newSem, "Programming Languages", "PL theory", "COM S 611");
     
     // create users
-    new User(database, "mg", "Michael", "George", "11111", "Eng");
-    new User(database, "am", "Andrew",  "Myers",  "22222", "Eng");
-    new User(database, "jl", "Jed",     "Liu",    "33333", "Eng");
-    new User(database, "kv", "Vikram",  "K",      "44444", "Eng");
-    new User(database, "xq", "Xin",     "Qi",     "55555", "Eng");
+    User mike   = new User(database, "mdg39", "Michael", "George", "11111", "Eng");
+    User andru  = new User(database, "acm22", "Andrew",  "Myers",  "22222", "Eng");
+    User jed    = new User(database, "ml103", "Jed",     "Liu",    "33333", "Eng");
+    User vikram = new User(database, "kv48",  "Vikram",  "K",      "44444", "Eng");
+    User xin    = new User(database, "xq24",  "Xin",     "Qi",     "55555", "Eng");
+    
+    // create courses
+    for (Iterator sems = database.getAllSemesters().iterator(); sems.hasNext();) {
+      Semester next = (Semester) sems.next();
+      Course c = new Course(database, next, "Intro to Programming II", "In database course you will program a lot", "COM S 211");
+      new Student(c, jed);
+      new Staff(andru, c);
+      
+      new Course(database, next, "Intro to Programming", "In database course you will learn to program", "COM S 100");
+    }
+    
+               new Course(database, oldSem, "Intro to Programming III", "Yet more programming", "COM S 312");
+    Course c = new Course(database, newSem, "Programming Languages",    "PL theory",            "COM S 611");
+    new Student(c, jed);
   }
   
   public static void main(String[] args) {

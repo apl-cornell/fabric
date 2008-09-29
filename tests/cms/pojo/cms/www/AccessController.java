@@ -895,6 +895,9 @@ public class AccessController extends HttpServlet {
     // TODO: fetch CMS root
     CMSRoot database = new CMSRoot();
     
+    // add test data
+    cms.controller.test.CreateDB.create(database);
+    
     if (xmlBuilder == null) {
       try {
         xmlBuilder = new XMLBuilder(database);

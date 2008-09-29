@@ -73,28 +73,6 @@ public class CMSRoot {
 
     setCurrentSemester(new Semester(this, "Summer 2008"));
     this.guestUser = new User(this, "guest", "Guest", "User", "0", "none");
-    
-    // Populate the database for testing.
-    Semester oldSem = new Semester(this, "Spring 2008");
-    Semester newSem = new Semester(this, "Fall 2008");
-    Semester curSem = new Semester(this, "Summer 2008");
-    newSem.setHidden(true);
-    User mike = new User(this, "mdg39", "Michael", "George", "11111", "Eng");
-    User andru = new User(this, "acm22", "Andrew",  "Myers",  "22222", "Eng");
-    User jed = new User(this, "ml103", "Jed",     "Liu",    "33333", "Eng");
-    User vikram = new User(this, "kv48", "Vikram",  "K",      "44444", "Eng");
-    User xin = new User(this, "xq24", "Xin",     "Qi",     "55555", "Eng");
-    for (Iterator sems = getAllSemesters().iterator(); sems.hasNext();) {
-      Semester next = (Semester) sems.next();
-      Course c = new Course(this, next, "Intro to Programming II", "In this course you will program a lot", "COM S 211");
-      new Student(c, jed);
-      new Staff(andru, c);
-      
-      new Course(this, next, "Intro to Programming", "In this course you will learn to program", "COM S 100");
-    }
-    new Course(this, oldSem, "Intro to Programming III", "Yet more programming", "COM S 312");
-    Course c = new Course(this, newSem, "Programming Languages", "PL theory", "COM S 611");
-    new Student(c, jed);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -214,7 +192,6 @@ public class CMSRoot {
   }
   
   public Semester getSemester(String semesterID) {
-    if (semesterID == null) return null;
     return (Semester) semesters.get(semesterID);
   }
   
