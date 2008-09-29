@@ -108,7 +108,7 @@ public class CMSRoot {
   }
   
   public Collection/*User*/ getAllUsers() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(users.values());
   }
   
   public Collection/*LogDetail*/ findGradeLogDetails(Course course, Collection/*Group*/ groups) {
@@ -124,8 +124,13 @@ public class CMSRoot {
     return Collections.unmodifiableCollection(semesters.values());
   }
   public Collection/*User*/ findAllAdmins() {
-    // TODO: check on return type; might not be user
-    throw new NotImplementedException();
+    List result = new ArrayList();
+    for (Iterator it = users.values().iterator(); it.hasNext();) {
+      User user = (User) it.next();
+      if (user.isCMSAdmin()) result.add(user);
+    }
+    
+    return result;
   }
   public Collection/*User*/ findActiveStudentsWithoutCUID() {
     throw new NotImplementedException();
@@ -137,7 +142,23 @@ public class CMSRoot {
     return getCurrentSemester().findGuestAccessCourses();
   }
   public Collection/*Assignment*/ findOpenAssignmentsByDeadline(Date checkDeadline) {
-    throw new NotImplementedException();
+    // Subtract a bit from current time to allow for grace periods of very
+    // recently due assignments.
+    long MILLISECS_PER_HOUR = 1000 * 60 * 60;
+    Date now = new Date(new Date().getTime() - 8 * MILLISECS_PER_HOUR);
+    SortedSet result = new TreeSet();
+    Collection courses = getCurrentSemester().getCourses();
+    for (Iterator cit = courses.iterator(); cit.hasNext();) {
+      Course course = (Course) cit.next();
+      for (Iterator ait = course.getAssignments().iterator(); ait.hasNext();) {
+        Assignment assignment = (Assignment) ait.next();
+        if (!assignment.getHidden() && assignment.getDueDate().after(now)) {
+          result.add(assignment);
+        }
+      }
+    }
+    
+    return result;
   }
   public Collection/*Log*/ findLogs(LogSearchParams params) {
     throw new NotImplementedException();
