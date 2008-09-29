@@ -53,9 +53,7 @@ public class User implements Principal {
   // managed fields                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  Collection/*Student*/ studentCourses; // managed by student class
   Map/*Course, Student*/ studentIndex;  // managed by student class
-  Collection/*Staff*/   staffCourses;   // managed by staff   class
   Map/*Course, Staff*/  staffIndex;     // managed by staff   class
   
   //////////////////////////////////////////////////////////////////////////////
@@ -94,8 +92,6 @@ public class User implements Principal {
   public User (CMSRoot db, String netID, String firstName, String lastName, String CUID, String college) {
     this.db = db;
     this.isAdmin = false;
-    this.studentCourses = new ArrayList/*Student*/();
-    this.staffCourses   = new ArrayList/*Staff*/  ();
     this.studentIndex   = new HashMap/*Course, Student*/();
     this.staffIndex     = new HashMap/*Course, Staff*/();
     
@@ -117,7 +113,7 @@ public class User implements Principal {
   public Collection/*Course*/ findStaffCoursesBySemester(Semester semester) {
     SortedSet result = new TreeSet();
     
-    for (Iterator it = staffCourses.iterator(); it.hasNext();) {
+    for (Iterator it = staffIndex.values().iterator(); it.hasNext();) {
       Staff staff = (Staff) it.next();
       Course course = staff.getCourse();
       if (staff.getStatus().equals(Staff.ACTIVE) && course.getSemester() == semester)
@@ -133,7 +129,7 @@ public class User implements Principal {
   public Collection/*Course*/ findStudentCoursesBySemester(Semester semester) {
     SortedSet result = new TreeSet();
     
-    for (Iterator it = studentCourses.iterator(); it.hasNext();) {
+    for (Iterator it = studentIndex.values().iterator(); it.hasNext();) {
       Student student = (Student) it.next();
       Course course = student.getCourse();
       if (student.getStatus().equals(Student.ENROLLED) && course.getSemester() == semester)
@@ -192,7 +188,7 @@ public class User implements Principal {
   public Collection/*Semester*/ findSemesters() {
     SortedSet result = new TreeSet();
 
-    for (Iterator it = studentCourses.iterator(); it.hasNext();) {
+    for (Iterator it = studentIndex.values().iterator(); it.hasNext();) {
       Student student = (Student) it.next();
       if (student.getStatus().equals(Student.ENROLLED)) {
         Semester semester = student.getCourse().getSemester();
@@ -200,7 +196,7 @@ public class User implements Principal {
       }
     }
 
-    for (Iterator it = staffCourses.iterator(); it.hasNext();) {
+    for (Iterator it = staffIndex.values().iterator(); it.hasNext();) {
       Staff staff = (Staff) it.next();
       if (staff.getStatus().equals(Staff.ACTIVE)) {
         Semester semester = staff.getCourse().getSemester();
@@ -220,7 +216,7 @@ public class User implements Principal {
     Course result = null;
 
     // loop through students
-    Iterator/*Student*/ i = studentCourses.iterator();
+    Iterator/*Student*/ i = studentIndex.values().iterator();
     while(i.hasNext()) {
       Student s = (Student) i.next();
      
@@ -234,7 +230,7 @@ public class User implements Principal {
     }
     
     // loop through staff
-    Iterator/*Staff*/ j = staffCourses.iterator();
+    Iterator/*Staff*/ j = staffIndex.values().iterator();
     while (j.hasNext()) {
       Staff s = (Staff) j.next();
       

@@ -79,7 +79,6 @@ public class Staff implements Comparable {
     setGroupsPriv(false);
     
     course.staff.put(user, this);
-    user.staffCourses.add(this);
     user.staffIndex.put(course, this);
   }
   

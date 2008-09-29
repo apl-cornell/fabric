@@ -139,7 +139,7 @@ public class CMSRoot {
       
       // Ensure the user is actively enrolled in a course as a student.
       boolean enrolled = false;
-      for (Iterator sit = user.studentCourses.iterator(); !enrolled
+      for (Iterator sit = user.studentIndex.values().iterator(); !enrolled
           && sit.hasNext();) {
         enrolled = ((Student) sit.next()).getStatus().equals(Student.ENROLLED);
       }
