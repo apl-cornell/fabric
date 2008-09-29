@@ -2585,7 +2585,7 @@ public class TransactionHandler {
         }
       }
       if (recipient.equals("all") || recipient.equals("students")) {
-        Iterator students = course.getStudents().iterator();
+        Iterator students = course.findActiveStudents().iterator();
         while (students.hasNext()) {
           Student student = (Student) students.next();
           email.addTo(student.getUser().getNetID() + "@cornell.edu");

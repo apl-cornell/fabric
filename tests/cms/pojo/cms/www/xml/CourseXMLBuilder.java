@@ -291,7 +291,7 @@ public class CourseXMLBuilder {
     addTotalScoreStats(course, xCourse);
     // This info is rarely used, and only when the user is CMS Admin
     if (user.isCMSAdmin()) {
-      Collection/*Student*/ enrolledStudents = course.getStudents();
+      Collection/*Student*/ enrolledStudents = course.findActiveStudents();
       xCourse.setAttribute(XMLBuilder.A_ENROLLMENT,
           Integer.toString(enrolledStudents.size()));
     }
