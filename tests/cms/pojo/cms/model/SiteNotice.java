@@ -2,7 +2,7 @@ package cms.model;
 
 import java.util.Date;
 
-public class SiteNotice {
+public class SiteNotice implements Comparable {
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -52,6 +52,11 @@ public class SiteNotice {
     setDeleted(false);
     
     db.notices.add(this);
+  }
+  
+  public int compareTo(Object o) {
+    if (!(o instanceof SiteNotice)) return 0;
+    return -getPostedDate().compareTo(((SiteNotice) o).getPostedDate());
   }
 }
 

@@ -3977,12 +3977,7 @@ public class TransactionHandler {
       
       // sort students by netID
       List students = new ArrayList(course.getStudents());
-      Collections.sort(students, new Comparator() {
-        public int compare(Object o1, Object o2) {
-          return ((Student) o1).getUser().getNetID().compareTo(
-                 ((Student) o2).getUser().getNetID());
-        }
-      });
+      Collections.sort(students, Student.NETID_COMPARATOR);
       
       // add student rows
       iter = students.iterator();
@@ -4031,12 +4026,7 @@ public class TransactionHandler {
     try {
       List students = new ArrayList(course.getStudents());
       // sort based on netID
-      Collections.sort(students, new Comparator() {
-        public int compare(Object s1, Object s2) {
-          return ((Student) s1).getUser().getNetID().compareTo(
-                 ((Student) s2).getUser().getNetID());
-        }
-      });
+      Collections.sort(students, Student.NETID_COMPARATOR);
       
       CSVPrinter out = new CSVPrinter(s);
       String[] line = null;

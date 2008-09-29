@@ -7,20 +7,7 @@ package cms.www.xml;
 import java.net.ConnectException;
 import java.sql.Timestamp;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.TreeMap;
-import java.util.Vector;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.apache.commons.fileupload.DiskFileUpload;
@@ -672,13 +659,7 @@ public class XMLBuilder {
     if (requester.isAdminPrivByCourse(course))
       root.setAttribute(A_ISADMIN, "true");
     List students = new ArrayList(course.getStudents());
-    // sort by last name
-    Collections.sort(students, new Comparator() {
-      public int compare(Object t1, Object t2) {
-        return ((Student) t1).getUser().getLastName().compareTo(
-               ((Student) t2).getUser().getLastName());
-      }
-    });
+    Collections.sort(students, Student.LAST_NAME_COMPARATOR);
     
     Iterator studentsIter = students.iterator();
     while (studentsIter.hasNext()) {

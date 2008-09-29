@@ -13,6 +13,30 @@ public class User implements Principal {
   public static final int AUTHORIZATION_LEVEL_CORNELL_COMMUNITY = 3;
   public static final int AUTHORIZATION_LEVEL_GUEST = 3;
   
+  public static final Comparator LAST_NAME_COMPARATOR = new Comparator() {
+    public int compare(Object o1, Object o2) {
+      if (!(o1 instanceof User && o2 instanceof User)) return 0;
+      User u1 = (User) o1;
+      User u2 = (User) o2;
+      int result = u1.getLastName().compareTo(u2.getLastName());
+      if (result != 0) return result;
+      
+      result = u1.getFirstName().compareTo(u2.getFirstName());
+      if (result != 0) return result;
+      
+      return u1.getNetID().compareTo(u2.getNetID());
+    }
+  };
+  
+  public static final Comparator NETID_COMPARATOR = new Comparator() {
+    public int compare(Object o1, Object o2) {
+      if (!(o1 instanceof User && o2 instanceof User)) return 0;
+      User u1 = (User) o1;
+      User u2 = (User) o2;
+      return u1.getNetID().compareTo(u2.getNetID());
+    }
+  };
+  
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
@@ -91,11 +115,7 @@ public class User implements Principal {
   }
   
   public Collection/*Course*/ findStaffCoursesBySemester(Semester semester) {
-    SortedSet result = new TreeSet(new Comparator(){
-      public int compare(Object o1, Object o2) {
-        return ((String) o1).compareTo((String) o2);
-      }
-    });
+    SortedSet result = new TreeSet();
     
     for (Iterator it = staffCourses.iterator(); it.hasNext();) {
       Staff staff = (Staff) it.next();
@@ -111,11 +131,7 @@ public class User implements Principal {
   }
   
   public Collection/*Course*/ findStudentCoursesBySemester(Semester semester) {
-    SortedSet result = new TreeSet(new Comparator() {
-      public int compare(Object o1, Object o2) {
-        return ((String) o1).compareTo((String) o2);
-      }
-    });
+    SortedSet result = new TreeSet();
     
     for (Iterator it = studentCourses.iterator(); it.hasNext();) {
       Student student = (Student) it.next();
@@ -152,13 +168,7 @@ public class User implements Principal {
   
   public Collection/*Announcement*/findAnnouncementsByDateAndSemester(
       Date fromDate, Semester semester) {
-    SortedSet result = new TreeSet(new Comparator() {
-      public int compare(Object o1, Object o2) {
-        Announcement a1 = (Announcement) o1;
-        Announcement a2 = (Announcement) o2;
-        return -a1.getPosted().compareTo(a2.getPosted());
-      }
-    });
+    SortedSet result = new TreeSet();
     
     for (Iterator cit = findStudentCoursesBySemester(semester).iterator(); cit.hasNext();) {
       Course course = (Course) cit.next();
@@ -180,31 +190,7 @@ public class User implements Principal {
   }
   
   public Collection/*Semester*/ findSemesters() {
-    SortedSet result = new TreeSet(new Comparator() {
-      public int compare(Object o1, Object o2) {
-        String name1 = ((Semester) o1).getName();
-        String name2 = ((Semester) o2).getName();
-        
-        int year1 = Integer.parseInt(name1.substring(name1.indexOf(' ')+1));
-        int year2 = Integer.parseInt(name2.substring(name2.indexOf(' ')+1));
-        if (year1 != year2) return year1 - year2;
-        
-        String session1 = name1.substring(0, name1.indexOf(' '));
-        String session2 = name2.substring(0, name2.indexOf(' '));
-        if (session1.equalsIgnoreCase(session2)) return 0;
-        
-        if (session1.equalsIgnoreCase("Spring")) return -1;
-        if (session2.equalsIgnoreCase("Spring")) return 1;
-        if (session1.equalsIgnoreCase("Summer")) return 1;
-        if (session2.equalsIgnoreCase("Summer")) return 1;
-        if (session1.equalsIgnoreCase("Fall")) return -1;
-        if (session2.equalsIgnoreCase("Fall")) return 1;
-        if (session1.equalsIgnoreCase("Winter")) return 1;
-        if (session2.equalsIgnoreCase("Winter")) return 1;
-        
-        return 0;
-      }
-    });
+    SortedSet result = new TreeSet();
 
     for (Iterator it = studentCourses.iterator(); it.hasNext();) {
       Student student = (Student) it.next();
@@ -304,6 +290,9 @@ public class User implements Principal {
   }
   public boolean isCMSAdmin() {
     return isAdmin;
+  }
+  public void setCMSAdmin(boolean status) {
+    isAdmin = status;
   }
   public boolean isStudentInCourseByCourse(Course course) {
     Student student = (Student) studentIndex.get(course);

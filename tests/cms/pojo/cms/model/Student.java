@@ -1,8 +1,28 @@
 package cms.model;
 
+import java.util.Comparator;
+
 public class Student {
 
   public static final String ENROLLED = "Enrolled", DROPPED = "Dropped";
+  
+  public static final Comparator LAST_NAME_COMPARATOR = new Comparator() {
+    public int compare(Object o1, Object o2) {
+      if (!(o1 instanceof Student && o2 instanceof Student)) return 0;
+      Student s1 = (Student) o1;
+      Student s2 = (Student) o2;
+      return User.LAST_NAME_COMPARATOR.compare(s1.getUser(), s2.getUser());
+    }
+  };
+  
+  public static final Comparator NETID_COMPARATOR = new Comparator() {
+    public int compare(Object o1, Object o2) {
+      if (!(o1 instanceof Student && o2 instanceof Student)) return 0;
+      Student s1 = (Student) o1;
+      Student s2 = (Student) o2;
+      return User.NETID_COMPARATOR.compare(s1.getUser(), s2.getUser());
+    }
+  };
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //

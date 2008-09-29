@@ -4,7 +4,7 @@ import java.util.*;
 
 import cms.auth.Principal;
 
-public class Semester {
+public class Semester implements Comparable {
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -50,17 +50,13 @@ public class Semester {
   public Collection getCourses() {
     return Collections.unmodifiableCollection(courses);
   }
+  
   public Collection/*Course*/ findStaffAdminCourses(User user) {
     throw new NotImplementedException();
   }
+  
   public Collection/*Course*/ findCCAccessCourses() {
-    SortedSet result = new TreeSet(new Comparator() {
-      public int compare(Object o1, Object o2) {
-        Course c1 = (Course) o1;
-        Course c2 = (Course) o2;
-        return c1.getCode().compareTo(c2.getCode());
-      }
-    });
+    SortedSet result = new TreeSet();
     
     for (Iterator cit = courses.iterator(); cit.hasNext();) {
       Course course = (Course) cit.next();
@@ -68,20 +64,41 @@ public class Semester {
     }
     return result;
   }
+  
   public Collection/*Course*/ findGuestAccessCourses() {
-    SortedSet result = new TreeSet(new Comparator() {
-      public int compare(Object o1, Object o2) {
-        Course c1 = (Course) o1;
-        Course c2 = (Course) o2;
-        return c1.getCode().compareTo(c2.getCode());
-      }
-    });
+    SortedSet result = new TreeSet();
     
     for (Iterator cit = courses.iterator(); cit.hasNext();) {
       Course course = (Course) cit.next();
       if (course.getCourseGuestAccess()) result.add(course);
     }
     return result;
+  }
+  
+  public int compareTo(Object o) {
+    if (!(o instanceof Semester)) return 0;
+    
+    String name1 = getName();
+    String name2 = ((Semester) o).getName();
+    
+    int year1 = Integer.parseInt(name1.substring(name1.indexOf(' ')+1));
+    int year2 = Integer.parseInt(name2.substring(name2.indexOf(' ')+1));
+    if (year1 != year2) return year1 - year2;
+    
+    String session1 = name1.substring(0, name1.indexOf(' '));
+    String session2 = name2.substring(0, name2.indexOf(' '));
+    if (session1.equalsIgnoreCase(session2)) return 0;
+    
+    if (session1.equalsIgnoreCase("Spring")) return -1;
+    if (session2.equalsIgnoreCase("Spring")) return 1;
+    if (session1.equalsIgnoreCase("Summer")) return 1;
+    if (session2.equalsIgnoreCase("Summer")) return 1;
+    if (session1.equalsIgnoreCase("Fall")) return -1;
+    if (session2.equalsIgnoreCase("Fall")) return 1;
+    if (session1.equalsIgnoreCase("Winter")) return 1;
+    if (session2.equalsIgnoreCase("Winter")) return 1;
+    
+    return 0;
   }
 }
 

@@ -21,14 +21,16 @@ public class CreateDB {
     User vikram = new User(database, "kv48",  "Vikram",  "K",      "44444", "Eng");
     User xin    = new User(database, "xq24",  "Xin",     "Qi",     "55555", "Eng");
     
+    andru.setCMSAdmin(true);
+    
     // create courses
     for (Iterator sems = database.getAllSemesters().iterator(); sems.hasNext();) {
       Semester next = (Semester) sems.next();
-      Course c = new Course(database, next, "Intro to Programming II", "In database course you will program a lot", "COM S 211");
+      Course c = new Course(database, next, "Intro to Programming II", "In this course you will program a lot", "COM S 211");
       new Student(c, jed);
       new Staff(andru, c);
       
-      new Course(database, next, "Intro to Programming", "In database course you will learn to program", "COM S 100");
+      new Course(database, next, "Intro to Programming", "In this course you will learn to program", "COM S 100");
     }
     
                new Course(database, oldSem, "Intro to Programming III", "Yet more programming", "COM S 312");

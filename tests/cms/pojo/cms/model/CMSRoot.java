@@ -145,12 +145,7 @@ public class CMSRoot {
   public Collection/*SiteNotice*/ findCurrentSiteNoticeShowing() {
     Date now = new Date();
     
-    SortedSet result = new TreeSet(new Comparator() {
-      public int compare(Object o1, Object o2) {
-        return -((SiteNotice) o1).getPostedDate().compareTo(
-            ((SiteNotice) o2).getPostedDate());
-      }
-    });
+    SortedSet result = new TreeSet();
     
     for (Iterator it = notices.iterator(); it.hasNext();) {
       SiteNotice notice = (SiteNotice) it.next();
@@ -161,7 +156,14 @@ public class CMSRoot {
     return result;
   }
   public Collection/*SiteNotice*/ findAllLivingSiteNotices() {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet();
+    
+    for (Iterator it = notices.iterator(); it.hasNext();) {
+      SiteNotice notice = (SiteNotice) it.next();
+      if (!notice.getDeleted()) result.add(notice);
+    }
+    
+    return result;
   }
   public Collection/*SiteNotice*/ findDeletedSiteNotices() {
     throw new NotImplementedException();

@@ -3,7 +3,7 @@ package cms.model;
 import java.util.*;
 import java.util.Map.Entry;
 
-public class Course {
+public class Course implements Comparable {
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -169,8 +169,8 @@ public class Course {
   public Collection getEmails() {
     throw new NotImplementedException();
   }
-  public Collection getStudents() {
-    throw new NotImplementedException();
+  public Collection/*Student*/ getStudents() {
+    return Collections.unmodifiableCollection(students.values());
   }
   public Collection getRegradeRequests() {
     throw new NotImplementedException();
@@ -213,7 +213,14 @@ public class Course {
   }
   
   public Collection/*Student*/ findActiveStudents() {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet();
+    
+    for (Iterator it = students.values().iterator(); it.hasNext();) {
+      Student student = (Student) it.next();
+      if (student.getStatus().equals(Student.ENROLLED)) result.add(student);
+    }
+    
+    return result;
   }
   
   public Collection/*Group*/ findGroupsByUser(User user) {
@@ -330,8 +337,15 @@ public class Course {
     
     return result;
   }
+  
   public Staff getStaff(User user) {
     return (Staff) staff.get(user);
+  }
+  
+  public int compareTo(Object o) {
+    if (!(o instanceof Course)) return 0;
+    
+    return getCode().compareTo(((Course) o).getCode());
   }
 }
 

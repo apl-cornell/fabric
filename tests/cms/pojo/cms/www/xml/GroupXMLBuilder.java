@@ -225,9 +225,9 @@ public class GroupXMLBuilder {
     // TODO: this method is kind of horrible... [mdg]
     Map/*String (netID), User*/ userMap = new HashMap();
     
-    Iterator users = course.getStudents().iterator();
-    while (users.hasNext()) {
-      User user = (User) users.next();
+    Iterator students = course.getStudents().iterator();
+    while (students.hasNext()) {
+      User user = ((Student) students.next()).getUser();
       userMap.put(user.getNetID(), user);
     }
     
