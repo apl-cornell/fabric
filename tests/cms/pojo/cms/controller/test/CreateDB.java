@@ -31,6 +31,10 @@ public class CreateDB {
       Staff s = new Staff(andru, c);
       s = new Staff(mike, c);
       s.setAdminPriv(true);
+      s.setGroupsPriv(true);
+      s.setGradesPriv(true);
+      s.setAssignmentsPriv(true);
+      s.setCategoryPriv(true);
       
       new Course(database, next, "Intro to Programming", "In this course you will learn to program", "COM S 100");
     }
