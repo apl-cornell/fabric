@@ -1,8 +1,7 @@
 package cms.model;
 
 import java.net.InetAddress;
-import java.util.Collection;
-import java.util.Date;
+import java.util.*;
 
 /**
  * A Log is a high-level log in a two-level logging system. Log objects handle
@@ -136,11 +135,14 @@ public class Log {
 
   private String      actingNetID;
   private String      simulatedNetID;
+  private SortedSet/*User*/ receivingUsers;
   private InetAddress actingIPAddress;
   private Date        time;
   private String      logName;
   private int         logType;
   private Course      course;
+  
+  final List/*String*/ detailLogs;  // Managed by LogDetail.
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
@@ -170,17 +172,25 @@ public class Log {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Log() {
-    // TODO: not obvious from logBean.ejbCreate
+  public Log(CMSRoot database) {
+    database.logs.add(this);
+    detailLogs = new ArrayList();
   }
   public Collection/*Assignments*/ findAssignments() {
     throw new NotImplementedException();
   }
   public Collection/*LogDetail*/ getDetailLogs() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(detailLogs);
   }
   public Collection/*User*/ getReceivingUsers() {
     throw new NotImplementedException();
+  }
+  
+  public void addReceivingUsers(Collection users) {
+    if (users == null) return;
+    
+    if (receivingUsers == null) receivingUsers = new TreeSet(users);
+    else receivingUsers.addAll(users);
   }
 }
 

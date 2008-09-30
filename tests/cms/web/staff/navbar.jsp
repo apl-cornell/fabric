@@ -2,7 +2,7 @@
 <% 
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 String URL= request.getServletPath(); 
-Principal p = (Principal)session.getAttribute(AccessController.A_PRINCIPAL);
+User p = (User)session.getAttribute(AccessController.A_PRINCIPAL);
 Element root= (Element)displayData.getFirstChild();
 Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
 Element category= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_CATEGORY);

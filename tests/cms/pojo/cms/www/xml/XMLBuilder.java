@@ -13,6 +13,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -915,7 +918,8 @@ public class XMLBuilder {
   public Document buildLogSearchPage(User user,
       HttpServletRequest request, Course course) throws FileUploadException {
     LogSearchParams params = new LogSearchParams();
-    DiskFileUpload upload = new DiskFileUpload();
+    ServletFileUpload upload = new ServletFileUpload();
+    upload.setFileItemFactory(new DiskFileItemFactory());
     Iterator i = upload.parseRequest(request).iterator();
     while (i.hasNext()) {
       FileItem param = (FileItem) i.next();

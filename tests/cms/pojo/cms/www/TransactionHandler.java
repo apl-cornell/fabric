@@ -154,11 +154,11 @@ public class TransactionHandler {
    * 
    * @return TransactionResult
    */
-  public TransactionResult addCMSAdmin(User p, User admin) {
+  public TransactionResult addCMSAdmin(User p, User newAdmin) {
     TransactionResult result = new TransactionResult();
     boolean success = false;
     try {
-      success = transactions.addCMSAdmin(p, admin);
+      success = transactions.addCMSAdmin(p, newAdmin);
     } catch (Exception e) {
       result.addError("Database failed to add CMS admin");
       e.printStackTrace();
@@ -2478,7 +2478,7 @@ public class TransactionHandler {
     try {
       if (!p.isCMSAdmin())
         result.addError("Couldn't find CMS admin in database");
-      else success = transactions.removeCMSAdmin(p);
+      else success = transactions.removeCMSAdmin(p, toRemove);
     } catch (Exception e) {
       result.addError("Database failed to remove CMS admin");
       e.printStackTrace();

@@ -1,10 +1,10 @@
-<%@ page language="java" import="org.w3c.dom.*, java.util.List, edu.cornell.csuglab.cms.author.Principal, cms.www.*, cms.www.util.*, cms.www.xml.*" %>
+<%@ page language="java" import="org.w3c.dom.*, java.util.List, cms.auth.*, cms.model.*, cms.www.*, cms.www.util.*, cms.www.xml.*" %>
 <%
 /***************************************************************************************************
 * upload a file with any kind of student info, or download a template for a final-grade upload
 ***************************************************************************************************/
 Document displayData = (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
-Principal p = (Principal)session.getAttribute(AccessController.A_PRINCIPAL);
+User p = (User)session.getAttribute(AccessController.A_PRINCIPAL);
 Element root = (Element)displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).item(0);
 Element course = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
 String courseID = null;

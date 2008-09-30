@@ -46,6 +46,8 @@ public class LogDetail {
     setDetail(detail);
     setUser(user);
     setAssignment(assign);
+    
+    log.detailLogs.add(this);
   }
 }
 

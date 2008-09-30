@@ -58,6 +58,7 @@ public class CMSRoot {
   final Map/*String, Semester*/ semesters; // Managed by Semester.
   final Map/*String, SiteNotice*/ notices; // Managed by SiteNotice.
   final Map/*String, Course*/ courses; // Managed by Course.  Maps CourseIDs to Courses.
+  final Collection/*Log*/ logs; // Managed by Log.
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
@@ -70,6 +71,7 @@ public class CMSRoot {
     this.semesters = new HashMap/*String, Semester*/();
     this.notices = new HashMap/*String, SiteNotice*/();
     this.courses = new HashMap/*String, Course*/();
+    this.logs = new ArrayList();
 
     setCurrentSemester(new Semester(this, "Summer 2008"));
     this.guestUser = new User(this, "guest", "Guest", "User", "0", "none");
@@ -124,7 +126,9 @@ public class CMSRoot {
     throw new NotImplementedException();
   }
   public Collection/*Semester*/ getAllSemesters() {
-    return Collections.unmodifiableCollection(semesters.values());
+    SortedSet result = new TreeSet();
+    result.addAll(semesters.values());
+    return result;
   }
   public Collection/*User*/ findAllAdmins() {
     List result = new ArrayList();

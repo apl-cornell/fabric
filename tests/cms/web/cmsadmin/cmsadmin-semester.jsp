@@ -47,7 +47,7 @@ if(hiddenSems.getLength() > 0 )
     		<span id="removedsemhead">
       		<a href="#" onClick="show('removedsem', 'Removed semesters &raquo;', '&laquo; Removed semesters'); return false;">Removed semesters &raquo;</a>
     		</span>
-    		<table class="replacebody" id="removedsem" cellpadding="0" cellspacing="0"><%
+    		<table class="showhide" id="removedsem" style="display: none" cellpadding="0" cellspacing="0"><%
    for(int i = 0; i < hiddenSems.getLength(); i++)
   	{
    	Element sem= (Element) hiddenSems.item(i); %>

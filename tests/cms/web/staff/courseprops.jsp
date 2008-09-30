@@ -1,6 +1,6 @@
 <%@page language="java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*"%><%
 Document displayData = (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
-Principal p = (Principal)session.getAttribute(AccessController.A_PRINCIPAL);
+User p = (User)session.getAttribute(AccessController.A_PRINCIPAL);
 Element root = (Element)displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).item(0);
 Element course = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE); 
 String courseid = course.getAttribute(XMLBuilder.A_COURSEID); 
@@ -68,7 +68,7 @@ permissions checking: which of {staff, students, Cornell community, guests} can 
 			<jsp:include page="../problem-report.jsp"/>
 <%	if(cmsAdminOnly)
 	{%>
-			<jsp:include page="course-title.jsp" />
+			<jsp:include page="../course-title.jsp" />
 <%	}  %>
           <div class="assignment_left">
             <h2>General Properties</h2>

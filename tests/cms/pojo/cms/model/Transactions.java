@@ -1,10 +1,6 @@
 package cms.model;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 import cms.www.TransactionError;
 import cms.www.TransactionResult;
@@ -21,12 +17,33 @@ public class Transactions {
     throw new NotImplementedException();
   }
 
-  public boolean addCMSAdmin(User p, User admin) {
-    throw new NotImplementedException();
+  public boolean addCMSAdmin(User p, User newAdmin) {
+    List users = new ArrayList(1);
+    users.add(newAdmin);
+    
+    Log log = startLog(p);
+    log.setLogName(Log.ADD_CMS_ADMIN);
+    log.setLogType(Log.LOG_ADMIN);
+    log.addReceivingUsers(users);
+    new LogDetail(log, newAdmin.getNetID() + " was added as a CMS admin");
+    
+    newAdmin.setCMSAdmin(true);
+    
+    return true;
   }
 
   public boolean createCourse(User p, String courseCode, String courseName) {
-    throw new NotImplementedException();
+    Course course =
+        new Course(database, database.getCurrentSemester(), courseName, "",
+            courseCode);
+    
+    Log log = startLog(p);
+    log.setCourse(course);
+    log.setLogName(Log.CREATE_COURSE);
+    log.setLogType(Log.LOG_ADMIN);
+    new LogDetail(log, "Created '" + courseCode + ": " + courseName + "'");
+    
+    return true;
   }
 
   public boolean addSiteNotice(User p, String text, User author, Date exp, boolean hidden) {
@@ -94,8 +111,19 @@ public class Transactions {
     throw new NotImplementedException();
   }
 
-  public boolean removeCMSAdmin(User p) {
-    throw new NotImplementedException();
+  public boolean removeCMSAdmin(User p, User toRemove) {
+    List users = new ArrayList(1);
+    users.add(toRemove);
+    
+    Log log = startLog(p);
+    log.setLogName(Log.REMOVE_CMS_ADMIN);
+    log.setLogType(Log.LOG_ADMIN);
+    log.addReceivingUsers(users);
+    new LogDetail(log, "Remove " + toRemove.getNetID() + " from the CMS admin list");
+    
+    toRemove.setCMSAdmin(false);
+    
+    return true;
   }
 
   public boolean removeCtgRow(User p, CategoryRow row) {
@@ -131,7 +159,14 @@ public class Transactions {
   }
 
   public boolean createSemester(User p, String semesterName) {
-    throw new NotImplementedException();
+    Log log = startLog(p);
+    log.setLogName(Log.CREATE_SEMESTER);
+    log.setLogType(Log.LOG_ADMIN);
+    new LogDetail(log, "Created semester: " + semesterName);
+    
+    new Semester(database, semesterName);
+    
+    return true;
   }
 
   public boolean declineInvitation(User p, Group group) {
@@ -151,11 +186,31 @@ public class Transactions {
   }
 
   public void editSemester(User p, Semester semester, boolean hidden) {
-    throw new NotImplementedException();
+    boolean hiddenChange = semester.getHidden() != hidden;
+    semester.setHidden(hidden);
+    
+    Log log = startLog(p);
+    log.setLogName(Log.EDIT_SEMESTER);
+    log.setLogType(Log.LOG_ADMIN);
+    
+    if (hiddenChange) {
+      new LogDetail(log, "Semester " + semester.getName() + " was "
+          + (hidden ? "" : "un") + "hidden.");
+    }
   }
 
   public boolean setCurrentSemester(User p, Semester sem) {
-    throw new NotImplementedException();
+    Semester oldSem = database.getCurrentSemester();
+    if (oldSem != sem) {
+      database.setCurrentSemester(sem);
+      Log log = startLog(p);
+      log.setLogName(Log.SET_CURRENT_SEMESTER);
+      log.setLogType(Log.LOG_ADMIN);
+      new LogDetail(log, "Current semester changed from " + oldSem.getName()
+          + " to " + sem.getName());
+    }
+    
+    return true;
   }
 
   public TransactionResult setExtension(User p, Group group, Date extension) {
@@ -210,6 +265,16 @@ public class Transactions {
   public void computeTotalScores(User p, Object data, Object object) {
     throw new NotImplementedException();
   }
+  
+  private Log startLog(User p) {
+    Log log = new Log(database);
+    log.setActingNetID(p.getNetID());
+    if (p.isInStaffAsBlankMode()) {
+//      log.setSimulatedNetID(p.getUserID());  // XXX
+    }
+    return log;
+  }
+
 }
 
 /*
