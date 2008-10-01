@@ -2,9 +2,13 @@ package cms.model;
 
 import java.util.*;
 
+import javax.servlet.http.HttpServletRequest;
+
+import cms.www.AccessController;
 import cms.www.TransactionError;
 import cms.www.TransactionResult;
 import cms.www.util.Emailer;
+import cms.www.util.Util;
 
 public class Transactions {
   private CMSRoot database;
@@ -235,6 +239,229 @@ public class Transactions {
 
   public boolean createTimeSlots(User p, TimeSlot tsd, int multiplicity) {
     throw new NotImplementedException();
+  }
+  
+  public TransactionResult setAllCourseProperties(User p, Course course,
+      HttpServletRequest request, TransactionResult result) {
+    // XXX This method was moved out of transaction handler because it itself is
+    // a transaction.  -- MJL
+    
+    Log log = startLog(p);
+    log.setCourse(course);
+    log.setLogName(Log.EDIT_COURSE_PROPS);
+    log.setLogType(Log.LOG_COURSE);
+    
+    Map map = request.getParameterMap();
+    
+    // Set course general properties.
+    String name = request.getParameter(AccessController.P_NAME);
+    if (!Util.equalNull(course.getName(), name)) {
+      new LogDetail(log, "Course '" + course.getName() + "' renamed to '" + name + "'");
+      course.setName(name);
+    }
+    
+    if (p.isCMSAdmin()) {
+      String code = request.getParameter(AccessController.P_CODE);
+      if (!Util.equalNull(course.getCode(), code)) {
+        new LogDetail(log, "Course Code changed to: " + code);
+        course.setCode(code);
+      }
+    }
+
+    String displayedCode = request
+        .getParameter(AccessController.P_DISPLAYEDCODE);
+    if (!Util.equalNull(course.getDisplayedCode(), displayedCode)) {
+      new LogDetail(log, "Displayed Course Code changed to: " + displayedCode);
+      course.setDisplayedCode(displayedCode);
+    }
+    
+    boolean hasSection = map.containsKey(AccessController.P_HASSECTION);
+    if (course.getHasSection() != hasSection) {
+      new LogDetail(log, "Section is now "
+          + (hasSection ? "enabled" : "disabled"));
+      course.setHasSection(hasSection);
+    }
+    
+    boolean showGraderNetID = map.containsKey(AccessController.P_SHOWGRADERID);
+    if (course.getShowGraderNetID() != showGraderNetID) {
+      new LogDetail(log, "Grader NetIDs are now "
+          + (showGraderNetID ? "shown to" : "hidden from") + " students");
+      course.setShowGraderNetID(showGraderNetID);
+    }
+    
+    boolean freezeCourse = map.containsKey(AccessController.P_FREEZECOURSE);
+    if (course.getFreezeCourse() != freezeCourse) {
+      new LogDetail(log, "Course is now " + (freezeCourse ? "" : "un")
+          + "frozen");
+      course.setFreezeCourse(freezeCourse);
+    }
+    
+    boolean showFinalGrade = map.containsKey(AccessController.P_FINALGRADES);
+    if (course.getShowFinalGrade() != showFinalGrade) {
+      new LogDetail(log, "Final grades are now "
+          + (showFinalGrade ? "shown to" : "hidden from") + " students");
+      course.setShowFinalGrade(showFinalGrade);
+    }
+    
+    boolean showTotalScores =
+        map.containsKey(AccessController.P_SHOWTOTALSCORES);
+    if (course.getShowTotalScores() != showTotalScores) {
+      new LogDetail(log, "Total scores are now "
+          + (showTotalScores ? "shown to" : "hidden from") + " students");
+      course.setShowTotalScores(showTotalScores);
+    }
+    
+    boolean showAssignWeights =
+        map.containsKey(AccessController.P_SHOWASSIGNWEIGHTS);
+    if (course.getShowAssignWeights() != showAssignWeights) {
+      new LogDetail(log, "Assignment weights are now "
+          + (showAssignWeights ? "shown to" : "hidden from") + " students");
+      course.setShowAssignWeights(showAssignWeights);
+    }
+    
+    boolean announceGuestAccess =
+        map
+        .containsKey(AccessController.P_ANNOUNCEGUESTACCESS);
+    if (course.getAnnounceGuestAccess() != announceGuestAccess) {
+      new LogDetail(log, "Guest access to announcements is now "
+          + (announceGuestAccess ? "" : "dis") + "allowed");
+      course.setAnnounceGuestAccess(announceGuestAccess);
+    }
+    
+    boolean assignGuestAccess =
+        map.containsKey(AccessController.P_ASSIGNGUESTACCESS);
+    if (course.getAssignGuestAccess() != assignGuestAccess) {
+      new LogDetail(log, "Guest access to assignments is now "
+          + (assignGuestAccess ? "" : "dis") + "allowed");
+      course.setAssignGuestAccess(assignGuestAccess);
+    }
+    
+    boolean solutionGuestAccess =
+        map.containsKey(AccessController.P_SOLUTIONGUESTACCESS);
+    if (course.getSolutionGuestAccess() != solutionGuestAccess) {
+      new LogDetail(log, "Guest access to solution files is now "
+          + (solutionGuestAccess ? "" : "dis") + "allowed");
+      course.setSolutionGuestAccess(solutionGuestAccess);
+    }
+    
+    boolean courseGuestAccess =
+        map.containsKey(AccessController.P_COURSEGUESTACCESS);
+    if (course.getCourseGuestAccess() != courseGuestAccess) {
+      new LogDetail(log, "Guest access to course is now "
+          + (courseGuestAccess ? "" : "dis") + "allowed");
+      course.setCourseGuestAccess(courseGuestAccess);
+    }
+    
+    boolean announceCCAccess =
+        map
+        .containsKey(AccessController.P_ANNOUNCECCACCESS);
+    if (course.getAnnounceCCAccess() != announceCCAccess) {
+      new LogDetail(log, "Cornell community access to announcements is now "
+          + (announceCCAccess ? "" : "dis") + "allowed");
+      course.setAnnounceCCAccess(announceCCAccess);
+    }
+    
+    boolean assignCCAccess =
+        map.containsKey(AccessController.P_ASSIGNCCACCESS);
+    if (course.getAssignCCAccess() != assignCCAccess) {
+      new LogDetail(log, "Cornell community access to assignments is now "
+          + (assignCCAccess ? "" : "dis") + "allowed");
+      course.setAssignCCAccess(assignCCAccess);
+    }
+    
+    boolean solutionCCAccess =
+        map.containsKey(AccessController.P_SOLUTIONCCACCESS);
+    if (course.getSolutionCCAccess() != solutionCCAccess) {
+      new LogDetail(log, "Cornell community access to solution files is now "
+          + (solutionCCAccess ? "" : "dis") + "allowed");
+      course.setSolutionCCAccess(solutionCCAccess);
+    }
+    
+    boolean courseCCAccess =
+        map.containsKey(AccessController.P_COURSECCACCESS);
+    if (course.getCourseCCAccess() != courseCCAccess) {
+      new LogDetail(log, "Cornell community access to course is now "
+          + (courseCCAccess ? "" : "dis") + "allowed");
+      course.setCourseCCAccess(courseCCAccess);
+    }
+    
+    boolean hasAdmin = false;
+
+    // Remove current staff members and set remaining staff member permissions.
+    Iterator iter = course.getStaff().iterator();
+    while (iter.hasNext()) {
+      Staff staff = ((Staff) iter.next());
+      if (map.containsKey(staff.getUser().getNetID()
+          + AccessController.P_REMOVE)) {
+        if (staff.getUser().equals(p)) {
+          result.addError("Cannot remove yourself as a staff member");
+          continue;
+        }
+        
+        // Remove the staff member.
+        staff.setStatus(log, Staff.INACTIVE);
+        
+        continue;
+      }
+      
+      // set staff permissions
+      String netID = staff.getUser().getNetID();
+      staff.setAdminPriv(log, map.containsKey(netID + AccessController.P_ISADMIN));
+      staff.setAssignmentsPriv(log, map.containsKey(netID
+          + AccessController.P_ISASSIGN));
+      staff.setGroupsPriv(log, map.containsKey(netID + AccessController.P_ISGROUPS));
+      staff.setGradesPriv(log, map.containsKey(netID + AccessController.P_ISGRADES));
+      staff.setCategoryPriv(log, map.containsKey(netID
+          + AccessController.P_ISCATEGORY));
+
+      hasAdmin = hasAdmin || staff.getAdminPriv();
+    }
+    
+    // add new staff
+    int i = 0;
+    for (String newnetid = request.getParameter(AccessController.P_NEWNETID + i);
+        newnetid != null;
+        newnetid = request.getParameter(AccessController.P_NEWNETID + (++i))) {
+      User newUser = database.getUser(newnetid);
+      if (newUser.studentIndex.containsKey(course)) {
+        result.addError("Could not add " + newnetid
+            + ": Already enrolled as a student");
+        
+        continue;
+      }
+      
+      Staff newStaff = (Staff) newUser.staffIndex.get(course);
+      if (newStaff == null) {
+        newStaff = new Staff(log, newUser, course);
+      } else {
+        newStaff.setStatus(log, Staff.ACTIVE);
+      }
+
+      newStaff.setAdminPriv(log, map.containsKey(AccessController.P_NEWADMIN
+          + i));
+      newStaff.setAssignmentsPriv(log, map
+          .containsKey(AccessController.P_NEWASSIGN + i));
+      newStaff.setGroupsPriv(log, map.containsKey(AccessController.P_NEWGROUPS
+          + i));
+      newStaff.setGradesPriv(log, map.containsKey(AccessController.P_NEWGRADES
+          + i));
+      newStaff.setCategoryPriv(log, map
+          .containsKey(AccessController.P_NEWCATEGORY + i));
+
+      hasAdmin = hasAdmin || newStaff.getAdminPriv();
+    }
+
+    if (!hasAdmin) {
+      result
+          .addError("Must have at least one staff member with admin privilege");
+    }
+
+    if (result.hasErrors()) {
+      // Abort.
+      return result;
+    }
+
+    return result;
   }
 
   public TransactionResult editCourseDescription(User p, Course course, String newDescription) {

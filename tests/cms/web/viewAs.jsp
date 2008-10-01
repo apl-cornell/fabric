@@ -106,7 +106,7 @@ if (studentList.getLength()!=0) {
 String link, studNetID, selected;
 String apparentNetID= "NetID";
 if(p.isInStaffAsStudentMode()) 
-    apparentNetID=p.getUserID();
+    apparentNetID=p.getNetID();
 /* name of input box for NetID, fixes bug when user presses Enter instead of clicking OK */
 %>
 <%=begintag%>Student&nbsp;<%=endtag%>

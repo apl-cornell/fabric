@@ -256,6 +256,15 @@ public class User implements Principal {
   public boolean isInStaffAsBlankMode() {
     return false; // XXX
   }
+  public boolean isInStaffAsCornellMemMode() {
+    return false; // XXX
+  }
+  public boolean isInStaffAsGuestMode() {
+    return false; // XXX
+  }
+  public boolean isInStaffAsStudentMode() {
+    return false; // XXX
+  }
   public boolean isAdminPrivByCourseID(String courseID) {
     return isAdminPrivByCourse(db.getCourse(courseID));
   }

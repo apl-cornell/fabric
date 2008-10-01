@@ -3388,76 +3388,12 @@ public class TransactionHandler {
     try {
       Map map = request.getParameterMap();
       boolean isFreeze = map.containsKey(AccessController.P_FREEZECOURSE);
-      if (isFreeze && courseIsFrozen(course))
+      if (isFreeze && courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
-      else {
-        boolean isAdmin, hasAdmin = false;
-        // put request data into a nicer form
-        Vector staff2remove = new Vector(); // staff
-        Vector staffPerms   = new Vector(); // Staff
-        // remove current staff members and set remaining staff member
-        // permissions
-        Iterator iter = course.getStaff().iterator();
-        while (iter.hasNext()) {
-          Staff staff = ((Staff) iter.next());
-          if (map.containsKey(staff.getUser().getNetID() + AccessController.P_REMOVE)) {
-            // the staff should be removed
-            if (staff.getUser().equals(p))
-              result.addError("Cannot remove yourself as a staff member");
-            else
-              staff2remove.add(staff);
-          } else { // set staff permissions
-            String netID = staff.getUser().getNetID();
-            staff.setAdminPriv(      map.containsKey(netID + AccessController.P_ISADMIN));
-            staff.setAssignmentsPriv(map.containsKey(netID + AccessController.P_ISASSIGN));
-            staff.setGroupsPriv(     map.containsKey(netID + AccessController.P_ISGROUPS));
-            staff.setGradesPriv(     map.containsKey(netID + AccessController.P_ISGRADES));
-            staff.setCategoryPriv(   map.containsKey(netID + AccessController.P_ISCATEGORY));
-            
-            hasAdmin = hasAdmin || staff.getAdminPriv();
-          }
-        }
-        // add new staff
-        int i = 0;
-        String newnetid = request.getParameter(AccessController.P_NEWNETID + i);
-        while (newnetid != null) {
-          User  newUser  = database.getUser(newnetid);
-          Staff newStaff = new Staff(newUser, course);
-          
-          newStaff.setAdminPriv(      map.containsKey(AccessController.P_NEWADMIN    + i));
-          newStaff.setAssignmentsPriv(map.containsKey(AccessController.P_NEWASSIGN   + i));
-          newStaff.setGroupsPriv(     map.containsKey(AccessController.P_NEWGROUPS   + i));
-          newStaff.setGradesPriv(     map.containsKey(AccessController.P_NEWGRADES   + i));
-          newStaff.setCategoryPriv(   map.containsKey(AccessController.P_NEWCATEGORY + i));
-
-          hasAdmin = hasAdmin || newStaff.getAdminPriv();
-          newnetid = request.getParameter(AccessController.P_NEWNETID + (++i));
-        }
-        if (!hasAdmin) {
-          result.addError("Must have at least one staff member with admin privilege");
-        }
-        if (result.hasErrors()) {
-          return result;
-        }
-        // set course general properties
-        course.setName(               request.getParameter(AccessController.P_NAME));
-        course.setCode(               request.getParameter(AccessController.P_CODE));
-        course.setDisplayedCode(      request.getParameter(AccessController.P_DISPLAYEDCODE));
-        course.setFreezeCourse(            map.containsKey(AccessController.P_FREEZECOURSE));
-        course.setShowFinalGrade(          map.containsKey(AccessController.P_FINALGRADES));
-        course.setShowTotalScores(         map.containsKey(AccessController.P_SHOWTOTALSCORES));
-        course.setShowAssignWeights(       map.containsKey(AccessController.P_SHOWASSIGNWEIGHTS));
-        course.setShowGraderNetID(         map.containsKey(AccessController.P_SHOWGRADERID));
-        course.setHasSection(              map.containsKey(AccessController.P_HASSECTION));
-        course.setCourseGuestAccess(       map.containsKey(AccessController.P_COURSEGUESTACCESS));
-        course.setAssignGuestAccess(       map.containsKey(AccessController.P_ASSIGNGUESTACCESS));
-        course.setAnnounceGuestAccess(     map.containsKey(AccessController.P_ANNOUNCEGUESTACCESS));
-        course.setSolutionGuestAccess(     map.containsKey(AccessController.P_SOLUTIONGUESTACCESS));
-        course.setCourseCCAccess(          map.containsKey(AccessController.P_COURSECCACCESS));
-        course.setAssignCCAccess(          map.containsKey(AccessController.P_ASSIGNCCACCESS));
-        course.setAnnounceCCAccess(        map.containsKey(AccessController.P_ANNOUNCECCACCESS));
-        course.setSolutionCCAccess(        map.containsKey(AccessController.P_SOLUTIONCCACCESS));
+        return result;
       }
+
+      result = transactions.setAllCourseProperties(p, course, request, result);
     } catch (Exception e) {
       result.addError("Error while trying to set course properties");
       e.printStackTrace();

@@ -98,7 +98,7 @@ public class GradingXMLBuilder {
     Iterator details = xmlBuilder.database.findGradeLogDetails(course, groups).iterator();
     while (details.hasNext()) {
       LogDetail d = (LogDetail) details.next();
-      Group group = d.getAssignment().findGroup(d.getUser());
+      Group group = d.getAssignment().findGroup(d.getAffectedUser());
       Element xGroup = (Element) xml.getElementsByTagNameNS(
           XMLBuilder.TAG_GROUP + group.toString(),
           XMLBuilder.TAG_GROUP).item(0);
@@ -108,7 +108,7 @@ public class GradingXMLBuilder {
             .getTimestamp()));
         xGradeLog.setAttribute(XMLBuilder.A_TEXT, d.getDetail());
         xGradeLog.setAttribute(XMLBuilder.A_GRADER, d.getLog().getActingNetID());
-        xGradeLog.setAttribute(XMLBuilder.A_NETID, d.getUser().getNetID());
+        xGradeLog.setAttribute(XMLBuilder.A_NETID, d.getAffectedUser().getNetID());
         xGroup.appendChild(xGradeLog);
       }
     }

@@ -109,8 +109,8 @@ public class LogXMLBuilder {
   protected Element buildDetailedLogSubtree(Document xml, LogDetail details) {
     Element detailElement = xml.createElement(XMLBuilder.TAG_LOGDETAIL);
     detailElement.setAttribute(XMLBuilder.A_DETAILS, details.getDetail());
-    if (details.getUser() != null) {
-      detailElement.setAttribute(XMLBuilder.A_NETID, details.getUser().getNetID());
+    if (details.getAffectedUser() != null) {
+      detailElement.setAttribute(XMLBuilder.A_NETID, details.getAffectedUser().getNetID());
     }
     if (details.getAssignment() != null) {
       detailElement.setAttribute(XMLBuilder.A_ASSIGNID,   details.getAssignment().toString());

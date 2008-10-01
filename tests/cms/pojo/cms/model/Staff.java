@@ -1,5 +1,7 @@
 package cms.model;
 
+import cms.www.util.Util;
+
 public class Staff implements Comparable {
 
   //possible statuses
@@ -40,6 +42,55 @@ public class Staff implements Comparable {
   public void setEmailAssignedTo (final boolean emailAssignedTo) { this.emailAssignedTo = emailAssignedTo; }
   public void setEmailFinalGrade (final boolean emailFinalGrade) { this.emailFinalGrade = emailFinalGrade; }
   public void setEmailRequest    (final boolean emailRequest)    { this.emailRequest    = emailRequest;    }
+  
+  public void setStatus(Log log, String status) {
+    if (this.status.equals(status)) return;
+    
+    LogDetail detail =
+        new LogDetail(log, getUser().getNetID() + " was "
+            + (status.equals(ACTIVE) ? "restored" : "removed")
+            + " as a staff member");
+    detail.setAffectedUser(getUser());
+    
+    setStatus(status);
+  }
+  
+  public void setAdminPriv(Log log, boolean adminPriv) {
+    if (this.adminPriv == adminPriv) return;
+    logPermChange(log, "Full Admin", adminPriv);
+    setAdminPriv(adminPriv);
+  }
+  
+  public void setGroupsPriv(Log log, boolean groupsPriv) {
+    if (this.groupsPriv == groupsPriv) return;
+    logPermChange(log, "Groups", groupsPriv);
+    setGroupsPriv(groupsPriv);
+  }
+  
+  public void setGradesPriv(Log log, boolean gradesPriv) {
+    if (this.gradesPriv == gradesPriv) return;
+    logPermChange(log, "Grades", gradesPriv);
+    setGradesPriv(gradesPriv);
+  }
+  
+  public void setAssignmentsPriv(Log log, boolean assignmentsPriv) {
+    if (this.assignmentsPriv == assignmentsPriv) return;
+    logPermChange(log, "Assignments", assignmentsPriv);
+    setAssignmentsPriv(assignmentsPriv);
+  }
+  
+  public void setCategoryPriv(Log log, boolean categoryPriv) {
+    if (this.categoryPriv == categoryPriv) return;
+    logPermChange(log, "Content", categoryPriv);
+    setCategoryPriv(categoryPriv);
+  }
+  
+  private void logPermChange(Log log, String desc, boolean status) {
+    LogDetail detail =
+        new LogDetail(log, desc + " privilege was "
+            + (status ? "granted to " : "revoked from ") + user.getNetID());
+    detail.setAffectedUser(user);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //
@@ -80,6 +131,13 @@ public class Staff implements Comparable {
     
     course.staff.put(user, this);
     user.staffIndex.put(course, this);
+  }
+  
+  public Staff(Log log, User user, Course course) {
+    this(user, course);
+    LogDetail detail =
+        new LogDetail(log, user.getNetID() + " was added as a staff member");
+    detail.setAffectedUser(user);
   }
   
   public int compareTo(Object o) {
