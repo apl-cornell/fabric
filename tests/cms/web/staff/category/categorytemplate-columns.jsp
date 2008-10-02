@@ -166,7 +166,7 @@ if(!ctgID.equals("0"))
       sel.appendChild(opt);
   
       opt = document.createElement('option');
-      txt = document.createTextNode('<%= CategoryColumn.URL %>');
+      txt = document.createTextNode('<%= CategoryColumn.LINK %>');
       opt.appendChild(txt);
       sel.appendChild(opt);
       

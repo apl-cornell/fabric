@@ -2,13 +2,17 @@ package cms.model;
 
 import java.util.Date;
 
-public class Email {
+public class Email implements Comparable {
+  
+  public static final int STAFF = 1;
+  public static final int STUDENTS = 2;
+  public static final int ALL = 3;
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private Course course;
+  private final Course course;
   private String subject;
   private String message;
   private User   sender;
@@ -19,7 +23,6 @@ public class Email {
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setCourse    (final Course course)    { this.course    = course;    }
   public void setSubject   (final String subject)   { this.subject   = subject;   }
   public void setMessage   (final String message)   { this.message   = message;   }
   public void setSender    (final User sender)      { this.sender    = sender;    }
@@ -42,12 +45,20 @@ public class Email {
   //////////////////////////////////////////////////////////////////////////////
 
   public Email(Course course, User sender, String subject, String message, int recipient) {
-    setCourse(course);
+    this.course = course;
     setSender(sender);
     setSubject(subject);
     setMessage(message);
     setRecipient(recipient);
     setDateSent(new Date(System.currentTimeMillis()));
+    
+    course.emails.add(this);
+  }
+  
+  public int compareTo(Object o) {
+    if (!(o instanceof Email)) return 0;
+    
+    return -dateSent.compareTo(((Email)o).dateSent);
   }
 }
 

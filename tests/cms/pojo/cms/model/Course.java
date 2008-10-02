@@ -48,6 +48,7 @@ public class Course implements Comparable {
   final Collection/*CategoryRow*/      ctgRows;
   final Collection/*CategoryContents*/ contents;
   final Collection/*CategoryFile*/     ctgFiles;
+  final SortedSet/*Email*/             emails;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
@@ -136,6 +137,7 @@ public class Course implements Comparable {
     ctgRows       = new ArrayList/*CategoryRow*/      ();
     contents      = new ArrayList/*CategoryContents*/ ();
     ctgFiles      = new ArrayList/*CategoryFile*/     ();
+    emails = new TreeSet();
 
     // TODO: this is probably unnecessary, since these are the java defaults
     setAnnounceGuestAccess(false);
@@ -171,8 +173,8 @@ public class Course implements Comparable {
   public Collection getAllAssignmentFiles() {
     return new ArrayList();
   }
-  public Collection getEmails() {
-    throw new NotImplementedException();
+  public Collection/*Email*/ getEmails() {
+    return Collections.unmodifiableCollection(emails);
   }
   public Collection/*Student*/ getStudents() {
     return Collections.unmodifiableCollection(students.values());

@@ -2109,8 +2109,7 @@ public class XMLBuilder {
         .get(AccessController.P_DUEAMPM));
     xAssignment.setAttribute(A_GRACEPERIOD, (String) parameterMap
         .get(AccessController.P_GRACEPERIOD));
-    if (((String) parameterMap.get(AccessController.P_LATEALLOWED))
-        .equals(AccessController.ONE))
+    if (AccessController.ONE.equals(parameterMap.get(AccessController.P_LATEALLOWED)))
       xAssignment.setAttribute(A_LATEALLOWED, "true");
     xAssignment.setAttribute(A_LATEDATE, (String) parameterMap
         .get(AccessController.P_LATEDATE));
@@ -2122,8 +2121,7 @@ public class XMLBuilder {
       xAssignment.setAttribute(A_SHOWSTATS, "true");
     if (parameterMap.containsKey(AccessController.P_SHOWSOLUTION))
       xAssignment.setAttribute(A_SHOWSOLUTION, "true");
-    if (((String) parameterMap.get(AccessController.P_REGRADES))
-        .equals(AccessController.ONE))
+    if (AccessController.ONE.equals(parameterMap.get(AccessController.P_REGRADES)))
       xAssignment.setAttribute(A_STUDENTREGRADES, "true");
     xAssignment.setAttribute(A_REGRADEDATE, (String) parameterMap
         .get(AccessController.P_REGRADEDATE));
@@ -2131,8 +2129,7 @@ public class XMLBuilder {
         .get(AccessController.P_REGRADETIME));
     xAssignment.setAttribute(A_REGRADEAMPM, (String) parameterMap
         .get(AccessController.P_REGRADEAMPM));
-    if (((String) parameterMap.get(AccessController.P_GROUPSBYTA))
-        .equals(AccessController.ONE))
+    if (AccessController.ONE.equals(parameterMap.get(AccessController.P_GROUPSBYTA)))
       xAssignment.setAttribute(A_ASSIGNEDGRADERS, "true");
     // Add description node
     Element xDescription = xml.createElement(TAG_DESCRIPTION);

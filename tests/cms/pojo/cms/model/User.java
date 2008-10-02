@@ -335,8 +335,10 @@ public class User implements Principal {
     
     return course.getCourseGuestAccess();
   }
+  
   public boolean hasStudentsPageAccess(Course course) {
-    throw new NotImplementedException();
+    return isAdminPrivByCourse(course) || isGroupsPrivByCourse(course)
+        && isGradesPrivByCourse(course);
   }
   public boolean isAdminPrivByAssignment(Assignment assign) {
     throw new NotImplementedException();

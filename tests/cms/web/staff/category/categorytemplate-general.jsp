@@ -21,11 +21,11 @@
 	  		<td>Sort Order</td>
 			<td>
 				<span title="Rows are sorted in ascending order">
-	      		<input type="Radio" value="<%=CategoryTemplate.ASCENDING%>" name="<%=AccessController.P_ORDER%>" <%=(sortOrder.equals("1") ? " checked>" : ">")%>
+	      		<input type="Radio" value="<%=Category.ASCENDING%>" name="<%=AccessController.P_ORDER%>" <%=(sortOrder.equals("1") ? " checked>" : ">")%>
 	      			Ascending
 	    		</span><br>
 	    		<span title="Rows are sorted in descending order">
-	      		<input type="Radio" value="<%=CategoryTemplate.DESCENDING%>" name="<%=AccessController.P_ORDER%>" <%=(sortOrder.equals("1") ? ">" : "checked>")%>
+	      		<input type="Radio" value="<%=Category.DESCENDING%>" name="<%=AccessController.P_ORDER%>" <%=(sortOrder.equals("1") ? ">" : "checked>")%>
 	      			Descending
 	    		</span><br>
 	  		</td>
@@ -34,7 +34,7 @@
 			<td>Max Items to Show</td>
 			<td>
 				<span title="Select max items to show">
-				<% String numToShow = category.getAttribute(XMLBuilder.A_NUMSHOW).equals(""+CategoryTemplate.SHOWALL)?"":category.getAttribute(XMLBuilder.A_NUMSHOW);%>
+				<% String numToShow = category.getAttribute(XMLBuilder.A_NUMSHOW).equals(""+Category.SHOWALL)?"":category.getAttribute(XMLBuilder.A_NUMSHOW);%>
 				<input type="Text" size="5" name="<%=AccessController.P_NUMSHOWITEMS%>" value="<%=numToShow%>">
 				&nbsp;(blank interpreted as Show All)
 				</span>
@@ -43,16 +43,16 @@
 		<tr>
 			<td>Content Accessible By</td>
 			<td>
-				<input type="Radio" value="<%=Principal.AUTHOR_STAFF%>" name="<%=AccessController.P_AUTHORZN%>" <%=authorzn == Principal.AUTHOR_STAFF ? "checked>" : ">"%>
+				<input type="Radio" value="<%=User.AUTHORIZATION_LEVEL_STAFF%>" name="<%=AccessController.P_AUTHORZN%>" <%=authorzn == User.AUTHORIZATION_LEVEL_STAFF ? "checked>" : ">"%>
 					Admin Only
 				<br>
-				<input type="Radio" value="<%=Principal.AUTHOR_STUDENT%>" name="<%=AccessController.P_AUTHORZN%>" <%=authorzn == Principal.AUTHOR_STUDENT ? "checked>" : ">"%>
+				<input type="Radio" value="<%=User.AUTHORIZATION_LEVEL_STUDENT%>" name="<%=AccessController.P_AUTHORZN%>" <%=authorzn == User.AUTHORIZATION_LEVEL_STUDENT ? "checked>" : ">"%>
 					Admin and Students
 				<br>
-				<input type="Radio" value="<%=Principal.AUTHOR_CORNELL_COMMUNITY%>" name="<%=AccessController.P_AUTHORZN%>" <%=authorzn == Principal.AUTHOR_CORNELL_COMMUNITY ? "checked>" : ">"%>
+				<input type="Radio" value="<%=User.AUTHORIZATION_LEVEL_CORNELL_COMMUNITY%>" name="<%=AccessController.P_AUTHORZN%>" <%=authorzn == User.AUTHORIZATION_LEVEL_CORNELL_COMMUNITY ? "checked>" : ">"%>
 					Cornell Community
 				<br>
-				<input type="Radio" value="<%=Principal.AUTHOR_GUEST%>" name="<%=AccessController.P_AUTHORZN%>" <%=authorzn == Principal.AUTHOR_GUEST ? "checked>" : ">"%>
+				<input type="Radio" value="<%=User.AUTHORIZATION_LEVEL_GUEST%>" name="<%=AccessController.P_AUTHORZN%>" <%=authorzn == User.AUTHORIZATION_LEVEL_GUEST ? "checked>" : ">"%>
 					Guest
 			</td>	
 	</table>

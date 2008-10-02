@@ -2629,7 +2629,7 @@ public class TransactionHandler {
    */
   public TransactionResult setAssignmentProps(User p, Course course,
       Assignment assign, HttpServletRequest request) {
-    Profiler.enterMethod("TransactionHandler.setAssignmentProps", "AssignmentID: " + assign.toString());
+    Profiler.enterMethod("TransactionHandler.setAssignmentProps", "AssignmentID: " + assign);
     TransactionResult result = new TransactionResult();
     
     String name = "",
@@ -2678,7 +2678,7 @@ public class TransactionHandler {
     
     boolean newAssign = (assign == null);
     
-    List info = null;
+    List info = Collections.EMPTY_LIST; // XXX
     try {
       if(courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");

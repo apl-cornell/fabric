@@ -16,8 +16,11 @@ public class FileUtil {
    * @return The filename (just title and extension)
    */
   public static String trimFilePath(String filename) {
-    filename = filename.substring(filename.lastIndexOf("/"));
-    filename = filename.substring(filename.lastIndexOf("\\"));
+    int idx1 = filename.lastIndexOf("/");
+    int idx2 = filename.lastIndexOf("\\");
+    int idx = idx1 > idx2 ? idx1 : idx2;
+    
+    if (idx > 0) filename = filename.substring(idx);
     return filename;
   }
 
