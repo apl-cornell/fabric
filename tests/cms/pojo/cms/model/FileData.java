@@ -1,9 +1,8 @@
 package cms.model;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -24,7 +23,7 @@ public class FileData {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private File   file;
+  private byte[] file;
   private String name;
   
   //////////////////////////////////////////////////////////////////////////////
@@ -43,12 +42,8 @@ public class FileData {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public FileData(String fileName) throws IOException {
-    String prefix = fileName;
-    if (prefix == null || prefix.length() < 4)
-      prefix = "file";
-    
-    this.file  = File.createTempFile(prefix, null);
+  public FileData(String fileName) {
+    // fileName is neglected
     this.state = new Initialized(); 
   }
 
@@ -56,8 +51,8 @@ public class FileData {
   // public methods                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public InputStream read() throws IOException {
-    return new FileInputStream(file);
+  public InputStream read() {
+    return new ByteArrayInputStream(file);
   }
 
   /**
@@ -87,7 +82,7 @@ public class FileData {
    */
   public String formatFileSize() {
     
-    long fileSize = file.length();
+    long fileSize = file.length;
     int megSize = 1048576, kiloSize = 1024;
     
     String result = null;
@@ -108,7 +103,7 @@ public class FileData {
   }
   
   public long getSize() {
-    return file.length();
+    return file.length;
   }
   
   //////////////////////////////////////////////////////////////////////////////
@@ -152,6 +147,7 @@ public class FileData {
   
   private final class Writing implements State {
     public final OutputStream  stream;
+    public final ByteArrayOutputStream data;
     public final MessageDigest digest;
     
     public Writing() throws IOException {
@@ -160,11 +156,14 @@ public class FileData {
       } catch (NoSuchAlgorithmException e) {
         throw new IOException("Could not create MD5 Computation", e);
       }
-      stream = new BufferedOutputStream(new DigestOutputStream(new FileOutputStream(file), digest));
+      data   = new ByteArrayOutputStream();
+      stream = new BufferedOutputStream(new DigestOutputStream(data, digest));
     }
     
     public String md5() throws IOException {
+      file = data.toByteArray();
       stream.close();
+      
       String md5 = new String(digest.digest());
       
       state = new Written(md5);
