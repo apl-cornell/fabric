@@ -1,13 +1,13 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.*" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, cms.model.*" %><%
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA); 
 Element root= (Element) displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).item(0); 
 Element assignment= (Element) XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
 Element filetypes= (Element) root.getElementsByTagName(XMLBuilder.TAG_FILETYPES).item(0);
 NodeList subproblems= assignment.getElementsByTagName(XMLBuilder.TAG_SUBPROBLEM);
 int assignType = Integer.parseInt(assignment.getAttribute(XMLBuilder.A_ASSIGNTYPE));
-boolean isQuiz = assignType == AssignmentBean.QUIZ;
-boolean isAssignment = assignType == AssignmentBean.ASSIGNMENT;
-boolean isSurvey = assignType == AssignmentBean.SURVEY;
+boolean isQuiz = assignType == Assignment.QUIZ;
+boolean isAssignment = assignType == Assignment.ASSIGNMENT;
+boolean isSurvey = assignType == Assignment.SURVEY;
 %>
 
 <h2>
@@ -22,7 +22,7 @@ boolean isSurvey = assignType == AssignmentBean.SURVEY;
       <th colspan = "2">Question Number</th>
       <th>Question Name</th>
       <th>Question Type</th>
-      <%=assignType == AssignmentBean.QUIZ ? "<th>Score</th>" : ""%>
+      <%=assignType == Assignment.QUIZ ? "<th>Score</th>" : ""%>
 	  <th>Remove</th>
     </tr>
     <% for (int i= 0; i != subproblems.getLength(); i++) {
@@ -41,7 +41,7 @@ boolean isSurvey = assignType == AssignmentBean.SURVEY;
         <input size="40" name="<%= AccessController.P_SUBPROBNAME + subID %>" value="<%= subprob.getAttribute(XMLBuilder.A_NAME) %>">
         
 		<% String choiceDisplay = "none";
-      	 if(subprobType == SubProblemBean.MULTIPLE_CHOICE){
+      	 if(subprobType == SubProblem.MULTIPLE_CHOICE){
       		choiceDisplay = "block";
       	 }%>
 
@@ -74,9 +74,9 @@ boolean isSurvey = assignType == AssignmentBean.SURVEY;
       <td style="text-align: center">
 	      <select onChange="showAddChoice(this, '<%= subID %>')" style="width: 100%;" name="<%= AccessController.P_SUBPROBTYPE + subID %>" size="1">
 	      	<%int probType = Integer.parseInt(subprob.getAttribute(XMLBuilder.A_TYPE));%>
-	      	<option value="<%=SubProblemBean.MULTIPLE_CHOICE%>" <%=probType == SubProblemBean.MULTIPLE_CHOICE ? "selected" : ""%>>Multiple Choice</option>
-	      	<option value="<%=SubProblemBean.FILL_IN%>" <%=probType == SubProblemBean.FILL_IN ? "selected" : ""%>>Fill In</option>
-	      	<option value="<%=SubProblemBean.SHORT_ANSWER%>" <%=probType == SubProblemBean.SHORT_ANSWER ? "selected" : ""%>>Short Answer</option>
+	      	<option value="<%=SubProblem.MULTIPLE_CHOICE%>" <%=probType == SubProblem.MULTIPLE_CHOICE ? "selected" : ""%>>Multiple Choice</option>
+	      	<option value="<%=SubProblem.FILL_IN%>" <%=probType == SubProblem.FILL_IN ? "selected" : ""%>>Fill In</option>
+	      	<option value="<%=SubProblem.SHORT_ANSWER%>" <%=probType == SubProblem.SHORT_ANSWER ? "selected" : ""%>>Short Answer</option>
 	      </select>
       </td>
       <% if (isQuiz) { 
@@ -102,7 +102,7 @@ boolean isSurvey = assignType == AssignmentBean.SURVEY;
   <table id="addsub" cellpaddign='5' cellspacing='0' border='0' width='100%'>
   	<tr>
   		<td>
-    <a href="#" onClick="addQuestRow(<%=assignType==AssignmentBean.QUIZ ? "true" : "false"%>); return false;" class="button">(New Row)</a>&nbsp;
+    <a href="#" onClick="addQuestRow(<%=assignType==Assignment.QUIZ ? "true" : "false"%>); return false;" class="button">(New Row)</a>&nbsp;
   		</td>
 	<% if (isQuiz) { %>
 	<!-- display total score here -->

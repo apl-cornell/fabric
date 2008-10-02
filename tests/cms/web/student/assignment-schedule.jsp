@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean, java.util.*" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, cms.model.*, java.util.*" %><%
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
 Element assignment = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
@@ -8,7 +8,7 @@ String groupid= (group == null) ? "" : group.getAttribute(XMLBuilder.A_ID);
 /* max number of students in a group */
 int maxgroup= Integer.parseInt(assignment.getAttribute(XMLBuilder.A_MAXGROUP));
 String status = assignment.getAttribute(XMLBuilder.A_STATUS);
-boolean enableGroups = status.equals(AssignmentBean.OPEN) && !assignment.hasAttribute(XMLBuilder.A_PASTDUE); 
+boolean enableGroups = status.equals(Assignment.OPEN) && !assignment.hasAttribute(XMLBuilder.A_PASTDUE); 
 boolean isScheduled = group.hasAttribute(XMLBuilder.A_ISSCHEDULED);
 String tsid = "";
 if(isScheduled)

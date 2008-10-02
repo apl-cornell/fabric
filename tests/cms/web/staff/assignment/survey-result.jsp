@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*,cms.auth.*, cms.model.*, edu.cornell.csuglab.cms.base.*, cms.www.*, cms.www.xml.*" %>
+<%@ page language="java" import="org.w3c.dom.*,cms.auth.*, cms.model.*, cms.www.*, cms.www.xml.*" %>
 <%
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getChildNodes().item(0);
@@ -9,7 +9,7 @@ String assignmentName = assignment.getAttribute(XMLBuilder.A_NAME).trim();
 String courseTitle = assignmentCode + ": " + result.getAttribute(XMLBuilder.A_COURSENAME);
 String assignmentType = "";
 int assignType = Integer.parseInt(assignment.getAttribute(XMLBuilder.A_TYPE));
-assignmentType = (assignType == AssignmentBean.QUIZ) ? "Quiz" : "Survey";
+assignmentType = (assignType == Assignment.QUIZ) ? "Quiz" : "Survey";
 %>
 <jsp:include page="../../header.jsp" />
 <script src="CalendarPopup.js" type="text/javascript"></script> <%-- required by formattedtextboxes.js --%>
@@ -92,7 +92,7 @@ assignmentType = (assignType == AssignmentBean.QUIZ) ? "Quiz" : "Survey";
 			<tr id="<%= resultTableID %>" style="display: none"><td colspan="2" >
 				<table class="assignment_table result_table" cellpadding="0" cellspacin="0" border="0" width="100%">
 			
-			<% if (stype == SubProblemBean.MULTIPLE_CHOICE) { %>
+			<% if (stype == SubProblem.MULTIPLE_CHOICE) { %>
 				<tr>
 					<th>Choice</th>
 					<th style="width:200px; text-align: center"></th>
@@ -108,7 +108,7 @@ assignmentType = (assignType == AssignmentBean.QUIZ) ? "Quiz" : "Survey";
 					Element answer = (Element) answers.item(j);	
 					String lastClass = "";
 					if (j == numAnswers - 1) lastClass = "class='last'";
-					if (stype != SubProblemBean.MULTIPLE_CHOICE) {
+					if (stype != SubProblem.MULTIPLE_CHOICE) {
 			%>
 					<tr><td <%= lastClass %>><%= answer.getAttribute(XMLBuilder.A_TEXT) %></td></tr>
 				<% } else { 

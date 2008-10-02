@@ -1,4 +1,4 @@
-<%@page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*,edu.cornell.csuglab.cms.base.*;" 
+<%@page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*,cms.model.*;" 
 %><% Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
    Element root= (Element)displayData.getChildNodes().item(0); 
    Element assignment= (Element) root.getElementsByTagName(XMLBuilder.TAG_ASSIGNMENT).item(0);
@@ -630,20 +630,20 @@ function makeQuestRow(hasScore) {
   opt= document.createElement('option');
   txt= document.createTextNode('Multiple Choice');
   opt.appendChild(txt);
-  opt.setAttribute('value', '<%=SubProblemBean.MULTIPLE_CHOICE%>');
+  opt.setAttribute('value', '<%=SubProblem.MULTIPLE_CHOICE%>');
   sel.appendChild(opt);
   cell.appendChild(sel);
   
   opt= document.createElement('option');
   txt= document.createTextNode('Fill In');
-  opt.setAttribute('value', '<%=SubProblemBean.FILL_IN%>');
+  opt.setAttribute('value', '<%=SubProblem.FILL_IN%>');
   opt.appendChild(txt);
   sel.appendChild(opt);
   cell.appendChild(sel);
   
   opt= document.createElement('option');
   txt= document.createTextNode('Short Answer');
-  opt.setAttribute('value', '<%=SubProblemBean.SHORT_ANSWER%>');
+  opt.setAttribute('value', '<%=SubProblem.SHORT_ANSWER%>');
   opt.appendChild(txt);
   sel.appendChild(opt);
   cell.appendChild(sel);
@@ -781,7 +781,7 @@ function addChoice(cellId, questindex, isNew) {
 			for(var i = 0; i < select.options.length; i = i + 1) {
 				var option = select.options.item(i);
 				if (option.selected) {
-					if (option.value == <%= SubProblemBean.MULTIPLE_CHOICE %>) {
+					if (option.value == <%= SubProblem.MULTIPLE_CHOICE %>) {
 						document.getElementById(target).style.display = "block";
 						document.getElementById(choices).style.display = "block";
 					} else {

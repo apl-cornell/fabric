@@ -20,9 +20,9 @@ public class CMSRoot {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private int                  maxFileSize;
-  private Map/*String,String*/ fileTypes;
-  private boolean              debugMode;
+  private final int                  maxFileSize;
+  private final Map/*String,String*/ fileTypes;
+  private final boolean              debugMode;
   private Semester             currentSemester;
   private final User           guestUser;
 
@@ -30,8 +30,6 @@ public class CMSRoot {
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setMaxFileSize     (final int maxFileSize)          { this.maxFileSize     = maxFileSize;     }
-  public void setDebugMode       (final boolean debugMode)        { this.debugMode       = debugMode;       }
   public void setCurrentSemester (final Semester currentSemester) { this.currentSemester = currentSemester; }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -66,16 +64,25 @@ public class CMSRoot {
   //////////////////////////////////////////////////////////////////////////////
 
   public CMSRoot() {
-    this.debugMode = true;
-    
     this.users = new HashMap/*String, User*/();
     this.semesters = new HashMap/*String, Semester*/();
     this.notices = new HashMap/*String, SiteNotice*/();
     this.courses = new HashMap/*String, Course*/();
     this.logs = new ArrayList();
+    
+    this.debugMode = true;
 
     setCurrentSemester(new Semester(this, "Summer 2008"));
     this.guestUser = new User(this, "guest", "Guest", "User", "0", "none");
+    maxFileSize = 10000000;
+    
+    // Create default file types.
+    this.fileTypes = new TreeMap();
+    fileTypes.put(RequiredSubmission.ANY_TYPE, "Any file type");
+    fileTypes.put("txt", "Text document");
+    fileTypes.put("zip", "Zip archive");
+    fileTypes.put("java", "Java source file");
+    fileTypes.put("pdf", "Adobe Acrobat portable document file");
   }
 
   //////////////////////////////////////////////////////////////////////////////

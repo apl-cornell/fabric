@@ -11,7 +11,7 @@ public class Semester implements Comparable {
   //////////////////////////////////////////////////////////////////////////////
 
   private final CMSRoot database;
-  private String  name;
+  private final String  name;
   private boolean hidden;
   
   //////////////////////////////////////////////////////////////////////////////
@@ -24,7 +24,6 @@ public class Semester implements Comparable {
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setName   (final String name)    { this.name   = name;   }
   public void setHidden (final boolean hidden) { this.hidden = hidden; }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -39,7 +38,7 @@ public class Semester implements Comparable {
   //////////////////////////////////////////////////////////////////////////////
 
   public Semester(CMSRoot database, String name) {
-    setName(name);
+    this.name = name;
     setHidden(false);
     
     this.database = database;
@@ -83,7 +82,7 @@ public class Semester implements Comparable {
     SortedSet result = new TreeSet();
     for (Iterator cit = courses.iterator(); cit.hasNext();) {
       Course course = (Course) cit.next();
-      for (Iterator ait = course.assignments.iterator(); ait.hasNext();) {
+      for (Iterator ait = course.getAssignments().iterator(); ait.hasNext();) {
         Assignment assignment = (Assignment) ait.next();
         if (!assignment.getHidden()) result.add(assignment);
       }
@@ -108,14 +107,18 @@ public class Semester implements Comparable {
     
     if (session1.equalsIgnoreCase("Spring")) return -1;
     if (session2.equalsIgnoreCase("Spring")) return 1;
-    if (session1.equalsIgnoreCase("Summer")) return 1;
+    if (session1.equalsIgnoreCase("Summer")) return -1;
     if (session2.equalsIgnoreCase("Summer")) return 1;
     if (session1.equalsIgnoreCase("Fall")) return -1;
     if (session2.equalsIgnoreCase("Fall")) return 1;
-    if (session1.equalsIgnoreCase("Winter")) return 1;
+    if (session1.equalsIgnoreCase("Winter")) return -1;
     if (session2.equalsIgnoreCase("Winter")) return 1;
     
     return 0;
+  }
+  
+  public String toString() {
+    return name;
   }
 }
 

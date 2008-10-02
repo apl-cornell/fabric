@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.util.*, cms.www.*, edu.cornell.csuglab.cms.base.EmailBean, cms.www.xml.*" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.util.*, cms.model.*, cms.www.*, cms.www.xml.*" %><%
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA); 
 Element root= (Element) displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).item(0);
 NodeList c = root.getElementsByTagName(XMLBuilder.TAG_COURSE);
@@ -122,8 +122,8 @@ boolean custom = (students != null && students.getChildNodes() != null && studen
 	           Element xEmail = (Element) emails.item(i); 
 	           String emailID = xEmail.getAttribute(XMLBuilder.A_ID);
 	           String recip = xEmail.getAttribute(XMLBuilder.A_RECIPIENT);
-	           String recipTxt = recip.equals("" + EmailBean.STAFF) ? "Staff only" : 
-	               (recip.equals("" + EmailBean.STUDENTS) ? "Students only" :
+	           String recipTxt = recip.equals("" + Email.STAFF) ? "Staff only" : 
+	               (recip.equals("" + Email.STUDENTS) ? "Students only" :
 	               "All staff and students"); %>
             <tbody<%= i > 4 ? " id='belowfive" + i + "' style='display: none'" : "" %>>
             <tr>

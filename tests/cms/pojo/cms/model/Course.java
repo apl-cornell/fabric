@@ -39,7 +39,7 @@ public class Course implements Comparable {
   // managed views                                                            //
   //////////////////////////////////////////////////////////////////////////////
 
-  final Collection/*Assignment*/       assignments;
+  final Map/* String, Assignment */assignments; // assignmentID -> Assignment
   final Map/*User,Student*/            students;
   final Map/*User,Staff*/              staff;
   final Collection/*Announcement*/     announcements;
@@ -127,7 +127,7 @@ public class Course implements Comparable {
 
     setFileCounter(1);
 
-    assignments   = new ArrayList/*Assignment*/       ();
+    assignments   = new HashMap/*String, Assignment*/       ();
     students      = new HashMap/*User,Student*/       ();
     staff         = new HashMap/*User,Staff*/         ();
     announcements = new ArrayList/*Announcement*/     ();
@@ -161,8 +161,13 @@ public class Course implements Comparable {
     db.courses.put(toString(), this);
   }
   public Collection/*Assignment*/ getAssignments() {
-    return Collections.unmodifiableCollection(assignments);
+    return Collections.unmodifiableCollection(assignments.values());
   }
+  
+  public Assignment getAssignment(String assignmentID) {
+    return (Assignment) assignments.get(assignmentID);
+  }
+  
   public Collection getAllAssignmentFiles() {
     return new ArrayList();
   }
@@ -236,7 +241,7 @@ public class Course implements Comparable {
     
     Map/*SubProblem, Grade*/ result = new HashMap/*SubProblem, Grade*/();
     
-    for (Iterator ait = assignments.iterator(); ait.hasNext();) {
+    for (Iterator ait = assignments.values().iterator(); ait.hasNext();) {
       Assignment assignment = (Assignment) ait.next();
       
       if (assignment.getHidden()) continue;
@@ -289,7 +294,7 @@ public class Course implements Comparable {
     // XXX This method could probably be done more efficiently by creating appropriate indices.
     Map result = new HashMap();
     
-    for (Iterator ait = assignments.iterator(); ait.hasNext();) {
+    for (Iterator ait = assignments.values().iterator(); ait.hasNext();) {
       Assignment assignment = (Assignment) ait.next();
       
       if (assignment.getHidden()) continue;
@@ -318,7 +323,7 @@ public class Course implements Comparable {
   }
   public Collection/*Assignment*/ findHiddenAssignments() {
     Set result = new HashSet();
-    for (Iterator it = assignments.iterator(); it.hasNext();) {
+    for (Iterator it = assignments.values().iterator(); it.hasNext();) {
       Assignment assignment = (Assignment) it.next();
       if (assignment.getHidden()) result.add(assignment);
     }

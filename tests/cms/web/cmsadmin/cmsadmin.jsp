@@ -1,6 +1,6 @@
 <%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, cms.auth.*, cms.model.*" %>
 <% Document displayData = (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
-Principal p = (Principal)session.getAttribute(AccessController.A_PRINCIPAL);
+User p = (User)session.getAttribute(AccessController.A_PRINCIPAL);
 Element root = (Element)displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).item(0);
 %>
 

@@ -11,7 +11,6 @@ public class CreateDB {
     // create semesters
     Semester oldSem = new Semester(database, "Spring 2008");
     Semester newSem = new Semester(database, "Fall 2008");
-    Semester curSem = new Semester(database, "Summer 2008");
     newSem.setHidden(true);
     
     // create users
@@ -29,6 +28,12 @@ public class CreateDB {
       Course c = new Course(database, next, "Intro to Programming II", "In this course you will program a lot", "COM S 211");
       new Student(c, jed);
       Staff s = new Staff(andru, c);
+      s.setAdminPriv(true);
+      s.setGroupsPriv(true);
+      s.setGradesPriv(true);
+      s.setAssignmentsPriv(true);
+      s.setCategoryPriv(true);
+      
       s = new Staff(mike, c);
       s.setAdminPriv(true);
       s.setGroupsPriv(true);

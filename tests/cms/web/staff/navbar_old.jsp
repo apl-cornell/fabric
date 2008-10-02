@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %>
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*" %>
 <% 
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 String URL= request.getServletPath(); 
@@ -49,11 +49,11 @@ var assigngrades = new Array();
  for (int i = 0; i < allassigns.getLength(); i++) { 
     Element xAssign = (Element) allassigns.item(i);%>
     assignedits[0] <%= assignCount==0 ? "" : "+" %>= '<a href="?<%= AccessController.P_ACTION + "="
-    %><%if(xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE).equals(Integer.toString(AssignmentBean.ASSIGNMENT))){
+    %><%if(xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE).equals(Integer.toString(Assignment.ASSIGNMENT))){
     	  %><%=AccessController.ACT_ASSIGNADMIN%><%}
-		  else if(xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE).equals(Integer.toString(AssignmentBean.SURVEY))){
+		  else if(xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE).equals(Integer.toString(Assignment.SURVEY))){
 		  %><%=AccessController.ACT_SURVEYADMIN%><%}
-		  else if(xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE).equals(Integer.toString(AssignmentBean.QUIZ))){
+		  else if(xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE).equals(Integer.toString(Assignment.QUIZ))){
 		  %><%=AccessController.ACT_QUIZADMIN
 		  %><%}
 		  %><%="&amp;" + AccessController.P_ASSIGNID + "=" + xAssign.getAttribute(XMLBuilder.A_ASSIGNID) %>">&#149;&nbsp;<%= xAssign.getAttribute(XMLBuilder.A_NAME).replaceAll("'", "\\\\'") %></a>';
@@ -80,7 +80,7 @@ var assigngrades = new Array();
 <% for (int i = 0; i < allassigns.getLength(); i++) { 
     	Element xAssign = (Element) allassigns.item(i); 
     	int assignType = Integer.parseInt(xAssign.getAttribute(XMLBuilder.A_ASSIGNTYPE));
-    	String groupAction = (assignType == AssignmentBean.SURVEY) ? AccessController.ACT_SURVEYRESULT : AccessController.ACT_GRADEASSIGN; %>
+    	String groupAction = (assignType == Assignment.SURVEY) ? AccessController.ACT_SURVEYRESULT : AccessController.ACT_GRADEASSIGN; %>
   assigngrades[0] <%= isFirstAssign ? "" : "+" %>= '<a href="?<%= AccessController.P_ACTION + "=" + groupAction + "&amp;" + AccessController.P_ASSIGNID + "=" + xAssign.getAttribute(XMLBuilder.A_ASSIGNID) %>">&#149;&nbsp;<%= xAssign.getAttribute(XMLBuilder.A_NAME).replaceAll("'", "\\\\'") %></a>';
 <% 		isFirstAssign = false;
 	}%>

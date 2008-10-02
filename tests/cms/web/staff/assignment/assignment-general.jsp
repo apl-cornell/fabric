@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean"%>
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, cms.model.*"%>
 <% Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA); 
    Element root= (Element) displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).item(0);
    Element assignment= (Element) XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
@@ -30,33 +30,33 @@ General
 	  <td>Status</td>
 	  <td>
 <% String status= assignment.getAttribute(XMLBuilder.A_STATUS);
-   boolean hidden= AssignmentBean.HIDDEN.equalsIgnoreCase(status);
-   boolean open= AssignmentBean.OPEN.equalsIgnoreCase(status);
-   boolean closed=  AssignmentBean.CLOSED.equalsIgnoreCase(status);
-   boolean graded= AssignmentBean.GRADED.equalsIgnoreCase(status);
+   boolean hidden= Assignment.HIDDEN.equalsIgnoreCase(status);
+   boolean open= Assignment.OPEN.equalsIgnoreCase(status);
+   boolean closed=  Assignment.CLOSED.equalsIgnoreCase(status);
+   boolean graded= Assignment.GRADED.equalsIgnoreCase(status);
    if (!(hidden || open || closed || graded)) hidden = true;%>
 	    <span title="Students cannot see the assignment.">
-	      <input type="Radio" value="<%= AssignmentBean.HIDDEN %>" name="<%= AccessController.P_STATUS %>" <%= hidden ? "checked" : "" %>> 
+	      <input type="Radio" value="<%= Assignment.HIDDEN %>" name="<%= AccessController.P_STATUS %>" <%= hidden ? "checked" : "" %>> 
 	      Hidden: <small>hidden from students (grades still count towards total)</small>
 	    </span><br>
 	    <span title="Students can see the assignment and submit files.">
-	      <input type="Radio" value="<%= AssignmentBean.OPEN %>" name="<%= AccessController.P_STATUS %>" <%= open ? "checked" : "" %>> 
+	      <input type="Radio" value="<%= Assignment.OPEN %>" name="<%= AccessController.P_STATUS %>" <%= open ? "checked" : "" %>> 
 	      Open: <small>students can submit files until due or late deadline, grades hidden</small>
 	    </span><br>
         <span title="Students can see the assignment (without grades or statistics) but cannot submit files.">
-	      <input type="Radio" value="<%= AssignmentBean.CLOSED %>" name="<%= AccessController.P_STATUS %>" <%= closed ? "checked" : "" %>> 
+	      <input type="Radio" value="<%= Assignment.CLOSED %>" name="<%= AccessController.P_STATUS %>" <%= closed ? "checked" : "" %>> 
 	      Closed: <small>extension-only submissions, grades hidden</small>
 	    </span>
-	<% if (assignType != AssignmentBean.SURVEY) { %>
+	<% if (assignType != Assignment.SURVEY) { %>
 		<br>
 	    <span title="Students can see the assignment (with grades) but cannot submit files.">
-	      <input type="Radio" value="<%= AssignmentBean.GRADED %>" name="<%= AccessController.P_STATUS %>" <%= graded ? "checked" : "" %>> 
+	      <input type="Radio" value="<%= Assignment.GRADED %>" name="<%= AccessController.P_STATUS %>" <%= graded ? "checked" : "" %>> 
 	      Graded: <small>extension-only submissions, grades visible, solutions visible if graded </small>
 	    </span>
 	<% } %>
 	  </td>
 	</tr>
-	<%if(assignType == AssignmentBean.ASSIGNMENT){%>
+	<%if(assignType == Assignment.ASSIGNMENT){%>
 	  <tr>
       <td>Maximum Score</td>
       <td>
@@ -64,7 +64,7 @@ General
       </td>
     </tr>
     <%}%>
-	<% if(assignType != AssignmentBean.SURVEY) {%>
+	<% if(assignType != Assignment.SURVEY) {%>
     <tr>
       <td>Weight</td>
       <td>
@@ -142,7 +142,7 @@ General
         Show statistics on student pages.
       </td>
     </tr>
- 	<% if (assignType != AssignmentBean.SURVEY) { %>
+ 	<% if (assignType != Assignment.SURVEY) { %>
     <tr>
       <td>Show Solution</td>
       <td>
@@ -155,7 +155,7 @@ General
    String regradeDate= assignment.getAttribute(XMLBuilder.A_REGRADEDATE); 
    String regradeTime= assignment.getAttribute(XMLBuilder.A_REGRADETIME);
    ampm= assignment.getAttribute(XMLBuilder.A_REGRADEAMPM); %>
-	<% if (assignType != AssignmentBean.SURVEY) { %>
+	<% if (assignType != Assignment.SURVEY) { %>
 	  <tr>
 	    <td>Regrades</td>
 	    <td>
@@ -180,7 +180,7 @@ General
 	 <% } %>
 	  </tr>
 	  <% boolean assignedgraders= assignment.hasAttribute(XMLBuilder.A_ASSIGNEDGRADERS); %>
-	<% if (assignType != AssignmentBean.SURVEY) { %>
+	<% if (assignType != Assignment.SURVEY) { %>
     <tr>
       <td>Assigned Graders Only</td>
       <td>

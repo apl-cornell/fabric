@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %>
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*" %>
 <% Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
    Element root = (Element) displayData.getChildNodes().item(0);
    Element course = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
@@ -46,12 +46,12 @@ if (null == l) { %>
     for (int i = 0; i < assignments.getLength(); i++) {
          Element assignment = (Element) assignments.item(i); 
          int assignType = Integer.parseInt(assignment.getAttribute(XMLBuilder.A_ASSIGNTYPE));
-         if (assignType == AssignmentBean.SURVEY) continue;
+         if (assignType == Assignment.SURVEY) continue;
          
          String score =  assignment.hasAttribute(XMLBuilder.A_SCORE)? assignment.getAttribute(XMLBuilder.A_SCORE): null;
          String status = assignment.getAttribute(XMLBuilder.A_STATUS);
          boolean showStats = assignment.hasAttribute(XMLBuilder.A_SHOWSTATS);
-         boolean graded = status.equals(AssignmentBean.GRADED);
+         boolean graded = status.equals(Assignment.GRADED);
          hasScores = hasScores || (graded && score != null);
          gradedCount = graded ? gradedCount + 1 : gradedCount;
          nonGradeCount = graded ? nonGradeCount : nonGradeCount + 1;

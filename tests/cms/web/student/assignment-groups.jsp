@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, cms.model.*" %><%
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
 Element assignment = (Element)XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
@@ -6,7 +6,7 @@ Element group = (Element)XMLUtil.getFirstChildByTagName(assignment, XMLBuilder.T
 String groupid= (group == null) ? "" : group.getAttribute(XMLBuilder.A_ID);
 int maxgroup= Integer.parseInt(assignment.getAttribute(XMLBuilder.A_MAXGROUP));
 String status = assignment.getAttribute(XMLBuilder.A_STATUS);
-boolean enableGroups = status.equals(AssignmentBean.OPEN) && !assignment.hasAttribute(XMLBuilder.A_PASTDUE); %>
+boolean enableGroups = status.equals(Assignment.OPEN) && !assignment.hasAttribute(XMLBuilder.A_PASTDUE); %>
 <% if (group != null) { %>
 <h2>
   <a name="group"></a>

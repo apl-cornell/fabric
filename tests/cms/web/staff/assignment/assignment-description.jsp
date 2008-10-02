@@ -1,12 +1,12 @@
-<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.base.AssignmentBean, cms.www.*, cms.www.xml.*" %>
+<%@ page language="java" import="org.w3c.dom.*, cms.model.*, cms.www.*, cms.www.xml.*" %>
 <% Document displaydata= (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
    Element root= (Element) displaydata.getFirstChild(); 
    Element assignment= (Element) XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
    Element description= (Element) assignment.getElementsByTagName(XMLBuilder.TAG_DESCRIPTION).item(0);
    int assigntype = Integer.parseInt(assignment.getAttribute(XMLBuilder.A_ASSIGNTYPE));
    String type = "Assignment";
-   if (assigntype == AssignmentBean.QUIZ) type = "Quiz";
-   else if (assigntype == AssignmentBean.SURVEY) type = "Survey";
+   if (assigntype == Assignment.QUIZ) type = "Quiz";
+   else if (assigntype == Assignment.SURVEY) type = "Survey";
    Text txt= (Text) description.getFirstChild(); %>
 <h2>
   <%= type %> Description

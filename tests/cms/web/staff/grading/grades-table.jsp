@@ -1,4 +1,4 @@
-<%@page language="java" import="org.w3c.dom.*, cms.www.*, edu.cornell.csuglab.cms.base.AssignmentBean, edu.cornell.csuglab.cms.base.RegradeRequestBean, cms.www.xml.*"%><%
+<%@page language="java" import="org.w3c.dom.*, cms.www.*, cms.model.*, cms.www.xml.*"%><%
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
 Element assign= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT); 
@@ -12,7 +12,7 @@ String assignid= assign.getAttribute(XMLBuilder.A_ID);
 Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
 String courseid= course.getAttribute(XMLBuilder.A_COURSEID);
 int assignType = Integer.parseInt(assign.getAttribute(XMLBuilder.A_ASSIGNTYPE));
-boolean isAssignment = (assignType == AssignmentBean.ASSIGNMENT);
+boolean isAssignment = (assignType == Assignment.ASSIGNMENT);
 boolean hasSection = course.hasAttribute(XMLBuilder.A_HASSECTION);
 boolean isAdmin = course.hasAttribute(XMLBuilder.A_ISADMIN);
 boolean isGrades = course.hasAttribute(XMLBuilder.A_ISGRADES);
@@ -113,7 +113,7 @@ for (int i= 0; i != numgroups; i++)
   boolean canGrade = isAdmin || (isGrades && (!assignedGraders || group.hasAttribute(XMLBuilder.A_CANGRADE)));
    %>
   <tr <%
-  if (status.equals(RegradeRequestBean.PENDING)) { %> class="pending"<%
+  if (status.equals(RegradeRequest.PENDING)) { %> class="pending"<%
   } else if (grade == null) {%> class="ungraded"<%
   } %>>
     <td class="index" id="cg<%= groupid %>"<%= lateTag %>><%= i + 1 %></td>
@@ -282,9 +282,9 @@ for (int i= 0; i != numgroups; i++)
 <%---------------------------- Subproblem grade Columns END ----------------------------------%>
 
     <td nowrap align="right"<%= lateTag %>>&nbsp;
-<%	if(status.equals(RegradeRequestBean.PENDING)) {%>
+<%	if(status.equals(RegradeRequest.PENDING)) {%>
       <img src="images/tag_red.gif" alt="(Regrade pending)"><%
-	} else if(status.equals(RegradeRequestBean.REGRADED)) {%>
+	} else if(status.equals(RegradeRequest.REGRADED)) {%>
       <img src="images/tag_orange.gif" alt="(Regraded)"><%
 	}
 	if(overMax) {%>

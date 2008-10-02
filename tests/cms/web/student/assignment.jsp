@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, cms.model.*" %><%
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
 Element assignment = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
@@ -10,11 +10,11 @@ boolean isStudent = course.hasAttribute(XMLBuilder.A_ISSTUDENT);
 int assignmentType = Integer.parseInt(assignment.getAttribute(XMLBuilder.A_ASSIGNTYPE));
 String status = assignment.getAttribute(XMLBuilder.TAG_STATUS);
 
-if (assignment == null || status.equals(AssignmentBean.HIDDEN)) { %> 
+if (assignment == null || status.equals(Assignment.HIDDEN)) { %> 
 <p>Error: Assignment data not available <%
 } else {
-  boolean isOpen = status.equals(AssignmentBean.OPEN) && !assignment.hasAttribute(XMLBuilder.A_PASTDUE); 
-  boolean isGraded = status.equals(AssignmentBean.GRADED); %>
+  boolean isOpen = status.equals(Assignment.OPEN) && !assignment.hasAttribute(XMLBuilder.A_PASTDUE); 
+  boolean isGraded = status.equals(Assignment.GRADED); %>
 <jsp:include page="../header.jsp" />
 <style type="text/css">
   ul.filelist {list-style-type: none; padding: 0em; border: 1px solid #ddd}
@@ -55,7 +55,7 @@ if (isStudent) {
             	<jsp:include page="assignment-groups.jsp" />
           	</div><%
   } 
-  if(assignmentType == AssignmentBean.ASSIGNMENT)
+  if(assignmentType == Assignment.ASSIGNMENT)
   {
   %>
           <div class="assignment_left">

@@ -17,7 +17,7 @@ public class Assignment implements Comparable {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private Course course;
+  private final Course course;
   private String name, nameShort;
   private String description;
   private String status;
@@ -58,7 +58,7 @@ public class Assignment implements Comparable {
   //////////////////////////////////////////////////////////////////////////////
 
   public Assignment(Course course, String name, String nameShort, Date due) {
-    setCourse(course);
+    this.course = course;
     setName(name);
     setNameShort(nameShort);
     setDueDate(due);
@@ -71,6 +71,8 @@ public class Assignment implements Comparable {
     this.timeSlots           = new ArrayList/*TimeSlot*/();
     this.requiredSubmissions = new ArrayList/*RequiredSubmission*/();
     this.groups              = new ArrayList/*Group*/();
+    
+    course.assignments.put(toString(), this);
 
     // TODO: set up other fields
   }
@@ -108,16 +110,6 @@ public class Assignment implements Comparable {
   public void setGroupLimit       (final Integer groupLimit)       { this.groupLimit       = groupLimit;       }
   public void setDuration         (final Long duration)            { this.duration         = duration;         }
   public void setTimeslotLockTime (final Date timeslotLockTime)    { this.timeslotLockTime = timeslotLockTime; }
-
-  public void setCourse(final Course course) {
-    if (this.course != null)
-      this.course.assignments.remove(this);
-
-    this.course = course;
-
-    if (this.course != null)
-      this.course.assignments.add(this);
-  }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //

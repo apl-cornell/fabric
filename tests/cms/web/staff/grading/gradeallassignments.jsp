@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, java.util.*, edu.cornell.csuglab.cms.base.RegradeRequestBean, edu.cornell.csuglab.cms.author.Principal, edu.cornell.csuglab.cms.util.*" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, java.util.*, cms.model.*, cms.auth.User, cms.www.util.*" %><%
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
 String meNetID = ((Principal) session.getAttribute(AccessController.A_PRINCIPAL)).getUserID();
@@ -391,7 +391,7 @@ for (int i= 0; i != numgroups; i++) {
     for (int j= 0; j != numregrades; j++) { 
       Element regrade= (Element)regrades.item(j);
       String reqid= regrade.getAttribute(XMLBuilder.A_REQUESTID);
-      if (RegradeRequestBean.PENDING.equals(regrade.getAttribute(XMLBuilder.A_STATUS))) {
+      if (RegradeRequest.PENDING.equals(regrade.getAttribute(XMLBuilder.A_STATUS))) {
         pendingregrades++; %>
                 <li>
                   <label>

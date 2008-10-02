@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.base.*, cms.www.*, cms.www.xml.*"%>
+<%@ page language="java" import="org.w3c.dom.*, cms.model.*, cms.www.*, cms.www.xml.*"%>
 <% Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
    Element root= (Element)displayData.getChildNodes().item(0);
    Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE); 
@@ -150,28 +150,28 @@ if(!ctgID.equals("0"))
       var txt;
   
       opt = document.createElement('option');
-      txt = document.createTextNode('<%= CategoryColBean.TEXT %>');
+      txt = document.createTextNode('<%= CategoryColumn.TEXT %>');
       opt.appendChild(txt);
       opt.selected = true;
       sel.appendChild(opt);
   
    	  opt = document.createElement('option');
-      txt = document.createTextNode('<%= CategoryColBean.DATE %>');
+      txt = document.createTextNode('<%= CategoryColumn.DATE %>');
       opt.appendChild(txt);
       sel.appendChild(opt);
   
       opt = document.createElement('option');
-      txt = document.createTextNode('<%= CategoryColBean.FILE %>');
+      txt = document.createTextNode('<%= CategoryColumn.FILE %>');
       opt.appendChild(txt);
       sel.appendChild(opt);
   
       opt = document.createElement('option');
-      txt = document.createTextNode('<%= CategoryColBean.URL %>');
+      txt = document.createTextNode('<%= CategoryColumn.URL %>');
       opt.appendChild(txt);
       sel.appendChild(opt);
       
       opt = document.createElement('option');
-      txt = document.createTextNode('<%= CategoryColBean.NUMBER %>');
+      txt = document.createTextNode('<%= CategoryColumn.NUMBER %>');
       opt.appendChild(txt);
       sel.appendChild(opt);
   

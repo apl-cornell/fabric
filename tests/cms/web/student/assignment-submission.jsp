@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, cms.model.*" %><%
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
 Element assignment = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
@@ -12,7 +12,7 @@ String extension = group.getAttribute(XMLBuilder.A_EXTENSION);
 boolean hasExtension = extension != null && !extension.equals("");
 boolean pastExtension = group.hasAttribute(XMLBuilder.A_PASTEXTENSION);
 String status = assignment.getAttribute(XMLBuilder.A_STATUS);
-boolean isOpen = status.equals(AssignmentBean.OPEN);
+boolean isOpen = status.equals(Assignment.OPEN);
 Element submissions = XMLUtil.getFirstChildByTagName(assignment, XMLBuilder.TAG_SUBMISSIONS);
 if (submissions != null) { %>
 <h2>

@@ -1385,6 +1385,12 @@ public class TransactionHandler {
       result.addError("'" + semesterName + "' is not a legal semester name");
       return result;
     }
+    
+    if (database.getSemester(semesterName) != null) {
+      result.addError("Semester '" + semesterName + "' already exists");
+      return result;
+    }
+    
     try {
       success = transactions.createSemester(p, semesterName);
     } catch (Exception e) {

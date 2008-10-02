@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, java.util.*, edu.cornell.csuglab.cms.base.RegradeRequestBean, edu.cornell.csuglab.cms.author.Principal,edu.cornell.csuglab.cms.util.*,edu.cornell.csuglab.cms.base.*" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, java.util.*, cms.model.*, cms.auth.*, cms.www.util.*" %><%
 /**********************************************************
 * grade one or more students for a specific assignment
 **********************************************************/
@@ -27,7 +27,7 @@ boolean isAdmin = course.hasAttribute(XMLBuilder.A_ISADMIN);
 boolean isGrades = course.hasAttribute(XMLBuilder.A_ISGRADES);
 boolean assignedGraders = assignment.hasAttribute(XMLBuilder.A_ASSIGNEDGRADERS);
 boolean checkCanGrade = !isAdmin && assignedGraders;
-boolean isQuiz = Integer.parseInt(assignment.getAttribute(XMLBuilder.A_ASSIGNTYPE)) == AssignmentBean.QUIZ || Integer.parseInt(assignment.getAttribute(XMLBuilder.A_ASSIGNTYPE)) == AssignmentBean.SURVEY;
+boolean isQuiz = Integer.parseInt(assignment.getAttribute(XMLBuilder.A_ASSIGNTYPE)) == Assignment.QUIZ || Integer.parseInt(assignment.getAttribute(XMLBuilder.A_ASSIGNTYPE)) == Assignment.SURVEY;
 %><jsp:include page="../../header.jsp"/>
 <style type="text/css">
   td.comments {text-align: center; width: 21em}
@@ -518,7 +518,7 @@ for (int i= 0; i < numgroups; i++) {
       Element firstmem = (Element) group.getElementsByTagName(XMLBuilder.TAG_MEMBER).item(0);
       Element score = (Element) firstmem.getElementsByTagNameNS(XMLBuilder.TAG_GRADE + regrade.getAttribute(XMLBuilder.A_SUBPROBID), XMLBuilder.TAG_GRADE).item(0);
       boolean canRegrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder.A_CANGRADE));
-      if (RegradeRequestBean.PENDING.equals(regrade.getAttribute(XMLBuilder.A_STATUS))) {
+      if (RegradeRequest.PENDING.equals(regrade.getAttribute(XMLBuilder.A_STATUS))) {
         pendingregrades++; 
             if (canRegrade) {
                isRespond = true; %>

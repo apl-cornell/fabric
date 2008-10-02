@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*,edu.cornell.csuglab.cms.base.AssignmentBean;"%><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*,cms.model.*;"%><%
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getChildNodes().item(0);
 Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE); 
@@ -19,15 +19,15 @@ String assignID= assignment.getAttribute(XMLBuilder.A_ASSIGNID);
   <td id="course_page_container">
   	<%
 	String assignTypeName = "";
-	if(assignType == AssignmentBean.ASSIGNMENT)
+	if(assignType == Assignment.ASSIGNMENT)
 	{
 		assignTypeName = "Assignment";
 	}
-	else if(assignType == AssignmentBean.QUIZ)
+	else if(assignType == Assignment.QUIZ)
 	{
 		assignTypeName = "Quiz";
 	}
-	else if(assignType == AssignmentBean.SURVEY)
+	else if(assignType == Assignment.SURVEY)
 	{
 		assignTypeName = "Survey";
 	}
@@ -45,7 +45,7 @@ String assignID= assignment.getAttribute(XMLBuilder.A_ASSIGNID);
         <div class="assignment_left">
          <jsp:include page="assignment-description.jsp"/>
         </div>
-        <% if (assignType == AssignmentBean.ASSIGNMENT) { %>
+        <% if (assignType == Assignment.ASSIGNMENT) { %>
         <div class="assignment_left">
           <jsp:include page="assignment-groups.jsp"/>
         </div>

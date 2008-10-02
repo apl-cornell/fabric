@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, cms.model.*" %><%
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
 Element assignment = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
@@ -11,8 +11,8 @@ String status = assignment.getAttribute(XMLBuilder.TAG_STATUS);
 if (assignment == null) { %> 
 <p>Error: no assignment data<%
 } else {
-  boolean isOpen = status.equals(AssignmentBean.OPEN) && !assignment.hasAttribute(XMLBuilder.A_PASTDUE); 
-  boolean isGraded = status.equals(AssignmentBean.GRADED); %>
+  boolean isOpen = status.equals(Assignment.OPEN) && !assignment.hasAttribute(XMLBuilder.A_PASTDUE); 
+  boolean isGraded = status.equals(Assignment.GRADED); %>
 <jsp:include page="../header.jsp" />
 <style type="text/css">
   ul.filelist {list-style-type: none; padding: 0em; border: 1px solid #ddd}
@@ -43,7 +43,7 @@ if (assignment == null) { %>
             <jsp:include page="assignment-files.jsp" />
           </div><%
 if (isStudent) { 
-		if (status.equals(AssignmentBean.OPEN) && assignment.hasAttribute(XMLBuilder.A_USESCHEDULE)) { %>
+		if (status.equals(Assignment.OPEN) && assignment.hasAttribute(XMLBuilder.A_USESCHEDULE)) { %>
 		<div class="assignment_left">
 			<jsp:include page="assignment-schedule.jsp" />
 		</div>

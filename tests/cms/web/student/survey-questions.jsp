@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.*" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, cms.model.*" %><%
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
 Element assignment = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
@@ -12,7 +12,7 @@ String extension = group.getAttribute(XMLBuilder.A_EXTENSION);
 boolean hasExtension = extension != null && !extension.equals("");
 boolean pastExtension = group.hasAttribute(XMLBuilder.A_PASTEXTENSION);
 String status = assignment.getAttribute(XMLBuilder.A_STATUS);
-boolean isOpen = status.equals(AssignmentBean.OPEN);
+boolean isOpen = status.equals(Assignment.OPEN);
 NodeList subproblems= assignment.getElementsByTagName(XMLBuilder.TAG_SUBPROBLEM);
 if (subproblems != null) { %>
 
@@ -66,7 +66,7 @@ function confirmSubmit() { return confirm(confirmMessage); }
         <br>
         <%
         	int probType = Integer.parseInt(subprob.getAttribute(XMLBuilder.A_TYPE));
-			if(probType == SubProblemBean.MULTIPLE_CHOICE){
+			if(probType == SubProblem.MULTIPLE_CHOICE){
 				NodeList choices = subprob.getElementsByTagName(XMLBuilder.TAG_CHOICE);
 				for(int j = 0; j < choices.getLength(); j++){
 					Element choice = (Element)choices.item(j);%>
@@ -74,9 +74,9 @@ function confirmSubmit() { return confirm(confirmMessage); }
 					<%=choice.getAttribute(XMLBuilder.A_LETTER)%>. <%=choice.getAttribute(XMLBuilder.A_TEXT)%><br>
 				<%}
 			%>
-			<%} else if(probType == SubProblemBean.FILL_IN){%>
+			<%} else if(probType == SubProblem.FILL_IN){%>
 				<input name = "<%=AccessController.P_SUBPROBNAME + subprob.getAttribute(XMLBuilder.A_ID)%>" type = "text" size="40" <%=subprob.hasAttribute(XMLBuilder.A_ANSWER) ? "value=\"" + subprob.getAttribute(XMLBuilder.A_ANSWER) + "\"" : ""%>>
-			<%} else if(probType == SubProblemBean.SHORT_ANSWER){%>
+			<%} else if(probType == SubProblem.SHORT_ANSWER){%>
 				<textarea name = "<%=AccessController.P_SUBPROBNAME + subprob.getAttribute(XMLBuilder.A_ID)%>" rows="5" cols="40"><%=subprob.hasAttribute(XMLBuilder.A_ANSWER) ? subprob.getAttribute(XMLBuilder.A_ANSWER): ""%></textarea>
 			<%}%>
       </td>

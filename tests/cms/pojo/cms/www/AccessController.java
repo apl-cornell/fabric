@@ -2226,13 +2226,8 @@ public class AccessController extends HttpServlet {
     }
     // Set assignment properties/make new assignment
     else if (action.equals(ACT_SETASSIGN)) {
-      Assignment assign = getAssignment(request.getParameter(P_ASSIGNID));
-      Course     course = null;
-      if (assign != null) { // existing assignment
-        course = assign.getCourse();
-      } else { // new assignment
-        course = getCourse(request.getParameter(P_COURSEID));
-      }
+      Course course = getCourse(request.getParameter(P_COURSEID));
+      Assignment assign = course.getAssignment(request.getParameter(P_ASSIGNID));
       if (course != null && user.isAssignPrivByCourse(course)) {
         TransactionResult result =
             transactions.setAssignmentProps(user, course, assign, request);

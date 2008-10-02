@@ -1,4 +1,4 @@
-<%@page language="java" import="org.w3c.dom.*, cms.www.*, edu.cornell.csuglab.cms.base.AssignmentBean, cms.www.xml.*"%><%
+<%@page language="java" import="org.w3c.dom.*, cms.www.*, cms.model.*, cms.www.xml.*"%><%
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
 Element assign= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
@@ -12,7 +12,7 @@ NodeList probs= probsnode.getChildNodes();
 int numprobs= probs.getLength();
 Element course = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
 int assignType = Integer.parseInt(assign.getAttribute(XMLBuilder.A_ASSIGNTYPE));
-boolean isAssignment = (assignType == AssignmentBean.ASSIGNMENT);
+boolean isAssignment = (assignType == Assignment.ASSIGNMENT);
 boolean isAdmin = course.hasAttribute(XMLBuilder.A_ISADMIN);
 boolean isGrades = course.hasAttribute(XMLBuilder.A_ISGRADES);
 boolean isGroups = course.hasAttribute(XMLBuilder.A_ISGROUPS);

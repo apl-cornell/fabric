@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.AssignmentBean" %><% 
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, cms.model.*" %><% 
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
 Element assignment = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
@@ -8,11 +8,11 @@ Element principal = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_PRINCIPA
 boolean isGuest = principal == null;
 boolean isCCMember = principal != null && principal.hasAttribute(XMLBuilder.A_ISCCMEMBER);
 boolean isStudent = course.hasAttribute(XMLBuilder.A_ISSTUDENT);
-boolean showGrades = isStudent && status.equals(AssignmentBean.GRADED);
+boolean showGrades = isStudent && status.equals(Assignment.GRADED);
 boolean showStats = isStudent && assignment.hasAttribute(XMLBuilder.A_SHOWSTATS);
 boolean hasScore = assignment.hasAttribute(XMLBuilder.A_SCORE);
-boolean graded = status.equals(AssignmentBean.GRADED);
-boolean closed = status.equals(AssignmentBean.CLOSED);
+boolean graded = status.equals(Assignment.GRADED);
+boolean closed = status.equals(Assignment.CLOSED);
 boolean regrades = assignment.hasAttribute(XMLBuilder.A_STUDENTREGRADES) &&
       assignment.hasAttribute(XMLBuilder.A_REGRADEDATE);
 boolean latesubmit = assignment.hasAttribute(XMLBuilder.A_LATEDATE);
@@ -71,7 +71,7 @@ if (group != null) {
 	Element membersList = XMLUtil.getFirstChildByTagName(group, XMLBuilder.TAG_MEMBERS);
 	members = membersList.getChildNodes();
 }
-if (group != null && !status.equals(AssignmentBean.OPEN) && members.getLength() > 1) { %>
+if (group != null && !status.equals(Assignment.OPEN) && members.getLength() > 1) { %>
   <dt>My Group:</dt><dd>
 <%     for (int i = 0; i < members.getLength(); i++) {
          Element member = (Element) members.item(i); %>
