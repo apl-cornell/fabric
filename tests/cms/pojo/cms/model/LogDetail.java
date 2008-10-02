@@ -9,7 +9,7 @@ public class LogDetail {
   private Log        log;
   private String     detail;
   private Assignment assignment;
-  private User       affectedUser;
+  private final User       affectedUser;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
@@ -18,7 +18,6 @@ public class LogDetail {
   public void setLog        (final Log log)               { this.log        = log;        }
   public void setDetail     (final String detail)         { this.detail     = detail;     }
   public void setAssignment (final Assignment assignment) { this.assignment = assignment; }
-  public void setAffectedUser       (final User user)             { this.affectedUser       = user;       }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //
@@ -40,12 +39,21 @@ public class LogDetail {
   public LogDetail (Log log, String detail) {
     this(log, detail, null, null);
   }
+  
+  public LogDetail(Log log, String detail, User affectedUser) {
+    this(log, detail, affectedUser, null);
+  }
 
-  public LogDetail (Log log, String detail, User user, Assignment assign) {
+  public LogDetail (Log log, String detail, User affectedUser, Assignment assign) {
+    this.affectedUser = affectedUser;
+    
     setLog(log);
     setDetail(detail);
-    setAffectedUser(user);
     setAssignment(assign);
+    
+    if (affectedUser != null) {
+      log.addReceivingUser(affectedUser);
+    }
     
     log.detailLogs.add(this);
   }

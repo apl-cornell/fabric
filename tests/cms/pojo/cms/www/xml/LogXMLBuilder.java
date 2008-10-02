@@ -1,5 +1,6 @@
 package cms.www.xml;
 
+import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -66,7 +67,8 @@ public class LogXMLBuilder {
     logElement.setAttribute(XMLBuilder.A_NETID, log.getActingNetID());
     if (log.getSimulatedNetID() != null)
       logElement.setAttribute(XMLBuilder.A_SIMNETID, log.getSimulatedNetID());
-    logElement.setAttribute(XMLBuilder.A_IPADDRESS, log.getActingIPAddress()
+    InetAddress ip = log.getActingIPAddress();
+    logElement.setAttribute(XMLBuilder.A_IPADDRESS, ip == null ? "(none)" : ip
         .getHostAddress());
     logElement.setAttribute(XMLBuilder.A_DATE, DateTimeUtil.formatDate(log
         .getTimestamp()));
@@ -86,7 +88,7 @@ public class LogXMLBuilder {
     if (assignments.length() > 0) {
       logElement.setAttribute(XMLBuilder.A_ASSIGNMENT, assignments.toString());
     }
-    appendReceivingNetIDSubtree(xml, logElement, log.getReceivingUsers());
+    appendReceivingNetIDSubtree(xml, logElement, log.getReceivingUsers().values());
     i = log.getDetailLogs().iterator();
     while (i.hasNext()) {
       logElement.appendChild(buildDetailedLogSubtree(xml, (LogDetail) i.next()));
@@ -123,7 +125,7 @@ public class LogXMLBuilder {
       Collection netids) {
     Iterator i = netids.iterator();
     while (i.hasNext()) {
-      String netid = (String) i.next();
+      String netid = ((User) i.next()).getNetID();
       Element xNetID = xml.createElement(XMLBuilder.TAG_RECNETID);
       xNetID.setAttribute(XMLBuilder.A_NETID, netid);
       e.appendChild(xNetID);

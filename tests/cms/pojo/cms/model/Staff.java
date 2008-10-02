@@ -47,10 +47,9 @@ public class Staff implements Comparable {
     if (this.status.equals(status)) return;
     
     LogDetail detail =
-        new LogDetail(log, getUser().getNetID() + " was "
+        new LogDetail(log, user.getNetID() + " was "
             + (status.equals(ACTIVE) ? "restored" : "removed")
-            + " as a staff member");
-    detail.setAffectedUser(getUser());
+            + " as a staff member", user);
     
     setStatus(status);
   }
@@ -86,10 +85,8 @@ public class Staff implements Comparable {
   }
   
   private void logPermChange(Log log, String desc, boolean status) {
-    LogDetail detail =
-        new LogDetail(log, desc + " privilege was "
-            + (status ? "granted to " : "revoked from ") + user.getNetID());
-    detail.setAffectedUser(user);
+    new LogDetail(log, desc + " privilege was "
+        + (status ? "granted to " : "revoked from ") + user.getNetID(), user);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -135,9 +132,7 @@ public class Staff implements Comparable {
   
   public Staff(Log log, User user, Course course) {
     this(user, course);
-    LogDetail detail =
-        new LogDetail(log, user.getNetID() + " was added as a staff member");
-    detail.setAffectedUser(user);
+    new LogDetail(log, user.getNetID() + " was added as a staff member", user);
   }
   
   public int compareTo(Object o) {

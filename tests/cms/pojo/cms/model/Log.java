@@ -135,12 +135,13 @@ public class Log {
 
   private String      actingNetID;
   private String      simulatedNetID;
-  private SortedSet/*User*/ receivingUsers;
+  private SortedMap/*String, User*/ receivingUsers;  // NetID -> User
   private InetAddress actingIPAddress;
   private Date        time;
   private String      logName;
   private int         logType;
   private Course      course;
+  private Collection/*Assignment*/ assignments;
   
   final List/*String*/ detailLogs;  // Managed by LogDetail.
 
@@ -175,22 +176,34 @@ public class Log {
   public Log(CMSRoot database) {
     database.logs.add(this);
     detailLogs = new ArrayList();
+    time = new Date();
+    assignments = new HashSet();
   }
   public Collection/*Assignments*/ findAssignments() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(assignments);
   }
   public Collection/*LogDetail*/ getDetailLogs() {
     return Collections.unmodifiableCollection(detailLogs);
   }
-  public Collection/*User*/ getReceivingUsers() {
-    throw new NotImplementedException();
+  public Map/*String, User*/ getReceivingUsers() {
+    return receivingUsers == null ? Collections.EMPTY_MAP : Collections
+        .unmodifiableMap(receivingUsers);
   }
   
   public void addReceivingUsers(Collection users) {
     if (users == null) return;
     
-    if (receivingUsers == null) receivingUsers = new TreeSet(users);
-    else receivingUsers.addAll(users);
+    if (receivingUsers == null) receivingUsers = new TreeMap();
+
+    for (Iterator it = users.iterator(); it.hasNext();) {
+      User user = (User) it.next();
+      receivingUsers.put(user.getNetID(), user);
+    }
+  }
+
+  public void addReceivingUser(User user) {
+    if (receivingUsers == null) receivingUsers = new TreeMap();
+    receivingUsers.put(user.getNetID(), user);
   }
 }
 

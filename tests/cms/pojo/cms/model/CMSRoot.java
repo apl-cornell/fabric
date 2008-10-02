@@ -1,5 +1,6 @@
 package cms.model;
 
+import java.net.InetAddress;
 import java.util.Collections;
 
 import java.util.*;
@@ -184,7 +185,59 @@ public class CMSRoot {
     return result;
   }
   public Collection/*Log*/ findLogs(LogSearchParams params) {
-    throw new NotImplementedException();
+    List result = new ArrayList();
+    
+    String actingNetID = params.getActingNetID();
+    String receivingNetID = params.getReceivingNetID();
+    String simulatedNetID = params.getSimulatedNetID();
+    String ip = params.getActingIPAddress();
+    Date startTime = params.getStartTime();
+    Date endTime = params.getEndTime();
+    long logTypes = params.getLogTypes();
+    Collection logNames = params.getLogNames();
+    Long courseID = params.getCourseID();
+    Long assignmentID = params.getAssignmentID();
+    
+    for (Iterator it = logs.iterator(); it.hasNext();) {
+      Log log = (Log) it.next();
+      
+      if (actingNetID != null && !actingNetID.equals(log.getActingNetID()))
+        continue;
+      
+      if (receivingNetID != null) {
+        Map receivingUsers = log.getReceivingUsers();
+        if (receivingUsers == null
+            || !receivingUsers.containsKey(receivingNetID)) continue;
+      }
+      
+      if (simulatedNetID != null
+          && !simulatedNetID.equals(log.getSimulatedNetID())) continue;
+      
+      if (ip != null) {
+        InetAddress actingIPAddress = log.getActingIPAddress();
+        if (actingIPAddress == null || !ip.equals(actingIPAddress.toString()))
+          continue;
+      }
+      
+      Date timestamp = log.getTimestamp();
+      if (startTime != null && timestamp.before(startTime)) continue;
+      
+      if (endTime != null && timestamp.after(endTime)) continue;
+      
+      if ((params.getLogTypes() & log.getLogType()) == 0) continue;
+      
+      if (!logNames.isEmpty() && !logNames.contains(log.getLogName()))
+        continue;
+      
+      if (courseID != null && !courseID.equals(log.getClass().toString()))
+        continue;
+      
+      if (assignmentID != null) throw new NotImplementedException(); // XXX
+      
+      result.add(log);
+    }
+    
+    return result;
   }
   public Collection/*SiteNotice*/ findCurrentSiteNoticeShowing() {
     Date now = new Date();
