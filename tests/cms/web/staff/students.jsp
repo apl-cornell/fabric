@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.w3c.dom.*, edu.cornell.csuglab.cms.base.RegradeRequestBean, cms.www.*, cms.www.xml.*, edu.cornell.csuglab.cms.base.StudentBean, edu.cornell.csuglab.cms.base.AssignmentBean" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.model.*, cms.www.*, cms.www.xml.*" %><%
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA); 
 Element root= (Element) displayData.getFirstChild();
 Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
@@ -133,7 +133,7 @@ NodeList assigns= assignments.getChildNodes();
 for (int i= 0; i != assigns.getLength(); i++) {
   Element assign= (Element)assigns.item(i); 
   int type = assign.hasAttribute(XMLBuilder.A_ASSIGNTYPE) ? Integer.parseInt(assign.getAttribute(XMLBuilder.A_ASSIGNTYPE)) : -1;
-  if (type == AssignmentBean.SURVEY) continue;
+  if (type == Assignment.SURVEY) continue;
   %>
               <th nowrap class="scores">
  <%
@@ -180,7 +180,7 @@ for (int i= 0; i != assigns.getLength(); i++)
       nameShort= assign.hasAttribute(XMLBuilder.A_NAMESHORT) ? " ("+assign.getAttribute(XMLBuilder.A_NAMESHORT)+")" : "",
       nameAssign= assign.hasAttribute(XMLBuilder.A_NAME) ? assign.getAttribute(XMLBuilder.A_NAME) : "";
 	  int type = assign.hasAttribute(XMLBuilder.A_ASSIGNTYPE) ? Integer.parseInt(assign.getAttribute(XMLBuilder.A_ASSIGNTYPE)) : -1;
-	  if (type == AssignmentBean.SURVEY) continue;
+	  if (type == Assignment.SURVEY) continue;
 %>
               <th class="nosort" align="center">
               	<div onMouseover="ddrivetip('<b>Name:</b> <%= nameAssign.replaceAll("\"", "&quot;").replaceAll("'", "\\\\'") %><%= nameShort.replaceAll("\"", "&quot;").replaceAll("'", "\\\\'") %><br><b>Weight:</b> <%=weight%><br><b>Max:</b> <%=total%><br><b>High:</b> <%=max%><br><b>Mean:</b> <%=mean%><br><b>Median:</b> <%=median%><br><b>Dev:</b> <%=dev%>');" onMouseout="hideddrivetip()">
@@ -194,7 +194,7 @@ for (int i= 0; i != assigns.getLength(); i++)
               <th class="nosort"><div style="display:none">~</div>&nbsp;</th>
               <th class="nosort"><div style="display:none">~</div>&nbsp;</th>
             </tr><%
-NodeList studs= XMLUtil.getChildrenByAttributeValue(students, XMLBuilder.A_ENROLLED, StudentBean.ENROLLED);
+NodeList studs= XMLUtil.getChildrenByAttributeValue(students, XMLBuilder.A_ENROLLED, Student.ENROLLED);
 boolean hasDroppedStuds = students.getChildNodes().getLength() > studs.getLength();
 for (int i= 0; i < studs.getLength(); i++) {
   Element student= (Element) studs.item(i);
@@ -229,12 +229,12 @@ for (int i= 0; i < studs.getLength(); i++) {
     String regradeStatus = grade.getAttribute(XMLBuilder.A_REGRADE);
 	boolean overMaxScore = grade.hasAttribute(XMLBuilder.A_OVERMAX);
   	int type = assign.hasAttribute(XMLBuilder.A_ASSIGNTYPE) ? Integer.parseInt(assign.getAttribute(XMLBuilder.A_ASSIGNTYPE)) : -1;     
-    if (type == AssignmentBean.SURVEY) continue;
+    if (type == Assignment.SURVEY) continue;
 %>
               <%-- The next line is real long, but don't split it up
                    or the sorttable will break
                 --%>
-              <td nowrap align="right" <%= regradeStatus.equals(RegradeRequestBean.PENDING) ? "class=\"regrade_pending\"" : (regradeStatus.equals(RegradeRequestBean.REGRADED) ? "class=\"regraded\"" : "") %>><%=overMaxScore ? "<img src=\"images/warning.gif\" height=\"15px\" alt=\"(Over Max Score)\">" : ""%>
+              <td nowrap align="right" <%= regradeStatus.equals(RegradeRequest.PENDING) ? "class=\"regrade_pending\"" : (regradeStatus.equals(RegradeRequest.REGRADED) ? "class=\"regraded\"" : "") %>><%=overMaxScore ? "<img src=\"images/warning.gif\" height=\"15px\" alt=\"(Over Max Score)\">" : ""%>
 				<% if (isadmin) { %>
 					<a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_GRADESTUDENTS %>&amp;<%= AccessController.P_ASSIGNID %>=<%= assignID %>&amp;<%= AccessController.P_GROUPID %>=<%= groupID %>">
 				<% } %>
@@ -373,7 +373,7 @@ for (int i= 0; i != assigns.getLength(); i++) {
               <th id="finalgrade" class="nosort">Final Grade</th>
               <th class="nosort">&nbsp;</th>
             </tr><%
-studs= XMLUtil.getChildrenByAttributeValue(students, XMLBuilder.A_ENROLLED, StudentBean.DROPPED);
+studs= XMLUtil.getChildrenByAttributeValue(students, XMLBuilder.A_ENROLLED, Student.DROPPED);
 for (int i= 0; i < studs.getLength(); i++) {
   Element student= (Element) studs.item(i); 
   /* hidden append for second sort by */
