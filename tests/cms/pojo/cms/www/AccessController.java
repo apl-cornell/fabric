@@ -2247,7 +2247,7 @@ public class AccessController extends HttpServlet {
           if (assign == null) {
             buildURL = ERROR_URL;
             xml =
-                xmlBuilder.buildErrorAssignmentPage(user, (Collection) result
+                xmlBuilder.buildErrorAssignmentPage(user, (Map) result
                     .getValue(), course, assign);
           } else {
             buildURL = ASSIGNADMIN_URL;

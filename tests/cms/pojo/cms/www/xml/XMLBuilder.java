@@ -8,6 +8,7 @@ import java.net.ConnectException;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.apache.commons.fileupload.DiskFileUpload;
@@ -2017,20 +2018,18 @@ public class XMLBuilder {
    * with the form values they submitted instead of having to retype everything.
    */
   public Document buildErrorAssignmentPage(User user,
-      Collection params, Course course, Assignment assign) {
+      Map params, Course course, Assignment assign) {
     Document xml = buildStaffNavbar(user, course);
     Map parameterMap = new HashMap();
-    Iterator i = params.iterator();
     Vector oldSubIDs = new Vector(), hiddenOldSubIDs = new Vector();
     Vector newSubIDs = new Vector(), oldItemIDs = new Vector();
     Vector hiddenItemIDs = new Vector(), newItemIDs = new Vector();
     Vector probIDs = new Vector(), newProbIDs = new Vector();
     Vector hiddenProbIDs = new Vector();
     Map hiddenFileIDs = new HashMap();
-    while (i.hasNext()) {
-      FileItem item = (FileItem) i.next();
-      if (item.isFormField()) {
-        String key = item.getFieldName();
+    for (Iterator i = params.entrySet().iterator(); i.hasNext();) {
+      Entry item = (Entry) i.next();
+        String key = (String) item.getKey();
         if (key.startsWith(AccessController.P_REQFILETYPE)
             || key.startsWith(AccessController.P_HIDDENREQTYPE)
             || key.startsWith(AccessController.P_NEWREQFILETYPE)
@@ -2039,13 +2038,13 @@ public class XMLBuilder {
           // There is potentially more than one of these, so it maps to a Vector
           Vector v = (Vector) parameterMap.get(key);
           if (v == null) {
-            (v = new Vector()).add(item.getString());
+            (v = new Vector()).add(item.getValue());
             parameterMap.put(key, v);
           } else {
-            v.add(item.getString());
+            v.add(item.getValue());
           }
         } else {
-          parameterMap.put(key, item.getString());
+          parameterMap.put(key, item.getValue());
         }
         // Save the ID so we know to write a tag for it later
         if (key.startsWith(AccessController.P_REQFILENAME)) {
@@ -2075,7 +2074,7 @@ public class XMLBuilder {
         } else if (key.startsWith(AccessController.P_HIDDENITEMFILEID)) {
           String itemID =
               key.substring(AccessController.P_HIDDENITEMFILEID.length());
-          String hiddenFileID = item.getString();
+          String hiddenFileID = (String) item.getValue();
           Vector hs = (Vector) hiddenFileIDs.get(itemID);
           if (hs == null) {
             (hs = new Vector()).add(hiddenFileID);
@@ -2084,7 +2083,7 @@ public class XMLBuilder {
             hs.add(hiddenFileID);
           }
         }
-      }
+      
     }
     Element root = (Element) xml.getFirstChild();
     Element xAssignment = xml.createElement(TAG_ASSIGNMENT);

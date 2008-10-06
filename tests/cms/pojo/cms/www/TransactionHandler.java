@@ -2629,98 +2629,134 @@ public class TransactionHandler {
    */
   public TransactionResult setAssignmentProps(User p, Course course,
       Assignment assign, HttpServletRequest request) {
-    Profiler.enterMethod("TransactionHandler.setAssignmentProps", "AssignmentID: " + assign);
+    Profiler.enterMethod("TransactionHandler.setAssignmentProps",
+        "AssignmentID: " + assign);
     TransactionResult result = new TransactionResult();
-    
-    String name = "",
-           nameshort = "",
-           status = "",
-           description = "";
-    
-    String duedate     = null, duetime     = null, dueampm     = null,
-           latedate    = null, latetime    = null, lateampm    = null,
-           regradedate = null, regradetime = null, regradeampm = null,
-           tslockdate  = null, tslocktime  = null, tslockampm  = null;
-    
-    boolean latesubmissions = false,
-            assignedgroups  = false,
-            assignedgraders = false,
-            studentregrades = false,
-            showstats       = false,
-            showsolution    = false;
-    
-    Assignment groupsFrom = null;
-    
-    int graceperiod        = 0,
-        groupmin           = 0,
-        groupmax           = 0,
-        groupoption        = 0,
-        regradeoption      = 0,
-        numOfAssignedFiles = 0,
-        type               = Assignment.ASSIGNMENT; 
-    float score  = 0,
-          weight = 0;
-    int order = 1;
-    char letter = 'a';
-    boolean useSchedule = false; // flag indicating whether scheduling is in use
-    boolean emptyQuestName = false; // flag indicating an empty problem name was submitted
-    String TSTimeStr = null; // string indicating the duration of a timeslot in h:mm:ss format
-    long TSDuration = 0; // duration of a timeslot in seconds
-    int TSMaxGroups = 0; // maximum number of groups in a timeslot
-    boolean proceed= true; //success flag (not an assignment property)
-    long importID = 0;
-    
-    HashSet filenames= new HashSet(), probnames= new HashSet(), subnames= new HashSet(), questnames = new HashSet();
-    HashMap newReqs     = new HashMap();
-    HashMap newItems    = new HashMap();
-    HashMap newSubProbs = new HashMap();
-    HashMap newChoices  = new HashMap();
-    
+
     boolean newAssign = (assign == null);
-    
-    List info = Collections.EMPTY_LIST; // XXX
+
+    // Maps param names to values.
+    Map/* String,String */fieldParams = new HashMap();
     try {
-      if(courseIsFrozen(course)) {
-        result.addError("Course is frozen; no changes may be made to it");
-        result.setValue(info);
-        return result;
-      }
-      
-      if (newAssign)
-        assign = new Assignment(course, null, null, null);
-      
+      // Parse the request.
       ServletFileUpload upload = new ServletFileUpload();
-      Map params = new HashMap();
-      Map files  = new HashMap();
-      
-      FileItemIterator items = upload.getItemIterator(request);
-      while (items.hasNext()) {
+      Map files = new HashMap();
+      for (FileItemIterator items = upload.getItemIterator(request); items
+          .hasNext();) {
         FileItemStream item = items.next();
         if (item.isFormField())
-          params.put(item.getName(), Streams.asString(item.openStream()));
-        else
+          fieldParams.put(item.getFieldName(), Streams.asString(item.openStream()));
+        else if (!item.getName().isEmpty())
           files.put(item.getFieldName(), downloadFile(item));
       }
+
+      if (courseIsFrozen(course)) {
+        result.addError("Course is frozen; no changes may be made to it");
+        result.setValue(fieldParams);
+        return result;
+      }
+
+      if (newAssign) assign = new Assignment(course, null, null, null);
+
+      String name = "";
+      String nameshort = "";
+      String status = "";
+      String description = "";
+
+      String duedate = null;
+      String duetime = null;
+      String dueampm = null;
+      String latedate = null;
+      String latetime = null;
+      String lateampm = null;
+      String regradedate = null;
+      String regradetime = null;
+      String regradeampm = null;
+      String tslockdate = null;
+      String tslocktime = null;
+      String tslockampm = null;
+
+      boolean latesubmissions = false;
+      boolean assignedgroups = false;
+      boolean assignedgraders = false;
+      boolean studentregrades = false;
+      boolean showstats = false;
+      boolean showsolution = false;
+
+      Assignment groupsFrom = null;
+
+      int graceperiod = 0;
+      int groupmin = 0;
+      int groupmax = 0;
+      int groupoption = 0;
+      int regradeoption = 0;
+      int numOfAssignedFiles = 0;
+      int type = Assignment.ASSIGNMENT;
+      float score = 0;
+      float weight = 0;
+      int order = 1;
+      char letter = 'a';
+
+      // flag indicating whether scheduling is in use
+      boolean useSchedule = false;
+
+      // flags indicating empty names, so only one such error is shown.
+      boolean emptyProbName = false;
+      boolean emptyItemName = false;
+      boolean emptySubmissionName = false;
+
+      // flag indicating an empty problem name was submitted
+      boolean emptyQuestName = false;
+
+      // string indicating the duration of a timeslot in h:mm:ss format
+      String TSTimeStr = null;
+
+      // duration of a timeslot in seconds
+      long TSDuration = 0;
+
+      // maximum number of groups in a timeslot
+      int TSMaxGroups = 0;
+
+      // success flag (not an assignment property)
+      boolean proceed = true;
+
+      long importID = 0;
+
+      Set filenames = new HashSet();
+      Set probNames = new HashSet();
+      Set subnames = new HashSet();
+      Set questnames = new HashSet();
+
+      // for ensuring totalscore = sum of problem scores
+      Map probScores = new HashMap();
+
+      Map newReqs = new HashMap();
+      Map newItems = new HashMap();
+      Map newSubProbs = new HashMap();
+      Map newChoices = new HashMap();
       
-      Iterator i = params.entrySet().iterator();
-      while (i.hasNext()) {
+      Set restoredFiles = new HashSet();
+      Set replacedItems = new HashSet();
+
+      for (Iterator i = fieldParams.entrySet().iterator(); i.hasNext();) {
         Map.Entry item = (Map.Entry) i.next();
-        String field   = (String) item.getKey();
-        String value   = (String) item.getValue();
-        
+        String field = (String) item.getKey();
+        String value = (String) item.getValue();
+
         if (field.equals(AccessController.P_NAME)) {
           name = value;
         } else if (field.equals(AccessController.P_NAMESHORT)) {
           nameshort = value;
         } else if (field.equals(AccessController.P_ASSIGNMENTTYPE)) {
+          // XXX MJL Logging?
           type = Integer.parseInt(value);
           assign.setType(type);
         } else if (field.equals(AccessController.P_DUEDATE)) {
-          duedate= value;
+          duedate = value;
         } else if (field.equals(AccessController.P_DUETIME)) {
-          duetime= value;
+          duetime = value;
         } else if (field.equals(AccessController.P_DUEAMPM)) {
-          dueampm= value;
+          dueampm = value;
         } else if (field.equals(AccessController.P_GRACEPERIOD)) {
           try {
             graceperiod = Integer.parseInt(value);
@@ -2731,31 +2767,32 @@ public class TransactionHandler {
         } else if (field.equals(AccessController.P_LATEALLOWED)) {
           latesubmissions = value.equals(AccessController.ONE);
         } else if (field.equals(AccessController.P_LATEDATE)) {
-          latedate= value;
+          latedate = value;
         } else if (field.equals(AccessController.P_LATETIME)) {
-          latetime= value;
+          latetime = value;
         } else if (field.equals(AccessController.P_LATEAMPM)) {
-          lateampm= value;
-        } else if (field.equals(AccessController.P_USESCHEDULE)){
+          lateampm = value;
+        } else if (field.equals(AccessController.P_USESCHEDULE)) {
           try {
-            useSchedule = value.equals("on"); // changed to support "on" checkbox value, EPW 02-24-06
+            // changed to support "on" checkbox value, EPW 02-24-06
+            useSchedule = value.equals("on");
           } catch (Exception e) {
             useSchedule = true;
           }
-        } else if (field.equals(AccessController.P_TSDURATIONSTR)){
+        } else if (field.equals(AccessController.P_TSDURATIONSTR)) {
           TSTimeStr = value;
-        } else if (field.equals(AccessController.P_TSMAXGROUPS)){
+        } else if (field.equals(AccessController.P_TSMAXGROUPS)) {
           // Try-catch block added in case empty string sent, EPW 02-24-06
           try {
             TSMaxGroups = Integer.parseInt(value);
           } catch (NumberFormatException nfe) {
             TSMaxGroups = 0;
           }
-        } else if(field.equals(AccessController.P_SCHEDULE_LOCKDATE)) {
+        } else if (field.equals(AccessController.P_SCHEDULE_LOCKDATE)) {
           tslockdate = value;
-        } else if(field.equals(AccessController.P_SCHEDULE_LOCKTIME)) {
+        } else if (field.equals(AccessController.P_SCHEDULE_LOCKTIME)) {
           tslocktime = value;
-        } else if(field.equals(AccessController.P_SCHEDULE_LOCKAMPM)) {
+        } else if (field.equals(AccessController.P_SCHEDULE_LOCKAMPM)) {
           tslockampm = value;
         } else if (field.equals(AccessController.P_STATUS)) {
           status = value;
@@ -2765,41 +2802,41 @@ public class TransactionHandler {
           groupoption = Integer.parseInt(value);
         } else if (field.equals(AccessController.P_GROUPSMIN)) {
           try {
-            groupmin= Integer.parseInt(value);
+            groupmin = Integer.parseInt(value);
           } catch (NumberFormatException nfe) {
-            groupmin= -1;
+            groupmin = -1;
           }
         } else if (field.equals(AccessController.P_GROUPSMAX)) {
           try {
-            groupmax= Integer.parseInt(value);
+            groupmax = Integer.parseInt(value);
           } catch (NumberFormatException nfe) {
-            groupmax= -1;
+            groupmax = -1;
           }
         } else if (field.equals(AccessController.P_GROUPSBYTA)) {
           assignedgraders = value.equals(AccessController.ONE);
         } else if (field.equals(AccessController.P_REGRADES)) {
           regradeoption = Integer.parseInt(value);
         } else if (field.equals(AccessController.P_REGRADEDATE)) {
-          regradedate= value;
+          regradedate = value;
         } else if (field.equals(AccessController.P_REGRADETIME)) {
-          regradetime= value;
+          regradetime = value;
         } else if (field.equals(AccessController.P_REGRADEAMPM)) {
-          regradeampm= value;
+          regradeampm = value;
         } else if (field.equals(AccessController.P_TOTALSCORE)) {
           try {
             score = StringUtil.parseFloat(value);
             if (score <= 0) throw new NumberFormatException();
           } catch (NumberFormatException nfe) {
             result.addError("Max score must be a positive number");
-            proceed= false;
+            proceed = false;
           }
         } else if (field.equals(AccessController.P_WEIGHT)) {
           try {
-            weight= StringUtil.parseFloat(value);
+            weight = StringUtil.parseFloat(value);
             if (weight < 0) throw new NumberFormatException();
           } catch (NumberFormatException nfe) {
             result.addError("Weight must be a positive number");
-            proceed= false;
+            proceed = false;
           }
         } else if (field.equals(AccessController.P_SHOWSTATS)) {
           showstats = true;
@@ -2809,13 +2846,27 @@ public class TransactionHandler {
           groupsFrom = database.getAssignment(value);
         } else if (field.startsWith(AccessController.P_REQFILENAME)) {
           String id = field.split(AccessController.P_REQFILENAME)[1];
-          RequiredSubmission req = database.getRequiredSubmission(id);
-          req.setSubmissionName(value);
+          if (subnames.contains(value)) {
+            result.addError("A required submission with name '" + value
+                + "' already exists");
+            proceed = false;
+          } else if (value.equals("")) {
+            emptySubmissionName = true;
+          } else {
+            // XXX MJL check update & log
+            RequiredSubmission req = database.getRequiredSubmission(id);
+            req.setSubmissionName(value);
+            
+            subnames.add(value);
+            numOfAssignedFiles++;
+          }
         } else if (field.startsWith(AccessController.P_REQFILETYPE)) {
           String id = field.split(AccessController.P_REQFILETYPE)[1];
+          // XXX MJL check update & log
           RequiredSubmission req = database.getRequiredSubmission(id);
           req.addRequiredFileType(value);
         } else if (field.startsWith(AccessController.P_REQSIZE)) {
+          // XXX MJL check update & log
           String id = field.split(AccessController.P_REQSIZE)[1];
           RequiredSubmission req = database.getRequiredSubmission(id);
           try {
@@ -2824,17 +2875,29 @@ public class TransactionHandler {
             req.setMaxSize(size);
           } catch (NumberFormatException e) {
             result.addError("Max submission size must be a positive integer");
-            proceed= false;
-          }					
-        } else if (field.startsWith(AccessController.P_NEWREQFILENAME)) {
-          String id = field.split(AccessController.P_NEWREQFILENAME)[1];
-          RequiredSubmission req = (RequiredSubmission) newReqs.get(id);
-          if (req == null) {
-            req = new RequiredSubmission(assign);
-            newReqs.put(id, req);
+            proceed = false;
           }
-          req.setSubmissionName(value);
+        } else if (field.startsWith(AccessController.P_NEWREQFILENAME)) {
+          if (subnames.contains(value)) {
+            result.addError("A required submission with name '" + value + "' already exists");
+            proceed = false;
+          } else if (value.equals("")) {
+            emptySubmissionName = true;
+          } else {
+            // XXX MJL check update & log
+            String id = field.split(AccessController.P_NEWREQFILENAME)[1];
+            RequiredSubmission req = (RequiredSubmission) newReqs.get(id);
+            if (req == null) {
+              req = new RequiredSubmission(assign);
+              newReqs.put(id, req);
+            }
+            req.setSubmissionName(value);
+            
+            subnames.add(value);
+            numOfAssignedFiles++;
+          }
         } else if (field.startsWith(AccessController.P_NEWREQFILETYPE)) {
+          // XXX MJL check update & log
           String id = field.split(AccessController.P_NEWREQFILETYPE)[1];
           RequiredSubmission req = (RequiredSubmission) newReqs.get(id);
           if (req == null) {
@@ -2843,102 +2906,159 @@ public class TransactionHandler {
           }
           req.addRequiredFileType(value);
         } else if (field.startsWith(AccessController.P_NEWREQSIZE)) {
+          // XXX MJL check & update log
           String id = field.split(AccessController.P_NEWREQSIZE)[1];
-          RequiredSubmission req = (RequiredSubmission) newReqs.get(id);
-          if (req == null) {
-            req = new RequiredSubmission(assign);
-            newReqs.put(id, req);
-          }
           try {
             int size = Integer.parseInt(value);
             if (size <= 0) throw new NumberFormatException();
+            
+            RequiredSubmission req = (RequiredSubmission) newReqs.get(id);
+            if (req == null) {
+              req = new RequiredSubmission(assign);
+              newReqs.put(id, req);
+            }
             req.setMaxSize(size);
           } catch (NumberFormatException e) {
             result.addError("Max submission size must be a positive integer");
-            proceed= false;
+            proceed = false;
           }
 
         } else if (field.startsWith(AccessController.P_NEWITEMNAME)) {
           String id = field.split(AccessController.P_NEWITEMNAME)[1];
-          AssignmentItem ai = (AssignmentItem) newItems.get(id);
-          if (ai == null) {
-            ai = new AssignmentItem(assign);
-            newItems.put(id, ai);
+          if (filenames.contains(value)) {
+            result.addError("An assignment file with name '" + value + "' already exists");
+            proceed = false;
+          } else if (value.equals("")) {
+            emptyItemName = true;
+          } else {
+            // XXX MJL check update & log
+            AssignmentItem ai = (AssignmentItem) newItems.get(id);
+            if (ai == null) {
+              ai = new AssignmentItem(assign);
+              newItems.put(id, ai);
+            }
+            ai.setItemName(value);
+            
+            filenames.add(value);
           }
-          ai.setItemName(value);
         } else if (field.startsWith(AccessController.P_ITEMNAME)) {
           String id = field.split(AccessController.P_ITEMNAME)[1];
-          AssignmentItem ai = database.getAssignmentItem(id);
-          ai.setItemName(value);
+          if (filenames.contains(value)) {
+            result.addError("An assignment file with name '" + value
+                + "' already exists");
+            proceed = false;
+          } else if (value.equals("")) {
+            emptyItemName = true;
+          } else {
+            // XXX MJL check update & log
+            AssignmentItem ai = database.getAssignmentItem(id);
+            ai.setItemName(value);
+          }
         } else if (field.startsWith(AccessController.P_REMOVEREQ)) {
+          // XXX MJL check update & log
           String id = field.split(AccessController.P_REMOVEREQ)[1];
           RequiredSubmission req = database.getRequiredSubmission(id);
           req.setHidden(true);
+          numOfAssignedFiles--;
         } else if (field.startsWith(AccessController.P_REMOVEITEM)) {
+          // XXX MJL check update & log
           String id = field.split(AccessController.P_REMOVEITEM)[1];
           AssignmentItem ai = database.getAssignmentItem(id);
           ai.setHidden(true);
         } else if (field.startsWith(AccessController.P_RESTOREREQ)) {
+          // XXX MJL check update & log
           String id = field.split(AccessController.P_RESTOREREQ)[1];
           RequiredSubmission req = database.getRequiredSubmission(id);
           req.setHidden(false);
+          numOfAssignedFiles++;
         } else if (field.startsWith(AccessController.P_RESTOREITEM)) {
+          // XXX MJL check update & log
           String id = field.split(AccessController.P_RESTOREITEM)[1];
           AssignmentItem ai = database.getAssignmentItem(id);
           ai.setHidden(false);
         } else if (field.startsWith(AccessController.P_RESTOREITEMFILE)) {
           String itemfile = field.split(AccessController.P_RESTOREITEMFILE)[1];
-          String[] itemfiles = itemfile.split("_");
-
-          // TODO: ai not used.
-          AssignmentItem ai = database.getAssignmentItem(itemfiles[0]);
-          AssignmentFile af = database.getAssignmentFile(itemfiles[1]);
-          af.setHidden(false);
+          String[] itemFiles = itemfile.split("_");
+          String itemID = itemFiles[0];
+          String fileID = itemFiles[1];
+          
+          if (restoredFiles.contains(itemID) || replacedItems.contains(itemID)) {
+            result.addError("Error: Conflicting files chosen to replace assignment item.<br>");
+            proceed = false;
+          } else {
+            // XXX MJL check update & log
+            AssignmentFile af = database.getAssignmentFile(fileID);
+            af.setHidden(false);
+          }
         } else if (field.equals(AccessController.P_REMOVESOL)) {
+          // XXX MJL check update & log
           assign.removeCurrentSolutionFile();
         } else if (field.startsWith(AccessController.P_RESTORESOL)) {
           String id = field.split(AccessController.P_RESTORESOL)[1];
+          // XXX MJL check update & log
           SolutionFile sol = database.getSolutionFile(id);
           sol.setHidden(false);
         } else if (field.startsWith(AccessController.P_SUBPROBNAME)) {
-          String id = field.split(AccessController.P_SUBPROBNAME)[1];
-          SubProblem subProblem = database.getSubProblem(id);
-          //Assign subproblem orders in the order that they appear in the form
-          subProblem.setOrder(order++);
-          subProblem.setSubProblemName(value);
-
-          //reset the choice lettering
-          letter = 'a';
+          if (value.equals("")) {
+            emptyProbName = true;
+          } else {
+            String id = field.split(AccessController.P_SUBPROBNAME)[1];
+            SubProblem subProblem = database.getSubProblem(id);
+            
+            // XXX MJL check update & log
+            // Assign subproblem orders in the order that they appear in the form
+            subProblem.setOrder(order++);
+            subProblem.setSubProblemName(value);
+            probNames.add(value);
+  
+            // reset the choice lettering
+            letter = 'a';
+          }
         } else if (field.startsWith(AccessController.P_SUBPROBSCORE)) {
-          String id = field.split(AccessController.P_SUBPROBSCORE)[1];
-          SubProblem subProblem = database.getSubProblem(id);
-
           try {
             float maxscore = StringUtil.parseFloat(value);
             if (maxscore < 0.0f) throw new NumberFormatException();
+            
+            // XXX MJL check update & log
+            String id = field.split(AccessController.P_SUBPROBSCORE)[1];
+            SubProblem subProblem = database.getSubProblem(id);
             subProblem.setMaxScore(maxscore);
+            
+            if (!probScores.containsKey(id)) {
+              probScores.put(id, new Float(maxscore));
+            }
           } catch (NumberFormatException e) {
             result.addError("Problem scores must be positive numbers");
-            proceed= false;
+            proceed = false;
           }
         } else if (field.startsWith(AccessController.P_REMOVECHOICE)) {
           String id = field.split(AccessController.P_REMOVECHOICE)[1];
+          // XXX MJL check update & log
           Choice choice = database.getChoice(id);
           choice.remove();
         } else if (field.startsWith(AccessController.P_NEWSUBPROBNAME)) {
-          String id = field.split(AccessController.P_NEWSUBPROBNAME)[1];
-          SubProblem sp = (SubProblem) newSubProbs.get(id);
-          if (sp == null) {
-            sp = new SubProblem(assign);
-            newSubProbs.put(id, sp);
+          if (probNames.contains(value)) {
+            result.addError("A subproblem with name '" + value + "' already exists");
+            proceed = false;
+          } else if (value.equals("")) {
+            emptyProbName = true;
+          } else {
+            String id = field.split(AccessController.P_NEWSUBPROBNAME)[1];
+            SubProblem sp = (SubProblem) newSubProbs.get(id);
+            if (sp == null) {
+              sp = new SubProblem(assign);
+              newSubProbs.put(id, sp);
+            }
+  
+            // XXX MJL check update & log
+            // Assign subproblem orders in the order that they appear in the form
+            sp.setOrder(order++);
+            sp.setSubProblemName(value);
+            probNames.add(value);
+  
+            // reset the choice lettering
+            letter = 'a';
           }
-
-          //Assign subproblem orders in the order that they appear in the form
-          sp.setOrder(order++);
-          sp.setSubProblemName(value);
-
-          //reset the choice lettering
-          letter = 'a';
         } else if (field.startsWith(AccessController.P_NEWSUBPROBSCORE)) {
           String id = field.split(AccessController.P_NEWSUBPROBSCORE)[1];
           SubProblem sp = (SubProblem) newSubProbs.get(id);
@@ -2950,57 +3070,62 @@ public class TransactionHandler {
           try {
             float maxscore = StringUtil.parseFloat(value);
             if (maxscore < 0.0f) throw new NumberFormatException();
+            
+            // XXX MJL check update & log
             sp.setMaxScore(maxscore);
+            probScores.put("#" + id, new Float(maxscore));
           } catch (NumberFormatException e) {
             result.addError("Problem scores must be positive numbers");
-            proceed= false;
+            proceed = false;
           }
         } else if (field.startsWith(AccessController.P_RESTORESUBPROB)) {
           String id = field.split(AccessController.P_RESTORESUBPROB)[1];
+          // XXX MJL check update & log
           SubProblem sp = database.getSubProblem(id);
           sp.setHidden(false);
         } else if (field.startsWith(AccessController.P_REMOVESUBPROB)) {
           String id = field.split(AccessController.P_REMOVESUBPROB)[1];
+          // XXX MJL check update & log
           SubProblem sp = database.getSubProblem(id);
           sp.setHidden(true);
         }
-        //Surveys
+        // Surveys
         else if (field.startsWith(AccessController.P_CORRECTCHOICE)) {
           String id = field.split(AccessController.P_CORRECTCHOICE)[1];
           SubProblem sp = database.getSubProblem(id);
 
-          int correctChoice = -1;
           try {
-            correctChoice = Integer.parseInt(value);
+            int correctChoice = Integer.parseInt(value);
             if (correctChoice < 0) throw new NumberFormatException();
+            // XXX MJL check update & log
+            sp.setAnswer(correctChoice);
           } catch (NumberFormatException e) {
             result.addError("Correct choices must be positive numbers");
-            proceed= false;
+            proceed = false;
           }
-          sp.setAnswer(correctChoice);
-        }
-        else if (field.startsWith(AccessController.P_SUBPROBTYPE)) {
+        } else if (field.startsWith(AccessController.P_SUBPROBTYPE)) {
           String id = field.split(AccessController.P_SUBPROBTYPE)[1];
           SubProblem sp = database.getSubProblem(id);
           try {
             int questtype = Integer.parseInt(value);
             if (questtype < 0) throw new NumberFormatException();
+            // XXX MJL check update & log
             sp.setType(questtype);
           } catch (NumberFormatException e) {
             result.addError("Question types must be positive numbers");
-            proceed= false;
+            proceed = false;
           }
         } else if (field.startsWith(AccessController.P_CHOICE)) {
           String[] tokens = field.split("_");
-          String questID  = tokens[1];
+          String questID = tokens[1];
           String choiceID = tokens[2];
 
+          // XXX MJL check update & log
           // TODO: questID not used
           Choice choice = database.getChoice(choiceID);
           choice.setText(value);
           choice.setLetter(Character.toString(letter++));
-        }
-        else if (field.startsWith(AccessController.P_NEWCORRECTCHOICE)) {
+        } else if (field.startsWith(AccessController.P_NEWCORRECTCHOICE)) {
           String id = field.split(AccessController.P_NEWCORRECTCHOICE)[1];
           SubProblem sp = (SubProblem) newSubProbs.get(id);
           if (sp == null) {
@@ -3011,13 +3136,13 @@ public class TransactionHandler {
           try {
             int correctChoice = Integer.parseInt(value);
             if (correctChoice < 0) throw new NumberFormatException();
+            // XXX MJL check update & log
             sp.setAnswer(correctChoice);
           } catch (NumberFormatException e) {
             result.addError("Correct choices must be positive numbers");
-            proceed= false;
+            proceed = false;
           }
-        }
-        else if (field.startsWith(AccessController.P_NEWSUBPROBTYPE)) {
+        } else if (field.startsWith(AccessController.P_NEWSUBPROBTYPE)) {
           String id = field.split(AccessController.P_NEWSUBPROBTYPE)[1];
           SubProblem sp = (SubProblem) newSubProbs.get(id);
           if (sp == null) {
@@ -3028,10 +3153,11 @@ public class TransactionHandler {
           try {
             int questtype = Integer.parseInt(value);
             if (questtype < 0) throw new NumberFormatException();
+            // XXX MJL check update & log
             sp.setType(questtype);
           } catch (NumberFormatException e) {
             result.addError("Question types must be positive numbers");
-            proceed= false;
+            proceed = false;
           }
         } else if (field.startsWith(AccessController.P_NEWSUBPROBORDER)) {
           String id = field.split(AccessController.P_NEWSUBPROBTYPE)[1];
@@ -3044,14 +3170,15 @@ public class TransactionHandler {
           try {
             int questorder = Integer.parseInt(value);
             if (questorder < 0) throw new NumberFormatException();
+            // XXX MJL check update & log
             sp.setOrder(questorder);
           } catch (NumberFormatException e) {
             result.addError("Question orders must be positive numbers");
-            proceed= false;
+            proceed = false;
           }
         } else if (field.startsWith(AccessController.P_NEWCHOICE)) {
           String[] tokens = field.split("_");
-          String questID  = tokens[1];
+          String questID = tokens[1];
           String choiceID = tokens[2];
           Choice choice = (Choice) newChoices.get(choiceID);
           if (choice == null) {
@@ -3060,100 +3187,121 @@ public class TransactionHandler {
             newChoices.put(choiceID, choice);
           }
 
+          // XXX MJL check update & log
           choice.setText(value);
           choice.setLetter(Character.toString(letter++));
-        }
-        else {
+        } else {
           System.out.println("Not parsed: " + value);
         }
       }
 
-      i = files.entrySet().iterator();
-      while (i.hasNext()) {
+      for (Iterator i = files.entrySet().iterator(); i.hasNext();) {
         Map.Entry entry = (Map.Entry) i.next();
-        String    field = (String) entry.getKey();
-        FileData  value = (FileData) entry.getValue();
+        String field = (String) entry.getKey();
+        FileData value = (FileData) entry.getValue();
 
         if (field.equals(AccessController.P_SOLFILE)) {
+          // XXX MJL check update & log
           SolutionFile file = new SolutionFile(assign, false, value);
-        }
-        else if (field.startsWith(AccessController.P_NEWITEMFILE)) {
+        } else if (field.startsWith(AccessController.P_NEWITEMFILE)) {
+          // XXX MJL check update & log
           String id = field.split(AccessController.P_NEWITEMFILE)[1];
-          AssignmentItem ai   = (AssignmentItem) newItems.get(id);
-          AssignmentFile file = new AssignmentFile(ai, false, value); 
-        }
-        else if (field.startsWith(AccessController.P_ITEMFILE)) {
+          AssignmentItem ai = (AssignmentItem) newItems.get(id);
+          AssignmentFile file = new AssignmentFile(ai, false, value);
+        } else if (field.startsWith(AccessController.P_ITEMFILE)) {
           String id = field.split(AccessController.P_ITEMFILE)[1];
+          if (replacedItems.contains(id)) {
+            throw new FileUploadException("Error: Conflicting files chosen to replace assignment item.<br>");
+          }
+          
+          // XXX MJL check update & log
           AssignmentItem ai = database.getAssignmentItem(id);
           AssignmentFile file = new AssignmentFile(ai, false, value);
         } else {
           System.out.println("Not parsed (file): " + field);
         }
       }
-      
+
       //
       // validation
       //
-      
+
       if (name == null || name.equals("")) {
         result.addError("Name must be non-empty");
       }
       if (nameshort == null || nameshort.equals("")) {
         result.addError("Name short must be non-empty");
       }
-      
+
       Date due = null;
       try {
         if (duedate == null || duetime == null || dueampm == null)
           throw new ParseException("", 0);
-        due= DateTimeUtil.parseDate(duedate, duetime, dueampm);
+        due = DateTimeUtil.parseDate(duedate, duetime, dueampm);
       } catch (ParseException pe) {
         result.addError("Due date is not in the proper format");
-        proceed= false;
+        proceed = false;
       } catch (IllegalArgumentException iae) {
         result.addError("Due date " + iae.getMessage());
-        proceed= false;
+        proceed = false;
       }
-      
+
+      if (emptyProbName) {
+        result.addError("Problem names cannot be empty");
+        proceed = false;
+      }
+
+      if (emptyItemName) {
+        result.addError("Assignment file names must not be empty");
+      }
+
+      if (emptySubmissionName) {
+        result.addError("Required submission names must not be empty");
+      }
+
       Date late = null;
       if (latesubmissions) {
         if (latedate == null || latetime == null || lateampm == null)
-          result.addError("Late submission deadline is not in the proper format");
+          result
+              .addError("Late submission deadline is not in the proper format");
         else {
           try {
-            late= DateTimeUtil.parseDate(latedate, latetime, lateampm);
+            late = DateTimeUtil.parseDate(latedate, latetime, lateampm);
           } catch (ParseException pe) {
-            result.addError("Late submission deadline is not in the proper format");
-            proceed= false;
+            result
+                .addError("Late submission deadline is not in the proper format");
+            proceed = false;
           } catch (IllegalArgumentException iae) {
             result.addError("Late submission deadline " + iae.getMessage());
-            proceed= false;
+            proceed = false;
           }
         }
       }
-      
+
       Date TSLockedTime = null;
-      if (useSchedule){
+      if (useSchedule) {
         if (TSTimeStr == null)
           result.addError("Timeslot duration is not in the proper format");
         else {
           try {
             TSDuration = Long.parseLong(TSTimeStr);
-          } catch (Exception e){
+          } catch (Exception e) {
             result.addError("Timeslot duration is not in the proper format");
           }
         }
         if (tslockdate.equals("") || tslocktime.equals("")) {
-          TSLockedTime = null; //empty input means no deadline to set schedule
+          TSLockedTime = null; // empty input means no deadline to set schedule
         } else {
           try {
-            TSLockedTime = DateTimeUtil.parseDate(tslockdate, tslocktime, tslockampm);
+            TSLockedTime =
+                DateTimeUtil.parseDate(tslockdate, tslocktime, tslockampm);
           } catch (ParseException pe) {
-            result.addError("Schedule change deadline is not in the proper format");
-            proceed= false;
+            result
+                .addError("Schedule change deadline is not in the proper format");
+            proceed = false;
           } catch (IllegalArgumentException iae) {
             result.addError("Schedule change deadline " + iae.getMessage());
-            proceed= false;
+            proceed = false;
           }
         }
       }
@@ -3167,38 +3315,55 @@ public class TransactionHandler {
       } else if (groupoption == 1) {
         if (groupmin < 1) {
           result.addError("Minimum group size must be a positive integer");
-          proceed= false;
+          proceed = false;
         }
         if (groupmax < 1) {
           result.addError("Maximum group size must be a positive integer");
-          proceed= false;
+          proceed = false;
         }
         if (!(groupmin <= groupmax)) {
           result.addError("Please specify a valid group size range");
           proceed = false;
         }
       }
-      
+
       Date regradedeadline = null;
       if (regradeoption == 0) {
         studentregrades = false;
       } else if (regradeoption == 1) {
         studentregrades = true;
         if (regradedate == null || regradetime == null || regradeampm == null)
-          result.addError("Regrade submission deadline is not in the proper format");
+          result
+              .addError("Regrade submission deadline is not in the proper format");
         else {
           try {
-            regradedeadline= DateTimeUtil.parseDate(regradedate, regradetime, regradeampm);
+            regradedeadline =
+                DateTimeUtil.parseDate(regradedate, regradetime, regradeampm);
           } catch (ParseException pe) {
-            result.addError("Regrade submission deadline is not in the proper format");
-            proceed= false;
+            result
+                .addError("Regrade submission deadline is not in the proper format");
+            proceed = false;
           } catch (IllegalArgumentException iae) {
             result.addError("Regrade submission deadline " + iae.getMessage());
-            proceed= false;
+            proceed = false;
           }
         }
       }
-      
+
+      float total = 0;
+      for (Iterator pScores = probScores.values().iterator(); pScores.hasNext();) {
+        Float val = (Float) pScores.next();
+        total += val.floatValue();
+      }
+      // don't check this for quizzes for now
+      if (probScores.size() > 0 && total != score && type != Assignment.QUIZ) {
+        result.addError("Problem scores sum (" + total
+            + ") does not equal the Total Score (" + score + ")");
+      }
+
+      // XXX MJL What are lines 3651ff in the original source doing?
+      // XXX MJL Are they different from what follows?
+
       if (proceed && !result.hasErrors()) {
         assign.setName(name);
         assign.setNameShort(nameshort);
@@ -3221,8 +3386,8 @@ public class TransactionHandler {
         assign.setShowSolution(showsolution);
         assign.setNumassignedfiles(numOfAssignedFiles);
         assign.setScheduled(useSchedule);
-        assign.setDuration(new Long (TSDuration));
-        assign.setGroupLimit(new Integer (TSMaxGroups));
+        assign.setDuration(new Long(TSDuration));
+        assign.setGroupLimit(new Integer(TSMaxGroups));
         assign.setTimeslotLockTime(TSLockedTime);
         assign.setType(type);
 
@@ -3234,11 +3399,13 @@ public class TransactionHandler {
       result.addError(e.getMessage(), e);
     } catch (Exception e) {
       e.printStackTrace();
-      result.addError("Unexpected error while trying to " + (newAssign ? "create" : "edit") + " this assignment");
+      result.addError("Unexpected error while trying to "
+          + (newAssign ? "create" : "edit") + " this assignment");
       result.setException(e);
     }
-    Profiler.exitMethod("TransactionHandler.setAssignmentProps", "AssignmentID: " + assign.toString());
-    result.setValue(info);
+    Profiler.exitMethod("TransactionHandler.setAssignmentProps",
+        "AssignmentID: " + assign.toString());
+    result.setValue(fieldParams);
     return result;
   }
   
