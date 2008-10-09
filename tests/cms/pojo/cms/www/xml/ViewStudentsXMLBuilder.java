@@ -73,11 +73,11 @@ public class ViewStudentsXMLBuilder {
         Element xGrade = xml.createElement(XMLBuilder.A_ID + assign.toString());
         xGrade.setAttribute(XMLBuilder.A_ASSIGNID, assign.toString());
         
-        Group group = null; // TODO: find the group for this user and assignment
+        Group group = assign.findGroup(user);
         if (group != null)
           xGrade.setAttribute(XMLBuilder.A_GROUPID, group.toString());
         
-        Grade grade = null; // TODO: find the grade for this user and assignment
+        Grade grade = assign.findGrade(student);
         if (grade != null)
           xGrade.setAttribute(XMLBuilder.A_SCORE,
                               StringUtil.roundToOne(String.valueOf(grade.getGrade())));
@@ -85,7 +85,7 @@ public class ViewStudentsXMLBuilder {
         if (grade != null && grade.getGrade() > assign.getMaxScore())
           xGrade.setAttribute(XMLBuilder.A_OVERMAX, "true");
         
-        Iterator regrades = null; // TODO: find regrades for this group
+        Iterator regrades = assign.findRegradeRequests(group).iterator();
         RegradeRequest regrade = null;
         while (regrades.hasNext()) {
           RegradeRequest next = (RegradeRequest) regrades.next();

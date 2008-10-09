@@ -5,6 +5,7 @@ import java.util.*;
 import org.apache.commons.fileupload.FileUploadException;
 
 public class Assignment implements Comparable {
+  private static int nextID = 1;
 
   public static final String OPEN   = "Open";
   public static final String CLOSED = "Closed";
@@ -20,6 +21,7 @@ public class Assignment implements Comparable {
   //////////////////////////////////////////////////////////////////////////////
 
   private final Course course;
+  private final int id;
   private String name, nameShort;
   private String description;
   private String status;
@@ -47,13 +49,19 @@ public class Assignment implements Comparable {
   //////////////////////////////////////////////////////////////////////////////
 
   SolutionFile       solutionFile;        // maintained by SolutionFile
-  Collection/*Grade*/              grades;               // maintained by Grade
-  Collection/*SubProblem*/         subProblems;          // maintained by SubProblem
-  Collection/*AssignmentItem*/     items;                // maintained by AssignmentItem
-  Collection/*AnswerSet*/          answerSets;           // maintained by AnswerSet
-  Collection/*TimeSlot*/           timeSlots;            // maintained by TimeSlot
-  Collection/*RequiredSubmission*/ requiredSubmissions;  // maintained by RequiredSubmission
-  Collection/*Group*/              groups;               // maintained by Group
+  final Map/*Student, Grade*/              grades;               // maintained by Grade
+  final Collection/*SubProblem*/         subProblems;          // maintained by SubProblem
+  final Collection/*AssignmentItem*/     items;                // maintained by AssignmentItem
+  final Collection/*AnswerSet*/          answerSets;           // maintained by AnswerSet
+  final Collection/*TimeSlot*/           timeSlots;            // maintained by TimeSlot
+  final Collection/*RequiredSubmission*/ requiredSubmissions;  // maintained by RequiredSubmission
+  final Collection/*Group*/              groups;               // maintained by Group
+  final Map/*Group, Set<RegradeRequest>*/ regradeRequests; // Maintained by RegradeRequest
+  
+  /**
+   * Maps students to the GroupMember for which they are active (if any).
+   */
+  final Map/*User, GroupMember*/ groupMemberIndex; // Maintained by GroupMember.
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
@@ -61,18 +69,21 @@ public class Assignment implements Comparable {
 
   public Assignment(Course course, String name, String nameShort, Date due) {
     this.course = course;
+    this.id = nextID++;
     setName(name);
     setNameShort(nameShort);
     setDueDate(due);
 
     this.solutionFile       = null;
-    this.grades              = new ArrayList/*Grade*/();
+    this.grades              = new HashMap/*Grade*/();
     this.subProblems         = new ArrayList/*SubProblem*/();
     this.items               = new ArrayList/*AssignmentItem*/();
     this.answerSets          = new ArrayList/*AnswerSet*/();
     this.timeSlots           = new ArrayList/*TimeSlot*/();
     this.requiredSubmissions = new ArrayList/*RequiredSubmission*/();
     this.groups              = new ArrayList/*Group*/();
+    this.regradeRequests = new HashMap();
+    this.groupMemberIndex = new HashMap();
     
     course.assignments.put(toString(), this);
     course.semester.database.assignments.put(toString(), this);
@@ -230,6 +241,12 @@ public class Assignment implements Comparable {
   public Set/*RegradeRequest*/ findRegradeRequests() {
     throw new NotImplementedException();
   }
+  
+  public Set/*RegradeRequest*/ findRegradeRequests(Group group) {
+    Set result = (Set) regradeRequests.get(group);
+    if (result == null) return Collections.EMPTY_SET;
+    return result;
+  }
 
   public Set/*GroupGrades*/ findGroupGradesByGrader(User user, boolean adminPriv, int i) {
     throw new NotImplementedException();
@@ -266,9 +283,15 @@ public class Assignment implements Comparable {
   public Set/*Group*/ findLateGroups() {
     throw new NotImplementedException();
   }
+  
+  public Grade findGrade(Student student) {
+    return (Grade) grades.get(student);
+  }
 
   public Group findGroup(User user) {
-    throw new NotImplementedException();
+    GroupMember member = ((GroupMember) groupMemberIndex.get(user));
+    if (member == null) return null;
+    return member.getGroup();
   }
 
   public Collection/*GroupAssignedTo*/ findGroupAssignedTos(User user) {
@@ -374,8 +397,7 @@ public class Assignment implements Comparable {
     int result = course.compareTo(a.course);
     if (result != 0) return result;
     
-    // TODO determine an ordering for assignments within a course.
-    return 0;
+    return dueDate.compareTo(a.dueDate);
   }
 
   /**
@@ -408,6 +430,10 @@ public class Assignment implements Comparable {
       
       new GroupMember(newGroup, oldMember.getStudent(), GroupMember.ACTIVE);
     }
+  }
+  
+  public String toString() {
+    return "" + id;
   }
 }
 

@@ -10,17 +10,34 @@ public class GroupMember implements Comparable {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private Group   group;
-  private Student student;
+  private final Group   group;
+  private final Student student;
   private String  status;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setGroup   (final Group group)      { this.group  = group;  }
-  public void setStudent (final Student student)   { this.student = student; }
-  public void setStatus  (final String status)    { this.status = status; }
+  public void setStatus(final String status) {
+    this.status = status;
+
+    Assignment assignment = group.getAssignment();
+    User user = student.getUser();
+    GroupMember oldGroupMember =
+        (GroupMember) assignment.groupMemberIndex.get(user);
+    
+    if (status.equals(ACTIVE)) {
+      if (oldGroupMember != this) {
+        if (oldGroupMember != null) {
+          oldGroupMember.setStatus(REJECTED);
+        }
+        
+        assignment.groupMemberIndex.put(user, this);
+      }
+    } else if (oldGroupMember == this) {
+      assignment.groupMemberIndex.remove(user);
+    }
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // public getters                                                           //
@@ -35,11 +52,12 @@ public class GroupMember implements Comparable {
   //////////////////////////////////////////////////////////////////////////////
 
   public GroupMember(Group group, Student student, String status) {
-    setGroup(group);
-    setStudent(student);
-    setStatus(status);
+    this.group = group;
+    this.student = student;
     
     group.members.put(student.getUser(), this);
+    
+    setStatus(status);
   }
   
   public int compareTo(Object o) {

@@ -3355,8 +3355,6 @@ public class TransactionHandler {
         }
       }
       
-//      for (Iterator replacedItemIt = )
-      
       if (proceed && !result.hasErrors()) {
         assign.setName(name);
         assign.setNameShort(nameshort);

@@ -159,8 +159,18 @@ public class Course implements Comparable {
     
     db.courses.put(toString(), this);
   }
-  public Collection/*Assignment*/ getAssignments() {
-    return Collections.unmodifiableCollection(assignments.values());
+  
+  /**
+   * Returns the set of unhidden assignments.
+   */
+  public Collection getAssignments() {
+    SortedSet result = new TreeSet();
+    for (Iterator it = assignments.values().iterator(); it.hasNext();) {
+      Assignment assignment = (Assignment) it.next();
+      if (!assignment.getHidden()) result.add(assignment);
+    }
+    
+    return result;
   }
   
   public Assignment getAssignment(String assignmentID) {
@@ -266,7 +276,7 @@ public class Course implements Comparable {
         }
       }
 
-      for (Iterator git = assignment.grades.iterator(); git.hasNext();) {
+      for (Iterator git = assignment.grades.values().iterator(); git.hasNext();) {
         Grade grade = (Grade) git.next();
         if (grade.getGrade() == null) continue;
         if (!partners.contains(grade.getUser())) continue;
@@ -298,7 +308,7 @@ public class Course implements Comparable {
       
       if (assignment.getHidden()) continue;
       
-      for (Iterator git = assignment.grades.iterator(); git.hasNext();) {
+      for (Iterator git = assignment.grades.values().iterator(); git.hasNext();) {
         Grade grade = (Grade) git.next();
         if (grade.getUser() != user || grade.getGrade() == null
             || grade.getSubProblem() != null) continue;
