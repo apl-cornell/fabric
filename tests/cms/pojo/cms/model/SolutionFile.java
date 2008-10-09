@@ -1,12 +1,14 @@
 package cms.model;
 
+import org.apache.commons.fileupload.FileUploadException;
+
 public class SolutionFile implements FileEntry {
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private Assignment assignment;
+  private final Assignment assignment;
   private boolean    hidden;
   private FileData   file;
 
@@ -14,7 +16,6 @@ public class SolutionFile implements FileEntry {
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setAssignment (final Assignment assignment) { this.assignment = assignment; }
   public void setHidden     (final boolean hidden)        { this.hidden     = hidden;     }
   public void setFile       (final FileData file)         { this.file       = file;       }
 
@@ -30,10 +31,12 @@ public class SolutionFile implements FileEntry {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public SolutionFile(Assignment assign, boolean hidden, FileData data) {
-    setAssignment(assign);
+  public SolutionFile(Assignment assign, boolean hidden, FileData data)
+      throws FileUploadException {
+    this.assignment = assign;
     setHidden(hidden);
     setFile(data);
+    assignment.addSolutionFile(this);
   }
   
   public boolean isFileAuthorized(User user) {

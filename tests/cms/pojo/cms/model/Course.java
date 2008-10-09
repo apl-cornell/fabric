@@ -14,7 +14,7 @@ public class Course implements Comparable {
   private String   name;          // e.g. "Intro to Programming"
   private String   description;   // e.g. "In this course you will learn foo"
   private boolean  hasSection;
-  private Semester semester;
+  final Semester semester;
   private boolean  showFinalGrade;
   private boolean  showTotalScores;
   private boolean  showAssignWeights;
@@ -39,7 +39,7 @@ public class Course implements Comparable {
   // managed views                                                            //
   //////////////////////////////////////////////////////////////////////////////
 
-  final Map/* String, Assignment */assignments; // assignmentID -> Assignment
+  public final Map/* String, Assignment */assignments; // assignmentID -> Assignment
   final Map/*User,Student*/            students;
   final Map/*User,Staff*/              staff;
   final Collection/*Announcement*/     announcements;
@@ -59,11 +59,6 @@ public class Course implements Comparable {
   public void setName                (final String name)                 { this.name                = name;                }
   public void setDescription         (final String description)          { this.description         = description;         }
   public void setHasSection          (final boolean hasSection)          { this.hasSection          = hasSection;          }
-  public void setSemester            (final Semester semester)           {
-    if (this.semester != null) this.semester.courses.remove(this);
-    this.semester = semester;
-    this.semester.courses.add(this);
-  }
   public void setShowFinalGrade      (final boolean showFinalGrade)      { this.showFinalGrade      = showFinalGrade;      }
   public void setShowTotalScores     (final boolean showTotalScores)     { this.showTotalScores     = showTotalScores;     }
   public void setShowAssignWeights   (final boolean showAssignWeights)   { this.showAssignWeights   = showAssignWeights;   }
@@ -124,7 +119,9 @@ public class Course implements Comparable {
     setDescription(description);
     setCode(code);
     setDisplayedCode(code);
-    setSemester(semester);
+    
+    this.semester = semester;
+    this.semester.courses.add(this);
 
     setFileCounter(1);
 
@@ -353,6 +350,10 @@ public class Course implements Comparable {
     if (!(o instanceof Course)) return 0;
     
     return getCode().compareTo(((Course) o).getCode());
+  }
+  
+  public String toString() {
+    return semester.getName() + "|" + code;
   }
 }
 

@@ -4,6 +4,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+
+import polyglot.types.Type_c;
 
 public class SubProblem {
   
@@ -16,8 +20,8 @@ public class SubProblem {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private Assignment assignment;
-  private String     subProblemName;
+  private final Assignment assignment;
+  private String     name;
   private float      maxScore;
   private boolean    hidden;
   private int        type;
@@ -28,8 +32,7 @@ public class SubProblem {
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setAssignment     (final Assignment assignment)     { this.assignment     = assignment;     }
-  public void setSubProblemName (final String subProblemName)     { this.subProblemName = subProblemName; }
+  public void setName (final String name)     { this.name = name; }
   public void setMaxScore       (final float maxScore)            { this.maxScore       = maxScore;       }
   public void setHidden         (final boolean hidden)            { this.hidden         = hidden;         }
   public void setType           (final int type)                  { this.type           = type;           }
@@ -41,7 +44,7 @@ public class SubProblem {
   //////////////////////////////////////////////////////////////////////////////
 
   public Assignment getAssignment()     { return this.assignment;     }
-  public String     getSubProblemName() { return this.subProblemName; }
+  public String     getName() { return this.name; }
   public float      getMaxScore()       { return this.maxScore;       }
   public boolean    getHidden()         { return this.hidden;         }
   public int        getType()           { return this.type;           }
@@ -52,7 +55,8 @@ public class SubProblem {
   // managed fields                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  Map/*Group, User*/ assignedTo;  // Managed by GroupAssignedTo
+  final Map/*Group, User*/ assignedTo;  // Managed by GroupAssignedTo
+  final Map/*String, Choice*/ choices;  // Managed by Choice
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
@@ -60,9 +64,10 @@ public class SubProblem {
 
   public SubProblem(Assignment assign, String name, float maxScore, int type, int order, int answer) {
     assignedTo = new HashMap/*Group, User*/();
+    choices = new HashMap();
     
-    setAssignment(assignment);
-    setSubProblemName(name);
+    this.assignment = assign;
+    setName(name);
     setMaxScore(maxScore);
     setType(type);
     setOrder(order);
@@ -71,8 +76,9 @@ public class SubProblem {
   }
 
   public SubProblem(Assignment assign) {
-    throw new NotImplementedException();
+    this(assign, "", 0, MULTIPLE_CHOICE, 0, 0);
   }
+  
   public boolean isHidden() {
     throw new NotImplementedException();
   }
@@ -84,8 +90,24 @@ public class SubProblem {
   public Choice getAnswerChoice() {
     throw new NotImplementedException();
   }
-  public Collection/*Choice*/ getChoices() {
-    throw new NotImplementedException();
+
+  /**
+   * Returns a list of all visible and deleted/hidden choices for this
+   * subproblem.  Hidden choices come after visible ones.
+   */
+  public List/*Choice*/ getChoices() {
+    List visibleChoices = new ArrayList();
+    List hiddenChoices = new ArrayList();
+    
+    for (Iterator it = choices.values().iterator(); it.hasNext();) {
+      Choice choice = (Choice) it.next();
+      if (choice.getHidden())
+        hiddenChoices.add(choice);
+      else visibleChoices.add(choice);
+    }
+    
+    visibleChoices.addAll(hiddenChoices);
+    return visibleChoices;
   }
   public Choice getChoice(String text) {
     throw new NotImplementedException();

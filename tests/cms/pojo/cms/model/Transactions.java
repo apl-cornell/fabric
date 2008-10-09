@@ -493,7 +493,7 @@ public class Transactions {
     throw new NotImplementedException();
   }
   
-  private Log startLog(User p) {
+  public Log startLog(User p) {
     Log log = new Log(database);
     log.setActingNetID(p.getNetID());
     if (p.isInStaffAsBlankMode()) {

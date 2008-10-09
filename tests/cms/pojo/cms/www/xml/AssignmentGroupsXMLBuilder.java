@@ -161,7 +161,7 @@ public class AssignmentGroupsXMLBuilder {
       result.put(subProb, new Float(subProb.getMaxScore()));
       Element xSubProb = xml.createElement(XMLBuilder.TAG_SUBPROBLEM);
       xSubProb.setAttribute(XMLBuilder.A_SUBPROBID, subProb.toString());
-      xSubProb.setAttribute(XMLBuilder.A_NAME, subProb.getSubProblemName());
+      xSubProb.setAttribute(XMLBuilder.A_NAME, subProb.getName());
       xSubProb.setAttribute(XMLBuilder.A_SCORE,
                             StringUtil.roundToOne(String.valueOf(subProb.getMaxScore())));
       xSubProb.setAttribute(XMLBuilder.A_ORDER,

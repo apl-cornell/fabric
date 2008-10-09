@@ -80,7 +80,7 @@ public class StudentGradesXMLBuilder {
             xSubProb.setAttribute(XMLBuilder.A_SUBPROBID,
                                   subProb.toString());
             xSubProb.setAttribute(XMLBuilder.A_SUBPROBNAME,
-                                  subProb.getSubProblemName());
+                                  subProb.getName());
             xSubProb.setAttribute(XMLBuilder.A_MAXSCORE,
                                   StringUtil.trimTrailingZero(String.valueOf(subProb.getMaxScore())));
             xGroup.appendChild(xSubProb);

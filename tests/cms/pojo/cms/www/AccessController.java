@@ -2245,10 +2245,20 @@ public class AccessController extends HttpServlet {
            * course); }
            */
           if (assign == null) {
-            buildURL = ERROR_URL;
+            // XXX Why don't we have a real error page for this?  --MJL
+//            xml =
+//                xmlBuilder.buildErrorAssignmentPage(user, (Map) result
+//                    .getValue(), course, assign);
+            String message = "Assignment creation error page not implemented.<br>";
+            for (Iterator it = result.getErrors().iterator(); it.hasNext();) {
+              TransactionError error = (TransactionError) it.next();
+              message += error.getMessage()+"<br>";
+            }
+            
             xml =
-                xmlBuilder.buildErrorAssignmentPage(user, (Map) result
-                    .getValue(), course, assign);
+                xmlBuilder.buildErrorPage(user.getNetID(), action,
+                    new NotImplementedException(message));
+            buildURL = ERROR_URL;
           } else {
             buildURL = ASSIGNADMIN_URL;
             xml = xmlBuilder.buildBasicAssignmentPage(user, assign);

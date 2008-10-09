@@ -2,6 +2,8 @@ package cms.model;
 
 import java.util.*;
 
+import org.apache.commons.fileupload.FileUploadException;
+
 public class Assignment implements Comparable {
 
   public static final String OPEN   = "Open";
@@ -44,7 +46,7 @@ public class Assignment implements Comparable {
   // managed views                                                            //
   //////////////////////////////////////////////////////////////////////////////
 
-  Collection/*SolutionFile*/       solutionFiles;        // maintained by SolutionFile
+  SolutionFile       solutionFile;        // maintained by SolutionFile
   Collection/*Grade*/              grades;               // maintained by Grade
   Collection/*SubProblem*/         subProblems;          // maintained by SubProblem
   Collection/*AssignmentItem*/     items;                // maintained by AssignmentItem
@@ -63,7 +65,7 @@ public class Assignment implements Comparable {
     setNameShort(nameShort);
     setDueDate(due);
 
-    this.solutionFiles       = new ArrayList/*SolutionFile*/();
+    this.solutionFile       = null;
     this.grades              = new ArrayList/*Grade*/();
     this.subProblems         = new ArrayList/*SubProblem*/();
     this.items               = new ArrayList/*AssignmentItem*/();
@@ -73,6 +75,7 @@ public class Assignment implements Comparable {
     this.groups              = new ArrayList/*Group*/();
     
     course.assignments.put(toString(), this);
+    course.semester.database.assignments.put(toString(), this);
 
     // TODO: set up other fields
   }
@@ -150,8 +153,8 @@ public class Assignment implements Comparable {
     return Collections.unmodifiableCollection(this.requiredSubmissions);
   }
 
-  public Collection/*SolutionFile*/ getSolutionFiles() {
-    return Collections.unmodifiableCollection(this.solutionFiles);
+  public SolutionFile getSolutionFile() {
+    return solutionFile;
   }
 
   public Collection/*SubProblem*/ getSubProblems() {
@@ -162,6 +165,14 @@ public class Assignment implements Comparable {
   // public methods                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
+  void addSolutionFile(SolutionFile sf) throws FileUploadException {
+    if (solutionFile != null)
+      throw new FileUploadException(
+          "Error: Conflicting solution files<br>");
+    
+    this.solutionFile = sf;
+  }
+  
   public Collection/*RequiredSubmission*/ getHiddenRequiredSubmissions() {
     Collection result = new ArrayList();
     Iterator   i = requiredSubmissions.iterator();
@@ -228,8 +239,24 @@ public class Assignment implements Comparable {
     throw new NotImplementedException();
   }
 
+  /**
+   * Returns a set of group members that correspond to students who are enrolled
+   * in the course and active in the respective group.
+   */
   public Set/*GroupMember*/ findActiveGroupMembers() {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet();
+    for (Iterator git = groups.iterator(); git.hasNext();) {
+      Group group = (Group) git.next();
+      for (Iterator mit = group.members.values().iterator(); mit.hasNext();) {
+        GroupMember member = (GroupMember) mit.next();
+        if (member.getStatus().equals(GroupMember.ACTIVE)) {
+          Student student = member.getStudent();
+          if (student.getStatus().equals(Student.ENROLLED)) result.add(member);
+        }
+      }
+    }
+    
+    return result;
   }
 
   public Set/*GroupMember*/ findActiveAssignedGroupMembers(User user) {
@@ -325,14 +352,6 @@ public class Assignment implements Comparable {
   }
 
   /**
-   * import the groups from another assignment.
-   * @param groupsFrom
-   */
-  public void importGroups(Assignment groupsFrom) {
-    throw new NotImplementedException();
-  }
-
-  /**
    * Find the most recent grade for the student for the entire assignment (i.e.
    * not associated with a particular subproblem.
    */
@@ -357,6 +376,38 @@ public class Assignment implements Comparable {
     
     // TODO determine an ordering for assignments within a course.
     return 0;
+  }
+
+  /**
+   * Creates groups for all students in the course.
+   */
+  public void createGroups() {
+    for (Iterator it = course.students.values().iterator(); it.hasNext();) {
+      Student student = (Student) it.next();
+      Group group = new Group(this, numassignedfiles);
+      new GroupMember(group, student, GroupMember.ACTIVE);
+    }
+  }
+
+  /**
+   * Imports groups from another assignment.
+   */
+  public void importGroups(Assignment groupsFrom) {
+    Set activeMembers = groupsFrom.findActiveGroupMembers();
+    
+    // Maps (groups from the other assignment) to (groups in this assignment).
+    Map groupMap = new HashMap();
+    for (Iterator it = activeMembers.iterator(); it.hasNext();) {
+      GroupMember oldMember = (GroupMember) it.next();
+      Group oldGroup = oldMember.getGroup();
+      Group newGroup = (Group) groupMap.get(oldGroup);
+      if (newGroup == null) {
+        newGroup = new Group(this, numassignedfiles);
+        groupMap.put(oldGroup, newGroup);
+      }
+      
+      new GroupMember(newGroup, oldMember.getStudent(), GroupMember.ACTIVE);
+    }
   }
 }
 

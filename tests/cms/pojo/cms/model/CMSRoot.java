@@ -58,6 +58,9 @@ public class CMSRoot {
   final Map/*String, SiteNotice*/ notices; // Managed by SiteNotice.
   final Map/*String, Course*/ courses; // Managed by Course.  Maps CourseIDs to Courses.
   final Collection/*Log*/ logs; // Managed by Log.
+  
+  // XXX YUCK
+  final Map/*String, Assignment*/ assignments; // Managed by Assignment.
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
@@ -69,6 +72,7 @@ public class CMSRoot {
     this.notices = new HashMap/*String, SiteNotice*/();
     this.courses = new HashMap/*String, Course*/();
     this.logs = new ArrayList();
+    this.assignments = new HashMap();
     
     this.debugMode = true;
 
@@ -305,7 +309,7 @@ public class CMSRoot {
   //////////////////////////////////////////////////////////////////////////////
   
   public Assignment getAssignment(String assignID) {
-    throw new NotImplementedException();
+    return (Assignment) assignments.get(assignID);
   }
   
   public Group getGroup(String groupID) {

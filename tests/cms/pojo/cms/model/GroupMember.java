@@ -1,6 +1,6 @@
 package cms.model;
 
-public class GroupMember {
+public class GroupMember implements Comparable {
   public static final String
     INVITED= "Invited",
     REJECTED= "Rejected",
@@ -11,7 +11,7 @@ public class GroupMember {
   //////////////////////////////////////////////////////////////////////////////
 
   private Group   group;
-  private Student member;
+  private Student student;
   private String  status;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -19,7 +19,7 @@ public class GroupMember {
   //////////////////////////////////////////////////////////////////////////////
 
   public void setGroup   (final Group group)      { this.group  = group;  }
-  public void setStudent (final Student member)   { this.member = member; }
+  public void setStudent (final Student student)   { this.student = student; }
   public void setStatus  (final String status)    { this.status = status; }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -27,7 +27,7 @@ public class GroupMember {
   //////////////////////////////////////////////////////////////////////////////
 
   public Group   getGroup()   { return this.group;  }
-  public Student getStudent() { return this.member; }
+  public Student getStudent() { return this.student; }
   public String  getStatus()  { return this.status; }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -40,6 +40,13 @@ public class GroupMember {
     setStatus(status);
     
     group.members.put(student.getUser(), this);
+  }
+  
+  public int compareTo(Object o) {
+    if (!(o instanceof GroupMember)) return 0;
+    
+    GroupMember member = (GroupMember) o;
+    return Student.NETID_COMPARATOR.compare(this.student, member.student);
   }
 }
 

@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.Map;
 import java.text.ParseException;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -495,7 +496,7 @@ public class TransactionHandler {
             }
           } catch (NumberFormatException e) {
             result.addError("Grade for '" + vals[1] + "' on problem '"
-                + subProb.getSubProblemName()
+                + subProb.getName()
                 + "' is not a valid floating point number.");
           }
         } else if (field.startsWith(AccessController.P_OLDGRADE)) {
@@ -2292,7 +2293,7 @@ public class TransactionHandler {
         Vector subProbNames = new Vector();
         Iterator j = assignment.getSubProblems().iterator();
         while(j.hasNext())
-          subProbNames.add(((SubProblem) j.next()).getSubProblemName());
+          subProbNames.add(((SubProblem) j.next()).getName());
         
         colsFound = CSVFileFormatsUtil.parseColumnNamesFlexibly(line);
         subproblemColsFound =
@@ -2655,7 +2656,7 @@ public class TransactionHandler {
         result.setValue(fieldParams);
         return result;
       }
-
+      
       if (newAssign) assign = new Assignment(course, null, null, null);
 
       String name = "";
@@ -2684,6 +2685,7 @@ public class TransactionHandler {
       boolean showsolution = false;
 
       Assignment groupsFrom = null;
+      SolutionFile newSolution = null;
 
       int graceperiod = 0;
       int groupmin = 0;
@@ -2748,9 +2750,7 @@ public class TransactionHandler {
         } else if (field.equals(AccessController.P_NAMESHORT)) {
           nameshort = value;
         } else if (field.equals(AccessController.P_ASSIGNMENTTYPE)) {
-          // XXX MJL Logging?
           type = Integer.parseInt(value);
-          assign.setType(type);
         } else if (field.equals(AccessController.P_DUEDATE)) {
           duedate = value;
         } else if (field.equals(AccessController.P_DUETIME)) {
@@ -2843,7 +2843,11 @@ public class TransactionHandler {
         } else if (field.equals(AccessController.P_SHOWSOLUTION)) {
           showsolution = true;
         } else if (field.equals(AccessController.P_GROUPSFROM)) {
-          groupsFrom = database.getAssignment(value);
+          groupsFrom = course.getAssignment(value);
+          if (groupsFrom == null && !value.equals("0")) {
+            result.addError("Assignment used for importing groups does not exist");
+            proceed = false;
+          }
         } else if (field.startsWith(AccessController.P_REQFILENAME)) {
           String id = field.split(AccessController.P_REQFILENAME)[1];
           if (subnames.contains(value)) {
@@ -2853,7 +2857,6 @@ public class TransactionHandler {
           } else if (value.equals("")) {
             emptySubmissionName = true;
           } else {
-            // XXX MJL check update & log
             RequiredSubmission req = database.getRequiredSubmission(id);
             req.setSubmissionName(value);
             
@@ -2862,11 +2865,9 @@ public class TransactionHandler {
           }
         } else if (field.startsWith(AccessController.P_REQFILETYPE)) {
           String id = field.split(AccessController.P_REQFILETYPE)[1];
-          // XXX MJL check update & log
           RequiredSubmission req = database.getRequiredSubmission(id);
           req.addRequiredFileType(value);
         } else if (field.startsWith(AccessController.P_REQSIZE)) {
-          // XXX MJL check update & log
           String id = field.split(AccessController.P_REQSIZE)[1];
           RequiredSubmission req = database.getRequiredSubmission(id);
           try {
@@ -2884,7 +2885,6 @@ public class TransactionHandler {
           } else if (value.equals("")) {
             emptySubmissionName = true;
           } else {
-            // XXX MJL check update & log
             String id = field.split(AccessController.P_NEWREQFILENAME)[1];
             RequiredSubmission req = (RequiredSubmission) newReqs.get(id);
             if (req == null) {
@@ -2897,7 +2897,6 @@ public class TransactionHandler {
             numOfAssignedFiles++;
           }
         } else if (field.startsWith(AccessController.P_NEWREQFILETYPE)) {
-          // XXX MJL check update & log
           String id = field.split(AccessController.P_NEWREQFILETYPE)[1];
           RequiredSubmission req = (RequiredSubmission) newReqs.get(id);
           if (req == null) {
@@ -2906,7 +2905,6 @@ public class TransactionHandler {
           }
           req.addRequiredFileType(value);
         } else if (field.startsWith(AccessController.P_NEWREQSIZE)) {
-          // XXX MJL check & update log
           String id = field.split(AccessController.P_NEWREQSIZE)[1];
           try {
             int size = Integer.parseInt(value);
@@ -2931,7 +2929,6 @@ public class TransactionHandler {
           } else if (value.equals("")) {
             emptyItemName = true;
           } else {
-            // XXX MJL check update & log
             AssignmentItem ai = (AssignmentItem) newItems.get(id);
             if (ai == null) {
               ai = new AssignmentItem(assign);
@@ -2950,29 +2947,24 @@ public class TransactionHandler {
           } else if (value.equals("")) {
             emptyItemName = true;
           } else {
-            // XXX MJL check update & log
             AssignmentItem ai = database.getAssignmentItem(id);
             ai.setItemName(value);
           }
         } else if (field.startsWith(AccessController.P_REMOVEREQ)) {
-          // XXX MJL check update & log
           String id = field.split(AccessController.P_REMOVEREQ)[1];
           RequiredSubmission req = database.getRequiredSubmission(id);
           req.setHidden(true);
           numOfAssignedFiles--;
         } else if (field.startsWith(AccessController.P_REMOVEITEM)) {
-          // XXX MJL check update & log
           String id = field.split(AccessController.P_REMOVEITEM)[1];
           AssignmentItem ai = database.getAssignmentItem(id);
           ai.setHidden(true);
         } else if (field.startsWith(AccessController.P_RESTOREREQ)) {
-          // XXX MJL check update & log
           String id = field.split(AccessController.P_RESTOREREQ)[1];
           RequiredSubmission req = database.getRequiredSubmission(id);
           req.setHidden(false);
           numOfAssignedFiles++;
         } else if (field.startsWith(AccessController.P_RESTOREITEM)) {
-          // XXX MJL check update & log
           String id = field.split(AccessController.P_RESTOREITEM)[1];
           AssignmentItem ai = database.getAssignmentItem(id);
           ai.setHidden(false);
@@ -2986,16 +2978,16 @@ public class TransactionHandler {
             result.addError("Error: Conflicting files chosen to replace assignment item.<br>");
             proceed = false;
           } else {
-            // XXX MJL check update & log
+            restoredFiles.add(itemID);
+            replacedItems.add(itemID);
+            
             AssignmentFile af = database.getAssignmentFile(fileID);
             af.setHidden(false);
           }
         } else if (field.equals(AccessController.P_REMOVESOL)) {
-          // XXX MJL check update & log
           assign.removeCurrentSolutionFile();
         } else if (field.startsWith(AccessController.P_RESTORESOL)) {
           String id = field.split(AccessController.P_RESTORESOL)[1];
-          // XXX MJL check update & log
           SolutionFile sol = database.getSolutionFile(id);
           sol.setHidden(false);
         } else if (field.startsWith(AccessController.P_SUBPROBNAME)) {
@@ -3005,10 +2997,9 @@ public class TransactionHandler {
             String id = field.split(AccessController.P_SUBPROBNAME)[1];
             SubProblem subProblem = database.getSubProblem(id);
             
-            // XXX MJL check update & log
             // Assign subproblem orders in the order that they appear in the form
             subProblem.setOrder(order++);
-            subProblem.setSubProblemName(value);
+            subProblem.setName(value);
             probNames.add(value);
   
             // reset the choice lettering
@@ -3019,7 +3010,6 @@ public class TransactionHandler {
             float maxscore = StringUtil.parseFloat(value);
             if (maxscore < 0.0f) throw new NumberFormatException();
             
-            // XXX MJL check update & log
             String id = field.split(AccessController.P_SUBPROBSCORE)[1];
             SubProblem subProblem = database.getSubProblem(id);
             subProblem.setMaxScore(maxscore);
@@ -3033,7 +3023,6 @@ public class TransactionHandler {
           }
         } else if (field.startsWith(AccessController.P_REMOVECHOICE)) {
           String id = field.split(AccessController.P_REMOVECHOICE)[1];
-          // XXX MJL check update & log
           Choice choice = database.getChoice(id);
           choice.remove();
         } else if (field.startsWith(AccessController.P_NEWSUBPROBNAME)) {
@@ -3050,10 +3039,9 @@ public class TransactionHandler {
               newSubProbs.put(id, sp);
             }
   
-            // XXX MJL check update & log
             // Assign subproblem orders in the order that they appear in the form
             sp.setOrder(order++);
-            sp.setSubProblemName(value);
+            sp.setName(value);
             probNames.add(value);
   
             // reset the choice lettering
@@ -3071,7 +3059,6 @@ public class TransactionHandler {
             float maxscore = StringUtil.parseFloat(value);
             if (maxscore < 0.0f) throw new NumberFormatException();
             
-            // XXX MJL check update & log
             sp.setMaxScore(maxscore);
             probScores.put("#" + id, new Float(maxscore));
           } catch (NumberFormatException e) {
@@ -3080,12 +3067,10 @@ public class TransactionHandler {
           }
         } else if (field.startsWith(AccessController.P_RESTORESUBPROB)) {
           String id = field.split(AccessController.P_RESTORESUBPROB)[1];
-          // XXX MJL check update & log
           SubProblem sp = database.getSubProblem(id);
           sp.setHidden(false);
         } else if (field.startsWith(AccessController.P_REMOVESUBPROB)) {
           String id = field.split(AccessController.P_REMOVESUBPROB)[1];
-          // XXX MJL check update & log
           SubProblem sp = database.getSubProblem(id);
           sp.setHidden(true);
         }
@@ -3097,7 +3082,6 @@ public class TransactionHandler {
           try {
             int correctChoice = Integer.parseInt(value);
             if (correctChoice < 0) throw new NumberFormatException();
-            // XXX MJL check update & log
             sp.setAnswer(correctChoice);
           } catch (NumberFormatException e) {
             result.addError("Correct choices must be positive numbers");
@@ -3109,7 +3093,6 @@ public class TransactionHandler {
           try {
             int questtype = Integer.parseInt(value);
             if (questtype < 0) throw new NumberFormatException();
-            // XXX MJL check update & log
             sp.setType(questtype);
           } catch (NumberFormatException e) {
             result.addError("Question types must be positive numbers");
@@ -3120,7 +3103,6 @@ public class TransactionHandler {
           String questID = tokens[1];
           String choiceID = tokens[2];
 
-          // XXX MJL check update & log
           // TODO: questID not used
           Choice choice = database.getChoice(choiceID);
           choice.setText(value);
@@ -3136,7 +3118,6 @@ public class TransactionHandler {
           try {
             int correctChoice = Integer.parseInt(value);
             if (correctChoice < 0) throw new NumberFormatException();
-            // XXX MJL check update & log
             sp.setAnswer(correctChoice);
           } catch (NumberFormatException e) {
             result.addError("Correct choices must be positive numbers");
@@ -3153,14 +3134,13 @@ public class TransactionHandler {
           try {
             int questtype = Integer.parseInt(value);
             if (questtype < 0) throw new NumberFormatException();
-            // XXX MJL check update & log
             sp.setType(questtype);
           } catch (NumberFormatException e) {
             result.addError("Question types must be positive numbers");
             proceed = false;
           }
         } else if (field.startsWith(AccessController.P_NEWSUBPROBORDER)) {
-          String id = field.split(AccessController.P_NEWSUBPROBTYPE)[1];
+          String id = field.split(AccessController.P_NEWSUBPROBORDER)[1];
           SubProblem sp = (SubProblem) newSubProbs.get(id);
           if (sp == null) {
             sp = new SubProblem(assign);
@@ -3170,7 +3150,6 @@ public class TransactionHandler {
           try {
             int questorder = Integer.parseInt(value);
             if (questorder < 0) throw new NumberFormatException();
-            // XXX MJL check update & log
             sp.setOrder(questorder);
           } catch (NumberFormatException e) {
             result.addError("Question orders must be positive numbers");
@@ -3187,7 +3166,6 @@ public class TransactionHandler {
             newChoices.put(choiceID, choice);
           }
 
-          // XXX MJL check update & log
           choice.setText(value);
           choice.setLetter(Character.toString(letter++));
         } else {
@@ -3201,25 +3179,30 @@ public class TransactionHandler {
         FileData value = (FileData) entry.getValue();
 
         if (field.equals(AccessController.P_SOLFILE)) {
-          // XXX MJL check update & log
-          SolutionFile file = new SolutionFile(assign, false, value);
+          newSolution = new SolutionFile(assign, false, value);
         } else if (field.startsWith(AccessController.P_NEWITEMFILE)) {
-          // XXX MJL check update & log
           String id = field.split(AccessController.P_NEWITEMFILE)[1];
           AssignmentItem ai = (AssignmentItem) newItems.get(id);
-          AssignmentFile file = new AssignmentFile(ai, false, value);
+          if (ai == null) {
+            ai = new AssignmentItem(assign);
+            newItems.put(id, ai);
+          }
+          
+          new AssignmentFile(ai, false, value);
         } else if (field.startsWith(AccessController.P_ITEMFILE)) {
           String id = field.split(AccessController.P_ITEMFILE)[1];
-          if (replacedItems.contains(id)) {
+          if (!replacedItems.add(id)) {
             throw new FileUploadException("Error: Conflicting files chosen to replace assignment item.<br>");
           }
           
-          // XXX MJL check update & log
           AssignmentItem ai = database.getAssignmentItem(id);
           AssignmentFile file = new AssignmentFile(ai, false, value);
         } else {
           System.out.println("Not parsed (file): " + field);
+          continue;
         }
+        
+        // Check 
       }
 
       //
@@ -3359,11 +3342,21 @@ public class TransactionHandler {
       if (probScores.size() > 0 && total != score && type != Assignment.QUIZ) {
         result.addError("Problem scores sum (" + total
             + ") does not equal the Total Score (" + score + ")");
+        proceed = false;
       }
 
-      // XXX MJL What are lines 3651ff in the original source doing?
-      // XXX MJL Are they different from what follows?
-
+      // XXX MJL What are lines 3651-3712 in the original source doing?
+      
+      for (Iterator iit = newItems.values().iterator(); iit.hasNext();) {
+        AssignmentItem ai = (AssignmentItem) iit.next();
+        if (ai.getAssignmentFile() == null) {
+          result.addError("No file provided for assignment file " + ai.getItemName());
+          proceed = false;
+        }
+      }
+      
+//      for (Iterator replacedItemIt = )
+      
       if (proceed && !result.hasErrors()) {
         assign.setName(name);
         assign.setNameShort(nameshort);
@@ -3390,8 +3383,83 @@ public class TransactionHandler {
         assign.setGroupLimit(new Integer(TSMaxGroups));
         assign.setTimeslotLockTime(TSLockedTime);
         assign.setType(type);
+        
+        // If score was not set, compute maxScore by adding all subproblem scores.
+        if (score < 0.01) {
+          assign.setMaxScore(0/*XXX MJL Fix this*/);
+          throw new NotImplementedException();
+        }
+        else assign.setMaxScore(score);
 
-        assign.importGroups(groupsFrom);
+        if (newAssign) {
+          if (groupsFrom != null)
+            assign.importGroups(groupsFrom);
+          else assign.createGroups();
+        }
+
+        // Logging.
+        Log log = transactions.startLog(p);
+        log.setCourse(course);
+        log.setLogType(Log.LOG_COURSE);
+        if (newAssign) {
+          log.setLogName(Log.CREATE_ASSIGNMENT);
+          new LogDetail(log, "Created new assignment '" + name + "'");
+          
+          for (Iterator rit = newReqs.values().iterator(); rit.hasNext();) {
+            RequiredSubmission rs = (RequiredSubmission) rit.next();
+            String types = "";
+            for (Iterator tit = rs.getRequiredFileTypes().iterator(); tit.hasNext();) {
+              String fileType = (String) tit.next();
+              types += (types.isEmpty() ? "" : ", ") + fileType;
+            }
+            
+            new LogDetail(log, "Added required submission '"
+                + rs.getSubmissionName() + "' with accepted types: " + types);
+          }
+          
+          for (Iterator iit = newItems.values().iterator(); iit.hasNext();) {
+            AssignmentItem ai = (AssignmentItem) iit.next();
+            new LogDetail(log, "Added assignment file '"
+                + ai.getAssignmentFile().getFileName() + "' as '"
+                + ai.getItemName() + "'");
+          }
+          
+          if (newSolution != null) {
+            new LogDetail(log, "Added solution file '"
+                + newSolution.getFile().getName());
+          }
+          
+          for (Iterator spit = newSubProbs.values().iterator(); spit.hasNext();) {
+            SubProblem sp = (SubProblem) spit.next();
+            String subProbName = sp.getName();
+            new LogDetail(log, "Added problem '" + subProbName + "' worth " +
+                sp.getMaxScore() + " points");
+            
+            for (Iterator cit = sp.getChoices().iterator(); cit.hasNext();) {
+              Choice choice = (Choice) cit.next();
+              new LogDetail(log, "Added choice '" + choice.getText() + " ("
+                  + choice.getLetter() + ")' to problem '" + subProbName + "'");
+            }
+          }
+          
+          if (groupsFrom == null) {
+            new LogDetail(log, "Created new groups for each student");
+          } else {
+            new LogDetail(log, "Imported groups from '" + groupsFrom.getName()
+                + "'");
+          }
+        } else {
+          log.setLogName(Log.EDIT_ASSIGNMENT);
+        }
+        
+        
+//         XXX No support for email yet.
+//        if (newAssign) {
+//          if (status.equals(Assignment.OPEN))
+//            sendNewAssignEmails(assign, course, log);
+//          else if (status.equals(Assignment.GRADED))
+//            sendGradeReleaseEmails(assign, log);
+//        }
       }
     } catch (UploadTooBigException e) {
       result.addError(e.getMessage(), e);
@@ -4080,7 +4148,7 @@ public class TransactionHandler {
       row[0] = "NetID";
       Iterator iter = subProbs.iterator();
       for (int i = 1; i < n; i++)
-        row[i] = ((SubProblem) iter.next()).getSubProblemName();
+        row[i] = ((SubProblem) iter.next()).getName();
       row[n] = subProbs.isEmpty() ? "Grade" : "Total";
       out.println(row);
       

@@ -2,6 +2,8 @@ package cms.model;
 
 import java.util.Date;
 
+import org.apache.commons.fileupload.FileUploadException;
+
 public class AssignmentFile implements FileEntry {
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -9,7 +11,7 @@ public class AssignmentFile implements FileEntry {
 
   private Date           fileDate;
   private FileData       file;
-  private AssignmentItem assignmentItem;
+  private final AssignmentItem assignmentItem;
   private boolean        hidden;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -18,7 +20,6 @@ public class AssignmentFile implements FileEntry {
 
   public void setFile           (final FileData file)                 { this.file           = file;           }
   public void setFileDate       (final Date fileDate)                 { this.fileDate       = fileDate;       }
-  public void setAssignmentItem (final AssignmentItem assignmentItem) { this.assignmentItem = assignmentItem; }
   public void setHidden         (final boolean hidden)                { this.hidden         = hidden;         }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -34,14 +35,26 @@ public class AssignmentFile implements FileEntry {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public AssignmentFile(AssignmentItem item, boolean isHidden, FileData file) {
-    setAssignmentItem(item);
+  public AssignmentFile(AssignmentItem item, boolean isHidden, FileData file)
+      throws FileUploadException {
+    this.assignmentItem = item;
     setFileDate(new Date());
     setFile(file);
+    
+    if (assignmentItem.file != null) {
+      throw new FileUploadException("Error: Conflicting files chosen for assignment item.<br>");
+    }
+    
+    assignmentItem.file = this;
   }
+  
   public boolean isFileAuthorized(User user) {
     // See TransactionHandler.authorizeDownload
     throw new NotImplementedException();
+  }
+
+  public String getFileName() {
+    return file.getName();
   }
 }
 

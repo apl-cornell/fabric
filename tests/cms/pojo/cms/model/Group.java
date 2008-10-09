@@ -7,7 +7,7 @@ public class Group {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
   
-  private Assignment assignment;
+  private final Assignment assignment;
   private Date       latestSubmission;
   private Date       extension;
   private int        fileCounter;
@@ -18,7 +18,6 @@ public class Group {
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
   
-  public void setAssignment           (final Assignment assignment)           { this.assignment           = assignment;           }
   public void setLatestSubmission     (final Date latestSubmission)           { this.latestSubmission     = latestSubmission;     }
   public void setExtension            (final Date extension)                  { this.extension            = extension;            }
   public void setFileCounter          (final int fileCounter)                 { this.fileCounter          = fileCounter;          }
@@ -44,14 +43,14 @@ public class Group {
   // managed views                                                            //
   //////////////////////////////////////////////////////////////////////////////
 
-  Map/*User, GroupMember*/ members;  // by GroupMember
+  final Map/*User, GroupMember*/ members;  // by GroupMember
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
   public Group(Assignment assign, int remainingSubmissions) {
-    setAssignment(assign);
+    this.assignment = assign;
     setTimeSlot(null);
     setRemainingSubmissions(remainingSubmissions);
     setExtension(null);
@@ -59,6 +58,7 @@ public class Group {
     setLatestSubmission(null);
     
     assign.groups.add(this);
+    this.members = new HashMap();
   }
   
   public Collection/*Comment*/ getComments() {

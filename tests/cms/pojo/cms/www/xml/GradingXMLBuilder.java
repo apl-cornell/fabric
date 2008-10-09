@@ -133,7 +133,7 @@ public class GradingXMLBuilder {
           XMLBuilder.TAG_SUBPROBLEM + subprob.toString(),
           XMLBuilder.TAG_SUBPROBLEM);
       xSubProb.setAttribute(XMLBuilder.A_SUBPROBID, subprob.toString());
-      xSubProb.setAttribute(XMLBuilder.A_NAME,      subprob.getSubProblemName());
+      xSubProb.setAttribute(XMLBuilder.A_NAME,      subprob.getName());
       xSubProb.setAttribute(XMLBuilder.A_SCORE,
                             StringUtil.roundToOne(String.valueOf(subprob.getMaxScore())));
       xSubProb.setAttribute(XMLBuilder.A_ORDER,
@@ -377,7 +377,7 @@ public class GradingXMLBuilder {
           xRegrade.setAttribute(XMLBuilder.A_SUBPROBNAME,
                                 (regrade.getSubProblem() == null ?
                                     "All problems" :
-                                    regrade.getSubProblem().getSubProblemName()));
+                                    regrade.getSubProblem().getName()));
           xRegrade.setAttribute(XMLBuilder.A_STATUS,
                                 regrade.getStatus());
           xRegrade.setAttribute(XMLBuilder.A_DATE,

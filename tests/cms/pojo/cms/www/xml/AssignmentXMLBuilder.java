@@ -395,7 +395,7 @@ public class AssignmentXMLBuilder {
       // SubProblem sp= (SubProblem)orderToSubProblem.get(j.next());
       SubProblem sp = (SubProblem) i.next();
       Element xProb = xml.createElement(XMLBuilder.TAG_SUBPROBLEM);
-      xProb.setAttribute(XMLBuilder.A_NAME, sp.getSubProblemName());
+      xProb.setAttribute(XMLBuilder.A_NAME, sp.getName());
       xProb.setAttribute(XMLBuilder.A_TOTALSCORE, StringUtil.trimTrailingZero(Float
           .toString(sp.getMaxScore())));
       xProb.setAttribute(XMLBuilder.A_ID, sp.toString());
@@ -427,7 +427,7 @@ public class AssignmentXMLBuilder {
     while (i.hasNext()) {
       SubProblem sp = (SubProblem) i.next();
       Element xProb = xml.createElement(XMLBuilder.TAG_HIDDENSUBPROB);
-      xProb.setAttribute(XMLBuilder.A_NAME, sp.getSubProblemName());
+      xProb.setAttribute(XMLBuilder.A_NAME, sp.getName());
       xProb.setAttribute(XMLBuilder.A_TOTALSCORE, StringUtil.trimTrailingZero(Float
           .toString(sp.getMaxScore())));
       xProb.setAttribute(XMLBuilder.A_ID, sp.toString());
@@ -521,7 +521,7 @@ public class AssignmentXMLBuilder {
       xSubproblem.setAttribute(XMLBuilder.A_ID, subproblem.toString());
       xSubproblem.setAttribute(XMLBuilder.A_TYPE, Integer.toString(stype));
       xSubproblem.setAttribute(XMLBuilder.A_ORDER, Integer.toString(order));
-      xSubproblem.setAttribute(XMLBuilder.A_NAME, subproblem.getSubProblemName());
+      xSubproblem.setAttribute(XMLBuilder.A_NAME, subproblem.getName());
       xSubproblem.setAttribute(XMLBuilder.A_MAXSCORE, Float.toString(subproblem
           .getMaxScore()));
 

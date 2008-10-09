@@ -1624,7 +1624,7 @@ public class XMLBuilder {
         SubProblem subProblem = currentRegrade.getSubProblem();
         if (subProblem != null) {
           // there is a subProblem associated with regrade, get the name
-          comment.setAttribute(XMLBuilder.A_SUBPROBNAME, subProblem.getSubProblemName());
+          comment.setAttribute(XMLBuilder.A_SUBPROBNAME, subProblem.getName());
         }
         currentRegrade = iRegrade.hasNext() ? (RegradeRequest) iRegrade.next()
                                             : null;
@@ -1701,7 +1701,7 @@ public class XMLBuilder {
       int type = subproblem.getType();
       sidToTypeMap.put(subproblem, new Integer(type));
       sidToIndexMap.put(subproblem, new Integer(count));
-      firstRow[count] = subproblem.getSubProblemName();
+      firstRow[count] = subproblem.getName();
     }
     csv.add(firstRow);
 

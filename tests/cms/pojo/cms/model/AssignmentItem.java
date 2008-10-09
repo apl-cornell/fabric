@@ -1,22 +1,30 @@
 package cms.model;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public class AssignmentItem {
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private Assignment assignment;
-  private String     itemName;
+  private final Assignment assignment;
+  private String     name;
   private boolean    hidden;
+  
+  //////////////////////////////////////////////////////////////////////////////
+  // protected members                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+  
+  final Set hiddenFiles;
+  AssignmentFile file;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setAssignment (final Assignment assignment) { this.assignment = assignment; }
-  public void setItemName   (final String itemName)       { this.itemName   = itemName;   }
+  public void setItemName   (final String itemName)       { this.name   = itemName;   }
   public void setHidden     (final boolean hidden)        { this.hidden     = hidden;     }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -24,7 +32,7 @@ public class AssignmentItem {
   //////////////////////////////////////////////////////////////////////////////
 
   public Assignment getAssignment() { return this.assignment; }
-  public String     getItemName()   { return this.itemName;   }
+  public String     getItemName()   { return this.name;   }
   public boolean    getHidden()     { return this.hidden;     }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -32,19 +40,21 @@ public class AssignmentItem {
   //////////////////////////////////////////////////////////////////////////////
 
   public AssignmentItem(Assignment assign, String name) {
-    setAssignment(assignment);
+    this.assignment = assign;
     setItemName(name);
     setHidden(false);
+    
+    this.hiddenFiles = new HashSet();
   }
   
   public AssignmentItem(Assignment assign) {
-    throw new NotImplementedException();
+    this(assign, "");
   }
-  // Note: I think it may be the case that an assignment item has a unique
-  // non-hidden file and then a collection of hidden files, but I'm not sure.
+  
   public AssignmentFile getAssignmentFile() {
-    throw new NotImplementedException();
+    return file;
   }
+  
   public Collection/*AssignmentFile*/ findHiddenAssignmentFiles() {
     throw new NotImplementedException();
   }

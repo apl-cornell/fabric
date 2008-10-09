@@ -316,7 +316,7 @@ public class User implements Principal {
   }
   
   public boolean isAssignPrivByAssignment(Assignment assignment) {
-    throw new NotImplementedException();
+    return isAssignPrivByCourse(assignment.getCourse());
   }
   public boolean isAuthenticated() {
     return this != db.getGuestUser();

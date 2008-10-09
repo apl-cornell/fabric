@@ -1,6 +1,9 @@
 package cms.model;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class RequiredSubmission {
 
@@ -11,16 +14,16 @@ public class RequiredSubmission {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private Assignment assignment;
+  private final Assignment assignment;
   private String     submissionName;
   private int        maxSize;
   private boolean    hidden;
+  private final Set fileTypes;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setAssignment     (final Assignment assignment)     { this.assignment     = assignment;     }
   public void setSubmissionName (final String submissionName)     { this.submissionName = submissionName; }
   public void setMaxSize        (final int maxSize)               { this.maxSize        = maxSize;        }
   public void setHidden         (final boolean hidden)            { this.hidden         = hidden;         }
@@ -39,26 +42,27 @@ public class RequiredSubmission {
   //////////////////////////////////////////////////////////////////////////////
 
   public RequiredSubmission(Assignment assign, String name, int maxSize) {
-    setAssignment(assign);
+    this.assignment = assign;
     setSubmissionName(name);
     setMaxSize(maxSize);
     setHidden(false);
+    this.fileTypes = new HashSet();
   }
 
   public RequiredSubmission(Assignment assign) {
-    throw new NotImplementedException();
+    this(assign, "", 0);
   }
   public boolean isHidden() {
     throw new NotImplementedException();
   }
   public Collection/*String*/ getRequiredFileTypes() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(fileTypes);
   }
   public String matchFileType(String givenFileType) {
     throw new NotImplementedException();
   }
   public void addRequiredFileType(String value) {
-    throw new NotImplementedException();
+    fileTypes.add(value);
   }
 
 }

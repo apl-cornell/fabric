@@ -42,8 +42,8 @@ public class FileData {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public FileData(String fileName) {
-    // fileName is neglected
+  public FileData(String name) {
+    this.name = name;
     this.state = new Initialized(); 
   }
 

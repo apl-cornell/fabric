@@ -10,7 +10,7 @@ public class Semester implements Comparable {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private final CMSRoot database;
+  final CMSRoot database;
   private final String  name;
   private boolean hidden;
   

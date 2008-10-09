@@ -6,7 +6,7 @@ public class Choice {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private SubProblem subProblem;
+  private final SubProblem subProblem;
   private String     letter;
   private String     text;
   private boolean    hidden;
@@ -15,7 +15,6 @@ public class Choice {
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public void setSubProblem (final SubProblem subProblem) { this.subProblem = subProblem; }
   public void setLetter     (final String letter)         { this.letter       = letter;       }
   public void setText       (final String text)           { this.text         = text;         }
   public void setHidden     (final boolean hidden)        { this.hidden       = hidden;       }
@@ -34,10 +33,12 @@ public class Choice {
   //////////////////////////////////////////////////////////////////////////////
 
   public Choice(SubProblem subproblem, String letter, String text, boolean hidden) {
-    setSubProblem(subproblem);
+    this.subProblem = subproblem;
     setLetter(letter);
     setText(text);
     setHidden(hidden);
+    
+    subproblem.choices.put(toString(), this);
   }
   public Choice(SubProblem sp) {
     throw new NotImplementedException();
