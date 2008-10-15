@@ -197,17 +197,21 @@ public class GradingXMLBuilder {
       Assignment assignment) {
     Profiler.enterMethod("GradingXMLBuilder.addGrades", "");
 
-    Iterator grades = assignment.getGrades().iterator();
     Element root = (Element) xml.getFirstChild();
-    while (grades.hasNext()) {
+    
+    boolean canSeeAllGrades =
+        !assignment.getAssignedGraders()
+            || user.isAdminPrivByCourse(assignment.getCourse());
+    // XXX This does not reflect the original code's behaviour. The "groups"
+    // variable is completely ignored here. --MJL
+    for (Iterator grades = assignment.getGrades().iterator(); grades.hasNext();) {
       Grade grade = (Grade) grades.next();
       Group group = assignment.findGroup(grade.getUser());
       
       // check user's authorization to view the grade
       // TODO: still not totally sure if this is correct wrt CMS
-      if (assignment.getAssignedGraders() &&
-         !user.isAdminPrivByCourse(assignment.getCourse()) &&
-         !GroupAssignedTo.isAssignedTo(grade.getSubProblem(), group, user))
+      if (!canSeeAllGrades
+          && !GroupAssignedTo.isAssignedTo(grade.getSubProblem(), group, user))
         continue;
       
       Element xGroup = (Element) root.getElementsByTagNameNS(

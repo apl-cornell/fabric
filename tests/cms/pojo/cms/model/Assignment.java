@@ -20,7 +20,7 @@ public class Assignment implements Comparable {
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  private final Course course;
+  final Course course;
   private final int id;
   private String name, nameShort;
   private String description;

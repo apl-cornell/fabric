@@ -59,8 +59,9 @@ public class CMSRoot {
   final Map/*String, Course*/ courses; // Managed by Course.  Maps CourseIDs to Courses.
   final Collection/*Log*/ logs; // Managed by Log.
   
-  // XXX YUCK
+  // XXX YUCK  These wouldn't be needed if our URLs gave us more information.
   final Map/*String, Assignment*/ assignments; // Managed by Assignment.
+  final Map/*String, Group*/ groups; // Managed by Group.
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
@@ -73,6 +74,7 @@ public class CMSRoot {
     this.courses = new HashMap/*String, Course*/();
     this.logs = new ArrayList();
     this.assignments = new HashMap();
+    this.groups = new HashMap();
     
     this.debugMode = true;
 
@@ -313,7 +315,7 @@ public class CMSRoot {
   }
   
   public Group getGroup(String groupID) {
-    throw new NotImplementedException();
+    return (Group) groups.get(groupID);
   }
   
   public Semester getSemester(String semesterID) {

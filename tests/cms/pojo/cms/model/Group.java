@@ -58,6 +58,7 @@ public class Group {
     setLatestSubmission(null);
     
     assign.groups.add(this);
+    assign.course.semester.database.groups.put(toString(), this);
     this.members = new HashMap();
   }
   

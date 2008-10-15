@@ -347,7 +347,7 @@ public class User implements Principal {
     throw new NotImplementedException();
   }
   public boolean isGradesPrivByAssignment(Assignment assign) {
-    throw new NotImplementedException();
+    return isGradesPrivByCourse(assign.getCourse());
   }
   public boolean isGroupsPrivByAssignment(Assignment assign) {
     throw new NotImplementedException();

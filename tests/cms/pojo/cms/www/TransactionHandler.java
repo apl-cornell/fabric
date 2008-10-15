@@ -2630,6 +2630,11 @@ public class TransactionHandler {
    */
   public TransactionResult setAssignmentProps(User p, Course course,
       Assignment assign, HttpServletRequest request) {
+    // XXX This code has been vetted for assignment-creation and should match
+    // XXX the original CMS's behaviour.  This code still needs to be vetted
+    // XXX for assignment-editing.  Amongst other things, the creation of
+    // XXX audit logs is missing.  --MJL
+    
     Profiler.enterMethod("TransactionHandler.setAssignmentProps",
         "AssignmentID: " + assign);
     TransactionResult result = new TransactionResult();
@@ -3201,8 +3206,6 @@ public class TransactionHandler {
           System.out.println("Not parsed (file): " + field);
           continue;
         }
-        
-        // Check 
       }
 
       //
@@ -3344,8 +3347,6 @@ public class TransactionHandler {
             + ") does not equal the Total Score (" + score + ")");
         proceed = false;
       }
-
-      // XXX MJL What are lines 3651-3712 in the original source doing?
       
       for (Iterator iit = newItems.values().iterator(); iit.hasNext();) {
         AssignmentItem ai = (AssignmentItem) iit.next();
