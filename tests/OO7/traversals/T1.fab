@@ -27,8 +27,7 @@ public class T1 extends PrivatePartTraversal {
   public void visitAtomicPart (AtomicPart current) {
     if (visited.containsKey(current)) return;
     visited.put(current, current);
-    Core local = Client.getClient().getLocalCore();
-    Iterator iter = current.from().iterator(local);
+    Iterator iter = current.from().iterator();
     while (iter.hasNext()) {
       Connection connection = (Connection) iter.next();
       AtomicPart part = connection.to();

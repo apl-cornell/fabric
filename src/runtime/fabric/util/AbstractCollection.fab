@@ -90,6 +90,11 @@ public abstract class AbstractCollection implements Collection
    */
   public abstract Iterator iterator(fabric.client.Core core);
 
+  public Iterator iterator() {
+    Core local = Client.getClient().getLocalCore();
+    return iterator(local);
+  }
+
   /**
    * Return the number of elements in this collection. If there are more than
    * Integer.MAX_VALUE elements, return Integer.MAX_VALUE.

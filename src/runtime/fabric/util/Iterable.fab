@@ -4,8 +4,13 @@ import fabric.client.Core;
 
 public interface Iterable {
   /**
-   * Creates an interator on the given core.
+   * Creates an iterator on the given core.
    */
   Iterator iterator(Core core);
+
+  /**
+   * Creates an iterator on the local core.
+   */
+  Iterator iterator();
 }
 

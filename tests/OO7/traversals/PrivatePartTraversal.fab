@@ -13,8 +13,7 @@ public abstract class PrivatePartTraversal extends Traversal {
 
   public void visitBenchmark (Benchmark b) {
     atomic {
-      Core local = Client.getClient().getLocalCore();
-      Iterator i = b.modulesById().values().iterator(local);
+      Iterator i = b.modulesById().values().iterator();
       while (i.hasNext())
         visitModule((Module) i.next());
     }
@@ -25,15 +24,13 @@ public abstract class PrivatePartTraversal extends Traversal {
   }
   
   public void visitComplexAssembly (ComplexAssembly ca) {
-    Core local = Client.getClient().getLocalCore();
-    Iterator i = ca.subAssemblies().iterator(local);
+    Iterator i = ca.subAssemblies().iterator();
     while (i.hasNext())
       ((Assembly) i.next()).accept(this);
   }
   
   public void visitBaseAssembly (BaseAssembly ba) {
-    Core local = Client.getClient().getLocalCore();
-    Iterator i = ba.componentsShar().iterator(local);
+    Iterator i = ba.componentsShar().iterator();
     while (i.hasNext())
       ((CompositePart) i.next()).accept(this);
   }
