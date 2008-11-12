@@ -39,11 +39,6 @@ exception statement from your version. */
 
 package fabric.util;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-
 /**
  * This class provides a red-black tree implementation of the SortedMap
  * interface.  Elements in the Map will be sorted by either a user-provided
@@ -91,7 +86,7 @@ import java.io.Serializable;
  * @status updated to 1.4
  */
 public class TreeMap extends AbstractMap
-  implements SortedMap, Cloneable, Serializable
+  implements SortedMap
 {
   // Implementation note:
   // A red-black tree is a binary search tree with the additional properties
@@ -99,11 +94,6 @@ public class TreeMap extends AbstractMap
   // and no red node has red children. To avoid some null-pointer checks,
   // we use the special node nil which is always black, has no relatives,
   // and has key and value of null (but is not equal to a mapping of null).
-
-  /**
-   * Compatible with JDK 1.2.
-   */
-  private static final long serialVersionUID = 919286545866124006L;
 
   /**
    * Color status of a node. Package visible for use by nested classes.
@@ -273,38 +263,6 @@ public class TreeMap extends AbstractMap
         root = nil;
         size = 0;
       }
-  }
-
-  /**
-   * Returns a shallow clone of this TreeMap. The Map itself is cloned,
-   * but its contents are not.
-   *
-   * @return the clone
-   */
-  public Object clone()
-  {
-    TreeMap copy = null;
-    try
-      {
-        copy = (TreeMap) super.clone();
-      }
-    catch (CloneNotSupportedException x)
-      {
-      }
-    copy.entries = null;
-    copy.fabricateTree(size);
-
-    Node node = firstNode();
-    Node cnode = copy.firstNode();
-
-    while (node != nil)
-      {
-        cnode.key = node.key;
-        cnode.value = node.value;
-        node = successor(node);
-        cnode = copy.successor(cnode);
-      }
-    return copy;
   }
 
   /**
@@ -1141,33 +1099,6 @@ public class TreeMap extends AbstractMap
   }
 
   /**
-   * Construct a tree from sorted keys in linear time. Package visible for
-   * use by TreeSet.
-   *
-   * @param s the stream to read from
-   * @param count the number of keys to read
-   * @param readValues true to read values, false to insert "" as the value
-   * @throws ClassNotFoundException if the underlying stream fails
-   * @throws IOException if the underlying stream fails
-   * @see #readObject(ObjectInputStream)
-   * @see TreeSet#readObject(ObjectInputStream)
-   */
-  final void putFromObjStream(ObjectInputStream s, int count,
-                              boolean readValues)
-    throws IOException, ClassNotFoundException
-  {
-    fabricateTree(count);
-    Node node = firstNode();
-
-    while (--count >= 0)
-      {
-        node.key = s.readObject();
-        node.value = readValues ? s.readObject() : "";
-        node = successor(node);
-      }
-  }
-
-  /**
    * Construct a tree from sorted keys in linear time, with values of "".
    * Package visible for use by TreeSet.
    *
@@ -1186,23 +1117,6 @@ public class TreeMap extends AbstractMap
         node.value = "";
         node = successor(node);
       }
-  }
-
-  /**
-   * Deserializes this object from the given stream.
-   *
-   * @param s the stream to read from
-   * @throws ClassNotFoundException if the underlying stream fails
-   * @throws IOException if the underlying stream fails
-   * @serialData the <i>size</i> (int), followed by key (Object) and value
-   *             (Object) pairs in sorted order
-   */
-  private void readObject(ObjectInputStream s)
-    throws IOException, ClassNotFoundException
-  {
-    s.defaultReadObject();
-    int size = s.readInt();
-    putFromObjStream(s, size, true);
   }
 
   /**
@@ -1354,28 +1268,6 @@ public class TreeMap extends AbstractMap
         parent = parent.parent;
       }
     return parent;
-  }
-
-  /**
-   * Serializes this object to the given stream.
-   *
-   * @param s the stream to write to
-   * @throws IOException if the underlying stream fails
-   * @serialData the <i>size</i> (int), followed by key (Object) and value
-   *             (Object) pairs in sorted order
-   */
-  private void writeObject(ObjectOutputStream s) throws IOException
-  {
-    s.defaultWriteObject();
-
-    Node node = firstNode();
-    s.writeInt(size);
-    while (node != nil)
-      {
-        s.writeObject(node.key);
-        s.writeObject(node.value);
-        node = successor(node);
-      }
   }
 
   /**

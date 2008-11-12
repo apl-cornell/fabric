@@ -38,10 +38,6 @@ exception statement from your version. */
 
 package fabric.util;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
 /**
  * This class provides a TreeMap-backed implementation of the SortedSet
  * interface. The elements will be sorted according to their <i>natural
@@ -79,13 +75,8 @@ import java.io.ObjectOutputStream;
  * @status updated to 1.4
  */
 public class TreeSet extends AbstractSet
-  implements SortedSet//, Cloneable, Serializable
+  implements SortedSet//, Cloneable
 {
-  /**
-   * Compatible with JDK 1.2.
-   */
-  private static final long serialVersionUID = -2479143000061671589L;
-
   /**
    * The SortedMap which backs this Set.
    */
@@ -201,27 +192,6 @@ public class TreeSet extends AbstractSet
   {
     map.clear();
   }
-
-//  /**
-//   * Returns a shallow copy of this Set. The elements are not cloned.
-//   *
-//   * @return the cloned set
-//   */
-//  public Object clone()
-//  {
-//    TreeSet copy = null;
-//    try
-//      {
-//        copy = (TreeSet) super.clone();
-//        // Map may be either TreeMap or TreeMap.SubMap, hence the ugly casts.
-//        copy.map = (SortedMap) ((AbstractMap) map).clone();
-//      }
-//    catch (CloneNotSupportedException x)
-//      {
-//        // Impossible result.
-//      }
-//    return copy;
-//  }
 
   /**
    * Returns this Set's comparator.
@@ -373,43 +343,5 @@ public class TreeSet extends AbstractSet
   public SortedSet tailSet(Object from)
   {
     return new TreeSet(map.tailMap(from));
-  }
-
-  /**
-   * Serializes this object to the given stream.
-   *
-   * @param s the stream to write to
-   * @throws IOException if the underlying stream fails
-   * @serialData the <i>comparator</i> (Object), followed by the set size
-   *             (int), the the elements in sorted order (Object)
-   */
-  private void writeObject(ObjectOutputStream s) throws IOException
-  {
-    s.defaultWriteObject();
-    Iterator itr = map.keySet().iterator(LOCAL_CORE);
-    int pos = map.size();
-    s.writeObject(map.comparator());
-    s.writeInt(pos);
-    while (--pos >= 0)
-      s.writeObject(itr.next());
-  }
-
-  /**
-   * Deserializes this object from the given stream.
-   *
-   * @param s the stream to read from
-   * @throws ClassNotFoundException if the underlying stream fails
-   * @throws IOException if the underlying stream fails
-   * @serialData the <i>comparator</i> (Object), followed by the set size
-   *             (int), the the elements in sorted order (Object)
-   */
-  private void readObject(ObjectInputStream s)
-    throws IOException, ClassNotFoundException
-  {
-    s.defaultReadObject();
-    Comparator comparator = (Comparator) s.readObject();
-    int size = s.readInt();
-    map = new TreeMap(comparator);
-    ((TreeMap) map).putFromObjStream(s, size, false);
   }
 }

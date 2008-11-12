@@ -456,9 +456,18 @@
       <fileset dir="${runtime.src}"
           includes="**/*.fab"
           excludes="fabric/util/*.fab,fabric/lang/arrays/*.fab" />
-      <fileset dir="${runtime.src}"
-	  includes="fabric/util/HashMap.fab,fabric/util/LinkedList.fab,
-	    fabric/util/HashSet.fab,fabric/util/LinkedHashSet.fab,fabric/util/ArrayList.fab,fabric/util/Collections.fab,fabric/util/Arrays.fab" />
+      <filelist dir="${runtime.src}">
+        <file name="fabric/util/HashMap.fab"/>
+        <file name="fabric/util/LinkedList.fab"/>
+        <file name="fabric/util/HashSet.fab"/>
+        <file name="fabric/util/LinkedHashSet.fab"/>
+        <file name="fabric/util/ArrayList.fab"/>
+        <file name="fabric/util/Collections.fab"/>
+        <file name="fabric/util/Arrays.fab"/>
+        <file name="fabric/util/TreeMap.fab"/>
+        <file name="fabric/util/TreeSet.fab"/>
+        </filelist>
+
       <globmapper from="*.fab" to="*.class" />
     </apply>
   </target>
