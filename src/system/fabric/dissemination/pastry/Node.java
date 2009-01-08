@@ -5,6 +5,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 
+import fabric.common.Resources;
+
 import rice.environment.Environment;
 import rice.pastry.NodeIdFactory;
 import rice.pastry.PastryNode;
@@ -26,7 +28,7 @@ public class Node {
 
   public Node() throws IOException {
     // load environment/params file. ".params" is automatically added to the name
-    env = new Environment("etc/pastry");
+    env = new Environment(Resources.relpathRewrite("etc", "pastry"));
     String b = env.getParameters().getString("bootstrap");
     String[] parts = b.split(":");
     String h = parts.length > 0 ? parts[0] : null;

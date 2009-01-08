@@ -12,20 +12,20 @@ import java.util.logging.LogManager;
  * Manages the loading of configuration files
  */
 public class Resources {
-  public static InputStream readFile(String... relpath) throws IOException {
+  public static String relpathRewrite(String...relpath) {
     String filename = prefix;
     for (String name : relpath)
       filename += File.separator + name;
-
-    return new FileInputStream(filename);
+    
+    return filename;
+  }
+  
+  public static InputStream readFile(String... relpath) throws IOException {
+    return new FileInputStream(relpathRewrite(relpath));
   }
 
   public static OutputStream writeFile(String... relpath) throws IOException {
-    String filename = prefix;
-    for (String name : relpath)
-      filename += File.separator + name;
-
-    return new FileOutputStream(filename);
+    return new FileOutputStream(relpathRewrite(relpath));
   }
 
   private static final String prefix;
