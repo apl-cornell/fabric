@@ -183,7 +183,7 @@
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
-  <target name="fabric-system" depends="core,client"
+  <target name="fabric-system" depends="core,client,dissemination"
       description="Builds Fabric"/>
 
   <target name="dust"
@@ -288,6 +288,17 @@
       <include name="fabric/client/**" />
       <include name="fabric/messages/**" />
       <exclude name="fabric/client/debug/**" />
+      <classpath>
+	<path refid="standard.classpath"/>
+	<pathelement location="${bootstrap.classes}" />
+      </classpath>
+    </javac>
+  </target>
+
+  <!-- Compiles the Fabric dissemination node -->
+  <target name="dissemination" depends="client">
+    <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
+      <include name="fabric/dissemination/**" />
       <classpath>
 	<path refid="standard.classpath"/>
 	<pathelement location="${bootstrap.classes}" />
