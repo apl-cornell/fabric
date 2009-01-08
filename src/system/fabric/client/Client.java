@@ -239,7 +239,14 @@ public class Client {
    * Called to shut down and clean up client.
    */
   public void shutdown() {
+    shutdown_();
     fetchManager.destroy();
+  }
+
+  /**
+   * Called to shut down and clean up static client state.
+   */
+  private static void shutdown_() {
     FabricSoftRef.destroy();
   }
 
@@ -304,7 +311,12 @@ public class Client {
   // TODO: throws exception?
   public static void main(String[] args) throws Throwable {
     Options opts = getOpts(args);
-    initialize(opts.name);
+    try {
+      initialize(opts.name);
+    } catch (Throwable t) {
+      shutdown_();
+      throw t;
+    }
 
     // log the command line
     StringBuilder cmd = new StringBuilder("Command Line: Client");
@@ -314,21 +326,21 @@ public class Client {
     }
     log.config(cmd.toString());
 
-    Class<?> mainClass = Class.forName(opts.main[0] + "$$Impl");
-    Method main =
-        mainClass.getMethod("main", new Class[] { ObjectArray.class });
-    String[] newArgs = new String[opts.main.length - 1];
-    for (int i = 0; i < newArgs.length; i++)
-      newArgs[i] = opts.main[i + 1];
-
     Client c = getClient();
 
-    Core local = c.getLocalCore();
-    TransactionManager.getInstance().startTransaction();
-    Object argsProxy = WrappedJavaInlineable.$wrap(local, newArgs);
-    TransactionManager.getInstance().commitTransaction();
-
     try {
+      Class<?> mainClass = Class.forName(opts.main[0] + "$$Impl");
+      Method main =
+          mainClass.getMethod("main", new Class[] { ObjectArray.class });
+      String[] newArgs = new String[opts.main.length - 1];
+      for (int i = 0; i < newArgs.length; i++)
+        newArgs[i] = opts.main[i + 1];
+  
+      Core local = c.getLocalCore();
+      TransactionManager.getInstance().startTransaction();
+      Object argsProxy = WrappedJavaInlineable.$wrap(local, newArgs);
+      TransactionManager.getInstance().commitTransaction();
+
       MainThread.invoke(opts, main, argsProxy);
     } finally {
       c.shutdown();
