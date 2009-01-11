@@ -8,7 +8,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 import fabric.client.Client;
 import fabric.common.InternalError;
@@ -110,7 +109,6 @@ public class CoreClient extends Client {
       throw new IllegalStateException(
           "The Fabric client has already been initialized");
     
-    log = Logger.getLogger("fabric.client");
     log.info("Initializing Fabric client");
     
     instance =

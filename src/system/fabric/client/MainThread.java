@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-import fabric.client.Client.Options;
 import fabric.client.transaction.TransactionManager;
 
 /**
@@ -48,7 +47,7 @@ public final class MainThread extends Thread implements FabricThread {
       for (ListIterator<StackTraceElement> it =
           trace.listIterator(trace.size()); it.hasPrevious();) {
         StackTraceElement elt = it.previous();
-        if (elt.getClassName().equals(opts.main[0] + "$$Impl")) break;
+        if (elt.getClassName().equals(opts.app[0] + "$$Impl")) break;
         it.remove();
       }
 

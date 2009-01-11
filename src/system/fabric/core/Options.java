@@ -10,13 +10,13 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.TreeMap;
 
 import fabric.common.InternalError;
+import fabric.common.TerminationException;
 import fabric.common.UsageError;
 
-public class Options {
+public class Options extends fabric.common.Options {
 
   public int port;
 
@@ -43,14 +43,13 @@ public class Options {
   }
 
   private Options() {
-    setDefaultValues();
   }
 
   public Options(String[] args) throws UsageError {
-    this();
     parseCommandLine(args);
   }
 
+  @Override
   public void setDefaultValues() {
     this.port = 3372;
     this.cores = new TreeMap<String, CoreKeyStores>();
@@ -63,7 +62,7 @@ public class Options {
   public static void usage(PrintStream out) {
     Options defaults = new Options();
 
-    out.println("Usage: fabric [options]");
+    out.println("Usage: fab-core [options]");
     out.println("where [options] includes:");
     usageForFlag(out, "--port <number>", "port on which to listen",
         defaults.port);
@@ -88,7 +87,8 @@ public class Options {
    * @return the next index to process. i.e., if calling this method processes
    *         two commands, then the return value should be index+2.
    */
-  private int parseCommand(String args[], int index) throws UsageError {
+  @Override
+  protected int parseCommand(String args[], int index) throws UsageError {
     int i = index;
     if (args[i].equals("-h") || args[i].equals("-help")
         || args[i].equals("--help")) {
@@ -96,7 +96,7 @@ public class Options {
     }
 
     if (args[i].equals("--version")) {
-      throw new Main.TerminationException(0);
+      throw new TerminationException(0);
     }
 
     if (args[i].equals("--port")) {
@@ -185,122 +185,5 @@ public class Options {
     }
 
     return i;
-  }
-
-  public void parseCommandLine(String args[]) throws UsageError {
-    for (int i = 0; i < args.length;) {
-      try {
-        int ni = parseCommand(args, i);
-        if (ni == i) throw new UsageError("Illegal option: " + args[i]);
-        i = ni;
-      } catch (ArrayIndexOutOfBoundsException e) {
-        throw new UsageError("Missing argument");
-      }
-    }
-  }
-
-  /**
-   * The maximum width of a line when printing usage information. Used by
-   * <code>usageForFlag</code>.
-   */
-  protected static final int USAGE_SCREEN_WIDTH = 76;
-
-  /**
-   * The number of spaces from the left that the description for flags will be
-   * displayed. Used by <code>usageForFlag</code>.
-   */
-  protected static final int USAGE_FLAG_WIDTH = 27;
-
-  /**
-   * Output a flag and a description of its usage in a nice format.
-   * 
-   * @param out
-   *                output PrintStream
-   * @param flag
-   *                the name of the flag.
-   * @param description
-   *                description of the flag.
-   */
-  private static void usageForFlag(PrintStream out, String flag, String desc) {
-    out.print("  ");
-    out.print(flag);
-
-    // cur is where the cursor is on the screen.
-    int cur = flag.length() + 2;
-
-    if (cur < USAGE_FLAG_WIDTH) {
-      printSpaces(out, USAGE_FLAG_WIDTH - cur);
-    } else {
-      // The flag is long. Get a new line before printing the description.
-      out.println();
-      printSpaces(out, USAGE_FLAG_WIDTH);
-    }
-
-    cur = USAGE_FLAG_WIDTH;
-
-    // Break up the description.
-    StringTokenizer st = new StringTokenizer(desc);
-    while (st.hasMoreTokens()) {
-      String s = st.nextToken();
-      if (cur + s.length() > USAGE_SCREEN_WIDTH) {
-        out.println();
-        printSpaces(out, USAGE_FLAG_WIDTH);
-        cur = USAGE_FLAG_WIDTH;
-      }
-
-      out.print(s);
-      cur += s.length();
-      if (st.hasMoreTokens()) {
-        if (cur + 1 > USAGE_SCREEN_WIDTH) {
-          out.println();
-          printSpaces(out, USAGE_FLAG_WIDTH);
-          cur = USAGE_FLAG_WIDTH;
-        } else {
-          out.print(" ");
-          cur++;
-        }
-      }
-    }
-
-    out.println();
-  }
-
-  /**
-   * Output a flag and a description of its usage in a nice format.
-   * 
-   * @param out
-   *                output PrintStream
-   * @param flag
-   *                the name of the flag.
-   * @param description
-   *                description of the flag.
-   * @param defVal
-   *                default value
-   */
-  private static void usageForFlag(PrintStream out, String flag, String desc,
-      String defVal) {
-    usageForFlag(out, flag, desc + " (default: " + defVal + ")");
-  }
-
-  /**
-   * Output a flag and a description of its usage in a nice format.
-   * 
-   * @param out
-   *                output PrintStream
-   * @param flag
-   *                the name of the flag.
-   * @param description
-   *                description of the flag.
-   * @param defVal
-   *                default value
-   */
-  private static void usageForFlag(PrintStream out, String flag, String desc,
-      int defVal) {
-    usageForFlag(out, flag, desc, new Integer(defVal).toString());
-  }
-
-  private static void printSpaces(PrintStream out, int n) {
-    while (n-- > 0)
-      out.print(' ');
   }
 }

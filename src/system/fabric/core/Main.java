@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 
 import fabric.common.Resources;
+import fabric.common.TerminationException;
 import fabric.common.UsageError;
 import fabric.common.Version;
 
@@ -66,33 +67,5 @@ public class Main {
       throw new TerminationException(e.getMessage(), 1);
     }
 
-  }
-
-  /**
-   * This exception signals termination of the core node. It should be used
-   * instead of <code>System.exit</code> to allow Fabric to be started from
-   * within a JVM that wasn't started specifically for Fabric, e.g., the Apache
-   * ANT framework.
-   */
-  public static class TerminationException extends RuntimeException {
-    final public int exitCode;
-
-    public TerminationException(String msg) {
-      this(msg, 1);
-    }
-
-    public TerminationException(int exit) {
-      this.exitCode = exit;
-    }
-
-    public TerminationException(String msg, int exit) {
-      super(msg);
-      this.exitCode = exit;
-    }
-
-    public TerminationException(Exception cause, int exit) {
-      super(cause);
-      this.exitCode = exit;
-    }
   }
 }

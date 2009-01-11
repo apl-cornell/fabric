@@ -2,6 +2,7 @@ package fabric.client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -13,11 +14,9 @@ import java.util.logging.Logger;
 
 import javax.net.ssl.*;
 
-import com.sun.org.apache.xalan.internal.xsltc.cmdline.getopt.GetOpt;
-
 import fabric.client.transaction.TransactionManager;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.Resources;
 import fabric.dissemination.FetchManager;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
@@ -25,8 +24,8 @@ import fabric.lang.arrays.ObjectArray;
 import fabric.lang.auth.Label;
 
 /**
- * This is the main interface to the Fabric API. Clients wishing to use Fabric
- * must first initialize it by calling one of the <code>initialize</code>
+ * This is the main interface to the Fabric API. Applications wishing to use
+ * Fabric must first initialize it by calling one of the <code>initialize</code>
  * methods, and can then use the singleton Client instance to access Cores and
  * Objects.
  */
@@ -47,7 +46,7 @@ public class Client {
   protected final boolean useSSL;
 
   // The logger
-  public static Logger log;
+  public static final Logger log = Logger.getLogger("fabric.client");
 
   // The timeout (in milliseconds) to use whilst attempting to connect to a core
   // node.
@@ -102,8 +101,6 @@ public class Client {
     if (instance != null)
       throw new IllegalStateException(
           "The Fabric client has already been initialized");
-
-    log = Logger.getLogger("fabric.client");
 
     log.info("Initializing Fabric client");
     log.config("maximum connections: " + maxConnections);
@@ -310,7 +307,25 @@ public class Client {
 
   // TODO: throws exception?
   public static void main(String[] args) throws Throwable {
-    Options opts = getOpts(args);
+    log.info("Client node");
+    log.config("Fabric version " + new Version());
+    log.info("");
+    
+    // Parse the command-line options.
+    Options opts;
+    try {
+      opts = new Options(args);
+    } catch (UsageError ue) {
+      PrintStream out = ue.exitCode == 0 ? System.out : System.err;
+      if (ue.getMessage() != null && ue.getMessage().length() > 0) {
+        out.println(ue.getMessage());
+        out.println();
+      }
+      
+      Options.usage(out);
+      throw new TerminationException(ue.exitCode);
+    }
+    
     try {
       initialize(opts.name);
     } catch (Throwable t) {
@@ -326,55 +341,26 @@ public class Client {
     }
     log.config(cmd.toString());
 
-    Client c = getClient();
+    if (opts.app != null) {
+      Client c = getClient();
 
-    try {
-      Class<?> mainClass = Class.forName(opts.main[0] + "$$Impl");
-      Method main =
-          mainClass.getMethod("main", new Class[] { ObjectArray.class });
-      String[] newArgs = new String[opts.main.length - 1];
-      for (int i = 0; i < newArgs.length; i++)
-        newArgs[i] = opts.main[i + 1];
-  
-      Core local = c.getLocalCore();
-      TransactionManager.getInstance().startTransaction();
-      Object argsProxy = WrappedJavaInlineable.$wrap(local, newArgs);
-      TransactionManager.getInstance().commitTransaction();
+      try {
+        Class<?> mainClass = Class.forName(opts.app[0] + "$$Impl");
+        Method main =
+            mainClass.getMethod("main", new Class[] { ObjectArray.class });
+        String[] newArgs = new String[opts.app.length - 1];
+        for (int i = 0; i < newArgs.length; i++)
+          newArgs[i] = opts.app[i + 1];
 
-      MainThread.invoke(opts, main, argsProxy);
-    } finally {
-      c.shutdown();
-    }
-  }
+        Core local = c.getLocalCore();
+        TransactionManager.getInstance().startTransaction();
+        Object argsProxy = WrappedJavaInlineable.$wrap(local, newArgs);
+        TransactionManager.getInstance().commitTransaction();
 
-  private static Options getOpts(String[] args) throws IllegalArgumentException {
-    Options opts = new Options();
-    GetOpt o = new GetOpt(args, Options.OPTS);
-
-    try {
-      for (int c = o.getNextOption(); c != -1; c = o.getNextOption()) {
-        switch (c) {
-        case 'n':
-          opts.name = o.getOptionArg();
-          break;
-        }
+        MainThread.invoke(opts, main, argsProxy);
+      } finally {
+        c.shutdown();
       }
-
-      opts.main = o.getCmdArgs();
-    } catch (Exception e) {
-      throw new IllegalArgumentException();
     }
-
-    return opts;
   }
-
-  static class Options {
-
-    public static final String OPTS = "n:";
-
-    public String[] main;
-    public String name;
-
-  }
-
 }
