@@ -13,23 +13,28 @@ class Options extends fabric.common.Options {
   // This client's name.
   public String name;
 
+  private Options() {
+  }
+  
   public Options(String[] args) throws UsageError {
     parseCommandLine(args);
   }
 
   @Override
   public void setDefaultValues() {
-    this.name = null;
+    this.name = "client0"; // XXX this is for debugging convenience; should be null
     this.app = null;
   }
 
   public static void usage(PrintStream out) {
+    Options defaults = new Options();
+    
     out.println("Usage: fab [options] [app] [param...]");
     out.println("where");
     out.println("  [app] is the name of Fabric application's main class");
     out.println("  [param...] are the parameters to the Fabric application");
     out.println("and [options] includes:");
-    usageForFlag(out, "--name <name>", "this client's name");
+    usageForFlag(out, "--name <name>", "this client's name", defaults.name);
     usageForFlag(out, "--version", "print version info and exit");
     usageForFlag(out, "--help", "print this message");
   }

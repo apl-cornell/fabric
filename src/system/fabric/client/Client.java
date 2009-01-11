@@ -93,7 +93,7 @@ public class Client {
    *                Whether SSL encryption is desired. Used for debugging
    *                purposes.
    */
-  public static Client initialize(KeyStore keyStore, char[] passwd,
+  public static Client initialize(String name, KeyStore keyStore, char[] passwd,
       KeyStore trustStore, int maxConnections, int timeout, int retries,
       boolean useSSL, String fetcher) throws InternalError,
       UnrecoverableKeyException, IllegalStateException {
@@ -108,7 +108,7 @@ public class Client {
     log.config("retries:             " + retries);
     log.config("use ssl:             " + useSSL);
     instance =
-        new Client(keyStore, passwd, trustStore, maxConnections, timeout,
+        new Client(name, keyStore, passwd, trustStore, maxConnections, timeout,
             retries, useSSL, fetcher);
     return instance;
   }
@@ -118,9 +118,10 @@ public class Client {
    */
   protected static Client instance;
 
-  protected Client(KeyStore keyStore, char[] passwd, KeyStore trustStore,
-      int maxConnections, int timeout, int retries, boolean useSSL,
-      String fetcher) throws InternalError, UnrecoverableKeyException {
+  protected Client(String name, KeyStore keyStore, char[] passwd,
+      KeyStore trustStore, int maxConnections, int timeout, int retries,
+      boolean useSSL, String fetcher) throws InternalError,
+      UnrecoverableKeyException {
     // Sanitise input.
     if (timeout < 1) timeout = DEFAULT_TIMEOUT;
 
@@ -132,7 +133,8 @@ public class Client {
 
       this.principal =
           ((X509KeyManager) kmf.getKeyManagers()[0])
-              .getCertificateChain("client0")[0].getSubjectX500Principal();
+              .getCertificateChain(name)[0].getSubjectX500Principal();
+      log.config("Client principal is " + principal);
 
       TrustManager[] tm = null;
       if (trustStore != null) {
@@ -301,7 +303,7 @@ public class Client {
     boolean useSSL =
         Boolean.parseBoolean(p.getProperty("fabric.client.useSSL", "true"));
 
-    initialize(keyStore, passwd.toCharArray(), trustStore, maxConnections,
+    initialize(name, keyStore, passwd.toCharArray(), trustStore, maxConnections,
         timeout, retries, useSSL, fetcher);
   }
 
