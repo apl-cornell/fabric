@@ -15,7 +15,7 @@ import polyglot.main.Main.TerminationException;
  * fully qualified class names. This is here because the logic for qualifying
  * class names seems a bit wonky.
  */
-public class Options extends polyglot.main.Options {
+public class FabILOptions extends polyglot.main.Options {
   /**
    * Whether we're running in signature mode.
    */
@@ -34,11 +34,11 @@ public class Options extends polyglot.main.Options {
   /** Whether to perform optimizations. */
   public int optLevel;
   
-  public static Options global() {
-    return (Options) global;
+  public static FabILOptions global() {
+    return (FabILOptions) global;
   }
 
-  public Options(ExtensionInfo extension) {
+  public FabILOptions(ExtensionInfo extension) {
     super(extension);
     this.sigcp = null;
     this.addSigcp = new ArrayList<String>();

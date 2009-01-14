@@ -16,7 +16,7 @@ import polyglot.util.ErrorQueue;
 import polyglot.util.Position;
 import polyglot.visit.*;
 import fabil.ExtensionInfo;
-import fabil.Options;
+import fabil.FabILOptions;
 import fabil.visit.*;
 
 public class FabILScheduler extends JLScheduler {
@@ -81,7 +81,7 @@ public class FabILScheduler extends JLScheduler {
             List<Goal> l = new ArrayList<Goal>();
             l.add(TypeChecked(job));
 
-            if (Options.global().optLevel > 0) {
+            if (FabILOptions.global().optLevel > 0) {
               l.add(TypeCheckedAfterFlatten(job));
             }
 
@@ -203,7 +203,7 @@ public class FabILScheduler extends JLScheduler {
         l.add(WrapInlineables(job));
         l.add(LocationsAssigned(job));
 
-        if (Options.global().optLevel > 0) {
+        if (FabILOptions.global().optLevel > 0) {
           l.add(ReadWriteChecked(job));
         }
 

@@ -6,9 +6,11 @@ import polyglot.ast.NodeFactory;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.FileSource;
 import polyglot.frontend.Parser;
+import polyglot.frontend.Scheduler;
 import polyglot.lex.Lexer;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
+import fabil.FabILOptions;
 import fabil.extension.FabILExt_c;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
@@ -21,42 +23,52 @@ import fabric.types.FabricTypeSystem_c;
  * Extension information for ../../fabric extension.
  */
 public class ExtensionInfo extends jif.ExtensionInfo {
-    static {
-        // force Topics to load
-        new Topics();
-    }
+  static {
+    // force Topics to load
+    new Topics();
+  }
 
-    protected fabil.ExtensionInfo targetExt;
-    
-    @Override
-    public String defaultFileExtension() {
-        return "fab";
-    }
+  protected fabil.ExtensionInfo targetExt;
 
-    @Override
-    public String compilerName() {
-        return "fabc";
-    }
+  @Override
+  public String defaultFileExtension() {
+    return "fab";
+  }
 
-    @Override
-    public Parser parser(Reader reader, FileSource source, ErrorQueue eq) {
-        Lexer lexer = new Lexer_c(reader, source, eq);
-        Grm grm = new Grm(lexer, (FabricTypeSystem) ts, (FabricNodeFactory) nf, eq);
-        return new CupParser(grm, source, eq);
-    }
+  @Override
+  public String compilerName() {
+    return "fabc";
+  }
 
-    @Override
-    protected NodeFactory createNodeFactory() {
-        return new FabricNodeFactory_c();
-    }
+  @Override
+  public Parser parser(Reader reader, FileSource source, ErrorQueue eq) {
+    Lexer lexer = new Lexer_c(reader, source, eq);
+    Grm grm = new Grm(lexer, (FabricTypeSystem) ts, (FabricNodeFactory) nf, eq);
+    return new CupParser(grm, source, eq);
+  }
 
-    @Override
-    protected TypeSystem createTypeSystem() {
-        return new FabricTypeSystem_c(targetExt.typeSystem());
-    }
+  @Override
+  protected NodeFactory createNodeFactory() {
+    return new FabricNodeFactory_c();
+  }
 
-    public ExtensionInfo() {
-      super();
-      targetExt = new fabil.ExtensionInfo();
-    }
+  @Override
+  protected TypeSystem createTypeSystem() {
+    return new FabricTypeSystem_c(targetExt.typeSystem());
+  }
+
+  @Override
+  protected FabricOptions createOptions() {
+    return new FabricOptions(this);
+  }
+  
+  @Override
+  protected Scheduler createScheduler() {
+    return new FabricScheduler(this, this.jlext);
+  }
+
+  public ExtensionInfo() {
+    super();
+    targetExt = new fabil.ExtensionInfo();
+  }
 }
