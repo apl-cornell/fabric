@@ -12,7 +12,7 @@ import polyglot.util.Position;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
-public class NewExt_c extends LocatedExt_c {
+public class NewExt_c extends AnnotatedExt_c {
 
   @SuppressWarnings("unchecked")
   @Override

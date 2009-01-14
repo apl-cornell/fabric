@@ -7,18 +7,30 @@ import polyglot.util.Position;
 import fabil.visit.LocationAssigner;
 
 /**
- * This class provides common functionality to the New and NewArray for managing
- * a location field
+ * Provides common functionality to the New and NewArray for managing label and
+ * location fields.
  */
-public abstract class LocatedExt_c extends ExprExt_c {
+public abstract class AnnotatedExt_c extends ExprExt_c {
+  private Expr label;
   private Expr location;
 
+  public Expr label() {
+    return label;
+  }
+  
   public Expr location() {
     return location;
   }
+  
+  public Expr label(Expr label) {
+    AnnotatedExt_c result = (AnnotatedExt_c) copy();
+    result.label = label;
+    
+    return (Expr) node().ext(result);
+  }
 
   public Expr location(Expr location) {
-    LocatedExt_c result = (LocatedExt_c) copy();
+    AnnotatedExt_c result = (AnnotatedExt_c) copy();
     result.location = location;
 
     return (Expr) node().ext(result);

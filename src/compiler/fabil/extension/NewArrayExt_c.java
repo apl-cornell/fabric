@@ -7,7 +7,7 @@ import polyglot.util.InternalCompilerError;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
-public class NewArrayExt_c extends LocatedExt_c {
+public class NewArrayExt_c extends AnnotatedExt_c {
 
   /*
    * (non-Javadoc)

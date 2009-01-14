@@ -11,7 +11,7 @@ import polyglot.util.Position;
 
 import fabil.extension.FabILExtFactory;
 import fabil.extension.FabILExtFactory_c;
-import fabil.extension.LocatedExt_c;
+import fabil.extension.AnnotatedExt_c;
 
 /**
  * NodeFactory for FabIL extension.
@@ -85,26 +85,28 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   }
 
   @SuppressWarnings("unchecked")
-  public New New(Position pos, Expr outer, TypeNode objectType, Expr location,
-      List<Expr> args, ClassBody body) {
+  public New New(Position pos, Expr outer, TypeNode objectType, Expr label,
+      Expr location, List<Expr> args, ClassBody body) {
     New n =
         new New_c(pos, outer, objectType, CollectionUtil.nonNullList(args),
             body);
     n = (New) n.ext(extFactory().extNew());
     n = (New) n.del(delFactory().delNew());
-    n = (New) ((LocatedExt_c) n.ext()).location(location);
+    n = (New) ((AnnotatedExt_c) n.ext()).label(label);
+    n = (New) ((AnnotatedExt_c) n.ext()).location(location);
 
     return n;
   }
 
-  public NewArray NewArray(Position pos, TypeNode base, Expr location,
+  public NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
       List<Expr> dims, int addDims, ArrayInit init) {
     NewArray result =
         new NewArray_c(pos, base, CollectionUtil.nonNullList(dims), addDims,
             init);
     result = (NewArray) result.ext(extFactory().extNewArray());
     result = (NewArray) result.del(delFactory().delNewArray());
-    result = (NewArray) ((LocatedExt_c) result.ext()).location(location);
+    result = (NewArray) ((AnnotatedExt_c) result.ext()).label(label);
+    result = (NewArray) ((AnnotatedExt_c) result.ext()).location(location);
     return result;
   }
 
@@ -114,45 +116,45 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   @Override
   public New New(Position pos, Expr outer, TypeNode objectType, List args,
       ClassBody body) {
-    return New(pos, outer, objectType, null, args, body);
+    return New(pos, outer, objectType, null, null, args, body);
   }
 
-  public New New(Position pos, TypeNode objectType, Expr location,
+  public New New(Position pos, TypeNode objectType, Expr label, Expr location,
       List<Expr> args) {
-    return New(pos, null, objectType, location, args);
+    return New(pos, null, objectType, label, location, args);
   }
 
-  public New New(Position pos, Expr outer, TypeNode objectType, Expr location,
-      List<Expr> args) {
-    return New(pos, outer, objectType, location, args, null);
+  public New New(Position pos, Expr outer, TypeNode objectType, Expr label,
+      Expr location, List<Expr> args) {
+    return New(pos, outer, objectType, label, location, args, null);
   }
 
-  public New New(Position pos, TypeNode type, Expr location, List<Expr> args,
-      polyglot.ast.ClassBody body) {
-    return New(pos, null, type, location, args, body);
+  public New New(Position pos, TypeNode type, Expr label, Expr location,
+      List<Expr> args, polyglot.ast.ClassBody body) {
+    return New(pos, null, type, label, location, args, body);
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public final NewArray NewArray(Position pos, TypeNode base, List dims,
       int addDims, ArrayInit init) {
-    return NewArray(pos, base, null, dims, addDims, init);
+    return NewArray(pos, base, null, null, dims, addDims, init);
   }
 
-  public final NewArray NewArray(Position pos, TypeNode base, Expr location,
-      List<Expr> dims) {
-    return NewArray(pos, base, location, dims, 0, null);
+  public final NewArray NewArray(Position pos, TypeNode base, Expr label,
+      Expr location, List<Expr> dims) {
+    return NewArray(pos, base, label, location, dims, 0, null);
   }
 
-  public final NewArray NewArray(Position pos, TypeNode base, Expr location,
-      List<Expr> dims, int addDims) {
-    return NewArray(pos, base, location, dims, addDims, null);
+  public final NewArray NewArray(Position pos, TypeNode base, Expr label,
+      Expr location, List<Expr> dims, int addDims) {
+    return NewArray(pos, base, label, location, dims, addDims, null);
   }
 
-  public final NewArray NewArray(Position pos, TypeNode base, Expr location,
-      int addDims, ArrayInit init) {
+  public final NewArray NewArray(Position pos, TypeNode base, Expr label,
+      Expr location, int addDims, ArrayInit init) {
     List<Expr> emptyList = Collections.emptyList();
-    return NewArray(pos, base, location, emptyList, addDims, init);
+    return NewArray(pos, base, label, location, emptyList, addDims, init);
   }
 
 }

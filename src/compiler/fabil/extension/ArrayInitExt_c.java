@@ -12,7 +12,7 @@ import polyglot.util.Position;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
-public class ArrayInitExt_c extends LocatedExt_c {
+public class ArrayInitExt_c extends AnnotatedExt_c {
 
   /*
    * (non-Javadoc)
@@ -42,7 +42,7 @@ public class ArrayInitExt_c extends LocatedExt_c {
     for (Object e : arrayInit.elements()) {
       if (e instanceof ArrayInit) {
         ArrayInit ai = (ArrayInit) e;
-        LocatedExt_c ext = (LocatedExt_c) ai.ext();
+        AnnotatedExt_c ext = (AnnotatedExt_c) ai.ext();
         newElements.add(ext.location(location));
       } else {
         newElements.add((Expr) e);
