@@ -158,7 +158,7 @@ public abstract class Message<R extends Message.Response> {
   private R send(Core core, ObjectInputStream in, ObjectOutputStream out)
       throws FabricException, IOException {
     // Write this message out.
-    // TODO write out pc label
+    // TODO write out pc label  (what for?  --Jed)
     out.writeByte(messageType.ordinal());
     write(out);
     out.flush();
@@ -206,7 +206,7 @@ public abstract class Message<R extends Message.Response> {
       Worker handler) throws IOException {
 
     try {
-      // TODO read in label
+      // TODO read in pc label  (what for?  --Jed)
       Label l = null;
       
       MessageType messageType = MessageType.values()[in.readByte()];

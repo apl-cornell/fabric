@@ -4,6 +4,7 @@ import polyglot.ast.Expr;
 import polyglot.ast.NodeFactory;
 import polyglot.qq.QQ;
 import polyglot.util.Position;
+import fabil.visit.LabelAssigner;
 import fabil.visit.LocationAssigner;
 
 /**
@@ -34,6 +35,18 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     result.location = location;
 
     return (Expr) node().ext(result);
+  }
+  
+  @Override
+  public Expr assignLabels(LabelAssigner la) {
+    Expr expr = node();
+    if (label != null) return expr;
+    
+    NodeFactory nf = la.nodeFactory();
+    
+    // Need a label. By default, we use null to indicate a public
+    // bottom-integrity object.
+    return label(nf.NullLit(Position.compilerGenerated()));
   }
 
   @Override

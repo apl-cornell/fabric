@@ -5,15 +5,17 @@ package fabil.extension;
 
 import polyglot.ast.Ext;
 import polyglot.ast.Node;
-import fabil.visit.AtomicRewriter;
-import fabil.visit.LocationAssigner;
-import fabil.visit.ProxyRewriter;
-import fabil.visit.ThreadRewriter;
+import fabil.visit.*;
 
 /**
  * The interface for all Fabric extension nodes.
  */
 public interface FabILExt extends Ext {
+
+  /**
+   * Used by LabelAssigner to assign labels to all <code>new</code> expressions.
+   */
+  public Node assignLabels(LabelAssigner la);
 
   /**
    * Used by LocationAssigner to assign locations to all <code>new</code>

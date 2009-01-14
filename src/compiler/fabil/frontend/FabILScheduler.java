@@ -176,6 +176,25 @@ public class FabILScheduler extends JLScheduler {
   }
   
   /**
+   * Ensures all objects have their labels assigned.
+   */
+  public Goal LabelsAssigned(final Job job) {
+    Goal g =
+      internGoal(new VisitorGoal(job, new LabelAssigner(job, extInfo)) {
+        @Override
+        @SuppressWarnings("unchecked")
+        public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+          List<Goal> l = new ArrayList<Goal>();
+          l.add(InnerClassesRemoved(job));
+          l.addAll(super.prerequisiteGoals(scheduler));
+          return l;
+        }
+      });
+    
+    return g;
+  }
+  
+  /**
    * Ensures all objects have their locations assigned.
    */
   public Goal LocationsAssigned(final Job job) {
@@ -202,6 +221,7 @@ public class FabILScheduler extends JLScheduler {
         List<Goal> l = new ArrayList<Goal>();
         l.add(WrapInlineables(job));
         l.add(LocationsAssigned(job));
+        l.add(LabelsAssigned(job));
 
         if (FabILOptions.global().optLevel > 0) {
           l.add(ReadWriteChecked(job));

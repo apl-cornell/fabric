@@ -37,6 +37,7 @@ public class ArrayInitExt_c extends AnnotatedExt_c {
 
     ArrayInit arrayInit = node();
     Expr location = location();
+    Expr label = label();
 
     List<Expr> newElements = new ArrayList<Expr>(arrayInit.elements().size());
     for (Object e : arrayInit.elements()) {
@@ -58,10 +59,9 @@ public class ArrayInitExt_c extends AnnotatedExt_c {
         nf.NewArray(Position.compilerGenerated(), nf.CanonicalTypeNode(Position
             .compilerGenerated(), newBase), 1, arrayInit);
     
-    // XXX Need a real label.
     return qq.parseExpr(
-        "fabric.lang.arrays.internal.Compat.convert(%E, null, %E)", location,
-        init);
+        "fabric.lang.arrays.internal.Compat.convert(%E, %E, %E)", location,
+        label, init);
   }
 
   /*

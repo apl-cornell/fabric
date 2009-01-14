@@ -8,7 +8,6 @@ import polyglot.ast.New;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
 import polyglot.types.ClassType;
-import polyglot.util.Position;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
@@ -30,10 +29,7 @@ public class NewExt_c extends AnnotatedExt_c {
 
     List<Expr> newargs = new LinkedList<Expr>(call.arguments());
     newargs.add(0, location());
-    
-    // XXX Replace with a real label.
-    Expr label = nf.NullLit(Position.compilerGenerated());
-    newargs.add(1, label);
+    newargs.add(1, label());
 
     TypeNode implType =
         nf.TypeNodeFromQualifiedName(typeNode.position(), type.fullName()

@@ -22,9 +22,6 @@ public class NewArrayExt_c extends AnnotatedExt_c {
     // Only rewrite if we have a Fabric array.
     FabILTypeSystem ts = pr.typeSystem();
     if (!ts.isFabricArray(newArray.type())) return newArray;
-    
-    // XXX Replace with a real label.
-    Expr label = qq.parseExpr("null");
 
     if (newArray.dims().size() > 1)
       throw new InternalCompilerError("Multidimensional arrays not supported.");
@@ -44,7 +41,7 @@ public class NewArrayExt_c extends AnnotatedExt_c {
       typeArg += ".class, ";
     }
     return qq.parseExpr("(%T) new %T(%E, %E, " + typeArg + "%E).$getProxy()",
-        arrayType, arrayImplType, location(), label, size);
+        arrayType, arrayImplType, location(), label(), size);
   }
 
   /*

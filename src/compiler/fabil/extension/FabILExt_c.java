@@ -2,12 +2,13 @@ package fabil.extension;
 
 import polyglot.ast.Ext_c;
 import polyglot.ast.Node;
-import fabil.visit.AtomicRewriter;
-import fabil.visit.LocationAssigner;
-import fabil.visit.ProxyRewriter;
-import fabil.visit.ThreadRewriter;
+import fabil.visit.*;
 
 public class FabILExt_c extends Ext_c implements FabILExt {
+  
+  public Node assignLabels(LabelAssigner la) {
+    return node();
+  }
   
   public Node assignLocations(LocationAssigner la) {
     return node();
