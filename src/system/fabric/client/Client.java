@@ -21,7 +21,7 @@ import fabric.dissemination.FetchManager;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
-import fabric.lang.auth.Label;
+import jif.lang.Label;
 
 /**
  * This is the main interface to the Fabric API. Applications wishing to use

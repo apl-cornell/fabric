@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 
 import fabric.client.Core;
 import fabric.lang.Object.$Impl;
-import fabric.lang.auth.Label;
+import jif.lang.Label;
 
 /**
  * <code>$Impl</code> objects are stored on cores in serialized form as

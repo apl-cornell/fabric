@@ -21,7 +21,7 @@ import fabric.common.InternalError;
 import fabric.common.NoSuchCoreError;
 import fabric.common.Pair;
 import fabric.core.Worker;
-import fabric.lang.auth.Label;
+import jif.lang.Label;
 
 public abstract class Message<R extends Message.Response> {
 

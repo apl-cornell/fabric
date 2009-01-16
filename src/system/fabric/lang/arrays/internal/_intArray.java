@@ -11,7 +11,7 @@ import fabric.client.transaction.TransactionManager;
 import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 import fabric.lang.Object;
-import fabric.lang.auth.Label;
+import jif.lang.Label;
 
 public interface _intArray extends Object {
   int get$length();

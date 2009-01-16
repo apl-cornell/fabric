@@ -15,7 +15,7 @@ import fabric.common.FetchException;
 import fabric.common.InternalError;
 import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
-import fabric.lang.auth.Label;
+import jif.lang.Label;
 
 /**
  * All Fabric objects implement this interface.

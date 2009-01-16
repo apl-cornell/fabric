@@ -2,7 +2,7 @@ package fabric.lang.arrays.internal;
 
 import fabric.client.Core;
 import fabric.lang.arrays.*;
-import fabric.lang.auth.Label;
+import jif.lang.Label;
 import fabric.lang.Object;
 
 /**

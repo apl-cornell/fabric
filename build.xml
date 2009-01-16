@@ -55,13 +55,16 @@
   <property name="runtime.src" location="${src}/runtime"/>
   <property name="tests.fabnfs" location="${basedir}/tests/fabnfs"/>
   <property name="signatures.fabil.src" location="${src}/signatures/fabil"/>
+  <property name="signatures.fabric.src" location="${src}/signatures/fabric"/>
 
   <!-- Directory for class file targets -->
   <property name="classes" location="${basedir}/classes"/>
   <property name="bootstrap.classes" location="${basedir}/bs-classes"/>
   <property name="runtime.classes" location="${basedir}/rt-classes"/>
   <property name="tests.classes" location="${basedir}/tests/classes"/>
-  <property name="signatures.fabil.classes" location="${basedir}/sig-classes/fabil"/>
+  <property name="signatures.classes" location="${basedir}/sig-classes"/>
+  <property name="signatures.fabil.classes" location="${signatures.classes}/fabil"/>
+  <property name="signatures.fabric.classes" location="${signatures.classes}/fabric"/>
 
   <!-- Timestamp file for bootstrap classes. -->
   <property name="bootstrap.tstamp" location="${bootstrap.classes}/.tstamp"/>
@@ -85,6 +88,7 @@
   <property name="base.jar" location="${lib}/${name}.jar" />
   <property name="runtime.jar" location="${lib}/${name}-rt.jar" />
   <property name="signature.fabil.jar" location="${lib}/${name}-il-sig.jar" />
+  <property name="signature.fabric.jar" location="${lib}/${name}-sig.jar" />
 
   <!-- fabc executable -->
   <property name="fabc" location="${bin}/fabc" />
@@ -175,6 +179,7 @@
     <mkdir dir="${runtime.classes}"/>
     <mkdir dir="${tests.classes}"/>
     <mkdir dir="${signatures.fabil.classes}"/>
+    <mkdir dir="${signatures.fabric.classes}"/>
   </target>
 
   <!-- Compiles Fabric -->
@@ -190,6 +195,8 @@
       description="Cleans up the generated runtime and signatures">
     <delete dir="${runtime.classes}"/>
     <delete dir="${signatures.fabil.classes}"/>
+    <delete dir="${signatures.fabric.classes}"/>
+    <delete dir="${signatures.classes}"/>
   </target>
 
   <target name="clean" depends="dust"
@@ -264,8 +271,8 @@
       <include name="fabric/lang/**" />
       <include name="fabric/common/util/**" />
       <classpath>
-	<path refid="standard.classpath"/>
 	<pathelement location="${bootstrap.classes}" />
+	<path refid="standard.classpath"/>
       </classpath>
     </javac>
   </target>
@@ -352,6 +359,33 @@
       <param name="ext.pkg" value="fabric" />
       <param name="parser.type" value="ppg" />
     </antcall>
+  </target>
+
+  <!-- Compiles the Fabric signatures -->
+  <target name="fabric-signatures" depends="init,fabric-compiler,bin">
+    <mkdir dir="${signatures.fabric.classes}" />
+
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${basedir}"
+           dest="${signatures.fabric.classes}"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabc}" />
+      <arg value="-nooutput" />
+      <arg value="-e" />
+      <arg value="-d" />
+      <arg value="sig-classes/fabric" />
+      <arg value="-sourcepath" />
+      <arg value="src/signatures/fabric" />
+      <arg value="-sigcp" />
+      <arg value="sig-classes/fabric" />
+      <srcfile />
+      <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
   </target>
 
   <!-- Compiles the Filc compiler -->
@@ -524,9 +558,11 @@
 	excludes="**/*.java" />
   </target>
 
-  <target name="jar-sig" depends="fabil-signatures">
+  <target name="jar-sig" depends="fabil-signatures,fabric-signatures">
     <jar jarfile="${signature.fabil.jar}" basedir="${signatures.fabil.classes}"
 	excludes="**/*.java" />
+    <jar jarfile="${signature.fabric.jar}"
+	basedir="${signatures.fabric.classes}" excludes="**/*.java" />
   </target>
 
   <!--
