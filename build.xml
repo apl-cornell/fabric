@@ -54,14 +54,14 @@
   <property name="bootstrap.src" location="${src}/bootstrap"/>
   <property name="runtime.src" location="${src}/runtime"/>
   <property name="tests.fabnfs" location="${basedir}/tests/fabnfs"/>
-  <property name="signatures.src" location="${src}/signatures"/>
+  <property name="signatures.fabil.src" location="${src}/signatures/fabil"/>
 
   <!-- Directory for class file targets -->
   <property name="classes" location="${basedir}/classes"/>
   <property name="bootstrap.classes" location="${basedir}/bs-classes"/>
   <property name="runtime.classes" location="${basedir}/rt-classes"/>
   <property name="tests.classes" location="${basedir}/tests/classes"/>
-  <property name="signatures.classes" location="${basedir}/sig-classes"/>
+  <property name="signatures.fabil.classes" location="${basedir}/sig-classes/fabil"/>
 
   <!-- Timestamp file for bootstrap classes. -->
   <property name="bootstrap.tstamp" location="${bootstrap.classes}/.tstamp"/>
@@ -84,7 +84,7 @@
   <!-- Jar files -->
   <property name="base.jar" location="${lib}/${name}.jar" />
   <property name="runtime.jar" location="${lib}/${name}-rt.jar" />
-  <property name="signature.jar" location="${lib}/${name}-sig.jar" />
+  <property name="signature.fabil.jar" location="${lib}/${name}-il-sig.jar" />
 
   <!-- fabc executable -->
   <property name="fabc" location="${bin}/fabc" />
@@ -174,7 +174,7 @@
     <mkdir dir="${bootstrap.classes}"/>
     <mkdir dir="${runtime.classes}"/>
     <mkdir dir="${tests.classes}"/>
-    <mkdir dir="${signatures.classes}"/>
+    <mkdir dir="${signatures.fabil.classes}"/>
   </target>
 
   <!-- Compiles Fabric -->
@@ -189,7 +189,7 @@
   <target name="dust"
       description="Cleans up the generated runtime and signatures">
     <delete dir="${runtime.classes}"/>
-    <delete dir="${signatures.classes}"/>
+    <delete dir="${signatures.fabil.classes}"/>
   </target>
 
   <target name="clean" depends="dust"
@@ -363,15 +363,15 @@
     </antcall>
   </target>
 
-  <!-- Compiles the Fabric signatures -->
-  <target name="fabric-signatures" depends="init,fabil-compiler,bin">
-    <mkdir dir="${signatures.classes}" />
+  <!-- Compiles the FabIL signatures -->
+  <target name="fabil-signatures" depends="init,fabil-compiler,bin">
+    <mkdir dir="${signatures.fabil.classes}" />
 
     <apply executable="bash"
            parallel="true"
            failonerror="true"
            dir="${basedir}"
-           dest="${signatures.classes}"
+           dest="${signatures.fabil.classes}"
            relative="false"
            skipemptyfilesets="true"
            vmlauncher="false">
@@ -379,13 +379,13 @@
       <arg value="-nooutput" />
       <arg value="-sig" />
       <arg value="-d" />
-      <arg value="sig-classes" />
+      <arg value="sig-classes/fabil" />
       <arg value="-sourcepath" />
-      <arg value="src/signatures" />
+      <arg value="src/signatures/fabil" />
       <arg value="-sigcp" />
-      <arg value="sig-classes" />
+      <arg value="sig-classes/fabil" />
       <srcfile />
-      <fileset dir="${signatures.src}" includes="**/*.fab" />
+      <fileset dir="${signatures.fabil.src}" includes="**/*.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
   </target>
@@ -404,7 +404,7 @@
     a change in the Fabric translation.
   -->
   <target name="fabric-arrays"
-      depends="bin,fabil-compiler,fabric-signatures,client">
+      depends="bin,fabil-compiler,fabil-signatures,client">
     <mkdir dir="${runtime.classes}" />
 
     <condition property="runtime.opt" value="-O0">
@@ -424,7 +424,7 @@
       <arg value="-d" />
       <arg value="rt-classes" />
       <arg value="-sigcp" />
-      <arg value="sig-classes" />
+      <arg value="sig-classes/fabil" />
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
       <arg value="-cp" />
@@ -438,7 +438,7 @@
 
   <!-- Compiles the Fabric runtime -->
   <target name="fabric-runtime"
-      depends="init,fabil-compiler,fabric-signatures,fabric-arrays,client">
+      depends="init,fabil-compiler,fabil-signatures,fabric-arrays,client">
     <mkdir dir="${runtime.classes}" />
 
     <condition property="runtime.opt" value="-O0">
@@ -458,7 +458,7 @@
       <arg value="-d" />
       <arg value="rt-classes" />
       <arg value="-sigcp" />
-      <arg value="sig-classes" />
+      <arg value="sig-classes/fabil" />
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
       <arg value="-j" />
@@ -524,8 +524,8 @@
 	excludes="**/*.java" />
   </target>
 
-  <target name="jar-sig" depends="fabric-signatures">
-    <jar jarfile="${signature.jar}" basedir="${signatures.classes}"
+  <target name="jar-sig" depends="fabil-signatures">
+    <jar jarfile="${signature.fabil.jar}" basedir="${signatures.fabil.classes}"
 	excludes="**/*.java" />
   </target>
 
