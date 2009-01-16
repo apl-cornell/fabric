@@ -1,0 +1,17 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+public abstract class Number implements java.io.Serializable {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    public abstract int{this} intValue();
+    public abstract long{this} longValue();
+    public abstract float{this} floatValue();
+    public abstract double{this} doubleValue();
+    public native byte{this} byteValue();
+    public native short{this} shortValue();
+}

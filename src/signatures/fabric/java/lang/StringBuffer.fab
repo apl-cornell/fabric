@@ -1,0 +1,59 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+public final class StringBuffer[label L] /*implements java.io.Serializable, CharSequence*/
+{
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    public StringBuffer() {    }
+
+    public StringBuffer(int{L} length) {    }
+
+    public StringBuffer(String{L} str) throws (NullPointerException{str}) {    }
+
+    public native synchronized int{L} length();
+
+    public native synchronized int{L} capacity();
+    public native synchronized void ensureCapacity{L}(int{L} minimumCapacity);
+    public native synchronized void setLength{L}(int{L} newLength);
+    public native synchronized char{L} charAt(int{L} index) throws IndexOutOfBoundsException;
+    public native synchronized void getChars{L}(int{L} srcBegin, int{L} srcEnd, char{L}[]{L} dst, int{L} dstBegin):{L} throws IndexOutOfBoundsException, NullPointerException;
+    public native synchronized void setCharAt{L}(int{L} index, char{L} ch):{L} throws IndexOutOfBoundsException;
+//    public native synchronized StringBuffer append(Object obj);
+    public native synchronized StringBuffer[L]{this} append{L}(String{L} str);
+    public native synchronized StringBuffer[L]{this} append{L}(StringBuffer[L]{L} sb);
+    public native synchronized StringBuffer[L]{this} append{L}(char{L}[]{L} str) ;
+    public native synchronized StringBuffer[L]{this} append{L}(char{L}[]{L} str, int{L} offset, int{L} len);
+    public native synchronized StringBuffer[L]{this} append{L}(boolean{L} b);
+    public native synchronized StringBuffer[L]{this} append{L}(char{L} c);
+    public native synchronized StringBuffer[L]{this} append{L}(int{L} i);
+    public native synchronized StringBuffer[L]{this} append{L}(long{L} l);
+    public native synchronized StringBuffer[L]{this} append{L}(float{L} f);
+    public native synchronized StringBuffer[L]{this} append{L}(double{L} d);
+    public native synchronized StringBuffer[L]{this} delete{L}(int{L} start, int{L} end):{L} throws IndexOutOfBoundsException;
+    public native synchronized StringBuffer[L]{this} deleteCharAt{L}(int{L} index):{L} throws IndexOutOfBoundsException;
+    public native synchronized StringBuffer[L]{this} replace{L}(int{L} start, int{L} end, String{L} str):{L} throws IndexOutOfBoundsException, NullPointerException;
+    public native synchronized String{L} substring(int{L} start):{L} throws IndexOutOfBoundsException;
+//    public native CharSequence subSequence(int start, int end) throws IndexOutOfBoundsException;
+    public native synchronized String{L} substring(int{L} start, int{L} end):{L} throws IndexOutOfBoundsException;
+    public native synchronized StringBuffer[L]{this} insert{L}(int{L} index, char{L}[]{L} str, int{L} offset, int{L} len):{L} throws IndexOutOfBoundsException;
+//    public native synchronized StringBuffer[L]{this} insert{L}(int{L} offset, Object obj) throws IndexOutOfBoundsException;
+    public native synchronized StringBuffer[L]{this} insert{L}(int{L} offset, String{L} str):{L} throws IndexOutOfBoundsException;
+    public native synchronized StringBuffer[L]{this} insert{L}(int{L} offset, char{L}[]{L} str):{L} throws IndexOutOfBoundsException;
+    public native StringBuffer[L]{this} insert{L}(int{L} offset, boolean{L} b):{L} throws IndexOutOfBoundsException;
+    public native synchronized StringBuffer[L]{this} insert{L}(int{L} offset, char{L} c):{L} throws IndexOutOfBoundsException;
+    public native StringBuffer[L]{this} insert{L}(int{L} offset, int{L} i):{L} throws IndexOutOfBoundsException;
+    public native StringBuffer[L]{this} insert{L}(int{L} offset, long{L} l):{L} throws IndexOutOfBoundsException;
+    public native StringBuffer[L]{this} insert{L}(int{L} offset, float{L} f):{L} throws IndexOutOfBoundsException;
+    public native StringBuffer[L]{this} insert{L}(int{L} offset, double{L} d):{L} throws IndexOutOfBoundsException;
+    public native int{L} indexOf(String{L} str):{L} throws NullPointerException;
+    public native synchronized int{L} indexOf(String{L} str, int{L} fromIndex):{L} throws NullPointerException;
+    public native synchronized int{L} lastIndexOf(String{L} str):{L} throws NullPointerException;
+    public native synchronized int{L} lastIndexOf(String{L} str, int{L} fromIndex):{L} throws NullPointerException;
+    public native synchronized StringBuffer[L]{this} reverse{L}();
+    public native String{L} toString();
+}

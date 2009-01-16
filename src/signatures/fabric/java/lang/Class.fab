@@ -1,0 +1,31 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+public final class Class implements java.io.Serializable {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    private Class() { }
+
+    public native String{this} toString();
+
+    public native static Class{className} forName(String className) 
+                throws (ClassNotFoundException);
+
+    public native static Class forName(String name, boolean initialize,
+				Object loader)
+        throws (ClassNotFoundException);
+
+
+      public native boolean{this} isAssignableFrom(Class{this} cls);
+      public native boolean{this} isInterface();
+      public native boolean{this} isArray();
+      public native boolean{this} isPrimitive();
+      public native String{this} getName();
+
+}
+

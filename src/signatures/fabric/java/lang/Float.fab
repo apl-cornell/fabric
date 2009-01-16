@@ -1,0 +1,47 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+public final class Float extends Number /*implements Comparable*/ {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    public static final float{*!:*} POSITIVE_INFINITY = 1.0f; // PLACEHOLDER ONLY
+    public static final float{*!:*} NEGATIVE_INFINITY = -1.0f; // PLACEHOLDER ONLY
+    public static final float{*!:*} NaN = 0.0f; // PLACEHOLDER ONLY
+    public static final float{*!:*} MAX_VALUE = 3.4028235e+38f;
+    public static final float{*!:*} MIN_VALUE = 1.4e-45f;
+//    public static final Class   TYPE = Class.getPrimitiveClass("float");
+
+    public static native String toString(float f);
+    public static native Float valueOf(String s) throws (NumberFormatException{s});
+
+    public static native float parseFloat(String s) throws (NumberFormatException{s});
+    public static native boolean isNaN(float v);
+    public static native boolean isInfinite(float v);
+
+    public Float(float{this} value) {}
+    public Float(double{this} value) {}
+    public Float(String{this} s) throws (NumberFormatException{s}) { }
+    
+    public native boolean isNaN();
+    public native boolean isInfinite();
+    public native String toString();
+    public native byte byteValue();
+    public native short shortValue();
+    public native int intValue();
+    public native long longValue();
+    public native float floatValue();
+    public native double doubleValue();
+    public native int hashCode();
+    public native boolean equals(Object obj);
+    public static native int floatToIntBits(float value);
+    public static native int floatToRawIntBits(float value);
+    public static native float intBitsToFloat(int bits);
+    public native int compareTo(Float anotherFloat);
+    public native int compareTo(Object o);
+    public static native int compare(float f1, float f2);
+}

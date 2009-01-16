@@ -375,13 +375,32 @@
            vmlauncher="false">
       <arg value="${fabc}" />
       <arg value="-nooutput" />
+      <arg value="-v" />
       <arg value="-e" />
       <arg value="-d" />
       <arg value="sig-classes/fabric" />
       <arg value="-sourcepath" />
       <arg value="src/signatures/fabric" />
-      <arg value="-sigcp" />
+      <srcfile />
+      <fileset dir="${signatures.fabric.src}" includes="**/Object.fab" />
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${basedir}"
+           dest="${signatures.fabric.classes}"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabc}" />
+      <arg value="-nooutput" />
+      <arg value="-e" />
+      <arg value="-d" />
       <arg value="sig-classes/fabric" />
+      <arg value="-sourcepath" />
+      <arg value="src/signatures/fabric" />
       <srcfile />
       <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
       <globmapper from="*.fab" to="*.class" />
