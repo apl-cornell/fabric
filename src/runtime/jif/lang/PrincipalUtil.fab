@@ -400,7 +400,9 @@ public class PrincipalUtil {
   }
 
   static boolean isTopPrincipal(Principal p) {
-    return p == TOP_PRINCIPAL;
+    return TOP_PRINCIPAL.equals(p);
+//  XXX No proper support for static state yet.
+//    return p == TOP_PRINCIPAL;
   }
 
   public static ConfPolicy readableByPrinPolicy(Principal p) {
@@ -550,7 +552,9 @@ public class PrincipalUtil {
     }
 
     public boolean equals(Principal p) {
-      return p == this;
+      return p instanceof TopPrincipal;
+//  XXX No proper support for static state yet.
+//      return p == this;
     }
 
     public boolean isAuthorized(Object authPrf, Closure closure, Label lb,
