@@ -568,7 +568,7 @@ public interface Object {
       public static final Object $makeStaticInstance(
           Class<? extends Object.$Impl> c) {
         // XXX Need a real core and a real label.  (Should be given as args.)
-        Core core = Client.getClient().getCore("core0");
+        Core core = Client.getClient().getLocalCore();
         Label label = null;
         
         TransactionManager tm = TransactionManager.getInstance();
