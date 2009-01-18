@@ -240,7 +240,7 @@ public final class SerializedObject implements FastSerializable {
     };
   }
 
-  public Iterator<Pair<String, Long>> getIntercoreRefIterator() {
+  public Iterator<ComparablePair<String, Long>> getIntercoreRefIterator() {
     final int classNameLength = unsignedShortAt(20);
     final int numRefTypes = intAt(22 + classNameLength);
     final int numIntracoreRefs = intAt(26 + classNameLength);
@@ -250,7 +250,7 @@ public final class SerializedObject implements FastSerializable {
         38 + classNameLength + numRefTypes + 8 * numIntracoreRefs
             + serializedDataLength;
 
-    return new Iterator<Pair<String, Long>>() {
+    return new Iterator<ComparablePair<String, Long>>() {
       int nextIntercoreRefNum = 0;
       DataInput in =
           new DataInputStream(new ByteArrayInputStream(objectData, offset,
@@ -260,11 +260,11 @@ public final class SerializedObject implements FastSerializable {
         return nextIntercoreRefNum < numIntercoreRefs;
       }
 
-      public Pair<String, Long> next() {
+      public ComparablePair<String, Long> next() {
         if (!hasNext()) throw new NoSuchElementException();
         nextIntercoreRefNum++;
         try {
-          return new Pair<String, Long>(in.readUTF(), in.readLong());
+          return new ComparablePair<String, Long>(in.readUTF(), in.readLong());
         } catch (IOException e) {
           throw new InternalError("Unexpected IO exception.", e);
         }

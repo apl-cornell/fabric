@@ -23,13 +23,14 @@ public class SimpleSurrogateManager implements SurrogateManager {
 
   @SuppressWarnings("unchecked")
   public void createSurrogates(PrepareRequest req) {
-    Map<Pair<String, Long>, Long> cache =
-        new TreeMap<Pair<String, Long>, Long>();
+    Map<ComparablePair<String, Long>, Long> cache =
+        new TreeMap<ComparablePair<String, Long>, Long>();
     Collection<SerializedObject> surrogates = new ArrayList<SerializedObject>();
 
     for (SerializedObject obj : Util.chain(req.creates, req.writes)) {
       Iterator<Long> intracore = obj.getIntracoreRefIterator();
-      Iterator<Pair<String, Long>> intercore = obj.getIntercoreRefIterator();
+      Iterator<ComparablePair<String, Long>> intercore =
+          obj.getIntercoreRefIterator();
 
       boolean hadRemotes = false;
       List<Long> newrefs =
@@ -50,7 +51,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
 
         case REMOTE:
           // add surrogate reference
-          Pair<String, Long> ref = intercore.next();
+          ComparablePair<String, Long> ref = intercore.next();
           Long onum = cache.get(ref);
 
           if (onum == null) {
