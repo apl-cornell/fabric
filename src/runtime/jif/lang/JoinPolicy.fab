@@ -1,5 +1,7 @@
 package jif.lang;
 
+import fabric.client.Client;
+import fabric.client.Core;
 import fabric.util.*;
 
 /**
@@ -9,6 +11,7 @@ import fabric.util.*;
  */
 public abstract class JoinPolicy extends AbstractPolicy implements Policy {
   private Set components; // Set of Policies
+  public final Core localCore = Client.getClient().getLocalCore();
 
   JoinPolicy(LabelUtil labelUtil, Set policies) {
     super(labelUtil);
@@ -22,7 +25,7 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
   public boolean relabelsTo(Policy pol, Set s) {
     if (this == pol || this.equals(pol)) return true;
 
-    Set temp = new HashSet();
+    Set temp = new HashSet@localCore();
     // this == c1 join ... join cn
     // this <= pol if for all Ci, Ci <= pol
     boolean sat = true;

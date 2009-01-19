@@ -1,5 +1,7 @@
 package jif.lang;
 
+import fabric.client.Client;
+import fabric.client.Core;
 import fabric.util.*;
 
 /**
@@ -9,6 +11,7 @@ import fabric.util.*;
  */
 public abstract class MeetPolicy extends AbstractPolicy implements Policy {
   private Set components; // Set of Policies
+  public final Core localCore = Client.getClient().getLocalCore();
 
   MeetPolicy(LabelUtil labelUtil, Set policies) {
     super(labelUtil);
@@ -37,7 +40,7 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
       // we have this <= di
       MeetPolicy mp = (MeetPolicy) pol;
       boolean sat = true;
-      Set temp = new HashSet();
+      Set temp = new HashSet@localCore();
       for (Iterator i = mp.meetComponents().iterator(); i.hasNext();) {
         Policy Di = (Policy) i.next();
         if (!labelUtil.relabelsTo(this, Di, temp)) {

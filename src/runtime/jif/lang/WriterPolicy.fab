@@ -1,5 +1,7 @@
 package jif.lang;
 
+import fabric.client.Client;
+import fabric.client.Core;
 import fabric.util.*;
 
 /**
@@ -8,6 +10,7 @@ import fabric.util.*;
 public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
   private final Principal owner;
   private final Principal writer;
+  public final Core localCore = Client.getClient().getLocalCore();
 
   public WriterPolicy(LabelUtil labelUtil, Principal owner, Principal writer) {
     super(labelUtil);
@@ -38,7 +41,7 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
       MeetPolicy mp = (MeetPolicy) p;
       // this <= p1 meet ... meet p2 if for all pi
       // this <= pi
-      Set temp = new HashSet();
+      Set temp = new HashSet@localCore();
       for (Iterator iter = mp.meetComponents().iterator(); iter.hasNext();) {
         Policy pi = (Policy) iter.next();
         if (!labelUtil.relabelsTo(this, pi, temp)) return false;
@@ -54,21 +57,22 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
 
     // o' >= o?
 
-    ActsForProof ownersProof = PrincipalUtil.actsForProof(owner, pp.owner);
+    ActsForProof ownersProof =
+      PrincipalUtil.actsForProof(localCore, owner, pp.owner);
     if (ownersProof == null) {
       return false;
     }
 
     // for all j . rj' >= o || exists i . rj' >= ri
     ActsForProof writerWriterProof =
-        PrincipalUtil.actsForProof(this.writer, pp.writer);
+        PrincipalUtil.actsForProof(localCore, this.writer, pp.writer);
     if (writerWriterProof != null) {
       ownersProof.gatherDelegationDependencies(s);
       writerWriterProof.gatherDelegationDependencies(s);
       return true;
     }
     ActsForProof writerOwnerProof =
-        PrincipalUtil.actsForProof(this.writer, pp.owner);
+        PrincipalUtil.actsForProof(localCore, this.writer, pp.owner);
     if (writerOwnerProof != null) {
       ownersProof.gatherDelegationDependencies(s);
       writerOwnerProof.gatherDelegationDependencies(s);

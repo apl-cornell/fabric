@@ -43,6 +43,8 @@ public class LabelUtil {
   public static final boolean COUNT_TIME = false;
 
   public static final boolean USE_CACHING = true;
+  
+  public static final Core localCore = Client.getClient().getLocalCore();
 
   // caches
   private Set/* <Pair> */cacheTrueLabelRelabels = new HashSet/* <Pair> */();
@@ -164,11 +166,11 @@ public class LabelUtil {
     }
   }
 
-  public ConfPolicy readerPolicy(Principal owner,
+  public ConfPolicy readerPolicy(Core core, Principal owner,
       Collection/* <Principal> */readers) {
     try {
       enterTiming();
-      return readerPolicy(owner, PrincipalUtil.disjunction(readers));
+      return readerPolicy(owner, PrincipalUtil.disjunction(core, readers));
     } finally {
       exitTiming();
     }
@@ -177,20 +179,23 @@ public class LabelUtil {
   /**
    * See the Jif signature for the explanation of lbl.
    */
-  public ConfPolicy readerPolicy(Label lbl, Principal owner, Principal[] readers) {
+  public ConfPolicy readerPolicy(Core core, Label lbl, Principal owner,
+      Principal[] readers) {
     try {
       enterTiming();
-      if (readers == null) return readerPolicy(owner, Collections.EMPTY_SET);
-      return readerPolicy(owner, Arrays.asList(readers));
+      if (readers == null)
+        return readerPolicy(core, owner, Collections.EMPTY_SET);
+      return readerPolicy(core, owner, Arrays.asList(readers));
     } finally {
       exitTiming();
     }
   }
 
-  public ConfPolicy readerPolicy(Principal owner, PrincipalSet writers) {
+  public ConfPolicy readerPolicy(Core core, Principal owner,
+      PrincipalSet writers) {
     try {
       enterTiming();
-      return readerPolicy(owner, writers.getSet());
+      return readerPolicy(core, owner, writers.getSet());
     } finally {
       exitTiming();
     }
@@ -205,12 +210,12 @@ public class LabelUtil {
     }
   }
 
-  public Label readerPolicyLabel(Principal owner,
+  public Label readerPolicyLabel(Core core, Principal owner,
       Collection/* <Principal> */readers) {
     try {
       enterTiming();
       Label l =
-          toLabel(readerPolicy(owner, PrincipalUtil.disjunction(readers)));
+          toLabel(readerPolicy(owner, PrincipalUtil.disjunction(core, readers)));
       return l;
     } finally {
       exitTiming();
@@ -220,22 +225,24 @@ public class LabelUtil {
   /**
    * See the Jif signature for the explanation of lbl.
    */
-  public Label readerPolicyLabel(Label lbl, Principal owner, Principal[] readers) {
+  public Label readerPolicyLabel(Core core, Label lbl, Principal owner,
+      Principal[] readers) {
     try {
       enterTiming();
       if (readers == null)
-        return readerPolicyLabel(owner, Collections.EMPTY_SET);
-      return readerPolicyLabel(owner, Arrays.asList(readers));
+        return readerPolicyLabel(core, owner, Collections.EMPTY_SET);
+      return readerPolicyLabel(core, owner, Arrays.asList(readers));
     } finally {
       exitTiming();
     }
   }
 
-  public Label readerPolicyLabel(Principal owner, PrincipalSet readers) {
+  public Label readerPolicyLabel(Core core, Principal owner,
+      PrincipalSet readers) {
     try {
       enterTiming();
-      return readerPolicyLabel(owner, PrincipalUtil.disjunction(readers
-          .getSet()));
+      return readerPolicyLabel(owner, PrincipalUtil.disjunction(core,
+          readers.getSet()));
     } finally {
       exitTiming();
     }
@@ -250,11 +257,11 @@ public class LabelUtil {
     }
   }
 
-  public IntegPolicy writerPolicy(Principal owner,
+  public IntegPolicy writerPolicy(Core core, Principal owner,
       Collection/* <Principal> */writers) {
     try {
       enterTiming();
-      return writerPolicy(owner, PrincipalUtil.disjunction(writers));
+      return writerPolicy(owner, PrincipalUtil.disjunction(core, writers));
     } finally {
       exitTiming();
     }
@@ -269,11 +276,12 @@ public class LabelUtil {
     }
   }
 
-  public Label writerPolicyLabel(Principal owner,
+  public Label writerPolicyLabel(Core core, Principal owner,
       Collection/* <Principal> */writers) {
     try {
       enterTiming();
-      return toLabel(writerPolicy(owner, PrincipalUtil.disjunction(writers)));
+      return toLabel(writerPolicy(owner,
+          PrincipalUtil.disjunction(core, writers)));
     } finally {
       exitTiming();
     }
@@ -282,35 +290,38 @@ public class LabelUtil {
   /**
    * See the Jif signature for the explanation of lbl.
    */
-  public Label writerPolicyLabel(Label lbl, Principal owner, Principal[] writers) {
-    try {
-      enterTiming();
-      if (writers == null)
-        return writerPolicyLabel(owner, Collections.EMPTY_SET);
-      return writerPolicyLabel(owner, Arrays.asList(writers));
-    } finally {
-      exitTiming();
-    }
-  }
-
-  /**
-   * See the Jif signature for the explanation of lbl.
-   */
-  public IntegPolicy writerPolicy(Label lbl, Principal owner,
+  public Label writerPolicyLabel(Core core, Label lbl, Principal owner,
       Principal[] writers) {
     try {
       enterTiming();
-      if (writers == null) return writerPolicy(owner, Collections.EMPTY_SET);
-      return writerPolicy(owner, Arrays.asList(writers));
+      if (writers == null)
+        return writerPolicyLabel(core, owner, Collections.EMPTY_SET);
+      return writerPolicyLabel(core, owner, Arrays.asList(writers));
     } finally {
       exitTiming();
     }
   }
 
-  public IntegPolicy writerPolicy(Principal owner, PrincipalSet writers) {
+  /**
+   * See the Jif signature for the explanation of lbl.
+   */
+  public IntegPolicy writerPolicy(Core core, Label lbl, Principal owner,
+      Principal[] writers) {
     try {
       enterTiming();
-      return writerPolicy(owner, writers.getSet());
+      if (writers == null)
+        return writerPolicy(core, owner, Collections.EMPTY_SET);
+      return writerPolicy(core, owner, Arrays.asList(writers));
+    } finally {
+      exitTiming();
+    }
+  }
+
+  public IntegPolicy writerPolicy(Core core, Principal owner,
+      PrincipalSet writers) {
+    try {
+      enterTiming();
+      return writerPolicy(core, owner, writers.getSet());
     } finally {
       exitTiming();
     }
@@ -319,7 +330,8 @@ public class LabelUtil {
   public Label toLabel(ConfPolicy cPolicy, IntegPolicy iPolicy) {
     try {
       enterTiming();
-      if (cPolicy == null || iPolicy == null) throw new NullPointerException();
+      if (cPolicy == null || iPolicy == null)
+        throw new NullPointerException@localCore();
       return new PairLabel(this, cPolicy, iPolicy);
     } finally {
       exitTiming();
@@ -599,7 +611,7 @@ public class LabelUtil {
   public boolean isReadableBy(Label lbl, Principal p) {
     try {
       enterTiming();
-      Label L = toLabel(PrincipalUtil.readableByPrinPolicy(p));
+      Label L = toLabel(PrincipalUtil.readableByPrinPolicy(localCore, p));
       return relabelsTo(lbl, L);
     } finally {
       exitTiming();

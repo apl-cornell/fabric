@@ -46,18 +46,20 @@ public class PrincipalUtil {
    * Returns true if and only if the principal p acts for the principal q.
    */
   public static boolean actsFor(Principal p, Principal q) {
-    return actsForProof(p, q) != null;
+    final Core localCore = Client.getClient().getLocalCore();
+    return actsForProof(localCore, p, q) != null;
   }
 
   /**
    * Returns an actsfor proof if and only if the principal p acts for the
    * principal q.
    */
-  public static ActsForProof actsForProof(Principal p, Principal q) {
+  public static ActsForProof actsForProof(Core core, Principal p, Principal q) {
+    final Core localCore = Client.getClient().getLocalCore();
     try {
       LabelUtil.singleton().enterTiming();
       // try cache
-      ActsForPair pair = new ActsForPair(p, q);
+      ActsForPair pair = new ActsForPair@localCore(p, q);
       if (LabelUtil.USE_CACHING) {
         if (cacheActsFor.containsKey(pair)) {
           return (ActsForProof) cacheActsFor.get(pair);
@@ -65,22 +67,22 @@ public class PrincipalUtil {
         if (cacheNotActsFor.contains(pair)) return null;
       }
 
-      if (delegatesTo(q, p)) return new DelegatesProof(p, q);
+      if (delegatesTo(q, p)) return new DelegatesProof@core(p, q);
 
       // if the two principals are ==-equal, or if they
       // both agree that they are equal to each other, then
       // we return true (since the acts-for relation is
       // reflexive).
-      if (eq(p, q)) return new ReflexiveProof(p, q);
+      if (eq(p, q)) return new ReflexiveProof@core(p, q);
 
       // try searching
-      ActsForProof prf = findActsForProof(p, q, null);
+      ActsForProof prf = findActsForProof(core, p, q, null);
       if (prf != null && (verifyProof(prf, p, q))) {
         if (LabelUtil.USE_CACHING) {
           cacheActsFor.put(pair, prf);
         }
         // add dependencies that this actsfor replies on.
-        Set s = new HashSet();
+        Set s = new HashSet@localCore();
         prf.gatherDelegationDependencies(s);
         // for each DelegationPair in s, if that delegation is removed, the
         // proof is no longer valid.
@@ -128,8 +130,9 @@ public class PrincipalUtil {
    */
   public static void notifyRevokeDelegation(Principal granter,
       Principal superior) {
+    final Core localCore = Client.getClient().getLocalCore();
     if (LabelUtil.USE_CACHING) {
-      DelegationPair del = new DelegationPair(superior, granter);
+      DelegationPair del = new DelegationPair@localCore(superior, granter);
       Set deps = (Set) cacheActsForDependencies.remove(del);
       if (deps != null) {
         for (Iterator iter = deps.iterator(); iter.hasNext();) {
@@ -152,43 +155,31 @@ public class PrincipalUtil {
    *                records the goals that we are in the middle of attempting
    * @return An ActsForPoorf between p and q, or null if none can be found.
    */
-  public static ActsForProof findActsForProof(Principal p, Principal q,
+  public static ActsForProof findActsForProof(Core core, Principal p, Principal q,
       Object searchState) {
+    final Core localCore = Client.getClient().getLocalCore();
     try {
       LabelUtil.singleton().enterTiming();
       // try the dumb things first.
-      if (eq(p, q)) {
-        return new ReflexiveProof(p, q);
-      }
       if (q == null) {
-        return new DelegatesProof(p, q);
+        return new DelegatesProof@core(p, q);
+      }
+      if (eq(p, q)) {
+        return new ReflexiveProof@core(p, q);
       }
 
       // check the search state
-      Principal[] newss;
-      int ind = 0;
-      if (searchState instanceof Principal[]) {
-        Principal[] ss = (Principal[]) searchState;
-        newss = new Principal[ss.length + 2];
-        // ss is an array of principals, such that ss[2i],ss[2i+1] is goal on
-        // the goal stack.
-        for (; ind + 1 < ss.length; ind += 2) {
-          // check that p and q are not equal to ss[i] and ss[i+1]
-          if (eq(p, ss[ind]) && eq(q, ss[ind + 1])) {
-            // p and q are already on the goal stack. Prevent an infinite
-            // recursion.
-            return null;
-          }
-
-          newss[ind] = ss[ind];
-          newss[ind + 1] = ss[ind + 1];
-        }
+      ProofSearchState newss;
+      if (searchState instanceof ProofSearchState) {
+	ProofSearchState ss = (ProofSearchState)searchState;
+	if (ss.contains(p, q)) {
+	  // p and q are already on the goal stack. Prevent an infinite recursion.
+	  return null;
+	}
+	newss = new ProofSearchState@localCore(ss, p, q);                                        
       } else {
-        newss = new Principal[2];
+	newss = new ProofSearchState@localCore(p, q);
       }
-      // ind+1 is now less than newss.length
-      newss[ind] = p;
-      newss[ind + 1] = q;
 
       // if we're going from a dis/conjunctive principal, try finding a
       // downwards
@@ -197,18 +188,18 @@ public class PrincipalUtil {
       boolean doneDownTo = false;
       if (p instanceof ConjunctivePrincipal
           || p instanceof DisjunctivePrincipal) {
-        prf = p.findProofDownto(q, newss);
+        prf = p.findProofDownto(core, q, newss);
         if (prf != null) return prf;
         doneDownTo = true;
       }
 
       // try searching upwards from q.
-      prf = q.findProofUpto(p, newss);
+      prf = q.findProofUpto(core, p, newss);
       if (prf != null) return prf;
 
       // try searching downards from p.
       if (!doneDownTo && p != null) {
-        prf = p.findProofDownto(q, newss);
+        prf = p.findProofDownto(core, q, newss);
         if (prf != null) return prf;
       }
 
@@ -220,6 +211,32 @@ public class PrincipalUtil {
 
   }
 
+  private static class ProofSearchState {
+    private ActsForPair[] goalstack;
+
+    public ProofSearchState(Principal p, Principal q) {
+      goalstack = new ActsForPair[1];
+      goalstack[0] = new ActsForPair(p, q);
+    }
+    private ProofSearchState(ProofSearchState ss, Principal p, Principal q) {
+      int len = ss.goalstack.length + 1;
+      goalstack = new ActsForPair[len];
+      System.arraycopy(ss.goalstack, 0, goalstack, 0, len-1);
+      goalstack[len-1] = new ActsForPair(p, q);
+    }
+    public boolean contains(Principal p, Principal q) {
+      for (int i = 0; i < goalstack.length; i++) {
+	if (goalstack[i] != null) {
+	  if (eq(goalstack[i].p, p) && eq(goalstack[i].q, q)) {
+	    return true;
+	  }
+	}
+      }
+      return false;
+    }
+    
+  }
+    
   /**
    * Return whether principals p and q are equal. p and q must either be
    * references to the same object, both be null, or agree that they are equal
@@ -335,7 +352,8 @@ public class PrincipalUtil {
    * Execute the given closure, if the principal agrees.
    */
   public static Object execute(Principal p, Object authPrf, Closure c, Label lb) {
-    Capability cap = authorize(p, authPrf, c, lb, true);
+    final Core localCore = Client.getClient().getLocalCore();
+    Capability cap = authorize(localCore, p, authPrf, c, lb, true);
     if (cap != null) {
       return cap.invoke();
     }
@@ -345,13 +363,13 @@ public class PrincipalUtil {
   /**
    * Obtain a Capability for the given principal and closure.
    */
-  public static Capability authorize(Principal p, Object authPrf, Closure c,
-      Label lb) {
-    return authorize(p, authPrf, c, lb, false);
+  public static Capability authorize(Core core, Principal p, Object authPrf,
+      Closure c, Label lb) {
+    return authorize(core, p, authPrf, c, lb, false);
   }
 
-  private static Capability authorize(Principal p, Object authPrf, Closure c,
-      Label lb, boolean executeNow) {
+  private static Capability authorize(Core core, Principal p, Object authPrf,
+      Closure c, Label lb, boolean executeNow) {
     try {
       LabelUtil.singleton().enterTiming();
       Principal closureP = c.jif$getjif_lang_Closure_P();
@@ -366,7 +384,7 @@ public class PrincipalUtil {
             // either p is null (and the "null" principal always
             // gives authority!) or p grants authority to execute the
             // closure.
-            return new Capability(closureP, closureL, c);
+            return new Capability@core(closureP, closureL, c);
           }
         }
       }
@@ -405,50 +423,50 @@ public class PrincipalUtil {
 //    return p == TOP_PRINCIPAL;
   }
 
-  public static ConfPolicy readableByPrinPolicy(Principal p) {
+  public static ConfPolicy readableByPrinPolicy(Core core, Principal p) {
     try {
       LabelUtil.singleton().enterTiming();
-      return new ReaderPolicy(LabelUtil.singleton(), topPrincipal(), p);
+      return new ReaderPolicy@core(LabelUtil.singleton(), topPrincipal(), p);
     } finally {
       LabelUtil.singleton().exitTiming();
     }
 
   }
 
-  public static Principal disjunction(Principal left, Principal right) {
+  public static Principal disjunction(Core core, Principal left, Principal right) {
     try {
       LabelUtil.singleton().enterTiming();
       if (left == null || right == null) return null;
       if (actsFor(left, right)) return right;
       if (actsFor(right, left)) return left;
-      Collection/* <Principal> */c = new ArrayList/* <Principal> */(2);
+      Collection/* <Principal> */c = new ArrayList/* <Principal> */@core(2);
       c.add(left);
       c.add(right);
-      return disjunction(c);
+      return disjunction(core, c);
     } finally {
       LabelUtil.singleton().exitTiming();
     }
 
   }
 
-  public static Principal conjunction(Principal left, Principal right) {
+  public static Principal conjunction(Core core, Principal left, Principal right) {
     try {
       LabelUtil.singleton().enterTiming();
       if (left == null) return right;
       if (right == null) return left;
       if (actsFor(left, right)) return left;
       if (actsFor(right, left)) return right;
-      Collection/* <Principal> */c = new ArrayList/* <Principal> */(2);
+      Collection/* <Principal> */c = new ArrayList/* <Principal> */@core(2);
       c.add(left);
       c.add(right);
-      return conjunction(c);
+      return conjunction(core, c);
     } finally {
       LabelUtil.singleton().exitTiming();
     }
 
   }
 
-  public static Principal disjunction(Collection/* <Principal> */principals) {
+  public static Principal disjunction(Core core, Collection/* <Principal> */principals) {
     try {
       LabelUtil.singleton().enterTiming();
       if (principals == null || principals.isEmpty()) {
@@ -462,7 +480,7 @@ public class PrincipalUtil {
       }
 
       // go through the collection of principals, and flatten them
-      Set/* <Principal> */needed = new LinkedHashSet/* <Principal> */();
+      Set/* <Principal> */needed = new LinkedHashSet/* <Principal> */@core();
       for (Iterator/* <Principal> */iter = principals.iterator(localCore); iter
           .hasNext();) {
         Object o = iter.next();
@@ -476,20 +494,20 @@ public class PrincipalUtil {
           needed.add(p);
         }
       }
-      return new DisjunctivePrincipal(needed);
+      return new DisjunctivePrincipal@core(needed);
     } finally {
       LabelUtil.singleton().exitTiming();
     }
 
   }
 
-  public static Principal conjunction(Collection/* <Principal> */principals) {
+  public static Principal conjunction(Core core, Collection/* <Principal> */principals) {
     try {
       LabelUtil.singleton().enterTiming();
       if (principals == null || principals.isEmpty()) {
         return bottomPrincipal();
       }
-      Core localCore = Client.getClient().getLocalCore();
+      final Core localCore = Client.getClient().getLocalCore();
       if (principals.size() == 1) {
         Object o = principals.iterator(localCore).next();
         if (o == null || o instanceof Principal) return (Principal) o;
@@ -497,7 +515,7 @@ public class PrincipalUtil {
       }
 
       // go through the collection of principals, and flatten them
-      Set/* <Principal> */needed = new LinkedHashSet/* <Principal> */();
+      Set/* <Principal> */needed = new LinkedHashSet/* <Principal> */@core();
       for (Iterator/* <Principal> */iter = principals.iterator(localCore); iter
           .hasNext();) {
         Object o = iter.next();
@@ -512,7 +530,7 @@ public class PrincipalUtil {
           needed.add(p);
         }
       }
-      return new ConjunctivePrincipal(needed);
+      return new ConjunctivePrincipal@core(needed);
     } finally {
       LabelUtil.singleton().exitTiming();
     }
@@ -562,11 +580,13 @@ public class PrincipalUtil {
       return false;
     }
 
-    public ActsForProof findProofUpto(Principal p, Object searchState) {
+    public ActsForProof findProofUpto(Core core, Principal p,
+        Object searchState) {
       return null;
     }
 
-    public ActsForProof findProofDownto(Principal q, Object searchState) {
+    public ActsForProof findProofDownto(Core core, Principal q,
+        Object searchState) {
       return null;
     }
 

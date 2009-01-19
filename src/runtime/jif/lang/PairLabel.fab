@@ -1,5 +1,7 @@
 package jif.lang;
 
+import fabric.client.Client;
+import fabric.client.Core;
 import fabric.util.HashSet;
 import fabric.util.Set;
 
@@ -13,19 +15,20 @@ public final class PairLabel implements Label {
   private final IntegPolicy integPol;
   private Integer hashCode = null;
   private LabelUtil labelUtil;
+  public final Core localCore = Client.getClient().getLocalCore();
 
   public PairLabel(LabelUtil labelUtil, ConfPolicy confPol, IntegPolicy integPol) {
     this.labelUtil = labelUtil;
     this.confPol = confPol;
     this.integPol = integPol;
-    if (confPol == null || integPol == null) throw new NullPointerException();
+    if (confPol == null || integPol == null) throw new NullPointerException@localCore();
   }
 
   public boolean relabelsTo(Label l, Set s) {
     if (l instanceof PairLabel) {
       PairLabel that = (PairLabel) l;
       if (this == that || this.equals(that)) return true;
-      Set temp = new HashSet();
+      Set temp = new HashSet@localCore();
       if (labelUtil.relabelsTo(this.confPol, that.confPol, temp)
           && labelUtil.relabelsTo(this.integPol, that.integPol, temp)) {
         s.addAll(temp);

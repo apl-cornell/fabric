@@ -1,5 +1,7 @@
 package jif.lang;
 
+import fabric.client.Client;
+import fabric.client.Core;
 import fabric.util.HashSet;
 import fabric.util.Iterator;
 import fabric.util.Set;
@@ -10,6 +12,7 @@ import fabric.util.Set;
 public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
   private final Principal owner;
   private final Principal reader;
+  public final Core localCore = Client.getClient().getLocalCore();
 
   public ReaderPolicy(LabelUtil labelUtil, Principal owner, Principal reader) {
     super(labelUtil);
@@ -41,7 +44,7 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
       MeetPolicy mp = (MeetPolicy) p;
       // this <= p1 meet ... meet p2 if for all pi
       // this <= pi
-      Set temp = new HashSet();
+      Set temp = new HashSet@localCore();
       for (Iterator iter = mp.meetComponents().iterator(); iter.hasNext();) {
         Policy pi = (Policy) iter.next();
         if (!labelUtil.relabelsTo(this, pi, temp)) return false;
@@ -57,19 +60,20 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
 
     // o' >= o?
 
-    ActsForProof ownersProof = PrincipalUtil.actsForProof(pp.owner, owner);
+    ActsForProof ownersProof =
+      PrincipalUtil.actsForProof(localCore, pp.owner, owner);
     if (ownersProof == null) {
       return false;
     }
     ActsForProof readerReaderProof =
-        PrincipalUtil.actsForProof(pp.reader, this.reader);
+        PrincipalUtil.actsForProof(localCore, pp.reader, this.reader);
     if (readerReaderProof != null) {
       ownersProof.gatherDelegationDependencies(s);
       readerReaderProof.gatherDelegationDependencies(s);
       return true;
     }
     ActsForProof readerOwnerProof =
-        PrincipalUtil.actsForProof(pp.reader, this.owner);
+        PrincipalUtil.actsForProof(localCore, pp.reader, this.owner);
     if (readerOwnerProof != null) {
       ownersProof.gatherDelegationDependencies(s);
       readerOwnerProof.gatherDelegationDependencies(s);
