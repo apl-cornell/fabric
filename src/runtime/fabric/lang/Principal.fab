@@ -1,0 +1,84 @@
+package fabric.lang;
+
+import fabric.client.Client;
+import fabric.client.Core;
+import fabric.util.Iterator;
+import fabric.util.LinkedHashSet;
+import fabric.util.Set;
+import fabric.util.HashMap;
+import fabric.util.Map;
+
+import jif.lang.*;
+
+public class Principal implements jif.lang.Principal {
+  private static final Core localCore = Client.getClient().getLocalCore();
+  private static final Map principalCache = new HashMap@localCore();
+  private static final Principal UNKNOWN_PRINCIPAL =
+    new Principal("unknown-principal") { };
+
+  static Principal getInstance(java.security.Principal javaPrincipal) {
+    return getInstance(javaPrincipal.getName());
+  }
+
+  static Principal getInstance(String name) {
+    if (name == null) return UNKNOWN_PRINCIPAL;
+
+    atomic {
+      Principal p = (Principal) principalCache.get(name);
+      if (p == null) {
+	p = new Principal(name);
+	principalCache.put(name, p);
+      }
+      return p;
+    }
+  }
+
+  private final String name;
+
+  private Principal(String name) {
+    this.name = name;
+  }
+
+  public String name() {
+    return name;
+  }
+
+  public boolean delegatesTo(jif.lang.Principal p) {
+    return false;
+  }
+
+  public boolean isAuthorized(Object authorizationProof, Closure closure,
+      Label lb, boolean executeNow) {
+    // The default is that this principal authorizes no closures.
+    return false;
+  }
+  
+  public ActsForProof findProofDownto(Core core, jif.lang.Principal q,
+      Object searchState) {
+    // don't even try! We don't have any information
+    // about who we can act for.
+    return null;
+  }
+
+  public ActsForProof findProofUpto(Core core, jif.lang.Principal p,
+      Object searchState) {
+    return null;
+  }
+
+  public boolean equals(Object o) {
+    if (o == null) return false;
+    if (o instanceof Principal) {
+      return equals((Principal) o);
+    }
+    return false;
+  }
+  
+  public boolean equals(jif.lang.Principal p) {
+    return p != null && (this.name == p.name() || (this.name != null && 
+	this.name.equals(p.name()))) && this.getClass() == p.getClass();        
+  }
+  
+  public int hashCode() {
+    return name.hashCode();
+  }
+}

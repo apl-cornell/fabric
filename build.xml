@@ -290,7 +290,7 @@
   </target>
 
   <!-- Compiles the Fabric client API -->
-  <target name="client" depends="init,native">
+  <target name="client" depends="init,native,fabric-runtime">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/client/**" />
       <include name="fabric/messages/**" />
@@ -457,7 +457,7 @@
     a change in the Fabric translation.
   -->
   <target name="fabric-arrays"
-      depends="bin,fabil-compiler,fabil-signatures,client">
+      depends="bin,fabil-compiler,fabil-signatures">
     <mkdir dir="${runtime.classes}" />
 
     <condition property="runtime.opt" value="-O0">
@@ -491,7 +491,7 @@
 
   <!-- Compiles the Fabric runtime -->
   <target name="fabric-runtime"
-      depends="init,fabil-compiler,fabil-signatures,fabric-arrays,client">
+      depends="init,fabil-compiler,fabil-signatures,fabric-arrays">
     <mkdir dir="${runtime.classes}" />
 
     <condition property="runtime.opt" value="-O0">
@@ -530,7 +530,7 @@
         <file name="fabric/util/Arrays.fab"/>
         <file name="fabric/util/TreeMap.fab"/>
         <file name="fabric/util/TreeSet.fab"/>
-        </filelist>
+      </filelist>
 
       <globmapper from="*.fab" to="*.class" />
     </apply>
