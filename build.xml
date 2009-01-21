@@ -283,8 +283,8 @@
       <include name="fabric/core/**" />
       <include name="fabric/messages/**" />
       <classpath>
-        <path refid="standard.classpath"/>
         <pathelement location="${runtime.classes}" />
+        <path refid="standard.classpath"/>
       </classpath>
     </javac>
   </target>
@@ -296,8 +296,8 @@
       <include name="fabric/messages/**" />
       <exclude name="fabric/client/debug/**" />
       <classpath>
-	<path refid="standard.classpath"/>
 	<pathelement location="${bootstrap.classes}" />
+	<path refid="standard.classpath"/>
       </classpath>
     </javac>
   </target>
@@ -307,8 +307,8 @@
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/dissemination/**" />
       <classpath>
-	<path refid="standard.classpath"/>
 	<pathelement location="${bootstrap.classes}" />
+	<path refid="standard.classpath"/>
       </classpath>
     </javac>
   </target>
@@ -346,8 +346,8 @@
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/client/debug/**" />
       <classpath>
-        <path refid="standard.classpath" />
         <pathelement location="${runtime.classes}" />
+        <path refid="standard.classpath" />
       </classpath>
     </javac>
   </target>
