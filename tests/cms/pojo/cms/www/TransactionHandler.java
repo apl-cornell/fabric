@@ -577,7 +577,9 @@ public class TransactionHandler {
             Assignment assign = (Assignment) assigns.next();
             transactions.computeAssignmentStats(p, assign, null);
           }
-          transactions.computeTotalScores(p, data, null);
+          if(!isAssign) {
+            transactions.computeTotalScores(p, course, null);
+          }
         } catch (Exception e) {
           e.printStackTrace();
           result
@@ -674,7 +676,7 @@ public class TransactionHandler {
         String list = null;
         DiskFileUpload upload = new DiskFileUpload();
         List info =
-            upload.parseRequest(request, 1024, AccessController.maxFileSize, null);
+            upload.parseRequest(request, 1024, AccessController.maxFileSize, FileUtil.TEMP_DIR);
         Iterator i = info.iterator();
         while (i.hasNext()) {
           FileItem item = (FileItem) i.next();

@@ -1026,6 +1026,8 @@ public class AccessController extends HttpServlet {
       }
     }
   
+    Transactions.refreshAddressFromRequest(request);
+    
     String buildURL = "";
     HttpSession session = request.getSession(true);
     session.setAttribute(TIME, new Long(System.currentTimeMillis()));

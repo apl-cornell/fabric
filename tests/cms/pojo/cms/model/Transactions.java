@@ -2,19 +2,49 @@ package cms.model;
 
 import java.util.*;
 
+import java.net.ConnectException;
+
 import javax.servlet.http.HttpServletRequest;
+import javax.naming.NameNotFoundException;
+import javax.naming.NamingException;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
 
 import cms.www.AccessController;
 import cms.www.TransactionError;
 import cms.www.TransactionResult;
 import cms.www.util.Emailer;
 import cms.www.util.Util;
+import cms.www.util.Profiler;
 
 public class Transactions {
   private CMSRoot database;
+  private Properties env = null;
+
+  // This field is used for sending links in emails to users,
+  // and telling clients which hostname to use in cross-site nav/overview
+  // (links from there to here)
+  // Example: "https://cms.csuglab.cornell.edu/web/auth/"
+  private static String cmsServerAddress = "";
 
   public Transactions(CMSRoot database) {
     this.database = database;
+    env = new Properties();
+    env.put("java.naming.factory.initial", "com.sun.jndi.ldap.LdapCtxFactory");
+    env.put("java.naming.provider.url", "ldap://directory.cornell.edu");
+  }
+  
+  public static String getCMSServerAddress() {
+    return cmsServerAddress;
+  }
+  
+  public static void refreshAddressFromRequest(HttpServletRequest req) {
+    String address = req.getServerName();
+    
+    // prefer this to not be an IP address, but an IP is better than nothing
+    if (!address.matches("[0-9\\.]*") || cmsServerAddress.equals(""))
+            cmsServerAddress = req.getRequestURL().toString(); // contains protocol and path, but not query string
   }
 
   public boolean acceptInvitation(User user, Group group) {
@@ -83,8 +113,297 @@ public class Transactions {
     throw new NotImplementedException();
   }
 
-  public TransactionResult addStudentsToCourse(User pr, Vector netids, Course course, boolean emailOn) {
+  public TransactionResult addStudentsToCourse(User p, Vector netIDs, Course course, boolean sendEmail) {
+    Profiler.enterMethod("TransactionBean.addStudentsToCourse", "CourseID: " + 
+        course.getCode());
+    TransactionResult result = new TransactionResult();
+    try {
+      /*
+       * allAssigns holds all assignment for the given course, so we can add new students
+       * to groups for all of them
+       */
+      Collection allAssigns = course.getAssignments();
+      Map submissionCounts = new HashMap();
+      for (Iterator i = allAssigns.iterator(); i.hasNext(); ) {
+        Assignment a = (Assignment) i.next();
+        submissionCounts.put(a, new Integer(a.getNumassignedfiles()));
+      }
+      Log log = startLog(p);
+      log.setCourse(course);
+      log.setLogName(Log.ADD_STUDENTS);
+      log.setLogType(Log.LOG_COURSE);
+      result = ensureUserExistence(netIDs, log);
+      HashSet staffMems = new HashSet();
+      Iterator classstaff = course.getStaff().iterator();
+      while (classstaff.hasNext()) {
+        Staff staff = (Staff) classstaff.next();
+        staffMems.add(staff.getUser().getNetID());
+      }
+      //TODO: Look into why on the production version of CMS, this just returns null
+      Collection graded = new Vector();
+      for (int j=0; j < netIDs.size(); j++) {
+        String netID = (String)netIDs.get(j);
+        User studentUser = database.getUser(netID);
+        if (staffMems.contains(netID)) {
+            result.addError("Could not add '" + netID + "': " +
+                        "Already a staff member for this course");
+            continue;
+        }
+        Student student = null;
+        try {
+          student = course.getStudent(studentUser);
+        } catch (Exception e) {}
+        if (student == null) {
+          student = new Student(course, studentUser);
+          LogDetail l = new LogDetail(log, "Added " + netID + " as a student",
+              studentUser);
+          // Place new student in a group for all assignments
+          Iterator i= allAssigns.iterator();
+          while (i.hasNext()) {
+            Assignment assign = (Assignment)i.next();
+            Group g= new Group(assign, 
+                ((Integer) submissionCounts.get(assign)).intValue());
+            new GroupMember(g, student, GroupMember.ACTIVE);
+          }
+        
+          if (sendEmail) sendAddedToCourseEmail(netID, course, log);
+        
+        } else {
+          boolean isAlreadyEnrolled = student.getStatus().equals(Student.ENROLLED);
+          if (isAlreadyEnrolled){
+            result.addWarning(netID + " was not added because he is already " +
+                        "enrolled in this course.");
+          }
+          else {
+            new LogDetail(log, netID + " was reenrolled as a student", studentUser);
+            student.setStatus(Student.ENROLLED);
+            //Place student in a group for all assignments (s)he doesn't have records for
+            Vector assignIDs = new Vector();
+            
+            throw new NotImplementedException("Not yet completed");
+            
+            /*
+            Collection groupedAssigns = course.findGrouplessAssignments(courseID, netID);
+            assignIDs = (Vector) allAssignIDs.clone();
+            for (Iterator i= groupedAssigns.iterator(); i.hasNext(); ) {
+                    assignIDs.remove(new Long(((AssignmentLocal) i.next()).getAssignmentID()));
+            }
+            for (int i=0; i < assignIDs.size(); i++) {
+                Long assignID = (Long) assignIDs.get(i);
+                GroupLocal g= database.groupHome().create(assignID.longValue(), ((Integer) submissionCounts.get(assignID)).intValue());
+                database.groupMemberHome().create(g.getGroupID(), netID, GroupMemberBean.ACTIVE);
+            }
+            
+            // check whether adding this student makes any group size exceedds limit
+            Iterator groups = database.groupHome().findByNetIDCourseID(netID, courseID).iterator();
+            while (groups.hasNext()) {
+                    GroupLocal group = (GroupLocal)groups.next();
+                    AssignmentLocal assign = database.assignmentHome().findByAssignmentID(group.getAssignmentID());
+                    int currentGroupSize = TransactionHandler.getActiveGroupSize(group);
+                    int maxGroupSize = assign.getGroupSizeMax();
+                    if (currentGroupSize > maxGroupSize && maxGroupSize > 1)
+                            result.addWarning("Adding student " + netID + " causes a group size in "
+                                                                    + assign.getName() + " to overflow.");
+                    
+            }
+            
+            if (sendEmail) sendAddedToCourseEmail(netID, course, log);
+            */
+          }
+        }
+      }
+      // Recompute assignment stats for any assignments which require it
+      Iterator i = graded.iterator();
+      while (i.hasNext()) {
+        Assignment assign = (Assignment)i.next();
+        computeAssignmentStats(p, assign, log);
+        appendAssignment(log, assign);
+      }
+      computeTotalScores(p, course, log);
+      Profiler.exitMethod("TransactionBean.addStudentsToCourse", "CourseID: " + 
+          course.getCode());
+      return result;
+    }
+    catch(Exception e) {
+      e.printStackTrace();
+      result.setException(e);
+      result.getErrors().clear();
+      result.addError("An unexpected error occurred, could not add students");
+    }
+    Profiler.exitMethod("TransactionBean.addStudentsToCourse", "CourseID: " + 
+        course.getCode());
+    return result;
+  }
+
+  /**
+   * Make sure all users whose NetIDs are given exist in the CMS database. Do this
+   * by querying both the database and the LDAP server if necessary.  Remove
+   * any NetIDs from the input vector which cannot be added as a user (due to errors).
+   * 
+   * This function is not a transaction; it's called from within other functions
+   * that are. That's why it doesn't roll back on an exception.
+   * @param netIDs A Vector of Strings
+   * @return A TransactionResult describing the result of the transaction
+   *  
+   */
+  protected TransactionResult ensureUserExistence(Vector netIDs, Log log) {
+    TransactionResult result = new TransactionResult();
+    Collection LDAPInput = new ArrayList();
+    Hashtable existingUsers = new Hashtable();
+    try {
+      for(int i = 0; i < netIDs.size(); i++) {
+        String netID = (String)netIDs.get(i);
+        User user = null;
+        try {
+          user = database.getUser(netID);
+        } catch (Exception e) {}
+        if(user == null) LDAPInput.add(netID);
+        else if(user.getFirstName() == null || user.getLastName() == null || 
+            user.getFirstName().equals("") || user.getLastName().equals("")) {
+          LDAPInput.add(netID);
+          existingUsers.put(netID, user);
+        }
+      }
+      if(!LDAPInput.isEmpty()) {
+        String[][] LDAPNames = null;
+        try {
+          result = getLDAPNames(LDAPInput);
+          LDAPNames = (String[][]) result.getValue();
+        } catch(NamingException e) {
+          String names = "";
+          netIDs.removeAll(LDAPInput);
+          result.addError("Could not add " + 
+              Util.listElements(LDAPInput) + ": " +
+                        "Could not connect to LDAP");
+          return result;
+        }
+        for(int i=0; i < LDAPNames.length; i++) {
+          String netid = LDAPNames[i][0];
+          String firstName = LDAPNames[i][1];
+          String lastName = LDAPNames[i][2];
+          if (firstName == null || lastName == null) {
+              netIDs.remove(netid);
+              continue;
+          }
+          if (existingUsers.containsKey(netid)) {
+            User user = (User) existingUsers.get(netid);
+            if ((user.getFirstName() == null || 
+                user.getFirstName().equals("")) && 
+                !firstName.equals(""))
+                    user.setFirstName(firstName);
+            if ((user.getLastName() == null || 
+                user.getLastName().equals("")) && 
+                !lastName.equals(""))
+                    user.setLastName(lastName);
+          } else {
+            try {
+              new User(database, netid, firstName, lastName, "TBD", "TBD");
+              appendDetail(log, "Created new user (" + lastName + ", " +  
+                  firstName + ") as " + netid);
+            } catch(Exception e) {
+              result.addError("Could not add " + netid + ": Unknown create error");
+              netIDs.remove(netid);
+            }
+          }
+        }
+      }
+    } catch(Exception e) {
+        e.printStackTrace();
+            result.setException(e);
+            result.addError("Could not add users due to an unexpected error");
+            netIDs = new Vector();
+    }
+    return result;
+  }
+  
+  /* functions to add details to a log */
+  
+  private void appendAssignment(Log log, Assignment assignment) {
+    LogDetail d = new LogDetail(log);
+    d.setAssignment(assignment);
+  }
+  
+  public static void appendDetail(Log log, String detail) {
+    new LogDetail(log, detail);
+  }
+  
+  public static void appendDetail(Log log, String detail, User affected) {
+    new LogDetail(log, detail, affected);
+  }
+        
+  /**
+   * Get and increment the course-specific file counter
+   * @ejb.interface-method view-type="local"
+   * @ejb.transaction type="Required"
+   */
+  public long getCourseFileCounter(Course course) {
     throw new NotImplementedException();
+  }
+  
+  /**
+   * Get and increment the group-specific file counter
+   * @param groupID The GroupID of the group
+   * @return 
+   * @ejb.interface-method view-type="local"
+   * @ejb.transaction type="Required"
+   */
+  public int getGroupFileCounter(long groupID) {
+    throw new NotImplementedException();
+  }
+  
+  /**
+   * Auxiliary to ensureUserExistence():
+   * Query the LDAP server to find the first and last name associated with the given netID
+   * @param netids        The NetIDs of the users to find information on
+   * @return      Returns a TransactionResult containing any errors which occurred,
+   *      and has as it's value a two dimensional string array containing:
+   *                              result[i][0] = the ith NetID in netids (This entry is null if an error occurred at this row)
+   *                              result[i][1] = the first name given by LDAP for the ith netid
+   *                              result[i][2] = the last name given by LDAP for the ith netid
+   *                              First and last name are in the form 
+   *                                      [Capital letter][all lowercase letters]
+   */
+  public TransactionResult getLDAPNames(Collection netids) throws NamingException {
+    TransactionResult result = new TransactionResult();
+    String[][] value = new String[netids.size()][3];
+    DirContext ctx = new InitialDirContext(env);
+    Iterator i = netids.iterator();
+    int count = 0;
+    while (i.hasNext()) {
+      value[count][0] = (String) i.next();
+      try {
+        Attributes attrs = ctx.getAttributes("uid=" + value[count][0] + ", ou=People, " + 
+        "o=Cornell University, c=US");
+        if (attrs.getAll() != null) {
+            try {
+                value[count][1] = (String)attrs.get("givenName").get();
+            } catch (NullPointerException e) {}
+            try {
+                value[count][2] = (String)attrs.get("sn").get();
+            } catch (NullPointerException e) {}
+        }
+        if (value[count][1] == null) value[count][1] = "";
+        if (value[count][2] == null) value[count][2] = "";
+        
+      } catch (NameNotFoundException e) {
+              result.addError("Could not add '" + value[count][0] + "': " +
+                        "Not a registered Cornell NetID");
+              value[count][1] = null;
+              value[count][2] = null;
+      }
+      // Correct capitalization:
+      for (int j= 1; j != 3; j++) {
+        if (value[count][j] == null) continue;
+        int length= value[count][j].length();
+        if (length > 0) 
+            value[count][j]= Character.toUpperCase(value[count][j].charAt(0)) + 
+                    value[count][j].substring(1, length).toLowerCase();
+      }
+      count++;
+    }
+    ctx.close();
+    result.setValue(value);
+    return result;
   }
 
   public boolean inviteUser(User inviter, User invited, Group group) {
@@ -136,6 +455,28 @@ public class Transactions {
 
   public TransactionResult removeExtension(User p, Group group) {
     throw new NotImplementedException();
+  }
+  
+  public void sendAddedToCourseEmail(String netID, Course course, Log log) {
+    try {
+      Emailer email = new Emailer();
+      email.setFrom("CMS _do not reply_ " + "<cms-devnull@csuglab.cornell.edu>");
+      email.setSubject("[" + course.getCode() + "]" + " - You Have Been Added to " + course.getName());
+      String msg = "You have been added to the CMS roster for the course " + course.getName() + ".\n\n" +
+                      "By default, you will not receive any further e-mails about this course.  To change preferences about e-mail notifications, such as when grades are released or groups are changed, navigate to the following page:\n" +
+                      "   " + getCMSServerAddress() + "?" + AccessController.P_ACTION + "=" + AccessController.ACT_STUDENTPREFS + "&" + AccessController.P_COURSEID + "=" + course.getCode() +
+                      "\n\n\n" +
+                      "-----------------------------------\n" +
+                      "This message was auto-generated by Cornell CMS.  Do not reply to this message directly.  ";
+      
+      email.setMessage(msg);
+      email.addTo(netID + "@cornell.edu");
+      if (!email.sendEmail()) throw new ConnectException("");
+      appendDetail(log, "Sent Added-to-Course Email to " + netID);
+    } catch (ConnectException e) {
+      appendDetail(log, "Failed to create a connection for sending email.  " +
+                "Could not send Added-to-Course email to " + netID + ".");              
+    }
   }
 
   public TransactionResult restoreAnnouncement(User p, Announcement announce) {
@@ -489,8 +830,120 @@ public class Transactions {
     throw new NotImplementedException();
   }
 
-  public void computeTotalScores(User p, Object data, Object object) {
-    throw new NotImplementedException();
+  public void computeTotalScores(User p, Course course, Log log) {
+    Profiler.enterMethod("TransactionBean.computeTotalScores", "CourseID: " + 
+        course.getCode());
+    try {
+      boolean commitLog = false;
+      if (log == null) {
+        log = startLog(p);
+        commitLog = true;
+        log.setLogName(Log.COMPUTE_TOTAL_SCORES);
+        log.setLogType(Log.LOG_COURSE);
+        log.setCourse(course);
+      }
+      Collection as = course.getAssignments();
+      Collection ss = course.getStudents();
+      Hashtable assignWeights = new Hashtable(), maxScores = new Hashtable();
+      Iterator grades = null;
+      Iterator assigns = as.iterator();
+      Iterator students = ss.iterator();
+      Hashtable totalScores = new Hashtable();
+      float maxTotalScore = 0;
+      while (assigns.hasNext()) {
+        Assignment assign = (Assignment) assigns.next();
+        assignWeights.put(assign, new Float(assign.getWeight()));
+        maxScores.put(assign, new Float(assign.getMaxScore()));
+        maxTotalScore += assign.getWeight();
+        
+        grades = assign.getGrades().iterator();
+        while (grades.hasNext()) {
+          Grade grade = (Grade) grades.next();
+          Float score = (Float) totalScores.get(grade.getUser());
+          Float w = (Float) assignWeights.get(grade.getAssignment());
+          Float m = (Float) maxScores.get(grade.getAssignment());
+          if (w == null || m == null) continue;
+          if (score == null) {
+              score = new Float((grade.getGrade().floatValue() / m.floatValue()) * w.floatValue());
+          } else {
+              score = new Float((grade.getGrade().floatValue() / m.floatValue()) * w.floatValue() + score.floatValue());
+          }
+          totalScores.put(grade.getUser(), score);
+        }
+      }
+     
+      float highTotalScore = 0;
+      float[] scoresArray = new float[ss.size()];
+      int i = 0;
+      while (students.hasNext()) {
+        Student student = (Student) students.next();
+        Float score = (Float) totalScores.get(student.getUser());
+        if (score != null) {
+          if (score.floatValue() > highTotalScore) {
+                  highTotalScore = score.floatValue();
+          }
+          scoresArray[i++] = score.floatValue();
+          if (!Util.equalNull(student.getTotalScore(), score)) {
+            boolean isnew = student.getTotalScore() == null;
+            float diff = isnew ? 0 : score.floatValue() - student.getTotalScore().floatValue();
+            student.setTotalScore(score);
+            appendDetail(log, "Total grade for " + student.getUser().getNetID()
+                + (isnew ? " " : " re") + "calculated to be " + score.floatValue() +
+                    (isnew ? "" : ((diff > 0 ? " (+" : " (") + diff + ")")));
+          }
+        } else {
+          if (student.getTotalScore() != null) {
+                  student.setTotalScore(null); // score null, so total score should be null
+          }
+        }
+      }
+      float[] sortedScores;
+      if (i < ss.size()) {
+        sortedScores = new float[i];
+        System.arraycopy(scoresArray, 0, sortedScores, 0, i);
+        Arrays.sort(sortedScores);
+      } else {
+        Arrays.sort(scoresArray);
+        sortedScores = scoresArray;
+      }
+      float meanTotalScore = 0;
+      for (int j = 0; j < sortedScores.length; j++) {
+        meanTotalScore += sortedScores[j];
+      }
+      meanTotalScore /= sortedScores.length;
+      float stDevTotalScore = 0;
+      for (int j = 0; j < sortedScores.length; j++) {
+        float diff = sortedScores[j] - meanTotalScore;
+        stDevTotalScore += diff * diff;
+      }
+      stDevTotalScore = (float) Math.sqrt(stDevTotalScore / sortedScores.length);
+      float medianTotalScore;
+      if (sortedScores.length % 2 == 0) {
+              medianTotalScore = sortedScores.length == 0 ? 0 : ((sortedScores[sortedScores.length / 2 - 1]
+                              + sortedScores[sortedScores.length / 2]) / 2.0f);
+      } else /* Odd */ {
+              medianTotalScore = sortedScores[(sortedScores.length - 1) / 2];
+      }
+      if (as.size() == 0) course.setMaxTotalScore(null);
+      else course.setMaxTotalScore(new Float(maxTotalScore));
+      if (as.size() == 0 || ss.size() == 0) {
+              course.setHighTotalScore(null);
+              course.setMeanTotalScore(null);
+              course.setMedianTotalScore(null);
+              course.setStDevTotalScore(null);
+      } else {
+              course.setHighTotalScore(new Float(highTotalScore));
+              course.setMeanTotalScore(new Float(meanTotalScore));
+              course.setMedianTotalScore(new Float(medianTotalScore));
+              course.setStDevTotalScore(new Float(stDevTotalScore));
+      }
+      Profiler.exitMethod("TransactionBean.computeTotalScores", "CourseID: " 
+          + course.getCode());
+    } catch (Exception e) {
+        e.printStackTrace();
+        Profiler.exitMethod("TransactionBean.computeTotalScores", "CourseID: " 
+            + course.getCode() + " - (crash)");
+    }
   }
   
   public Log startLog(User p) {
