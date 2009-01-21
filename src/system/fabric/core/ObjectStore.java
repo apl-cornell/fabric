@@ -1,11 +1,11 @@
 package fabric.core;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.util.NoSuchElementException;
 
 import fabric.common.SerializedObject;
 import fabric.core.store.StoreException;
+import fabric.lang.Principal;
 
 /**
  * <p>

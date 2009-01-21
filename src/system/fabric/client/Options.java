@@ -12,6 +12,10 @@ class Options extends fabric.common.Options {
 
   // This client's name.
   public String name;
+  
+  // If creating a new principal, this is the core on which the principal will
+  // be created; otherwise, this is null.
+  public String core;
 
   private Options() {
   }
@@ -24,6 +28,7 @@ class Options extends fabric.common.Options {
   public void setDefaultValues() {
     this.name = "client0"; // XXX this is for debugging convenience; should be null
     this.app = null;
+    this.core = null;
   }
 
   public static void usage(PrintStream out) {
@@ -35,6 +40,8 @@ class Options extends fabric.common.Options {
     out.println("  [param...] are the parameters to the Fabric application");
     out.println("and [options] includes:");
     usageForFlag(out, "--name <name>", "this client's name", defaults.name);
+    usageForFlag(out, "--make-principal <core>",
+        "create a new principal for this client on the given core and exit");
     usageForFlag(out, "--version", "print version info and exit");
     usageForFlag(out, "--help", "print this message");
   }
@@ -53,6 +60,11 @@ class Options extends fabric.common.Options {
     
     if (args[i].equals("--name")) {
       this.name = args[i+1];
+      return i + 2;
+    }
+    
+    if (args[i].equals("--make-principal")) {
+      this.core = args[i+1];
       return i + 2;
     }
     

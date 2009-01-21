@@ -3,7 +3,6 @@ package fabric.core;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
-import java.security.Principal;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -21,6 +20,7 @@ import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.store.StoreException;
+import fabric.lang.Principal;
 import fabric.messages.*;
 
 public class Worker extends Thread {
@@ -117,6 +117,8 @@ public class Worker extends Thread {
           // Indicate that the core exists.
           out.write(1);
           out.flush();
+          
+          String clientName;
 
           if (node.opts.useSSL) {
             // Initiate the SSL handshake and initialize the fields.
@@ -137,7 +139,7 @@ public class Worker extends Thread {
             this.in =
                 new ObjectInputStream(new BufferedInputStream(sslSocket
                     .getInputStream()));
-            this.client = sslSocket.getSession().getPeerPrincipal();
+            clientName = sslSocket.getSession().getPeerPrincipal().getName();
           } else {
             this.out =
                 new ObjectOutputStream(new BufferedOutputStream(socket
@@ -146,8 +148,10 @@ public class Worker extends Thread {
             this.in =
                 new ObjectInputStream(new BufferedInputStream(socket
                     .getInputStream()));
-            this.client = (Principal) in.readObject();
+            clientName = in.readUTF();
           }
+          
+          this.client = null; // XXX
 
           logger.info("Accepted connection for " + coreName);
           logger.info("(" + client + ")");
@@ -170,8 +174,6 @@ public class Worker extends Thread {
         logger.warning("Connection closed");
         logger.warning("(" + client + ")");
       } catch (final IOException e) {
-        logger.log(Level.WARNING, "Connection closing", e);
-      } catch (final ClassNotFoundException e) {
         logger.log(Level.WARNING, "Connection closing", e);
       }
 

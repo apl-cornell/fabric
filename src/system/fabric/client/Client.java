@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
@@ -19,6 +21,7 @@ import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.dissemination.FetchManager;
 import fabric.lang.Object;
+import fabric.lang.Principal;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
 import jif.lang.Label;
@@ -41,6 +44,7 @@ public class Client {
 
   // The principal on whose behalf this client is running.
   protected final Principal principal;
+  protected final java.security.Principal javaPrincipal;
 
   // Whether SSL encryption is desired.
   protected final boolean useSSL;
@@ -93,10 +97,11 @@ public class Client {
    *                Whether SSL encryption is desired. Used for debugging
    *                purposes.
    */
-  public static Client initialize(String name, KeyStore keyStore, char[] passwd,
-      KeyStore trustStore, int maxConnections, int timeout, int retries,
-      boolean useSSL, String fetcher) throws InternalError,
-      UnrecoverableKeyException, IllegalStateException {
+  public static Client initialize(String name, String principalURL,
+      KeyStore keyStore, char[] passwd, KeyStore trustStore,
+      int maxConnections, int timeout, int retries, boolean useSSL,
+      String fetcher) throws InternalError, UnrecoverableKeyException,
+      IllegalStateException, UsageError {
 
     if (instance != null)
       throw new IllegalStateException(
@@ -108,8 +113,8 @@ public class Client {
     log.config("retries:             " + retries);
     log.config("use ssl:             " + useSSL);
     instance =
-        new Client(name, keyStore, passwd, trustStore, maxConnections, timeout,
-            retries, useSSL, fetcher);
+        new Client(name, principalURL, keyStore, passwd, trustStore,
+            maxConnections, timeout, retries, useSSL, fetcher);
     return instance;
   }
 
@@ -118,39 +123,12 @@ public class Client {
    */
   protected static Client instance;
 
-  protected Client(String name, KeyStore keyStore, char[] passwd,
-      KeyStore trustStore, int maxConnections, int timeout, int retries,
-      boolean useSSL, String fetcher) throws InternalError,
-      UnrecoverableKeyException {
+  protected Client(String name, String principalURL, KeyStore keyStore,
+      char[] passwd, KeyStore trustStore, int maxConnections, int timeout,
+      int retries, boolean useSSL, String fetcher) throws InternalError,
+      UnrecoverableKeyException, UsageError {
     // Sanitise input.
     if (timeout < 1) timeout = DEFAULT_TIMEOUT;
-
-    // Set up the SSL socket factory.
-    try {
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-      kmf.init(keyStore, passwd);
-
-      this.principal =
-          ((X509KeyManager) kmf.getKeyManagers()[0])
-              .getCertificateChain(name)[0].getSubjectX500Principal();
-      log.config("Client principal is " + principal);
-
-      TrustManager[] tm = null;
-      if (trustStore != null) {
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
-        tmf.init(trustStore);
-        tm = tmf.getTrustManagers();
-      }
-      sslContext.init(kmf.getKeyManagers(), tm, null);
-      this.sslSocketFactory = sslContext.getSocketFactory();
-    } catch (KeyManagementException e) {
-      throw new InternalError("Unable to initialise key manager factory.", e);
-    } catch (NoSuchAlgorithmException e) {
-      throw new InternalError(e);
-    } catch (KeyStoreException e) {
-      throw new InternalError("Unable to initialise key manager factory.", e);
-    }
 
     this.timeout = 1000 * timeout;
     this.retries = retries;
@@ -162,6 +140,51 @@ public class Client {
 
     this.label = new ThreadLocal<Label>();
 
+    // Set up the SSL socket factory.
+    try {
+      SSLContext sslContext = SSLContext.getInstance("TLS");
+      KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+      kmf.init(keyStore, passwd);
+
+      TrustManager[] tm = null;
+      if (trustStore != null) {
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
+        tmf.init(trustStore);
+        tm = tmf.getTrustManagers();
+      }
+      sslContext.init(kmf.getKeyManagers(), tm, null);
+      this.sslSocketFactory = sslContext.getSocketFactory();
+
+      this.javaPrincipal =
+          ((X509KeyManager) kmf.getKeyManagers()[0])
+              .getCertificateChain(name)[0].getSubjectX500Principal();
+    } catch (KeyManagementException e) {
+      throw new InternalError("Unable to initialise key manager factory.", e);
+    } catch (NoSuchAlgorithmException e) {
+      throw new InternalError(e);
+    } catch (KeyStoreException e) {
+      throw new InternalError("Unable to initialise key manager factory.", e);
+    }
+    
+    // Initialize the reference to the principal object.
+    if (principalURL != null) {
+      try {
+        URI principalPath = new URI(principalURL);
+        Core core = getCore(principalPath.getHost());
+        long onum = Long.parseLong(principalPath.getPath());
+        this.principal = new Principal.$Proxy(core, onum);
+      } catch (URISyntaxException e) {
+        throw new UsageError("Invalid principal URL specified.", 1);
+      }
+    } else {
+      this.principal = null;
+    }
+    
+    log.config("Client principal is " + this.principal);
+
+    // Initialize the fetch manager. This MUST be the last thing done in the
+    // constructor, or the fetch manager will not be properly shut down if
+    // there's an error while initializing the client.
     try {
       this.fetchManager = (FetchManager) Class.forName(fetcher).newInstance();
     } catch (Exception e) {
@@ -216,8 +239,18 @@ public class Client {
     return fetchManager;
   }
 
+  /**
+   * @return the Fabric notion of the client principal.
+   */
   public Principal getPrincipal() {
     return principal;
+  }
+  
+  /**
+   * @return the Java notion of the client principal.
+   */
+  public java.security.Principal getJavaPrincipal() {
+    return javaPrincipal;
   }
 
   /**
@@ -251,13 +284,15 @@ public class Client {
 
   public static void initialize() throws IOException, KeyStoreException,
       NoSuchAlgorithmException, CertificateException,
-      UnrecoverableKeyException, IllegalStateException, InternalError {
+      UnrecoverableKeyException, IllegalStateException, InternalError,
+      UsageError {
     initialize(null);
   }
 
   public static void initialize(String name) throws IOException,
       KeyStoreException, NoSuchAlgorithmException, CertificateException,
-      UnrecoverableKeyException, IllegalStateException, InternalError {
+      UnrecoverableKeyException, IllegalStateException, InternalError,
+      UsageError {
     // Read in the Fabric properties file and update the System properties
     InputStream in = Resources.readFile("etc", "client.properties");
     Properties p = new Properties(System.getProperties());
@@ -274,6 +309,8 @@ public class Client {
       } catch (IOException e) {
       }
     }
+    
+    String principalURL = System.getProperty("fabric.client.principal");
 
     KeyStore keyStore = KeyStore.getInstance("JKS");
     String passwd = System.getProperty("fabric.client.password");
@@ -303,8 +340,8 @@ public class Client {
     boolean useSSL =
         Boolean.parseBoolean(p.getProperty("fabric.client.useSSL", "true"));
 
-    initialize(name, keyStore, passwd.toCharArray(), trustStore, maxConnections,
-        timeout, retries, useSSL, fetcher);
+    initialize(name, principalURL, keyStore, passwd.toCharArray(), trustStore,
+        maxConnections, timeout, retries, useSSL, fetcher);
   }
 
   // TODO: throws exception?
@@ -314,39 +351,51 @@ public class Client {
     log.info("");
     
     // Parse the command-line options.
+    Client client = null;
     Options opts;
     try {
-      opts = new Options(args);
-    } catch (UsageError ue) {
-      PrintStream out = ue.exitCode == 0 ? System.out : System.err;
-      if (ue.getMessage() != null && ue.getMessage().length() > 0) {
-        out.println(ue.getMessage());
-        out.println();
-      }
-      
-      Options.usage(out);
-      throw new TerminationException(ue.exitCode);
-    }
-    
-    try {
-      initialize(opts.name);
-    } catch (Throwable t) {
-      shutdown_();
-      throw t;
-    }
-
-    // log the command line
-    StringBuilder cmd = new StringBuilder("Command Line: Client");
-    for (String c : args) {
-      cmd.append(" ");
-      cmd.append(c);
-    }
-    log.config(cmd.toString());
-
-    if (opts.app != null) {
-      Client c = getClient();
-
       try {
+        opts = new Options(args);
+        initialize(opts.name);
+
+        client = getClient();
+        if (client.getPrincipal() == null && opts.core == null) {
+          throw new UsageError(
+              "No fabric.client.principal specified in the client "
+                  + "configuration.  Either\nspecify one or create a principal "
+                  + "with --make-principal.");
+        }
+      } catch (UsageError ue) {
+        PrintStream out = ue.exitCode == 0 ? System.out : System.err;
+        if (ue.getMessage() != null && ue.getMessage().length() > 0) {
+          out.println(ue.getMessage());
+          out.println();
+        }
+
+        Options.usage(out);
+        throw new TerminationException(ue.exitCode);
+      }
+
+      // log the command line
+      StringBuilder cmd = new StringBuilder("Command Line: Client");
+      for (String s : args) {
+        cmd.append(" ");
+        cmd.append(s);
+      }
+      log.config(cmd.toString());
+
+      if (opts.core != null) {
+        // Create a principal object on the given core.
+        String name = client.getJavaPrincipal().getName();
+        Core core = client.getCore(opts.core);
+        TransactionManager.getInstance().startTransaction();
+        Principal principal = Principal.$Proxy.getInstance(core, name);
+        TransactionManager.getInstance().commitTransaction();
+
+        System.out.println("Client principal created:");
+        System.out.println("fab://" + opts.core + "/" + principal.$getOnum());
+      } else if (opts.app != null) {
+        // Run the requested application.
         Class<?> mainClass = Class.forName(opts.app[0] + "$$Impl");
         Method main =
             mainClass.getMethod("main", new Class[] { ObjectArray.class });
@@ -354,15 +403,17 @@ public class Client {
         for (int i = 0; i < newArgs.length; i++)
           newArgs[i] = opts.app[i + 1];
 
-        Core local = c.getLocalCore();
+        Core local = client.getLocalCore();
         TransactionManager.getInstance().startTransaction();
         Object argsProxy = WrappedJavaInlineable.$wrap(local, newArgs);
         TransactionManager.getInstance().commitTransaction();
 
         MainThread.invoke(opts, main, argsProxy);
-      } finally {
-        c.shutdown();
       }
+    } finally {
+      if (client != null)
+        client.shutdown();
+      else shutdown_();
     }
   }
 }

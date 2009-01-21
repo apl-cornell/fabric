@@ -2,32 +2,19 @@ package fabric.core.store.bdb;
 
 import static com.sleepycat.je.OperationStatus.SUCCESS;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.UnsupportedEncodingException;
-import java.security.Principal;
+import java.io.*;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.sleepycat.je.Database;
-import com.sleepycat.je.DatabaseConfig;
-import com.sleepycat.je.DatabaseEntry;
-import com.sleepycat.je.DatabaseException;
-import com.sleepycat.je.Environment;
-import com.sleepycat.je.EnvironmentConfig;
-import com.sleepycat.je.LockMode;
-import com.sleepycat.je.Transaction;
+import com.sleepycat.je.*;
 
 import fabric.common.InternalError;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongIterator;
 import fabric.core.ObjectStore;
 import fabric.core.PrepareRequest;
+import fabric.lang.Principal;
 
 /**
  * An ObjectStore backed by a Berkeley Database.

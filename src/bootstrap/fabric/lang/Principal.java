@@ -27,7 +27,30 @@ public interface Principal extends jif.lang.Principal, Object {
         Label lb, boolean executeNow);
 
     public native String name();
-    
+
     public static native Principal getInstance(Core core, String name);
+  }
+
+  public static class $Impl extends fabric.lang.Object.$Impl implements
+      fabric.lang.Principal {
+    public $Impl(fabric.client.Core $location, jif.lang.Label $label,
+        java.lang.String name) {
+      super($location, $label);
+    }
+
+    public native boolean delegatesTo(jif.lang.Principal p);
+
+    public native boolean equals(jif.lang.Principal p);
+
+    public native ActsForProof findProofDownto(Core core, jif.lang.Principal q,
+        Object searchState);
+
+    public native ActsForProof findProofUpto(Core core, jif.lang.Principal p,
+        Object searchState);
+
+    public native boolean isAuthorized(Object authPrf, Closure closure, Label lb,
+        boolean executeNow);
+
+    public native String name();
   }
 }

@@ -150,7 +150,7 @@ public class RemoteCore implements Core {
       out =
           new ObjectOutputStream(new BufferedOutputStream(socket
               .getOutputStream()));
-      out.writeObject(client.principal);
+      out.writeUTF(client.javaPrincipal.getName());
       out.flush();
       in =
           new ObjectInputStream(

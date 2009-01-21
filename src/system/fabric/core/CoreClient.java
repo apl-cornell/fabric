@@ -12,18 +12,20 @@ import java.util.Properties;
 import fabric.client.Client;
 import fabric.common.InternalError;
 import fabric.common.Resources;
+import fabric.common.UsageError;
 
 public class CoreClient extends Client {
   
   /** The node this CoreClient is attached to. */
   protected final Node node;
 
-  protected CoreClient(String clientName, KeyStore keyStore, char[] passwd,
-      KeyStore trustStore, int maxConnections, int timeout, int retries,
-      boolean useSSL, Node node) throws InternalError,
-      UnrecoverableKeyException {
-    super(clientName, keyStore, passwd, trustStore, maxConnections, timeout,
-        retries, useSSL, "fabric.client.DirectFetchManager");
+  protected CoreClient(String clientName, String clientPrincipalURL,
+      KeyStore keyStore, char[] passwd, KeyStore trustStore,
+      int maxConnections, int timeout, int retries, boolean useSSL, Node node)
+      throws InternalError, UnrecoverableKeyException, UsageError {
+    super(clientName, clientPrincipalURL, keyStore, passwd, trustStore,
+        maxConnections, timeout, retries, useSSL,
+        "fabric.client.DirectFetchManager");
     
     this.node = node;
     
@@ -70,9 +72,9 @@ public class CoreClient extends Client {
     boolean useSSL = Boolean.parseBoolean(
         System.getProperty("fabric.client.useSSL", "true"));
 
-    // XXX TODO replace the "client0" below with the actual name of the client.
-    initialize("client0", keyStore, passwd.toCharArray(), trustStore, maxConnections,
-        timeout, retries, useSSL, node);
+    // XXX TODO replace the name and principalURL below with the actual name and principalURL of the client.
+    initialize("client0", null, keyStore, passwd.toCharArray(), trustStore,
+        maxConnections, timeout, retries, useSSL, node);
   }
 
   /**
@@ -104,10 +106,10 @@ public class CoreClient extends Client {
    * @param Node
    *                The node where this CoreClient is running.
    */
-  public static Client initialize(String clientName, KeyStore keyStore,
-      char[] passwd, KeyStore trustStore, int maxConnections, int timeout,
-      int retries, boolean useSSL, Node node) throws InternalError,
-      UnrecoverableKeyException, IllegalStateException {
+  public static Client initialize(String clientName, String clientPrincipalURL,
+      KeyStore keyStore, char[] passwd, KeyStore trustStore,
+      int maxConnections, int timeout, int retries, boolean useSSL, Node node)
+      throws InternalError, UnrecoverableKeyException, IllegalStateException {
     
     if (instance != null)
       throw new IllegalStateException(
@@ -115,9 +117,13 @@ public class CoreClient extends Client {
     
     log.info("Initializing Fabric client");
     
-    instance =
-        new CoreClient(clientName, keyStore, passwd, trustStore,
-            maxConnections, timeout, retries, useSSL, node);
+    try {
+      instance =
+          new CoreClient(clientName, clientPrincipalURL, keyStore, passwd,
+              trustStore, maxConnections, timeout, retries, useSSL, node);
+    } catch (UsageError e) {
+      throw new InternalError(e.getMessage(), e);
+    }
     return instance;
   }
 

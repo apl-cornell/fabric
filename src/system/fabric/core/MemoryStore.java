@@ -3,7 +3,6 @@ package fabric.core;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,6 +16,7 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.store.StoreException;
+import fabric.lang.Principal;
 
 /**
  * <p>An in-memory implementation of the ObjectStore implementation.  This class
@@ -175,7 +175,9 @@ public class MemoryStore implements ObjectStore {
     PendingTransaction tx = pendingByTid.get(tid);
     if (tx == null)
       throw new StoreException();
-    if (!client.equals(tx.owner))
+    
+    // XXX This actually needs to check if the client acts for the owner.
+    if (client != tx.owner && !client.equals(tx.owner))
       throw new StoreException();
 
     // remove the pending transaction
