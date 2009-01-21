@@ -16,17 +16,17 @@ public class Principal implements jif.lang.Principal {
   private static final Principal UNKNOWN_PRINCIPAL =
     new Principal("unknown-principal") { };
 
-  static Principal getInstance(java.security.Principal javaPrincipal) {
-    return getInstance(javaPrincipal.getName());
-  }
-
-  static Principal getInstance(String name) {
+  /**
+   * Returns a Principal for the given name.  If no principal is known to exist,
+   * one is created on the given core.
+   */
+  public static Principal getInstance(Core core, String name) {
     if (name == null) return UNKNOWN_PRINCIPAL;
 
     atomic {
       Principal p = (Principal) principalCache.get(name);
       if (p == null) {
-	p = new Principal(name);
+	p = new Principal@core(name);
 	principalCache.put(name, p);
       }
       return p;
