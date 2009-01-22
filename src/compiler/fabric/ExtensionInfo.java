@@ -28,8 +28,6 @@ public class ExtensionInfo extends jif.ExtensionInfo {
     new Topics();
   }
 
-  protected fabil.ExtensionInfo targetExt;
-
   @Override
   public String defaultFileExtension() {
     return "fab";
@@ -54,7 +52,7 @@ public class ExtensionInfo extends jif.ExtensionInfo {
 
   @Override
   protected TypeSystem createTypeSystem() {
-    return new FabricTypeSystem_c(targetExt.typeSystem());
+    return new FabricTypeSystem_c(jlext.typeSystem());
   }
 
   @Override
@@ -69,6 +67,5 @@ public class ExtensionInfo extends jif.ExtensionInfo {
 
   public ExtensionInfo() {
     super();
-    targetExt = new fabil.ExtensionInfo();
   }
 }
