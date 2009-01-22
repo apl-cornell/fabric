@@ -25,6 +25,11 @@ public class Options extends fabric.common.Options {
    */
   public Map<String, CoreKeyStores> cores;
 
+  /**
+   * The name of the primary core.
+   */
+  public String primaryCoreName;
+
   public int threadPool;
   public int maxConnect;
   public int timeout;
@@ -57,6 +62,7 @@ public class Options extends fabric.common.Options {
     this.maxConnect = 25;
     this.timeout = 15;
     this.useSSL = true;
+    this.primaryCoreName = null;
   }
 
   public static void usage(PrintStream out) {
@@ -69,7 +75,9 @@ public class Options extends fabric.common.Options {
     usageForFlag(out,
         "--core <hostname> <keystore file> <truststore file> <passwd>",
         "participate in the given core with the associated key and trust "
-            + "stores. Can be specified multiple times.");
+            + "stores. Can be specified multiple times. The first core "
+            + "specified will be the node's \"primary\" core, and the core "
+            + "node's client will run under the primary core's principal.");
     usageForFlag(out, "--pool <number>", "size of worker thread pool",
         defaults.threadPool);
     usageForFlag(out, "--conn <number>", "maximum number of simultaneous "
@@ -143,6 +151,8 @@ public class Options extends fabric.common.Options {
 
       this.cores.put(coreName, new CoreKeyStores(keyStore,
           trustStore, passwd));
+      
+      if (this.primaryCoreName == null) this.primaryCoreName = coreName;
 
       return i + 4;
     }

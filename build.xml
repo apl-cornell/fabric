@@ -96,9 +96,6 @@
   <!-- filc executable -->
   <property name="filc" location="${bin}/filc" />
 
-  <!-- genmap executable -->
-  <property name="genmap" location="${bin}/genmap" />
-
   <path id="standard.classpath">
     <pathelement location="${classes}"/>
     <pathelement path="${java.class.path}" />
@@ -533,26 +530,6 @@
       </filelist>
 
       <globmapper from="*.fab" to="*.class" />
-    </apply>
-  </target>
-
-  <!-- Creates the contents of var -->
-  <target name="var" depends="bin,fabric-system">
-    <apply executable="bash"
-           dir="${basedir}"
-           dest="${var}"
-           failonerror="true"
-           vmlauncher="false"
-           relative="true"
-           parallel="true"
-           skipemptyfilesets="true"
-           addsourcefile="false">
-      <arg value="${genmap}" />
-      <targetfile />
-      <fileset dir="${etc}/keys"
-               includes="*.keystore"
-               excludes="trust.keystore" />
-      <globmapper from="*.keystore" to="*" />
     </apply>
   </target>
 

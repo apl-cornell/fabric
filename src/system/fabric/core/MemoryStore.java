@@ -29,7 +29,7 @@ import fabric.lang.Principal;
  * The <code>TransactionManager</code>'s thread safety ensures safe usage of
  * this class.</p>
  */
-public class MemoryStore implements ObjectStore {
+public class MemoryStore extends ObjectStore {
   
   /**
    * The data stored for a prepared transaction
@@ -39,6 +39,11 @@ public class MemoryStore implements ObjectStore {
     public PrepareRequest   request;
   }
 
+  /**
+   * Whether the store has been initialized.
+   */
+  private boolean isInitialized;
+  
   /**
    * Largest object number ever handed out
    */
@@ -62,22 +67,27 @@ public class MemoryStore implements ObjectStore {
    * Maps 48-bit object numbers to SerializedObjects.
    */
   private LongKeyMap<SerializedObject> objectTable;
-
-  private String name;
   
   private Logger log = Logger.getLogger("fabric.core.store.mem");
 
   /**
    * Opens the core contained in file "var/coreName" if it exists, or an empty
-   * core otherwise. 
+   * core otherwise.
+   * 
+   * @param name
+   *          name of core to create store for.
    */
   public MemoryStore(String name) {
+    super(name);
+    this.isInitialized = false;
     this.pendingByTid  = new HashMap<Integer, PendingTransaction>();
     this.pendingByOnum = new LongKeyHashMap<Collection<PendingTransaction>> ();
-    this.name          = name;
     
     try {
       ObjectInputStream oin = new ObjectInputStream(Resources.readFile("var", name));
+      
+      this.isInitialized = oin.readBoolean();
+      
       int size = oin.readInt();
       this.objectTable = new LongKeyHashMap<SerializedObject>(size);
       for (int i = 0; i < size; i++)
@@ -102,6 +112,7 @@ public class MemoryStore implements ObjectStore {
     log.info("Mem store loaded");
   }
 
+  @Override
   public int prepare(Principal client, PrepareRequest req) {
     // create and register PendingTransaction
     int tid = ++maxTid;
@@ -124,40 +135,49 @@ public class MemoryStore implements ObjectStore {
     return tid;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
   public void commit(Principal client, int tid) throws StoreException {
     PendingTransaction tx = remove(client, tid);
 
     // merge in the objects
-    for (SerializedObject o : Util.chain(tx.request.creates, tx.request.writes))
+    for (SerializedObject o : Util.chain(tx.request.creates, tx.request.writes)) {
       objectTable.put(o.getOnum(), o);
+    }
   }
 
+  @Override
   public void rollback(Principal client, int tid) throws StoreException {
     remove(client, tid);
   }
 
+  @Override
   public SerializedObject read(Principal client, long onum) {
     SerializedObject obj = objectTable.get(onum);
     return obj;
   }
 
+  @Override
   public boolean exists(long onum) {
     return isPrepared(onum) || objectTable.containsKey(onum);
   }
 
+  @Override
   public boolean isPrepared(long onum) {
     return pendingByOnum.containsKey(onum);
   }
 
+  @Override
   public boolean isRead(long onum) {
     return isPrepared(onum);  // TODO
   }
 
+  @Override
   public boolean isWritten(long onum) {
     return isPrepared(onum);  // TODO
   }
   
+  @Override
   public long[] newOnums(int num) {
     final long[] result = new long[num < 0 ? 0 : num];
 
@@ -176,9 +196,7 @@ public class MemoryStore implements ObjectStore {
     if (tx == null)
       throw new StoreException();
     
-    // XXX This actually needs to check if the client acts for the owner.
-    if (client != tx.owner && !client.equals(tx.owner))
-      throw new StoreException();
+    // XXX Check if the client acts for the owner.
 
     // remove the pending transaction
     pendingByTid.remove(tid);
@@ -192,12 +210,10 @@ public class MemoryStore implements ObjectStore {
     return tx;
   }
 
-  public String getName() {
-    return name;
-  }
-
+  @Override
   public void close() throws IOException {
     ObjectOutputStream oout = new ObjectOutputStream(Resources.writeFile("var", name));
+    oout.writeBoolean(isInitialized);
     oout.writeInt(this.objectTable.size());
     for (LongKeyMap.Entry<SerializedObject> entry : this.objectTable.entrySet()) {
       oout.writeLong(entry.getKey());
@@ -207,6 +223,16 @@ public class MemoryStore implements ObjectStore {
     oout.close();
   }
 
+  @Override
+  protected boolean isInitialized() {
+    return this.isInitialized;
+  }
+
+  @Override
+  protected void setInitialized() {
+    this.isInitialized = true;
+  }
+  
 }
 
 /*

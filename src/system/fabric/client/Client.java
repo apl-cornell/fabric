@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import javax.net.ssl.*;
 
+import jif.lang.Label;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.*;
 import fabric.common.InternalError;
@@ -24,7 +25,6 @@ import fabric.lang.Object;
 import fabric.lang.Principal;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
-import jif.lang.Label;
 
 /**
  * This is the main interface to the Fabric API. Applications wishing to use
@@ -100,8 +100,8 @@ public class Client {
   public static Client initialize(String name, String principalURL,
       KeyStore keyStore, char[] passwd, KeyStore trustStore,
       int maxConnections, int timeout, int retries, boolean useSSL,
-      String fetcher) throws InternalError, UnrecoverableKeyException,
-      IllegalStateException, UsageError {
+      String fetcher, PostInitExec postInitExec) throws InternalError,
+      UnrecoverableKeyException, IllegalStateException, UsageError {
 
     if (instance != null)
       throw new IllegalStateException(
@@ -115,6 +115,9 @@ public class Client {
     instance =
         new Client(name, principalURL, keyStore, passwd, trustStore,
             maxConnections, timeout, retries, useSSL, fetcher);
+    
+    if (postInitExec != null) postInitExec.run(instance);
+    
     return instance;
   }
 
@@ -123,7 +126,7 @@ public class Client {
    */
   protected static Client instance;
 
-  protected Client(String name, String principalURL, KeyStore keyStore,
+  private Client(String name, String principalURL, KeyStore keyStore,
       char[] passwd, KeyStore trustStore, int maxConnections, int timeout,
       int retries, boolean useSSL, String fetcher) throws InternalError,
       UnrecoverableKeyException, UsageError {
@@ -171,7 +174,7 @@ public class Client {
       try {
         URI principalPath = new URI(principalURL);
         Core core = getCore(principalPath.getHost());
-        long onum = Long.parseLong(principalPath.getPath());
+        long onum = Long.parseLong(principalPath.getPath().substring(1));
         this.principal = new Principal.$Proxy(core, onum);
       } catch (URISyntaxException e) {
         throw new UsageError("Invalid principal URL specified.", 1);
@@ -179,8 +182,6 @@ public class Client {
     } else {
       this.principal = null;
     }
-    
-    log.config("Client principal is " + this.principal);
 
     // Initialize the fetch manager. This MUST be the last thing done in the
     // constructor, or the fetch manager will not be properly shut down if
@@ -288,11 +289,18 @@ public class Client {
       UsageError {
     initialize(null);
   }
-
-  public static void initialize(String name) throws IOException,
+  
+  public static void initialize(String name) throws UnrecoverableKeyException,
       KeyStoreException, NoSuchAlgorithmException, CertificateException,
-      UnrecoverableKeyException, IllegalStateException, InternalError,
-      UsageError {
+      IllegalStateException, IOException, InternalError, UsageError {
+    initialize(name, null, null);
+  }
+
+  public static void initialize(String name, String principalURL,
+      PostInitExec postInitExec) throws IOException, KeyStoreException,
+      NoSuchAlgorithmException,
+      CertificateException, UnrecoverableKeyException, IllegalStateException,
+      InternalError, UsageError {
     // Read in the Fabric properties file and update the System properties
     InputStream in = Resources.readFile("etc", "client.properties");
     Properties p = new Properties(System.getProperties());
@@ -310,12 +318,13 @@ public class Client {
       }
     }
     
-    String principalURL = System.getProperty("fabric.client.principal");
+    if (principalURL == null)
+      principalURL = System.getProperty("fabric.client.principal");
 
     KeyStore keyStore = KeyStore.getInstance("JKS");
     String passwd = System.getProperty("fabric.client.password");
     String filename =
-        p.getProperty("fabric.client.keystore", "client.keystore");
+        p.getProperty("fabric.client.keystore", name + ".keystore");
     in = Resources.readFile("etc/keys", filename);
     keyStore.load(in, passwd.toCharArray());
     in.close();
@@ -341,7 +350,7 @@ public class Client {
         Boolean.parseBoolean(p.getProperty("fabric.client.useSSL", "true"));
 
     initialize(name, principalURL, keyStore, passwd.toCharArray(), trustStore,
-        maxConnections, timeout, retries, useSSL, fetcher);
+        maxConnections, timeout, retries, useSSL, fetcher, postInitExec);
   }
 
   // TODO: throws exception?
@@ -415,5 +424,18 @@ public class Client {
         client.shutdown();
       else shutdown_();
     }
+  }
+
+  /**
+   * This is a closure for executing code after standard client initialization
+   * is complete. It is used by, e.g., core.Node to establish a direct link
+   * between the client and the core.
+   */
+  public static interface PostInitExec {
+    void run(Client client);
+  }
+
+  public void setCore(String name, RemoteCore core) {
+    cores.put(name, core);
   }
 }

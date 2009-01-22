@@ -3,9 +3,14 @@ package fabric.core;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 
+import fabric.client.Client;
+import fabric.client.Core;
+import fabric.client.transaction.TransactionManager;
 import fabric.common.SerializedObject;
 import fabric.core.store.StoreException;
 import fabric.lang.Principal;
+import fabric.lang.WrappedJavaInlineable;
+import fabric.util.HashMap;
 
 /**
  * <p>
@@ -26,7 +31,13 @@ import fabric.lang.Principal;
  * creates it if it doesn't exist.
  * </p>
  */
-public interface ObjectStore {
+public abstract class ObjectStore {
+  
+  protected final String name;
+  
+  protected ObjectStore(String name) {
+    this.name = name;
+  }
 
   /**
    * Store object creations and modifications for later commit. The updates will
@@ -43,7 +54,8 @@ public interface ObjectStore {
    * @throws StoreException
    *           if the client has insufficient privileges.
    */
-  int prepare(Principal client, PrepareRequest req) throws StoreException;
+  public abstract int prepare(Principal client, PrepareRequest req)
+      throws StoreException;
 
   /**
    * Cause the objects prepared in transaction [tid] to be committed. The
@@ -57,7 +69,7 @@ public interface ObjectStore {
    * @throws StoreException
    *           if the principal differs from the caller of prepare()
    */
-  void commit(Principal client, int tid) throws StoreException;
+  public abstract void commit(Principal client, int tid) throws StoreException;
 
   /**
    * Cause the objects prepared in transaction [tid] to be discarded.
@@ -70,7 +82,7 @@ public interface ObjectStore {
    * @throws StoreException
    *           if the principal differs from the caller of prepare()
    */
-  void rollback(Principal client, int tid) throws StoreException;
+  public abstract void rollback(Principal client, int tid) throws StoreException;
 
   /**
    * Return the object stored at a particular onum.
@@ -86,7 +98,7 @@ public interface ObjectStore {
    * @throws NoSuchElementException
    *           if there is no object stored at the given onum
    */
-  SerializedObject read(Principal client, long onum)
+  public abstract SerializedObject read(Principal client, long onum)
       throws StoreException, NoSuchElementException;
 
   /**
@@ -97,7 +109,7 @@ public interface ObjectStore {
    * @return true if the object has been prepared by transaction that hasn't
    *         been committed or rolled back.
    */
-  boolean isPrepared(long onum);
+  public abstract boolean isPrepared(long onum);
 
   /**
    * Determine whether an onum has outstanding uncommitted reads.
@@ -107,7 +119,7 @@ public interface ObjectStore {
    * @return true if the object has been read by a transaction that hasn't
    *         been committed or rolled back.
    */
-  boolean isRead(long onum);
+  public abstract boolean isRead(long onum);
 
   /**
    * Determine whether an onum has outstanding uncommitted changes.
@@ -117,7 +129,7 @@ public interface ObjectStore {
    * @return true if the object has been changed by a transaction that hasn't
    *         been committed or rolled back.
    */
-  boolean isWritten(long onum);
+  public abstract boolean isWritten(long onum);
   
   /**
    * <p>
@@ -135,7 +147,7 @@ public interface ObjectStore {
    *          the number of onums to return
    * @return num fresh onums
    */
-  long[] newOnums(int num) throws StoreException;
+  public abstract long[] newOnums(int num) throws StoreException;
   
   /**
    * Checks whether an object with the corresponding onum exists, in either
@@ -145,17 +157,52 @@ public interface ObjectStore {
    *          the onum of to check
    * @return true if an object exists for onum
    */
-  boolean exists(long onum);
+  public abstract boolean exists(long onum);
 
   /**
    * Returns the name of this core.
    */
-  String getName();
+  public final String getName() {
+    return name;
+  }
   
   /**
    * Gracefully shutdown the object store.
    * @throws IOException 
    */
-  void close() throws IOException;
+  public abstract void close() throws IOException;
+  
+  /**
+   * Determines whether the object store has been initialized.
+   */
+  protected abstract boolean isInitialized();
+  
+  /**
+   * Sets a flag to indicate that the object store has been initialized.
+   */
+  protected abstract void setInitialized();
+
+  /**
+   * Ensures that the object store has been properly initialized. This creates,
+   * for example, the name-service map and the core's principal, if they do not
+   * already exist in the store.
+   */
+  @SuppressWarnings("deprecation")
+  public final void ensureInit() {
+    if (isInitialized()) return;
+    
+    Core core = Client.getClient().getCore(name);
+    
+    TransactionManager.getInstance().startTransaction();
+    HashMap.$Impl map = new HashMap.$Impl(core, null);
+    map.$forceRenumber(0L);
+    
+    Principal.$Impl principal = new Principal.$Impl(core, null, name);
+    principal.$forceRenumber(1L);
+    map.put(WrappedJavaInlineable.$wrap(name), principal.$getProxy());
+    TransactionManager.getInstance().commitTransaction();
+    
+    setInitialized();
+  }
 
 }

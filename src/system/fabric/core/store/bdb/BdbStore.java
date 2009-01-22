@@ -21,7 +21,7 @@ import fabric.lang.Principal;
  * 
  * @author xinz
  */
-public class BdbStore implements ObjectStore {
+public class BdbStore extends ObjectStore {
   
   protected Environment env;
   protected Database store;
@@ -29,12 +29,11 @@ public class BdbStore implements ObjectStore {
   protected Database prepared2;
   protected Database meta;
   
-  private DatabaseEntry tidCounter;
-  private DatabaseEntry onumCounter;
+  private final DatabaseEntry initializationStatus;
+  private final DatabaseEntry tidCounter;
+  private final DatabaseEntry onumCounter;
   
   private Logger log = Logger.getLogger("fabric.core.store.bdb");
-  
-  private String name;
   
   /**
    * Creates a new BdbStore for the core specified. A new database will be
@@ -43,7 +42,7 @@ public class BdbStore implements ObjectStore {
    * @param name name of core to create store for.
    */
   public BdbStore(String name) {
-    this.name = name;
+    super(name);
     String path = "var/bdb/" + name;
     new File(path).mkdirs();  // create path if it does not exist
     
@@ -70,6 +69,8 @@ public class BdbStore implements ObjectStore {
     }
     
     try {
+      initializationStatus =
+          new DatabaseEntry("initialization_status".getBytes("UTF-8"));
       tidCounter = new DatabaseEntry("tid_counter".getBytes("UTF-8"));
       onumCounter = new DatabaseEntry("onum_counter".getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
@@ -77,6 +78,7 @@ public class BdbStore implements ObjectStore {
     }
   }
 
+  @Override
   public void commit(Principal client, int tid) {
     log.finer("Bdb commit begin tid " + tid);
     
@@ -106,6 +108,7 @@ public class BdbStore implements ObjectStore {
     }
   }
 
+  @Override
   public boolean exists(long onum) {
     DatabaseEntry key = new DatabaseEntry(toBytes(onum));
     DatabaseEntry data = new DatabaseEntry();
@@ -123,14 +126,17 @@ public class BdbStore implements ObjectStore {
     return false;
   }
 
+  @Override
   public boolean isPrepared(long onum) {
     return prepared(onum) > 0;
   }
 
+  @Override
   public boolean isRead(long onum) {
     return prepared(onum) == 1;
   }
 
+  @Override
   public boolean isWritten(long onum) {
     return prepared(onum) == 2;
   }
@@ -151,13 +157,14 @@ public class BdbStore implements ObjectStore {
     return 0;
   }
   
+  @Override
   public long[] newOnums(int num) {
     log.fine("Bdb new onums begin");
     
     try {
       Transaction txn = env.beginTransaction(null, null);
       DatabaseEntry data = new DatabaseEntry();
-      long c = 1;
+      long c = 2;
       
       if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
         c = toLong(data.getData());
@@ -181,6 +188,7 @@ public class BdbStore implements ObjectStore {
     }
   }
 
+  @Override
   public int prepare(Principal client, PrepareRequest req) {
     int tid = newTid();
     log.finer("Bdb prepare begin tid " + tid);
@@ -224,6 +232,7 @@ public class BdbStore implements ObjectStore {
     }
   }
 
+  @Override
   public SerializedObject read(Principal client, long onum)
       throws NoSuchElementException {
     log.finest("Bdb read onum " + onum);
@@ -242,6 +251,7 @@ public class BdbStore implements ObjectStore {
     throw new NoSuchElementException();
   }
 
+  @Override
   public void rollback(Principal client, int tid) {
     log.finer("Bdb rollback begin tid " + tid);
     
@@ -259,6 +269,7 @@ public class BdbStore implements ObjectStore {
   /**
    * Clean up and close database.
    */
+  @Override
   public void close() {
     try {
       if (store != null) {
@@ -341,6 +352,53 @@ public class BdbStore implements ObjectStore {
       log.log(Level.SEVERE, "Bdb error in newTid: ", e);
       throw new InternalError(e);
     }
+  }
+  
+  @Override
+  public boolean isInitialized() {
+    log.fine("Bdb is initialized begin");
+    
+    try {
+      Transaction txn = env.beginTransaction(null, null);
+      DatabaseEntry data = new DatabaseEntry();
+      boolean result = false;
+      
+      if (meta.get(txn, initializationStatus, data, LockMode.DEFAULT) == SUCCESS) {
+        result = toBoolean(data.getData());
+      }
+      
+      txn.commit();
+      
+      return result;
+    } catch (DatabaseException e) {
+      log.log(Level.SEVERE, "Bdb error in isInitialized: ", e);
+      throw new InternalError(e);
+    }
+  }
+  
+  @Override
+  public void setInitialized() {
+    log.fine("Bdb set initialized begin");
+    
+    try {
+      Transaction txn = env.beginTransaction(null, null);
+      DatabaseEntry data = new DatabaseEntry();
+      data.setData(toBytes(true));
+      meta.put(txn, initializationStatus, data);
+      txn.commit();
+    } catch (DatabaseException e) {
+      log.log(Level.SEVERE, "Bdb error in isInitialized: ", e);
+      throw new InternalError(e);
+    }
+  }
+  
+  private byte[] toBytes(boolean b) {
+    byte[] result = { (byte) (b ? 1 : 0) };
+    return result;
+  }
+  
+  private boolean toBoolean(byte[] data) {
+    return data[0] == 1;
   }
   
   private byte[] toBytes(int i) {
@@ -430,10 +488,6 @@ public class BdbStore implements ObjectStore {
     } catch (IOException e) {
       throw new InternalError(e);
     }
-  }
-  
-  public String getName() {
-    return name;
   }
 
 }

@@ -249,17 +249,6 @@ public interface Object {
       TransactionManager.getInstance().registerCreate(this);
     }
 
-    /**
-     * Create an $Impl with the given object number
-     * 
-     * @deprecated this should only be called to create the root object. It does
-     *             not contact the core and thus any attempt to commit this
-     *             object will fail.
-     */
-    public $Impl(Core core, long onum, Label label) {
-      this(core, onum, 0, label);
-    }
-
     @Override
     public final $Impl clone() {
       try {
@@ -535,13 +524,19 @@ public interface Object {
     }
 
     /**
-     * This method changes the core and onum of the object. This method should
-     * not be called as it leaves the system in an inconsistent state.
+     * <p>
+     * This method changes the onum of the object. Unless if you <i>really</i>
+     * know what you're doing, you should <b>not</b> call this, as it leaves the
+     * system in an inconsistent state.
+     * </p>
+     * <p>
+     * This method is used to initialize object stores with objects at
+     * well-known onums (e.g., naming map and core principal).
+     * </p>
      * 
      * @deprecated
      */
-    public final void $forceRelocate(Core c, long onum) {
-      this.$ref.core = c;
+    public final void $forceRenumber(long onum) {
       this.$ref.onum = onum;
     }
   }

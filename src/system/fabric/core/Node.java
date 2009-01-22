@@ -4,10 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
+import java.security.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -19,6 +16,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
+import fabric.client.Client;
 import fabric.common.InternalError;
 import fabric.common.Resources;
 import fabric.core.Options.CoreKeyStores;
@@ -57,13 +55,13 @@ public class Node {
     this.cores = new HashMap<String, Core>();
     this.console = new ConsoleHandler();
     
-    // Initialize the cores with their object stores and SSL socket factories.
+    // Instantiate the cores with their object stores and SSL socket factories.
     for (Map.Entry<String, CoreKeyStores> coreEntry : opts.cores
         .entrySet()) {
       String coreName = coreEntry.getKey();
       CoreKeyStores keyStores = coreEntry.getValue();
 
-      ObjectStore core = loadCore(coreName);
+      ObjectStore store = loadCore(coreName);
       SSLSocketFactory sslSocketFactory;
 
       // Create the SSL socket factory.
@@ -80,7 +78,7 @@ public class Node {
         sslContext.init(kmf.getKeyManagers(), tm, null);
         sslSocketFactory = sslContext.getSocketFactory();
 
-        addCore(coreName, sslSocketFactory, core);
+        addCore(coreName, sslSocketFactory, store);
       } catch (KeyManagementException e) {
         throw new InternalError("Unable to initialise key manager factory.", e);
       } catch (UnrecoverableKeyException e1) {
@@ -94,7 +92,16 @@ public class Node {
       }
     }
     
+    // Start the client before instantiating the cores in case their object
+    // stores need initialization. (The initialization code will be run on the
+    // client.)
     startClient();
+    
+    // Ensure each core's object store has been properly initialized.
+    for (Core core : cores.values()) {
+      core.os.ensureInit();
+    }
+    
     console.println("Core started");
   }
 
@@ -131,7 +138,14 @@ public class Node {
   
   private void startClient() {
     try {
-      CoreClient.initialize(this);
+      Client.initialize(opts.primaryCoreName, "fab://" + opts.primaryCoreName
+          + "/1", new Client.PostInitExec() {
+        public void run(Client client) {
+          for (String s : cores.keySet()) {
+            client.setCore(s, new InProcessCore(s, cores.get(s)));
+          }
+        }
+      });
     } catch (Exception e) {
       throw new InternalError(e);
     }
@@ -149,7 +163,7 @@ public class Node {
    *                a <code>TransactionManager</code> to use for the core
    *                being added.
    */
-  public void addCore(String coreName, SSLSocketFactory sslSocketFactory,
+  private void addCore(String coreName, SSLSocketFactory sslSocketFactory,
       ObjectStore os) throws DuplicateCoreException {
     if (cores.containsKey(coreName))
       throw new DuplicateCoreException();

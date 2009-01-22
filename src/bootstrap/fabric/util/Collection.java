@@ -1,5 +1,7 @@
 package fabric.util;
 
-public interface Collection {
+import fabric.lang.Object;
+
+public interface Collection extends Object {
   
 }

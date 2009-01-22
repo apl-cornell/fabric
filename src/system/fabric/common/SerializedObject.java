@@ -45,12 +45,12 @@ public final class SerializedObject implements FastSerializable {
 
   /**
    * Creates a serialized representation of the given object. This should only
-   * be used by GenMap and for debugging (client.debug.*).
+   * be used by fabric.core.InProcessCore and for debugging (client.debug.*).
    * 
    * @param obj
-   *                The object to serialize.
+   *          The object to serialize.
+   * @deprecated
    */
-  @Deprecated
   public SerializedObject($Impl obj) {
     try {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
