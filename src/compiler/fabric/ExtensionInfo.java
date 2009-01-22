@@ -10,8 +10,6 @@ import polyglot.frontend.Scheduler;
 import polyglot.lex.Lexer;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
-import fabil.FabILOptions;
-import fabil.extension.FabILExt_c;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
 import fabric.parse.Grm;
@@ -67,5 +65,6 @@ public class ExtensionInfo extends jif.ExtensionInfo {
 
   public ExtensionInfo() {
     super();
+    this.jlext = new OutputExtensionInfo(this);
   }
 }
