@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Benchmark.fab,v 1.15 2008-05-07 17:29:22 mdgeorge Exp $
+// $Id: Benchmark.fil,v 1.1 2009-01-23 16:20:36 jed Exp $
 
 package OO7;
 

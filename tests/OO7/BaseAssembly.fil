@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BaseAssembly.fab,v 1.7 2008-05-07 17:29:22 mdgeorge Exp $
+// $Id: BaseAssembly.fil,v 1.1 2009-01-23 16:20:36 jed Exp $
 
 package OO7;
 import OO7.traversals.Traversal;

@@ -89,7 +89,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
 
   @Override
   public String defaultFileExtension() {
-    return "fab";
+    return "fil";
   }
 
   @Override

@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: CompositePart.fab,v 1.5 2008-01-17 19:32:00 mdgeorge Exp $
+// $Id: CompositePart.fil,v 1.1 2009-01-23 16:20:36 jed Exp $
 
 package OO7;
 import OO7.traversals.Traversal;

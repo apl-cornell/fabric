@@ -333,8 +333,8 @@
       <arg value="tests/classes" />
       <srcfile />
       <fileset dir="${basedir}/tests/fabnfs"
-          includes="fabnfs/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
+          includes="fabnfs/*.fil" />
+      <globmapper from="*.fil" to="*.class" />
     </apply>
   </target>
 
@@ -435,8 +435,8 @@
       <arg value="-sigcp" />
       <arg value="sig-classes/fabil" />
       <srcfile />
-      <fileset dir="${signatures.fabil.src}" includes="**/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
+      <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
+      <globmapper from="*.fil" to="*.class" />
     </apply>
   </target>
 
@@ -481,8 +481,8 @@
       <arg value="${bootstrap.classes}" />
       <!--arg value="-noserial" /-->
       <srcfile />
-      <fileset dir="${runtime.src}" includes="fabric/lang/arrays/*.fab"/>
-      <globmapper from="*.fab" to="*.class" />
+      <fileset dir="${runtime.src}" includes="fabric/lang/arrays/*.fil"/>
+      <globmapper from="*.fil" to="*.class" />
     </apply>
   </target>
 
@@ -515,21 +515,21 @@
       <arg value="-Xmx128M" />
       <srcfile />
       <fileset dir="${runtime.src}"
-          includes="**/*.fab"
-          excludes="fabric/util/*.fab,fabric/lang/arrays/*.fab" />
+          includes="**/*.fil"
+          excludes="fabric/util/*.fil,fabric/lang/arrays/*.fil" />
       <filelist dir="${runtime.src}">
-        <file name="fabric/util/HashMap.fab"/>
-        <file name="fabric/util/LinkedList.fab"/>
-        <file name="fabric/util/HashSet.fab"/>
-        <file name="fabric/util/LinkedHashSet.fab"/>
-        <file name="fabric/util/ArrayList.fab"/>
-        <file name="fabric/util/Collections.fab"/>
-        <file name="fabric/util/Arrays.fab"/>
-        <file name="fabric/util/TreeMap.fab"/>
-        <file name="fabric/util/TreeSet.fab"/>
+        <file name="fabric/util/HashMap.fil"/>
+        <file name="fabric/util/LinkedList.fil"/>
+        <file name="fabric/util/HashSet.fil"/>
+        <file name="fabric/util/LinkedHashSet.fil"/>
+        <file name="fabric/util/ArrayList.fil"/>
+        <file name="fabric/util/Collections.fil"/>
+        <file name="fabric/util/Arrays.fil"/>
+        <file name="fabric/util/TreeMap.fil"/>
+        <file name="fabric/util/TreeSet.fil"/>
       </filelist>
 
-      <globmapper from="*.fab" to="*.class" />
+      <globmapper from="*.fil" to="*.class" />
     </apply>
   </target>
 
