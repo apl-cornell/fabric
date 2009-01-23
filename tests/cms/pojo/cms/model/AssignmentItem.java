@@ -1,10 +1,13 @@
 package cms.model;
 
+import java.util.Collections;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 public class AssignmentItem {
+  private static int nextID = 1;
+  
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
   //////////////////////////////////////////////////////////////////////////////
@@ -12,6 +15,7 @@ public class AssignmentItem {
   private final Assignment assignment;
   private String     name;
   private boolean    hidden;
+  private final int  id;
   
   //////////////////////////////////////////////////////////////////////////////
   // protected members                                                        //
@@ -43,8 +47,11 @@ public class AssignmentItem {
     this.assignment = assign;
     setItemName(name);
     setHidden(false);
+    id = nextID++;
     
     this.hiddenFiles = new HashSet();
+    this.assignment.items.add(this);
+    this.assignment.course.semester.database.assignmentItems.put(toString(), this);
   }
   
   public AssignmentItem(Assignment assign) {
@@ -56,8 +63,13 @@ public class AssignmentItem {
   }
   
   public Collection/*AssignmentFile*/ findHiddenAssignmentFiles() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(hiddenFiles);
   }
+  
+  public String toString() {
+    return "" + id;
+  }
+  
 }
 
 /*

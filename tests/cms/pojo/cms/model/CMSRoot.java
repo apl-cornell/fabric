@@ -57,6 +57,8 @@ public class CMSRoot {
   final Map/*String, Semester*/ semesters; // Managed by Semester.
   final Map/*String, SiteNotice*/ notices; // Managed by SiteNotice.
   final Map/*String, Course*/ courses; // Managed by Course.  Maps CourseIDs to Courses.
+  final Map/*String, RequiredSubmission*/ requiredSubmissions; //Managed by RequiredSubmission.
+  final Map/*String, AssignmentItem*/ assignmentItems; //Managed by AssignmentItem
   final Collection/*Log*/ logs; // Managed by Log.
   
   // XXX YUCK  These wouldn't be needed if our URLs gave us more information.
@@ -75,6 +77,8 @@ public class CMSRoot {
     this.logs = new ArrayList();
     this.assignments = new HashMap();
     this.groups = new HashMap();
+    this.requiredSubmissions = new HashMap();
+    this.assignmentItems = new HashMap();
     
     this.debugMode = true;
 
@@ -371,7 +375,7 @@ public class CMSRoot {
   }
   
   public AssignmentItem getAssignmentItem(String id) {
-    throw new NotImplementedException();
+    return (AssignmentItem)assignmentItems.get(id);
   }
   
   public AssignmentFile getAssignmentFile(String id) {
@@ -395,7 +399,7 @@ public class CMSRoot {
   }
   
   public RequiredSubmission getRequiredSubmission(String id) {
-    throw new NotImplementedException();
+    return (RequiredSubmission)requiredSubmissions.get(id);
   }
   
   public Choice getChoice(String id) {

@@ -227,7 +227,7 @@ public class Course implements Comparable {
   }
   
   public Collection/*Student*/ findActiveStudents() {
-    SortedSet result = new TreeSet();
+    SortedSet result = new TreeSet(Student.LAST_NAME_COMPARATOR);
     
     for (Iterator it = students.values().iterator(); it.hasNext();) {
       Student student = (Student) it.next();
@@ -328,6 +328,8 @@ public class Course implements Comparable {
     return result;
   }
   public Student getStudent(User user) {
+    if(!students.containsKey(user))
+      return null;
     return (Student) students.get(user);
   }
   public Collection/*Assignment*/ findHiddenAssignments() {

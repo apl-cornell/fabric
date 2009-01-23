@@ -62,6 +62,8 @@ public class SubmittedFile implements FileEntry {
     setFileType(fileType);
     setLateSubmission(lateSubmission);
     setFile(file);
+    
+    group.submittedFiles.add(this);
   }
   public boolean isFileAuthorized(User user) {
     // See TransactionHandler.authorizeDownload

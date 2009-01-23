@@ -3408,6 +3408,7 @@ public class TransactionHandler {
           
           for (Iterator rit = newReqs.values().iterator(); rit.hasNext();) {
             RequiredSubmission rs = (RequiredSubmission) rit.next();
+            assign.addRequiredSubmission(rs);
             String types = "";
             for (Iterator tit = rs.getRequiredFileTypes().iterator(); tit.hasNext();) {
               String fileType = (String) tit.next();

@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class RequiredSubmission {
+  private static int nextID = 1;
 
   public static final String ANY_TYPE = "accept any";
   public static final String MATCHING_TYPE = "tgz";
@@ -18,8 +19,9 @@ public class RequiredSubmission {
   private String     submissionName;
   private int        maxSize;
   private boolean    hidden;
-  private final Set fileTypes;
-
+  private final Set  fileTypes;
+  private final int  id;
+  
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
   //////////////////////////////////////////////////////////////////////////////
@@ -47,13 +49,17 @@ public class RequiredSubmission {
     setMaxSize(maxSize);
     setHidden(false);
     this.fileTypes = new HashSet();
+    id = nextID++;
+    
+    this.assignment.course.semester.database.requiredSubmissions.put(
+        toString(), this);
   }
 
   public RequiredSubmission(Assignment assign) {
     this(assign, "", 0);
   }
   public boolean isHidden() {
-    throw new NotImplementedException();
+    return getHidden();
   }
   public Collection/*String*/ getRequiredFileTypes() {
     return Collections.unmodifiableCollection(fileTypes);
@@ -63,6 +69,11 @@ public class RequiredSubmission {
   }
   public void addRequiredFileType(String value) {
     fileTypes.add(value);
+  }
+  
+  public String toString() {
+    return "" + id;
+  
   }
 
 }

@@ -194,6 +194,10 @@ public class Assignment implements Comparable {
     }
     return result;
   }
+  
+  public void addRequiredSubmission(RequiredSubmission submission) {
+    requiredSubmissions.add(submission);
+  }
 
   public boolean hasSubProblems() {
     return !subProblems.isEmpty();
@@ -299,7 +303,7 @@ public class Assignment implements Comparable {
   }
 
   public Collection/*Grade*/ getGrades() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(grades.values());
   }
 
   public Collection/*AnswerSet*/ getAnswerSets() {
@@ -307,35 +311,47 @@ public class Assignment implements Comparable {
   }
 
   public boolean hasSolutionFile() {
-    throw new NotImplementedException();
+    return solutionFile != null;
   }
 
   public SolutionFile findSolutionFile() {
-    throw new NotImplementedException();
+    return solutionFile;
   }
 
   public Collection/*SolutionFile*/ findHiddenSolutionFiles() {
-    throw new NotImplementedException();
+    Vector c = new Vector();
+    if(solutionFile != null)  c.add(solutionFile);
+    return c;
   }
 
   public Collection/*AssignmentItem*/ getAssignmentItems() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(items);
   }
 
   public Collection/*AssignmentItems*/ findHiddenAssignmentItems() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(items);
   }
 
   public Collection/*GroupMember*/ findInvitations(User user) {
-    throw new NotImplementedException();
+    SortedSet result = new TreeSet();
+    for (Iterator git = groups.iterator(); git.hasNext();) {
+      Group group = (Group) git.next();
+      for (Iterator mit = group.members.values().iterator(); mit.hasNext();) {
+        GroupMember member = (GroupMember) mit.next();
+        if(member.getStudent().getUser().getNetID() == user.getNetID() &&
+            member.getStatus().equalsIgnoreCase("invited"))
+          result.add(member);
+      }
+    }
+    return result;
   }
 
   public Collection/*TimeSlot*/ getTimeSlots() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(timeSlots);
   }
 
   public Collection/*Group*/ getGroups() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(groups);
   }
 
   public Collection/*TimeSlot*/ findConflictingTimeSlots() {
@@ -348,7 +364,7 @@ public class Assignment implements Comparable {
    * @return
    */
   public boolean hasGrades(User user) {
-    throw new NotImplementedException();
+    return grades.containsKey(course.getStudent(user));
   }
   
   public AnswerSet findMostRecentAnswerSet(Group group) {
@@ -364,7 +380,7 @@ public class Assignment implements Comparable {
   }
 
   public void removeCurrentSolutionFile() {
-    throw new NotImplementedException();
+    solutionFile = null;
   }
 
   /**
@@ -379,7 +395,9 @@ public class Assignment implements Comparable {
    * not associated with a particular subproblem.
    */
   public Grade findMostRecentGrade(Student student) {
-    throw new NotImplementedException();
+    if(grades.containsKey(student)) 
+      return (Grade)grades.get(student);
+    return null;
   }
 
   public Grade findMostRecentGrade(Student student, SubProblem sp) {

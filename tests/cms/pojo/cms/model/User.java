@@ -251,7 +251,7 @@ public class User implements Principal {
   }
   
   public boolean hasAssignAccess(Course course, Assignment assign) {
-    throw new NotImplementedException();
+    return hasCourseAccess(course);
   }
   public boolean isInStaffAsBlankMode() {
     return false; // XXX

@@ -1770,9 +1770,9 @@ public class XMLBuilder {
     }
     // Generate grade
     Student student = assignment.getCourse().getStudent(user);
-    Float grade = assignment.findMostRecentGrade(student).getGrade();
-    if (grade != null) {
-      xAssignment.setAttribute(A_SCORE, grade.toString());
+    Grade grade = assignment.findMostRecentGrade(student);
+    if (grade != null && grade.getGrade() != null) {
+      xAssignment.setAttribute(A_SCORE, grade.getGrade().toString());
     }
     return xml;
   }
@@ -1807,8 +1807,7 @@ public class XMLBuilder {
    */
   public Document buildGradeAssignPage(User user, Assignment assign,
       Group group, boolean showGradeMsg) {
-    Profiler.enterMethod("XMLBuilder.buildGradeAssignPage", "assignid="
-        + assign.toString() + ", groupid=" + group.toString());
+    Profiler.enterMethod("XMLBuilder.buildGradeAssignPage", "");
     Document xml = buildStaffNavbar(user, assign.getCourse());
     Element xRoot = (Element) xml.getFirstChild();
     if (showGradeMsg) xRoot.setAttribute(A_GRADEMSG, "true");

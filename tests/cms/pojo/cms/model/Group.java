@@ -44,6 +44,7 @@ public class Group {
   //////////////////////////////////////////////////////////////////////////////
 
   final Map/*User, GroupMember*/ members;  // by GroupMember
+  final Collection/*SubmittedFile*/ submittedFiles; //by SubmittedFile
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructors                                                      //
@@ -60,24 +61,32 @@ public class Group {
     assign.groups.add(this);
     assign.course.semester.database.groups.put(toString(), this);
     this.members = new HashMap();
+    this.submittedFiles = new ArrayList();
   }
   
   public Collection/*Comment*/ getComments() {
-    throw new NotImplementedException();
+    return new ArrayList(); // XXX
   }
   
   public Collection/*RegradeRequest*/ getRegradeRequests() {
-    throw new NotImplementedException();
+    return assignment.findRegradeRequests(this);
   }
   
   public Collection/*SubmittedFile*/ getSubmittedFiles() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(submittedFiles);
   }
+  
   public GroupMember findGroupMember(User user) {
-    throw new NotImplementedException();
+    return (GroupMember)members.get(user);
   }
   public Collection/*GroupMember*/ findActiveMembers() {
-    throw new NotImplementedException();
+    Collection result = new ArrayList();
+    for(Iterator i = members.values().iterator(); i.hasNext();) {
+      GroupMember m = (GroupMember)i.next();
+      if(m.getStatus().equalsIgnoreCase("active"))
+        result.add(m);
+    }
+    return result;
   }
   public boolean isAssignedTo(User p) {
     throw new NotImplementedException();
