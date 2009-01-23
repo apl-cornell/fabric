@@ -68,7 +68,10 @@ class Options extends fabric.common.Options {
       return i + 2;
     }
     
-    this.app = Arrays.copyOfRange(args, i, args.length);
+    this.app = new String[args.length - i];
+    for (int idx = i; idx < args.length; i++)
+      this.app[idx - i] = args[idx];
+    
     return args.length;
   }
 }
