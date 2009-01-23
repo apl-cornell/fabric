@@ -4,6 +4,7 @@ import java.util.*;
 
 import fabric.common.*;
 import fabric.common.InternalError;
+import fabric.core.store.ObjectStore;
 import fabric.core.store.StoreException;
 
 /**

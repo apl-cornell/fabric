@@ -12,8 +12,8 @@ import com.sleepycat.je.*;
 import fabric.common.InternalError;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongIterator;
-import fabric.core.ObjectStore;
 import fabric.core.PrepareRequest;
+import fabric.core.store.ObjectStore;
 import fabric.lang.Principal;
 
 /**

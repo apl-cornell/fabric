@@ -1,4 +1,4 @@
-package fabric.core;
+package fabric.core.store;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -15,7 +15,7 @@ import fabric.common.Util;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.core.store.StoreException;
+import fabric.core.PrepareRequest;
 import fabric.lang.Principal;
 
 /**

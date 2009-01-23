@@ -1,4 +1,4 @@
-package fabric.core;
+package fabric.core.store;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
@@ -7,7 +7,7 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.SerializedObject;
-import fabric.core.store.StoreException;
+import fabric.core.PrepareRequest;
 import fabric.lang.Principal;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.util.HashMap;

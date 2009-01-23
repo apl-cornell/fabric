@@ -20,6 +20,7 @@ import fabric.client.Client;
 import fabric.common.InternalError;
 import fabric.common.Resources;
 import fabric.core.Options.CoreKeyStores;
+import fabric.core.store.ObjectStore;
 
 public class Node {
   
