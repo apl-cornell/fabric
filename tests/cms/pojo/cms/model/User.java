@@ -341,22 +341,22 @@ public class User implements Principal {
         && isGradesPrivByCourse(course);
   }
   public boolean isAdminPrivByAssignment(Assignment assign) {
-    throw new NotImplementedException();
+    return isAdminPrivByCourse(assign.getCourse());
   }
   public boolean isCategoryPrivByCategory(Category category) {
-    throw new NotImplementedException();
+    return isGroupsPrivByCourse(category.getCourse());
   }
   public boolean isGradesPrivByAssignment(Assignment assign) {
     return isGradesPrivByCourse(assign.getCourse());
   }
   public boolean isGroupsPrivByAssignment(Assignment assign) {
-    throw new NotImplementedException();
+    return isGroupsPrivByCourse(assign.getCourse());
   }
   public boolean isStudentInCourseByAssignment(Assignment assign) {
-    throw new NotImplementedException();
+    return isStudentInCourseByCourse(assign.getCourse());
   }
   public boolean isStudentInCourseByGroup(Group group) {
-    throw new NotImplementedException();
+    return isStudentInCourseByAssignment(group.getAssignment());
   }
   public boolean canView(SolutionFile sol) {
     // See TransactionHandler.authorizeDownload

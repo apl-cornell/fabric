@@ -53,7 +53,7 @@ public class AssignmentGroupsXMLBuilder {
     buildGroups(user, assign, fullAccess, xml, groupsNode);
     Map subProbScores = buildSubproblems(assign, xml, subProbsNode);
     buildAssignedGraders(user, assign, xml, groupsNode);
-    buildGroupGrades(user, assign, xml, groupsNode, adminPriv, subProbScores);
+    //buildGroupGrades(user, assign, xml, groupsNode, adminPriv, subProbScores);
     buildRegrades(assign, xml, groupsNode);
     buildStaffGraders(course, xml);
     root.appendChild(groupsNode);

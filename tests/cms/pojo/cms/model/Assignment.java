@@ -239,11 +239,22 @@ public class Assignment implements Comparable {
    * @param the subcollection of groups (Collection of Group)
    */
   public Collection/*Group*/ getGradedGroups(Collection/*Group*/ groups) {
-    throw new NotImplementedException();
+    Collection result = new ArrayList();
+    for(Iterator i = groups.iterator(); i.hasNext();) {
+      Group g = (Group)i.next();
+      if(g.getGrade() != null)
+        result.add(g);
+    }
+    return result;
   }
 
   public Set/*RegradeRequest*/ findRegradeRequests() {
-    throw new NotImplementedException();
+    Set result = new HashSet();
+    for(Iterator i = regradeRequests.values().iterator(); i.hasNext();) {
+      Set r = (Set)i.next();
+      result.addAll(r);
+    }
+    return result;
   }
   
   public Set/*RegradeRequest*/ findRegradeRequests(Group group) {
@@ -257,7 +268,7 @@ public class Assignment implements Comparable {
   }
 
   public Set/*GroupAssignedTo*/ getGroupAssignedTos() {
-    throw new NotImplementedException();
+    return new TreeSet(); // XXX
   }
 
   /**
@@ -285,7 +296,19 @@ public class Assignment implements Comparable {
   }
 
   public Set/*Group*/ findLateGroups() {
-    throw new NotImplementedException();
+    Set result = new HashSet();
+    for(Iterator i = groups.iterator(); i.hasNext();) {
+      Group g = (Group)i.next();
+      boolean cont = true;
+      for(Iterator fi = g.getSubmittedFiles().iterator(); fi.hasNext() && cont;) {
+        SubmittedFile f = (SubmittedFile)fi.next();
+        if(f.getLateSubmission()) {
+          result.add(g);
+          cont = false;
+        }
+      }
+    }
+    return result;
   }
   
   public Grade findGrade(Student student) {
@@ -307,7 +330,7 @@ public class Assignment implements Comparable {
   }
 
   public Collection/*AnswerSet*/ getAnswerSets() {
-    throw new NotImplementedException();
+    return Collections.unmodifiableCollection(answerSets);
   }
 
   public boolean hasSolutionFile() {
@@ -320,7 +343,7 @@ public class Assignment implements Comparable {
 
   public Collection/*SolutionFile*/ findHiddenSolutionFiles() {
     Vector c = new Vector();
-    if(solutionFile != null)  c.add(solutionFile);
+    if(solutionFile != null) c.add(solutionFile);
     return c;
   }
 

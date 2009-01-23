@@ -1816,7 +1816,7 @@ public class XMLBuilder {
     }
     xRoot.appendChild(assignmentXMLBuilder.buildGeneralSubtree(xml, assign, null));
     assignmentGroupsXMLBuilder.buildGroupGradingPage(user, assign, xml);
-    Profiler.exitMethod("XMLBuilder.buildGradeAssignPage", "assignid=" + assign.toString() + ", groupid=" + group.toString());
+    Profiler.exitMethod("XMLBuilder.buildGradeAssignPage", "assignid=" + assign.toString());
     return xml;
   }
 
