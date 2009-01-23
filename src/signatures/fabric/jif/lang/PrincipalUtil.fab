@@ -1,0 +1,77 @@
+package jif.lang;
+
+/**
+ * Utility methods for principals. In particular, there are methods to test if
+ * one principal acts for another, if two principals both act for each other, 
+ * helper methods to both find and verify delegates-chains, and a method for 
+ * dynamically acquiring a Capbility, which encapsulates the authority of a
+ * principal to execute a Closure.
+ */
+public class PrincipalUtil {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    /**
+     * Does the principal p act for the principal q? 
+     */
+    public static native boolean{p;q;q←} acts_for(Principal p, Principal q);
+
+    /**
+     * Are the principals p and q equivalent to each other? That is,
+     * does p act for q, and q act for p?
+     * 
+     */
+    public static boolean{p;q;p←;q←} equivalentTo(Principal p, Principal q) {
+        return acts_for(p, q) && acts_for(q, p);
+    }
+
+    /**
+     * Search for an actsfor proof between p and q. An actsfor proof
+     * between p and q is a proof that p acts for q. See the subclasses
+     * of ActsForProof for more information.
+     */
+    public static native ActsForProof{p;q;q←}
+	findActsForProof(Principal p, Principal q, Object searchState);
+
+    /**
+     * Verify that the chain is a valid delegates-chain between p and q. That is,
+     * q == chain[n], chain[n] delegates to chain[n-1], ..., chain[0] == p, i.e.,
+     * p acts for q.
+
+     */
+    public static native boolean verifyProof(ActsForProof{p;q;q←} proof, 
+                                             Principal p, Principal q);
+    
+    /**
+     * Notification that a new delegation has been added. All principals
+     * should call this method when adding a delegation, or risk an out-of-date
+     * cache.
+     */
+    public static native void notifyNewDelegation(Principal granter, Principal superior);
+    /**
+     * Notification that an existing delegation has been revoked. All principals
+     * should call this method when revoking a delegation, or risk an out-of-date
+     * cache.
+     */
+    public static native void notifyRevokeDelegation(Principal granter,
+						     Principal superior);
+
+    /**
+     * Obtain a Capability for the given principal and closure.
+     */
+    public static native Capability[p, lb]
+                authorize(principal p, Object authPrf, Closure[p, lb] c, label lb);
+                
+    /**
+     * Execute the closure for the given principal.
+     */
+    public static native Object{c;lb;authPrf;p;*lb}
+	execute{*lb}(principal p, Object authPrf, Closure[p, lb] c, label lb);
+
+    /**
+     * returns the null principal, the principal that every other principal can
+     * act for.
+     */                
+    public static native principal{*←*} nullPrincipal();
+    
+    public static native String stringValue(principal p); 
+    public static native String toString(principal p); 
+}

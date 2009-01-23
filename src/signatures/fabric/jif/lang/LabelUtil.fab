@@ -1,0 +1,41 @@
+package jif.lang;
+
+/**
+ * Utility methods for labels.
+ */
+public class LabelUtil {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    public static native LabelUtil singleton();
+    public native label noComponents();
+
+    public native label{owner; readers; *lbl; lbl} 
+       readerPolicyLabel(label lbl, principal owner, principal{*lbl}[] readers);
+    public native label{owner; writers; *lbl; lbl} 
+       writerPolicyLabel(label lbl, principal owner, principal{*lbl}[] writers);
+       
+    public native ConfPolicy{owner; readers; *lbl; lbl} 
+       readerPolicy(label lbl, principal owner, principal{*lbl}[] readers);
+       
+    public native IntegPolicy{owner; writers; *lbl; lbl} 
+       writerPolicy(label lbl, principal owner, principal{*lbl}[] writers);
+       
+    public native label toLabel(ConfPolicy cPolicy, IntegPolicy iPolicy) throws (NullPointerException{cPolicy;iPolicy});
+       
+    public native label join(label l1, label l2);
+    public native label meetLbl(label l1, label l2); // "meet" is a keyword, and can't be used
+    
+    public native ConfPolicy join(ConfPolicy p1, ConfPolicy p2);
+    public native ConfPolicy meetPol(ConfPolicy p1, ConfPolicy p2);
+
+    public native IntegPolicy join(IntegPolicy p1, IntegPolicy p2);
+    public native IntegPolicy meetPol(IntegPolicy p1, IntegPolicy p2);
+
+    public native boolean equivalentTo(label l1, label l2);
+    public native boolean relabelsTo(label fromLbl, label toLbl); 
+
+    public native boolean isReadableBy(label lbl, principal p); 
+    
+    public native String stringValue(label lb); 
+    public native String toString(label lb);
+    public native int hashCode(label lb);
+}
