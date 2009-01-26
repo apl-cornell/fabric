@@ -13,6 +13,8 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
+import fabric.client.Client;
+import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.AccessException;
@@ -69,7 +71,7 @@ public class Worker extends Thread {
    */
   public Worker(Node node) {
     this.node = node;
-    start();
+    fabric.client.transaction.TransactionManager.startThread(this);
   }
 
   /**
@@ -151,12 +153,24 @@ public class Worker extends Thread {
             clientName = in.readUTF();
           }
           
-          this.client = null; // XXX
+          // Read in the pointer to the principal object.
+          if (in.readBoolean()) {
+            String principalCoreName = in.readUTF();
+            Core principalCore = Client.getClient().getCore(principalCoreName);
+            long principalOnum = in.readLong();
+            this.client =
+                new fabric.lang.Principal.$Proxy(principalCore, principalOnum);
+          } else {
+            this.client = null;
+          }
+          
+          if (authClient(clientName)) {
+            logger.info("Core " + coreName + " accepted connection");
+            logger.info("Client principal is " + clientName
+                + (this.client == null ? " (acting as null)" : ""));
 
-          logger.info("Accepted connection for " + coreName);
-          logger.info("(" + client + ")");
-
-          run_();
+            run_();
+          }
         } else {
           // Indicate that the core doesn't exist here.
           out.write(0);
@@ -203,6 +217,29 @@ public class Worker extends Thread {
       // Signal that this worker is now available.
       node.workerDone(this);
     }
+  }
+
+  /**
+   * Determines whether the client principal matches the given name.
+   */
+  private boolean authClient(String name) {
+    // XXX Bypass authentication if we have a null client.
+    // XXX This is to allow bootstrapping the client principal.
+    if (client == null) return true;
+    
+    boolean result = false;
+    fabric.client.transaction.TransactionManager tm =
+        fabric.client.transaction.TransactionManager.getInstance();
+    
+    tm.startTransaction();
+    try {
+      result = client.name().equals(name);
+      tm.commitTransaction();
+    } catch (RuntimeException e) {
+      tm.abortTransaction();
+    }
+    
+    return result;
   }
 
   /**

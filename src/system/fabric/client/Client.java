@@ -319,12 +319,13 @@ public class Client {
     }
     
     if (principalURL == null)
-      principalURL = System.getProperty("fabric.client.principal");
+      principalURL = p.getProperty("fabric.client.principal");
 
     KeyStore keyStore = KeyStore.getInstance("JKS");
-    String passwd = System.getProperty("fabric.client.password");
+    String passwd = p.getProperty("fabric.client.password");
     String filename =
-        p.getProperty("fabric.client.keystore", name + ".keystore");
+        p.getProperty("fabric.client.keystore", name == null ? null
+            : (name + ".keystore"));
     in = Resources.readFile("etc/keys", filename);
     keyStore.load(in, passwd.toCharArray());
     in.close();
@@ -403,22 +404,38 @@ public class Client {
 
         System.out.println("Client principal created:");
         System.out.println("fab://" + opts.core + "/" + principal.$getOnum());
-      } else if (opts.app != null) {
-        // Run the requested application.
-        Class<?> mainClass = Class.forName(opts.app[0] + "$$Impl");
-        Method main =
-            mainClass.getMethod("main", new Class[] { ObjectArray.class });
-        String[] newArgs = new String[opts.app.length - 1];
-        for (int i = 0; i < newArgs.length; i++)
-          newArgs[i] = opts.app[i + 1];
-
-        Core local = client.getLocalCore();
-        TransactionManager.getInstance().startTransaction();
-        Object argsProxy = WrappedJavaInlineable.$wrap(local, newArgs);
-        TransactionManager.getInstance().commitTransaction();
-
-        MainThread.invoke(opts, main, argsProxy);
+        return;
       }
+      
+      // Attempt to read the principal object to ensure that it exists.
+      TransactionManager.getInstance().startTransaction();
+      log.config("Client principal is " + client.getPrincipal());
+      TransactionManager.getInstance().commitTransaction();
+
+      if (opts.app == null) {
+        // Act as a dissemination node.
+        while (true) {
+          try {
+            Thread.sleep(Long.MAX_VALUE);
+          } catch (InterruptedException e) {
+          }
+        }
+      }
+      
+      // Run the requested application.
+      Class<?> mainClass = Class.forName(opts.app[0] + "$$Impl");
+      Method main =
+          mainClass.getMethod("main", new Class[] { ObjectArray.class });
+      String[] newArgs = new String[opts.app.length - 1];
+      for (int i = 0; i < newArgs.length; i++)
+        newArgs[i] = opts.app[i + 1];
+
+      Core local = client.getLocalCore();
+      TransactionManager.getInstance().startTransaction();
+      Object argsProxy = WrappedJavaInlineable.$wrap(local, newArgs);
+      TransactionManager.getInstance().commitTransaction();
+
+      MainThread.invoke(opts, main, argsProxy);
     } finally {
       if (client != null)
         client.shutdown();

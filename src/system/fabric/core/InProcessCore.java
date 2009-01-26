@@ -7,11 +7,14 @@ import fabric.client.Client;
 import fabric.client.RemoteCore;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
+import fabric.common.FetchException;
 import fabric.common.InternalError;
 import fabric.common.SerializedObject;
+import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.Node.Core;
 import fabric.core.store.StoreException;
+import fabric.dissemination.Glob;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -70,6 +73,17 @@ public class InProcessCore extends RemoteCore {
         new PrepareRequest(serializedCreates, serializedWrites, reads);
     
     return tm.prepare(Client.getClient().getPrincipal(), req);
+  }
+
+  @Override
+  public Glob readObjectFromCore(long onum) throws FetchException {
+    SerializedObject obj;
+    try {
+      obj = tm.read(Client.getClient().getPrincipal(), onum);
+      return new Glob(obj, new LongKeyHashMap<SerializedObject>());
+    } catch (StoreException e) {
+      throw new FetchException(e);
+    }
   }
   
 }

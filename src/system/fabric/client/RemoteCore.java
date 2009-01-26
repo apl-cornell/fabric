@@ -157,6 +157,14 @@ public class RemoteCore implements Core {
               new BufferedInputStream(socket.getInputStream()));
       conn = socket;
     }
+    
+    // Send to the core a pointer to our principal object.
+    fabric.lang.Principal principal = client.getPrincipal();
+    out.writeBoolean(principal != null);
+    if (principal != null) {
+      out.writeUTF(principal.$getCore().name());
+      out.writeLong(principal.$getOnum());
+    }
   }
 
   public boolean isConnected() {
