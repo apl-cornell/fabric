@@ -1,7 +1,6 @@
 package fabric.client;
 
 import java.io.PrintStream;
-import java.util.Arrays;
 
 import fabric.common.TerminationException;
 import fabric.common.UsageError;
@@ -69,7 +68,7 @@ class Options extends fabric.common.Options {
     }
     
     this.app = new String[args.length - i];
-    for (int idx = i; idx < args.length; i++)
+    for (int idx = i; idx < args.length; idx++)
       this.app[idx - i] = args[idx];
     
     return args.length;
