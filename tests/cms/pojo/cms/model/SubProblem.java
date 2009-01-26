@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import polyglot.types.Type_c;
 
 public class SubProblem {
+  private static int nextID = 1;
+  
   
   // TODO: subclass for multiple choice
   public static int MULTIPLE_CHOICE = 0;
@@ -27,6 +29,7 @@ public class SubProblem {
   private int        type;
   private int        order;
   private int        answer;
+  private final int  id;
 
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
@@ -73,6 +76,11 @@ public class SubProblem {
     setOrder(order);
     setHidden(false);
     setAnswer(answer);
+    
+    id = nextID++;
+    
+    assignment.subProblems.add(this);
+    assignment.getCourse().getSemester().database.subProblems.put(toString(), this);
   }
 
   public SubProblem(Assignment assign) {
@@ -88,7 +96,9 @@ public class SubProblem {
    *         multiple choice problem, or null.
    */
   public Choice getAnswerChoice() {
-    throw new NotImplementedException();
+    if(assignment.getType() == Assignment.ASSIGNMENT)
+      return null;
+    throw new NotImplementedException("Only implemented for assignments");
   }
 
   /**
@@ -111,6 +121,10 @@ public class SubProblem {
   }
   public Choice getChoice(String text) {
     throw new NotImplementedException();
+  }
+  
+  public String toString() {
+    return "" + id;
   }
 
 }

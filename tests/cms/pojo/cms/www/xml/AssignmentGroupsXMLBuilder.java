@@ -277,7 +277,7 @@ public class AssignmentGroupsXMLBuilder {
     Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildGroupGrades", "");
     
     // build a mapping between each subproblem and its total score by all group memebers
-    TreeMap subproblemGradeMap = new TreeMap();
+    HashMap subproblemGradeMap = new HashMap();
     HashMap maxScoreMap = new HashMap();
     Map lastGradeMap = new HashMap();
     Object nullKey = new Integer(0);

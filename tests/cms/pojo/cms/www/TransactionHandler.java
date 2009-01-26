@@ -469,6 +469,8 @@ public class TransactionHandler {
       FileItemIterator i = upload.getItemIterator(request);
       
       ArrayList groups = new ArrayList();
+      TreeSet seenUsers = new TreeSet(User.NETID_COMPARATOR);
+      
       while (i.hasNext()) {
         FileItemStream item = i.next();
         String field = item.getFieldName();
@@ -479,6 +481,11 @@ public class TransactionHandler {
           SubProblem subProb = database.getSubProblem(vals[2]);
           Group      group   = database.getGroup(vals[3]);
           Assignment assign  = isAssign ? assignment : group.getAssignment();
+          
+          if(!seenUsers.contains(student)) {
+            assignment.resetGradesForStudent(student);
+            seenUsers.add(student);
+          }
           
           if (assign.getAssignedGraders()       &&
              !p.isAdminPrivByAssignment(assign) &&

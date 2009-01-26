@@ -59,6 +59,7 @@ public class CMSRoot {
   final Map/*String, Course*/ courses; // Managed by Course.  Maps CourseIDs to Courses.
   final Map/*String, RequiredSubmission*/ requiredSubmissions; //Managed by RequiredSubmission.
   final Map/*String, AssignmentItem*/ assignmentItems; //Managed by AssignmentItem
+  final Map/*String, SubProblem*/ subProblems; //Managed by SubProblem
   final Collection/*Log*/ logs; // Managed by Log.
   
   // XXX YUCK  These wouldn't be needed if our URLs gave us more information.
@@ -79,6 +80,7 @@ public class CMSRoot {
     this.groups = new HashMap();
     this.requiredSubmissions = new HashMap();
     this.assignmentItems = new HashMap();
+    this.subProblems = new HashMap();
     
     this.debugMode = true;
 
@@ -373,8 +375,7 @@ public class CMSRoot {
   
   public SubProblem getSubProblem(String subProblemID) {
     if(subProblemID.equals("0")) return null;
-    
-    throw new NotImplementedException("Not fully implemented.");
+    return (SubProblem)subProblems.get(subProblemID);
   }
   
   public CategoryContents getCategoryContents(String contentsID) {

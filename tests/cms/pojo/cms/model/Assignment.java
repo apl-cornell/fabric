@@ -48,15 +48,16 @@ public class Assignment implements Comparable {
   // managed views                                                            //
   //////////////////////////////////////////////////////////////////////////////
 
-  SolutionFile       solutionFile;        // maintained by SolutionFile
-  final Map/*Student, Grade*/              grades;               // maintained by Grade
+  SolutionFile                           solutionFile;         // maintained by SolutionFile
+  final Map/*Student, Grade*/            grades;               // maintained by Grade
+  final Map/*Student, Set<Grade>*/       subProblemGrades;     // maintained by Grade
   final Collection/*SubProblem*/         subProblems;          // maintained by SubProblem
   final Collection/*AssignmentItem*/     items;                // maintained by AssignmentItem
   final Collection/*AnswerSet*/          answerSets;           // maintained by AnswerSet
   final Collection/*TimeSlot*/           timeSlots;            // maintained by TimeSlot
   final Collection/*RequiredSubmission*/ requiredSubmissions;  // maintained by RequiredSubmission
   final Collection/*Group*/              groups;               // maintained by Group
-  final Map/*Group, Set<RegradeRequest>*/ regradeRequests; // Maintained by RegradeRequest
+  final Map/*Group, Set<RegradeRequest>*/ regradeRequests;     // Maintained by RegradeRequest
   
   /**
    * Maps students to the GroupMember for which they are active (if any).
@@ -77,6 +78,7 @@ public class Assignment implements Comparable {
     this.solutionFile       = null;
     this.grades              = new HashMap/*Grade*/();
     this.subProblems         = new ArrayList/*SubProblem*/();
+    this.subProblemGrades    = new HashMap()/*Student, Set<Grade>*/;
     this.items               = new ArrayList/*AssignmentItem*/();
     this.answerSets          = new ArrayList/*AnswerSet*/();
     this.timeSlots           = new ArrayList/*TimeSlot*/();
@@ -326,7 +328,12 @@ public class Assignment implements Comparable {
   }
 
   public Collection/*Grade*/ getGrades() {
-    return Collections.unmodifiableCollection(grades.values());
+    Collection allGrades = new ArrayList();
+    allGrades.addAll(grades.values());
+    for(Iterator i = subProblemGrades.values().iterator(); i.hasNext();) {
+      allGrades.addAll((Collection)i.next());
+    }
+    return Collections.unmodifiableCollection(allGrades);
   }
 
   public Collection/*AnswerSet*/ getAnswerSets() {
@@ -424,12 +431,37 @@ public class Assignment implements Comparable {
   }
 
   public Grade findMostRecentGrade(Student student, SubProblem sp) {
-    throw new NotImplementedException();
+    Set grades = (Set)subProblemGrades.get(student);
+    if(grades == null) return null;
+    for(Iterator i = grades.iterator(); i.hasNext();) {
+      Grade g = (Grade)i.next();
+      if(g.getSubProblem().toString().equals(sp.toString()))
+        return g;
+    }
+    return null;
   }
 
-  public void addGrade(Group group, SubProblem subProb, Float grade, User student, User grader) {
-    Grade g = new Grade(this, subProb, grade, student, grader);
-    grades.put(course.getStudent(student), g);
+  public void resetGradesForStudent(User studentUser) {
+    Student student = course.getStudent(studentUser);
+    grades.remove(student);
+    subProblemGrades.remove(student);
+  }
+  
+  public void addGrade(Group group, SubProblem subProb, Float grade, User studentUser, User grader) {
+    Student student = course.getStudent(studentUser);
+    Grade g = new Grade(this, subProb, grade, studentUser, grader);
+    if(subProb == null) {
+      grades.put(student, g);
+    } else {
+      Set grades = (Set)subProblemGrades.get(student);
+      if(grades == null) grades = new HashSet();
+      grades.add(g);
+      subProblemGrades.put(student, grades);
+      Grade gr = (Grade)this.grades.get(student);
+      addGrade(group, null, g.getGrade().floatValue() + (gr == null ? 0f : gr.getGrade()), 
+          studentUser, grader);
+      
+    }
   }
 
   public int compareTo(Object o) {
