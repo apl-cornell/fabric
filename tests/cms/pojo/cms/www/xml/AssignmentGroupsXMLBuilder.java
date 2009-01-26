@@ -17,6 +17,7 @@ import cms.www.util.Profiler;
 import cms.www.util.StringUtil;
 
 import cms.auth.Principal;
+import cms.www.xml.XMLBuilder;
 import cms.model.*;
 
 /*
@@ -130,11 +131,19 @@ public class AssignmentGroupsXMLBuilder {
       xGroupMember.setAttribute(XMLBuilder.A_SECTION, section);
       xGroup.appendChild(xGroupMember);
     }
-    // Add submissions counts to the group node
-    groupsNode.setAttribute(XMLBuilder.A_SUBMISSIONCOUNT, String
-        .valueOf(submissions));
-    groupsNode.setAttribute(XMLBuilder.A_PARTIAL, String.valueOf(partial));
-    groupsNode.setAttribute(XMLBuilder.A_COMPLETE, String.valueOf(complete));
+//  Add submissions counts to the group node
+        if ( numOfAssignedFiles == 0 ) {                        
+                groupsNode.setAttribute(XMLBuilder.A_SUBMISSIONCOUNT, "None");
+                groupsNode.setAttribute(XMLBuilder.A_PARTIAL, "");
+                groupsNode.setAttribute(XMLBuilder.A_COMPLETE, "");
+        } else {
+                groupsNode.setAttribute(XMLBuilder.A_SUBMISSIONCOUNT, String.valueOf(submissions));
+                groupsNode.setAttribute(XMLBuilder.A_PARTIAL, String.valueOf(partial));
+                groupsNode.setAttribute(XMLBuilder.A_COMPLETE, String.valueOf(complete));
+        }
+       
+        buildGroupGrades(assignment, xml, groupsNode);
+        
     Profiler.exitMethod("AssignmentGroupsXMLBuilder.buildGroups", "");
   }
 
@@ -204,7 +213,7 @@ public class AssignmentGroupsXMLBuilder {
     Profiler.exitMethod("AssignmentGroupsXMLBuilder.buildAssignedGraders", "");
   }
 
-  public void buildGroupGrades(User user, Assignment assignment, Document xml,
+  /*public void buildGroupGrades(User user, Assignment assignment, Document xml,
       Element groupsNode, boolean adminPriv, Map subProbScores) {
     Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildGroupGrades", "");
     Iterator groupGrades = assignment.findGroupGradesByGrader(user, adminPriv, subProbScores.size()).iterator();
@@ -259,6 +268,142 @@ public class AssignmentGroupsXMLBuilder {
         }
       }
     }
+    Profiler.exitMethod("AssignmentGroupsXMLBuilder.buildGroupGrades", "");
+  } */
+  
+  //TODO if one member has higher than max score and the other has null
+  //  then the average could be less than max score, what to do?
+  public static void buildGroupGrades(Assignment assign, Document xml, Element groupsNode) {
+    Profiler.enterMethod("AssignmentGroupsXMLBuilder.buildGroupGrades", "");
+    
+    // build a mapping between each subproblem and its total score by all group memebers
+    TreeMap subproblemGradeMap = new TreeMap();
+    HashMap maxScoreMap = new HashMap();
+    Map lastGradeMap = new HashMap();
+    Object nullKey = new Integer(0);
+    
+    for(Iterator i = assign.getGrades().iterator(); i.hasNext();) {
+      Grade g = (Grade)i.next();
+      if(g.getSubProblem() == null) {
+        lastGradeMap.put(g.getUser().getNetID() + "_null", g.getGrade());
+      } else {
+        lastGradeMap.put(g.getUser().getNetID() + "_" + g.getSubProblem().toString(), g.getGrade());
+      }
+    }
+    
+    
+    // collect all subproblems for this assignment
+    Collection subproblems = assign.getSubProblems();
+    Iterator si = subproblems.iterator();
+    while (si.hasNext()) {
+      SubProblem s = (SubProblem) si.next();
+      maxScoreMap.put(s, new Float(s.getMaxScore()));
+      subproblemGradeMap.put(s, null);
+    }
+    
+    // add the other subproblem with id 0 for total score
+    subproblemGradeMap.put(nullKey, null);
+    Iterator groups = assign.getGroups().iterator();
+    while (groups.hasNext()) {
+      Group g = (Group)groups.next();
+      Collection m = g.getMembers();
+      Iterator members = m.iterator();
+      
+      while (members.hasNext()) {
+        GroupMember member = (GroupMember) members.next();
+        String status = (String) member.getStudent().getStatus();
+        
+        if (status == null || status.equals(Student.DROPPED))
+                continue;
+        
+        Iterator sids = subproblemGradeMap.keySet().iterator();
+        
+        while (sids.hasNext()) {
+          Object sid = sids.next();
+          String lastGradeKey = member.getStudent().getUser().getNetID() + "_";
+          Object key;
+          if(sid == nullKey) {
+            key = nullKey;
+            lastGradeKey += "null";
+          } else {
+            key = sid;
+            lastGradeKey += sid.toString();
+          }
+          
+          Float score = (Float) lastGradeMap.get(lastGradeKey);
+          ArrayList subscores = (ArrayList)subproblemGradeMap.get(key);
+
+          if (score == null) {
+            continue;
+          }
+          
+          if (subscores == null){
+            subscores = new ArrayList();
+          }
+          
+          subscores.add(score);
+          subproblemGradeMap.put(key, subscores);
+        }
+      }
+      
+      // update the groups xml nodes
+      Element xGroup = (Element) groupsNode.getElementsByTagNameNS(
+          XMLBuilder.TAG_GROUP + g.toString(), XMLBuilder.TAG_GROUP).item(0);
+      Iterator avgIterator = subproblemGradeMap.keySet().iterator();
+      while (avgIterator.hasNext()) {
+        Object sid = avgIterator.next();
+        
+        ArrayList grades = (ArrayList) subproblemGradeMap.get(sid);
+        Element xGrade = xml.createElementNS(XMLBuilder.TAG_GRADE + sid, 
+          XMLBuilder.TAG_GRADE);
+        
+        float avg = 0f;
+        String score = null;
+        
+        if (grades != null) 
+        {
+          Iterator gradeIterator = grades.iterator();
+          while (gradeIterator.hasNext()) {
+                  Float grade = (Float) gradeIterator.next();
+                  avg += grade.floatValue();
+          }
+
+          avg /= grades.size();
+          score = StringUtil.roundToOne(String.valueOf(new Float(avg)));
+                                  
+          if (sid instanceof Integer) {
+            if (grades != null && assign.getMaxScore() < avg)
+                        xGrade.setAttribute(XMLBuilder.A_OVERMAX, "true");
+          } else {
+            Float max = (Float) maxScoreMap.get(sid);
+            if (grades != null && max.floatValue() < avg)
+                    xGrade.setAttribute(XMLBuilder.A_OVERMAX, "true");
+          }
+          
+          boolean allGradesIdentical = true;
+          for (int i = 0; i < grades.size(); i++)
+          {
+                  Float grade = (Float)grades.get(i);
+                  if (Math.abs(grade.floatValue() - avg) > 0.001)
+                  {
+                          allGradesIdentical = false;
+                          break;
+                  }
+          }
+          
+          if (grades.size() > 1 && !allGradesIdentical)
+                  xGrade.setAttribute(XMLBuilder.A_ISAVERAGE, "true");
+          
+          xGrade.setAttribute(XMLBuilder.A_SUBPROBID, String.valueOf(sid));
+          xGrade.setAttribute(XMLBuilder.A_SCORE, score);
+          xGroup.appendChild(xGrade);
+        }
+        
+        // zero out this grade value so that we can process the next group
+        subproblemGradeMap.put(sid, null);
+      }
+    }
+    
     Profiler.exitMethod("AssignmentGroupsXMLBuilder.buildGroupGrades", "");
   }
 

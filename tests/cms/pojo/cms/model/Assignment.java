@@ -427,8 +427,9 @@ public class Assignment implements Comparable {
     throw new NotImplementedException();
   }
 
-  public void addGrade(Group group, SubProblem subProb, Float float1) {
-    throw new NotImplementedException();
+  public void addGrade(Group group, SubProblem subProb, Float grade, User student, User grader) {
+    Grade g = new Grade(this, subProb, grade, student, grader);
+    grades.put(course.getStudent(student), g);
   }
 
   public int compareTo(Object o) {

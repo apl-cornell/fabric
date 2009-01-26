@@ -97,6 +97,18 @@ public class Group {
   public GroupGrade findMostRecentGrade(SubProblem subProb) {
     throw new NotImplementedException();
   }
+  
+  public boolean equals(Object obj) {
+    if(obj == null || !(obj instanceof Group)) return false;
+    Group g = (Group)obj;
+    if(g.members.size() != members.size()) return false;
+    if(g.assignment.toString() != assignment.toString()) return false;
+    for(Iterator i = members.keySet().iterator(); i.hasNext();) {
+      User u = (User)i.next();
+      if(!g.members.containsKey(u)) return false;
+    }
+    return true;
+  }
 }
 
 /*

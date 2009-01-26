@@ -138,7 +138,24 @@ public class CMSRoot {
   }
   
   public Collection/*LogDetail*/ findGradeLogDetails(Course course, Collection/*Group*/ groups) {
-    throw new NotImplementedException();
+    //TODO: enhance with indexing
+    Collection result = new ArrayList();
+    Iterator i = logs.iterator();
+    while(i.hasNext()) {
+      Log l = (Log)i.next();
+      if(l.getCourse().toString() != course.toString())
+        continue;
+      for(Iterator di = l.getDetailLogs().iterator(); di.hasNext();) {
+        LogDetail d = (LogDetail)di.next();
+        Group g = d.getAssignment().findGroup(d.getAffectedUser());
+        for(Iterator gi = groups.iterator(); gi.hasNext();)
+        if(g.equals(gi.next())) {
+          result.add(g);
+          break;
+        }
+      }
+    }
+    return result;
   }
   public Collection/*Assignment*/ findAssignmentsByCourseAdmin(Semester curSemester, User user) {
     throw new NotImplementedException();
@@ -355,7 +372,9 @@ public class CMSRoot {
   }
   
   public SubProblem getSubProblem(String subProblemID) {
-    throw new NotImplementedException();
+    if(subProblemID.equals("0")) return null;
+    
+    throw new NotImplementedException("Not fully implemented.");
   }
   
   public CategoryContents getCategoryContents(String contentsID) {

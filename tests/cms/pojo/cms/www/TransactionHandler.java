@@ -475,6 +475,7 @@ public class TransactionHandler {
         String value = getString(item);
         if (field.startsWith(AccessController.P_GRADE)) {
           String[] vals = field.split("_");
+          User       student = database.getUser(vals[1]);
           SubProblem subProb = database.getSubProblem(vals[2]);
           Group      group   = database.getGroup(vals[3]);
           Assignment assign  = isAssign ? assignment : group.getAssignment();
@@ -490,9 +491,9 @@ public class TransactionHandler {
             String scoreStr = value.trim();
             if (!scoreStr.equals("")) {
               float score = Float.parseFloat(scoreStr);
-              assignment.addGrade(group, subProb, new Float(score));
+              assignment.addGrade(group, subProb, new Float(score), student, p);
             } else {
-              assignment.addGrade(group, subProb, null);
+              assignment.addGrade(group, subProb, null, student, p);
             }
           } catch (NumberFormatException e) {
             result.addError("Grade for '" + vals[1] + "' on problem '"
@@ -501,12 +502,10 @@ public class TransactionHandler {
           }
         } else if (field.startsWith(AccessController.P_OLDGRADE)) {
           String[] vals = field.split("_");
+          User       student = database.getUser(vals[1]);
           SubProblem subProb = database.getSubProblem(vals[2]);
           Group      group   = database.getGroup(vals[3]);
-          GroupGrade grade   = database.getGroupGrade(vals[1]);
           
-          if (grade != group.findMostRecentGrade(subProb))
-            result.addError("A conflicting grade has been entered");
         } else if (field.startsWith(AccessController.P_COMMENTTEXT)) {
           Group group =
             database.getGroup(field.split(AccessController.P_COMMENTTEXT)[1]);
@@ -514,22 +513,21 @@ public class TransactionHandler {
         } else if (field.startsWith(AccessController.P_COMMENTFILE)) {
           Group group =
             database.getGroup(field.split(AccessController.P_COMMENTFILE)[1]);
-          FileData file = downloadFile(item);
+          //FileData file = downloadFile(item);
           // TODO: refactor comments and comment files
-          new CommentFile(new Comment("", p, group), file);
+          //new CommentFile(new Comment("", p, group), file);
         } else if (field.startsWith(AccessController.P_SUBMITTEDFILE)) {
           String[] vals = field.split("_");
           Group group = database.getGroup(vals[1]);
           RequiredSubmission submission = database.getRequiredSubmission(vals[2]);
           String fileName    = FileUtil.trimFilePath(item.getName());
-          String extension   = fileName.substring(fileName.lastIndexOf("."));
-          if (fileName.equals("")) {
-            continue;
+          if (!fileName.equals("")) {
+            String extension   = fileName.substring(fileName.lastIndexOf("."));
+            Assignment assign = isAssign ? assignment : group.getAssignment();
+            FileData file = downloadFile(item);
+            new SubmittedFile(group, group, p, submission, extension, false,
+                null/* date */, file);
           }
-          Assignment assign = isAssign ? assignment : group.getAssignment();
-          FileData file = downloadFile(item);
-          new SubmittedFile(group, group, p, submission, extension, false,
-              null/* date */, file);
         } else if (field.startsWith(AccessController.P_REGRADERESPONSE)) {
           // TODO: not sure this is right
           String[] vals = field.split("_");
@@ -569,7 +567,7 @@ public class TransactionHandler {
        * or missing, but just in case)
        */
       // TODO: I have no Idea if this stuff is right
-      result = transactions.addAllAssignsGrades(p, data, data);
+      //result = transactions.addAllAssignsGrades(p, data, data);
       if (result.getSuccess()) {
         try {
           Iterator assigns = (Iterator) result.getValue();
@@ -602,7 +600,7 @@ public class TransactionHandler {
     } catch (FileUploadException e) {
       result.addError(e.getMessage(), e);
     } catch (Exception e) {
-      result.addError("Database did not update grades and comments");
+      result.addError("Database did not update grades and comments.");
       e.printStackTrace();
     }
     Profiler.exitMethod("TransactionHandler.addGradesComments", "");

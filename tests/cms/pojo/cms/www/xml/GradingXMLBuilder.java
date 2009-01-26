@@ -223,7 +223,7 @@ public class GradingXMLBuilder {
             XMLBuilder.TAG_MEMBER).item(0);
         if (xMember != null) {
           Element latergrade = (Element) xMember.getElementsByTagNameNS(
-              XMLBuilder.TAG_GRADE + grade.getSubProblem().toString(),
+              XMLBuilder.TAG_GRADE + (grade.getSubProblem() != null ? grade.getSubProblem().toString() : "0"),
               XMLBuilder.TAG_GRADE).item(0);
           if (latergrade == null) {
             Element xGrade = xml.createElementNS(
