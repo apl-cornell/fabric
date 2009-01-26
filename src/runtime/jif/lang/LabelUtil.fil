@@ -1,5 +1,8 @@
 package jif.lang;
 
+import jif.lang.Label;
+import jif.lang.Principal;
+import jif.lang.PrincipalUtil;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.util.*;
@@ -612,6 +615,16 @@ public class LabelUtil {
     try {
       enterTiming();
       Label L = toLabel(PrincipalUtil.readableByPrinPolicy(localCore, p));
+      return relabelsTo(lbl, L);
+    } finally {
+      exitTiming();
+    }
+  }
+  
+  public boolean isWritableBy(Label lbl, Principal p) {
+    try {
+      enterTiming();
+      Label L = toLabel(PrincipalUtil.writableByPrinPolicy(localCore, p));
       return relabelsTo(lbl, L);
     } finally {
       exitTiming();

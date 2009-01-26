@@ -1,5 +1,9 @@
 package jif.lang;
 
+import jif.lang.IntegPolicy;
+import jif.lang.LabelUtil;
+import jif.lang.Principal;
+import jif.lang.WriterPolicy;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.util.ArrayList;
@@ -431,6 +435,15 @@ public class PrincipalUtil {
       LabelUtil.singleton().exitTiming();
     }
 
+  }
+  
+  public static IntegPolicy writableByPrinPolicy(Core core, Principal p) {
+    try {
+      LabelUtil.singleton().enterTiming();
+      return new WriterPolicy@core(LabelUtil.singleton(), topPrincipal(), p);
+    } finally {
+      LabelUtil.singleton().exitTiming();
+    }
   }
 
   public static Principal disjunction(Core core, Principal left, Principal right) {
