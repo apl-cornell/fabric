@@ -5,8 +5,10 @@ import java.io.Reader;
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.FileSource;
+import polyglot.frontend.Job;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
+import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
@@ -61,6 +63,16 @@ public class ExtensionInfo extends jif.ExtensionInfo {
   @Override
   protected Scheduler createScheduler() {
     return new FabricScheduler(this, this.jlext);
+  }
+  
+  @Override
+  public FabricScheduler scheduler() {
+    return (FabricScheduler) super.scheduler();
+  }
+  
+  @Override
+  public Goal getCompileGoal(Job job) {
+    return scheduler().HandoffToFil(job);
   }
 
   public ExtensionInfo() {

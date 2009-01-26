@@ -1,8 +1,11 @@
 package fabric;
 
+import java.util.Iterator;
+
 import polyglot.ast.Node;
 import polyglot.frontend.Job;
 import polyglot.frontend.Source;
+import polyglot.frontend.goals.Goal;
 import jif.JifScheduler;
 
 public class FabricScheduler extends JifScheduler {
@@ -31,6 +34,23 @@ public class FabricScheduler extends JifScheduler {
         this.objectJob = j;
     }
     return j;
-}
+  }
 
+  public Goal HandoffToFil(Job job) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public boolean runToCompletion() {
+    if (super.runToCompletion()) {
+      // Create a goal to compile every source file.
+      for (Iterator<Job> i = jlext.scheduler().jobs().iterator(); i.hasNext(); ) {
+          Job job = i.next();
+          jlext.scheduler().addGoal(jlext.getCompileGoal(job));
+      }
+      return jlext.scheduler().runToCompletion();
+    }
+    return false;
+  }
 }
