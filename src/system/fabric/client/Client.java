@@ -32,7 +32,7 @@ import fabric.lang.arrays.ObjectArray;
  * methods, and can then use the singleton Client instance to access Cores and
  * Objects.
  */
-public class Client {
+public final class Client {
 
   // A map from core hostnames to Core objects
   protected final Map<String, RemoteCore> cores;
@@ -362,7 +362,7 @@ public class Client {
     
     // Parse the command-line options.
     Client client = null;
-    Options opts;
+    final Options opts;
     try {
       try {
         opts = new Options(args);
@@ -396,21 +396,30 @@ public class Client {
 
       if (opts.core != null) {
         // Create a principal object on the given core.
-        String name = client.getJavaPrincipal().getName();
-        Core core = client.getCore(opts.core);
-        TransactionManager.getInstance().startTransaction();
-        Principal principal = Principal.$Proxy.getInstance(core, name);
-        TransactionManager.getInstance().commitTransaction();
-
-        System.out.println("Client principal created:");
-        System.out.println("fab://" + opts.core + "/" + principal.$getOnum());
+        final String name = client.getJavaPrincipal().getName();
+        final Core core = client.getCore(opts.core);
+        
+        runInTransaction(new Code<Void>() {
+          public Void run() {
+            Principal principal = Principal.$Proxy.getInstance(core, name);
+            
+            System.out.println("Client principal created:");
+            System.out.println("fab://" + opts.core + "/" + principal.$getOnum());
+            return null;
+          }
+        });
+        
         return;
       }
       
       // Attempt to read the principal object to ensure that it exists.
-      TransactionManager.getInstance().startTransaction();
-      log.config("Client principal is " + client.getPrincipal());
-      TransactionManager.getInstance().commitTransaction();
+      final Principal clientPrincipal = client.getPrincipal();
+      runInTransaction(new Code<Void>() {
+        public Void run() {
+          log.config("Client principal is " + clientPrincipal);
+          return null;
+        }
+      });
 
       if (opts.app == null) {
         // Act as a dissemination node.
@@ -426,14 +435,16 @@ public class Client {
       Class<?> mainClass = Class.forName(opts.app[0] + "$$Impl");
       Method main =
           mainClass.getMethod("main", new Class[] { ObjectArray.class });
-      String[] newArgs = new String[opts.app.length - 1];
+      final String[] newArgs = new String[opts.app.length - 1];
       for (int i = 0; i < newArgs.length; i++)
         newArgs[i] = opts.app[i + 1];
 
-      Core local = client.getLocalCore();
-      TransactionManager.getInstance().startTransaction();
-      Object argsProxy = WrappedJavaInlineable.$wrap(local, newArgs);
-      TransactionManager.getInstance().commitTransaction();
+      final Core local = client.getLocalCore();
+      Object argsProxy = runInTransaction(new Code<Object>() {
+        public Object run() {
+          return WrappedJavaInlineable.$wrap(local, newArgs);
+        }
+      });
 
       MainThread.invoke(opts, main, argsProxy);
     } finally {
@@ -454,5 +465,27 @@ public class Client {
 
   public void setCore(String name, RemoteCore core) {
     cores.put(name, core);
+  }
+
+  /**
+   * Executes the given code from within a Fabric transaction. Should not be
+   * called by generated code. This is here to abstract away the details of
+   * starting and finishing transactions.
+   */
+  public static <T> T runInTransaction(Code<T> code) {
+    TransactionManager tm = TransactionManager.getInstance();
+    tm.startTransaction();
+    try {
+      T result = code.run();
+      tm.commitTransaction();
+      return result;
+    } catch (RuntimeException t) {
+      tm.abortTransaction();
+      throw t;
+    }
+  }
+  
+  public static interface Code<T> {
+    T run();
   }
 }

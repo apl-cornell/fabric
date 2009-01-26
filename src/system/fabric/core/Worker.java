@@ -164,7 +164,7 @@ public class Worker extends Thread {
             this.client = null;
           }
           
-          if (authClient(clientName)) {
+          if (authenticateClient(clientName)) {
             logger.info("Core " + coreName + " accepted connection");
             logger.info("Client principal is " + clientName
                 + (this.client == null ? " (acting as null)" : ""));
@@ -222,24 +222,16 @@ public class Worker extends Thread {
   /**
    * Determines whether the client principal matches the given name.
    */
-  private boolean authClient(String name) {
+  private boolean authenticateClient(final String name) {
     // XXX Bypass authentication if we have a null client.
     // XXX This is to allow bootstrapping the client principal.
     if (client == null) return true;
     
-    boolean result = false;
-    fabric.client.transaction.TransactionManager tm =
-        fabric.client.transaction.TransactionManager.getInstance();
-    
-    tm.startTransaction();
-    try {
-      result = client.name().equals(name);
-      tm.commitTransaction();
-    } catch (RuntimeException e) {
-      tm.abortTransaction();
-    }
-    
-    return result;
+    return Client.runInTransaction(new Client.Code<Boolean>() {
+      public Boolean run() {
+        return client.name().equals(name);
+      }
+    });
   }
 
   /**

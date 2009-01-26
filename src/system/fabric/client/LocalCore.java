@@ -3,7 +3,6 @@ package fabric.client;
 import java.util.Collection;
 import java.util.logging.Logger;
 
-import fabric.client.transaction.TransactionManager;
 import fabric.common.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;
@@ -13,7 +12,7 @@ public class LocalCore implements Core {
   private long freshOID = 0;
 
   // TODO: should be a fabric.util.HashMap
-  private Object rootMap;
+  private final Object rootMap;
 
   private static final Logger log = Logger.getLogger("fabric.client.LocalCore");
 
@@ -51,10 +50,12 @@ public class LocalCore implements Core {
    * @see fabric.client.Client.getLocalCore
    */
   protected LocalCore() {
-    TransactionManager.getInstance().startTransaction();
-    // XXX Use a proper label.
-    this.rootMap = new Object.$Impl(this, null).$getProxy();
-    TransactionManager.getInstance().commitTransaction();
+    this.rootMap = Client.runInTransaction(new Client.Code<Object>() {
+      public Object run() {
+        // XXX Use a proper label.
+        return new Object.$Impl(LocalCore.this, null).$getProxy();
+      }
+    });
   }
 
   @Override

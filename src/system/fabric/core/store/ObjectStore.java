@@ -5,7 +5,6 @@ import java.util.NoSuchElementException;
 
 import fabric.client.Client;
 import fabric.client.Core;
-import fabric.client.transaction.TransactionManager;
 import fabric.common.SerializedObject;
 import fabric.core.PrepareRequest;
 import fabric.lang.Principal;
@@ -191,16 +190,20 @@ public abstract class ObjectStore {
   public final void ensureInit() {
     if (isInitialized()) return;
     
-    Core core = Client.getClient().getCore(name);
+    final Core core = Client.getClient().getCore(name);
     
-    TransactionManager.getInstance().startTransaction();
-    HashMap.$Impl map = new HashMap.$Impl(core, null);
-    map.$forceRenumber(0L);
-    
-    Principal.$Impl principal = new Principal.$Impl(core, null, name);
-    principal.$forceRenumber(1L);
-    map.put(WrappedJavaInlineable.$wrap(name), principal.$getProxy());
-    TransactionManager.getInstance().commitTransaction();
+    Client.runInTransaction(new Client.Code<Void>() {
+      public Void run() {
+        HashMap.$Impl map = new HashMap.$Impl(core, null);
+        map.$forceRenumber(0L);
+
+        Principal.$Impl principal = new Principal.$Impl(core, null, name);
+        principal.$forceRenumber(1L);
+        map.put(WrappedJavaInlineable.$wrap(name), principal.$getProxy());
+
+        return null;
+      }
+    });
     
     setInitialized();
   }

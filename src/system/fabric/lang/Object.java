@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.util.Iterator;
 import java.util.List;
 
+import jif.lang.Label;
 import fabric.client.*;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.ReadMapEntry;
@@ -15,7 +16,6 @@ import fabric.common.FetchException;
 import fabric.common.InternalError;
 import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
-import jif.lang.Label;
 
 /**
  * All Fabric objects implement this interface.
@@ -561,26 +561,22 @@ public interface Object {
        *                The class to instantiate.
        */
       public static final Object $makeStaticInstance(
-          Class<? extends Object.$Impl> c) {
+          final Class<? extends Object.$Impl> c) {
         // XXX Need a real core and a real label.  (Should be given as args.)
-        Core core = Client.getClient().getLocalCore();
-        Label label = null;
+        final Core core = Client.getClient().getLocalCore();
+        final Label label = null;
         
-        TransactionManager tm = TransactionManager.getInstance();
-        boolean commit = true;
-        tm.startTransaction();
-        try {
-          Constructor<? extends Object.$Impl> constr =
-              c.getConstructor(Core.class, Label.class);
-          return constr.newInstance(core, label);
-        } catch (Throwable t) {
-          commit = false;
-          throw new AbortException(t);
-        } finally {
-          if (commit)
-            tm.commitTransaction();
-          else tm.abortTransaction();
-        }
+        return Client.runInTransaction(new Client.Code<Object>() {
+          public Object run() {
+            try {
+              Constructor<? extends Object.$Impl> constr =
+                  c.getConstructor(Core.class, Label.class);
+              return constr.newInstance(core, label);
+            } catch (Exception e) {
+              throw new AbortException(e);
+            }
+          }
+        });
       }
     }
 
