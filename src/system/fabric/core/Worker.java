@@ -229,7 +229,14 @@ public class Worker extends Thread {
     
     return Client.runInTransaction(new Client.Code<Boolean>() {
       public Boolean run() {
-        return client.name().equals(name);
+        try {
+          return client.name().equals(name);
+        } catch (NullPointerException e) {
+          // XXX For ease of debugging, assume that if the client principal
+          // XXX doesn't exist, it's about to be created.
+          client = null;
+          return true;
+        }
       }
     });
   }
