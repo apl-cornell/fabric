@@ -15,10 +15,10 @@ while true; do
   esac
 done
 
+classpath="$JIF/rt-classes:$classpath"
 classpath="$TOP/classes:$TOP/rt-classes:$classpath"
 classpath="$TOP/lib/fabric.jar:$classpath"
 classpath="$TOP/lib/je-3.2.68.jar:$classpath"
-classpath="$JIF/rt-classes:$classpath"
 
 command="\"$JAVA\" $vmargs -classpath \"$(fixpath $classpath)\" fabric.core.Main $args"
 
