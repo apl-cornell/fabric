@@ -34,6 +34,7 @@ import fabric.messages.AllocateMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
+import fabric.util.Map;
 
 /**
  * Encapsulates a Core. This class maintains the connection to the core and
@@ -339,8 +340,8 @@ public class RemoteCore implements Core {
     return "Core@" + name;
   }
 
-  public Object getRoot() {
-    return new Object.$Proxy(this, 0);
+  public Map getRoot() {
+    return new Map.$Proxy(this, 0);
   }
 
   public String name() {

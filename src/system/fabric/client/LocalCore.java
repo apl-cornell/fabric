@@ -6,13 +6,14 @@ import java.util.logging.Logger;
 import fabric.common.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;
+import fabric.util.HashMap;
+import fabric.util.Map;
 
 public class LocalCore implements Core {
 
   private long freshOID = 0;
 
-  // TODO: should be a fabric.util.HashMap
-  private final Object rootMap;
+  private final Map rootMap;
 
   private static final Logger log = Logger.getLogger("fabric.client.LocalCore");
 
@@ -50,10 +51,10 @@ public class LocalCore implements Core {
    * @see fabric.client.Client.getLocalCore
    */
   protected LocalCore() {
-    this.rootMap = Client.runInTransaction(new Client.Code<Object>() {
-      public Object run() {
+    this.rootMap = Client.runInTransaction(new Client.Code<Map>() {
+      public Map run() {
         // XXX Use a proper label.
-        return new Object.$Impl(LocalCore.this, null).$getProxy();
+        return (Map) new HashMap.$Impl(LocalCore.this, null).$getProxy();
       }
     });
   }
@@ -63,7 +64,7 @@ public class LocalCore implements Core {
     return "LocalCore";
   }
 
-  public Object getRoot() {
+  public Map getRoot() {
     return rootMap;
   }
 

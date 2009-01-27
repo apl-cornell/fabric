@@ -68,7 +68,7 @@ public interface Core {
   /**
    * Returns the root map of the Core
    */
-  public fabric.lang.Object getRoot() throws UnreachableCoreException;
+  public fabric.util.Map getRoot() throws UnreachableCoreException;
 
   /**
    * Notifies this Core object that an $Impl has been evicted, so that it can
