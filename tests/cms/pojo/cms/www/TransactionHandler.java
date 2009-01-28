@@ -575,33 +575,70 @@ public class TransactionHandler {
        */
       // TODO: I have no Idea if this stuff is right
       //result = transactions.addAllAssignsGrades(p, data, data);
-      if (result.getSuccess()) {
-        try {
-          Iterator assigns = (Iterator) result.getValue();
-          while (assigns.hasNext()) {
-            Assignment assign = (Assignment) assigns.next();
-            transactions.computeAssignmentStats(p, assign, null);
+      if (!result.hasErrors()) {
+        if (isAssign) {
+          //result = transactions.addGradesComments(p, ID, data);
+          // If commit went through successfully and updates were made, update statistics
+          if (result.getSuccess()) {
+            Profiler.enterMethod("TransactionHandler.addGradesComments (part)", 
+                "Statistics update branch A");
+            try {
+              Profiler.enterMethod("TransactionHandler.addGradesComments (part)", 
+                  "Stat update branch A into computeAssignmentStats");
+              transactions.computeAssignmentStats(p, assignment, null);
+              Profiler.exitMethod("TransactionHandler.addGradesComments (part)", 
+                  "Stat update branch A into computeAssignmentStats");
+              Profiler.enterMethod("TransactionHandler.addGradesComments (part)", 
+                  "Stat update branch A into computeTotalScores");
+              transactions.computeTotalScores(p, assignment.getCourse(), null);
+              Profiler.exitMethod("TransactionHandler.addGradesComments (part)", 
+                  "Stat update branch A into computeTotalScores");
+            } catch (Exception e) {
+              e.printStackTrace();
+              result.addError("Grades committed, but failed to compute updated " +
+                        "statistics");
+            }
+            Profiler.exitMethod("TransactionHandler.addGradesComments (part)", 
+                "Statistics update branch A");
           }
-          if(!isAssign) {
-            transactions.computeTotalScores(p, course, null);
+        } else {
+          Profiler.enterMethod("TransactionHandler.addGradesComments (part)", 
+              "Statistics update branch B");
+          //result = transactions.addAllAssignsGrades(p, ID, data);
+          if (result.getSuccess()) {
+            try {
+              Iterator assigns = (Iterator) result.getValue();
+              while (assigns.hasNext()) {
+                Assignment assign = (Assignment) assigns.next();
+                transactions.computeAssignmentStats(p, assign, 
+                    null);
+              }
+              transactions.computeTotalScores(p, assignment.getCourse(), null);
+            } catch (Exception e) {
+              e.printStackTrace();
+              result.addError("Grades committed, but failed to compute " +
+                          "updated statistics");
+            }
           }
-        } catch (Exception e) {
-          e.printStackTrace();
-          result
-          .addError("Grades committed, but failed to compute updated statistics");
+          Profiler.exitMethod("TransactionHandler.addGradesComments (part)", 
+              "Statistics update branch B");
         }
-      }
-      String msg =
-        result.getSuccess() ? "Grades/comments updated successfully"
-            : "Database did not update grades and comments";
-      if (isAssign) {
-        Object[] pack = new Object[2];
-        pack[0] = msg;
-        pack[1] = groups;
-        result.setValue(pack);
+        String msg = result.getSuccess() ? "Grades/comments updated successfully" : 
+          "Database did not update grades and comments";
+        if (isAssign) {
+          Object[] pack = new Object[2];
+          pack[0] = msg;
+          pack[1] = null; //groupIDs;
+          result.setValue(pack);
+        } else {
+          result.setValue(msg);
+        }
       } else {
-        result.setValue(msg);
+        result.addError("Database did not update grades and comments");
       }
+      Profiler.exitMethod("TransactionHandler.addGradesComments (part)",
+          "Statistics update portion");
+        
     } catch (UploadTooBigException e) {
       result.addError(e.getMessage(), e);
     } catch (FileUploadException e) {

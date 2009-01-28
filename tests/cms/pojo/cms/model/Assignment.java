@@ -447,6 +447,15 @@ public class Assignment implements Comparable {
     subProblemGrades.remove(student);
   }
   
+  /**
+   * Adds a grade for a student for the assignment. If it is a subproblem,
+   * it will update to the total grade for the assignment. 
+   * @param group
+   * @param subProb
+   * @param grade
+   * @param studentUser
+   * @param grader
+   */
   public void addGrade(Group group, SubProblem subProb, Float grade, User studentUser, User grader) {
     Student student = course.getStudent(studentUser);
     Grade g = new Grade(this, subProb, grade, studentUser, grader);
@@ -458,9 +467,6 @@ public class Assignment implements Comparable {
       grades.add(g);
       subProblemGrades.put(student, grades);
       Grade gr = (Grade)this.grades.get(student);
-      addGrade(group, null, g.getGrade().floatValue() + (gr == null ? 0f : gr.getGrade()), 
-          studentUser, grader);
-      
     }
   }
 
@@ -471,7 +477,9 @@ public class Assignment implements Comparable {
     int result = course.compareTo(a.course);
     if (result != 0) return result;
     
-    return dueDate.compareTo(a.dueDate);
+    result = dueDate.compareTo(a.dueDate);
+    if(result != 0) return result;
+    return name.compareTo(a.name);
   }
 
   /**

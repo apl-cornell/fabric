@@ -886,8 +886,222 @@ public class Transactions {
     throw new NotImplementedException();
   }
 
-  public void computeAssignmentStats(User p, Assignment assign, Object object) {
-    throw new NotImplementedException();
+  public void computeAssignmentStats(User p, Assignment assignment, Log log) {
+    Profiler.enterMethod("Transactions.computeAssignmentStats", "AssignmentID: " + assignment);
+    try {
+    if (log == null) {
+      log = startLog(p);
+      log.setLogName(Log.COMPUTE_ASSIGNMENT_STATS);
+      log.setLogType(Log.LOG_COURSE);
+      log.setCourse(assignment.getCourse());
+      appendAssignment(log, assignment);
+    }
+    // New grade entries made here are attributed to the system
+    String grader = "CMS";
+    Collection subProblems = assignment.getSubProblems();
+    boolean hasSubProblems = subProblems.size() > 0;
+    Collection students = assignment.getCourse().getStudents();
+    Collection groups = assignment.getGroups();
+    /* Key: NetID -> Value: [TotalGrade, PreviousGrade]
+     * String -> Float[2] */
+    Hashtable studentSums = new Hashtable();
+    /* Key: "<GroupID>_<SubProblemID>"
+     * Value: [Total (Float), EntryNum (Integer), Averaged (Boolean), LastEntry (Float)]
+     * String -> Object[4] */
+    Hashtable groupSums = new Hashtable();
+    Iterator i;
+    
+    Map groupsMap = new HashMap();
+    i = groups.iterator();
+    while(i.hasNext()) {
+      Group g = (Group)i.next();
+      for(Iterator mi = g.getMembers().iterator(); mi.hasNext();)
+        groupsMap.put(((GroupMember)mi.next()).getStudent().getUser(), g);
+    }
+    
+    
+    // Find all grades for students in this assignment and add them to the individual sums
+    Collection grades = assignment.getGrades();
+    if (grades.size() == 0) {
+      Profiler.exitMethod("Transactions.computeAssignmentStats", "Assignment: " 
+          + assignment + " - (early exit)");
+      return;
+    }
+    i = grades.iterator();
+    while (i.hasNext()) {
+      Grade grade = (Grade) i.next();
+      float score = grade.getGrade().floatValue();
+      // [sum of current scores (null if no scores), old total score (null if none)]
+      Float[] sum = (Float[]) studentSums.get(grade.getUser());
+      if (!(grade.getSubProblem() == null && hasSubProblems)) {
+        if (sum != null) {
+          sum[0] = sum[0] == null ? new Float(score) : 
+            new Float(sum[0].floatValue() + score);
+        } else {
+          sum = new Float[2];
+          sum[0] = new Float(score);
+          sum[1] = null;
+        }
+      } else {
+        if (sum != null) {
+            sum[1] = new Float(score);
+        } else {
+            sum = new Float[2];
+            sum[0] = null;
+            sum[1] = new Float(score);
+        }
+      }
+      studentSums.put(grade.getUser(), sum);
+      if (students.contains(assignment.getCourse().getStudent(grade.getUser())) 
+          && grade.getSubProblem() != null) {
+          Group group = (Group)groupsMap.get(grade.getUser());
+          Object[] groupSum = (Object[]) groupSums.get(group.toString() + "_" + 
+              grade.getSubProblem().toString());
+          if (groupSum != null) {
+            Float total = (Float) groupSum[0];
+            Integer count = (Integer) groupSum[1];
+            Boolean averaged = (Boolean) groupSum[2];
+            Float last = (Float) groupSum[3];
+            groupSum[0] = new Float(total.floatValue() + score);
+            groupSum[1] = new Integer(count.intValue() + 1);
+            if (!averaged.booleanValue() && !last.equals(new Float(score))) {
+                    groupSum[2] = new Boolean(true);
+            }
+          } else {
+            groupSum = new Object[4];
+            groupSum[0] = new Float(score);
+            groupSum[1] = new Integer(1);
+            groupSum[2] = new Boolean(false);
+            groupSum[3] = new Float(score);
+          }
+          groupSums.put(group.toString() + "_" + grade.getSubProblem().toString(), 
+              groupSum);
+      }
+    }
+    // Enter newly summed total grades into the database and compute the mean score
+    i = students.iterator();
+    float total = 0;
+    ArrayList scores = new ArrayList();
+    /* This loop finds a total of all assignment grades (for getting the mean), 
+     *  and creates a grade entry for the student's total assignment grade 
+     *  if necessary. */
+    while (i.hasNext()) {
+      Student student = (Student) i.next();
+      Float[] sums = (Float[]) studentSums.get(student.getUser());
+      if (sums != null) {
+        Group g = (Group)groupsMap.get(student.getUser());
+        if (sums[0] != null) {
+          // Insert recently calculated sums into the group grade sums
+          Object[] groupSum = (Object[]) groupSums.get(g.toString() + "_0");
+          if (groupSum != null) {
+            Float sumtotal = (Float) groupSum[0];
+            Integer count = (Integer) groupSum[1];
+            Boolean averaged = (Boolean) groupSum[2];
+            Float last = (Float) groupSum[3];
+            groupSum[0] = new Float(sumtotal.floatValue() + sums[0].floatValue());
+            groupSum[1] = new Integer(count.intValue() + 1);
+            if (!averaged.booleanValue() && !last.equals(new Float(sums[0].floatValue()))) {
+                    groupSum[2] = new Boolean(true);
+            }
+          } else {
+            groupSum = new Object[4];
+            groupSum[0] = new Float(sums[0].floatValue());
+            groupSum[1] = new Integer(1);
+            groupSum[2] = new Boolean(false);
+            groupSum[3] = new Float(sums[0].floatValue());
+          }
+          groupSums.put(g.toString() + "_0", groupSum);
+          scores.add(new Float(sums[0].floatValue()));
+          total += sums[0].floatValue();
+        }
+        if (hasSubProblems && (sums[0] == null || sums[1] == null || !sums[0].equals(sums[1]))) {
+          assignment.addGrade(g, null, sums[0], student.getUser(), p);
+          float diff = ((sums[0] == null || sums[1] == null) ? 0 : sums[0].floatValue() - sums[1].floatValue());
+          LogDetail d = new LogDetail(log, "Grade for " + student.getUser().getNetID() 
+              + " on " + assignment.getName() + 
+                  (sums[0] == null ? " erased" : " calculated to be " + 
+                      sums[0].floatValue() + (sums[1] == null ? "" : (" (" + 
+                          (diff > 0 ? "+" : "") + diff + ")"))),
+                          student.getUser(), assignment);
+        }
+      }
+    }
+    Float mean, median, max = null, stdev;
+    if (scores.size() > 0) {
+      mean = new Float(total / (float) scores.size());
+      float sstotal = 0;
+      i = scores.iterator();
+      float val;
+      /* This loop calculates the sum of squared differences using the previously
+       * computed mean value (for finding the standard deviation) */
+      while (i.hasNext()) {
+              Float score = (Float) i.next();
+              if (max == null || score.floatValue() > max.floatValue()) {
+                      max = score;
+              }
+              val = (score.floatValue() - mean.floatValue());
+              sstotal += (val * val);
+      }
+      stdev = new Float((float) Math.sqrt(sstotal / scores.size()));
+      // Find median
+      median = new Float(0);
+      Object[] sortedScores = scores.toArray();
+      Arrays.sort(sortedScores);
+      if (sortedScores.length % 2 == 0) {
+              median = new Float(sortedScores.length == 0 ? 0 : (((Float) sortedScores[sortedScores.length / 2 - 1]).floatValue() 
+                              + ((Float) sortedScores[sortedScores.length / 2]).floatValue()) / 2.0f);
+      } else /* Odd */ {
+              median = new Float(((Float) sortedScores[(sortedScores.length - 1) / 2]).floatValue());
+      }
+    } else {
+      mean = null;
+      median = null;
+      stdev = null;
+    }
+    /* XXX TODO: GROUP GRADES
+    // First we modify all the previously EXISTING group grades
+    i = assignment.getgr
+    while (i.hasNext()) {
+            GroupGradeLocal groupGrade = (GroupGradeLocal) i.next();
+            String key = groupGrade.getGroupID() + "_" + groupGrade.getSubProblemID();
+            Object[] groupSum = (Object[]) groupSums.get(key);
+            if (groupSum != null) {
+                    Float sum = (Float) groupSum[0];
+                    Integer count = (Integer) groupSum[1];
+                    Boolean averaged = (Boolean) groupSum[2];
+                    groupGrade.setScore(sum.floatValue() / count.floatValue());
+                    groupGrade.setIsAveraged(averaged.booleanValue());
+                    groupSums.remove(key);
+            } else {
+                    ggHome.remove(groupGrade.getPrimaryKey());
+            }
+    }
+    // Then for any left over (NON-EXISTING) group grades, we create new database entries
+    Enumeration e = groupSums.keys();
+    while (e.hasMoreElements()) {
+            String k = (String) e.nextElement();
+            String[] ks = k.split("_");
+            long groupID = Long.parseLong(ks[0]);
+            long subProblemID = Long.parseLong(ks[1]);
+            Object[] groupSum = (Object[]) groupSums.get(k);
+            Float sum = (Float) groupSum[0];
+            Integer count = (Integer) groupSum[1];
+            Boolean averaged = (Boolean) groupSum[2];
+            ggHome.create(groupID, sum.floatValue() / count.floatValue(),
+                            averaged.booleanValue(), subProblemID);
+    }
+    */
+    assignment.setMax(max);
+    assignment.setMean(mean);
+    assignment.setStdDev(stdev);
+    assignment.setMedian(median);
+    Profiler.exitMethod("Transactions.computeAssignmentStats", "Assignment: " + 
+        assignment);
+    } catch(Exception x) {
+      x.printStackTrace();
+      Profiler.exitMethod("Transactions.computeAssignmentStats", "Assignment: " 
+          + assignment + " - (crash)");
+    }
   }
 
   public void computeTotalScores(User p, Course course, Log log) {
@@ -919,6 +1133,7 @@ public class Transactions {
         grades = assign.getGrades().iterator();
         while (grades.hasNext()) {
           Grade grade = (Grade) grades.next();
+          if(grade.getSubProblem() == null) continue;
           Float score = (Float) totalScores.get(grade.getUser());
           Float w = (Float) assignWeights.get(grade.getAssignment());
           Float m = (Float) maxScores.get(grade.getAssignment());

@@ -167,7 +167,7 @@ public class Course implements Comparable {
     SortedSet result = new TreeSet();
     for (Iterator it = assignments.values().iterator(); it.hasNext();) {
       Assignment assignment = (Assignment) it.next();
-      if (!assignment.getHidden()) result.add(assignment);
+      result.add(assignment);
     }
     
     return result;
