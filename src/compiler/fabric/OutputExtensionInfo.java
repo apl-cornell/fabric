@@ -1,46 +1,82 @@
 package fabric;
 
 import polyglot.ast.Node;
+import polyglot.frontend.CyclicDependencyException;
+import polyglot.frontend.EmptyPass;
 import polyglot.frontend.Job;
+import polyglot.frontend.Pass;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.Source;
-import jif.ExtensionInfo;
+import polyglot.frontend.goals.Goal;
+import polyglot.frontend.goals.SourceFileGoal;
+import polyglot.util.InternalCompilerError;
+import fabil.frontend.FabILScheduler;
 
-public class OutputExtensionInfo extends jif.OutputExtensionInfo {
-
-  public OutputExtensionInfo(ExtensionInfo jifExtInfo) {
-    super(jifExtInfo);
-  }
+/** A small extension of the fabil ExtensionInfo and Scheduler to perform fabil
+ *  compilation of asts that have come from fabric.
+ */
+public class OutputExtensionInfo extends fabil.ExtensionInfo {
 
   @Override
   public Scheduler createScheduler() {
     return new OutputScheduler(this);
   }
   
-  static class OutputScheduler extends jif.OutputExtensionInfo.OutputScheduler {
-    // We use the same hack here as in JifScheduler, but we need to override to
-    // compare with Object.fab instead of Object.jif.
-
+  protected static class OutputScheduler extends FabILScheduler {
+    protected Job objectJob;
+    
     OutputScheduler(OutputExtensionInfo extInfo) {
       super(extInfo);
     }
-
+    
     @Override
     public Job addJob(Source source, Node ast) {
+      // We use the same hack here as in JifScheduler, but we need to override to
+      // compare with Object.fab instead of Object.jif.
       Job j = super.addJob(source, ast);
       if ("Object.fab".equals(source.name())) {
         this.objectJob = j;
       }
       return j;
     }
-
+    
     @Override
     public Job addJob(Source source) {
+      // We use the same hack here as in JifScheduler, but we need to override to
+      // compare with Object.fab instead of Object.jif.
       Job j = super.addJob(source);
       if ("Object.fab".equals(source.name())) {
-        this.objectJob = j;
+          this.objectJob = j;
       }
       return j;
+    }
+    
+    @Override
+    public Goal TypesInitialized(Job job) {
+      Goal g = super.TypesInitialized(job);
+      try {
+          if (objectJob != null && job != objectJob) {
+              addPrerequisiteDependency(g, TypesInitialized(objectJob));
+          }
+      }
+      catch (CyclicDependencyException e) {
+          // Cannot happen
+          throw new InternalCompilerError(e);
+      }
+      return g;
+    }
+
+    @Override
+    public Goal Parsed(Job job) {
+      if (job.ast() != null) {
+        return internGoal(new SourceFileGoal(job) {
+          @Override
+          public Pass createPass(polyglot.frontend.ExtensionInfo einf) {
+            return new EmptyPass(this);
+          }
+        });
+      }
+      return super.Parsed(job);
     }
   }
 }

@@ -2,16 +2,29 @@ package fabric;
 
 import java.util.Iterator;
 
+import fabric.ast.FabricNodeFactory;
+import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricToFabilRewriter;
+
 import polyglot.ast.Node;
+import polyglot.frontend.CyclicDependencyException;
 import polyglot.frontend.Job;
 import polyglot.frontend.Source;
 import polyglot.frontend.goals.Goal;
+import polyglot.frontend.goals.VisitorGoal;
+import polyglot.util.InternalCompilerError;
 import jif.JifScheduler;
 
 public class FabricScheduler extends JifScheduler {
-
-  public FabricScheduler(ExtensionInfo extInfo, jif.OutputExtensionInfo jlext) {
-    super(extInfo, jlext);
+  protected  fabil.ExtensionInfo filext;
+  protected fabric.ExtensionInfo fabext;
+  
+  public FabricScheduler(
+         fabric.ExtensionInfo fabext,
+          fabil.ExtensionInfo filext) {
+    super(fabext, filext);
+    this.fabext = fabext;
+    this.filext = filext;
   }
 
   @Override
@@ -36,20 +49,39 @@ public class FabricScheduler extends JifScheduler {
     return j;
   }
 
-  public Goal HandoffToFil(Job job) {
-    // TODO Auto-generated method stub
-    return null;
+  public Goal FabricToFabilRewritten(Job job) {
+    FabricTypeSystem  ts = fabext.typeSystem();
+    FabricNodeFactory nf = fabext.nodeFactory();
+    Goal g = internGoal(new VisitorGoal(job, new FabricToFabilRewriter(job, ts, nf, filext)));     
+
+    try {
+        addPrerequisiteDependency(g, this.Serialized(job));
+        
+        // make sure that if Object.fab is being compiled, it is always
+        // written to FabIL before any other job.
+        if (objectJob != null && job != objectJob)
+            addPrerequisiteDependency(g, FabricToFabilRewritten(objectJob));
+    }
+    catch (CyclicDependencyException e) {
+        // Cannot happen
+        throw new InternalCompilerError(e);
+    }
+    return g;
   }
 
   @Override
   public boolean runToCompletion() {
+    /* Note: this call to super.runToCompletion also adds a goal to the jlext
+     * scheduler for each job.  I think what's going on is that there shouldn't
+     * be any jobs added to that scheduler, so that's a noop. --mdg
+     */
     if (super.runToCompletion()) {
       // Create a goal to compile every source file.
-      for (Iterator<Job> i = jlext.scheduler().jobs().iterator(); i.hasNext(); ) {
+      for (Iterator<Job> i = filext.scheduler().jobs().iterator(); i.hasNext(); ) {
           Job job = i.next();
-          jlext.scheduler().addGoal(jlext.getCompileGoal(job));
+          filext.scheduler().addGoal(filext.getCompileGoal(job));
       }
-      return jlext.scheduler().runToCompletion();
+      return filext.scheduler().runToCompletion();
     }
     return false;
   }

@@ -2,7 +2,7 @@ package fabric;
 
 import java.io.Reader;
 
-import polyglot.ast.NodeFactory;
+import polyglot.frontend.Compiler;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.FileSource;
 import polyglot.frontend.Job;
@@ -10,8 +10,8 @@ import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
-import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
+import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
 import fabric.parse.Grm;
@@ -20,14 +20,30 @@ import fabric.types.FabricTypeSystem;
 import fabric.types.FabricTypeSystem_c;
 
 /**
- * Extension information for ../../fabric extension.
+ * Extension information for fabric extension.
  */
 public class ExtensionInfo extends jif.ExtensionInfo {
+  /* Note: jif.ExtensionInfo has a jif.OutputExtensionInfo field jlext.  The
+   * only unoverridden place this is used is in a call to initCompiler, so it
+   * should never leak out. */
+  
+  protected fabil.ExtensionInfo filext = new OutputExtensionInfo();
+  
   static {
     // force Topics to load
     new Topics();
   }
 
+  public ExtensionInfo() {
+    super();
+  }
+  
+  @Override
+  public void initCompiler(Compiler compiler) {
+     super.initCompiler(compiler);
+    filext.initCompiler(compiler);
+  }
+  
   @Override
   public String defaultFileExtension() {
     return "fab";
@@ -39,22 +55,34 @@ public class ExtensionInfo extends jif.ExtensionInfo {
   }
 
   @Override
-  public Parser parser(Reader reader, FileSource source, ErrorQueue eq) {
-    Lexer lexer = new Lexer_c(reader, source, eq);
-    Grm grm = new Grm(lexer, (FabricTypeSystem) ts, (FabricNodeFactory) nf, eq);
-    return new CupParser(grm, source, eq);
+  public Goal getCompileGoal(Job job) {
+    return scheduler().FabricToFabilRewritten(job);
   }
 
   @Override
-  protected NodeFactory createNodeFactory() {
+  public Parser parser(Reader reader, FileSource source, ErrorQueue eq) {
+    Lexer lexer = new Lexer_c(reader, source, eq);
+    Grm grm     = new Grm(lexer, typeSystem(), nodeFactory(), eq);
+    return new CupParser(grm, source, eq);
+  }
+  
+  @Override
+  public FabILTypeSystem jlTypeSystem() {
+    return filext.typeSystem();
+  }
+
+  /* Overridden Factory Methods ***********************************************/
+  
+  @Override
+  protected FabricNodeFactory createNodeFactory() {
     return new FabricNodeFactory_c();
   }
 
   @Override
-  protected TypeSystem createTypeSystem() {
-    return new FabricTypeSystem_c(jlext.typeSystem());
+  protected FabricTypeSystem createTypeSystem() {
+    return new FabricTypeSystem_c(filext.typeSystem());
   }
-
+  
   @Override
   protected FabricOptions createOptions() {
     return new FabricOptions(this);
@@ -62,21 +90,24 @@ public class ExtensionInfo extends jif.ExtensionInfo {
   
   @Override
   protected Scheduler createScheduler() {
-    return new FabricScheduler(this, this.jlext);
+    return new FabricScheduler(this, this.filext);
   }
   
+  /* Overridden typed accessors ***********************************************/
+  
+  @Override
+  public FabricNodeFactory nodeFactory() {
+    return (FabricNodeFactory) super.nodeFactory();
+  }
+  
+  @Override
+  public FabricTypeSystem typeSystem() {
+    return (FabricTypeSystem) super.typeSystem();
+  }
+
   @Override
   public FabricScheduler scheduler() {
     return (FabricScheduler) super.scheduler();
   }
   
-  @Override
-  public Goal getCompileGoal(Job job) {
-    return scheduler().HandoffToFil(job);
-  }
-
-  public ExtensionInfo() {
-    super();
-    this.jlext = new OutputExtensionInfo(this);
-  }
 }

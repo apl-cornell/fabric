@@ -1,12 +1,12 @@
 package fabric.types;
 
+import fabil.types.FabILTypeSystem;
 import jif.types.JifTypeSystem_c;
-import polyglot.types.*;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
 
-  public FabricTypeSystem_c(TypeSystem jlts) {
-    super(jlts);
+  public FabricTypeSystem_c(FabILTypeSystem filts) {
+    super(filts);
     // TODO Auto-generated constructor stub
   }
     // TODO: implement new methods in FabricTypeSystem.
