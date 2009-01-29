@@ -278,6 +278,7 @@
   <target name="core" depends="init,native,fabric-runtime">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/core/**" />
+      <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
       <classpath>
         <pathelement location="${runtime.classes}" />
@@ -290,6 +291,7 @@
   <target name="client" depends="init,native,fabric-runtime">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/client/**" />
+      <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
       <exclude name="fabric/client/debug/**" />
       <classpath>
