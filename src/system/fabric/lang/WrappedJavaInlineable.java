@@ -52,9 +52,8 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * array should be instances of fabric.lang.Object from the Fabric type
    * system's point of view.
    */
-  public static ObjectArray $wrap(Core core, java.lang.Object[] array) {
-    // XXX fill in a real label
-    ObjectArray result = new ObjectArray.$Impl(core, null, Object.$Proxy.class,
+  public static ObjectArray $wrap(Core core, Label label, java.lang.Object[] array) {
+    ObjectArray result = new ObjectArray.$Impl(core, label, Object.$Proxy.class,
         array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, $wrap(array[i]));

@@ -5,6 +5,7 @@ package fabil.extension;
 
 import polyglot.ast.Ext;
 import polyglot.ast.Node;
+import polyglot.types.SemanticException;
 import fabil.visit.*;
 
 /**
@@ -15,13 +16,13 @@ public interface FabILExt extends Ext {
   /**
    * Used by LabelAssigner to assign labels to all <code>new</code> expressions.
    */
-  public Node assignLabels(LabelAssigner la);
+  public Node assignLabels(LabelAssigner la) throws SemanticException;
 
   /**
    * Used by LocationAssigner to assign locations to all <code>new</code>
    * expressions.
    */
-  public Node assignLocations(LocationAssigner la);
+  public Node assignLocations(LocationAssigner la) throws SemanticException;
 
   /**
    * Used by ProxyRewriter to override the default visitor behaviour.

@@ -3,9 +3,11 @@ package fabil.visit;
 import polyglot.ast.Node;
 import polyglot.frontend.Job;
 import polyglot.qq.QQ;
+import polyglot.types.SemanticException;
 import polyglot.visit.ContextVisitor;
 import fabil.ExtensionInfo;
 import fabil.extension.FabILExt;
+import fabil.types.FabILTypeSystem;
 
 /**
  * Assigns object locations to all <code>new</code> expressions.
@@ -22,9 +24,14 @@ public class LocationAssigner extends ContextVisitor {
   public QQ qq() {
     return qq;
   }
+  
+  @Override
+  public FabILTypeSystem typeSystem() {
+    return (FabILTypeSystem) super.typeSystem();
+  }
 
   @Override
-  protected Node leaveCall(Node n) {
+  protected Node leaveCall(Node n) throws SemanticException {
     return ext(n).assignLocations(this);
   }
 

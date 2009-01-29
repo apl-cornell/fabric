@@ -20,6 +20,9 @@ public final class SerializedObject implements FastSerializable {
    * <ul>
    * <li>long onum</li>
    * <li>int version number</li>
+   * <li>byte whether the label pointer is an intercore ref</li>
+   * <li>short label's core's name length (only present if intercore)</li>
+   * <li>byte[] label's core's name data (only present if intercore)</li>
    * <li>long label's onum</li>
    * <li>short class name length</li>
    * <li>byte[] class name data</li>
@@ -70,11 +73,11 @@ public final class SerializedObject implements FastSerializable {
    * Creates a serialized representation of a surrogate object.
    * 
    * @param onum
-   *                The local object number for the surrogate.
+   *          The local object number for the surrogate.
    * @param label
-   *                The onum for the surrogate's label object.
+   *          The onum for the surrogate's label object.
    * @param remoteRef
-   *                The name of the remote object being referred to.
+   *          The name of the remote object being referred to.
    */
   public SerializedObject(long onum, long label, Pair<String, Long> remoteRef) {
     try {
@@ -97,7 +100,8 @@ public final class SerializedObject implements FastSerializable {
       // Version number.
       out.writeInt(0);
 
-      // Label's onum.
+      // Label reference.
+      out.writeBoolean(false);
       out.writeLong(label);
 
       // Class name.
@@ -123,54 +127,94 @@ public final class SerializedObject implements FastSerializable {
   }
 
   /**
-   * Returns the unsigned short that starts at the given position in objectData.
+   * @return the offset in objectData representing the start of the onum.
    */
-  private final int unsignedShortAt(int pos) {
-    return ((objectData[pos] & 0xff) << 8) | (objectData[pos + 1] & 0xff);
-  }
-
-  /**
-   * Returns the int that starts at the given position in objectData.
-   */
-  private final int intAt(int pos) {
-    return ((objectData[pos] & 0xff) << 24)
-        | ((objectData[pos + 1] & 0xff) << 16)
-        | ((objectData[pos + 2] & 0xff) << 8) | (objectData[pos + 3] & 0xff);
-  }
-
-  /**
-   * Sets the int that starts at the given position in objectData.
-   */
-  private final void setIntAt(int pos, int value) {
-    objectData[pos] = (byte) (0xff & (value >> 24));
-    objectData[pos + 1] = (byte) (0xff & (value >> 16));
-    objectData[pos + 2] = (byte) (0xff & (value >> 8));
-    objectData[pos + 3] = (byte) (0xff & value);
-  }
-
-  /**
-   * Returns the long that starts at the given position in objectData.
-   */
-  private final long longAt(int pos) {
-    return ((long) (objectData[pos] & 0xff) << 56)
-        | ((long) (objectData[pos + 1] & 0xff) << 48)
-        | ((long) (objectData[pos + 2] & 0xff) << 40)
-        | ((long) (objectData[pos + 3] & 0xff) << 32)
-        | ((long) (objectData[pos + 4] & 0xff) << 24)
-        | ((long) (objectData[pos + 5] & 0xff) << 16)
-        | ((long) (objectData[pos + 6] & 0xff) << 8)
-        | (objectData[pos + 7] & 0xff);
+  private final int onumPos() {
+    return 0;
   }
 
   public long getOnum() {
-    return longAt(0);
+    return longAt(onumPos());
+  }
+
+  /**
+   * @return the offset in objectData representing the start of the version
+   *         number.
+   */
+  private final int versionPos() {
+    return onumPos() + 8;
+  }
+
+  public int getVersion() {
+    return intAt(versionPos());
+  }
+
+  public void setVersion(final int version) {
+    setIntAt(versionPos(), version);
+  }
+
+  /**
+   * @return the offset in objectData representing the start of a boolean that
+   *         indicates whether the label pointer is an intercore reference.
+   */
+  private final int isIntercoreLabelPos() {
+    return versionPos() + 4;
+  }
+
+  public boolean labelRefIsIntercore() {
+    return booleanAt(isIntercoreLabelPos());
+  }
+
+  /**
+   * @return the offset in objectData representing the start of the label
+   *         reference.
+   */
+  private final int labelPos() {
+    return isIntercoreLabelPos() + 1;
+  }
+
+  public ComparablePair<String, Long> getIntercoreLabelRef() {
+    if (!labelRefIsIntercore())
+      throw new InternalError("Unsupported operation: Attempted to get an "
+          + "intercore reference to an intracore label.");
+
+    int labelPos = labelPos();
+    int coreNameLength = unsignedShortAt(labelPos);
+    int onumPos = labelPos + 2 + coreNameLength;
+    DataInput in =
+        new DataInputStream(new ByteArrayInputStream(objectData, labelPos,
+            onumPos));
+    try {
+      return new ComparablePair<String, Long>(in.readUTF(), longAt(labelPos));
+    } catch (IOException e) {
+      throw new InternalError("Error while reading core name.", e);
+    }
+  }
+
+  public long getLabelOnum() {
+    if (labelRefIsIntercore())
+      throw new InternalError("Unsupported operation: Attempted to get label "
+          + "onum of an object whose intercore references have not yet been "
+          + "swizzled." + getIntercoreLabelRef());
+
+    return longAt(labelPos());
+  }
+
+  /**
+   * @return the offset in objectData representing the start of the class name.
+   */
+  private final int classNamePos() {
+    int labelPos = labelPos();
+    return labelPos + 8
+        + (labelRefIsIntercore() ? (unsignedShortAt(labelPos) + 2) : 0);
   }
 
   public String getClassName() {
     if (className == null) {
+      int classNamePos = classNamePos();
       DataInput in =
-          new DataInputStream(new ByteArrayInputStream(objectData, 20,
-              objectData.length - 20));
+          new DataInputStream(new ByteArrayInputStream(objectData,
+              classNamePos, objectData.length - classNamePos));
       try {
         className = in.readUTF();
       } catch (IOException e) {
@@ -181,22 +225,67 @@ public final class SerializedObject implements FastSerializable {
     return className;
   }
 
-  public long getLabel() {
-    return longAt(12);
+  /**
+   * @return the offset in objectData representing the start of an int
+   *         representing the number of reference types (i.e.,
+   *         intercore/intracore/serialized).
+   */
+  private final int numRefTypesPos() {
+    int classPos = classNamePos();
+    return classPos + 2 + unsignedShortAt(classPos);
   }
 
-  public int getVersion() {
-    return intAt(8);
+  public final int getNumRefTypes() {
+    return intAt(numRefTypesPos());
   }
 
-  public void setVersion(final int version) {
-    setIntAt(8, version);
+  /**
+   * @return the offset in objectData representing the start of an int
+   *         representing the number of intracore references.
+   */
+  private final int numIntracoreRefsPos() {
+    return numRefTypesPos() + 4;
+  }
+
+  public final int getNumIntracoreRefs() {
+    return intAt(numIntracoreRefsPos());
+  }
+
+  /**
+   * @return the offset in objectData representing the start of an int
+   *         representing the length of the data portion of the object.
+   */
+  private final int serializedDataLengthPos() {
+    return numIntracoreRefsPos() + 4;
+  }
+
+  private final int serializedDataLength() {
+    return intAt(serializedDataLengthPos());
+  }
+
+  /**
+   * @return the offset in objectData representing the start of an int
+   *         representing the number of intercore references.
+   */
+  private final int numIntercoreRefsPos() {
+    return serializedDataLengthPos() + 4;
+  }
+
+  public final int getNumIntercoreRefs() {
+    return intAt(numIntercoreRefsPos());
+  }
+
+  /**
+   * @return the offset in objectData representing the start of the reference
+   *         type (i.e., intercore/intracore/serialized) data.
+   */
+  private final int refTypesPos() {
+    return numIntercoreRefsPos() + 4;
   }
 
   public Iterator<RefTypeEnum> getRefTypeIterator() {
-    final int classNameLength = unsignedShortAt(20);
-    final int numRefTypes = intAt(22 + classNameLength);
-    final int offset = classNameLength + 38;
+    final int numRefTypes = getNumRefTypes();
+    final int offset = refTypesPos();
 
     return new Iterator<RefTypeEnum>() {
       int nextRefTypeNum = 0;
@@ -216,11 +305,17 @@ public final class SerializedObject implements FastSerializable {
     };
   }
 
+  /**
+   * @return the offset in objectData representing the start of the
+   *         intracore-reference data.
+   */
+  private final int intracoreRefsPos() {
+    return refTypesPos() + getNumRefTypes();
+  }
+
   public Iterator<Long> getIntracoreRefIterator() {
-    final int classNameLength = unsignedShortAt(20);
-    final int numRefTypes = intAt(22 + classNameLength);
-    final int numIntracoreRefs = intAt(26 + classNameLength);
-    final int offset = classNameLength + numRefTypes + 38;
+    final int numIntracoreRefs = getNumIntracoreRefs();
+    final int offset = intracoreRefsPos();
 
     return new Iterator<Long>() {
       int nextIntracoreRefNum = 0;
@@ -240,15 +335,31 @@ public final class SerializedObject implements FastSerializable {
     };
   }
 
+  /**
+   * @return the offset in objectData representing the start of the serialized
+   *         data.
+   */
+  private final int serializedDataPos() {
+    return intracoreRefsPos() + 8 * getNumIntracoreRefs();
+  }
+
+  public InputStream getSerializedDataStream() {
+    int serializedDataLength = serializedDataLength();
+    return new ByteArrayInputStream(objectData, serializedDataPos(),
+        serializedDataLength);
+  }
+
+  /**
+   * @return the offset in objectData representing the start of the intercore
+   *         reference data.
+   */
+  private final int intercoreRefsPos() {
+    return serializedDataPos() + serializedDataLength();
+  }
+
   public Iterator<ComparablePair<String, Long>> getIntercoreRefIterator() {
-    final int classNameLength = unsignedShortAt(20);
-    final int numRefTypes = intAt(22 + classNameLength);
-    final int numIntracoreRefs = intAt(26 + classNameLength);
-    final int serializedDataLength = intAt(30 + classNameLength);
-    final int numIntercoreRefs = intAt(34 + classNameLength);
-    final int offset =
-        38 + classNameLength + numRefTypes + 8 * numIntracoreRefs
-            + serializedDataLength;
+    final int numIntercoreRefs = getNumIntercoreRefs();
+    final int offset = intercoreRefsPos();
 
     return new Iterator<ComparablePair<String, Long>>() {
       int nextIntercoreRefNum = 0;
@@ -276,30 +387,6 @@ public final class SerializedObject implements FastSerializable {
     };
   }
 
-  public InputStream getSerializedDataStream() {
-    int classNameLength = unsignedShortAt(20);
-    int numRefTypes = intAt(22 + classNameLength);
-    int numIntracoreRefs = intAt(26 + classNameLength);
-    int serializedDataLength = intAt(30 + classNameLength);
-    return new ByteArrayInputStream(objectData, classNameLength + 38
-        + numRefTypes + 8 * numIntracoreRefs, serializedDataLength);
-  }
-
-  public final int getNumRefTypes() {
-    int classNameLength = unsignedShortAt(20);
-    return intAt(22 + classNameLength);
-  }
-
-  public final int getNumIntracoreRefs() {
-    int classNameLength = unsignedShortAt(20);
-    return intAt(26 + classNameLength);
-  }
-
-  public final int getNumIntercoreRefs() {
-    int classNameLength = unsignedShortAt(20);
-    return intAt(34 + classNameLength);
-  }
-
   /**
    * Replaces the intracore and intercore references with the given intracore
    * references. It is assumed that all intercore references are being replaced
@@ -310,13 +397,27 @@ public final class SerializedObject implements FastSerializable {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       DataOutputStream out = new DataOutputStream(baos);
 
-      int classNameLength = unsignedShortAt(20);
       int numIntracoreRefs = getNumIntracoreRefs();
-      out.write(objectData, 0, 26 + classNameLength);
+      Iterator<Long> intracoreRefIt = intracoreRefs.iterator();
+      
+      // Write onum and version number.
+      out.write(objectData, 0, isIntercoreLabelPos());
+      
+      // Write the label reference.
+      out.writeBoolean(false);
+      if (labelRefIsIntercore()) out.writeLong(intracoreRefIt.next());
+      else out.writeLong(getLabelOnum());
+      
+      // Write the class name and number of ref types.
+      out.write(objectData, classNamePos(), numIntracoreRefsPos()
+          - classNamePos());
+      
       // Write number of intracore refs.
       out.writeInt(getNumIntercoreRefs() + numIntracoreRefs);
+      
       // Write length of serialized data.
-      out.write(objectData, 30 + classNameLength, 4);
+      out.write(objectData, serializedDataLengthPos(), 4);
+      
       // Write number of intercore refs.
       out.writeInt(0);
 
@@ -324,7 +425,7 @@ public final class SerializedObject implements FastSerializable {
       int numRefs = getNumRefTypes();
       final int REMOTE = RefTypeEnum.REMOTE.ordinal();
       final int ONUM = RefTypeEnum.ONUM.ordinal();
-      int offset = 38 + classNameLength;
+      int offset = refTypesPos();
       for (int i = 0; i < numRefs; i++) {
         if (objectData[offset] == REMOTE)
           out.write(ONUM);
@@ -333,12 +434,12 @@ public final class SerializedObject implements FastSerializable {
       }
 
       // Write intracore refs.
-      for (Long ref : intracoreRefs)
-        out.writeLong(ref);
+      while (intracoreRefIt.hasNext()) {
+        out.writeLong(intracoreRefIt.next());
+      }
 
       // Write serialized data.
-      out.write(objectData, offset + 8 * numIntracoreRefs,
-          intAt(30 + classNameLength));
+      out.write(objectData, serializedDataPos(), serializedDataLength());
 
       out.flush();
       baos.flush();
@@ -354,17 +455,6 @@ public final class SerializedObject implements FastSerializable {
   }
 
   /**
-   * XXX HACK This should disappear once we have real labels in place.
-   */
-  private static long getLabelOnum(Label l) {
-    if (l == null) {//Thread.dumpStack();
-      return -1;
-    } else {
-      return l.$getOnum();
-    }
-  }
-
-  /**
    * Writes the given $Impl out to the given output stream. The behaviour of
    * this method should mirror write(DataOutput).
    * 
@@ -373,10 +463,16 @@ public final class SerializedObject implements FastSerializable {
    * @see SerializedObject#SerializedObject(DataInput)
    */
   public static void write($Impl impl, DataOutput out) throws IOException {
+    Label label = impl.get$label();
+    Core labelCore = label.$getCore();
+    boolean interCoreLabel = !impl.$getCore().equals(labelCore);
+
     // Write out the object header.
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
-    out.writeLong(getLabelOnum(impl.get$label()));
+    out.writeBoolean(interCoreLabel);
+    if (interCoreLabel) out.writeUTF(labelCore.name());
+    out.writeLong(label.$getOnum());
     out.writeUTF(impl.getClass().getName());
 
     // Get the object to serialize itself into a bunch of buffers.
@@ -426,7 +522,7 @@ public final class SerializedObject implements FastSerializable {
    * A deserialization constructor.
    * 
    * @param in
-   *                An input stream containing a serialized object.
+   *          An input stream containing a serialized object.
    * @see SerializedObject#write(DataOutput)
    * @see SerializedObject#write($Impl, DataOutput)
    * @see SerializedObject#readImpl(Core, DataInput)
@@ -438,11 +534,22 @@ public final class SerializedObject implements FastSerializable {
     // The buffer for copying stuff.
     byte[] buf = new byte[BUF_LEN];
 
-    // Copy the object header.
-    in.readFully(buf, 0, 20);
-    out.write(buf, 0, 20);
+    // Copy the onum and version number.
+    in.readFully(buf, 0, 12);
+    out.write(buf, 0, 12);
 
-    // Copy the classname.
+    // Copy the label pointer.
+    boolean isIntercoreLabel = in.readBoolean();
+    out.writeBoolean(isIntercoreLabel);
+    int bytesToCopy = 8;
+    if (isIntercoreLabel) {
+      int coreNameLength = in.readUnsignedShort();
+      out.writeShort(coreNameLength);
+      bytesToCopy += coreNameLength;
+    }
+    copyBytes(in, out, bytesToCopy, buf);
+
+    // Copy the class name.
     int classNameLength = in.readUnsignedShort();
     out.writeShort(classNameLength);
     copyBytes(in, out, classNameLength, buf);
@@ -484,13 +591,13 @@ public final class SerializedObject implements FastSerializable {
    * DataOutput.
    * 
    * @param in
-   *                the DataInput to read from.
+   *          the DataInput to read from.
    * @param out
-   *                the DataOutput to write to.
+   *          the DataOutput to write to.
    * @param length
-   *                the number of bytes to copy.
+   *          the number of bytes to copy.
    * @param buf
-   *                the buffer to use. Must be of length BUF_LEN.
+   *          the buffer to use. Must be of length BUF_LEN.
    */
   private static final void copyBytes(DataInput in, DataOutput out, int length,
       byte[] buf) throws IOException {
@@ -507,10 +614,10 @@ public final class SerializedObject implements FastSerializable {
    * Used by the client to deserialize this object.
    * 
    * @param core
-   *                The core on which this object lives.
+   *          The core on which this object lives.
    * @return The deserialized object.
    * @throws ClassNotFoundException
-   *                 Thrown when the class for this object is unavailable.
+   *           Thrown when the class for this object is unavailable.
    */
   public $Impl deserialize(Core core) throws ClassNotFoundException {
     Class<?> c = Class.forName(getClassName());
@@ -518,12 +625,59 @@ public final class SerializedObject implements FastSerializable {
     try {
       return ($Impl) c.getConstructor(Core.class, long.class, int.class,
           long.class, ObjectInput.class, Iterator.class, Iterator.class)
-          .newInstance(core, getOnum(), getVersion(), getLabel(),
+          .newInstance(core, getOnum(), getVersion(), getLabelOnum(),
               new ObjectInputStream(getSerializedDataStream()),
               getRefTypeIterator(), getIntracoreRefIterator());
     } catch (Exception e) {
       throw new InternalError(e);
     }
+  }
+
+  /**
+   * Returns the boolean at the given position in objectData.
+   */
+  private final boolean booleanAt(int pos) {
+    return objectData[pos] == 1;
+  }
+
+  /**
+   * Returns the unsigned short that starts at the given position in objectData.
+   */
+  private final int unsignedShortAt(int pos) {
+    return ((objectData[pos] & 0xff) << 8) | (objectData[pos + 1] & 0xff);
+  }
+
+  /**
+   * Returns the int that starts at the given position in objectData.
+   */
+  private final int intAt(int pos) {
+    return ((objectData[pos] & 0xff) << 24)
+        | ((objectData[pos + 1] & 0xff) << 16)
+        | ((objectData[pos + 2] & 0xff) << 8) | (objectData[pos + 3] & 0xff);
+  }
+
+  /**
+   * Sets the int that starts at the given position in objectData.
+   */
+  private final void setIntAt(int pos, int value) {
+    objectData[pos] = (byte) (0xff & (value >> 24));
+    objectData[pos + 1] = (byte) (0xff & (value >> 16));
+    objectData[pos + 2] = (byte) (0xff & (value >> 8));
+    objectData[pos + 3] = (byte) (0xff & value);
+  }
+
+  /**
+   * Returns the long that starts at the given position in objectData.
+   */
+  private final long longAt(int pos) {
+    return ((long) (objectData[pos] & 0xff) << 56)
+        | ((long) (objectData[pos + 1] & 0xff) << 48)
+        | ((long) (objectData[pos + 2] & 0xff) << 40)
+        | ((long) (objectData[pos + 3] & 0xff) << 32)
+        | ((long) (objectData[pos + 4] & 0xff) << 24)
+        | ((long) (objectData[pos + 5] & 0xff) << 16)
+        | ((long) (objectData[pos + 6] & 0xff) << 8)
+        | (objectData[pos + 7] & 0xff);
   }
 
 }

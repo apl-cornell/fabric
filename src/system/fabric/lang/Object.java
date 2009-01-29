@@ -7,15 +7,13 @@ import java.lang.reflect.Constructor;
 import java.util.Iterator;
 import java.util.List;
 
-import jif.lang.Label;
+import jif.lang.*;
 import fabric.client.*;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.ReadMapEntry;
 import fabric.client.transaction.TransactionManager;
-import fabric.common.FetchException;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.Pair;
-import fabric.common.RefTypeEnum;
 
 /**
  * All Fabric objects implement this interface.
@@ -61,7 +59,7 @@ public interface Object {
     private transient final $Impl anchor;
 
     public $Proxy(Core core, long onum) {
-      if (core instanceof LocalCore)
+      if ((core instanceof LocalCore) && onum != ONumConstants.EMPTY_LABEL)
         throw new InternalError(
             "Attempted to create unresolved reference to a local object.");
 
@@ -236,7 +234,8 @@ public interface Object {
       if (label == null && this instanceof Label) label =
         (Label) $getProxy();
       
-      if (label == null) Thread.dumpStack();
+      if (label == null) throw new InternalError("Null label!");
+      
       this.$label = label;
     }
 
@@ -570,13 +569,23 @@ public interface Object {
           final Class<? extends Object.$Impl> c) {
         // XXX Need a real core and a real label.  (Should be given as args.)
         final Core core = Client.getClient().getLocalCore();
-        final Label label = null;
         
         return Client.runInTransaction(new Client.Code<Object>() {
           public Object run() {
             try {
               Constructor<? extends Object.$Impl> constr =
                   c.getConstructor(Core.class, Label.class);
+              Label emptyLabel = core.getEmptyLabel();
+              Principal clientPrincipal = Client.getClient().getPrincipal();
+              ConfPolicy conf =
+                  (ConfPolicy) new ReaderPolicy.$Impl(core, emptyLabel,
+                      clientPrincipal, null).$getProxy();
+              IntegPolicy integ =
+                  (IntegPolicy) new WriterPolicy.$Impl(core, emptyLabel,
+                      clientPrincipal, null).$getProxy();
+              Label label =
+                  (Label) new PairLabel.$Impl(core, null, conf, integ)
+                      .$getProxy();
               return constr.newInstance(core, label);
             } catch (Exception e) {
               throw new AbortException(e);

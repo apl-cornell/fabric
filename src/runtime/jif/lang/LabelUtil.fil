@@ -10,31 +10,33 @@ import fabric.util.*;
 /**
  * A Label is the runtime representation of a Jif label. A Label consists of a
  * set of components, each of which is a jif.lang.Policy. This code is
- * msotly copied from Jif.
+ * mostly copied from Jif.
  */
 public final class LabelUtil {
   private LabelUtil() {
   }
 
-  /*
-   * fields and class for collecting timing statistics. timing statistics are
-   * collected on a per-thread basis.
-   */
-  private static class Stats {
-    private long totalTime = 0;
-    private long enterStartTime = 0;
-    private int callStackCount = 0;
-    private int callCount = 0;
-    private int topCallCount = 0;
-  }
-
-  private static ThreadLocal statsPerThread = new ThreadLocal() {
-    protected Object initialValue() {
-      Core core = Client.getClient().getLocalCore();
-      return new Stats@core();
-    }
-  };
-  public static final boolean COUNT_TIME = false;
+// ALL STATS-RELATED STUFF HAS BEEN DISABLED DUE TO BOOTSTRAPPING ISSUES.
+// (How would we create the label of the Stats object?)  -MJL 
+//  /*
+//   * fields and class for collecting timing statistics. timing statistics are
+//   * collected on a per-thread basis.
+//   */
+//  private static class Stats {
+//    private long totalTime = 0;
+//    private long enterStartTime = 0;
+//    private int callStackCount = 0;
+//    private int callCount = 0;
+//    private int topCallCount = 0;
+//  }
+//
+//  private static ThreadLocal statsPerThread = new ThreadLocal() {
+//    protected Object initialValue() {
+//      Core core = Client.getClient().getLocalCore();
+//      return new Stats@core();
+//    }
+//  };
+//  public static final boolean COUNT_TIME = false;
 
   public static final boolean USE_CACHING = true;
   
@@ -65,14 +67,14 @@ public final class LabelUtil {
    * timing of.
    */
   static void enterTiming() {
-    if (COUNT_TIME) {
-      Stats stats = (Stats) statsPerThread.get();
-      stats.callCount++;
-      if (stats.callStackCount++ == 0) {
-        stats.topCallCount++;
-        stats.enterStartTime = System.currentTimeMillis();
-      }
-    }
+//    if (COUNT_TIME) {
+//      Stats stats = (Stats) statsPerThread.get();
+//      stats.callCount++;
+//      if (stats.callStackCount++ == 0) {
+//        stats.topCallCount++;
+//        stats.enterStartTime = System.currentTimeMillis();
+//      }
+//    }
   }
 
   /*
@@ -80,12 +82,12 @@ public final class LabelUtil {
    * timing of.
    */
   static void exitTiming() {
-    if (COUNT_TIME) {
-      Stats stats = (Stats) statsPerThread.get();
-      if ((--stats.callStackCount) == 0) {
-        stats.totalTime += (System.currentTimeMillis() - stats.enterStartTime);
-      }
-    }
+//    if (COUNT_TIME) {
+//      Stats stats = (Stats) statsPerThread.get();
+//      if ((--stats.callStackCount) == 0) {
+//        stats.totalTime += (System.currentTimeMillis() - stats.enterStartTime);
+//      }
+//    }
   }
 
   /*
@@ -96,11 +98,11 @@ public final class LabelUtil {
    */
   public static long getAndClearTime() {
     long r = -1;
-    if (COUNT_TIME) {
-      Stats stats = (Stats) statsPerThread.get();
-      r = stats.totalTime;
-      stats.totalTime = 0;
-    }
+//    if (COUNT_TIME) {
+//      Stats stats = (Stats) statsPerThread.get();
+//      r = stats.totalTime;
+//      stats.totalTime = 0;
+//    }
     return r;
   }
 
@@ -111,21 +113,21 @@ public final class LabelUtil {
    */
   public static int getAndClearCount() {
     int r = -1;
-    if (COUNT_TIME) {
-      Stats stats = (Stats) statsPerThread.get();
-      r = stats.callCount;
-      stats.callCount = 0;
-    }
+//    if (COUNT_TIME) {
+//      Stats stats = (Stats) statsPerThread.get();
+//      r = stats.callCount;
+//      stats.callCount = 0;
+//    }
     return r;
   }
 
   public static int getAndClearTopCount() {
     int r = -1;
-    if (COUNT_TIME) {
-      Stats stats = (Stats) statsPerThread.get();
-      r = stats.topCallCount;
-      stats.topCallCount = 0;
-    }
+//    if (COUNT_TIME) {
+//      Stats stats = (Stats) statsPerThread.get();
+//      r = stats.topCallCount;
+//      stats.topCallCount = 0;
+//    }
     return r;
   }
 

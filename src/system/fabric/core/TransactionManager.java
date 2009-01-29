@@ -3,9 +3,6 @@ package fabric.core;
 import java.util.NoSuchElementException;
 
 import jif.lang.Label;
-import jif.lang.LabelUtil;
-
-import fabric.client.Client;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.SerializedObject;
@@ -160,7 +157,7 @@ public class TransactionManager {
     try {
       Principal corePrincipal = store.corePrincipal();
       SerializedObject obj = read(corePrincipal, onum);
-      long labelOnum = obj.getLabel();
+      long labelOnum = obj.getLabelOnum();
       return new Label.$Proxy(corePrincipal.$getCore(), labelOnum);
     } catch (StoreException e) {
       throw new fabric.common.InternalError(e);

@@ -2,15 +2,23 @@ package fabil.extension;
 
 import polyglot.ast.Ext_c;
 import polyglot.ast.Node;
+import polyglot.types.SemanticException;
 import fabil.visit.*;
 
 public class FabILExt_c extends Ext_c implements FabILExt {
-  
-  public Node assignLabels(LabelAssigner la) {
+
+  /**
+   * @throws SemanticException
+   *           when a label is missing and no default can be assigned.
+   */
+  public Node assignLabels(LabelAssigner la) throws SemanticException {
     return node();
   }
-  
-  public Node assignLocations(LocationAssigner la) {
+
+  /**
+   * @throws SemanticException
+   */
+  public Node assignLocations(LocationAssigner la) throws SemanticException {
     return node();
   }
 
@@ -29,8 +37,10 @@ public class FabILExt_c extends Ext_c implements FabILExt {
   public Node rewriteThreads(ThreadRewriter tr) {
     return node();
   }
-  
-  /** Return the Fabric extension object associated with a node. */
+
+  /**
+   * Returns the Fabric extension object associated with the given node.
+   */
   public static FabILExt ext(Node n) {
     return (FabILExt) n.ext().ext();
   }

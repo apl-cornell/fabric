@@ -16,7 +16,10 @@ import java.util.logging.Logger;
 
 import javax.net.ssl.*;
 
+import jif.lang.ConfPolicy;
+import jif.lang.IntegPolicy;
 import jif.lang.Label;
+import jif.lang.LabelUtil;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.*;
 import fabric.common.InternalError;
@@ -444,7 +447,14 @@ public final class Client {
       final Core local = client.getLocalCore();
       Object argsProxy = runInTransaction(new Code<Object>() {
         public Object run() {
-          return WrappedJavaInlineable.$wrap(local, newArgs);
+          ConfPolicy conf =
+              LabelUtil.$Impl.readerPolicy(local, clientPrincipal,
+                  clientPrincipal);
+          IntegPolicy integ =
+              LabelUtil.$Impl.writerPolicy(local, clientPrincipal,
+                  clientPrincipal);
+          Label label = LabelUtil.$Impl.toLabel(local, conf, integ);
+          return WrappedJavaInlineable.$wrap(local, label, newArgs);
         }
       });
 

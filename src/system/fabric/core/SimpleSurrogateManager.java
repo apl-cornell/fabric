@@ -36,7 +36,25 @@ public class SimpleSurrogateManager implements SurrogateManager {
       boolean hadRemotes = false;
       List<Long> newrefs =
           new ArrayList<Long>(obj.getNumIntracoreRefs()
-              + obj.getNumIntercoreRefs());
+              + obj.getNumIntercoreRefs() + 1);
+      
+      long labelOnum;
+      if (obj.labelRefIsIntercore()) {
+        // Add a surrogate reference to the label.
+        ComparablePair<String, Long> ref = obj.getIntercoreLabelRef();
+
+        try {
+          labelOnum = store.newOnums(1)[0];
+          surrogates.add(new SerializedObject(labelOnum, labelOnum, ref));
+          cache.put(ref, labelOnum);
+          hadRemotes = true;
+          newrefs.add(labelOnum);
+        } catch (StoreException e) {
+          throw new InternalError(e);
+        }
+      } else {
+        labelOnum = obj.getLabelOnum();
+      }
 
       for (Iterator<RefTypeEnum> it = obj.getRefTypeIterator(); it.hasNext();) {
         RefTypeEnum type = it.next();
@@ -62,8 +80,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
             } catch (StoreException e) {
               throw new InternalError(e);
             }
-            // TODO: policy?
-            surrogates.add(new SerializedObject(onum, obj.getLabel(), ref));
+            surrogates.add(new SerializedObject(onum, labelOnum, ref));
             cache.put(ref, onum);
           }
           hadRemotes = true;

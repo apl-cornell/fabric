@@ -9,15 +9,17 @@ import jif.lang.Label;
 import jif.lang.LabelUtil;
 
 import fabric.common.InternalError;
+import fabric.common.ONumConstants;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;
 import fabric.lang.Principal;
+import fabric.lang.Object.$Impl;
 import fabric.util.HashMap;
 import fabric.util.Map;
 
 public class LocalCore implements Core {
 
-  private long freshOID = 0;
+  private long freshOID = ONumConstants.FIRST_UNRESERVED;
 
   private Map rootMap;
   private ConfPolicy bottomConfidPolicy;
@@ -47,6 +49,9 @@ public class LocalCore implements Core {
   }
 
   public synchronized Object.$Impl readObject(long onum) {
+    if (onum == ONumConstants.EMPTY_LABEL)
+      return ($Impl) emptyLabel.fetch();
+    
     throw new InternalError("Not supported.");
   }
 
@@ -97,6 +102,11 @@ public class LocalCore implements Core {
   }
   
   public void initialize() {
+    // Bootstrap with a proxy. Any remaining references to this proxy will be
+    // resolved by the hack in readObject().
+    this.emptyLabel =
+      new Label.$Proxy(LocalCore.this, ONumConstants.EMPTY_LABEL);
+    
     // Create the object representing the bottom confidentiality policy.
     this.bottomConfidPolicy =
         Client.runInTransaction(new Client.Code<ConfPolicy>() {
@@ -123,7 +133,7 @@ public class LocalCore implements Core {
       }
     });
 
-    // Label the policies created thus far with the empty label.
+    // Fix the labels on the policies created thus far.
     bottomConfidPolicy.set$label(emptyLabel);
     topIntegPolicy.set$label(emptyLabel);
 
