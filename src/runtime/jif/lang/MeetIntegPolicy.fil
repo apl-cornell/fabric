@@ -7,23 +7,23 @@ import fabric.util.*;
  * Jif.
  */
 public final class MeetIntegPolicy extends MeetPolicy implements IntegPolicy {
-  MeetIntegPolicy(LabelUtil labelUtil, Set policies) {
-    super(labelUtil, policies);
+  MeetIntegPolicy(Set policies) {
+    super(policies);
   }
 
-  public IntegPolicy join(IntegPolicy p, Set s) {
-    return labelUtil.join(this, p, s);
+  public IntegPolicy join(Core core, IntegPolicy p, Set s) {
+    return LabelUtil.join(core, this, p, s);
   }
 
-  public IntegPolicy meet(IntegPolicy p, Set s) {
-    return labelUtil.meet(this, p, s);
+  public IntegPolicy meet(Core core, IntegPolicy p, Set s) {
+    return LabelUtil.meet(core, this, p, s);
   }
 
-  public IntegPolicy join(IntegPolicy p) {
-    return labelUtil.join(this, p);
+  public IntegPolicy join(Core core, IntegPolicy p) {
+    return LabelUtil.join(core, this, p);
   }
 
-  public IntegPolicy meet(IntegPolicy p) {
-    return labelUtil.meetPol(this, p);
+  public IntegPolicy meet(Core core, IntegPolicy p) {
+    return LabelUtil.meetPol(core, this, p);
   }
 }

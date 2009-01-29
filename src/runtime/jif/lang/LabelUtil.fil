@@ -12,17 +12,8 @@ import fabric.util.*;
  * set of components, each of which is a jif.lang.Policy. This code is
  * msotly copied from Jif.
  */
-public class LabelUtil {
-  protected LabelUtil() {
-  }
-
-  protected static LabelUtil singleton;
-  static {
-    singleton = new LabelUtil();
-  }
-
-  public static LabelUtil singleton() {
-    return singleton;
+public final class LabelUtil {
+  private LabelUtil() {
   }
 
   /*
@@ -37,7 +28,7 @@ public class LabelUtil {
     private int topCallCount = 0;
   }
 
-  private ThreadLocal statsPerThread = new ThreadLocal() {
+  private static ThreadLocal statsPerThread = new ThreadLocal() {
     protected Object initialValue() {
       Core core = Client.getClient().getLocalCore();
       return new Stats@core();
@@ -50,30 +41,30 @@ public class LabelUtil {
   public static final Core localCore = Client.getClient().getLocalCore();
 
   // caches
-  private Set/* <Pair> */cacheTrueLabelRelabels = new HashSet/* <Pair> */();
-  private Set/* <Pair> */cacheFalseLabelRelabels = new HashSet/* <Pair> */();
-  private Map/* <DelegationPair, Set<Pair>> */cacheTrueLabelRelabelsDependencies =
+  private static Set/* <Pair> */cacheTrueLabelRelabels = new HashSet/* <Pair> */();
+  private static Set/* <Pair> */cacheFalseLabelRelabels = new HashSet/* <Pair> */();
+  private static Map/* <DelegationPair, Set<Pair>> */cacheTrueLabelRelabelsDependencies =
       new HashMap/* <DelegationPair, Set<Pair>> */();
-  private Map/* <Pair, Set<DelegationPair>> */cacheTruePolicyRelabels =
+  private static Map/* <Pair, Set<DelegationPair>> */cacheTruePolicyRelabels =
       new HashMap/* <Pair, Set<DelegationPair>> */();
-  private Set/* <Pair> */cacheFalsePolicyRelabels =
+  private static Set/* <Pair> */cacheFalsePolicyRelabels =
       new HashSet/* <Pair> */();
-  private Map/* <DelegationPair, Set<Pair>> */cacheTruePolicyRelabelsDependencies =
+  private static Map/* <DelegationPair, Set<Pair>> */cacheTruePolicyRelabelsDependencies =
       new HashMap/* <DelegationPair, Set<Pair>> */();
-  private Map/* <Pair, Label> */cacheLabelJoins =
+  private static Map/* <Pair, Label> */cacheLabelJoins =
       new HashMap/* <Pair, Label> */();
-  private Map/* <Pair, Label> */cacheLabelMeets =
+  private static Map/* <Pair, Label> */cacheLabelMeets =
       new HashMap/* <Pair, Label> */();
-  private Map/* <DelegationPair, Set<Pair>> */cacheLabelJoinDependencies =
+  private static Map/* <DelegationPair, Set<Pair>> */cacheLabelJoinDependencies =
       new HashMap/* <DelegationPair, Set<Pair>> */();
-  private Map/* <DelegationPair, Set<Pair>> */cacheLabelMeetDependencies =
+  private static Map/* <DelegationPair, Set<Pair>> */cacheLabelMeetDependencies =
       new HashMap/* <DelegationPair, Set<Pair>> */();
 
   /*
    * Record that we are entering a section of code that we want to record the
    * timing of.
    */
-  void enterTiming() {
+  static void enterTiming() {
     if (COUNT_TIME) {
       Stats stats = (Stats) statsPerThread.get();
       stats.callCount++;
@@ -88,7 +79,7 @@ public class LabelUtil {
    * Record that we are exiting a section of code that we want to record the
    * timing of.
    */
-  void exitTiming() {
+  static void exitTiming() {
     if (COUNT_TIME) {
       Stats stats = (Stats) statsPerThread.get();
       if ((--stats.callStackCount) == 0) {
@@ -103,7 +94,7 @@ public class LabelUtil {
    * created (whichever was last). Also clears the total time recorded for this
    * thread.
    */
-  public long getAndClearTime() {
+  public static long getAndClearTime() {
     long r = -1;
     if (COUNT_TIME) {
       Stats stats = (Stats) statsPerThread.get();
@@ -118,7 +109,7 @@ public class LabelUtil {
    * method was called, and/or the thread created (whichever was last). Also
    * clears the total time recorded for this thread.
    */
-  public int getAndClearCount() {
+  public static int getAndClearCount() {
     int r = -1;
     if (COUNT_TIME) {
       Stats stats = (Stats) statsPerThread.get();
@@ -128,7 +119,7 @@ public class LabelUtil {
     return r;
   }
 
-  public int getAndClearTopCount() {
+  public static int getAndClearTopCount() {
     int r = -1;
     if (COUNT_TIME) {
       Stats stats = (Stats) statsPerThread.get();
@@ -138,42 +129,35 @@ public class LabelUtil {
     return r;
   }
 
-  private final ConfPolicy BOTTOM_CONF;
-  private final IntegPolicy TOP_INTEG;
-  private final Label NO_COMPONENTS;
-
-  {
-    BOTTOM_CONF = this.readerPolicy(null, (Principal) null);
-    TOP_INTEG = this.writerPolicy(null, (Principal) null);
-    NO_COMPONENTS = this.toLabel(BOTTOM_CONF, TOP_INTEG);
+  public static Label noComponents(Core core) {
+    return toLabel(core, bottomConf(core), topInteg(core));
   }
 
-  public Label noComponents() {
-    return NO_COMPONENTS;
+  public static ConfPolicy bottomConf(Core core) {
+    return core.getBottomConfidPolicy();
   }
 
-  public ConfPolicy bottomConf() {
-    return BOTTOM_CONF;
+  public static IntegPolicy topInteg(Core core) {
+    return writerPolicy(core, null, (Principal) null);
   }
 
-  public IntegPolicy topInteg() {
-    return TOP_INTEG;
-  }
-
-  public ConfPolicy readerPolicy(Principal owner, Principal reader) {
+  public static ConfPolicy readerPolicy(Core core, Principal owner,
+      Principal reader) {
     try {
       enterTiming();
-      return new ReaderPolicy(this, owner, reader);
+      Label label = core.getEmptyLabel();
+      return new ReaderPolicy~label@core(owner, reader);
     } finally {
       exitTiming();
     }
   }
 
-  public ConfPolicy readerPolicy(Core core, Principal owner,
+  public static ConfPolicy readerPolicy(Core core, Principal owner,
       Collection/* <Principal> */readers) {
     try {
       enterTiming();
-      return readerPolicy(owner, PrincipalUtil.disjunction(core, readers));
+      return readerPolicy(core, owner,
+          PrincipalUtil.disjunction(core, readers));
     } finally {
       exitTiming();
     }
@@ -182,8 +166,8 @@ public class LabelUtil {
   /**
    * See the Jif signature for the explanation of lbl.
    */
-  public ConfPolicy readerPolicy(Core core, Label lbl, Principal owner,
-      Principal[] readers) {
+  public static ConfPolicy readerPolicy(Core core, Label lbl,
+      Principal owner, Principal[] readers) {
     try {
       enterTiming();
       if (readers == null)
@@ -194,7 +178,7 @@ public class LabelUtil {
     }
   }
 
-  public ConfPolicy readerPolicy(Core core, Principal owner,
+  public static ConfPolicy readerPolicy(Core core, Principal owner,
       PrincipalSet writers) {
     try {
       enterTiming();
@@ -204,21 +188,23 @@ public class LabelUtil {
     }
   }
 
-  public Label readerPolicyLabel(Principal owner, Principal reader) {
+  public static Label readerPolicyLabel(Core core, Principal owner,
+      Principal reader) {
     try {
       enterTiming();
-      return toLabel(readerPolicy(owner, reader));
+      return toLabel(core, readerPolicy(core, owner, reader));
     } finally {
       exitTiming();
     }
   }
 
-  public Label readerPolicyLabel(Core core, Principal owner,
+  public static Label readerPolicyLabel(Core core, Principal owner,
       Collection/* <Principal> */readers) {
     try {
       enterTiming();
       Label l =
-          toLabel(readerPolicy(owner, PrincipalUtil.disjunction(core, readers)));
+          toLabel(core, readerPolicy(core, owner,
+              PrincipalUtil.disjunction(core, readers)));
       return l;
     } finally {
       exitTiming();
@@ -228,8 +214,8 @@ public class LabelUtil {
   /**
    * See the Jif signature for the explanation of lbl.
    */
-  public Label readerPolicyLabel(Core core, Label lbl, Principal owner,
-      Principal[] readers) {
+  public static Label readerPolicyLabel(Core core, Label lbl,
+      Principal owner, Principal[] readers) {
     try {
       enterTiming();
       if (readers == null)
@@ -240,50 +226,51 @@ public class LabelUtil {
     }
   }
 
-  public Label readerPolicyLabel(Core core, Principal owner,
+  public static Label readerPolicyLabel(Core core, Principal owner,
       PrincipalSet readers) {
     try {
       enterTiming();
-      return readerPolicyLabel(owner, PrincipalUtil.disjunction(core,
+      return readerPolicyLabel(core, owner, PrincipalUtil.disjunction(core,
           readers.getSet()));
     } finally {
       exitTiming();
     }
   }
 
-  public IntegPolicy writerPolicy(Principal owner, Principal writer) {
+  public static IntegPolicy writerPolicy(Core core, Principal owner, Principal writer) {
     try {
       enterTiming();
-      return new WriterPolicy(this, owner, writer);
+      Label label = core.getEmptyLabel();
+      return new WriterPolicy~label@core(owner, writer);
     } finally {
       exitTiming();
     }
   }
 
-  public IntegPolicy writerPolicy(Core core, Principal owner,
+  public static IntegPolicy writerPolicy(Core core, Principal owner,
       Collection/* <Principal> */writers) {
     try {
       enterTiming();
-      return writerPolicy(owner, PrincipalUtil.disjunction(core, writers));
+      return writerPolicy(core, owner, PrincipalUtil.disjunction(core, writers));
     } finally {
       exitTiming();
     }
   }
 
-  public Label writerPolicyLabel(Principal owner, Principal writer) {
+  public static Label writerPolicyLabel(Core core, Principal owner, Principal writer) {
     try {
       enterTiming();
-      return toLabel(writerPolicy(owner, writer));
+      return toLabel(core, writerPolicy(core, owner, writer));
     } finally {
       exitTiming();
     }
   }
 
-  public Label writerPolicyLabel(Core core, Principal owner,
+  public static Label writerPolicyLabel(Core core, Principal owner,
       Collection/* <Principal> */writers) {
     try {
       enterTiming();
-      return toLabel(writerPolicy(owner,
+      return toLabel(core, writerPolicy(core, owner,
           PrincipalUtil.disjunction(core, writers)));
     } finally {
       exitTiming();
@@ -293,7 +280,7 @@ public class LabelUtil {
   /**
    * See the Jif signature for the explanation of lbl.
    */
-  public Label writerPolicyLabel(Core core, Label lbl, Principal owner,
+  public static Label writerPolicyLabel(Core core, Label lbl, Principal owner,
       Principal[] writers) {
     try {
       enterTiming();
@@ -308,7 +295,7 @@ public class LabelUtil {
   /**
    * See the Jif signature for the explanation of lbl.
    */
-  public IntegPolicy writerPolicy(Core core, Label lbl, Principal owner,
+  public static IntegPolicy writerPolicy(Core core, Label lbl, Principal owner,
       Principal[] writers) {
     try {
       enterTiming();
@@ -320,7 +307,7 @@ public class LabelUtil {
     }
   }
 
-  public IntegPolicy writerPolicy(Core core, Principal owner,
+  public static IntegPolicy writerPolicy(Core core, Principal owner,
       PrincipalSet writers) {
     try {
       enterTiming();
@@ -330,36 +317,36 @@ public class LabelUtil {
     }
   }
 
-  public Label toLabel(ConfPolicy cPolicy, IntegPolicy iPolicy) {
+  public static Label toLabel(Core core, ConfPolicy cPolicy, IntegPolicy iPolicy) {
     try {
       enterTiming();
       if (cPolicy == null || iPolicy == null)
         throw new NullPointerException@localCore();
-      return new PairLabel(this, cPolicy, iPolicy);
+      return new PairLabel@core(cPolicy, iPolicy);
     } finally {
       exitTiming();
     }
   }
 
-  public Label toLabel(ConfPolicy policy) {
+  public static Label toLabel(Core core, ConfPolicy policy) {
     try {
       enterTiming();
-      return new PairLabel(this, policy, TOP_INTEG);
+      return new PairLabel@core(policy, topInteg(core));
     } finally {
       exitTiming();
     }
   }
 
-  public Label toLabel(IntegPolicy policy) {
+  public static Label toLabel(Core core, IntegPolicy policy) {
     try {
       enterTiming();
-      return new PairLabel(this, BOTTOM_CONF, policy);
+      return new PairLabel@core(bottomConf(core), policy);
     } finally {
       exitTiming();
     }
   }
 
-  public Label join(Label l1, Label l2) {
+  public static Label join(Core core, Label l1, Label l2) {
     try {
       enterTiming();
       if (l1 == null) return l2;
@@ -374,11 +361,10 @@ public class LabelUtil {
         if (result == null) {
           PairLabel pl1 = (PairLabel) l1;
           PairLabel pl2 = (PairLabel) l2;
-          Set dependencies = new HashSet();
+          Set dependencies = new HashSet@core();
           result =
-              new PairLabel(this, pl1.confPolicy().join(pl2.confPolicy(),
-                  dependencies), pl1.integPolicy().join(pl2.integPolicy(),
-                  dependencies));
+              new PairLabel@core(pl1.confPolicy().join(core, pl2.confPolicy(), dependencies),
+                  pl1.integPolicy().join(core, pl2.integPolicy(), dependencies));
           if (USE_CACHING) {
             // add dependencies from delegations to the cache result
             // i.e., what dependencies does this result rely on?
@@ -405,16 +391,16 @@ public class LabelUtil {
     }
   }
 
-  public Label meetLbl(Label l1, Label l2) {
+  public static Label meetLbl(Core core, Label l1, Label l2) {
     try {
       enterTiming();
-      return meet(l1, l2);
+      return meet(core, l1, l2);
     } finally {
       exitTiming();
     }
   }
 
-  public Label meet(Label l1, Label l2) {
+  public static Label meet(Core core, Label l1, Label l2) {
     try {
       enterTiming();
       if (l1 == null) return l2;
@@ -429,11 +415,10 @@ public class LabelUtil {
         if (result == null) {
           PairLabel pl1 = (PairLabel) l1;
           PairLabel pl2 = (PairLabel) l2;
-          Set dependencies = new HashSet();
+          Set dependencies = new HashSet@core();
           result =
-              new PairLabel(this, pl1.confPolicy().meet(pl2.confPolicy(),
-                  dependencies), pl1.integPolicy().meet(pl2.integPolicy(),
-                  dependencies));
+              new PairLabel@core(pl1.confPolicy().meet(core, pl2.confPolicy(), dependencies),
+                  pl1.integPolicy().meet(core, pl2.integPolicy(), dependencies));
           if (USE_CACHING) {
             // add dependencies from delegations to the cache result
             // i.e., what dependencies does this result rely on?
@@ -460,20 +445,20 @@ public class LabelUtil {
     }
   }
 
-  public ConfPolicy join(ConfPolicy p1, ConfPolicy p2) {
+  public static ConfPolicy join(Core core, ConfPolicy p1, ConfPolicy p2) {
     try {
       enterTiming();
-      return join(p1, p2, new HashSet/* <DelegationPair> */());
+      return join(core, p1, p2, new HashSet/* <DelegationPair> */@core());
     } finally {
       exitTiming();
     }
   }
 
-  protected ConfPolicy join(ConfPolicy p1, ConfPolicy p2,
+  protected static ConfPolicy join(Core core, ConfPolicy p1, ConfPolicy p2,
       Set/* <DelegationPair> */s) {
     try {
       enterTiming();
-      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */();
+      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@core();
       if (p1 instanceof JoinConfPolicy) {
         comps.addAll(((JoinConfPolicy) p1).joinComponents());
       } else {
@@ -489,26 +474,26 @@ public class LabelUtil {
       if (comps.size() == 1) {
         return (ConfPolicy) comps.iterator().next();
       }
-      return new JoinConfPolicy(this, comps);
+      return new JoinConfPolicy@core(comps);
     } finally {
       exitTiming();
     }
 
   }
 
-  public IntegPolicy join(IntegPolicy p1, IntegPolicy p2) {
+  public static IntegPolicy join(Core core, IntegPolicy p1, IntegPolicy p2) {
     try {
       enterTiming();
-      return join(p1, p2, new HashSet/* <DelegationPair> */());
+      return join(core, p1, p2, new HashSet/* <DelegationPair> */@core());
     } finally {
       exitTiming();
     }
   }
 
-  IntegPolicy join(IntegPolicy p1, IntegPolicy p2, Set/* <DelegationPair> */s) {
+  static IntegPolicy join(Core core, IntegPolicy p1, IntegPolicy p2, Set/* <DelegationPair> */s) {
     try {
       enterTiming();
-      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */();
+      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@core();
       if (p1 instanceof JoinIntegPolicy) {
         comps.addAll(((JoinIntegPolicy) p1).joinComponents());
       } else {
@@ -524,27 +509,27 @@ public class LabelUtil {
       if (comps.size() == 1) {
         return (IntegPolicy) comps.iterator().next();
       }
-      return new JoinIntegPolicy(this, comps);
+      return new JoinIntegPolicy@core(comps);
     } finally {
       exitTiming();
     }
 
   }
 
-  public ConfPolicy meetPol(ConfPolicy p1, ConfPolicy p2) {
+  public static ConfPolicy meetPol(Core core, ConfPolicy p1, ConfPolicy p2) {
     try {
       enterTiming();
-      return meet(p1, p2, new HashSet/* <DelegationPair> */());
+      return meet(core, p1, p2, new HashSet/* <DelegationPair> */@core());
     } finally {
       exitTiming();
     }
   }
 
-  protected ConfPolicy meet(ConfPolicy p1, ConfPolicy p2,
+  protected static ConfPolicy meet(Core core, ConfPolicy p1, ConfPolicy p2,
       Set/* <DelegationPair> */s) {
     try {
       enterTiming();
-      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */();
+      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@core();
       if (p1 instanceof MeetConfPolicy) {
         comps.addAll(((MeetConfPolicy) p1).meetComponents());
       } else {
@@ -560,25 +545,25 @@ public class LabelUtil {
       if (comps.size() == 1) {
         return (ConfPolicy) comps.iterator().next();
       }
-      return new MeetConfPolicy(this, comps);
+      return new MeetConfPolicy@core(comps);
     } finally {
       exitTiming();
     }
   }
 
-  public IntegPolicy meetPol(IntegPolicy p1, IntegPolicy p2) {
+  public static IntegPolicy meetPol(Core core, IntegPolicy p1, IntegPolicy p2) {
     try {
       enterTiming();
-      return meet(p1, p2, new HashSet/* <DelegationPair> */());
+      return meet(core, p1, p2, new HashSet/* <DelegationPair> */@core());
     } finally {
       exitTiming();
     }
   }
 
-  IntegPolicy meet(IntegPolicy p1, IntegPolicy p2, Set/* <DelegationPair> */s) {
+  static IntegPolicy meet(Core core, IntegPolicy p1, IntegPolicy p2, Set/* <DelegationPair> */s) {
     try {
       enterTiming();
-      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */();
+      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@core();
       if (p1 instanceof MeetIntegPolicy) {
         comps.addAll(((MeetIntegPolicy) p1).meetComponents());
       } else {
@@ -594,14 +579,14 @@ public class LabelUtil {
       if (comps.size() == 1) {
         return (IntegPolicy) comps.iterator().next();
       }
-      return new MeetIntegPolicy(this, comps);
+      return new MeetIntegPolicy@core(comps);
     } finally {
       exitTiming();
     }
 
   }
 
-  public boolean equivalentTo(Label l1, Label l2) {
+  public static boolean equivalentTo(Label l1, Label l2) {
     try {
       enterTiming();
       if (l1 == l2 || (l1 != null && l1.equals(l2))) return true;
@@ -611,27 +596,27 @@ public class LabelUtil {
     }
   }
 
-  public boolean isReadableBy(Label lbl, Principal p) {
+  public static boolean isReadableBy(Label lbl, Principal p) {
     try {
       enterTiming();
-      Label L = toLabel(PrincipalUtil.readableByPrinPolicy(localCore, p));
+      Label L = toLabel(localCore, PrincipalUtil.readableByPrinPolicy(localCore, p));
       return relabelsTo(lbl, L);
     } finally {
       exitTiming();
     }
   }
   
-  public boolean isWritableBy(Label lbl, Principal p) {
+  public static boolean isWritableBy(Label lbl, Principal p) {
     try {
       enterTiming();
-      Label L = toLabel(PrincipalUtil.writableByPrinPolicy(localCore, p));
+      Label L = toLabel(localCore, PrincipalUtil.writableByPrinPolicy(localCore, p));
       return relabelsTo(lbl, L);
     } finally {
       exitTiming();
     }
   }
 
-  public boolean relabelsTo(Label from, Label to) {
+  public static boolean relabelsTo(Label from, Label to) {
     try {
       enterTiming();
       if (from == null || to == null) return false;
@@ -669,7 +654,7 @@ public class LabelUtil {
     }
   }
 
-  public boolean relabelsTo(Policy from, Policy to) {
+  public static boolean relabelsTo(Policy from, Policy to) {
     try {
       enterTiming();
       return relabelsTo(from, to, new HashSet/* <DelegationPair> */());
@@ -678,7 +663,7 @@ public class LabelUtil {
     }
   }
 
-  public boolean relabelsTo(Policy from, Policy to, Set/* <DelegationPair> */s) {
+  public static boolean relabelsTo(Policy from, Policy to, Set/* <DelegationPair> */s) {
     try {
       enterTiming();
       if (from == null || to == null) return false;
@@ -722,7 +707,7 @@ public class LabelUtil {
     }
   }
 
-  public String stringValue(Label lb) {
+  public static String stringValue(Label lb) {
     try {
       enterTiming();
       if (lb == null) return "<null>";
@@ -732,7 +717,7 @@ public class LabelUtil {
     }
   }
 
-  public String toString(Label lb) {
+  public static String toString(Label lb) {
     try {
       enterTiming();
       return stringValue(lb);
@@ -741,7 +726,7 @@ public class LabelUtil {
     }
   }
 
-  public int hashCode(Label lb) {
+  public static int hashCode(Label lb) {
     try {
       enterTiming();
       if (lb == null) return 0;
@@ -751,7 +736,7 @@ public class LabelUtil {
     }
   }
 
-  private Set/* <Policy> */simplifyJoin(Set/* <Policy> */policies,
+  private static Set/* <Policy> */simplifyJoin(Set/* <Policy> */policies,
       Set/* <DelegationPair> */dependencies) {
     Set/* <Policy> */needed = new LinkedHashSet/* <Policy> */();
     for (Iterator/* <Policy> */i = policies.iterator(); i.hasNext();) {
@@ -777,7 +762,7 @@ public class LabelUtil {
     return needed;
   }
 
-  private Set/* <Policy> */simplifyMeet(Set/* <Policy> */policies,
+  private static Set/* <Policy> */simplifyMeet(Set/* <Policy> */policies,
       Set/* <DelegationPair> */dependencies) {
     Set/* <Policy> */needed = new LinkedHashSet/* <Policy> */();
     for (Iterator/* <Policy> */i = policies.iterator(); i.hasNext();) {
@@ -806,7 +791,7 @@ public class LabelUtil {
   /**
    * Internal representation of a pair of objects, used for the caches
    */
-  private class Pair {
+  private static class Pair {
     final Object left; // must be non null
     final Object right; // must be non null
 
@@ -833,7 +818,7 @@ public class LabelUtil {
     }
   }
 
-  void notifyNewDelegation(Principal granter, Principal superior) {
+  static void notifyNewDelegation(Principal granter, Principal superior) {
     try {
       enterTiming();
       if (USE_CACHING) {
@@ -854,7 +839,7 @@ public class LabelUtil {
     }
   }
 
-  void notifyRevokeDelegation(Principal granter, Principal superior) {
+  static void notifyRevokeDelegation(Principal granter, Principal superior) {
     try {
       enterTiming();
       if (USE_CACHING) {

@@ -223,7 +223,6 @@ public interface Object {
      */
     private $Impl(Core core, long onum, int version, Label label) {
       this.$version = version;
-      this.$label = label;
       this.$writer = null;
       this.$writeLockHolder = null;
       this.$reader = null;
@@ -232,6 +231,13 @@ public interface Object {
       this.$ref = new FabricSoftRef(core, onum, this);
       this.$readMapEntry = TransactionManager.getReadMapEntry(this);
       this.$ref.readMapEntry(this.$readMapEntry);
+      
+      // By default, labels label themselves.
+      if (label == null && this instanceof Label) label =
+        (Label) $getProxy();
+      
+      if (label == null) Thread.dumpStack();
+      this.$label = label;
     }
 
     /**

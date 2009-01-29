@@ -14,9 +14,9 @@ public interface Label {
    */
   boolean relabelsTo(Label l, Set/* <DelegationPair> */s);
 
-  Label join(Label l);
+  Label join(Core core, Label l);
 
-  Label meet(Label l);
+  Label meet(Core core, Label l);
 
   ConfPolicy confPolicy();
 

@@ -35,7 +35,7 @@ public final class Capability {
       ok = ok && PrincipalUtil.equivalentTo(c.jif$jif_lang_Capability_P, jif$P);
       ok =
           ok
-              && LabelUtil.singleton().equivalentTo(
+              && LabelUtil.equivalentTo(
                   c.jif$jif_lang_Capability_L, jif$L);
       return ok;
     }

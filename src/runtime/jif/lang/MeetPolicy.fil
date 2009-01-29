@@ -13,8 +13,7 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
   private Set components; // Set of Policies
   public final Core localCore = Client.getClient().getLocalCore();
 
-  MeetPolicy(LabelUtil labelUtil, Set policies) {
-    super(labelUtil);
+  MeetPolicy(Set policies) {
     components = Collections.unmodifiableSet(policies);
   }
 
@@ -29,7 +28,7 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
     // this <= pol if there is a Ci such that Ci <= pol
     for (Iterator i = components.iterator(); i.hasNext();) {
       Policy Ci = (Policy) i.next();
-      if (labelUtil.relabelsTo(Ci, pol, s)) {
+      if (LabelUtil.relabelsTo(Ci, pol, s)) {
         return true;
       }
     }
@@ -43,7 +42,7 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
       Set temp = new HashSet@localCore();
       for (Iterator i = mp.meetComponents().iterator(); i.hasNext();) {
         Policy Di = (Policy) i.next();
-        if (!labelUtil.relabelsTo(this, Di, temp)) {
+        if (!LabelUtil.relabelsTo(this, Di, temp)) {
           sat = false;
           break;
         }
@@ -59,7 +58,7 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
       JoinPolicy jp = (JoinPolicy) pol;
       for (Iterator i = jp.joinComponents().iterator(); i.hasNext();) {
         Policy Di = (Policy) i.next();
-        if (labelUtil.relabelsTo(this, Di, s)) {
+        if (LabelUtil.relabelsTo(this, Di, s)) {
           return true;
         }
       }

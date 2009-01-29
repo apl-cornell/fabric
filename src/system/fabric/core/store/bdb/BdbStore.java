@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import com.sleepycat.je.*;
 
 import fabric.common.InternalError;
+import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongIterator;
 import fabric.core.PrepareRequest;
@@ -164,7 +165,7 @@ public class BdbStore extends ObjectStore {
     try {
       Transaction txn = env.beginTransaction(null, null);
       DatabaseEntry data = new DatabaseEntry();
-      long c = 2;
+      long c = ONumConstants.FIRST_UNRESERVED;
       
       if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
         c = toLong(data.getData());

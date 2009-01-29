@@ -2,6 +2,10 @@ package fabric.core;
 
 import java.util.NoSuchElementException;
 
+import jif.lang.Label;
+import jif.lang.LabelUtil;
+
+import fabric.client.Client;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.SerializedObject;
@@ -94,6 +98,11 @@ public class TransactionManager {
           if (store.isPrepared(o.getOnum()))
             throw new TransactionPrepareFailedException("Object " + o.getOnum()
                 + " has been locked by an " + "uncommitted transaction");
+          
+          if (!isWritePermitted(client, o.getOnum())) {
+            throw new TransactionPrepareFailedException("Insufficient privilege "
+                + "to write object " + o.getOnum());
+          }
 
           try {
             SerializedObject old = store.read(client, o.getOnum());
@@ -142,6 +151,34 @@ public class TransactionManager {
     } catch (final NoSuchElementException e) {
       throw new TransactionPrepareFailedException("Object does not exist");
     }
+  }
+  
+  /**
+   * Returns the label on the object at the given onum.
+   */
+  private Label getLabelByOnum(long onum) {
+    try {
+      Principal corePrincipal = store.corePrincipal();
+      SerializedObject obj = read(corePrincipal, onum);
+      long labelOnum = obj.getLabel();
+      return new Label.$Proxy(corePrincipal.$getCore(), labelOnum);
+    } catch (StoreException e) {
+      throw new fabric.common.InternalError(e);
+    }
+  }
+
+  /**
+   * Determines whether the given principal is permitted to modify the object at
+   * the given onum.
+   */
+  private boolean isWritePermitted(final Principal principal, long onum) {
+    return true;
+//    final Label label = getLabelByOnum(onum);
+//    return Client.runInTransaction(new Client.Code<Boolean>() {
+//      public Boolean run() {
+//        return LabelUtil.$Impl.isWritableBy(label, principal);
+//      }
+//    });
   }
 
   public synchronized SerializedObject read(Principal client, long onum)

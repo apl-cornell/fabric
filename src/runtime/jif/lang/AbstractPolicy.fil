@@ -6,10 +6,7 @@ package jif.lang;
  * code is mostly copied from Jif.
  */
 public abstract class AbstractPolicy implements Policy {
-  protected final LabelUtil labelUtil;
-
-  protected AbstractPolicy(LabelUtil labelUtil) {
-    this.labelUtil = labelUtil;
+  protected AbstractPolicy() {
   }
 
   abstract public boolean equals(Object that);

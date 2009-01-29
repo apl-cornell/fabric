@@ -357,7 +357,7 @@ public final class SerializedObject implements FastSerializable {
    * XXX HACK This should disappear once we have real labels in place.
    */
   private static long getLabelOnum(Label l) {
-    if (l == null) {
+    if (l == null) {//Thread.dumpStack();
       return -1;
     } else {
       return l.$getOnum();

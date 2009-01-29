@@ -10,10 +10,8 @@ import fabric.util.*;
 public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
   private final Principal owner;
   private final Principal writer;
-  public final Core localCore = Client.getClient().getLocalCore();
 
-  public WriterPolicy(LabelUtil labelUtil, Principal owner, Principal writer) {
-    super(labelUtil);
+  public WriterPolicy(Principal owner, Principal writer) {
     this.owner = owner;
     this.writer = writer;
   }
@@ -28,13 +26,15 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
 
   public boolean relabelsTo(Policy p, Set s) {
     if (this == p || this.equals(p)) return true;
+    
+    final Core localCore = Client.getClient().getLocalCore();
     if (p instanceof JoinIntegPolicy) {
       JoinPolicy jp = (JoinPolicy) p;
       // this <= p1 join ... join p2 if there exists a pi such that
       // this <= pi
       for (Iterator iter = jp.joinComponents().iterator(); iter.hasNext();) {
         Policy pi = (Policy) iter.next();
-        if (labelUtil.relabelsTo(this, pi, s)) return true;
+        if (LabelUtil.relabelsTo(this, pi, s)) return true;
       }
       return false;
     } else if (p instanceof MeetIntegPolicy) {
@@ -44,7 +44,7 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
       Set temp = new HashSet@localCore();
       for (Iterator iter = mp.meetComponents().iterator(); iter.hasNext();) {
         Policy pi = (Policy) iter.next();
-        if (!labelUtil.relabelsTo(this, pi, temp)) return false;
+        if (!LabelUtil.relabelsTo(this, pi, temp)) return false;
       }
       s.addAll(temp);
       return true;
@@ -112,19 +112,19 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
     return str;
   }
 
-  public IntegPolicy join(IntegPolicy p, Set s) {
-    return labelUtil.join(this, p, s);
+  public IntegPolicy join(Core core, IntegPolicy p, Set s) {
+    return LabelUtil.join(core, this, p, s);
   }
 
-  public IntegPolicy meet(IntegPolicy p, Set s) {
-    return labelUtil.meet(this, p, s);
+  public IntegPolicy meet(Core core, IntegPolicy p, Set s) {
+    return LabelUtil.meet(core, this, p, s);
   }
 
-  public IntegPolicy join(IntegPolicy p) {
-    return labelUtil.join(this, p);
+  public IntegPolicy join(Core core, IntegPolicy p) {
+    return LabelUtil.join(core, this, p);
   }
 
-  public IntegPolicy meet(IntegPolicy p) {
-    return labelUtil.meetPol(this, p);
+  public IntegPolicy meet(Core core, IntegPolicy p) {
+    return LabelUtil.meetPol(core, this, p);
   }
 }

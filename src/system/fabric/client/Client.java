@@ -118,6 +118,8 @@ public final class Client {
     
     if (postInitExec != null) postInitExec.run(instance);
     
+    instance.localCore.initialize();
+    
     return instance;
   }
 

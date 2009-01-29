@@ -2,6 +2,10 @@ package fabric.client;
 
 import java.util.Collection;
 
+import jif.lang.ConfPolicy;
+import jif.lang.IntegPolicy;
+import jif.lang.Label;
+
 import fabric.common.FetchException;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object.$Impl;
@@ -68,7 +72,23 @@ public interface Core {
   /**
    * Returns the root map of the Core
    */
-  public fabric.util.Map getRoot() throws UnreachableCoreException;
+  public fabric.util.Map getRoot();
+  
+  /**
+   * Returns the ConfPolicy object representing bottom confidentiality.
+   */
+  public ConfPolicy getBottomConfidPolicy();
+  
+  /**
+   * Returns the IntegPolicy object representing top integrity.
+   */
+  public IntegPolicy getTopIntegPolicy();
+
+  /**
+   * Returns the Label object representing an empty label (which is the most
+   * permissive, having bottom confidentiality and top integrity).
+   */
+  public Label getEmptyLabel();
 
   /**
    * Notifies this Core object that an $Impl has been evicted, so that it can

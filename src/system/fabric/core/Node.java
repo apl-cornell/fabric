@@ -18,6 +18,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 import fabric.client.Client;
 import fabric.common.InternalError;
+import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.core.Options.CoreKeyStores;
 import fabric.core.store.ObjectStore;
@@ -140,7 +141,7 @@ public class Node {
   private void startClient() {
     try {
       Client.initialize(opts.primaryCoreName, "fab://" + opts.primaryCoreName
-          + "/1", new Client.PostInitExec() {
+          + "/" + ONumConstants.CORE_PRINCIPAL, new Client.PostInitExec() {
         public void run(Client client) {
           for (String s : cores.keySet()) {
             client.setCore(s, new InProcessCore(s, cores.get(s)));

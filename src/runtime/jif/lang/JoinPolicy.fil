@@ -13,8 +13,7 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
   private Set components; // Set of Policies
   public final Core localCore = Client.getClient().getLocalCore();
 
-  JoinPolicy(LabelUtil labelUtil, Set policies) {
-    super(labelUtil);
+  JoinPolicy(Set policies) {
     components = Collections.unmodifiableSet(policies);
   }
 
@@ -31,7 +30,7 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
     boolean sat = true;
     for (Iterator i = components.iterator(); i.hasNext();) {
       Policy Ci = (Policy) i.next();
-      if (!labelUtil.relabelsTo(Ci, pol, temp)) {
+      if (!LabelUtil.relabelsTo(Ci, pol, temp)) {
         sat = false;
         break;
       }
@@ -51,7 +50,7 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
       sat = true;
       for (Iterator i = mp.meetComponents().iterator(); i.hasNext();) {
         Policy Di = (Policy) i.next();
-        if (!labelUtil.relabelsTo(this, Di, temp)) {
+        if (!LabelUtil.relabelsTo(this, Di, temp)) {
           sat = false;
           break;
         }
@@ -68,7 +67,7 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
       for (Iterator i = jp.joinComponents().iterator(); i.hasNext();) {
         temp.clear();
         Policy Di = (Policy) i.next();
-        if (labelUtil.relabelsTo(this, Di, temp)) {
+        if (LabelUtil.relabelsTo(this, Di, temp)) {
           s.addAll(temp);
           return true;
         }

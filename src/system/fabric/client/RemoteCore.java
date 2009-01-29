@@ -19,12 +19,12 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
 import javax.security.auth.x500.X500Principal;
 
-import fabric.common.FabricException;
-import fabric.common.FetchException;
+import jif.lang.ConfPolicy;
+import jif.lang.IntegPolicy;
+import jif.lang.Label;
+
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.NoSuchCoreError;
-import fabric.common.SerializedObject;
-import fabric.common.Surrogate;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
@@ -341,7 +341,19 @@ public class RemoteCore implements Core {
   }
 
   public Map getRoot() {
-    return new Map.$Proxy(this, 0);
+    return new Map.$Proxy(this, ONumConstants.ROOT_MAP);
+  }
+  
+  public ConfPolicy getBottomConfidPolicy() {
+    return new ConfPolicy.$Proxy(this, ONumConstants.BOTTOM_CONFIDENTIALITY);
+  }
+  
+  public IntegPolicy getTopIntegPolicy() {
+    return new IntegPolicy.$Proxy(this, ONumConstants.TOP_INTEGRITY);
+  }
+
+  public Label getEmptyLabel() {
+    return new Label.$Proxy(this, ONumConstants.EMPTY_LABEL);
   }
 
   public String name() {

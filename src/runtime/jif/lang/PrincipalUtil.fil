@@ -1,7 +1,6 @@
 package jif.lang;
 
 import jif.lang.IntegPolicy;
-import jif.lang.LabelUtil;
 import jif.lang.Principal;
 import jif.lang.WriterPolicy;
 import fabric.client.Client;
@@ -39,10 +38,10 @@ public class PrincipalUtil {
    */
   public static boolean acts_for(Principal p, Principal q) {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       return actsFor(p, q);
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
   }
 
@@ -61,7 +60,7 @@ public class PrincipalUtil {
   public static ActsForProof actsForProof(Core core, Principal p, Principal q) {
     final Core localCore = Client.getClient().getLocalCore();
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       // try cache
       ActsForPair pair = new ActsForPair@localCore(p, q);
       if (LabelUtil.USE_CACHING) {
@@ -109,7 +108,7 @@ public class PrincipalUtil {
       }
       return null;
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
   }
 
@@ -126,7 +125,7 @@ public class PrincipalUtil {
     }
 
     // need to notify the label cache too
-    LabelUtil.singleton().notifyNewDelegation(granter, superior);
+    LabelUtil.notifyNewDelegation(granter, superior);
   }
 
   /**
@@ -146,7 +145,7 @@ public class PrincipalUtil {
       }
     }
     // need to notify the label cache too
-    LabelUtil.singleton().notifyRevokeDelegation(granter, superior);
+    LabelUtil.notifyRevokeDelegation(granter, superior);
   }
 
   /**
@@ -163,7 +162,7 @@ public class PrincipalUtil {
       Object searchState) {
     final Core localCore = Client.getClient().getLocalCore();
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       // try the dumb things first.
       if (q == null) {
         return new DelegatesProof@core(p, q);
@@ -210,7 +209,7 @@ public class PrincipalUtil {
       // have failed!
       return null;
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
@@ -258,7 +257,7 @@ public class PrincipalUtil {
   public static boolean verifyProof(ActsForProof prf, Principal actor,
       Principal granter) {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       if (prf == null) return false;
       if (prf.getActor() != actor || prf.getGranter() != granter) return false;
 
@@ -308,14 +307,14 @@ public class PrincipalUtil {
       // unknown proof!
       return false;
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
 
   public static boolean delegatesTo(Principal granter, Principal superior) {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       if (granter == null) return true;
       if (topPrincipal().equals(superior)) return true;
       if (superior instanceof ConjunctivePrincipal) {
@@ -327,27 +326,27 @@ public class PrincipalUtil {
       }
       return granter.delegatesTo(superior);
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
 
   public static boolean equivalentTo(Principal p, Principal q) {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       return actsFor(p, q) && actsFor(q, p);
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
 
   public static boolean equals(Principal p, Principal q) {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       return eq(p, q);
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
@@ -375,14 +374,14 @@ public class PrincipalUtil {
   private static Capability authorize(Core core, Principal p, Object authPrf,
       Closure c, Label lb, boolean executeNow) {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       Principal closureP = c.jif$getjif_lang_Closure_P();
       Label closureL = c.jif$getjif_lang_Closure_L();
       if (closureP == p
           || (p != null && closureP != null && p.equals(closureP) && closureP
               .equals(p))) {
         // The principals agree.
-        if (LabelUtil.singleton().equivalentTo(closureL, lb)) {
+        if (LabelUtil.equivalentTo(closureL, lb)) {
           // the labels agree
           if (p == null || p.isAuthorized(authPrf, c, lb, executeNow)) {
             // either p is null (and the "null" principal always
@@ -394,7 +393,7 @@ public class PrincipalUtil {
       }
       return null;
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
@@ -409,10 +408,10 @@ public class PrincipalUtil {
 
   public static Principal bottomPrincipal() {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       return nullPrincipal();
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
@@ -429,26 +428,26 @@ public class PrincipalUtil {
 
   public static ConfPolicy readableByPrinPolicy(Core core, Principal p) {
     try {
-      LabelUtil.singleton().enterTiming();
-      return new ReaderPolicy@core(LabelUtil.singleton(), topPrincipal(), p);
+      LabelUtil.enterTiming();
+      return new ReaderPolicy@core(topPrincipal(), p);
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
   
   public static IntegPolicy writableByPrinPolicy(Core core, Principal p) {
     try {
-      LabelUtil.singleton().enterTiming();
-      return new WriterPolicy@core(LabelUtil.singleton(), topPrincipal(), p);
+      LabelUtil.enterTiming();
+      return new WriterPolicy@core(topPrincipal(), p);
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
   }
 
   public static Principal disjunction(Core core, Principal left, Principal right) {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       if (left == null || right == null) return null;
       if (actsFor(left, right)) return right;
       if (actsFor(right, left)) return left;
@@ -457,14 +456,14 @@ public class PrincipalUtil {
       c.add(right);
       return disjunction(core, c);
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
 
   public static Principal conjunction(Core core, Principal left, Principal right) {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       if (left == null) return right;
       if (right == null) return left;
       if (actsFor(left, right)) return left;
@@ -474,14 +473,14 @@ public class PrincipalUtil {
       c.add(right);
       return conjunction(core, c);
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
 
   public static Principal disjunction(Core core, Collection/* <Principal> */principals) {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       if (principals == null || principals.isEmpty()) {
         return topPrincipal();
       }
@@ -509,14 +508,14 @@ public class PrincipalUtil {
       }
       return new DisjunctivePrincipal@core(needed);
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
 
   public static Principal conjunction(Core core, Collection/* <Principal> */principals) {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       if (principals == null || principals.isEmpty()) {
         return bottomPrincipal();
       }
@@ -545,27 +544,27 @@ public class PrincipalUtil {
       }
       return new ConjunctivePrincipal@core(needed);
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
 
   public static String toString(Principal p) {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       return p == null ? "_" : p.name();
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }
 
   public static String stringValue(Principal p) {
     try {
-      LabelUtil.singleton().enterTiming();
+      LabelUtil.enterTiming();
       return toString(p);
     } finally {
-      LabelUtil.singleton().exitTiming();
+      LabelUtil.exitTiming();
     }
 
   }

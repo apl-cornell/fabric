@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
 import fabric.common.Util;
@@ -45,9 +46,9 @@ public class MemoryStore extends ObjectStore {
   private boolean isInitialized;
   
   /**
-   * Largest object number ever handed out
+   * The next free onum.
    */
-  private long maxOnum;
+  private long nextOnum;
 
   /**
    * Largest transaction id ever used;
@@ -100,12 +101,12 @@ public class MemoryStore extends ObjectStore {
 
     // Note: this would be much faster if objectTable was sorted...but it's just
     //       recovery so IMO probably not worth it
-    this.maxOnum = 1;
+    this.nextOnum = ONumConstants.FIRST_UNRESERVED;
     LongIterator iter = this.objectTable.keySet().iterator();
     while(iter.hasNext()) {
       long l = iter.next();
-      if (this.maxOnum < l)
-        maxOnum = l;
+      if (this.nextOnum < l)
+        nextOnum = l;
     }
 
     this.maxTid = 0;
@@ -182,7 +183,7 @@ public class MemoryStore extends ObjectStore {
     final long[] result = new long[num < 0 ? 0 : num];
 
     for (int i = 0; i < num; i++)
-      result[i] = ++maxOnum;
+      result[i] = nextOnum++;
 
     return result;
   }

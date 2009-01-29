@@ -14,23 +14,25 @@ public final class PairLabel implements Label {
   private final ConfPolicy confPol;
   private final IntegPolicy integPol;
   private Integer hashCode = null;
-  private LabelUtil labelUtil;
-  public final Core localCore = Client.getClient().getLocalCore();
 
-  public PairLabel(LabelUtil labelUtil, ConfPolicy confPol, IntegPolicy integPol) {
-    this.labelUtil = labelUtil;
+  public PairLabel(ConfPolicy confPol, IntegPolicy integPol) {
     this.confPol = confPol;
     this.integPol = integPol;
-    if (confPol == null || integPol == null) throw new NullPointerException@localCore();
+    if (confPol == null || integPol == null) {
+      final Core localCore = Client.getClient().getLocalCore();
+      throw new NullPointerException@localCore();
+    }
   }
 
   public boolean relabelsTo(Label l, Set s) {
     if (l instanceof PairLabel) {
       PairLabel that = (PairLabel) l;
       if (this == that || this.equals(that)) return true;
+      
+      final Core localCore = Client.getClient().getLocalCore();
       Set temp = new HashSet@localCore();
-      if (labelUtil.relabelsTo(this.confPol, that.confPol, temp)
-          && labelUtil.relabelsTo(this.integPol, that.integPol, temp)) {
+      if (LabelUtil.relabelsTo(this.confPol, that.confPol, temp)
+          && LabelUtil.relabelsTo(this.integPol, that.integPol, temp)) {
         s.addAll(temp);
         return true;
       }
@@ -67,12 +69,12 @@ public final class PairLabel implements Label {
     return "{" + c + i + "}";
   }
 
-  public final Label join(Label l) {
-    return labelUtil.join(this, l);
+  public final Label join(Core core, Label l) {
+    return LabelUtil.join(core, this, l);
   }
 
-  public Label meet(Label l) {
-    return labelUtil.meet(this, l);
+  public Label meet(Core core, Label l) {
+    return LabelUtil.meet(core, this, l);
   }
 
   public ConfPolicy confPolicy() {
