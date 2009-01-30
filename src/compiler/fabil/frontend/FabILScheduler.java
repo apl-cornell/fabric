@@ -81,7 +81,7 @@ public class FabILScheduler extends JLScheduler {
             List<Goal> l = new ArrayList<Goal>();
             l.add(TypeChecked(job));
 
-            if (FabILOptions.global().optLevel > 0) {
+            if (extInfo.getFabILOptions().optLevel() > 0) {
               l.add(TypeCheckedAfterFlatten(job));
             }
 
@@ -223,7 +223,7 @@ public class FabILScheduler extends JLScheduler {
         l.add(LocationsAssigned(job));
         l.add(LabelsAssigned(job));
 
-        if (FabILOptions.global().optLevel > 0) {
+        if (extInfo.getFabILOptions().optLevel() > 0) {
           l.add(ReadWriteChecked(job));
         }
 
@@ -274,7 +274,7 @@ public class FabILScheduler extends JLScheduler {
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
         l.addAll(super.prerequisiteGoals(scheduler));
-        if (!extInfo.getOptions().signatureMode) {
+        if (!((FabILOptions) extInfo.getOptions()).signatureMode()) {
           l.add(RewriteProxies(job));
           l.add(RewriteAtomic(job));
           l.add(InstrumentThreads(job));
@@ -285,7 +285,7 @@ public class FabILScheduler extends JLScheduler {
       @Override
       protected polyglot.visit.ClassSerializer createSerializer(TypeSystem ts,
           NodeFactory nf, Date lastModified, ErrorQueue eq, Version version) {
-        if (extInfo.getOptions().signatureMode)
+        if (((FabILOptions) extInfo.getOptions()).signatureMode())
           return super.createSerializer(ts, nf, lastModified, eq, version);
 
         return new fabil.visit.ClassSerializer(ts, nf, lastModified, eq,

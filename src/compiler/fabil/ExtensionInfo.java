@@ -8,6 +8,7 @@ import polyglot.frontend.FileSource;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
 import polyglot.lex.Lexer;
+import polyglot.main.Options;
 import polyglot.types.LoadedClassResolver;
 import polyglot.types.SourceClassResolver;
 import polyglot.types.TypeSystem;
@@ -43,8 +44,8 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   }
 
   @Override
-  protected FabILOptions createOptions() {
-    return new FabILOptions(this);
+  protected FabILOptions_c createOptions() {
+    return new FabILOptions_c(this);
   }
 
   @Override
@@ -55,16 +56,6 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   @Override
   protected TypeSystem createTypeSystem() {
     return new FabILTypeSystem_c();
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.frontend.AbstractExtensionInfo#getOptions()
-   */
-  @Override
-  public FabILOptions getOptions() {
-    return (FabILOptions) super.getOptions();
   }
 
   /*
@@ -102,7 +93,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
     // are compiled from Fabric. For these types, we want to see the Java
     // translation of the class, not the original Fabric source.
     // See fabil.types.FabILTypeSystem_c.fArrayImplOf(polyglot.types.Type)
-    FabILOptions options = getOptions();
+    FabILOptions options = (FabILOptions) getOptions();
     String classpath = options.constructFabILClasspath();
     LoadedClassResolver lcr = new LoadedClassResolver(ts, classpath,
         compiler.loader(), version(), true);
@@ -116,10 +107,13 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
    */
   @Override
   protected LoadedClassResolver makeLoadedClassResolver() {
-    FabILOptions options = getOptions();
-    String cp = options.constructFabILClasspath();
-    return new SourceClassResolver(compiler, this, cp, compiler.loader(), true,
-        options.compile_command_line_only, options.ignore_mod_times);
+    return new SourceClassResolver(compiler,
+                                   this,
+                                   getFabILOptions().constructFabILClasspath(),
+                                   compiler.loader(),
+                                   true,
+                                   getOptions().compile_command_line_only,
+                                   getOptions().ignore_mod_times);
   }
 
   @Override
@@ -137,6 +131,10 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   @Override
   public Version version() {
     return new Version();
+  }
+  
+  public FabILOptions getFabILOptions() {
+    return (FabILOptions) getOptions();
   }
 
 }
