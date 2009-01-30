@@ -31,10 +31,12 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
     
     @Override
     public Job addJob(Source source, Node ast) {
-      // We use the same hack here as in JifScheduler, but we need to override to
-      // compare with Object.fab instead of Object.jif.
+      // We use the same hack here as in JifScheduler, but we need to override
+      // to compare with Object.fab instead of Object.jif. Moreover, we need to
+      // make sure it's referring to java.lang.Object (as opposed to
+      // fabric.lang.Object)
       Job j = super.addJob(source, ast);
-      if ("Object.fab".equals(source.name())) {
+      if ("Object.fab".equals(source.name()) && source.path().contains("java")) {
         this.objectJob = j;
       }
       return j;
@@ -42,10 +44,12 @@ public class OutputExtensionInfo extends fabil.ExtensionInfo {
     
     @Override
     public Job addJob(Source source) {
-      // We use the same hack here as in JifScheduler, but we need to override to
-      // compare with Object.fab instead of Object.jif.
+      // We use the same hack here as in JifScheduler, but we need to override
+      // to compare with Object.fab instead of Object.jif. Moreover, we need to
+      // make sure it's referring to java.lang.Object (as opposed to
+      // fabric.lang.Object)
       Job j = super.addJob(source);
-      if ("Object.fab".equals(source.name())) {
+      if ("Object.fab".equals(source.name()) && source.path().contains("java")) {
           this.objectJob = j;
       }
       return j;
