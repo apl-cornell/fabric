@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.util.*;
 
 import jif.lang.*;
+import jif.lang.PrincipalUtil.TopPrincipal;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.common.ONumConstants;
@@ -42,9 +43,11 @@ public abstract class ObjectStore {
 
   protected final String name;
   protected Principal corePrincipal;
-  protected Label emptyLabel;
+  protected jif.lang.Principal topPrincipal;
   protected ConfPolicy bottomConfid;
   protected IntegPolicy topInteg;
+  protected IntegPolicy bottomInteg;
+  protected Label publicReadonlyLabel;
 
   protected static class MutableInteger {
     public int value;
@@ -398,28 +401,49 @@ public abstract class ObjectStore {
 
     Client.runInTransaction(new Client.Code<Void>() {
       public Void run() {
-        Label emptyLabel = emptyLabel();
-        ReaderPolicy.$Impl bottomConfid =
-            new ReaderPolicy.$Impl(core, emptyLabel, null, null);
-        bottomConfid.$forceRenumber(ONumConstants.BOTTOM_CONFIDENTIALITY);
+        TopPrincipal.$Impl topPrincipalImpl =
+            new TopPrincipal.$Impl(core, publicReadonlyLabel());
+        topPrincipalImpl.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 
-        WriterPolicy.$Impl topInteg =
-            new WriterPolicy.$Impl(core, emptyLabel, null, null);
-        topInteg.$forceRenumber(ONumConstants.TOP_INTEGRITY);
+        ReaderPolicy.$Impl topConfidImpl =
+            new ReaderPolicy.$Impl(core, publicReadonlyLabel(), topPrincipal(),
+                topPrincipal());
+        topConfidImpl.$forceRenumber(ONumConstants.TOP_CONFIDENTIALITY);
+
+        ReaderPolicy.$Impl bottomConfidImpl =
+            new ReaderPolicy.$Impl(core, publicReadonlyLabel(), null, null);
+        bottomConfidImpl.$forceRenumber(ONumConstants.BOTTOM_CONFIDENTIALITY);
+
+        WriterPolicy.$Impl topIntegImpl =
+            new WriterPolicy.$Impl(core, publicReadonlyLabel(), null, null);
+        topIntegImpl.$forceRenumber(ONumConstants.TOP_INTEGRITY);
+
+        WriterPolicy.$Impl bottomIntegImpl =
+            new WriterPolicy.$Impl(core, publicReadonlyLabel(), topPrincipal(),
+                topPrincipal());
+        bottomIntegImpl.$forceRenumber(ONumConstants.BOTTOM_INTEGRITY);
 
         PairLabel.$Impl emptyLabelImpl =
-            new PairLabel.$Impl(core, emptyLabel, bottomConfid(), topInteg());
+            new PairLabel.$Impl(core, publicReadonlyLabel(), bottomConfid(),
+                topInteg());
         emptyLabelImpl.$forceRenumber(ONumConstants.EMPTY_LABEL);
 
-        Principal.$Impl principal = new Principal.$Impl(core, emptyLabel, name);
+        PairLabel.$Impl publicReadonlyLabelImpl =
+            new PairLabel.$Impl(core, publicReadonlyLabel(), bottomConfid(),
+                bottomInteg());
+        publicReadonlyLabelImpl
+            .$forceRenumber(ONumConstants.PUBLIC_READONLY_LABEL);
+
+        Principal.$Impl principal =
+            new Principal.$Impl(core, publicReadonlyLabel(), name);
         principal.$forceRenumber(ONumConstants.CORE_PRINCIPAL);
 
         // Create the label {core->_; core<-_} for the root map.
         ReaderPolicy confid =
-            (ReaderPolicy) new ReaderPolicy.$Impl(core, emptyLabel,
+            (ReaderPolicy) new ReaderPolicy.$Impl(core, publicReadonlyLabel(),
                 corePrincipal(), null).$getProxy();
         WriterPolicy integ =
-            (WriterPolicy) new WriterPolicy.$Impl(core, emptyLabel,
+            (WriterPolicy) new WriterPolicy.$Impl(core, publicReadonlyLabel(),
                 corePrincipal(), null).$getProxy();
         Label label =
             (Label) new PairLabel.$Impl(core, null, confid, integ).$getProxy();
@@ -435,10 +459,7 @@ public abstract class ObjectStore {
     setInitialized();
   }
 
-  /**
-   * Returns the core's principal object.
-   */
-  public final Principal corePrincipal() {
+  private final Principal corePrincipal() {
     if (corePrincipal == null) {
       Core core = Client.getClient().getCore(name);
       corePrincipal = new Principal.$Proxy(core, ONumConstants.CORE_PRINCIPAL);
@@ -447,31 +468,53 @@ public abstract class ObjectStore {
     return corePrincipal;
   }
 
-  public final Label emptyLabel() {
-    if (emptyLabel == null) {
+  private final jif.lang.Principal topPrincipal() {
+    if (topPrincipal == null) {
       Core core = Client.getClient().getCore(name);
-      emptyLabel = new Label.$Proxy(core, ONumConstants.EMPTY_LABEL);
+      topPrincipal =
+          new jif.lang.Principal.$Proxy(core, ONumConstants.TOP_PRINCIPAL);
     }
 
-    return emptyLabel;
+    return topPrincipal;
   }
 
-  public final ConfPolicy bottomConfid() {
+  private final ConfPolicy bottomConfid() {
     if (bottomConfid == null) {
       Core core = Client.getClient().getCore(name);
-      bottomConfid = new ConfPolicy.$Proxy(core, ONumConstants.EMPTY_LABEL);
+      bottomConfid =
+          new ConfPolicy.$Proxy(core, ONumConstants.BOTTOM_CONFIDENTIALITY);
     }
 
     return bottomConfid;
   }
 
-  public final IntegPolicy topInteg() {
+  private final IntegPolicy topInteg() {
     if (topInteg == null) {
       Core core = Client.getClient().getCore(name);
-      topInteg = new IntegPolicy.$Proxy(core, ONumConstants.EMPTY_LABEL);
+      topInteg = new IntegPolicy.$Proxy(core, ONumConstants.TOP_INTEGRITY);
     }
 
     return topInteg;
+  }
+
+  private final IntegPolicy bottomInteg() {
+    if (bottomInteg == null) {
+      Core core = Client.getClient().getCore(name);
+      bottomInteg =
+          new IntegPolicy.$Proxy(core, ONumConstants.BOTTOM_INTEGRITY);
+    }
+
+    return bottomInteg;
+  }
+
+  private final Label publicReadonlyLabel() {
+    if (publicReadonlyLabel == null) {
+      Core core = Client.getClient().getCore(name);
+      publicReadonlyLabel =
+          new Label.$Proxy(core, ONumConstants.PUBLIC_READONLY_LABEL);
+    }
+
+    return publicReadonlyLabel;
   }
 
 }

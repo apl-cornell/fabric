@@ -7,7 +7,7 @@ import jif.lang.ConfPolicy;
 import jif.lang.IntegPolicy;
 import jif.lang.Label;
 import jif.lang.LabelUtil;
-
+import jif.lang.PrincipalUtil.TopPrincipal;
 import fabric.common.InternalError;
 import fabric.common.ONumConstants;
 import fabric.common.util.LongKeyMap;
@@ -22,9 +22,13 @@ public class LocalCore implements Core {
   private long freshOID = ONumConstants.FIRST_UNRESERVED;
 
   private Map rootMap;
+  private jif.lang.Principal topPrincipal;
+  private ConfPolicy topConfidPolicy;
   private ConfPolicy bottomConfidPolicy;
   private IntegPolicy topIntegPolicy;
+  private IntegPolicy bottomIntegPolicy;
   private Label emptyLabel;
+  private Label publicReadonlyLabel;
 
   private static final Logger log = Logger.getLogger("fabric.client.LocalCore");
 
@@ -52,6 +56,9 @@ public class LocalCore implements Core {
     if (onum == ONumConstants.EMPTY_LABEL)
       return ($Impl) emptyLabel.fetch();
     
+    if (onum == ONumConstants.PUBLIC_READONLY_LABEL)
+      return ($Impl) publicReadonlyLabel.fetch();
+    
     throw new InternalError("Not supported.");
   }
 
@@ -76,6 +83,14 @@ public class LocalCore implements Core {
     return rootMap;
   }
   
+  public jif.lang.Principal getTopPrincipal() {
+    return topPrincipal;
+  }
+  
+  public ConfPolicy getTopConfidPolicy() {
+    return topConfidPolicy;
+  }
+  
   public ConfPolicy getBottomConfidPolicy() {
     return bottomConfidPolicy;
   }
@@ -84,8 +99,16 @@ public class LocalCore implements Core {
     return topIntegPolicy;
   }
   
+  public IntegPolicy getBottomIntegPolicy() {
+    return bottomIntegPolicy;
+  }
+  
   public Label getEmptyLabel() {
     return emptyLabel;
+  }
+  
+  public Label getPublicReadonlyLabel() {
+    return publicReadonlyLabel;
   }
 
   public String name() {
@@ -102,43 +125,51 @@ public class LocalCore implements Core {
   }
   
   public void initialize() {
-    // Bootstrap with a proxy. Any remaining references to this proxy will be
-    // resolved by the hack in readObject().
+    // Bootstrap labels with some proxies. Any remaining references to these
+    // proxies will be resolved by the hack in readObject().
     this.emptyLabel =
       new Label.$Proxy(LocalCore.this, ONumConstants.EMPTY_LABEL);
     
-    // Create the object representing the bottom confidentiality policy.
-    this.bottomConfidPolicy =
-        Client.runInTransaction(new Client.Code<ConfPolicy>() {
-          public ConfPolicy run() {
-            return LabelUtil.$Impl.readerPolicy(LocalCore.this, null,
-                (Principal) null);
-          }
-        });
-
-    // Create the object representing the top integrity policy.
-    this.topIntegPolicy =
-        Client.runInTransaction(new Client.Code<IntegPolicy>() {
-          public IntegPolicy run() {
-            return LabelUtil.$Impl.writerPolicy(LocalCore.this, null,
-                (Principal) null);
-          }
-        });
+    this.publicReadonlyLabel =
+      new Label.$Proxy(LocalCore.this, ONumConstants.PUBLIC_READONLY_LABEL);
     
-    // Create the object representing the empty label.
-    this.emptyLabel = Client.runInTransaction(new Client.Code<Label>() {
-      public Label run() {
-        return LabelUtil.$Impl.toLabel(LocalCore.this, bottomConfidPolicy,
-            topIntegPolicy);
-      }
-    });
+    Client.runInTransaction(new Client.Code<Void>() {
+      public Void run() {
+        // Create the object representing the top principal.
+        topPrincipal =
+            (jif.lang.Principal) new TopPrincipal.$Impl(
+                LocalCore.this, publicReadonlyLabel).$getProxy();
 
-    // Fix the labels on the policies created thus far.
-    bottomConfidPolicy.set$label(emptyLabel);
-    topIntegPolicy.set$label(emptyLabel);
+        // Create the object representing the bottom confidentiality policy.
+        bottomConfidPolicy =
+            LabelUtil.$Impl
+                .readerPolicy(LocalCore.this, null, (Principal) null);
 
-    this.rootMap = Client.runInTransaction(new Client.Code<Map>() {
-      public Map run() {
+        // Create the object representing the bottom integrity policy.
+        bottomIntegPolicy =
+            LabelUtil.$Impl.writerPolicy(LocalCore.this, topPrincipal,
+                topPrincipal);
+        
+        // Create the object representing the public readonly label.
+        publicReadonlyLabel =
+            LabelUtil.$Impl.toLabel(LocalCore.this, bottomConfidPolicy,
+                bottomIntegPolicy);
+        
+        // Create the object representing the top confidentiality policy.
+        topConfidPolicy =
+            LabelUtil.$Impl.readerPolicy(LocalCore.this, topPrincipal,
+                topPrincipal);
+
+        // Create the object representing the top integrity policy.
+        topIntegPolicy =
+            LabelUtil.$Impl
+                .writerPolicy(LocalCore.this, null, (Principal) null);
+
+        // Create the object representing the empty label.
+        emptyLabel =
+            LabelUtil.$Impl.toLabel(LocalCore.this, bottomConfidPolicy,
+                topIntegPolicy);
+
         // Create the label {client->_; client<-_} for the root map.
         Principal clientPrincipal = Client.getClient().getPrincipal();
         ConfPolicy conf =
@@ -146,8 +177,10 @@ public class LocalCore implements Core {
         IntegPolicy integ =
             LabelUtil.$Impl.writerPolicy(LocalCore.this, clientPrincipal, null);
         Label label = LabelUtil.$Impl.toLabel(LocalCore.this, conf, integ);
-        
-        return (Map) new HashMap.$Impl(LocalCore.this, label).$getProxy();
+
+        rootMap = (Map) new HashMap.$Impl(LocalCore.this, label).$getProxy();
+
+        return null;
       }
     });
   }

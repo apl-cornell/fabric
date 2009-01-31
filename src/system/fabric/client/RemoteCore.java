@@ -344,6 +344,14 @@ public class RemoteCore implements Core {
     return new Map.$Proxy(this, ONumConstants.ROOT_MAP);
   }
   
+  public jif.lang.Principal getTopPrincipal() {
+    return new jif.lang.Principal.$Proxy(this, ONumConstants.TOP_PRINCIPAL);
+  }
+  
+  public ConfPolicy getTopConfidPolicy() {
+    return new ConfPolicy.$Proxy(this, ONumConstants.TOP_CONFIDENTIALITY);
+  }
+  
   public ConfPolicy getBottomConfidPolicy() {
     return new ConfPolicy.$Proxy(this, ONumConstants.BOTTOM_CONFIDENTIALITY);
   }
@@ -351,9 +359,17 @@ public class RemoteCore implements Core {
   public IntegPolicy getTopIntegPolicy() {
     return new IntegPolicy.$Proxy(this, ONumConstants.TOP_INTEGRITY);
   }
+  
+  public IntegPolicy getBottomIntegPolicy() {
+    return new IntegPolicy.$Proxy(this, ONumConstants.BOTTOM_INTEGRITY);
+  }
 
   public Label getEmptyLabel() {
     return new Label.$Proxy(this, ONumConstants.EMPTY_LABEL);
+  }
+  
+  public Label getPublicReadonlyLabel() {
+    return new Label.$Proxy(this, ONumConstants.PUBLIC_READONLY_LABEL);
   }
 
   public String name() {

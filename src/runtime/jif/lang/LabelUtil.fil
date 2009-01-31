@@ -138,6 +138,10 @@ public final class LabelUtil {
   public static ConfPolicy bottomConf(Core core) {
     return core.getBottomConfidPolicy();
   }
+  
+  public static ConfPolicy topConf(Core core) {
+    return core.getTopConfidPolicy();
+  }
 
   public static IntegPolicy topInteg(Core core) {
     return writerPolicy(core, null, (Principal) null);
@@ -147,7 +151,7 @@ public final class LabelUtil {
       Principal reader) {
     try {
       enterTiming();
-      Label label = core.getEmptyLabel();
+      Label label = core.getPublicReadonlyLabel();
       return new ReaderPolicy~label@core(owner, reader);
     } finally {
       exitTiming();
@@ -242,7 +246,7 @@ public final class LabelUtil {
   public static IntegPolicy writerPolicy(Core core, Principal owner, Principal writer) {
     try {
       enterTiming();
-      Label label = core.getEmptyLabel();
+      Label label = core.getPublicReadonlyLabel();
       return new WriterPolicy~label@core(owner, writer);
     } finally {
       exitTiming();
@@ -611,7 +615,9 @@ public final class LabelUtil {
   public static boolean isWritableBy(Label lbl, Principal p) {
     try {
       enterTiming();
-      Label L = toLabel(localCore, PrincipalUtil.writableByPrinPolicy(localCore, p));
+      Label L =
+          toLabel(localCore, topConf(localCore), writerPolicy(localCore, null,
+              p));
       return relabelsTo(lbl, L);
     } finally {
       exitTiming();

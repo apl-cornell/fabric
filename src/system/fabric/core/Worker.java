@@ -231,6 +231,8 @@ public class Worker extends Thread {
       public Boolean run() {
         try {
           return client.name().equals(name);
+        } catch (ClassCastException e) {
+          return false;
         } catch (NullPointerException e) {
           // XXX For ease of debugging, assume that if the client principal
           // XXX doesn't exist, it's about to be created.

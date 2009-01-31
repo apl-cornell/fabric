@@ -3,6 +3,7 @@ package fabric.core;
 import jif.lang.Label;
 import jif.lang.LabelUtil;
 import fabric.client.Client;
+import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.SerializedObject;
@@ -203,8 +204,8 @@ public class TransactionManager {
    * Returns the label at the given onum.
    */
   private Label getLabelByOnum(long labelOnum) {
-    Principal corePrincipal = store.corePrincipal();
-    return new Label.$Proxy(corePrincipal.$getCore(), labelOnum);
+    Core core = Client.getClient().getCore(store.getName());
+    return new Label.$Proxy(core, labelOnum);
   }
 
   /**
