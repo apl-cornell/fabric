@@ -1,8 +1,0 @@
-# File system exports go here.  The format is:
-# Directory	address[/bits]
-#
-# for example, to export the root of the C drive to every address
-# that starts with 192.168.0:
-/		192.168.0/24
-/		128.84.97/24
-/		128.84.98/24

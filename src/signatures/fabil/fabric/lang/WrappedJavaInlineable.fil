@@ -1,5 +1,0 @@
-package fabric.lang;
-
-public interface WrappedJavaInlineable extends JavaInlineable {
-	
-}

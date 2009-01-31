@@ -1,9 +1,0 @@
-package compiler;
-
-public class Constructor01 {
-  int i;
-  Constructor01(int i) {
-    this.i = i;
-  }
-}
-
