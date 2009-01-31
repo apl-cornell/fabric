@@ -173,7 +173,7 @@ public class Node {
     Core c    = new Core();
     c.os      = os;
     c.tm      = new TransactionManager(os);
-    c.sm      = new SimpleSurrogateManager(os);
+    c.sm      = new SimpleSurrogateManager(c.tm);
     c.factory = sslSocketFactory;
     cores.put(coreName, c);
   }

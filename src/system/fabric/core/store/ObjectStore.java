@@ -1,16 +1,18 @@
 package fabric.core.store;
 
 import java.io.IOException;
-import java.util.NoSuchElementException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.*;
 
 import jif.lang.*;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
-import fabric.core.PrepareRequest;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.lang.Principal;
-import fabric.util.HashMap;
 
 /**
  * <p>
@@ -26,40 +28,223 @@ import fabric.util.HashMap;
  * called with the returned transaction identifier.
  * </p>
  * <p>
+ * In general, implementations of ObjectStore are not thread-safe. Only
+ * TransactionManager should be interacting directly with ObjectStore
+ * implementations; it is responsible for ensuring safe use of ObjectStore.
+ * </p>
+ * <p>
  * All ObjectStore implementations should provide a constructor which takes the
  * name of the core and opens the appropriate backend store if it exists, or
  * creates it if it doesn't exist.
  * </p>
  */
 public abstract class ObjectStore {
-  
+
   protected final String name;
   protected Principal corePrincipal;
   protected Label emptyLabel;
   protected ConfPolicy bottomConfid;
   protected IntegPolicy topInteg;
-  
-  protected ObjectStore(String name) {
-    this.name = name;
+
+  protected static class MutableInteger {
+    public int value;
+
+    public MutableInteger() {
+      this(0);
+    }
+
+    public MutableInteger(int value) {
+      this.value = value;
+    }
   }
 
   /**
-   * Store object creations and modifications for later commit. The updates will
-   * not become visible until commit() is called with the resulting transaction
-   * identifier. In the case of an exception, no objects should be marked as
-   * prepared.
+   * The data stored for a partially prepared transaction.
+   */
+  protected static final class PendingTransaction implements Iterable<Long> {
+    public final Principal owner;
+    public final Collection<Long> reads;
+
+    /**
+     * Objects that have been modified or created.
+     */
+    public final Collection<SerializedObject> modData;
+
+    PendingTransaction(Principal owner) {
+      this.owner = owner;
+      this.reads = new ArrayList<Long>();
+      this.modData = new ArrayList<SerializedObject>();
+    }
+
+    /**
+     * Deserialization constructor.
+     */
+    public PendingTransaction(ObjectInputStream in) throws IOException {
+      if (in.readBoolean()) {
+        Core core = Client.getClient().getCore(in.readUTF());
+        this.owner = new Principal.$Proxy(core, in.readLong());
+      } else {
+        this.owner = null;
+      }
+
+      int size = in.readInt();
+      this.reads = new ArrayList<Long>(size);
+      for (int i = 0; i < size; i++)
+        reads.add(in.readLong());
+
+      size = in.readInt();
+      this.modData = new ArrayList<SerializedObject>(size);
+      for (int i = 0; i < size; i++)
+        modData.add(new SerializedObject(in));
+    }
+
+    /**
+     * Returns an iterator of onums involved in this transaction.
+     */
+    public Iterator<Long> iterator() {
+      return new Iterator<Long>() {
+        private Iterator<Long> readIt = reads.iterator();
+        private Iterator<SerializedObject> modIt = modData.iterator();
+
+        public boolean hasNext() {
+          return readIt.hasNext() || modIt.hasNext();
+        }
+
+        public Long next() {
+          if (readIt.hasNext()) return readIt.next();
+          return modIt.next().getOnum();
+        }
+
+        public void remove() {
+          throw new UnsupportedOperationException();
+        }
+      };
+    }
+
+    /**
+     * Serializes this object out to the given output stream.
+     */
+    public void write(ObjectOutputStream out) throws IOException {
+      out.writeBoolean(owner != null);
+      if (owner != null) {
+        out.writeUTF(owner.$getCore().name());
+        out.writeLong(owner.$getOnum());
+      }
+
+      out.writeInt(reads.size());
+      for (Long onum : reads)
+        out.writeLong(onum);
+
+      out.writeInt(modData.size());
+      for (SerializedObject obj : modData)
+        obj.write(out);
+    }
+  }
+
+  /**
+   * The table of partially prepared transactions.
+   */
+  protected final Map<Integer, PendingTransaction> pendingByTid;
+
+  /**
+   * Tracks the read/write pins for each onum. A value of -1 represents a
+   * write-pin; otherwise, the value is the number of read-pins. While this may
+   * look like a locking mechanism, it is not. TransactionManager is responsible
+   * for implementing the locking discipline for preparing transactions.
+   */
+  protected final LongKeyMap<MutableInteger> rwCount;
+
+  protected ObjectStore(String name) {
+    this.name = name;
+    this.pendingByTid = new HashMap<Integer, PendingTransaction>();
+    this.rwCount = new LongKeyHashMap<MutableInteger>();
+  }
+
+  /**
+   * Opens a new transaction.
    * 
    * @param client
-   *          the client to the transaction
-   * @param req
-   *          the read, write, and create sets for the transaction to prepare
-   * @return a transaction identifier that can subsequently be passed to
-   *         commit() or abort()
+   *          the client under whose authority the transaction is running.
+   * @return a transaction identifier that can be subsequently be passed to
+   *         registerCreate(), registerRead(), registerWrite(), commit(), or
+   *         abort().
    * @throws StoreException
    *           if the client has insufficient privileges.
    */
-  public abstract int prepare(Principal client, PrepareRequest req)
-      throws StoreException;
+  public final int beginTransaction(Principal client) throws StoreException {
+    int tid = newTid(client);
+    pendingByTid.put(tid, new PendingTransaction(client));
+    return tid;
+  }
+
+  /**
+   * Allocates a new transaction ID for the given client.
+   * 
+   * @throws StoreException
+   *           if the client has insufficient privileges.
+   */
+  protected abstract int newTid(Principal client) throws StoreException;
+
+  /**
+   * Registers that a transaction has read an object.
+   */
+  public final void registerRead(int tid, long onum) {
+    addRWPin(onum, false);
+    pendingByTid.get(tid).reads.add(onum);
+  }
+
+  /**
+   * Registers that a transaction has created or written to an object. This
+   * update will not become visible in the store until commit() is called for
+   * the transaction.
+   * 
+   * @param tid
+   *          the identifier for the transaction.
+   * @param obj
+   *          the updated object.
+   */
+  public final void registerUpdate(int tid, SerializedObject obj) {
+    addRWPin(obj.getOnum(), true);
+    pendingByTid.get(tid).modData.add(obj);
+  }
+
+  /**
+   * Registers that an onum was involved in a transaction by associating another
+   * reader/writer pin with the onum.
+   */
+  private void addRWPin(long onum, boolean write) {
+    MutableInteger count = rwCount.get(onum);
+    if (count != null) {
+      count.value++;
+      return;
+    }
+
+    rwCount.put(onum, new MutableInteger(write ? -1 : 1));
+  }
+
+  /**
+   * Rolls back a partially prepared transaction. (i.e., one for which
+   * finishPrepare() has yet to be called.)
+   */
+  public final void abortPrepare(int tid) {
+    unpin(pendingByTid.remove(tid));
+  }
+
+  /**
+   * <p>
+   * Notifies the store that the given transaction is finished preparing. The
+   * transaction is not considered to be prepared until this is called. After
+   * calling this method, there should not be any further calls to
+   * registerRead() or registerUpdate() for the given transaction. This method
+   * MUST be called before calling commit().
+   * </p>
+   * <p>
+   * Upon receiving this call, the object store should save the prepared
+   * transaction to stable storage so that it can be recovered in case of
+   * failure.
+   * </p>
+   */
+  public abstract void finishPrepare(int tid);
 
   /**
    * Cause the objects prepared in transaction [tid] to be committed. The
@@ -86,24 +271,17 @@ public abstract class ObjectStore {
    * @throws StoreException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void rollback(Principal client, int tid) throws StoreException;
+  public abstract void rollback(Principal client, int tid)
+      throws StoreException;
 
   /**
    * Return the object stored at a particular onum.
    * 
-   * @param client
-   *          the client responsible for the request
    * @param onum
    *          the identifier
-   * @return the object
-   * @throws StoreException
-   *           if client is not allowed to read the object (according to the
-   *           access control policy associated with the object
-   * @throws NoSuchElementException
-   *           if there is no object stored at the given onum
+   * @return the object or null if no object exists at the given onum
    */
-  public abstract SerializedObject read(Principal client, long onum)
-      throws StoreException, NoSuchElementException;
+  public abstract SerializedObject read(long onum);
 
   /**
    * Determine whether an onum has outstanding uncommitted changes or reads.
@@ -113,17 +291,22 @@ public abstract class ObjectStore {
    * @return true if the object has been prepared by transaction that hasn't
    *         been committed or rolled back.
    */
-  public abstract boolean isPrepared(long onum);
+  public final boolean isPrepared(long onum) {
+    return rwCount.containsKey(onum);
+  }
 
   /**
    * Determine whether an onum has outstanding uncommitted reads.
    * 
    * @param onum
    *          the object number in question
-   * @return true if the object has been read by a transaction that hasn't
-   *         been committed or rolled back.
+   * @return true if the object has been read by a transaction that hasn't been
+   *         committed or rolled back.
    */
-  public abstract boolean isRead(long onum);
+  public final boolean isRead(long onum) {
+    MutableInteger count = rwCount.get(onum);
+    return count != null && count.value > 0;
+  }
 
   /**
    * Determine whether an onum has outstanding uncommitted changes.
@@ -133,13 +316,28 @@ public abstract class ObjectStore {
    * @return true if the object has been changed by a transaction that hasn't
    *         been committed or rolled back.
    */
-  public abstract boolean isWritten(long onum);
-  
+  public final boolean isWritten(long onum) {
+    MutableInteger count = rwCount.get(onum);
+    return count != null && count.value < 0;
+  }
+
+  /**
+   * Adjusts rwCount to account for the fact that the given transaction is about
+   * to be committed or aborted.
+   */
+  protected final void unpin(PendingTransaction tx) {
+    for (long oid : tx) {
+      MutableInteger count = rwCount.get(oid);
+      count.value--;
+      if (count.value <= 0) rwCount.remove(oid);
+    }
+  }
+
   /**
    * <p>
    * Return a set of onums that aren't currently occupied. The ObjectStore may
-   * return the same onum more than once from this method, althogh doing so would
-   * encourage collisions. There is no assumption of unpredictability or
+   * return the same onum more than once from this method, althogh doing so
+   * would encourage collisions. There is no assumption of unpredictability or
    * randomness about the returned ids.
    * </p>
    * <p>
@@ -151,8 +349,8 @@ public abstract class ObjectStore {
    *          the number of onums to return
    * @return num fresh onums
    */
-  public abstract long[] newOnums(int num) throws StoreException;
-  
+  public abstract long[] newOnums(int num);
+
   /**
    * Checks whether an object with the corresponding onum exists, in either
    * prepared or committed form.
@@ -169,18 +367,19 @@ public abstract class ObjectStore {
   public final String getName() {
     return name;
   }
-  
+
   /**
    * Gracefully shutdown the object store.
-   * @throws IOException 
+   * 
+   * @throws IOException
    */
   public abstract void close() throws IOException;
-  
+
   /**
    * Determines whether the object store has been initialized.
    */
   protected abstract boolean isInitialized();
-  
+
   /**
    * Sets a flag to indicate that the object store has been initialized.
    */
@@ -194,27 +393,27 @@ public abstract class ObjectStore {
   @SuppressWarnings("deprecation")
   public final void ensureInit() {
     if (isInitialized()) return;
-    
+
     final Core core = Client.getClient().getCore(name);
-    
+
     Client.runInTransaction(new Client.Code<Void>() {
       public Void run() {
         Label emptyLabel = emptyLabel();
         ReaderPolicy.$Impl bottomConfid =
             new ReaderPolicy.$Impl(core, emptyLabel, null, null);
         bottomConfid.$forceRenumber(ONumConstants.BOTTOM_CONFIDENTIALITY);
-        
+
         WriterPolicy.$Impl topInteg =
             new WriterPolicy.$Impl(core, emptyLabel, null, null);
         topInteg.$forceRenumber(ONumConstants.TOP_INTEGRITY);
-        
+
         PairLabel.$Impl emptyLabelImpl =
             new PairLabel.$Impl(core, emptyLabel, bottomConfid(), topInteg());
         emptyLabelImpl.$forceRenumber(ONumConstants.EMPTY_LABEL);
 
         Principal.$Impl principal = new Principal.$Impl(core, emptyLabel, name);
         principal.$forceRenumber(ONumConstants.CORE_PRINCIPAL);
-        
+
         // Create the label {core->_; core<-_} for the root map.
         ReaderPolicy confid =
             (ReaderPolicy) new ReaderPolicy.$Impl(core, emptyLabel,
@@ -225,16 +424,17 @@ public abstract class ObjectStore {
         Label label =
             (Label) new PairLabel.$Impl(core, null, confid, integ).$getProxy();
 
-        HashMap.$Impl map = new HashMap.$Impl(core, label);
+        fabric.util.HashMap.$Impl map =
+            new fabric.util.HashMap.$Impl(core, label);
         map.$forceRenumber(ONumConstants.ROOT_MAP);
-        
+
         return null;
       }
     });
-    
+
     setInitialized();
   }
-  
+
   /**
    * Returns the core's principal object.
    */
@@ -243,34 +443,34 @@ public abstract class ObjectStore {
       Core core = Client.getClient().getCore(name);
       corePrincipal = new Principal.$Proxy(core, ONumConstants.CORE_PRINCIPAL);
     }
-    
+
     return corePrincipal;
   }
-  
+
   public final Label emptyLabel() {
     if (emptyLabel == null) {
       Core core = Client.getClient().getCore(name);
       emptyLabel = new Label.$Proxy(core, ONumConstants.EMPTY_LABEL);
     }
-    
+
     return emptyLabel;
   }
-  
+
   public final ConfPolicy bottomConfid() {
     if (bottomConfid == null) {
       Core core = Client.getClient().getCore(name);
       bottomConfid = new ConfPolicy.$Proxy(core, ONumConstants.EMPTY_LABEL);
     }
-    
+
     return bottomConfid;
   }
-  
+
   public final IntegPolicy topInteg() {
     if (topInteg == null) {
       Core core = Client.getClient().getCore(name);
       topInteg = new IntegPolicy.$Proxy(core, ONumConstants.EMPTY_LABEL);
     }
-    
+
     return topInteg;
   }
 

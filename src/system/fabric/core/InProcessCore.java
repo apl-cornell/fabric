@@ -47,7 +47,7 @@ public class InProcessCore extends RemoteCore {
   @Override
   public long createOnum() {
     try {
-      return tm.newOIDs(Client.getClient().getPrincipal(), 1)[0];
+      return tm.newOnums(Client.getClient().getPrincipal(), 1)[0];
     } catch (StoreException e) {
       throw new InternalError(e);
     }

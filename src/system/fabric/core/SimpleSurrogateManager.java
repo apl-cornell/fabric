@@ -2,10 +2,10 @@ package fabric.core;
 
 import java.util.*;
 
-import fabric.common.*;
-import fabric.common.InternalError;
-import fabric.core.store.ObjectStore;
-import fabric.core.store.StoreException;
+import fabric.common.ComparablePair;
+import fabric.common.RefTypeEnum;
+import fabric.common.SerializedObject;
+import fabric.common.Util;
 
 /**
  * This is a simple surrogate policy. It keeps no state between requests, and
@@ -15,11 +15,10 @@ import fabric.core.store.StoreException;
  */
 public class SimpleSurrogateManager implements SurrogateManager {
 
-  /** The object store in which to allocate surrogates. */
-  private ObjectStore store;
+  private TransactionManager tm;
 
-  public SimpleSurrogateManager(final ObjectStore store) {
-    this.store = store;
+  public SimpleSurrogateManager(final TransactionManager tm) {
+    this.tm = tm;
   }
 
   @SuppressWarnings("unchecked")
@@ -37,21 +36,17 @@ public class SimpleSurrogateManager implements SurrogateManager {
       List<Long> newrefs =
           new ArrayList<Long>(obj.getNumIntracoreRefs()
               + obj.getNumIntercoreRefs() + 1);
-      
+
       long labelOnum;
       if (obj.labelRefIsIntercore()) {
         // Add a surrogate reference to the label.
         ComparablePair<String, Long> ref = obj.getIntercoreLabelRef();
 
-        try {
-          labelOnum = store.newOnums(1)[0];
-          surrogates.add(new SerializedObject(labelOnum, labelOnum, ref));
-          cache.put(ref, labelOnum);
-          hadRemotes = true;
-          newrefs.add(labelOnum);
-        } catch (StoreException e) {
-          throw new InternalError(e);
-        }
+        labelOnum = tm.newOnums(1)[0];
+        surrogates.add(new SerializedObject(labelOnum, labelOnum, ref));
+        cache.put(ref, labelOnum);
+        hadRemotes = true;
+        newrefs.add(labelOnum);
       } else {
         labelOnum = obj.getLabelOnum();
       }
@@ -75,11 +70,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
 
           if (onum == null) {
             // create surrogate
-            try {
-              onum = store.newOnums(1)[0];
-            } catch (StoreException e) {
-              throw new InternalError(e);
-            }
+            onum = tm.newOnums(1)[0];
             surrogates.add(new SerializedObject(onum, labelOnum, ref));
             cache.put(ref, onum);
           }

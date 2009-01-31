@@ -276,13 +276,6 @@ public final class TransactionManager {
           public void run() {
             try {
               core.commitTransaction(tid);
-
-              // Update the local version numbers.
-              for ($Impl obj : current.writes)
-                if (obj.$getCore() == core) obj.$version++;
-
-              for ($Impl obj : current.creates)
-                if (obj.$getCore() == core) obj.$version = 1;
             } catch (TransactionCommitFailedException e) {
               failed.add(core);
             } catch (UnreachableCoreException e) {

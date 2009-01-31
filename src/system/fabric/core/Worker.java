@@ -281,7 +281,7 @@ public class Worker extends Thread {
   public AllocateMessage.Response handle(AllocateMessage msg) throws AccessException {
     logger.finer("Handling Allocate Message");
     try {
-      long[] onums = transactionManager.newOIDs(client, msg.num);
+      long[] onums = transactionManager.newOnums(client, msg.num);
       return new AllocateMessage.Response(onums);
     } catch (StoreException e) {
       throw new AccessException();

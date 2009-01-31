@@ -5,6 +5,7 @@ import java.util.*;
 import fabric.client.Core;
 import fabric.client.transaction.LockList.Node;
 import fabric.common.Pair;
+import fabric.common.Util;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object.$Impl;
@@ -126,8 +127,9 @@ public final class Log {
 
   /**
    * Returns a map from onums to version numbers of objects read at the given
-   * core. Reads on created objects are not included.
+   * core. Reads on created and modified objects are not included.
    */
+  @SuppressWarnings("unchecked")
   LongKeyMap<Integer> getReadsForCore(Core core) {
     LongKeyMap<Integer> result = new LongKeyHashMap<Integer>();
     LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap = reads.get(core);
@@ -138,7 +140,7 @@ public final class Log {
       result.put(entry.getKey(), entry.getValue().second.versionNumber);
     }
 
-    for ($Impl create : creates)
+    for ($Impl create : Util.chain(writes, creates))
       result.remove(create.$getOnum());
 
     return result;
