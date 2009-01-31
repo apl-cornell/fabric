@@ -51,6 +51,7 @@ public class RequiredSubmission {
     this.fileTypes = new HashSet();
     id = nextID++;
     
+    this.assignment.requiredSubmissions.add(this);
     this.assignment.course.semester.database.requiredSubmissions.put(
         toString(), this);
   }

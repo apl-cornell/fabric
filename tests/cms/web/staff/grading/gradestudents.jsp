@@ -4,7 +4,7 @@
 **********************************************************/
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
-String meNetID = ((Principal) session.getAttribute(AccessController.A_PRINCIPAL)).getUserID();
+String meNetID = ((User) session.getAttribute(AccessController.A_PRINCIPAL)).getNetID();
 Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
 String courseID = course.getAttribute(XMLBuilder.A_COURSEID);
 String asgnID = root.getAttribute(XMLBuilder.A_ASSIGNID);
@@ -545,7 +545,9 @@ for (int i= 0; i < numgroups; i++) {
                 <%    Element regr= (Element)regrades.item(j);
                       Text regrtext= (Text)regrade.getFirstChild();      
                 %>
-                <%=GradeCommentInfo.formatComments(regrtext.getData())%>
+                <%
+/* XXX GradeCommentInfo.formatComments(regrtext.getData()) */ 
+                 %>
                 
                     </div>
 

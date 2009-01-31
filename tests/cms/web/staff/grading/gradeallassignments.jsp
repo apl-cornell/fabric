@@ -1,7 +1,7 @@
-<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, java.util.*, cms.model.*, cms.auth.User, cms.www.util.*" %><%
+<%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*, java.util.*, cms.model.*, cms.auth.*, cms.www.util.*" %><%
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
-String meNetID = ((Principal) session.getAttribute(AccessController.A_PRINCIPAL)).getUserID();
+String meNetID = ((User) session.getAttribute(AccessController.A_PRINCIPAL)).getNetID();
 Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
 NodeList groups= root.getElementsByTagName(XMLBuilder.TAG_GROUP);
 int numgroups= groups.getLength();
@@ -416,7 +416,7 @@ for (int i= 0; i != numgroups; i++) {
                 <%    Element regr= (Element)regrades.item(j);
                       Text regrtext= (Text)regrade.getFirstChild();      
                 %>
-                <%= GradeCommentInfo.formatComments(regrtext.getData())%>
+                <%= (regrtext.getData())%>
                 
                     </div>
 

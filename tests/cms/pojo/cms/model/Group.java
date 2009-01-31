@@ -76,6 +76,14 @@ public class Group {
     return Collections.unmodifiableCollection(submittedFiles);
   }
   
+  public boolean hasMember(User u) {
+    return members.containsKey(u);
+  }
+  
+  public GroupMember getMember(User u) {
+    return (GroupMember)members.get(u);
+  }
+  
   public GroupMember findGroupMember(User user) {
     return (GroupMember)members.get(user);
   }

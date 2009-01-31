@@ -72,7 +72,7 @@ public class StudentGradesXMLBuilder {
               .trimTrailingZero(String.valueOf(assign.getMaxScore())));
           
           Iterator subProbs = assign.getSubProblems().iterator();
-          while (i.hasNext()) {
+          while (subProbs.hasNext()) {
             SubProblem subProb = (SubProblem) subProbs.next();
             Element xSubProb = xml.createElementNS(
                 XMLBuilder.TAG_SUBPROBLEM + subProb.toString(),
@@ -163,12 +163,15 @@ public class StudentGradesXMLBuilder {
                     XMLBuilder.TAG_MEMBER).item(0);
         if (xMember != null) {
           Element xGrade = xml.createElementNS(
-              XMLBuilder.TAG_GRADE + grade.getSubProblem().toString(),
+              XMLBuilder.TAG_GRADE + 
+                (grade.getSubProblem() == null ? "null" : 
+                  grade.getSubProblem().toString()),
               XMLBuilder.TAG_GRADE);
           xGrade.setAttribute(XMLBuilder.A_SCORE, 
                               StringUtil.trimTrailingZero(String.valueOf(grade.getGrade())));
           xGrade.setAttribute(XMLBuilder.A_SUBPROBID,
-                              grade.getSubProblem().toString());
+              grade.getSubProblem() == null ? "null" : 
+                grade.getSubProblem().toString());
           xMember.appendChild(xGrade);
         }
       }

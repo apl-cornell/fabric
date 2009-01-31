@@ -74,7 +74,8 @@ public class Assignment implements Comparable {
     setName(name);
     setNameShort(nameShort);
     setDueDate(due);
-
+    setHidden(false);
+    
     this.solutionFile       = null;
     this.grades              = new HashMap/*Grade*/();
     this.subProblems         = new ArrayList/*SubProblem*/();

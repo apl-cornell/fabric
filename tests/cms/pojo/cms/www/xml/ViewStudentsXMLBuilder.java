@@ -82,7 +82,8 @@ public class ViewStudentsXMLBuilder {
           xGrade.setAttribute(XMLBuilder.A_SCORE,
                               StringUtil.roundToOne(String.valueOf(grade.getGrade())));
         
-        if (grade != null && grade.getGrade() > assign.getMaxScore())
+        if (grade != null && grade.getGrade() != null &&
+            grade.getGrade() > assign.getMaxScore())
           xGrade.setAttribute(XMLBuilder.A_OVERMAX, "true");
         
         Iterator regrades = assign.findRegradeRequests(group).iterator();

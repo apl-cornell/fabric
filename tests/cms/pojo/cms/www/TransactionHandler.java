@@ -1524,11 +1524,12 @@ public class TransactionHandler {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
         Iterator i = users.iterator();
-        TreeSet  nonExist = new TreeSet();
+        ArrayList  nonExist = new ArrayList();
         while (i.hasNext()) {
-          User user = (User) i.next();
-          if (course.getStudent(user) == null)
-            nonExist.add(user);
+          String netid = (String)i.next();
+          User user = (User) (database.getUser(netid));
+          if (user == null || course.getStudent(user) == null)
+            nonExist.add(netid);
         }
         
         if (nonExist.size() > 0) {

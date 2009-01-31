@@ -468,7 +468,23 @@ public class Transactions {
   }
 
   public TransactionResult removeAssignment(User p, Assignment assignment) {
-    throw new NotImplementedException();
+    TransactionResult result = new TransactionResult();
+    try {
+        assignment.setHidden(true);
+        Log log = startLog(p);
+        log.setCourse(assignment.getCourse());
+        appendAssignment(log, assignment);
+        log.setLogName(Log.REMOVE_ASSIGNMENT);
+        log.setLogType(Log.LOG_COURSE);
+        appendDetail(log, "'" + assignment.getName() + 
+            "' was removed from the course");
+        computeTotalScores(p, assignment.getCourse(), log);
+    } catch (Exception e) {
+        e.printStackTrace();
+                result.setException(e);
+        result.addError("Unexpected error, course not remove assignment");
+    }
+    return result;
   }
 
   public boolean removeCategory(User p, Category category) {
@@ -582,8 +598,37 @@ public class Transactions {
     throw new NotImplementedException();
   }
 
-  public boolean dropStudents(User p, Collection users, Course course) {
-    throw new NotImplementedException();
+  public boolean dropStudents(User p, Collection netIDs, Course course) {
+    try {
+      Iterator i = netIDs.iterator();
+      Log log = startLog(p);
+      log.setCourse(course);
+      log.setLogName(Log.DROP_STUDENTS);
+      log.setLogType(Log.LOG_COURSE);
+      Collection graded = course.getAssignments();
+      SortedSet affectedNetIDs = new TreeSet();
+      while (i.hasNext()) {
+        String netID = (String) i.next();
+        Student student = course.getStudent(database.getUser(netID));
+        if (student == null) {
+            return false;
+        } else {
+            student.setStatus(Student.DROPPED);
+            appendDetail(log, netID + " was dropped from the course");
+                    affectedNetIDs.add(netID);
+        }
+      }
+      i = graded.iterator();
+      while (i.hasNext()) {
+        Assignment assign = (Assignment) i.next();
+        computeAssignmentStats(p, assign, log);
+        appendAssignment(log, assign);
+      }
+      computeTotalScores(p, course, log);
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
   }
 
   public void editAnnouncement(User p, Announcement annt, String newText, boolean remove) {
@@ -623,7 +668,19 @@ public class Transactions {
   }
 
   public boolean setFinalGrades(User p, Course course, Collection grades) {
-    throw new NotImplementedException();
+    try {
+      for(Iterator i = grades.iterator(); i.hasNext();) {
+        String[] gradePair = (String[])i.next();
+        User u = database.getUser(gradePair[0]);
+        String grade = gradePair[1];
+        
+        Student s = course.getStudent(u);
+        s.setFinalGrade(grade);
+      }
+      return true;
+    } catch(Exception ex) {
+      return false;
+    }
   }
 
   public boolean mergeGroups(User p, List groups, Assignment assignment) {
@@ -1133,7 +1190,7 @@ public class Transactions {
         grades = assign.getGrades().iterator();
         while (grades.hasNext()) {
           Grade grade = (Grade) grades.next();
-          if(grade.getSubProblem() == null) continue;
+          if(grade.getSubProblem() == null && assign.hasSubProblems()) continue;
           Float score = (Float) totalScores.get(grade.getUser());
           Float w = (Float) assignWeights.get(grade.getAssignment());
           Float m = (Float) maxScores.get(grade.getAssignment());

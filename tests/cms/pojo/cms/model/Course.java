@@ -167,7 +167,8 @@ public class Course implements Comparable {
     SortedSet result = new TreeSet();
     for (Iterator it = assignments.values().iterator(); it.hasNext();) {
       Assignment assignment = (Assignment) it.next();
-      result.add(assignment);
+      if(!assignment.getHidden())
+        result.add(assignment);
     }
     
     return result;
@@ -238,11 +239,31 @@ public class Course implements Comparable {
   }
   
   public Collection/*Group*/ findGroupsByUser(User user) {
-    throw new NotImplementedException();
+    Collection/*Group*/ result = new ArrayList();
+    for(Iterator ai = assignments.values().iterator(); ai.hasNext();) {
+      Assignment a = (Assignment)ai.next();
+      for(Iterator gi = a.getGroups().iterator(); gi.hasNext();) {
+        Group g = (Group)gi.next();
+        if(g.hasMember(user)) {
+          result.add(g);
+        }
+      }
+    }
+    return result;
   }
   
   public Collection/*GroupMember*/ findGroupMembersByUser(User user) {
-    throw new NotImplementedException();
+    Collection/*GroupMember*/ result = new ArrayList();
+    for(Iterator ai = assignments.values().iterator(); ai.hasNext();) {
+      Assignment a = (Assignment)ai.next();
+      for(Iterator gi = a.getGroups().iterator(); gi.hasNext();) {
+        Group g = (Group)gi.next();
+        if(g.hasMember(user)) {
+          result.add(g.getMember(user));
+        }
+      }
+    }
+    return result;
   }
   
   public Collection/*Grade*/ findRecentGradesByUser(User user, boolean admin, User grader) {
@@ -296,7 +317,12 @@ public class Course implements Comparable {
   }
   
   public Collection/*RequiredSubmission*/ getRequiredSubmissions() {
-    throw new NotImplementedException();
+    Collection result = new ArrayList();
+    for(Iterator i = assignments.values().iterator(); i.hasNext();) {
+      Assignment a = (Assignment)i.next();
+      result.addAll(a.requiredSubmissions);
+    }
+    return result;
   }
   
   public Map/*Assignment, Float*/ getGradeMap(User user) {
