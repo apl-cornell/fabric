@@ -28,24 +28,28 @@ public class TransactionManager {
   /**
    * Instruct the transaction manager that the given transaction is aborting
    */
-  public synchronized void abortTransaction(Principal client, int transactionID) {
-    try {
-      store.rollback(client, transactionID);
-    } catch (StoreException e) {
+  public void abortTransaction(Principal client, int transactionID) {
+    synchronized (store) {
+      try {
+        store.rollback(client, transactionID);
+      } catch (StoreException e) {
+      }
     }
   }
 
   /**
    * Execute the commit phase of two phase commit.
    */
-  public synchronized void commitTransaction(Principal client, int transactionID)
+  public void commitTransaction(Principal client, int transactionID)
       throws TransactionCommitFailedException {
-    try {
-      store.commit(client, transactionID);
-    } catch (final StoreException e) {
-      throw new TransactionCommitFailedException("Insufficient Authorization");
-    } catch (final RuntimeException e) {
-      throw new TransactionCommitFailedException("something went wrong");
+    synchronized (store) {
+      try {
+        store.commit(client, transactionID);
+      } catch (final StoreException e) {
+        throw new TransactionCommitFailedException("Insufficient Authorization");
+      } catch (final RuntimeException e) {
+        throw new TransactionCommitFailedException("something went wrong");
+      }
     }
   }
 
@@ -230,26 +234,52 @@ public class TransactionManager {
    * @throws StoreException
    *           if the principal is not allowed to read the object.
    */
-  public synchronized SerializedObject read(Principal client, long onum)
+  public SerializedObject read(Principal client, long onum)
       throws StoreException {
-    return store.read(onum);
+    SerializedObject obj;
+    synchronized (store) {
+      obj = store.read(onum);
+    }
+    if (isReadPermitted(client, obj.getLabelOnum())) return obj;
+    throw new StoreException();
+  }
+
+  /**
+   * Determines whether the given principal is permitted to read according to
+   * the label at the given onum.
+   */
+  private boolean isReadPermitted(final Principal principal, long labelOnum) {
+    // Allow the core's client principal to do anything. We use pointer equality
+    // here to avoid having to call into the client.
+    if (principal == Client.getClient().getPrincipal()) return true;
+
+    // Call into the Jif label framework to perform the label check.
+    final Label label = getLabelByOnum(labelOnum);
+    return Client.runInTransaction(new Client.Code<Boolean>() {
+      public Boolean run() {
+        return LabelUtil.$Impl.isReadableBy(label, principal);
+      }
+    });
   }
 
   /**
    * @throws StoreException
    *           if the principal is not allowed to create objects on this core.
    */
-  public synchronized long[] newOnums(Principal client, int num)
-      throws StoreException {
-    return store.newOnums(num);
+  public long[] newOnums(Principal client, int num) throws StoreException {
+    synchronized (store) {
+      return store.newOnums(num);
+    }
   }
 
   /**
    * Creates new onums, bypassing authorization. This is for internal use by the
    * core.
    */
-  synchronized long[] newOnums(int num) {
-    return store.newOnums(num);
+  long[] newOnums(int num) {
+    synchronized (store) {
+      return store.newOnums(num);
+    }
   }
 
 }

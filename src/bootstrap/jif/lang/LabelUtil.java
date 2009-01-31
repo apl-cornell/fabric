@@ -11,6 +11,8 @@ public interface LabelUtil extends Object {
       super(core, label);
     }
     
+    public static native boolean isReadableBy(Label lbl, Principal p);
+    
     public static native boolean isWritableBy(Label lbl, Principal p);
     
     public static native ConfPolicy readerPolicy(Core core, Principal owner,
