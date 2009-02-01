@@ -7,9 +7,10 @@ package cms.www.xml;
 import java.net.ConnectException;
 import java.sql.Timestamp;
 import java.text.ParseException;
-import java.util.*;
-import java.util.Map.Entry;
+import fabric.util.*;
+import fabric.util.Map;
 import java.util.regex.Pattern;
+import java.util.Date;
 
 import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
@@ -44,7 +45,7 @@ import cms.model.*;
  * 
  * @author rd94
  */
-@SuppressWarnings("unchecked")
+//@SuppressWarnings("unchecked") - XXX - FILC BUG?
 public class XMLBuilder {
   // XML Attributes
   public final static String
@@ -558,7 +559,7 @@ public class XMLBuilder {
     Element root = (Element) xml.getFirstChild();
     Element studentsNode = xml.createElement(TAG_STUDENTS);
     Iterator emails = course.getEmails().iterator();
-    Collection selectedIDs = new Vector();
+    Collection selectedIDs = new ArrayList();
     if (groups != null) {
       Iterator groupsIter = groups.iterator();
       while (groupsIter.hasNext()) {
@@ -921,7 +922,7 @@ public class XMLBuilder {
     LogSearchParams params = new LogSearchParams();
     ServletFileUpload upload = new ServletFileUpload();
     upload.setFileItemFactory(new DiskFileItemFactory());
-    Iterator i = upload.parseRequest(request).iterator();
+    java.util.Iterator i = upload.parseRequest(request).iterator();
     while (i.hasNext()) {
       FileItem param = (FileItem) i.next();
       String fieldName = param.getFieldName();
@@ -1113,7 +1114,7 @@ public class XMLBuilder {
    * @return
    */
   public Document addStatus(Document xml, TransactionResult result) {
-    Iterator i = result.getErrors().iterator();
+    java.util.Iterator i = result.getErrors().iterator();
     Element root = (Element) xml.getFirstChild();
     Exception e;
     if ((e = result.getException()) != null) {
@@ -1742,7 +1743,7 @@ public class XMLBuilder {
       Group group = assignment.findGroup(user);
       AnswerSet answerSet = assignment.findMostRecentAnswerSet(group);
       if (answerSet != null) {
-        Iterator i = answerSet.getAnswers().iterator();
+        java.util.Iterator i = answerSet.getAnswers().iterator();
         answerMap = new HashMap();
 
         while (i.hasNext()) {
@@ -1986,7 +1987,7 @@ public class XMLBuilder {
      */
     if (result.hasErrors()) {
       String message = "";
-      Iterator i = result.getErrors().iterator();
+      java.util.Iterator i = result.getErrors().iterator();
       while (i.hasNext()) {
         TransactionError err = (TransactionError) i.next();
         if (err.getLocation() != 0) {
@@ -2020,24 +2021,24 @@ public class XMLBuilder {
       Map params, Course course, Assignment assign) {
     Document xml = buildStaffNavbar(user, course);
     Map parameterMap = new HashMap();
-    Vector oldSubIDs = new Vector(), hiddenOldSubIDs = new Vector();
-    Vector newSubIDs = new Vector(), oldItemIDs = new Vector();
-    Vector hiddenItemIDs = new Vector(), newItemIDs = new Vector();
-    Vector probIDs = new Vector(), newProbIDs = new Vector();
-    Vector hiddenProbIDs = new Vector();
+    ArrayList oldSubIDs = new ArrayList(), hiddenOldSubIDs = new ArrayList();
+    ArrayList newSubIDs = new ArrayList(), oldItemIDs = new ArrayList();
+    ArrayList hiddenItemIDs = new ArrayList(), newItemIDs = new ArrayList();
+    ArrayList probIDs = new ArrayList(), newProbIDs = new ArrayList();
+    ArrayList hiddenProbIDs = new ArrayList();
     Map hiddenFileIDs = new HashMap();
     for (Iterator i = params.entrySet().iterator(); i.hasNext();) {
-      Entry item = (Entry) i.next();
+      Map.Entry item = (Map.Entry) i.next();
         String key = (String) item.getKey();
         if (key.startsWith(AccessController.P_REQFILETYPE)
             || key.startsWith(AccessController.P_HIDDENREQTYPE)
             || key.startsWith(AccessController.P_NEWREQFILETYPE)
             || key.startsWith(AccessController.P_HIDDENITEMFILEID)
             || key.startsWith(AccessController.P_HIDDENSOLID)) {
-          // There is potentially more than one of these, so it maps to a Vector
-          Vector v = (Vector) parameterMap.get(key);
+          // There is potentially more than one of these, so it maps to a ArrayList
+          ArrayList v = (ArrayList) parameterMap.get(key);
           if (v == null) {
-            (v = new Vector()).add(item.getValue());
+            (v = new ArrayList()).add(item.getValue());
             parameterMap.put(key, v);
           } else {
             v.add(item.getValue());
@@ -2074,9 +2075,9 @@ public class XMLBuilder {
           String itemID =
               key.substring(AccessController.P_HIDDENITEMFILEID.length());
           String hiddenFileID = (String) item.getValue();
-          Vector hs = (Vector) hiddenFileIDs.get(itemID);
+          ArrayList hs = (ArrayList) hiddenFileIDs.get(itemID);
           if (hs == null) {
-            (hs = new Vector()).add(hiddenFileID);
+            (hs = new ArrayList()).add(hiddenFileID);
             hiddenFileIDs.put(itemID, hs);
           } else {
             hs.add(hiddenFileID);
@@ -2148,7 +2149,7 @@ public class XMLBuilder {
       xItem.setAttribute(A_ID, ID);
       xItem.setAttribute(A_NAME, (String) parameterMap
           .get(AccessController.P_REQFILENAME + ID));
-      Vector v = (Vector) parameterMap.get(AccessController.P_REQFILETYPE + ID);
+      ArrayList v = (ArrayList) parameterMap.get(AccessController.P_REQFILETYPE + ID);
       int bound = v == null ? -1 : v.size();
       for (int k = 0; k < bound; k++) {
         Element xFormat = xml.createElement(TAG_FORMAT);
@@ -2170,8 +2171,8 @@ public class XMLBuilder {
           .get(AccessController.P_HIDDENREQNAME + ID));
       xItem.setAttribute(A_SIZE, (String) parameterMap
           .get(AccessController.P_HIDDENREQSIZE + ID));
-      Vector v =
-          (Vector) parameterMap.get(AccessController.P_HIDDENREQTYPE + ID);
+      ArrayList v =
+          (ArrayList) parameterMap.get(AccessController.P_HIDDENREQTYPE + ID);
       int bound = v == null ? -1 : v.size();
       for (int k = 0; k < bound; k++) {
         Element xFormat = xml.createElement(TAG_FORMAT);
@@ -2190,8 +2191,8 @@ public class XMLBuilder {
           .get(AccessController.P_NEWREQFILENAME + ID));
       xItem.setAttribute(A_SIZE, (String) parameterMap
           .get(AccessController.P_NEWREQSIZE + ID));
-      Vector v =
-          (Vector) parameterMap.get(AccessController.P_NEWREQFILETYPE + ID);
+      ArrayList v =
+          (ArrayList) parameterMap.get(AccessController.P_NEWREQFILETYPE + ID);
       int bound = v == null ? -1 : v.size();
       for (int k = 0; k < bound; k++) {
         Element xFormat = xml.createElement(TAG_FORMAT);
@@ -2218,7 +2219,7 @@ public class XMLBuilder {
       xFile.setAttribute(A_NAME, (String) parameterMap
           .get(AccessController.P_ITEMFILENAME + ID));
       xItem.appendChild(xFile);
-      Vector hFileIDs = (Vector) hiddenFileIDs.get(ID);
+      ArrayList hFileIDs = (ArrayList) hiddenFileIDs.get(ID);
       int bound = hFileIDs == null ? -1 : hFileIDs.size();
       for (int k = 0; k < bound; k++) {
         String hFileID = (String) hFileIDs.get(k);
@@ -2270,9 +2271,9 @@ public class XMLBuilder {
     }
     xAssignment.setAttribute(A_SOLFILEPATH, (String) parameterMap
         .get(AccessController.P_SOLFILEPATH));
-    Vector hiddenSolIDs =
-        (Vector) parameterMap.get(AccessController.P_HIDDENSOLID);
-    hiddenSolIDs = hiddenSolIDs == null ? new Vector() : hiddenSolIDs;
+    ArrayList hiddenSolIDs =
+        (ArrayList) parameterMap.get(AccessController.P_HIDDENSOLID);
+    hiddenSolIDs = hiddenSolIDs == null ? new ArrayList() : hiddenSolIDs;
     for (int j = 0; j < hiddenSolIDs.size(); j++) {
       Element xHiddenSol = xml.createElement(TAG_HIDDENSOLFILE);
       String ID = (String) hiddenSolIDs.get(j);

@@ -1,9 +1,10 @@
 package cms.model;
 
 import java.net.InetAddress;
-import java.util.Collections;
+import fabric.util.Collections;
 
-import java.util.*;
+import fabric.util.*;
+import java.util.Date;
 
 /**
  * This class is the root container for all of the objects in the CMS Database.

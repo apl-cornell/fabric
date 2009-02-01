@@ -1,6 +1,7 @@
 package cms.model;
 
-import java.util.*;
+import fabric.util.*;
+import java.util.Date;
 
 import org.apache.commons.fileupload.FileUploadException;
 
@@ -350,7 +351,7 @@ public class Assignment implements Comparable {
   }
 
   public Collection/*SolutionFile*/ findHiddenSolutionFiles() {
-    Vector c = new Vector();
+    ArrayList c = new ArrayList();
     if(solutionFile != null) c.add(solutionFile);
     return c;
   }
@@ -471,7 +472,7 @@ public class Assignment implements Comparable {
     }
   }
 
-  public int compareTo(Object o) {
+  public int compareTo(java.lang.Object o) {
     if (!(o instanceof Assignment)) return 0;
     
     Assignment a = (Assignment) o;

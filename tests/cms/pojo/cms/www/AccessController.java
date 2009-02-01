@@ -7,13 +7,12 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
+
+import fabric.util.*;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
+
 import java.text.ParseException;
-import java.util.*;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
@@ -51,6 +50,8 @@ public class AccessController extends HttpServlet {
   // Loaded from tSystemProperties during system startup
   public static boolean debug;
   public static int maxFileSize;
+  
+  public static Core core;
 
   /* URLs of all main JSPs in the system (others are included JSP fragments) */
   public static final String ASSIGNADMIN_URL = "/staff/assignment/assignment.jsp", // assignment
@@ -888,30 +889,36 @@ public class AccessController extends HttpServlet {
    * @param config
    *                Configuration info for the servlet
    */
-  @Override
+  //@Override -- TODO FILC BUG?
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
     
+    try {
+      fabric.client.Client.initialize();
+    }
+    catch(Exception ex) { }
+    core = fabric.client.Client.getClient().getLocalCore();
+    
     // TODO: fetch CMS root
-    CMSRoot database = new CMSRoot();
+    CMSRoot database = new CMSRoot@core();
     
     // add test data
     cms.controller.test.CreateDB.create(database);
     
     if (xmlBuilder == null) {
       try {
-        xmlBuilder = new XMLBuilder(database);
+        xmlBuilder = new XMLBuilder@core(database);
       } catch (ParserConfigurationException e) {
-        throw new ServletException(e);
+        throw new ServletException@core(e);
       }
     }
     if (transactions == null) {
-      transactions = new TransactionHandler(database);
+      transactions = new TransactionHandler@core(database);
     }
 
     debug = xmlBuilder.getDatabase().getDebugMode();
     if (xmlBuilder.getDatabase().getDebugMode())
-      debugPrincipalMap = new HashMap();
+      debugPrincipalMap = new HashMap@core();
     maxFileSize = xmlBuilder.getDatabase().getMaxFileSize();
   }
 
@@ -1030,7 +1037,7 @@ public class AccessController extends HttpServlet {
     
     String buildURL = "";
     HttpSession session = request.getSession(true);
-    session.setAttribute(TIME, new Long(System.currentTimeMillis()));
+    session.setAttribute(TIME, new java.lang.Long(System.currentTimeMillis()));
     /*
      * Course data for all of a user's courses are cached in the session and can
      * be retrieved for fast reference
@@ -1039,7 +1046,7 @@ public class AccessController extends HttpServlet {
       // Check for a requested action
       System.out.println("The current action is: " + action);
       // debug parameter values
-      Map reqmap = request.getParameterMap();
+      java.util.Map reqmap = request.getParameterMap();
       Iterator iter = reqmap.keySet().iterator();
       while (iter.hasNext()) {
         String key = (String) iter.next();
@@ -1343,7 +1350,7 @@ public class AccessController extends HttpServlet {
                                                           // netids in textbox
                                                           // contents
         if (user.isGroupsPrivByAssignment(assign)) {
-          List netids = StringUtil.parseNetIDList(request.getParameter(P_NETIDLIST));
+          java.util.List netids = StringUtil.parseNetIDList(request.getParameter(P_NETIDLIST));
           TransactionResult result =
               transactions.createGroup(user, netids, assign);
           buildURL = GRADEASSIGN_URL;
@@ -1655,9 +1662,13 @@ public class AccessController extends HttpServlet {
       String netIDs = request.getParameter(P_STUDENTSLIST);
       // FIXME make work for multiple students
       if (user.isAdminPrivByCourse(course)) {
-        List netids = StringUtil.parseNetIDList(netIDs);
+        java.util.List netids = StringUtil.parseNetIDList(netIDs);
+        List nNetIds = new ArrayList();
+        for(Iterator ni = netids.iterator(); ni.hasNext();) {
+          nNetIds.add((String)ni.next());
+        }
         TransactionResult result =
-            transactions.dropStudent(user, course, netids);
+            transactions.dropStudent(user, course, nNetIds);
         buildURL = STUDENTS_URL;
         xml = xmlBuilder.buildStudentsPage(user, course, false);
         xml = xmlBuilder.addStatus(xml, result);

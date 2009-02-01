@@ -41,7 +41,7 @@ public class Choice {
     subproblem.choices.put(toString(), this);
   }
   public Choice(SubProblem sp) {
-    throw new NotImplementedException();
+    this.subProblem = sp;
   }
   public void remove() {
     throw new NotImplementedException();

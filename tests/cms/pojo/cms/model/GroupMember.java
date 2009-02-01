@@ -60,7 +60,7 @@ public class GroupMember implements Comparable {
     setStatus(status);
   }
   
-  public int compareTo(Object o) {
+  public int compareTo(java.lang.Object o) {
     if (!(o instanceof GroupMember)) return 0;
     
     GroupMember member = (GroupMember) o;

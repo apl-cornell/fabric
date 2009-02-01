@@ -135,7 +135,7 @@ public class Staff implements Comparable {
     new LogDetail(log, user.getNetID() + " was added as a staff member", user);
   }
   
-  public int compareTo(Object o) {
+  public int compareTo(java.lang.Object o) {
     if (!(o instanceof Staff)) return 0;
     return user.getNetID().compareTo(((Staff) o).user.getNetID());
   }

@@ -91,7 +91,7 @@ public class Category implements Comparable {
     throw new NotImplementedException();
   }
   
-  public int compareTo(Object o) {
+  public int compareTo(java.lang.Object o) {
     if (!(o instanceof Category)) return 0;
     
     Category category = (Category) o;

@@ -1,6 +1,6 @@
 package cms.model;
 
-import java.util.*;
+import fabric.util.*;
 
 import cms.auth.Principal;
 
@@ -91,7 +91,7 @@ public class Semester implements Comparable {
     return result;
   }
   
-  public int compareTo(Object o) {
+  public int compareTo(java.lang.Object o) {
     if (!(o instanceof Semester)) return 0;
     
     String name1 = getName();

@@ -1,7 +1,7 @@
 package cms.model;
 
-import java.util.*;
-import java.util.Map.Entry;
+import fabric.util.*;
+import fabric.util.Map;
 
 public class Course implements Comparable {
 
@@ -291,7 +291,7 @@ public class Course implements Comparable {
       // Build up a set of partners for the assignment.
       Set/*User*/ partners = new HashSet();
       for (Iterator eit = group.members.entrySet().iterator(); eit.hasNext();) {
-        Map.Entry entry = (Entry) eit.next();
+        Map.Entry entry = (Map.Entry) eit.next();
         if (((GroupMember) entry.getValue()).getStatus().equals(GroupMember.ACTIVE)) {
           partners.add(entry.getKey());
         }
@@ -347,7 +347,7 @@ public class Course implements Comparable {
     
     // Extract actual grades.
     for (Iterator it = result.entrySet().iterator(); it.hasNext();) {
-      Entry entry = (Entry) it.next();
+      Map.Entry entry = (Map.Entry) it.next();
       entry.setValue(((Grade) entry.getValue()).getGrade());
     }
     
@@ -384,7 +384,7 @@ public class Course implements Comparable {
     return (Staff) staff.get(user);
   }
   
-  public int compareTo(Object o) {
+  public int compareTo(java.lang.Object o) {
     if (!(o instanceof Course)) return 0;
     
     return getCode().compareTo(((Course) o).getCode());

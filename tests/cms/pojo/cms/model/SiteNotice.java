@@ -54,7 +54,7 @@ public class SiteNotice implements Comparable {
     db.notices.put(toString(), this);
   }
   
-  public int compareTo(Object o) {
+  public int compareTo(java.lang.Object o) {
     if (!(o instanceof SiteNotice)) return 0;
     return -getPostedDate().compareTo(((SiteNotice) o).getPostedDate());
   }

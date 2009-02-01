@@ -55,7 +55,7 @@ public class Email implements Comparable {
     course.emails.add(this);
   }
   
-  public int compareTo(Object o) {
+  public int compareTo(java.lang.Object o) {
     if (!(o instanceof Email)) return 0;
     
     return -dateSent.compareTo(((Email)o).dateSent);

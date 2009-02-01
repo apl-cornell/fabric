@@ -1,6 +1,8 @@
 package cms.model;
 
-import java.util.*;
+import fabric.util.*;
+import java.util.Properties;
+import java.util.Date;
 
 import java.net.ConnectException;
 
@@ -113,7 +115,7 @@ public class Transactions {
     throw new NotImplementedException();
   }
 
-  public TransactionResult addStudentsToCourse(User p, Vector netIDs, Course course, boolean sendEmail) {
+  public TransactionResult addStudentsToCourse(User p, ArrayList netIDs, Course course, boolean sendEmail) {
     Profiler.enterMethod("Transactions.addStudentsToCourse", "CourseID: " + course);
     TransactionResult result = new TransactionResult();
     try {
@@ -139,7 +141,7 @@ public class Transactions {
         staffMems.add(staff.getUser().getNetID());
       }
       //TODO: Look into why on the production version of CMS, this just returns null
-      Collection graded = new Vector();
+      Collection graded = new ArrayList();
       for (int j=0; j < netIDs.size(); j++) {
         String netID = (String)netIDs.get(j);
         User studentUser = database.getUser(netID);
@@ -177,13 +179,13 @@ public class Transactions {
             new LogDetail(log, netID + " was reenrolled as a student", studentUser);
             student.setStatus(Student.ENROLLED);
             //Place student in a group for all assignments (s)he doesn't have records for
-            Vector assignIDs = new Vector();
+            ArrayList assignIDs = new ArrayList();
             
             throw new NotImplementedException("Not yet completed");
             
             /*
             Collection groupedAssigns = course.findGrouplessAssignments(courseID, netID);
-            assignIDs = (Vector) allAssignIDs.clone();
+            assignIDs = (ArrayList) allAssignIDs.clone();
             for (Iterator i= groupedAssigns.iterator(); i.hasNext(); ) {
                     assignIDs.remove(new Long(((AssignmentLocal) i.next()).getAssignmentID()));
             }
@@ -240,14 +242,14 @@ public class Transactions {
    * 
    * This function is not a transaction; it's called from within other functions
    * that are. That's why it doesn't roll back on an exception.
-   * @param netIDs A Vector of Strings
+   * @param netIDs A ArrayList of Strings
    * @return A TransactionResult describing the result of the transaction
    *  
    */
-  protected TransactionResult ensureUserExistence(Vector netIDs, Log log) {
+  protected TransactionResult ensureUserExistence(ArrayList netIDs, Log log) {
     TransactionResult result = new TransactionResult();
     Collection LDAPInput = new ArrayList();
-    Hashtable existingUsers = new Hashtable();
+    HashMap existingUsers = new HashMap();
     try {
       for(int i = 0; i < netIDs.size(); i++) {
         String netID = (String)netIDs.get(i);
@@ -309,7 +311,7 @@ public class Transactions {
         e.printStackTrace();
             result.setException(e);
             result.addError("Could not add users due to an unexpected error");
-            netIDs = new Vector();
+            netIDs = new ArrayList();
     }
     return result;
   }
@@ -363,39 +365,39 @@ public class Transactions {
    */
   public TransactionResult getLDAPNames(Collection netids) throws NamingException {
     TransactionResult result = new TransactionResult();
-    String[][] value = new String[netids.size()][3];
+    ArrayList[] value = new ArrayList[netids.size()];
     DirContext ctx = new InitialDirContext(env);
     Iterator i = netids.iterator();
     int count = 0;
     while (i.hasNext()) {
-      value[count][0] = (String) i.next();
+      value[count].set(0, (String) i.next());
       try {
-        Attributes attrs = ctx.getAttributes("uid=" + value[count][0] + ", ou=People, " + 
+        Attributes attrs = ctx.getAttributes("uid=" + value[count].get(0) + ", ou=People, " + 
         "o=Cornell University, c=US");
         if (attrs.getAll() != null) {
             try {
-                value[count][1] = (String)attrs.get("givenName").get();
+                value[count].set(1,(String)attrs.get("givenName").get());
             } catch (NullPointerException e) {}
             try {
-                value[count][2] = (String)attrs.get("sn").get();
+                value[count].set(2, (String)attrs.get("sn").get());
             } catch (NullPointerException e) {}
         }
-        if (value[count][1] == null) value[count][1] = "";
-        if (value[count][2] == null) value[count][2] = "";
+        if (value[count].get(1) == null) value[count].set(1, "");
+        if (value[count].get(2) == null) value[count].set(2, "");
         
       } catch (NameNotFoundException e) {
-              result.addError("Could not add '" + value[count][0] + "': " +
+              result.addError("Could not add '" + value[count].get(0) + "': " +
                         "Not a registered Cornell NetID");
-              value[count][1] = null;
-              value[count][2] = null;
+              value[count].set(1, null);
+              value[count].set(2, null);
       }
       // Correct capitalization:
       for (int j= 1; j != 3; j++) {
-        if (value[count][j] == null) continue;
-        int length= value[count][j].length();
+        if (value[count].get(j) == null) continue;
+        int length= ((String)value[count].get(j)).length();
         if (length > 0) 
-            value[count][j]= Character.toUpperCase(value[count][j].charAt(0)) + 
-                    value[count][j].substring(1, length).toLowerCase();
+            value[count].set(j, Character.toUpperCase(((String)value[count].get(j)).charAt(0)) + 
+                    ((String)value[count].get(j)).substring(1, length).toLowerCase());
       }
       count++;
     }
@@ -709,7 +711,7 @@ public class Transactions {
     log.setLogName(Log.EDIT_COURSE_PROPS);
     log.setLogType(Log.LOG_COURSE);
     
-    Map map = request.getParameterMap();
+    java.util.Map map = request.getParameterMap();
     
     // Set course general properties.
     String name = request.getParameter(AccessController.P_NAME);
@@ -961,11 +963,11 @@ public class Transactions {
     Collection groups = assignment.getGroups();
     /* Key: NetID -> Value: [TotalGrade, PreviousGrade]
      * String -> Float[2] */
-    Hashtable studentSums = new Hashtable();
+    HashMap studentSums = new HashMap();
     /* Key: "<GroupID>_<SubProblemID>"
      * Value: [Total (Float), EntryNum (Integer), Averaged (Boolean), LastEntry (Float)]
      * String -> Object[4] */
-    Hashtable groupSums = new Hashtable();
+    HashMap groupSums = new HashMap();
     Iterator i;
     
     Map groupsMap = new HashMap();
@@ -1148,10 +1150,10 @@ public class Transactions {
                             averaged.booleanValue(), subProblemID);
     }
     */
-    assignment.setMax(max);
-    assignment.setMean(mean);
-    assignment.setStdDev(stdev);
-    assignment.setMedian(median);
+    assignment.setMax(max.floatValue());
+    assignment.setMean(mean.floatValue());
+    assignment.setStdDev(stdev.floatValue());
+    assignment.setMedian(median.floatValue());
     Profiler.exitMethod("Transactions.computeAssignmentStats", "Assignment: " + 
         assignment);
     } catch(Exception x) {
@@ -1175,11 +1177,11 @@ public class Transactions {
       }
       Collection as = course.getAssignments();
       Collection ss = course.getStudents();
-      Hashtable assignWeights = new Hashtable(), maxScores = new Hashtable();
+      HashMap assignWeights = new HashMap(), maxScores = new HashMap();
       Iterator grades = null;
       Iterator assigns = as.iterator();
       Iterator students = ss.iterator();
-      Hashtable totalScores = new Hashtable();
+      HashMap totalScores = new HashMap();
       float maxTotalScore = 0;
       while (assigns.hasNext()) {
         Assignment assign = (Assignment) assigns.next();

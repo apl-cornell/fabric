@@ -1,12 +1,12 @@
 package cms.www.xml;
 
-import java.util.*;
+import fabric.util.*;
 import org.w3c.dom.*;
 
 /**
  * For use in XMLUtil's child-finder methods
  */
-public class CMSNodeList extends Vector implements NodeList
+public class CMSNodeList extends ArrayList implements NodeList
 {
 	public CMSNodeList()
 	{

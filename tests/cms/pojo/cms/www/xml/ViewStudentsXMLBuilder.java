@@ -1,8 +1,8 @@
 package cms.www.xml;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
+import fabric.util.Collection;
+import fabric.util.Iterator;
+import fabric.util.LinkedList;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import cms.www.util.Profiler;

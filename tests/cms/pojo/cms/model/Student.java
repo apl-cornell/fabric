@@ -1,6 +1,6 @@
 package cms.model;
 
-import java.util.Comparator;
+import fabric.util.Comparator;
 
 public class Student {
 

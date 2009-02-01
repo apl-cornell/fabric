@@ -63,7 +63,7 @@ public class Announcement implements Comparable {
     this.setHidden   (false);
   }
 
-  public int compareTo(Object o) {
+  public int compareTo(java.lang.Object o) {
     if (!(o instanceof Announcement)) return 0;
     return -posted.compareTo(((Announcement) o).posted);
   }

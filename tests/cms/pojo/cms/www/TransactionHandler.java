@@ -11,8 +11,8 @@ import java.io.OutputStream;
 import java.util.Date;
 import java.util.Map;
 import java.text.ParseException;
-import java.util.*;
-import java.util.Map.Entry;
+import fabric.util.*;
+import fabric.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -60,7 +60,7 @@ import cms.model.*;
  * 
  * @author Jon
  */
-@SuppressWarnings("unchecked")
+//@SuppressWarnings("unchecked") - XXX - FILC BUG?
 public class TransactionHandler {
   private CMSRoot      database     = null;
   private Transactions transactions = null;
@@ -772,7 +772,7 @@ public class TransactionHandler {
   }
 
   public TransactionResult assignGrader(User p, Assignment assign,
-      SubProblem subProblem, User grader, Map requestMap) {
+      SubProblem subProblem, User grader, java.util.Map requestMap) {
     TransactionResult result = new TransactionResult();
     try {
       Course course = assign.getCourse();
@@ -1205,7 +1205,7 @@ public class TransactionHandler {
    * @param assignment
    * @return
    */
-  public TransactionResult createGroup(User p, List netids,
+  public TransactionResult createGroup(User p, java.util.List netids,
       Assignment assignment) {
     TransactionResult result = new TransactionResult();
     try {

@@ -1,9 +1,9 @@
 package cms.www.xml;
 
 import java.net.InetAddress;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
+import fabric.util.Collection;
+import fabric.util.Iterator;
+import fabric.util.Map;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

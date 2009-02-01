@@ -1,8 +1,8 @@
 package cms.model;
 
 import java.util.Date;
-import java.util.ArrayList;
-import java.util.Collection;
+import fabric.util.ArrayList;
+import fabric.util.Collection;
 
 /**
  * A LogSearchParams describes the parameters entered by the user

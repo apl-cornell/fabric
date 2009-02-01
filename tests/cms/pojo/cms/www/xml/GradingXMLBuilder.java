@@ -3,8 +3,7 @@
  */
 package cms.www.xml;
 
-import java.util.Collection;
-import java.util.Iterator;
+import fabric.util.*;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

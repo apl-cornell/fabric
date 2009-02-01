@@ -1,7 +1,8 @@
 package cms.model;
 
 import java.net.InetAddress;
-import java.util.*;
+import fabric.util.*;
+import java.util.Date;
 
 /**
  * A Log is a high-level log in a two-level logging system. Log objects handle
