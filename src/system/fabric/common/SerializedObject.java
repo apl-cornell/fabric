@@ -145,10 +145,16 @@ public final class SerializedObject implements FastSerializable {
     return onumPos() + 8;
   }
 
+  /**
+   * @return the serialized object's version number.
+   */
   public int getVersion() {
     return intAt(versionPos());
   }
 
+  /**
+   * Modifies the serialized object's version number.
+   */
   public void setVersion(final int version) {
     setIntAt(versionPos(), version);
   }
@@ -161,6 +167,10 @@ public final class SerializedObject implements FastSerializable {
     return versionPos() + 4;
   }
 
+  /**
+   * @return whether the reference to the serialized object's label is an
+   *         intercore reference.
+   */
   public boolean labelRefIsIntercore() {
     return booleanAt(isIntercoreLabelPos());
   }
@@ -173,6 +183,11 @@ public final class SerializedObject implements FastSerializable {
     return isIntercoreLabelPos() + 1;
   }
 
+  /**
+   * @return an intercore reference to the the serialized object's label.
+   * @throws InternalError
+   *           if the serialized object has an intracore reference to its label.
+   */
   public ComparablePair<String, Long> getIntercoreLabelRef() {
     if (!labelRefIsIntercore())
       throw new InternalError("Unsupported operation: Attempted to get an "
@@ -185,12 +200,17 @@ public final class SerializedObject implements FastSerializable {
         new DataInputStream(new ByteArrayInputStream(objectData, labelPos,
             onumPos));
     try {
-      return new ComparablePair<String, Long>(in.readUTF(), longAt(labelPos));
+      return new ComparablePair<String, Long>(in.readUTF(), longAt(onumPos));
     } catch (IOException e) {
       throw new InternalError("Error while reading core name.", e);
     }
   }
 
+  /**
+   * @return an intracore reference to the serialized object's label.
+   * @throws InternalError
+   *           if the serialized object has an intercore reference to its label.
+   */
   public long getLabelOnum() {
     if (labelRefIsIntercore())
       throw new InternalError("Unsupported operation: Attempted to get label "
@@ -209,6 +229,9 @@ public final class SerializedObject implements FastSerializable {
         + (labelRefIsIntercore() ? (unsignedShortAt(labelPos) + 2) : 0);
   }
 
+  /**
+   * @return the serialized object's class name.
+   */
   public String getClassName() {
     if (className == null) {
       int classNamePos = classNamePos();
@@ -235,6 +258,10 @@ public final class SerializedObject implements FastSerializable {
     return classPos + 2 + unsignedShortAt(classPos);
   }
 
+  /**
+   * @return the number of references in the serialized object. (See
+   *         RefTypeEnum.)
+   */
   public final int getNumRefTypes() {
     return intAt(numRefTypesPos());
   }
@@ -247,6 +274,9 @@ public final class SerializedObject implements FastSerializable {
     return numRefTypesPos() + 4;
   }
 
+  /**
+   * @return the number of intracore references in the serialized object.
+   */
   public final int getNumIntracoreRefs() {
     return intAt(numIntracoreRefsPos());
   }
@@ -271,6 +301,9 @@ public final class SerializedObject implements FastSerializable {
     return serializedDataLengthPos() + 4;
   }
 
+  /**
+   * @return the number of intercore references in the serialized object.
+   */
   public final int getNumIntercoreRefs() {
     return intAt(numIntercoreRefsPos());
   }
@@ -283,6 +316,9 @@ public final class SerializedObject implements FastSerializable {
     return numIntercoreRefsPos() + 4;
   }
 
+  /**
+   * @return an Iterator for the serialized object's reference types.
+   */
   public Iterator<RefTypeEnum> getRefTypeIterator() {
     final int numRefTypes = getNumRefTypes();
     final int offset = refTypesPos();
@@ -313,6 +349,9 @@ public final class SerializedObject implements FastSerializable {
     return refTypesPos() + getNumRefTypes();
   }
 
+  /**
+   * @return an Iterator for the serialized object's intracore references.
+   */
   public Iterator<Long> getIntracoreRefIterator() {
     final int numIntracoreRefs = getNumIntracoreRefs();
     final int offset = intracoreRefsPos();
@@ -343,6 +382,10 @@ public final class SerializedObject implements FastSerializable {
     return intracoreRefsPos() + 8 * getNumIntracoreRefs();
   }
 
+  /**
+   * @return an InputStream for the Java-serialized data segment in the
+   *         serialized object.
+   */
   public InputStream getSerializedDataStream() {
     int serializedDataLength = serializedDataLength();
     return new ByteArrayInputStream(objectData, serializedDataPos(),
@@ -357,6 +400,9 @@ public final class SerializedObject implements FastSerializable {
     return serializedDataPos() + serializedDataLength();
   }
 
+  /**
+   * @return an Iterator for the serialized object's intercore references.
+   */
   public Iterator<ComparablePair<String, Long>> getIntercoreRefIterator() {
     final int numIntercoreRefs = getNumIntercoreRefs();
     final int offset = intercoreRefsPos();
@@ -399,25 +445,26 @@ public final class SerializedObject implements FastSerializable {
 
       int numIntracoreRefs = getNumIntracoreRefs();
       Iterator<Long> intracoreRefIt = intracoreRefs.iterator();
-      
+
       // Write onum and version number.
       out.write(objectData, 0, isIntercoreLabelPos());
-      
+
       // Write the label reference.
       out.writeBoolean(false);
-      if (labelRefIsIntercore()) out.writeLong(intracoreRefIt.next());
+      if (labelRefIsIntercore())
+        out.writeLong(intracoreRefIt.next());
       else out.writeLong(getLabelOnum());
-      
+
       // Write the class name and number of ref types.
       out.write(objectData, classNamePos(), numIntracoreRefsPos()
           - classNamePos());
-      
+
       // Write number of intracore refs.
       out.writeInt(getNumIntercoreRefs() + numIntracoreRefs);
-      
+
       // Write length of serialized data.
       out.write(objectData, serializedDataLengthPos(), 4);
-      
+
       // Write number of intercore refs.
       out.writeInt(0);
 
@@ -465,14 +512,17 @@ public final class SerializedObject implements FastSerializable {
   public static void write($Impl impl, DataOutput out) throws IOException {
     Label label = impl.get$label();
     Core labelCore = label.$getCore();
-    boolean interCoreLabel = !impl.$getCore().equals(labelCore);
+    long labelOnum = label.$getOnum();
+    boolean interCoreLabel =
+        !ONumConstants.isGlobalConstant(labelOnum)
+            && !impl.$getCore().equals(labelCore);
 
     // Write out the object header.
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
     out.writeBoolean(interCoreLabel);
     if (interCoreLabel) out.writeUTF(labelCore.name());
-    out.writeLong(label.$getOnum());
+    out.writeLong(labelOnum);
     out.writeUTF(impl.getClass().getName());
 
     // Get the object to serialize itself into a bunch of buffers.

@@ -6,7 +6,6 @@ import java.io.ObjectOutputStream;
 import java.util.*;
 
 import jif.lang.*;
-import jif.lang.PrincipalUtil.TopPrincipal;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.common.ONumConstants;
@@ -42,12 +41,8 @@ import fabric.lang.Principal;
 public abstract class ObjectStore {
 
   protected final String name;
-  protected Principal corePrincipal;
-  protected jif.lang.Principal topPrincipal;
-  protected ConfPolicy bottomConfid;
-  protected IntegPolicy topInteg;
-  protected IntegPolicy bottomInteg;
-  protected Label publicReadonlyLabel;
+  private Principal corePrincipal;
+  private Label publicReadonlyLabel;
 
   protected static class MutableInteger {
     public int value;
@@ -401,39 +396,8 @@ public abstract class ObjectStore {
 
     Client.runInTransaction(new Client.Code<Void>() {
       public Void run() {
-        TopPrincipal.$Impl topPrincipalImpl =
-            new TopPrincipal.$Impl(core, publicReadonlyLabel());
-        topPrincipalImpl.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
-
-        ReaderPolicy.$Impl topConfidImpl =
-            new ReaderPolicy.$Impl(core, publicReadonlyLabel(), topPrincipal(),
-                topPrincipal());
-        topConfidImpl.$forceRenumber(ONumConstants.TOP_CONFIDENTIALITY);
-
-        ReaderPolicy.$Impl bottomConfidImpl =
-            new ReaderPolicy.$Impl(core, publicReadonlyLabel(), null, null);
-        bottomConfidImpl.$forceRenumber(ONumConstants.BOTTOM_CONFIDENTIALITY);
-
-        WriterPolicy.$Impl topIntegImpl =
-            new WriterPolicy.$Impl(core, publicReadonlyLabel(), null, null);
-        topIntegImpl.$forceRenumber(ONumConstants.TOP_INTEGRITY);
-
-        WriterPolicy.$Impl bottomIntegImpl =
-            new WriterPolicy.$Impl(core, publicReadonlyLabel(), topPrincipal(),
-                topPrincipal());
-        bottomIntegImpl.$forceRenumber(ONumConstants.BOTTOM_INTEGRITY);
-
-        PairLabel.$Impl emptyLabelImpl =
-            new PairLabel.$Impl(core, publicReadonlyLabel(), bottomConfid(),
-                topInteg());
-        emptyLabelImpl.$forceRenumber(ONumConstants.EMPTY_LABEL);
-
-        PairLabel.$Impl publicReadonlyLabelImpl =
-            new PairLabel.$Impl(core, publicReadonlyLabel(), bottomConfid(),
-                bottomInteg());
-        publicReadonlyLabelImpl
-            .$forceRenumber(ONumConstants.PUBLIC_READONLY_LABEL);
-
+        // No need to initialize global constants here, as those objects will be
+        // supplied by the clients' local core.
         Principal.$Impl principal =
             new Principal.$Impl(core, publicReadonlyLabel(), name);
         principal.$forceRenumber(ONumConstants.CORE_PRINCIPAL);
@@ -466,45 +430,6 @@ public abstract class ObjectStore {
     }
 
     return corePrincipal;
-  }
-
-  private final jif.lang.Principal topPrincipal() {
-    if (topPrincipal == null) {
-      Core core = Client.getClient().getCore(name);
-      topPrincipal =
-          new jif.lang.Principal.$Proxy(core, ONumConstants.TOP_PRINCIPAL);
-    }
-
-    return topPrincipal;
-  }
-
-  private final ConfPolicy bottomConfid() {
-    if (bottomConfid == null) {
-      Core core = Client.getClient().getCore(name);
-      bottomConfid =
-          new ConfPolicy.$Proxy(core, ONumConstants.BOTTOM_CONFIDENTIALITY);
-    }
-
-    return bottomConfid;
-  }
-
-  private final IntegPolicy topInteg() {
-    if (topInteg == null) {
-      Core core = Client.getClient().getCore(name);
-      topInteg = new IntegPolicy.$Proxy(core, ONumConstants.TOP_INTEGRITY);
-    }
-
-    return topInteg;
-  }
-
-  private final IntegPolicy bottomInteg() {
-    if (bottomInteg == null) {
-      Core core = Client.getClient().getCore(name);
-      bottomInteg =
-          new IntegPolicy.$Proxy(core, ONumConstants.BOTTOM_INTEGRITY);
-    }
-
-    return bottomInteg;
   }
 
   private final Label publicReadonlyLabel() {

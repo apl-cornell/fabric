@@ -1,12 +1,6 @@
 package fabric.client;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectStreamException;
+import java.io.*;
 import java.lang.ref.SoftReference;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -19,21 +13,13 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
 import javax.security.auth.x500.X500Principal;
 
-import jif.lang.ConfPolicy;
-import jif.lang.IntegPolicy;
-import jif.lang.Label;
-
 import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
-import fabric.messages.AbortTransactionMessage;
-import fabric.messages.AllocateMessage;
-import fabric.messages.CommitTransactionMessage;
-import fabric.messages.PrepareTransactionMessage;
-import fabric.messages.ReadMessage;
+import fabric.messages.*;
 import fabric.util.Map;
 
 /**
@@ -199,7 +185,11 @@ public class RemoteCore implements Core {
    * @return The requested object
    * @throws FabricException
    */
-  public Object.$Impl readObject(long onum) throws FetchException {
+  public final Object.$Impl readObject(long onum) throws FetchException {
+    // Intercept reads of global constants and redirect them to the local core.
+    if (ONumConstants.isGlobalConstant(onum))
+      return Client.instance.localCore.readObject(onum);
+    
     // Check object table. Lock it to avoid a race condition when the object is
     // not in the cache and another thread attempts to read the same object.
     
@@ -342,34 +332,6 @@ public class RemoteCore implements Core {
 
   public Map getRoot() {
     return new Map.$Proxy(this, ONumConstants.ROOT_MAP);
-  }
-  
-  public jif.lang.Principal getTopPrincipal() {
-    return new jif.lang.Principal.$Proxy(this, ONumConstants.TOP_PRINCIPAL);
-  }
-  
-  public ConfPolicy getTopConfidPolicy() {
-    return new ConfPolicy.$Proxy(this, ONumConstants.TOP_CONFIDENTIALITY);
-  }
-  
-  public ConfPolicy getBottomConfidPolicy() {
-    return new ConfPolicy.$Proxy(this, ONumConstants.BOTTOM_CONFIDENTIALITY);
-  }
-  
-  public IntegPolicy getTopIntegPolicy() {
-    return new IntegPolicy.$Proxy(this, ONumConstants.TOP_INTEGRITY);
-  }
-  
-  public IntegPolicy getBottomIntegPolicy() {
-    return new IntegPolicy.$Proxy(this, ONumConstants.BOTTOM_INTEGRITY);
-  }
-
-  public Label getEmptyLabel() {
-    return new Label.$Proxy(this, ONumConstants.EMPTY_LABEL);
-  }
-  
-  public Label getPublicReadonlyLabel() {
-    return new Label.$Proxy(this, ONumConstants.PUBLIC_READONLY_LABEL);
   }
 
   public String name() {

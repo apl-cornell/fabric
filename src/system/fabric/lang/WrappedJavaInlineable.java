@@ -152,5 +152,9 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   public String toString() {
     return obj == null ? "null" : obj.toString();
   }
+
+  public void $forceRenumber(long onum) {
+    throw new InternalError("Unsupported operation");
+  }
   
 }

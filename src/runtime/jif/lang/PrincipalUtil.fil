@@ -414,8 +414,9 @@ public class PrincipalUtil {
 
   }
 
-  public static Principal topPrincipal(Core core) {
-    return core.getTopPrincipal();
+  public static Principal topPrincipal() {
+    final LocalCore localCore = Client.getClient().getLocalCore();
+    return localCore.getTopPrincipal();
   }
 
   static boolean isTopPrincipal(Principal p) {
@@ -425,7 +426,7 @@ public class PrincipalUtil {
   public static ConfPolicy readableByPrinPolicy(Core core, Principal p) {
     try {
       LabelUtil.enterTiming();
-      return new ReaderPolicy@core(topPrincipal(core), p);
+      return new ReaderPolicy@core(topPrincipal(), p);
     } finally {
       LabelUtil.exitTiming();
     }
@@ -435,7 +436,7 @@ public class PrincipalUtil {
   public static IntegPolicy writableByPrinPolicy(Core core, Principal p) {
     try {
       LabelUtil.enterTiming();
-      return new WriterPolicy@core(topPrincipal(core), p);
+      return new WriterPolicy@core(topPrincipal(), p);
     } finally {
       LabelUtil.exitTiming();
     }
@@ -478,13 +479,13 @@ public class PrincipalUtil {
     try {
       LabelUtil.enterTiming();
       if (principals == null || principals.isEmpty()) {
-        return topPrincipal(core);
+        return topPrincipal();
       }
       final Core localCore = Client.getClient().getLocalCore();
       if (principals.size() == 1) {
         Object o = principals.iterator(localCore).next();
         if (o == null || o instanceof Principal) return (Principal) o;
-        return topPrincipal(core);
+        return topPrincipal();
       }
 
       // go through the collection of principals, and flatten them

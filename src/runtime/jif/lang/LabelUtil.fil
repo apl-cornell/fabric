@@ -40,7 +40,7 @@ public final class LabelUtil {
 
   public static final boolean USE_CACHING = true;
   
-  public static final Core localCore = Client.getClient().getLocalCore();
+  public static final LocalCore localCore = Client.getClient().getLocalCore();
 
   // caches
   private static Set/* <Pair> */cacheTrueLabelRelabels = new HashSet/* <Pair> */();
@@ -131,27 +131,27 @@ public final class LabelUtil {
     return r;
   }
 
-  public static Label noComponents(Core core) {
-    return toLabel(core, bottomConf(core), topInteg(core));
+  public static Label noComponents() {
+    return localCore.getEmptyLabel();
   }
 
-  public static ConfPolicy bottomConf(Core core) {
-    return core.getBottomConfidPolicy();
+  public static ConfPolicy bottomConf() {
+    return localCore.getBottomConfidPolicy();
   }
   
-  public static ConfPolicy topConf(Core core) {
-    return core.getTopConfidPolicy();
+  public static ConfPolicy topConf() {
+    return localCore.getTopConfidPolicy();
   }
 
-  public static IntegPolicy topInteg(Core core) {
-    return writerPolicy(core, null, (Principal) null);
+  public static IntegPolicy topInteg() {
+    return localCore.getTopIntegPolicy();
   }
 
   public static ConfPolicy readerPolicy(Core core, Principal owner,
       Principal reader) {
     try {
       enterTiming();
-      Label label = core.getPublicReadonlyLabel();
+      Label label = localCore.getPublicReadonlyLabel();
       return new ReaderPolicy~label@core(owner, reader);
     } finally {
       exitTiming();
@@ -246,7 +246,7 @@ public final class LabelUtil {
   public static IntegPolicy writerPolicy(Core core, Principal owner, Principal writer) {
     try {
       enterTiming();
-      Label label = core.getPublicReadonlyLabel();
+      Label label = localCore.getPublicReadonlyLabel();
       return new WriterPolicy~label@core(owner, writer);
     } finally {
       exitTiming();
@@ -337,7 +337,7 @@ public final class LabelUtil {
   public static Label toLabel(Core core, ConfPolicy policy) {
     try {
       enterTiming();
-      return new PairLabel@core(policy, topInteg(core));
+      return new PairLabel@core(policy, topInteg());
     } finally {
       exitTiming();
     }
@@ -346,7 +346,7 @@ public final class LabelUtil {
   public static Label toLabel(Core core, IntegPolicy policy) {
     try {
       enterTiming();
-      return new PairLabel@core(bottomConf(core), policy);
+      return new PairLabel@core(bottomConf(), policy);
     } finally {
       exitTiming();
     }
@@ -615,9 +615,7 @@ public final class LabelUtil {
   public static boolean isWritableBy(Label lbl, Principal p) {
     try {
       enterTiming();
-      Label L =
-          toLabel(localCore, topConf(localCore), writerPolicy(localCore, null,
-              p));
+      Label L = toLabel(localCore, topConf(), writerPolicy(localCore, null, p));
       return relabelsTo(lbl, L);
     } finally {
       exitTiming();

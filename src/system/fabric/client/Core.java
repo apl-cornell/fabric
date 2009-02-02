@@ -2,11 +2,6 @@ package fabric.client;
 
 import java.util.Collection;
 
-import jif.lang.ConfPolicy;
-import jif.lang.IntegPolicy;
-import jif.lang.Label;
-import jif.lang.Principal;
-
 import fabric.common.FetchException;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object.$Impl;
@@ -77,45 +72,6 @@ public interface Core {
    */
   public fabric.util.Map getRoot();
   
-  /**
-   * Returns the Top principal object.
-   */
-  public Principal getTopPrincipal();
-
-  /**
-   * Returns the ConfPolicy object representing top confidentiality.
-   */
-  public ConfPolicy getTopConfidPolicy();
-
-  /**
-   * Returns the ConfPolicy object representing bottom confidentiality.
-   */
-  public ConfPolicy getBottomConfidPolicy();
-
-  /**
-   * Returns the IntegPolicy object representing top integrity (publicly
-   * writable, Bot <- Bot).
-   */
-  public IntegPolicy getTopIntegPolicy();
-  
-  /**
-   * Returns the IntegPolicy object representing bottom (readonly) integrity
-   * (Top <- Top).
-   */
-  public IntegPolicy getBottomIntegPolicy();
-
-  /**
-   * Returns the Label object representing an empty label (which is the most
-   * permissive, having bottom confidentiality and top integrity).
-   */
-  public Label getEmptyLabel();
-
-  /**
-   * Returns the Label object representing the public, readonly label (bottom
-   * confidentiality, bottom integrity).
-   */
-  public Label getPublicReadonlyLabel();
-
   /**
    * Notifies this Core object that an $Impl has been evicted, so that it can
    * perform the necessary cache maintenance.

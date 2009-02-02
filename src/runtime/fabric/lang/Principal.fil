@@ -11,7 +11,7 @@ import fabric.util.Map;
 import jif.lang.*;
 
 public class Principal implements jif.lang.Principal {
-  private static final Core localCore = Client.getClient().getLocalCore();
+  private static final LocalCore localCore = Client.getClient().getLocalCore();
   private static final Map principalCache = new HashMap@localCore();
   private static final Principal UNKNOWN_PRINCIPAL =
     new Principal("unknown-principal") { };
@@ -26,7 +26,7 @@ public class Principal implements jif.lang.Principal {
     atomic {
       Principal p = (Principal) principalCache.get(name);
       if (p == null) {
-        Label label = core.getPublicReadonlyLabel();
+        Label label = localCore.getPublicReadonlyLabel();
 	p = new Principal~label@core(name);
 	principalCache.put(name, p);
       }

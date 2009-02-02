@@ -41,7 +41,22 @@ public interface Object {
   java.lang.Object $unwrap();
 
   /** Fetches the object if this is a proxy; returns itself if it's an impl. */
-  public Object fetch();
+  Object fetch();
+  
+  /**
+   * <p>
+   * This method changes the onum of the object. Unless if you <i>really</i>
+   * know what you're doing, you should <b>not</b> call this, as it leaves the
+   * system in an inconsistent state.
+   * </p>
+   * <p>
+   * This method is used to initialize object stores with objects at
+   * well-known onums (e.g., naming map and core principal).
+   * </p>
+   * 
+   * @deprecated
+   */
+  void $forceRenumber(long onum);
 
   /**
    * $Proxy objects behave like regular objects by delegating to $Impl objects,
@@ -151,6 +166,23 @@ public interface Object {
     @Override
     public int hashCode() {
       return fetch().hashCode();
+    }
+    
+    /**
+     * <p>
+     * This method changes the onum of the object. Unless if you <i>really</i>
+     * know what you're doing, you should <b>not</b> call this, as it leaves the
+     * system in an inconsistent state.
+     * </p>
+     * <p>
+     * This method is used to initialize object stores with objects at
+     * well-known onums (e.g., naming map and core principal).
+     * </p>
+     * 
+     * @deprecated
+     */
+    public final void $forceRenumber(long onum) {
+      fetch().$forceRenumber(onum);
     }
   }
 
@@ -506,7 +538,7 @@ public interface Object {
       }
 
       $Proxy p = ($Proxy) obj;
-      if (p.ref.core.equals(core)) {
+      if (ONumConstants.isGlobalConstant(p.ref.onum) || p.ref.core.equals(core)) {
         // Intracore reference.
         refType.add(RefTypeEnum.ONUM);
         intracoreRefs.add(p.ref.onum);
@@ -514,6 +546,8 @@ public interface Object {
       }
 
       // Remote reference.
+      if (p.ref.core instanceof LocalCore)
+        throw new InternalError("Creating remote ref to local core.");
       refType.add(RefTypeEnum.REMOTE);
       intercoreRefs.add(new Pair<String, Long>(p.ref.core.name(), p.ref.onum));
     }
@@ -569,7 +603,7 @@ public interface Object {
       public static final Object $makeStaticInstance(
           final Class<? extends Object.$Impl> c) {
         // XXX Need a real core and a real label.  (Should be given as args.)
-        final Core core = Client.getClient().getLocalCore();
+        final LocalCore core = Client.getClient().getLocalCore();
         
         return Client.runInTransaction(new Client.Code<Object>() {
           public Object run() {
@@ -577,17 +611,7 @@ public interface Object {
               Constructor<? extends Object.$Impl> constr =
                   c.getConstructor(Core.class, Label.class);
               Label emptyLabel = core.getEmptyLabel();
-              Principal clientPrincipal = Client.getClient().getPrincipal();
-              ConfPolicy conf =
-                  (ConfPolicy) new ReaderPolicy.$Impl(core, emptyLabel,
-                      clientPrincipal, null).$getProxy();
-              IntegPolicy integ =
-                  (IntegPolicy) new WriterPolicy.$Impl(core, emptyLabel,
-                      clientPrincipal, null).$getProxy();
-              Label label =
-                  (Label) new PairLabel.$Impl(core, null, conf, integ)
-                      .$getProxy();
-              return constr.newInstance(core, label);
+              return constr.newInstance(core, emptyLabel);
             } catch (Exception e) {
               throw new AbortException(e);
             }
