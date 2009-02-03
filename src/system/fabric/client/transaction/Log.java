@@ -321,6 +321,7 @@ public final class Log {
 
     // Release write locks on created objects and set version numbers.
     for ($Impl obj : creates) {
+      obj.$writer = null;
       obj.$writeLockHolder = null;
       obj.$version = 1;
       obj.$readMapEntry.versionNumber = 1;
