@@ -19,20 +19,20 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   /**
    * Whether we're running in signature mode.
    */
-  protected boolean signatureMode;
+  public boolean signatureMode;
 
   /**
    * The classpath for the FabIL signatures of Java objects.
    */
-  protected String sigcp;
+  public String sigcp;
 
   /**
    * Additional classpath entries for FabIL signatures.
    */
-  protected List<String> addSigcp;
+  public List<String> addSigcp;
   
   /** Whether to perform optimizations. */
-  protected int optLevel;
+  public int optLevel;
 
   public FabILOptions_c(ExtensionInfo extension) {
     super(extension);
@@ -61,7 +61,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    */
   @SuppressWarnings("unchecked")
   @Override
-  protected int parseCommand(String[] args, int index, Set source)
+  public int parseCommand(String[] args, int index, Set source)
       throws UsageError, TerminationException {
     if (args[index].equals("-sig")) {
       index++;
@@ -152,4 +152,5 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   public static FabILOptions global() {
     return (FabILOptions) global;
   }
+
 }
