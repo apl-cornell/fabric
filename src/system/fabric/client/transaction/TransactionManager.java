@@ -221,7 +221,7 @@ public final class TransactionManager {
                   numCores));
 
       for (final Core core : cores) {
-        Thread thread = new Thread() {
+        Thread thread = new Thread("client prepare to " + core.name()) {
           @Override
           public void run() {
             try {
@@ -271,7 +271,7 @@ public final class TransactionManager {
       for (Map.Entry<Core, Integer> entry : tids.entrySet()) {
         final Core core = entry.getKey();
         final int tid = entry.getValue();
-        Thread thread = new Thread() {
+        Thread thread = new Thread("client commit to " + core.name()) {
           @Override
           public void run() {
             try {

@@ -70,6 +70,7 @@ public class Worker extends Thread {
    * Instantiates a new worker thread and starts it running.
    */
   public Worker(Node node) {
+    super("Core worker");
     this.node = node;
     fabric.client.transaction.TransactionManager.startThread(this);
   }
