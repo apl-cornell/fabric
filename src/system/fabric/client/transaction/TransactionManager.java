@@ -15,11 +15,11 @@ import fabric.lang.Object.$Impl;
  * <p>
  * We say that a transaction has acquired a write lock on an object if any entry
  * in the object's <code>$history</code> list has <code>$writeLockHolder</code>
- * set to that transaction.  @see fabric.lang.Object.$Impl
+ * set to that transaction. @see fabric.lang.Object.$Impl
  * </p>
  * <p>
  * We say that a transaction has acquired a read lock if it is in the
- * "read list" for that object.  @see fabric.lang.Object.$Impl.$readMapEntry
+ * "read list" for that object. @see fabric.lang.Object.$Impl.$readMapEntry
  * </p>
  * <p>
  * When a transaction acquires a read lock, we ensure that the <i>read
@@ -220,7 +220,8 @@ public final class TransactionManager {
               .synchronizedMap(new HashMap<Core, TransactionPrepareFailedException>(
                   numCores));
 
-      for (final Core core : cores) {
+      for (Iterator<Core> coreIt = cores.iterator(); coreIt.hasNext();) {
+        final Core core = coreIt.next();
         Thread thread = new Thread("client prepare to " + core.name()) {
           @Override
           public void run() {
@@ -240,8 +241,15 @@ public final class TransactionManager {
             }
           }
         };
-        threads.add(thread);
-        thread.start();
+
+        // Optimization: only start in a new thread if there are more cores to
+        // contact.
+        if (coreIt.hasNext()) {
+          threads.add(thread);
+          thread.start();
+        } else {
+          thread.run();
+        }
       }
 
       // Wait for replies.
@@ -268,7 +276,9 @@ public final class TransactionManager {
       final List<Core> failed =
           Collections.synchronizedList(new ArrayList<Core>());
       threads.clear();
-      for (Map.Entry<Core, Integer> entry : tids.entrySet()) {
+      for (Iterator<Map.Entry<Core, Integer>> entryIt =
+          tids.entrySet().iterator(); entryIt.hasNext();) {
+        Map.Entry<Core, Integer> entry = entryIt.next();
         final Core core = entry.getKey();
         final int tid = entry.getValue();
         Thread thread = new Thread("client commit to " + core.name()) {
@@ -283,8 +293,15 @@ public final class TransactionManager {
             }
           }
         };
-        threads.add(thread);
-        thread.start();
+
+        // Optimization: only start in a new thread if there are more cores to
+        // contact.
+        if (entryIt.hasNext()) {
+          threads.add(thread);
+          thread.start();
+        } else {
+          thread.run();
+        }
       }
 
       // Wait for replies.
@@ -417,7 +434,7 @@ public final class TransactionManager {
                   allReadersInAncestry = false;
                 }
               }
-              
+
               if (allReadersInAncestry) break;
             }
           }
