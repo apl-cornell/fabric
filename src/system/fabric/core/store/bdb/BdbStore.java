@@ -108,7 +108,7 @@ public class BdbStore extends ObjectStore {
           log.finest("Bdb committing onum " + onum);
           DatabaseEntry key = new DatabaseEntry(toBytes(onum));
           DatabaseEntry data = new DatabaseEntry(toBytes(o));
-          store.put(null, key, data);
+          store.put(txn, key, data);
         }
 
         txn.commit();
