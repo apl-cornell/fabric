@@ -111,7 +111,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
    * The default load factor; this is explicitly specified by the spec.
    * Package visible for use by HashSet.
    */
-  static final float DEFAULT_LOAD_FACTOR = 0.75f;
+  static final float DEFAULT_LOAD_FACTOR = 1f;
 
   /**
    * The rounded product of the capacity and the load factor; when the number
@@ -198,7 +198,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
 
   /**
    * Construct a new HashMap with the default capacity (11) and the default
-   * load factor (0.75).
+   * load factor (1).
    */
   public LongKeyHashMap()
   {
@@ -224,7 +224,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
 
   /**
    * Construct a new HashMap with a specific inital capacity and
-   * default load factor of 0.75.
+   * default load factor of 1.
    *
    * @param initialCapacity the initial capacity of this HashMap (&gt;=0)
    * @throws IllegalArgumentException if (initialCapacity &lt; 0)
