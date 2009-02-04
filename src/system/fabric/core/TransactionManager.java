@@ -1,5 +1,8 @@
 package fabric.core;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import jif.lang.Label;
 import jif.lang.LabelUtil;
 import fabric.client.Client;
@@ -7,6 +10,7 @@ import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.SerializedObject;
+import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.store.ObjectStore;
 import fabric.core.store.StoreException;
@@ -245,6 +249,44 @@ public class TransactionManager {
   }
 
   /**
+   * This is the cache for authorizing reads. We're not using the caches
+   * LabelUtil because the transaction management is too slow (!!).
+   */
+  private static final LongKeyMap<Map<Principal, Boolean>> cachedReadAuthorizations =
+      new LongKeyHashMap<Map<Principal, Boolean>>();
+
+  private static Boolean checkAuthorizationCache(
+      LongKeyMap<Map<Principal, Boolean>> cache, Principal principal,
+      long labelOnum) {
+    Map<Principal, Boolean> submap;
+    synchronized (cache) {
+      submap = cache.get(labelOnum);
+      if (submap == null) return null;
+    }
+
+    synchronized (submap) {
+      return submap.get(principal);
+    }
+  }
+
+  private static void cacheAuthorization(
+      LongKeyMap<Map<Principal, Boolean>> cache, Principal principal,
+      long labelOnum, Boolean result) {
+    Map<Principal, Boolean> submap;
+    synchronized (cache) {
+      submap = cache.get(labelOnum);
+      if (submap == null) {
+        submap = new HashMap<Principal, Boolean>();
+        cache.put(labelOnum, submap);
+      }
+    }
+
+    synchronized (submap) {
+      submap.put(principal, result);
+    }
+  }
+
+  /**
    * Determines whether the given principal is permitted to read according to
    * the label at the given onum.
    */
@@ -253,13 +295,21 @@ public class TransactionManager {
     // here to avoid having to call into the client.
     if (principal == Client.getClient().getPrincipal()) return true;
 
+    Boolean result =
+        checkAuthorizationCache(cachedReadAuthorizations, principal, labelOnum);
+    if (result != null) return result;
+
     // Call into the Jif label framework to perform the label check.
     final Label label = getLabelByOnum(labelOnum);
-    return Client.runInTransaction(new Client.Code<Boolean>() {
+    result = Client.runInTransaction(new Client.Code<Boolean>() {
       public Boolean run() {
         return LabelUtil.$Impl.isReadableBy(label, principal);
       }
     });
+
+    cacheAuthorization(cachedReadAuthorizations, principal, labelOnum, result);
+
+    return result;
   }
 
   /**
