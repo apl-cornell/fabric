@@ -10,6 +10,10 @@ import jif.ast.JifExtFactory_c;
  * for atomic sections.
  */
 public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtFactory {
+  public FabricJifExtFactory_c() {
+    super();
+  }
+  
   public FabricJifExtFactory_c(FabricExtFactory next) {
     super(next);
   }

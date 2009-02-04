@@ -1,6 +1,7 @@
 package fabric.ast;
 
 import polyglot.ast.Ext;
+import polyglot.ast.ExtFactory;
 import jif.ast.AbstractJifExtFactory_c;
 
 /**
@@ -14,6 +15,15 @@ import jif.ast.AbstractJifExtFactory_c;
  */
 public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
                                      implements FabricExtFactory {
+  
+  public AbstractFabExtFactory_c() {
+    super();
+  }
+  
+  public AbstractFabExtFactory_c(ExtFactory next) {
+    super(next);
+  }
+  
   public Ext extAtomic() {
     Ext e = extAtomicImpl();
     if (nextExtFactory() != null && 

@@ -25,7 +25,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
   //////////////////////////////////////////////////////////////////////////////
   
   public FabricNodeFactory_c() {
-    this(new FabricJifExtFactory_c(new FabricFabExtFactory_c()));
+    this(new FabricFabExtFactory_c(new FabricJifExtFactory_c()));
   }
   
   public FabricNodeFactory_c(FabricExtFactory extFactory) {

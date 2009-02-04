@@ -1,5 +1,6 @@
 package fabric.ast;
 
+import polyglot.ast.ExtFactory;
 import fabric.extension.*;
 
 /**
@@ -10,7 +11,13 @@ import fabric.extension.*;
  */
 public class FabricFabExtFactory_c extends AbstractFabExtFactory_c {
   
-  // TODO: construct appropriate fabric extensions
+  public FabricFabExtFactory_c() {
+    super();
+  }
+  
+  public FabricFabExtFactory_c(ExtFactory next) {
+    super(next);
+  }
   
   @Override
   protected FabricExt extNodeImpl() {
