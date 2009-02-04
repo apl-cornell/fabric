@@ -18,6 +18,7 @@ import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.AccessException;
+import fabric.common.FabricThread;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -25,7 +26,11 @@ import fabric.core.store.StoreException;
 import fabric.lang.Principal;
 import fabric.messages.*;
 
-public class Worker extends Thread {
+/**
+ * This implements FabricThread for performance reasons. It will be calling into
+ * the in-process client to perform access control.
+ */
+public class Worker extends FabricThread.AbstractImpl {
   
   /** The node that we're working for. */
   private final Node node;

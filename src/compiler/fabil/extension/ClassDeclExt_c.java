@@ -574,7 +574,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     if (type == null || !tr.shouldRewrite(type))
       return super.rewriteThreads(tr);
 
-    // Rewrite to implement fabric.client.FabricThread.
+    // Rewrite to implement fabric.common.FabricThread.
     QQ qq = tr.qq();
     NodeFactory nf = tr.nodeFactory();
     FabILTypeSystem ts = tr.typeSystem();

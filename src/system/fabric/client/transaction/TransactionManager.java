@@ -5,8 +5,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import fabric.client.*;
+import fabric.common.FabricThread;
 import fabric.common.InternalError;
 import fabric.common.util.LongKeyMap;
+import fabric.core.InProcessCore;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -75,6 +77,10 @@ public final class TransactionManager {
 
   public static ReadMapEntry getReadMapEntry($Impl impl) {
     FabricSoftRef ref = impl.$ref;
+    
+    // Optimization: if the impl lives on the local core, it will never be
+    // evicted, so no need to store the entry in the read map.
+    if (ref.core.isLocalCore()) return new ReadMapEntry(impl);
 
     while (true) {
       ReadMapEntry result;
@@ -222,8 +228,7 @@ public final class TransactionManager {
 
       for (Iterator<Core> coreIt = cores.iterator(); coreIt.hasNext();) {
         final Core core = coreIt.next();
-        Thread thread = new Thread("client prepare to " + core.name()) {
-          @Override
+        Runnable runnable = new Runnable() {
           public void run() {
             try {
               Collection<$Impl> creates = current.getCreatesForCore(core);
@@ -243,12 +248,15 @@ public final class TransactionManager {
         };
 
         // Optimization: only start in a new thread if there are more cores to
-        // contact.
-        if (coreIt.hasNext()) {
+        // contact and if it's a truly remote core (i.e., not in-process).
+        if (!(core instanceof InProcessCore || core.isLocalCore())
+            && coreIt.hasNext()) {
+          Thread thread =
+              new Thread(runnable, "client prepare to " + core.name());
           threads.add(thread);
           thread.start();
         } else {
-          thread.run();
+          runnable.run();
         }
       }
 
@@ -281,8 +289,7 @@ public final class TransactionManager {
         Map.Entry<Core, Integer> entry = entryIt.next();
         final Core core = entry.getKey();
         final int tid = entry.getValue();
-        Thread thread = new Thread("client commit to " + core.name()) {
-          @Override
+        Runnable runnable = new Runnable() {
           public void run() {
             try {
               core.commitTransaction(tid);
@@ -295,12 +302,15 @@ public final class TransactionManager {
         };
 
         // Optimization: only start in a new thread if there are more cores to
-        // contact.
-        if (entryIt.hasNext()) {
+        // contact and if it's a truly remote core (i.e., not in-process).
+        if (!(core instanceof InProcessCore || core.isLocalCore())
+            && entryIt.hasNext()) {
+          Thread thread =
+              new Thread(runnable, "client commit to " + core.name());
           threads.add(thread);
           thread.start();
         } else {
-          thread.run();
+          runnable.run();
         }
       }
 

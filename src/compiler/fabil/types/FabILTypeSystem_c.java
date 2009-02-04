@@ -35,7 +35,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
   }
 
   public ClassType FabricThread() {
-    return load("fabric.client.FabricThread");
+    return load("fabric.common.FabricThread");
   }
 
   public ClassType Thread() {

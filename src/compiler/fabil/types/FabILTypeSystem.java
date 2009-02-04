@@ -21,7 +21,7 @@ public interface FabILTypeSystem extends TypeSystem {
   /** The ClassType of fabric.lang.WrappedJavaInlineable. */
   ClassType WrappedJavaInlineable();
   
-  /** The ClassType of fabric.client.FabricThread. */
+  /** The ClassType of fabric.common.FabricThread. */
   ClassType FabricThread();
   
   /** The ClassType of java.lang.Thread. */

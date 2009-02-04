@@ -74,7 +74,7 @@ public interface Object {
     private transient final $Impl anchor;
 
     public $Proxy(Core core, long onum) {
-      if ((core instanceof LocalCore) && onum != ONumConstants.EMPTY_LABEL
+      if (core.isLocalCore() && onum != ONumConstants.EMPTY_LABEL
           && onum != ONumConstants.PUBLIC_READONLY_LABEL)
         throw new InternalError(
             "Attempted to create unresolved reference to a local object.");

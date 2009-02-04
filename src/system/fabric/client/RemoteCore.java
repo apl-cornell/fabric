@@ -334,8 +334,12 @@ public class RemoteCore implements Core {
     return new Map.$Proxy(this, ONumConstants.ROOT_MAP);
   }
 
-  public String name() {
+  public final String name() {
     return name;
+  }
+  
+  public final boolean isLocalCore() {
+    return false;
   }
 
   @Override

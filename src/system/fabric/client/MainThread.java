@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import fabric.client.transaction.TransactionManager;
+import fabric.common.FabricThread;
 
 /**
  * The thread in which the Fabric program executes. This is here to ensure that
@@ -78,7 +79,7 @@ public final class MainThread extends Thread implements FabricThread {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.client.FabricThread#getTransactionManager()
+   * @see fabric.common.FabricThread#getTransactionManager()
    */
   public final TransactionManager getTransactionManager() {
     return tm;
@@ -87,7 +88,7 @@ public final class MainThread extends Thread implements FabricThread {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.client.FabricThread#setTransactionManager(fabric.client.transaction.TransactionManager)
+   * @see fabric.common.FabricThread#setTransactionManager(fabric.client.transaction.TransactionManager)
    */
   public final void setTransactionManager(TransactionManager tm) {
     this.tm = tm;

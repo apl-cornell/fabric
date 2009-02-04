@@ -17,7 +17,7 @@ import fabric.lang.Object.$Impl;
 import fabric.util.HashMap;
 import fabric.util.Map;
 
-public class LocalCore implements Core {
+public final class LocalCore implements Core {
 
   private long freshOID = ONumConstants.FIRST_UNRESERVED;
 
@@ -135,6 +135,10 @@ public class LocalCore implements Core {
 
   public String name() {
     return "local";
+  }
+  
+  public boolean isLocalCore() {
+    return true;
   }
 
   @Override

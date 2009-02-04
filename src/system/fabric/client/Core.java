@@ -11,6 +11,11 @@ public interface Core {
    * Returns this core's host name.
    */
   public String name();
+  
+  /**
+   * Determines whether this is the local core.
+   */
+  public boolean isLocalCore();
 
   /**
    * Notifies the core that the transaction is entering the Prepare phase.
