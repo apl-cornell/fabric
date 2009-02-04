@@ -38,7 +38,7 @@ public final class LabelUtil {
 //  };
 //  public static final boolean COUNT_TIME = false;
 
-  public static final boolean USE_CACHING = true;
+  public static final boolean USE_CACHING = false;
   
   public static final LocalCore localCore = Client.getClient().getLocalCore();
 

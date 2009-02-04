@@ -53,7 +53,7 @@ public class FabricSoftRef extends SoftReference<$Impl> {
         try {
           FabricSoftRef ref = (FabricSoftRef) queue.remove();
           ref.core.notifyEvict(ref.onum);
-          ref.readMapEntry.depin();
+          if (ref.readMapEntry.depin()) ref.readMapEntry = null;
         } catch (InterruptedException e) {}
       }
     }

@@ -30,23 +30,27 @@ public final class ReadMapEntry {
   
   /**
    * Does garbage collection when pin count is 0.
+   * @return whether garbage collection was performed.
    */
-  private void unpin() {
+  private boolean unpin() {
     if (readLocks.isEmpty() && pinCount == 0) {
       // There are no read locks and no references to this entry. Garbage
       // collect.
       synchronized (TransactionManager.readMap) {
         TransactionManager.readMap.remove(obj.core, obj.onum);
+        return true;
       }
     }
+    return false;
   }
   
   /**
    * Decrements pin count by 1 and does garbage collection if possible.
+   * @return whether the entry was removed from the read map.
    */
-  public synchronized void depin() {
+  public synchronized boolean depin() {
     pinCount--;
-    unpin();
+    return unpin();
   }
 
   /**
