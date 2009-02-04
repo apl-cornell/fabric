@@ -83,7 +83,7 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     Context context = la.context();
     ClassType currentClass = context.currentClass();
     if (!ts.isFabricReference(currentClass)) {
-      throw new SemanticException("Missing label", expr.position());
+      throw new SemanticException("Missing location", expr.position());
     }
     
     Expr defaultLocation;
