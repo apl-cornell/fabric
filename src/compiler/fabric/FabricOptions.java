@@ -12,6 +12,7 @@ public class FabricOptions extends JifOptions implements FabILOptions {
 
   public FabricOptions(ExtensionInfo extension) {
     super(extension);
+    this.delegate = new FabILOptions_c(extension);
   }
 
   /* FabIL Options (forwarded to delegate ) ***********************************/

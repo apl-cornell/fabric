@@ -9,6 +9,7 @@ import polyglot.frontend.Scheduler;
 import polyglot.frontend.Source;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.SourceFileGoal;
+import polyglot.main.Options;
 import polyglot.util.InternalCompilerError;
 import fabil.frontend.FabILScheduler;
 
@@ -17,9 +18,22 @@ import fabil.frontend.FabILScheduler;
  */
 public class OutputExtensionInfo extends fabil.ExtensionInfo {
 
+  protected ExtensionInfo fabext;
+  
   @Override
   public Scheduler createScheduler() {
     return new OutputScheduler(this);
+  }
+  
+  @Override
+  protected Options createOptions() {
+    // we share the options with fabric, which in turn delegates to a
+    // FabILOptions object for the fabil options handling.
+    return fabext.getOptions(); 
+  }
+  
+  public OutputExtensionInfo(ExtensionInfo fabext) {
+    this.fabext = fabext;
   }
   
   protected static class OutputScheduler extends FabILScheduler {

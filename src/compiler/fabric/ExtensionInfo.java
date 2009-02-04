@@ -27,7 +27,7 @@ public class ExtensionInfo extends jif.ExtensionInfo {
    * only unoverridden place this is used is in a call to initCompiler, so it
    * should never leak out. */
   
-  protected fabil.ExtensionInfo filext = new OutputExtensionInfo();
+  protected fabil.ExtensionInfo filext = new OutputExtensionInfo(this);
   
   static {
     // force Topics to load

@@ -44,7 +44,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   }
 
   @Override
-  protected FabILOptions_c createOptions() {
+  protected Options createOptions() {
     return new FabILOptions_c(this);
   }
 
