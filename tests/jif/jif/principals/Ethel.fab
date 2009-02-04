@@ -1,0 +1,15 @@
+package jif.principals;
+
+public class Ethel extends ExternalPrincipal {
+    public Ethel() {
+	super("Ethel");
+    }
+
+    private static Ethel{*!:*} P;
+    public static Principal getInstance{*!:*}() {
+	if (P == null) {
+	    P = new Ethel();
+	}
+	return P;
+    }
+}

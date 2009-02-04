@@ -1,0 +1,30 @@
+package jif.principals;
+
+public class Dolores extends ExternalPrincipal {
+    public Dolores{this:;this!:}() where authority (this) {
+	super("Dolores");
+
+        // Dolores allows Chuck to act for her.
+	// Note that in order to add Chuck to Dolores' superiors,
+	// we need the authority of Dolores, which is captured
+	// by the "where authority (this)" caluse on the
+	// constructor signature.
+	final principal c = new Chuck();
+	addDelegatesTo(c);
+
+	// If we were sure that jif.principals.Chuck was
+	// already compiled when we compile this class,
+	// we could simply use the following code to
+	// add Chuck to the delegates list.
+
+	// addDelegatesTo(Chuck);
+    }
+
+    private static Dolores{*!:*} P;
+    public static Principal getInstance{*!:*}() {
+	if (P == null) {
+	    P = new Dolores();
+	}
+	return P;
+    }
+}

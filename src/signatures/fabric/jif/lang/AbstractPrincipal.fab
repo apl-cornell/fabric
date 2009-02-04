@@ -1,0 +1,67 @@
+package jif.lang;
+
+
+/**
+ * This is an abstract implementation of the principal interface.
+ * It provides convenience methods for delgating authority to superiors.
+ * This class assumes that principals are equal if they are the same class
+ * with the same name.
+ */
+public abstract class AbstractPrincipal implements Principal {
+
+    private final String{this} name;
+        
+    protected AbstractPrincipal(String{this} name) {
+        this.name = name;
+    }
+
+    public String{this} name() {
+        return name;
+    }
+    
+    public boolean{this;p;this!:} delegatesTo(principal p) {
+        return superiorsContains((Principal)p);
+    }
+    
+    public native void addDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);    
+    public native void removeDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);
+
+    protected native boolean{this;p;this!:} superiorsContains(Principal p) where authority (this);
+    
+    public boolean{authPrf; closure; lb; *lb; executeNow; this; this!:} isAuthorized{this!:}(Object authPrf, 
+                                                                 Closure[this, lb] closure,
+                                                                 label lb,
+                                                                 boolean executeNow) where authority (this) {
+        // The default is that this principal authorizes no closures.
+        return false;
+    }
+    
+    
+    public ActsForProof{this;q;this!:;q!:} findProofDownto(Principal q, Object searchState) {    
+        // don't even try! We don't have any information
+        // about who we can act for.
+        return null;
+    }
+    
+    public native ActsForProof{this;p;this!:;p!:} findProofUpto{this!:}(Principal p, Object searchState) where authority (this);
+    
+    public boolean equals(Object o) {
+        if (o instanceof Principal) {
+            Principal p = (Principal)o;
+            String name = this.name;
+            return (name == p.name() || (name != null && 
+                    name.equals(p.name()))) &&
+                    this.getClass() == p.getClass();        
+        }
+        return false;
+    }
+    
+    public boolean equals(Principal p) {
+        if (p == null) return false;
+        String name = this.name;
+        return (name == p.name() || (name != null && 
+                name.equals(p.name()))) &&
+                this.getClass() == p.getClass();        
+    }
+    
+}

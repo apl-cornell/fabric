@@ -1,0 +1,12 @@
+package jif.lang;
+
+
+/**
+ * An ExternalPrincipal is used primarily for test purposes, to represent
+ * principals like "Alice" and "Bob".
+ */
+public class ExternalPrincipal extends AbstractPrincipal {
+    public ExternalPrincipal(String{this} name) {
+        super(name);
+    }
+}
