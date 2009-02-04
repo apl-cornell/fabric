@@ -249,7 +249,7 @@ public class TransactionManager {
   }
 
   /**
-   * This is the cache for authorizing reads. We're not using the caches
+   * This is the cache for authorizing reads. We're not using the caches in
    * LabelUtil because the transaction management is too slow (!!).
    */
   private static final LongKeyMap<Map<Principal, Boolean>> cachedReadAuthorizations =
