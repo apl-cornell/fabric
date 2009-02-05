@@ -214,9 +214,9 @@ public final class LocalCore implements Core {
         // should not be leaking to remote cores.
         Principal clientPrincipal = Client.getClient().getPrincipal();
         ConfPolicy conf =
-            LabelUtil.$Impl.readerPolicy(LocalCore.this, clientPrincipal, null);
+            LabelUtil.$Impl.readerPolicy(LocalCore.this, clientPrincipal, (Principal) null);
         IntegPolicy integ =
-            LabelUtil.$Impl.writerPolicy(LocalCore.this, clientPrincipal, null);
+            LabelUtil.$Impl.writerPolicy(LocalCore.this, clientPrincipal, (Principal) null);
         Label label = LabelUtil.$Impl.toLabel(LocalCore.this, conf, integ);
 
         rootMap = (Map) new HashMap.$Impl(LocalCore.this, label).$getProxy();
