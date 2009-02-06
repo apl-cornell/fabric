@@ -12,6 +12,8 @@ import fabric.util.*;
 import java.util.Date;
 import java.util.Iterator;
 
+import fabric.client.Client;
+
 import java.text.ParseException;
 
 import javax.servlet.RequestDispatcher;
@@ -23,6 +25,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.xml.parsers.ParserConfigurationException;
+
+import jif.lang.Label;
 
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.util.Streams;
@@ -51,8 +55,6 @@ public class AccessController extends HttpServlet {
   public static boolean debug;
   public static int maxFileSize;
   
-  public static Core core;
-
   /* URLs of all main JSPs in the system (others are included JSP fragments) */
   public static final String ASSIGNADMIN_URL = "/staff/assignment/assignment.jsp", // assignment
                                                                                     // creation/edit
@@ -882,6 +884,10 @@ public class AccessController extends HttpServlet {
 
   private HashMap    debugPrincipalMap;
   private XMLBuilder xmlBuilder;
+  
+  private LocalCore localCore;
+  private Core core;
+  private Label label;
 
   /**
    * Initialize the Servlet
@@ -896,29 +902,34 @@ public class AccessController extends HttpServlet {
     try {
       fabric.client.Client.initialize();
     }
-    catch(Exception ex) { }
-    core = fabric.client.Client.getClient().getLocalCore();
+    catch(Exception ex) { 
+    //  throw new ServletException(ex);
+    }
+    
+    localCore = Client.getClient().getLocalCore();
+    core = Client.getClient().getLocalCore();
+    label = localCore.getEmptyLabel();
     
     // TODO: fetch CMS root
-    CMSRoot database = new CMSRoot@core();
+    CMSRoot database = new CMSRoot~label@core();
     
     // add test data
     cms.controller.test.CreateDB.create(database);
     
     if (xmlBuilder == null) {
       try {
-        xmlBuilder = new XMLBuilder@core(database);
+        xmlBuilder = new XMLBuilder~label@core(database);
       } catch (ParserConfigurationException e) {
-        throw new ServletException@core(e);
+        throw new ServletException~label@core(e);
       }
     }
     if (transactions == null) {
-      transactions = new TransactionHandler@core(database);
+      transactions = new TransactionHandler~label@core(database);
     }
 
     debug = xmlBuilder.getDatabase().getDebugMode();
     if (xmlBuilder.getDatabase().getDebugMode())
-      debugPrincipalMap = new HashMap@core();
+      debugPrincipalMap = new HashMap~label@core();
     maxFileSize = xmlBuilder.getDatabase().getMaxFileSize();
   }
 
@@ -1037,7 +1048,7 @@ public class AccessController extends HttpServlet {
     
     String buildURL = "";
     HttpSession session = request.getSession(true);
-    session.setAttribute(TIME, new java.lang.Long(System.currentTimeMillis()));
+    session.setAttribute(TIME, new Long~label@localCore(System.currentTimeMillis()));
     /*
      * Course data for all of a user's courses are cached in the session and can
      * be retrieved for fast reference
@@ -1053,7 +1064,7 @@ public class AccessController extends HttpServlet {
         String value = ((String[]) reqmap.get(key))[0];
         System.out.println("reqparam: " + key + "=" + value);
       }
-      session.setAttribute(A_DEBUG, new Boolean(debug));
+      session.setAttribute(A_DEBUG, new Boolean~label@localCore(debug));
       session.setAttribute(A_COOKIES, request.getCookies());
       Document xml  = null;
       User     user = null;
@@ -1084,7 +1095,7 @@ public class AccessController extends HttpServlet {
             RequestHandlerInfo info =
                 handleSpecificAction(action, request, response, session, user);
             if (info == null)
-              throw new RuntimeException(
+              throw new RuntimeException~label@localCore(
                   "Action handler return value should not be null!");
             buildURL = info.getBuildURL();
             xml = info.getXMLDocument();
@@ -1113,7 +1124,7 @@ public class AccessController extends HttpServlet {
     } catch (Exception e) {
       System.out.println("Error in AccessController.processRequest(): " + e);
       e.printStackTrace();
-      throw new ServletException(e);
+      throw new ServletException~label@localCore(e);
     }
   }
 
@@ -1350,7 +1361,7 @@ public class AccessController extends HttpServlet {
                                                           // netids in textbox
                                                           // contents
         if (user.isGroupsPrivByAssignment(assign)) {
-          java.util.List netids = StringUtil.parseNetIDList(request.getParameter(P_NETIDLIST));
+          List netids = StringUtil.parseNetIDList(request.getParameter(P_NETIDLIST));
           TransactionResult result =
               transactions.createGroup(user, netids, assign);
           buildURL = GRADEASSIGN_URL;
@@ -1649,7 +1660,7 @@ public class AccessController extends HttpServlet {
       Course course = getCourse(request.getParameter(P_COURSEID));
       String netID = request.getParameter(P_NETID);
       if (user.isAdminPrivByCourse(course)) {
-        Collection n = new ArrayList();
+        Collection n = new ArrayList~label@core();
         n.add(netID);
         TransactionResult result = transactions.dropStudent(user, course, n);
         buildURL = STUDENTS_URL;
@@ -1662,9 +1673,9 @@ public class AccessController extends HttpServlet {
       String netIDs = request.getParameter(P_STUDENTSLIST);
       // FIXME make work for multiple students
       if (user.isAdminPrivByCourse(course)) {
-        java.util.List netids = StringUtil.parseNetIDList(netIDs);
-        List nNetIds = new ArrayList();
-        for(Iterator ni = netids.iterator(); ni.hasNext();) {
+        List netids = StringUtil.parseNetIDList(netIDs);
+        List nNetIds = new ArrayList~label@core();
+        for(fabric.util.Iterator ni = netids.iterator(); ni.hasNext();) {
           nNetIds.add((String)ni.next());
         }
         TransactionResult result =
@@ -2088,7 +2099,7 @@ public class AccessController extends HttpServlet {
     else if (action.equals(ACT_REMOVECMSADMIN)) {
       if (user.isCMSAdmin()) {
         buildURL = CMSADMIN_URL;
-        TransactionResult result = new TransactionResult();
+        TransactionResult result = new TransactionResult~label@localCore();
         if (user.getNetID().equals(request.getParameter(P_NETID)))
           result.addError("Can't remove current user");
         else result =
@@ -2270,7 +2281,7 @@ public class AccessController extends HttpServlet {
             
             xml =
                 xmlBuilder.buildErrorPage(user.getNetID(), action,
-                    new NotImplementedException(message));
+                    new NotImplementedException~label@localCore(message));
             buildURL = ERROR_URL;
           } else {
             buildURL = ASSIGNADMIN_URL;
@@ -2403,7 +2414,7 @@ public class AccessController extends HttpServlet {
         Course course = getCourse(request.getParameter(P_COURSEID));
         if (course != null) {
           if (user.isStudentInCourseByCourse(course)) {
-            TransactionResult result = new TransactionResult();
+            TransactionResult result = new TransactionResult~label@localCore();
             result.addError("No scope (which courses to apply settings to?) was received from browser.");
             buildURL = STUDENTPREFS_URL;
             xml = xmlBuilder.buildStudentPrefsPage(user, course);
@@ -2531,7 +2542,7 @@ public class AccessController extends HttpServlet {
       Course     course = assign.getCourse();
       if (user.isAssignPrivByCourse(course)) {
         buildURL = ASSIGNSCHED_URL;
-        java.util.Collection results = new java.util.Vector();
+        java.util.Collection results = new java.util.Vector~label@localCore();
         Iterator entries = request.getParameterMap().entrySet().iterator();
         while (entries.hasNext()) {
           // entry.key   is a String representing the group
@@ -2693,7 +2704,7 @@ public class AccessController extends HttpServlet {
             result);
         xml = xmlBuilder.addStatus(xml, result);
         buildURL = CONFIRMTABLE_URL;
-        session.setAttribute(A_ISCLASSLIST, new Boolean(isClasslist));
+        session.setAttribute(A_ISCLASSLIST, new Boolean~label@localCore(isClasslist));
       } else buildURL = FORBIDDEN_URL;
     }
     // Enter Cornell-member perspective
@@ -2812,7 +2823,7 @@ public class AccessController extends HttpServlet {
     }
     boolean xhfg = true;
     if (debug) Profiler.endAction(action);
-    return new RequestHandlerInfo(buildURL, xml);
+    return new RequestHandlerInfo~label@localCore(buildURL, xml);
   }
 
   private Course getAssumedCourse(HttpServletRequest request, User user) {
@@ -2890,7 +2901,7 @@ public class AccessController extends HttpServlet {
    * @return A List of Groups
    */
   private List extractGroupsFromMainGradingPageRequest(HttpServletRequest request) {
-    List result = new ArrayList();
+    List result = new ArrayList~label@localCore();
     Iterator i = request.getParameterMap().keySet().iterator();
     while(i.hasNext()) {
       String param = ((String)i.next()).trim();
@@ -2913,7 +2924,7 @@ public class AccessController extends HttpServlet {
     response.setContentType("application/download");
     response.setHeader("Content-disposition", "attachment; filename=\""
         + file.getName() + "\"");
-    Streams.copy(file.read(), new BufferedOutputStream(response.getOutputStream()), true);
+    Streams.copy(file.read(), new BufferedOutputStream~label@localCore(response.getOutputStream()), true);
   }
 }
 

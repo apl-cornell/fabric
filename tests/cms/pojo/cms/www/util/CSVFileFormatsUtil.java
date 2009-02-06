@@ -1,9 +1,6 @@
 package cms.www.util;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Vector;
+import fabric.util.*;
 
 /**
  * Specify the various CSV formats parsed and/or written by the system.
@@ -186,7 +183,7 @@ public class CSVFileFormatsUtil
 	 * @return An array of indices into ALLOWED_COLUMNS, where each index is -1 if the provided string
 	 * couldn't be recognized as any information we know
 	 */
-	public static int[] parseSubProblemColumnNamesFlexibly(String[] line, Vector subProblemNames) throws CSVParseException {
+	public static int[] parseSubProblemColumnNamesFlexibly(String[] line, ArrayList subProblemNames) throws CSVParseException {
 		int[] indices = new int[subProblemNames.size()];
 		HashMap seenIndices = new HashMap();
 		for(int i = 0; i < subProblemNames.size(); i++) {
@@ -218,7 +215,7 @@ public class CSVFileFormatsUtil
 	 * @param colName One of the COLUMN_NAMES above (NETID etc)
 	 * @return
 	 */
-	public static int getSubProblemColumnNum(int[] colsFound, String colName, Vector subProblemNames) {
+	public static int getSubProblemColumnNum(int[] colsFound, String colName, ArrayList subProblemNames) {
 		if (colsFound == null) return -1;
 		int nameIndex = -2; //a value that should never be in colsFound
 		//figure out which index we're looking for

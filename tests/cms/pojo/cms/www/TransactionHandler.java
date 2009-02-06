@@ -673,7 +673,7 @@ public class TransactionHandler {
       }
       Collection subProblems = new ArrayList();
       String requestText = null;
-      for (Enumeration e = request.getParameterNames(); e.hasMoreElements();) {
+      for (java.util.Enumeration e = request.getParameterNames(); e.hasMoreElements();) {
         String parameter = (String) e.nextElement();
         if (parameter.startsWith(AccessController.P_REGRADESUB)) {
           String subProb = parameter.split(AccessController.P_REGRADESUB)[1];
@@ -709,7 +709,7 @@ public class TransactionHandler {
       if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
-        Vector netids = new Vector();
+        ArrayList netids = new ArrayList();
         ExcelCSVParser p;
         boolean isFile = false;
         boolean isList = false;
@@ -717,9 +717,9 @@ public class TransactionHandler {
         FileItem file = null;
         String list = null;
         DiskFileUpload upload = new DiskFileUpload();
-        List info =
+        java.util.List info =
             upload.parseRequest(request, 1024, AccessController.maxFileSize, FileUtil.TEMP_DIR);
-        Iterator i = info.iterator();
+        java.util.Iterator i = info.iterator();
         while (i.hasNext()) {
           FileItem item = (FileItem) i.next();
           String name = item.getFieldName();
@@ -781,7 +781,7 @@ public class TransactionHandler {
         return result;
       }
       Collection groups = new LinkedList();
-      Iterator i = requestMap.keySet().iterator();
+      java.util.Iterator i = requestMap.keySet().iterator();
       while (i.hasNext()) {
         String key = (String) i.next();
         if (key.startsWith(AccessController.P_GRADEGROUP)) {
@@ -1205,7 +1205,7 @@ public class TransactionHandler {
    * @param assignment
    * @return
    */
-  public TransactionResult createGroup(User p, java.util.List netids,
+  public TransactionResult createGroup(User p, List netids,
       Assignment assignment) {
     TransactionResult result = new TransactionResult();
     try {
@@ -1676,7 +1676,7 @@ public class TransactionHandler {
    *           If naming exception is encountered
    */
   private InitialContext getContext() throws NamingException {
-    Hashtable props = new Hashtable();
+    java.util.Hashtable props = new java.util.Hashtable();
     props.put(InitialContext.INITIAL_CONTEXT_FACTORY,
         "org.jnp.interfaces.NamingContextFactory");
     props.put(InitialContext.PROVIDER_URL, "jnp://localhost:1099");
@@ -1888,7 +1888,7 @@ public class TransactionHandler {
     DiskFileUpload upload = new DiskFileUpload();
     FileItem file = null;
     try {
-      Iterator items =
+      java.util.Iterator items =
           upload.parseRequest(request, 1024, AccessController.maxFileSize,
               null).iterator();
       while (items.hasNext()) {
@@ -2335,7 +2335,7 @@ public class TransactionHandler {
       int maxWidth = line.length;
       int[] colsFound = null, subproblemColsFound = null;
       try {
-        Vector subProbNames = new Vector();
+        ArrayList subProbNames = new ArrayList();
         Iterator j = assignment.getSubProblems().iterator();
         while(j.hasNext())
           subProbNames.add(((SubProblem) j.next()).getName());
@@ -2467,7 +2467,7 @@ public class TransactionHandler {
           result.addError(user.getNetID()
               + " has not been previously enrolled in this class");
         } else {
-          Vector n = new Vector();
+          ArrayList n = new ArrayList();
           n.add(user);
           result = transactions.addStudentsToCourse(p, n, course, emailOn);
           if (!result.hasErrors()) {
@@ -2621,7 +2621,7 @@ public class TransactionHandler {
     try {
       Emailer email = new Emailer();
       DiskFileUpload upload = new DiskFileUpload();
-      Iterator i = upload.parseRequest(request).iterator();
+      java.util.Iterator i = upload.parseRequest(request).iterator();
       String subject = null, body = null, recipient = null;
       while (i.hasNext()) {
         FileItem item = (FileItem) i.next();
@@ -3571,7 +3571,7 @@ public class TransactionHandler {
       }
 
       Map/*String, CategoryColumn*/ newColumns = new HashMap();
-      Iterator i = request.getParameterMap().entrySet().iterator();
+      java.util.Iterator i = request.getParameterMap().entrySet().iterator();
       while (i.hasNext()) {
         Map.Entry item = (Map.Entry) i.next();
         String field = (String) item.getKey();
@@ -3672,7 +3672,7 @@ public class TransactionHandler {
   public TransactionResult setCourseProps(User p, Course course, HttpServletRequest request) {
     TransactionResult result = new TransactionResult();
     try {
-      Map map = request.getParameterMap();
+      java.util.Map map = request.getParameterMap();
       boolean isFreeze = map.containsKey(AccessController.P_FREEZECOURSE);
       if (isFreeze && courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
@@ -3770,7 +3770,7 @@ public class TransactionHandler {
       }
       ArrayList toDelete = new ArrayList();
       DiskFileUpload u = new DiskFileUpload();
-      Iterator i = u.parseRequest(request).iterator();
+      java.util.Iterator i = u.parseRequest(request).iterator();
       // iterate through request to find all fields of form deletetimeslot_##
       while (i.hasNext()) {
         FileItem item = (FileItem) i.next();
@@ -3827,7 +3827,7 @@ public class TransactionHandler {
       String sTime = null;
       String sAMPM = null;
       DiskFileUpload u = new DiskFileUpload();
-      Iterator i = u.parseRequest(request).iterator();
+      java.util.Iterator i = u.parseRequest(request).iterator();
       while (i.hasNext()) {
         FileItem item = (FileItem) i.next();
         String field = item.getFieldName();
@@ -3886,7 +3886,7 @@ public class TransactionHandler {
     TransactionResult result = new TransactionResult();
     boolean success = true;
     DiskFileUpload upload = new DiskFileUpload();
-    Iterator list = null;
+    java.util.Iterator list = null;
     try {
       if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
@@ -3897,7 +3897,7 @@ public class TransactionHandler {
       success = false;
       e.printStackTrace();
     }
-    Collection grades = new Vector();
+    Collection grades = new ArrayList();
     while (success && list.hasNext()) {
       FileItem item = (FileItem) list.next();
       if (item.getFieldName().startsWith(AccessController.P_FINALGRADE)) {
@@ -3933,7 +3933,7 @@ public class TransactionHandler {
         data.setEmailAssignedTo(false);
         data.setEmailRequest(false);
         DiskFileUpload upload = new DiskFileUpload();
-        Iterator i = upload.parseRequest(request).iterator();
+        java.util.Iterator i = upload.parseRequest(request).iterator();
         while (i.hasNext()) {
           FileItem item = (FileItem) i.next();
           String field = item.getFieldName();
@@ -4065,7 +4065,7 @@ public class TransactionHandler {
   public TransactionResult submitSurvey(User p, HttpServletRequest request) {
     Profiler.enterMethod("TransactionHandler.submitFiles", "");
     TransactionResult result = new TransactionResult();
-    List info = null;
+    java.util.List info = null;
     List answers = null;
     DiskFileUpload upload = new DiskFileUpload();
     try {
@@ -4086,8 +4086,8 @@ public class TransactionHandler {
         } else {
           info =
               upload.parseRequest(request, 1024, AccessController.maxFileSize, null);
-          Iterator i = info.iterator();
-          answers = new Vector();
+          java.util.Iterator i = info.iterator();
+          answers = new ArrayList();
           while (i.hasNext()) {
             FileItem item = (FileItem) i.next();
             String field = item.getFieldName();

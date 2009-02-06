@@ -1,9 +1,6 @@
 package cms.model;
 
-import java.util.Collections;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import fabric.util.*;
 
 public class AssignmentItem {
   private static int nextID = 1;

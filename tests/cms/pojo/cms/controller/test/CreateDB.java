@@ -1,8 +1,7 @@
 package cms.controller.test;
 
-import java.util.Iterator;
+import fabric.util.*;
 import java.util.Date;
-import java.util.Collection;
 import java.util.Random;
 import cms.model.*;
 
@@ -105,7 +104,7 @@ public class CreateDB {
       Group g = (Group)i.next();
       for(Iterator mi = g.getMembers().iterator(); mi.hasNext();) {
         if(!assign.hasSubProblems()) {
-          assign.addGrade(g, null, r.nextFloat() * 100, 
+          assign.addGrade(g, null, new Float(r.nextFloat() * 100), 
               ((GroupMember)mi.next()).getStudent().getUser(), grader);
         } else {
           throw new NotImplementedException();

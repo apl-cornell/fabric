@@ -1,6 +1,7 @@
 package cms.www.xml;
 
 import fabric.util.*;
+import java.util.Date;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -84,22 +85,22 @@ public class AssignmentXMLBuilder {
   }
 
   public void addStatSubtree(Document xml, Element xAssignment, Assignment assignment) {
-    Float stat;
-    if ((stat = assignment.getMean()) != null) {
+    float stat;
+    if ((stat = assignment.getMean()) != 0f) {
       xAssignment.setAttribute(XMLBuilder.A_STATMEAN, StringUtil.roundToOne(""
-          + stat.floatValue()));
+          + stat));
     }
-    if ((stat = assignment.getStdDev()) != null) {
+    if ((stat = assignment.getStdDev()) != 0f) {
       xAssignment.setAttribute(XMLBuilder.A_STATDEV, StringUtil.roundToOne(""
-          + stat.floatValue()));
+          + stat));
     }
-    if ((stat = assignment.getMax()) != null) {
+    if ((stat = assignment.getMax()) != 0f) {
       xAssignment.setAttribute(XMLBuilder.A_STATMAX, StringUtil.roundToOne(""
-          + stat.floatValue()));
+          + stat));
     }
-    if ((stat = assignment.getMedian()) != null) {
+    if ((stat = assignment.getMedian()) != 0f) {
       xAssignment.setAttribute(XMLBuilder.A_STATMEDIAN, StringUtil.roundToOne(""
-          + stat.floatValue()));
+          + stat));
     }
   }
 
@@ -307,7 +308,7 @@ public class AssignmentXMLBuilder {
     // visible submissions
     Iterator i = assignment.getRequiredSubmissions().iterator();
     // We need to match RequiredFiles with the same FileName
-    Hashtable nameMatch = new Hashtable();
+    HashMap nameMatch = new HashMap();
     while (i.hasNext()) {
       RequiredSubmission sub = (RequiredSubmission) i.next();
       xSubmissions.appendChild(buildSubmissionSubtree(xml, sub, XMLBuilder.TAG_ITEM));
