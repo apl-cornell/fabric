@@ -1,8 +1,7 @@
 package cms.www.xml;
 
-import java.util.Collection;
+import fabric.util.*;
 import java.util.Date;
-import java.util.Iterator;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

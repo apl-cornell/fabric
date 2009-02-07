@@ -503,7 +503,7 @@ public class AssignmentXMLBuilder {
 
     Iterator i = assignment.getSubProblems().iterator();
     TreeMap sidToOrderMap = new TreeMap();
-    TreeMap orderToElementMap = new TreeMap();
+    java.util.TreeMap orderToElementMap = new java.util.TreeMap();
     TreeMap sidToChoiceTallyMap = new TreeMap(); // maps subproblem id to
                                                   // choice tally map
     // TreeMap cidToLetterMap = new TreeMap();
@@ -598,7 +598,7 @@ public class AssignmentXMLBuilder {
       orderToElementMap.put(order, xSubProblem);
     }
 
-    Iterator keySet = orderToElementMap.keySet().iterator();
+    java.util.Iterator keySet = orderToElementMap.keySet().iterator();
     while (keySet.hasNext()) {
       Element xSubproblem = (Element) orderToElementMap.get(keySet.next());
       xAssignment.appendChild(xSubproblem);

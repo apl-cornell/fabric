@@ -40,7 +40,7 @@ public class ViewStudentsXMLBuilder {
 
   public void buildStudentList(Course course, Document xml, Element studentsNode) {
     Iterator students = course.getStudents().iterator();
-    LinkedList nonenrolled = new LinkedList();
+    java.util.LinkedList nonenrolled = new java.util.LinkedList();
     while (students.hasNext()) {
       Student student = (Student) students.next();
       User    user    = student.getUser();
@@ -83,7 +83,7 @@ public class ViewStudentsXMLBuilder {
                               StringUtil.roundToOne(String.valueOf(grade.getGrade())));
         
         if (grade != null && grade.getGrade() != null &&
-            grade.getGrade() > assign.getMaxScore())
+            grade.getGrade().floatValue() > assign.getMaxScore())
           xGrade.setAttribute(XMLBuilder.A_OVERMAX, "true");
         
         Iterator regrades = assign.findRegradeRequests(group).iterator();
@@ -101,7 +101,7 @@ public class ViewStudentsXMLBuilder {
     }
     
     // add on all of the non-enrolled students
-    Iterator i = nonenrolled.iterator();
+    java.util.Iterator i = nonenrolled.iterator();
     while (i.hasNext())
       studentsNode.appendChild((Element) i.next());
   }

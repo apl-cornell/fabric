@@ -1,6 +1,6 @@
 package cms.model;
 
-import java.util.Collection;
+import fabric.util.Collection;
 
 public class CategoryContentsFileList extends CategoryContents {
 

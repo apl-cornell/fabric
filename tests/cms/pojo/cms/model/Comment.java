@@ -1,6 +1,6 @@
 package cms.model;
 
-import java.util.Collection;
+import fabric.util.Collection;
 import java.util.Date;
 
 public class Comment {

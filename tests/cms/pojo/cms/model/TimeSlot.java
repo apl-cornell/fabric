@@ -1,7 +1,6 @@
 package cms.model;
 
-import java.util.AbstractList;
-import java.util.Collection;
+import fabric.util.*;
 import java.util.Date;
 
 public class TimeSlot {

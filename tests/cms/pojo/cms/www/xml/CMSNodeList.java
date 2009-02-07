@@ -1,6 +1,6 @@
 package cms.www.xml;
 
-import fabric.util.*;
+import java.util.*;
 import org.w3c.dom.*;
 
 /**

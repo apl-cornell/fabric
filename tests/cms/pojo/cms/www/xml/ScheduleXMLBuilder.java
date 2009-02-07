@@ -5,10 +5,8 @@
  */
 package cms.www.xml;
 
-import java.util.ArrayList;
+import fabric.util.*;
 import java.util.Date;
-import java.util.Collection;
-import java.util.Iterator;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -109,7 +107,7 @@ public class ScheduleXMLBuilder {
     // schedule printouts
     Element xUnscheduled = xml.createElement(XMLBuilder.TAG_UNSCHEDULEDGROUPS);
     Iterator it = assignment.getGroups().iterator();
-    observedGroups = new java.util.ArrayList();
+    observedGroups = new ArrayList();
     while (it.hasNext()) {
       // Group gr = XMLBuilder.database.groupHome().findByPrimaryKey((GroupPK)
       // it.next());
@@ -183,7 +181,7 @@ public class ScheduleXMLBuilder {
         .format(tsEnd));
     // Add short subtrees for every group in the timeslot
     Iterator i = ts.findGroups().iterator();
-    Collection observedGroups = new java.util.ArrayList();
+    Collection observedGroups = new ArrayList();
     while (i.hasNext()) {
       Group gr = (Group) i.next();
       if (!observedGroups.contains(gr)) {

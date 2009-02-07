@@ -1743,7 +1743,7 @@ public class XMLBuilder {
       Group group = assignment.findGroup(user);
       AnswerSet answerSet = assignment.findMostRecentAnswerSet(group);
       if (answerSet != null) {
-        java.util.Iterator i = answerSet.getAnswers().iterator();
+        Iterator i = answerSet.getAnswers().iterator();
         answerMap = new HashMap();
 
         while (i.hasNext()) {

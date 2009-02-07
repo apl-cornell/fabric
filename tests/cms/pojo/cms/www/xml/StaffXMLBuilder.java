@@ -1,6 +1,6 @@
 package cms.www.xml;
 
-import java.util.Iterator;
+import fabric.util.Iterator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
