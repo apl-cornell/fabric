@@ -15,4 +15,8 @@ public class FabricException extends Exception {
   public FabricException(Throwable cause) {
     super(cause);
   }
+
+  public FabricException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

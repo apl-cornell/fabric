@@ -8,6 +8,7 @@ import fabric.client.TransactionCommitFailedException;
 import fabric.client.UnreachableCoreException;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
+import fabric.common.ProtocolError;
 import fabric.core.Worker;
 
 public class CommitTransactionMessage extends
@@ -57,20 +58,20 @@ public class CommitTransactionMessage extends
    * @see fabric.messages.Message#dispatch(fabric.core.Worker)
    */
   @Override
-  public Response dispatch(Worker w) throws TransactionCommitFailedException {
+  public Response dispatch(Worker w) throws TransactionCommitFailedException,
+      ProtocolError {
     return w.handle(this);
   }
 
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#send(fabric.client.Core)
+   * @see fabric.messages.Message#send(fabric.client.Core, boolean)
    */
-  @Override
   public Response send(RemoteCore core) throws UnreachableCoreException,
       TransactionCommitFailedException {
     try {
-      return super.send(core);
+      return super.send(core, true);
     } catch (UnreachableCoreException e) {
       throw e;
     } catch (TransactionCommitFailedException e) {

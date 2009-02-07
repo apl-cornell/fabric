@@ -11,6 +11,7 @@ import fabric.client.TransactionPrepareFailedException;
 import fabric.client.UnreachableCoreException;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
+import fabric.common.ProtocolError;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -144,20 +145,20 @@ public class PrepareTransactionMessage extends
    * @see fabric.messages.Message#dispatch(fabric.core.Worker)
    */
   @Override
-  public Response dispatch(Worker w) throws TransactionPrepareFailedException {
+  public Response dispatch(Worker w) throws TransactionPrepareFailedException,
+      ProtocolError {
     return w.handle(this);
   }
 
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#send(fabric.client.Core)
+   * @see fabric.messages.Message#send(fabric.client.Core, boolean)
    */
-  @Override
   public Response send(RemoteCore core) throws UnreachableCoreException,
       TransactionPrepareFailedException {
     try {
-      return super.send(core);
+      return super.send(core, true);
     } catch (UnreachableCoreException e) {
       throw e;
     } catch (TransactionPrepareFailedException e) {

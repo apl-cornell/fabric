@@ -4,6 +4,7 @@ import fabric.client.RemoteCore;
 import fabric.client.UnreachableCoreException;
 import fabric.common.AccessException;
 import fabric.common.FetchException;
+import fabric.common.ObjectGroup;
 
 /**
  * A FetchManager is responsible for retrieving objects from Cores. Clients
@@ -23,7 +24,7 @@ public interface FetchManager {
    * @throws AccessException
    * @throws UnreachableCoreException
    */
-  public Glob fetch(RemoteCore c, long onum) throws FetchException;
+  public ObjectGroup fetch(RemoteCore c, long onum) throws FetchException;
 
   /**
    * Called to destroy and clean up the fetch manager.

@@ -1,6 +1,7 @@
 package fabric.core;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import jif.lang.Label;
@@ -9,11 +10,12 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
+import fabric.common.AccessException;
+import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.store.ObjectStore;
-import fabric.core.store.StoreException;
 import fabric.lang.Principal;
 
 public class TransactionManager {
@@ -32,12 +34,10 @@ public class TransactionManager {
   /**
    * Instruct the transaction manager that the given transaction is aborting
    */
-  public void abortTransaction(Principal client, int transactionID) {
+  public void abortTransaction(Principal client, int transactionID)
+      throws AccessException {
     synchronized (store) {
-      try {
-        store.rollback(client, transactionID);
-      } catch (StoreException e) {
-      }
+      store.rollback(client, transactionID);
     }
   }
 
@@ -49,10 +49,10 @@ public class TransactionManager {
     synchronized (store) {
       try {
         store.commit(client, transactionID);
-      } catch (final StoreException e) {
+      } catch (final AccessException e) {
         throw new TransactionCommitFailedException("Insufficient Authorization");
       } catch (final RuntimeException e) {
-        throw new TransactionCommitFailedException("something went wrong");
+        throw new TransactionCommitFailedException("something went wrong", e);
       }
     }
   }
@@ -97,7 +97,7 @@ public class TransactionManager {
     synchronized (store) {
       try {
         tid = store.beginTransaction(client);
-      } catch (final StoreException e) {
+      } catch (final AccessException e) {
         throw new TransactionPrepareFailedException("Insufficient privileges");
       }
     }
@@ -235,22 +235,147 @@ public class TransactionManager {
   }
 
   /**
-   * @throws StoreException
+   * Reads a group of objects from the object store.
+   * 
+   * @param principal
+   *          The principal performing the read. For dissemination reads, this
+   *          is ignored.
+   * @param onum
+   *          The group's head object.
+   * @param dissem
+   *          Whether this is a dissemination read.
+   * @param worker
+   *          Used to track read statistics.
+   */
+  public ObjectGroup readGroup(Principal principal, long onum, boolean dissem,
+      Worker worker) throws AccessException {
+    if (dissem) principal = Client.getClient().getPrincipal();
+    SerializedObject obj = read(principal, onum);
+    if (obj == null) return null;
+    
+    Label headLabel = getLabelByOnum(obj.getLabelOnum());
+
+    // Traverse object graph and add more objects to the object group.
+    LongKeyMap<SerializedObject> group = new LongKeyHashMap<SerializedObject>();
+    for (Iterator<Long> it = obj.getIntracoreRefIterator(); it.hasNext();) {
+      long relatedOnum = it.next();
+      SerializedObject related = read(principal, relatedOnum, true);
+      if (related != null) {
+        // If this is a dissemination read, ensure that the related object's
+        // label is at most as restrictive as the head object's label.
+        if (dissem) {
+          Label relatedLabel = getLabelByOnum(related.getLabelOnum());
+          if (!relabelsTo(relatedLabel, headLabel)) continue;
+        }
+        
+        group.put(relatedOnum, related);
+        int count = 0;
+        if (worker.numSendsByType.containsKey(related.getClassName()))
+          count = worker.numSendsByType.get(related.getClassName());
+        count++;
+        worker.numSendsByType.put(related.getClassName(), count);
+      }
+    }
+
+    worker.numObjectsSent += group.size() + 1;
+    int count = 0;
+    if (worker.numSendsByType.containsKey(obj.getClassName()))
+      count = worker.numSendsByType.get(obj.getClassName());
+    count++;
+    worker.numSendsByType.put(obj.getClassName(), count);
+    
+    return new ObjectGroup(obj, group);
+  }
+
+  /**
+   * This is the cache for checking whether one label relabels to another. We're
+   * not using the caches in LabelUtil because the transaction management is too
+   * slow (!!).
+   */
+  private static final LongKeyMap<LongKeyHashMap<Boolean>> cachedRelabelQueries =
+      new LongKeyHashMap<LongKeyHashMap<Boolean>>();
+
+  private static Boolean checkRelabellingCache(long labelFromOnum,
+      long labelToOnum) {
+    LongKeyMap<Boolean> submap;
+    synchronized (cachedRelabelQueries) {
+      submap = cachedRelabelQueries.get(labelFromOnum);
+      if (submap == null) return null;
+    }
+
+    synchronized (submap) {
+      return submap.get(labelToOnum);
+    }
+  }
+
+  private static void cacheRelabelResult(long labelFromOnum, long labelToOnum,
+      Boolean result) {
+    LongKeyHashMap<Boolean> submap;
+    synchronized (cachedRelabelQueries) {
+      submap = cachedRelabelQueries.get(labelFromOnum);
+      if (submap == null) {
+        submap = new LongKeyHashMap<Boolean>();
+        cachedRelabelQueries.put(labelFromOnum, submap);
+      }
+    }
+
+    synchronized (submap) {
+      submap.put(labelToOnum, result);
+    }
+  }
+
+  /**
+   * This assumes that the label references are intracore references.
+   */
+  private boolean relabelsTo(final Label from, final Label to) {
+    if (from.$getOnum() == to.$getOnum()) return true;
+    Boolean result = checkRelabellingCache(from.$getOnum(), to.$getOnum());
+    if (result != null) return result;
+    
+    // Call into the Jif label framework to perform the relabelling check.
+    result = Client.runInTransaction(new Client.Code<Boolean>() {
+      public Boolean run() {
+        return LabelUtil.$Impl.relabelsTo(from, to);
+      }
+    });
+
+    cacheRelabelResult(from.$getOnum(), to.$getOnum(), result);
+
+    return result;
+  }
+
+  /**
+   * @throws AccessException
    *           if the principal is not allowed to read the object.
    */
   public SerializedObject read(Principal client, long onum)
-      throws StoreException {
+      throws AccessException {
+    return read(client, onum, false);
+  }
+
+  /**
+   * @param denyWithNull
+   *          If true, this method will return null instead of throwing an
+   *          AccessException if the client has insufficient privileges.
+   */
+  private SerializedObject read(Principal client, long onum,
+      boolean denyWithNull) throws AccessException {
     SerializedObject obj;
     synchronized (store) {
       obj = store.read(onum);
     }
+    
+    if (obj == null) return null;
     if (isReadPermitted(client, obj.getLabelOnum())) return obj;
-    throw new StoreException();
+    if (denyWithNull) return null;
+    throw new AccessException();
   }
 
   /**
-   * This is the cache for authorizing reads. We're not using the caches in
-   * LabelUtil because the transaction management is too slow (!!).
+   * This is the cache for authorizing reads. The keys in this map are label
+   * onums and principals. The values are booleans that specify whether the
+   * principal is authorized to read according to the label. We're not using the
+   * caches in LabelUtil because the transaction management is too slow (!!).
    */
   private static final LongKeyMap<Map<Principal, Boolean>> cachedReadAuthorizations =
       new LongKeyHashMap<Map<Principal, Boolean>>();
@@ -313,10 +438,10 @@ public class TransactionManager {
   }
 
   /**
-   * @throws StoreException
+   * @throws AccessException
    *           if the principal is not allowed to create objects on this core.
    */
-  public long[] newOnums(Principal client, int num) throws StoreException {
+  public long[] newOnums(Principal client, int num) throws AccessException {
     synchronized (store) {
       return store.newOnums(num);
     }

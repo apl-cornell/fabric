@@ -23,13 +23,15 @@ import fabric.messages.*;
 import fabric.util.Map;
 
 /**
- * Encapsulates a Core. This class maintains the connection to the core and
- * manages all communication. Cores can only be obtained through the
+ * Encapsulates a Core. This class maintains two connections to the core (one
+ * with SSL, for client requests; and one without, for dissemination requests)
+ * and manages all communication. Cores can only be obtained through the
  * <code>Client.getCore()</code> interface. For each remote core, there should
  * be at most one <code>RemoteCore</code> object representing that core.
  */
 public class RemoteCore implements Core {
-  private transient Socket conn;
+  private transient Socket sslConn;
+  private transient Socket unencryptedConn;
 
   /**
    * The DNS host name of the host.
@@ -47,10 +49,12 @@ public class RemoteCore implements Core {
   private transient LongKeyMap<FabricSoftRef> objects;
 
   /**
-   * The connection to the actual Core.
+   * The connections to the actual Core.
    */
-  private transient ObjectInputStream in;
-  private transient ObjectOutputStream out;
+  private transient ObjectInputStream sslIn;
+  private transient ObjectOutputStream sslOut;
+  private transient ObjectInputStream unencryptedIn;
+  private transient ObjectOutputStream unencryptedOut;
 
   /**
    * Cache of serialized objects that the core has sent us.
@@ -67,31 +71,36 @@ public class RemoteCore implements Core {
     this.serialized = new LongKeyHashMap<SoftReference<SerializedObject>>();
   }
 
-  public ObjectInputStream objectInputStream() {
-    return in;
+  public ObjectInputStream objectInputStream(boolean ssl) {
+    if (ssl) return sslIn;
+    return unencryptedIn; 
   }
 
-  public ObjectOutputStream objectOutputStream() {
-    return out;
+  public ObjectOutputStream objectOutputStream(boolean ssl) {
+    if (ssl) return sslOut;
+    return unencryptedOut;
   }
 
   /**
    * Establishes a connection with a core node at a given host. A helper for
    * <code>Message.send(Core)</code>.
    * 
+   * @param withSSL
+   *          Whether to establish an encrypted connection.
    * @param client
-   *                The Client instance.
+   *          The Client instance.
    * @param core
-   *                The core being connected to.
+   *          The core being connected to.
    * @param host
-   *                The host to connect to.
+   *          The host to connect to.
    * @param corePrincipal
-   *                The principal associated with the core we're connecting to.
+   *          The principal associated with the core we're connecting to.
    * @throws IOException
-   *                 if there was an error.
+   *           if there was an error.
    */
-  public void connect(Client client, Core core, InetSocketAddress host,
-      Principal corePrincipal) throws NoSuchCoreError, IOException {
+  public void connect(boolean withSSL, Client client, Core core,
+      InetSocketAddress host, Principal corePrincipal) throws NoSuchCoreError,
+      IOException {
     Socket socket = new Socket();
     socket.setTcpNoDelay(true);
     socket.setKeepAlive(true);
@@ -100,12 +109,15 @@ public class RemoteCore implements Core {
     socket.connect(host, client.timeout);
     DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
     dataOut.writeUTF(core.name());
+    
+    // Specify whether we're encrypting.
+    dataOut.writeBoolean(withSSL);
     dataOut.flush();
 
     // Determine whether the core exists at the node.
     if (socket.getInputStream().read() == 0) throw new NoSuchCoreError();
 
-    if (client.useSSL) {
+    if (withSSL && client.useSSL) {
       // Start encrypting.
       SSLSocket sslSocket =
           (SSLSocket) client.sslSocketFactory.createSocket(socket, core.name(),
@@ -124,38 +136,50 @@ public class RemoteCore implements Core {
         throw new IOException();
       }
 
-      out =
+      sslOut =
           new ObjectOutputStream(new BufferedOutputStream(sslSocket
               .getOutputStream()));
-      out.flush();
-      in =
+      sslOut.flush();
+      sslIn =
           new ObjectInputStream(new BufferedInputStream(sslSocket
               .getInputStream()));
 
-      conn = sslSocket;
+      sslConn = sslSocket;
     } else {
-      out =
+      ObjectOutputStream out =
           new ObjectOutputStream(new BufferedOutputStream(socket
               .getOutputStream()));
-      out.writeUTF(client.javaPrincipal.getName());
+      if (withSSL) out.writeUTF(client.javaPrincipal.getName());
       out.flush();
-      in =
+      ObjectInputStream in =
           new ObjectInputStream(
               new BufferedInputStream(socket.getInputStream()));
-      conn = socket;
+      
+      if (withSSL) {
+        sslOut = out;
+        sslIn = in;
+        sslConn = socket;
+      } else {
+        unencryptedOut = out;
+        unencryptedIn = in;
+        unencryptedConn = socket;
+      }
     }
     
-    // Send to the core a pointer to our principal object.
-    fabric.lang.Principal principal = client.getPrincipal();
-    out.writeBoolean(principal != null);
-    if (principal != null) {
-      out.writeUTF(principal.$getCore().name());
-      out.writeLong(principal.$getOnum());
+    if (withSSL) {
+      // Send to the core a pointer to our principal object.
+      fabric.lang.Principal principal = client.getPrincipal();
+      sslOut.writeBoolean(principal != null);
+      if (principal != null) {
+        sslOut.writeUTF(principal.$getCore().name());
+        sslOut.writeLong(principal.$getOnum());
+      }
     }
   }
 
-  public boolean isConnected() {
-    return conn != null && !conn.isClosed();
+  public boolean isConnected(boolean ssl) {
+    if (ssl) return sslConn != null && !sslConn.isClosed();
+    return unencryptedConn != null && !unencryptedConn.isClosed();
   }
 
   public synchronized long createOnum() throws UnreachableCoreException {
@@ -234,7 +258,7 @@ public class RemoteCore implements Core {
 
     if (result == null) {
       // no serial copy --- fetch from dissemination
-      Glob g = Client.getClient().fetchManager().fetch(this, onum);
+      ObjectGroup g = Client.getClient().fetchManager().fetch(this, onum);
 
       try {
         result = g.obj().deserialize(this);
@@ -266,14 +290,25 @@ public class RemoteCore implements Core {
    * Goes to the core to get object.
    * 
    * @param onum
-   *                The object number to fetch
-   * @return The constructed $Impl
-   * @throws FabricException
+   *          The object number to fetch
+   * @return An ObjectGroup whose head object is the requested object.
+   * @throws FetchException
+   *           if there was an error while fetching the object from the core.
    */
-  public Glob readObjectFromCore(long onum) throws FetchException {
+  public ObjectGroup readObjectFromCore(long onum) throws FetchException {
     ReadMessage.Response response = new ReadMessage(onum).send(this);
-    Glob g = new Glob(response.serializedResult, response.related);
-    return g;
+    return response.group;
+  }
+
+  /**
+   * Called by dissemination to fetch an encrypted object from the core.
+   * @param onum The object number to fetch.
+   */
+  public final Glob readEncryptedObjectFromCore(long onum)
+      throws FetchException {
+    DissemReadMessage.Response response =
+      new DissemReadMessage(onum).send(this);
+    return response.glob;
   }
 
   /**

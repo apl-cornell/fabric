@@ -72,7 +72,7 @@ public class Cache {
     Glob g = null;
     
     try {
-      g = c.readObjectFromCore(onum);
+      g = c.readEncryptedObjectFromCore(onum);
     } catch (FetchException e) {}
     
     if (g != null) {
@@ -98,7 +98,7 @@ public class Cache {
     synchronized (map) {
       Glob old = get(c, onum);
       
-      if (old == null || old.obj().getVersion() < g.obj().getVersion()) {
+      if (old == null || old.isOlderThan(g)) {
         map.put(key, new SoftReference<Glob>(g));
       }
     }

@@ -7,14 +7,11 @@ import fabric.client.Client;
 import fabric.client.RemoteCore;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
-import fabric.common.FetchException;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.Node.Core;
-import fabric.core.store.StoreException;
-import fabric.dissemination.Glob;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -35,7 +32,11 @@ public class InProcessCore extends RemoteCore {
   
   @Override
   public void abortTransaction(int transactionID) {
-    tm.abortTransaction(Client.getClient().getPrincipal(), transactionID);
+    try {
+      tm.abortTransaction(Client.getClient().getPrincipal(), transactionID);
+    } catch (AccessException e) {
+      throw new InternalError(e);
+    }
   }
 
   @Override
@@ -48,7 +49,7 @@ public class InProcessCore extends RemoteCore {
   public long createOnum() {
     try {
       return tm.newOnums(Client.getClient().getPrincipal(), 1)[0];
-    } catch (StoreException e) {
+    } catch (AccessException e) {
       throw new InternalError(e);
     }
   }
@@ -76,12 +77,12 @@ public class InProcessCore extends RemoteCore {
   }
 
   @Override
-  public Glob readObjectFromCore(long onum) throws FetchException {
+  public ObjectGroup readObjectFromCore(long onum) throws FetchException {
     SerializedObject obj;
     try {
       obj = tm.read(Client.getClient().getPrincipal(), onum);
-      return new Glob(obj, new LongKeyHashMap<SerializedObject>());
-    } catch (StoreException e) {
+      return new ObjectGroup(obj, new LongKeyHashMap<SerializedObject>());
+    } catch (AccessException e) {
       throw new FetchException(e);
     }
   }

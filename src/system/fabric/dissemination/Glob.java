@@ -4,17 +4,19 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.common.SerializedObject;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
+import fabric.common.ObjectGroup;
 
 /**
  * A glob is a serialized object and a set of related objects.
  */
 public class Glob {
+  /**
+   * The head object's version number.
+   */
+  private final int version;
   
-  private final SerializedObject obj;
-  private final LongKeyMap<SerializedObject> related;
+  // XXX This needs to be replaced with an encrypted and signed thing.
+  private final ObjectGroup group;
   
   private transient int level;
   private transient int frequency;
@@ -22,29 +24,9 @@ public class Glob {
   
   private transient boolean home;
   
-  public Glob(SerializedObject obj, LongKeyMap<SerializedObject> related) {
-    this(obj, related, false);
-  }
-
-  public Glob(SerializedObject obj, LongKeyMap<SerializedObject> related, 
-      boolean home) {
-    this.obj = obj;
-    this.related = related;
-    this.home = home;
-  }
-  
-  /**
-   * The main object of this glob.
-   */
-  public SerializedObject obj() {
-    return obj;
-  }
-  
-  /**
-   * The related objects as a map from their onums to the objects.
-   */
-  public LongKeyMap<SerializedObject> related() {
-    return related;
+  public Glob(ObjectGroup group) {
+    this.version = group.obj().getVersion();
+    this.group = group;
   }
   
   /** The dissemination level of the glob. 0 is replicated to all nodes. */
@@ -87,29 +69,27 @@ public class Glob {
     return home;
   }
   
+  /**
+   * Whether this Glob is older than the given Glob.
+   */
+  public boolean isOlderThan(Glob glob) {
+    return version < glob.version;
+  }
+  
   /** Serializer. */
   public void write(DataOutput out) throws IOException {
-    obj.write(out);
-    out.writeInt(related.size());
-    
-    for (LongKeyMap.Entry<SerializedObject> e : related.entrySet()) {
-      out.writeLong(e.getKey());
-      e.getValue().write(out);
-    }
+    out.writeInt(version);
+    group.write(out);
   }
   
   /** Deserializer. */
   public Glob(DataInput in) throws IOException {
-    obj = new SerializedObject(in);
-    
-    int n = in.readInt();
-    related = new LongKeyHashMap<SerializedObject>(n);
-    
-    for (int i = 0; i < n; i++) {
-      long onum = in.readLong();
-      SerializedObject o = new SerializedObject(in);
-      related.put(onum, o);
-    }
+    this.version = in.readInt();
+    this.group = new ObjectGroup(in);
+  }
+
+  public ObjectGroup decrypt() {
+    return group;
   }
 
 }

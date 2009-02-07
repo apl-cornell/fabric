@@ -1,41 +1,32 @@
 package fabric.messages;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.common.AccessException;
-import fabric.common.FabricException;
-import fabric.common.FetchException;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.SerializedObject;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
 import fabric.core.Worker;
 import fabric.lang.Object.$Impl;
 
 /**
- * A <code>ReadMessage</code> represents a request to read an object at a
- * core.
+ * A <code>ReadMessage</code> represents a request from a client to read an
+ * object at a core.
  */
 public final class ReadMessage extends Message<ReadMessage.Response> {
   public static class Response implements Message.Response {
 
-    public final LongKeyMap<SerializedObject> related;
-
-    /**
-     * The serialized result of the read message.
-     */
-    public final SerializedObject serializedResult;
+    public final ObjectGroup group;
 
     private transient final Core core;
 
     /**
      * Used by the core to create a read-message response.
      */
-    public Response(SerializedObject obj, LongKeyMap<SerializedObject> group) {
-      this.serializedResult = obj;
-      this.related = group;
+    public Response(ObjectGroup group) {
+      this.group = group;
       this.core = null;
     }
 
@@ -49,12 +40,9 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
      */
     Response(Core core, DataInput in) throws IOException {
       this.core = core;
-      int size = in.readInt();
-      this.related = new LongKeyHashMap<SerializedObject>(size);
-      for (int i = 0; i < size; i++) {
-        related.put(in.readLong(), new SerializedObject(in));
-      }
-      this.serializedResult = new SerializedObject(in);
+      if (in.readBoolean())
+        this.group = new ObjectGroup(in);
+      else this.group = null;
     }
 
     /*
@@ -63,17 +51,14 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
      * @see fabric.messages.Message.Response#write(java.io.DataOutput)
      */
     public void write(DataOutput out) throws IOException {
-      out.writeInt(related.size());
-      for (LongKeyMap.Entry<SerializedObject> entry : related.entrySet()) {
-        out.writeLong(entry.getKey());
-        entry.getValue().write(out);
-      }
-      
-      serializedResult.write(out);
+      if (group != null) {
+        out.writeBoolean(true);
+        group.write(out);
+      } else out.writeBoolean(false);
     }
     
     public $Impl result() throws ClassNotFoundException {
-      return serializedResult.deserialize(core);
+      return group.obj().deserialize(core);
     }
   }
 
@@ -82,6 +67,9 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
    */
   public final long onum;
 
+  /**
+   * Creates a read request for a client.
+   */
   public ReadMessage(long onum) {
     super(MessageType.READ_ONUM);
     this.onum = onum;
@@ -100,19 +88,18 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
    * @see fabric.messages.Message#dispatch(fabric.core.Worker)
    */
   @Override
-  public Response dispatch(Worker w) throws AccessException {
+  public Response dispatch(Worker w) throws AccessException, ProtocolError {
     return w.handle(this);
   }
 
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#send(fabric.client.Core)
+   * @see fabric.messages.Message#send(fabric.client.Core, boolean)
    */
-  @Override
   public Response send(RemoteCore core) throws FetchException {
     try {
-      return super.send(core);
+      return send(core, true);
     } catch (FetchException e) {
       throw e;
     } catch (FabricException e) {

@@ -8,6 +8,7 @@ import java.util.*;
 import jif.lang.*;
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.common.AccessException;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
@@ -166,10 +167,10 @@ public abstract class ObjectStore {
    * @return a transaction identifier that can be subsequently be passed to
    *         registerCreate(), registerRead(), registerWrite(), commit(), or
    *         abort().
-   * @throws StoreException
+   * @throws AccessException
    *           if the client has insufficient privileges.
    */
-  public final int beginTransaction(Principal client) throws StoreException {
+  public final int beginTransaction(Principal client) throws AccessException {
     int tid = newTid(client);
     pendingByTid.put(tid, new PendingTransaction(client));
     return tid;
@@ -178,10 +179,10 @@ public abstract class ObjectStore {
   /**
    * Allocates a new transaction ID for the given client.
    * 
-   * @throws StoreException
+   * @throws AccessException
    *           if the client has insufficient privileges.
    */
-  protected abstract int newTid(Principal client) throws StoreException;
+  protected abstract int newTid(Principal client) throws AccessException;
 
   /**
    * Registers that a transaction has read an object.
@@ -253,10 +254,10 @@ public abstract class ObjectStore {
    * @param tid
    *          the identifier (returned by prepare) corresponding to the
    *          transaction
-   * @throws StoreException
+   * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(Principal client, int tid) throws StoreException;
+  public abstract void commit(Principal client, int tid) throws AccessException;
 
   /**
    * Cause the objects prepared in transaction [tid] to be discarded.
@@ -266,11 +267,11 @@ public abstract class ObjectStore {
    * @param tid
    *          the identifier (returned by prepare) corresponding to the
    *          transaction
-   * @throws StoreException
+   * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
   public abstract void rollback(Principal client, int tid)
-      throws StoreException;
+      throws AccessException;
 
   /**
    * Return the object stored at a particular onum.

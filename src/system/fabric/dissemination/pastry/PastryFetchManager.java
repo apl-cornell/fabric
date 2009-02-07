@@ -6,6 +6,7 @@ import fabric.client.RemoteCore;
 import fabric.client.UnreachableCoreException;
 import fabric.common.FetchException;
 import fabric.common.InternalError;
+import fabric.common.ObjectGroup;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 
@@ -28,12 +29,15 @@ public class PastryFetchManager implements FetchManager {
     }
   }
 
-  public Glob fetch(RemoteCore c, long onum) throws FetchException {
+  public ObjectGroup fetch(RemoteCore c, long onum) throws FetchException {
+    Glob glob;
     try {
-      return node.disseminator().fetch(c, onum);
+      glob = node.disseminator().fetch(c, onum);
     } catch (UnreachableCoreException e) {
       return c.readObjectFromCore(onum);
     }
+    
+    return glob.decrypt();
   }
   
   public void destroy() {

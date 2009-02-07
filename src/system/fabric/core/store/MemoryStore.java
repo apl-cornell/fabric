@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.logging.Logger;
 
+import fabric.common.AccessException;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
@@ -100,7 +101,7 @@ public class MemoryStore extends ObjectStore {
   }
 
   @Override
-  public void commit(Principal client, int tid) throws StoreException {
+  public void commit(Principal client, int tid) throws AccessException {
     PendingTransaction tx = remove(client, tid);
 
     // merge in the objects
@@ -110,7 +111,7 @@ public class MemoryStore extends ObjectStore {
   }
 
   @Override
-  public void rollback(Principal client, int tid) throws StoreException {
+  public void rollback(Principal client, int tid) throws AccessException {
     remove(client, tid);
   }
 
@@ -155,9 +156,9 @@ public class MemoryStore extends ObjectStore {
    * a commit or roll-back.
    */
   private PendingTransaction remove(Principal client, int tid)
-      throws StoreException {
+      throws AccessException {
     PendingTransaction tx = pendingByTid.remove(tid);
-    if (tx == null) throw new StoreException();
+    if (tx == null) throw new AccessException();
 
     // XXX Check if the client acts for the owner.
 

@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -19,10 +18,9 @@ import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.AccessException;
 import fabric.common.FabricThread;
-import fabric.common.SerializedObject;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
-import fabric.core.store.StoreException;
+import fabric.common.ObjectGroup;
+import fabric.common.ProtocolError;
+import fabric.dissemination.Glob;
 import fabric.lang.Principal;
 import fabric.messages.*;
 
@@ -31,46 +29,50 @@ import fabric.messages.*;
  * the in-process client to perform access control.
  */
 public class Worker extends FabricThread.AbstractImpl {
-  
+
   /** The node that we're working for. */
   private final Node node;
 
   /** The client that we're serving. */
   private Principal client;
+  private String clientName;
+  private boolean clientIsDissem;
 
   /** The transaction manager for the object core that the client is talking to. */
   private TransactionManager transactionManager;
 
   /** The surrogate creation policy object */
   private SurrogateManager surrogateManager;
-  
+
   // The socket and associated I/O streams for communicating with the client.
   private Socket socket;
+  private SSLSocket sslSocket;
   private ObjectInputStream in;
   private ObjectOutputStream out;
 
   // Bookkeeping information for debugging/monitoring purposes:
   private int numReads;
-  private int numObjectsSent;
+  int numObjectsSent;
   private int numPrepares;
   private int numCommits;
   private int numCreates;
   private int numWrites;
-  private Map<String, Integer> numSendsByType;
+  Map<String, Integer> numSendsByType;
   private static final Logger logger = Logger.getLogger("fabric.core.worker");
 
-  /** associate debugging log messages with pending transactions */
+  /** Associates debugging log messages with pending transactions */
   private Map<Integer, LogRecord> pendingLogs;
-  
+
   private class LogRecord {
     public LogRecord(int creates, int writes) {
       this.creates = creates;
-      this.writes  = writes;
+      this.writes = writes;
     }
+
     public int creates;
     public int writes;
   }
-  
+
   /**
    * Instantiates a new worker thread and starts it running.
    */
@@ -107,7 +109,7 @@ public class Worker extends FabricThread.AbstractImpl {
       } catch (InterruptedException e) {
         continue;
       }
-      
+
       reset();
 
       SSLSocket sslSocket = null;
@@ -118,63 +120,22 @@ public class Worker extends FabricThread.AbstractImpl {
         OutputStream out = socket.getOutputStream();
         String coreName = dataIn.readUTF();
         this.transactionManager = node.getTransactionManager(coreName);
-        this.surrogateManager   = node.getSurrogateManager(coreName);
-        this.pendingLogs        = new HashMap<Integer, LogRecord>();
+        this.surrogateManager = node.getSurrogateManager(coreName);
+        this.pendingLogs = new HashMap<Integer, LogRecord>();
 
         if (this.transactionManager != null) {
           // Indicate that the core exists.
           out.write(1);
           out.flush();
-          
-          String clientName;
 
-          if (node.opts.useSSL) {
-            // Initiate the SSL handshake and initialize the fields.
-            SSLSocketFactory sslSocketFactory =
-                node.getSSLSocketFactory(coreName);
-            synchronized (sslSocketFactory) {
-              sslSocket =
-                  (SSLSocket) sslSocketFactory.createSocket(socket, null, 0,
-                      true);
-            }
-            sslSocket.setUseClientMode(false);
-            sslSocket.setNeedClientAuth(true);
-            sslSocket.startHandshake();
-            this.out =
-                new ObjectOutputStream(new BufferedOutputStream(sslSocket
-                    .getOutputStream()));
-            this.out.flush();
-            this.in =
-                new ObjectInputStream(new BufferedInputStream(sslSocket
-                    .getInputStream()));
-            clientName = sslSocket.getSession().getPeerPrincipal().getName();
-          } else {
-            this.out =
-                new ObjectOutputStream(new BufferedOutputStream(socket
-                    .getOutputStream()));
-            this.out.flush();
-            this.in =
-                new ObjectInputStream(new BufferedInputStream(socket
-                    .getInputStream()));
-            clientName = in.readUTF();
-          }
-          
-          // Read in the pointer to the principal object.
-          if (in.readBoolean()) {
-            String principalCoreName = in.readUTF();
-            Core principalCore = Client.getClient().getCore(principalCoreName);
-            long principalOnum = in.readLong();
-            this.client =
-                new fabric.lang.Principal.$Proxy(principalCore, principalOnum);
-          } else {
-            this.client = null;
-          }
-          
-          if (authenticateClient(clientName)) {
+          if (initializeSession(coreName, dataIn)) {
             logger.info("Core " + coreName + " accepted connection");
-            logger.info("Client principal is " + clientName
-                + (this.client == null ? " (acting as null)" : ""));
-
+            if (clientIsDissem) {
+              logger.info("Client connected as a dissemination node");
+            } else {
+              logger.info("Client principal is " + clientName
+                  + (client == null ? " (acting as null)" : ""));
+            }
             run_();
           }
         } else {
@@ -197,13 +158,13 @@ public class Worker extends FabricThread.AbstractImpl {
         logger.log(Level.WARNING, "Connection closing", e);
       }
 
-      logger.info(numReads       + " read requests");
+      logger.info(numReads + " read requests");
       logger.info(numObjectsSent + " objects sent");
-      logger.info(numPrepares    + " prepare requests");
-      logger.info(numCommits     + " commit requests");
-      logger.info(numCreates     + " objects created");
-      logger.info(numWrites      + " objects updated");
-      
+      logger.info(numPrepares + " prepare requests");
+      logger.info(numCommits + " commit requests");
+      logger.info(numCreates + " objects created");
+      logger.info(numWrites + " objects updated");
+
       for (Map.Entry<String, Integer> entry : numSendsByType.entrySet()) {
         logger.info("\t" + entry.getValue() + " " + entry.getKey() + " sent");
       }
@@ -226,13 +187,75 @@ public class Worker extends FabricThread.AbstractImpl {
   }
 
   /**
+   * Performs session initialization.
+   * 
+   * @return whether the session was successfully initialized.
+   * @throws IOException 
+   */
+  private boolean initializeSession(String coreName, DataInput dataIn) throws IOException {
+    clientIsDissem = !dataIn.readBoolean();
+    if (clientIsDissem) {
+      // Connection from dissemination node.
+      this.out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+      this.out.flush();
+      this.in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+      this.clientName = null;
+      this.client = null;
+      return true;
+    }
+    
+    // Connection from client.
+    if (node.opts.useSSL) {
+      // Initiate the SSL handshake and initialize the fields.
+      SSLSocketFactory sslSocketFactory = node.getSSLSocketFactory(coreName);
+      synchronized (sslSocketFactory) {
+        sslSocket =
+            (SSLSocket) sslSocketFactory.createSocket(socket, null, 0, true);
+      }
+      sslSocket.setUseClientMode(false);
+      sslSocket.setNeedClientAuth(true);
+      sslSocket.startHandshake();
+      this.out =
+          new ObjectOutputStream(new BufferedOutputStream(sslSocket
+              .getOutputStream()));
+      this.out.flush();
+      this.in =
+          new ObjectInputStream(new BufferedInputStream(sslSocket
+              .getInputStream()));
+      this.clientName = sslSocket.getSession().getPeerPrincipal().getName();
+    } else {
+      this.out =
+          new ObjectOutputStream(new BufferedOutputStream(socket
+              .getOutputStream()));
+      this.out.flush();
+      this.in =
+          new ObjectInputStream(
+              new BufferedInputStream(socket.getInputStream()));
+      this.clientName = in.readUTF();
+    }
+
+    // Read in the pointer to the principal object.
+    if (in.readBoolean()) {
+      String principalCoreName = in.readUTF();
+      Core principalCore = Client.getClient().getCore(principalCoreName);
+      long principalOnum = in.readLong();
+      this.client =
+          new fabric.lang.Principal.$Proxy(principalCore, principalOnum);
+    } else {
+      this.client = null;
+    }
+    
+    return authenticateClient(this.clientName);
+  }
+
+  /**
    * Determines whether the client principal matches the given name.
    */
   private boolean authenticateClient(final String name) {
     // XXX Bypass authentication if we have a null client.
     // XXX This is to allow bootstrapping the client principal.
     if (client == null) return true;
-    
+
     return Client.runInTransaction(new Client.Code<Boolean>() {
       public Boolean run() {
         try {
@@ -257,7 +280,7 @@ public class Worker extends FabricThread.AbstractImpl {
       Message.receive(in, out, this);
     }
   }
-  
+
   private void reset() {
     // Reset the statistics counters.
     numReads =
@@ -277,7 +300,10 @@ public class Worker extends FabricThread.AbstractImpl {
     transactionManager = null;
   }
 
-  public void handle(AbortTransactionMessage message) {
+  public void handle(AbortTransactionMessage message) throws AccessException,
+      ProtocolError {
+    if (clientIsDissem) throw new ProtocolError("Message not supported.");
+    
     logger.finer("Handling Abort Message");
     transactionManager.abortTransaction(client, message.transactionID);
     logger.fine("Transaction " + message.transactionID + " aborted");
@@ -286,31 +312,33 @@ public class Worker extends FabricThread.AbstractImpl {
   /**
    * Processes the given request for new OIDs.
    */
-  public AllocateMessage.Response handle(AllocateMessage msg) throws AccessException {
+  public AllocateMessage.Response handle(AllocateMessage msg)
+      throws AccessException, ProtocolError {
+    if (clientIsDissem) throw new ProtocolError("Message not supported.");
+    
     logger.finer("Handling Allocate Message");
-    try {
-      long[] onums = transactionManager.newOnums(client, msg.num);
-      return new AllocateMessage.Response(onums);
-    } catch (StoreException e) {
-      throw new AccessException();
-    }
+    long[] onums = transactionManager.newOnums(client, msg.num);
+    return new AllocateMessage.Response(onums);
   }
 
   /**
    * Processes the given commit request
    */
   public CommitTransactionMessage.Response handle(
-      CommitTransactionMessage message) throws TransactionCommitFailedException {
+      CommitTransactionMessage message)
+      throws TransactionCommitFailedException, ProtocolError {
+    if (clientIsDissem) throw new ProtocolError("Message not supported.");
+    
     logger.finer("Handling Commit Message");
     this.numCommits++;
-    
+
     transactionManager.commitTransaction(client, message.transactionID);
     logger.fine("Transaction " + message.transactionID + " committed");
 
     // updated object tallies
     LogRecord lr = pendingLogs.remove(message.transactionID);
     this.numCreates += lr.creates;
-    this.numWrites  += lr.writes;
+    this.numWrites += lr.writes;
 
     return new CommitTransactionMessage.Response();
   }
@@ -319,23 +347,24 @@ public class Worker extends FabricThread.AbstractImpl {
    * Processes the given PREPARE request.
    */
   public PrepareTransactionMessage.Response handle(PrepareTransactionMessage msg)
-      throws TransactionPrepareFailedException {
+      throws TransactionPrepareFailedException, ProtocolError {
+    if (clientIsDissem) throw new ProtocolError("Message not supported.");
+    
     logger.finer("Handling Prepare Message");
     this.numPrepares++;
-    
-    PrepareRequest req = new PrepareRequest(msg.serializedCreates,
-                                            msg.serializedWrites,
-                                            msg.reads);
+
+    PrepareRequest req =
+        new PrepareRequest(msg.serializedCreates, msg.serializedWrites,
+            msg.reads);
 
     surrogateManager.createSurrogates(req);
     int transactionID = transactionManager.prepare(client, req);
-    
+
     logger.fine("Transaction " + transactionID + " prepared");
     // Store the size of the transaction for debugging at the end of the session
     // Note: this number does not include surrogates
-    pendingLogs.put(transactionID,
-          new LogRecord(msg.serializedCreates.size(),
-                        msg.serializedWrites.size()));
+    pendingLogs.put(transactionID, new LogRecord(msg.serializedCreates.size(),
+        msg.serializedWrites.size()));
 
     return new PrepareTransactionMessage.Response(transactionID);
   }
@@ -343,45 +372,32 @@ public class Worker extends FabricThread.AbstractImpl {
   /**
    * Processes the given read request.
    */
-  public ReadMessage.Response handle(ReadMessage msg) throws AccessException {
+  public ReadMessage.Response handle(ReadMessage msg) throws AccessException,
+      ProtocolError {
+    if (clientIsDissem) throw new ProtocolError("Message not supported.");
+    
     logger.finer("Handling Read Message");
     this.numReads++;
-
-    LongKeyMap<SerializedObject> group = new LongKeyHashMap<SerializedObject>();
-    SerializedObject obj = null;
     
-    try {
-      obj = transactionManager.read(client, msg.onum);
-    
-      if (obj != null) {
-        // Traverse object graph and add more objects to the object group.
-        for (Iterator<Long> it = obj.getIntracoreRefIterator(); it.hasNext();) {
-          long onum = it.next();
-          SerializedObject related = transactionManager.read(client, onum);
-          if (related != null) {
-            group.put(onum, related);
-            int count = 0;
-            if (numSendsByType.containsKey(related.getClassName()))
-              count = numSendsByType.get(related.getClassName());
-            count++;
-            numSendsByType.put(related.getClassName(), count);
-          }
-        }
-  
-        this.numObjectsSent += group.size() + 1;
-        int count = 0;
-        if (numSendsByType.containsKey(obj.getClassName()))
-          count = numSendsByType.get(obj.getClassName());
-        count++;
-        numSendsByType.put(obj.getClassName(), count);
-  
-        return new ReadMessage.Response(obj, group);
-      }
-    } catch (StoreException e) {
-      throw new AccessException();
-    }
-
-    throw new AccessException();
+    ObjectGroup group =
+        transactionManager.readGroup(client, msg.onum, false, this);
+    return new ReadMessage.Response(group);
   }
   
+  /**
+   * Processes the given dissemination-read request.
+   * @throws AccessException if  
+   */
+  public DissemReadMessage.Response handle(DissemReadMessage msg)
+      throws AccessException {
+    logger.finer("Handling DissemRead message");
+    this.numReads++;
+    
+    ObjectGroup group = transactionManager.readGroup(null, msg.onum, true, this);
+    if (group == null) throw new AccessException();
+
+    Glob glob = new Glob(group);
+    return new DissemReadMessage.Response(glob);
+  }
+
 }

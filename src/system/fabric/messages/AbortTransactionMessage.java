@@ -4,7 +4,9 @@ import java.io.*;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
+import fabric.common.AccessException;
 import fabric.common.FabricException;
+import fabric.common.ProtocolError;
 import fabric.core.Worker;
 
 public class AbortTransactionMessage extends
@@ -54,7 +56,7 @@ public class AbortTransactionMessage extends
    * @see fabric.messages.Message#dispatch(fabric.core.Worker)
    */
   @Override
-  public Response dispatch(Worker w) {
+  public Response dispatch(Worker w) throws AccessException, ProtocolError {
     w.handle(this);
     return new Response();
   }
@@ -62,12 +64,11 @@ public class AbortTransactionMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#send(fabric.client.Core)
+   * @see fabric.messages.Message#send(fabric.client.Core, boolean)
    */
-  @Override
   public Response send(RemoteCore core) {
     try {
-      return super.send(core);
+      return send(core, true);
     } catch (FabricException e) {
       // Nothing to do here. Sending abort messages is more of a courtesy than
       // anything.

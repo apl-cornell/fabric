@@ -64,7 +64,7 @@ public abstract class Message<R extends Message.Response> {
    * @throws UnreachableCoreException
    *                 if unable to connect to the core.
    */
-  protected R send(RemoteCore core) throws FabricException,
+  protected final R send(RemoteCore core, boolean useSSL) throws FabricException,
       UnreachableCoreException {
     // XXX Won't always send to the same core node. Is this a problem?
     // XXX This is pretty ugly. Can it be cleaned up?
@@ -72,7 +72,7 @@ public abstract class Message<R extends Message.Response> {
 
     // FIXME? do we want to lock entire core?
     synchronized (core) {
-      boolean needToConnect = !core.isConnected();
+      boolean needToConnect = !core.isConnected(useSSL);
       Client client = Client.getClient();
       final int retries = client.retries;
   
@@ -99,14 +99,16 @@ public abstract class Message<R extends Message.Response> {
   
             // Attempt to establish a connection.
             int hostNum = (startHostIdx + hostIdx) % numHosts;
-            core.connect(client, core, hosts.get(hostNum), corePrincipal);
+            core.connect(useSSL, client, core, hosts.get(hostNum),
+                corePrincipal);
           } else {
             // Set the flag for the next loop iteration in case we fail.
             needToConnect = true;
           }
   
           // Attempt to send our message and obtain a reply.
-          return send(core, core.objectInputStream(), core.objectOutputStream());
+          return send(core, core.objectInputStream(useSSL), core
+              .objectOutputStream(useSSL));
         } catch (NoSuchCoreError e) {
           // Connected to a node that doesn't host the core we're interested in.
           // Increment loop counter variables.
@@ -294,7 +296,8 @@ public abstract class Message<R extends Message.Response> {
     ALLOCATE_ONUMS(AllocateMessage.class), READ_ONUM(ReadMessage.class), PREPARE_TRANSACTION(
         PrepareTransactionMessage.class), COMMIT_TRANSACTION(
         CommitTransactionMessage.class), ABORT_TRANSACTION(
-        AbortTransactionMessage.class);
+        AbortTransactionMessage.class), DISSEM_READ_ONUM(
+        DissemReadMessage.class);
 
     private final Class<? extends Message<?>> messageClass;
 

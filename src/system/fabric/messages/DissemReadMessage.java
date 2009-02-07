@@ -1,27 +1,32 @@
 package fabric.messages;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.client.UnreachableCoreException;
 import fabric.common.AccessException;
 import fabric.common.FabricException;
+import fabric.common.FetchException;
 import fabric.common.InternalError;
-import fabric.common.ProtocolError;
 import fabric.core.Worker;
+import fabric.dissemination.Glob;
 
 /**
- * An <code>AllocateMessage</code> represents a request to allocate a number
- * of object IDs at a core.
+ * A <code>DissemReadMessage</code> represents a request from a dissemination
+ * node to read an object at a core.
  */
-public final class AllocateMessage extends Message<AllocateMessage.Response> {
-
+public final class DissemReadMessage extends Message<DissemReadMessage.Response> {
   public static class Response implements Message.Response {
-    public long[] oids;
 
-    public Response(long[] onums) {
-      this.oids = onums;
+    public final Glob glob;
+
+    /**
+     * Used by the core to create a read-message response.
+     */
+    public Response(Glob glob) {
+      this.glob = glob;
     }
 
     /**
@@ -33,9 +38,7 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
      *                the input stream from which to read the response.
      */
     Response(Core core, DataInput in) throws IOException {
-      oids = new long[in.readInt()];
-      for (int i = 0; i < oids.length; i++)
-        oids[i] = in.readLong();
+      this.glob = new Glob(in);
     }
 
     /*
@@ -44,27 +47,28 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
      * @see fabric.messages.Message.Response#write(java.io.DataOutput)
      */
     public void write(DataOutput out) throws IOException {
-      out.writeInt(oids.length);
-      for (long oid : oids) out.writeLong(oid);
+      glob.write(out);
     }
   }
 
-  public final int num;
+  /**
+   * The onum of the object to read.
+   */
+  public final long onum;
 
   /**
-   * @param num
-   *                The number of object IDs to allocate.
+   * Creates a read request for a client.
    */
-  public AllocateMessage(int num) {
-    super(MessageType.ALLOCATE_ONUMS);
-    this.num = num;
+  public DissemReadMessage(long onum) {
+    super(MessageType.DISSEM_READ_ONUM);
+    this.onum = onum;
   }
 
   /**
    * Deserialization constructor.
    */
-  protected AllocateMessage(DataInput in) throws IOException {
-    this(in.readInt());
+  protected DissemReadMessage(DataInput in) throws IOException {
+    this(in.readLong());
   }
 
   /*
@@ -73,7 +77,7 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
    * @see fabric.messages.Message#dispatch(fabric.core.Worker)
    */
   @Override
-  public Response dispatch(Worker w) throws AccessException, ProtocolError {
+  public Response dispatch(Worker w) throws AccessException {
     return w.handle(this);
   }
 
@@ -82,10 +86,10 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
    * 
    * @see fabric.messages.Message#send(fabric.client.Core, boolean)
    */
-  public Response send(RemoteCore core) throws UnreachableCoreException {
+  public Response send(RemoteCore core) throws FetchException {
     try {
-      return send(core, true);
-    } catch (UnreachableCoreException e) {
+      return send(core, false);
+    } catch (FetchException e) {
       throw e;
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from core.", e);
@@ -104,7 +108,7 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
    */
   @Override
   public void write(DataOutput out) throws IOException {
-    out.writeInt(num);
+    out.writeLong(onum);
   }
 
 }

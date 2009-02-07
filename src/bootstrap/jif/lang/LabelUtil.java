@@ -23,5 +23,7 @@ public interface LabelUtil extends Object {
     
     public static native Label toLabel(Core core, ConfPolicy confidPolicy,
         IntegPolicy integPolicy);
+    
+    public static native boolean relabelsTo(Label from, Label to);
   }
 }

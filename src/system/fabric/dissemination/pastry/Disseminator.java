@@ -1,24 +1,14 @@
 package fabric.dissemination.pastry;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 import rice.Continuation;
 import rice.Executable;
 import rice.environment.Environment;
 import rice.environment.params.Parameters;
-import rice.p2p.commonapi.Application;
-import rice.p2p.commonapi.Endpoint;
-import rice.p2p.commonapi.Id;
-import rice.p2p.commonapi.IdFactory;
-import rice.p2p.commonapi.Message;
-import rice.p2p.commonapi.NodeHandle;
-import rice.p2p.commonapi.RouteMessage;
+import rice.p2p.commonapi.*;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.MessageDeserializer;
 import rice.pastry.PastryNode;
@@ -29,14 +19,9 @@ import rice.pastry.routing.RoutingTable;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.client.UnreachableCoreException;
 import fabric.common.Pair;
 import fabric.dissemination.Glob;
-import fabric.dissemination.pastry.messages.AggregateInterval;
-import fabric.dissemination.pastry.messages.Fetch;
-import fabric.dissemination.pastry.messages.MessageType;
-import fabric.dissemination.pastry.messages.Replicate;
-import fabric.dissemination.pastry.messages.ReplicateInterval;
+import fabric.dissemination.pastry.messages.*;
 
 /**
  * A pastry application that implements the functionality of a Fabric
@@ -164,9 +149,14 @@ public class Disseminator implements Application {
       aggregateInterval();
     }
   }
-  
-  /** Called by a FetchManager to fetch the specified object. */
-  public Glob fetch(RemoteCore c, long onum) {
+
+  /**
+   * Called by a FetchManager to fetch the specified object.
+   * 
+   * @throws DisseminationTimeoutException
+   *           if the dissemination network takes too long.
+   */
+  public Glob fetch(RemoteCore c, long onum) throws DisseminationTimeoutException {
     log.fine("Pastry dissem fetch request " + c + " " + onum);
     
     Glob g = cache.get(c, onum);
@@ -192,7 +182,7 @@ public class Disseminator implements Application {
       }
       
       if (f.reply() == null) {
-        throw new UnreachableCoreException(c);
+        throw new DisseminationTimeoutException();
       }
       
       return f.reply().glob();
