@@ -1,0 +1,7 @@
+package compiler;
+
+public class Array10 {
+  void m() {
+	  String first = "test test".split(" ")[0];
+  }
+}

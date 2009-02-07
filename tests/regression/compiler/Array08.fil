@@ -1,0 +1,7 @@
+package compiler;
+
+public class Array08 {
+  void m() {
+	  String a[] = new String[] { "a", "b", "c" };
+  }
+}

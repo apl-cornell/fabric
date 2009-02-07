@@ -1,0 +1,9 @@
+package compiler;
+
+public class Array09 {
+  void m() {
+	  byte[] a = "test".getBytes();
+
+	  String[] splits = "test test".split(" ");
+  }
+}
