@@ -406,7 +406,7 @@ public class TransactionHandler {
             ((CategoryContentsLink) contents).setAddress(value);
           } else if (type.equals(AccessController.P_NEW_CONTENT_URLADDRESS) ||
                      type.equals(AccessController.P_CONTENT_URLLABEL)) {
-            ((CategoryContentsLink) contents).setLabel(value);
+            ((CategoryContentsLink) contents).setTheLabel(value);
           } else if (type.equals(AccessController.P_REMOVEROW)) {
             row = database.getCategoryRow(msgParts[1]);
             row.setHidden(true);

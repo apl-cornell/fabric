@@ -3,18 +3,18 @@ package cms.model;
 public class CategoryContentsLink extends CategoryContents {
 
   private String address;
-  private String label;
+  private String tlabel;
   
   public String getAddress() { return this.address; }
-  public String getLabel()   { return this.label;   }
+  public String getTheLabel()   { return this.tlabel;   }
   
   public void setAddress(final String address) { this.address = address; }
-  public void setLabel(final String label)     { this.label   = label;   }
+  public void setTheLabel(final String label)     { this.tlabel   = label;   }
   
   public CategoryContentsLink(CategoryRow row, CategoryColumn col, String address, String label) {
     super(col, row);
     setAddress(address);
-    setLabel(label);
+    setTheLabel(label);
   }
   
   public void accept(Visitor visitor) {

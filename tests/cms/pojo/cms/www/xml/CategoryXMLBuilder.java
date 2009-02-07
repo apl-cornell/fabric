@@ -280,7 +280,7 @@ public class CategoryXMLBuilder {
       public void visitLinkContents(CategoryContentsLink link) {
         xContent.setAttribute(XMLBuilder.A_URL, link.getAddress());
         xContent.setAttribute(XMLBuilder.A_LINKNAME,
-                              (link.getLabel() == null) ? "" : link.getLabel());
+                              (link.getTheLabel() == null) ? "" : link.getTheLabel());
       }
       
       public void visitFileContents(CategoryContentsFileList file) {
