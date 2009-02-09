@@ -51,6 +51,8 @@ label_opt ::=
             {: RESULT = null; :}
     |   COMP name:l
     	    {: RESULT = l.toExpr(); :}
+    |   COMP THIS:a
+    	    {: RESULT = parser.nf.This(parser.pos(a)); :}
     ;
 
 location_expr_opt ::=
