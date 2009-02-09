@@ -263,9 +263,9 @@ public interface Object {
       this.$readMapEntry = TransactionManager.getReadMapEntry(this);
       this.$ref.readMapEntry(this.$readMapEntry);
       
-      // By default, labels label themselves.
+      // By default, labels are public read-only.
       if (label == null && this instanceof Label) label =
-        (Label) $getProxy();
+        Client.getClient().getLocalCore().getPublicReadonlyLabel();
       
       if (label == null) throw new InternalError("Null label!");
       
