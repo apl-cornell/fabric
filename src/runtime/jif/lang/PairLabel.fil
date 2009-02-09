@@ -13,11 +13,13 @@ import fabric.util.Set;
 public final class PairLabel implements Label {
   private final ConfPolicy confPol;
   private final IntegPolicy integPol;
+  private final KeyObject keyObject;
   private Integer hashCode = null;
 
   public PairLabel(ConfPolicy confPol, IntegPolicy integPol) {
     this.confPol = confPol;
     this.integPol = integPol;
+    this.keyObject = new KeyObject~this();
     if (confPol == null || integPol == null) {
       final Core localCore = Client.getClient().getLocalCore();
       throw new NullPointerException@localCore();
@@ -83,5 +85,9 @@ public final class PairLabel implements Label {
 
   public IntegPolicy integPolicy() {
     return integPol;
+  }
+  
+  public KeyObject keyObject() {
+    return keyObject;
   }
 }

@@ -21,4 +21,6 @@ public interface Label {
   ConfPolicy confPolicy();
 
   IntegPolicy integPolicy();
+  
+  KeyObject keyObject();
 }

@@ -1,0 +1,30 @@
+package fabric.lang;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+
+/**
+ * This wraps a Java SecretKey object. This is here so that we can have
+ * immutable Label objects and so that we can be more lax about the
+ * confidentiality of label objects. By not inlining the key object in the
+ * corresponding label object, we can simply apply the label to the key object
+ * and be certain of the key's confidentiality.
+ */
+public class KeyObject {
+  private SecretKey key;
+  private static KeyGenerator keyGen;
+  
+  static {
+    keyGen = KeyGenerator.getInstance("AES");
+    keyGen.init(128);
+  }
+  
+  public SecretKey getKey() {
+    if (key == null) return rekey();
+    return key;
+  }
+  
+  public Secret rekey() {
+    return key = keyGen.generateKey();
+  }
+}
