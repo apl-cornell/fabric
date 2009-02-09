@@ -17,21 +17,21 @@ import fabric.common.InternalError;
 public class KeyObject {
   private SecretKey key;
   private static KeyGenerator keyGen;
-  
+
   static {
     try {
-    keyGen = KeyGenerator.getInstance("AES");
-    keyGen.init(128);
+      keyGen = KeyGenerator.getInstance("AES");
+      keyGen.init(128);
     } catch (GeneralSecurityException e) {
       throw new InternalError(e);
     }
   }
-  
+
   public SecretKey getKey() {
     if (key == null) return rekey();
     return key;
   }
-  
+
   public SecretKey rekey() {
     return key = keyGen.generateKey();
   }
