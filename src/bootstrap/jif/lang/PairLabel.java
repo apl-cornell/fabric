@@ -2,6 +2,7 @@ package jif.lang;
 
 import fabric.client.Core;
 import fabric.client.UnreachableCoreException;
+import fabric.lang.KeyObject;
 
 public interface PairLabel extends Label {
   public static class $Impl extends fabric.lang.Object.$Impl implements
@@ -10,5 +11,7 @@ public interface PairLabel extends Label {
         throws UnreachableCoreException {
       super(core, label);
     }
+
+    public native KeyObject keyObject();
   }
 }

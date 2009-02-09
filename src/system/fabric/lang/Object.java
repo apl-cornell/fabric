@@ -97,9 +97,15 @@ public interface Object {
       if (result == null) {
         // Object has been evicted.
         try {
-          result = ref.core.readObject(ref.onum);
+          if (this instanceof KeyObject) {
+            // Bypass dissemination when reading key objects.
+            result = ref.core.readObjectNoDissem(ref.onum);
+          } else {
+            result = ref.core.readObject(ref.onum);
+          }
         } catch (FetchException e) {
           // TODO figure out how to communicate error
+          e.printStackTrace();
         }
 
         ref = result.$ref;

@@ -1,7 +1,10 @@
 package jif.lang;
 
+import jif.lang.ConfPolicy;
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.client.LocalCore;
+import fabric.common.ONumConstants;
 import fabric.util.HashSet;
 import fabric.util.Set;
 
@@ -19,10 +22,17 @@ public final class PairLabel implements Label {
   public PairLabel(ConfPolicy confPol, IntegPolicy integPol) {
     this.confPol = confPol;
     this.integPol = integPol;
-    this.keyObject = new KeyObject~this();
+    
+    final LocalCore localCore = Client.getClient().getLocalCore();
     if (confPol == null || integPol == null) {
-      final Core localCore = Client.getClient().getLocalCore();
       throw new NullPointerException@localCore();
+    }
+
+    // HACK: If we have bottom confidentiality, use the null key object.
+    if (confPol == localCore.getBottomConfidPolicy()) {
+      this.keyObject = null;
+    } else {
+      this.keyObject = new KeyObject~this();
     }
   }
 

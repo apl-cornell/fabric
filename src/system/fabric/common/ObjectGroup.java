@@ -42,7 +42,6 @@ public class ObjectGroup {
     out.writeInt(related.size());
     
     for (LongKeyMap.Entry<SerializedObject> entry : related.entrySet()) {
-      out.writeLong(entry.getKey());
       entry.getValue().write(out);
     }
   }
@@ -57,7 +56,8 @@ public class ObjectGroup {
     related = new LongKeyHashMap<SerializedObject>(groupSize);
     
     for (int i = 0; i < groupSize; i++) {
-      related.put(in.readLong(), new SerializedObject(in));
+      SerializedObject obj = new SerializedObject(in);
+      related.put(obj.getOnum(), obj);
     }
   }
 }

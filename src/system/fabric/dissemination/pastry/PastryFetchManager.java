@@ -3,7 +3,6 @@ package fabric.dissemination.pastry;
 import java.io.IOException;
 
 import fabric.client.RemoteCore;
-import fabric.client.UnreachableCoreException;
 import fabric.common.FetchException;
 import fabric.common.InternalError;
 import fabric.common.ObjectGroup;
@@ -33,11 +32,11 @@ public class PastryFetchManager implements FetchManager {
     Glob glob;
     try {
       glob = node.disseminator().fetch(c, onum);
-    } catch (UnreachableCoreException e) {
+    } catch (DisseminationTimeoutException e) {
       return c.readObjectFromCore(onum);
     }
     
-    return glob.decrypt();
+    return glob.decrypt(c);
   }
   
   public void destroy() {

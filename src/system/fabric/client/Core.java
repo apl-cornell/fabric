@@ -27,14 +27,24 @@ public interface Core {
       TransactionPrepareFailedException;
 
   /**
-   * Returns the requested $Impl object, fetching it from the Core if it is not
-   * resident.
+   * Returns the requested $Impl object. If the object is not resident, it is
+   * fetched from the Core via dissemination.
    * 
    * @param onum
    *          The identifier of the requested object
    * @return The requested object
    */
   $Impl readObject(long onum) throws FetchException;
+
+  /**
+   * Returns the requested $Impl object, fetching it directly from the Core if
+   * it is not resident.
+   * 
+   * @param onum
+   *          The identifier of the requested object
+   * @return The requested object
+   */
+  $Impl readObjectNoDissem(long onum) throws FetchException;
 
   /**
    * Returns the requested $Impl object if it exists in the object cache.

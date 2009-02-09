@@ -53,6 +53,10 @@ public final class LocalCore implements Core {
   }
 
   public synchronized Object.$Impl readObject(long onum) {
+    return readObjectNoDissem(onum);
+  }
+  
+  public synchronized Object.$Impl readObjectNoDissem(long onum) {
     if (!ONumConstants.isGlobalConstant(onum))
       throw new InternalError("Not supported.");
 

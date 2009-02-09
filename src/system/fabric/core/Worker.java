@@ -396,7 +396,8 @@ public class Worker extends FabricThread.AbstractImpl {
     ObjectGroup group = transactionManager.readGroup(null, msg.onum, true, this);
     if (group == null) throw new AccessException();
 
-    Glob glob = new Glob(group);
+    Core core = Client.getClient().getCore(transactionManager.store.getName());
+    Glob glob = new Glob(core, group);
     return new DissemReadMessage.Response(glob);
   }
 

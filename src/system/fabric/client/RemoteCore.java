@@ -201,8 +201,8 @@ public class RemoteCore implements Core {
   }
 
   /**
-   * Returns the requested $Impl, fetching it from the Core if it is not
-   * resident.
+   * Returns the requested $Impl object. If the object is not resident, it is
+   * fetched from the Core via dissemination.
    * 
    * @param onum
    *                The identifier of the requested object
@@ -210,6 +210,20 @@ public class RemoteCore implements Core {
    * @throws FabricException
    */
   public final Object.$Impl readObject(long onum) throws FetchException {
+    return readObject(true, onum);
+  }
+  
+  /*
+   * (non-Javadoc)
+   *
+   * @see fabric.client.Core#readObjectNoDissem(long)
+   */
+  public final Object.$Impl readObjectNoDissem(long onum) throws FetchException {
+    return readObject(false, onum);
+  }
+  
+  private final Object.$Impl readObject(boolean useDissem, long onum)
+      throws FetchException {
     // Intercept reads of global constants and redirect them to the local core.
     if (ONumConstants.isGlobalConstant(onum))
       return Client.instance.localCore.readObject(onum);
@@ -221,7 +235,7 @@ public class RemoteCore implements Core {
     synchronized (objects) {
       Object.$Impl result = readObjectFromCache(onum);
       if (result != null) return result;
-      return fetchObject(onum);
+      return fetchObject(useDissem, onum);
     }
   }
 
@@ -237,12 +251,16 @@ public class RemoteCore implements Core {
    * Fetches the object from the serialized cache, or goes to the core if it is
    * not present. Places the result in the object cache.
    * 
+   * @param useDissem
+   *          Whether to use the dissemination network. If false, the
+   *          dissemination network will be bypassed.
    * @param onum
-   *                The object number to fetch
+   *          The object number to fetch
    * @return The constructed $Impl
    * @throws FabricException
    */
-  private Object.$Impl fetchObject(long onum) throws FetchException {
+  private Object.$Impl fetchObject(boolean useDissem, long onum)
+      throws FetchException {
     Object.$Impl result = null;
     SoftReference<SerializedObject> serialRef = serialized.remove(onum);
 
@@ -257,8 +275,13 @@ public class RemoteCore implements Core {
     }
 
     if (result == null) {
-      // no serial copy --- fetch from dissemination
-      ObjectGroup g = Client.getClient().fetchManager().fetch(this, onum);
+      // no serial copy --- fetch from the network.
+      ObjectGroup g;
+      if (useDissem) {
+        g = Client.getClient().fetchManager().fetch(this, onum);
+      } else {
+        g = readObjectFromCore(onum);
+      }
 
       try {
         result = g.obj().deserialize(this);
