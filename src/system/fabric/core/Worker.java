@@ -3,6 +3,7 @@ package fabric.core;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -30,19 +31,32 @@ import fabric.messages.*;
  */
 public class Worker extends FabricThread.AbstractImpl {
 
-  /** The node that we're working for. */
+  /**
+   * The node that we're working for.
+   */
   private final Node node;
 
-  /** The client that we're serving. */
+  /**
+   * The client that we're serving.
+   */
   private Principal client;
   private String clientName;
   private boolean clientIsDissem;
 
-  /** The transaction manager for the object core that the client is talking to. */
+  /**
+   * The transaction manager for the object core that the client is talking to.
+   */
   private TransactionManager transactionManager;
 
-  /** The surrogate creation policy object */
+  /**
+   * The surrogate creation policy object.
+   */
   private SurrogateManager surrogateManager;
+  
+  /**
+   * The private signing key for the object core that the client is talking to.
+   */
+  private PrivateKey privateKey;
 
   // The socket and associated I/O streams for communicating with the client.
   private Socket socket;
@@ -121,6 +135,7 @@ public class Worker extends FabricThread.AbstractImpl {
         String coreName = dataIn.readUTF();
         this.transactionManager = node.getTransactionManager(coreName);
         this.surrogateManager = node.getSurrogateManager(coreName);
+        this.privateKey = node.getPrivateKey(coreName);
         this.pendingLogs = new HashMap<Integer, LogRecord>();
 
         if (this.transactionManager != null) {
@@ -397,7 +412,7 @@ public class Worker extends FabricThread.AbstractImpl {
     if (group == null) throw new AccessException();
 
     Core core = Client.getClient().getCore(transactionManager.store.getName());
-    Glob glob = new Glob(core, group);
+    Glob glob = new Glob(core, group, privateKey);
     return new DissemReadMessage.Response(glob);
   }
 

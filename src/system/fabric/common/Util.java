@@ -4,14 +4,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public final class Util {
-  public static final String ALG_SIGNATURE = "MD5withRSA";
-
-  public static final String ALG_SECRET_KEY_GEN = "AES";
-  public static final String ALG_SECRET_CRYPTO = "AES/CBC/PKCS5Padding";
-
-  public static final String ALG_PUBLIC_KEY_GEN = "RSA";
-  public static final String ALG_PUBLIC_CRYPTO = "RSA/CBC/PKCS5Padding";
-
   /**
    * <p>Returns an iterable that iterates over the elements of the iterables passed
    * in. The common use is:

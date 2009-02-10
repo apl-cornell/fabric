@@ -34,10 +34,20 @@ public class Node {
   protected Map<String, Core> cores;
 
   protected class Core {
-    public SSLSocketFactory   factory;
-    public TransactionManager tm;
-    public SurrogateManager   sm;
-    public ObjectStore        os;
+    public final SSLSocketFactory   factory;
+    public final TransactionManager tm;
+    public final SurrogateManager   sm;
+    public final ObjectStore        os;
+    public final PrivateKey         privateKey;
+
+    private Core(SSLSocketFactory factory, ObjectStore os,
+        TransactionManager tm, SurrogateManager sm, PrivateKey key) {
+      this.factory = factory;
+      this.os = os;
+      this.tm = tm;
+      this.sm = sm;
+      this.privateKey = key;
+    }
   }
   
   /**
@@ -80,7 +90,8 @@ public class Node {
         sslContext.init(kmf.getKeyManagers(), tm, null);
         sslSocketFactory = sslContext.getSocketFactory();
 
-        addCore(coreName, sslSocketFactory, store);
+        PrivateKey key = (PrivateKey) keyStores.keyStore.getKey(coreName, keyStores.password);
+        addCore(coreName, sslSocketFactory, store, key);
       } catch (KeyManagementException e) {
         throw new InternalError("Unable to initialise key manager factory.", e);
       } catch (UnrecoverableKeyException e1) {
@@ -157,24 +168,23 @@ public class Node {
    * Adds a new Core to this node.
    * 
    * @param coreName
-   *                the host name for the core being added.
+   *          the host name for the core being added.
    * @param sslSocketFactory
-   *                the <code>SSLSocketFactory</code> for initiating SSL
-   *                sessions with the core.
+   *          the <code>SSLSocketFactory</code> for initiating SSL sessions with
+   *          the core.
    * @param tm
-   *                a <code>TransactionManager</code> to use for the core
-   *                being added.
+   *          a <code>TransactionManager</code> to use for the core being added.
+   * @param key
+   *          The core's private key, used for signing disseminated objects.
    */
   private void addCore(String coreName, SSLSocketFactory sslSocketFactory,
-      ObjectStore os) throws DuplicateCoreException {
+      ObjectStore os, PrivateKey key) throws DuplicateCoreException {
     if (cores.containsKey(coreName))
       throw new DuplicateCoreException();
     
-    Core c    = new Core();
-    c.os      = os;
-    c.tm      = new TransactionManager(os);
-    c.sm      = new SimpleSurrogateManager(c.tm);
-    c.factory = sslSocketFactory;
+    TransactionManager tm = new TransactionManager(os);
+    SurrogateManager sm = new SimpleSurrogateManager(tm);
+    Core c = new Core(sslSocketFactory, os, tm, sm, key);
     cores.put(coreName, c);
   }
   
@@ -195,7 +205,8 @@ public class Node {
    * @return null if there is no corresponding binding.
    */
   public TransactionManager getTransactionManager(String coreName) {
-    return cores.containsKey(coreName) ? cores.get(coreName).tm : null;
+    Core c = cores.get(coreName);
+    return c == null ? null : c.tm;
   }
 
   /**
@@ -203,12 +214,18 @@ public class Node {
    * <code>SSLSocketFactory</code>.
    */
   public SSLSocketFactory getSSLSocketFactory(String coreName) {
-    return cores.get(coreName).factory;
+    Core c = cores.get(coreName);
+    return c == null ? null : c.factory;
   }
 
   public SurrogateManager getSurrogateManager(String coreName) {
     Core c = cores.get(coreName);
     return c == null ? null : c.sm;
+  }
+  
+  public PrivateKey getPrivateKey(String coreName) {
+    Core c = cores.get(coreName);
+    return c == null ? null : c.privateKey;
   }
   
   /**

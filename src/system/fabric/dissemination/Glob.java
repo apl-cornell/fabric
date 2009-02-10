@@ -1,22 +1,20 @@
 package fabric.dissemination;
 
 import java.io.*;
-import java.security.GeneralSecurityException;
+import java.security.*;
 
 import javax.crypto.*;
-import javax.crypto.spec.SecretKeySpec;
 
 import jif.lang.Label;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.Client.Code;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.ObjectGroup;
-import fabric.common.SerializedObject;
 import fabric.lang.KeyObject;
 
 /**
- * A glob is a serialized object and a set of related objects.
+ * A glob is an ObjectGroup that has been encrypted and signed.
  */
 public class Glob {
   /**
@@ -24,8 +22,27 @@ public class Glob {
    */
   private final int version;
 
+  /**
+   * A pointer to the encryption key. This can be null if the null cipher was
+   * used. (This can happen, for example, if the data was public.)
+   */
   private final Long keyOnum;
+
+  /**
+   * The initialization vector for decrypting. Can be null if the null cipher
+   * was used. (This can happen, for example, if the data was public.)
+   */
+  private final byte[] iv;
+
+  /**
+   * The encrypted data.
+   */
   private final byte[] data;
+
+  /**
+   * The signature on the version, keyOnum, iv, and data.
+   */
+  private final byte[] signature;
 
   private transient int level;
   private transient int frequency;
@@ -35,21 +52,29 @@ public class Glob {
 
   /**
    * Used by the core to encrypt and sign an object group.
+   * 
+   * @param core
+   *          The core at which the group resides.
+   * @param group
+   *          The group to encapsulate.
+   * @param key
+   *          The core's private key. Used to sign the glob.
    */
-  public Glob(Core core, ObjectGroup group) {
+  public Glob(Core core, ObjectGroup group, PrivateKey key) {
     this.version = group.obj().getVersion();
 
     final KeyObject keyObject = getLabel(core, group.obj()).keyObject();
     if (keyObject == null) {
       this.keyOnum = null;
+      this.iv = null;
     } else {
       this.keyOnum = keyObject.$getOnum();
+      this.iv = Crypto.makeIV();
     }
 
     try {
       // Set up the crypto for encrypting the object group.
-      // TODO Sign the object too.
-      Cipher cipher = makeCipher(keyObject, Cipher.ENCRYPT_MODE);
+      Cipher cipher = makeCipher(keyObject, Cipher.ENCRYPT_MODE, iv);
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       CipherOutputStream cos = new CipherOutputStream(bos, cipher);
       DataOutputStream out = new DataOutputStream(cos);
@@ -61,6 +86,12 @@ public class Glob {
       out.flush();
       cos.close();
       this.data = bos.toByteArray();
+
+      // Start signing things.
+      Signature signer = Crypto.signatureInstance();
+      signer.initSign(key);
+      updateSignature(signer);
+      this.signature = signer.sign();
     } catch (IOException e) {
       throw new InternalError(e);
     } catch (GeneralSecurityException e) {
@@ -68,7 +99,39 @@ public class Glob {
     }
   }
 
-  private Cipher makeCipher(final KeyObject keyObject, int opmode)
+  /**
+   * Updates the given signature with the data to be signed or verified.
+   * 
+   * @throws SignatureException
+   */
+  private void updateSignature(Signature sig) throws SignatureException {
+    // Update with version number.
+    sig.update((byte) (version >>> 24));
+    sig.update((byte) (version >>> 16));
+    sig.update((byte) (version >>> 8));
+    sig.update((byte) version);
+
+    // Update with keyOnum, if non-null.
+    if (keyOnum != null) {
+      long val = keyOnum;
+      sig.update((byte) (val >>> 56));
+      sig.update((byte) (val >>> 48));
+      sig.update((byte) (val >>> 40));
+      sig.update((byte) (val >>> 32));
+      sig.update((byte) (val >>> 24));
+      sig.update((byte) (val >>> 16));
+      sig.update((byte) (val >>> 8));
+      sig.update((byte) val);
+    }
+
+    // Update with iv, if non-null.
+    if (iv != null) sig.update(iv);
+
+    // Update with data.
+    sig.update(data);
+  }
+
+  private Cipher makeCipher(final KeyObject keyObject, int opmode, byte[] iv)
       throws GeneralSecurityException {
     if (keyObject == null) {
       return new NullCipher();
@@ -79,9 +142,7 @@ public class Glob {
         }
       }).getEncoded();
 
-      Cipher cipher = Cipher.getInstance("AES");
-      cipher.init(opmode, new SecretKeySpec(key, "AES"));
-      return cipher;
+      return Crypto.cipherInstance(opmode, key, iv);
     }
   }
 
@@ -136,6 +197,15 @@ public class Glob {
     return version < glob.version;
   }
 
+  public boolean verifySignature(PublicKey key) throws SignatureException,
+      NoSuchAlgorithmException, InvalidKeyException {
+    // Check the signature.
+    Signature verifier = Crypto.signatureInstance();
+    verifier.initVerify(key);
+    updateSignature(verifier);
+    return verifier.verify(signature);
+  }
+
   /** Serializer. */
   public void write(DataOutput out) throws IOException {
     out.writeInt(version);
@@ -145,18 +215,53 @@ public class Glob {
       out.writeBoolean(true);
       out.writeLong(keyOnum);
     }
+
+    if (iv == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(iv.length);
+      out.write(iv);
+    }
+
     out.writeInt(data.length);
     out.write(data);
+
+    out.writeInt(signature.length);
+    out.write(signature);
   }
 
-  /** Deserializer. */
-  public Glob(DataInput in) throws IOException {
+  /**
+   * Deserializer.
+   * 
+   * @param key
+   *          The public key for verifying the signature.
+   */
+  public Glob(/*PublicKey key, */DataInput in) throws IOException/*,
+      BadSignatureException*/ {
     this.version = in.readInt();
     if (in.readBoolean())
       this.keyOnum = in.readLong();
     else this.keyOnum = null;
+
+    int ivLength = in.readInt();
+    if (ivLength > 0) {
+      this.iv = new byte[ivLength];
+      in.readFully(this.iv);
+    } else {
+      this.iv = null;
+    }
+
     this.data = new byte[in.readInt()];
     in.readFully(this.data);
+
+    this.signature = new byte[in.readInt()];
+    in.readFully(this.signature);
+
+//    try {
+//      if (!verifySignature(key)) throw new BadSignatureException();
+//    } catch (GeneralSecurityException e) {
+//      throw new InternalError(e);
+//    }
   }
 
   /**
@@ -168,7 +273,7 @@ public class Glob {
         keyOnum == null ? null : new KeyObject.$Proxy(core, keyOnum);
 
     try {
-      Cipher cipher = makeCipher(keyObject, Cipher.DECRYPT_MODE);
+      Cipher cipher = makeCipher(keyObject, Cipher.DECRYPT_MODE, iv);
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
       DataInputStream in =
           new DataInputStream(new CipherInputStream(bis, cipher));
