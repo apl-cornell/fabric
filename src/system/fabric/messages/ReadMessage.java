@@ -9,7 +9,6 @@ import fabric.client.RemoteCore;
 import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.core.Worker;
-import fabric.lang.Object.$Impl;
 
 /**
  * A <code>ReadMessage</code> represents a request from a client to read an
@@ -20,26 +19,20 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
 
     public final ObjectGroup group;
 
-    private transient final Core core;
-
     /**
      * Used by the core to create a read-message response.
      */
     public Response(ObjectGroup group) {
       this.group = group;
-      this.core = null;
     }
 
     /**
      * Deserialization constructor, used by the client.
      * 
-     * @param core
-     *                The core from which the response is being read.
      * @param in
      *                the input stream from which to read the response.
      */
-    Response(Core core, DataInput in) throws IOException {
-      this.core = core;
+    Response(DataInput in) throws IOException {
       if (in.readBoolean())
         this.group = new ObjectGroup(in);
       else this.group = null;
@@ -55,10 +48,6 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
         out.writeBoolean(true);
         group.write(out);
       } else out.writeBoolean(false);
-    }
-    
-    public $Impl result() throws ClassNotFoundException {
-      return group.obj().deserialize(core);
     }
   }
 
@@ -109,7 +98,7 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
 
   @Override
   public Response response(Core c, DataInput in) throws IOException {
-    return new Response(c, in);
+    return new Response(in);
   }
   
   /*

@@ -18,9 +18,9 @@ import fabric.lang.KeyObject;
  */
 public class Glob {
   /**
-   * The head object's version number.
+   * The time at which this glob was created.
    */
-  private final int version;
+  private final long timestamp;
 
   /**
    * A pointer to the encryption key. This can be null if the null cipher was
@@ -61,9 +61,9 @@ public class Glob {
    *          The core's private key. Used to sign the glob.
    */
   public Glob(Core core, ObjectGroup group, PrivateKey key) {
-    this.version = group.obj().getVersion();
+    this.timestamp = System.currentTimeMillis();
 
-    final KeyObject keyObject = getLabel(core, group.obj()).keyObject();
+    final KeyObject keyObject = getLabel(core, group).keyObject();
     if (keyObject == null) {
       this.keyOnum = null;
       this.iv = null;
@@ -87,11 +87,12 @@ public class Glob {
       cos.close();
       this.data = bos.toByteArray();
 
-      // Start signing things.
-      Signature signer = Crypto.signatureInstance();
-      signer.initSign(key);
-      updateSignature(signer);
-      this.signature = signer.sign();
+      // Sign things.
+//      Signature signer = Crypto.signatureInstance();
+//      signer.initSign(key);
+//      updateSignature(signer);
+//      this.signature = signer.sign();
+      this.signature = new byte[0];
     } catch (IOException e) {
       throw new InternalError(e);
     } catch (GeneralSecurityException e) {
@@ -106,10 +107,14 @@ public class Glob {
    */
   private void updateSignature(Signature sig) throws SignatureException {
     // Update with version number.
-    sig.update((byte) (version >>> 24));
-    sig.update((byte) (version >>> 16));
-    sig.update((byte) (version >>> 8));
-    sig.update((byte) version);
+    sig.update((byte) (timestamp >>> 56));
+    sig.update((byte) (timestamp >>> 48));
+    sig.update((byte) (timestamp >>> 40));
+    sig.update((byte) (timestamp >>> 32));
+    sig.update((byte) (timestamp >>> 24));
+    sig.update((byte) (timestamp >>> 16));
+    sig.update((byte) (timestamp >>> 8));
+    sig.update((byte) timestamp);
 
     // Update with keyOnum, if non-null.
     if (keyOnum != null) {
@@ -146,7 +151,9 @@ public class Glob {
     }
   }
 
-  private Label getLabel(Core core, SerializedObject obj) {
+  private Label getLabel(Core core, ObjectGroup group) {
+    SerializedObject obj =
+      group.objects().entrySet().iterator().next().getValue();
     return new Label.$Proxy(core, obj.getLabelOnum());
   }
 
@@ -194,7 +201,7 @@ public class Glob {
    * Whether this Glob is older than the given Glob.
    */
   public boolean isOlderThan(Glob glob) {
-    return version < glob.version;
+    return timestamp < glob.timestamp;
   }
 
   public boolean verifySignature(PublicKey key) throws SignatureException,
@@ -208,7 +215,7 @@ public class Glob {
 
   /** Serializer. */
   public void write(DataOutput out) throws IOException {
-    out.writeInt(version);
+    out.writeLong(timestamp);
     if (keyOnum == null) {
       out.writeBoolean(false);
     } else {
@@ -238,7 +245,7 @@ public class Glob {
    */
   public Glob(/*PublicKey key, */DataInput in) throws IOException/*,
       BadSignatureException*/ {
-    this.version = in.readInt();
+    this.timestamp = in.readLong();
     if (in.readBoolean())
       this.keyOnum = in.readLong();
     else this.keyOnum = null;

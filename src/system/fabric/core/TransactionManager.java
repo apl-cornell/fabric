@@ -253,28 +253,32 @@ public class TransactionManager {
     SerializedObject obj = read(principal, onum);
     if (obj == null) return null;
     
-    Label headLabel = getLabelByOnum(obj.getLabelOnum());
+    LongKeyMap<SerializedObject> group = new LongKeyHashMap<SerializedObject>();
+    group.put(onum, obj);
+    
+    long headLabelOnum = obj.getLabelOnum();
 
     // Traverse object graph and add more objects to the object group.
-    LongKeyMap<SerializedObject> group = new LongKeyHashMap<SerializedObject>();
     for (Iterator<Long> it = obj.getIntracoreRefIterator(); it.hasNext();) {
       long relatedOnum = it.next();
       SerializedObject related = read(principal, relatedOnum, true);
-      if (related != null) {
-        // If this is a dissemination read, ensure that the related object's
-        // label is at most as restrictive as the head object's label.
-        if (dissem) {
-          Label relatedLabel = getLabelByOnum(related.getLabelOnum());
-          if (!relabelsTo(relatedLabel, headLabel)) continue;
-        }
-        
-        group.put(relatedOnum, related);
-        int count = 0;
-        if (worker.numSendsByType.containsKey(related.getClassName()))
-          count = worker.numSendsByType.get(related.getClassName());
-        count++;
-        worker.numSendsByType.put(related.getClassName(), count);
+      if (related == null) continue;
+      
+      // If this is a dissemination read, ensure that the related object's
+      // label is the same as the head object's label.
+      if (dissem) {
+        long relatedLabelOnum = related.getLabelOnum();
+        // We can be smarter here, but to avoid calling into the client, let's
+        // hope this is sufficient.
+        if (headLabelOnum != relatedLabelOnum) continue;
       }
+
+      group.put(relatedOnum, related);
+      int count = 0;
+      if (worker.numSendsByType.containsKey(related.getClassName()))
+        count = worker.numSendsByType.get(related.getClassName());
+      count++;
+      worker.numSendsByType.put(related.getClassName(), count);
     }
 
     worker.numObjectsSent += group.size() + 1;
@@ -284,64 +288,7 @@ public class TransactionManager {
     count++;
     worker.numSendsByType.put(obj.getClassName(), count);
     
-    return new ObjectGroup(obj, group);
-  }
-
-  /**
-   * This is the cache for checking whether one label relabels to another. We're
-   * not using the caches in LabelUtil because the transaction management is too
-   * slow (!!).
-   */
-  private static final LongKeyMap<LongKeyHashMap<Boolean>> cachedRelabelQueries =
-      new LongKeyHashMap<LongKeyHashMap<Boolean>>();
-
-  private static Boolean checkRelabellingCache(long labelFromOnum,
-      long labelToOnum) {
-    LongKeyMap<Boolean> submap;
-    synchronized (cachedRelabelQueries) {
-      submap = cachedRelabelQueries.get(labelFromOnum);
-      if (submap == null) return null;
-    }
-
-    synchronized (submap) {
-      return submap.get(labelToOnum);
-    }
-  }
-
-  private static void cacheRelabelResult(long labelFromOnum, long labelToOnum,
-      Boolean result) {
-    LongKeyHashMap<Boolean> submap;
-    synchronized (cachedRelabelQueries) {
-      submap = cachedRelabelQueries.get(labelFromOnum);
-      if (submap == null) {
-        submap = new LongKeyHashMap<Boolean>();
-        cachedRelabelQueries.put(labelFromOnum, submap);
-      }
-    }
-
-    synchronized (submap) {
-      submap.put(labelToOnum, result);
-    }
-  }
-
-  /**
-   * This assumes that the label references are intracore references.
-   */
-  private boolean relabelsTo(final Label from, final Label to) {
-    if (from.$getOnum() == to.$getOnum()) return true;
-    Boolean result = checkRelabellingCache(from.$getOnum(), to.$getOnum());
-    if (result != null) return result;
-    
-    // Call into the Jif label framework to perform the relabelling check.
-    result = Client.runInTransaction(new Client.Code<Boolean>() {
-      public Boolean run() {
-        return LabelUtil.$Impl.relabelsTo(from, to);
-      }
-    });
-
-    cacheRelabelResult(from.$getOnum(), to.$getOnum(), result);
-
-    return result;
+    return new ObjectGroup(group);
   }
 
   /**

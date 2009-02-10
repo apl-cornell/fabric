@@ -8,41 +8,29 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 
 /**
- * Holds an unencrypted serialized object and a set of related, unencrypted,
- * serialized objects.
+ * Holds a set of related, unencrypted, serialized objects.
  */
 public class ObjectGroup {
-  private final SerializedObject obj;
-  private final LongKeyMap<SerializedObject> related;
+  private final LongKeyMap<SerializedObject> objects;
 
-  public ObjectGroup(SerializedObject obj, LongKeyMap<SerializedObject> related) {
-    this.obj = obj;
-    this.related = related;
+  public ObjectGroup(LongKeyMap<SerializedObject> objects) {
+    this.objects = objects;
   }
   
   /**
-   * The head object for this group.
+   * The objects as a map from their onums to the objects.
    */
-  public SerializedObject obj() {
-    return obj;
-  }
-  
-  /**
-   * The related objects as a map from their onums to the objects.
-   */
-  public LongKeyMap<SerializedObject> related() {
-    return related;
+  public LongKeyMap<SerializedObject> objects() {
+    return objects;
   }
   
   /**
    * Serializes the group onto the given output stream.
    */
   public void write(DataOutput out) throws IOException {
-    obj.write(out);
-    out.writeInt(related.size());
-    
-    for (LongKeyMap.Entry<SerializedObject> entry : related.entrySet()) {
-      entry.getValue().write(out);
+    out.writeInt(objects.size());
+    for (SerializedObject obj : objects.values()) {
+      obj.write(out);
     }
   }
   
@@ -50,14 +38,12 @@ public class ObjectGroup {
    * Deserialization constructor.
    */
   public ObjectGroup(DataInput in) throws IOException {
-    obj = new SerializedObject(in);
-    
     int groupSize = in.readInt();
-    related = new LongKeyHashMap<SerializedObject>(groupSize);
+    objects = new LongKeyHashMap<SerializedObject>(groupSize);
     
     for (int i = 0; i < groupSize; i++) {
       SerializedObject obj = new SerializedObject(in);
-      related.put(obj.getOnum(), obj);
+      objects.put(obj.getOnum(), obj);
     }
   }
 }

@@ -78,10 +78,11 @@ public class InProcessCore extends RemoteCore {
 
   @Override
   public ObjectGroup readObjectFromCore(long onum) throws FetchException {
-    SerializedObject obj;
     try {
-      obj = tm.read(Client.getClient().getPrincipal(), onum);
-      return new ObjectGroup(obj, new LongKeyHashMap<SerializedObject>());
+      LongKeyMap<SerializedObject> map = new LongKeyHashMap<SerializedObject>();
+      SerializedObject obj = tm.read(Client.getClient().getPrincipal(), onum);
+      map.put(onum, obj);
+      return new ObjectGroup(map);
     } catch (AccessException e) {
       throw new FetchException(e);
     }

@@ -283,16 +283,21 @@ public class RemoteCore implements Core {
         g = readObjectFromCore(onum);
       }
 
-      try {
-        result = g.obj().deserialize(this);
-      } catch (ClassNotFoundException e) {
-        throw new InternalError(e);
-      }
-
-      for (LongKeyMap.Entry<SerializedObject> entry : g.related().entrySet()) {
-        // Add to the cache if object not already in memory.
-        serialized.put(entry.getKey(), new SoftReference<SerializedObject>(
-            entry.getValue()));
+      for (LongKeyMap.Entry<SerializedObject> entry : g.objects().entrySet()) {
+        long curOnum = entry.getKey();
+        SerializedObject curObj = entry.getValue();
+        
+        if (curOnum == onum) {
+          try {
+            result = curObj.deserialize(this);
+          } catch (ClassNotFoundException e) {
+            throw new InternalError(e);
+          }
+        } else {
+          // Add to the cache if object not already in memory.
+          serialized.put(entry.getKey(), new SoftReference<SerializedObject>(
+              entry.getValue()));
+        }
       }
     }
 
