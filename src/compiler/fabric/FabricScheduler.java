@@ -1,10 +1,11 @@
 package fabric;
 
-import java.util.Iterator;
+import java.util.*;
 
 import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
+import fabric.visit.FabricTypeBuilder;
 
 import polyglot.ast.Node;
 import polyglot.frontend.CyclicDependencyException;
@@ -47,6 +48,20 @@ public class FabricScheduler extends JifScheduler {
         this.objectJob = j;
     }
     return j;
+  }
+  
+  @Override
+  public Goal TypesInitialized(Job job) {
+    FabricTypeSystem ts = fabext.typeSystem();
+    FabricNodeFactory nf = fabext.nodeFactory();
+    Goal g = internGoal(new VisitorGoal(job, new FabricTypeBuilder(job, ts, nf)));
+    try {
+      addPrerequisiteDependency(g, Parsed(job));
+    }
+    catch (CyclicDependencyException e) {
+      throw new InternalCompilerError(e);
+    }
+    return g;
   }
 
   public Goal FabricToFabilRewritten(Job job) {
