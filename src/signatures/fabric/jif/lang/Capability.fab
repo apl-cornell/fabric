@@ -1,0 +1,30 @@
+package jif.lang;
+
+/**
+ * A <code>Capability</code> represents the authority to execute
+ * a given @link{Closure Closure}. A capability has the authority of 
+ * the principal P, and can be used to invoke the contained Closure. 
+ * The label L is a lower bound on the side-effects
+ * of the closure.<p>
+ * 
+ * A capability can only be obtained through the runtime interface, and 
+ * only if the principal P grants authority to invoke the given closure.
+ */
+public final class Capability[principal P, label L] authority(P) {
+    /**
+     * The only way to construct a Capability is through the
+     * PrincipalUtil class.
+     */
+    private Capability(Closure[P,L]{this} closure) { 
+    	this.closure = closure;
+    }
+    
+    private final Closure[P, L]{this} closure;
+
+    public Closure[P,L]{this} getClosure() { return closure; }
+
+	public Object{closure; L} invoke{L}() where authority(P) {
+		if (closure == null) return null;
+		return closure.invoke();
+	}
+}

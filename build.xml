@@ -372,19 +372,25 @@
            relative="false"
            skipemptyfilesets="true"
            vmlauncher="false">
-      <arg value="${fabc}" />
-      <arg value="-nooutput" />
-      <arg value="-v" />
-      <arg value="-e" />
-      <arg value="-d" />
-      <arg value="sig-classes/fabric" />
-      <arg value="-sourcepath" />
-      <arg value="src/signatures/fabric" />
+      <arg value="${fabc}"     />
+      <arg value="-sigcp"      /> <arg value="sig-classes/fabric"    />
+      <arg value="-sig"        />
+      <arg value="-nooutput"   />
+      <arg value="-e"          />
+      <arg value="-d"          /> <arg value="sig-classes/fabric"    />
+      <arg value="-sourcepath" /> <arg value="src/signatures/fabric" />
       <srcfile />
-      <fileset dir="${signatures.fabric.src}" includes="**/Object.fab" />
+      <fileset dir="${signatures.fabric.src}">
+        <include name="java/lang/Object.fab"       />
+        <include name="fabric/lang/Object.fab"     />
+        <include name="jif/lang/LabelUtil.fab"     />
+        <include name="jif/lang/PrincipalUtil.fab" />
+        <include name="jif/lang/Capability.fab"    />
+        </fileset>
       <globmapper from="*.fab" to="*.class" />
     </apply>
 
+    <!--
     <apply executable="bash"
            parallel="true"
            failonerror="true"
@@ -404,6 +410,7 @@
       <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
+    -->
   </target>
 
   <!-- Compiles the Filc compiler -->
