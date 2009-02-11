@@ -88,11 +88,10 @@ public class Glob implements FastSerializable {
       this.data = bos.toByteArray();
 
       // Sign things.
-//      Signature signer = Crypto.signatureInstance();
-//      signer.initSign(key);
-//      updateSignature(signer);
-//      this.signature = signer.sign();
-      this.signature = new byte[0];
+      Signature signer = Crypto.signatureInstance();
+      signer.initSign(key);
+      updateSignature(signer);
+      this.signature = signer.sign();
     } catch (IOException e) {
       throw new InternalError(e);
     } catch (GeneralSecurityException e) {
