@@ -11,10 +11,8 @@ import jif.lang.ReaderPolicy;
 import jif.lang.WriterPolicy;
 import fabric.client.Client;
 import fabric.client.Core;
-import fabric.common.AccessException;
-import fabric.common.FastSerializable;
-import fabric.common.ONumConstants;
-import fabric.common.SerializedObject;
+import fabric.common.*;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
@@ -50,6 +48,18 @@ public abstract class ObjectStore {
   protected final String name;
   private Principal corePrincipal;
   private Label publicReadonlyLabel;
+  
+  /**
+   * Maps object numbers to globIDs. The glob with ID globIDByOnum(onum) holds a
+   * copy of object onum.
+   */
+  private final LongKeyMap<Long> globIDByOnum;
+
+  /**
+   * Maps globIDs to Globs and the number of times the glob is referenced in
+   * globIDByOnum.
+   */
+  private final LongKeyMap<Pair<Glob, MutableInteger>> globTable;
 
   protected static class MutableInteger {
     public int value;
@@ -171,6 +181,8 @@ public abstract class ObjectStore {
     this.name = name;
     this.pendingByTid = new HashMap<Integer, PendingTransaction>();
     this.rwCount = new LongKeyHashMap<MutableInteger>();
+    this.globIDByOnum = new LongKeyHashMap<Long>();
+    this.globTable = new LongKeyHashMap<Pair<Glob,MutableInteger>>();
   }
 
   /**
@@ -295,17 +307,60 @@ public abstract class ObjectStore {
    * @return the object or null if no object exists at the given onum
    */
   public abstract SerializedObject read(long onum);
+  
+  /**
+   * Returns a fresh globID.
+   */
+  protected abstract long nextGlobID();
 
   /**
    * Returns the cached Glob containing the given onum. Null is returned if no
    * such Glob exists.
    */
-  public abstract Glob getCachedGlob(long onum);
+  public final Glob getCachedGlob(long onum) {
+    Long globID = globIDByOnum.get(onum);
+    if (globID == null) return null;
+    
+    Pair<Glob, MutableInteger> entry = globTable.get(globID);
+    if (entry == null) return null;
+    return entry.first;
+  }
   
   /**
    * Inserts the given glob into the cache for the given onums.
    */
-  public abstract void cacheGlob(LongSet onums, Glob glob);
+  public final void cacheGlob(LongSet onums, Glob glob) {
+    // Get a new ID for the glob and insert into the glob table.
+    long globID = nextGlobID();
+    globTable.put(globID, new Pair<Glob, MutableInteger>(glob,
+        new MutableInteger(onums.size())));
+    
+    // Establish globID bindings for all onums we're given.
+    for (LongIterator it = onums.iterator(); it.hasNext();) {
+      long onum = it.next();
+      
+      Long oldGlobID = globIDByOnum.put(onum, globID);
+      if (oldGlobID == null) continue;
+      
+      Pair<Glob, MutableInteger> entry = globTable.get(oldGlobID);
+      if (entry == null) continue;
+
+      if (entry.second.value == 1) {
+        // We've removed the last pin. Evict the old glob from the glob table.
+        globTable.remove(oldGlobID);
+      } else {
+        entry.second.value--;
+      }
+    }
+  }
+
+  /**
+   * Removes from cache the glob associated with the given onum.
+   */
+  protected final void removeGlobByOnum(long onum) {
+    Long globID = globIDByOnum.remove(onum);
+    if (globID != null) globTable.remove(globID);
+  }
 
   /**
    * Determine whether an onum has outstanding uncommitted changes or reads.
