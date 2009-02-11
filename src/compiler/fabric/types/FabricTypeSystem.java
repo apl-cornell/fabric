@@ -1,7 +1,8 @@
 package fabric.types;
 
+import polyglot.types.ClassType;
 import jif.types.JifTypeSystem;
 
 public interface FabricTypeSystem extends JifTypeSystem {
-    // TODO: declare any new methods needed
+  ClassType FObject();
 }

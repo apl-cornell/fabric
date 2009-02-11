@@ -2,15 +2,24 @@ package fabric.types;
 
 import java.util.List;
 
+import polyglot.frontend.Source;
+import polyglot.types.ClassType;
 import polyglot.types.ImportTable;
+import polyglot.types.LazyClassInitializer;
 import polyglot.types.Package;
+import polyglot.types.ParsedClassType;
 
 import fabil.types.FabILImportTable;
+import fabil.types.FabILParsedClassType_c;
 import fabil.types.FabILTypeSystem;
 import jif.types.JifTypeSystem_c;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
 
+  public ClassType FObject() {
+    return load("fabric.lang.Object");
+  }
+  
   public FabricTypeSystem_c(FabILTypeSystem filts) {
     super(filts);
   }
@@ -38,4 +47,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     // java.lang.Object and fabric.lang.Object 
     return new FabILImportTable(this, pkg, sourcename);
   }
+
+  @Override
+  public ParsedClassType createClassType(LazyClassInitializer init,
+      Source fromSource) {
+    return new FabricParsedClassType_c(this, init, fromSource);
+  }
+
+  
 }
