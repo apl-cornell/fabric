@@ -16,7 +16,7 @@ import fabric.lang.KeyObject;
 /**
  * A glob is an ObjectGroup that has been encrypted and signed.
  */
-public class Glob {
+public class Glob implements FastSerializable {
   /**
    * The time at which this glob was created.
    */

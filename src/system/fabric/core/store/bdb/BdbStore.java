@@ -8,10 +8,14 @@ import java.util.logging.Logger;
 
 import com.sleepycat.je.*;
 
+import fabric.common.FastSerializable;
 import fabric.common.InternalError;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongSet;
 import fabric.core.store.ObjectStore;
+import fabric.dissemination.Glob;
 import fabric.lang.Principal;
 
 /**
@@ -24,9 +28,26 @@ public class BdbStore extends ObjectStore {
   private Database store;
   private Database prepared;
 
+  /**
+   * Maps object numbers to globIDs. The glob with ID globIDByOnum(onum) holds a
+   * copy of object onum.
+   */
+  private Database globIDByOnum;
+  
+  /**
+   * Maps globIDs to Globs.
+   */
+  private Database globTable;
+  
+  /**
+   * Maps globIDs to the number of times the glob is referenced in globIDByOnum.
+   */
+  private Database globPinCounts;
+
   private final DatabaseEntry initializationStatus;
   private final DatabaseEntry tidCounter;
   private final DatabaseEntry onumCounter;
+  private final DatabaseEntry globIDCounter;
 
   private Logger log = Logger.getLogger("fabric.core.store.bdb");
 
@@ -56,6 +77,9 @@ public class BdbStore extends ObjectStore {
       dbconf.setTransactional(true);
       store = env.openDatabase(null, "store", dbconf);
       prepared = env.openDatabase(null, "prepared", dbconf);
+      globIDByOnum = env.openDatabase(null, "globIDByOnum", dbconf);
+      globTable = env.openDatabase(null, "globTable", dbconf);
+      globPinCounts = env.openDatabase(null, "globPinCounts", dbconf);
       meta = env.openDatabase(null, "meta", dbconf);
 
       initRwCount();
@@ -71,6 +95,7 @@ public class BdbStore extends ObjectStore {
           new DatabaseEntry("initialization_status".getBytes("UTF-8"));
       tidCounter = new DatabaseEntry("tid_counter".getBytes("UTF-8"));
       onumCounter = new DatabaseEntry("onum_counter".getBytes("UTF-8"));
+      globIDCounter = new DatabaseEntry("globID_counter".getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
       throw new InternalError(e);
     }
@@ -106,9 +131,17 @@ public class BdbStore extends ObjectStore {
         for (SerializedObject o : pending.modData) {
           long onum = o.getOnum();
           log.finest("Bdb committing onum " + onum);
-          DatabaseEntry key = new DatabaseEntry(toBytes(onum));
-          DatabaseEntry data = new DatabaseEntry(toBytes(o));
-          store.put(txn, key, data);
+          DatabaseEntry onumData = new DatabaseEntry(toBytes(onum));
+          DatabaseEntry objData = new DatabaseEntry(toBytes(o));
+          store.put(txn, onumData, objData);
+          
+          // Remove any cached globs containing the old version of this object.
+          DatabaseEntry globIDData = new DatabaseEntry();
+          if (globIDByOnum.get(txn, onumData, globIDData, LockMode.DEFAULT) == SUCCESS) {
+            globIDByOnum.delete(txn, onumData);
+            globTable.delete(txn, globIDData);
+            globPinCounts.delete(txn, globIDData);
+          }
         }
 
         txn.commit();
@@ -155,6 +188,82 @@ public class BdbStore extends ObjectStore {
     }
 
     return null;
+  }
+
+  @Override
+  public Glob getCachedGlob(long onum) {
+    try {
+      Transaction txn = env.beginTransaction(null, null);
+      DatabaseEntry onumData = new DatabaseEntry(toBytes(onum));
+      DatabaseEntry globIDData = new DatabaseEntry();
+      DatabaseEntry globData = new DatabaseEntry();
+      
+      if (globIDByOnum.get(txn, onumData, globIDData, LockMode.DEFAULT) != SUCCESS
+          || globTable.get(txn, globIDData, globData, LockMode.DEFAULT) != SUCCESS) {
+        txn.commit();
+        return null;
+      }
+      
+      txn.commit();
+      return toGlob(globData.getData());
+    } catch (DatabaseException e) {
+      log.log(Level.SEVERE, "Bdb error in getCachedGlob: ", e);
+      throw new InternalError(e);
+    }
+  }
+
+  @Override
+  public void cacheGlob(LongSet onums, Glob glob) {
+    try {
+      Transaction txn = env.beginTransaction(null, null);
+      
+      // Get a new ID for the glob.
+      DatabaseEntry globIDData = new DatabaseEntry();
+      if (meta.get(txn, globIDCounter, globIDData, LockMode.DEFAULT) != SUCCESS)
+        globIDData.setData(toBytes(0L));
+      long nextGlobID = toLong(globIDData.getData())+1;
+      DatabaseEntry nextGlobIDData = new DatabaseEntry(toBytes(nextGlobID));
+      meta.put(txn, globIDCounter, nextGlobIDData);
+      
+      // Insert into the glob table.
+      DatabaseEntry globData = new DatabaseEntry(toBytes(glob));
+      globTable.put(txn, globIDData, globData);
+      
+      // Add pins.
+      DatabaseEntry pinData = new DatabaseEntry(toBytes(onums.size()));
+      globPinCounts.put(txn, globIDData, pinData);
+      
+      // Establish globID bindings for all onums we're given.
+      for (LongIterator it = onums.iterator(); it.hasNext();) {
+        DatabaseEntry onumData = new DatabaseEntry(toBytes(it.next()));
+        DatabaseEntry oldGlobIDData = new DatabaseEntry();
+        
+        boolean hasOldEntry =
+            globIDByOnum.get(txn, onumData, oldGlobIDData, LockMode.DEFAULT) == SUCCESS;
+        globIDByOnum.put(txn, onumData, globIDData);
+        
+        if (!hasOldEntry) continue;
+        
+        // We overwrote an entry for the current onum.  Unpin.
+        if (globPinCounts.get(txn, oldGlobIDData, pinData, LockMode.DEFAULT) != SUCCESS)
+          continue;
+        
+        long pinCount = toInt(pinData.getData()) - 1;
+        if (pinCount == 0) {
+          // We've removed the last pin.  Evict the old glob.
+          globPinCounts.delete(txn, oldGlobIDData);
+          globTable.delete(txn, oldGlobIDData);
+        } else {
+          pinData.setData(toBytes(pinCount));
+          globPinCounts.put(txn, oldGlobIDData, pinData);
+        }
+      }
+      
+      txn.commit();
+    } catch (DatabaseException e) {
+      log.log(Level.SEVERE, "Bdb error in cacheGlob: ", e);
+      throw new InternalError(e);
+    }
   }
 
   @Override
@@ -212,17 +321,12 @@ public class BdbStore extends ObjectStore {
   @Override
   public void close() {
     try {
-      if (store != null) {
-        store.close();
-      }
-
-      if (prepared != null) {
-        prepared.close();
-      }
-
-      if (env != null) {
-        env.close();
-      }
+      if (store != null) store.close();
+      if (prepared != null) prepared.close();
+      if (globIDByOnum != null) globIDByOnum.close();
+      if (globTable != null) globTable.close();
+      if (globPinCounts != null) globPinCounts.close();
+      if (env != null) env.close();
     } catch (DatabaseException e) {
     }
   }
@@ -255,8 +359,7 @@ public class BdbStore extends ObjectStore {
 
     try {
       Transaction txn = env.beginTransaction(null, null);
-      DatabaseEntry data = new DatabaseEntry();
-      data.setData(toBytes(true));
+      DatabaseEntry data = new DatabaseEntry(toBytes(true));
       meta.put(txn, initializationStatus, data);
       txn.commit();
     } catch (DatabaseException e) {
@@ -376,23 +479,11 @@ public class BdbStore extends ObjectStore {
     return i;
   }
 
-  private byte[] toBytes(PendingTransaction pending) {
+  private byte[] toBytes(FastSerializable obj) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       ObjectOutputStream oos = new ObjectOutputStream(bos);
-      pending.write(oos);
-      oos.flush();
-      return bos.toByteArray();
-    } catch (IOException e) {
-      throw new InternalError(e);
-    }
-  }
-
-  private byte[] toBytes(SerializedObject o) {
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      ObjectOutputStream oos = new ObjectOutputStream(bos);
-      o.write(oos);
+      obj.write(oos);
       oos.flush();
       return bos.toByteArray();
     } catch (IOException e) {
@@ -415,6 +506,16 @@ public class BdbStore extends ObjectStore {
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
       ObjectInputStream ois = new ObjectInputStream(bis);
       return new SerializedObject(ois);
+    } catch (IOException e) {
+      throw new InternalError(e);
+    }
+  }
+
+  private Glob toGlob(byte[] data) {
+    try {
+      ByteArrayInputStream bis = new ByteArrayInputStream(data);
+      ObjectInputStream ois = new ObjectInputStream(bis);
+      return new Glob(ois);
     } catch (IOException e) {
       throw new InternalError(e);
     }

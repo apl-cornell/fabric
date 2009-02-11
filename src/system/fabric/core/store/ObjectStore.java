@@ -1,18 +1,24 @@
 package fabric.core.store;
 
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.*;
 
-import jif.lang.*;
+import jif.lang.Label;
+import jif.lang.PairLabel;
+import jif.lang.ReaderPolicy;
+import jif.lang.WriterPolicy;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.common.AccessException;
+import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
+import fabric.dissemination.Glob;
 import fabric.lang.Principal;
 
 /**
@@ -60,7 +66,8 @@ public abstract class ObjectStore {
   /**
    * The data stored for a partially prepared transaction.
    */
-  protected static final class PendingTransaction implements Iterable<Long> {
+  protected static final class PendingTransaction implements FastSerializable,
+      Iterable<Long> {
     public final Principal owner;
     public final Collection<Long> reads;
 
@@ -123,7 +130,7 @@ public abstract class ObjectStore {
     /**
      * Serializes this object out to the given output stream.
      */
-    public void write(ObjectOutputStream out) throws IOException {
+    public void write(DataOutput out) throws IOException {
       out.writeBoolean(owner != null);
       if (owner != null) {
         out.writeUTF(owner.$getCore().name());
@@ -141,15 +148,22 @@ public abstract class ObjectStore {
   }
 
   /**
-   * The table of partially prepared transactions.
+   * The table of partially prepared transactions. Note that this does not need
+   * to be saved to stable storage.
    */
   protected final Map<Integer, PendingTransaction> pendingByTid;
 
   /**
+   * <p>
    * Tracks the read/write pins for each onum. A value of -1 represents a
    * write-pin; otherwise, the value is the number of read-pins. While this may
    * look like a locking mechanism, it is not. TransactionManager is responsible
    * for implementing the locking discipline for preparing transactions.
+   * </p>
+   * <p>
+   * This map should be recomputed from the set of prepared transactions when
+   * restoring from stable storage.
+   * </p>
    */
   protected final LongKeyMap<MutableInteger> rwCount;
 
@@ -281,6 +295,17 @@ public abstract class ObjectStore {
    * @return the object or null if no object exists at the given onum
    */
   public abstract SerializedObject read(long onum);
+
+  /**
+   * Returns the cached Glob containing the given onum. Null is returned if no
+   * such Glob exists.
+   */
+  public abstract Glob getCachedGlob(long onum);
+  
+  /**
+   * Inserts the given glob into the cache for the given onums.
+   */
+  public abstract void cacheGlob(LongSet onums, Glob glob);
 
   /**
    * Determine whether an onum has outstanding uncommitted changes or reads.

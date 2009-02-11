@@ -1,5 +1,6 @@
 package fabric.core;
 
+import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -16,6 +17,7 @@ import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.store.ObjectStore;
+import fabric.dissemination.Glob;
 import fabric.lang.Principal;
 
 public class TransactionManager {
@@ -235,6 +237,38 @@ public class TransactionManager {
   }
 
   /**
+   * Returns a Glob containing the specified object.
+   * 
+   * @param key
+   *          The private key to use for signing the glob.
+   * @param worker
+   *          Used to track read statistics.
+   */
+  public Glob getGlob(long onum, PrivateKey key, Worker worker)
+      throws AccessException {
+    Glob glob;
+    synchronized (store) {
+      glob = store.getCachedGlob(onum);
+    }
+    if (glob != null) return glob;
+    
+    ObjectGroup group = readGroup(null, onum, true, null);
+    if (group == null) throw new AccessException();
+    
+    Core core = Client.getClient().getCore(store.getName());
+    glob = new Glob(core, group, key);
+    
+    // Cache the glob.
+    synchronized (store) {
+      store.cacheGlob(group.objects().keySet(), glob);
+    }
+    
+    worker.numGlobsCreated++;
+    
+    return glob;
+  }
+
+  /**
    * Reads a group of objects from the object store.
    * 
    * @param principal
@@ -274,19 +308,24 @@ public class TransactionManager {
       }
 
       group.put(relatedOnum, related);
-      int count = 0;
-      if (worker.numSendsByType.containsKey(related.getClassName()))
-        count = worker.numSendsByType.get(related.getClassName());
-      count++;
-      worker.numSendsByType.put(related.getClassName(), count);
+      
+      if (worker != null) {
+        int count = 0;
+        if (worker.numSendsByType.containsKey(related.getClassName()))
+          count = worker.numSendsByType.get(related.getClassName());
+        count++;
+        worker.numSendsByType.put(related.getClassName(), count);
+      }
     }
 
-    worker.numObjectsSent += group.size() + 1;
-    int count = 0;
-    if (worker.numSendsByType.containsKey(obj.getClassName()))
-      count = worker.numSendsByType.get(obj.getClassName());
-    count++;
-    worker.numSendsByType.put(obj.getClassName(), count);
+    if (worker != null) {
+      worker.numObjectsSent += group.size() + 1;
+      int count = 0;
+      if (worker.numSendsByType.containsKey(obj.getClassName()))
+        count = worker.numSendsByType.get(obj.getClassName());
+      count++;
+      worker.numSendsByType.put(obj.getClassName(), count);
+    }
     
     return new ObjectGroup(group);
   }

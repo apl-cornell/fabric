@@ -67,6 +67,8 @@ public class Worker extends FabricThread.AbstractImpl {
   // Bookkeeping information for debugging/monitoring purposes:
   private int numReads;
   int numObjectsSent;
+  private int numGlobsSent;
+  int numGlobsCreated;
   private int numPrepares;
   private int numCommits;
   private int numCreates;
@@ -175,6 +177,8 @@ public class Worker extends FabricThread.AbstractImpl {
 
       logger.info(numReads + " read requests");
       logger.info(numObjectsSent + " objects sent");
+      logger.info(numGlobsSent + " encrypted globs sent");
+      logger.info(numGlobsCreated + " encrypted globs created");
       logger.info(numPrepares + " prepare requests");
       logger.info(numCommits + " commit requests");
       logger.info(numCreates + " objects created");
@@ -267,8 +271,9 @@ public class Worker extends FabricThread.AbstractImpl {
    * Determines whether the client principal matches the given name.
    */
   private boolean authenticateClient(final String name) {
-    // XXX Bypass authentication if we have a null client.
-    // XXX This is to allow bootstrapping the client principal.
+    // Bypass authentication if we have a null client.
+    // This is to allow bootstrapping the client principal.
+    // This is safe because everyone acts for null anyway.
     if (client == null) return true;
 
     return Client.runInTransaction(new Client.Code<Boolean>() {
@@ -299,7 +304,10 @@ public class Worker extends FabricThread.AbstractImpl {
   private void reset() {
     // Reset the statistics counters.
     numReads =
-        numObjectsSent = numPrepares = numCommits = numCreates = numWrites = 0;
+        numObjectsSent =
+            numGlobsSent =
+                numGlobsCreated =
+                    numPrepares = numCommits = numCreates = numWrites = 0;
     numSendsByType = new TreeMap<String, Integer>();
   }
 
@@ -408,11 +416,9 @@ public class Worker extends FabricThread.AbstractImpl {
     logger.finer("Handling DissemRead message");
     this.numReads++;
     
-    ObjectGroup group = transactionManager.readGroup(null, msg.onum, true, this);
-    if (group == null) throw new AccessException();
-
-    Core core = Client.getClient().getCore(transactionManager.store.getName());
-    Glob glob = new Glob(core, group, privateKey);
+    Glob glob = transactionManager.getGlob(msg.onum, privateKey, this);
+    if (glob != null) numGlobsSent++;
+    
     return new DissemReadMessage.Response(glob);
   }
 
