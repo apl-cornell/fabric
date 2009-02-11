@@ -240,10 +240,11 @@ public class Glob implements FastSerializable {
    * Deserializer.
    * 
    * @param key
-   *          The public key for verifying the signature.
+   *          The public key for verifying the signature. (If null, signature
+   *          verification is bypassed.)
    */
-  public Glob(/*PublicKey key, */DataInput in) throws IOException/*,
-      BadSignatureException*/ {
+  public Glob(PublicKey key, DataInput in) throws IOException,
+      BadSignatureException {
     this.timestamp = in.readLong();
     if (in.readBoolean())
       this.keyOnum = in.readLong();
@@ -263,11 +264,12 @@ public class Glob implements FastSerializable {
     this.signature = new byte[in.readInt()];
     in.readFully(this.signature);
 
-//    try {
-//      if (!verifySignature(key)) throw new BadSignatureException();
-//    } catch (GeneralSecurityException e) {
-//      throw new InternalError(e);
-//    }
+    try {
+      if (key != null && !verifySignature(key))
+        throw new BadSignatureException();
+    } catch (GeneralSecurityException e) {
+      throw new InternalError(e);
+    }
   }
 
   /**

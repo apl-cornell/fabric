@@ -38,15 +38,18 @@ public class Node {
     public final TransactionManager tm;
     public final SurrogateManager   sm;
     public final ObjectStore        os;
+    public final PublicKey          publicKey;
     public final PrivateKey         privateKey;
 
     private Core(SSLSocketFactory factory, ObjectStore os,
-        TransactionManager tm, SurrogateManager sm, PrivateKey key) {
+        TransactionManager tm, SurrogateManager sm, PublicKey publicKey,
+        PrivateKey privateKey) {
       this.factory = factory;
       this.os = os;
       this.tm = tm;
       this.sm = sm;
-      this.privateKey = key;
+      this.publicKey = publicKey;
+      this.privateKey = privateKey;
     }
   }
   
@@ -90,8 +93,13 @@ public class Node {
         sslContext.init(kmf.getKeyManagers(), tm, null);
         sslSocketFactory = sslContext.getSocketFactory();
 
-        PrivateKey key = (PrivateKey) keyStores.keyStore.getKey(coreName, keyStores.password);
-        addCore(coreName, sslSocketFactory, store, key);
+        PublicKey publicKey =
+            (PublicKey) keyStores.trustStore.getKey(coreName,
+                keyStores.password);
+        PrivateKey privateKey =
+            (PrivateKey) keyStores.keyStore
+                .getKey(coreName, keyStores.password);
+        addCore(coreName, sslSocketFactory, store, publicKey, privateKey);
       } catch (KeyManagementException e) {
         throw new InternalError("Unable to initialise key manager factory.", e);
       } catch (UnrecoverableKeyException e1) {
@@ -174,17 +182,20 @@ public class Node {
    *          the core.
    * @param tm
    *          a <code>TransactionManager</code> to use for the core being added.
-   * @param key
+   * @param publicKey
+   *          The core's public key.
+   * @param privateKey
    *          The core's private key, used for signing disseminated objects.
    */
   private void addCore(String coreName, SSLSocketFactory sslSocketFactory,
-      ObjectStore os, PrivateKey key) throws DuplicateCoreException {
+      ObjectStore os, PublicKey publicKey, PrivateKey privateKey)
+      throws DuplicateCoreException {
     if (cores.containsKey(coreName))
       throw new DuplicateCoreException();
     
     TransactionManager tm = new TransactionManager(os);
     SurrogateManager sm = new SimpleSurrogateManager(tm);
-    Core c = new Core(sslSocketFactory, os, tm, sm, key);
+    Core c = new Core(sslSocketFactory, os, tm, sm, publicKey, privateKey);
     cores.put(coreName, c);
   }
   

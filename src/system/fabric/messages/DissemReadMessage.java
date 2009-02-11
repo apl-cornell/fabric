@@ -4,11 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.common.AccessException;
-import fabric.common.FabricException;
-import fabric.common.FetchException;
+import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.core.Worker;
 import fabric.dissemination.Glob;
@@ -37,8 +34,15 @@ public final class DissemReadMessage extends Message<DissemReadMessage.Response>
      * @param in
      *                the input stream from which to read the response.
      */
-    Response(Core core, DataInput in) throws IOException {
-      this.glob = new Glob(in);
+    Response(RemoteCore core, DataInput in) throws IOException {
+      Glob glob;
+      try {
+        glob = new Glob(core.getPublicKey(), in);
+      } catch (BadSignatureException e) {
+        glob = null;
+      }
+      
+      this.glob = glob;
     }
 
     /*
@@ -97,7 +101,7 @@ public final class DissemReadMessage extends Message<DissemReadMessage.Response>
   }
 
   @Override
-  public Response response(Core c, DataInput in) throws IOException {
+  public Response response(RemoteCore c, DataInput in) throws IOException {
     return new Response(c, in);
   }
   

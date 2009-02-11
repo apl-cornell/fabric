@@ -4,7 +4,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.common.*;
 import fabric.common.InternalError;
@@ -97,7 +96,7 @@ public final class ReadMessage extends Message<ReadMessage.Response> {
   }
 
   @Override
-  public Response response(Core c, DataInput in) throws IOException {
+  public Response response(RemoteCore c, DataInput in) throws IOException {
     return new Response(in);
   }
   

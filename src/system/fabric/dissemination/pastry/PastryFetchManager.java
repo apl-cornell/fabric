@@ -33,8 +33,10 @@ public class PastryFetchManager implements FetchManager {
     try {
       glob = node.disseminator().fetch(c, onum);
     } catch (DisseminationTimeoutException e) {
-      return c.readObjectFromCore(onum);
+      glob = null;
     }
+    
+    if (glob == null) return c.readObjectFromCore(onum);
     
     return glob.decrypt(c);
   }

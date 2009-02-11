@@ -12,6 +12,8 @@ import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.client.RemoteCore;
+import fabric.common.BadSignatureException;
 import fabric.common.Pair;
 import fabric.dissemination.Glob;
 
@@ -147,10 +149,13 @@ public class Replicate implements RawMessage {
       globs = new HashMap<Pair<Core, Long>, Glob>(n);
       
       for (int i = 0; i < n; i++) {
-        String core = in.readUTF();
+        RemoteCore core = client.getCore(in.readUTF());
         long onum = in.readLong();
-        Glob g = new Glob(in);
-        globs.put(new Pair<Core, Long>(client.getCore(core), onum), g);
+        try {
+          Glob g = new Glob(core.getPublicKey(), in);
+          globs.put(new Pair<Core, Long>(core, onum), g);
+        } catch (BadSignatureException e) {
+        }
       }
     }
     

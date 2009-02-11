@@ -1,27 +1,18 @@
 package fabric.messages;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.security.Principal;
 import java.util.List;
 
+import jif.lang.Label;
 import fabric.client.Client;
-import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.client.UnreachableCoreException;
-import fabric.common.FabricException;
-import fabric.common.FabricRuntimeException;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.NoSuchCoreError;
-import fabric.common.Pair;
 import fabric.core.Worker;
-import jif.lang.Label;
 
 public abstract class Message<R extends Message.Response> {
 
@@ -157,7 +148,7 @@ public abstract class Message<R extends Message.Response> {
    *                 if an I/O error occurs during
    *                 serialization/deserialization.
    */
-  private R send(Core core, ObjectInputStream in, ObjectOutputStream out)
+  private R send(RemoteCore core, ObjectInputStream in, ObjectOutputStream out)
       throws FabricException, IOException {
     // Write this message out.
     // TODO write out pc label  (what for?  --Jed)
@@ -277,7 +268,7 @@ public abstract class Message<R extends Message.Response> {
    * @param in Input stream containing the message.
    * @return A Response message with the appropriate type.
    */
-  public abstract R response(Core c, DataInput in) throws IOException;
+  public abstract R response(RemoteCore c, DataInput in) throws IOException;
 
   /**
    * Writes this message out on the given output stream. Only used by the

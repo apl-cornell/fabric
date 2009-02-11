@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.util.logging.Logger;
 
 import fabric.common.*;
+import fabric.common.InternalError;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -102,7 +103,9 @@ public class MemoryStore extends ObjectStore {
       this.globTable = new LongKeyHashMap<Pair<Glob, Integer>>(size);
       for (int i = 0; i < size; i++)
         this.globTable.put(oin.readLong(), new Pair<Glob, Integer>(
-            new Glob(oin), oin.readInt()));
+            new Glob(null, oin), oin.readInt()));
+    } catch (BadSignatureException e) {
+      throw new InternalError(e);
     } catch (Exception e) {
       // TODO: distinguish invalid files from nonexistent
       this.nextOnum = ONumConstants.FIRST_UNRESERVED;

@@ -7,11 +7,9 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.*;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Logger;
 
 import javax.net.ssl.*;
@@ -41,6 +39,9 @@ public final class Client {
   protected final Map<String, RemoteCore> cores;
 
   protected final LocalCore localCore;
+  
+  // A KeyStore holding cores' public key certificates.
+  protected final KeyStore trustStore;
 
   // A socket factory for creating TLS connections.
   protected final SSLSocketFactory sslSocketFactory;
@@ -145,6 +146,7 @@ public final class Client {
     this.nameService = new NameService();
     this.cores = new HashMap<String, RemoteCore>();
     this.localCore = new LocalCore();
+    this.trustStore = trustStore;
 
     this.label = new ThreadLocal<Label>();
 
@@ -228,8 +230,14 @@ public final class Client {
 
     RemoteCore result = cores.get(name);
     if (result == null) {
-      result = new RemoteCore(name);
-      cores.put(name, result);
+      try {
+        Certificate cert = trustStore.getCertificate(name);
+        PublicKey pubKey = cert.getPublicKey();
+        result = new RemoteCore(name, pubKey);
+        cores.put(name, result);
+      } catch (GeneralSecurityException e) {
+        throw new InternalError(e);
+      }
     }
     return result;
   }

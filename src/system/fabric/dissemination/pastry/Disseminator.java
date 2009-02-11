@@ -483,7 +483,8 @@ public class Disseminator implements Application {
     RemoteCore c = client.getCore(msg.core());
     long onum = msg.onum();
     Glob g = msg.glob();
-    cache.put(c, onum, g);
+    
+    if (g != null) cache.put(c, onum, g);
     
     return true;
   }

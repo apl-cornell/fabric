@@ -93,7 +93,7 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
   }
 
   @Override
-  public Response response(Core c, DataInput in) throws IOException {
+  public Response response(RemoteCore c, DataInput in) throws IOException {
     return new Response(c, in);
   }
   

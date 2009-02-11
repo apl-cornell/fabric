@@ -8,10 +8,8 @@ import java.util.logging.Logger;
 
 import com.sleepycat.je.*;
 
-import fabric.common.FastSerializable;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.ONumConstants;
-import fabric.common.SerializedObject;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
 import fabric.core.store.ObjectStore;
@@ -515,7 +513,11 @@ public class BdbStore extends ObjectStore {
     try {
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
       ObjectInputStream ois = new ObjectInputStream(bis);
-      return new Glob(ois);
+      try {
+        return new Glob(null, ois);
+      } catch (BadSignatureException e) {
+        throw new InternalError(e);
+      }
     } catch (IOException e) {
       throw new InternalError(e);
     }

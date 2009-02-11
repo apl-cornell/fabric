@@ -82,7 +82,7 @@ public class CommitTransactionMessage extends
   }
 
   @Override
-  public Response response(Core c, DataInput in) {
+  public Response response(RemoteCore c, DataInput in) {
     return new Response(c, in);
   }
   

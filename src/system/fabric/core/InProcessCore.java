@@ -26,7 +26,7 @@ public class InProcessCore extends RemoteCore {
   protected TransactionManager tm;
 
   public InProcessCore(String name, Core c) {
-    super(name);
+    super(name, c.publicKey);
     tm = c.tm;
   }
   

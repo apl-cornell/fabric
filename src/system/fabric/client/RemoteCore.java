@@ -5,6 +5,7 @@ import java.lang.ref.SoftReference;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.Principal;
+import java.security.PublicKey;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -55,6 +56,11 @@ public class RemoteCore implements Core {
   private transient ObjectOutputStream sslOut;
   private transient ObjectInputStream unencryptedIn;
   private transient ObjectOutputStream unencryptedOut;
+  
+  /**
+   * The core's public key.
+   */
+  private transient final PublicKey publicKey;
 
   /**
    * Cache of serialized objects that the core has sent us.
@@ -64,11 +70,12 @@ public class RemoteCore implements Core {
   /**
    * Creates a core representing the core at the given host name.
    */
-  protected RemoteCore(String name) {
+  protected RemoteCore(String name, PublicKey key) {
     this.name = name;
     this.objects = new LongKeyHashMap<FabricSoftRef>();
     this.fresh_ids = new LinkedList<Long>();
     this.serialized = new LongKeyHashMap<SoftReference<SerializedObject>>();
+    this.publicKey = key;
   }
 
   public ObjectInputStream objectInputStream(boolean ssl) {
@@ -421,6 +428,13 @@ public class RemoteCore implements Core {
         objects.remove(onum);
       }
     }
+  }
+
+  /**
+   * @return The core's public key for verifying Glob signatures.
+   */
+  public PublicKey getPublicKey() {
+    return publicKey;
   }
 
 }
