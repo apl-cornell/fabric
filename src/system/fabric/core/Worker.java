@@ -68,6 +68,7 @@ public class Worker extends FabricThread.AbstractImpl {
   private int numReads;
   int numObjectsSent;
   private int numGlobsSent;
+  int numGlobbedObjects;
   int numGlobsCreated;
   private int numPrepares;
   private int numCommits;
@@ -179,6 +180,9 @@ public class Worker extends FabricThread.AbstractImpl {
       logger.info(numObjectsSent + " objects sent");
       logger.info(numGlobsSent + " encrypted globs sent");
       logger.info(numGlobsCreated + " encrypted globs created");
+      if (numGlobsCreated != 0)
+        logger.info("  " + (numGlobbedObjects / numGlobsCreated)
+            + " objects per glob");
       logger.info(numPrepares + " prepare requests");
       logger.info(numCommits + " commit requests");
       logger.info(numCreates + " objects created");
@@ -307,7 +311,8 @@ public class Worker extends FabricThread.AbstractImpl {
         numObjectsSent =
             numGlobsSent =
                 numGlobsCreated =
-                    numPrepares = numCommits = numCreates = numWrites = 0;
+                    numGlobbedObjects =
+                        numPrepares = numCommits = numCreates = numWrites = 0;
     numSendsByType = new TreeMap<String, Integer>();
   }
 

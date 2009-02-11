@@ -1,9 +1,7 @@
 package fabric.core;
 
 import java.security.PrivateKey;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import jif.lang.Label;
 import jif.lang.LabelUtil;
@@ -14,8 +12,10 @@ import fabric.client.TransactionPrepareFailedException;
 import fabric.common.AccessException;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.core.store.ObjectStore;
 import fabric.dissemination.Glob;
 import fabric.lang.Principal;
@@ -23,6 +23,7 @@ import fabric.lang.Principal;
 public class TransactionManager {
 
   private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
+  private static final int MAX_GROUP_SIZE = 75;
 
   /**
    * The object store of the core for which we're managing transactions.
@@ -264,6 +265,7 @@ public class TransactionManager {
     }
     
     worker.numGlobsCreated++;
+    worker.numGlobbedObjects += group.objects().size();
     
     return glob;
   }
@@ -287,44 +289,56 @@ public class TransactionManager {
     SerializedObject obj = read(principal, onum);
     if (obj == null) return null;
     
-    LongKeyMap<SerializedObject> group = new LongKeyHashMap<SerializedObject>();
-    group.put(onum, obj);
-    
     long headLabelOnum = obj.getLabelOnum();
-
-    // Traverse object graph and add more objects to the object group.
-    for (Iterator<Long> it = obj.getIntracoreRefIterator(); it.hasNext();) {
-      long relatedOnum = it.next();
-      SerializedObject related = read(principal, relatedOnum, true);
-      if (related == null) continue;
-      
-      // If this is a dissemination read, ensure that the related object's
-      // label is the same as the head object's label.
-      if (dissem) {
-        long relatedLabelOnum = related.getLabelOnum();
-        // We can be smarter here, but to avoid calling into the client, let's
-        // hope this is sufficient.
-        if (headLabelOnum != relatedLabelOnum) continue;
-      }
-
-      group.put(relatedOnum, related);
+    
+    LongKeyMap<SerializedObject> group =
+        new LongKeyHashMap<SerializedObject>(MAX_GROUP_SIZE);
+    Queue<SerializedObject> toVisit = new LinkedList<SerializedObject>();
+    LongSet seen = new LongHashSet();
+    
+    // Do a breadth-first traversal and add objects to an object group.
+    toVisit.add(obj);
+    seen.add(onum);
+    while (!toVisit.isEmpty()) {
+      SerializedObject curObj = toVisit.remove();
+      group.put(curObj.getOnum(), curObj);
       
       if (worker != null) {
         int count = 0;
-        if (worker.numSendsByType.containsKey(related.getClassName()))
-          count = worker.numSendsByType.get(related.getClassName());
+        worker.numObjectsSent++;
+        if (worker.numSendsByType.containsKey(curObj.getClassName()))
+          count = worker.numSendsByType.get(curObj.getClassName());
         count++;
-        worker.numSendsByType.put(related.getClassName(), count);
+        worker.numSendsByType.put(curObj.getClassName(), count);
       }
-    }
-
-    if (worker != null) {
-      worker.numObjectsSent += group.size() + 1;
-      int count = 0;
-      if (worker.numSendsByType.containsKey(obj.getClassName()))
-        count = worker.numSendsByType.get(obj.getClassName());
-      count++;
-      worker.numSendsByType.put(obj.getClassName(), count);
+      
+      if (group.size() == MAX_GROUP_SIZE) break;
+      
+      for (Iterator<Long> it = curObj.getIntracoreRefIterator(); it.hasNext();) {
+        long relatedOnum = it.next();
+        if (seen.contains(relatedOnum)) continue;
+        seen.add(relatedOnum);
+        
+        if (dissem) {
+          // Ensure that the related object hasn't been globbed already.
+          synchronized (store) {
+            if (store.getCachedGlob(relatedOnum) != null) continue;
+          }
+        }
+        
+        SerializedObject related = read(principal, relatedOnum, true);
+        if (related == null) continue;
+        
+        if (dissem) {
+          // Ensure that the related object's label is the same as the head
+          // object's label. We could be smarter here, but to avoid calling into
+          // the client, let's hope pointer-equality is sufficient.
+          long relatedLabelOnum = related.getLabelOnum();
+          if (headLabelOnum != relatedLabelOnum) continue;
+        }
+        
+        toVisit.add(related);
+      }
     }
     
     return new ObjectGroup(group);
