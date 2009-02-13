@@ -6,7 +6,7 @@
  */
 package java.lang;
 
-public final class Class implements java.io.Serializable {
+public final class Class extends java.lang.Object implements java.io.Serializable {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 
     private Class() { }

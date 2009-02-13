@@ -1,18 +1,26 @@
 package fabric.ast;
 
+import java.util.Collections;
 import java.util.List;
 
 import fabric.extension.LocatedExt_c;
 
 
+import jif.ast.JifClassDecl;
+import jif.ast.JifClassDecl_c;
 import jif.ast.JifNodeFactory_c;
+import polyglot.ast.ClassBody;
+import polyglot.ast.ClassDecl;
 import polyglot.ast.Expr;
 import polyglot.ast.Ext;
+import polyglot.ast.Id;
 import polyglot.ast.New;
 import polyglot.ast.NewArray;
 import polyglot.ast.Node;
 import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
+import polyglot.types.Flags;
+import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 
 /**
@@ -37,7 +45,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  // factory methods                                                          //
+  // new factory methods                                                      //
   //////////////////////////////////////////////////////////////////////////////  
   
   public Atomic Atomic(Position pos, List<Stmt> statements) {
@@ -97,6 +105,35 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     result = (NewArray) setLocation(result, location);
     return result;
   }
+  
+  //////////////////////////////////////////////////////////////////////////////
+  // overridden factory methods                                               //
+  //////////////////////////////////////////////////////////////////////////////  
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public ClassDecl ClassDecl(Position pos, Flags flags, Id name, TypeNode superClass, List interfaces, ClassBody body) {
+    ClassDecl n = new ClassDecl_c(pos, flags, name,
+                                  Collections.EMPTY_LIST, superClass, interfaces, 
+                                  Collections.EMPTY_LIST, body);
+    n = (ClassDecl)n.ext(extFactory().extClassDecl());
+    n = (ClassDecl)n.del(delFactory().delClassDecl());
+    return n;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public JifClassDecl JifClassDecl(Position pos, Flags flags, Id name,
+                                   List params, 
+                                   TypeNode superClass, List interfaces,
+                                   List authority, ClassBody body) {
+  JifClassDecl n = new ClassDecl_c(pos, flags, name, params, superClass,
+                                   interfaces, authority, body);
+  n = (JifClassDecl)n.ext(extFactory().extClassDecl());
+  n = (JifClassDecl)n.del(delFactory().delClassDecl());
+  return n;
+}
+
   
   //////////////////////////////////////////////////////////////////////////////
   // private helper methods                                                   //

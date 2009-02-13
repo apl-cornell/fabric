@@ -17,6 +17,7 @@ public final class Capability[principal P, label L] authority(P) {
      */
     private Capability(Closure[P,L]{this} closure) { 
     	this.closure = closure;
+        super();
     }
     
     private final Closure[P, L]{this} closure;

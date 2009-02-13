@@ -6,7 +6,7 @@
  */
 package java.lang;
 
-public final class String implements java.io.Serializable, CharSequence /*,  Comparable*/ {
+public final class String extends java.lang.Object implements java.io.Serializable, CharSequence /*,  Comparable*/ {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     public String() {  }
 

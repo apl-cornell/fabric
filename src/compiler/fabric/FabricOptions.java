@@ -14,6 +14,12 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     super(extension);
     this.delegate = new FabILOptions_c(extension);
   }
+  
+  @Override
+  public void setDefaultValues() {
+    super.setDefaultValues();
+    this.fully_qualified_names = true;
+  }
 
   /* FabIL Options (forwarded to delegate ) ***********************************/
   
