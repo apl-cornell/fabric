@@ -89,12 +89,26 @@ public class Util
    */
   public static String validGrade(String grade) {
     String nospace = StringUtil.removeSpaces(grade);
-    final String gradeStrings[] = new String[]
-                                             {
-        "A+", "A", "A-", "B+", "B", "B-",
-        "C+", "C", "C-", "D+", "D", "D-",
-        "F", "S", "U", "W", "INC", "AUD"
-                                             };
+    String[] tmp = new String[18];
+    tmp[0] = "A+";
+    tmp[1] = "A";
+    tmp[2] = "A-";
+    tmp[3] = "B+";
+    tmp[4] = "B";
+    tmp[5] = "B-";
+    tmp[6] = "C+";
+    tmp[7] = "C";
+    tmp[8] = "C-";
+    tmp[9] = "D+";
+    tmp[10] = "D";
+    tmp[11] = "D-";
+    tmp[12] = "F";
+    tmp[13] = "S";
+    tmp[14] = "U";
+    tmp[15] = "W";
+    tmp[16] = "INC";
+    tmp[17] = "AUD";
+    final String gradeStrings[] = tmp;
     for(int i = 0; i < gradeStrings.length; i++)
       if(nospace.equalsIgnoreCase(gradeStrings[i]))
         return gradeStrings[i];

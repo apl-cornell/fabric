@@ -4,6 +4,8 @@ import fabric.util.*;
 import java.util.Properties;
 import java.util.Date;
 
+import fabric.client.*;
+
 import java.net.ConnectException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -19,10 +21,13 @@ import cms.www.TransactionResult;
 import cms.www.util.Emailer;
 import cms.www.util.Util;
 import cms.www.util.Profiler;
+import cms.fabil.Kludge;
 
 public class Transactions {
   private CMSRoot database;
   private Properties env = null;
+  private LocalCore localCore;
+  private Label dlabel;
 
   // This field is used for sending links in emails to users,
   // and telling clients which hostname to use in cross-site nav/overview
@@ -33,6 +38,8 @@ public class Transactions {
   public Transactions(CMSRoot database) {
     this.database = database;
     env = new Properties();
+    localCore = Client.getClient().getLocalCore();
+    dlabel = localCore.getEmptyLabel();
     env.put("java.naming.factory.initial", "com.sun.jndi.ldap.LdapCtxFactory");
     env.put("java.naming.provider.url", "ldap://directory.cornell.edu");
   }
@@ -268,7 +275,7 @@ public class Transactions {
         String[][] LDAPNames = null;
         try {
           result = getLDAPNames(LDAPInput);
-          LDAPNames = (String[][]) result.getValue();
+          LDAPNames = (String[][]) result.getValue(); //XXX
         } catch(NamingException e) {
           String names = "";
           netIDs.removeAll(LDAPInput);
@@ -278,9 +285,9 @@ public class Transactions {
           return result;
         }
         for(int i=0; i < LDAPNames.length; i++) {
-          String netid = LDAPNames[i][0];
-          String firstName = LDAPNames[i][1];
-          String lastName = LDAPNames[i][2];
+          String netid = ((String[])LDAPNames[i])[0];
+          String firstName = ((String[])LDAPNames[i])[1];
+          String lastName = ((String[])LDAPNames[i])[2];
           if (firstName == null || lastName == null) {
               netIDs.remove(netid);
               continue;

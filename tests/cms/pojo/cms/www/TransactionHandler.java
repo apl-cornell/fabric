@@ -49,7 +49,10 @@ import com.Ostermiller.util.CSVPrinter;
 import com.Ostermiller.util.ExcelCSVParser;
 import com.Ostermiller.util.ExcelCSVPrinter;
 
+import cms.fabil.Kludge;
+import fabric.client.*;
 import cms.model.*;
+import jif.lang.Label;
 
 /**
  * TransactionHandler is a wrapper class for Transaction. For each
@@ -64,6 +67,9 @@ import cms.model.*;
 public class TransactionHandler {
   private CMSRoot      database     = null;
   private Transactions transactions = null;
+
+  private LocalCore localCore;
+  private Label dlabel;
   
   private static class UploadTooBigException extends IOException {
     public UploadTooBigException() {
@@ -84,6 +90,8 @@ public class TransactionHandler {
   public TransactionHandler(final CMSRoot database) {
     this.database     = database;
     this.transactions = new Transactions(database); 
+    this.localCore    = Client.getClient().getLocalCore();
+    this.dlabel        = localCore.getEmptyLabel();
   }
 
   /**
@@ -328,7 +336,7 @@ public class TransactionHandler {
         FileItemIterator i = upload.getItemIterator(request);
         while (i.hasNext()) {
           FileItemStream item = i.next();
-          String[] msgParts = item.getFieldName().split("_");
+          String[] msgParts = Kludge.convert(localCore, dlabel, item.getFieldName().split("_"));
           String   type     = msgParts[0];
           String   value    = getString(item);
 
@@ -476,7 +484,7 @@ public class TransactionHandler {
         String field = item.getFieldName();
         String value = getString(item);
         if (field.startsWith(AccessController.P_GRADE)) {
-          String[] vals = field.split("_");
+          String[] vals = Kludge.convert(localCore, dlabel, field.split("_"));
           User       student = database.getUser(vals[1]);
           SubProblem subProb = database.getSubProblem(vals[2]);
           Group      group   = database.getGroup(vals[3]);
@@ -508,23 +516,23 @@ public class TransactionHandler {
                 + "' is not a valid floating point number.");
           }
         } else if (field.startsWith(AccessController.P_OLDGRADE)) {
-          String[] vals = field.split("_");
+          String[] vals = Kludge.convert(localCore, dlabel, field.split("_"));
           User       student = database.getUser(vals[1]);
           SubProblem subProb = database.getSubProblem(vals[2]);
           Group      group   = database.getGroup(vals[3]);
           
         } else if (field.startsWith(AccessController.P_COMMENTTEXT)) {
           Group group =
-            database.getGroup(field.split(AccessController.P_COMMENTTEXT)[1]);
+            database.getGroup((String)Kludge.get(field.split(AccessController.P_COMMENTTEXT),1));
           Comment comment = new Comment(value, p, group);
         } else if (field.startsWith(AccessController.P_COMMENTFILE)) {
           Group group =
-            database.getGroup(field.split(AccessController.P_COMMENTFILE)[1]);
+            database.getGroup((String)(Kludge.get(field.split(AccessController.P_COMMENTFILE),1)));
           //FileData file = downloadFile(item);
           // TODO: refactor comments and comment files
           //new CommentFile(new Comment("", p, group), file);
         } else if (field.startsWith(AccessController.P_SUBMITTEDFILE)) {
-          String[] vals = field.split("_");
+          String[] vals = Kludge.convert(localCore, dlabel, field.split("_"));
           Group group = database.getGroup(vals[1]);
           RequiredSubmission submission = database.getRequiredSubmission(vals[2]);
           String fileName    = FileUtil.trimFilePath(item.getName());
@@ -537,31 +545,31 @@ public class TransactionHandler {
           }
         } else if (field.startsWith(AccessController.P_REGRADERESPONSE)) {
           // TODO: not sure this is right
-          String[] vals = field.split("_");
+          String[] vals = Kludge.convert(localCore, dlabel, field.split("_"));
           RegradeRequest regrade = database.getRegradeRequest(vals[1]);
           Group group = database.getGroup(vals[2]);
           regrade.addResponse(value);
         } else if (field.startsWith(AccessController.P_REGRADESUB)) {
           // TODO: not sure this is right
-          String[] vals = field.split("_");
+          String[] vals = Kludge.convert(localCore, dlabel, field.split("_"));
           SubProblem subProb = database.getSubProblem(vals[1]);
           Group group = database.getGroup(vals[2]);
           new RegradeRequest(subProb, group, p, value);
         } else if (field.startsWith(AccessController.P_REGRADEWHOLE)) {
           // TODO: not sure this is right
-          Group group = database.getGroup(field.split("_")[1]);
+          Group group = database.getGroup((String)Kludge.get(field.split("_"),1));
           new RegradeRequest(null, group, p, value);
         } else if (field.startsWith(AccessController.P_REGRADEREQUEST)) {
           // TODO
-          Group group = database.getGroup(field.split("_")[1]);
+          Group group = database.getGroup((String)Kludge.get(field.split("_"),1));
           new RegradeRequest(null, group, p, value);
         } else if (field.startsWith(AccessController.P_REGRADENETID)) {
           // TODO
-          Group group = database.getGroup((field.split("_"))[1]);
+          Group group = database.getGroup((String)Kludge.get(field.split("_"),1));
         } else if (field.startsWith(AccessController.P_GROUPID)) {
           groups.add(database.getGroup(value));
         } else if (field.startsWith(AccessController.P_REMOVECOMMENT)) {
-          Comment comment = database.getComment(field.split(AccessController.P_REMOVECOMMENT)[1]);
+          Comment comment = database.getComment((String)Kludge.get(field.split(AccessController.P_REMOVECOMMENT),1));
           comment.setHidden(true);
         }
       }
@@ -676,7 +684,7 @@ public class TransactionHandler {
       for (java.util.Enumeration e = request.getParameterNames(); e.hasMoreElements();) {
         String parameter = (String) e.nextElement();
         if (parameter.startsWith(AccessController.P_REGRADESUB)) {
-          String subProb = parameter.split(AccessController.P_REGRADESUB)[1];
+          String subProb = (String)Kludge.get(parameter.split(AccessController.P_REGRADESUB),1);
           subProblems.add(database.getSubProblem(subProb));
         } else if (parameter.equals(AccessController.P_REGRADEREQUEST)) {
           requestText = request.getParameter(parameter);
@@ -748,11 +756,12 @@ public class TransactionHandler {
         {
           InputStream stream = file.getInputStream();
           p = new ExcelCSVParser(stream);
-          String[][] a = p.getAllValues();
+          String[][] a = Kludge.convert(localCore, dlabel, p.getAllValues());
           for (int j = 0; j != a.length; j++) {
-            for (int k = 0; k != a[j].length; k++) {
-              if (!"".equals(a[j][k])) {
-                netids.add(a[j][k].trim().toLowerCase());
+            String[] b = (String[])a[j];
+            for (int k = 0; k != b.length; k++) {
+              if (!"".equals(b[k])) {
+                netids.add(b[k].trim().toLowerCase());
               }
             }
           }
@@ -785,7 +794,7 @@ public class TransactionHandler {
       while (i.hasNext()) {
         String key = (String) i.next();
         if (key.startsWith(AccessController.P_GRADEGROUP)) {
-          groups.add(database.getGroup(key.split(AccessController.P_GRADEGROUP)[1]));
+          groups.add(database.getGroup((String)Kludge.get(key.split(AccessController.P_GRADEGROUP),1)));
         }
       }
       if (groups.size() > 0) {
@@ -1606,7 +1615,7 @@ public class TransactionHandler {
     while (i.hasNext()) {
       String[] line = (String[]) i.next();
       try {
-        printer.writeln(line);
+        printer.writeln(line.toString());
       } catch (IOException ex) {
         result.addError("Error writing a row");
         return result;
@@ -1650,7 +1659,7 @@ public class TransactionHandler {
       headerLine[i] =
           ((CSVFileFormatsUtil.ColumnInfo) headers.get(i)).getName();
     try {
-      printer.writeln(headerLine);
+      printer.writeln(headerLine.toString());
     } catch (IOException x) {
       result.addError("Couldn't print to template file");
       return result;
@@ -1662,7 +1671,7 @@ public class TransactionHandler {
     for (int i = 0; i < commaLine.length; i++)
       commaLine[i] = "";
     try {
-      printer.writeln(commaLine);
+      printer.writeln(commaLine.toString());
     } catch (IOException x) {
       result.addError("Couldn't print to template file");
       return result;
@@ -1703,7 +1712,7 @@ public class TransactionHandler {
       FileItemIterator i = upload.getItemIterator(request);
       while (i.hasNext()) {
         FileItemStream item = i.next();
-        String name = item.getFieldName().split("file_")[1];
+        String name = (String)Kludge.get(item.getFieldName().split("file_"),1);
         RequiredSubmission submission = database.getRequiredSubmission(name);
         FileData file = downloadFile(item);
         if (!item.getName().equals("")) {
@@ -1923,7 +1932,7 @@ public class TransactionHandler {
     String[] line = null;
     int expectedLineLength = CSVFileFormatsUtil.getNumColumns(format);
     try {
-      line = parser.getLine();
+      line = Kludge.convert(localCore, dlabel, parser.getLine());
       if (line == null) {
         result.addError("Uploaded file is empty");
       }
@@ -1988,7 +1997,7 @@ public class TransactionHandler {
           new BufferedReader(new InputStreamReader(file.getInputStream()));
       ExcelCSVParser csvParser = new ExcelCSVParser(listlines);
       // try to recognize header line
-      String[] line = csvParser.getLine();
+      String[] line = Kludge.convert(localCore, dlabel, csvParser.getLine());
       int[] infoFound = CSVFileFormatsUtil.parseColumnNamesFlexibly(line);
       values.add(line);
       for (int i = 0; i < infoFound.length; i++)
@@ -2013,7 +2022,7 @@ public class TransactionHandler {
       // parse all further lines using assumed format
       int lineNum = 2, expectedLineLength = line.length;
       try {
-        line = csvParser.getLine();
+        line = Kludge.convert(localCore, dlabel, csvParser.getLine());
       } catch (IOException x) {
         result.addError("Error parsing CSV on line " + lineNum);
         return result;
@@ -2073,7 +2082,7 @@ public class TransactionHandler {
           }
           if (result.hasErrors()) return result;
           values.add(checkedLine);
-          line = csvParser.getLine();
+          line = Kludge.convert(localCore, dlabel, csvParser.getLine());
         } catch (IOException x) {
           result.addError("Error parsing line " + lineNum);
           return result;
@@ -2227,14 +2236,16 @@ public class TransactionHandler {
           CSVFileFormatsUtil.getColumnNumber(format, CSVFileFormatsUtil.FINAL_GRADE);
       String[] line = readCSVHeaderLine(csvParser, format, result);
       if (result.hasErrors()) return result;
-      String[] fileValues = new String[] { "NetID", "Final Grade" };
+      String[] fileValues = new String[2];
+      fileValues[0] = "NetID";
+      fileValues[1] = "Final Grade";
       values.add(fileValues); // regardless of the file format, this is all the
                               // info we need
       int lineSize = fileValues.length;
 
       int lineNum = 2;
       try {
-        line = csvParser.getLine();
+        line = Kludge.convert(localCore, dlabel, csvParser.getLine());
       } catch (IOException x) {
         result.addError("Error parsing line " + lineNum + " of uploaded file");
         return result;
@@ -2272,7 +2283,7 @@ public class TransactionHandler {
             }
           }
           values.add(checkedLine);
-          line = csvParser.getLine();
+          line = Kludge.convert(localCore, dlabel, csvParser.getLine());
         } catch (IOException x) {
           result
               .addError("Error parsing line " + lineNum + " of uploaded file");
@@ -2330,7 +2341,7 @@ public class TransactionHandler {
       BufferedReader listlines =
           new BufferedReader(new InputStreamReader(file.getInputStream()));
       ExcelCSVParser csvParser = new ExcelCSVParser(listlines);
-      String[] line = csvParser.getLine();
+      String[] line = Kludge.convert(localCore, dlabel, csvParser.getLine());
       if (line == null) return result;
       int maxWidth = line.length;
       int[] colsFound = null, subproblemColsFound = null;
@@ -2378,11 +2389,11 @@ public class TransactionHandler {
           CSVFileFormatsUtil.getFlexibleColumnNum(colsFound,
               CSVFileFormatsUtil.GRADE);
       if (colsFound == null) {
-        while ((line = csvParser.getLine()) != null) {
+        while ((line = Kludge.convert(localCore, dlabel, csvParser.getLine())) != null) {
           values.add(line);
         }
       } else {
-        while ((line = csvParser.getLine()) != null) {
+        while ((line = Kludge.convert(localCore, dlabel, csvParser.getLine())) != null) {
           String checkedLine[] = new String[line.length];
 
           for (int j = 0; j < line.length; j++)
@@ -2899,7 +2910,7 @@ public class TransactionHandler {
             proceed = false;
           }
         } else if (field.startsWith(AccessController.P_REQFILENAME)) {
-          String id = field.split(AccessController.P_REQFILENAME)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_REQFILENAME),1);
           if (subnames.contains(value)) {
             result.addError("A required submission with name '" + value
                 + "' already exists");
@@ -2914,11 +2925,11 @@ public class TransactionHandler {
             numOfAssignedFiles++;
           }
         } else if (field.startsWith(AccessController.P_REQFILETYPE)) {
-          String id = field.split(AccessController.P_REQFILETYPE)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_REQFILETYPE),1);
           RequiredSubmission req = database.getRequiredSubmission(id);
           req.addRequiredFileType(value);
         } else if (field.startsWith(AccessController.P_REQSIZE)) {
-          String id = field.split(AccessController.P_REQSIZE)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_REQSIZE),1);
           RequiredSubmission req = database.getRequiredSubmission(id);
           try {
             int size = Integer.parseInt(value);
@@ -2935,7 +2946,7 @@ public class TransactionHandler {
           } else if (value.equals("")) {
             emptySubmissionName = true;
           } else {
-            String id = field.split(AccessController.P_NEWREQFILENAME)[1];
+            String id = (String)Kludge.get(field.split(AccessController.P_NEWREQFILENAME),1);
             RequiredSubmission req = (RequiredSubmission) newReqs.get(id);
             if (req == null) {
               req = new RequiredSubmission(assign);
@@ -2947,7 +2958,7 @@ public class TransactionHandler {
             numOfAssignedFiles++;
           }
         } else if (field.startsWith(AccessController.P_NEWREQFILETYPE)) {
-          String id = field.split(AccessController.P_NEWREQFILETYPE)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_NEWREQFILETYPE),1);
           RequiredSubmission req = (RequiredSubmission) newReqs.get(id);
           if (req == null) {
             req = new RequiredSubmission(assign);
@@ -2955,7 +2966,7 @@ public class TransactionHandler {
           }
           req.addRequiredFileType(value);
         } else if (field.startsWith(AccessController.P_NEWREQSIZE)) {
-          String id = field.split(AccessController.P_NEWREQSIZE)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_NEWREQSIZE),1);
           try {
             int size = Integer.parseInt(value);
             if (size <= 0) throw new NumberFormatException();
@@ -2972,7 +2983,7 @@ public class TransactionHandler {
           }
 
         } else if (field.startsWith(AccessController.P_NEWITEMNAME)) {
-          String id = field.split(AccessController.P_NEWITEMNAME)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_NEWITEMNAME),1);
           if (filenames.contains(value)) {
             result.addError("An assignment file with name '" + value + "' already exists");
             proceed = false;
@@ -2989,7 +3000,7 @@ public class TransactionHandler {
             filenames.add(value);
           }
         } else if (field.startsWith(AccessController.P_ITEMNAME)) {
-          String id = field.split(AccessController.P_ITEMNAME)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_ITEMNAME),1);
           if (filenames.contains(value)) {
             result.addError("An assignment file with name '" + value
                 + "' already exists");
@@ -3001,26 +3012,26 @@ public class TransactionHandler {
             ai.setItemName(value);
           }
         } else if (field.startsWith(AccessController.P_REMOVEREQ)) {
-          String id = field.split(AccessController.P_REMOVEREQ)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_REMOVEREQ),1);
           RequiredSubmission req = database.getRequiredSubmission(id);
           req.setHidden(true);
           numOfAssignedFiles--;
         } else if (field.startsWith(AccessController.P_REMOVEITEM)) {
-          String id = field.split(AccessController.P_REMOVEITEM)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_REMOVEITEM),1);
           AssignmentItem ai = database.getAssignmentItem(id);
           ai.setHidden(true);
         } else if (field.startsWith(AccessController.P_RESTOREREQ)) {
-          String id = field.split(AccessController.P_RESTOREREQ)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_RESTOREREQ),1);
           RequiredSubmission req = database.getRequiredSubmission(id);
           req.setHidden(false);
           numOfAssignedFiles++;
         } else if (field.startsWith(AccessController.P_RESTOREITEM)) {
-          String id = field.split(AccessController.P_RESTOREITEM)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_RESTOREITEM),1);
           AssignmentItem ai = database.getAssignmentItem(id);
           ai.setHidden(false);
         } else if (field.startsWith(AccessController.P_RESTOREITEMFILE)) {
-          String itemfile = field.split(AccessController.P_RESTOREITEMFILE)[1];
-          String[] itemFiles = itemfile.split("_");
+          String itemfile = (String)Kludge.get(field.split(AccessController.P_RESTOREITEMFILE),1);
+          String[] itemFiles = Kludge.convert(localCore, dlabel, itemfile.split("_"));
           String itemID = itemFiles[0];
           String fileID = itemFiles[1];
           
@@ -3037,14 +3048,14 @@ public class TransactionHandler {
         } else if (field.equals(AccessController.P_REMOVESOL)) {
           assign.removeCurrentSolutionFile();
         } else if (field.startsWith(AccessController.P_RESTORESOL)) {
-          String id = field.split(AccessController.P_RESTORESOL)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_RESTORESOL),1);
           SolutionFile sol = database.getSolutionFile(id);
           sol.setHidden(false);
         } else if (field.startsWith(AccessController.P_SUBPROBNAME)) {
           if (value.equals("")) {
             emptyProbName = true;
           } else {
-            String id = field.split(AccessController.P_SUBPROBNAME)[1];
+            String id = (String)Kludge.get(field.split(AccessController.P_SUBPROBNAME),1);
             SubProblem subProblem = database.getSubProblem(id);
             
             // Assign subproblem orders in the order that they appear in the form
@@ -3060,7 +3071,7 @@ public class TransactionHandler {
             float maxscore = StringUtil.parseFloat(value);
             if (maxscore < 0.0f) throw new NumberFormatException();
             
-            String id = field.split(AccessController.P_SUBPROBSCORE)[1];
+            String id = (String)Kludge.get(field.split(AccessController.P_SUBPROBSCORE),1);
             SubProblem subProblem = database.getSubProblem(id);
             subProblem.setMaxScore(maxscore);
             
@@ -3072,7 +3083,7 @@ public class TransactionHandler {
             proceed = false;
           }
         } else if (field.startsWith(AccessController.P_REMOVECHOICE)) {
-          String id = field.split(AccessController.P_REMOVECHOICE)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_REMOVECHOICE),1);
           Choice choice = database.getChoice(id);
           choice.remove();
         } else if (field.startsWith(AccessController.P_NEWSUBPROBNAME)) {
@@ -3082,7 +3093,7 @@ public class TransactionHandler {
           } else if (value.equals("")) {
             emptyProbName = true;
           } else {
-            String id = field.split(AccessController.P_NEWSUBPROBNAME)[1];
+            String id = (String)Kludge.get(field.split(AccessController.P_NEWSUBPROBNAME),1);
             SubProblem sp = (SubProblem) newSubProbs.get(id);
             if (sp == null) {
               sp = new SubProblem(assign);
@@ -3098,7 +3109,7 @@ public class TransactionHandler {
             letter = 'a';
           }
         } else if (field.startsWith(AccessController.P_NEWSUBPROBSCORE)) {
-          String id = field.split(AccessController.P_NEWSUBPROBSCORE)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_NEWSUBPROBSCORE),1);
           SubProblem sp = (SubProblem) newSubProbs.get(id);
           if (sp == null) {
             sp = new SubProblem(assign);
@@ -3116,17 +3127,17 @@ public class TransactionHandler {
             proceed = false;
           }
         } else if (field.startsWith(AccessController.P_RESTORESUBPROB)) {
-          String id = field.split(AccessController.P_RESTORESUBPROB)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_RESTORESUBPROB),1);
           SubProblem sp = database.getSubProblem(id);
           sp.setHidden(false);
         } else if (field.startsWith(AccessController.P_REMOVESUBPROB)) {
-          String id = field.split(AccessController.P_REMOVESUBPROB)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_REMOVESUBPROB),1);
           SubProblem sp = database.getSubProblem(id);
           sp.setHidden(true);
         }
         // Surveys
         else if (field.startsWith(AccessController.P_CORRECTCHOICE)) {
-          String id = field.split(AccessController.P_CORRECTCHOICE)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_CORRECTCHOICE),1);
           SubProblem sp = database.getSubProblem(id);
 
           try {
@@ -3138,7 +3149,7 @@ public class TransactionHandler {
             proceed = false;
           }
         } else if (field.startsWith(AccessController.P_SUBPROBTYPE)) {
-          String id = field.split(AccessController.P_SUBPROBTYPE)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_SUBPROBTYPE),1);
           SubProblem sp = database.getSubProblem(id);
           try {
             int questtype = Integer.parseInt(value);
@@ -3149,7 +3160,7 @@ public class TransactionHandler {
             proceed = false;
           }
         } else if (field.startsWith(AccessController.P_CHOICE)) {
-          String[] tokens = field.split("_");
+          String[] tokens = Kludge.convert(localCore, dlabel, field.split("_"));
           String questID = tokens[1];
           String choiceID = tokens[2];
 
@@ -3158,7 +3169,7 @@ public class TransactionHandler {
           choice.setText(value);
           choice.setLetter(Character.toString(letter++));
         } else if (field.startsWith(AccessController.P_NEWCORRECTCHOICE)) {
-          String id = field.split(AccessController.P_NEWCORRECTCHOICE)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_NEWCORRECTCHOICE),1);
           SubProblem sp = (SubProblem) newSubProbs.get(id);
           if (sp == null) {
             sp = new SubProblem(assign);
@@ -3174,7 +3185,7 @@ public class TransactionHandler {
             proceed = false;
           }
         } else if (field.startsWith(AccessController.P_NEWSUBPROBTYPE)) {
-          String id = field.split(AccessController.P_NEWSUBPROBTYPE)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_NEWSUBPROBTYPE),1);
           SubProblem sp = (SubProblem) newSubProbs.get(id);
           if (sp == null) {
             sp = new SubProblem(assign);
@@ -3190,7 +3201,7 @@ public class TransactionHandler {
             proceed = false;
           }
         } else if (field.startsWith(AccessController.P_NEWSUBPROBORDER)) {
-          String id = field.split(AccessController.P_NEWSUBPROBORDER)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_NEWSUBPROBORDER),1);
           SubProblem sp = (SubProblem) newSubProbs.get(id);
           if (sp == null) {
             sp = new SubProblem(assign);
@@ -3206,7 +3217,7 @@ public class TransactionHandler {
             proceed = false;
           }
         } else if (field.startsWith(AccessController.P_NEWCHOICE)) {
-          String[] tokens = field.split("_");
+          String[] tokens = Kludge.convert(localCore, dlabel, field.split("_"));
           String questID = tokens[1];
           String choiceID = tokens[2];
           Choice choice = (Choice) newChoices.get(choiceID);
@@ -3231,7 +3242,7 @@ public class TransactionHandler {
         if (field.equals(AccessController.P_SOLFILE)) {
           newSolution = new SolutionFile(assign, false, value);
         } else if (field.startsWith(AccessController.P_NEWITEMFILE)) {
-          String id = field.split(AccessController.P_NEWITEMFILE)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_NEWITEMFILE),1);
           AssignmentItem ai = (AssignmentItem) newItems.get(id);
           if (ai == null) {
             ai = new AssignmentItem(assign);
@@ -3240,7 +3251,7 @@ public class TransactionHandler {
           
           new AssignmentFile(ai, false, value);
         } else if (field.startsWith(AccessController.P_ITEMFILE)) {
-          String id = field.split(AccessController.P_ITEMFILE)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_ITEMFILE),1);
           if (!replacedItems.add(id)) {
             throw new FileUploadException("Error: Conflicting files chosen to replace assignment item.<br>");
           }
@@ -3580,13 +3591,13 @@ public class TransactionHandler {
         if (field.equals(AccessController.P_NEWCTGNAME)) {
           category.setName(value);
         } else if (field.startsWith(AccessController.P_CTGNAME)) {
-          String id = field.split(AccessController.P_CTGNAME)[1];
+          String id = (String)Kludge.get(field.split(AccessController.P_CTGNAME), 1);
           category.setName(value);
         } else if (field.equals(AccessController.P_ORDER)) {
           category.setAscending(value.equals(Category.ASCENDING));
         } else if (field.equals(AccessController.P_COLSORTBY)) {
           if (value.startsWith(AccessController.P_PREFIX_NEW_CONTENT)) {
-            value = value.split(AccessController.P_PREFIX_NEW_CONTENT)[1];
+            value = (String)Kludge.get(value.split(AccessController.P_PREFIX_NEW_CONTENT), 1);
             category.setSortBy(getNewColumn(newColumns, value, category));
           } else {
             category.setSortBy(database.getCategoryColumn(value));
@@ -3604,33 +3615,33 @@ public class TransactionHandler {
           int authorzn = Integer.parseInt(value);
           category.setAuthLevel(authorzn);
         } else if (field.startsWith(AccessController.P_NEWCOLNAME)) {
-          String id = (field.split(AccessController.P_NEWCOLNAME))[1];
+          String id = (String)(Kludge.get(field.split(AccessController.P_NEWCOLNAME),1));
           getNewColumn(newColumns, id, category).setName(value);
         } else if (field.startsWith(AccessController.P_NEWCOLTYPE)) {
-          String id = (field.split(AccessController.P_NEWCOLTYPE))[1];
+          String id = (String)(Kludge.get(field.split(AccessController.P_NEWCOLTYPE),1));
           getNewColumn(newColumns, id, category).setType(value);
         } else if (field.startsWith(AccessController.P_NEWCOLHIDDEN)) {
-          String id = (field.split(AccessController.P_NEWCOLHIDDEN))[1];
+          String id = (String)(Kludge.get(field.split(AccessController.P_NEWCOLHIDDEN),1));
           // if we're seeing this field at all, its value is equivalent to
           // true
           getNewColumn(newColumns, id, category).setHidden(true);
         } else if (field.startsWith(AccessController.P_NEWCOLPOSITION)) {
-          String id = (field.split(AccessController.P_NEWCOLPOSITION))[1];
+          String id = (String)(Kludge.get(field.split(AccessController.P_NEWCOLPOSITION),1));
           getNewColumn(newColumns, id, category).setPosition(Integer.parseInt(value));
         } else if (field.startsWith(AccessController.P_COLNAME)) {
-          String id = (field.split(AccessController.P_COLNAME))[1];
+          String id = (String)(Kludge.get(field.split(AccessController.P_COLNAME),1));
           database.getCategoryColumn(id).setName(value);
         } else if (field.startsWith(AccessController.P_COLPOSITION)) {
-          String id = (field.split(AccessController.P_COLPOSITION)[1]);
+          String id = (String)(Kludge.get(field.split(AccessController.P_COLPOSITION),1));
           database.getCategoryColumn(id).setPosition(Integer.parseInt(value));
         } else if (field.startsWith(AccessController.P_COLHIDDEN)) {
-          String id = (field.split(AccessController.P_COLHIDDEN)[1]);
+          String id = (String)(Kludge.get(field.split(AccessController.P_COLHIDDEN),1));
           database.getCategoryColumn(id).setHidden(Boolean.parseBoolean(value));
         } else if (field.startsWith(AccessController.P_REMOVECOL)) {
-          String id = (field.split(AccessController.P_REMOVECOL)[1]);
+          String id = (String)(Kludge.get(field.split(AccessController.P_REMOVECOL),1));
           database.getCategoryColumn(id).setRemoved(true);
         } else if (field.startsWith(AccessController.P_RESTORECOL)) {
-          String id = (field.split(AccessController.P_RESTORECOL)[1]);
+          String id = (String)(Kludge.get(field.split(AccessController.P_RESTORECOL),1));
           database.getCategoryColumn(id).setRemoved(false);
         } else if (field.startsWith(AccessController.P_CTGPOSITION)) {
           category.setPosition(Integer.parseInt(value));
@@ -3776,7 +3787,7 @@ public class TransactionHandler {
         FileItem item = (FileItem) i.next();
         String field = item.getFieldName();
         if (field.startsWith(AccessController.P_DELETETIMESLOT)) {
-          TimeSlot ts = database.getTimeSlot(field.split(AccessController.P_DELETETIMESLOT)[1]);
+          TimeSlot ts = database.getTimeSlot((String)(Kludge.get(field.split(AccessController.P_DELETETIMESLOT),1)));
           if (ts.getHidden())
             result.addError("Timeslot has already been deleted");
           else if (ts.getStaff().equals(p) || p.isAdminPrivByAssignment(assignment))
@@ -3901,10 +3912,13 @@ public class TransactionHandler {
     while (success && list.hasNext()) {
       FileItem item = (FileItem) list.next();
       if (item.getFieldName().startsWith(AccessController.P_FINALGRADE)) {
-        String netid =
-            item.getFieldName().split(AccessController.P_FINALGRADE)[1];
+        String netid = (String)(Kludge.get(
+            item.getFieldName().split(AccessController.P_FINALGRADE),1));
         String grade = item.getString();
-        grades.add(new String[] { netid, grade });
+        String[] tmp = new String[2];
+        tmp[0] = netid;
+        tmp[1] = grade;
+        grades.add(tmp);
       }
     }
     try {
@@ -4095,7 +4109,7 @@ public class TransactionHandler {
               if (field.startsWith(AccessController.P_SUBPROBNAME)) {
                 long sub =
                     Long
-                        .parseLong(field.split(AccessController.P_SUBPROBNAME)[1]);
+                        .parseLong((String)(Kludge.get(field.split(AccessController.P_SUBPROBNAME),1)));
                 Answer answerData = new Answer(null, null, item.getString());
                 answers.add(answerData);
               }
@@ -4149,15 +4163,15 @@ public class TransactionHandler {
       line[0] = "Assignment Name";
       for (int j = 0; j < asgns.size(); j++)
         line[j + 1] = ((String[]) data.get(j))[0];
-      printer.println(line);
+      printer.println(line.toString());
       line[0] = "Max Score";
       for (int j = 0; j < asgns.size(); j++)
         line[j + 1] = ((String[]) data.get(j))[1];
-      printer.println(line);
+      //printer.println(line);
       line[0] = "Weight";
       for (int j = 0; j < asgns.size(); j++)
         line[j + 1] = ((String[]) data.get(j))[2];
-      printer.println(line);
+      printer.println(line.toString());
     } catch (Exception x) {
       x.printStackTrace();
       result.addError(x.getMessage());
@@ -4195,7 +4209,7 @@ public class TransactionHandler {
       for (int i = 1; i < n; i++)
         row[i] = ((SubProblem) iter.next()).getName();
       row[n] = subProbs.isEmpty() ? "Grade" : "Total";
-      out.println(row);
+      out.println(row.toString());
       
       // sort students by netID
       List students = new ArrayList(course.getStudents());
@@ -4225,7 +4239,7 @@ public class TransactionHandler {
         }
         row[n] = String.valueOf(total);
        
-        out.println(row);
+        out.println(row.toString());
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -4254,15 +4268,20 @@ public class TransactionHandler {
       String[] line = null;
       
       // header line
-      line = new String[] { CSVFileFormatsUtil.NETID, CSVFileFormatsUtil.FINAL_GRADE };
-      out.println(line);
+      line = new String[2];
+      line[0] = CSVFileFormatsUtil.NETID;
+      line[1] = CSVFileFormatsUtil.FINAL_GRADE;
+      
+      out.println(line.toString());
       // data lines
       Iterator i = students.iterator();
       while (i.hasNext()) {
         Student student = (Student) i.next();
         String grade = student.getFinalGrade();
-        line = new String[] { student.getUser().getNetID(), grade == null ? "" : grade };
-        out.println(line);
+        line = new String[2];
+        line[0] = student.getUser().getNetID();
+        line[1] = grade == null ? "" : grade;
+        out.println(line.toString());
       }
     } catch (Exception x) {
       result.addError(x.getMessage());
@@ -4309,7 +4328,7 @@ public class TransactionHandler {
       }
       firstRow[3 + aCount] = "Total Score";
       firstRow[4 + aCount] = "Final Grade";
-      out.println(firstRow);
+      out.println(firstRow.toString());
       NodeList students =
           (root.getElementsByTagName(XMLBuilder.TAG_STUDENTS).item(0))
               .getChildNodes();
@@ -4333,7 +4352,7 @@ public class TransactionHandler {
         }
         thisRow[3 + aCount] = student.getAttribute(XMLBuilder.A_TOTALSCORE);
         thisRow[4 + aCount] = student.getAttribute(XMLBuilder.A_FINALGRADE);
-        out.println(thisRow);
+        out.println(thisRow.toString());
       }
     } catch (Exception e) {
       result.addError(e.getMessage());
@@ -4372,7 +4391,7 @@ public class TransactionHandler {
         finalGradeCol = CSVFileFormatsUtil.getColumnNumber(CSVFileFormatsUtil.FINALGRADES_FORMAT, CSVFileFormatsUtil.FINAL_GRADE);
 
       CSVPrinter out = new CSVPrinter(s);
-      out.println(CSVFileFormatsUtil.FINALGRADES_FORMAT);
+      out.println(CSVFileFormatsUtil.FINALGRADES_FORMAT.toString());
 
       Iterator students = course.getStudents().iterator();
       while (students.hasNext()) {
@@ -4395,7 +4414,7 @@ public class TransactionHandler {
         if (gradeOptCol   != -1) mydata[gradeOptCol]   = student.getGradeOption() == null ? "" : student.getGradeOption();
         if (finalGradeCol != -1) mydata[finalGradeCol] = student.getFinalGrade()  == null ? "" : student.getFinalGrade();
 
-        out.println(mydata);
+        out.println(mydata.toString());
       }
     } catch (Exception e) {
       e.printStackTrace();

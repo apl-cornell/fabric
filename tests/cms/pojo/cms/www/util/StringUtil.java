@@ -22,7 +22,9 @@ public class StringUtil
 	    if (str == null) {
 	    	return result;
 	    }
-	    char[] chars = str.toCharArray();
+            fabric.client.LocalCore core = fabric.client.Client.getClient().getLocalCore();
+            jif.lang.Label label = core.getEmptyLabel();
+	    char[] chars = cms.fabil.Kludge.convert(core, label, str.toCharArray());
 	    String s = "";
 	    for (int i=0; i < chars.length; i++) {
 	        if (Character.isLetterOrDigit(chars[i])) {
@@ -96,7 +98,9 @@ public class StringUtil
 	}
 
 	public static boolean isAlphaNumeric(String str) {
-		char[] chars = str.toCharArray();
+          fabric.client.LocalCore core = fabric.client.Client.getClient().getLocalCore();
+          jif.lang.Label label = core.getEmptyLabel();
+            char[] chars = cms.fabil.Kludge.convert(core, label, str.toCharArray());
 		boolean result = true;
 		for (int i=0; i < chars.length; i++) {
 			result = Character.isLetterOrDigit(chars[i]);

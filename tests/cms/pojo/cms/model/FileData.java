@@ -9,6 +9,8 @@ import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import cms.fabil.Kludge;
+import fabric.client.*;
 
 /**
  * The File class encapsulates storage of file data. Files may be implemented as
@@ -25,6 +27,8 @@ public class FileData {
 
   private byte[] file;
   private String name;
+  private jif.lang.Label dlabel;
+  private LocalCore localCore;
   
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
@@ -44,7 +48,9 @@ public class FileData {
 
   public FileData(String name) {
     this.name = name;
-    this.state = new Initialized(); 
+    this.state = new Initialized();
+    this.localCore = Client.getClient().getLocalCore();
+    this.dlabel = localCore.getEmptyLabel();
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -52,7 +58,7 @@ public class FileData {
   //////////////////////////////////////////////////////////////////////////////
 
   public InputStream read() {
-    return new ByteArrayInputStream(file);
+    return null; //XXX //new ByteArrayInputStream(file);
   }
 
   /**
@@ -161,7 +167,7 @@ public class FileData {
     }
     
     public String md5() throws IOException {
-      file = data.toByteArray();
+      file = new byte[0]; //XXX //data.toByteArray();
       stream.close();
       
       String md5 = new String(digest.digest());

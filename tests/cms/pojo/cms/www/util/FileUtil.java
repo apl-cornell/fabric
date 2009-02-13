@@ -160,9 +160,10 @@ public class FileUtil
          * @return A two-element array of Strings
          */
         public static String[] splitFileNameType(String filename) {
-                int index = filename.lastIndexOf(".");
-                if(index == -1) return new String[] {filename, ""};
-                else return new String[] {filename.substring(0, index), filename.substring(index + 1)};
+        //        int index = filename.lastIndexOf(".");
+        //        if(index == -1) return new String[] {filename, ""};
+        //        else return new String[] {filename.substring(0, index), filename.substring(index + 1)};
+          return new String[0];
         }
         
         /**
@@ -172,15 +173,14 @@ public class FileUtil
          */
         public static String calcMD5(FileItem file)
         {
-                byte buf[] = new byte[1024];
                 String result = null;
                 int rc;
                 MD5 md = new MD5();
                 try {
                         InputStream in = file.getInputStream();
-                        while ((rc = in.read(buf, 0, 1024)) > 0) {
-                                md.update(buf, rc);
-                        }
+                        //while ((rc = in.read(buf, 0, 1024)) > 0) {
+                                //md.update(buf, rc); //XXX
+                        //}
                         result = md.getHashString();
                 }
                 catch (Exception ex) {

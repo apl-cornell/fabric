@@ -63,17 +63,57 @@ public class CSVFileFormatsUtil
 	/* the formats we read */
 	//classlist: add data to known students prior to submitting final grades
 	//CLASSLIST_FORMAT = new String[] {DEPARTMENT, COURSE_NUM, LASTNAME, FIRSTNAME, CUID, SECTION, GRADE_OPTION, CREDITS},
-	public static final String[] 
-		CLASSLIST_FORMAT = new String[] {LASTNAME, FIRSTNAME, CUID, GRADE_OPTION, CREDITS},
-		CUID_FORMAT = new String[] {NETID, CUID},
-		GRADES_FORMAT_NOSUBPROBS = new String[] {NETID, GRADE},
-		FINALGRADES_TEMPLATE_FORMAT = new String[] {NETID, FINAL_GRADE};
+	public static String[] CLASSLIST_FORMAT;
+        public static String[] CUID_FORMAT;
+        public static String[] GRADES_FORMAT_NOSUBPROBS;
+        public static String[] FINALGRADES_TEMPLATE_FORMAT;
 	
 	/* the formats we write */
 	//final grades: all data known about all students in the class
-	public static final String[] 
-		FINALGRADES_FORMAT = new String[] {COLLEGE, DEPARTMENT, COURSE_NUM, SECTION, FINAL_GRADE, LASTNAME, FIRSTNAME, CUID, NETID, GRADE_OPTION, CREDITS};
+	public static String[] FINALGRADES_FORMAT;
+        
+        
+        static {
+          String[] tmp = new String[11];
+          tmp[0] = COLLEGE;
+          tmp[1] = DEPARTMENT;
+          tmp[2] = COURSE_NUM;
+          tmp[3] = SECTION;
+          tmp[4] = FINAL_GRADE;
+          tmp[5] = LASTNAME;
+          tmp[6] = FIRSTNAME;
+          tmp[7] = CUID;
+          tmp[8] = NETID;
+          tmp[9] = GRADE_OPTION;
+          tmp[10] = CREDITS;
+          
+          FINALGRADES_FORMAT = tmp;
+          
+          String[] tmp2 = new String[5];
+          tmp2[0] = LASTNAME;
+          tmp2[1] = FIRSTNAME;
+          tmp2[2] = CUID;
+          tmp2[3] = GRADE_OPTION;
+          tmp2[4] = CREDITS;
+          CLASSLIST_FORMAT = tmp2;
+          
+          CUID_FORMAT = new String[2];
+          CUID_FORMAT[0] = NETID;
+          CUID_FORMAT[1] = CUID;
+          
+          GRADES_FORMAT_NOSUBPROBS = new String[2];
+          GRADES_FORMAT_NOSUBPROBS[0] = NETID;
+          GRADES_FORMAT_NOSUBPROBS[1] = GRADE;
+          
+          FINALGRADES_TEMPLATE_FORMAT = new String[2];
+          FINALGRADES_TEMPLATE_FORMAT[0] = NETID;
+          FINALGRADES_TEMPLATE_FORMAT[1] = FINAL_GRADE;
+          
+          
+
+        }
 	
+                
 	/**
 	 * Return the number of columns in the given format in a manner that doesn't depend
 	 * on the representation of the format

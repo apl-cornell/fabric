@@ -859,7 +859,7 @@ public class AccessController extends HttpServlet {
    * XMLbuilding so that processRequest() itself doesn't have to be insanely
    * long and essentially have two levels of logic in one function.
    */
-  private class RequestHandlerInfo {
+  private static class RequestHandlerInfo {
     private String buildURL; // the URL to which to output, or null if none
 
     private Document xmlDoc; // the info to send to a JSP, or null if no
@@ -2906,7 +2906,7 @@ public class AccessController extends HttpServlet {
     while(i.hasNext()) {
       String param = ((String)i.next()).trim();
       if(param.startsWith(P_GRADEGROUP)) {
-        Group group = getGroup(param.split(P_GRADEGROUP)[1]);
+        Group group = (Group)getGroup((String)cms.fabil.Kludge.get(param.split(P_GRADEGROUP), 1));
         if (group != null)
           result.add(group);
       }
