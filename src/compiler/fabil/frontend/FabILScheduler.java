@@ -57,15 +57,34 @@ public class FabILScheduler extends JLScheduler {
     return g;
   }
 
+  public Goal CheckAbortRetry(final Job job) {
+    TypeSystem ts = job.extensionInfo().typeSystem();
+    NodeFactory nf = job.extensionInfo().nodeFactory();
+    
+    Goal g = internGoal(new VisitorGoal(job, new AbortRetryChecker(job, ts, nf)) {
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(TypesInitialized(job));
+        return l;
+      }
+    });
+    
+    return g;
+  }
+  
   public Goal TypeCheckedAfterFlatten(final Job job) {
     TypeSystem ts = job.extensionInfo().typeSystem();
     NodeFactory nf = job.extensionInfo().nodeFactory();
 
     Goal g = internGoal(new polyglot.frontend.goals.TypeChecked(job, ts, nf) {
-      @SuppressWarnings("unchecked")
       @Override
-      public Collection prerequisiteGoals(Scheduler scheduler) {
-        return Collections.singletonList(ExpressionsFlattened(job));
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(ExpressionsFlattened(job));
+        l.add(CheckAbortRetry(job));
+        return l;
+//        return Collections.singletonList(ExpressionsFlattened(job));
       }
     });
 
@@ -91,6 +110,19 @@ public class FabILScheduler extends JLScheduler {
 
     return g;
   }
+  
+  public Goal FindUpdatedVariables(final Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new UpdatedVariableFinder()) {
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler s) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(RewriteAtomicMethods(job));
+        return l;
+      }
+    });
+    
+    return g;
+  }
 
   public Goal InnerClassesRemoved(final Job job) {
     InnerClassRemover icr =
@@ -110,6 +142,7 @@ public class FabILScheduler extends JLScheduler {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
             List<Goal> l = new ArrayList<Goal>();
+            l.add(FindUpdatedVariables(job));
             l.add(RewriteAtomicMethods(job));
             return l;
           }

@@ -28,6 +28,44 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   protected Ext postExtAtomic(Ext ext) {
     return postExtBlock(ext);
   }
+  
+  public final Ext extAbort() {
+    Ext e = extAbortImpl();
+    
+    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
+    if (nextExtFactory != null) {
+      Ext e2 = nextExtFactory.extAbort();
+      e = composeExts(e, e2);
+    }
+    return postExtAbort(e);
+  }
+  
+  protected Ext extAbortImpl() {
+    return new AbortExt_c();
+  }
+  
+  protected Ext postExtAbort(Ext ext) {
+    return postExtStmt(ext);
+  }
+
+  public final Ext extRetry() {
+    Ext e = extRetryImpl();
+    
+    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
+    if (nextExtFactory != null) {
+      Ext e2 = nextExtFactory.extRetry();
+      e = composeExts(e, e2);
+    }
+    return postExtRetry(e);
+  }
+  
+  protected Ext extRetryImpl() {
+    return new RetryExt_c();
+  }
+  
+  protected Ext postExtRetry(Ext ext) {
+    return postExtStmt(ext);
+  }
 
   @Override
   protected Ext extArrayAccessAssignImpl() {

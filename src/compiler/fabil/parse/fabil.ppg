@@ -22,10 +22,13 @@ parser Grm extends polyglot.parse.Grm {:
 
 terminal Token AT;
 terminal Token ATOMIC;
+terminal Token ABORT;
+terminal Token RETRY;
 
 non terminal Atomic atomic_statement;
 non terminal Expr   location_expr_opt;
 non terminal Expr label_opt;
+non terminal Stmt	abort_stmt, retry_stmt;
 
 start with goal;
 
@@ -36,11 +39,26 @@ start with goal;
 
 extend statement_without_trailing_substatement ::=
                     // Stmt
-        atomic_statement:a {: RESULT = a; :};
+        atomic_statement:a {: RESULT = a; :}
+    |   abort_stmt:a {: RESULT = a; :}
+    |   retry_stmt:a {: RESULT = a; :}
+    ;
 
 atomic_statement ::=
                     // Atomic
         ATOMIC:n block:a {: RESULT = parser.nf.Atomic(parser.pos(n,a), a.statements()); :};
+
+abort_stmt ::=
+					// AbortStmt
+		ABORT:a SEMICOLON:b
+			{: RESULT = parser.nf.AbortStmt(parser.pos(a, b)); :}
+	;
+	
+retry_stmt ::= 
+					// RetryStmt
+		RETRY:a SEMICOLON:b
+			{: RESULT = parser.nf.RetryStmt(parser.pos(a, b)); :}
+	;
 
 ////////////////////////////////////////////////////////////////////////
 // Labels and locations for constructors                              //

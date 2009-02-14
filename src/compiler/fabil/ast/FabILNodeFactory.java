@@ -41,4 +41,7 @@ public interface FabILNodeFactory extends NodeFactory {
 
   NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
       List<Expr> dims, int addDims, ArrayInit init);
+  
+  RetryStmt RetryStmt(Position pos);
+  AbortStmt AbortStmt(Position pos);
 }

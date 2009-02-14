@@ -157,4 +157,17 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return NewArray(pos, base, label, location, emptyList, addDims, init);
   }
 
+  public RetryStmt RetryStmt(Position pos) {
+    RetryStmt s = new RetryStmt_c(pos);
+    s = (RetryStmt)s.ext(extFactory().extRetry());
+    s = (RetryStmt)s.del(delFactory().delStmt());
+    return s;
+  }
+  
+  public AbortStmt AbortStmt(Position pos) {
+    AbortStmt s = new AbortStmt_c(pos);
+    s = (AbortStmt)s.ext(extFactory().extAbort());
+    s = (AbortStmt)s.del(delFactory().delStmt());
+    return s;
+  }
 }

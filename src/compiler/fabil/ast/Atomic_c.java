@@ -1,17 +1,20 @@
 package fabil.ast;
 
-import java.util.List;
+import java.util.*;
 
 import polyglot.ast.Block_c;
 import polyglot.ast.Stmt;
+import polyglot.types.LocalInstance;
 import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
 import fabil.types.FabILTypeSystem;
+import fabil.visit.AbortRetryCollector;
 
 /**
  * An <code>Atomic</code> represents an <code>atomic</code> block.
  */
 public class Atomic_c extends Block_c implements Atomic {
+  protected List<LocalInstance> updatedLocals;
   
   public Atomic_c(Position pos, List<Stmt> statements) {
     super(pos, statements);
@@ -28,7 +31,34 @@ public class Atomic_c extends Block_c implements Atomic {
     FabILTypeSystem ts = (FabILTypeSystem) v.typeSystem();
     v.visitThrow(this, ENTRY, ts.AbortException());
     
+    // Find all the aborts and retries that are lexically enclosed in the 
+    // atomic blocks, and add appropriate edges.
+    List<AbortStmt> aborts = new ArrayList<AbortStmt>();
+    List<RetryStmt> retries = new ArrayList<RetryStmt>();
+    
+    AbortRetryCollector c = new AbortRetryCollector(aborts, retries);
+    this.visit(c);
+    
+    for (AbortStmt abort : aborts) {
+      v.edge(abort, this, EXIT);
+    }
+    for (RetryStmt retry : retries) {
+      v.edge(retry, this, ENTRY);
+    }
+    
     return super.acceptCFG(v, succs);
   }
   
+  public List<LocalInstance> updatedLocals() {
+    return updatedLocals;
+  }
+  
+  public Atomic updatedLocals(List<LocalInstance> s) {
+    if (s == this.updatedLocals) {
+      return this;
+    }
+    Atomic_c n = (Atomic_c)this.copy();
+    n.updatedLocals = s;
+    return n;
+  }
 }

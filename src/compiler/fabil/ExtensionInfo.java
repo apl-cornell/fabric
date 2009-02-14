@@ -136,5 +136,4 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
   public FabILOptions getFabILOptions() {
     return (FabILOptions) getOptions();
   }
-
 }
