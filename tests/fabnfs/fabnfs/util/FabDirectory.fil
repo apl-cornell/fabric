@@ -39,16 +39,24 @@ public class FabDirectory extends FileSystemObject {
                 throw new NullPointerException();
             }
 //            System.out.println(this.toString() + ": Removed " + name + " from " + fileName + "(" + fullPath + ")" + ": " + listString());
-            return fso;
+            // XXX: this avoids spurious reachability errors
+            if (true)
+                return fso;
         }
+        // should not happen
+        throw new InternalError();
     }
 
     public FileSystemObject addFile(String name, FileSystemObject file) {
         atomic {
             FileSystemObject fso = (FileSystemObject)dirElements.put(name, file);
 //            System.out.println(this.toString() + ": Adding foreign file " + name + " to " + fileName + "(" + fullPath + ")" + ": " + listString());
-            return fso;
+	    // XXX: this avoids spurious reachability errors
+            if(true)
+                return fso;
         }
+	// should not happen
+	throw new InternalError();
     }
 
     public FabDirectory mkdir(String name, String path) {
@@ -56,8 +64,12 @@ public class FabDirectory extends FileSystemObject {
             FabDirectory subdir = new FabDirectory(name, this, path);
             dirElements.put(name, subdir);
 //            System.out.println(this.toString() + ": Created Directory " + name + " and added it to " + fileName + "(" + fullPath + ")" + ": " + listString());
-            return subdir;
+	    // XXX: this avoids spurious reachability errors
+            if (true)
+                return subdir;
         }
+	// should not happen
+	throw new InternalError();
     }
 
     public FabFile mkfile(String name, String path) {
@@ -65,8 +77,12 @@ public class FabDirectory extends FileSystemObject {
             FabFile file = new FabFile(name, this, path);
             dirElements.put(name, file);
 //            System.out.println(this.toString() + ": Created " + name + " and added it to " + fileName + "(" + fullPath + ")" + ": " + listString());
-            return file;
+	    // XXX: this avoids spurious reachability errors
+            if (true)
+                return file;
         }
+	// should not happen
+	throw new InternalError();
     }
 
     public StringArray list() {
@@ -79,8 +95,12 @@ public class FabDirectory extends FileSystemObject {
             for(Iterator it = coll.iterator(); it.hasNext(); ) {
                 toReturn.set(i++, ((FileSystemObject)it.next()).fileName);
             }
-            return toReturn;
+	    // XXX: this avoids spurious reachability errors
+	    if (true)
+                return toReturn;
         }
+	// should not happen
+	throw new InternalError();
     }
 
     String listString() {
@@ -94,8 +114,12 @@ public class FabDirectory extends FileSystemObject {
 //                toReturn = toReturn + ((FileSystemObject)it.next()).fileName + ", ";
 //            }
             toReturn = dirElements.toString();
-            return toReturn + "(size="+dirElements.size()+")";
+	    // XXX: this avoids spurious reachability errors
+	    if (true)
+                return toReturn + "(size="+dirElements.size()+")";
         }
+	// should not happen
+	throw new InternalError();
     }
 
 }

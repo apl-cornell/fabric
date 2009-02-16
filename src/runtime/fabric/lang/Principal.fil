@@ -1,5 +1,5 @@
 package fabric.lang;
-
+import fabric.common.InternalError;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.util.Iterator;
@@ -30,8 +30,13 @@ public class Principal implements jif.lang.Principal {
 	p = new Principal~label@core(name);
 	principalCache.put(name, p);
       }
-      return p;
+      // XXX: we insert a check here to satisfy the broken reachability
+      // computation in the fabil compiler.
+      if (p != null)
+        return p;
     }
+    // this is only reached if the transaction aborts.
+    throw new InternalError();
   }
 
   private final String name;
