@@ -6,7 +6,6 @@ import java.net.InetSocketAddress;
 import java.security.Principal;
 import java.util.List;
 
-import jif.lang.Label;
 import fabric.client.Client;
 import fabric.client.RemoteCore;
 import fabric.client.UnreachableCoreException;
@@ -20,28 +19,9 @@ public abstract class Message<R extends Message.Response> {
    * The <code>MessageType</code> corresponding to this class.
    */
   protected final MessageType messageType;
-  
-  /**
-   * The label of the program when sending this message. Available only on core.
-   */
-  private Label label;
 
   protected Message(MessageType messageType) {
     this.messageType = messageType;
-  }
-
-  /**
-   * The label of the program when sending this message. Available only on core.
-   */
-  public Label label() {
-    return label;
-  }
-  
-  /**
-   * Sets the label this message is associated with.
-   */
-  public void label(Label label) {
-    this.label = label;
   }
 
   /**
@@ -198,9 +178,6 @@ public abstract class Message<R extends Message.Response> {
       Worker handler) throws IOException {
 
     try {
-      // TODO read in pc label  (what for?  --Jed)
-      Label l = null;
-      
       MessageType messageType = MessageType.values()[in.readByte()];
       Class<? extends Message<?>> messageClass = messageType.messageClass;
       Message<?> m;
@@ -218,7 +195,6 @@ public abstract class Message<R extends Message.Response> {
         throw new FabricException(e);
       }
       
-      m.label(l);
       Response r = m.dispatch(handler);
 
       // Signal that no error occurred.
