@@ -96,8 +96,6 @@ public class RemoteCore implements Core {
    *          Whether to establish an encrypted connection.
    * @param client
    *          The Client instance.
-   * @param core
-   *          The core being connected to.
    * @param host
    *          The host to connect to.
    * @param corePrincipal
@@ -105,9 +103,8 @@ public class RemoteCore implements Core {
    * @throws IOException
    *           if there was an error.
    */
-  public void connect(boolean withSSL, Client client, Core core,
-      InetSocketAddress host, Principal corePrincipal) throws NoSuchCoreError,
-      IOException {
+  public void connect(boolean withSSL, Client client, InetSocketAddress host,
+      Principal corePrincipal) throws NoSuchCoreError, IOException {
     Socket socket = new Socket();
     socket.setTcpNoDelay(true);
     socket.setKeepAlive(true);
@@ -115,7 +112,7 @@ public class RemoteCore implements Core {
     // Connect to the core node and identify the core we're interested in.
     socket.connect(host, client.timeout);
     DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
-    dataOut.writeUTF(core.name());
+    dataOut.writeUTF(name);
     
     // Specify whether we're encrypting.
     dataOut.writeBoolean(withSSL);
@@ -127,7 +124,7 @@ public class RemoteCore implements Core {
     if (withSSL && client.useSSL) {
       // Start encrypting.
       SSLSocket sslSocket =
-          (SSLSocket) client.sslSocketFactory.createSocket(socket, core.name(),
+          (SSLSocket) client.sslSocketFactory.createSocket(socket, name,
               host.getPort(), true);
       sslSocket.setUseClientMode(true);
       sslSocket.startHandshake();

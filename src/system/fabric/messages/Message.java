@@ -90,8 +90,7 @@ public abstract class Message<R extends Message.Response> {
   
             // Attempt to establish a connection.
             int hostNum = (startHostIdx + hostIdx) % numHosts;
-            core.connect(useSSL, client, core, hosts.get(hostNum),
-                corePrincipal);
+            core.connect(useSSL, client, hosts.get(hostNum), corePrincipal);
           } else {
             // Set the flag for the next loop iteration in case we fail.
             needToConnect = true;
