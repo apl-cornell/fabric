@@ -240,7 +240,7 @@ public final class TransactionManager {
               tids.put(core, transactionID);
             } catch (TransactionPrepareFailedException e) {
               failures.put(core, e);
-            } catch (UnreachableCoreException e) {
+            } catch (UnreachableNodeException e) {
               failures.put(core, new TransactionPrepareFailedException(
                   "Unreachable core"));
             }
@@ -295,7 +295,7 @@ public final class TransactionManager {
               core.commitTransaction(tid);
             } catch (TransactionCommitFailedException e) {
               failed.add(core);
-            } catch (UnreachableCoreException e) {
+            } catch (UnreachableNodeException e) {
               unreachable.add(core);
             }
           }

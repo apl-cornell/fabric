@@ -1,5 +1,7 @@
 package fabric.client;
 
+import fabric.client.remote.RemoteClient;
+import fabric.common.InternalError;
 import fabric.common.Pair;
 
 import java.net.*;
@@ -28,14 +30,40 @@ public class NameService {
   }
   
   /**
+   * Returns a list of node addresses for the given host.
+   */
+  public Pair<List<InetSocketAddress>, Principal> lookup(
+      RemoteNode host) throws UnknownHostException {
+    if (host instanceof RemoteCore) return lookup((RemoteCore) host);
+    if (host instanceof RemoteClient) return lookup((RemoteClient) host);
+    throw new InternalError();
+  }
+  
+  /**
+   * Returns a list of client node addresses for the given client.
+   */
+  public Pair<List<InetSocketAddress>, Principal> lookup(
+      RemoteClient client) throws UnknownHostException {
+    return lookup(client, 3373);
+  }
+  
+  /**
    * Returns a list of core node addresses for the given core.
    */
-  public Pair<List<InetSocketAddress>, Principal> lookupCore(RemoteCore core)
+  public Pair<List<InetSocketAddress>, Principal> lookup(RemoteCore core)
       throws UnknownHostException {
-    // Look up the core's hostname in DNS.
+    return lookup(core, 3372);
+  }
+  
+  /**
+   * Returns a list of node addresses for the given host.
+   */
+  private Pair<List<InetSocketAddress>, Principal> lookup(RemoteNode host,
+      int port) throws UnknownHostException {
+    // Look up the hostname in DNS.
     InetAddress[] ipAddrs;
     try {
-      ipAddrs = InetAddress.getAllByName(core.name);
+      ipAddrs = InetAddress.getAllByName(host.name());
     } catch (UnknownHostException e) {
       // XXX If hostname not found, use localhost.
       ipAddrs = InetAddress.getAllByName("localhost");
@@ -45,12 +73,12 @@ public class NameService {
         new ArrayList<InetSocketAddress>(ipAddrs.length);
     for (InetAddress ip : ipAddrs) {
       // XXX Obtain port number from DNS too?
-      socketAddrs.add(new InetSocketAddress(ip, 3372));
+      socketAddrs.add(new InetSocketAddress(ip, port));
     }
 
     // XXX Need to obtain X500 principal from DNS too.
     return new Pair<List<InetSocketAddress>, Principal>(socketAddrs,
-        new X500Principal("cn=" + core.name
+        new X500Principal("cn=" + host.name()
             + ",ou=Fabric,o=Cornell University,l=Ithaca,st=NY,c=US"));
   }
 }

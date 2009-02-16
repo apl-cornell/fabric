@@ -30,7 +30,7 @@ import fabric.util.Map;
  * <code>Client.getCore()</code> interface. For each remote core, there should
  * be at most one <code>RemoteCore</code> object representing that core.
  */
-public class RemoteCore implements Core {
+public class RemoteCore implements Core, RemoteNode {
   private transient Socket sslConn;
   private transient Socket unencryptedConn;
 
@@ -89,13 +89,17 @@ public class RemoteCore implements Core {
   }
 
   /**
+   * <p>
    * Establishes a connection with a core node at a given host. A helper for
    * <code>Message.send(Core)</code>.
+   * </p>
+   * <p>
+   * NOTE: If you fix a bug in this method, then you'll probably want to fix a
+   * bug in RemoteClient.connect() as well.
+   * </p>
    * 
    * @param withSSL
    *          Whether to establish an encrypted connection.
-   * @param client
-   *          The Client instance.
    * @param host
    *          The host to connect to.
    * @param corePrincipal
@@ -103,8 +107,9 @@ public class RemoteCore implements Core {
    * @throws IOException
    *           if there was an error.
    */
-  public void connect(boolean withSSL, Client client, InetSocketAddress host,
-      Principal corePrincipal) throws NoSuchCoreError, IOException {
+  public void connect(boolean withSSL, InetSocketAddress host,
+      Principal corePrincipal) throws NoSuchNodeError, IOException {
+    Client client = Client.getClient();
     Socket socket = new Socket();
     socket.setTcpNoDelay(true);
     socket.setKeepAlive(true);
@@ -119,7 +124,7 @@ public class RemoteCore implements Core {
     dataOut.flush();
 
     // Determine whether the core exists at the node.
-    if (socket.getInputStream().read() == 0) throw new NoSuchCoreError();
+    if (socket.getInputStream().read() == 0) throw new NoSuchNodeError();
 
     if (withSSL && client.useSSL) {
       // Start encrypting.
@@ -186,7 +191,7 @@ public class RemoteCore implements Core {
     return unencryptedConn != null && !unencryptedConn.isClosed();
   }
 
-  public synchronized long createOnum() throws UnreachableCoreException {
+  public synchronized long createOnum() throws UnreachableNodeException {
     reserve(1);
     return fresh_ids.poll();
   }
@@ -198,7 +203,7 @@ public class RemoteCore implements Core {
    */
   public int prepareTransaction(Collection<Object.$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object.$Impl> writes)
-      throws UnreachableCoreException, TransactionPrepareFailedException {
+      throws UnreachableNodeException, TransactionPrepareFailedException {
     PrepareTransactionMessage.Response response =
         new PrepareTransactionMessage(toCreate, reads, writes).send(this);
     return response.transactionID;
@@ -362,7 +367,7 @@ public class RemoteCore implements Core {
    * @param num
    *                The number of objects to allocate
    */
-  protected void reserve(int num) throws UnreachableCoreException {
+  protected void reserve(int num) throws UnreachableNodeException {
     while (fresh_ids.size() < num) {
       // log.info("Requesting new onums, coreid=" + coreID);
       if (num < 512) num = 512;
@@ -388,7 +393,7 @@ public class RemoteCore implements Core {
    * @see fabric.client.Core#commitTransaction(int)
    */
   public void commitTransaction(int transactionID)
-      throws UnreachableCoreException, TransactionCommitFailedException {
+      throws UnreachableNodeException, TransactionCommitFailedException {
     new CommitTransactionMessage(transactionID).send(this);
   }
 

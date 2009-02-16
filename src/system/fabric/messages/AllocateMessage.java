@@ -4,7 +4,7 @@ import java.io.*;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.client.UnreachableCoreException;
+import fabric.client.UnreachableNodeException;
 import fabric.common.AccessException;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
@@ -15,7 +15,8 @@ import fabric.core.Worker;
  * An <code>AllocateMessage</code> represents a request to allocate a number
  * of object IDs at a core.
  */
-public final class AllocateMessage extends Message<AllocateMessage.Response> {
+public final class AllocateMessage extends
+    Message<RemoteCore, AllocateMessage.Response> {
 
   public static class Response implements Message.Response {
     public long[] oids;
@@ -82,10 +83,10 @@ public final class AllocateMessage extends Message<AllocateMessage.Response> {
    * 
    * @see fabric.messages.Message#send(fabric.client.Core, boolean)
    */
-  public Response send(RemoteCore core) throws UnreachableCoreException {
+  public Response send(RemoteCore core) throws UnreachableNodeException {
     try {
       return send(core, true);
-    } catch (UnreachableCoreException e) {
+    } catch (UnreachableNodeException e) {
       throw e;
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from core.", e);

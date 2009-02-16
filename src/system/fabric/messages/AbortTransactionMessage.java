@@ -10,7 +10,7 @@ import fabric.common.ProtocolError;
 import fabric.core.Worker;
 
 public class AbortTransactionMessage extends
-    Message<AbortTransactionMessage.Response> {
+    Message<RemoteCore, AbortTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
     private Response() {

@@ -1,7 +1,7 @@
 package fabric.dissemination;
 
 import fabric.client.RemoteCore;
-import fabric.client.UnreachableCoreException;
+import fabric.client.UnreachableNodeException;
 import fabric.common.AccessException;
 import fabric.common.FetchException;
 import fabric.common.ObjectGroup;
@@ -22,7 +22,7 @@ public interface FetchManager {
    *                the object identifier.
    * @return the requested glob if fetch was successful.
    * @throws AccessException
-   * @throws UnreachableCoreException
+   * @throws UnreachableNodeException
    */
   public ObjectGroup fetch(RemoteCore c, long onum) throws FetchException;
 

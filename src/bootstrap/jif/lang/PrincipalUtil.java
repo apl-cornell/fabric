@@ -1,13 +1,13 @@
 package jif.lang;
 
 import fabric.client.Core;
-import fabric.client.UnreachableCoreException;
+import fabric.client.UnreachableNodeException;
 import fabric.lang.Object;
 
 public interface PrincipalUtil extends Object {
   public interface TopPrincipal extends Principal, Object {
     public static class $Impl extends Object.$Impl implements TopPrincipal {
-      public $Impl(Core core, Label label) throws UnreachableCoreException {
+      public $Impl(Core core, Label label) throws UnreachableNodeException {
         super(core, label);
       }
 

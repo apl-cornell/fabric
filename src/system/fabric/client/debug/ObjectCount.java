@@ -7,7 +7,7 @@ import java.util.*;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.client.UnreachableCoreException;
+import fabric.client.UnreachableNodeException;
 import fabric.common.SerializedObject;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
@@ -42,7 +42,7 @@ public class ObjectCount {
     Map rootMap;
     try {
       rootMap = (Map) core.getRoot().$getProxy();
-    } catch (UnreachableCoreException e) {
+    } catch (UnreachableNodeException e) {
       System.err.println("Unreachable core: " + uri);
       return;
     }

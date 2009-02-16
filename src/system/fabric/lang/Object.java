@@ -286,7 +286,7 @@ public interface Object {
      * @param label
      *                the security label for the object
      */
-    public $Impl(Core core, Label label) throws UnreachableCoreException {
+    public $Impl(Core core, Label label) throws UnreachableNodeException {
       this(core, core.createOnum(), 0, label);
 
       // Register the new object with the transaction manager.
@@ -627,7 +627,7 @@ public interface Object {
     }
 
     public static class $Impl extends Object.$Impl implements $Static {
-      public $Impl(Core core, Label label) throws UnreachableCoreException {
+      public $Impl(Core core, Label label) throws UnreachableNodeException {
         super(core, label);
       }
 

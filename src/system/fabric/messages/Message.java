@@ -7,13 +7,13 @@ import java.security.Principal;
 import java.util.List;
 
 import fabric.client.Client;
-import fabric.client.RemoteCore;
-import fabric.client.UnreachableCoreException;
+import fabric.client.RemoteNode;
+import fabric.client.UnreachableNodeException;
 import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.core.Worker;
 
-public abstract class Message<R extends Message.Response> {
+public abstract class Message<N extends RemoteNode, R extends Message.Response> {
 
   /**
    * The <code>MessageType</code> corresponding to this class.
@@ -25,25 +25,25 @@ public abstract class Message<R extends Message.Response> {
   }
 
   /**
-   * Sends this message to the given core.
+   * Sends this message to the given node.
    * 
    * @param message
    *                The message to send.
-   * @return The reply from the core.
+   * @return The reply from the node.
    * @throws FabricException
    *                 if an error occurs at the core while handling the message.
-   * @throws UnreachableCoreException
-   *                 if unable to connect to the core.
+   * @throws UnreachableNodeException
+   *                 if unable to connect to the node.
    */
-  protected final R send(RemoteCore core, boolean useSSL) throws FabricException,
-      UnreachableCoreException {
-    // XXX Won't always send to the same core node. Is this a problem?
+  protected final R send(N node, boolean useSSL) throws FabricException,
+      UnreachableNodeException {
+    // XXX Won't always send to the same node host. Is this a problem?
     // XXX This is pretty ugly. Can it be cleaned up?
     // XXX Is this code in the right place?
 
-    // FIXME? do we want to lock entire core?
-    synchronized (core) {
-      boolean needToConnect = !core.isConnected(useSSL);
+    // FIXME? do we want to lock entire node?
+    synchronized (node) {
+      boolean needToConnect = !node.isConnected(useSSL);
       Client client = Client.getClient();
       final int retries = client.retries;
   
@@ -60,7 +60,7 @@ public abstract class Message<R extends Message.Response> {
           if (needToConnect) {
             if (hosts == null) {
               Pair<List<InetSocketAddress>, Principal> entry =
-                  client.nameService.lookupCore(core);
+                  client.nameService.lookup(node);
               hosts = entry.first;
               corePrincipal = entry.second;
   
@@ -70,17 +70,17 @@ public abstract class Message<R extends Message.Response> {
   
             // Attempt to establish a connection.
             int hostNum = (startHostIdx + hostIdx) % numHosts;
-            core.connect(useSSL, client, hosts.get(hostNum), corePrincipal);
+            node.connect(useSSL, hosts.get(hostNum), corePrincipal);
           } else {
             // Set the flag for the next loop iteration in case we fail.
             needToConnect = true;
           }
   
           // Attempt to send our message and obtain a reply.
-          return send(core, core.objectInputStream(useSSL), core
+          return send(node, node.objectInputStream(useSSL), node
               .objectOutputStream(useSSL));
-        } catch (NoSuchCoreError e) {
-          // Connected to a node that doesn't host the core we're interested in.
+        } catch (NoSuchNodeError e) {
+          // Connected to a system that doesn't host the node we're interested in.
           // Increment loop counter variables.
           hostIdx++;
           if (hostIdx == numHosts) {
@@ -106,12 +106,12 @@ public abstract class Message<R extends Message.Response> {
         }
       }
   
-      throw new UnreachableCoreException(core);
+      throw new UnreachableNodeException(node);
     }
   }
 
   /**
-   * Sends this message to a core node. Used only by the client.
+   * Sends this message to a remote node. Used only by the client.
    * 
    * @param core
    *                the core to which the object is being sent.
@@ -127,10 +127,9 @@ public abstract class Message<R extends Message.Response> {
    *                 if an I/O error occurs during
    *                 serialization/deserialization.
    */
-  private R send(RemoteCore core, ObjectInputStream in, ObjectOutputStream out)
+  private R send(N core, ObjectInputStream in, ObjectOutputStream out)
       throws FabricException, IOException {
     // Write this message out.
-    // TODO write out pc label  (what for?  --Jed)
     out.writeByte(messageType.ordinal());
     write(out);
     out.flush();
@@ -179,8 +178,8 @@ public abstract class Message<R extends Message.Response> {
 
     try {
       MessageType messageType = MessageType.values()[in.readByte()];
-      Class<? extends Message<?>> messageClass = messageType.messageClass;
-      Message<?> m;
+      Class<? extends Message<?,?>> messageClass = messageType.messageClass;
+      Message<?,?> m;
       
       try {
         m = messageClass.getDeclaredConstructor(
@@ -243,7 +242,7 @@ public abstract class Message<R extends Message.Response> {
    * @param in Input stream containing the message.
    * @return A Response message with the appropriate type.
    */
-  public abstract R response(RemoteCore c, DataInput in) throws IOException;
+  public abstract R response(N c, DataInput in) throws IOException;
 
   /**
    * Writes this message out on the given output stream. Only used by the
@@ -265,9 +264,9 @@ public abstract class Message<R extends Message.Response> {
         AbortTransactionMessage.class), DISSEM_READ_ONUM(
         DissemReadMessage.class);
 
-    private final Class<? extends Message<?>> messageClass;
+    private final Class<? extends Message<?,?>> messageClass;
 
-    MessageType(Class<? extends Message<?>> messageClass) {
+    MessageType(Class<? extends Message<?,?>> messageClass) {
       this.messageClass = messageClass;
     }
   }

@@ -5,14 +5,14 @@ import java.io.*;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.client.TransactionCommitFailedException;
-import fabric.client.UnreachableCoreException;
+import fabric.client.UnreachableNodeException;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
 import fabric.common.ProtocolError;
 import fabric.core.Worker;
 
 public class CommitTransactionMessage extends
-    Message<CommitTransactionMessage.Response> {
+    Message<RemoteCore, CommitTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
     public Response() {
@@ -68,11 +68,11 @@ public class CommitTransactionMessage extends
    * 
    * @see fabric.messages.Message#send(fabric.client.Core, boolean)
    */
-  public Response send(RemoteCore core) throws UnreachableCoreException,
+  public Response send(RemoteCore core) throws UnreachableNodeException,
       TransactionCommitFailedException {
     try {
       return super.send(core, true);
-    } catch (UnreachableCoreException e) {
+    } catch (UnreachableNodeException e) {
       throw e;
     } catch (TransactionCommitFailedException e) {
       throw e;

@@ -8,7 +8,7 @@ import java.util.Collections;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.client.TransactionPrepareFailedException;
-import fabric.client.UnreachableCoreException;
+import fabric.client.UnreachableNodeException;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
 import fabric.common.ProtocolError;
@@ -23,7 +23,7 @@ import fabric.lang.Object.$Impl;
  * to a core.
  */
 public class PrepareTransactionMessage extends
-    Message<PrepareTransactionMessage.Response> {
+    Message<RemoteCore, PrepareTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
     public final int transactionID;
@@ -155,11 +155,11 @@ public class PrepareTransactionMessage extends
    * 
    * @see fabric.messages.Message#send(fabric.client.Core, boolean)
    */
-  public Response send(RemoteCore core) throws UnreachableCoreException,
+  public Response send(RemoteCore core) throws UnreachableNodeException,
       TransactionPrepareFailedException {
     try {
       return super.send(core, true);
-    } catch (UnreachableCoreException e) {
+    } catch (UnreachableNodeException e) {
       throw e;
     } catch (TransactionPrepareFailedException e) {
       throw e;

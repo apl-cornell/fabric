@@ -13,7 +13,8 @@ import fabric.core.Worker;
  * A <code>ReadMessage</code> represents a request from a client to read an
  * object at a core.
  */
-public final class ReadMessage extends Message<ReadMessage.Response> {
+public final class ReadMessage extends
+    Message<RemoteCore, ReadMessage.Response> {
   public static class Response implements Message.Response {
 
     public final ObjectGroup group;

@@ -44,14 +44,14 @@ public final class Client {
   protected final KeyStore trustStore;
 
   // A socket factory for creating TLS connections.
-  protected final SSLSocketFactory sslSocketFactory;
+  public final SSLSocketFactory sslSocketFactory;
 
   // The principal on whose behalf this client is running.
   protected final Principal principal;
-  protected final java.security.Principal javaPrincipal;
+  public final java.security.Principal javaPrincipal;
 
   // Whether SSL encryption is desired.
-  protected final boolean useSSL;
+  public final boolean useSSL;
 
   // The logger
   public static final Logger log = Logger.getLogger("fabric.client");

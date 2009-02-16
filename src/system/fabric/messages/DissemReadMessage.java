@@ -14,7 +14,8 @@ import fabric.dissemination.Glob;
  * A <code>DissemReadMessage</code> represents a request from a dissemination
  * node to read an object at a core.
  */
-public final class DissemReadMessage extends Message<DissemReadMessage.Response> {
+public final class DissemReadMessage extends
+    Message<RemoteCore, DissemReadMessage.Response> {
   public static class Response implements Message.Response {
 
     public final Glob glob;

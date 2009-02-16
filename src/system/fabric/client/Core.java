@@ -23,7 +23,7 @@ public interface Core {
    * @return a core-specific transaction ID iff the operation succeeded.
    */
   int prepareTransaction(Collection<$Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<$Impl> writes) throws UnreachableCoreException,
+      Collection<$Impl> writes) throws UnreachableNodeException,
       TransactionPrepareFailedException;
 
   /**
@@ -69,18 +69,18 @@ public interface Core {
    * 
    * @param transactionID
    *          the ID of the transaction to commit
-   * @throws UnreachableCoreException
+   * @throws UnreachableNodeException
    * @throws TransactionCommitFailedException
    */
-  void commitTransaction(int transactionID) throws UnreachableCoreException,
+  void commitTransaction(int transactionID) throws UnreachableNodeException,
       TransactionCommitFailedException;
 
   /**
    * Obtains a new, unused object number from the Core.
    * 
-   * @throws UnreachableCoreException
+   * @throws UnreachableNodeException
    */
-  long createOnum() throws UnreachableCoreException;
+  long createOnum() throws UnreachableNodeException;
 
   /**
    * Returns the root map of the Core
