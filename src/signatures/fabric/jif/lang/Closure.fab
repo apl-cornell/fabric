@@ -15,5 +15,5 @@ public interface Closure[principal P, label L] authority(P) {
      * The label {L} is a lower bound on the side-effects
      * of the code.
      */
-    Object{L} invoke{L}() where caller(P);
+    java.lang.Object{L} invoke{L}() where caller(P);
 }

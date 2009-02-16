@@ -17,14 +17,13 @@ public final class Capability[principal P, label L] authority(P) {
      */
     private Capability(Closure[P,L]{this} closure) { 
     	this.closure = closure;
-        super();
     }
     
     private final Closure[P, L]{this} closure;
 
     public Closure[P,L]{this} getClosure() { return closure; }
 
-	public Object{closure; L} invoke{L}() where authority(P) {
+	public java.lang.Object{closure; L} invoke{L}() where authority(P) {
 		if (closure == null) return null;
 		return closure.invoke();
 	}

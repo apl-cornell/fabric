@@ -37,11 +37,11 @@ public final class Float extends Number /*implements Comparable*/ {
     public native float floatValue();
     public native double doubleValue();
     public native int hashCode();
-    public native boolean equals(Object obj);
+    public native boolean equals(java.lang.Object obj);
     public static native int floatToIntBits(float value);
     public static native int floatToRawIntBits(float value);
     public static native float intBitsToFloat(int bits);
     public native int compareTo(Float anotherFloat);
-    public native int compareTo(Object o);
+    public native int compareTo(java.lang.Object o);
     public static native int compare(float f1, float f2);
 }

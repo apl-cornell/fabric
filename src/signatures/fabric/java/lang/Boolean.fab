@@ -23,6 +23,6 @@ public final class Boolean /*implements Comparable*/ {
     public static native String toString(boolean b);
     public native String{this} toString();
     public native int{this} hashCode();
-    public native boolean{this;obj} equals(Object obj);
+    public native boolean{this;obj} equals(java.lang.Object obj);
     //public static boolean getBoolean(String name);
 }

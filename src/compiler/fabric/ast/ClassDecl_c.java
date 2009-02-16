@@ -31,6 +31,7 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
   @Override
   protected void setSuperClass(AmbiguityRemover ar, TypeNode superClass)
       throws SemanticException {
+    // XXX: I think this is taken care of by the ExplicitSuperclassAdder now
     FabricTypeSystem ts = (FabricTypeSystem) ar.typeSystem();
     String fullName = type.fullName();
 

@@ -22,10 +22,10 @@ public final class String extends java.lang.Object implements java.io.Serializab
     public native char{this; index} charAt(int index) throws (StringIndexOutOfBoundsException{this; index});
     public native CharSequence{this;start;end} subSequence(int start, int end)  throws (IndexOutOfBoundsException{this;start;end});
     public native void getChars{this}(int{this} srcBegin, int{this} srcEnd, char{this}[]{this} dst, int{this} dstBegin) throws (StringIndexOutOfBoundsException{this});
-    public native boolean{this; anObject} equals(Object anObject);
+    public native boolean{this; anObject} equals(java.lang.Object anObject);
     public native boolean{this; anotherString} equalsIgnoreCase(String anotherString);
     public native int{this; anotherString} compareTo(String anotherString) throws (NullPointerException{anotherString});
-    public native int{this; o} compareTo(Object o) throws (ClassCastException{o}, NullPointerException{o});
+    public native int{this; o} compareTo(java.lang.Object o) throws (ClassCastException{o}, NullPointerException{o});
 
     public native int{this; str} compareToIgnoreCase(String str) throws (NullPointerException{str});
     public native boolean{this; other; toffset; ooffset; len} regionMatches(int toffset, String other, int ooffset, 
@@ -59,7 +59,7 @@ public final class String extends java.lang.Object implements java.io.Serializab
     public native String{this} trim();
     public native String{this} toString();
     public native char{this}[]{this} toCharArray();
-//    public native static String{obj} valueOf(Object obj);
+//    public native static String{obj} valueOf(java.lang.Object obj);
 //    public native static String{data} valueOf(char{}[] data) throws (NullPointerException{data});
 //    public native static String{data;offset;count} valueOf(char{}[] data, int offset, int count) throws (NullPointerException{data});
 //    public native static String{data;offset;count} copyValueOf(char{}[] data, int{data} offset, int{data} count) throws (NullPointerException{data});

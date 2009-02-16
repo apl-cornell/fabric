@@ -36,7 +36,7 @@ public final class Double extends Number /*implements Comparable*/ {
         public native float floatValue();
         public native double doubleValue();
         public native int hashCode();
-        public native boolean equals(Object obj);
+        public native boolean equals(java.lang.Object obj);
 
         public static native long doubleToLongBits(double value);
         public static native long doubleToRawLongBits(double value);

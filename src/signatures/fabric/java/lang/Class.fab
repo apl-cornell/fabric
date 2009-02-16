@@ -17,7 +17,7 @@ public final class Class extends java.lang.Object implements java.io.Serializabl
                 throws (ClassNotFoundException);
 
     public native static Class forName(String name, boolean initialize,
-				Object loader)
+				java.lang.Object loader)
         throws (ClassNotFoundException);
 
 

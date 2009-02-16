@@ -74,7 +74,7 @@ public final class Character implements java.io.Serializable /*,  Comparable*/ {
     public native int{this} hashCode();
     
     
-    public native boolean{this;obj} equals(Object obj);
+    public native boolean{this;obj} equals(java.lang.Object obj);
     public native String{this} toString();
     public native static String toString(char c);
     
@@ -107,5 +107,5 @@ public final class Character implements java.io.Serializable /*,  Comparable*/ {
     public native static boolean isMirrored(char ch);
     
     public native int{this;anotherCharacter} compareTo(Character anotherCharacter);
-    public native int{this;o} compareTo(Object o) throws (ClassCastException{o});
+    public native int{this;o} compareTo(java.lang.Object o) throws (ClassCastException{o});
 }

@@ -35,7 +35,7 @@ public final class Long extends Number /*implements Comparable*/ {
     public native String{this} toString();
     public native int{this} hashCode();
 
-    public native boolean{this; anObject} equals(Object anObject);
+    public native boolean{this; anObject} equals(java.lang.Object anObject);
 
     public static native Long{nm} decode(String nm) throws (NumberFormatException{nm});
 }

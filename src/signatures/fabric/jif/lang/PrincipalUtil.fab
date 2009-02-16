@@ -29,7 +29,7 @@ public class PrincipalUtil {
      * of ActsForProof for more information.
      */
     public static native ActsForProof{p;q;q←}
-	findActsForProof(Principal p, Principal q, Object searchState);
+	findActsForProof(Principal p, Principal q, java.lang.Object searchState);
 
     /**
      * Verify that the chain is a valid delegates-chain between p and q. That is,

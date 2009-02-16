@@ -23,7 +23,7 @@ public final class StringBuffer[label L] /*implements java.io.Serializable, Char
     public native synchronized char{L} charAt(int{L} index) throws IndexOutOfBoundsException;
     public native synchronized void getChars{L}(int{L} srcBegin, int{L} srcEnd, char{L}[]{L} dst, int{L} dstBegin):{L} throws IndexOutOfBoundsException, NullPointerException;
     public native synchronized void setCharAt{L}(int{L} index, char{L} ch):{L} throws IndexOutOfBoundsException;
-//    public native synchronized StringBuffer append(Object obj);
+//    public native synchronized StringBuffer append(java.lang.Object obj);
     public native synchronized StringBuffer[L]{this} append{L}(String{L} str);
     public native synchronized StringBuffer[L]{this} append{L}(StringBuffer[L]{L} sb);
     public native synchronized StringBuffer[L]{this} append{L}(char{L}[]{L} str) ;
@@ -41,7 +41,7 @@ public final class StringBuffer[label L] /*implements java.io.Serializable, Char
 //    public native CharSequence subSequence(int start, int end) throws IndexOutOfBoundsException;
     public native synchronized String{L} substring(int{L} start, int{L} end):{L} throws IndexOutOfBoundsException;
     public native synchronized StringBuffer[L]{this} insert{L}(int{L} index, char{L}[]{L} str, int{L} offset, int{L} len):{L} throws IndexOutOfBoundsException;
-//    public native synchronized StringBuffer[L]{this} insert{L}(int{L} offset, Object obj) throws IndexOutOfBoundsException;
+//    public native synchronized StringBuffer[L]{this} insert{L}(int{L} offset, java.lang.Object obj) throws IndexOutOfBoundsException;
     public native synchronized StringBuffer[L]{this} insert{L}(int{L} offset, String{L} str):{L} throws IndexOutOfBoundsException;
     public native synchronized StringBuffer[L]{this} insert{L}(int{L} offset, char{L}[]{L} str):{L} throws IndexOutOfBoundsException;
     public native StringBuffer[L]{this} insert{L}(int{L} offset, boolean{L} b):{L} throws IndexOutOfBoundsException;

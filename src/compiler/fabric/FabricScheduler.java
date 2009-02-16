@@ -4,6 +4,7 @@ import java.util.*;
 
 import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
+import fabric.visit.ExplicitSuperclassAdder;
 import fabric.visit.FabricToFabilRewriter;
 import fabric.visit.FabricTypeBuilder;
 
@@ -50,6 +51,18 @@ public class FabricScheduler extends JifScheduler {
     return j;
   }
   
+  public Goal ExplicitSuperclassesAdded(Job job) {
+    FabricTypeSystem  ts = fabext.typeSystem();
+    FabricNodeFactory nf = fabext.nodeFactory();
+    Goal g = internGoal(new VisitorGoal(job, new ExplicitSuperclassAdder(ts,nf)));
+    try {
+      addPrerequisiteDependency(g, Parsed(job));
+    } catch(CyclicDependencyException e) {
+      throw new InternalCompilerError(e);
+    }
+    return g;
+  }
+  
   @Override
   public Goal TypesInitialized(Job job) {
     FabricTypeSystem ts = fabext.typeSystem();
@@ -57,6 +70,7 @@ public class FabricScheduler extends JifScheduler {
     Goal g = internGoal(new VisitorGoal(job, new FabricTypeBuilder(job, ts, nf)));
     try {
       addPrerequisiteDependency(g, Parsed(job));
+      addPrerequisiteDependency(g, ExplicitSuperclassesAdded(job));
     }
     catch (CyclicDependencyException e) {
       throw new InternalCompilerError(e);

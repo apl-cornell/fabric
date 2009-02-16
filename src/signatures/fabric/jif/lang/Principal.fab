@@ -57,7 +57,7 @@ public interface Principal {
      * principal expects to be asked to authorize.
      */
     boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
-	isAuthorized{this←}(Object authPrf, 
+	isAuthorized{this←}(java.lang.Object authPrf, 
 			    Closure[this, lb] closure,
 			    label lb,
 			    boolean executeNow) where authority (this);
@@ -67,12 +67,12 @@ public interface Principal {
      * Return null if no such proof can be found.
      */
     ActsForProof{this; p; this←; p←}
-	findProofUpto{this←}(Principal p, Object searchState);
+	findProofUpto{this←}(Principal p, java.lang.Object searchState);
     
     /**
      * Search for a proof that this principal can act for the principal q.
      * Return null if no such proof can be found.
      */
     ActsForProof{this; q; q←; this←}
-	findProofDownto{this←}(Principal q, Object searchState);    
+	findProofDownto{this←}(Principal q, java.lang.Object searchState);    
 }
