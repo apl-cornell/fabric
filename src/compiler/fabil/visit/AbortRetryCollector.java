@@ -31,6 +31,11 @@ public class AbortRetryCollector extends NodeVisitor {
     else if (n instanceof RetryStmt) {
       retries.add((RetryStmt)n);
     }
+    else if (n instanceof Atomic) {
+      // Only abort/retry the innermost atomic block.
+      aborts.clear();
+      retries.clear();
+    }
     return n;
   }
 }

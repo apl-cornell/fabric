@@ -62,8 +62,8 @@ public class AtomicExt_c extends FabILExt_c {
     
     String block = "{\n" +
     		   "  %LS\n" +
-    		   "  " + label + ": for (; ; ) {\n" +
-    		   "    boolean " + flag + " = true;\n" +
+    		   "  " + label + ": for (boolean " + flag + " = false; !" + flag + "; ) {\n" +
+    		   "    " + flag + " = true;\n" +
     		   "    %S\n" +
     		   "    try {\n" +
     		   "      %LS\n" +
@@ -72,10 +72,11 @@ public class AtomicExt_c extends FabILExt_c {
                    "      " + flag + " = false;" +
     		   "      continue " + label + ";\n" +
     		   "    }\n" +
+    		   (atomic.mayAbort() ?
                    "    catch (final fabric.client.UserAbortException " + e + ") {\n" +
                    "      " + flag + " = false;" +
                    "      break " + label + ";\n" +
-                   "    }\n" +
+                   "    }\n" : "") +
     		   "    catch (final Throwable " + e + ") {\n" +
     		   "      " + flag + " = false;\n" +
     		   "      throw new fabric.client.AbortException(" + e + ");\n" +
@@ -84,12 +85,16 @@ public class AtomicExt_c extends FabILExt_c {
     		   "      if (" + flag + ") {\n" +
     		   "        try {\n" +
     		   "          %S\n" +
-    		   "          break " + label + ";\n" +
+//    		   "          break " + label + ";\n" +
     		   "        }\n" +
-    		   "        catch (final fabric.client.AbortException " + e + ") { }\n" +
+    		   "        catch (final fabric.client.AbortException " + e + ") {\n" +
+    		   "          " + flag + " = false;\n" +
+    		   "        }\n" +
     		   "      }\n" +
-   		   "      { %LS }\n" +
-    		   "      %S\n" +
+    		   "      if (!" + flag + ") {\n" +
+   		   "        { %LS }\n" +
+    		   "        %S\n" +
+    		   "      }\n" +
     		   "    }\n" +
     		   "  }\n" +
     		   "}\n";

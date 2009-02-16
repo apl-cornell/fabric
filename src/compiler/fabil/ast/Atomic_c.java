@@ -15,6 +15,7 @@ import fabil.visit.AbortRetryCollector;
  */
 public class Atomic_c extends Block_c implements Atomic {
   protected List<LocalInstance> updatedLocals;
+  protected boolean mayAbort;
   
   public Atomic_c(Position pos, List<Stmt> statements) {
     super(pos, statements);
@@ -59,6 +60,19 @@ public class Atomic_c extends Block_c implements Atomic {
     }
     Atomic_c n = (Atomic_c)this.copy();
     n.updatedLocals = s;
+    return n;
+  }
+  
+  public boolean mayAbort() {
+    return mayAbort;
+  }
+  
+  public Atomic mayAbort(boolean b) {
+    if (b == mayAbort) {
+      return this;
+    }
+    Atomic_c n = (Atomic_c)this.copy();
+    n.mayAbort = b;
     return n;
   }
 }
