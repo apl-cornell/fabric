@@ -504,6 +504,11 @@
       <not><isset property="runtime.opt" /></not>
     </condition>
 
+    <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
+      <include name="fabric/client/RetryException.java" />
+      <include name="fabric/client/UserAbortException.java" />
+    </javac>
+
     <apply executable="bash"
         parallel="true"
         failonerror="true"
