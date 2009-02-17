@@ -24,7 +24,7 @@ import fabric.core.Options.CoreKeyStores;
 import fabric.core.store.ObjectStore;
 
 public class Node {
-  
+
   public Options opts;
 
   /**
@@ -34,12 +34,12 @@ public class Node {
   protected Map<String, Core> cores;
 
   protected class Core {
-    public final SSLSocketFactory   factory;
+    public final SSLSocketFactory factory;
     public final TransactionManager tm;
-    public final SurrogateManager   sm;
-    public final ObjectStore        os;
-    public final PublicKey          publicKey;
-    public final PrivateKey         privateKey;
+    public final SurrogateManager sm;
+    public final ObjectStore os;
+    public final PublicKey publicKey;
+    public final PrivateKey privateKey;
 
     private Core(SSLSocketFactory factory, ObjectStore os,
         TransactionManager tm, SurrogateManager sm, PublicKey publicKey,
@@ -52,7 +52,7 @@ public class Node {
       this.privateKey = privateKey;
     }
   }
-  
+
   /**
    * The number of additional connections the node can handle.
    */
@@ -62,17 +62,16 @@ public class Node {
    * The thread pool.
    */
   private Stack<Worker> pool;
-  
+
   public ConsoleHandler console;
 
   public Node(Options opts) {
     this.opts = opts;
     this.cores = new HashMap<String, Core>();
     this.console = new ConsoleHandler();
-    
+
     // Instantiate the cores with their object stores and SSL socket factories.
-    for (Map.Entry<String, CoreKeyStores> coreEntry : opts.cores
-        .entrySet()) {
+    for (Map.Entry<String, CoreKeyStores> coreEntry : opts.cores.entrySet()) {
       String coreName = coreEntry.getKey();
       CoreKeyStores keyStores = coreEntry.getValue();
 
@@ -112,42 +111,45 @@ public class Node {
         // Should never happen.
       }
     }
-    
+
     // Start the client before instantiating the cores in case their object
     // stores need initialization. (The initialization code will be run on the
     // client.)
     startClient();
-    
+
     // Ensure each core's object store has been properly initialized.
     for (Core core : cores.values()) {
       core.os.ensureInit();
     }
-    
+
     console.println("Core started");
   }
 
   private ObjectStore loadCore(String coreName) {
     Properties p = new Properties(System.getProperties());
-    
+
     try {
-      InputStream in = Resources.readFile("etc", "core", 
-          coreName + ".properties");
+      InputStream in =
+          Resources.readFile("etc", "core", coreName + ".properties");
       p.load(in);
       in.close();
-    } catch (IOException e) {}
+    } catch (IOException e) {
+    }
 
     try {
       String store = p.getProperty("fabric.core.store");
-      final ObjectStore os = (ObjectStore) Class.forName(store).getConstructor(
-          String.class).newInstance(coreName);
-      
+      final ObjectStore os =
+          (ObjectStore) Class.forName(store).getConstructor(String.class)
+              .newInstance(coreName);
+
       // register a hook to close the object store gracefully.
       Runtime.getRuntime().addShutdownHook(new Thread() {
         @Override
         public void run() {
           try {
             os.close();
-          } catch (final IOException exc) {}
+          } catch (final IOException exc) {
+          }
         }
       });
 
@@ -156,7 +158,7 @@ public class Node {
       throw new InternalError("could not initialize core", exc);
     }
   }
-  
+
   private void startClient() {
     try {
       Client.initialize(opts.primaryCoreName, "fab://" + opts.primaryCoreName
@@ -190,19 +192,19 @@ public class Node {
   private void addCore(String coreName, SSLSocketFactory sslSocketFactory,
       ObjectStore os, PublicKey publicKey, PrivateKey privateKey)
       throws DuplicateCoreException {
-    if (cores.containsKey(coreName))
-      throw new DuplicateCoreException();
-    
+    if (cores.containsKey(coreName)) throw new DuplicateCoreException();
+
     TransactionManager tm = new TransactionManager(os);
     SurrogateManager sm = new SimpleSurrogateManager(tm);
     Core c = new Core(sslSocketFactory, os, tm, sm, publicKey, privateKey);
     cores.put(coreName, c);
   }
-  
+
   /**
    * Returns the core corresponding to the given name.
    * 
-   * @param name Name of core to retrieve.
+   * @param name
+   *          Name of core to retrieve.
    * @return The requested core, or null if it does not exist.
    */
   public Core getCore(String name) {
@@ -233,12 +235,12 @@ public class Node {
     Core c = cores.get(coreName);
     return c == null ? null : c.sm;
   }
-  
+
   public PrivateKey getPrivateKey(String coreName) {
     Core c = cores.get(coreName);
     return c == null ? null : c.privateKey;
   }
-  
+
   /**
    * The main execution body of a core node.
    */
@@ -255,21 +257,9 @@ public class Node {
 
     // The main server loop.
     while (true) {
-      // If we can't handle any more connections, block until an existing
-      // connection is done.
-      synchronized (this) {
-        while (availConns == 0) {
-          try {
-            this.wait();
-          } catch (InterruptedException e) {
-            continue;
-          }
-        }
-      }
-
       // Accept a connection and give it to a worker thread.
-      Socket client = server.accept();
       Worker worker = getWorker();
+      Socket client = server.accept();
 
       // XXX not setting timeout
       // client.setSoTimeout(opts.timeout * 1000);
@@ -281,6 +271,16 @@ public class Node {
    * Returns an available <code>Worker</code> object.
    */
   private synchronized Worker getWorker() {
+    // If we can't handle any more connections, block until an existing
+    // connection is done.
+    while (availConns == 0) {
+      try {
+        this.wait();
+      } catch (InterruptedException e) {
+        continue;
+      }
+    }
+
     availConns--;
 
     if (pool.isEmpty()) return new Worker(this);
@@ -290,13 +290,17 @@ public class Node {
   /**
    * This is invoked by a <code>Worker</code> to notify this node that it is
    * finished serving a client.
+   * 
+   * @return true iff the worker should kill itself.
    */
-  protected synchronized void workerDone(Worker worker) {
+  protected synchronized boolean workerDone(Worker worker) {
     availConns++;
+    this.notify();
 
     // Clean up the worker and add it to the thread pool if there's room.
-    if (pool.size() == opts.threadPool) return;
+    if (pool.size() == opts.threadPool) return true;
     worker.cleanup();
     pool.push(worker);
+    return false;
   }
 }

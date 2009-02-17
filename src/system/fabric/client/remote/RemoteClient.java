@@ -11,6 +11,8 @@ import javax.security.auth.x500.X500Principal;
 
 import fabric.client.Client;
 import fabric.client.RemoteNode;
+import fabric.client.remote.messages.InterClientMessage;
+import fabric.client.remote.messages.RemoteCallMessage;
 import fabric.common.NoSuchNodeError;
 import fabric.lang.Object.$Proxy;
 
@@ -89,9 +91,12 @@ public final class RemoteClient implements RemoteNode {
 
     if (client.useSSL) {
       // Start encrypting.
-      SSLSocket sslSocket =
-          (SSLSocket) client.sslSocketFactory.createSocket(socket, name, host
-              .getPort(), true);
+      SSLSocket sslSocket;
+      synchronized (client.sslSocketFactory) {
+        sslSocket =
+            (SSLSocket) client.sslSocketFactory.createSocket(socket, name, host
+                .getPort(), true);
+      }
       sslSocket.setUseClientMode(true);
       sslSocket.startHandshake();
 
@@ -127,21 +132,31 @@ public final class RemoteClient implements RemoteNode {
 
       conn = socket;
     }
+
+    // Send a pointer to our principal object.
+    fabric.lang.Principal principal = client.getPrincipal();
+    InterClientMessage.writeRef(($Proxy) principal, out);
   }
-  
+
   public boolean isConnected(boolean useSSL) {
     return isConnected();
   }
-  
+
   public boolean isConnected() {
     return conn != null && !conn.isClosed();
   }
 
   protected $Proxy issueRemoteCall($Proxy receiver, String methodName,
       $Proxy[] args) {
-    // RemoteCallMessage.Response response =
-    // new RemoteCallMessage(receiver, methodName, args);
-    return null;
+    // XXX TODO Get the following values from the transaction manager.
+    long tid = 0;
+    int commitSync = 0;
+    int callTransactionNestDepth = 0;
+
+    RemoteCallMessage.Response response =
+        new RemoteCallMessage(tid, commitSync, callTransactionNestDepth,
+            receiver, methodName, args).send(this);
+    return response.result;
   }
 
   public String name() {

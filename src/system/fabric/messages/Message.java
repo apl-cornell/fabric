@@ -9,6 +9,7 @@ import java.util.List;
 import fabric.client.Client;
 import fabric.client.RemoteNode;
 import fabric.client.UnreachableNodeException;
+import fabric.client.remote.messages.RemoteCallMessage;
 import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.core.Worker;
@@ -28,12 +29,12 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    * Sends this message to the given node.
    * 
    * @param message
-   *                The message to send.
+   *          The message to send.
    * @return The reply from the node.
    * @throws FabricException
-   *                 if an error occurs at the core while handling the message.
+   *           if an error occurs at the remote node while handling the message.
    * @throws UnreachableNodeException
-   *                 if unable to connect to the node.
+   *           if unable to connect to the node.
    */
   protected final R send(N node, boolean useSSL) throws FabricException,
       UnreachableNodeException {
@@ -51,7 +52,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
   
       // These will be filled in with real values if needed.
       List<InetSocketAddress> hosts = null;
-      Principal corePrincipal = null;
+      Principal nodePrincipal = null;
       int numHosts = 0;
       int startHostIdx = 0;
   
@@ -62,7 +63,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
               Pair<List<InetSocketAddress>, Principal> entry =
                   client.nameService.lookup(node);
               hosts = entry.first;
-              corePrincipal = entry.second;
+              nodePrincipal = entry.second;
   
               numHosts = hosts.size();
               startHostIdx = Client.RAND.nextInt(numHosts);
@@ -70,7 +71,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
   
             // Attempt to establish a connection.
             int hostNum = (startHostIdx + hostIdx) % numHosts;
-            node.connect(useSSL, hosts.get(hostNum), corePrincipal);
+            node.connect(useSSL, hosts.get(hostNum), nodePrincipal);
           } else {
             // Set the flag for the next loop iteration in case we fail.
             needToConnect = true;
@@ -113,21 +114,20 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
   /**
    * Sends this message to a remote node. Used only by the client.
    * 
-   * @param core
-   *                the core to which the object is being sent.
+   * @param node
+   *          the node to which the object is being sent.
    * @param in
-   *                the input stream for sending objects to the core.
+   *          the input stream for sending objects to the node.
    * @param out
-   *                the output stream on which to obtain response objects.
-   * @return the response from the core.
+   *          the output stream on which to obtain response objects.
+   * @return the response from the remote node.
    * @throws FabricException
-   *                 if an error occurred at the core while handling this
-   *                 request.
+   *           if an error occurred at the remote node while handling this
+   *           request.
    * @throws IOException
-   *                 if an I/O error occurs during
-   *                 serialization/deserialization.
+   *           if an I/O error occurs during serialization/deserialization.
    */
-  private R send(N core, ObjectInputStream in, ObjectOutputStream out)
+  private R send(N node, ObjectInputStream in, ObjectOutputStream out)
       throws FabricException, IOException {
     // Write this message out.
     out.writeByte(messageType.ordinal());
@@ -142,13 +142,13 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
         exc.fillInStackTrace();
         throw exc;
       } catch (ClassNotFoundException e) {
-        throw new InternalError("Unexpected response from core", e);
+        throw new InternalError("Unexpected response from remote node", e);
       }
     }
 
     // Read the response.
     try {
-      return response(core, in);
+      return response(node, in);
     } catch (RuntimeException e) {
       throw e;
     } catch (Exception e) {
@@ -174,7 +174,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    * @throws ClassNotFoundException
    */
   public static void receive(ObjectInput in, ObjectOutputStream out,
-      Worker handler) throws IOException {
+      MessageHandler handler) throws IOException {
 
     try {
       MessageType messageType = MessageType.values()[in.readByte()];
@@ -224,6 +224,14 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
       out.flush();
     }
   }
+  
+  private final R dispatch(MessageHandler handler) throws FabricException {
+    if (handler instanceof fabric.client.remote.Worker) {
+      return dispatch((fabric.client.remote.Worker) handler);
+    }
+    
+    return dispatch((Worker) handler);
+  }
 
   /**
    * Calls the appropriate <code>handle(...)</code> method on the worker.
@@ -232,17 +240,32 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    * @return the result computed by the handler
    * @throws FabricException
    */
-  public abstract R dispatch(Worker handler) throws FabricException;
+  public R dispatch(Worker handler) throws FabricException {
+    throw new InternalError(
+        "Invalid, unsupported, or unimplemented core message");
+  }
+
+  /**
+   * Calls the appropriate <code>handle(...)</code> method on the worker.
+   * 
+   * @param handler
+   * @return the result computed by the handler
+   * @throws FabricException
+   */
+  public R dispatch(fabric.client.remote.Worker handler) throws FabricException {
+    throw new InternalError(
+        "Invalid, unsupported, or unimplemented client message");
+  }
   
   /**
    * Creates a Response message of the appropriate type using the provided
    * input stream.
    * 
-   * @param c Core where the message came from.
+   * @param node the remote node from which the response originated.
    * @param in Input stream containing the message.
    * @return A Response message with the appropriate type.
    */
-  public abstract R response(N c, DataInput in) throws IOException;
+  public abstract R response(N node, DataInput in) throws IOException;
 
   /**
    * Writes this message out on the given output stream. Only used by the
@@ -262,7 +285,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
         PrepareTransactionMessage.class), COMMIT_TRANSACTION(
         CommitTransactionMessage.class), ABORT_TRANSACTION(
         AbortTransactionMessage.class), DISSEM_READ_ONUM(
-        DissemReadMessage.class);
+        DissemReadMessage.class), REMOTE_CALL(RemoteCallMessage.class);
 
     private final Class<? extends Message<?,?>> messageClass;
 

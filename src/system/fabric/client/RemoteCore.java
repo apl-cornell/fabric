@@ -128,9 +128,12 @@ public class RemoteCore implements Core, RemoteNode {
 
     if (withSSL && client.useSSL) {
       // Start encrypting.
-      SSLSocket sslSocket =
-          (SSLSocket) client.sslSocketFactory.createSocket(socket, name,
-              host.getPort(), true);
+      SSLSocket sslSocket;
+      synchronized (client.sslSocketFactory) {
+        sslSocket =
+            (SSLSocket) client.sslSocketFactory.createSocket(socket, name, host
+                .getPort(), true);
+      }
       sslSocket.setUseClientMode(true);
       sslSocket.startHandshake();
 

@@ -34,6 +34,7 @@ import fabric.lang.arrays.ObjectArray;
  * Objects.
  */
 public final class Client {
+  public final String name;
 
   // A map from core hostnames to Core objects
   protected final Map<String, RemoteCore> cores;
@@ -139,6 +140,7 @@ public final class Client {
     // Sanitise input.
     if (timeout < 1) timeout = DEFAULT_TIMEOUT;
 
+    this.name = name;
     this.timeout = 1000 * timeout;
     this.retries = retries;
     this.useSSL = useSSL;

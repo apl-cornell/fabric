@@ -17,10 +17,7 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
-import fabric.common.AccessException;
-import fabric.common.FabricThread;
-import fabric.common.ObjectGroup;
-import fabric.common.ProtocolError;
+import fabric.common.*;
 import fabric.dissemination.Glob;
 import fabric.lang.Principal;
 import fabric.messages.*;
@@ -29,7 +26,7 @@ import fabric.messages.*;
  * This implements FabricThread for performance reasons. It will be calling into
  * the in-process client to perform access control.
  */
-public class Worker extends FabricThread.AbstractImpl {
+public class Worker extends FabricThread.AbstractImpl implements MessageHandler {
 
   /**
    * The node that we're working for.
@@ -205,8 +202,11 @@ public class Worker extends FabricThread.AbstractImpl {
       }
 
       // Signal that this worker is now available.
-      node.workerDone(this);
+      if (node.workerDone(this)) break;
     }
+    
+    fabric.client.transaction.TransactionManager.getInstance()
+        .deregisterThread(this);
   }
 
   /**
