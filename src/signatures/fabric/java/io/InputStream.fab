@@ -1,0 +1,23 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.io;
+
+public abstract class InputStream[label L] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
+
+    public abstract int{L} read{L}() throws (IOException{L});
+    public native int{L;b} read{L;b}(byte{L}[] b) throws (IOException{L;b});
+    public native int{L;b} read{L;b}(byte{L}[] b, int{L} off, int{L} len) throws (IOException{L;b});
+    public native long{L} skip(long{L} n) throws (IOException{L});
+    public native int{L} available() throws (IOException{L});
+    public native void close{L}() throws (IOException{L});
+    public native void mark{L}(int{L} readlimit);
+    public native void reset{L}() throws (IOException{L});
+    public native boolean{L} markSupported();
+
+}

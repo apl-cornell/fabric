@@ -1,0 +1,22 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ * */
+package java.io;
+
+public abstract class Reader[label L] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    protected Reader() { }
+    public native int{L} read{L}() throws (IOException{L});
+    public native int{L;cbuf} read{L;cbuf}(char{L}[] cbuf) throws (IOException{L;cbuf});
+    abstract public int{L;cbuf} read{L;cbuf}(char{L}[] cbuf, int{L} off, int{L} len) throws (IOException{L;cbuf});
+    public native long{L} skip{L}(long{L} n) throws (IOException{L});
+    public native boolean{L} ready() throws (IOException{L});
+    public native boolean{L} markSupported();
+    public native void mark{L}(int{L} readAheadLimit) throws (IOException{L});
+    public native void reset{L}() throws (IOException{L});
+    abstract public void close{L}() throws (IOException{L});
+}
