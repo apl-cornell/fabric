@@ -1,5 +1,7 @@
 package jif.principals;
 
+import jif.lang.Principal;
+
 public class Dolores extends ExternalPrincipal {
     public Dolores{this:;this!:}() where authority (this) {
 	super("Dolores");

@@ -1,5 +1,7 @@
 package jif.principals;
 
+import jif.lang.Principal;
+
 public class Ethel extends ExternalPrincipal {
     public Ethel() {
 	super("Ethel");

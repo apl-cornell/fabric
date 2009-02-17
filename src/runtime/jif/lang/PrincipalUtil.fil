@@ -157,7 +157,7 @@ public class PrincipalUtil {
    * @return An ActsForPoorf between p and q, or null if none can be found.
    */
   public static ActsForProof findActsForProof(Core core, Principal p, Principal q,
-      Object searchState) {
+      java.lang.Object searchState) {
     final Core localCore = Client.getClient().getLocalCore();
     try {
       LabelUtil.enterTiming();
@@ -352,7 +352,7 @@ public class PrincipalUtil {
   /**
    * Execute the given closure, if the principal agrees.
    */
-  public static Object execute(Principal p, Object authPrf, Closure c, Label lb) {
+  public static java.lang.Object execute(Principal p, java.lang.Object authPrf, Closure c, Label lb) {
     final Core localCore = Client.getClient().getLocalCore();
     Capability cap = authorize(localCore, p, authPrf, c, lb, true);
     if (cap != null) {
@@ -364,12 +364,12 @@ public class PrincipalUtil {
   /**
    * Obtain a Capability for the given principal and closure.
    */
-  public static Capability authorize(Core core, Principal p, Object authPrf,
+  public static Capability authorize(Core core, Principal p, java.lang.Object authPrf,
       Closure c, Label lb) {
     return authorize(core, p, authPrf, c, lb, false);
   }
 
-  private static Capability authorize(Core core, Principal p, Object authPrf,
+  private static Capability authorize(Core core, Principal p, java.lang.Object authPrf,
       Closure c, Label lb, boolean executeNow) {
     try {
       LabelUtil.enterTiming();
@@ -584,18 +584,18 @@ public class PrincipalUtil {
 //      return p == this;
     }
 
-    public boolean isAuthorized(Object authPrf, Closure closure, Label lb,
+    public boolean isAuthorized(java.lang.Object authPrf, Closure closure, Label lb,
         boolean executeNow) {
       return false;
     }
 
     public ActsForProof findProofUpto(Core core, Principal p,
-        Object searchState) {
+        java.lang.Object searchState) {
       return null;
     }
 
     public ActsForProof findProofDownto(Core core, Principal q,
-        Object searchState) {
+        java.lang.Object searchState) {
       return null;
     }
 
@@ -610,7 +610,7 @@ public class PrincipalUtil {
       this.q = q;
     }
 
-    public boolean equals(Object o) {
+    public boolean equals(java.lang.Object o) {
       if (o != null && o.getClass().equals(this.getClass())) {
         PrincipalPair that = (PrincipalPair) o;
         return eq(this.p, that.p) && eq(this.q, that.q);

@@ -48,25 +48,25 @@ public class Principal implements jif.lang.Principal {
     return false;
   }
 
-  public boolean isAuthorized(Object authorizationProof, Closure closure,
+  public boolean isAuthorized(java.lang.Object authorizationProof, Closure closure,
       Label lb, boolean executeNow) {
     // The default is that this principal authorizes no closures.
     return false;
   }
   
   public ActsForProof findProofDownto(Core core, jif.lang.Principal q,
-      Object searchState) {
+      java.lang.Object searchState) {
     // don't even try! We don't have any information
     // about who we can act for.
     return null;
   }
 
   public ActsForProof findProofUpto(Core core, jif.lang.Principal p,
-      Object searchState) {
+      java.lang.Object searchState) {
     return null;
   }
 
-  public boolean equals(Object o) {
+  public boolean equals(java.lang.Object o) {
     if (o == null) return false;
     if (o instanceof Principal) {
       return equals((Principal) o);

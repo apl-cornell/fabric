@@ -11,10 +11,10 @@ public interface Principal {
 
   boolean equals(final Principal p);
 
-  boolean isAuthorized(final Object authPrf, final Closure closure,
+  boolean isAuthorized(final java.lang.Object authPrf, final Closure closure,
       final Label lb, final boolean executeNow);
 
-  ActsForProof findProofUpto(final Core core, final Principal p, final Object searchState);
+  ActsForProof findProofUpto(final Core core, final Principal p, final java.lang.Object searchState);
 
-  ActsForProof findProofDownto(final Core core, final Principal q, final Object searchState);
+  ActsForProof findProofDownto(final Core core, final Principal q, final java.lang.Object searchState);
 }

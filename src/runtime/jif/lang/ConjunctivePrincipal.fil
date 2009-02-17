@@ -57,7 +57,7 @@ public final class ConjunctivePrincipal implements Principal {
     return false;
   }
 
-  public boolean isAuthorized(Object authPrf, Closure closure, Label lb,
+  public boolean isAuthorized(java.lang.Object authPrf, Closure closure, Label lb,
       boolean executeNow) {
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
@@ -67,7 +67,7 @@ public final class ConjunctivePrincipal implements Principal {
     return true;
   }
 
-  public ActsForProof findProofUpto(Core core, Principal p, Object searchState) {
+  public ActsForProof findProofUpto(Core core, Principal p, java.lang.Object searchState) {
     Map proofs = new HashMap();
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
       Principal q = (Principal) iter.next();
@@ -82,7 +82,7 @@ public final class ConjunctivePrincipal implements Principal {
 
   }
 
-  public ActsForProof findProofDownto(Core core, Principal q, Object searchState) {
+  public ActsForProof findProofDownto(Core core, Principal q, java.lang.Object searchState) {
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
       Principal witness = (Principal) iter.next();
       ActsForProof prf =

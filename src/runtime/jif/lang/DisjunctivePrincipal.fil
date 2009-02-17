@@ -56,7 +56,7 @@ public final class DisjunctivePrincipal implements Principal {
     return false;
   }
 
-  public boolean isAuthorized(Object authPrf, Closure closure, Label lb,
+  public boolean isAuthorized(java.lang.Object authPrf, Closure closure, Label lb,
       boolean executeNow) {
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
@@ -65,7 +65,7 @@ public final class DisjunctivePrincipal implements Principal {
     return false;
   }
 
-  public ActsForProof findProofUpto(Core core, Principal p, Object searchState) {
+  public ActsForProof findProofUpto(Core core, Principal p, java.lang.Object searchState) {
     if (delegatesTo(p)) {
       return new DelegatesProof@core(p, this);
     }
@@ -82,7 +82,7 @@ public final class DisjunctivePrincipal implements Principal {
     return null;
   }
 
-  public ActsForProof findProofDownto(Core core, Principal q, Object searchState) {
+  public ActsForProof findProofDownto(Core core, Principal q, java.lang.Object searchState) {
     Map proofs = new HashMap@core();
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();

@@ -1,0 +1,4 @@
+package fabric.client;
+
+public class Core {
+}
