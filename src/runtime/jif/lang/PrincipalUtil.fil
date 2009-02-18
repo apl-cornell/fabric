@@ -610,7 +610,7 @@ public class PrincipalUtil {
       this.q = q;
     }
 
-    public boolean equals(java.lang.Object o) {
+    public boolean equals(Object o) {
       if (o != null && o.getClass().equals(this.getClass())) {
         PrincipalPair that = (PrincipalPair) o;
         return eq(this.p, that.p) && eq(this.q, that.q);
