@@ -7,7 +7,7 @@ package jif.lang;
  * This class assumes that principals are equal if they are the same class
  * with the same name.
  */
-public abstract class AbstractPrincipal implements Principal {
+public class AbstractPrincipal implements Principal {
 
     private final String{this} name;
         

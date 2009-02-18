@@ -67,12 +67,12 @@ public interface Principal {
      * Return null if no such proof can be found.
      */
     ActsForProof{this; p; this←; p←}
-	findProofUpto{this←}(Principal p, java.lang.Object searchState);
+	findProofUpto{this←}(Core c, Principal p, java.lang.Object searchState);
     
     /**
      * Search for a proof that this principal can act for the principal q.
      * Return null if no such proof can be found.
      */
     ActsForProof{this; q; q←; this←}
-	findProofDownto{this←}(Principal q, java.lang.Object searchState);    
+	findProofDownto{this←}(Core c, Principal q, java.lang.Object searchState);    
 }
