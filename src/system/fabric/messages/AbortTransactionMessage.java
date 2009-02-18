@@ -36,9 +36,9 @@ public class AbortTransactionMessage extends
     }
   }
 
-  public final int transactionID;
+  public final long transactionID;
 
-  public AbortTransactionMessage(int transactionID) {
+  public AbortTransactionMessage(long transactionID) {
     super(MessageType.ABORT_TRANSACTION);
     this.transactionID = transactionID;
   }
@@ -47,7 +47,7 @@ public class AbortTransactionMessage extends
    * Deserialization constructor.
    */
   protected AbortTransactionMessage(DataInput in) throws IOException {
-    this(in.readInt());
+    this(in.readLong());
   }
 
   /*
@@ -88,7 +88,7 @@ public class AbortTransactionMessage extends
    */
   @Override
   public void write(DataOutput out) throws IOException {
-    out.writeInt(transactionID);
+    out.writeLong(transactionID);
   }
 
 }

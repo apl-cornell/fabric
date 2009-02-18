@@ -161,7 +161,7 @@ public abstract class ObjectStore {
    * The table of partially prepared transactions. Note that this does not need
    * to be saved to stable storage.
    */
-  protected final Map<Integer, PendingTransaction> pendingByTid;
+  protected final LongKeyMap<PendingTransaction> pendingByTid;
 
   /**
    * <p>
@@ -179,7 +179,7 @@ public abstract class ObjectStore {
 
   protected ObjectStore(String name) {
     this.name = name;
-    this.pendingByTid = new HashMap<Integer, PendingTransaction>();
+    this.pendingByTid = new LongKeyHashMap<PendingTransaction>();
     this.rwCount = new LongKeyHashMap<MutableInteger>();
     this.globIDByOnum = new LongKeyHashMap<Long>();
     this.globTable = new LongKeyHashMap<Pair<Glob,MutableInteger>>();
@@ -190,30 +190,19 @@ public abstract class ObjectStore {
    * 
    * @param client
    *          the client under whose authority the transaction is running.
-   * @return a transaction identifier that can be subsequently be passed to
-   *         registerCreate(), registerRead(), registerWrite(), commit(), or
-   *         abort().
    * @throws AccessException
    *           if the client has insufficient privileges.
    */
-  public final int beginTransaction(Principal client) throws AccessException {
-    int tid = newTid(client);
+  public final void beginTransaction(long tid, Principal client)
+      throws AccessException {
+    // XXX TODO Allow the same tid from multiple clients.
     pendingByTid.put(tid, new PendingTransaction(client));
-    return tid;
   }
-
-  /**
-   * Allocates a new transaction ID for the given client.
-   * 
-   * @throws AccessException
-   *           if the client has insufficient privileges.
-   */
-  protected abstract int newTid(Principal client) throws AccessException;
 
   /**
    * Registers that a transaction has read an object.
    */
-  public final void registerRead(int tid, long onum) {
+  public final void registerRead(long tid, long onum) {
     addRWPin(onum, false);
     pendingByTid.get(tid).reads.add(onum);
   }
@@ -228,7 +217,7 @@ public abstract class ObjectStore {
    * @param obj
    *          the updated object.
    */
-  public final void registerUpdate(int tid, SerializedObject obj) {
+  public final void registerUpdate(long tid, SerializedObject obj) {
     addRWPin(obj.getOnum(), true);
     pendingByTid.get(tid).modData.add(obj);
   }
@@ -251,7 +240,7 @@ public abstract class ObjectStore {
    * Rolls back a partially prepared transaction. (i.e., one for which
    * finishPrepare() has yet to be called.)
    */
-  public final void abortPrepare(int tid) {
+  public final void abortPrepare(long tid) {
     unpin(pendingByTid.remove(tid));
   }
 
@@ -269,7 +258,7 @@ public abstract class ObjectStore {
    * failure.
    * </p>
    */
-  public abstract void finishPrepare(int tid);
+  public abstract void finishPrepare(long tid);
 
   /**
    * Cause the objects prepared in transaction [tid] to be committed. The
@@ -283,7 +272,7 @@ public abstract class ObjectStore {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(Principal client, int tid) throws AccessException;
+  public abstract void commit(Principal client, long tid) throws AccessException;
 
   /**
    * Cause the objects prepared in transaction [tid] to be discarded.
@@ -296,7 +285,7 @@ public abstract class ObjectStore {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void rollback(Principal client, int tid)
+  public abstract void rollback(Principal client, long tid)
       throws AccessException;
 
   /**

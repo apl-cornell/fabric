@@ -97,8 +97,7 @@ public class RemoteCallMessage extends
 
   @Override
   public Response dispatch(Worker handler) {
-    // XXX TODO
-    return null;
+    return handler.handle(this);
   }
 
   public Response send(RemoteClient client) throws UnreachableNodeException {

@@ -26,7 +26,6 @@ public class BdbStore extends ObjectStore {
   private Database prepared;
 
   private final DatabaseEntry initializationStatus;
-  private final DatabaseEntry tidCounter;
   private final DatabaseEntry onumCounter;
   private final DatabaseEntry globIDCounter;
 
@@ -71,7 +70,6 @@ public class BdbStore extends ObjectStore {
     try {
       initializationStatus =
           new DatabaseEntry("initialization_status".getBytes("UTF-8"));
-      tidCounter = new DatabaseEntry("tid_counter".getBytes("UTF-8"));
       onumCounter = new DatabaseEntry("onum_counter".getBytes("UTF-8"));
       globIDCounter = new DatabaseEntry("globID_counter".getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
@@ -80,7 +78,7 @@ public class BdbStore extends ObjectStore {
   }
 
   @Override
-  public void finishPrepare(int tid) {
+  public void finishPrepare(long tid) {
     // Move the transaction data out of memory and into BDB.
     PendingTransaction pending = pendingByTid.remove(tid);
 
@@ -98,7 +96,7 @@ public class BdbStore extends ObjectStore {
   }
 
   @Override
-  public void commit(Principal client, int tid) {
+  public void commit(Principal client, long tid) {
     log.finer("Bdb commit begin tid " + tid);
 
     try {
@@ -131,7 +129,7 @@ public class BdbStore extends ObjectStore {
   }
 
   @Override
-  public void rollback(Principal client, int tid) {
+  public void rollback(Principal client, long tid) {
     log.finer("Bdb rollback begin tid " + tid);
 
     try {
@@ -287,29 +285,6 @@ public class BdbStore extends ObjectStore {
     // TODO Recover rwCount info from prepared
   }
 
-  @Override
-  protected int newTid(Principal client) {
-    try {
-      Transaction txn = env.beginTransaction(null, null);
-      DatabaseEntry data = new DatabaseEntry();
-      int c = 0;
-
-      if (meta.get(txn, tidCounter, data, LockMode.DEFAULT) == SUCCESS) {
-        c = toInt(data.getData());
-      }
-
-      data.setData(toBytes(c + 1));
-      meta.put(txn, tidCounter, data);
-      txn.commit();
-
-      log.finer("Bdb created tid " + c);
-      return c;
-    } catch (DatabaseException e) {
-      log.log(Level.SEVERE, "Bdb error in newTid: ", e);
-      throw new InternalError(e);
-    }
-  }
-
   /**
    * Removes a PendingTransaction from the prepare log and returns it. If no
    * transaction with the given transaction id is found, null is returned.
@@ -325,7 +300,7 @@ public class BdbStore extends ObjectStore {
    * @throws DatabaseException
    *           if a database error occurs
    */
-  private PendingTransaction remove(Principal client, Transaction txn, int tid)
+  private PendingTransaction remove(Principal client, Transaction txn, long tid)
       throws DatabaseException {
     DatabaseEntry key = new DatabaseEntry(toBytes(tid));
     DatabaseEntry data = new DatabaseEntry();
@@ -348,28 +323,6 @@ public class BdbStore extends ObjectStore {
 
   private boolean toBoolean(byte[] data) {
     return data[0] == 1;
-  }
-
-  private byte[] toBytes(int i) {
-    byte[] data = new byte[4];
-
-    for (int j = 0; j < 4; j++) {
-      data[3 - j] = (byte) (i & 0xff);
-      i = i >>> 8;
-    }
-
-    return data;
-  }
-
-  private int toInt(byte[] data) {
-    int i = 0;
-
-    for (int j = 0; j < 4; j++) {
-      i = i << 8;
-      i = i | data[j];
-    }
-
-    return i;
   }
 
   private byte[] toBytes(long i) {

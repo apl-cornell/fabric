@@ -32,19 +32,19 @@ public final class LocalCore implements Core {
 
   private static final Logger log = Logger.getLogger("fabric.client.LocalCore");
 
-  public synchronized int prepareTransaction(Collection<Object.$Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Object.$Impl> writes) {
+  public synchronized void prepareTransaction(long tid,
+      Collection<Object.$Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<Object.$Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     log.fine("Local transaction preparing");
-    return 0;
   }
 
-  public synchronized void abortTransaction(int transactionID) {
+  public synchronized void abortTransaction(long transactionID) {
     log.fine("Local transaction aborting");
   }
 
-  public synchronized void commitTransaction(int transactionID) {
+  public synchronized void commitTransaction(long transactionID) {
     log.fine("Local transaction committing");
   }
 

@@ -37,7 +37,7 @@ public class TransactionManager {
   /**
    * Instruct the transaction manager that the given transaction is aborting
    */
-  public void abortTransaction(Principal client, int transactionID)
+  public void abortTransaction(Principal client, long transactionID)
       throws AccessException {
     synchronized (store) {
       store.rollback(client, transactionID);
@@ -47,7 +47,7 @@ public class TransactionManager {
   /**
    * Execute the commit phase of two phase commit.
    */
-  public void commitTransaction(Principal client, int transactionID)
+  public void commitTransaction(Principal client, long transactionID)
       throws TransactionCommitFailedException {
     synchronized (store) {
       try {
@@ -89,17 +89,16 @@ public class TransactionManager {
    *          The set of objects to be updated in this transaction
    * @param reads
    *          The set of objects that the transaction read
-   * @return A locally unique transaction identifier
    * @throws TransactionPrepareFailedException
    *           If the transaction would cause a conflict or if the client is
    *           insufficiently privileged to execute the transaction.
    */
-  public int prepare(Principal client, PrepareRequest req)
+  public void prepare(Principal client, PrepareRequest req)
       throws TransactionPrepareFailedException {
-    int tid;
+    final long tid = req.tid;
     synchronized (store) {
       try {
-        tid = store.beginTransaction(client);
+        store.beginTransaction(tid, client);
       } catch (final AccessException e) {
         throw new TransactionPrepareFailedException("Insufficient privileges");
       }
@@ -189,7 +188,6 @@ public class TransactionManager {
       }
 
       store.finishPrepare(tid);
-      return tid;
     } catch (TransactionPrepareFailedException e) {
       synchronized (store) {
         store.abortPrepare(tid);

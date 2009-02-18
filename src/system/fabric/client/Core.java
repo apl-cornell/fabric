@@ -19,12 +19,10 @@ public interface Core {
 
   /**
    * Notifies the core that the transaction is entering the Prepare phase.
-   * 
-   * @return a core-specific transaction ID iff the operation succeeded.
    */
-  int prepareTransaction(Collection<$Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<$Impl> writes) throws UnreachableNodeException,
-      TransactionPrepareFailedException;
+  void prepareTransaction(long tid, Collection<$Impl> toCreate,
+      LongKeyMap<Integer> reads, Collection<$Impl> writes)
+      throws UnreachableNodeException, TransactionPrepareFailedException;
 
   /**
    * Returns the requested $Impl object. If the object is not resident, it is
@@ -62,7 +60,7 @@ public interface Core {
    * @param transactionID
    *          the ID of the aborting transaction.
    */
-  void abortTransaction(int transactionID);
+  void abortTransaction(long transactionID);
 
   /**
    * Notifies the Core that the transaction should be committed.
@@ -72,7 +70,7 @@ public interface Core {
    * @throws UnreachableNodeException
    * @throws TransactionCommitFailedException
    */
-  void commitTransaction(int transactionID) throws UnreachableNodeException,
+  void commitTransaction(long transactionID) throws UnreachableNodeException,
       TransactionCommitFailedException;
 
   /**

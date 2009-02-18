@@ -201,15 +201,11 @@ public class RemoteCore implements Core, RemoteNode {
 
   /**
    * Sends a PREPARE message to the core.
-   * 
-   * @return a core-specific transaction ID iff the operation succeeded.
    */
-  public int prepareTransaction(Collection<Object.$Impl> toCreate,
+  public void prepareTransaction(long tid, Collection<Object.$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object.$Impl> writes)
       throws UnreachableNodeException, TransactionPrepareFailedException {
-    PrepareTransactionMessage.Response response =
-        new PrepareTransactionMessage(toCreate, reads, writes).send(this);
-    return response.transactionID;
+    new PrepareTransactionMessage(tid, toCreate, reads, writes).send(this);
   }
 
   /**
@@ -384,9 +380,9 @@ public class RemoteCore implements Core, RemoteNode {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.client.Core#abortTransaction(int)
+   * @see fabric.client.Core#abortTransaction(long)
    */
-  public void abortTransaction(int transactionID) {
+  public void abortTransaction(long transactionID) {
     new AbortTransactionMessage(transactionID).send(this);
   }
 
@@ -395,7 +391,7 @@ public class RemoteCore implements Core, RemoteNode {
    * 
    * @see fabric.client.Core#commitTransaction(int)
    */
-  public void commitTransaction(int transactionID)
+  public void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
     new CommitTransactionMessage(transactionID).send(this);
   }

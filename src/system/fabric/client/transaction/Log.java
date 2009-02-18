@@ -1,5 +1,6 @@
 package fabric.client.transaction;
 
+import java.security.SecureRandom;
 import java.util.*;
 
 import fabric.client.Core;
@@ -16,10 +17,20 @@ import fabric.lang.Object.$Impl;
  */
 public final class Log {
   /**
+   * Source for random tids.
+   */
+  private static final Random rand = new SecureRandom();
+  
+  /**
    * The log for the parent transaction, or null if there is none (i.e., this is
    * the log for a top-level transaction).
    */
   final Log parent;
+  
+  /**
+   * The tid for the top-level transaction.
+   */
+  final long tid;
 
   /**
    * The set of sub-transactions.
@@ -86,6 +97,11 @@ public final class Log {
     this.parent = parent;
     if (parent != null) {
       parent.children.add(this);
+      this.tid = parent.tid;
+    } else {
+      synchronized (rand) {
+        this.tid = rand.nextLong();
+      }
     }
 
     this.children = Collections.synchronizedSet(new HashSet<Log>());

@@ -39,11 +39,6 @@ public class MemoryStore extends ObjectStore {
   private long nextOnum;
 
   /**
-   * Largest transaction id ever used;
-   */
-  private int maxTid;
-
-  /**
    * Maps 48-bit object numbers to SerializedObjects.
    */
   private LongKeyMap<SerializedObject> objectTable;
@@ -86,21 +81,15 @@ public class MemoryStore extends ObjectStore {
       this.objectTable = new LongKeyHashMap<SerializedObject>();
     }
 
-    this.maxTid = 0;
     log.info("Mem store loaded");
   }
 
   @Override
-  protected int newTid(Principal client) {
-    return ++maxTid;
+  public void finishPrepare(long tid) {
   }
 
   @Override
-  public void finishPrepare(int tid) {
-  }
-
-  @Override
-  public void commit(Principal client, int tid) throws AccessException {
+  public void commit(Principal client, long tid) throws AccessException {
     PendingTransaction tx = remove(client, tid);
 
     // merge in the objects
@@ -113,7 +102,7 @@ public class MemoryStore extends ObjectStore {
   }
 
   @Override
-  public void rollback(Principal client, int tid) throws AccessException {
+  public void rollback(Principal client, long tid) throws AccessException {
     remove(client, tid);
   }
 
@@ -168,7 +157,7 @@ public class MemoryStore extends ObjectStore {
    * Helper method to check permissions and update the pending object table for
    * a commit or roll-back.
    */
-  private PendingTransaction remove(Principal client, int tid)
+  private PendingTransaction remove(Principal client, long tid)
       throws AccessException {
     PendingTransaction tx = pendingByTid.remove(tid);
     if (tx == null) throw new AccessException();

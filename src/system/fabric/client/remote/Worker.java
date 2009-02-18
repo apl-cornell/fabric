@@ -11,6 +11,8 @@ import javax.net.ssl.SSLSocketFactory;
 
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.client.remote.messages.RemoteCallMessage;
+import fabric.client.remote.messages.RemoteCallMessage.Response;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.FabricThread;
 import fabric.common.MessageHandler;
@@ -208,5 +210,14 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     in = null;
     out = null;
     socket = null;
+  }
+
+  /**
+   * @param remoteCallMessage
+   * @return
+   */
+  public Response handle(RemoteCallMessage remoteCallMessage) {
+    // TODO Auto-generated method stub
+    return null;
   }
 }

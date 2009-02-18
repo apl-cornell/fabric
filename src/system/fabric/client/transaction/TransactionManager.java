@@ -1,10 +1,10 @@
 package fabric.client.transaction;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import fabric.client.*;
+import fabric.client.remote.RemoteClient;
 import fabric.common.FabricThread;
 import fabric.common.InternalError;
 import fabric.common.util.LongKeyMap;
@@ -77,7 +77,7 @@ public final class TransactionManager {
 
   public static ReadMapEntry getReadMapEntry($Impl impl) {
     FabricSoftRef ref = impl.$ref;
-    
+
     // Optimization: if the impl lives on the local core, it will never be
     // evicted, so no need to store the entry in the read map.
     if (ref.core.isLocalCore()) return new ReadMapEntry(impl);
@@ -215,8 +215,6 @@ public final class TransactionManager {
     // contact.
     Set<Core> cores = current.coresToContact();
 
-    // The transaction ID assigned by each core.
-    final Map<Core, Integer> tids = new ConcurrentHashMap<Core, Integer>();
     try {
       // Go through each core and send prepare messages in parallel.
       final int numCores = cores.size();
@@ -234,10 +232,7 @@ public final class TransactionManager {
               Collection<$Impl> creates = current.getCreatesForCore(core);
               LongKeyMap<Integer> reads = current.getReadsForCore(core);
               Collection<$Impl> writes = current.getWritesForCore(core);
-
-              int transactionID =
-                  core.prepareTransaction(creates, reads, writes);
-              tids.put(core, transactionID);
+              core.prepareTransaction(current.tid, creates, reads, writes);
             } catch (TransactionPrepareFailedException e) {
               failures.put(core, e);
             } catch (UnreachableNodeException e) {
@@ -284,15 +279,12 @@ public final class TransactionManager {
       final List<Core> failed =
           Collections.synchronizedList(new ArrayList<Core>());
       threads.clear();
-      for (Iterator<Map.Entry<Core, Integer>> entryIt =
-          tids.entrySet().iterator(); entryIt.hasNext();) {
-        Map.Entry<Core, Integer> entry = entryIt.next();
-        final Core core = entry.getKey();
-        final int tid = entry.getValue();
+      for (Iterator<Core> coreIt = cores.iterator(); coreIt.hasNext();) {
+        final Core core = coreIt.next();
         Runnable runnable = new Runnable() {
           public void run() {
             try {
-              core.commitTransaction(tid);
+              core.commitTransaction(current.tid);
             } catch (TransactionCommitFailedException e) {
               failed.add(core);
             } catch (UnreachableNodeException e) {
@@ -304,7 +296,7 @@ public final class TransactionManager {
         // Optimization: only start in a new thread if there are more cores to
         // contact and if it's a truly remote core (i.e., not in-process).
         if (!(core instanceof InProcessCore || core.isLocalCore())
-            && entryIt.hasNext()) {
+            && coreIt.hasNext()) {
           Thread thread =
               new Thread(runnable, "client commit to " + core.name());
           threads.add(thread);
@@ -334,9 +326,8 @@ public final class TransactionManager {
       }
     } catch (TransactionPrepareFailedException e) {
       // Go through each core we've contacted and send abort messages.
-      for (Map.Entry<Core, Integer> entry : tids.entrySet()) {
-        entry.getKey().abortTransaction(entry.getValue());
-      }
+      for (Core core : cores)
+        core.abortTransaction(current.tid);
       logger.finest(current + " error committing: abort exception: " + e);
       abortTransaction();
       throw new AbortException(e);
@@ -540,6 +531,31 @@ public final class TransactionManager {
 
     synchronized (current.threads) {
       current.threads.remove(thread);
+    }
+  }
+
+  /**
+   * Registers a remote call to the given client.
+   * 
+   * @return information on how to sync the remote client's transaction stack
+   *         with the local transaction stack.
+   */
+  public RemoteCallSyncInfo registerRemoteCall(RemoteClient client) {
+    // XXX TODO
+    return null;
+  }
+
+  public static class RemoteCallSyncInfo {
+    public final long tid;
+    public final int numCommits;
+    public final int callTransactionNestDepth;
+
+    private RemoteCallSyncInfo(int callTransactionNestDepth, int numCommits,
+        long tid) {
+      super();
+      this.callTransactionNestDepth = callTransactionNestDepth;
+      this.numCommits = numCommits;
+      this.tid = tid;
     }
   }
 }

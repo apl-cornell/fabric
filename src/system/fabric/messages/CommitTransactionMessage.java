@@ -38,9 +38,9 @@ public class CommitTransactionMessage extends
     }
   }
 
-  public final int transactionID;
+  public final long transactionID;
 
-  public CommitTransactionMessage(int transactionID) {
+  public CommitTransactionMessage(long transactionID) {
     super(MessageType.COMMIT_TRANSACTION);
     this.transactionID = transactionID;
   }
@@ -49,7 +49,7 @@ public class CommitTransactionMessage extends
    * Deserialization constructor.
    */
   protected CommitTransactionMessage(DataInput in) throws IOException {
-    this(in.readInt());
+    this(in.readLong());
   }
 
   /*
@@ -93,7 +93,7 @@ public class CommitTransactionMessage extends
    */
   @Override
   public void write(DataOutput out) throws IOException {
-    out.writeInt(transactionID);
+    out.writeLong(transactionID);
   }
 
 }

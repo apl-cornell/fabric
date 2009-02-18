@@ -12,19 +12,21 @@ import fabric.common.util.LongKeyMap;
  * @author mdgeorge
  */
 public final class PrepareRequest {
+  public final long tid;
 
   /** The set of created objects */
-  public Collection<SerializedObject> creates;
+  public final Collection<SerializedObject> creates;
 
   /** The collection of modified objects */
-  public Collection<SerializedObject> writes;
+  public final Collection<SerializedObject> writes;
 
   /** The object numbers and version numbers of the read objects */
-  public LongKeyMap<Integer> reads;
+  public final LongKeyMap<Integer> reads;
 
   /** Create a PrepareRequest with the provided fields */
-  public PrepareRequest(Collection<SerializedObject> creates,
+  public PrepareRequest(long tid, Collection<SerializedObject> creates,
       Collection<SerializedObject> writes, LongKeyMap<Integer> reads) {
+    this.tid = tid;
     this.creates = creates;
     this.writes = writes;
     this.reads = reads;

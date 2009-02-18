@@ -13,6 +13,8 @@ import fabric.client.Client;
 import fabric.client.RemoteNode;
 import fabric.client.remote.messages.InterClientMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
+import fabric.client.transaction.TransactionManager;
+import fabric.client.transaction.TransactionManager.RemoteCallSyncInfo;
 import fabric.common.NoSuchNodeError;
 import fabric.lang.Object.$Proxy;
 
@@ -148,14 +150,13 @@ public final class RemoteClient implements RemoteNode {
 
   protected $Proxy issueRemoteCall($Proxy receiver, String methodName,
       $Proxy[] args) {
-    // XXX TODO Get the following values from the transaction manager.
-    long tid = 0;
-    int commitSync = 0;
-    int callTransactionNestDepth = 0;
+    RemoteCallSyncInfo syncInfo =
+        TransactionManager.getInstance().registerRemoteCall(this);
 
     RemoteCallMessage.Response response =
-        new RemoteCallMessage(tid, commitSync, callTransactionNestDepth,
-            receiver, methodName, args).send(this);
+        new RemoteCallMessage(syncInfo.tid, syncInfo.numCommits,
+            syncInfo.callTransactionNestDepth, receiver, methodName, args)
+            .send(this);
     return response.result;
   }
 

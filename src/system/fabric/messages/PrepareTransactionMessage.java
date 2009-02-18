@@ -26,12 +26,9 @@ public class PrepareTransactionMessage extends
     Message<RemoteCore, PrepareTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
-    public final int transactionID;
-
-    public Response(int transactionID) {
-      this.transactionID = transactionID;
+    public Response() {
     }
-
+    
     /**
      * Deserialization constructor, used by the client.
      * 
@@ -40,8 +37,7 @@ public class PrepareTransactionMessage extends
      * @param in
      *                the input stream from which to read the response.
      */
-    Response(Core core, DataInput in) throws IOException {
-      transactionID = in.readInt();
+    Response(Core core, DataInput in) {
     }
 
     /*
@@ -49,11 +45,12 @@ public class PrepareTransactionMessage extends
      * 
      * @see fabric.messages.Message.Response#write(java.io.DataOutput)
      */
-    public void write(DataOutput out) throws IOException {
-      out.writeInt(transactionID);
+    public void write(DataOutput out) {
     }
   }
 
+  public final long tid;
+  
   public final LongKeyMap<Integer> reads;
 
   /**
@@ -87,10 +84,11 @@ public class PrepareTransactionMessage extends
   /**
    * Only used by the client.
    */
-  public PrepareTransactionMessage(Collection<$Impl> toCreate,
+  public PrepareTransactionMessage(long tid, Collection<$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<$Impl> writes) {
     super(MessageType.PREPARE_TRANSACTION);
 
+    this.tid = tid;
     this.creates = toCreate;
     this.reads = reads;
     this.writes = writes;
@@ -107,6 +105,9 @@ public class PrepareTransactionMessage extends
     super(MessageType.PREPARE_TRANSACTION);
     this.creates = null;
     this.writes = null;
+    
+    // Read the TID.
+    this.tid = in.readLong();
 
     // Read reads.
     int size = in.readInt();
@@ -169,7 +170,7 @@ public class PrepareTransactionMessage extends
   }
 
   @Override
-  public Response response(RemoteCore c, DataInput in) throws IOException {
+  public Response response(RemoteCore c, DataInput in) {
     return new Response(c, in);
   }
   
@@ -180,6 +181,9 @@ public class PrepareTransactionMessage extends
    */
   @Override
   public void write(DataOutput out) throws IOException {
+    // Serialize tid.
+    out.writeLong(tid);
+    
     // Serialize reads.
     if (reads == null) {
       out.writeInt(0);

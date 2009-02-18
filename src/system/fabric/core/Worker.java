@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.PrivateKey;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -18,6 +17,8 @@ import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.*;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.Principal;
 import fabric.messages.*;
@@ -75,7 +76,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   private static final Logger logger = Logger.getLogger("fabric.core.worker");
 
   /** Associates debugging log messages with pending transactions */
-  private Map<Integer, LogRecord> pendingLogs;
+  private LongKeyMap<LogRecord> pendingLogs;
 
   private class LogRecord {
     public LogRecord(int creates, int writes) {
@@ -136,7 +137,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
         this.transactionManager = node.getTransactionManager(coreName);
         this.surrogateManager = node.getSurrogateManager(coreName);
         this.privateKey = node.getPrivateKey(coreName);
-        this.pendingLogs = new HashMap<Integer, LogRecord>();
+        this.pendingLogs = new LongKeyHashMap<LogRecord>();
 
         if (this.transactionManager != null) {
           // Indicate that the core exists.
@@ -382,19 +383,19 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     this.numPrepares++;
 
     PrepareRequest req =
-        new PrepareRequest(msg.serializedCreates, msg.serializedWrites,
-            msg.reads);
+        new PrepareRequest(msg.tid, msg.serializedCreates,
+            msg.serializedWrites, msg.reads);
 
     surrogateManager.createSurrogates(req);
-    int transactionID = transactionManager.prepare(client, req);
+    transactionManager.prepare(client, req);
 
-    logger.fine("Transaction " + transactionID + " prepared");
+    logger.fine("Transaction " + req.tid + " prepared");
     // Store the size of the transaction for debugging at the end of the session
     // Note: this number does not include surrogates
-    pendingLogs.put(transactionID, new LogRecord(msg.serializedCreates.size(),
+    pendingLogs.put(req.tid, new LogRecord(msg.serializedCreates.size(),
         msg.serializedWrites.size()));
 
-    return new PrepareTransactionMessage.Response(transactionID);
+    return new PrepareTransactionMessage.Response();
   }
 
   /**
