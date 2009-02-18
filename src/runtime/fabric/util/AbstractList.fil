@@ -303,13 +303,15 @@ while (i.hasNext())
    */
   public Iterator iterator(fabric.client.Core core)
   {
+	final int initSize = size();
+	final int initModCount = modCount;
     // Bah, Sun's implementation forbids using listIterator(0).
     return new Iterator@core()
     {
       private int pos = 0;
-      private int size = size();
+      private int size = initSize;
       private int last = -1;
-      private int knownMod = modCount;
+      private int knownMod = initModCount;
 
       // This will get inlined, since it is private.
       /**

@@ -108,10 +108,11 @@ public class TreeMap extends AbstractMap
    * to be black. This object must never be used as a key in a TreeMap, or
    * it will break bounds checking of a SubMap.
    */
-  static final Node nil = new Node(null, null, BLACK);
+  static Node nil;
   static
     {
       // Nil is self-referential, so we must initialize it after creation.
+	  nil = new Node(null, null, BLACK);
       nil.parent = nil;
       nil.left = nil;
       nil.right = nil;
@@ -1284,7 +1285,7 @@ public class TreeMap extends AbstractMap
      */
     private final int type;
     /** The number of modifications to the backing Map that we know about. */
-    private int knownMod = modCount;
+    private int knownMod;
     /** The last Entry returned by a next() call. */
     private Node last;
     /** The next entry that should be returned by next(). */
@@ -1306,6 +1307,7 @@ public class TreeMap extends AbstractMap
       this.type = type;
       this.next = firstNode();
       this.max = nil;
+      this.knownMod = modCount;
     }
 
     /**
@@ -1321,6 +1323,7 @@ public class TreeMap extends AbstractMap
       this.type = type;
       this.next = first;
       this.max = max;
+      this.knownMod = modCount;
     }
 
     /**
