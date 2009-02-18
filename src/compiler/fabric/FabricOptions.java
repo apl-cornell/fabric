@@ -26,6 +26,9 @@ public class FabricOptions extends JifOptions implements FabILOptions {
   protected FabILOptions_c delegate;
   
   public String constructFabILClasspath() {
+    // XXX: copied from swift.  Not convinced it's right
+    delegate.classpath     = this.classpath;
+    delegate.bootclasspath = this.bootclasspath;
     return delegate.constructFabILClasspath();
   }
 
