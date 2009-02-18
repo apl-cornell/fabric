@@ -899,38 +899,43 @@ public class AccessController extends HttpServlet {
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
     
+    System.setProperty("fabric.prefix", "/home/lucas/workspace/fabric");
+    
     try {
-      fabric.client.Client.initialize();
+      fabric.client.Client.initialize("client0");
     }
     catch(Exception ex) { 
-    //  throw new ServletException(ex);
+      Core core2 = null;
+      Label label2 = null;
+      throw new RuntimeException~label2@core2(ex);
     }
     
     localCore = Client.getClient().getLocalCore();
     core = Client.getClient().getLocalCore();
     label = localCore.getEmptyLabel();
-    
-    // TODO: fetch CMS root
-    CMSRoot database = new CMSRoot~label@core();
-    
-    // add test data
-    cms.controller.test.CreateDB.create(database);
-    
-    if (xmlBuilder == null) {
-      try {
-        xmlBuilder = new XMLBuilder~label@core(database);
-      } catch (ParserConfigurationException e) {
-        throw new ServletException~label@core(e);
+    atomic {
+      // TODO: fetch CMS root
+      CMSRoot database = new CMSRoot~label@core();
+      
+      // add test data
+      cms.controller.test.CreateDB.create(database);
+      
+      if (xmlBuilder == null) {
+        try {
+          xmlBuilder = new XMLBuilder~label@core(database);
+        } catch (ParserConfigurationException e) {
+          throw new ServletException~label@core(e);
+        }
       }
+      if (transactions == null) {
+        transactions = new TransactionHandler~label@core(database);
+      }
+  
+      debug = xmlBuilder.getDatabase().getDebugMode();
+      if (xmlBuilder.getDatabase().getDebugMode())
+        debugPrincipalMap = new HashMap~label@core();
+      maxFileSize = xmlBuilder.getDatabase().getMaxFileSize();
     }
-    if (transactions == null) {
-      transactions = new TransactionHandler~label@core(database);
-    }
-
-    debug = xmlBuilder.getDatabase().getDebugMode();
-    if (xmlBuilder.getDatabase().getDebugMode())
-      debugPrincipalMap = new HashMap~label@core();
-    maxFileSize = xmlBuilder.getDatabase().getMaxFileSize();
   }
 
   /**
@@ -950,7 +955,9 @@ public class AccessController extends HttpServlet {
    */
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-    processRequest(request, response);
+    atomic {
+      processRequest(request, response);
+    }
   }
 
   /**
@@ -963,7 +970,9 @@ public class AccessController extends HttpServlet {
    */
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-    processRequest(request, response);
+    atomic {
+      processRequest(request, response);
+    }
   }
 
   /**
@@ -1061,7 +1070,9 @@ public class AccessController extends HttpServlet {
       Iterator iter = reqmap.keySet().iterator();
       while (iter.hasNext()) {
         String key = (String) iter.next();
-        String value = ((String[]) reqmap.get(key))[0];
+        String[] vals = cms.fabil.Kludge.convertStringArray(localCore, label, 
+            reqmap.get(key));
+        String value = vals[0];
         System.out.println("reqparam: " + key + "=" + value);
       }
       session.setAttribute(A_DEBUG, new Boolean~label@localCore(debug));

@@ -1149,7 +1149,7 @@ public class XMLBuilder {
    * @return Document an xml document with display data tags for the jsp page
    */
   public Document buildOverview(User user, Semester sem) {
-    Profiler.enterMethod("XMLBuilder.buildOverview", "SemesterID: " + sem);
+    Profiler.enterMethod("XMLBuilder.buildOverview", "SemesterID: " + sem.toString());
     boolean hasSem = sem != null;
     Document xml = hasSem ? buildPageHeader(user, sem) : buildPageHeader(user);
     Element root = (Element) xml.getElementsByTagName(TAG_ROOT).item(0);
@@ -1231,7 +1231,7 @@ public class XMLBuilder {
       xSemester.setAttribute(A_NAME, semester.getName());
       root.appendChild(xSemester);
     }
-    Profiler.exitMethod("XMLBuilder.buildOverview", "SemesterID: " + sem);
+    Profiler.exitMethod("XMLBuilder.buildOverview", "SemesterID: " + sem.toString());
     return xml;
   }
 

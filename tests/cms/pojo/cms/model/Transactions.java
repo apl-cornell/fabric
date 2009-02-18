@@ -953,7 +953,7 @@ public class Transactions {
   }
 
   public void computeAssignmentStats(User p, Assignment assignment, Log log) {
-    Profiler.enterMethod("Transactions.computeAssignmentStats", "AssignmentID: " + assignment);
+    Profiler.enterMethod("Transactions.computeAssignmentStats", "AssignmentID: " + assignment.toString());
     try {
     if (log == null) {
       log = startLog(p);
@@ -990,7 +990,7 @@ public class Transactions {
     Collection grades = assignment.getGrades();
     if (grades.size() == 0) {
       Profiler.exitMethod("Transactions.computeAssignmentStats", "Assignment: " 
-          + assignment + " - (early exit)");
+          + assignment.toString() + " - (early exit)");
       return;
     }
     i = grades.iterator();
@@ -1166,13 +1166,13 @@ public class Transactions {
     } catch(Exception x) {
       x.printStackTrace();
       Profiler.exitMethod("Transactions.computeAssignmentStats", "Assignment: " 
-          + assignment + " - (crash)");
+          + assignment.toString() + " - (crash)");
     }
   }
 
   public void computeTotalScores(User p, Course course, Log log) {
     Profiler.enterMethod("Transactions.computeTotalScores", "CourseID: " + 
-        course);
+        course.toString());
     try {
       boolean commitLog = false;
       if (log == null) {
@@ -1279,11 +1279,11 @@ public class Transactions {
               course.setStDevTotalScore(new Float(stDevTotalScore));
       }
       Profiler.exitMethod("Transactions.computeTotalScores", "CourseID: " 
-          + course);
+          + course.toString());
     } catch (Exception e) {
         e.printStackTrace();
         Profiler.exitMethod("Transactions.computeTotalScores", "CourseID: " 
-            + course + " - (crash)");
+            + course.toString() + " - (crash)");
     }
   }
   

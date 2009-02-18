@@ -52,8 +52,8 @@ if (debug && p != null) {
    <%--<jsp:include page="print-xml-tree.jsp" /> moved to top of each page --%>
 <% } %>
   <script type="text/javascript">
-    <% if (root.hasAttribute(XMLBuilder.A_JUMPTOGROUP)) { %>
-      window.location='<%= "#" + root.getAttribute(XMLBuilder.A_JUMPTOGROUP) %>';
+    <% if (root.hasAttribute(XMLBuilder.$Static.A_JUMPTOGROUP)) { %>
+      window.location='<%= "#" + root.getAttribute(XMLBuilder.$Static.A_JUMPTOGROUP) %>';
 	<% } %>
 		
   </script>

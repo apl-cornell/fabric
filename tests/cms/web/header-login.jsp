@@ -3,14 +3,14 @@
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
 boolean debug= ((Boolean)session.getAttribute(AccessController.A_DEBUG)).booleanValue();
-Element principal= XMLUtil.getFirstChildByTagName(root,XMLBuilder.TAG_PRINCIPAL);
+Element principal= XMLUtil.$Proxy.getFirstChildByTagName(root,XMLBuilder.$Static.TAG_PRINCIPAL);
 String firstName="", lastName="", netID = "";
- Element course = XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
- String courseid = (course != null ? course.getAttribute(XMLBuilder.A_COURSEID) : null);
+ Element course = XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_COURSE);
+ String courseid = (course != null ? course.getAttribute(XMLBuilder.$Static.A_COURSEID) : null);
 if (principal!=null) {
-    firstName= principal.getAttribute(XMLBuilder.A_FIRSTNAME);
-    lastName= principal.getAttribute(XMLBuilder.A_LASTNAME);
-    netID= principal.getAttribute(XMLBuilder.A_NETID);
+    firstName= principal.getAttribute(XMLBuilder.$Static.A_FIRSTNAME);
+    lastName= principal.getAttribute(XMLBuilder.$Static.A_LASTNAME);
+    netID= principal.getAttribute(XMLBuilder.$Static.A_NETID);
 }
 %>
 
