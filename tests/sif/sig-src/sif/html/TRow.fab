@@ -1,0 +1,32 @@
+package sif.html;
+
+/**
+ * @author andru
+ *
+ * */
+public final class TRow[label L, label E] extends BlockContainer[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    
+    public TRow(label cL, label cE, 
+                Node[cL,cE]{L} cells) where {*cL} <= L, 
+                {E; cells} <= {*cE} {
+        super("tr", cL, cE, cells);
+    }
+    
+    public TRow(Node[L,E]{L} cells) where {cells} <= {E} {
+        super("tr", L, E, cells);
+     }
+
+    /**
+     * Takes a nodelist, puts each element inside a TCell[L], and puts all the cells into a row.
+     */
+    public static native TRow[L,E] create(label cL, label cE, NodeList[cL, cE]{L} cells) 
+    where {*cL} <= L, {E; cells} <= {*cE};
+    /**
+     * Takes a nodelist, puts each element inside a TCell[L], and puts all the cells into a row.
+     */
+    public static native TRow[L,E] create(NodeList[L, E]{L} cells) 
+    where {cells} <= {E};
+}

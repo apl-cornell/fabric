@@ -1,0 +1,9 @@
+package calendar;
+
+public class ShowCalendarSessAction$1 {
+
+	final static public int{*!:} DISPLAY_KIND_MONTH = 0;
+    final static public int{*!:} DISPLAY_KIND_WEEK = 1;
+    final static public int{*!:} DISPLAY_KIND_DAY = 2;
+	
+}

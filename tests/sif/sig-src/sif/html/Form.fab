@@ -1,0 +1,19 @@
+package sif.html;
+
+import sif.servlet.*;
+
+/** A Form contains Inputs and generates requests. */
+public final class Form[principal servletP, label L, label E] extends BlockContainer[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    private final Action[servletP]{this} action;
+
+    public Form{L}(Action[servletP]{this} action_, 
+            label cL, label cE, 
+            Node[cL,cE]{L} n) where {*cL} <= L, {E; n} <= {*cE} {
+	super("form", cL, cE, n);
+	action = action_;
+    }
+    
+}

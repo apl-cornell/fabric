@@ -1,0 +1,22 @@
+package sif.html;
+
+import sif.servlet.Servlet;
+/**
+ * A "file" input that allows the client to upload the contents of a file.
+ * 
+ * @author andru
+ *
+ */
+public final class FileChooser[principal servletP, label L, label E] extends InputNode[servletP, L, E] {    
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    public FileChooser(Input[servletP]{L} input, int{L} size) 
+    where {L;E} <= {*input.inputLbl} { 
+        super(input);
+    }
+    public FileChooser{L}(Servlet[servletP]{L} s, label{L} inputLabel, int{L} size) 
+    where {L;E} <= {*inputLabel} {
+        super(s, inputLabel);
+    }
+}

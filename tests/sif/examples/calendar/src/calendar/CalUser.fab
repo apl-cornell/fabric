@@ -1,0 +1,21 @@
+package calendar;
+
+import userserv.User;
+
+/**
+ * Represents a calendar app user 
+ */
+public class CalUser extends User[CalServEP] {
+    public CalUser{CalServEP:;CalServEP!:}(String{this} name, 
+            String{this} password, 
+            String{CalServEP:;CalServEP!:} firstName, 
+            String{CalServEP:;CalServEP!:} lastName) where authority (this), endorse({CalServEP:;CalServEP!: meet this!:}) {
+        super(name, password, firstName, lastName);
+        
+        // the calendar root principal can act for all users.
+        // DOWNGRADE REASON: Hide the effect of delegating CalRootEP.
+        declassify({this:;this!:}) {
+            addDelegatesTo(CalRootEP);
+        }
+    }
+}

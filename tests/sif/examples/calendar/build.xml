@@ -1,0 +1,65 @@
+<project name="calendar-fabric-example" default="compile" basedir=".">
+  <description>
+    Build file for the Calendar SIF application.
+  </description>
+
+  <property name="app.name" value="calendar" />
+
+  <property name="java-code-src" value="${basedir}/web/WEB-INF/classes" />
+
+  
+
+  <import file="../build-examples-common.xml" />
+
+    <!-- Redefine the class path to include the User stuff -->
+    <path id="example.classpath">
+      <path refid="standard.classpath" />
+        <pathelement location="${basedir}/${destdir}" />
+        <pathelement location="${examples-common.basedir}/user/classes" />
+    </path>
+	
+	<target name="dummy">
+	</target>
+
+    <target name="compile" depends="init,configure,principals"
+            description="Compile the Jif code for this example">
+        <antcall target="precompile"/>
+        <apply executable="sh"
+               parallel="true"
+               failonerror="true"
+               dest="${basedir}"
+               relative="true"
+               skipemptyfilesets="true"
+               vmlauncher="false">
+	    <arg value="${jif.home}/bin/jifc" />
+            <arg value="-robust" />
+            <arg value="-d" />
+            <arg value="${destdir}" />
+            <arg value="-sourcepath" />
+            <arg value="src" />
+            <arg value="-addsigcp" />
+            <arg value="${sif.sig-classes}" />
+            <arg value="-addsigcp" />
+            <arg value="${sif.lib}/sifsig.jar" />
+            <arg value="-cp" />
+            <arg pathref="example.classpath" />
+            <arg value="-e" />
+<!--
+            <arg value="-report" />
+            <arg value="solver=5" />
+            <arg value="-report" />
+            <arg value="labelEnv=3" />
+            <arg value="-report" />
+            <arg value="jif=3" />
+-->
+            <srcfile />
+            <fileset dir="${basedir}" includes="src/**/*.jif" excludes="src/jif/principals/*.jif"/>
+            <mapper type="regexp"
+                    from="^src(.*)\.jif"
+                    to="${destdir}\1\.class" />
+        </apply>
+        <antcall target="postcompile"/>
+    </target>
+
+</project>
+

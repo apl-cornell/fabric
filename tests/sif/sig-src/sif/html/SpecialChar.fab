@@ -1,0 +1,20 @@
+package sif.html;
+
+/**
+ * Special html characters, such as &nbsp; &quot; , etc.
+ */
+public class SpecialChar[label L, label E] extends Node[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    private final String{L} name;
+
+    public SpecialChar(String{L} name) {
+        super();
+        this.name = name;
+    }    
+    public SpecialChar(int{L} num) {
+        super();
+        this.name = "#" + num;
+    }    
+}

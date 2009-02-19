@@ -1,0 +1,23 @@
+package sif.html;
+
+/**
+ * A Tag represents an HTML node that has a tag.
+ * It may or may not have a corresponding end tag.
+ **/
+public class Tag[label L, label E] extends Node[L,E] {	
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    private final String{L} tag;
+    private final String{L} class_;
+    
+    Tag(String{L} t, String{L} c) {
+	super();
+        tag = t;
+        class_ = c;
+    }
+    
+    final String{L} getTag() {
+        return this.tag;    	
+    }
+}

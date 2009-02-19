@@ -1,0 +1,51 @@
+package sif.html;
+
+/**
+ * A table cell.
+ */
+public final class TCell[label L, label E] extends BlockContainer[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    private final boolean{L} header;
+    private final int{L} colspan;
+
+    public TCell(label cL, label cE, 
+                 Node[cL,cE]{L} n) where {*cL} <= L, {E; n} <= {*cE} {
+        this(null, cL, cE, n, 1, false);
+    }
+    public TCell(String{L} class_, 
+    		label cL, label cE, 
+            Node[cL,cE]{L} n) where {*cL} <= L, {E; n} <= {*cE} {
+        this(class_, cL, cE, n, 1, false);
+    }
+    public TCell(String{L} class_, 
+    		label cL, label cE, 
+            Node[cL,cE]{L} n, 
+            int{L} colspan_, 
+            boolean{L} header_) where {*cL} <= L, {E; n} <= {*cE} {
+        super(cL, cE, n, (header_ ? "th" : "td"), class_);
+        colspan = colspan_;
+        header = header_;
+    }
+    
+    public TCell(Node[L,E]{L} n) where {n} <= {E} {
+                this(null, L, E, n, 1, false);
+            }
+    public TCell(String{L} class_, 
+            Node[L,E]{L} n) where {n} <= {E} {
+                this(class_, L, E, n, 1, false);
+            }
+    public TCell(String{L} class_, 
+            Node[L,E]{L} n, 
+            int{L} colspan_, 
+            boolean{L} header_) where {n} <= {E} {
+                super(L, E, n, (header_ ? "th" : "td"), class_);
+                colspan = colspan_;
+                header = header_;
+            }
+
+    public final boolean{L} isHeader() {
+        return header;
+    }
+}

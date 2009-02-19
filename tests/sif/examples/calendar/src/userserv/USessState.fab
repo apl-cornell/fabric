@@ -1,0 +1,16 @@
+package userserv;
+
+import sif.servlet.SessionState;
+import jif.util.*;
+
+public class USessState[principal servP] extends SessionState {
+    private User[servP]{sessionPrincipal!:} currentUser = null;
+    
+    public User[servP]{sessionPrincipal!:} currentUser() { 
+        return currentUser;
+    }
+    
+    void currentUser{sessionPrincipal!:}(User[servP]{sessionPrincipal!:} cu) { 
+        currentUser = cu; 
+    }
+}

@@ -1,0 +1,36 @@
+package sif.html;
+
+/**
+ * @author andru
+ *
+ * A container that is a block-level element like a
+ * paragraph, and hence can have a line break placed
+ * safely before or after it in the HTML.
+ */
+public abstract class BlockContainer[label L, label E] extends Container[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    BlockContainer(String{L} tag, 
+                             label cL, label cE, 
+                             Node[cL,cE]{L} body) where {*cL} <= L, {E; body} <= {*cE} {
+        super(tag, cL, cE, body);
+    }
+    BlockContainer(label cL, label cE, 
+                             Node[cL,cE]{L} body, 
+                             String{L} tag) where {*cL} <= L, {E; body} <= {*cE} {
+        super(tag, cL, cE, body);
+    }
+    BlockContainer(String{L} tag, 
+                             String{L} class_, 
+                             label cL, label cE, 
+                             Node[cL,cE]{L} body) where {*cL} <= L, {E; body} <= {*cE} {
+        super(tag, class_, cL, cE, body);
+    }    
+    BlockContainer(label cL, label cE, 
+                             Node[cL,cE]{L} body, 
+                             String{L} tag, 
+                             String{L} class_) where {*cL} <= L, {E; body} <= {*cE} {
+        super(tag, class_, cL, cE, body);
+    }    
+}

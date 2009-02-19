@@ -1,0 +1,21 @@
+package sif.html;
+
+/**
+ * @author andru
+ *
+ * A <div> node.
+ */
+public final class Div[label L, label E] extends BlockContainer[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    public Div(String{L} class_, 
+            label cL, label cE, 
+            Node[cL,cE]{L} n) where {*cL} <= L, {E; n} <= {*cE} {
+        super("div", class_, cL, cE, n);
+    }
+            public Div(String{L} class_, 
+                    Node[L,E]{L} n) where {n} <= {E} {
+                super("div", class_, L, E, n);
+            }
+}

@@ -1,0 +1,15 @@
+package jif.principals;
+
+public class CalRootEP extends ExternalPrincipal {
+    public CalRootEP() {
+	super("calendar.CalRootEP");
+    }
+
+    private static CalRootEP{*!:} P;
+    public static Principal{*!:} getInstance{*!:}() {
+	if (P == null) {
+	    P = new CalRootEP();
+	}
+	return P;
+    }
+}

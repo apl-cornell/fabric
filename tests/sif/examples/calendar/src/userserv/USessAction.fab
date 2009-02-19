@@ -1,0 +1,55 @@
+package userserv;
+
+import javax.servlet.ServletException;
+
+import sif.servlet.*;
+import sif.html.Page;
+
+/**
+ * A session-specific User Action class.
+ */
+abstract public class USessAction[principal servP] extends UAction[servP] {
+    public final principal{this} session;
+    public USessAction(UServlet[servP]{this} m, principal{this} session)
+    {
+        this.session = session;
+        super(m);
+    }
+    
+    public final void invokeImpl{*lbl}(label{*lbl} lbl,
+            Request[servP]{*lbl} req,
+            UServlet[servP]{*lbl} servlet,
+            USessState[servP]{*lbl} state) 
+   throws (ServletException{*lbl;req.session!:})
+          where caller(req.session),
+                lbl <= {*:req.session},
+                req.session equiv state.sessionPrincipal
+    {
+        if (req == null || servlet == null || 
+                state == null || !(session instanceof SessionPrincipal)) 
+            throw new ServletException("invalid args");
+
+        if (req.session equiv this.session) {
+            final User[servP] currentUser = state.currentUser(); 
+            if (req.session actsfor currentUser) {
+                this.invokeSessImpl(lbl, req, servlet, state, currentUser);
+            }
+        }
+        else {
+            throw new ServletException("req.session not equivalent to this.session"); 
+        }
+    }
+
+    public abstract void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
+                        Request[servP]{*lbl;session!:} req,
+                        UServlet[servP]{*lbl;session!:} servlet,
+                        USessState[servP]{*lbl;session!:} state,
+                        User[servP]{*lbl;session!:} currentUser) 
+               throws (ServletException{*lbl;req.session!:})
+        where session equiv req.session, 
+              session equiv state.sessionPrincipal,
+              session actsfor currentUser,              
+              lbl <= {*:req.session},
+              caller(session);
+}
+

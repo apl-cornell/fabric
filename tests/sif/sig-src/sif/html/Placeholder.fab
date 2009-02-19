@@ -1,0 +1,19 @@
+package sif.html;
+
+/**
+ * A placeholder represents a "hole" that is filled
+ * later to form a complete page. It allows for more efficient rendering of
+ * HTML pages.
+ * 
+ * The label of the 
+ * placeholder is not important: when the placeholder is replaced 
+ * with an actual node, the labels will be computed appropriately. 
+ **/
+public class Placeholder[label L, label E] extends Node[L,E] {	
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    public Placeholder() {
+	super();
+    }    
+}

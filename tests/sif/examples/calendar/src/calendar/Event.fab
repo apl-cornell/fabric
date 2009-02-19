@@ -1,0 +1,65 @@
+package calendar;
+
+import userserv.*;
+import jif.util.*;
+
+/**
+ * An Event represents an entry in the calendar system.  A single Event object
+ * is shared amongst all users involved in that event.
+ *
+ * Note: this class has a natural ordering that is inconsistent with equals.
+ */
+public class Event /*implements Comparable*/ implements JifObject[{CalServEP:;CalServEP!:}] {
+    final int{CalServEP:;CalServEP!:;this} uid;
+    
+    // timeLbl is typically less restrictive than infoLbl
+    // A principal could be allowed to read data marked with timeLbl, indicating
+    // a busy status, but with no information about the event
+    final label{this} timeLbl;
+    // Data marked with infoLbl includes all information pertaining to the event
+    final label{this} infoLbl;
+    final Event$1[infoLbl]{this} remote1;
+
+    final Date[timeLbl]{this} startTime;
+    final Date[timeLbl]{this} endTime;
+    
+    public Event{*infoLbl_}(int{CalServEP:;CalServEP!:;this} uid_,
+                 label{this} timeLbl_,
+                 label{this} infoLbl_,
+                 Date[timeLbl_]{this} startTime_,
+                 Date[timeLbl_]{this} endTime_,
+                 String{*infoLbl_} name_,
+                 String{*infoLbl_} note_,
+                 List[{CalServEP:;CalServEP!:}]{*infoLbl_} attendees_,
+                 List[{CalServEP:;CalServEP!:}]{*infoLbl_} viewers_,
+                 User[CalServEP]{*infoLbl_} creator_) {
+        this.uid = uid_;
+        this.timeLbl = timeLbl_;
+        this.infoLbl = infoLbl_;
+        this.startTime = startTime_;
+        this.endTime = endTime_;
+        this.remote1 = new Event$1[infoLbl](name_, note_, attendees_, viewers_, creator_);
+    }
+
+
+    public String{CalServEP:;CalServEP!:} toString() {
+        return Integer.toString(uid);
+    }
+    
+    public int{CalServEP:;CalServEP!:} hashCode() {
+        return uid;
+    }
+
+    public boolean{o;CalServEP:;CalServEP!:} equals(IDComparable[{CalServEP:;CalServEP!:}] o) {
+        return equals(new label {CalServEP:;CalServEP!:}, o);
+    }
+    public boolean{o;CalServEP:;CalServEP!:;lbl;*lbl} equals(label lbl, IDComparable[lbl] o) {
+        if (o instanceof Event) {
+            Event that = (Event)o;
+            return this.uid == that.uid;
+        }
+        return false;
+    }
+
+}
+

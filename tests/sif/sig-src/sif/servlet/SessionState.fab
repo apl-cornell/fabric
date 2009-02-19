@@ -1,0 +1,19 @@
+package sif.servlet;
+
+/**
+ * Global state for a single session.
+ */
+
+public class SessionState {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
+
+    protected SessionState() {
+        sessionPrincipal = null; // dummy only
+    }
+
+    public final principal{this} sessionPrincipal;
+    
+    public native final String{this} getSessionId();
+}
+

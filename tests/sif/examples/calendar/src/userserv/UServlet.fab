@@ -1,0 +1,72 @@
+package userserv;
+
+import jif.util.*;
+import sif.servlet.*;
+import sif.html.Page;
+
+import javax.servlet.ServletException;
+
+public abstract class UServlet[principal servP] extends Servlet[servP]  {
+
+    public void initialize{servP:; servP!:}() throws ServletException {
+        addStartAction(new LogoffAction[servP](this));
+    }
+
+
+    /**
+     * Ensure that there is a logged in user. This method should be called first
+     * in the invoke() method of any action that requires the user to be logged in.
+     * If this method returns a non-null value, the calling action should return that 
+     * Page.
+     * 
+     * @param req the Request
+     * @return false if the user is not logged in, true otherwise.
+     * @throws ServletException
+     */
+    boolean{*lbl;req.session!:} ensureLoggedIn{*lbl}
+                                (label{*lbl} lbl, 
+                                 Request[servP]{*lbl} req, 
+                                 UAction[servP]{*lbl} successAction)
+    throws (ServletException{*lbl;req.session!:}) 
+    where caller(req.session),
+    lbl <= {*:req.session}
+    {
+        if (req == null) return false;
+        ServletException{*lbl;req.session!:} ex = null;
+        boolean{*lbl;req.session!:} ret = true;
+        try {
+            final USessState[servP] css = (USessState[servP])req.getSessionState();
+            final LoginAction[servP] la = new LoginAction[servP](this, successAction, req.session); 
+            
+            if (css != null && 
+                    css.sessionPrincipal equiv la.session && 
+                    req.session equiv la.session &&
+                    css.currentUser() == null) {
+                // not logged in yet.
+                try {
+                    la.invokeSessImpl(lbl, req, this, css, null);
+                    ret = false;
+                }
+                catch (ServletException e) {
+                    ex = e;
+                }
+            }
+        }
+        catch (ClassCastException impossible) {  }
+        if (ex != null) throw ex;
+        return ret;        
+    }
+
+    protected abstract String defaultActionName(Request[servP] req);
+                                
+
+    /**
+     * Look up a User from a given user id
+     */
+    protected abstract User[servP]{p:;p!:;p} 
+    lookupUserID{p:; p!:}(
+    		String{p:; p!:} userID,
+    		principal{p:; p!:} p)
+    		where caller(p);    
+}
+

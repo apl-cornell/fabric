@@ -1,0 +1,77 @@
+package userserv;
+
+/**
+ * Represents a user, as would be found in a database. 
+ */
+public class User[principal servP] extends AbstractPrincipal implements JifObject[{servP:;servP!:}] {
+    public User(String{this} name, 
+                String{this} password, 
+                String{servP:;servP!:} firstName, 
+                String{servP:;servP!:} lastName) where authority (this) {
+        this.password = password;
+        this.remote1 = new User$1[servP](firstName, lastName);
+        super(name);        
+    }
+
+    private final User$1[servP]{this} remote1;
+    private final String{this} password; // XXX should be a secure hash of it 
+
+    public String{this} getPassword() {
+        return this.password;
+    }
+    public String{servP:;servP!:} getFirstName() {
+    	if(remote1 == null) return null;
+        return remote1.firstName;
+    }
+
+    public String{servP:;servP!:} getLastName() {
+    	if(remote1 == null) return null;
+        return remote1.lastName;
+    }
+
+    public String{servP:;servP!: ; this} getRepresentation() {
+        return this.displayString() + " <" + this.name() + ">";
+    }
+
+    public boolean{authPrf; closure; lb; executeNow; *lb; this} isAuthorized(Object authPrf, 
+                                                            Closure[this, lb] closure,
+                                                            label lb,
+                                                            boolean executeNow) where authority (this) {
+        if (closure instanceof LoginClosure[servP, this] && authPrf instanceof String) {
+            String passwd = (String)authPrf;
+            String myPass = this.password;
+            
+            if (myPass == passwd || (myPass != null && myPass.equals(passwd))) {
+                // password supplied agrees with this password!
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public String getUserID() {
+        return this.name();
+    }
+
+    public String{servP:;servP!:} toString() {
+        return this.name();
+    }
+
+    public String{servP:;servP!:} displayString() {
+        return this.getFirstName()+" "+this.getLastName();
+    }
+
+    public int{servP:;servP!:} hashCode() {
+        String s = this.name();
+        return s==null?0:s.hashCode();
+    }
+
+    public boolean{servP:;servP!:;o} equals(IDComparable[{servP:;servP!:}] o) {
+        return equals(new label {servP:;servP!:}, o);
+    }
+    public boolean{servP:;servP!:;o;lbl;*lbl} equals(label lbl, IDComparable[lbl] o) {
+        Object obj = o;
+        return equals(obj);
+    }
+}

@@ -1,0 +1,23 @@
+package calendar;
+
+import userserv.*;
+import jif.util.*;
+
+public class Event$1[label L] {
+	public Event$1{L}(String{L} name_,
+			String{L} note_,
+            List[{CalServEP:;CalServEP!:}]{L} attendees_,
+            List[{CalServEP:;CalServEP!:}]{L} viewers_,
+            User[CalServEP]{L} creator_) {
+		this.name = name_;
+		this.note = note_;
+		this.attendees = attendees_;
+		this.viewers = viewers_;
+		this.creator = creator_;
+	}
+    final String{L} name;
+    final String{L} note;
+    final List[{CalServEP:;CalServEP!:}]{L} attendees; // Set of User[CalServEP] who are attending the event
+    final List[{CalServEP:;CalServEP!:}]{L} viewers; // Set of User[CalServEP] who can view the time of the event
+    final User[CalServEP]{L} creator;
+}

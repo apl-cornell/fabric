@@ -1,0 +1,27 @@
+package calendar;
+
+import javax.servlet.ServletException;
+
+import sif.servlet.*;
+import sif.html.*;
+import userserv.*;
+import jif.util.*;
+
+/**
+ * Interface for a class that will receive notification of the event having been
+ * successfully created/edited.
+ */
+public interface FinishEditEventReceiver {
+    void receiveEvent{*lbl}(label{*lbl} lbl,
+            Request[CalServEP]{*lbl} req,
+            Main{*lbl} servlet,
+            CalendarSessionState{*lbl} state,
+            User[CalServEP]{*lbl} currentUser,
+            Event{currentUser:;currentUser!:} origEvent, 
+            Event{currentUser:;currentUser!:} editedEvent) 
+     throws (ServletException{*lbl;req.session!:})
+        where req.session equiv state.sessionPrincipal,
+              req.session actsfor currentUser,              
+              lbl <= {currentUser:; currentUser!:},
+              caller(req.session);
+}

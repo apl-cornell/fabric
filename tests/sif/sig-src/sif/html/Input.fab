@@ -1,0 +1,49 @@
+package sif.html;
+
+import javax.servlet.ServletException;
+import sif.servlet.Servlet;
+
+/**
+ * @author andru
+ *
+ */
+public final class Input[principal servletP] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    private final String{servletP:;servletP!:;this} name;
+    
+    public final label{this} inputLbl;
+    
+    /** Construct an input with an automatically generated name. */
+    public Input(Servlet[servletP]{this} s, label{this} inputLbl) {
+        this.inputLbl = inputLbl;
+	if (s != null) {
+	    String nm = "i" + s.generateNonce();
+	    name = nm;
+	}
+	else {
+	    name = "iNull";
+	}
+    }
+    
+    /** Construct an input with a given name. No two inputs in the same servlet
+     * may have the same name. Throws an error if they do.
+     * @param s the servlet
+     * @param n the name of the input
+     */
+  public Input(String{s} n, Servlet[servletP]{this} s, label{this} inputLbl) throws (IllegalArgumentException{s}) {
+      this.inputLbl = inputLbl;
+      this.name = null; // dummy
+  }
+    
+    /** @return The name of the input. */
+    public String{servletP:;servletP!:} getName() {
+        return name;
+    }
+    
+    public final int{servletP:;servletP!:} hashCode() { //XXX This method is problematic?
+	if (name == null) return 0;
+        return name.hashCode();
+    }
+}

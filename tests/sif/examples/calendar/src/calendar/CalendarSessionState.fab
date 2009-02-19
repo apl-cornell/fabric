@@ -1,0 +1,12 @@
+package calendar;
+
+import userserv.*;
+import sif.servlet.SessionState;
+import jif.util.*;
+
+public class CalendarSessionState extends USessState[CalServEP] {
+    State{sessionPrincipal!:} state = null;
+    ShowCalendarSessAction{sessionPrincipal!:} scsa = null;
+    public CalendarSessionState() {
+    }
+}

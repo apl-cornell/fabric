@@ -1,0 +1,152 @@
+<project name="examples-common" default="usage" basedir=".">
+  <description>
+    SIF Examples common build file
+  </description>
+
+  <!-- ****************************************
+       load up the properties
+       ****************************************  -->
+  <dirname property="examples-common.basedir" file="${ant.file.examples-common}"/>
+  <import file="${examples-common.basedir}/../config.xml"/>
+
+
+  <condition property="destdir" value="classes" else="web/WEB-INF/classes">
+    <isset property="app.isShared" />
+  </condition>
+     
+  <path id="example.classpath">
+    <path refid="standard.classpath" />
+    <pathelement location="${basedir}/${destdir}" />
+  </path>
+
+
+  <!-- ****************************************
+       Clean up targets and other admin tasks
+       ****************************************  -->
+  <target name="dust" description="clean up the compiled Jif classes">
+    <!-- Delete the ${basedir}/${destdir} directory tree -->
+    <delete dir="${basedir}/${destdir}" />
+  </target>
+
+  <target name="clean" depends="dust" />
+  <target name="clobber" depends="clean" />
+
+  <!-- initialize the build -->
+  <target name="init" depends="configure">
+    <!-- Create the time stamp -->
+    <tstamp />
+    <!-- Create the build directory structures used by compile -->
+    <mkdir dir="${basedir}/${destdir}" />
+  </target>
+
+
+
+  <!-- ****************************************
+       SIF targets
+       ****************************************  -->
+
+    <target name="usage">
+        <echo message="This is a build file with common Ant definitions. Use the build files in the subdirectories." />
+    </target>
+
+    <target name="principals" depends="init,configure"
+            description="Compile the Jif code for principals (in src/jif/princpals)">
+        <apply executable="sh"
+               parallel="true"
+               failonerror="true"
+               dest="${basedir}"
+               relative="true"
+               skipemptyfilesets="true"
+               vmlauncher="false">
+	    <arg value="${jif.home}/bin/jifc" />
+            <arg value="-robust" />
+            <arg value="-d" />
+            <arg value="${destdir}" />
+            <arg value="-sourcepath" />
+            <arg value="src" />
+            <arg value="-cp" />
+            <arg pathref="example.classpath" />
+            <srcfile />
+            <fileset dir="${basedir}" includes="src/jif/principals/*.jif" />
+            <mapper type="regexp"
+                    from="^src(.*)\.jif"
+                    to="${destdir}\1\.class" />
+        </apply>
+    </target>
+
+    <target name="compile" depends="init,configure,principals"
+            description="Compile the Jif code for this example">
+        <antcall target="precompile"/>
+        <apply executable="sh"
+               parallel="true"
+               failonerror="true"
+               dest="${basedir}"
+               relative="true"
+               skipemptyfilesets="true"
+               vmlauncher="false">
+	    <arg value="${jif.home}/bin/jifc" />
+            <arg value="-robust" />
+            <arg value="-d" />
+            <arg value="${destdir}" />
+            <arg value="-sourcepath" />
+            <arg value="src" />
+            <arg value="-addsigcp" />
+            <arg value="${sif.sig-classes}" />
+            <arg value="-addsigcp" />
+            <arg value="${sif.lib}/sifsig.jar" />
+            <arg value="-cp" />
+            <arg pathref="example.classpath" />
+            <arg value="-e" />
+            <srcfile />
+            <fileset dir="${basedir}" includes="src/**/*.jif" excludes="src/jif/principals/*.jif"/>
+            <mapper type="regexp"
+                    from="^src(.*)\.jif"
+                    to="${destdir}\1\.class" />
+        </apply>
+        <antcall target="postcompile"/>
+    </target>
+
+    <!-- Hooks for examples to extend or modify the behavior of compile -->
+    <target name="precompile"/>
+    <target name="postcompile"/>
+
+    <target name="java-src" depends="init"
+            if="java-code-src"
+            description="Builds the Java src in the directory ${java-code-src}, if that variable is defined.">
+        <javac srcdir="${java-code-src}" destdir="${basedir}/${destdir}">
+            <classpath refid="example.classpath" />
+        </javac>
+    </target>
+
+    <target name="install-java"
+            if="java-code-src"
+            description="Builds and installs the Java src in the directory ${java-code-src}, if that variable is defined."
+            depends="java-src,install-quick"/>
+
+    <target name="install-quick"
+            depends="configure-install">
+        <fail unless="catalina.home.defined"
+              message="The Tomcat installation directory is unknown. Please either edit config.properties, or set the envirnoment variable CATALINA_HOME to the Tomcat installation directory." />
+        <antcall target="install-quick-shared" />
+        <antcall target="install-quick-app" />
+    </target>
+    <target name="install-quick-shared" if="app.isShared">
+	<delete dir="${catalina.home}/shared/classes/${app.name}" />
+	<copy todir="${catalina.home}/shared/classes" includeEmptyDirs="no">
+		<fileset dir="${basedir}/${destdir}" defaultexcludes="yes"/>
+	</copy>
+    </target>
+    <target name="install-quick-app" unless="app.isShared">
+	<delete dir="${catalina.home}/webapps/${app.name}" />
+	<copy todir="${catalina.home}/webapps/${app.name}" includeEmptyDirs="no">
+		<fileset dir="${basedir}/web" defaultexcludes="yes"/>
+	</copy>
+    </target>
+
+    <target name="install"
+            depends="compile,install-quick"
+            description="Installs the SIF code to the shared part of the Tomcat installation.">
+    </target>
+
+</project>
+

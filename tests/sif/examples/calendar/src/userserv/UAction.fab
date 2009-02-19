@@ -1,0 +1,121 @@
+package userserv;
+
+import javax.servlet.ServletException;
+
+import sif.servlet.*;
+import sif.html.*;
+
+/**
+ * A User Action class.
+ */
+abstract public class UAction[principal servP] extends Action[servP] {
+    public UAction(UServlet[servP]{this} m) {
+        super();
+        initFields(m);
+    }
+    public UAction(String{this} name, UServlet[servP]{this} m) {
+        super();
+        initFields(name, m);
+    }
+    
+    protected boolean{this} ensureLoggedIn() { return true; }
+    
+    protected UAction[servP] directAfterLogin{*:req.session}(Request[servP]{*:req.session} req, UServlet[servP]{*:req.session} servlet) { 
+        return null;
+    }
+
+
+    public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
+    throws (ServletException{*lbl;*:req.session;req.session!:})
+        where caller(req.session),
+        lbl <= {*:req.session} {
+
+        Servlet[servP] s = getServlet();
+        if (s == null || !(s instanceof UServlet[servP])) throw new ServletException("No servlet available"); 
+        if (req == null) throw new ServletException("No request available"); 
+        UServlet[servP] m = (UServlet[servP])s;
+
+        if (this.ensureLoggedIn()) {
+            UAction[servP] a = this.directAfterLogin(req, m);
+            if (a == null) a = this;
+            if (!m.ensureLoggedIn(lbl, req, a)) return;
+        }
+
+        final label newLbl = new label {*lbl; req.session!:};
+        SessionState ss = req.getSessionState();
+        if (!(ss instanceof USessState[servP])) throw new ServletException("Incorrect session state"); 
+        final USessState[servP] css = (USessState[servP])ss;
+        
+        if (req.session equiv css.sessionPrincipal) {            
+            this.invokeImpl(newLbl, req, m, css);
+        }
+        else {
+            throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
+        }
+    }
+
+          
+    public abstract void invokeImpl{*lbl}(label{*lbl} lbl,
+                                      Request[servP]{*lbl} req,
+                                      UServlet[servP]{*lbl} servlet,
+                                      USessState[servP]{*lbl} state) 
+        throws (ServletException{*lbl;req.session!:})
+          where caller(req.session),
+          lbl <= {*:req.session},
+          req.session equiv state.sessionPrincipal;
+
+    /**
+     * Utility method to create a Table with class "banner" and containing
+     * the specified text.
+     */
+    protected Node[lbl, lbl]{lbl} createBanner{*lbl}(label{*lbl} lbl, String{*lbl} text) {
+        return new Table[lbl, lbl]("banner", 
+                lbl, lbl, lbl, lbl,
+                new TRow[lbl, lbl](lbl, lbl, 
+                        new TCell[lbl, lbl](
+                                lbl, lbl, new Header[lbl, lbl](1, lbl, lbl, new Text[lbl, lbl](text)))),
+                                null);
+    }
+    /**
+     * Utility method to create a Table with class "sifbody" and containing
+     * the node
+     */
+    protected Node[cL, cE]{*cE} createBody{*cE}(label{*cE} cL, label{*cE} cE, Node[cL, cE]{*cE} body) where {*cE} <= {*cL} {
+       return new Table[cL, cE]("sifbody", 
+               cL, cE, cL, cE,
+               new TRow[cL, cE](cL, cE, 
+                       new TCell[cL, cE](cL, cE, body)),
+                       null);
+    }
+                          
+    /**
+     * Utility method to create a Table with class "sifbody" and containing
+     * the node
+     */
+//    protected Node[lbl, lbl]{lbl} createBody{*child}(label{*child} lbl, label{*child} child, Node[lbl, lbl]{*child} body) where child <= lbl {
+//       return new Table[lbl, lbl]("sifbody", 
+//               child,
+//               new TRow[lbl, lbl](child, 
+//                       new TCell[lbl, lbl](child, body)),
+//                       null);
+//    }
+
+    // find the default value if there is one stored in the request
+    public static String{*dataLbl;*lbl;req.session!:} defaultValue{*lbl}(label{*lbl} lbl, 
+                                                       label{*lbl} dataLbl, 
+                                                       Request[servP]{*lbl} req, 
+                                                       String{*dataLbl;*lbl;req.session!:} dataValue, 
+                                                       Input[servP]{*dataLbl;*lbl;req.session!:} inp) 
+    {
+        if (req == null) return null;
+        String deflt = dataValue;
+        if (inp != null && inp.inputLbl <= dataLbl) {
+            String{*dataLbl;*lbl;req.session!:} s = req.getParam(inp);
+            if (s != null) {
+                deflt = s; 
+            }
+        }
+        return deflt;
+    }                          
+}
+

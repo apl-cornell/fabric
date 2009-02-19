@@ -1,0 +1,164 @@
+package calendar;
+
+import userserv.*;
+import sif.servlet.*;
+import sif.html.*;
+import jif.util.*;
+
+public class CalServDeclassifier authority (CalServEP) {
+
+    // DOWNGRADE REASON: transfer user list from CalServEP to p
+    static principal{p:;p!:}[]{p:;p!:} userListToPrincipals{users}(principal{users} p, 
+                                                                                 List[{CalServEP:;CalServEP!:}]{p:;p!:} users) 
+    where caller (CalServEP,p), endorse({p:;p!:}) {
+        if (users == null) return null;
+        int size = transfer(CalServEP, p, users.size());
+        principal{p:;p!:}[] ps = new principal[size<0?0:size];
+        for (int i = 0; i < size; i++) {
+            User[CalServEP] u = null;
+            try {
+                u = (User[CalServEP])users.get(i);
+            }
+            catch (IndexOutOfBoundsException impossible) { }
+            catch (ClassCastException impossible) { }
+            try {
+                ps[i] = (principal)(Principal)transfer(CalServEP, p, u);
+            }
+            catch (IndexOutOfBoundsException impossible) { }
+            catch (ClassCastException impossible) { }
+        }
+        return ps;
+        
+    }
+
+    // DOWNGRADE REASON: transfer user display string from CalServEP to p
+    static String{*lbl} declassUserDisplayString{p:}(label{p:} lbl, principal{p:} p, User[CalServEP]{p:} u) 
+      where {p!:} <= lbl, lbl <= {p:}, caller (CalServEP,p), endorse({p:;p!:}) {
+        String userName = u==null?null:u.displayString();
+        String s = null;
+        try {
+            s = (String)transfer(CalServEP, p, userName);
+        }
+        catch (ClassCastException imposs) { }
+        return declassify(s, {*lbl;p!:});
+    }
+        
+      // DOWNGRADE REASON: transfer user list from CalServEP to p
+     static String{*lbl} declassUserListToString{p:;p}(
+                       label{p:} lbl,
+                       principal{users} p, 
+                       List[{CalServEP:;CalServEP!:}]{p:} users, 
+                       boolean{users} useDisplayString,
+                       String{users} seperator) 
+      where {p!:} <= lbl, lbl <= {p:}, caller (CalServEP,p), endorse({p:;p!:}) 
+      {
+          String sb = "";
+          int i = 0;
+          while (users != null && i < users.size()) {
+              try {
+                  User[CalServEP] u = (User[CalServEP])users.get(i);
+                  if (u != null) {
+                      if (useDisplayString) {
+                          sb += u.displayString();
+                      }
+                      else {
+                          sb += u.name();                          
+                      }
+                  }
+                  if (i+1 < users.size()) {
+                      sb += seperator;                
+                  }
+              }
+              catch (IndexOutOfBoundsException impossible) { }
+              catch (ClassCastException impossible) { }
+              
+              i++;
+          }
+          String{p:;p!:} s = null;
+          try {
+              s = (String)transfer(CalServEP, p, sb);
+          }
+          catch (ClassCastException imposs) { }
+          return declassify(s, {*lbl;p!:});
+      }
+      
+      // DOWNGRADE REASON: utility method to transfer from P to Q
+      static Object{Q:;Q!: meet P!:} transfer{P:;Q:}(principal{P:;Q:} P, 
+              principal{P:;Q:} Q, 
+              Object{P:;Q:} o) 
+              where caller(P,Q), endorse({P:;Q:;P!: meet Q!:}){
+          declassify ({P!: meet Q!:}) {
+              Object o1 = endorse(o, {P:;Q:} to {P:;Q:;Q!: meet P!:});
+              Object o2 = declassify(o1, {P:;Q!: meet P!:;Q:} to {Q!: meet P!:;Q:});
+              return o2;
+          }
+          
+      }
+      // DOWNGRADE REASON: utility method to transfer from P to Q
+      static int{Q:;Q!: meet P!:} transfer{P:;P!:;Q:;Q!:}(principal{P:;P!:;Q:;Q!:} P, 
+              principal{P:;P!:;Q:;Q!:} Q, 
+              int{P:;P!:;Q:;Q!:} i) 
+              where caller(P,Q), 
+              endorse({P:;Q:;P!: meet Q!:}){
+          try {
+              return ((Integer)transfer(P,Q,new Integer(i))).intValue();
+          }
+          catch (ClassCastException impossible) { }
+          catch (NullPointerException impossible) { }
+          return 0;
+      }
+        
+      
+      // DOWNGRADE REASON: utility method to transfer date from P to Q
+      static Date[{Q:;Q!:}]{Q:;Q!:} declassDate{P!:}(principal{P!:} P, 
+                                                  principal{Q:;Q!:} Q, 
+                                                  Date[{P!:}]{P!:} d) 
+                                                  where caller (P,Q), endorse({P!: meet Q!:}) {
+          declassify ({P!: meet Q!:}) {
+              int day = d==null?0:d.getDay();
+              int month = d==null?0:d.getMonth();
+              int year = d==null?0:d.getYear();
+              int hour = d==null?0:d.getHour();
+              int minute = d==null?0:d.getMinute();
+              
+              int d3 = transfer(P, Q, day);
+              int m3 = transfer(P, Q, month);
+              int y3 = transfer(P, Q, year);    
+              int h3 = transfer(P, Q, hour);    
+              int mi3 = transfer(P, Q, minute);    
+              
+              Date[{Q:;Q!:}] newD = null;
+              try {
+                  newD = new Date[{Q:;Q!:}](y3, m3, d3, h3, mi3);
+              }
+              catch (IllegalArgumentException impossible) { }
+              return newD;
+          }
+      }
+
+      // DOWNGRADE REASON: utility method to transfer date from P to lbl.
+      static Date[lbl]{P!:; lbl} declassDate{P:;P!:}(principal{P:;P!:} P,
+              label{P:;P!:} lbl,
+              Date[{P:;P!:}]{P:;P!:} d) 
+              where {P!:} <= lbl, caller(P) 
+    {
+        int day = d==null?0:d.getDay();
+        int month = d==null?0:d.getMonth();
+        int year = d==null?0:d.getYear();
+        int hour = d==null?0:d.getHour();
+        int minute = d==null?0:d.getMinute();
+        
+        int d3 = declassify(day, {P:;P!:} to {P!:});
+        int m3 = declassify(month, {P:;P!:} to {P!:});
+        int y3 = declassify(year, {P:;P!:} to {P!:});
+        int h3 = declassify(hour, {P:;P!:} to {P!:});
+        int mi3 = declassify(minute, {P:;P!:} to {P!:});
+        
+        Date[lbl] newD = null;
+        try {
+            newD = new Date[lbl](y3, m3, d3, h3, mi3);
+        }
+        catch (IllegalArgumentException impossible) { }
+        return newD;
+    }              
+}

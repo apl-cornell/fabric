@@ -1,0 +1,23 @@
+package sif.html;
+
+/**
+ * @author andru
+ *
+ * A Paragraph is an HTML paragraph.
+ */
+public final class Paragraph[label L, label E] extends BlockContainer[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    public Paragraph(label cL, label cE, 
+            Node[cL,cE]{L} n) where {*cL} <= L, 
+            {E; n} <= {*cE} {
+        super("p", cL, cE, n);
+    }
+    public Paragraph(Node[L,E]{L} n) where {n} <= {E} {
+        super("p", L, E, n);
+    }
+    public Paragraph{L}(String{L} text) {
+        super("p", L, E, new Text[L,E](text)); // dummy
+    }
+}

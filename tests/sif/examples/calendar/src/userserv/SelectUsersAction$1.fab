@@ -1,0 +1,17 @@
+package userserv;
+
+import jif.util.*;
+
+public class SelectUsersAction$1[label L, principal servP] {
+	
+	public SelectUsersAction$1{L}(List[{servP:;servP!:}]{L} selectedUsers) {
+		this.selectedUsers = selectedUsers;
+	}
+    /**
+     * List of Users. This list will be updated only once the user has 
+     * submitted an acceptable list of users. In single mode, this list will
+     * contain at most one element.
+     */
+    final List[{servP:;servP!:}]{L} selectedUsers;
+	
+}
