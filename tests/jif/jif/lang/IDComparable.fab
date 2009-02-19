@@ -1,0 +1,14 @@
+package jif.lang;
+
+/**
+ * The Jif signature for the method equals().
+ *
+ * Since the information that is returned by the equals() method
+ * will depend on information both from the comparison object
+ * <code>obj</code> and the fields of a class, this interface
+ * is parameterized on a label.
+ */
+public interface IDComparable[covariant label L] {
+    boolean{L; obj} equals(IDComparable[L] obj);
+    boolean{L; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj);
+}

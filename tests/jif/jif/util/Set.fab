@@ -1,0 +1,9 @@
+package jif.util;
+
+/**
+ * A set of JifObjects.
+ *
+ * @see jif.util.Collection
+ */
+public interface Set[label L] extends Collection[L] {
+}

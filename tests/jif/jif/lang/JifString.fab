@@ -1,0 +1,167 @@
+/*
+ * A wrapper for Java Strings, to allow them to be treated as 
+ * JifObjects
+ */
+package jif.lang;
+
+public final class JifString[covariant label L] implements JifObject[L] {
+    public final String{L} s;
+    public JifString(String{L} s) { this.s = s; }
+
+    public int{L} length() { return s==null?-1:s.length(); }
+    public char{L; index} charAt(int index) throws (StringIndexOutOfBoundsException{L; index}) {
+        return s==null?((char)0):s.charAt(index);
+    }
+//    public void getChars{L}(int{L} srcBegin, int{L} srcEnd, char{L}[]{L} dst, int{L} dstBegin) throws (StringIndexOutOfBoundsException{L}) {
+//        if (s == null) return;
+//        s.getChars(srcBegin, srcEnd, dst, dstBegin);
+//    }
+    public boolean{L; anObject} equals(Object anObject) {
+        if (anObject == null) return s == null;
+        if (anObject instanceof IDComparable[L]) {
+            return equals((IDComparable[L])anObject);
+        }
+        return false;
+    }
+    public boolean{L; other} equals(IDComparable[L] other) {
+        return equals(L, other);
+    }
+
+    public boolean{L; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
+        if (obj instanceof JifString[lbl]) {
+            JifString[lbl] that = (JifString[lbl])obj;
+            if (this.s == null) return that.s == null;
+            return this.s.equals(that.s);
+        }
+        return false;        
+    }
+    
+    public boolean{L; anotherString} equalsIgnoreCase(String anotherString) {
+        if (s == null) return anotherString == null;
+        return s.equalsIgnoreCase(anotherString);
+    }
+    public boolean{L; anotherString} equalsIgnoreCase(JifString[L] anotherString) {
+        if (anotherString == null) return s == null;
+        return equalsIgnoreCase(anotherString.s);
+    }
+    public int{L; anotherString} compareTo(String anotherString) throws (NullPointerException{L;anotherString}) {
+        return -anotherString.compareTo(s);
+    }
+    public int{L; anotherString} compareTo(JifString[L] anotherString) throws (NullPointerException{L;anotherString}) {
+        return compareTo(anotherString.s);        
+    }
+    public int{L; o} compareTo(Object o) throws (ClassCastException{o}, NullPointerException{L;o}) {
+        if (o instanceof String) return compareTo((String)o);
+        return compareTo((JifString[L])o); 
+    }
+
+    public int{L; str} compareToIgnoreCase(String str) throws (NullPointerException{str;L}) {
+        return -str.compareToIgnoreCase(s);        
+    }
+    public int{L; str} compareToIgnoreCase(JifString[L] str) throws (NullPointerException{str;L}) {
+        return compareToIgnoreCase(str.s);        
+    }
+    public boolean{L; other; toffset; ooffset; len} regionMatches(int toffset, String other, int ooffset, 
+				 int len)throws (NullPointerException{other; L}) 
+    {
+        if (s == null) return false;
+        return s.regionMatches(toffset, other, ooffset, len);
+    }
+    public boolean{L; other; ignoreCase; toffset; ooffset; len} regionMatches(boolean ignoreCase,
+				         int toffset,
+			               String other, int ooffset, int len)throws (NullPointerException{other;L}) 
+    {
+        if (s == null) return false;
+        return s.regionMatches(ignoreCase, toffset, other, ooffset, len);
+    }
+    public boolean{L; prefix; toffset} startsWith(String prefix, int toffset) {
+        if (s == null) return false;
+        return s.startsWith(prefix, toffset);
+    }
+    public boolean{L; prefix} startsWith(String prefix) {
+        if (s == null) return false;
+        return s.startsWith(prefix);
+    }
+    public boolean{L; suffix} endsWith(String suffix) {
+        if (s == null) return false;
+        return s.endsWith(suffix);
+    }
+    public int{L} hashCode() {
+        if (s == null) return 9473621;
+        return s.hashCode();
+    }
+    public int{L; ch} indexOf(int ch) {
+        if (s == null) return -1;
+        return s.indexOf(ch);
+    }
+    public int{L; ch; fromIndex} indexOf(int ch, int fromIndex) {
+        if (s == null) return -1;
+        return s.indexOf(ch, fromIndex);
+    }
+    public int{L; ch} lastIndexOf(int ch) {
+        if (s == null) return -1;
+        return s.lastIndexOf(ch);
+    }
+    public int{L; ch; fromIndex} lastIndexOf(int ch, int fromIndex) {
+        if (s == null) return -1;
+        return s.lastIndexOf(ch, fromIndex);
+    }
+    public int{L; str} indexOf(String str) throws (NullPointerException{str;L}) {
+        if (s == null) return -1;
+        return s.indexOf(str);        
+    }
+    public int{L; str; fromIndex} indexOf(String str, int fromIndex) throws (NullPointerException{str;L}) {
+        if (s == null) return -1;
+        return s.indexOf(str, fromIndex);                
+    }
+    public int{L; str} lastIndexOf(String str) throws (NullPointerException{str;L}){
+        if (s == null) return -1;
+        return s.lastIndexOf(str);                
+    }
+    public int{L; str; fromIndex} lastIndexOf(String str, int fromIndex) throws (NullPointerException{str;L}){
+        if (s == null) return -1;
+        return s.lastIndexOf(str, fromIndex);                
+    }
+//    public JifString[L]{L; beginIndex} substring{L}(int{L} beginIndex) throws (StringIndexOutOfBoundsException{L; beginIndex}) {
+//        if (s == null) throw new StringIndexOutOfBoundsException();
+//        return new JifString[L](s.substring(beginIndex));                
+//    }
+//    public JifString[L]{L; beginIndex; endIndex} substring{L}(int{L} beginIndex, int{L} endIndex) throws (StringIndexOutOfBoundsException{L; beginIndex; endIndex}) {
+//        if (s == null) throw new StringIndexOutOfBoundsException();
+//        return new JifString[L](s.substring(beginIndex, endIndex));                
+//    }
+
+//    public JifString[L]{L;str} concat{L}(String{L} str) throws (NullPointerException{L}) {
+//        if (s == null) return new JifString[L](str);
+//        return new JifString[L](s.concat(str));                        
+//    }
+//    public JifString[L]{L} replace{L}(char{L} oldChar, char{L} newChar) {
+//        if (s == null) return this;
+//        return new JifString[L](s.replace(oldChar, newChar));
+//    }
+//    public byte{L}[]{L} getBytes{L}() {
+//        if (s == null) return null;
+//        return s.getBytes();
+//    }
+    //    public String{L} toLowerCase(Locale locale);
+//    public JifString[L]{L} toLowerCase{L}() {
+//        if (s == null) return this;
+//        return new JifString[L](s.toLowerCase());
+//    }
+    //    public String toUpperCase(Locale locale);
+//    public JifString[L]{L} toUpperCase{L}() {
+//        if (s == null) return this;
+//        return new JifString[L](s.toUpperCase());
+//    }
+//    public JifString[L]{L} trim{L}() {
+//        if (s == null) return this;
+//        return new JifString[L](s.trim());
+//    }
+    public String{L} toString() {
+        return s;
+    }
+//    public char{L}[]{L} toCharArray{L}()  {
+//        if (s == null) return null;
+//        return s.toCharArray();
+//    }
+}

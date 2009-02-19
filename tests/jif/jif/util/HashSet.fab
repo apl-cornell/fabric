@@ -1,0 +1,83 @@
+package jif.util;
+
+public class HashSet[label L] extends AbstractSet[L] {
+    private final HashMap[L,L]{this} map;
+  
+    public HashSet{L}(int{L} initialCapacity, float{L} loadFactor) throws (IllegalArgumentException{L}) {
+        map = new HashMap[L,L](initialCapacity, loadFactor);
+        super();
+    }
+  
+    public HashSet{L}(int{L} initialCapacity) throws (IllegalArgumentException{L}) {
+        map = new HashMap[L,L](initialCapacity);
+        super();
+    }
+
+    public HashSet{L}() {
+        map = new HashMap[L,L]();
+        super();
+    }
+    
+    public int{L} size() {
+        if (map != null) return map.size();
+        return 0;
+    }
+    
+    public boolean{L;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o) {
+        if (map != null) return map.containsKey(lbl, o);
+        return false;
+    }
+    
+    public boolean{L} add{L}(JifObject[L]{L} o):{L} throws (ClassCastException{L}, IllegalArgumentException{L}) {
+        if (map != null) return (map.put(o, o) == null);                        
+        return false;
+    }
+    
+    public boolean{L} remove{L}(JifObject[L]{L} o) {
+        if (map != null) return (map.remove(o) != null);
+        return false;
+    }
+
+    public void clear{L}() {
+        if (map != null) map.clear();        
+    }
+
+    public JifObject[L]{L;index} get(int index):{L;index} throws (IndexOutOfBoundsException{L;index}) {
+        if (map != null) {
+            Set[L] ks = map.keySet();
+            if (ks != null) return ks.get(index);
+        }
+        return null;
+    }
+    
+    public boolean{L;o;lbl;*lbl} equals(label lbl, IDComparable[lbl] o) {
+        if (o == this) return true;
+        if (!(o instanceof Set[lbl])) return false;
+        Set[lbl] that = (Set[lbl])o;
+        if (this.size() != that.size()) return false;
+
+        if (map == null) return false;
+        HashMapEntry[L,L] e = map.header;
+        
+        while (e != null && e.after != map.header) {
+            e = e.after;
+            if (e == null) continue;
+            JifObject[L] key = e.getKey();
+            if (!that.contains(L, key)) return false;
+        }
+        return true;
+    }
+
+    public int{L} hashCode() {
+        if (map != null) return map.hashCode();
+        return 0;
+    }
+    
+    public Iterator[L]{this} iterator() {
+        if (map != null) {
+            Set[L] ks = map.keySet();
+            if (ks != null) return ks.iterator();
+        }        
+        return null;
+    }
+}

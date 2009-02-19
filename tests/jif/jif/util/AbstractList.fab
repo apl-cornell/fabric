@@ -1,0 +1,299 @@
+package jif.util;
+
+/**
+ * Base implementation for List.
+ */
+public abstract class AbstractList[label L] extends AbstractCollection[L] 
+    implements List[L] {
+    protected AbstractList() {
+    }
+
+
+    abstract public JifObject[L]{L;index} get(int index):{L;index}
+        throws (IndexOutOfBoundsException{L;index});
+
+    public boolean{L} remove{L}(JifObject[L]{L} o) {
+        int index = 0;
+        int sz = size();
+        while (index < sz) {
+            try {
+                JifObject[L]{L} e = get(index);
+                if (e == o || (e != null && e.equals(o))) {
+                    // remove it...
+                    remove(index);
+                    return true;
+                }
+                index++;
+            }
+            catch (IndexOutOfBoundsException e) {
+                // can't happen...
+            }
+        }
+        return false;
+    }
+
+
+    // Search Operations
+    public boolean{L;*lbl;lbl;elem} contains(label lbl, JifObject[lbl] elem) {
+        return indexOf(lbl,elem) >= 0;
+    }
+
+
+    public int{L;o} indexOf(JifObject[L] o) {
+        return indexOf(L, o);
+    }
+    public int{L;*lbl;lbl;o} indexOf(label lbl, JifObject[lbl] o) {
+        int i = 0;
+        int sz = size();
+        try {
+            while (i < sz) {
+                JifObject[L] e = get(i);
+                if (o == e || (o != null && o.equals(L, e))) {
+                    return i;
+                }
+                i++;
+            }
+        }
+        catch (IndexOutOfBoundsException e) { /* cant happen */ }
+        return -1;
+    }
+
+    public int{L;o} lastIndexOf(JifObject[L] o) {
+        return lastIndexOf(L, o);
+    }
+    public int{L;*lbl;lbl;o} lastIndexOf(label lbl, JifObject[lbl] o) {
+        int i = size() - 1;
+        try {
+            while (i >= 0) {
+                JifObject[L] e = get(i);
+                if (o == e || (o != null && o.equals(L, e))) {
+                    return i;
+                }
+                i--;
+            }
+        }
+        catch (IndexOutOfBoundsException e) { /* cant happen */ }
+        return -1;
+    }
+
+
+    // Iterators
+
+    public Iterator[L]{this} iterator() {
+        return listIterator();
+    }    
+
+    public ListIterator[L]{this} listIterator() {
+        return new ListItr[L](this);
+    }    
+
+    public ListIterator[L]{this;L} listIterator{L}(int{L} index) 
+        throws (IndexOutOfBoundsException{L}) {
+        if (index<0 || index>size())
+            throw new IndexOutOfBoundsException("Index: "+index);
+        return new ListItr[L](this, index);
+    }    
+
+
+
+    // Comparison and hashing
+    public int{L} hashCode() {
+        int hashCode = 1;
+        int i = 0;
+        
+        while (i < size()) {
+            try {
+                JifObject[L] obj = get(i);
+                hashCode = 31*hashCode + (obj==null ? 0 : obj.hashCode());
+            }
+            catch (IndexOutOfBoundsException e) {}
+            i++;
+        }
+        return hashCode;
+    }
+    
+    public boolean{L;o} equals(IDComparable[L] o) {
+        return equals(L, o);
+    }
+
+    public boolean{L; *lbl; lbl; o} equals(label lbl, IDComparable[lbl] o) {
+        if (o == null) 
+            return false;
+        
+        if (!(o instanceof List[lbl]))
+            return false;
+        
+        if (o == this)
+            return true;
+        
+        
+        List[lbl] that = (List[lbl])o;
+        
+        int sz = this.size();
+        if (sz != that.size()) 
+            return false;
+        
+        int i = 0;
+        while (i < sz) {
+            try {
+                JifObject[lbl] o1 = that.get(i);
+                JifObject[L] o2 = this.get(i);
+                
+                if (!(o1==null ? o2==null : o1.equals(L, o2))) {
+                    return false;
+                }
+            }
+            catch (IndexOutOfBoundsException e) { /* cant happen */ }
+            
+            i++;
+        }
+        return true;
+    }
+
+}
+
+class ListItr[label L]  implements ListIterator[L] {
+    // This class maintains the invariant that 0 <= nextIndex <= list.size()
+    private int{L} nextIndex;
+    private int{L} lastIndexReturned;
+
+    private final List[L]{this} list;
+    
+    protected ListItr(List[L]{this} l) {
+        nextIndex = 0;
+        lastIndexReturned = -1;
+        list = l;
+    }
+
+    protected ListItr(List[L]{this} l, int{L} index) {
+        nextIndex = index;
+        lastIndexReturned = -1;
+        list = l;
+    }
+    
+    public boolean{L} hasNext() {
+        List[L] l = this.list;
+        
+        if (l != null) {
+            return nextIndex != l.size();
+        }
+
+        return false;
+    }
+    
+    public JifObject[L]{L} next{L}():{L} 
+        throws (NoSuchElementException) {
+	    lastIndexReturned = nextIndex;
+
+	    List[L] l = this.list;
+	    if (l == null) 
+		return null; 
+
+	    if (nextIndex == l.size()) {
+		lastIndexReturned = -1;
+		throw new NoSuchElementException();
+	    }
+
+	    try {
+		nextIndex++;
+		return l.get(lastIndexReturned);
+	    }
+	    catch (IndexOutOfBoundsException e) {
+		// cannot happen...
+		return null;
+	    }
+
+	}
+
+    public boolean{L} hasPrevious() {
+        List[L] l = this.list;
+        
+        if (l != null) {
+            return nextIndex > 0;
+        }
+        
+        return false;
+    }
+
+    public JifObject[L]{L} previous{L}():{L} 
+        throws (NoSuchElementException) {
+	    lastIndexReturned = nextIndex - 1;
+
+	    List[L] l = this.list;
+	    if (l == null) 
+		return null;
+        
+	    if (nextIndex <= 0) {
+		lastIndexReturned = -1;
+		throw new NoSuchElementException();
+	    }
+        
+	    try {
+		nextIndex--;
+		return l.get(lastIndexReturned);
+	    }
+	    catch (IndexOutOfBoundsException e) {
+		// cannot happen...
+		return null;
+	    }
+	}
+
+    public int{L} nextIndex() {
+        return nextIndex;
+    }
+    
+    public int{L} previousIndex() {
+        return nextIndex-1;
+    }
+
+    public void remove{L}():{L} throws (IllegalStateException{L}) {
+        List[L] l = this.list;
+        if (l == null) 
+            return;
+
+        if (nextIndex > l.size() || nextIndex <= 0)
+            throw new IllegalStateException();
+
+        try {
+            int n = nextIndex - 1;
+            l.remove(n);
+        }
+        catch (IndexOutOfBoundsException e) {
+            // cannot happen...
+        }
+        nextIndex = nextIndex - 1;
+        lastIndexReturned = -1;
+    }
+
+    public void set{L}(JifObject[L]{L} o):{L} 
+        throws (IllegalStateException{L}) {
+	    List[L] l = this.list;
+	    if (l == null) 
+		return;
+
+	    if (lastIndexReturned >= l.size() || lastIndexReturned < 0)
+		throw new IllegalStateException();
+
+	    try {
+		l.set(lastIndexReturned, o);
+	    }
+	    catch (IndexOutOfBoundsException e) {
+		// cannot happen...
+	    }
+	}
+
+    public void add{L}(JifObject[L]{L} o):{L} 
+        throws (ClassCastException{L}, IllegalArgumentException{L}) {
+	    List[L] l = this.list;
+	    if (l == null) return;
+
+	    try {
+		l.add(nextIndex, o);
+	    }
+	    catch (IndexOutOfBoundsException e) {
+		// cannot happen
+	    }
+          
+	    lastIndexReturned = -1;
+	}
+}

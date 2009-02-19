@@ -1,0 +1,797 @@
+package jif.util;
+
+/**
+ * This class is operationally similar to the HashMap implementation
+ * of Java 1.4.2, on which this code was based.
+ */
+
+public class HashMap[label K, label V] extends AbstractMap[K,V] {
+    /**
+     * The default initial capacity - MUST be a power of two.
+     */
+    static final int{*!:} DEFAULT_INITIAL_CAPACITY = 16;
+
+    /**
+     * The maximum capacity, used if a higher value is implicitly specified
+     * by either of the constructors with arguments.
+     * MUST be a power of two <= 1<<30.
+     */
+    static final int{*!:} MAXIMUM_CAPACITY = 1 << 30;
+
+    /**
+     * The load factor used when none specified in constructor.
+     **/
+    static final float{*!:} DEFAULT_LOAD_FACTOR = 0.75f;
+
+    /**
+     * The table, resized as necessary. Length MUST Always be a power of two.
+     */
+    transient HashMapEntry[K,V]{K}[]{K} table;
+    
+    /**
+     * Head of the doubly linked list of entries.
+     */
+    HashMapEntry[K,V]{K} header;
+
+    /**
+     * Just use a single entry set, for efficiency
+     */
+    private final HashMapEntrySet[K,V]{this} entrySet;
+
+    /**
+     * The number of key-value mappings contained in this identity hash map.
+     */
+    transient int{K} size;
+  
+    /**
+     * The next size value at which to resize (capacity * load factor).
+     * @serial
+     */
+    int{K} threshold;
+  
+    /**
+     * The load factor for the hash table.
+     *
+     * @serial
+     */
+    final float{K} loadFactor;
+
+    public HashMap{K}(int{K} initialCapacity, float{K} loadFactor) throws (IllegalArgumentException{K}) {
+        int initialCap = initialCapacity;
+        if (initialCap < 0)
+            throw new IllegalArgumentException("Illegal initial capacity: " +
+                                               initialCap);
+        if (initialCap > MAXIMUM_CAPACITY)
+            initialCap = MAXIMUM_CAPACITY;
+        if (loadFactor <= 0 || Float.isNaN(loadFactor))
+            throw new IllegalArgumentException("Illegal load factor: " +
+                                               loadFactor);
+
+        // Find a power of 2 >= initialCapacity
+        int capacity = 1;
+        while (capacity < initialCap) 
+            capacity <<= 1;
+    
+        this.loadFactor = loadFactor;
+        threshold = (int)(capacity * loadFactor);
+        
+        HashMapEntry[K,V]{K}[] ttable = null;
+        try {
+            ttable = new HashMapEntry[K,V][capacity];
+        }
+        catch (NegativeArraySizeException imposs) { }
+        this.table = ttable;
+        
+        entrySet = new HashMapEntrySet[K,V](this);
+        super();
+        init();
+    }
+  
+    public HashMap{K}(int{K} initialCapacity) throws (IllegalArgumentException{K}) {
+        this(initialCapacity, DEFAULT_LOAD_FACTOR);
+    }
+
+    /**
+     * Constructs an empty <tt>HashMap</tt> with the default initial capacity
+     * (16) and the default load factor (0.75).
+     */
+    public HashMap{K}() {
+        this.loadFactor = DEFAULT_LOAD_FACTOR;
+        threshold = (int)(DEFAULT_INITIAL_CAPACITY * DEFAULT_LOAD_FACTOR);
+        table = new HashMapEntry[K,V][DEFAULT_INITIAL_CAPACITY];
+        entrySet = new HashMapEntrySet[K,V](this);
+        super();
+        init();
+    }
+
+//    public HashMap(Map m) {
+//        this(Math.max((int) (m.size() / DEFAULT_LOAD_FACTOR) + 1,
+//                      DEFAULT_INITIAL_CAPACITY), DEFAULT_LOAD_FACTOR);
+//        putAllForCreate(m);
+//    }
+
+    // internal utilities
+
+    /**
+     * Initialization hook for subclasses. This method is called
+     * in all constructors and pseudo-constructors (clone, readObject)
+     * after HashMap has been initialized but before any entries have
+     * been inserted.  (In the absence of this method, readObject would
+     * require explicit knowledge of subclasses.)
+     */
+    void init{K}() {
+        // set up the doubly linked list
+        HashMapEntry[K,V] h = new HashMapEntry[K,V](-1, null, null, null);
+        header = h;
+        h.before = header;
+        h.after = header;
+    }
+
+    /**
+     * Returns a hash value for the specified object.  In addition to 
+     * the object's own hashCode, this method applies a "supplemental
+     * hash function," which defends against poor quality hash functions.
+     * This is critical because HashMap uses power-of two length 
+     * hash tables.<p>
+     *
+     * The shift distances in this function were chosen as the result
+     * of an automated search over the entire four-dimensional search space.
+     */
+    static int{lbl;*lbl;x} hash(label lbl, Hashable[lbl] x) {
+        int h = x==null?19760210:x.hashCode();
+
+        h += ~(h << 9);
+        h ^=  (h >>> 14);
+        h +=  (h << 4);
+        h ^=  (h >>> 10);
+        return h;
+    }
+
+    static boolean{lbx;x;lby;y;*lbx;*lby} eq(label lbx, IDComparable[lbx] x, label lby, IDComparable[lby] y) {
+        return x == y || (x != null && x.equals(lby, y));
+    }
+
+    /**
+     * Returns index for hash code h. 
+     */
+    static int indexFor(int h, int length) {
+        return h & (length-1);
+    }
+
+    static int indexFor(int h, HashMapEntry[K,V]{K}[] table) {
+        int length = table==null?0:table.length;
+        return h & (length-1);
+    }
+ 
+    public int{K} size() {
+        return size;
+    }
+  
+    public boolean{K} isEmpty() {
+        return size == 0;
+    }
+
+    public JifObject[V]{K; *lbl;lbl;key} get(label lbl, JifObject[lbl] key) {
+        int hash = hash(lbl, key);
+        int i = indexFor(hash, table);
+        HashMapEntry[K,V] e = null;
+        try {
+            e = table[i]; 
+        }
+        catch (NullPointerException imposs) { }
+        catch (ArrayIndexOutOfBoundsException imposs) { }
+        while (true) {
+            if (e == null) return null;
+            if (e.hash == hash && eq(lbl, key, K, e.key)) 
+                return e.getValue();
+            e = e.next;
+        }
+    }
+
+    public boolean{K;*lbl;lbl;key} containsKey(label lbl, JifObject[lbl] key) {
+        int hash = hash(lbl, key);
+        int i = indexFor(hash, table);
+        HashMapEntry[K,V] e = null;
+        try {
+            e = table[i]; 
+        }
+        catch (NullPointerException imposs) { }
+        catch (ArrayIndexOutOfBoundsException imposs) { }
+        while (e != null) {
+            if (e.hash == hash && eq(lbl, key, K, e.key)) 
+                return true;
+            e = e.next;
+        }
+        return false;
+    }
+
+
+    /**
+     * Returns the entry associated with the specified key in the
+     * HashMap.  Returns null if the HashMap contains no mapping
+     * for this key.
+     */
+    HashMapEntry[K,V]{K; *lbl; lbl; key} getEntry(label lbl, JifObject[lbl] key) {
+        int hash = hash(lbl, key);
+        int i = indexFor(hash, table);
+        HashMapEntry[K,V] e = null;
+        try {
+            e = table[i]; 
+        }
+        catch (NullPointerException imposs) { }
+        catch (ArrayIndexOutOfBoundsException imposs) { }
+        while (true) {
+            if (e == null) return null;
+            if (e.hash == hash && eq(lbl, key, K, e.key)) {
+                return e;
+            }
+            e = e.next;
+        }
+    }
+  
+    public JifObject[V]{K} put{K}(JifObject[K]{K} key, JifObject[V]{K} value) {
+        int hash = hash(K, key);
+        int i = indexFor(hash, table);
+
+        HashMapEntry[K,V] e = null;
+        try {
+            e = table[i]; 
+        }
+        catch (NullPointerException imposs) { }
+        catch (ArrayIndexOutOfBoundsException imposs) { }
+        for (; e != null; e = e.next) {
+            if (e.hash == hash && eq(K, key, K, e.key)) {
+                JifObject[V] oldValue = e.getValue();
+                e.value = value;
+                e.recordAccess(this);
+                return oldValue;
+            }
+        }
+
+        addEntry(hash, key, value, i);
+        return null;
+    }
+
+    private void putForCreate{K}(JifObject[K]{K} key, JifObject[V]{K} value) {
+        int hash = hash(K, key);
+        int i = indexFor(hash, table);
+
+        /**
+         * Look for preexisting entry for key.  This will never happen for
+         * clone or deserialize.  It will only happen for construction if the
+         * input Map is a sorted map whose ordering is inconsistent w/ equals.
+         */
+        HashMapEntry[K,V] e = null;
+        try {
+            e = table[i]; 
+        }
+        catch (NullPointerException imposs) { }
+        catch (ArrayIndexOutOfBoundsException imposs) { }
+        for (; e != null; e = e.next) {
+            if (e.hash == hash && eq(K, key, K, e.key)) {
+                e.value = value;
+                return;
+            }
+        }
+
+        createEntry(hash, key, value, i);
+    }
+
+//    void putAllForCreate{K}(Map[K,V] m) {
+//        for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+//            Map.Entry e = (Map.Entry) i.next();
+//            putForCreate(e.getKey(), e.getValue());
+//        }
+//    }
+
+    void resize{K}(int{K} newCapacity) {
+        HashMapEntry[K,V]{K}[] oldTable = table;
+        int oldCapacity = oldTable==null?0:oldTable.length;
+        if (oldCapacity == MAXIMUM_CAPACITY) {
+            threshold = Integer.MAX_VALUE;
+            return;
+        }
+
+        try {
+            HashMapEntry[K,V]{K}[] newTable = new HashMapEntry[K,V][newCapacity];
+            transfer(newTable);
+            table = newTable;
+            threshold = (int)(newCapacity * loadFactor);
+        }
+        catch (NegativeArraySizeException imposs) { }
+    }
+
+    void transfer{K}(HashMapEntry[K,V]{K}[]{K} newTable) {
+        HashMapEntry[K,V]{K}[] src = table;
+        int newCapacity = newTable==null?0:newTable.length;
+        for (int j = 0; j < (src==null?0:src.length); j++) {
+            try {
+                HashMapEntry[K,V] e = src[j];
+                if (e != null) {
+                    src[j] = null;
+                    do {
+                        HashMapEntry[K,V] next = e.next;
+                        int i = indexFor(e.hash, newCapacity);  
+                        e.next = newTable[i];
+                        newTable[i] = e;
+                        e = next;
+                    } while (e != null);
+                }
+            }
+            catch (NullPointerException imposs) { }
+            catch (ArrayIndexOutOfBoundsException imposs) { }
+        }
+    }
+
+//    public void putAll(Map m) {
+//        int numKeysToBeAdded = m.size();
+//        if (numKeysToBeAdded == 0)
+//            return;
+//
+//        if (numKeysToBeAdded > threshold) {
+//            int targetCapacity = (int)(numKeysToBeAdded / loadFactor + 1);
+//            if (targetCapacity > MAXIMUM_CAPACITY)
+//                targetCapacity = MAXIMUM_CAPACITY;
+//            int newCapacity = table==null?0:table.length;
+//            while (newCapacity < targetCapacity)
+//                newCapacity <<= 1;
+//            if (newCapacity > table==null?0:table.length)
+//                resize(newCapacity);
+//        }
+//
+//        for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+//            Map.Entry e = (Map.Entry) i.next();
+//            put(e.getKey(), e.getValue());
+//        }
+//    }
+  
+    public JifObject[V]{K} remove{K}(JifObject[K]{K} key) {
+        HashMapEntry[K,V] e = removeEntryForKey(key);
+        if (e != null)  return e.getValue();
+        return null;
+    }
+
+    HashMapEntry[K,V]{K} removeEntryForKey{K}(JifObject[K]{K} key) {
+        int hash = hash(K, key);
+        int i = indexFor(hash, table);
+        HashMapEntry[K,V] prev = null;
+        try {
+            prev = table[i];
+        }
+        catch (NullPointerException imposs) { }
+        catch (ArrayIndexOutOfBoundsException imposs) { }
+        HashMapEntry[K,V] e = prev;
+
+        while (e != null) {
+            HashMapEntry[K,V] next = e.next;
+            if (e.hash == hash && eq(K, key, K, e.key)) {
+                size--;
+                if (prev == e) {
+                    try {
+                        table[i] = next;
+                    }
+                    catch (NullPointerException imposs) { }
+                    catch (ArrayIndexOutOfBoundsException imposs) { }
+                }
+                else if (prev != null) {
+                    prev.next = next;
+                }
+                e.recordRemoval(this);
+                return e;
+            }
+            prev = e;
+            e = next;
+        }
+   
+        return e;
+    }
+
+    /**
+     * Special version of remove for EntrySet.
+     */
+    HashMapEntry[K,V]{K} removeMapping{K}(JifObject[K]{K} o) {
+        if (!(o instanceof HashMapEntry[K,V]))
+            return null;
+
+        HashMapEntry[K,V] entry = (HashMapEntry[K,V])o;
+        JifObject[K] k = entry.getKey();        
+        int hash = hash(K, k);
+        int i = indexFor(hash, table);
+        HashMapEntry[K,V] prev = null;
+        try {
+            prev = table[i];
+        }
+        catch (NullPointerException imposs) { }
+        catch (ArrayIndexOutOfBoundsException imposs) { }
+
+        HashMapEntry[K,V] e = prev;
+
+        while (e != null) {
+            HashMapEntry[K,V] next = e.next;
+            if (e.hash == hash && e.equals(entry)) {
+                size--;
+                if (prev == e) { 
+                    try {
+                        table[i] = next;
+                    }
+                    catch (NullPointerException imposs) { }
+                    catch (ArrayIndexOutOfBoundsException imposs) { }
+                }
+                else {
+                    if (prev != null) prev.next = next;
+                }
+
+                e.recordRemoval(this);
+                return e;
+            }
+            prev = e;
+            e = next;
+        }
+   
+        return e;
+    }
+
+    /**
+     * Removes all mappings from this map.
+     */
+    public void clear{K}() {
+        HashMapEntry[K,V]{K}[] tab = table;
+        try {
+            for (int i = 0; i < tab.length; i++) 
+                tab[i] = null;
+        }
+        catch (NullPointerException imposs) { }
+        catch (ArrayIndexOutOfBoundsException imposs) { }
+        size = 0;
+        // clear the doubly linked list
+        try {
+            header.before = header;
+            header.after = header;
+        }
+        catch (NullPointerException imposs) { }
+    }
+
+//    /**
+//     * Returns <tt>true</tt> if this map maps one or more keys to the
+//     * specified value.
+//     *
+//     * @param value value whose presence in this map is to be tested.
+//     * @return <tt>true</tt> if this map maps one or more keys to the
+//     *         specified value.
+//     */
+//    public boolean containsValue(Object value) {
+//        if (value == null) 
+//            return containsNullValue();
+//
+//        Entry tab[] = table;
+//        for (int i = 0; i < tab.length ; i++)
+//            for (Entry e = tab[i] ; e != null ; e = e.next)
+//                if (value.equals(e.value))
+//                    return true;
+//        return false;
+//    }
+
+//    /**
+//     * Special-case code for containsValue with null argument
+//     **/
+//    private boolean containsNullValue() {
+//        Entry tab[] = table;
+//        for (int i = 0; i < tab.length ; i++)
+//            for (Entry e = tab[i] ; e != null ; e = e.next)
+//                if (e.value == null)
+//                    return true;
+//        return false;
+//    }
+
+//    /**
+//     * Returns a shallow copy of this <tt>HashMap</tt> instance: the keys and
+//     * values themselves are not cloned.
+//     *
+//     * @return a shallow copy of this map.
+//     */
+//    public Object clone() {
+//        HashMap result = null;
+//        try { 
+//            result = (HashMap)super.clone();
+//        } catch (CloneNotSupportedException e) { 
+//            // assert false;
+//        }
+//        result.table = new Entry[table==null?0:table.length];
+//        result.entrySet = null;
+//        result.modCount = 0;
+//        result.size = 0;
+//        result.init();
+//        result.putAllForCreate(this);
+//
+//        return result;
+//    }
+
+
+    /**
+     * Add a new entry with the specified key, value and hash code to
+     * the specified bucket.  It is the responsibility of this 
+     * method to resize the table if appropriate.
+     *
+     * Subclass overrides this to alter the behavior of put method.
+     */
+    void addEntry{K}(int{K} hash, JifObject[K]{K} key, JifObject[V]{K} value, int{K} bucketIndex) {
+        HashMapEntry[K,V] e = null;
+        try {
+            e = new HashMapEntry[K,V](hash, key, value, table[bucketIndex]);
+            table[bucketIndex] = e;
+            e.addBefore(header);
+            if (size++ >= threshold) 
+                resize(2 * table.length);
+        }
+        catch (NullPointerException imposs) { }
+        catch (ArrayIndexOutOfBoundsException imposs) { }
+    }
+
+    /**
+     * Like addEntry except that this version is used when creating entries
+     * as part of Map construction or "pseudo-construction" (cloning,
+     * deserialization).  This version needn't worry about resizing the table.
+     *
+     * Subclass overrides this to alter the behavior of HashMap(Map),
+     * clone, and readObject.
+     */
+    void createEntry{K}(int{K} hash, JifObject[K]{K} key, JifObject[V]{K} value, int{K} bucketIndex) {
+        HashMapEntry[K,V] e = null;
+        try {
+            e = new HashMapEntry[K,V](hash, key, value, table[bucketIndex]);
+            table[bucketIndex] = e;
+            e.addBefore(header);
+        }
+        catch (NullPointerException imposs) { }
+        catch (ArrayIndexOutOfBoundsException imposs) { }
+        size++;
+    }
+
+    /**
+     * Returns a collection view of the mappings contained in this map.  Each
+     * element in the returned collection is a <tt>Map.Entry</tt>.  The
+     * collection is backed by the map, so changes to the map are reflected in
+     * the collection, and vice-versa.  The collection supports element
+     * removal, which removes the corresponding mapping from the map, via the
+     * <tt>Iterator.remove</tt>, <tt>Collection.remove</tt>,
+     * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt> operations.
+     * It does not support the <tt>add</tt> or <tt>addAll</tt> operations.
+     *
+     * @return a collection view of the mappings contained in this map.
+     * @see Map.Entry
+     */
+    public Set[K] entrySet() {
+        return entrySet;
+    }
+    
+    public boolean{K;V; *lbl; lbl; o} equals(label lbl, IDComparable[lbl] o) {
+        if (o == this) return true;        
+        if (!(o instanceof Map[K,V])) return false;
+        
+        Map[K,V] t = (Map[K,V])o;
+        if (t.size() != size()) return false;
+        
+        HashMapEntry[K,V] e = header;
+        while (e != null && e.after != header) {
+            e = e.after;
+            if (e == null) continue;
+            JifObject[K] key = e.getKey();
+            JifObject[V] value = e.getValue();
+            if (value == null) {
+                if (!(t.get(key)==null && t.containsKey(key))) {
+                    return false;
+                }
+            } else {
+                if (!value.equals(t.get(key)))
+                    return false;
+            }                
+        }
+        return true;
+    }
+    public int{K;V} hashCode() {
+        int h=0;        
+        HashMapEntry[K,V] e = header;
+        while (e != null && e.after != header) {
+            e = e.after;
+            h += e==null?0:e.hashCode();
+        }
+        return h;        
+    }
+        
+    public String{K;V} toString() {
+        String buf = "{";
+        HashMapEntry[K,V] e = header;
+        while (e != null && e.after != header) {
+            e = e.after;
+            if (e == null) continue;
+            try {
+                JifObject[K] key = e.getKey();
+                JifObject[V] value = e.getValue();
+                String k = key == this ?"(this Map)" : (key==null?"null":key.toString());
+                String v = value == this ?"(this Map)" : (value==null?"null":value.toString());
+                buf += (k + "=" + v);
+                if (e.after != header) buf += ", ";
+            }
+            catch (NullPointerException ignore) { }
+        }
+        return buf + "}";            
+    }
+    
+}
+
+class HashMapEntry[label K, label V] implements MapEntry[K,V] {
+    final JifObject[K]{this} key;
+    JifObject[V]{K} value;
+    final int{this} hash;
+    HashMapEntry[K,V]{K} next;
+
+    HashMapEntry[K,V]{K} before;
+    HashMapEntry[K,V]{K} after;
+    
+    /**
+     * Create new entry.
+     */
+    HashMapEntry(int{this} h, JifObject[K]{this} k, JifObject[V]{K} v, HashMapEntry[K,V]{K} n) { 
+        value = v; 
+        key = k;
+        hash = h;
+        next = n;
+    }
+    
+    public JifObject[K] getKey() {
+        return key;
+    }
+
+    public JifObject[V]{K} getValue() {
+        return value;
+    }
+
+    public JifObject[V]{K} setValue{K}(JifObject[V]{K} newValue) {
+        JifObject[V] oldValue = value;
+        value = newValue;
+        return oldValue;
+    }
+
+    public boolean{K; obj} equals(IDComparable[K] obj) {
+        return equals(K, obj);
+    }
+    public boolean{K; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
+        return this == obj;
+    }
+
+    public int{K} hashCode() {
+        return (key==null ? 0 : key.hashCode());
+    }
+
+    public String{K} toString() {
+        return (key==null ? "null" : key.toString()) + " entry";
+    }
+
+    void addBefore{K}(HashMapEntry[K,V]{K} existingEntry) {
+        try {
+            this.after  = existingEntry;
+            this.before = existingEntry.before;
+            this.before.after = this;
+            this.after.before = this;
+        }
+        catch (NullPointerException imposs) { }            
+    }
+    
+    /**
+     * This method is invoked whenever the value in an entry is
+     * overwritten by an invocation of put(k,v) for a key k that's already
+     * in the HashMap.
+     */
+    void recordAccess{K}(HashMap[K,V]{this} m) {
+    }
+
+    /**
+     * This method is invoked whenever the entry is
+     * removed from the table.
+     */
+    void recordRemoval{K}(HashMap[K,V]{this} m) {
+        // update the doubly linked list.
+        try {
+            before.after = after;
+            after.before = before;
+        }
+        catch (NullPointerException imposs) { }
+    }
+    
+}
+
+class HashMapEntrySet[label K, label V] extends AbstractSet[K] {
+    private final HashMap[K,V]{this} parent;
+    HashMapEntrySet(HashMap[K,V]{this} parent) {
+        this.parent = parent;
+        super();
+    }
+    public Iterator[K] iterator() {
+        return new HashMapEntrySetIterator[K,V](parent); 
+    }
+
+    public JifObject[K]{K;index} get(int index):{K;index} throws (IndexOutOfBoundsException{K;index}) {
+        if (index < 0 || index >= size()) throw new IndexOutOfBoundsException();
+        try {
+            HashMapEntry[K,V] c = parent.header.after;
+    
+            for (int i = 0; i < index; i++) {
+                c = c.after;
+            }
+            return c;
+        }
+        catch (NullPointerException imposs) { }
+        return null;
+    }
+
+    public int{K} size() {
+        return parent==null?0:parent.size();
+    }
+    
+    public boolean{K;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o) {
+        if (o instanceof HashMapEntry[K,V] && parent != null) {
+            HashMapEntry[K,V] e = (HashMapEntry[K,V])o;
+            return parent.getEntry(K, e.key) == o;
+        }
+        return false;
+    }
+
+    public boolean{K} remove{K}(JifObject[K]{K} o) {
+        if (parent != null) return parent.removeMapping(o) != null;
+        return false;
+    }
+    public void clear{K}() {
+        if (parent != null) parent.clear();
+    }
+}
+
+class HashMapEntrySetIterator[label K, label V] implements Iterator[K] {
+    private final HashMap[K,V]{this} parent;
+    private HashMapEntry[K, V]{K} current = null;
+    private HashMapEntry[K, V]{K} next = null;
+
+    HashMapEntrySetIterator(HashMap[K,V]{this} parent) {
+        this.parent = parent;        
+    }
+
+    public boolean{K} hasNext() {
+        if (next == null) {
+            // haven't initialized current and next yet.
+            // hasNext if the map is non-empty
+            return (parent==null?-1:parent.size()) > 0;            
+        }
+        return next != (parent==null?null:parent.header);
+    }
+
+    public JifObject[K]{K} next{K}() throws (NoSuchElementException{K}) {
+        if (parent != null) {
+            if (next == null) {
+                // initialization that we couldn't do in the constructor.
+                try {
+                    current = parent.header;
+                    next = current.after;
+                }
+                catch (NullPointerException imposs) { }
+            }
+
+            if (next == parent.header) throw new NoSuchElementException();
+            current = next; // assign current null first, in case next() throws exception
+            try {
+                next = current.after;
+            }
+            catch (NullPointerException imposs) { }
+            return current;
+        }
+        return null;
+    }
+
+    public void remove{K}() throws (IllegalStateException{K}) {
+        if (parent != null) {
+            if (current == null || current == parent.header) throw new IllegalStateException();
+            HashMapEntry[K,V] c = current;
+            JifObject[K] k = c==null?null:c.key;
+            current = parent.header;
+            parent.removeEntryForKey(k);
+        }
+    }
+}

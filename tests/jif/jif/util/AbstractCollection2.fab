@@ -1,0 +1,48 @@
+package jif.util;
+
+/**
+ * Base implementation for Collection.
+ */
+public abstract class AbstractCollection2[label S, label C] implements Collection2[S,C] {
+    /**
+     * Sole constructor.  (For invocation by subclass constructors, typically
+     * implicit.)
+     */
+    protected AbstractCollection2() {
+    }
+
+//    public abstract Iterator2[S,C]{this} iterator();
+    public abstract int{S} size();
+
+    public final boolean{S} isEmpty() {
+        return size() == 0;
+    }
+
+    public boolean{S;C;o} contains(JifObject[C] o) {
+        return contains(C, o);
+    }
+
+    public boolean{S} add{S}(JifObject[C]{S} o):{S} throws (ClassCastException{S}, IllegalArgumentException{S})
+    {
+    	return false;
+    }
+    
+    public boolean{S} addAll{S}(Collection2[S,C]{S} c) 
+    throws (ClassCastException{S}, IllegalArgumentException{S}) {
+    boolean{this;S} modified = false;
+    if (c != null) {
+        Iterator2[S,C]{this;S} e = c.iterator();
+        while (e != null && e.hasNext()) {
+            try {
+                if(add(e.next())) {
+                    modified = true;
+                }
+            }
+            catch (NoSuchElementException impossible) { }
+        }
+    }
+    return modified;
+}
+    
+  
+}

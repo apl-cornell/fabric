@@ -1,0 +1,297 @@
+package jif.util;
+
+public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
+    static final int{*!:*} INITIAL_CAPACITY = 10;
+    
+    // This is the number of actual (key,value) pairs stored in the Map
+    int{K} size;
+    
+    // This is the current capacity of the Map. Invariant -> entryArray.length == actualSize
+    private int{K} capacity;
+    ArrayMapEntry[K,V]{K}[]{K} entryArray;
+    private final ArrayMapEntrySet[K,V]{this} entrySet;
+    
+    public ArrayMap() {
+        entryArray = new ArrayMapEntry[K,V][INITIAL_CAPACITY];
+        size = 0;
+        capacity = INITIAL_CAPACITY;
+        entrySet = new ArrayMapEntrySet[K,V](this);
+        super();
+    }
+    
+    // extend the size by INITIAL_CAPACITY
+    private void extendCapacity{K}() {
+        int newCapacity  = 1+(int)(capacity * 1.5);
+        
+        
+        try {
+            ArrayMapEntry[K,V]{K}[]{K} newEntryArray = new ArrayMapEntry[K,V][newCapacity];
+            for(int i = 0; i < size; i++) {
+                newEntryArray[i] = entryArray[i];
+            }
+            entryArray = newEntryArray;
+            capacity = newCapacity;
+        } 
+        catch (NegativeArraySizeException impossible) {}
+        catch (ArrayIndexOutOfBoundsException impossible) {}
+        catch (NullPointerException impossible) {}
+        
+        
+    }
+    
+    public JifObject[V]{K;*lbl;lbl;key} get(label lbl, JifObject[lbl] key) {
+        try {
+            for(int i = 0; i < size; i++) {
+                ArrayMapEntry[K,V] e = entryArray[i]; 
+                JifObject[K] k = e.key;
+                if (k == key || (k != null && k.equals(lbl, key))) {
+                    return e.value;
+                }
+            }
+        } 
+        catch (ArrayIndexOutOfBoundsException impossible) {}
+        catch (NullPointerException impossible) {}
+        return null;
+    }
+    
+    public boolean{K;*lbl;lbl;key} containsKey(label lbl, JifObject[lbl] key) {
+        try {
+            for(int i = 0; i < size; i++) {
+                ArrayMapEntry[K,V] e = entryArray[i]; 
+                JifObject[K] k = e.key;
+                if (k == key || (k != null && k.equals(lbl, key))) {
+                    return true;
+                }
+            }
+        } 
+        catch (ArrayIndexOutOfBoundsException impossible) {}
+        catch (NullPointerException impossible) {}
+        return false;
+    }
+    
+    
+    // Modification Operations    
+    public JifObject[V]{K} put{K}(JifObject[K]{K} key, JifObject[V]{K} value) {
+        boolean found = false;
+        JifObject[V] old = null;
+        
+        try {
+            for(int i = 0; i < size; i++) {
+                ArrayMapEntry[K,V] e = entryArray[i]; 
+                JifObject[K] k = e.key;
+                if (k == key || (k != null && k.equals(key))) {
+                    found = true;
+                    old = e.value;
+                    e.value = value;
+                    break;
+                }
+            }
+            if(!found) {
+                // need a new entry
+                if(capacity < size + 1) {
+                    extendCapacity();
+                }
+                ArrayMapEntry[K,V] e = new ArrayMapEntry[K,V](key, value);
+                entryArray[size] = e;
+                
+                // increment size
+                size++;
+            }
+            return old;
+        } 
+        catch (ArrayIndexOutOfBoundsException impossible) {}
+        catch (NullPointerException impossible) {}
+        
+        return null;        
+    }
+    
+    public JifObject[V]{K} remove{K}(JifObject[K]{K} key) {
+        JifObject[V] old;
+        try {
+            for(int i = 0; i < size; i++) {
+                ArrayMapEntry[K,V] e = entryArray[i]; 
+                JifObject[K] k = e.key;
+                if (k == key || (k != null && k.equals(key))) {
+                    old = e.value;                    
+                    remove(i);
+                    return old;
+                }
+            }
+        } 
+        catch (ArrayIndexOutOfBoundsException impossible) {}
+        catch (NullPointerException impossible) {}
+        return null;
+    }
+    
+    // remove the ith (key,value) pair
+    protected void remove{K}(int{K} i) throws (ArrayIndexOutOfBoundsException{K}) {
+        size--;
+        try {
+            for(int j = i; j < size; j++) {
+                entryArray[j] = entryArray[j+1];
+            }
+        } 
+        catch (NullPointerException impossible) {}        
+    }
+
+    public void clear{K}() {
+       size = 0;
+    }
+    
+    public int{K} size() {
+        return size;
+    }   
+
+    public Set[K] entrySet() {
+        return entrySet;
+    }
+    
+}
+
+class ArrayMapEntry[label K, label V] implements MapEntry[K,V] {
+    final JifObject[K]{this} key;
+    JifObject[V]{K} value;
+
+    /**
+     * Create new entry.
+     */
+    ArrayMapEntry(JifObject[K]{this} k, JifObject[V]{K} v) { 
+        value = v; 
+        key = k;
+    }
+    
+    public JifObject[K] getKey() {
+        return key;
+    }
+
+    public JifObject[V]{K} getValue() {
+        return value;
+    }
+
+    public JifObject[V]{K} setValue{K}(JifObject[V]{K} newValue) {
+        JifObject[V] oldValue = value;
+        value = newValue;
+        return oldValue;
+    }
+
+    public boolean{K; obj} equals(IDComparable[K] obj) {
+        return equals(K, obj);
+    }
+    public boolean{K; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
+        return this == obj;
+    }
+
+    public int{K} hashCode() {
+        return (key==null ? 0 : key.hashCode());
+    }
+
+    public String{K} toString() {
+        return (key==null ? "null" : key.toString()) + " entry";
+    }    
+}
+
+
+class ArrayMapEntrySet[label K, label V] extends AbstractSet[K] {	
+    protected final ArrayMap[K,V]{this} parent;
+    
+    ArrayMapEntrySet(ArrayMap[K,V]{this} parent) {
+        this.parent = parent;
+        super();
+    }
+    
+    public int{K} size() {
+        return parent==null?0:parent.size();
+    }	
+    
+    public boolean{K;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o) {
+        try {
+            for(int i = 0; i < parent.size; i++) {
+                if(parent.entryArray[i].equals(lbl, o)) {
+                    return true;
+                }
+            }
+        } 
+        catch (NullPointerException unlikely) {}
+        catch (ArrayIndexOutOfBoundsException impossible) {}
+        
+        return false;
+    }
+    
+    // XXX no locking required?
+    public boolean{K} remove{K}(JifObject[K]{K} o) {
+        try {
+            for(int i = 0; i < parent.size; i++) {
+                if(parent.entryArray[i].equals(o)) {
+                    parent.remove(i);
+                    return true;
+                }
+            }
+        } 
+        catch (NullPointerException unlikely) { }
+        catch (ArrayIndexOutOfBoundsException imposs) { }
+        return true;
+    }
+    public Iterator[K]{this} iterator() {
+        return new ArrayMapEntrySetIterator[K,V](this.parent);
+    }
+           
+    public JifObject[K]{K;index} get(int index):{K;index} throws (IndexOutOfBoundsException{K;index}) {
+        try {
+            return parent.entryArray[index];
+        } 
+        catch (NullPointerException unlikely) {}
+        // unreachable
+        return null;
+    }    
+}
+
+class ArrayMapEntrySetIterator[label K, label V] implements Iterator[K] {
+    
+    private final ArrayMap[K,V]{this} parent;
+    private int{K} current;
+    private int{K} next;
+    
+    ArrayMapEntrySetIterator(ArrayMap[K,V] parent):{parent} {
+        this.parent = parent;
+        current = -1;
+        next = 0;
+    }
+    
+    public boolean{K} hasNext() {
+        try {
+            return (next < parent.size);
+        } 
+        catch (NullPointerException unlikely) {}
+        return false;		
+    }
+    
+    public JifObject[K]{K} next{K}() throws (NoSuchElementException{K}) {
+        try {
+            if(next >= parent.size) {
+                throw new NoSuchElementException();
+            }
+            current = next;
+            next++;
+            
+            return parent.entryArray[current];
+        } 
+        catch (NullPointerException impossible) {}
+        catch (ArrayIndexOutOfBoundsException impossible) {}
+        
+        return null;
+    }
+    
+    public void remove{K}() throws (IllegalStateException{K}) {
+        try {
+            if(current < 0 || current >= parent.size) {
+                throw new IllegalStateException();
+            }
+            parent.remove(current);
+        } 
+        catch (ArrayIndexOutOfBoundsException impossible) {}
+        catch (NullPointerException unlikely) {}
+
+        current = -1;
+        next--;        
+    }
+}

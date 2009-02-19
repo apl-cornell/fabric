@@ -1,0 +1,196 @@
+package jif.util;
+
+/**
+ * Jif Implementation of the Abstractmap class
+ */
+
+public abstract class AbstractMap[label K, label V] implements Map[K,V] {
+    
+    protected AbstractMap() {
+    }
+    
+    // Query Operations
+        
+    public boolean{K} isEmpty() {
+        return size() == 0;
+    }
+    
+    public boolean{K;key} containsKey(JifObject[K] key)
+    {
+        return containsKey(K, key);
+    }    
+    public JifObject[V]{K; key} get(JifObject[K] key) {
+        return get(K, key);
+    }
+    
+    
+    // Modification Operations
+    
+    public abstract JifObject[V]{K} put{K}(JifObject[K]{K} key, JifObject[V]{K} value);
+    
+    public abstract JifObject[V]{K} remove{K}(JifObject[K]{K} key);
+    
+    
+    // Bulk Operations
+    
+    /*
+     public void putAll{K}(Map[K,V]{K} t) {
+     try
+     {
+     
+     Iterator[K] i = t.entrySet().iterator();
+     while (i.hasNext())
+     {
+     Map$Entry[K,V] e = (Map$Entry[K,V]) i.next();
+     put(e.getKey(), e.getValue());
+     }
+     } catch (NullPointerException unlikely) {}
+     catch (NoSuchElementException unlikely) {}
+     catch (ClassCastException unlikely) {}
+     }
+     */
+        
+    public final boolean{K;key} containsKey{K}(String{K} key) {
+        return this.containsKey(new JifString[K](key));
+    }
+    public final JifObject[V]{K; key} get{K}(String{K} key) {
+        return this.get(new JifString[K](key));
+    }
+    public final JifObject[V]{K; *lbl; lbl; key} get{*lbl}(label lbl, String{*lbl} key) {
+        return this.get(lbl, new JifString[lbl](key));
+    }
+    public final JifObject[V]{K} put{K}(String{K} key, JifObject[V]{K} value) {
+        return this.put(new JifString[K](key), value);
+    }
+    public final JifObject[V]{K} remove{K}(String{K} key) {
+        return this.remove(new JifString[K](key));
+    }
+    
+    
+    // Views
+    
+    public Set[K] keySet() {
+        return new AbstractMapKeySet[K,V](this);
+    }
+    protected Iterator[K] entrySetIterator() {
+        Set[K] es = entrySet();
+        if (es != null) return es.iterator();
+        return null;
+    }
+    
+    // Comparison and hashing    
+    public boolean{K;V;o} equals(IDComparable[{K;V}] o)
+    {
+        return equals(new label {K;V}, o);
+    }
+    public boolean{K;V; *lbl; lbl; o} equals(label lbl, IDComparable[lbl] o) {
+        if (o == this) return true;        
+        if (!(o instanceof Map[K,V])) return false;
+        
+        Map[K,V] t = (Map[K,V])o;
+        if (t.size() != size()) return false;
+        
+        try {
+            Set[K] es = entrySet();
+            for (int i = 0; es != null && i < es.size(); i++) {
+                MapEntry[K,V] e = (MapEntry[K,V])es.get(i);
+                if (e == null) continue;
+                JifObject[K] key = e.getKey();
+                JifObject[V] value = e.getValue();
+                if (value == null) {
+                    if (!(t.get(key)==null && t.containsKey(key))) {
+                        return false;
+                    }
+                } else {
+                    if (!value.equals(t.get(key)))
+                        return false;
+                }
+            }
+        } 
+        catch(ClassCastException unused) { return false; } 
+        catch (IndexOutOfBoundsException imposs) { }        
+        return true;
+    }
+    public int{K;V} hashCode() {
+        int h=0;        
+        Set[K] es = entrySet();
+        for (int i = 0; es != null && i < es.size(); i++) {
+            try {
+                MapEntry[K,V] e = (MapEntry[K,V])es.get(i);
+                h += e==null?0:e.hashCode();
+            }
+            catch (ClassCastException imposs) { }
+            catch (IndexOutOfBoundsException imposs) { }
+        }
+        return h;        
+    }
+        
+    public String{K;V} toString() {
+        String buf = "{";
+        Set[K] es = entrySet();
+        for (int i = 0; es != null && i < es.size(); i++) {
+            try {
+                MapEntry[K,V] e = (MapEntry[K,V])es.get(i);
+                if (e == null) continue;
+                JifObject[K] key = e.getKey();
+                JifObject[V] value = e.getValue();
+                String k = key == this ?"(this Map)" : (key==null?"null":key.toString());
+                String v = value == this ?"(this Map)" : (value==null?"null":value.toString());
+                buf += (k + "=" + v);
+                if (i < es.size()-1) buf += ", ";
+            }
+            catch (NullPointerException ignore) { }
+            catch (ClassCastException ignore) { }
+            catch (IndexOutOfBoundsException imposs) { }
+        }
+        return buf + "}";            
+    }
+}
+
+class AbstractMapKeySet[label K, label V] extends AbstractSet[K] {
+    private final Set[K]{this} parentEntrySet;
+    private final AbstractMap[K,V]{this} parent;
+    AbstractMapKeySet(AbstractMap[K,V]{this} parent) {
+        this.parent = parent;
+        this.parentEntrySet = parent==null?null:parent.entrySet();
+        super();
+    }
+    public Iterator[K] iterator() {
+        return new AbstractMapKeySetIterator[K,V](parent); 
+    }
+
+    public JifObject[K]{K;index} get(int index):{K;index} throws (IndexOutOfBoundsException{K;index}) {
+        JifObject[K] n = parentEntrySet==null?null:parentEntrySet.get(index);
+        if (n instanceof MapEntry[K,V]) return ((MapEntry[K,V])n).getKey(); 
+        return null;
+    }
+
+    public int{K} size() {
+        return parent==null?0:parent.size();
+    }
+    
+    public boolean{K;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o) {
+        return parent==null?false:parent.containsKey(lbl, o);
+    }
+}
+
+class AbstractMapKeySetIterator[label K, label V] implements Iterator[K] {
+    private final Iterator[K]{this} i;
+    AbstractMapKeySetIterator(AbstractMap[K,V]{this} parent) {
+        i = parent==null?null:parent.entrySetIterator();
+    }
+
+    public boolean{K} hasNext() {
+        return i==null?false:i.hasNext();
+    }
+
+    public JifObject[K]{K} next{K}() throws (NoSuchElementException{K}) {
+        JifObject[K] n = (i==null?null:i.next());
+        if (n instanceof MapEntry[K,V]) return ((MapEntry[K,V])n).getKey(); 
+        return null;
+    }
+
+    public void remove{K}() throws (IllegalStateException{K}) {
+        if (i != null) i.remove();
+    }
+}

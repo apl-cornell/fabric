@@ -1,0 +1,46 @@
+package jif.util;
+
+/**
+ * A collection of JifObjects.
+ *
+ * The parameter L is the label of the elements, that is,
+ * the collection contains JifObject[L] elements. It is
+ * also the label for the amount of 
+ * information obtained by knowing what objects are 
+ * contained in this collection.
+ */
+public interface Collection[label L] extends JifObject[L] {
+    int{L} size();
+    boolean{L} isEmpty();
+    boolean{L;o} contains(JifObject[L] o);
+    boolean{L;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o);
+    Iterator[L]{this} iterator();
+
+    JifObject[L]{L}[]{L} toArray{L}();
+    JifObject[L]{L}const[]{L} toConstArray{L}();
+
+    boolean{L} add{L}(JifObject[L]{L} o):{L} throws (ClassCastException{L}, IllegalArgumentException{L});
+    boolean{L} remove{L}(JifObject[L]{L} o);
+
+    boolean{L;c} containsAll(Collection[L]{L} c)
+    throws (NullPointerException{c});
+    boolean{L} addAll{L}(Collection[L]{L} c)
+    throws (ClassCastException{L}, IllegalArgumentException{L});
+    boolean{L} removeAll{L}(Collection[L]{L} c);
+    boolean{L} retainAll{L}(Collection[L]{L} c);
+    boolean{L} retainAll{L}(label lbl, Collection[lbl]{L} c) where lbl <= L;
+    void clear{L}();
+
+    // all collections must provide a way of accessing elements by index.
+    // this allows clients to iterate over elements without the side-effects
+    // required by iterators.
+    JifObject[L]{L;index} get(int index):{L;index}
+    throws (IndexOutOfBoundsException{L;index});
+
+    // convenience methods that automatically convert Strings to JifStrings.
+    // Note: when keys are returned, they will be returned as JifString[L]s
+    boolean{L} add{L}(String{L} o):{L} throws (ClassCastException{L}, IllegalArgumentException{L});
+    boolean{L} remove{L}(String{L} o);
+    boolean{L;o} contains{L}(String{L} o);
+    boolean{L;*lbl;lbl;o} contains{*lbl}(label lbl, String{*lbl} o);
+}

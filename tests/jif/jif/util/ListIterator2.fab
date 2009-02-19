@@ -1,0 +1,15 @@
+package jif.util;
+
+/**
+ * A list iterator interface for the Jif collection framework.
+ */
+public interface ListIterator2[label S, label C] extends Iterator2[S,C] {
+    boolean{S} hasPrevious();
+    JifObject[C]{S} previous{S}():{S} throws (NoSuchElementException{S});
+    int{S} nextIndex();
+    int{S} previousIndex();
+    
+    void set{S}(JifObject[C]{S} o):{S} throws (IllegalStateException{S});
+    void add{S}(JifObject[C]{S} o):{S} 
+        throws (ClassCastException{S}, IllegalArgumentException{S});
+}
