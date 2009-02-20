@@ -7,6 +7,7 @@ import fabric.client.*;
 import fabric.client.remote.RemoteClient;
 import fabric.common.FabricThread;
 import fabric.common.InternalError;
+import fabric.common.TransactionID;
 import fabric.common.util.LongKeyMap;
 import fabric.core.InProcessCore;
 import fabric.lang.Object.$Impl;
@@ -341,7 +342,7 @@ public final class TransactionManager {
     } catch (TransactionPrepareFailedException e) {
       // Go through each core we've contacted and send abort messages.
       for (Core core : cores)
-        core.abortTransaction(current.tid.topTid);
+        core.abortTransaction(current.tid);
       logger.finest(current + " error committing: abort exception: " + e);
       abortTransaction();
       throw new AbortException(e);

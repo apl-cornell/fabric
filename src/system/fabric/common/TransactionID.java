@@ -1,4 +1,4 @@
-package fabric.client.transaction;
+package fabric.common;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Random;
 
-import fabric.common.FastSerializable;
 
 public class TransactionID implements FastSerializable {
   /**
@@ -35,10 +34,17 @@ public class TransactionID implements FastSerializable {
     this((TransactionID) null);
   }
 
-  TransactionID(TransactionID parent) {
+  /**
+   * Creates a new transaction ID that is a child of the given tid.
+   * @param parent
+   */
+  public TransactionID(TransactionID parent) {
     this(parent, newTid());
   }
 
+  /**
+   * Deserialization constructor.
+   */
   public TransactionID(DataInput in) throws IOException {
     this(in.readBoolean() ? new TransactionID(in) : null, in.readLong());
   }

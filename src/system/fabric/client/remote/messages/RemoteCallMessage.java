@@ -7,9 +7,9 @@ import fabric.client.UnreachableNodeException;
 import fabric.client.remote.RemoteCallException;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.Worker;
-import fabric.client.transaction.TransactionID;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
+import fabric.common.TransactionID;
 import fabric.lang.Object.$Proxy;
 import fabric.messages.Message;
 

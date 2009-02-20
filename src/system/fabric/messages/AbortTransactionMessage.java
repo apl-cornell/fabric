@@ -1,16 +1,15 @@
 package fabric.messages;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
-import fabric.client.Core;
-import fabric.client.RemoteCore;
-import fabric.common.AccessException;
-import fabric.common.FabricException;
-import fabric.common.ProtocolError;
-import fabric.core.Worker;
+import fabric.client.RemoteNode;
+import fabric.common.*;
+import fabric.common.InternalError;
 
 public class AbortTransactionMessage extends
-    Message<RemoteCore, AbortTransactionMessage.Response> {
+    Message<RemoteNode, AbortTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
     private Response() {
@@ -19,76 +18,65 @@ public class AbortTransactionMessage extends
     /**
      * Deserialization constructor, used by the client.
      * 
-     * @param core
-     *                The core from which the response is being read.
+     * @param node
+     *          The node from which the response is being read.
      * @param in
-     *                the input stream from which to read the response.
+     *          the input stream from which to read the response.
      */
-    Response(Core core, DataInput in) {
+    Response(RemoteNode node, DataInput in) {
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see fabric.messages.Message.Response#write(java.io.ObjectOutputStream)
      */
     public void write(DataOutput out) {
     }
   }
 
-  public final long transactionID;
+  public final TransactionID tid;
 
-  public AbortTransactionMessage(long transactionID) {
+  public AbortTransactionMessage(TransactionID tid) {
     super(MessageType.ABORT_TRANSACTION);
-    this.transactionID = transactionID;
+    this.tid = tid;
   }
 
   /**
    * Deserialization constructor.
    */
   protected AbortTransactionMessage(DataInput in) throws IOException {
-    this(in.readLong());
+    this(new TransactionID(in));
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.messages.Message#dispatch(fabric.core.Worker)
-   */
   @Override
-  public Response dispatch(Worker w) throws AccessException, ProtocolError {
+  public Response dispatch(fabric.core.Worker w) throws AccessException,
+      ProtocolError {
     w.handle(this);
     return new Response();
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.messages.Message#send(fabric.client.Core, boolean)
-   */
-  public Response send(RemoteCore core) {
+  @Override
+  public Response dispatch(fabric.client.remote.Worker handler) {
+    handler.handle(this);
+    return new Response();
+  }
+
+  public Response send(RemoteNode node) {
     try {
-      return send(core, true);
+      return send(node, true);
     } catch (FabricException e) {
-      // Nothing to do here. Sending abort messages is more of a courtesy than
-      // anything.
-      return new Response();
+      throw new InternalError(e);
     }
   }
 
   @Override
-  public Response response(RemoteCore c, DataInput in) {
-    return new Response(c, in);
+  public Response response(RemoteNode node, DataInput in) {
+    return new Response(node, in);
   }
-  
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.messages.Message#write(java.io.ObjectOutputStream)
-   */
+
   @Override
   public void write(DataOutput out) throws IOException {
-    out.writeLong(transactionID);
+    tid.write(out);
   }
 
 }

@@ -31,9 +31,9 @@ public class InProcessCore extends RemoteCore {
   }
   
   @Override
-  public void abortTransaction(long transactionID) {
+  public void abortTransaction(TransactionID tid) {
     try {
-      tm.abortTransaction(Client.getClient().getPrincipal(), transactionID);
+      tm.abortTransaction(Client.getClient().getPrincipal(), tid.topTid);
     } catch (AccessException e) {
       throw new InternalError(e);
     }

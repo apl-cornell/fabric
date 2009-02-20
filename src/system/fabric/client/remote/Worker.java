@@ -15,13 +15,14 @@ import fabric.client.Core;
 import fabric.client.remote.messages.RemoteCallMessage;
 import fabric.client.remote.messages.RemoteCallMessage.Response;
 import fabric.client.transaction.Log;
-import fabric.client.transaction.TransactionID;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.FabricThread;
 import fabric.common.MessageHandler;
+import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Principal;
+import fabric.messages.AbortTransactionMessage;
 import fabric.messages.Message;
 
 public class Worker extends FabricThread.AbstractImpl implements MessageHandler {
@@ -224,6 +225,26 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     socket = null;
   }
 
+  /**
+   * Returns the Log for the given transaction id.
+   * 
+   * @param createIfMissing
+   *          if this is true and there is no log for the given tid, then one
+   *          will be created.
+   */
+  private Log getLogByTid(TransactionID tid, boolean createIfMissing) {
+    Log log;
+    synchronized (runningTransactions) {
+      log = runningTransactions.get(tid.topTid);
+      if (log == null && createIfMissing) {
+        log = new Log(tid);
+        runningTransactions.put(tid.topTid, log);
+      }
+    }
+
+    return log;
+  }
+
   public Response handle(final RemoteCallMessage remoteCallMessage)
       throws RemoteCallException {
     // We assume that this thread's transaction manager is free (i.e., it's not
@@ -231,22 +252,12 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     // it will be free at the end of the method.
 
     // XXX TODO Security checks.
-    
+
     TransactionManager tm = getTransactionManager();
     TransactionID tid = remoteCallMessage.tid;
 
     if (tid != null) {
-      Log log;
-      // Get the log for the transaction.
-      synchronized (runningTransactions) {
-        log = runningTransactions.get(remoteCallMessage.tid.topTid);
-        if (log == null) {
-          log = new Log(tid);
-          runningTransactions.put(remoteCallMessage.tid.topTid, log);
-        }
-      }
-
-      // Associate it with the transaction manager.
+      Log log = getLogByTid(tid, true);
       tm.associateLog(log);
 
       // Synchronize the log stack...
@@ -300,5 +311,14 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
       throw e;
     }
+  }
+
+  public void handle(AbortTransactionMessage abortTransactionMessage) {
+    Log log = getLogByTid(abortTransactionMessage.tid, false);
+    if (log == null) return;
+
+    TransactionManager tm = getTransactionManager();
+    tm.associateLog(log);
+    tm.abortTransaction();
   }
 }

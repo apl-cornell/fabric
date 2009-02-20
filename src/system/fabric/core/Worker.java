@@ -334,8 +334,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     if (clientIsDissem) throw new ProtocolError("Message not supported.");
     
     logger.finer("Handling Abort Message");
-    transactionManager.abortTransaction(client, message.transactionID);
-    logger.fine("Transaction " + message.transactionID + " aborted");
+    transactionManager.abortTransaction(client, message.tid.topTid);
+    logger.fine("Transaction " + message.tid.topTid + " aborted");
   }
 
   /**

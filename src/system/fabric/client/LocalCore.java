@@ -10,6 +10,7 @@ import jif.lang.LabelUtil;
 import jif.lang.PrincipalUtil.TopPrincipal;
 import fabric.common.InternalError;
 import fabric.common.ONumConstants;
+import fabric.common.TransactionID;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;
 import fabric.lang.Principal;
@@ -40,7 +41,7 @@ public final class LocalCore implements Core {
     log.fine("Local transaction preparing");
   }
 
-  public synchronized void abortTransaction(long transactionID) {
+  public synchronized void abortTransaction(TransactionID tid) {
     log.fine("Local transaction aborting");
   }
 

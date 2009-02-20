@@ -3,6 +3,7 @@ package fabric.client;
 import java.util.Collection;
 
 import fabric.common.FetchException;
+import fabric.common.TransactionID;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object.$Impl;
 
@@ -58,9 +59,10 @@ public interface Core {
    * Notifies the core that the transaction is being Aborted.
    * 
    * @param transactionID
-   *          the ID of the aborting transaction.
+   *          the ID of the aborting transaction. This is assumed to specify a
+   *          top-level transaction.
    */
-  void abortTransaction(long transactionID);
+  void abortTransaction(TransactionID tid);
 
   /**
    * Notifies the Core that the transaction should be committed.

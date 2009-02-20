@@ -6,6 +6,7 @@ import fabric.client.Core;
 import fabric.client.remote.RemoteClient;
 import fabric.client.transaction.LockList.Node;
 import fabric.common.Pair;
+import fabric.common.TransactionID;
 import fabric.common.Util;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -232,6 +233,19 @@ public final class Log {
    * transaction. All locks held by this transaction are released.
    */
   void abort() {
+    // Contact all remote clients that we've called and have them abort.
+    List<Thread> abortThreads = new ArrayList<Thread>(clientsCalled.size());
+    for (final RemoteClient client : clientsCalled) {
+      Thread thread = new Thread() {
+        @Override
+        public void run() {
+          client.abortTransaction(tid);
+        }
+      };
+      thread.start();
+      abortThreads.add(thread);
+    }
+
     // Release read locks.
     for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
       for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {
@@ -269,6 +283,17 @@ public final class Log {
       if (abortSignal != null) {
         synchronized (this) {
           if (abortSignal.equals(tid)) abortSignal = null;
+        }
+      }
+    }
+
+    // Wait for remote clients to finish aborting.
+    for (Thread thread : abortThreads) {
+      while (true) {
+        try {
+          thread.join();
+          break;
+        } catch (InterruptedException e) {
         }
       }
     }

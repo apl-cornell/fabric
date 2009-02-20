@@ -14,10 +14,11 @@ import fabric.client.RemoteNode;
 import fabric.client.UnreachableNodeException;
 import fabric.client.remote.messages.InterClientMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
-import fabric.client.transaction.TransactionID;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.NoSuchNodeError;
+import fabric.common.TransactionID;
 import fabric.lang.Object.$Proxy;
+import fabric.messages.AbortTransactionMessage;
 
 /**
  * Encapsulates a remote client. This class maintains the connection to the
@@ -153,7 +154,7 @@ public final class RemoteClient implements RemoteNode {
     return conn != null && !conn.isClosed();
   }
 
-  protected Object issueRemoteCall(Class<?> receiverClass, $Proxy receiver,
+  public Object issueRemoteCall(Class<?> receiverClass, $Proxy receiver,
       String methodName, Class<?>[] parameterTypes, Object[] args)
       throws UnreachableNodeException, RemoteCallException {
     TransactionID tid =
@@ -163,6 +164,10 @@ public final class RemoteClient implements RemoteNode {
         new RemoteCallMessage(tid, receiverClass, receiver, methodName,
             parameterTypes, args).send(this);
     return response.result;
+  }
+
+  public void abortTransaction(TransactionID tid) {
+    new AbortTransactionMessage(tid).send(this);
   }
 
   public String name() {

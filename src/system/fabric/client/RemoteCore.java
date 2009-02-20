@@ -382,8 +382,8 @@ public class RemoteCore implements Core, RemoteNode {
    * 
    * @see fabric.client.Core#abortTransaction(long)
    */
-  public void abortTransaction(long transactionID) {
-    new AbortTransactionMessage(transactionID).send(this);
+  public void abortTransaction(TransactionID tid) {
+    new AbortTransactionMessage(tid).send(this);
   }
 
   /*
