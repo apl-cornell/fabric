@@ -154,14 +154,16 @@ public final class RemoteClient implements RemoteNode {
     return conn != null && !conn.isClosed();
   }
 
-  public Object issueRemoteCall(Class<?> receiverClass, $Proxy receiver,
-      String methodName, Class<?>[] parameterTypes, Object[] args)
+  public Object issueRemoteCall($Proxy receiver, String methodName,
+      Class<?>[] parameterTypes, Object[] args)
       throws UnreachableNodeException, RemoteCallException {
     TransactionID tid =
         TransactionManager.getInstance().registerRemoteCall(this);
+    
+    Class<?> receiverProxyClass = receiver.fetch().$getProxy().getClass();
 
     RemoteCallMessage.Response response =
-        new RemoteCallMessage(tid, receiverClass, receiver, methodName,
+        new RemoteCallMessage(tid, receiverProxyClass, receiver, methodName,
             parameterTypes, args).send(this);
     return response.result;
   }

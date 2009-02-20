@@ -280,8 +280,20 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
           // This is ugly. Wrap all exceptions that can be thrown with a runtime
           // exception and do the actual handling below.
           try {
-            return remoteCallMessage.getMethod().invoke(
-                remoteCallMessage.receiver, remoteCallMessage.args);
+            // Ensure the receiver and arguments have the right dynamic types.
+            fabric.lang.Object receiver =
+                remoteCallMessage.receiver.fetch().$getProxy();
+            Object[] args = new Object[remoteCallMessage.args.length];
+            for (int i = 0; i < args.length; i++) {
+              Object arg = remoteCallMessage.args[i];
+              if (arg instanceof fabric.lang.Object) {
+                arg = ((fabric.lang.Object) arg).fetch().$getProxy();
+              }
+              args[i] = arg;
+            }
+            
+            return remoteCallMessage.getMethod().invoke(receiver,
+                remoteCallMessage.args);
           } catch (IllegalArgumentException e) {
             throw new RuntimeException(e);
           } catch (SecurityException e) {
