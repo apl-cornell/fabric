@@ -250,7 +250,7 @@ public final class Client {
   }
   
   /**
-   * @return a <code>RemoteCore</code> object 
+   * @return a <code>RemoteClient</code> object 
    */
   public RemoteClient getClient(String name) {
     name = NameService.resolveAlias(name);
