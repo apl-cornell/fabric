@@ -373,7 +373,7 @@
            skipemptyfilesets="true"
            vmlauncher="false">
       <arg value="${fabc}"     />
-      <arg value="-sigcp"      /> <arg value="sig-classes/fabric"    />
+      <arg value="-sigcp"      /> <arg value="sig-classes/fabric:sig-classes/fabil"/>
       <arg value="-sig"        />
       <arg value="-nooutput"   />
       <arg value="-d"          /> <arg value="sig-classes/fabric"    />
@@ -398,7 +398,7 @@
            skipemptyfilesets="true"
            vmlauncher="false">
       <arg value="${fabc}"     />
-      <arg value="-sigcp"      /> <arg value="sig-classes/fabric"    />
+      <arg value="-sigcp"      /> <arg value="sig-classes/fabric:sig-classes/fabil"/>
       <arg value="-sig"        />
       <arg value="-nooutput"   />
       <arg value="-d"          /> <arg value="sig-classes/fabric"    />
