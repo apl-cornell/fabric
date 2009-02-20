@@ -154,17 +154,17 @@ public final class RemoteClient implements RemoteNode {
     return conn != null && !conn.isClosed();
   }
 
-  public Object issueRemoteCall($Proxy receiver, String methodName,
+  public Object issueRemoteCall(fabric.lang.Object receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
       throws UnreachableNodeException, RemoteCallException {
     TransactionID tid =
         TransactionManager.getInstance().registerRemoteCall(this);
-    
+
     Class<?> receiverProxyClass = receiver.fetch().$getProxy().getClass();
 
     RemoteCallMessage.Response response =
-        new RemoteCallMessage(tid, receiverProxyClass, receiver, methodName,
-            parameterTypes, args).send(this);
+        new RemoteCallMessage(tid, receiverProxyClass, ($Proxy) receiver,
+            methodName, parameterTypes, args).send(this);
     return response.result;
   }
 
