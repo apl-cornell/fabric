@@ -18,6 +18,7 @@ import jif.lang.ConfPolicy;
 import jif.lang.IntegPolicy;
 import jif.lang.Label;
 import jif.lang.LabelUtil;
+import fabric.client.remote.RemoteClient;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.*;
 import fabric.common.InternalError;
@@ -38,6 +39,9 @@ public final class Client {
 
   // A map from core hostnames to Core objects
   protected final Map<String, RemoteCore> cores;
+
+  // A map from client hostnames to RemoteClient objects.
+  private final Map<String, RemoteClient> remoteClients;
 
   protected final LocalCore localCore;
   
@@ -147,6 +151,7 @@ public final class Client {
 
     this.nameService = new NameService();
     this.cores = new HashMap<String, RemoteCore>();
+    this.remoteClients = new HashMap<String, RemoteClient>();
     this.localCore = new LocalCore();
     this.trustStore = trustStore;
 
@@ -240,6 +245,22 @@ public final class Client {
       } catch (GeneralSecurityException e) {
         throw new InternalError(e);
       }
+    }
+    return result;
+  }
+  
+  /**
+   * @return a <code>RemoteCore</code> object 
+   */
+  public RemoteClient getClient(String name) {
+    name = NameService.resolveAlias(name);
+    
+    if (name == null) throw new NullPointerException();
+    
+    RemoteClient result = remoteClients.get(name);
+    if (result == null) {
+      result = new RemoteClient(name);
+      remoteClients.put(name, result);
     }
     return result;
   }

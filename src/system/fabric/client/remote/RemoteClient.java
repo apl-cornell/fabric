@@ -40,7 +40,11 @@ public final class RemoteClient implements RemoteNode {
   private ObjectInputStream in;
   private ObjectOutputStream out;
 
-  protected RemoteClient(String name) {
+  /**
+   * This should only be called by fabric.client.Client. If you want a
+   * RemoteClient, use fabric.client.Client.getClient() instead.
+   */
+  public RemoteClient(String name) {
     this.name = name;
   }
 
