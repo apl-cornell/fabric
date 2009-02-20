@@ -148,11 +148,18 @@ public final class TransactionManager {
   }
 
   private void checkAbortSignal() {
-    if (current.abortSignal) {
-      logger.finest(current + " got abort signal");
-      // Abort the transaction.
-      // TODO Provide a reason for the abort.
-      throw new AbortException(null);
+    if (current.abortSignal != null) {
+      synchronized (current) {
+        if (!current.tid.isDescendantOf(current.abortSignal)) {
+          current.abortSignal = null;
+          return;
+        }
+        
+        logger.finest(current + " got abort signal");
+        // Abort the transaction.
+        // TODO Provide a reason for the abort.
+        throw new AbortException(null);
+      }
     }
   }
 
@@ -497,11 +504,8 @@ public final class TransactionManager {
    * tid is generated for the subtransaction.
    */
   public void startTransaction(TransactionID tid) {
-    if (current != null && current.abortSignal) {
-      // Abort the transaction.
-      // TODO Provide a reason for the abort.
-      throw new AbortException(null);
-    }
+    if (current != null) checkAbortSignal();
+
     current = new Log(current, tid);
     logger.finest(current.parent + " started subtx " + current + " in thread "
         + Thread.currentThread());

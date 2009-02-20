@@ -40,9 +40,10 @@ public final class Log {
 
   /**
    * A flag indicating whether this transaction should abort. This flag should
-   * be checked before each operation.
+   * be checked before each operation. This flag is set when it's non-null and
+   * indicates the outermost transaction in the stack that is aborting.
    */
-  volatile boolean abortSignal;
+  volatile TransactionID abortSignal;
 
   /**
    * Maps OIDs to <code>readMap</code> entries for objects read in this
@@ -100,13 +101,19 @@ public final class Log {
 
     this.child = null;
     this.thread = Thread.currentThread();
-    this.abortSignal = false;
+    this.abortSignal = null;
     this.reads = new OidKeyHashMap<Pair<LockList.Node<Log>, ReadMapEntry>>();
     this.readsReadByParent =
         new ArrayList<Pair<LockList.Node<Log>, ReadMapEntry>>();
     this.creates = new ArrayList<$Impl>();
     this.writes = new ArrayList<$Impl>();
     this.clientsCalled = new ArrayList<RemoteClient>();
+
+    if (parent != null) {
+      synchronized (parent) {
+        parent.child = this;
+      }
+    }
   }
 
   /**
@@ -213,8 +220,8 @@ public final class Log {
     while (!toFlag.isEmpty()) {
       Log log = toFlag.remove();
       synchronized (log) {
-        toFlag.add(log.child);
-        log.abortSignal = true;
+        if (log.child != null) toFlag.add(log.child);
+        log.abortSignal = tid;
         log.thread.interrupt();
       }
     }
@@ -247,7 +254,9 @@ public final class Log {
 
     if (parent != null && parent.tid == tid.parent) {
       // The parent frame represents the parent transaction. Null out its child.
-      parent.child = null;
+      synchronized (parent) {
+        parent.child = null;
+      }
     } else {
       // This frame will be reused to represent the parent transaction. Clear
       // out the log data structures.
@@ -256,6 +265,12 @@ public final class Log {
       creates.clear();
       writes.clear();
       clientsCalled.clear();
+
+      if (abortSignal != null) {
+        synchronized (this) {
+          if (abortSignal.equals(tid)) abortSignal = null;
+        }
+      }
     }
   }
 
@@ -323,7 +338,17 @@ public final class Log {
       }
     }
 
-    parent.child = null;
+    // Merge the set of clients that have been called.
+    synchronized (parent.clientsCalled) {
+      for (RemoteClient client : clientsCalled) {
+        if (!parent.clientsCalled.contains(client))
+          parent.clientsCalled.add(client);
+      }
+    }
+
+    synchronized (parent) {
+      parent.child = null;
+    }
   }
 
   /**
