@@ -1,4 +1,4 @@
-<project name="sif" default="all" basedir=".">
+<project name="sif" default="sif" basedir=".">
 	<description>
     SIF build file
   </description>
@@ -20,20 +20,9 @@
 	<!-- signature source directory -->
 	<property name="sig-src" location="${basedir}/sig-src" />
 
-	<!-- distribution directory -->
-	<property name="dist" location="${basedir}/dist" />
-
 	<!-- ****************************************
        Clean up targets and other admin tasks
        ****************************************  -->
-	<target name="dust" description="clean up the generated runtime, sig">
-		<!-- Delete the ${classes} and ${dist} directory trees -->
-		<delete dir="${sif.sig-classes}" />
-		<subant target="dust">
-			<fileset dir="examples" includes="*/build.xml"/>
-		</subant>
-	</target>
-
 	<target name="clean" description="clean up">
 		<!-- Delete the ${sif.classes} and ${dist} directory trees -->
 		<delete dir="${sif.classes}" />
@@ -64,23 +53,39 @@
 
 	<target name="all"
             depends="sif,sif-examples"
-            description="Builds the SIF and all servlet examples" />
+            description="Builds the Fabric-Servlet and all examples" />
 
 	<target name="sif" depends="sif-base,sif-sig" 
                         description="Builds the SIF framework, including signature files" />
 
 	<target name="sif-base"
             depends="init,configure"
-            description="Build the base SIF framework, not including the signature files">
-		<javac source="1.5" target="1.5" srcdir="${src}" destdir="${sif.classes}">
-			<classpath refid="standard.classpath" />
-		</javac>
+            description="Build the base SIF framework using the FabIL compiler, not including the signature files">
+		<apply executable="bash"
+						parallel="true"
+						failonerror="true"
+						dest="${basedir}"
+						relative="true"
+						skipemptyfilesets="true"
+						vmlauncher="false">
+			<arg value="${fabric.home}/bin/filc"/>
+			<arg value="-d"/>
+			<arg value="${sif.classes}"/>
+			<arg value="-sourcepath"/>
+			<arg value="${src}"/>
+			<srcfile />
+			<fileset dir="${basedir}" includes="src/**/*.fil" />
+			<mapper type="regexp"
+                    from="^src(.*)\.fil"
+                    to="classes\1\.class" />			
+		</apply>
 	</target>
 
-	<!-- The Jif signatures for the standard Java classes -->
+	
+	<!-- The Fabric signatures for the standard Java classes -->
 	<target name="sif-sig"
             depends="init,configure"
-            description="Compile the SIF signature classes.">
+            description="Compile the Fabric signatures for the SIF framework classes.">
 		<apply executable="sh"
                parallel="true"
                failonerror="true"
@@ -88,15 +93,15 @@
                relative="true"
                skipemptyfilesets="true"
                vmlauncher="false">
-			<arg value="${jif.home}/bin/jifc" />
+			<arg value="${fabric.home}/bin/fabc" />
 			<arg value="-d" />
 			<arg value="sig-classes" />
 			<arg value="-sourcepath" />
 			<arg value="sig-src" />
 			<srcfile />
-			<fileset dir="${basedir}" includes="sig-src/**/*.jif" />
+			<fileset dir="${basedir}" includes="sig-src/**/*.fab" />
 			<mapper type="regexp"
-                    from="^sig-src(.*)\.jif"
+                    from="^sig-src(.*)\.fab"
                     to="sig-classes\1\.class" />
 		</apply>
 
@@ -104,7 +109,7 @@
 
 	<target name="sif-examples"
             depends="sif"
-            description="Builds all servlet examples">
+            description="Builds all examples">
 		<!-- compile the user example first, since other examples depend on it -->
 		<subant target="compile">
 			<fileset dir="examples" includes="user/build.xml"/>
@@ -148,58 +153,6 @@
 			<fileset dir="examples" includes="*/build.xml" excludes="user/build.xml"/>
 		</subant>
 	</target>
-
-	<!-- ****************************************
-       Javadoc and distribution targets
-       ****************************************  -->
-
-	<target name="jar" depends="sif-base">
-		<jar jarfile="${sif.lib}/sif.jar" basedir="${sif.classes}" includes="sif/**" />
-		<jar jarfile="${sif.lib}/sifsig.jar" basedir="${sif.sig-classes}" includes="sif/**" />
-	</target>
-
-	<!-- generate the Jif distribution -->
-	<target name="dist">
-		<!-- Create the distribution directory -->
-		<mkdir dir="${dist}" />
-
-		<!-- Clobber everything so we're in a clean state -->
-		<antcall target="clobber" />
-
-		<!-- Compile the examples -->
-		<antcall target="sif-examples" />
-
-			<!-- Copy src files over. -->
-		<copy todir="${dist}" includeEmptyDirs="no">
-			<fileset dir="${basedir}" defaultexcludes="yes">
-				<include name="src/**" />
-				<include name="sig-src/**" />
-
-				<include name="examples/**" />
-				<exclude name="examples/calendarJava" />
-				<exclude name="examples/calendarJava/**" />
-
-				<include name="README" />
-				<include name="CHANGES" />
-				<include name="LICENSE" />
-				<include name="*.xml" />
-				<include name="config.properties" />
-				<include name="jif-*.zip" />
-			</fileset>
-		</copy>
-
-		<!-- Create sif.jar and copy all the jars over -->
-		<antcall target="jar" />
-		<copy todir="${dist}" includeEmptyDirs="no">
-			<fileset dir="${basedir}" defaultexcludes="yes">
-				<include name="lib/sif.jar" />
-				<include name="lib/sifsig.jar" />
-			</fileset>
-		</copy>
-
-	</target>
-
-
 
 </project>
 

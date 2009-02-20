@@ -26,6 +26,18 @@
             </not>
         </and>
     </condition>
+	
+  <!-- Fabric installation -->
+  <!-- If it is not defined in the properties file, use the environment variable $FABRIC. -->
+  <condition property="fabric.home" value="${env.FABRIC}">
+      <and>
+          <isset property="env.FABRIC" />
+          <not>
+              <isset property="fabric.home" />
+          </not>
+      </and>
+  </condition>
+	
 
     <!-- Tomcat installation -->
     <!-- If it is not defined in the properties file, use the environment variable $CATALINA_HOME. -->
@@ -43,7 +55,7 @@
     <property name="sif.classes" location="${sif-config.basedir}/classes" />
 
     <!-- directory for shared libraries -->
-    <property name="sif.lib" location="${sif-config.basedir}/lib" />
+    <property name="sif.lib" location="${fabric.home}/lib" />
 
     <!-- directory for shared libraries -->
     <property name="sif.sig-classes" location="${sif-config.basedir}/sig-classes" />
