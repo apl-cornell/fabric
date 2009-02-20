@@ -8,10 +8,9 @@ import polyglot.types.ImportTable;
 import polyglot.types.LazyClassInitializer;
 import polyglot.types.Package;
 import polyglot.types.ParsedClassType;
+import polyglot.types.TypeSystem;
 
 import fabil.types.FabILImportTable;
-import fabil.types.FabILParsedClassType_c;
-import fabil.types.FabILTypeSystem;
 import jif.types.JifTypeSystem_c;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
@@ -20,8 +19,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return load("fabric.lang.Object");
   }
   
-  public FabricTypeSystem_c(FabILTypeSystem filts) {
-    super(filts);
+  public FabricTypeSystem_c(TypeSystem jlts) {
+    super(jlts);
   }
 
   @SuppressWarnings("unchecked")

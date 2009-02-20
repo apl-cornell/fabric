@@ -80,7 +80,7 @@ public class ExtensionInfo extends jif.ExtensionInfo {
 
   @Override
   protected FabricTypeSystem createTypeSystem() {
-    return new FabricTypeSystem_c(filext.typeSystem());
+    return new FabricTypeSystem_c(jlext.typeSystem());
   }
   
   @Override

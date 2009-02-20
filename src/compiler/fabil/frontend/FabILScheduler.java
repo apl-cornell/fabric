@@ -4,6 +4,7 @@ import java.util.*;
 
 import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
+import polyglot.frontend.CyclicDependencyException;
 import polyglot.frontend.JLScheduler;
 import polyglot.frontend.Job;
 import polyglot.frontend.Scheduler;
@@ -13,6 +14,7 @@ import polyglot.frontend.goals.VisitorGoal;
 import polyglot.main.Version;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.*;
 import fabil.ExtensionInfo;
@@ -27,6 +29,20 @@ public class FabILScheduler extends JLScheduler {
     this.extInfo = extInfo;
   }
 
+  @Override
+  public Goal TypesInitialized(Job job) {
+    TypeSystem ts = extInfo.typeSystem();
+    NodeFactory nf = extInfo.nodeFactory();
+    Goal g = internGoal(new VisitorGoal(job, new FabILTypeBuilder(job, ts, nf)));
+    try {
+      addPrerequisiteDependency(g, Parsed(job));
+    }
+    catch (CyclicDependencyException e) {
+      throw new InternalCompilerError(e);
+    }
+    return g;
+  }
+  
   public Goal LoopsNormalized(final Job job) {
     Goal g =
         internGoal(new VisitorGoal(job, new LoopNormalizer(job, job
