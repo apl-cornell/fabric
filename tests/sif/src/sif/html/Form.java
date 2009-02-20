@@ -50,7 +50,7 @@ public final class Form extends BlockContainer {
     public static boolean jif$Instanceof(Principal P, Label l, Label e, Object o) {
 	if ((o instanceof Form) && Node.jif$Instanceof(l, e, o)) {
 	    Form that = (Form)o;
-	    return PrincipalUtil.equivalentTo(that.servletP, P);
+	    return PrincipalUtil.$Impl.equivalentTo(that.servletP, P);
 	}
     return false;
     }

@@ -19,7 +19,7 @@ import jif.lang.*;
 abstract public class Servlet extends HttpServlet {
 
     private ThreadLocal nonce;
-    private Map startActions;
+    private Map<String, Action> startActions;
 
     private final Principal servletP;
 
@@ -42,7 +42,7 @@ abstract public class Servlet extends HttpServlet {
                 }
             }
         };
-        startActions = new HashMap();
+        startActions = new HashMap<String, Action>();
         this.jif$invokeDefConstructor();
 
         initialize();
@@ -228,7 +228,7 @@ abstract public class Servlet extends HttpServlet {
                     // ideally this might have to be 'met' with {servP!:} to ensure that servP believes so
                     laction = new LabeledAction(a, trustedBySessionLabel(req));
                 } else {
-                    laction = new LabeledAction(a, LabelUtil.singleton().noComponents());
+                    laction = new LabeledAction(a, LabelUtil.$Impl.noComponents());
                 }
             }
         }
@@ -249,11 +249,11 @@ abstract public class Servlet extends HttpServlet {
             if (debug(2)) {
                 // time the invocation of the action
                 DEBUG.print(laction.a.getName() + " " + laction.a.getClass()+ " ");
-                long clear = LabelUtil.singleton().getAndClearTime();
+                long clear = LabelUtil.$Impl.getAndClearTime();
                 long time_start = System.currentTimeMillis();
                 laction.a.invoke(laction.L, req);
                 long time_end = System.currentTimeMillis();
-                clear = LabelUtil.singleton().getAndClearTime();
+                clear = LabelUtil.$Impl.getAndClearTime();
                 DEBUG.print("Action " + (time_end - time_start) + " Dynamic_Security " + clear + " ");
             }
             else {
@@ -284,7 +284,7 @@ abstract public class Servlet extends HttpServlet {
 
 
     Label trustedBySessionLabel(Request req) {
-        return LabelUtil.singleton().writerPolicyLabel(req.session, Collections.EMPTY_SET);        
+        return LabelUtil.$Impl.writerPolicyLabel(req.session, Collections.EMPTY_SET);        
     }
 
     /**
@@ -307,7 +307,7 @@ abstract public class Servlet extends HttpServlet {
      */
     private LabeledAction findAction(Request req, String action_name) {
         // first look in the session-specific actions, then the start actions
-        Map sessionActions = getSessionActions(req.request);
+        Map<String, LabeledAction> sessionActions = getSessionActions(req.request);
         if (sessionActions.containsKey(action_name)) {
             return sessionActions.get(action_name);
 
@@ -324,10 +324,10 @@ abstract public class Servlet extends HttpServlet {
      * @param request
      * @return the map of session actions
      */    
-    private Map getSessionActions(HttpServletRequest request) {
-        Map sessionActions = (Map)request.getSession(true).getAttribute("session_actions");
+    private Map<String, LabeledAction> getSessionActions(HttpServletRequest request) {
+        Map<String, LabeledAction> sessionActions = (Map<String, LabeledAction>)request.getSession(true).getAttribute("session_actions");
         if (sessionActions == null) {
-            sessionActions = new HashMap();
+            sessionActions = new HashMap<String, LabeledAction>();
             request.getSession(true).setAttribute("session_actions", sessionActions);
         }
 
@@ -377,7 +377,7 @@ abstract public class Servlet extends HttpServlet {
         Node content = new NodeList(lbl, lbl, lbl, lbl, new Paragraph(lbl, lbl, lbl, lbl, new Text(lbl, lbl, explanation)),
             stackTrace);
 
-        Label none = LabelUtil.singleton().noComponents();
+        Label none = LabelUtil.$Impl.noComponents();
         Action a = findDefaultAction(req);
         if (a != null) {
             String url = req.contextURL();
@@ -481,7 +481,7 @@ abstract public class Servlet extends HttpServlet {
      * data on one input that was intended for another input with
      * a different label. 
      */
-    private Set inputNames = new HashSet();
+    private Set<String> inputNames = new HashSet<String>();
 
     public void addNamedInput(Input input) {
         String name = input.getName();
@@ -492,7 +492,7 @@ abstract public class Servlet extends HttpServlet {
 
 
     private Label sessionPrincipalLabel(SessionState ss) {
-        return LabelUtil.singleton().readerPolicyLabel(ss.sessionPrincipal, Collections.EMPTY_SET);
+        return LabelUtil.$Impl.readerPolicyLabel(ss.sessionPrincipal, Collections.EMPTY_SET);
     }
 
     protected SessionState createSessionState() {
@@ -507,7 +507,7 @@ abstract public class Servlet extends HttpServlet {
         return getOutputChannelBound(request.session);
     }
     public static Label getOutputChannelBound(Principal session) {
-        return LabelUtil.singleton().toLabel(PrincipalUtil.readableByPrinPolicy(session));
+        return LabelUtil.$Impl.toLabel(PrincipalUtil.$Impl.readableByPrinPolicy(session));
         //return LabelUtil.privacyPolicyLabel(session, Collections.EMPTY_LIST);
     }
 

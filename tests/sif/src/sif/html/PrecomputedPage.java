@@ -15,20 +15,20 @@ public class PrecomputedPage {
     /**
      * A list of char[].
      */
-    private List precomputedOutput;
+    private List<char[]> precomputedOutput;
     
     /**
      * A list describing how the spaces between the char[]s of
      * precomputedOutput should fit.
      */
-    private List args;
+    private List<Object> args;
     
     /**
      * The ActionNodePairs that are added by the page.
      */
-    private Set addedActions;
+    private Set<ActionNodePair> addedActions;
 
-    private Map actionLevels;
+    private Map<ActionNodePair, Label> actionLevels;
 
     private CharArrayWriter caw;
     
@@ -37,8 +37,8 @@ public class PrecomputedPage {
         this.L = L;
         
         // pre-render the HTML for the page, using our own special HTMLWriter
-        precomputedOutput = new ArrayList();
-        args = new ArrayList();
+        precomputedOutput = new ArrayList<char[]>();
+        args = new ArrayList<Object>();
         
         // precompute the output of the page body
         caw = new CharArrayWriter(1024);
@@ -80,7 +80,7 @@ public class PrecomputedPage {
     public static boolean jif$Instanceof(Label l, Label e, Object o) {
         if (o instanceof PrecomputedPage) {
             PrecomputedPage that = (PrecomputedPage)o;
-            return LabelUtil.singleton().equivalentTo(that.L, l);
+            return LabelUtil.$Impl.equivalentTo(that.L, l);
         }
         return false;
     }
@@ -111,8 +111,8 @@ public class PrecomputedPage {
      */
     public void write(Request req, PrintWriter w, NodeList precomputedPageArgs, Head precomputedPageHead) {
         // add all the added actions, and store the names generated.
-        Map actionNames = new HashMap();
-        for (Iterator iter = addedActions.iterator(); iter.hasNext(); ) {
+        Map<ActionNodePair, String> actionNames = new HashMap<ActionNodePair, String>();
+        for (Iterator<ActionNodePair> iter = addedActions.iterator(); iter.hasNext(); ) {
             ActionNodePair anp = iter.next();
             String name = req.servlet.addAction(anp.a, actionLevels.get(anp), req);
             actionNames.put(anp, name);            
@@ -132,8 +132,8 @@ public class PrecomputedPage {
         }
         w.println("<body>");
         
-        Iterator text = precomputedOutput.iterator();
-        Iterator holders = args.iterator();        
+        Iterator<char[]> text = precomputedOutput.iterator();
+        Iterator<Object> holders = args.iterator();        
         int index = 0;
         
         while (text.hasNext() && holders.hasNext()) {
@@ -190,9 +190,9 @@ public class PrecomputedPage {
 }
 
 class HTMLPrecomputerWriter extends HTMLWriter {
-    Set addedActions = new HashSet();
-    Map actionLevels = new HashMap();
-    Set addedInputs = new HashSet();
+    Set<ActionNodePair> addedActions = new HashSet<ActionNodePair>();
+    Map<ActionNodePair, Label> actionLevels = new HashMap<ActionNodePair, Label>();
+    Set<Input> addedInputs = new HashSet<Input>();
     private PrecomputedPage precomputer;
     public HTMLPrecomputerWriter(PrecomputedPage precomputer, Writer out) {
         super(new PrintWriter(out), null);

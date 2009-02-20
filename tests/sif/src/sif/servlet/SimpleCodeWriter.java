@@ -19,7 +19,7 @@ public class SimpleCodeWriter extends CodeWriter {
     int rmargin;
     int lmargin;
     boolean breakAll;
-    Stack lmargins;
+    Stack<State> lmargins;
     int pos;
 
     public SimpleCodeWriter(OutputStream o, int width_) {
@@ -40,7 +40,7 @@ public class SimpleCodeWriter extends CodeWriter {
 	adjustRmargin();
 	breakAll = false;
 	pos = 0;
-	lmargins = new Stack();
+	lmargins = new Stack<State>();
     }
 
     public SimpleCodeWriter(Writer o, int width_) {
@@ -68,7 +68,7 @@ public class SimpleCodeWriter extends CodeWriter {
     }
         
     public void end() {
-	State s = (State)lmargins.pop();
+	State s = lmargins.pop();
 	lmargin = s.lmargin;
 	breakAll = s.breakAll;
     }

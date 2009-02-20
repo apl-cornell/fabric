@@ -1,5 +1,7 @@
 package sif.html;
 
+import jif.lang.Label;
+
 /**
  * @author andru
  *

@@ -1,6 +1,7 @@
 package sif.html;
 
 import sif.servlet.HTMLWriter;
+import jif.lang.Label;
 
 /**
  * @author andru

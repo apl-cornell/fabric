@@ -49,7 +49,7 @@ public final class Input {
     public static boolean jif$Instanceof(jif.lang.Principal jif$servletP, Object o) {
         if (o instanceof Input) {
             Input that = (Input)o;
-            return PrincipalUtil.equivalentTo(that.servletP, jif$servletP);
+            return PrincipalUtil.$Impl.equivalentTo(that.servletP, jif$servletP);
         }
         return false;
     }

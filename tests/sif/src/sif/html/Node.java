@@ -33,7 +33,7 @@ public abstract class Node {
     public static boolean jif$Instanceof(Label l, Label e, Object o) {
         if (o instanceof Node) {
             Node that = (Node)o;
-            return LabelUtil.singleton().equivalentTo(that.L, l) && LabelUtil.singleton().equivalentTo(that.E, e);
+            return LabelUtil.$Impl.equivalentTo(that.L, l) && LabelUtil.$Impl.equivalentTo(that.E, e);
         }
         return false;
     }

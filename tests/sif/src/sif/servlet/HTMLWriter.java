@@ -48,8 +48,8 @@ public abstract class HTMLWriter  {
     /**
      * Maps from label names to confidentiality policies and integrity policies respectively.
      */
-    private final Map confLatticeMap; 
-    private final Map integLatticeMap;
+    private final Map<String, Policy> confLatticeMap; 
+    private final Map<String, Policy> integLatticeMap;
 
     
     /**
@@ -72,8 +72,8 @@ public abstract class HTMLWriter  {
         // cw = new SimpleCodeWriter(p, lineWidth);
         //cw = new OptimalCodeWriter(p, lineWidth);
         if (labelColorCodings) {
-            confLatticeMap = new HashMap();
-            integLatticeMap = new HashMap();
+            confLatticeMap = new HashMap<String, Policy>();
+            integLatticeMap = new HashMap<String, Policy>();
         }
         else {
             confLatticeMap = null;
@@ -190,11 +190,11 @@ public abstract class HTMLWriter  {
     }
     
     // Takes a lattice and generate names for the elements
-    private void colorCoding(Map labelLattice, String uniqPrefix) {
+    private void colorCoding(Map<String, Policy> labelLattice, String uniqPrefix) {
     	// called after the entire html is written and just before the <body> tag is closed
     	// first construct the confidentiality lattice
-    	Map labelToActual = new HashMap();
-    	Vector bottoms = new Vector();
+    	Map<Policy, Policy> labelToActual = new HashMap<Policy, Policy>();
+    	Vector<Integer> bottoms = new Vector<Integer>();
     	Policy[] labels;
     	Policy[] confList;
     	if(uniqPrefix.equals("conf")) {
@@ -208,7 +208,7 @@ public abstract class HTMLWriter  {
     	for(int i = 0; i < labels.length; i++) {
     		boolean isNew = true;
     		for(int j = 0; j < i; j++) {
-    			if(LabelUtil.singleton().relabelsTo(labels[i], labels[j]) && LabelUtil.singleton().relabelsTo(labels[j], labels[i])) {
+    			if(LabelUtil.$Impl.relabelsTo(labels[i], labels[j]) && LabelUtil.$Impl.relabelsTo(labels[j], labels[i])) {
     				isNew = false;
     				labelToActual.put(labels[i], labels[j]);
     				break;
@@ -236,7 +236,7 @@ public abstract class HTMLWriter  {
     	for(int i = 0; i < numConf; i++) {
     		for(int j = 0; j < numConf; j++) {
     			if(i != j) {
-    				if(confTable[i][j] == 0 && LabelUtil.singleton().relabelsTo(confList[i], confList[j])) {
+    				if(confTable[i][j] == 0 && LabelUtil.$Impl.relabelsTo(confList[i], confList[j])) {
     					confTable[i][j] = 1;
     					confTable[j][i] = -1;
     					for(int k = 0; k < numConf; k++) {
@@ -291,15 +291,15 @@ public abstract class HTMLWriter  {
 //    	System.out.println();
     	
     	// map of labels to names, with each name being a set of integers
-    	Map namesMap = new HashMap();
-    	Map arrayObjectMap = new HashMap();
+    	Map<Policy, Set<Integer>> namesMap = new HashMap<Policy, Set<Integer>>();
+    	Map<Policy, String> arrayObjectMap = new HashMap<Policy, String>();
     	
     	// now give structured names to each label indicating its position in the lattice
     	// first associate each label with a set of integers that represent the name
     	int uniqCounter = 0;
     	for(int i = 0; i < bottoms.size(); i++) {
     		int bot = bottoms.get(i).intValue();
-    		Set set = new HashSet();
+    		Set<Integer> set = new HashSet<Integer>();
     		if(bottoms.size() > 1) {
     			set.add(new Integer(uniqCounter++));
     		}
@@ -321,12 +321,12 @@ public abstract class HTMLWriter  {
     		int bot = bottoms.remove(0).intValue();
     		for(int j = 0; j < numConf; j++) {
     			if(confTable[bot][j] == 1) {
-    					Set setPrime = namesMap.get(confList[j]);
+    					Set<Integer> setPrime = namesMap.get(confList[j]);
     					if(setPrime == null) {
-    						setPrime = new HashSet();
+    						setPrime = new HashSet<Integer>();
     						namesMap.put(confList[j], setPrime);
     					}
-    					setPrime.addAll((HashSet)namesMap.get(confList[bot]));
+    					setPrime.addAll((HashSet<Integer>)namesMap.get(confList[bot]));
     					if(outgoing[bot] > 1 || incoming[j] == 1) {
     						setPrime.add(new Integer(uniqCounter++));
     					}
@@ -365,7 +365,7 @@ public abstract class HTMLWriter  {
     	String mapVar = uniqPrefix + "map";
     	
     	cw.write("var " + mapVar + " = new Object;\n");
-    	Iterator keys = labelLattice.keySet().iterator();
+    	Iterator<String> keys = labelLattice.keySet().iterator();
     	while(keys.hasNext()) {
     		Object key = keys.next();
     		Object label = labelLattice.get(key);
@@ -567,7 +567,7 @@ public abstract class HTMLWriter  {
         
     protected String labelToString(Label inputLbl) {
         if (inputLbl == null) return "<null label>";
-//        if (LabelUtil.singleton().isReadableBy(inputLbl, PrincipalUtil.nullPrincipal())) {
+//        if (LabelUtil.$Impl.isReadableBy(inputLbl, PrincipalUtil.nullPrincipal())) {
 //            return "public information";
 //        }
         return inputLbl.toString();
@@ -588,15 +588,15 @@ public abstract class HTMLWriter  {
         final Label currInputLvl;  // what the current input label being displayed is (null if none)      
         final boolean openedTag;   // was a tag opened when this LevelInfo was pushed?
         public String toString() {
-            return "[currOut="+LabelUtil.singleton().toString(currOutputLvl)+
-                      "; currInp="+LabelUtil.singleton().toString(currInputLvl)+
+            return "[currOut="+LabelUtil.$Impl.toString(currOutputLvl)+
+                      "; currInp="+LabelUtil.$Impl.toString(currInputLvl)+
                       "; opened="+openedTag+
                       "; "+n+"]";
         }
     }
 
     public class LevelStack {
-        private final List stack = new ArrayList(30);
+        private final List<LevelInfo> stack = new ArrayList<LevelInfo>(30);
         
         public LevelStack() {
         }
@@ -643,8 +643,8 @@ public abstract class HTMLWriter  {
             
             LevelInfo li = stack.get(stack.size()-1);
             
-            return !(LabelUtil.singleton().equivalentTo(inputLevel, li.currInputLvl) && 
-                    LabelUtil.singleton().equivalentTo(outputNodeLevel, li.currOutputLvl));
+            return !(LabelUtil.$Impl.equivalentTo(inputLevel, li.currInputLvl) && 
+                    LabelUtil.$Impl.equivalentTo(outputNodeLevel, li.currOutputLvl));
         }
         private Label outputLevel() {
             LevelInfo li = stack.get(stack.size()-1);

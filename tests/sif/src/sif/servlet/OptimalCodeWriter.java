@@ -487,13 +487,13 @@ abstract class Item
     /** Minimum lmargin-rhs width on second and following lines. 
      * A map from max levels to Integer(width). */
 
-    Map min_widths = new HashMap();
+    Map<MaxLevels, Integer> min_widths = new HashMap<MaxLevels, Integer>();
     
     /** Minimum lmargin-final offset */
-    Map min_indents = new HashMap();
+    Map<MaxLevels, Integer> min_indents = new HashMap<MaxLevels, Integer>();
 
     /** Minimum pos-rhs width (i.e., min width up to first break) */
-    Map min_pos_width = new HashMap();
+    Map<MaxLevels, Integer> min_pos_width = new HashMap<MaxLevels, Integer>();
     
     /** Are there any breaks in this items and following items? */
     boolean contains_brks;
@@ -850,7 +850,7 @@ class BlockItem extends Item {
      * Map from maxlevels to either null or non-null, the latter if it can
      * contain breaks at those maxlevels.
      */
-    Map containsBreaks = new HashMap();
+    Map<MaxLevels, MaxLevels> containsBreaks = new HashMap<MaxLevels, MaxLevels>();
     
     boolean selfContainsBreaks(MaxLevels m) {
 	if (containsBreaks.containsKey(m)) {

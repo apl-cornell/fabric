@@ -18,7 +18,7 @@ public final class Radio {
     public static boolean jif$Instanceof(Principal P, Object o) {
         if (o instanceof Radio) {
             Radio that = (Radio)o;
-            return PrincipalUtil.equivalentTo(that.servletP, P);
+            return PrincipalUtil.$Impl.equivalentTo(that.servletP, P);
         }
         return false;
     }

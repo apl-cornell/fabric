@@ -17,14 +17,14 @@ public class StandardHTMLWriter extends HTMLWriter  {
     /**
      * Map from ActionNodePairs to Strings
      */
-    private final Map actionNames = new HashMap();
+    private final Map<ActionNodePair, String> actionNames = new HashMap<ActionNodePair, String>();
         
     /** The set of input names used so far. Each input must have
      * a unique name, ensuring that the program doesn't receive
      * data on one input that was intended for another input with
      * a different label. 
      * */
-    private Set inputNames = new HashSet();
+    private Set<String> inputNames = new HashSet<String>();
 
     public StandardHTMLWriter(Request req, PrintWriter p, int lineWidth, String colorCoding) {
         super(p, lineWidth, colorCoding);
@@ -81,7 +81,7 @@ public class StandardHTMLWriter extends HTMLWriter  {
 
 
     private String lookupActionName(Action action, Node n) {
-        return (String)actionNames.get(new ActionNodePair(action, n));
+        return actionNames.get(new ActionNodePair(action, n));
     }
 }
  
