@@ -230,12 +230,14 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     // managing any tranaction's log) at the start of the method and ensure that
     // it will be free at the end of the method.
 
+    // XXX TODO Security checks.
+    
     TransactionManager tm = getTransactionManager();
     TransactionID tid = remoteCallMessage.tid;
 
     if (tid != null) {
-      // Get the log for the transaction.
       Log log;
+      // Get the log for the transaction.
       synchronized (runningTransactions) {
         log = runningTransactions.get(remoteCallMessage.tid.topTid);
         if (log == null) {
@@ -246,9 +248,22 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
       // Associate it with the transaction manager.
       tm.associateLog(log);
+
+      // Synchronize the log stack...
+      TransactionID commonAncestor =
+          log.getTid().getLowestCommonAncestor(remoteCallMessage.tid);
+
+      // Do the commits that we've missed.
+      for (int i = log.getTid().depth; i > commonAncestor.depth; i--)
+        tm.commitTransaction();
+
+      // Start new transactions if necessary.
+      if (commonAncestor.depth != remoteCallMessage.tid.depth)
+        tm.startTransaction(remoteCallMessage.tid);
     }
 
     try {
+      // Execute the requested method.
       Object result = Client.runInTransaction(new Client.Code<Object>() {
         public Object run() {
           // This is ugly. Wrap all exceptions that can be thrown with a runtime

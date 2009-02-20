@@ -97,7 +97,7 @@ public class TransactionID implements FastSerializable {
 
   public boolean equals(TransactionID tid) {
     if (topTid != tid.topTid || depth != tid.depth) return false;
-    
+
     TransactionID tid1 = this;
     TransactionID tid2 = tid;
     while (tid1 != tid2) {
@@ -106,5 +106,36 @@ public class TransactionID implements FastSerializable {
       tid2 = tid2.parent;
     }
     return true;
+  }
+
+  /**
+   * @return the longest tid that is an ancestor of both this tid and the given
+   *         tid.
+   */
+  public TransactionID getLowestCommonAncestor(TransactionID tid) {
+    if (tid == null) return null;
+
+    TransactionID ancestor1;
+    TransactionID ancestor2;
+    if (depth < tid.depth) {
+      ancestor1 = this;
+      ancestor2 = tid;
+    } else {
+      ancestor1 = tid;
+      ancestor2 = this;
+    }
+
+    // Get the two ancestors to the same height.
+    while (ancestor2.depth > ancestor1.depth)
+      ancestor2 = ancestor2.parent;
+
+    // Walk up until the ancestors match.
+    while (ancestor1 != ancestor2
+        && (ancestor1.tid != ancestor2.tid || ancestor1.equals(ancestor2))) {
+      ancestor1 = ancestor1.parent;
+      ancestor2 = ancestor2.parent;
+    }
+
+    return ancestor1;
   }
 }

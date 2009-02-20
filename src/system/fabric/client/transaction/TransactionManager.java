@@ -168,10 +168,10 @@ public final class TransactionManager {
 
     current.abort();
     logger.finest(current + " aborted");
-    
+
     if (current.tid.parent == null || current.parent != null
         && current.parent.tid == current.tid.parent) {
-      // The parent frame represents the parent transaction.  Pop the stack.
+      // The parent frame represents the parent transaction. Pop the stack.
       current = current.parent;
     } else {
       // Reuse the current frame for the parent transaction.
@@ -210,7 +210,7 @@ public final class TransactionManager {
         // Parent frame represents parent transaction. Pop the stack.
         current = parent;
       } else {
-        // Reuse the current frame for the parent transaction.  Update its TID.
+        // Reuse the current frame for the parent transaction. Update its TID.
         current.tid = current.tid.parent;
       }
       return;
@@ -488,12 +488,21 @@ public final class TransactionManager {
    * the caller.
    */
   public void startTransaction() throws AbortException {
+    startTransaction(null);
+  }
+
+  /**
+   * Starts a new transaction with the given tid. The given tid is assumed to be
+   * a valid descendent of the current tid. If the given tid is null, a random
+   * tid is generated for the subtransaction.
+   */
+  public void startTransaction(TransactionID tid) {
     if (current != null && current.abortSignal) {
       // Abort the transaction.
       // TODO Provide a reason for the abort.
       throw new AbortException(null);
     }
-    current = new Log(current);
+    current = new Log(current, tid);
     logger.finest(current.parent + " started subtx " + current + " in thread "
         + Thread.currentThread());
   }
@@ -516,7 +525,7 @@ public final class TransactionManager {
     // XXX Eventually, we will want to support threads in transactions.
     if (current != null)
       throw new InternalError("Cannot create threads within transactions");
-    
+
     TransactionManager tm = new TransactionManager();
 
     if (thread instanceof FabricThread) {
@@ -549,10 +558,10 @@ public final class TransactionManager {
       if (!current.clientsCalled.contains(client))
         current.clientsCalled.add(client);
     }
-    
+
     return current.tid;
   }
-  
+
   /**
    * Associates the given transaction log with this transaction manager.
    */

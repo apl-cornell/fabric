@@ -83,11 +83,21 @@ public final class Log {
 
   /**
    * Creates a new log with the given parent and the given transaction ID. The
-   * TID for the parent and the given TID are assumed to be consistent.
+   * TID for the parent and the given TID are assumed to be consistent. If the
+   * given TID is null, a random tid is generated for the subtransaction.
    */
-  private Log(Log parent, TransactionID tid) {
+  Log(Log parent, TransactionID tid) {
     this.parent = parent;
-    this.tid = tid;
+    if (tid == null) {
+      if (parent == null) {
+        this.tid = new TransactionID();
+      } else {
+        this.tid = new TransactionID(parent.tid);
+      }
+    } else {
+      this.tid = tid;
+    }
+
     this.child = null;
     this.thread = Thread.currentThread();
     this.abortSignal = false;
@@ -98,7 +108,7 @@ public final class Log {
     this.writes = new ArrayList<$Impl>();
     this.clientsCalled = new ArrayList<RemoteClient>();
   }
-  
+
   /**
    * Creates a nested transaction whose parent is the transaction with the given
    * log. The created transaction log is added to the parent's children.
@@ -108,8 +118,7 @@ public final class Log {
    *          a top-level transaction.
    */
   Log(Log parent) {
-    this(parent, parent == null ? new TransactionID() : new TransactionID(
-        parent.tid));
+    this(parent, null);
   }
 
   /**
@@ -258,12 +267,12 @@ public final class Log {
    */
   void commitNested() {
     // TODO See if lazy merging of logs helps performance.
-    
+
     if (parent == null || parent.tid != tid.parent) {
       // Reuse this frame for the parent transaction.
       return;
     }
-    
+
     // Merge reads and transfer read locks.
     for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
       for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {
@@ -455,5 +464,12 @@ public final class Log {
    * Blocks until all threads in <code>threads</code> are finished.
    */
   void waitForThreads() {
+  }
+
+  /**
+   * @return
+   */
+  public TransactionID getTid() {
+    return tid;
   }
 }
