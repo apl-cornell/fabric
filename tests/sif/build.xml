@@ -24,10 +24,9 @@
        Clean up targets and other admin tasks
        ****************************************  -->
 	<target name="clean" description="clean up">
-		<!-- Delete the ${sif.classes} and ${dist} directory trees -->
+		<!-- Delete the ${sif.classes} directory tree -->
 		<delete dir="${sif.classes}" />
 		<delete dir="${sif.sig-classes}" />
-		<delete dir="${dist}" />
 		<subant target="clean">
 			<fileset dir="examples" includes="*/build.xml"/>
 		</subant>
@@ -42,7 +41,6 @@
 		<!-- Create the build directory structures used by compile -->
 		<mkdir dir="${sif.classes}" />
 		<mkdir dir="${sif.sig-classes}" />
-		<mkdir dir="${sif.lib}" />
 	</target>
 
 
