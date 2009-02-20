@@ -11,4 +11,9 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     super(job, fab_ts, fab_nf, fabil_ext);
     // TODO Auto-generated constructor stub
   }
+  
+  @Override
+  public String runtimeLabelUtil() {
+    return "jif.lang.LabelUtil";
+  }
 }
