@@ -16,6 +16,10 @@ public class SpecialExt_c extends ExprExt_c {
   @Override
   protected Expr rewriteProxiesImpl(ProxyRewriter pr) {
     Special special = node();
+    
+    if (!pr.typeSystem().isFabricClass(special.type()))
+      return special;
+    
     TypeNode qualifier = special.qualifier();
     QQ qq = pr.qq();
     if (qualifier != null) {
