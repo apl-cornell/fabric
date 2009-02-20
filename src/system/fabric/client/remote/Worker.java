@@ -1,6 +1,7 @@
 package fabric.client.remote;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.logging.Level;
@@ -13,9 +14,13 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.remote.messages.RemoteCallMessage;
 import fabric.client.remote.messages.RemoteCallMessage.Response;
+import fabric.client.transaction.Log;
+import fabric.client.transaction.TransactionID;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.FabricThread;
 import fabric.common.MessageHandler;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.lang.Principal;
 import fabric.messages.Message;
 
@@ -41,6 +46,13 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
   private static final Logger logger =
       Logger.getLogger("fabric.client.remote.Worker");
+
+  /**
+   * For each active transaction, maps the top-level transaction IDs to
+   * top-level transaction log.
+   */
+  private static final LongKeyMap<Log> runningTransactions =
+      new LongKeyHashMap<Log>();
 
   /**
    * Instantiates a new worker thread and starts it running.
@@ -212,12 +224,66 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     socket = null;
   }
 
-  /**
-   * @param remoteCallMessage
-   * @return
-   */
-  public Response handle(RemoteCallMessage remoteCallMessage) {
-    // TODO Auto-generated method stub
-    return null;
+  public Response handle(final RemoteCallMessage remoteCallMessage)
+      throws RemoteCallException {
+    // We assume that this thread's transaction manager is free (i.e., it's not
+    // managing any tranaction's log) at the start of the method and ensure that
+    // it will be free at the end of the method.
+
+    TransactionManager tm = getTransactionManager();
+    TransactionID tid = remoteCallMessage.tid;
+
+    if (tid != null) {
+      // Get the log for the transaction.
+      Log log;
+      synchronized (runningTransactions) {
+        log = runningTransactions.get(remoteCallMessage.tid.topTid);
+        if (log == null) {
+          log = new Log(tid);
+          runningTransactions.put(remoteCallMessage.tid.topTid, log);
+        }
+      }
+
+      // Associate it with the transaction manager.
+      tm.associateLog(log);
+    }
+
+    try {
+      Object result = Client.runInTransaction(new Client.Code<Object>() {
+        public Object run() {
+          // This is ugly. Wrap all exceptions that can be thrown with a runtime
+          // exception and do the actual handling below.
+          try {
+            return remoteCallMessage.getMethod().invoke(
+                remoteCallMessage.receiver, remoteCallMessage.args);
+          } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
+          } catch (SecurityException e) {
+            throw new RuntimeException(e);
+          } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+          } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+          } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+          } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+          }
+        }
+      });
+
+      // Return the result.
+      return new Response(result);
+    } catch (RuntimeException e) {
+      Throwable cause = e.getCause();
+      if (cause instanceof IllegalArgumentException
+          || cause instanceof SecurityException
+          || cause instanceof IllegalAccessException
+          || cause instanceof InvocationTargetException
+          || cause instanceof NoSuchMethodException)
+        throw new RemoteCallException(cause);
+
+      throw e;
+    }
   }
 }

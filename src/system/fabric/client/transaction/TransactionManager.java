@@ -147,14 +147,6 @@ public final class TransactionManager {
     this.current = null;
   }
 
-  /**
-   * Creates a transaction manager that is a child of the given transaction
-   * manager.
-   */
-  private TransactionManager(TransactionManager tm) {
-    this.current = tm.current;
-  }
-
   private void checkAbortSignal() {
     if (current.abortSignal) {
       logger.finest(current + " got abort signal");
@@ -176,7 +168,15 @@ public final class TransactionManager {
 
     current.abort();
     logger.finest(current + " aborted");
-    current = current.parent;
+    
+    if (current.tid.parent == null || current.parent != null
+        && current.parent.tid == current.tid.parent) {
+      // The parent frame represents the parent transaction.  Pop the stack.
+      current = current.parent;
+    } else {
+      // Reuse the current frame for the parent transaction.
+      current.tid = current.tid.parent;
+    }
   }
 
   /**
@@ -202,11 +202,17 @@ public final class TransactionManager {
     logger.finest(current + " committing");
 
     Log parent = current.parent;
-    if (parent != null) {
+    if (current.tid.parent != null) {
       // Update data structures to reflect the commit.
       current.commitNested();
       logger.finest(current + " committed");
-      current = parent;
+      if (parent.tid == current.tid.parent) {
+        // Parent frame represents parent transaction. Pop the stack.
+        current = parent;
+      } else {
+        // Reuse the current frame for the parent transaction.  Update its TID.
+        current.tid = current.tid.parent;
+      }
       return;
     }
 
@@ -232,7 +238,8 @@ public final class TransactionManager {
               Collection<$Impl> creates = current.getCreatesForCore(core);
               LongKeyMap<Integer> reads = current.getReadsForCore(core);
               Collection<$Impl> writes = current.getWritesForCore(core);
-              core.prepareTransaction(current.tid, creates, reads, writes);
+              core.prepareTransaction(current.tid.topTid, creates, reads,
+                  writes);
             } catch (TransactionPrepareFailedException e) {
               failures.put(core, e);
             } catch (UnreachableNodeException e) {
@@ -284,7 +291,7 @@ public final class TransactionManager {
         Runnable runnable = new Runnable() {
           public void run() {
             try {
-              core.commitTransaction(current.tid);
+              core.commitTransaction(current.tid.topTid);
             } catch (TransactionCommitFailedException e) {
               failed.add(core);
             } catch (UnreachableNodeException e) {
@@ -327,7 +334,7 @@ public final class TransactionManager {
     } catch (TransactionPrepareFailedException e) {
       // Go through each core we've contacted and send abort messages.
       for (Core core : cores)
-        core.abortTransaction(current.tid);
+        core.abortTransaction(current.tid.topTid);
       logger.finest(current + " error committing: abort exception: " + e);
       abortTransaction();
       throw new AbortException(e);
@@ -506,19 +513,17 @@ public final class TransactionManager {
    * called before the thread is started.
    */
   public void registerThread(Thread thread) {
-    TransactionManager child = new TransactionManager(this);
+    // XXX Eventually, we will want to support threads in transactions.
+    if (current != null)
+      throw new InternalError("Cannot create threads within transactions");
+    
+    TransactionManager tm = new TransactionManager();
 
     if (thread instanceof FabricThread) {
-      ((FabricThread) thread).setTransactionManager(child);
+      ((FabricThread) thread).setTransactionManager(tm);
     } else {
       synchronized (instanceMap) {
-        instanceMap.put(thread, child);
-      }
-    }
-
-    if (current != null) {
-      synchronized (current.threads) {
-        current.threads.add(thread);
+        instanceMap.put(thread, tm);
       }
     }
   }
@@ -527,35 +532,31 @@ public final class TransactionManager {
    * Registers that the given thread has finished.
    */
   public void deregisterThread(Thread thread) {
-    if (current == null) return;
-
-    synchronized (current.threads) {
-      current.threads.remove(thread);
+    if (!(thread instanceof FabricThread)) {
+      synchronized (instanceMap) {
+        instanceMap.remove(thread);
+      }
     }
   }
 
   /**
    * Registers a remote call to the given client.
    * 
-   * @return information on how to sync the remote client's transaction stack
-   *         with the local transaction stack.
+   * @return the current transaction ID.
    */
-  public RemoteCallSyncInfo registerRemoteCall(RemoteClient client) {
-    // XXX TODO
-    return null;
-  }
-
-  public static class RemoteCallSyncInfo {
-    public final long tid;
-    public final int numCommits;
-    public final int callTransactionNestDepth;
-
-    private RemoteCallSyncInfo(int callTransactionNestDepth, int numCommits,
-        long tid) {
-      super();
-      this.callTransactionNestDepth = callTransactionNestDepth;
-      this.numCommits = numCommits;
-      this.tid = tid;
+  public TransactionID registerRemoteCall(RemoteClient client) {
+    if (current != null) {
+      if (!current.clientsCalled.contains(client))
+        current.clientsCalled.add(client);
     }
+    
+    return current.tid;
+  }
+  
+  /**
+   * Associates the given transaction log with this transaction manager.
+   */
+  public void associateLog(Log log) {
+    current = log;
   }
 }

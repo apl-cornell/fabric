@@ -11,10 +11,11 @@ import javax.security.auth.x500.X500Principal;
 
 import fabric.client.Client;
 import fabric.client.RemoteNode;
+import fabric.client.UnreachableNodeException;
 import fabric.client.remote.messages.InterClientMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
+import fabric.client.transaction.TransactionID;
 import fabric.client.transaction.TransactionManager;
-import fabric.client.transaction.TransactionManager.RemoteCallSyncInfo;
 import fabric.common.NoSuchNodeError;
 import fabric.lang.Object.$Proxy;
 
@@ -148,15 +149,15 @@ public final class RemoteClient implements RemoteNode {
     return conn != null && !conn.isClosed();
   }
 
-  protected $Proxy issueRemoteCall($Proxy receiver, String methodName,
-      $Proxy[] args) {
-    RemoteCallSyncInfo syncInfo =
+  protected Object issueRemoteCall(Class<?> receiverClass, $Proxy receiver,
+      String methodName, Class<?>[] parameterTypes, Object[] args)
+      throws UnreachableNodeException, RemoteCallException {
+    TransactionID tid =
         TransactionManager.getInstance().registerRemoteCall(this);
 
     RemoteCallMessage.Response response =
-        new RemoteCallMessage(syncInfo.tid, syncInfo.numCommits,
-            syncInfo.callTransactionNestDepth, receiver, methodName, args)
-            .send(this);
+        new RemoteCallMessage(tid, receiverClass, receiver, methodName,
+            parameterTypes, args).send(this);
     return response.result;
   }
 

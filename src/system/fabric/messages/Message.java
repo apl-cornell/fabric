@@ -265,7 +265,8 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    * @param in Input stream containing the message.
    * @return A Response message with the appropriate type.
    */
-  public abstract R response(N node, DataInput in) throws IOException;
+  public abstract R response(N node, DataInput in) throws IOException,
+      FabricException;
 
   /**
    * Writes this message out on the given output stream. Only used by the

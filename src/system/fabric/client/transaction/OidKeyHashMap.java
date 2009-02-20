@@ -22,6 +22,10 @@ final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   public LongKeyMap<V> get(Core core) {
     return map.get(core);
   }
+  
+  public void clear() {
+    map.clear();
+  }
 
   public V get(Core core, long onum) {
     LongKeyMap<V> submap = map.get(core);

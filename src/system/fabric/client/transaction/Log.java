@@ -1,9 +1,9 @@
 package fabric.client.transaction;
 
-import java.security.SecureRandom;
 import java.util.*;
 
 import fabric.client.Core;
+import fabric.client.remote.RemoteClient;
 import fabric.client.transaction.LockList.Node;
 import fabric.common.Pair;
 import fabric.common.Util;
@@ -17,36 +17,26 @@ import fabric.lang.Object.$Impl;
  */
 public final class Log {
   /**
-   * Source for random tids.
+   * The transaction ID for this log.
    */
-  private static final Random rand = new SecureRandom();
-  
+  TransactionID tid;
+
   /**
-   * The log for the parent transaction, or null if there is none (i.e., this is
-   * the log for a top-level transaction).
+   * The log for the parent transaction, or null if there is none. A null value
+   * here does not necessarily mean that this is the top-level transaction. The
+   * tid should be checked to determine whether this transaction is top-level.
    */
   final Log parent;
-  
-  /**
-   * The tid for the top-level transaction.
-   */
-  final long tid;
 
   /**
-   * The set of sub-transactions.
+   * The sub-transaction.
    */
-  private final Set<Log> children;
+  private Log child;
 
   /**
-   * The thread that started this transaction.
+   * The thread that is running this transaction.
    */
-  final Thread thread;
-
-  /**
-   * The set of threads started at this transaction level (and are still
-   * running).
-   */
-  final Set<Thread> threads;
+  Thread thread;
 
   /**
    * A flag indicating whether this transaction should abort. This flag should
@@ -57,75 +47,84 @@ public final class Log {
   /**
    * Maps OIDs to <code>readMap</code> entries for objects read in this
    * transaction or completed sub-transactions. Reads from running or aborted
-   * sub-transactions don't count here. <code>readMap</code> entries are
-   * paired with the specific <code>LockList.Node</code> containing the read
-   * lock for this transaction.
+   * sub-transactions don't count here. <code>readMap</code> entries are paired
+   * with the specific <code>LockList.Node</code> containing the read lock for
+   * this transaction.
    */
   // Proxy objects aren't used here because doing so would result in calls to
   // hashcode() and equals() on such objects, resulting in fetching the
   // corresponding Impls from the core.
-  protected OidKeyHashMap<Pair<LockList.Node<Log>, ReadMapEntry>> reads;
+  protected final OidKeyHashMap<Pair<LockList.Node<Log>, ReadMapEntry>> reads;
 
   /**
    * TODO: DOCO
    */
-  protected List<Pair<LockList.Node<Log>, ReadMapEntry>> readsReadByParent;
+  protected final List<Pair<LockList.Node<Log>, ReadMapEntry>> readsReadByParent;
 
   /**
    * A collection of all objects created in this transaction or completed
    * sub-transactions. Objects created in running or aborted sub-transactions
    * don't count here.
    */
-  protected List<$Impl> creates;
+  protected final List<$Impl> creates;
 
   /**
    * A collection of all objects modified in this transaction or completed
    * sub-transactions. Objects modified in running or aborted sub-transactions
    * don't count here.
    */
-  protected List<$Impl> writes;
+  protected final List<$Impl> writes;
 
   /**
-   * Creates a nested transaction whose parent is the transaction with the given
-   * log. The created transaction log is added to the parent's children.
-   * 
-   * @param parent
-   *                the log for the parent transaction or null if creating the
-   *                log for a top-level transaction.
+   * The set of clients called by this transaction and completed
+   * sub-transactions.
    */
-  Log(Log parent) {
-    this.parent = parent;
-    if (parent != null) {
-      parent.children.add(this);
-      this.tid = parent.tid;
-    } else {
-      synchronized (rand) {
-        this.tid = rand.nextLong();
-      }
-    }
+  protected final List<RemoteClient> clientsCalled;
 
-    this.children = Collections.synchronizedSet(new HashSet<Log>());
+  /**
+   * Creates a new log with the given parent and the given transaction ID. The
+   * TID for the parent and the given TID are assumed to be consistent.
+   */
+  private Log(Log parent, TransactionID tid) {
+    this.parent = parent;
+    this.tid = tid;
+    this.child = null;
     this.thread = Thread.currentThread();
-    this.threads = new HashSet<Thread>();
     this.abortSignal = false;
     this.reads = new OidKeyHashMap<Pair<LockList.Node<Log>, ReadMapEntry>>();
     this.readsReadByParent =
         new ArrayList<Pair<LockList.Node<Log>, ReadMapEntry>>();
     this.creates = new ArrayList<$Impl>();
     this.writes = new ArrayList<$Impl>();
+    this.clientsCalled = new ArrayList<RemoteClient>();
+  }
+  
+  /**
+   * Creates a nested transaction whose parent is the transaction with the given
+   * log. The created transaction log is added to the parent's children.
+   * 
+   * @param parent
+   *          the log for the parent transaction or null if creating the log for
+   *          a top-level transaction.
+   */
+  Log(Log parent) {
+    this(parent, parent == null ? new TransactionID() : new TransactionID(
+        parent.tid));
   }
 
   /**
-   * Returns true iff the given Log is in the ancestry of this log.
+   * Creates a log with the given transaction ID.
+   */
+  public Log(TransactionID tid) {
+    this(null, tid);
+  }
+
+  /**
+   * Returns true iff the given Log is in the ancestry of (or is the same as)
+   * this log.
    */
   boolean isDescendantOf(Log log) {
-    Log cur = this;
-    while (cur != null) {
-      if (cur == log) return true;
-      cur = cur.parent;
-    }
-
-    return false;
+    return tid.isDescendantOf(log.tid);
   }
 
   /**
@@ -205,7 +204,7 @@ public final class Log {
     while (!toFlag.isEmpty()) {
       Log log = toFlag.remove();
       synchronized (log) {
-        toFlag.addAll(log.children);
+        toFlag.add(log.child);
         log.abortSignal = true;
         log.thread.interrupt();
       }
@@ -237,8 +236,17 @@ public final class Log {
       }
     }
 
-    if (parent != null) {
-      parent.children.remove(this);
+    if (parent != null && parent.tid == tid.parent) {
+      // The parent frame represents the parent transaction. Null out its child.
+      parent.child = null;
+    } else {
+      // This frame will be reused to represent the parent transaction. Clear
+      // out the log data structures.
+      reads.clear();
+      readsReadByParent.clear();
+      creates.clear();
+      writes.clear();
+      clientsCalled.clear();
     }
   }
 
@@ -250,6 +258,12 @@ public final class Log {
    */
   void commitNested() {
     // TODO See if lazy merging of logs helps performance.
+    
+    if (parent == null || parent.tid != tid.parent) {
+      // Reuse this frame for the parent transaction.
+      return;
+    }
+    
     // Merge reads and transfer read locks.
     for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
       for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {
@@ -300,7 +314,7 @@ public final class Log {
       }
     }
 
-    parent.children.remove(this);
+    parent.child = null;
   }
 
   /**
@@ -441,20 +455,5 @@ public final class Log {
    * Blocks until all threads in <code>threads</code> are finished.
    */
   void waitForThreads() {
-    while (true) {
-      Thread thread;
-      synchronized (threads) {
-        if (threads.isEmpty()) return;
-        thread = threads.iterator().next();
-      }
-      try {
-        TransactionManager.logger.finest(this + " waiting on thread " + thread);
-        thread.join();
-        synchronized (threads) {
-          threads.remove(thread);
-        }
-      } catch (InterruptedException e) {
-      }
-    }
   }
 }

@@ -1,12 +1,13 @@
 package fabric.client.remote.messages;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.Method;
 
 import fabric.client.UnreachableNodeException;
+import fabric.client.remote.RemoteCallException;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.Worker;
+import fabric.client.transaction.TransactionID;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
 import fabric.lang.Object.$Proxy;
@@ -15,17 +16,17 @@ import fabric.messages.Message;
 public class RemoteCallMessage extends
     InterClientMessage<RemoteCallMessage.Response> {
 
-  private long tid;
-  private int commitSync;
-  private int callTransactionNestDepth;
-  private $Proxy receiver;
-  private String methodName;
-  private $Proxy[] args;
+  public final TransactionID tid;
+  public final Class<?> receiverType;
+  public final $Proxy receiver;
+  public final String methodName;
+  public final Class<?>[] parameterTypes;
+  public final Object[] args;
 
   public static class Response implements Message.Response {
-    public final $Proxy result;
+    public final Object result;
 
-    public Response($Proxy result) {
+    public Response(Object result) {
       this.result = result;
     }
 
@@ -36,30 +37,48 @@ public class RemoteCallMessage extends
      *          The client from which the response is being read.
      * @param in
      *          The input stream from which to read the response.
+     * @throws ClassNotFoundException
      */
-    Response(RemoteClient client, DataInput in) throws IOException {
-      this.result = readRef(in);
+    Response(RemoteClient client, DataInput in) throws IOException,
+        RemoteCallException {
+      if (in.readBoolean()) {
+        this.result = readRef(in);
+      } else {
+        byte[] buf = new byte[in.readInt()];
+        in.readFully(buf);
+
+        ObjectInputStream ois =
+            new ObjectInputStream(new ByteArrayInputStream(buf));
+        try {
+          this.result = ois.readObject();
+        } catch (ClassNotFoundException e) {
+          throw new RemoteCallException(e);
+        }
+      }
     }
 
     public void write(DataOutput out) throws IOException {
-      writeRef(result, out);
+      out.writeBoolean(result instanceof $Proxy);
+      if (result instanceof $Proxy)
+        writeRef(($Proxy) result, out);
+      else {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(result);
+        oos.flush();
+        baos.flush();
+
+        byte[] buf = baos.toByteArray();
+        out.writeInt(buf.length);
+        out.write(buf);
+      }
     }
   }
 
   /**
    * @param tid
-   *          The identifier for the top-level transaction. This should be the
-   *          same across all sub-tranactions across all hosts. When committing
-   *          the top-level transaction, this tid will be used by the cores to
-   *          identify prepare requests that are part of the same transaction.
-   * @param commitSync
-   *          The number of times the callee should commit nested transactions
-   *          to synchronize its transaction stack with the caller.
-   * @param callTransactionNestDepth
-   *          The nesting depth for the transaction in which the call will be
-   *          executed. A callTransactionNestDepth of 0 indicates that the call
-   *          will be executed in a top-level transaction that will immediately
-   *          commit to the core.
+   *          The identifier for the transaction in which the remote call is
+   *          being made.
    * @param receiver
    *          The object that is receiving the call.
    * @param methodName
@@ -67,43 +86,66 @@ public class RemoteCallMessage extends
    * @param args
    *          The arguments to the method.
    */
-  public RemoteCallMessage(long tid, int commitSync,
-      int callTransactionNestDepth, $Proxy receiver, String methodName,
-      $Proxy[] args) {
+  public RemoteCallMessage(TransactionID tid, Class<?> receiverType,
+      $Proxy receiver, String methodName, Class<?>[] parameterTypes,
+      Object[] args) {
     super(MessageType.REMOTE_CALL);
 
+    if (parameterTypes.length != args.length)
+      throw new IllegalArgumentException();
+
     this.tid = tid;
-    this.commitSync = commitSync;
-    this.callTransactionNestDepth = callTransactionNestDepth;
+    this.receiverType = receiverType;
     this.receiver = receiver;
     this.methodName = methodName;
+    this.parameterTypes = parameterTypes;
     this.args = args;
   }
 
   /**
    * Deserialization constructor.
    */
-  public RemoteCallMessage(DataInput in) throws IOException {
-    this(in.readLong(), in.readInt(), in.readInt(), readRef(in), in.readUTF(),
-        readArgs(in));
-  }
+  public RemoteCallMessage(DataInput in) throws IOException,
+      ClassNotFoundException {
+    super(MessageType.REMOTE_CALL);
 
-  private static $Proxy[] readArgs(DataInput in) throws IOException {
-    $Proxy[] result = new $Proxy[in.readInt()];
-    for (int i = 0; i < result.length; i++)
-      result[i] = readRef(in);
-    return result;
+    if (in.readBoolean())
+      this.tid = new TransactionID(in);
+    else this.tid = null;
+
+    byte[] buf = new byte[in.readInt()];
+    in.readFully(buf);
+
+    ObjectInputStream ois =
+        new ObjectInputStream(new ByteArrayInputStream(buf));
+
+    this.receiverType = (Class<?>) ois.readObject();
+    this.receiver = readRef(ois);
+
+    this.methodName = ois.readUTF();
+    this.parameterTypes = new Class<?>[in.readInt()];
+    this.args = new Object[parameterTypes.length];
+
+    for (int i = 0; i < args.length; i++) {
+      parameterTypes[i] = (Class<?>) ois.readObject();
+      if (ois.readBoolean())
+        args[i] = readRef(ois);
+      else args[i] = ois.readObject();
+    }
   }
 
   @Override
-  public Response dispatch(Worker handler) {
+  public Response dispatch(Worker handler) throws RemoteCallException {
     return handler.handle(this);
   }
 
-  public Response send(RemoteClient client) throws UnreachableNodeException {
+  public Response send(RemoteClient client) throws UnreachableNodeException,
+      RemoteCallException {
     try {
       return super.send(client, true);
     } catch (UnreachableNodeException e) {
+      throw e;
+    } catch (RemoteCallException e) {
       throw e;
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from client.", e);
@@ -111,20 +153,45 @@ public class RemoteCallMessage extends
   }
 
   @Override
-  public Response response(RemoteClient c, DataInput in) throws IOException {
+  public Response response(RemoteClient c, DataInput in) throws IOException,
+      RemoteCallException {
     return new Response(c, in);
   }
 
   @Override
   public void write(DataOutput out) throws IOException {
-    out.writeLong(tid);
-    out.writeInt(commitSync);
-    out.writeInt(callTransactionNestDepth);
-    writeRef(receiver, out);
-    out.writeUTF(methodName);
-    out.writeInt(args.length);
-    for (int i = 0; i < args.length; i++)
-      writeRef(args[i], out);
+    out.writeBoolean(tid != null);
+    if (tid != null) tid.write(out);
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(baos);
+    oos.writeObject(receiverType);
+    writeRef(receiver, oos);
+
+    oos.writeUTF(methodName);
+    oos.writeInt(args.length);
+
+    for (int i = 0; i < args.length; i++) {
+      oos.writeObject(parameterTypes[i]);
+      if (args[i] instanceof $Proxy) {
+        oos.writeBoolean(true);
+        writeRef(($Proxy) args[i], oos);
+      } else {
+        oos.writeBoolean(false);
+        oos.writeObject(args[i]);
+      }
+    }
+
+    oos.flush();
+    baos.flush();
+
+    byte[] buf = baos.toByteArray();
+    out.writeInt(buf.length);
+    out.write(buf);
+  }
+
+  public Method getMethod() throws SecurityException, NoSuchMethodException {
+    return receiverType.getMethod(methodName, parameterTypes);
   }
 
 }
