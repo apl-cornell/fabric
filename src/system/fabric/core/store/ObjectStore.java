@@ -61,18 +61,6 @@ public abstract class ObjectStore {
    */
   private final LongKeyMap<Pair<Glob, MutableInteger>> globTable;
 
-  protected static class MutableInteger {
-    public int value;
-
-    public MutableInteger() {
-      this(0);
-    }
-
-    public MutableInteger(int value) {
-      this.value = value;
-    }
-  }
-
   /**
    * The data stored for a partially prepared transaction.
    */
