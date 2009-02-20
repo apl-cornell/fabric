@@ -552,8 +552,14 @@ public interface Object {
       }
 
       // Remote reference.
-      if (p.ref.core instanceof LocalCore)
-        throw new InternalError("Creating remote ref to local core.");
+      if (p.ref.core instanceof LocalCore) {
+        Class<?> objClass = obj.getClass();
+        String objStr = obj.toString();
+        throw new InternalError(
+            "Creating remote ref to local core.  Object on local core has class "
+                + objClass + ".  Its string representation is \"" + objStr
+                + "\".");
+      }
       refType.add(RefTypeEnum.REMOTE);
       intercoreRefs.add(new Pair<String, Long>(p.ref.core.name(), p.ref.onum));
     }
