@@ -6,7 +6,7 @@
  */
 package java.lang;
 
-public final class StringBuffer[label L] /*implements java.io.Serializable, CharSequence*/
+public final class StringBuffer[label L] extends java.lang.Object /*implements java.io.Serializable, CharSequence*/
 {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     public StringBuffer() {    }

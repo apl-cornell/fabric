@@ -138,7 +138,7 @@
   <!-- Create appropriate executables in the bin directory -->
   <target name="bin-check">
     <uptodate property="bin.up-to-date" srcfile="bin/defs.in"
-	targetfile="bin/defs" />
+              targetfile="bin/defs" />
   </target>
 
   <target name="bin" depends="configure,bin-check" unless="bin.up-to-date">
@@ -217,10 +217,10 @@
       </fileset>
 
       <fileset dir="${compiler.src}">
-	  <include name="**/Grm.java" />
-	  <include name="**/sym.java" />
-	  <include name="**/Lexer_c.java" />
-	  <include name="**/*_ppg.cup" />
+          <include name="**/Grm.java" />
+          <include name="**/sym.java" />
+          <include name="**/Lexer_c.java" />
+          <include name="**/*_ppg.cup" />
       </fileset>
     </delete>
   </target>
@@ -235,7 +235,7 @@
   <target name="bootstrap" depends="init,bootstrap-check" unless="bootstrap.up-to-date">
     <touch file="${bootstrap.tstamp}"/>
     <javac target="1.5" srcdir="${bootstrap.src}"
-	destdir="${bootstrap.classes}" debug="on">
+        destdir="${bootstrap.classes}" debug="on">
       <include name="**" />
       <sourcepath path="${system.src}"/>
       <classpath refid="standard.classpath"/>
@@ -248,7 +248,7 @@
     -->
     <touch millis="0">
       <fileset dir="${bootstrap.classes}">
-	<include name="**/*.class"/>
+        <include name="**/*.class"/>
       </fileset>
     </touch>
   </target>
@@ -268,8 +268,8 @@
       <include name="fabric/lang/**" />
       <include name="fabric/common/util/**" />
       <classpath>
-	<pathelement location="${bootstrap.classes}" />
-	<path refid="standard.classpath"/>
+        <pathelement location="${bootstrap.classes}" />
+        <path refid="standard.classpath"/>
       </classpath>
     </javac>
   </target>
@@ -295,8 +295,8 @@
       <include name="fabric/messages/**" />
       <exclude name="fabric/client/debug/**" />
       <classpath>
-	<pathelement location="${bootstrap.classes}" />
-	<path refid="standard.classpath"/>
+        <pathelement location="${bootstrap.classes}" />
+        <path refid="standard.classpath"/>
       </classpath>
     </javac>
   </target>
@@ -306,15 +306,15 @@
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/dissemination/**" />
       <classpath>
-	<pathelement location="${bootstrap.classes}" />
-	<path refid="standard.classpath"/>
+        <pathelement location="${bootstrap.classes}" />
+        <path refid="standard.classpath"/>
       </classpath>
     </javac>
   </target>
 
   <target name="nfsserver" depends="client,fabric-runtime">
     <javac target="1.5" srcdir="${tests.fabnfs}" destdir="${tests.classes}"
-	debug="on">
+        debug="on">
       <include name="fabnfs/**" />
       <classpath refid="standard.classpath"/>
     </javac>
@@ -322,7 +322,7 @@
         parallel="true"
         failonerror="true"
         dir="${basedir}"
-    	dest="${tests.classes}"
+        dest="${tests.classes}"
         relative="false"
         skipemptyfilesets="true"
         vmlauncher="false">
@@ -390,13 +390,13 @@
     </apply>
 
     <apply executable="bash"
-	   parallel="true"
-	   failonerror="true"
-	   dir="${basedir}"
-	   dest="${signatures.fabric.classes}"
-	   relative="false"
-	   skipemptyfilesets="true"
-	   vmlauncher="false">
+           parallel="true"
+           failonerror="true"
+           dir="${basedir}"
+           dest="${signatures.fabric.classes}"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
       <arg value="${fabc}"     />
       <arg value="-sigcp"      /> <arg value="sig-classes/fabric"    />
       <arg value="-sig"        />
@@ -405,12 +405,16 @@
       <arg value="-sourcepath" /> <arg value="src/signatures/fabric" />
       <srcfile />
       <fileset dir="${signatures.fabric.src}">
-	<exclude name="java/lang/Object.fab"       />
-	<exclude name="fabric/lang/Object.fab"     />
-	<exclude name="jif/lang/LabelUtil.fab"     />
-	<exclude name="jif/lang/PrincipalUtil.fab" />
-	<exclude name="jif/lang/Capability.fab"    />
-	</fileset>
+        <exclude name="java/lang/Object.fab"       />
+        <exclude name="fabric/lang/Object.fab"     />
+        <exclude name="jif/lang/LabelUtil.fab"     />
+        <exclude name="jif/lang/PrincipalUtil.fab" />
+        <exclude name="jif/lang/Capability.fab"    />
+
+        <!-- these are broken -->
+        <exclude name="jif/lang/Cloneable.fab"     />
+        <exclude name="java/lang/Cloneable.fab"    />
+        </fileset>
       <globmapper from="*.fab" to="*.class" />
     </apply>
 
@@ -553,7 +557,7 @@
   <!-- Compiles the Fabric test programs -->
   <target name="tests" depends="init,fabric-system,nfsserver">
     <javac target="1.5" srcdir="${src}" destdir="${classes}" debug="on"
-	includes="tests/**">
+        includes="tests/**">
       <classpath refid="standard.classpath"/>
     </javac>
   </target>
@@ -568,14 +572,14 @@
 
   <target name="jar-runtime" depends="fabric-runtime">
     <jar jarfile="${runtime.jar}" basedir="${runtime.classes}"
-	excludes="**/*.java" />
+        excludes="**/*.java" />
   </target>
 
   <target name="jar-sig" depends="fabil-signatures,fabric-signatures">
     <jar jarfile="${signature.fabil.jar}" basedir="${signatures.fabil.classes}"
-	excludes="**/*.java" />
+        excludes="**/*.java" />
     <jar jarfile="${signature.fabric.jar}"
-	basedir="${signatures.fabric.classes}" excludes="**/*.java" />
+        basedir="${signatures.fabric.classes}" excludes="**/*.java" />
   </target>
 
   <!--
