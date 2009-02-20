@@ -6,7 +6,7 @@
  */
 package java.lang;
 
-public final class Boolean /*implements Comparable*/ {
+public final class Boolean extends java.lang.Object /*implements Comparable*/ {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 
     public static final Boolean{*<-*} TRUE = null; // PLACEHOLDER

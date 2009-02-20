@@ -6,7 +6,7 @@
  */
 package java.io;
 
-public final class FileDescriptor {
+public final class FileDescriptor extends java.lang.Object {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 
     public FileDescriptor() { }

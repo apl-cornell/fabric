@@ -6,7 +6,7 @@
  */
 package java.lang;
 
-public final class Character implements java.io.Serializable /*,  Comparable*/ {
+public final class Character extends java.lang.Object implements java.io.Serializable /*,  Comparable*/ {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     public static final int{*<-*} MIN_RADIX = 2;
     public static final int{*<-*} MAX_RADIX = 36;
