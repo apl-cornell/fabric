@@ -48,8 +48,8 @@ public abstract class HTMLWriter  {
     /**
      * Maps from label names to confidentiality policies and integrity policies respectively.
      */
-    private final Map<String, Policy> confLatticeMap; 
-    private final Map<String, Policy> integLatticeMap;
+    private final Map confLatticeMap; 
+    private final Map integLatticeMap;
 
     
     /**
@@ -72,8 +72,8 @@ public abstract class HTMLWriter  {
         // cw = new SimpleCodeWriter(p, lineWidth);
         //cw = new OptimalCodeWriter(p, lineWidth);
         if (labelColorCodings) {
-            confLatticeMap = new HashMap<String, Policy>();
-            integLatticeMap = new HashMap<String, Policy>();
+            confLatticeMap = new HashMap();
+            integLatticeMap = new HashMap();
         }
         else {
             confLatticeMap = null;
@@ -190,11 +190,11 @@ public abstract class HTMLWriter  {
     }
     
     // Takes a lattice and generate names for the elements
-    private void colorCoding(Map<String, Policy> labelLattice, String uniqPrefix) {
+    private void colorCoding(Map labelLattice, String uniqPrefix) {
     	// called after the entire html is written and just before the <body> tag is closed
     	// first construct the confidentiality lattice
-    	Map<Policy, Policy> labelToActual = new HashMap<Policy, Policy>();
-    	Vector<Integer> bottoms = new Vector<Integer>();
+    	Map labelToActual = new HashMap();
+    	Vector bottoms = new Vector();
     	Policy[] labels;
     	Policy[] confList;
     	if(uniqPrefix.equals("conf")) {
@@ -291,15 +291,15 @@ public abstract class HTMLWriter  {
 //    	System.out.println();
     	
     	// map of labels to names, with each name being a set of integers
-    	Map<Policy, Set<Integer>> namesMap = new HashMap<Policy, Set<Integer>>();
-    	Map<Policy, String> arrayObjectMap = new HashMap<Policy, String>();
+    	Map namesMap = new HashMap();
+    	Map arrayObjectMap = new HashMap();
     	
     	// now give structured names to each label indicating its position in the lattice
     	// first associate each label with a set of integers that represent the name
     	int uniqCounter = 0;
     	for(int i = 0; i < bottoms.size(); i++) {
     		int bot = bottoms.get(i).intValue();
-    		Set<Integer> set = new HashSet<Integer>();
+    		Set set = new HashSet();
     		if(bottoms.size() > 1) {
     			set.add(new Integer(uniqCounter++));
     		}
@@ -321,12 +321,12 @@ public abstract class HTMLWriter  {
     		int bot = bottoms.remove(0).intValue();
     		for(int j = 0; j < numConf; j++) {
     			if(confTable[bot][j] == 1) {
-    					Set<Integer> setPrime = namesMap.get(confList[j]);
+    					Set setPrime = namesMap.get(confList[j]);
     					if(setPrime == null) {
-    						setPrime = new HashSet<Integer>();
+    						setPrime = new HashSet();
     						namesMap.put(confList[j], setPrime);
     					}
-    					setPrime.addAll((HashSet<Integer>)namesMap.get(confList[bot]));
+    					setPrime.addAll((HashSet)namesMap.get(confList[bot]));
     					if(outgoing[bot] > 1 || incoming[j] == 1) {
     						setPrime.add(new Integer(uniqCounter++));
     					}
@@ -365,7 +365,7 @@ public abstract class HTMLWriter  {
     	String mapVar = uniqPrefix + "map";
     	
     	cw.write("var " + mapVar + " = new Object;\n");
-    	Iterator<String> keys = labelLattice.keySet().iterator();
+    	Iterator keys = labelLattice.keySet().iterator();
     	while(keys.hasNext()) {
     		Object key = keys.next();
     		Object label = labelLattice.get(key);
@@ -596,7 +596,7 @@ public abstract class HTMLWriter  {
     }
 
     public class LevelStack {
-        private final List<LevelInfo> stack = new ArrayList<LevelInfo>(30);
+        private final List stack = new ArrayList(30);
         
         public LevelStack() {
         }

@@ -19,7 +19,7 @@ import jif.lang.*;
 abstract public class Servlet extends HttpServlet {
 
     private ThreadLocal nonce;
-    private Map<String, Action> startActions;
+    private Map startActions;
 
     private final Principal servletP;
 
@@ -42,7 +42,7 @@ abstract public class Servlet extends HttpServlet {
                 }
             }
         };
-        startActions = new HashMap<String, Action>();
+        startActions = new HashMap();
         this.jif$invokeDefConstructor();
 
         initialize();
@@ -307,7 +307,7 @@ abstract public class Servlet extends HttpServlet {
      */
     private LabeledAction findAction(Request req, String action_name) {
         // first look in the session-specific actions, then the start actions
-        Map<String, LabeledAction> sessionActions = getSessionActions(req.request);
+        Map sessionActions = getSessionActions(req.request);
         if (sessionActions.containsKey(action_name)) {
             return sessionActions.get(action_name);
 
@@ -324,10 +324,10 @@ abstract public class Servlet extends HttpServlet {
      * @param request
      * @return the map of session actions
      */    
-    private Map<String, LabeledAction> getSessionActions(HttpServletRequest request) {
-        Map<String, LabeledAction> sessionActions = (Map<String, LabeledAction>)request.getSession(true).getAttribute("session_actions");
+    private Map getSessionActions(HttpServletRequest request) {
+        Map sessionActions = (Map)request.getSession(true).getAttribute("session_actions");
         if (sessionActions == null) {
-            sessionActions = new HashMap<String, LabeledAction>();
+            sessionActions = new HashMap();
             request.getSession(true).setAttribute("session_actions", sessionActions);
         }
 
@@ -481,7 +481,7 @@ abstract public class Servlet extends HttpServlet {
      * data on one input that was intended for another input with
      * a different label. 
      */
-    private Set<String> inputNames = new HashSet<String>();
+    private Set inputNames = new HashSet();
 
     public void addNamedInput(Input input) {
         String name = input.getName();

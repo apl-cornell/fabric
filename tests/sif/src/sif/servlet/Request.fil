@@ -39,8 +39,8 @@ public final class Request {
     private Head precomputedPageHead;
     
     private boolean isMultipart;
-    private Map<String, String> parameterMap;
-    private Map<String, FileItem> fileMap = Collections.EMPTY_MAP;
+    private Map parameterMap;
+    private Map fileMap = Collections.EMPTY_MAP;
     
     Request(Servlet srv, HttpServletRequest req) {
         servlet = srv;
@@ -53,8 +53,8 @@ public final class Request {
             parameterMap = req.getParameterMap();
         }
         else {
-            parameterMap = new HashMap<String, String>();
-            fileMap = new HashMap<String, FileItem>();
+            parameterMap = new HashMap();
+            fileMap = new HashMap();
             
             // Create a factory for disk-based file items
             FileItemFactory factory = new DiskFileItemFactory();
@@ -112,7 +112,7 @@ public final class Request {
     }
     public InputStream getFile(Input inp) {
         String name = inp.getName();
-        FileItem fi = fileMap.get(name);
+        FileItem fi = (FileItem)fileMap.get(name);
         if (fi != null) {
             try {
                 return fi.getInputStream();
