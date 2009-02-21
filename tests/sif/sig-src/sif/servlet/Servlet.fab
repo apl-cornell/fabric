@@ -8,7 +8,7 @@ import jif.util.Map;
 /** A servlet contains the information that is shared across users and sessions.
  * It converts between the Java HttpServlet request processing style and this one. */
 
-abstract public class Servlet[principal servletP] {    
+abstract public class Servlet[principal servletP] extends java.lang.Object {    
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;        
     private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;

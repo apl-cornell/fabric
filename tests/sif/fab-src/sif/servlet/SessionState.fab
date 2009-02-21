@@ -1,0 +1,29 @@
+package sif.servlet;
+import jif.lang.Principal;
+
+/**
+ * Global state for a single session.
+ */
+
+public class SessionState {
+
+    protected SessionState() {
+        sessionPrincipal = new SessionPrincipal(this);
+    }
+
+    private final principal sessionPrincipal;
+    private String{}          sessionId;
+
+    public final String{} getSessionId() {
+        return this.sessionId;
+    }
+
+    void setSessionId(String{} id) {
+        this.sessionId = id;
+    }
+
+    public final Principal sessionPrincipal() {
+        return this.sessionPrincipal;
+    }
+}
+

@@ -7,7 +7,7 @@ import java.io.InputStream;
  * This is a Jif signature for the Request class
  *
  */
-public final class Request[principal servletP] {
+public final class Request[principal servletP] extends java.lang.Object {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 
     

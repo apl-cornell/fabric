@@ -4,7 +4,7 @@ package sif.html;
  * A Page is an entire HTML page.
  * @author andru
  */
-public final class Page[label L, label E] extends Node[L,E] {
+public final class Page[label L, label E] extends Node[L,E] extends java.lang.Object {
 	private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 	private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
 

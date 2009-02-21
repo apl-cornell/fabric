@@ -492,7 +492,7 @@ abstract public class Servlet extends HttpServlet {
 
 
     private Label sessionPrincipalLabel(SessionState ss) {
-        return LabelUtil.$Impl.readerPolicyLabel(ss.sessionPrincipal, Collections.EMPTY_SET);
+        return LabelUtil.$Impl.readerPolicyLabel(ss.sessionPrincipal(), Collections.EMPTY_SET);
     }
 
     protected SessionState createSessionState() {

@@ -7,7 +7,7 @@ import sif.servlet.Servlet;
  * @author andru
  *
  */
-public final class Input[principal servletP] {
+public final class Input[principal servletP] extends java.lang.Object {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
 

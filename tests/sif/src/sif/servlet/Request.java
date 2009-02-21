@@ -45,7 +45,7 @@ public final class Request {
     Request(Servlet srv, HttpServletRequest req) {
         servlet = srv;
         request = req;
-        session = this.getSessionState().sessionPrincipal; 
+        session = this.getSessionState().sessionPrincipal(); 
         bnd = Servlet.getOutputChannelBound(this);
         
         this.isMultipart = ServletFileUpload.isMultipartContent(req);
@@ -150,7 +150,7 @@ public final class Request {
 	    result = servlet.createSessionState();
 	    request.getSession(true).setAttribute("session_state", result);
 	    result.setSessionId(request.getSession().getId());
-	    result.sessionPrincipal.sessionInitialized();
+	    result.sessionPrincipal().sessionInitialized();
 	}
 
 	return result;

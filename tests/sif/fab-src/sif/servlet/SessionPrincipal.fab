@@ -7,7 +7,7 @@ public final class SessionPrincipal extends AbstractPrincipal {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     final SessionState{this} session;
     public SessionPrincipal(SessionState{this} session) {
-	super(session==null?"":session.getSessionId());
+	super("");
 	this.session = session;
     }
     
