@@ -5,9 +5,7 @@ import java.util.List;
 
 import fabric.extension.LocatedExt_c;
 
-
 import jif.ast.JifClassDecl;
-import jif.ast.JifClassDecl_c;
 import jif.ast.JifNodeFactory_c;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
@@ -20,7 +18,6 @@ import polyglot.ast.Node;
 import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
-import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 
 /**

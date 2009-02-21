@@ -47,4 +47,9 @@ public interface FabILExt extends Ext {
    * transaction manager.
    */
   public Node rewriteThreads(ThreadRewriter tr);
+
+  /**
+   * Used by <code>RemoteCallRewriter</code> to translate RMIs.
+   */
+  public Node rewriteRemoteCalls(RemoteCallRewriter rr);
 }

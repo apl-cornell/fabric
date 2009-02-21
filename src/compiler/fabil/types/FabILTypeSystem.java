@@ -34,6 +34,11 @@ public interface FabILTypeSystem extends TypeSystem {
   ClassType toFArray(ArrayType type);
 
   ClassType AbortException();
+  
+  /** The ClassType of fabric.client.remote.RemoteClient. */
+  ClassType RemoteClient();
+  
+  ClassType RemoteCallException();
 
   /**
    * @return true iff the given type is a primitive, an array of Fabric types,

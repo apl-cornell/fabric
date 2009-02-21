@@ -7,10 +7,12 @@ import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.MethodInstance;
+import polyglot.types.PrimitiveType;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
+import fabil.visit.RemoteCallRewriter;
 import fabil.visit.ThreadRewriter;
 
 public class ClassDeclExt_c extends ClassMemberExt_c {
@@ -613,6 +615,131 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     return result;
   }
 
+  @SuppressWarnings("unchecked")
+  @Override
+  public Node rewriteRemoteCalls(RemoteCallRewriter rr) {
+    NodeFactory nf = rr.nodeFactory();
+    FabILTypeSystem ts = rr.typeSystem();
+    
+    ClassDecl cd = node();
+    if (!cd.name().equals("$Proxy")) {
+      // Only translate the proxy class.
+      return cd;
+    }
+
+    TypeNode tnClass = rr.qq().parseType("java.lang.Class");
+    TypeNode tnObject = rr.qq().parseType("java.lang.Object");
+    
+    List<ClassMember> members = new ArrayList<ClassMember>(cd.body().members().size());
+    
+    for (ClassMember cm : (List<ClassMember>)cd.body().members()) {
+      members.add(cm);
+      if (!(cm instanceof MethodDecl)) continue;
+      
+      MethodDecl md = (MethodDecl)cm;
+      if (md.flags().isPublic() && !md.flags().isStatic()) {
+        // Every public instance method has a wrapper method for remote calls
+        
+        // First, use a static field to store the parameter types.
+        String fieldName = "$paramTypes" + (freshTid++);
+        
+        List<Expr> formalTypes = new ArrayList<Expr>(md.formals().size());
+        for (Formal f : (List<Formal>)md.formals()) {
+          TypeNode tn = f.type();
+          formalTypes.add(nf.ClassLit(Position.compilerGenerated(), tn));
+        }
+
+        FieldDecl fd = nf.FieldDecl(Position.compilerGenerated(), 
+                                    Flags.STATIC.Public().Final(), 
+                                    nf.ArrayTypeNode(Position.compilerGenerated(), tnClass), 
+                                    nf.Id(Position.compilerGenerated(), fieldName), 
+                                    nf.ArrayInit(Position.compilerGenerated(), formalTypes));
+        members.add(fd);
+        
+        // Now create the wrapper method.
+        List<Local> locals = new ArrayList<Local>(md.formals().size());
+        for (Formal f : (List<Formal>)md.formals()) {
+          locals.add(nf.Local(Position.compilerGenerated(), f.id()));
+        }
+        
+        Expr args = nf.NewArray(Position.compilerGenerated(), 
+                                tnObject, 
+                                md.formals().size(),
+                                nf.ArrayInit(Position.compilerGenerated(), 
+                                             locals));
+        
+        List<Expr> arguments = new ArrayList<Expr>(4);
+        arguments.add(nf.This(Position.compilerGenerated()));
+        arguments.add(nf.StringLit(Position.compilerGenerated(), md.name()));
+        arguments.add(nf.AmbExpr(Position.compilerGenerated(), 
+                      nf.Id(Position.compilerGenerated(), 
+                            fieldName)));
+        arguments.add(args);
+        
+        Id rcId = nf.Id(Position.compilerGenerated(), "$remoteClient");
+        Formal remoteClient = nf.Formal(Position.compilerGenerated(), 
+                                        Flags.FINAL, 
+                                        nf.CanonicalTypeNode(Position.compilerGenerated(), 
+                                                             ts.RemoteClient()), 
+                                        rcId);
+        
+        Call call = nf.Call(Position.compilerGenerated(), 
+                            nf.Local(Position.compilerGenerated(), rcId), 
+                            nf.Id(Position.compilerGenerated(), "issueRemoteCall"), 
+                            arguments);
+
+        Stmt ret;
+        Type retType = md.returnType().type();
+        if (retType.isPrimitive()) {
+          // Cannot cast Object to a primitive type directly
+          PrimitiveType pt = (PrimitiveType)retType;
+          ret = rr.qq().parseStmt(" return (" + pt.wrapperTypeString(ts) + ")%E;", call);
+        }
+        else if (retType.isVoid()) {
+          ret = nf.Eval(Position.compilerGenerated(), call);
+        }
+        else {
+          ret = nf.Return(Position.compilerGenerated(), 
+                          nf.Cast(Position.compilerGenerated(), 
+                                  md.returnType(), 
+                                  call));
+        }
+        
+        List<Stmt> catchStmts = new ArrayList<Stmt>();
+        catchStmts.add(rr.qq().parseStmt("java.lang.Throwable $t = $e.getCause();"));
+        // We need to catch RemoteCallException, and rethrow the cause.
+        for (TypeNode exception : (List<TypeNode>)md.throwTypes()) {
+          catchStmts.add(rr.qq().parseStmt("if ($t instanceof %T) throw (%T)$t;", exception, exception));
+        }
+        catchStmts.add(rr.qq().parseStmt("throw new java.lang.RuntimeException($e);"));
+        
+        Stmt tryCatch = rr.qq().parseStmt(
+            "try {\n" +
+            "  %S\n" +
+            "}\n" +
+            "catch (%T $e) {\n" +
+            "  %LS\n" +
+            "}",
+            ret, ts.RemoteCallException(), catchStmts);
+        
+        List<Formal> newFormals = new ArrayList<Formal>(md.formals().size() + 1);
+        newFormals.add(remoteClient);
+        newFormals.addAll(md.formals());
+        MethodDecl wrapper = nf.MethodDecl(Position.compilerGenerated(),
+                                           Flags.PUBLIC, 
+                                           md.returnType(), 
+                                           nf.Id(Position.compilerGenerated(), md.name() + "$remote"), 
+                                           newFormals, 
+                                           md.throwTypes(), 
+                                           nf.Block(Position.compilerGenerated(), tryCatch));
+        
+        members.add(wrapper);
+      }
+    }
+    
+    return cd.body(nf.ClassBody(Position.compilerGenerated(), members));
+  }
+  
   /*
    * (non-Javadoc)
    * 
@@ -626,4 +753,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   private ClassMemberExt ext(ClassMember m) {
     return (ClassMemberExt) m.ext();
   }
+  
+  private static int freshTid = 0;
 }

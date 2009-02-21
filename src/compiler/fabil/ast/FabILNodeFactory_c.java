@@ -1,7 +1,6 @@
 package fabil.ast;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import polyglot.ast.*;
 import polyglot.ast.Assign.Operator;
@@ -169,5 +168,19 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     s = (AbortStmt)s.ext(extFactory().extAbort());
     s = (AbortStmt)s.del(delFactory().delStmt());
     return s;
+  }
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  public Call Call(Position pos, Receiver target, Id name, List args) {
+    return Call(pos, target, name, null, args);
+  }
+  
+  @SuppressWarnings("unchecked")
+  public Call Call(Position pos, Receiver target, Id name, Expr remoteClient, List args) {
+    Call n = new FabILCall_c(pos, target, name, remoteClient, args);
+    n = (Call)n.ext(extFactory().extCall());
+    n = (Call)n.del(delFactory().delCall());
+    return n;
   }
 }

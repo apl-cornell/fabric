@@ -41,7 +41,15 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
   public ClassType Thread() {
     return load("java.lang.Thread");
   }
+  
+  public ClassType RemoteClient() {
+    return load("fabric.client.remote.RemoteClient");
+  }
 
+  public ClassType RemoteCallException() {
+    return load("fabric.client.remote.RemoteCallException");
+  }
+  
   /*
    * (non-Javadoc)
    * 
@@ -73,6 +81,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
     result.add("fabric.lang");
     result.add("jif.lang");
     result.add("fabric.client");
+    result.add("fabric.client.remote");
     return result;
   }
 

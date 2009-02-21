@@ -2,14 +2,7 @@ package fabil.ast;
 
 import java.util.List;
 
-import polyglot.ast.ArrayInit;
-import polyglot.ast.ClassBody;
-import polyglot.ast.Expr;
-import polyglot.ast.New;
-import polyglot.ast.NewArray;
-import polyglot.ast.NodeFactory;
-import polyglot.ast.Stmt;
-import polyglot.ast.TypeNode;
+import polyglot.ast.*;
 import polyglot.util.Position;
 
 /**
@@ -44,4 +37,7 @@ public interface FabILNodeFactory extends NodeFactory {
   
   RetryStmt RetryStmt(Position pos);
   AbortStmt AbortStmt(Position pos);
+  
+  @SuppressWarnings("unchecked")
+  Call Call(Position pos, Receiver target, Id name, Expr remoteClient, List args);
 }

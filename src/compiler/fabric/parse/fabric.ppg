@@ -79,3 +79,24 @@ extend modifier ::=
         ATOMIC:a
             {: RESULT = FabricFlags.ATOMIC; :}
     ;
+
+/*
+extend method_invocation ::=
+                    // Call
+        name:a AT expression:b LPAREN argument_list_opt:c RPAREN:d
+            {: RESULT = parser.nf.Call(parser.pos(a,d),
+                a.prefix == null ? null : a.prefix.toReceiver(),
+                a.name, b, c); :}
+    |   primary:a DOT IDENTIFIER:b AT expression:c LPAREN argument_list_opt:d RPAREN:e
+            {: RESULT = parser.nf.Call(parser.pos(b,e), a,
+                parser.nf.Id(parser.pos(b), b.getIdentifier()), c, d); :}
+    |   SUPER:a DOT IDENTIFIER:b AT expression:c LPAREN argument_list_opt:d RPAREN:e
+            {: RESULT = parser.nf.Call(parser.pos(a, e, b),
+                parser.nf.Super(parser.pos(a)),
+                parser.nf.Id(parser.pos(b), b.getIdentifier()), c, d); :}
+    |   name:a DOT SUPER:n DOT IDENTIFIER:b AT expression:c LPAREN argument_list_opt:d RPAREN:e
+            {: RESULT = parser.nf.Call(parser.pos(b,e),
+                parser.nf.Super(parser.pos(n), a.toType()),
+                parser.nf.Id(parser.pos(b), b.getIdentifier()), c, d); :}
+    ;
+*/

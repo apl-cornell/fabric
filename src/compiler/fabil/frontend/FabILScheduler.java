@@ -126,7 +126,7 @@ public class FabILScheduler extends JLScheduler {
 
     return g;
   }
-  
+    
   public Goal FindUpdatedVariables(final Job job) {
     Goal g = internGoal(new VisitorGoal(job, new UpdatedVariableFinder()) {
       @Override
@@ -261,7 +261,7 @@ public class FabILScheduler extends JLScheduler {
     
     return g;
   }
-
+  
   public Goal RewriteProxies(final Job job) {
     Goal g = internGoal(new VisitorGoal(job, new ProxyRewriter(extInfo)) {
       @SuppressWarnings("unchecked")
@@ -315,6 +315,18 @@ public class FabILScheduler extends JLScheduler {
     return g;
   }
 
+  public Goal RewriteRemoteCalls(final Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new RemoteCallRewriter((ExtensionInfo)job.extensionInfo())) {
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler s) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(RewriteAtomic(job));
+        return l;
+      }
+    });
+    return g;
+  }
+
   @Override
   public Goal Serialized(Job job) {
     Goal g = internGoal(new Serialized(job) {
@@ -326,6 +338,7 @@ public class FabILScheduler extends JLScheduler {
         if (!((FabILOptions) extInfo.getOptions()).signatureMode()) {
           l.add(RewriteProxies(job));
           l.add(RewriteAtomic(job));
+          l.add(RewriteRemoteCalls(job));
           l.add(InstrumentThreads(job));
         }
         return l;

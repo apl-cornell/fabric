@@ -137,14 +137,22 @@ extend field_access ::=
 // method_invocation
 drop {
     method_invocation ::=
-            primary DOT IDENTIFIER LPAREN argument_list_opt RPAREN
+	        name LPAREN argument_list_opt RPAREN
+        |   primary DOT IDENTIFIER LPAREN argument_list_opt RPAREN
         ;
 }
+
 extend method_invocation ::=
-        primary_no_new_array:a DOT IDENTIFIER:b LPAREN argument_list_opt:c RPAREN:d
-            {: RESULT = parser.nf.Call(parser.pos(b,d), a,
-                parser.nf.Id(parser.pos(b), b.getIdentifier()), c); :}
+                    // Call
+        name:a location_expr_opt:b LPAREN argument_list_opt:c RPAREN:d
+            {: RESULT = parser.nf.Call(parser.pos(a,d),
+                a.prefix == null ? null : a.prefix.toReceiver(),
+                a.name, b, c); :}
+    |   primary_no_new_array:a DOT IDENTIFIER:b location_expr_opt:c LPAREN argument_list_opt:d RPAREN:e
+            {: RESULT = parser.nf.Call(parser.pos(b,e), a,
+                parser.nf.Id(parser.pos(b), b.getIdentifier()), c, d); :}
     ;
+
 
 // explicit_constructor_invocation
 // TODO: this doesn't seem right.

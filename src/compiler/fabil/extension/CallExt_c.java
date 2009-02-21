@@ -1,13 +1,17 @@
 package fabil.extension;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import polyglot.ast.*;
+import polyglot.types.ClassType;
 import polyglot.types.MethodInstance;
 import polyglot.types.Type;
 import polyglot.util.Position;
+import fabil.ast.FabILCall;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
+import fabil.visit.RemoteCallRewriter;
 import fabil.visit.ThreadRewriter;
 import fabil.visit.ReadWriteChecker.State;
 
@@ -90,6 +94,25 @@ public class CallExt_c extends ExprExt_c {
         "fabric.client.transaction.TransactionManager.startThread(%E)", target);
   }
 
+  @SuppressWarnings("unchecked")
+  @Override
+  public Node rewriteRemoteCalls(RemoteCallRewriter rr) {
+    FabILCall c = (FabILCall)node();
+    if (c.remoteClient() == null) return c;
+
+    NodeFactory nf = rr.nodeFactory();
+    
+    List<Expr> args = new ArrayList<Expr>(c.arguments().size() + 1);
+    args.add(c.remoteClient());
+    args.addAll(c.arguments());
+    
+    Expr target = rr.qq().parseExpr("(" + ((ClassType)c.target().type()).fullName() + ".$Proxy)" + c.target());
+    return nf.Call(Position.compilerGenerated(), 
+                   target, 
+                   nf.Id(Position.compilerGenerated(), c.name() + "$remote"), 
+                   args);
+  }
+  
   /*
    * (non-Javadoc)
    * 
