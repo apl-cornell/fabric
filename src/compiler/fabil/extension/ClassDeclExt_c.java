@@ -649,11 +649,18 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
           formalTypes.add(nf.ClassLit(Position.compilerGenerated(), tn));
         }
 
+        Expr init;
+        if (formalTypes.size() == 0) {
+          init = nf.NullLit(Position.compilerGenerated());
+        }
+        else {
+          init = nf.ArrayInit(Position.compilerGenerated(), formalTypes);
+        }
         FieldDecl fd = nf.FieldDecl(Position.compilerGenerated(), 
                                     Flags.STATIC.Public().Final(), 
                                     nf.ArrayTypeNode(Position.compilerGenerated(), tnClass), 
                                     nf.Id(Position.compilerGenerated(), fieldName), 
-                                    nf.ArrayInit(Position.compilerGenerated(), formalTypes));
+                                    init);
         members.add(fd);
         
         // Now create the wrapper method.
@@ -662,11 +669,17 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
           locals.add(nf.Local(Position.compilerGenerated(), f.id()));
         }
         
-        Expr args = nf.NewArray(Position.compilerGenerated(), 
-                                tnObject, 
-                                md.formals().size(),
-                                nf.ArrayInit(Position.compilerGenerated(), 
-                                             locals));
+        Expr args;
+        if (locals.size() == 0) {
+          args = nf.NullLit(Position.compilerGenerated());
+        }
+        else {
+          args = nf.NewArray(Position.compilerGenerated(), 
+                             tnObject,
+                             1, // one-dimensional array
+                             nf.ArrayInit(Position.compilerGenerated(), 
+                                          locals));
+        }
         
         List<Expr> arguments = new ArrayList<Expr>(4);
         arguments.add(nf.This(Position.compilerGenerated()));
@@ -690,13 +703,14 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
         Stmt ret;
         Type retType = md.returnType().type();
-        if (retType.isPrimitive()) {
+        if (retType.isVoid()) {
+          // void is also a primitive type!
+          ret = nf.Eval(Position.compilerGenerated(), call);
+        }
+        else if (retType.isPrimitive()) {
           // Cannot cast Object to a primitive type directly
           PrimitiveType pt = (PrimitiveType)retType;
           ret = rr.qq().parseStmt(" return (" + pt.wrapperTypeString(ts) + ")%E;", call);
-        }
-        else if (retType.isVoid()) {
-          ret = nf.Eval(Position.compilerGenerated(), call);
         }
         else {
           ret = nf.Return(Position.compilerGenerated(), 
