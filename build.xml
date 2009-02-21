@@ -500,7 +500,7 @@
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
       <arg value="-j" />
-      <arg value="-Xmx128M" />
+      <arg value="-Xmx256M" />
       <srcfile />
       <fileset dir="${runtime.src}"
           includes="**/*.fil"
