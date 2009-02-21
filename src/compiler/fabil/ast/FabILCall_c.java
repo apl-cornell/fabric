@@ -12,7 +12,7 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 
 public class FabILCall_c extends Call_c implements FabILCall {
-  Expr remoteClient;
+  protected Expr remoteClient;
   
   @SuppressWarnings("unchecked")
   public FabILCall_c(Position pos, Receiver target, Id name, List arguments) {

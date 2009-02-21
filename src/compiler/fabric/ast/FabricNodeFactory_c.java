@@ -7,6 +7,7 @@ import fabric.extension.LocatedExt_c;
 
 import jif.ast.JifClassDecl;
 import jif.ast.JifNodeFactory_c;
+import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.Expr;
@@ -15,6 +16,7 @@ import polyglot.ast.Id;
 import polyglot.ast.New;
 import polyglot.ast.NewArray;
 import polyglot.ast.Node;
+import polyglot.ast.Receiver;
 import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
@@ -160,5 +162,33 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     result = result.ext(jifExt);
     
     return result;
+  }
+  
+  public RetryStmt RetryStmt(Position pos) {
+    RetryStmt s = new RetryStmt_c(pos);
+    s = (RetryStmt)s.ext(fabricExtFactory().extRetry());
+    s = (RetryStmt)s.del(fabricDelFactory().delStmt());
+    return s;
+  }
+  
+  public AbortStmt AbortStmt(Position pos) {
+    AbortStmt s = new AbortStmt_c(pos);
+    s = (AbortStmt)s.ext(fabricExtFactory().extAbort());
+    s = (AbortStmt)s.del(fabricDelFactory().delStmt());
+    return s;
+  }
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  public Call Call(Position pos, Receiver target, Id name, List args) {
+    return Call(pos, target, name, null, args);
+  }
+  
+  @SuppressWarnings("unchecked")
+  public Call Call(Position pos, Receiver target, Id name, Expr remoteClient, List args) {
+    Call n = new FabricCall_c(pos, target, name, remoteClient, args);
+    n = (Call)n.ext(extFactory().extCall());
+    n = (Call)n.del(delFactory().delCall());
+    return n;
   }
 }

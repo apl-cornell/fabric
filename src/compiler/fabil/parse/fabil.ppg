@@ -153,7 +153,6 @@ extend method_invocation ::=
                 parser.nf.Id(parser.pos(b), b.getIdentifier()), c, d); :}
     ;
 
-
 // explicit_constructor_invocation
 // TODO: this doesn't seem right.
 drop {

@@ -7,4 +7,6 @@ import jif.ast.JifExtFactory;
  *  Note that the created extensions need not be <code>FabricExt</code>s. */
 public interface FabricExtFactory extends JifExtFactory {
   Ext extAtomic();
+  Ext extAbort();
+  Ext extRetry();
 }

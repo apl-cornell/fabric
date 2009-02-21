@@ -24,9 +24,12 @@ parser Grm extends jif.parse.Grm {:
 
 terminal Token AT;
 terminal Token ATOMIC;
+terminal Token ABORT;
+terminal Token RETRY;
 
 non terminal Atomic atomic_statement;
 non terminal Expr   location_expr_opt;
+non terminal Stmt	abort_stmt, retry_stmt;
 
 start with goal;
 
@@ -37,11 +40,26 @@ start with goal;
 
 extend statement_without_trailing_substatement ::=
                     // Stmt
-        atomic_statement:a {: RESULT = a; :};
+        atomic_statement:a {: RESULT = a; :}
+    |   abort_stmt:a {: RESULT = a; :}
+    |   retry_stmt:a {: RESULT = a; :}
+    ;
 
 atomic_statement ::=
                     // Atomic
         ATOMIC:n block:a {: RESULT = parser.nf.Atomic(parser.pos(n,a), a.statements()); :};
+
+abort_stmt ::=
+					// AbortStmt
+		ABORT:a SEMICOLON:b
+			{: RESULT = parser.nf.AbortStmt(parser.pos(a, b)); :}
+	;
+	
+retry_stmt ::= 
+					// RetryStmt
+		RETRY:a SEMICOLON:b
+			{: RESULT = parser.nf.RetryStmt(parser.pos(a, b)); :}
+	;
 
 ////////////////////////////////////////////////////////////////////////
 // Locations for constructors                                         //
@@ -80,23 +98,25 @@ extend modifier ::=
             {: RESULT = FabricFlags.ATOMIC; :}
     ;
 
-/*
+drop {
+    method_invocation ::=
+	        reftype_or_expr:a LPAREN argument_list_opt:b RPAREN:y
+	    |   primary_no_new_array:a DOT IDENTIFIER:b LPAREN argument_list_opt:c RPAREN:y
+	    ;
+}
+
 extend method_invocation ::=
                     // Call
-        name:a AT expression:b LPAREN argument_list_opt:c RPAREN:d
-            {: RESULT = parser.nf.Call(parser.pos(a,d),
-                a.prefix == null ? null : a.prefix.toReceiver(),
-                a.name, b, c); :}
-    |   primary:a DOT IDENTIFIER:b AT expression:c LPAREN argument_list_opt:d RPAREN:e
+        reftype_or_expr:a location_expr_opt:b LPAREN argument_list_opt:c RPAREN:d
+	        {: if (! (a instanceof Name)) parser.die(parser.pos(a));
+	           Name n = (Name) a;
+               RESULT = parser.nf.Call(parser.pos(a,d),
+                                       n.prefix == null ? null
+						                                : n.prefix.toReceiver(),
+	                                   parser.nf.Id(parser.pos(n), n.name), 
+	                                   b, c); :}
+    |   primary_no_new_array:a DOT IDENTIFIER:b location_expr_opt:c LPAREN argument_list_opt:d RPAREN:e
             {: RESULT = parser.nf.Call(parser.pos(b,e), a,
-                parser.nf.Id(parser.pos(b), b.getIdentifier()), c, d); :}
-    |   SUPER:a DOT IDENTIFIER:b AT expression:c LPAREN argument_list_opt:d RPAREN:e
-            {: RESULT = parser.nf.Call(parser.pos(a, e, b),
-                parser.nf.Super(parser.pos(a)),
-                parser.nf.Id(parser.pos(b), b.getIdentifier()), c, d); :}
-    |   name:a DOT SUPER:n DOT IDENTIFIER:b AT expression:c LPAREN argument_list_opt:d RPAREN:e
-            {: RESULT = parser.nf.Call(parser.pos(b,e),
-                parser.nf.Super(parser.pos(n), a.toType()),
-                parser.nf.Id(parser.pos(b), b.getIdentifier()), c, d); :}
+                                       parser.nf.Id(parser.pos(b), b.getIdentifier()), 
+                                       c, d); :}
     ;
-*/

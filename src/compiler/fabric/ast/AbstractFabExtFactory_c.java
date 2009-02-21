@@ -24,7 +24,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     super(next);
   }
   
-  public Ext extAtomic() {
+  public final Ext extAtomic() {
     Ext e = extAtomicImpl();
     if (nextExtFactory() != null && 
             nextExtFactory() instanceof FabricExtFactory) {
@@ -42,5 +42,42 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
   protected Ext postExtAtomic(Ext e) {
     return postExtBlock(e);
   }
+  
+  public final Ext extAbort() {
+    Ext e = extAbortImpl();
+    if (nextExtFactory() != null && 
+        nextExtFactory() instanceof FabricExtFactory) {
+      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
+      Ext e2 = nextFac.extAbort();
+      e = composeExts(e2, e);
+    }
+    return postExtAbort(e);
+  }
+  
+  protected Ext extAbortImpl() {
+    return extStmtImpl();
+  }
+  
+  protected Ext postExtAbort(Ext e) {
+    return postExtStmt(e);
+  }
 
+  public final Ext extRetry() {
+    Ext e = extRetryImpl();
+    if (nextExtFactory() != null && 
+        nextExtFactory() instanceof FabricExtFactory) {
+      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
+      Ext e2 = nextFac.extRetry();
+      e = composeExts(e2, e);
+    }
+    return postExtRetry(e);
+  }
+  
+  protected Ext extRetryImpl() {
+    return extStmtImpl();
+  }
+  
+  protected Ext postExtRetry(Ext e) {
+    return postExtStmt(e);
+  }
 }

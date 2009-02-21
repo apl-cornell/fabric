@@ -21,4 +21,10 @@ public interface FabricNodeFactory extends JifNodeFactory {
   NewArray NewArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims);
   NewArray NewArray(Position pos, TypeNode base, Expr location, int addDims, ArrayInit init);
   NewArray NewArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims, ArrayInit init);
+  
+  RetryStmt RetryStmt(Position pos);
+  AbortStmt AbortStmt(Position pos);
+  
+  @SuppressWarnings("unchecked")
+  Call Call(Position pos, Receiver target, Id name, Expr remoteClient, List args);
 }
