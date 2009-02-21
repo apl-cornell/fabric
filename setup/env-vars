@@ -1,0 +1,2 @@
+JIF ../jif
+include $JIF/setup/env-vars
