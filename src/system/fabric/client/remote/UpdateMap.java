@@ -10,6 +10,7 @@ import javax.crypto.Cipher;
 
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.client.OidKeyHashMap;
 import fabric.common.Crypto;
 import fabric.common.InternalError;
 import fabric.common.Pair;
@@ -25,17 +26,34 @@ public class UpdateMap {
    */
   private Map<byte[], Pair<byte[], byte[]>> map;
 
+  /**
+   * Cache for map entries and non-entries that have been discovered.
+   */
+  private OidKeyHashMap<RemoteClient> cache;
+
   private static String ALG_HASH = "MD5";
 
   public UpdateMap() {
     this.map = new HashMap<byte[], Pair<byte[], byte[]>>();
+    this.cache = new OidKeyHashMap<RemoteClient>();
   }
 
   public RemoteClient lookup($Proxy proxy) {
+    // First, check the cache.
+    if (cache.containsKey(proxy)) return cache.get(proxy);
+    
+    RemoteClient result = slowLookup(proxy);
+    cache.put(proxy, result);
+    return result;
+  }
+
+  private RemoteClient slowLookup($Proxy proxy) {
     try {
       byte[] encryptKey = getKey(proxy);
       byte[] mapKey = hash(proxy, encryptKey);
       Pair<byte[], byte[]> encHost = map.get(mapKey);
+
+      if (encHost == null) return null;
 
       Cipher cipher =
           Crypto.cipherInstance(Cipher.DECRYPT_MODE, encryptKey, encHost.first);
@@ -57,6 +75,7 @@ public class UpdateMap {
       Pair<byte[], byte[]> encHost =
           new Pair<byte[], byte[]>(iv, cipher.doFinal(client.name.getBytes()));
       map.put(mapKey, encHost);
+      cache.put(proxy, client);
     } catch (GeneralSecurityException e) {
       throw new InternalError(e);
     }
@@ -66,7 +85,10 @@ public class UpdateMap {
    * Puts all the entries from the given map into this map.
    */
   public void putAll(UpdateMap map) {
+    if (map.map.isEmpty()) return;
+    
     this.map.putAll(map.map);
+    this.cache.clear();
   }
 
   /**

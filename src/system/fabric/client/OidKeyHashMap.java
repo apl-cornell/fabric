@@ -7,6 +7,7 @@ import java.util.Set;
 
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.lang.Object;
 
 /**
  * A map keyed on OIDs.
@@ -25,10 +26,27 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   public void clear() {
     map.clear();
   }
+  
+  public boolean containsKey(Object obj) {
+    return containsKey(obj.$getCore(), obj.$getOnum());
+  }
+  
+  public boolean containsKey(Core core, long onum) {
+    LongKeyMap<V> submap = map.get(core);
+    return submap != null && submap.containsKey(onum);
+  }
+  
+  public V get(Object obj) {
+    return get(obj.$getCore(), obj.$getOnum());
+  }
 
   public V get(Core core, long onum) {
     LongKeyMap<V> submap = map.get(core);
     return submap == null ? null : submap.get(onum);
+  }
+  
+  public V put(Object obj, V val) {
+    return put(obj.$getCore(), obj.$getOnum(), val);
   }
 
   public V put(Core core, long onum, V val) {
@@ -39,6 +57,10 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     }
 
     return submap.put(onum, val);
+  }
+  
+  public V remove(Object obj) {
+    return remove(obj.$getCore(), obj.$getOnum());
   }
 
   public V remove(Core core, long onum) {
