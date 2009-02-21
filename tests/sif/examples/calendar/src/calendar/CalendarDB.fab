@@ -20,9 +20,12 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	private Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}@backend events;
 
 	private Core backend;
+	private RemoteClient coreClient;
 
 	public CalendarDB(Core core) {
 		backend = core;
+		Client local = Client.getClient();
+		coreClient = c.getClient(backend.name())
 		// fabric init stuff here
 	}
 
@@ -55,9 +58,15 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 			return uidCounter++;
 		}
 	}
-
+	
 	public User[CalServEP]{CalServEP:; CalServEP!:; userID} 
 	lookupUserID(String userID) {
+		lookupUserIDRemote@coreClient(userID);
+	}
+	
+
+	public User[CalServEP]{CalServEP:; CalServEP!:; userID} 
+	lookupUserIDRemote(String userID) {
 		User[CalServEP]{CalServEP:;CalServEP!:}[] users = this.users;
 		if (users == null || userID == null) return null;
 		for (int i = 0; i < users.length; i++) {
@@ -71,6 +80,13 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		}
 		return null;
 	}
+	
+	public Event{CalServEP:;CalServEP!:} 
+	retrieveEvent{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
+	where caller(CalServEP) {
+		retrieveEventRemote@coreClient(eventID);
+	}
+	
 
 	public Event{CalServEP:;CalServEP!:} 
 	retrieveEvent{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
@@ -112,14 +128,24 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		}
 		return true;
 	}
-
+	
+	List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
+	eventSubset{CalServEP:;CalServEP!:}(
+			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
+			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
+			User[CalServEP]{CalServEP:;CalServEP!:} displayUser)
+			where authority(CalRootEP), authority(CalServEP) {
+		eventSubsetRemote@coreClient(start, end, displayUser);
+	}
+	
+	
 	/**
 	 * Get the subset of events that start on or after dt, and before end, 
 	 * for which user is either an attendee, or created the event. (i.e.,
 	 * if the info label is readable by user).
 	 */
 	List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
-	eventSubset{CalServEP:;CalServEP!:}(
+	eventSubsetRemote{CalServEP:;CalServEP!:}(
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
 			User[CalServEP]{CalServEP:;CalServEP!:} displayUser)
