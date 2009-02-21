@@ -1,5 +1,8 @@
 package fabric.client.remote;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -12,15 +15,17 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.OidKeyHashMap;
 import fabric.common.Crypto;
+import fabric.common.FastSerializable;
 import fabric.common.InternalError;
 import fabric.common.Pair;
+import fabric.common.util.LongKeyMap;
 import fabric.lang.KeyObject;
 import fabric.lang.Object.$Proxy;
 
 /**
  * Maps proxies to the host that holds the most up-to-date copy of that object.
  */
-public class UpdateMap {
+public class UpdateMap implements FastSerializable {
   /**
    * Maps md5(oid, object key) to (iv, enc(hostname, object key, iv)).
    */
@@ -29,21 +34,47 @@ public class UpdateMap {
   /**
    * Cache for map entries and non-entries that have been discovered.
    */
-  private OidKeyHashMap<RemoteClient> cache;
+  private OidKeyHashMap<RemoteClient> readCache;
+
+  /**
+   * Cache for map entries that haven't been encrypted yet.
+   */
+  private OidKeyHashMap<Pair<$Proxy, RemoteClient>> writeCache;
 
   private static String ALG_HASH = "MD5";
 
   public UpdateMap() {
     this.map = new HashMap<byte[], Pair<byte[], byte[]>>();
-    this.cache = new OidKeyHashMap<RemoteClient>();
+    this.readCache = new OidKeyHashMap<RemoteClient>();
+    this.writeCache = new OidKeyHashMap<Pair<$Proxy, RemoteClient>>();
+  }
+
+  /**
+   * Deserialization constructor.
+   */
+  public UpdateMap(DataInput in) throws IOException {
+    this();
+    int size = in.readInt();
+    for (int i = 0; i < size; i++) {
+      byte[] key = new byte[in.readInt()];
+      in.readFully(key);
+      
+      byte[] iv = new byte[in.readInt()];
+      in.readFully(iv);
+      
+      byte[] data = new byte[in.readInt()];
+      in.readFully(data);
+      
+      map.put(key, new Pair<byte[], byte[]>(iv, data));
+    }
   }
 
   public RemoteClient lookup($Proxy proxy) {
     // First, check the cache.
-    if (cache.containsKey(proxy)) return cache.get(proxy);
-    
+    if (readCache.containsKey(proxy)) return readCache.get(proxy);
+
     RemoteClient result = slowLookup(proxy);
-    cache.put(proxy, result);
+    readCache.put(proxy, result);
     return result;
   }
 
@@ -65,6 +96,32 @@ public class UpdateMap {
   }
 
   public void put($Proxy proxy, RemoteClient client) {
+    writeCache.put(proxy, new Pair<$Proxy, RemoteClient>(proxy, client));
+    readCache.put(proxy, client);
+  }
+
+  /**
+   * Puts all the entries from the given map into this map.
+   */
+  public void putAll(UpdateMap map) {
+    if (map.map.isEmpty()) return;
+
+    flushWriteCache();
+    this.map.putAll(map.map);
+    this.readCache.clear();
+  }
+
+  private void flushWriteCache() {
+    for (LongKeyMap<Pair<$Proxy, RemoteClient>> entry : writeCache) {
+      for (Pair<$Proxy, RemoteClient> val : entry.values()) {
+        slowPut(val.first, val.second);
+      }
+    }
+
+    writeCache.clear();
+  }
+
+  private void slowPut($Proxy proxy, RemoteClient client) {
     try {
       byte[] encryptKey = getKey(proxy);
       byte[] mapKey = hash(proxy, encryptKey);
@@ -75,20 +132,9 @@ public class UpdateMap {
       Pair<byte[], byte[]> encHost =
           new Pair<byte[], byte[]>(iv, cipher.doFinal(client.name.getBytes()));
       map.put(mapKey, encHost);
-      cache.put(proxy, client);
     } catch (GeneralSecurityException e) {
       throw new InternalError(e);
     }
-  }
-
-  /**
-   * Puts all the entries from the given map into this map.
-   */
-  public void putAll(UpdateMap map) {
-    if (map.map.isEmpty()) return;
-    
-    this.map.putAll(map.map);
-    this.cache.clear();
   }
 
   /**
@@ -123,5 +169,22 @@ public class UpdateMap {
     if (keyObject == null) return null;
 
     return keyObject.getKey().getEncoded();
+  }
+
+  public void write(DataOutput out) throws IOException {
+    flushWriteCache();
+
+    out.writeInt(map.size());
+    for (Map.Entry<byte[], Pair<byte[], byte[]>> entry : map.entrySet()) {
+      byte[] key = entry.getKey();
+      Pair<byte[], byte[]> val = entry.getValue();
+
+      out.writeInt(key.length);
+      out.write(key);
+      out.writeInt(val.first.length);
+      out.write(val.first);
+      out.writeInt(val.second.length);
+      out.write(val.second);
+    }
   }
 }
