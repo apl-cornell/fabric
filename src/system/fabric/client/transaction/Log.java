@@ -3,6 +3,7 @@ package fabric.client.transaction;
 import java.util.*;
 
 import fabric.client.Core;
+import fabric.client.OidKeyHashMap;
 import fabric.client.remote.RemoteClient;
 import fabric.client.transaction.LockList.Node;
 import fabric.common.Pair;

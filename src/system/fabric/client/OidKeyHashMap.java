@@ -1,21 +1,20 @@
-package fabric.client.transaction;
+package fabric.client;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import fabric.client.Core;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 
 /**
  * A map keyed on OIDs.
  */
-final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
+public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   Map<Core, LongKeyMap<V>> map;
 
-  OidKeyHashMap() {
+  public OidKeyHashMap() {
     map = new HashMap<Core, LongKeyMap<V>>();
   }
 
