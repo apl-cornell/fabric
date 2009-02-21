@@ -81,7 +81,20 @@ public final class Log {
    * The set of clients called by this transaction and completed
    * sub-transactions.
    */
-  protected final List<RemoteClient> clientsCalled;
+  public final List<RemoteClient> clientsCalled;
+
+  /**
+   * Indicates the state of commit for the top-level transaction.
+   */
+  public final CommitState commitState;
+
+  public static class CommitState {
+    public static enum Values {
+      UNPREPARED, PREPARING, PREPARED, COMMITTING, COMMITTED, ABORTING, ABORTED
+    }
+    
+    public Values value = Values.UNPREPARED;
+  }
 
   /**
    * Creates a new log with the given parent and the given transaction ID. The
@@ -114,6 +127,10 @@ public final class Log {
       synchronized (parent) {
         parent.child = this;
       }
+
+      commitState = parent.commitState;
+    } else {
+      commitState = new CommitState();
     }
   }
 

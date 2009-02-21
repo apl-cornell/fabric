@@ -9,9 +9,7 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
 import javax.security.auth.x500.X500Principal;
 
-import fabric.client.Client;
-import fabric.client.RemoteNode;
-import fabric.client.UnreachableNodeException;
+import fabric.client.*;
 import fabric.client.remote.messages.InterClientMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
 import fabric.client.transaction.TransactionManager;
@@ -19,6 +17,8 @@ import fabric.common.NoSuchNodeError;
 import fabric.common.TransactionID;
 import fabric.lang.Object.$Proxy;
 import fabric.messages.AbortTransactionMessage;
+import fabric.messages.CommitTransactionMessage;
+import fabric.messages.PrepareTransactionMessage;
 
 /**
  * Encapsulates a remote client. This class maintains the connection to the
@@ -168,7 +168,24 @@ public final class RemoteClient implements RemoteNode {
     return response.result;
   }
 
-  public void abortTransaction(TransactionID tid) {
+  public void prepareTransaction(long tid) throws UnreachableNodeException,
+      TransactionPrepareFailedException {
+    PrepareTransactionMessage.Response response =
+        new PrepareTransactionMessage(tid).send(this);
+    if (!response.success)
+      throw new TransactionPrepareFailedException(response.message);
+  }
+
+  public void commitTransaction(long tid) throws UnreachableNodeException,
+      TransactionCommitFailedException {
+    CommitTransactionMessage.Response response =
+        new CommitTransactionMessage(tid).send(this);
+    if (!response.success)
+      throw new TransactionCommitFailedException(response.message);
+  }
+
+  public void abortTransaction(TransactionID tid)
+      throws UnreachableNodeException {
     new AbortTransactionMessage(tid).send(this);
   }
 

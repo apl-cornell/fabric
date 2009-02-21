@@ -1,13 +1,13 @@
 package fabric.messages;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import fabric.client.Core;
-import fabric.client.RemoteCore;
-import fabric.client.TransactionPrepareFailedException;
+import fabric.client.RemoteNode;
 import fabric.client.UnreachableNodeException;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
@@ -15,42 +15,58 @@ import fabric.common.ProtocolError;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.core.Worker;
 import fabric.lang.Object.$Impl;
 
 /**
- * A <code>PrepareTransactionMessage</code> represents a transaction request
- * to a core.
+ * A <code>PrepareTransactionMessage</code> represents a transaction request to
+ * a core.
  */
 public class PrepareTransactionMessage extends
-    Message<RemoteCore, PrepareTransactionMessage.Response> {
+    Message<RemoteNode, PrepareTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
-    public Response() {
+    public final boolean success;
+    public final String message;
+
+    public Response(boolean success) {
+      this(success, null);
     }
-    
+
+    public Response(boolean success, String message) {
+      this.success = success;
+      this.message = message;
+    }
+
     /**
      * Deserialization constructor, used by the client.
      * 
-     * @param core
-     *                The core from which the response is being read.
+     * @param node
+     *          The node from which the response is being read.
      * @param in
-     *                the input stream from which to read the response.
+     *          the input stream from which to read the response.
      */
-    Response(Core core, DataInput in) {
+    Response(RemoteNode node, DataInput in) throws IOException {
+      this.success = in.readBoolean();
+      if (in.readBoolean())
+        this.message = in.readUTF();
+      else this.message = null;
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see fabric.messages.Message.Response#write(java.io.DataOutput)
      */
-    public void write(DataOutput out) {
+    public void write(DataOutput out) throws IOException {
+      out.writeBoolean(success);
+      if (message != null) {
+        out.writeBoolean(true);
+        out.writeUTF(message);
+      } else out.writeBoolean(false);
     }
   }
 
   public final long tid;
-  
+
   public final LongKeyMap<Integer> reads;
 
   /**
@@ -62,8 +78,8 @@ public class PrepareTransactionMessage extends
 
   /**
    * The objects created during the transaction, serialized. This will only be
-   * non-null on the core. The client should use the <code>creates</code>
-   * field instead.
+   * non-null on the core. The client should use the <code>creates</code> field
+   * instead.
    */
   public final Collection<SerializedObject> serializedCreates;
 
@@ -80,6 +96,13 @@ public class PrepareTransactionMessage extends
    * instead.
    */
   public final Collection<SerializedObject> serializedWrites;
+
+  /**
+   * Used to prepare transactions at remote clients.
+   */
+  public PrepareTransactionMessage(long tid) {
+    this(tid, null, null, null);
+  }
 
   /**
    * Only used by the client.
@@ -105,7 +128,7 @@ public class PrepareTransactionMessage extends
     super(MessageType.PREPARE_TRANSACTION);
     this.creates = null;
     this.writes = null;
-    
+
     // Read the TID.
     this.tid = in.readLong();
 
@@ -142,48 +165,42 @@ public class PrepareTransactionMessage extends
 
   /*
    * (non-Javadoc)
-   * 
    * @see fabric.messages.Message#dispatch(fabric.core.Worker)
    */
   @Override
-  public Response dispatch(Worker w) throws TransactionPrepareFailedException,
-      ProtocolError {
+  public Response dispatch(fabric.core.Worker w) throws ProtocolError {
     return w.handle(this);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.messages.Message#send(fabric.client.Core, boolean)
-   */
-  public Response send(RemoteCore core) throws UnreachableNodeException,
-      TransactionPrepareFailedException {
+  @Override
+  public Response dispatch(fabric.client.remote.Worker handler) {
+    return handler.handle(this);
+  }
+
+  public Response send(RemoteNode node) throws UnreachableNodeException {
     try {
-      return super.send(core, true);
+      return super.send(node, true);
     } catch (UnreachableNodeException e) {
       throw e;
-    } catch (TransactionPrepareFailedException e) {
-      throw e;
     } catch (FabricException e) {
-      throw new InternalError("Unexpected response from core.", e);
+      throw new InternalError("Unexpected response from node.", e);
     }
   }
 
   @Override
-  public Response response(RemoteCore c, DataInput in) {
-    return new Response(c, in);
+  public Response response(RemoteNode node, DataInput in) throws IOException {
+    return new Response(node, in);
   }
-  
+
   /*
    * (non-Javadoc)
-   * 
    * @see fabric.messages.Message#write(java.io.DataOutput)
    */
   @Override
   public void write(DataOutput out) throws IOException {
     // Serialize tid.
     out.writeLong(tid);
-    
+
     // Serialize reads.
     if (reads == null) {
       out.writeInt(0);

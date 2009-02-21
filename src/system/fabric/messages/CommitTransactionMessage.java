@@ -1,40 +1,57 @@
 package fabric.messages;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
-import fabric.client.Core;
-import fabric.client.RemoteCore;
-import fabric.client.TransactionCommitFailedException;
+import fabric.client.RemoteNode;
 import fabric.client.UnreachableNodeException;
+import fabric.client.remote.Worker;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
 import fabric.common.ProtocolError;
-import fabric.core.Worker;
 
 public class CommitTransactionMessage extends
-    Message<RemoteCore, CommitTransactionMessage.Response> {
+    Message<RemoteNode, CommitTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
-    public Response() {
+    public final boolean success;
+    public final String message;
+
+    public Response(boolean success) {
+      this(success, null);
+    }
+
+    public Response(boolean success, String message) {
+      this.success = success;
+      this.message = message;
     }
 
     /**
      * Deserialization constructor, used by the client.
      * 
-     * @param core
-     *                The core from which the response is being read.
+     * @param node
+     *          The node from which the response is being read.
      * @param in
-     *                the input stream from which to read the response.
+     *          the input stream from which to read the response.
      */
-    Response(Core core, DataInput in) {
+    Response(RemoteNode node, DataInput in) throws IOException {
+      this.success = in.readBoolean();
+      if (in.readBoolean())
+        this.message = in.readUTF();
+      else this.message = null;
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see fabric.messages.Message.Response#write(java.io.DataOutput)
      */
-    public void write(DataOutput out) {
+    public void write(DataOutput out) throws IOException {
+      out.writeBoolean(success);
+      if (message != null) {
+        out.writeBoolean(true);
+        out.writeUTF(message);
+      } else out.writeBoolean(false);
     }
   }
 
@@ -52,43 +69,33 @@ public class CommitTransactionMessage extends
     this(in.readLong());
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.messages.Message#dispatch(fabric.core.Worker)
-   */
   @Override
-  public Response dispatch(Worker w) throws TransactionCommitFailedException,
-      ProtocolError {
+  public Response dispatch(fabric.core.Worker w) throws ProtocolError {
     return w.handle(this);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.messages.Message#send(fabric.client.Core, boolean)
-   */
-  public Response send(RemoteCore core) throws UnreachableNodeException,
-      TransactionCommitFailedException {
+  @Override
+  public Response dispatch(Worker handler) {
+    return handler.handle(this);
+  }
+
+  public Response send(RemoteNode node) throws UnreachableNodeException {
     try {
-      return super.send(core, true);
+      return super.send(node, true);
     } catch (UnreachableNodeException e) {
       throw e;
-    } catch (TransactionCommitFailedException e) {
-      throw e;
     } catch (FabricException e) {
-      throw new InternalError("Unexpected response from core.", e);
+      throw new InternalError("Unexpected response from node.", e);
     }
   }
 
   @Override
-  public Response response(RemoteCore c, DataInput in) {
-    return new Response(c, in);
+  public Response response(RemoteNode node, DataInput in) throws IOException {
+    return new Response(node, in);
   }
-  
+
   /*
    * (non-Javadoc)
-   * 
    * @see fabric.messages.Message#write(java.io.DataOutput)
    */
   @Override

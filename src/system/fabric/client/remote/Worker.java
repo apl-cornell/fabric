@@ -4,16 +4,15 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.client.*;
 import fabric.client.remote.messages.RemoteCallMessage;
-import fabric.client.remote.messages.RemoteCallMessage.Response;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.FabricThread;
@@ -23,7 +22,9 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Principal;
 import fabric.messages.AbortTransactionMessage;
+import fabric.messages.CommitTransactionMessage;
 import fabric.messages.Message;
+import fabric.messages.PrepareTransactionMessage;
 
 public class Worker extends FabricThread.AbstractImpl implements MessageHandler {
 
@@ -235,18 +236,26 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   private Log getLogByTid(TransactionID tid, boolean createIfMissing) {
     Log log;
     synchronized (runningTransactions) {
-      log = runningTransactions.get(tid.topTid);
+      log = getLogByTopTid(tid.topTid);
       if (log == null && createIfMissing) {
-        log = new Log(tid);
+        log = new Log(new TransactionID());
         runningTransactions.put(tid.topTid, log);
       }
     }
-
     return log;
   }
 
-  public Response handle(final RemoteCallMessage remoteCallMessage)
-      throws RemoteCallException {
+  /**
+   * Returns the Log for the given top-level transaction id.
+   */
+  private Log getLogByTopTid(long tid) {
+    synchronized (runningTransactions) {
+      return runningTransactions.get(tid);
+    }
+  }
+
+  public RemoteCallMessage.Response handle(
+      final RemoteCallMessage remoteCallMessage) throws RemoteCallException {
     // We assume that this thread's transaction manager is free (i.e., it's not
     // managing any tranaction's log) at the start of the method and ensure that
     // it will be free at the end of the method.
@@ -291,7 +300,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
               }
               args[i] = arg;
             }
-            
+
             return remoteCallMessage.getMethod().invoke(receiver,
                 remoteCallMessage.args);
           } catch (IllegalArgumentException e) {
@@ -311,7 +320,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       });
 
       // Return the result.
-      return new Response(result);
+      return new RemoteCallMessage.Response(result);
     } catch (RuntimeException e) {
       Throwable cause = e.getCause();
       if (cause instanceof IllegalArgumentException
@@ -332,5 +341,42 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     TransactionManager tm = getTransactionManager();
     tm.associateLog(log);
     tm.abortTransaction();
+  }
+
+  public PrepareTransactionMessage.Response handle(
+      PrepareTransactionMessage prepareTransactionMessage) {
+    Log log = getLogByTopTid(prepareTransactionMessage.tid);
+    if (log == null)
+      return new PrepareTransactionMessage.Response(false,
+          "No such transaction");
+
+    TransactionManager tm = getTransactionManager();
+    tm.associateLog(log);
+
+    // Commit up to the top level.
+    for (int i = 0; i < log.getTid().depth; i++)
+      tm.commitTransaction();
+
+    Map<RemoteNode, TransactionPrepareFailedException> failures =
+        tm.sendPrepareMessages();
+    
+    return new PrepareTransactionMessage.Response(failures.isEmpty());
+  }
+
+  public CommitTransactionMessage.Response handle(
+      CommitTransactionMessage commitTransactionMessage) {
+    Log log = getLogByTopTid(commitTransactionMessage.transactionID);
+    if (log == null)
+      return new CommitTransactionMessage.Response(false, "No such transaction");
+
+    TransactionManager tm = getTransactionManager();
+    tm.associateLog(log);
+    try {
+      tm.sendCommitMessagesAndCleanUp();
+    } catch (TransactionAtomicityViolationException e) {
+      return new CommitTransactionMessage.Response(false);
+    }
+
+    return new CommitTransactionMessage.Response(true);
   }
 }

@@ -56,7 +56,7 @@ public class RemoteCore implements Core, RemoteNode {
   private transient ObjectOutputStream sslOut;
   private transient ObjectInputStream unencryptedIn;
   private transient ObjectOutputStream unencryptedOut;
-  
+
   /**
    * The core's public key.
    */
@@ -80,7 +80,7 @@ public class RemoteCore implements Core, RemoteNode {
 
   public ObjectInputStream objectInputStream(boolean ssl) {
     if (ssl) return sslIn;
-    return unencryptedIn; 
+    return unencryptedIn;
   }
 
   public ObjectOutputStream objectOutputStream(boolean ssl) {
@@ -118,7 +118,7 @@ public class RemoteCore implements Core, RemoteNode {
     socket.connect(host, client.timeout);
     DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
     dataOut.writeUTF(name);
-    
+
     // Specify whether we're encrypting.
     dataOut.writeBoolean(withSSL);
     dataOut.flush();
@@ -166,7 +166,7 @@ public class RemoteCore implements Core, RemoteNode {
       ObjectInputStream in =
           new ObjectInputStream(
               new BufferedInputStream(socket.getInputStream()));
-      
+
       if (withSSL) {
         sslOut = out;
         sslIn = in;
@@ -177,7 +177,7 @@ public class RemoteCore implements Core, RemoteNode {
         unencryptedConn = socket;
       }
     }
-    
+
     if (withSSL) {
       // Send to the core a pointer to our principal object.
       fabric.lang.Principal principal = client.getPrincipal();
@@ -204,8 +204,12 @@ public class RemoteCore implements Core, RemoteNode {
    */
   public void prepareTransaction(long tid, Collection<Object.$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object.$Impl> writes)
-      throws UnreachableNodeException, TransactionPrepareFailedException {
-    new PrepareTransactionMessage(tid, toCreate, reads, writes).send(this);
+      throws TransactionPrepareFailedException, UnreachableNodeException {
+    PrepareTransactionMessage.Response response =
+        new PrepareTransactionMessage(tid, toCreate, reads, writes).send(this);
+
+    if (!response.success)
+      throw new TransactionPrepareFailedException(response.message);
   }
 
   /**
@@ -213,33 +217,33 @@ public class RemoteCore implements Core, RemoteNode {
    * fetched from the Core via dissemination.
    * 
    * @param onum
-   *                The identifier of the requested object
+   *          The identifier of the requested object
    * @return The requested object
    * @throws FabricException
    */
   public final Object.$Impl readObject(long onum) throws FetchException {
     return readObject(true, onum);
   }
-  
+
   /*
    * (non-Javadoc)
-   *
    * @see fabric.client.Core#readObjectNoDissem(long)
    */
   public final Object.$Impl readObjectNoDissem(long onum) throws FetchException {
     return readObject(false, onum);
   }
-  
+
   private final Object.$Impl readObject(boolean useDissem, long onum)
       throws FetchException {
     // Intercept reads of global constants and redirect them to the local core.
     if (ONumConstants.isGlobalConstant(onum))
       return Client.instance.localCore.readObject(onum);
-    
+
     // Check object table. Lock it to avoid a race condition when the object is
     // not in the cache and another thread attempts to read the same object.
-    
-    // XXX Deadlock if we simultaneously fetch surrogates from two cores that refer to each other.
+
+    // XXX Deadlock if we simultaneously fetch surrogates from two cores that
+    // refer to each other.
     synchronized (objects) {
       Object.$Impl result = readObjectFromCache(onum);
       if (result != null) return result;
@@ -294,7 +298,7 @@ public class RemoteCore implements Core, RemoteNode {
       for (LongKeyMap.Entry<SerializedObject> entry : g.objects().entrySet()) {
         long curOnum = entry.getKey();
         SerializedObject curObj = entry.getValue();
-        
+
         if (curOnum == onum) {
           try {
             result = curObj.deserialize(this);
@@ -338,12 +342,14 @@ public class RemoteCore implements Core, RemoteNode {
 
   /**
    * Called by dissemination to fetch an encrypted object from the core.
-   * @param onum The object number to fetch.
+   * 
+   * @param onum
+   *          The object number to fetch.
    */
   public final Glob readEncryptedObjectFromCore(long onum)
       throws FetchException {
     DissemReadMessage.Response response =
-      new DissemReadMessage(onum).send(this);
+        new DissemReadMessage(onum).send(this);
     return response.glob;
   }
 
@@ -364,7 +370,7 @@ public class RemoteCore implements Core, RemoteNode {
    * core.
    * 
    * @param num
-   *                The number of objects to allocate
+   *          The number of objects to allocate
    */
   protected void reserve(int num) throws UnreachableNodeException {
     while (fresh_ids.size() < num) {
@@ -379,7 +385,6 @@ public class RemoteCore implements Core, RemoteNode {
 
   /*
    * (non-Javadoc)
-   * 
    * @see fabric.client.Core#abortTransaction(long)
    */
   public void abortTransaction(TransactionID tid) {
@@ -388,12 +393,14 @@ public class RemoteCore implements Core, RemoteNode {
 
   /*
    * (non-Javadoc)
-   * 
    * @see fabric.client.Core#commitTransaction(int)
    */
   public void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
-    new CommitTransactionMessage(transactionID).send(this);
+    CommitTransactionMessage.Response response =
+        new CommitTransactionMessage(transactionID).send(this);
+    if (!response.success)
+      throw new TransactionCommitFailedException(response.message);
   }
 
   @Override
@@ -408,7 +415,7 @@ public class RemoteCore implements Core, RemoteNode {
   public final String name() {
     return name;
   }
-  
+
   public final boolean isLocalCore() {
     return false;
   }

@@ -50,7 +50,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
    * The surrogate creation policy object.
    */
   private SurrogateManager surrogateManager;
-  
+
   /**
    * The private signing key for the object core that the client is talking to.
    */
@@ -205,7 +205,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       // Signal that this worker is now available.
       if (node.workerDone(this)) break;
     }
-    
+
     fabric.client.transaction.TransactionManager.getInstance()
         .deregisterThread(this);
   }
@@ -214,20 +214,25 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
    * Performs session initialization.
    * 
    * @return whether the session was successfully initialized.
-   * @throws IOException 
+   * @throws IOException
    */
-  private boolean initializeSession(String coreName, DataInput dataIn) throws IOException {
+  private boolean initializeSession(String coreName, DataInput dataIn)
+      throws IOException {
     clientIsDissem = !dataIn.readBoolean();
     if (clientIsDissem) {
       // Connection from dissemination node.
-      this.out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+      this.out =
+          new ObjectOutputStream(new BufferedOutputStream(socket
+              .getOutputStream()));
       this.out.flush();
-      this.in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+      this.in =
+          new ObjectInputStream(
+              new BufferedInputStream(socket.getInputStream()));
       this.clientName = null;
       this.client = null;
       return true;
     }
-    
+
     // Connection from client.
     if (node.opts.useSSL) {
       // Initiate the SSL handshake and initialize the fields.
@@ -268,7 +273,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     } else {
       this.client = null;
     }
-    
+
     return authenticateClient(this.clientName);
   }
 
@@ -332,7 +337,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   public void handle(AbortTransactionMessage message) throws AccessException,
       ProtocolError {
     if (clientIsDissem) throw new ProtocolError("Message not supported.");
-    
+
     logger.finer("Handling Abort Message");
     transactionManager.abortTransaction(client, message.tid.topTid);
     logger.fine("Transaction " + message.tid.topTid + " aborted");
@@ -344,7 +349,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   public AllocateMessage.Response handle(AllocateMessage msg)
       throws AccessException, ProtocolError {
     if (clientIsDissem) throw new ProtocolError("Message not supported.");
-    
+
     logger.finer("Handling Allocate Message");
     long[] onums = transactionManager.newOnums(client, msg.num);
     return new AllocateMessage.Response(onums);
@@ -354,31 +359,34 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
    * Processes the given commit request
    */
   public CommitTransactionMessage.Response handle(
-      CommitTransactionMessage message)
-      throws TransactionCommitFailedException, ProtocolError {
+      CommitTransactionMessage message) throws ProtocolError {
     if (clientIsDissem) throw new ProtocolError("Message not supported.");
-    
+
     logger.finer("Handling Commit Message");
     this.numCommits++;
 
-    transactionManager.commitTransaction(client, message.transactionID);
-    logger.fine("Transaction " + message.transactionID + " committed");
+    try {
+      transactionManager.commitTransaction(client, message.transactionID);
+      logger.fine("Transaction " + message.transactionID + " committed");
 
-    // updated object tallies
-    LogRecord lr = pendingLogs.remove(message.transactionID);
-    this.numCreates += lr.creates;
-    this.numWrites += lr.writes;
+      // updated object tallies
+      LogRecord lr = pendingLogs.remove(message.transactionID);
+      this.numCreates += lr.creates;
+      this.numWrites += lr.writes;
 
-    return new CommitTransactionMessage.Response();
+      return new CommitTransactionMessage.Response(true);
+    } catch (TransactionCommitFailedException e) {
+      return new CommitTransactionMessage.Response(false, e.getMessage());
+    }
   }
 
   /**
    * Processes the given PREPARE request.
    */
   public PrepareTransactionMessage.Response handle(PrepareTransactionMessage msg)
-      throws TransactionPrepareFailedException, ProtocolError {
+      throws ProtocolError {
     if (clientIsDissem) throw new ProtocolError("Message not supported.");
-    
+
     logger.finer("Handling Prepare Message");
     this.numPrepares++;
 
@@ -387,15 +395,21 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
             msg.serializedWrites, msg.reads);
 
     surrogateManager.createSurrogates(req);
-    transactionManager.prepare(client, req);
 
-    logger.fine("Transaction " + req.tid + " prepared");
-    // Store the size of the transaction for debugging at the end of the session
-    // Note: this number does not include surrogates
-    pendingLogs.put(req.tid, new LogRecord(msg.serializedCreates.size(),
-        msg.serializedWrites.size()));
+    try {
+      transactionManager.prepare(client, req);
 
-    return new PrepareTransactionMessage.Response();
+      logger.fine("Transaction " + req.tid + " prepared");
+      // Store the size of the transaction for debugging at the end of the
+      // session
+      // Note: this number does not include surrogates
+      pendingLogs.put(req.tid, new LogRecord(msg.serializedCreates.size(),
+          msg.serializedWrites.size()));
+
+      return new PrepareTransactionMessage.Response(true);
+    } catch (TransactionPrepareFailedException e) {
+      return new PrepareTransactionMessage.Response(false, e.getMessage());
+    }
   }
 
   /**
@@ -404,27 +418,29 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   public ReadMessage.Response handle(ReadMessage msg) throws AccessException,
       ProtocolError {
     if (clientIsDissem) throw new ProtocolError("Message not supported.");
-    
+
     logger.finer("Handling Read Message");
     this.numReads++;
-    
+
     ObjectGroup group =
         transactionManager.readGroup(client, msg.onum, false, this);
     return new ReadMessage.Response(group);
   }
-  
+
   /**
    * Processes the given dissemination-read request.
-   * @throws AccessException if  
+   * 
+   * @throws AccessException
+   *           if
    */
   public DissemReadMessage.Response handle(DissemReadMessage msg)
       throws AccessException {
     logger.finer("Handling DissemRead message");
     this.numReads++;
-    
+
     Glob glob = transactionManager.getGlob(msg.onum, privateKey, this);
     if (glob != null) numGlobsSent++;
-    
+
     return new DissemReadMessage.Response(glob);
   }
 

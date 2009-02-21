@@ -9,14 +9,17 @@ import fabric.common.FabricException;
 public class TransactionPrepareFailedException extends FabricException {
   public final List<String> messages;
 
-  public TransactionPrepareFailedException(Map<Core, TransactionPrepareFailedException> causes) {
+  public TransactionPrepareFailedException(
+      Map<RemoteNode, TransactionPrepareFailedException> failures) {
     messages = new ArrayList<String>();
-    for (Map.Entry<Core, TransactionPrepareFailedException> e : causes.entrySet())
+    for (Map.Entry<RemoteNode, TransactionPrepareFailedException> e : failures
+        .entrySet())
       for (String s : e.getValue().messages)
         messages.add(e.getKey() + ": " + s);
   }
-  
-  public TransactionPrepareFailedException(List<TransactionPrepareFailedException> causes) {
+
+  public TransactionPrepareFailedException(
+      List<TransactionPrepareFailedException> causes) {
     messages = new ArrayList<String>();
     for (TransactionPrepareFailedException exc : causes)
       messages.addAll(exc.messages);
@@ -29,11 +32,11 @@ public class TransactionPrepareFailedException extends FabricException {
   @Override
   public String getMessage() {
     String result = "Transaction failed to prepare.";
-    
+
     for (String m : messages) {
       result += System.getProperty("line.separator") + "    " + m;
     }
-    
+
     return result;
   }
 

@@ -1,5 +1,7 @@
 package fabric.client.transaction;
 
+import static fabric.client.transaction.Log.CommitState.Values.*;
+
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -155,7 +157,7 @@ public final class TransactionManager {
           current.abortSignal = null;
           return;
         }
-        
+
         logger.finest(current + " got abort signal");
         // Abort the transaction.
         // TODO Provide a reason for the abort.
@@ -165,6 +167,39 @@ public final class TransactionManager {
   }
 
   public void abortTransaction() {
+    if (current.tid.depth == 0) {
+      // Make sure no other thread is working on this transaction.
+      synchronized (current.commitState) {
+        while (current.commitState.value == PREPARING) {
+          try {
+            current.commitState.wait();
+          } catch (InterruptedException e) {
+          }
+        }
+
+        switch (current.commitState.value) {
+        case UNPREPARED:
+        case PREPARED:
+          current.commitState.value = ABORTING;
+          break;
+
+        case PREPARING:
+          // We should've taken care of this case already.
+          throw new InternalError();
+
+        case COMMITTING:
+        case COMMITTED:
+          // Too late to abort! We shouldn't really enter this situation.
+          logger.fine("Ignoring attempt to abort a committed transaction.");
+          return;
+
+        case ABORTING:
+        case ABORTED:
+          return;
+        }
+      }
+    }
+
     logger.finest(current + " aborting");
     // Assume only one thread will be executing this.
 
@@ -185,12 +220,17 @@ public final class TransactionManager {
       // Reuse the current frame for the parent transaction.
       current.tid = current.tid.parent;
     }
+
+    synchronized (current.commitState) {
+      current.commitState.value = ABORTED;
+    }
   }
 
   /**
    * Commits the transaction if possible; otherwise, aborts the transaction.
    */
-  public void commitTransaction() throws AbortException {
+  public void commitTransaction() throws AbortException,
+      TransactionAtomicityViolationException {
     logger.finest(current + " attempting to commit");
     // Assume only one thread will be executing this.
 
@@ -224,135 +264,289 @@ public final class TransactionManager {
       return;
     }
 
-    // Commit to core.
+    // Commit top-level transaction.
+
     // Go through the transaction log and figure out the cores we need to
     // contact.
     Set<Core> cores = current.coresToContact();
+    List<RemoteClient> clients = current.clientsCalled;
 
-    try {
-      // Go through each core and send prepare messages in parallel.
-      final int numCores = cores.size();
-      List<Thread> threads = new ArrayList<Thread>(numCores);
-      final Map<Core, TransactionPrepareFailedException> failures =
-          Collections
-              .synchronizedMap(new HashMap<Core, TransactionPrepareFailedException>(
-                  numCores));
+    // Send prepare messages to our cohorts.
+    Map<RemoteNode, TransactionPrepareFailedException> failures =
+        sendPrepareMessages(cores, clients);
 
-      for (Iterator<Core> coreIt = cores.iterator(); coreIt.hasNext();) {
-        final Core core = coreIt.next();
-        Runnable runnable = new Runnable() {
-          public void run() {
-            try {
-              Collection<$Impl> creates = current.getCreatesForCore(core);
-              LongKeyMap<Integer> reads = current.getReadsForCore(core);
-              Collection<$Impl> writes = current.getWritesForCore(core);
-              core.prepareTransaction(current.tid.topTid, creates, reads,
-                  writes);
-            } catch (TransactionPrepareFailedException e) {
-              failures.put(core, e);
-            } catch (UnreachableNodeException e) {
-              failures.put(core, new TransactionPrepareFailedException(
-                  "Unreachable core"));
-            }
-          }
-        };
-
-        // Optimization: only start in a new thread if there are more cores to
-        // contact and if it's a truly remote core (i.e., not in-process).
-        if (!(core instanceof InProcessCore || core.isLocalCore())
-            && coreIt.hasNext()) {
-          Thread thread =
-              new Thread(runnable, "client prepare to " + core.name());
-          threads.add(thread);
-          thread.start();
-        } else {
-          runnable.run();
-        }
-      }
-
-      // Wait for replies.
-      for (Thread thread : threads) {
-        while (true) {
-          try {
-            thread.join();
-            break;
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-        }
-      }
-
-      // Check for conflicts and unreachable cores.
-      if (!failures.isEmpty()) {
-        throw new TransactionPrepareFailedException(failures);
-      }
-
-      // At this point, everything is PREPARED at the cores. Send commit
-      // messages.
-      final List<Core> unreachable =
-          Collections.synchronizedList(new ArrayList<Core>());
-      final List<Core> failed =
-          Collections.synchronizedList(new ArrayList<Core>());
-      threads.clear();
-      for (Iterator<Core> coreIt = cores.iterator(); coreIt.hasNext();) {
-        final Core core = coreIt.next();
-        Runnable runnable = new Runnable() {
-          public void run() {
-            try {
-              core.commitTransaction(current.tid.topTid);
-            } catch (TransactionCommitFailedException e) {
-              failed.add(core);
-            } catch (UnreachableNodeException e) {
-              unreachable.add(core);
-            }
-          }
-        };
-
-        // Optimization: only start in a new thread if there are more cores to
-        // contact and if it's a truly remote core (i.e., not in-process).
-        if (!(core instanceof InProcessCore || core.isLocalCore())
-            && coreIt.hasNext()) {
-          Thread thread =
-              new Thread(runnable, "client commit to " + core.name());
-          threads.add(thread);
-          thread.start();
-        } else {
-          runnable.run();
-        }
-      }
-
-      // Wait for replies.
-      for (Thread thread : threads) {
-        while (true) {
-          try {
-            thread.join();
-            break;
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-        }
-      }
-
-      if (!(unreachable.isEmpty() && failed.isEmpty())) {
-        logger.finest(current
-            + " error committing: atomicity violation -- failed:" + failed
-            + " unreachable:" + unreachable);
-        throw new TransactionAtomicityViolationException(failed, unreachable);
-      }
-    } catch (TransactionPrepareFailedException e) {
-      // Go through each core we've contacted and send abort messages.
-      for (Core core : cores)
-        core.abortTransaction(current.tid);
+    if (!failures.isEmpty()) {
+      failures.remove(null);
+      TransactionPrepareFailedException e =
+          new TransactionPrepareFailedException(failures);
       logger.finest(current + " error committing: abort exception: " + e);
       abortTransaction();
       throw new AbortException(e);
+    }
+
+    // Send commit messages to our cohorts.
+    sendCommitMessagesAndCleanUp(cores, clients);
+  }
+
+  /**
+   * Sends prepare messages to the cohorts. Also sends abort messages if any
+   * cohort fails to prepare.
+   */
+  public Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages() {
+    return sendPrepareMessages(current.coresToContact(), current.clientsCalled);
+  }
+
+  /**
+   * Sends prepare messages to the given set of cores and clients. Also sends
+   * abort messages if any of them fails to prepare.
+   */
+  private Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
+      Set<Core> cores, List<RemoteClient> clients) {
+    final Map<RemoteNode, TransactionPrepareFailedException> failures =
+        Collections
+            .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
+
+    synchronized (current.commitState) {
+      switch (current.commitState.value) {
+      case UNPREPARED:
+        current.commitState.value = PREPARING;
+        break;
+      case PREPARING:
+      case PREPARED:
+        return failures;
+      case COMMITTING:
+      case COMMITTED:
+        logger.fine("Ignoring prepare request (transaction state = "
+            + current.commitState.value + ")");
+        return failures;
+      case ABORTING:
+      case ABORTED:
+        // XXX HACK UGLY
+        failures.put(null, null);
+        return failures;
+      }
+    }
+
+    List<Thread> threads = new ArrayList<Thread>(cores.size() + clients.size());
+
+    // Go through each client and send prepare messages in parallel.
+    for (final RemoteClient client : clients) {
+      Thread thread = new Thread("client prepare to " + client.name()) {
+        @Override
+        public void run() {
+          try {
+            client.prepareTransaction(current.tid.topTid);
+          } catch (UnreachableNodeException e) {
+            failures.put(client, new TransactionPrepareFailedException(
+                "Unreachable client"));
+          } catch (TransactionPrepareFailedException e) {
+            failures.put(client, new TransactionPrepareFailedException(e
+                .getMessage()));
+          }
+        }
+      };
+      thread.start();
+      threads.add(thread);
+    }
+
+    // Go through each core and send prepare messages in parallel.
+    for (Iterator<Core> coreIt = cores.iterator(); coreIt.hasNext();) {
+      final Core core = coreIt.next();
+      Runnable runnable = new Runnable() {
+        public void run() {
+          try {
+            Collection<$Impl> creates = current.getCreatesForCore(core);
+            LongKeyMap<Integer> reads = current.getReadsForCore(core);
+            Collection<$Impl> writes = current.getWritesForCore(core);
+            core.prepareTransaction(current.tid.topTid, creates, reads, writes);
+          } catch (TransactionPrepareFailedException e) {
+            failures.put((RemoteNode) core, e);
+          } catch (UnreachableNodeException e) {
+            failures.put((RemoteNode) core,
+                new TransactionPrepareFailedException("Unreachable core"));
+          }
+        }
+      };
+
+      // Optimization: only start in a new thread if there are more cores to
+      // contact and if it's a truly remote core (i.e., not in-process).
+      if (!(core instanceof InProcessCore || core.isLocalCore())
+          && coreIt.hasNext()) {
+        Thread thread =
+            new Thread(runnable, "client prepare to " + core.name());
+        threads.add(thread);
+        thread.start();
+      } else {
+        runnable.run();
+      }
+    }
+
+    // Wait for replies.
+    for (Thread thread : threads) {
+      while (true) {
+        try {
+          thread.join();
+          break;
+        } catch (InterruptedException e) {
+        }
+      }
+    }
+
+    // Check for conflicts and unreachable cores/clients.
+    if (!failures.isEmpty()) {
+      String logMessage =
+          "Transaction tid=" + current.tid.topTid + ":  prepare failed.";
+      for (Map.Entry<RemoteNode, TransactionPrepareFailedException> entry : failures
+          .entrySet()) {
+        logMessage +=
+            "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
+      }
+      logger.fine(logMessage);
+
+      sendAbortMessages(cores, clients, failures.keySet());
+    } else {
+      synchronized (current.commitState) {
+        current.commitState.value = PREPARED;
+        current.commitState.notifyAll();
+      }
+    }
+
+    return failures;
+  }
+
+  /**
+   * Sends commit messages to the cohorts.
+   */
+  public void sendCommitMessagesAndCleanUp()
+      throws TransactionAtomicityViolationException {
+    sendCommitMessagesAndCleanUp(current.coresToContact(),
+        current.clientsCalled);
+  }
+
+  /**
+   * Sends commit messages to the given set of cores and clients.
+   */
+  private void sendCommitMessagesAndCleanUp(Set<Core> cores,
+      List<RemoteClient> clients) throws TransactionAtomicityViolationException {
+    synchronized (current.commitState) {
+      switch (current.commitState.value) {
+      case UNPREPARED:
+      case PREPARING:
+        // This shouldn't happen.
+        logger.fine("Ignoring commit request (transaction state = "
+            + current.commitState.value + ")");
+        return;
+      case PREPARED:
+        current.commitState.value = COMMITTING;
+        break;
+      case COMMITTING:
+      case COMMITTED:
+        return;
+      case ABORTING:
+      case ABORTED:
+        throw new TransactionAtomicityViolationException();
+      }
+    }
+
+    final List<RemoteNode> unreachable =
+        Collections.synchronizedList(new ArrayList<RemoteNode>());
+    final List<RemoteNode> failed =
+        Collections.synchronizedList(new ArrayList<RemoteNode>());
+    List<Thread> threads = new ArrayList<Thread>(cores.size() + clients.size());
+
+    // Send commit messages to the clients in parallel.
+    for (final RemoteClient client : clients) {
+      Thread thread = new Thread("client commit to " + client) {
+        @Override
+        public void run() {
+          try {
+            client.commitTransaction(current.tid.topTid);
+          } catch (UnreachableNodeException e) {
+            unreachable.add(client);
+          } catch (TransactionCommitFailedException e) {
+            failed.add(client);
+          }
+        }
+      };
+      thread.start();
+      threads.add(thread);
+    }
+
+    // Send commit messages to the cores in parallel.
+    for (Iterator<Core> coreIt = cores.iterator(); coreIt.hasNext();) {
+      final Core core = coreIt.next();
+      Runnable runnable = new Runnable() {
+        public void run() {
+          try {
+            core.commitTransaction(current.tid.topTid);
+          } catch (TransactionCommitFailedException e) {
+            failed.add((RemoteCore) core);
+          } catch (UnreachableNodeException e) {
+            unreachable.add((RemoteCore) core);
+          }
+        }
+      };
+
+      // Optimization: only start in a new thread if there are more cores to
+      // contact and if it's a truly remote core (i.e., not in-process).
+      if (!(core instanceof InProcessCore || core.isLocalCore())
+          && coreIt.hasNext()) {
+        Thread thread = new Thread(runnable, "client commit to " + core.name());
+        threads.add(thread);
+        thread.start();
+      } else {
+        runnable.run();
+      }
+    }
+
+    // Wait for replies.
+    for (Thread thread : threads) {
+      while (true) {
+        try {
+          thread.join();
+          break;
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+
+    if (!(unreachable.isEmpty() && failed.isEmpty())) {
+      logger.finest(current
+          + " error committing: atomicity violation -- failed:" + failed
+          + " unreachable:" + unreachable);
+      throw new TransactionAtomicityViolationException(failed, unreachable);
     }
 
     // Update data structures to reflect successful commit.
     logger.finest(current + " committed at cores...updating data structures");
     current.commitTopLevel();
     logger.finest(current + " committed");
+
+    synchronized (current.commitState) {
+      current.commitState.value = COMMITTED;
+    }
+    
     current = null;
+  }
+
+  /**
+   * Sends abort messages to those nodes that haven't reported failures.
+   * 
+   * @param cores
+   *          the set of cores involved in the transaction.
+   * @param clients
+   *          the set of clients involved in the transaction.
+   * @param fails
+   *          the set of nodes that have reported failure.
+   */
+  private void sendAbortMessages(Set<Core> cores, List<RemoteClient> clients,
+      Set<RemoteNode> fails) {
+    for (Core core : cores)
+      if (!fails.contains(core)) core.abortTransaction(current.tid);
+
+    for (RemoteClient client : clients)
+      if (!fails.contains(client)) client.abortTransaction(current.tid);
   }
 
   public void registerCreate($Impl obj) {
