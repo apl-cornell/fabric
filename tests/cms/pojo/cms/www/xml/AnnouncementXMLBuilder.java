@@ -37,7 +37,7 @@ public class AnnouncementXMLBuilder {
    */
   public Element buildAnnouncementsSubtree(User p, Document xml, Course course) {
     Profiler.enterMethod("AnnouncementXMLBuilder.buildAnnouncementSubtree",
-        "CourseID: " + course);
+        "CourseID: " + course.toString());
     Element xAnnouncements = xml.createElement(XMLBuilder.TAG_COURSEANNOUNCEMENTS);
     Iterator i = course.getAnnouncements().iterator();
     
@@ -61,7 +61,7 @@ public class AnnouncementXMLBuilder {
     xAnnouncements.setAttribute(XMLBuilder.A_NUMTOTALANNOUNCE, ""
         + numTotalAnnounce);
     Profiler.exitMethod("AnnouncementXMLBuilder.buildAnnouncementSubtree",
-        "CourseID: " + course);
+        "CourseID: " + course.toString());
     return xAnnouncements;
   }
 

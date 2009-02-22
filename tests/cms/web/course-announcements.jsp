@@ -3,19 +3,19 @@ Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAY
 String URL= request.getServletPath();
 User p= (User) session.getAttribute(AccessController.A_PRINCIPAL);
 String netid= p.getNetID();
-Element root= (Element) displayData.getElementsByTagName(XMLBuilder.TAG_ROOT).item(0);
-Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
-String courseid= course.getAttribute(XMLBuilder.A_COURSEID); 
-Element announcements =  XMLUtil.getFirstChildByTagName(course, XMLBuilder.TAG_COURSEANNOUNCEMENTS);
+Element root= (Element) displayData.getElementsByTagName(XMLBuilder.$Static.TAG_ROOT).item(0);
+Element course= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_COURSE);
+String courseid= course.getAttribute(XMLBuilder.$Static.A_COURSEID); 
+Element announcements =  XMLUtil.$Proxy.getFirstChildByTagName(course, XMLBuilder.$Static.TAG_COURSEANNOUNCEMENTS);
 if (announcements != null) { 
 boolean inStudentView =  URL.equals(AccessController.COURSE_URL);
 String divID = inStudentView ? "id=\"topblock\"" : "";
-int numTotalAnnounce = Integer.parseInt(announcements.getAttribute(XMLBuilder.A_NUMTOTALANNOUNCE));
-int numRecentAnnounce = Integer.parseInt(announcements.getAttribute(XMLBuilder.A_NUMRECENTANNOUNCE));
+int numTotalAnnounce = Integer.parseInt(announcements.getAttribute(XMLBuilder.$Static.A_NUMTOTALANNOUNCE));
+int numRecentAnnounce = Integer.parseInt(announcements.getAttribute(XMLBuilder.$Static.A_NUMRECENTANNOUNCE));
 boolean isadmin = false, iscategory = false;
 if (!p.isInStaffAsBlankMode()) {
-  isadmin= course.hasAttribute(XMLBuilder.A_ISADMIN) && !inStudentView;
-  iscategory = course.hasAttribute(XMLBuilder.A_ISCATEGORY);
+  isadmin= course.hasAttribute(XMLBuilder.$Static.A_ISADMIN) && !inStudentView;
+  iscategory = course.hasAttribute(XMLBuilder.$Static.A_ISCATEGORY);
 }
 boolean display = numRecentAnnounce < numTotalAnnounce;
 String style = display ? "": "style = \"display:none\"";
@@ -36,14 +36,14 @@ if (length == 0) { %>
 		<table width="100%" cellpadding="2" cellspacing="0" border="0"><%
   for (int i= 0; i != list.getLength(); i++) { 
     Element item= (Element) list.item(i); 
-    String poster= item.getAttribute(XMLBuilder.A_POSTER); 
-    String txt = item.getAttribute(XMLBuilder.A_TEXT);
-    String editInfo = item.getAttribute(XMLBuilder.A_OLDTEXT);
-    String announceid = item.getAttribute(XMLBuilder.A_ID);
-    NodeList history = item.getElementsByTagName(XMLBuilder.TAG_ANNOUNCEMENTHISTORY).item(0).getChildNodes(); %>
+    String poster= item.getAttribute(XMLBuilder.$Static.A_POSTER); 
+    String txt = item.getAttribute(XMLBuilder.$Static.A_TEXT);
+    String editInfo = item.getAttribute(XMLBuilder.$Static.A_OLDTEXT);
+    String announceid = item.getAttribute(XMLBuilder.$Static.A_ID);
+    NodeList history = item.getElementsByTagName(XMLBuilder.$Static.TAG_ANNOUNCEMENTHISTORY).item(0).getChildNodes(); %>
             <tr>
               <td>
-                <p style="margin-left: 3em; font-size: smaller"><i><%= item.getAttribute(XMLBuilder.A_DATE) %></i><%
+                <p style="margin-left: 3em; font-size: smaller"><i><%= item.getAttribute(XMLBuilder.$Static.A_DATE) %></i><%
     if (isadmin || iscategory) { %>
                 <span id="editannounce_<%= announceid %>head"><a class="hide" href="#" onclick="show('editannounce_<%= announceid %>','(edit)','(edit)'); return false;">(edit)</a>:</span></p><%
     } %>
@@ -61,7 +61,7 @@ if (length == 0) { %>
              <ul><% 
                 for(int j= 0; j<history.getLength(); j++){
                     Element old = (Element)history.item(j); %>
-                <li><%=old.getAttribute(XMLBuilder.A_TEXT)%></li><%
+                <li><%=old.getAttribute(XMLBuilder.$Static.A_TEXT)%></li><%
                 } %>
              </ul> 
           <% } %></p>
@@ -72,17 +72,17 @@ if (length == 0) { %>
             </tr><%}%>
 		</table><%
 } 
-NodeList hiddens = root.getElementsByTagName(XMLBuilder.TAG_HIDDENANNOUNCE);
+NodeList hiddens = root.getElementsByTagName(XMLBuilder.$Static.TAG_HIDDENANNOUNCE);
 if (hiddens.getLength() > 0 && (isadmin || iscategory)) { %>
     <p>Restore removed Announcements <span id="hiddenannouncedivhead"><a class="hide" href="#" onclick="show('hiddenannouncediv','(show)','(hide)'); return false;">(show)</a></span><br>
     <div id="hiddenannouncediv" style="display: none">
     <table width="100%" cellpadding="2" cellspacing="0" border="0">
       <% for (int i=0; i < hiddens.getLength(); i++) { 
           Element xHiddenAnnounce = (Element) hiddens.item(i); %>
-          <tr><td>Posted by <%= xHiddenAnnounce.getAttribute(XMLBuilder.A_POSTER) %> on <%= xHiddenAnnounce.getAttribute(XMLBuilder.A_DATE) %>&nbsp;
-          <a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_RESTOREANNOUNCE + "&amp;" + AccessController.P_ID + "=" + xHiddenAnnounce.getAttribute(XMLBuilder.A_ID) %>">Restore</a></td>
+          <tr><td>Posted by <%= xHiddenAnnounce.getAttribute(XMLBuilder.$Static.A_POSTER) %> on <%= xHiddenAnnounce.getAttribute(XMLBuilder.$Static.A_DATE) %>&nbsp;
+          <a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_RESTOREANNOUNCE + "&amp;" + AccessController.P_ID + "=" + xHiddenAnnounce.getAttribute(XMLBuilder.$Static.A_ID) %>">Restore</a></td>
           </tr><tr><td><p style="margin-left: 20px">
-          <%= xHiddenAnnounce.getAttribute(XMLBuilder.A_TEXT) %></p></td></tr>
+          <%= xHiddenAnnounce.getAttribute(XMLBuilder.$Static.A_TEXT) %></p></td></tr>
       <% } %>
     </table></div>
 <%

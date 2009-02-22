@@ -911,7 +911,7 @@ public class AccessController extends HttpServlet {
     }
     
     localCore = Client.getClient().getLocalCore();
-    core = Client.getClient().getLocalCore();
+    core = localCore; //Client.getClient().getCore("core0");
     label = localCore.getEmptyLabel();
     atomic {
       // TODO: fetch CMS root
@@ -955,9 +955,7 @@ public class AccessController extends HttpServlet {
    */
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-    atomic {
       processRequest(request, response);
-    }
   }
 
   /**
@@ -970,9 +968,7 @@ public class AccessController extends HttpServlet {
    */
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-    atomic {
       processRequest(request, response);
-    }
   }
 
   /**
@@ -1063,75 +1059,75 @@ public class AccessController extends HttpServlet {
      * be retrieved for fast reference
      */
     try {
-      // Check for a requested action
-      System.out.println("The current action is: " + action);
-      // debug parameter values
-      java.util.Map reqmap = request.getParameterMap();
-      Iterator iter = reqmap.keySet().iterator();
-      while (iter.hasNext()) {
-        String key = (String) iter.next();
-        String[] vals = cms.fabil.Kludge.convertStringArray(localCore, label, 
-            reqmap.get(key));
-        String value = vals[0];
-        System.out.println("reqparam: " + key + "=" + value);
-      }
-      session.setAttribute(A_DEBUG, new Boolean~label@localCore(debug));
-      session.setAttribute(A_COOKIES, request.getCookies());
-      Document xml  = null;
-      User     user = null;
-      
-      /*
-       * no action: go to cms home page, which tells you to either go guest or
-       * sign in (if action is null, there won't be a principal, so don't bother
-       * setting one up) FIXME After I synched on 5/17/05, I found that when I
-       * tried to run, the action was null and so getUserID() (just below) was
-       * being called on the null Principal that was returned by
-       * setUpPrincipal() (above). I "fixed" this, assuming it was a bug, and
-       * the system seems to be working now. Am I missing something, or was
-       * non-working code committed? - Evan
-       */
-      if (action == null) {
-        buildURL = HOMEPAGE_URL;
-        xml = xmlBuilder.buildHomepage();
-      } else {
-        // Set up Principal and netID in debug mode
-        user = setUpPrincipal(session, request, action != null);
-        if (user == null) {
+      atomic {
+        // Check for a requested action
+        System.out.println("The current action is: " + action);
+        // debug parameter values
+        java.util.Map reqmap = request.getParameterMap();
+        Iterator iter = reqmap.keySet().iterator();
+        while (iter.hasNext()) {
+          String key = (String) iter.next();
+          String[] vals = cms.fabil.Kludge.convertStringArray(localCore, label, 
+              reqmap.get(key));
+          String value = vals[0];
+          System.out.println("reqparam: " + key + "=" + value);
+        }
+        session.setAttribute(A_DEBUG, new Boolean~label@localCore(debug));
+        session.setAttribute(A_COOKIES, request.getCookies());
+        Document xml  = null;
+        User     user = null;
+        
+        /*
+         * no action: go to cms home page, which tells you to either go guest or
+         * sign in (if action is null, there won't be a principal, so don't bother
+         * setting one up) FIXME After I synched on 5/17/05, I found that when I
+         * tried to run, the action was null and so getUserID() (just below) was
+         * being called on the null Principal that was returned by
+         * setUpPrincipal() (above). I "fixed" this, assuming it was a bug, and
+         * the system seems to be working now. Am I missing something, or was
+         * non-working code committed? - Evan
+         */
+        if (action == null) {
           buildURL = HOMEPAGE_URL;
           xml = xmlBuilder.buildHomepage();
         } else {
-          // staffAs_ mode, apparentID
-          // of principal otherwise
-          try {
-            RequestHandlerInfo info =
-                handleSpecificAction(action, request, response, session, user);
-            if (info == null)
-              throw new RuntimeException~label@localCore(
-                  "Action handler return value should not be null!");
-            buildURL = info.getBuildURL();
-            xml = info.getXMLDocument();
-          } catch (Exception nfe) {
-            // Bad input - go to overview
-            xml = xmlBuilder.buildErrorPage(user.getNetID(), action, nfe);
-            buildURL = ERROR_URL;
-            nfe.printStackTrace();
+          // Set up Principal and netID in debug mode
+          user = setUpPrincipal(session, request, action != null);
+          if (user == null) {
+            buildURL = HOMEPAGE_URL;
+            xml = xmlBuilder.buildHomepage();
+          } else {
+            // staffAs_ mode, apparentID
+            // of principal otherwise
+            try {
+              RequestHandlerInfo info =
+                  handleSpecificAction(action, request, response, session, user);
+              if (info == null)
+                throw new RuntimeException~label@localCore(
+                    "Action handler return value should not be null!");
+              buildURL = info.getBuildURL();
+              xml = info.getXMLDocument();
+            } catch (Exception nfe) {
+              // Bad input - go to overview
+              xml = xmlBuilder.buildErrorPage(user.getNetID(), action, nfe);
+              buildURL = ERROR_URL;
+              nfe.printStackTrace();
+            }
           }
         }
+        session.setAttribute(A_DISPLAYDATA, xml);
+        /*
+         * FIXME is it ok to set the principal to be null on the line below, or
+         * will this cause problems in JSPs? The principal is null when the action
+         * is null; see my fixme just above this. - Evan
+         */
+        session.setAttribute(A_PRINCIPAL, user);
+  
+        if (buildURL != null) {
+  
+          redirectTo(buildURL, request, response);
+        }
       }
-      session.setAttribute(A_DISPLAYDATA, xml);
-      /*
-       * FIXME is it ok to set the principal to be null on the line below, or
-       * will this cause problems in JSPs? The principal is null when the action
-       * is null; see my fixme just above this. - Evan
-       */
-      session.setAttribute(A_PRINCIPAL, user);
-
-      if (buildURL != null) {
-
-        redirectTo(buildURL, request, response);
-      }
-    } catch (ServletException e) {
-      throw e;
     } catch (Exception e) {
       System.out.println("Error in AccessController.processRequest(): " + e);
       e.printStackTrace();

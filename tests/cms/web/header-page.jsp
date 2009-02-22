@@ -12,7 +12,7 @@ boolean cmsAdminOverview= (URL.equals(AccessController.CMSADMIN_URL)||URL.equals
 <%
 if(debug) {%>
 	<%-- for debug purposes --%>
-	<jsp:include page="print-xml-tree.jsp" /><%
+	<% /* jsp:include page="print-xml-tree.jsp" / */ %><%
 }%>
 <div id="dhtmltooltip"></div>
 <script type="text/javascript">

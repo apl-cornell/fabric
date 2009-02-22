@@ -40,7 +40,7 @@ public class CourseXMLBuilder {
    * @deprecated This method is very slow and should usually be avoided
    */
   public Element buildFullSubtree(User user, Document xml, Course course) {
-    Profiler.enterMethod("CourseXMLBuilder.buildFullSubtree", "Course: " + course);
+    Profiler.enterMethod("CourseXMLBuilder.buildFullSubtree", "Course: " + course.toString());
     boolean isStaff = user.isStaffInCourseByCourse(course);
     Element xCourse = buildGeneralSubtree(user, xml, course);
     xCourse.appendChild(xmlBuilder.announcementXMLBuilder.buildAnnouncementsSubtree(user, xml, course));
@@ -51,7 +51,7 @@ public class CourseXMLBuilder {
     xCourse.appendChild(buildAssignmentFilesSubtree(user, xml, course));
     xCourse.appendChild(buildCategoriesSubtree(user, xml, course));
     if (isStaff) xCourse.appendChild(buildStaffListSubtree(user, xml, course));
-    Profiler.exitMethod("CourseXMLBuilder.buildFullSubtree", "Course: " + course);
+    Profiler.exitMethod("CourseXMLBuilder.buildFullSubtree", "Course: " + course.toString());
     return xCourse;
   }
 
@@ -268,7 +268,7 @@ public class CourseXMLBuilder {
    */
   public Element buildGeneralSubtree(User user, Document xml, Course course) {
     Profiler.enterMethod("CourseXMLBuilder.buildGeneralSubtree", "CourseID: "
-        + course);
+        + course.toString());
     Element xCourse = buildBasicPropNode(user, xml, course);
 
     Student student = course.getStudent(user);
@@ -292,7 +292,7 @@ public class CourseXMLBuilder {
       xCourse.setAttribute(XMLBuilder.A_ENROLLMENT,
           Integer.toString(enrolledStudents.size()));
     }
-    Profiler.exitMethod("CourseXMLBuilder.buildGeneralSubtree", "CourseID: " + course);
+    Profiler.exitMethod("CourseXMLBuilder.buildGeneralSubtree", "CourseID: " + course.toString());
     return xCourse;
   }
 

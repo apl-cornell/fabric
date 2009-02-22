@@ -8,11 +8,11 @@ session.setAttribute(AccessController.A_URL, URL);
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 User p = (User)session.getAttribute(AccessController.A_PRINCIPAL);
 Element root= (Element)displayData.getFirstChild();
-Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
+Element course= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_COURSE);
 boolean showViewAs= false;
 String courseid = null;
 if (course!=null) {
-    courseid= course.getAttribute(XMLBuilder.A_COURSEID);
+    courseid= course.getAttribute(XMLBuilder.$Static.A_COURSEID);
     showViewAs= p.isAdminPrivByCourseID(courseid) || p.isInStaffAsBlankMode(); 
 }%>
 
@@ -97,7 +97,7 @@ else {
 <%
 Element students= null;
 NodeList studs= null;
-CMSNodeList studentList= XMLUtil.getChildrenByTagNameAndAttributeValue(root,XMLBuilder.TAG_COURSESTUDENTS,XMLBuilder.A_COURSEID,course.getAttribute(XMLBuilder.A_COURSEID));
+CMSNodeList studentList= XMLUtil.$Proxy.getChildrenByTagNameAndAttributeValue(root,XMLBuilder.$Static.TAG_COURSESTUDENTS,XMLBuilder.$Static.A_COURSEID,course.getAttribute(XMLBuilder.$Static.A_COURSEID));
 if (studentList.getLength()!=0) {
     students= (Element) studentList.get(0);
     studs= students.getChildNodes();
@@ -132,7 +132,7 @@ font-size: 10px;">
         students = new Array(<%=studs.getLength()%>);
 <%      for (int i= 0; i < studs.getLength(); i++) {
             Element student= (Element) studs.item(i); 
-            studNetID= student.getAttribute(XMLBuilder.A_NETID);
+            studNetID= student.getAttribute(XMLBuilder.$Static.A_NETID);
 %>
             students[<%=i%>]="<%=studNetID%>";
 <%      }
