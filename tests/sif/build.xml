@@ -20,6 +20,9 @@
 	<!-- signature source directory -->
 	<property name="sig-src" location="${basedir}/sig-src" />
 
+	<!-- fabric source directory -->
+	<property name="fab-src" location="${basedir}/fab-src" />
+
 	<!-- ****************************************
        Clean up targets and other admin tasks
        ****************************************  -->
@@ -57,7 +60,7 @@
                         description="Builds the SIF framework, including signature files" />
 
 	<target name="sif-base"
-            depends="init,configure"
+            depends="init,configure,sif-fab"
             description="Build the base SIF framework using the Java compiler, not including the signature files">
 		
 		<javac source="1.5" target="1.5" srcdir="${src}" destdir="${sif.classes}">
@@ -85,13 +88,44 @@
                     to="classes\1\.class" />			
 		</apply-->
 	</target>
+	
+	<target name="sif-fab"
+		depends="init,configure"
+		description="Builds the part of the SIF framework that is in Fabric">
+		
+		<apply executable="bash"
+						parallel="true"
+						failonerror="true"
+						dest="${basedir}"
+						relative="true"
+						skipemptyfilesets="true"
+						vmlauncher="false">
+			<arg value="${fabric.home}/bin/fabc"/>
+			<arg value="-d"/>
+			<arg value="${sif.classes}"/>
+			<arg value="-sourcepath"/>
+			<arg value="${fab-src}"/>
+      <arg value="-cp" />
+      <arg pathref="standard.classpath" />
+			<arg value="-sigcp"/>
+			<arg value="${fabric.home}/sig-classes/fabric"/>
+			<arg value="-filsigcp"/>
+			<arg value="${fabric.home}/sig-classes/fabil"/>
+			<srcfile />
+			<fileset dir="${basedir}" includes="fab-src/**/*.fab" />
+			<mapper type="regexp"
+                    from="^fab-src(.*)\.fab"
+                    to="classes\1\.class" />			
+		</apply>
+		
+	</target>
 
 	
 	<!-- The Fabric signatures for the standard Java classes -->
 	<target name="sif-sig"
             depends="init,configure"
             description="Compile the Fabric signatures for the SIF framework classes.">
-		<apply executable="sh"
+		<apply executable="bash"
                parallel="true"
                failonerror="true"
                dest="${basedir}"

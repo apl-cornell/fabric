@@ -16,6 +16,18 @@
 	<!-- set the prefix for accessing environment variables -->
 	<property environment="env" />
 
+	<!-- Polyglot installation -->
+	<!-- If it is not defined in the properties file, use the environment variable $JIF. -->
+	<condition property="polyglot.home" value="${env.POLYGLOT}">
+		<and>
+			<isset property="env.POLYGLOT" />
+			<not>
+				<isset property="POLYGLOT.home" />
+			</not>
+		</and>
+	</condition>
+	
+	
 	<!-- Jif installation -->
 	<!-- If it is not defined in the properties file, use the environment variable $JIF. -->
 	<condition property="jif.home" value="${env.JIF}">
@@ -68,11 +80,14 @@
 		</fileset>
 		<pathelement location="${sif.classes}" />
 		<pathelement location="${fabric.home}/rt-classes" />
+		<pathelement location="${fabric.home}/classes" />		
 		<pathelement location="${jif.home}/lib-classes" />
-		<!--fileset dir="${jif.home}/lib">
+		<pathelement location="${jif.home}/classes" />
+		<pathelement location="${jif.home}/rt-classes" />		
+		<fileset dir="${jif.home}/lib">
             <include name="*.jar" />
             <exclude name="*sig.jar" />
-        </fileset-->
+        </fileset>
 		<pathelement path="${java.class.path}" />
 	</path>
 
