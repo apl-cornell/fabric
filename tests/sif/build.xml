@@ -1,197 +1,194 @@
 <project name="sif" default="sif" basedir=".">
-	<description>
+    <description>
     SIF build file
   </description>
 
 
-	<!-- ****************************************
+    <!-- ****************************************
         Configuration properties.
        ****************************************  -->
-	<import file="config.xml"/>
+    <import file="config.xml"/>
 
-	<!-- ****************************************
+    <!-- ****************************************
        set global properties for this build
        ****************************************  -->
 
-	<!-- source directory -->
-	<property name="src" location="${basedir}/src" />
+    <!-- source directory -->
+    <property name="src" location="${basedir}/src" />
 
 
-	<!-- signature source directory -->
-	<property name="sig-src" location="${basedir}/sig-src" />
+    <!-- signature source directory -->
+    <property name="sig-src" location="${basedir}/sig-src" />
 
-	<!-- fabric source directory -->
-	<property name="fab-src" location="${basedir}/fab-src" />
+    <!-- fabric source directory -->
+    <property name="fab-src" location="${basedir}/fab-src" />
 
-	<!-- ****************************************
+    <!-- ****************************************
        Clean up targets and other admin tasks
        ****************************************  -->
-	<target name="clean" description="clean up">
-		<!-- Delete the ${sif.classes} directory tree -->
-		<delete dir="${sif.classes}" />
-		<delete dir="${sif.sig-classes}" />
-		<subant target="clean">
-			<fileset dir="examples" includes="*/build.xml"/>
-		</subant>
-	</target>
+    <target name="clean" description="clean up">
+        <!-- Delete the ${sif.classes} directory tree -->
+        <delete dir="${sif.classes}" />
+        <delete dir="${sif.sig-classes}" />
+        <subant target="clean">
+            <fileset dir="examples" includes="*/build.xml"/>
+        </subant>
+    </target>
 
-	<target name="clobber" depends="clean" />
+    <target name="clobber" depends="clean" />
 
-	<!-- initialize the build -->
-	<target name="init">
-		<!-- Create the time stamp -->
-		<tstamp />
-		<!-- Create the build directory structures used by compile -->
-		<mkdir dir="${sif.classes}" />
-		<mkdir dir="${sif.sig-classes}" />
-	</target>
+    <!-- initialize the build -->
+    <target name="init">
+        <!-- Create the time stamp -->
+        <tstamp />
+        <!-- Create the build directory structures used by compile -->
+        <mkdir dir="${sif.classes}" />
+        <mkdir dir="${sif.sig-classes}" />
+    </target>
 
 
 
-	<!-- ****************************************
+    <!-- ****************************************
        SIF targets
        ****************************************  -->
 
-	<target name="all"
+    <target name="all"
             depends="sif,sif-examples"
             description="Builds the Fabric-Servlet and all examples" />
 
-	<target name="sif" depends="sif-base,sif-sig" 
+    <target name="sif" depends="sif-base,sif-sig" 
                         description="Builds the SIF framework, including signature files" />
 
-	<target name="sif-base"
+    <target name="sif-base"
             depends="init,configure,sif-fab"
             description="Build the base SIF framework using the Java compiler, not including the signature files">
-		
-		<javac source="1.5" target="1.5" srcdir="${src}" destdir="${sif.classes}">
-			<classpath refid="standard.classpath" />
-		</javac>
-		
-		<!--apply executable="bash"
-						parallel="true"
-						failonerror="true"
-						dest="${basedir}"
-						relative="true"
-						skipemptyfilesets="true"
-						vmlauncher="false">
-			<arg value="${fabric.home}/bin/filc"/>
-			<arg value="-d"/>
-			<arg value="${sif.classes}"/>
-			<arg value="-sourcepath"/>
-			<arg value="${src}"/>
+        
+        <javac source="1.5" target="1.5" srcdir="${src}" destdir="${sif.classes}">
+            <classpath refid="standard.classpath" />
+        </javac>
+        
+        <!--apply executable="bash"
+                        parallel="true"
+                        failonerror="true"
+                        dest="${basedir}"
+                        relative="true"
+                        skipemptyfilesets="true"
+                        vmlauncher="false">
+            <arg value="${fabric.home}/bin/filc"/>
+            <arg value="-d"/>
+            <arg value="${sif.classes}"/>
+            <arg value="-sourcepath"/>
+            <arg value="${src}"/>
       <arg value="-cp" />
-      <arg pathref="standard.classpath" />			
-			<srcfile />
-			<fileset dir="${basedir}" includes="src/**/*.fil" />
-			<mapper type="regexp"
+      <arg pathref="standard.classpath" />          
+            <srcfile />
+            <fileset dir="${basedir}" includes="src/**/*.fil" />
+            <mapper type="regexp"
                     from="^src(.*)\.fil"
-                    to="classes\1\.class" />			
-		</apply-->
-	</target>
-	
-	<target name="sif-fab"
-		depends="init,configure"
-		description="Builds the part of the SIF framework that is in Fabric">
-		
-		<apply executable="bash"
-						parallel="true"
-						failonerror="true"
-						dest="${basedir}"
-						relative="true"
-						skipemptyfilesets="true"
-						vmlauncher="false">
-			<arg value="${fabric.home}/bin/fabc"/>
-			<arg value="-d"/>
-			<arg value="${sif.classes}"/>
-			<arg value="-sourcepath"/>
-			<arg value="${fab-src}"/>
+                    to="classes\1\.class" />            
+        </apply-->
+    </target>
+    
+    <target name="sif-fab"
+        depends="init,configure"
+        description="Builds the part of the SIF framework that is in Fabric">
+        
+        <apply executable="bash"
+                        parallel="true"
+                        failonerror="true"
+                        dest="${basedir}"
+                        relative="true"
+                        skipemptyfilesets="true"
+                        vmlauncher="false">
+            <arg value="${fabric.home}/bin/fabc"/>
+            <arg value="-d"/>
+            <arg value="${sif.classes}"/>
+            <arg value="-sourcepath"/>
+            <arg value="${fab-src}"/>
       <arg value="-cp" />
       <arg pathref="standard.classpath" />
-			<arg value="-sigcp"/>
-			<arg value="${fabric.home}/sig-classes/fabric"/>
-			<arg value="-filsigcp"/>
-			<arg value="${fabric.home}/sig-classes/fabil"/>
-			<srcfile />
-			<fileset dir="${basedir}" includes="fab-src/**/*.fab" />
-			<mapper type="regexp"
+            <arg value="-sigcp"/>
+            <arg value="${fabric.home}/sig-classes/fabric"/>
+            <arg value="-filsigcp"/>
+            <arg value="${fabric.home}/sig-classes/fabil"/>
+            <srcfile />
+            <fileset dir="${basedir}" includes="fab-src/**/*.fab" />
+            <mapper type="regexp"
                     from="^fab-src(.*)\.fab"
-                    to="classes\1\.class" />			
-		</apply>
-		
-	</target>
+                    to="classes\1\.class" />            
+        </apply>
+        
+    </target>
 
-	
-	<!-- The Fabric signatures for the standard Java classes -->
-	<target name="sif-sig"
+    
+    <!-- The Fabric signatures for the standard Java classes -->
+    <target name="sif-sig"
             depends="init,configure"
             description="Compile the Fabric signatures for the SIF framework classes.">
-		<apply executable="bash"
+        <apply executable="bash"
                parallel="true"
                failonerror="true"
                dest="${basedir}"
                relative="true"
                skipemptyfilesets="true"
                vmlauncher="false">
-			<arg value="${fabric.home}/bin/fabc" />
-			<arg value="-d" />
-			<arg value="sig-classes" />
-			<arg value="-sourcepath" />
-			<arg value="sig-src" />
-			<srcfile />
-			<fileset dir="${basedir}" includes="sig-src/**/*.fab" />
-			<mapper type="regexp"
-                    from="^sig-src(.*)\.fab"
-                    to="sig-classes\1\.class" />
-		</apply>
+            <arg value="${fabric.home}/bin/fabc" />
+            <arg value="-cp"         /> <arg pathref="standard.classpath" />
+            <arg value="-d"          /> <arg value="sig-classes" />
+            <arg value="-sourcepath" /> <arg value="sig-src" />
+            <srcfile />
+            <fileset dir="${basedir}" includes="sig-src/**/*.fab" />
+            <globmapper from="sig-src/*.fab" to="sig-classes/*.class" handledirsep="true" />
+        </apply>
 
-	</target>
+    </target>
 
-	<target name="sif-examples"
+    <target name="sif-examples"
             depends="sif"
             description="Builds all examples">
-		<!-- compile the user example first, since other examples depend on it -->
-		<subant target="compile">
-			<fileset dir="examples" includes="user/build.xml"/>
-		</subant>
-		<subant target="compile">
-			<fileset dir="examples" includes="*/build.xml" excludes="user/build.xml"/>
-		</subant>
-	</target>
+        <!-- compile the user example first, since other examples depend on it -->
+        <subant target="compile">
+            <fileset dir="examples" includes="user/build.xml"/>
+        </subant>
+        <subant target="compile">
+            <fileset dir="examples" includes="*/build.xml" excludes="user/build.xml"/>
+        </subant>
+    </target>
 
-	<target name="install-quick"
+    <target name="install-quick"
             depends="configure-install">
-		<fail unless="catalina.home.defined"
+        <fail unless="catalina.home.defined"
               message="The Tomcat installation directory is unknown. Please either edit config.properties, or set the envirnoment variable CATALINA_HOME to the Tomcat installation directory." />
-		<delete dir="${catalina.home}/shared/classes/sif" />
-		<copy todir="${catalina.home}/shared/classes" includeEmptyDirs="no">
-			<fileset dir="${sif.classes}" defaultexcludes="yes">
-			</fileset>
-		</copy>
-		<copy todir="${catalina.home}/shared/lib">
-			<fileset dir="${basedir}/lib" includes="common*.jar,mysql*.jar,sif.jar,jif.jar,jiflib.jar,jifrt.jar"	defaultexcludes="yes"/>
-		</copy>
-		<copy todir="${catalina.home}/webapps/ROOT">
-			<fileset dir="${basedir}/src" includes="preamble.js" defaultexcludes="yes"/>
-		</copy>
+        <delete dir="${catalina.home}/shared/classes/sif" />
+        <copy todir="${catalina.home}/shared/classes" includeEmptyDirs="no">
+            <fileset dir="${sif.classes}" defaultexcludes="yes">
+            </fileset>
+        </copy>
+        <copy todir="${catalina.home}/shared/lib">
+            <fileset dir="${basedir}/lib" includes="common*.jar,mysql*.jar,sif.jar,jif.jar,jiflib.jar,jifrt.jar"    defaultexcludes="yes"/>
+        </copy>
+        <copy todir="${catalina.home}/webapps/ROOT">
+            <fileset dir="${basedir}/src" includes="preamble.js" defaultexcludes="yes"/>
+        </copy>
 
-	</target>
+    </target>
 
-	<target name="install"
+    <target name="install"
             depends="sif,install-quick"
             description="Installs the SIF code to the shared part of the Tomcat installation.">
-	</target>
+    </target>
 
-	<target name="install-all"
+    <target name="install-all"
             depends="install"
             description="Installs the SIF code and the examples to the Tomcat.">
-		<!-- compile the user example first, since other examples depend on it -->
-		<subant target="install">
-			<fileset dir="examples" includes="user/build.xml"/>
-		</subant>
-		<subant target="install">
-			<fileset dir="examples" includes="*/build.xml" excludes="user/build.xml"/>
-		</subant>
-	</target>
+        <!-- compile the user example first, since other examples depend on it -->
+        <subant target="install">
+            <fileset dir="examples" includes="user/build.xml"/>
+        </subant>
+        <subant target="install">
+            <fileset dir="examples" includes="*/build.xml" excludes="user/build.xml"/>
+        </subant>
+    </target>
 
 </project>
 
