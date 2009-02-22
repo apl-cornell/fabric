@@ -725,7 +725,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         for (TypeNode exception : (List<TypeNode>)md.throwTypes()) {
           catchStmts.add(rr.qq().parseStmt("if ($t instanceof %T) throw (%T)$t;", exception, exception));
         }
-        catchStmts.add(rr.qq().parseStmt("throw new java.lang.RuntimeException($e);"));
+        catchStmts.add(rr.qq().parseStmt("throw new fabric.common.InternalError($e);"));
         
         Stmt tryCatch = rr.qq().parseStmt(
             "try {\n" +
