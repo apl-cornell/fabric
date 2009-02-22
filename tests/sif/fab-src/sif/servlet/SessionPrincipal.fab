@@ -6,8 +6,9 @@ package sif.servlet;
 public final class SessionPrincipal extends AbstractPrincipal {
     final SessionState{this} session;
     public SessionPrincipal(SessionState{this} session) {
-	super("");
 	this.session = session;
+        super("");
+        
     }
     
 
