@@ -2,12 +2,16 @@ package sif.servlet;
 
 import java.io.*;
 import java.util.*;
+import fabric.util.Collections;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import fabric.client.Client;
+import fabric.client.Core;
 
 import sif.html.*;
 
@@ -284,7 +288,8 @@ abstract public class Servlet extends HttpServlet {
 
 
     Label trustedBySessionLabel(Request req) {
-        return LabelUtil.$Impl.writerPolicyLabel(req.session, Collections.EMPTY_SET);        
+        Core local = Client.getClient().getLocalCore();
+        return LabelUtil.$Impl.writerPolicyLabel(local, req.session, req.session);        
     }
 
     /**
@@ -492,11 +497,12 @@ abstract public class Servlet extends HttpServlet {
 
 
     private Label sessionPrincipalLabel(SessionState ss) {
-        return LabelUtil.$Impl.readerPolicyLabel(ss.sessionPrincipal(), Collections.EMPTY_SET);
+        Core local = Client.getClient().getLocalCore();
+        return LabelUtil.$Impl.readerPolicyLabel(local, ss.sessionPrincipal(), ss.sessionPrincipal());
     }
 
-    protected SessionState createSessionState() {
-        return new SessionState();
+    protected SessionState createSessionState(String id) {
+        return SessionState.$Impl.createSessionState(id);
     }
 
     /**
@@ -507,7 +513,8 @@ abstract public class Servlet extends HttpServlet {
         return getOutputChannelBound(request.session);
     }
     public static Label getOutputChannelBound(Principal session) {
-        return LabelUtil.$Impl.toLabel(PrincipalUtil.$Impl.readableByPrinPolicy(session));
+        Core local = Client.getClient().getLocalCore();
+        return LabelUtil.$Impl.toLabel(local, PrincipalUtil.$Impl.readableByPrinPolicy(local,session));
         //return LabelUtil.privacyPolicyLabel(session, Collections.EMPTY_LIST);
     }
 

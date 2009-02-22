@@ -48,28 +48,8 @@ public class PrincipalUtil {
    */
   public static boolean actsFor(Principal p, Principal q) {
     final Core localCore = Client.getClient().getLocalCore();
-    // Special case for Session Principal
-    if(p instanceof SessionPrincipal) {
-    	// lookup in the local core for additional local actsfor relationships
-    	return localCore.getActsFor().get(p).equals(q);
-    } else {
-    	return actsForProof(localCore, p, q) != null;
-    }
+    return actsForProof(localCore, p, q) != null;
   }
-  
-  /**
-   * Utility method that is used to add actsfor relationships for the local session principal
-   * IMPORTANT NOTE: The use of this method should only be from code that has
-   * the authority of the principal that is doing the delegation and that principal needs to
-   * trust this local client from which this method is called
-   * 
-   * This method's signature will contain the 'where caller(p)' annotation for this purpose
-   */
-  public static void addDelegatesTo(Principal p, SessionPrincipal q) {
-	    final Core localCore = Client.getClient().getLocalCore();
-	    localCore.getActsFor().put(p, q);
-  }
-  
 
   /**
    * Returns an actsfor proof if and only if the principal p acts for the

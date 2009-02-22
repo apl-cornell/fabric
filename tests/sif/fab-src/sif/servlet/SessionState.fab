@@ -7,23 +7,25 @@ import jif.lang.Principal;
 
 public class SessionState {
 
-    protected SessionState() {
-        sessionPrincipal = new SessionPrincipal(this);
+    protected SessionState(String{this} sessionId) {
+        this.sessionPrincipal = new SessionPrincipal(this);
+        this.sessionId        = sessionId;
     }
 
-    private final principal sessionPrincipal;
-    private String{}          sessionId;
+    private final Principal{this} sessionPrincipal;
+    private final String{this}    sessionId;
 
-    public final String{} getSessionId() {
+    public final String{this} getSessionId() {
         return this.sessionId;
     }
 
-    void setSessionId(String{} id) {
-        this.sessionId = id;
-    }
-
-    public final Principal sessionPrincipal() {
+    public final Principal{this} sessionPrincipal() {
         return this.sessionPrincipal;
+    }
+    
+    /** convenience method for non-fabric code */
+    public static SessionState createSessionState(String id) {
+      return new SessionState(id);
     }
 }
 

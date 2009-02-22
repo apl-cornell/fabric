@@ -1,19 +1,22 @@
 package fabric.client;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import jif.lang.ConfPolicy;
 import jif.lang.IntegPolicy;
 import jif.lang.Label;
 import jif.lang.LabelUtil;
+import jif.lang.Principal;
 import jif.lang.PrincipalUtil.TopPrincipal;
 import fabric.common.InternalError;
 import fabric.common.ONumConstants;
+import fabric.common.Pair;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;
-import fabric.lang.Principal;
 import fabric.lang.Object.$Impl;
 import fabric.util.HashMap;
 import fabric.util.Map;
@@ -31,7 +34,7 @@ public final class LocalCore implements Core {
   private Label emptyLabel;
   private Label publicReadonlyLabel;
   
-  private Map actsForMap;
+  private Set<Pair<Principal,Principal>> localDelegates;
 
   private static final Logger log = Logger.getLogger("fabric.client.LocalCore");
 
@@ -112,10 +115,18 @@ public final class LocalCore implements Core {
     return rootMap;
   }
   
-  public Map getActsFor() {
-    return actsForMap;
+  public void addLocalDelegation(Principal p, Principal q) {
+    localDelegates.add(new Pair<Principal,Principal> (p,q));
   }
-
+  
+  public void removeLocalDelegation(Principal p, Principal q) {
+    localDelegates.remove(new Pair<Principal,Principal> (p,q));
+  }
+  
+  public boolean localDelegatesTo(Principal p, Principal q) {
+    return localDelegates.contains(new Pair<Principal, Principal> (p,q));
+  }
+  
   public jif.lang.Principal getTopPrincipal() {
     return topPrincipal;
   }
@@ -231,7 +242,7 @@ public final class LocalCore implements Core {
         Label label = LabelUtil.$Impl.toLabel(LocalCore.this, conf, integ);
 
         rootMap = (Map) new HashMap.$Impl(LocalCore.this, label).$getProxy();
-        actsForMap = (Map) new HashMap.$Impl(LocalCore.this, label).$getProxy();
+        localDelegates = new HashSet<Pair<Principal, Principal>>();
 
         return null;
       }

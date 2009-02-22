@@ -147,10 +147,8 @@ public final class Request {
 	  (SessionState)request.getSession(true).getAttribute("session_state");
 
 	if (result == null) {
-	    result = servlet.createSessionState();
+	    result = servlet.createSessionState(request.getSession().getId());
 	    request.getSession(true).setAttribute("session_state", result);
-	    result.setSessionId(request.getSession().getId());
-	    result.sessionPrincipal().sessionInitialized();
 	}
 
 	return result;
