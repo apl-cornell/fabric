@@ -67,8 +67,8 @@
 			<exclude name="*sig.jar" />
 		</fileset>
 		<pathelement location="${sif.classes}" />
-		<!-- pathelement location="${jif.home}/rt-classes" /-->
-		<!--pathelement location="${jif.home}/lib-classes" /-->
+		<pathelement location="${fabric.home}/rt-classes" />
+		<pathelement location="${jif.home}/lib-classes" />
 		<!--fileset dir="${jif.home}/lib">
             <include name="*.jar" />
             <exclude name="*sig.jar" />

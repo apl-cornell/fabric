@@ -4,7 +4,7 @@ package jif.lang;
  * Utility methods for principals. In particular, there are methods to test if
  * one principal acts for another, if two principals both act for each other, 
  * helper methods to both find and verify delegates-chains, and a method for 
- * dynamically acquiring a Capbility, which encapsulates the authority of a
+ * dynamically acquiring a Capability, which encapsulates the authority of a
  * principal to execute a Closure.
  */
 public class PrincipalUtil {
@@ -13,6 +13,14 @@ public class PrincipalUtil {
      * Does the principal p act for the principal q? 
      */
     public static native boolean{p;q;q←} acts_for(Principal p, Principal q);
+
+    /**
+     * Add the relationship p actsfor q a.k.a. q <= p to the principal hierarchy
+     */
+    public static void addDelegatesTo{p←}(Principal p, SessionPrincipal q) 
+    where caller(p) {
+    }
+    
 
     /**
      * Are the principals p and q equivalent to each other? That is,
@@ -35,7 +43,6 @@ public class PrincipalUtil {
      * Verify that the chain is a valid delegates-chain between p and q. That is,
      * q == chain[n], chain[n] delegates to chain[n-1], ..., chain[0] == p, i.e.,
      * p acts for q.
-
      */
     public static native boolean verifyProof(ActsForProof{p;q;q←} proof, 
                                              Principal p, Principal q);

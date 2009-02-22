@@ -30,6 +30,8 @@ public final class LocalCore implements Core {
   private IntegPolicy bottomIntegPolicy;
   private Label emptyLabel;
   private Label publicReadonlyLabel;
+  
+  private Map actsForMap;
 
   private static final Logger log = Logger.getLogger("fabric.client.LocalCore");
 
@@ -108,6 +110,10 @@ public final class LocalCore implements Core {
 
   public Map getRoot() {
     return rootMap;
+  }
+  
+  public Map getActsFor() {
+    return actsForMap;
   }
 
   public jif.lang.Principal getTopPrincipal() {
@@ -225,6 +231,7 @@ public final class LocalCore implements Core {
         Label label = LabelUtil.$Impl.toLabel(LocalCore.this, conf, integ);
 
         rootMap = (Map) new HashMap.$Impl(LocalCore.this, label).$getProxy();
+        actsForMap = (Map) new HashMap.$Impl(LocalCore.this, label).$getProxy();
 
         return null;
       }

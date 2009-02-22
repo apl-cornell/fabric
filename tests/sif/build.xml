@@ -58,8 +58,13 @@
 
 	<target name="sif-base"
             depends="init,configure"
-            description="Build the base SIF framework using the FabIL compiler, not including the signature files">
-		<apply executable="bash"
+            description="Build the base SIF framework using the Java compiler, not including the signature files">
+		
+		<javac source="1.5" target="1.5" srcdir="${src}" destdir="${sif.classes}">
+			<classpath refid="standard.classpath" />
+		</javac>
+		
+		<!--apply executable="bash"
 						parallel="true"
 						failonerror="true"
 						dest="${basedir}"
@@ -71,12 +76,14 @@
 			<arg value="${sif.classes}"/>
 			<arg value="-sourcepath"/>
 			<arg value="${src}"/>
+      <arg value="-cp" />
+      <arg pathref="standard.classpath" />			
 			<srcfile />
 			<fileset dir="${basedir}" includes="src/**/*.fil" />
 			<mapper type="regexp"
                     from="^src(.*)\.fil"
                     to="classes\1\.class" />			
-		</apply>
+		</apply-->
 	</target>
 
 	
