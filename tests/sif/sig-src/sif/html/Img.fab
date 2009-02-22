@@ -5,7 +5,7 @@ import sif.servlet.*;
 /**
  * A image -- an "img src=" tag.
  */
-public final class Img[label L, label E] extends Tag[L, E] extends java.lang.Object {
+public final class Img[label L, label E] extends Tag[L, E] {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
 
