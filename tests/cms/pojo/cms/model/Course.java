@@ -125,7 +125,7 @@ public class Course implements Comparable {
 
     setFileCounter(1);
 
-    assignments   = new HashMap/*String, Assignment*/       ();
+    assignments   = new HashMap/*String, Assignment*/ ();
     students      = new HashMap/*User,Student*/       ();
     staff         = new HashMap/*User,Staff*/         ();
     announcements = new ArrayList/*Announcement*/     ();
@@ -134,7 +134,7 @@ public class Course implements Comparable {
     ctgRows       = new ArrayList/*CategoryRow*/      ();
     contents      = new ArrayList/*CategoryContents*/ ();
     ctgFiles      = new ArrayList/*CategoryFile*/     ();
-    emails = new TreeSet();
+    emails        = new TreeSet();
 
     // TODO: this is probably unnecessary, since these are the java defaults
     setAnnounceGuestAccess(false);

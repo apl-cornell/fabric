@@ -68,7 +68,7 @@ public class TransactionHandler {
   private CMSRoot      database     = null;
   private Transactions transactions = null;
 
-  private LocalCore localCore;
+  private Core localCore;
   private Label dlabel;
   
   private static class UploadTooBigException extends IOException {
@@ -90,8 +90,8 @@ public class TransactionHandler {
   public TransactionHandler(final CMSRoot database) {
     this.database     = database;
     this.transactions = new Transactions(database); 
-    this.localCore    = Client.getClient().getLocalCore();
-    this.dlabel        = localCore.getEmptyLabel();
+    this.localCore    = Client.getClient().getCore("core0");//Client.getClient().getLocalCore();
+    this.dlabel       = Client.getClient().getLocalCore().getEmptyLabel();
   }
 
   /**

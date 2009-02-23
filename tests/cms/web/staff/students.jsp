@@ -1,17 +1,17 @@
 <%@ page language="java" import="org.w3c.dom.*, cms.model.*, cms.www.*, cms.www.xml.*" %><%
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA); 
 Element root= (Element) displayData.getFirstChild();
-Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
-Element students= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_STUDENTS);
-Element assignments= XMLUtil.getFirstChildByTagName(course, XMLBuilder.TAG_ASSIGNMENTS);
-String courseid= course.getAttribute(XMLBuilder.A_COURSEID);
-boolean hasSection = course.hasAttribute(XMLBuilder.A_HASSECTION);
-boolean isadmin= course.hasAttribute(XMLBuilder.A_ISADMIN);
-boolean isgroups= course.hasAttribute(XMLBuilder.A_ISGROUPS);
-boolean isgrades= course.hasAttribute(XMLBuilder.A_ISGRADES);
-boolean isassign= course.hasAttribute(XMLBuilder.A_ISASSIGN);
-boolean showAddDrop= root.hasAttribute(XMLBuilder.A_SHOWADDDROP);
-boolean showGradeMsg = root.hasAttribute(XMLBuilder.A_GRADEMSG);%>
+Element course= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_COURSE);
+Element students= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_STUDENTS);
+Element assignments= XMLUtil.$Proxy.getFirstChildByTagName(course, XMLBuilder.$Static.TAG_ASSIGNMENTS);
+String courseid= course.getAttribute(XMLBuilder.$Static.A_COURSEID);
+boolean hasSection = course.hasAttribute(XMLBuilder.$Static.A_HASSECTION);
+boolean isadmin= course.hasAttribute(XMLBuilder.$Static.A_ISADMIN);
+boolean isgroups= course.hasAttribute(XMLBuilder.$Static.A_ISGROUPS);
+boolean isgrades= course.hasAttribute(XMLBuilder.$Static.A_ISGRADES);
+boolean isassign= course.hasAttribute(XMLBuilder.$Static.A_ISASSIGN);
+boolean showAddDrop= root.hasAttribute(XMLBuilder.$Static.A_SHOWADDDROP);
+boolean showGradeMsg = root.hasAttribute(XMLBuilder.$Static.A_GRADEMSG);%>
 <jsp:include page="../header.jsp" />
 <script type="text/javascript" src="cookies.js"></script> <%-- required for sorttable.js --%>
 <script type="text/javascript" src="sorttable.js"></script>
@@ -132,8 +132,8 @@ function insertRegradeImages(table)
 NodeList assigns= assignments.getChildNodes();
 for (int i= 0; i != assigns.getLength(); i++) {
   Element assign= (Element)assigns.item(i); 
-  int type = assign.hasAttribute(XMLBuilder.A_ASSIGNTYPE) ? Integer.parseInt(assign.getAttribute(XMLBuilder.A_ASSIGNTYPE)) : -1;
-  if (type == Assignment.SURVEY) continue;
+  int type = assign.hasAttribute(XMLBuilder.$Static.A_ASSIGNTYPE) ? Integer.parseInt(assign.getAttribute(XMLBuilder.$Static.A_ASSIGNTYPE)) : -1;
+  if (type == Assignment.$Static.SURVEY) continue;
   %>
               <th nowrap class="scores">
  <%
@@ -143,7 +143,7 @@ String assignactbegin3= "\">";
 String assignactend= "</a>"; 
 String begingrade=null, endgrade=null;
 if (isadmin || isgrades || isgroups) {
-    begingrade= assignactbegin1 + AccessController.ACT_GRADEASSIGN + assignactbegin2 + assign.getAttribute(XMLBuilder.A_ID) + assignactbegin3;
+    begingrade= assignactbegin1 + AccessController.ACT_GRADEASSIGN + assignactbegin2 + assign.getAttribute(XMLBuilder.$Static.A_ID) + assignactbegin3;
     endgrade= assignactend;
 } else {
   begingrade= "<span class=\"noaccess\">";
@@ -151,7 +151,7 @@ if (isadmin || isgrades || isgroups) {
 }
 %>
 <%=begingrade%>
-<%= assign.getAttribute(XMLBuilder.A_NAMESHORT) %>
+<%= assign.getAttribute(XMLBuilder.$Static.A_NAMESHORT) %>
 <%=endgrade%>
 </th><%
 } %>
@@ -171,16 +171,16 @@ if (isadmin || isgrades || isgroups) {
 for (int i= 0; i != assigns.getLength(); i++)
 {
 	Element assign= (Element)assigns.item(i);
-	String total = assign.getAttribute(XMLBuilder.A_TOTALSCORE),   
-      mean = assign.hasAttribute(XMLBuilder.A_STATMEAN) ? assign.getAttribute(XMLBuilder.A_STATMEAN) : "", 
-      max = assign.hasAttribute(XMLBuilder.A_STATMAX) ? assign.getAttribute(XMLBuilder.A_STATMAX) : "", 
-      median = assign.hasAttribute(XMLBuilder.A_STATMEDIAN) ? assign.getAttribute(XMLBuilder.A_STATMEDIAN) : "", 
-      dev = assign.hasAttribute(XMLBuilder.A_STATDEV) ? assign.getAttribute(XMLBuilder.A_STATDEV) : "",
-      weight = assign.hasAttribute(XMLBuilder.A_WEIGHT) ? assign.getAttribute(XMLBuilder.A_WEIGHT) : "",
-      nameShort= assign.hasAttribute(XMLBuilder.A_NAMESHORT) ? " ("+assign.getAttribute(XMLBuilder.A_NAMESHORT)+")" : "",
-      nameAssign= assign.hasAttribute(XMLBuilder.A_NAME) ? assign.getAttribute(XMLBuilder.A_NAME) : "";
-	  int type = assign.hasAttribute(XMLBuilder.A_ASSIGNTYPE) ? Integer.parseInt(assign.getAttribute(XMLBuilder.A_ASSIGNTYPE)) : -1;
-	  if (type == Assignment.SURVEY) continue;
+	String total = assign.getAttribute(XMLBuilder.$Static.A_TOTALSCORE),   
+      mean = assign.hasAttribute(XMLBuilder.$Static.A_STATMEAN) ? assign.getAttribute(XMLBuilder.$Static.A_STATMEAN) : "", 
+      max = assign.hasAttribute(XMLBuilder.$Static.A_STATMAX) ? assign.getAttribute(XMLBuilder.$Static.A_STATMAX) : "", 
+      median = assign.hasAttribute(XMLBuilder.$Static.A_STATMEDIAN) ? assign.getAttribute(XMLBuilder.$Static.A_STATMEDIAN) : "", 
+      dev = assign.hasAttribute(XMLBuilder.$Static.A_STATDEV) ? assign.getAttribute(XMLBuilder.$Static.A_STATDEV) : "",
+      weight = assign.hasAttribute(XMLBuilder.$Static.A_WEIGHT) ? assign.getAttribute(XMLBuilder.$Static.A_WEIGHT) : "",
+      nameShort= assign.hasAttribute(XMLBuilder.$Static.A_NAMESHORT) ? " ("+assign.getAttribute(XMLBuilder.$Static.A_NAMESHORT)+")" : "",
+      nameAssign= assign.hasAttribute(XMLBuilder.$Static.A_NAME) ? assign.getAttribute(XMLBuilder.$Static.A_NAME) : "";
+	  int type = assign.hasAttribute(XMLBuilder.$Static.A_ASSIGNTYPE) ? Integer.parseInt(assign.getAttribute(XMLBuilder.$Static.A_ASSIGNTYPE)) : -1;
+	  if (type == Assignment.$Static.SURVEY) continue;
 %>
               <th class="nosort" align="center">
               	<div onMouseover="ddrivetip('<b>Name:</b> <%= nameAssign.replaceAll("\"", "&quot;").replaceAll("'", "\\\\'") %><%= nameShort.replaceAll("\"", "&quot;").replaceAll("'", "\\\\'") %><br><b>Weight:</b> <%=weight%><br><b>Max:</b> <%=total%><br><b>High:</b> <%=max%><br><b>Mean:</b> <%=mean%><br><b>Median:</b> <%=median%><br><b>Dev:</b> <%=dev%>');" onMouseout="hideddrivetip()">
@@ -188,29 +188,29 @@ for (int i= 0; i != assigns.getLength(); i++)
               </th><%
 } %>
               <th class="nosort" align="center">
-              	<div onMouseover="ddrivetip('<b>Max:</b> <%= course.getAttribute(XMLBuilder.A_MAXTOTALSCORE) %><br><b>High:</b> <%= course.getAttribute(XMLBuilder.A_HIGHTOTALSCORE) %><br><b>Mean:</b> <%= course.getAttribute(XMLBuilder.A_MEANTOTALSCORE) %><br><b>Median:</b> <%= course.getAttribute(XMLBuilder.A_MEDIANTOTALSCORE) %><br><b>Dev:</b> <%= course.getAttribute(XMLBuilder.A_STDEVTOTALSCORE) %>');" onMouseout="hideddrivetip()">
+              	<div onMouseover="ddrivetip('<b>Max:</b> <%= course.getAttribute(XMLBuilder.$Static.A_MAXTOTALSCORE) %><br><b>High:</b> <%= course.getAttribute(XMLBuilder.$Static.A_HIGHTOTALSCORE) %><br><b>Mean:</b> <%= course.getAttribute(XMLBuilder.$Static.A_MEANTOTALSCORE) %><br><b>Median:</b> <%= course.getAttribute(XMLBuilder.$Static.A_MEDIANTOTALSCORE) %><br><b>Dev:</b> <%= course.getAttribute(XMLBuilder.$Static.A_STDEVTOTALSCORE) %>');" onMouseout="hideddrivetip()">
               	<div style="display:none">~</div>  <center><small> <u>Stats</u> </small></center></div>
               </th>
               <th class="nosort"><div style="display:none">~</div>&nbsp;</th>
               <th class="nosort"><div style="display:none">~</div>&nbsp;</th>
             </tr><%
-NodeList studs= XMLUtil.getChildrenByAttributeValue(students, XMLBuilder.A_ENROLLED, Student.ENROLLED);
+NodeList studs= XMLUtil.$Proxy.getChildrenByAttributeValue(students, XMLBuilder.$Static.A_ENROLLED, Student.$Static.ENROLLED);
 boolean hasDroppedStuds = students.getChildNodes().getLength() > studs.getLength();
 for (int i= 0; i < studs.getLength(); i++) {
   Element student= (Element) studs.item(i);
   /* hidden append for second sort by */
-  String hiddenAppend= "<span style=\"display: none;\">"+","+student.getAttribute(XMLBuilder.A_LASTNAME)+","+student.getAttribute(XMLBuilder.A_FIRSTNAME)+","+student.getAttribute(XMLBuilder.A_NETID)+"</span>";
-  String totalscore= student.getAttribute(XMLBuilder.A_TOTALSCORE); 
-  String netID = student.getAttribute(XMLBuilder.A_NETID); 
-  String section = student.getAttribute(XMLBuilder.A_SECTION);
+  String hiddenAppend= "<span style=\"display: none;\">"+","+student.getAttribute(XMLBuilder.$Static.A_LASTNAME)+","+student.getAttribute(XMLBuilder.$Static.A_FIRSTNAME)+","+student.getAttribute(XMLBuilder.$Static.A_NETID)+"</span>";
+  String totalscore= student.getAttribute(XMLBuilder.$Static.A_TOTALSCORE); 
+  String netID = student.getAttribute(XMLBuilder.$Static.A_NETID); 
+  String section = student.getAttribute(XMLBuilder.$Static.A_SECTION);
   String gradeURL = "?" + AccessController.P_ACTION + "=" + AccessController.ACT_STUDENTALLGRADES + "&" 
         + AccessController.P_COURSEID + "=" + courseid + "&" + AccessController.P_NETID + "=" + netID; 
         %>
 <%-- ----------------------------------- begin row --------------------------------------------------------- --%>
             <tr>
             <td nowrap class="index"><%= i + 1 %></td>
-              <td><%= student.getAttribute(XMLBuilder.A_LASTNAME)%><%=hiddenAppend%></td>
-              <td><%= student.getAttribute(XMLBuilder.A_FIRSTNAME)%><%=hiddenAppend%></td>
+              <td><%= student.getAttribute(XMLBuilder.$Static.A_LASTNAME)%><%=hiddenAppend%></td>
+              <td><%= student.getAttribute(XMLBuilder.$Static.A_FIRSTNAME)%><%=hiddenAppend%></td>
               <td>
               		<% if (isadmin) { %><a href="<%= gradeURL %>"><% } %><%= netID %><% if (isadmin) { %></a><% } %>
 			  </td>
@@ -220,21 +220,21 @@ for (int i= 0; i < studs.getLength(); i++) {
 <%
   for (int j= 0; j != assigns.getLength(); j++) {
     Element assign= (Element)assigns.item(j);
-    String assignTag= "id"+assign.getAttribute(XMLBuilder.A_ASSIGNID);
+    String assignTag= "id"+assign.getAttribute(XMLBuilder.$Static.A_ASSIGNID);
     Element grade= (Element)student.getElementsByTagName(assignTag).item(0);
     String score= "*";
-    if(grade != null && grade.hasAttribute(XMLBuilder.A_SCORE)) score= grade.getAttribute(XMLBuilder.A_SCORE);
-    String assignID=grade.getAttribute(XMLBuilder.A_ASSIGNID);
-    String groupID=grade.getAttribute(XMLBuilder.A_GROUPID);
-    String regradeStatus = grade.getAttribute(XMLBuilder.A_REGRADE);
-	boolean overMaxScore = grade.hasAttribute(XMLBuilder.A_OVERMAX);
-  	int type = assign.hasAttribute(XMLBuilder.A_ASSIGNTYPE) ? Integer.parseInt(assign.getAttribute(XMLBuilder.A_ASSIGNTYPE)) : -1;     
-    if (type == Assignment.SURVEY) continue;
+    if(grade != null && grade.hasAttribute(XMLBuilder.$Static.A_SCORE)) score= grade.getAttribute(XMLBuilder.$Static.A_SCORE);
+    String assignID=grade.getAttribute(XMLBuilder.$Static.A_ASSIGNID);
+    String groupID=grade.getAttribute(XMLBuilder.$Static.A_GROUPID);
+    String regradeStatus = grade.getAttribute(XMLBuilder.$Static.A_REGRADE);
+	boolean overMaxScore = grade.hasAttribute(XMLBuilder.$Static.A_OVERMAX);
+  	int type = assign.hasAttribute(XMLBuilder.$Static.A_ASSIGNTYPE) ? Integer.parseInt(assign.getAttribute(XMLBuilder.$Static.A_ASSIGNTYPE)) : -1;     
+    if (type == Assignment.$Static.SURVEY) continue;
 %>
               <%-- The next line is real long, but don't split it up
                    or the sorttable will break
                 --%>
-              <td nowrap align="right" <%= regradeStatus.equals(RegradeRequest.PENDING) ? "class=\"regrade_pending\"" : (regradeStatus.equals(RegradeRequest.REGRADED) ? "class=\"regraded\"" : "") %>><%=overMaxScore ? "<img src=\"images/warning.gif\" height=\"15px\" alt=\"(Over Max Score)\">" : ""%>
+              <td nowrap align="right" <%= regradeStatus.equals(RegradeRequest.$Static.PENDING) ? "class=\"regrade_pending\"" : (regradeStatus.equals(RegradeRequest.$Static.REGRADED) ? "class=\"regraded\"" : "") %>><%=overMaxScore ? "<img src=\"images/warning.gif\" height=\"15px\" alt=\"(Over Max Score)\">" : ""%>
 				<% if (isadmin) { %>
 					<a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_GRADESTUDENTS %>&amp;<%= AccessController.P_ASSIGNID %>=<%= assignID %>&amp;<%= AccessController.P_GROUPID %>=<%= groupID %>">
 				<% } %>
@@ -249,7 +249,7 @@ for (int i= 0; i < studs.getLength(); i++) {
                    or the sorttable will break
                 --%>
               <td align="center"><% if (totalscore.equals("")) { %><%=hiddenAppend%>*<% } else {%><%=totalscore %><%=hiddenAppend%><% } %></td>
-         <% String finalGrade = student.getAttribute(XMLBuilder.A_FINALGRADE); 
+         <% String finalGrade = student.getAttribute(XMLBuilder.$Static.A_FINALGRADE); 
      String numFinaGrade=""; /* index into dropdown menus below */
                     if (finalGrade.equals("A+"))
                             numFinaGrade="1";
@@ -293,7 +293,7 @@ for (int i= 0; i < studs.getLength(); i++) {
               <td class="finalgrade" align="center">
     <div style="display:none"><%=numFinaGrade%></div>            
 	<%=hiddenAppend%>
-                <select name="<%= AccessController.P_FINALGRADE + student.getAttribute(XMLBuilder.A_NETID) %>" id="<%= AccessController.P_FINALGRADE + student.getAttribute(XMLBuilder.A_NETID) %>"<%= isadmin ? "" : " disabled" %>>
+                <select name="<%= AccessController.P_FINALGRADE + student.getAttribute(XMLBuilder.$Static.A_NETID) %>" id="<%= AccessController.P_FINALGRADE + student.getAttribute(XMLBuilder.$Static.A_NETID) %>"<%= isadmin ? "" : " disabled" %>>
                   <option value="null"<%= finalGrade.equals("") ? " selected" : "" %>></option>
                   <option value="A+"<%= finalGrade.equals("A+") ? " selected" : "" %>>A+</option>
                   <option value="A"<%= finalGrade.equals("A") ? " selected" : "" %>>A</option>
@@ -367,28 +367,28 @@ for (int i= 0; i < studs.getLength(); i++) {
 assigns= assignments.getChildNodes();
 for (int i= 0; i != assigns.getLength(); i++) {
   Element assign= (Element)assigns.item(i); %>
-              <th class="scores"><%= assign.getAttribute(XMLBuilder.A_NAMESHORT) %></th><%
+              <th class="scores"><%= assign.getAttribute(XMLBuilder.$Static.A_NAMESHORT) %></th><%
 } %>
               <th class="scores">Total</th>
               <th id="finalgrade" class="nosort">Final Grade</th>
               <th class="nosort">&nbsp;</th>
             </tr><%
-studs= XMLUtil.getChildrenByAttributeValue(students, XMLBuilder.A_ENROLLED, Student.DROPPED);
+studs= XMLUtil.$Proxy.getChildrenByAttributeValue(students, XMLBuilder.$Static.A_ENROLLED, Student.$Static.DROPPED);
 for (int i= 0; i < studs.getLength(); i++) {
   Element student= (Element) studs.item(i); 
   /* hidden append for second sort by */
-  String hiddenAppend= "<div style=\"display: none;\">"+","+student.getAttribute(XMLBuilder.A_LASTNAME)+","+student.getAttribute(XMLBuilder.A_FIRSTNAME)+","+student.getAttribute(XMLBuilder.A_NETID)+"</div>";
-  String totalscore= student.getAttribute(XMLBuilder.A_TOTALSCORE); 
-  String netID = student.getAttribute(XMLBuilder.A_NETID);
+  String hiddenAppend= "<div style=\"display: none;\">"+","+student.getAttribute(XMLBuilder.$Static.A_LASTNAME)+","+student.getAttribute(XMLBuilder.$Static.A_FIRSTNAME)+","+student.getAttribute(XMLBuilder.$Static.A_NETID)+"</div>";
+  String totalscore= student.getAttribute(XMLBuilder.$Static.A_TOTALSCORE); 
+  String netID = student.getAttribute(XMLBuilder.$Static.A_NETID);
 %>
            <tr>
             <td class="index"><%= i + 1 %></td>
-              <td><%= student.getAttribute(XMLBuilder.A_LASTNAME)%><%=hiddenAppend%></td>
-              <td><%= student.getAttribute(XMLBuilder.A_FIRSTNAME)%><%=hiddenAppend%></td>
+              <td><%= student.getAttribute(XMLBuilder.$Static.A_LASTNAME)%><%=hiddenAppend%></td>
+              <td><%= student.getAttribute(XMLBuilder.$Static.A_FIRSTNAME)%><%=hiddenAppend%></td>
               <td><%= netID %></td><%
   for (int j= 0; j != assigns.getLength(); j++) {
     Element assign= (Element)assigns.item(j);
-    String assignTag= "id"+assign.getAttribute(XMLBuilder.A_ASSIGNID);
+    String assignTag= "id"+assign.getAttribute(XMLBuilder.$Static.A_ASSIGNID);
     Element grade= (Element)student.getElementsByTagName(assignTag).item(0);
     String score= "*";
     String assignID="";
@@ -396,9 +396,9 @@ for (int i= 0; i < studs.getLength(); i++) {
     /* grade will be null if this student dropped before this assignment and doesn't have a record for it */
     if (grade != null)
     {
-    	score = (grade.hasAttribute(XMLBuilder.A_SCORE)) ? grade.getAttribute(XMLBuilder.A_SCORE) : "*";
-    	assignID= grade.getAttribute(XMLBuilder.A_ASSIGNID);
-    	groupID= grade.getAttribute(XMLBuilder.A_GROUPID);
+    	score = (grade.hasAttribute(XMLBuilder.$Static.A_SCORE)) ? grade.getAttribute(XMLBuilder.$Static.A_SCORE) : "*";
+    	assignID= grade.getAttribute(XMLBuilder.$Static.A_ASSIGNID);
+    	groupID= grade.getAttribute(XMLBuilder.$Static.A_GROUPID);
     }
      %>
               <%-- The next line is real long, but don't split it up 
@@ -412,9 +412,9 @@ for (int i= 0; i < studs.getLength(); i++) {
                 --%>
               <td align="center"><% if (totalscore.equals("")) { %><%=hiddenAppend%>*<% } else {%><%=totalscore %><%=hiddenAppend%><% } %></td>
               <td class="finalgrade" align="center">
-                <%-- <input type="text" size="2" name="<%= AccessController.P_FINALGRADE + student.getAttribute(XMLBuilder.A_NETID) %>" value="<%= student.getAttribute(XMLBuilder.A_FINALGRADE) %>"> --%>
-                <select name="<%= AccessController.P_FINALGRADE + student.getAttribute(XMLBuilder.A_NETID) %>" id="<%= AccessController.P_FINALGRADE + student.getAttribute(XMLBuilder.A_NETID) %>" disabled="true">
-                  <% String finalGrade = student.getAttribute(XMLBuilder.A_FINALGRADE); %>
+                <%-- <input type="text" size="2" name="<%= AccessController.P_FINALGRADE + student.getAttribute(XMLBuilder.$Static.A_NETID) %>" value="<%= student.getAttribute(XMLBuilder.$Static.A_FINALGRADE) %>"> --%>
+                <select name="<%= AccessController.P_FINALGRADE + student.getAttribute(XMLBuilder.$Static.A_NETID) %>" id="<%= AccessController.P_FINALGRADE + student.getAttribute(XMLBuilder.$Static.A_NETID) %>" disabled="true">
+                  <% String finalGrade = student.getAttribute(XMLBuilder.$Static.A_FINALGRADE); %>
                   <option value="null"<%= finalGrade.equals("") ? " selected" : "" %>></option>
                   <option value="A+"<%= finalGrade.equals("A+") ? " selected" : "" %>>A+</option>
                   <option value="A"<%= finalGrade.equals("A") ? " selected" : "" %>>A</option>

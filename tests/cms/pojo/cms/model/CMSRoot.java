@@ -90,7 +90,7 @@ public class CMSRoot {
     maxFileSize = 10000000;
     
     // Create default file types.
-    this.fileTypes = new TreeMap();
+    fileTypes = new TreeMap();
     fileTypes.put(RequiredSubmission.ANY_TYPE, "Any file type");
     fileTypes.put("txt", "Text document");
     fileTypes.put("zip", "Zip archive");

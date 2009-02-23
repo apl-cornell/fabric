@@ -118,7 +118,7 @@ public class ViewStudentsXMLBuilder {
 
   public void buildStudentsPage(Course course, Document xml) {
     Profiler.enterMethod("ViewStudentsXMLBuilder.buildStudentsPage",
-        "CourseID: " + course);
+        "CourseID: " + course.toString());
     Element root = (Element) xml.getFirstChild();
     Element studentsNode = xml.createElement(XMLBuilder.TAG_STUDENTS);
     Element assignsNode = xml.createElement(XMLBuilder.TAG_STUDENTASSIGNS);
@@ -127,7 +127,7 @@ public class ViewStudentsXMLBuilder {
     root.appendChild(studentsNode);
     root.appendChild(assignsNode);
     Profiler.exitMethod("ViewStudentsXMLBuilder.buildStudentsPage",
-        "CourseID: " + course);
+        "CourseID: " + course.toString());
   }
 
 }

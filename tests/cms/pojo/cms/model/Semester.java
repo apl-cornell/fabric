@@ -42,7 +42,7 @@ public class Semester implements Comparable {
     setHidden(false);
     
     this.database = database;
-    this.courses = new LinkedList();
+    this.courses = new HashSet();
     database.semesters.put(toString(), this);
   }
   

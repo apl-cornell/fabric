@@ -28,6 +28,8 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import jif.lang.Label;
 
+import cms.controller.test.CreateDB;
+
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.util.Streams;
 import org.w3c.dom.Document;
@@ -899,41 +901,42 @@ public class AccessController extends HttpServlet {
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
     
-    System.setProperty("fabric.prefix", "/home/lucas/workspace/fabric");
-    
     try {
       fabric.client.Client.initialize("client0");
     }
     catch(Exception ex) { 
-      Core core2 = null;
-      Label label2 = null;
-      throw new RuntimeException~label2@core2(ex);
+      throw new RuntimeException~label@core(ex);
     }
-    
     localCore = Client.getClient().getLocalCore();
-    core = localCore; //Client.getClient().getCore("core0");
+    core = Client.getClient().getCore("core0");
     label = localCore.getEmptyLabel();
+    CMSRoot database = null;
+    
     atomic {
       // TODO: fetch CMS root
-      CMSRoot database = new CMSRoot~label@core();
+      database = new CMSRoot~label@core();
       
       // add test data
-      cms.controller.test.CreateDB.create(database);
-      
+      CreateDB driver = new CreateDB~label@core();
+      driver.create(database);
+    }
+    
+    
+    atomic {
       if (xmlBuilder == null) {
         try {
-          xmlBuilder = new XMLBuilder~label@core(database);
+          xmlBuilder = new XMLBuilder~label@localCore(database);
         } catch (ParserConfigurationException e) {
           throw new ServletException~label@core(e);
         }
       }
       if (transactions == null) {
-        transactions = new TransactionHandler~label@core(database);
+        transactions = new TransactionHandler~label@localCore(database);
       }
   
       debug = xmlBuilder.getDatabase().getDebugMode();
       if (xmlBuilder.getDatabase().getDebugMode())
-        debugPrincipalMap = new HashMap~label@core();
+        debugPrincipalMap = new HashMap~label@localCore();
       maxFileSize = xmlBuilder.getDatabase().getMaxFileSize();
     }
   }

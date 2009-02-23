@@ -26,7 +26,7 @@ import cms.fabil.Kludge;
 public class Transactions {
   private CMSRoot database;
   private Properties env = null;
-  private LocalCore localCore;
+  private Core localCore;
   private Label dlabel;
 
   // This field is used for sending links in emails to users,
@@ -38,8 +38,8 @@ public class Transactions {
   public Transactions(CMSRoot database) {
     this.database = database;
     env = new Properties();
-    localCore = Client.getClient().getLocalCore();
-    dlabel = localCore.getEmptyLabel();
+    localCore = Client.getClient().getCore("core0");//Client.getClient().getLocalCore();
+    dlabel = Client.getClient().getLocalCore().getEmptyLabel();
     env.put("java.naming.factory.initial", "com.sun.jndi.ldap.LdapCtxFactory");
     env.put("java.naming.provider.url", "ldap://directory.cornell.edu");
   }

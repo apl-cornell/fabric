@@ -6,7 +6,7 @@ import java.util.Random;
 import cms.model.*;
 
 public class CreateDB {
-  public static void create(CMSRoot database) {
+  public void create(CMSRoot database) {
     // Populate the database for testing.
     
     Transactions transactions = new Transactions(database);
@@ -48,14 +48,14 @@ public class CreateDB {
         if(!next.getHidden()) {
           //Create fake test data
           createFakeUsersForCourse(database, c, 20);
-          createFakeAssignments(andru, c, 2, transactions);
+          createFakeAssignments(andru, c, 4, transactions);
         }
       }
     }
     
   }
   
-  public static void createFakeUsersForCourse(CMSRoot database, Course course, int count) {
+  public void createFakeUsersForCourse(CMSRoot database, Course course, int count) {
     count += 1;
     while(count-- > 1) {
       String id = "au" + count;
@@ -66,7 +66,7 @@ public class CreateDB {
     }
   }
   
-  public static void createFakeAssignments(User creator, Course c, int count, 
+  public void createFakeAssignments(User creator, Course c, int count, 
       Transactions transactions) {
     float weight = Math.round(100f / count);
     count += 1;
@@ -96,7 +96,7 @@ public class CreateDB {
     }
   }
 
-  public static void createFakeGradesForAssignment(User grader, Assignment assign) {
+  public void createFakeGradesForAssignment(User grader, Assignment assign) {
     Collection/*Group*/ groups = assign.getGroups();
     Collection/*SubProblem*/ subProblems = assign.getSubProblems();
     Random r = new Random();
@@ -111,10 +111,5 @@ public class CreateDB {
         }
       }
     }
-  }
-  
-  public static void main(String[] args) {
-    CMSRoot db = new CMSRoot();
-    create(db);
   }
 }

@@ -6,23 +6,9 @@ public class Student {
 
   public static final String ENROLLED = "Enrolled", DROPPED = "Dropped";
   
-  public static final Comparator LAST_NAME_COMPARATOR = new Comparator() {
-    public int compare(Object o1, Object o2) {
-      if (!(o1 instanceof Student && o2 instanceof Student)) return 0;
-      Student s1 = (Student) o1;
-      Student s2 = (Student) o2;
-      return User.LAST_NAME_COMPARATOR.compare(s1.getUser(), s2.getUser());
-    }
-  };
+  public static Comparator LAST_NAME_COMPARATOR;
   
-  public static final Comparator NETID_COMPARATOR = new Comparator() {
-    public int compare(Object o1, Object o2) {
-      if (!(o1 instanceof Student && o2 instanceof Student)) return 0;
-      Student s1 = (Student) o1;
-      Student s2 = (Student) o2;
-      return User.NETID_COMPARATOR.compare(s1.getUser(), s2.getUser());
-    }
-  };
+  public static Comparator NETID_COMPARATOR;
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -104,6 +90,29 @@ public class Student {
   //////////////////////////////////////////////////////////////////////////////
 
   public Student(Course course, User user) {
+    if(NETID_COMPARATOR == null) {
+      NETID_COMPARATOR = new Comparator() {
+        public int compare(Object o1, Object o2) {
+          if (!(o1 instanceof Student && o2 instanceof Student)) return 0;
+          Student s1 = (Student) o1;
+          Student s2 = (Student) o2;
+          return User.NETID_COMPARATOR.compare(s1.getUser(), s2.getUser());
+        }
+      };
+    }
+    
+    if(LAST_NAME_COMPARATOR == null) {
+      LAST_NAME_COMPARATOR = new Comparator() {
+        public int compare(Object o1, Object o2) {
+          if (!(o1 instanceof Student && o2 instanceof Student)) return 0;
+          Student s1 = (Student) o1;
+          Student s2 = (Student) o2;
+          return User.LAST_NAME_COMPARATOR.compare(s1.getUser(), s2.getUser());
+        }
+      };
+    }
+    
+    
     setUser(user);
     setCourse(course);
     setCredits(null);
