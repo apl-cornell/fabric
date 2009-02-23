@@ -9,9 +9,11 @@ import polyglot.types.LazyClassInitializer;
 import polyglot.types.Package;
 import polyglot.types.ParsedClassType;
 import polyglot.types.TypeSystem;
+import polyglot.util.Position;
 
 import fabil.types.FabILImportTable;
 import jif.types.JifTypeSystem_c;
+import jif.types.principal.Principal;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
 
@@ -30,6 +32,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     List<String> result = super.defaultPackageImports();
     result.add("fabric.lang");
     result.add("fabric.client");
+    result.add("fabric.client.remote");
     return result;
   }
   
@@ -53,5 +56,15 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return new FabricParsedClassType_c(this, init, fromSource);
   }
 
+  public ClassType RemoteClient() {
+    return load("fabric.client.remote.RemoteClient");
+  }
   
+  public ClassType Client() {
+    return load("fabric.client.Client");
+  }
+
+  public Principal clientPrincipal(Position pos) {
+    return dynamicPrincipal(pos, new AccessPathClient(pos, this));
+  }
 }

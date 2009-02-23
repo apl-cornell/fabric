@@ -27,4 +27,8 @@ public interface FabricNodeFactory extends JifNodeFactory {
   
   @SuppressWarnings("unchecked")
   Call Call(Position pos, Receiver target, Id name, Expr remoteClient, List args);
+  
+  Client Client(Position pos);
+  
+  RemoteClientGetter RemoteClientGetter(Position pos, Expr remoteName);
 }

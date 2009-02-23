@@ -1,10 +1,9 @@
-// Assumes polyglot.jar is in classpath
+// Assumes jif.jar is in classpath
 include "jif/parse/jif.ppg"
 
 package fabric.parse;
 
-import fabric.ast.Atomic;
-import fabric.ast.FabricNodeFactory;
+import fabric.ast.*;
 import jif.parse.*;
 import polyglot.parse.*;
 import fabric.types.FabricTypeSystem;
@@ -26,10 +25,13 @@ terminal Token AT;
 terminal Token ATOMIC;
 terminal Token ABORT;
 terminal Token RETRY;
+terminal Token CLIENT;
 
 non terminal Atomic atomic_statement;
 non terminal Expr   location_expr_opt;
 non terminal Stmt	abort_stmt, retry_stmt;
+non terminal Client local_client;
+non terminal RemoteClientGetter remote_client;
 
 start with goal;
 
@@ -59,6 +61,29 @@ retry_stmt ::=
 					// RetryStmt
 		RETRY:a SEMICOLON:b
 			{: RESULT = parser.nf.RetryStmt(parser.pos(a, b)); :}
+	;
+
+////////////////////////////////////////////////////////////////////////
+// Local and remote clients                                           //
+////////////////////////////////////////////////////////////////////////
+
+local_client ::=
+					// Client
+		CLIENT:a
+			{: RESULT = parser.nf.Client(parser.pos(a)); :}
+	;
+
+remote_client ::=
+					// RemoteClientGetter
+		CLIENT:a LPAREN expression:b RPAREN:c
+			{: RESULT = parser.nf.RemoteClientGetter(parser.pos(a, c), b); :}
+	;
+
+extend postfix_expression ::=
+		local_client:a
+			{: RESULT = a; :}
+	|	remote_client:a
+			{: RESULT = a; :}
 	;
 
 ////////////////////////////////////////////////////////////////////////

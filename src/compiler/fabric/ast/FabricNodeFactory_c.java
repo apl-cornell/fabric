@@ -191,4 +191,20 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     n = (Call)n.del(delFactory().delCall());
     return n;
   }
+  
+  public Client Client(Position pos) {
+    Client n = new Client_c(pos);
+    // TODO add the real extension and delegation for Client.
+    n = (Client)n.ext(extFactory().extExpr());
+    n = (Client)n.del(delFactory().delExpr());
+    return n;
+  }
+  
+  public RemoteClientGetter RemoteClientGetter(Position pos, Expr remoteName) {
+    RemoteClientGetter n = new RemoteClientGetter_c(pos, remoteName);
+    // TODO add the real extension and delegation for RemoteClientGetter.
+    n = (RemoteClientGetter)n.ext(extFactory().extExpr());
+    n = (RemoteClientGetter)n.del(delFactory().delExpr());
+    return n;
+  }
 }

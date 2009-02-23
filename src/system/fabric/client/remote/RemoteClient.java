@@ -192,4 +192,12 @@ public final class RemoteClient implements RemoteNode {
   public String name() {
     return name;
   }
+ 
+  /**
+   * @return the principal associated with the remote client.
+   */
+  public Principal getPrincipal() {
+    // TODO fill in the real implementation.
+    return null;
+  }
 }
