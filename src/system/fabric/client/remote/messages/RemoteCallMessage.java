@@ -42,7 +42,7 @@ public class RemoteCallMessage extends
     Response(RemoteClient client, DataInput in) throws IOException,
         RemoteCallException {
       if (in.readBoolean()) {
-        this.result = readRef(in);
+        this.result = readRef(fabric.lang.Object.class, in);
       } else {
         byte[] buf = new byte[in.readInt()];
         in.readFully(buf);
@@ -120,7 +120,7 @@ public class RemoteCallMessage extends
         new ObjectInputStream(new ByteArrayInputStream(buf));
 
     this.receiverType = (Class<?>) ois.readObject();
-    this.receiver = readRef(ois);
+    this.receiver = readRef(receiverType, ois);
 
     this.methodName = ois.readUTF();
     this.parameterTypes = new Class<?>[in.readInt()];
@@ -129,7 +129,7 @@ public class RemoteCallMessage extends
     for (int i = 0; i < args.length; i++) {
       parameterTypes[i] = (Class<?>) ois.readObject();
       if (ois.readBoolean())
-        args[i] = readRef(ois);
+        args[i] = readRef(parameterTypes[i], ois);
       else args[i] = ois.readObject();
     }
   }

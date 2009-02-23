@@ -7,7 +7,7 @@ import java.lang.reflect.Constructor;
 import java.util.Iterator;
 import java.util.List;
 
-import jif.lang.*;
+import jif.lang.Label;
 import fabric.client.*;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.ReadMapEntry;
@@ -42,7 +42,7 @@ public interface Object {
 
   /** Fetches the object if this is a proxy; returns itself if it's an impl. */
   Object fetch();
-  
+
   /**
    * <p>
    * This method changes the onum of the object. Unless if you <i>really</i>
@@ -50,8 +50,8 @@ public interface Object {
    * system in an inconsistent state.
    * </p>
    * <p>
-   * This method is used to initialize object stores with objects at
-   * well-known onums (e.g., naming map and core principal).
+   * This method is used to initialize object stores with objects at well-known
+   * onums (e.g., naming map and core principal).
    * </p>
    * 
    * @deprecated
@@ -173,7 +173,7 @@ public interface Object {
     public int hashCode() {
       return fetch().hashCode();
     }
-    
+
     /**
      * <p>
      * This method changes the onum of the object. Unless if you <i>really</i>
@@ -256,25 +256,37 @@ public interface Object {
     public int $numWaiting;
 
     /**
+     * Whether this client owns the most up-to-date copy of the object.
+     */
+    public boolean $isOwned;
+
+    /**
+     * The version number on the last update-map that was checked.
+     */
+    public int $updateMapVersion;
+
+    /**
      * A private constructor for initializing transaction-management state.
      */
     private $Impl(Core core, long onum, int version, Label label) {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
-      this.$reader = null;
+      this.$reader = Log.NO_READER;
       this.$history = null;
       this.$numWaiting = 0;
       this.$ref = new FabricSoftRef(core, onum, this);
       this.$readMapEntry = TransactionManager.getReadMapEntry(this);
       this.$ref.readMapEntry(this.$readMapEntry);
-      
+      this.$isOwned = false;
+      this.$updateMapVersion = -1;
+
       // By default, labels are public read-only.
-      if (label == null && this instanceof Label) label =
-        Client.getClient().getLocalCore().getPublicReadonlyLabel();
-      
+      if (label == null && this instanceof Label)
+        label = Client.getClient().getLocalCore().getPublicReadonlyLabel();
+
       if (label == null) throw new InternalError("Null label!");
-      
+
       this.$label = label;
     }
 
@@ -282,9 +294,9 @@ public interface Object {
      * Creates a new Fabric object that will reside on the given Core.
      * 
      * @param core
-     *                the location for the object
+     *          the location for the object
      * @param label
-     *                the security label for the object
+     *          the security label for the object
      */
     public $Impl(Core core, Label label) throws UnreachableNodeException {
       this(core, core.createOnum(), 0, label);
@@ -338,14 +350,24 @@ public interface Object {
 
     /**
      * This is used to restore the state of the object during transaction
-     * roll-back. Subclasses should override this method and call
-     * <code>super.copyStateFrom(other)</code>.
+     * roll-back.
      */
-    public void $copyStateFrom($Impl other) {
+    public final void $copyStateFrom($Impl other) {
       $writer = null;
       $writeLockHolder = other.$writeLockHolder;
       $reader = other.$reader;
       $history = other.$history;
+      $isOwned = other.$isOwned;
+      $updateMapVersion = other.$updateMapVersion;
+      $copyAppStateFrom(other);
+    }
+
+    /**
+     * This copies the application state of the object. Subclasses should
+     * override this method and call
+     * <code>super.copyAppStateFrom(other)</code>.
+     */
+    public void $copyAppStateFrom($Impl other) {
     }
 
     public final Core $getCore() {
@@ -390,18 +412,18 @@ public interface Object {
      * constructor.
      * 
      * @param serializedOutput
-     *                An output stream for writing serialized primitive values
-     *                and inlined objects.
+     *          An output stream for writing serialized primitive values and
+     *          inlined objects.
      * @param refTypes
-     *                A list to which <code>RefTypeEnum</code>s will be
-     *                written to indicate the type of reference being serialized
-     *                (e.g., null, inlined, intracore, intercore).
+     *          A list to which <code>RefTypeEnum</code>s will be written to
+     *          indicate the type of reference being serialized (e.g., null,
+     *          inlined, intracore, intercore).
      * @param intracoreRefs
-     *                A list to which onums denoting intracore references will
-     *                be written.
+     *          A list to which onums denoting intracore references will be
+     *          written.
      * @param intercoreRefs
-     *                A list to which global object names (hostname/onum pairs),
-     *                denoting intercore references, will be written.
+     *          A list to which global object names (hostname/onum pairs),
+     *          denoting intercore references, will be written.
      */
     @SuppressWarnings("unused")
     public void $serialize(ObjectOutput serializedOutput,
@@ -420,23 +442,22 @@ public interface Object {
      * are presented is the same as the order used by $serialize.
      * 
      * @param core
-     *                The core on which the object lives.
+     *          The core on which the object lives.
      * @param onum
-     *                The object's onum.
+     *          The object's onum.
      * @param version
-     *                The object's version number.
+     *          The object's version number.
      * @param label
-     *                Onum of the object's label.
+     *          Onum of the object's label.
      * @param serializedInput
-     *                A stream of serialized primitive values and inlined
-     *                objects.
+     *          A stream of serialized primitive values and inlined objects.
      * @param refTypes
-     *                An iterator of <code>RefTypeEnum</code>s indicating the
-     *                type of each reference being deserialized (e.g., null,
-     *                inlined, intracore).
+     *          An iterator of <code>RefTypeEnum</code>s indicating the type of
+     *          each reference being deserialized (e.g., null, inlined,
+     *          intracore).
      * @param intracoreRefs
-     *                An iterator of intracore references, each represented by
-     *                an onum.
+     *          An iterator of intracore references, each represented by an
+     *          onum.
      */
     @SuppressWarnings("unused")
     public $Impl(Core core, long onum, int version, long label,
@@ -450,23 +471,21 @@ public interface Object {
      * A helper method for reading a pointer during object deserialization.
      * 
      * @param proxyClass
-     *                The expected proxy class for the reference being read.
+     *          The expected proxy class for the reference being read.
      * @param refType
-     *                The type of reference being read.
+     *          The type of reference being read.
      * @param in
-     *                The stream from which to read any inlined objects.
+     *          The stream from which to read any inlined objects.
      * @param core
-     *                The core to use when constructing any intracore
-     *                references.
+     *          The core to use when constructing any intracore references.
      * @param intracoreRefs
-     *                An iterator of intracore references, each represented by
-     *                an onum.
+     *          An iterator of intracore references, each represented by an
+     *          onum.
      * @throws ClassNotFoundException
-     *                 Thrown when the class for a wrapped object is
-     *                 unavailable.
+     *           Thrown when the class for a wrapped object is unavailable.
      * @throws IOException
-     *                 Thrown when an I/O error has occurred in the given
-     *                 <code>ObjectInput</code> stream.
+     *           Thrown when an I/O error has occurred in the given
+     *           <code>ObjectInput</code> stream.
      */
     protected static final Object $readRef(
         Class<? extends Object.$Proxy> proxyClass, RefTypeEnum refType,
@@ -513,21 +532,20 @@ public interface Object {
      * A helper method for serializing a reference during object serialization.
      * 
      * @param core
-     *                The referring object's core.
+     *          The referring object's core.
      * @param obj
-     *                The reference to be serialized.
+     *          The reference to be serialized.
      * @param refType
-     *                A list to which a <code>RefTypeEnum</code> will be
-     *                written to indicate the type of reference being serialized
-     *                (e.g., null, inlined, intracore, intercore).
+     *          A list to which a <code>RefTypeEnum</code> will be written to
+     *          indicate the type of reference being serialized (e.g., null,
+     *          inlined, intracore, intercore).
      * @param out
-     *                An output stream for writing inlined objects.
+     *          An output stream for writing inlined objects.
      * @param intracoreRefs
-     *                A list for writing intracore references, represented by
-     *                onums.
+     *          A list for writing intracore references, represented by onums.
      * @param intercoreRefs
-     *                A list for writing denoting intercore references,
-     *                represented by global object names (hostname/onum pairs).
+     *          A list for writing denoting intercore references, represented by
+     *          global object names (hostname/onum pairs).
      */
     protected static final void $writeRef(Core core, Object obj,
         List<RefTypeEnum> refType, ObjectOutput out, List<Long> intracoreRefs,
@@ -610,13 +628,13 @@ public interface Object {
        * Used to initialize the $Static.$Proxy.$instance variables.
        * 
        * @param c
-       *                The class to instantiate.
+       *          The class to instantiate.
        */
       public static final Object $makeStaticInstance(
           final Class<? extends Object.$Impl> c) {
-        // XXX Need a real core and a real label.  (Should be given as args.)
+        // XXX Need a real core and a real label. (Should be given as args.)
         final LocalCore core = Client.getClient().getLocalCore();
-        
+
         return Client.runInTransaction(new Client.Code<Object>() {
           public Object run() {
             try {

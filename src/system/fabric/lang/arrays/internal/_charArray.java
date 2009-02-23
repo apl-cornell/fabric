@@ -98,11 +98,11 @@ public interface _charArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$copyStateFrom(fabric.lang.Object.$Impl)
+     * @see fabric.lang.Object.$Impl#$copyAppStateFrom(fabric.lang.Object.$Impl)
      */
     @Override
-    public void $copyStateFrom(Object.$Impl other) {
-      super.$copyStateFrom(other);
+    public void $copyAppStateFrom(Object.$Impl other) {
+      super.$copyAppStateFrom(other);
       _charArray.$Impl src = (_charArray.$Impl) other;
       value = new char[src.value.length];
       System.arraycopy(src.value, 0, value, 0, src.value.length);

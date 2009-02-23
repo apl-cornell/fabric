@@ -34,6 +34,9 @@ public class AbortTransactionMessage extends
     }
   }
 
+  /**
+   * The tid for the transaction that is aborting.
+   */
   public final TransactionID tid;
 
   public AbortTransactionMessage(TransactionID tid) {

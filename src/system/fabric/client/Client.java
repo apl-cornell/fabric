@@ -268,6 +268,13 @@ public final class Client {
   public LocalCore getLocalCore() {
     return localCore;
   }
+  
+  /**
+   * @return a RemoteClient object representing the local client.
+   */
+  public RemoteClient getLocalClient() {
+    return getClient(name);
+  }
 
   /**
    * Returns the fetch manager.
@@ -531,4 +538,5 @@ public final class Client {
   public static interface Code<T> {
     T run();
   }
+
 }

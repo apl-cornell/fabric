@@ -11,13 +11,11 @@ import java.util.Map;
 
 import javax.crypto.Cipher;
 
+import fabric.client.AbortException;
 import fabric.client.Client;
 import fabric.client.Core;
-import fabric.client.OidKeyHashMap;
-import fabric.common.Crypto;
-import fabric.common.FastSerializable;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.Pair;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.KeyObject;
 import fabric.lang.Object.$Proxy;
@@ -26,6 +24,9 @@ import fabric.lang.Object.$Proxy;
  * Maps proxies to the host that holds the most up-to-date copy of that object.
  */
 public class UpdateMap implements FastSerializable {
+
+  private static String ALG_HASH = "MD5";
+
   /**
    * Maps md5(oid, object key) to (iv, enc(hostname, object key, iv)).
    */
@@ -41,30 +42,44 @@ public class UpdateMap implements FastSerializable {
    */
   private OidKeyHashMap<Pair<$Proxy, RemoteClient>> writeCache;
 
-  private static String ALG_HASH = "MD5";
+  public int version;
 
   public UpdateMap() {
     this.map = new HashMap<byte[], Pair<byte[], byte[]>>();
     this.readCache = new OidKeyHashMap<RemoteClient>();
     this.writeCache = new OidKeyHashMap<Pair<$Proxy, RemoteClient>>();
+    this.version = 0;
+  }
+
+  /**
+   * Copy constructor.
+   */
+  public UpdateMap(UpdateMap map) {
+    this.map = new HashMap<byte[], Pair<byte[], byte[]>>(map.map);
+    this.readCache = new OidKeyHashMap<RemoteClient>(map.readCache);
+    this.writeCache =
+        new OidKeyHashMap<Pair<$Proxy, RemoteClient>>(map.writeCache);
+    this.version = map.version;
   }
 
   /**
    * Deserialization constructor.
    */
-  public UpdateMap(DataInput in) throws IOException {
+  public UpdateMap(int version, DataInput in) throws IOException {
     this();
+    this.version = version;
+
     int size = in.readInt();
     for (int i = 0; i < size; i++) {
       byte[] key = new byte[in.readInt()];
       in.readFully(key);
-      
+
       byte[] iv = new byte[in.readInt()];
       in.readFully(iv);
-      
+
       byte[] data = new byte[in.readInt()];
       in.readFully(data);
-      
+
       map.put(key, new Pair<byte[], byte[]>(iv, data));
     }
   }
@@ -79,6 +94,8 @@ public class UpdateMap implements FastSerializable {
   }
 
   private RemoteClient slowLookup($Proxy proxy) {
+    if (map.isEmpty()) return null;
+    
     try {
       byte[] encryptKey = getKey(proxy);
       byte[] mapKey = hash(proxy, encryptKey);
@@ -89,10 +106,21 @@ public class UpdateMap implements FastSerializable {
       Cipher cipher =
           Crypto.cipherInstance(Cipher.DECRYPT_MODE, encryptKey, encHost.first);
       String hostname = new String(cipher.doFinal(encHost.second));
-      return Client.getClient().getClient(hostname);
+      RemoteClient result = Client.getClient().getClient(hostname);
+
+      if (!isValidWriter(result, proxy)) {
+        throw new AbortException("Invalid update map entry found.");
+      }
+
+      return result;
     } catch (GeneralSecurityException e) {
       throw new InternalError(e);
     }
+  }
+
+  private boolean isValidWriter(RemoteClient client, $Proxy proxy) {
+    // XXX TODO
+    return true;
   }
 
   public void put($Proxy proxy, RemoteClient client) {
@@ -109,6 +137,10 @@ public class UpdateMap implements FastSerializable {
     flushWriteCache();
     this.map.putAll(map.map);
     this.readCache.clear();
+
+    if (map.version > version)
+      version = map.version + 1;
+    else version++;
   }
 
   private void flushWriteCache() {

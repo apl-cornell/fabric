@@ -1,10 +1,11 @@
-package fabric.client;
+package fabric.common;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import fabric.client.Core;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;
@@ -17,6 +18,17 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
 
   public OidKeyHashMap() {
     map = new HashMap<Core, LongKeyMap<V>>();
+  }
+  
+  /**
+   * Copy constructor.
+   */
+  public OidKeyHashMap(OidKeyHashMap<V> other) {
+    this();
+    
+    for (Map.Entry<Core, LongKeyMap<V>> entry : other.map.entrySet()) {
+      this.map.put(entry.getKey(), new LongKeyHashMap<V>(entry.getValue()));
+    }
   }
 
   public LongKeyMap<V> get(Core core) {

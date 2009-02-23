@@ -72,7 +72,7 @@ public final class ReadMapEntry {
 
     synchronized (obj) {
       if (obj.$numWaiting > 0) obj.notifyAll();
-      obj.$reader = null;
+      obj.$reader = Log.NO_READER;
     }
   }
 }

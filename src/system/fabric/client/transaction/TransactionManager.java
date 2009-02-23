@@ -9,6 +9,7 @@ import fabric.client.*;
 import fabric.client.remote.RemoteClient;
 import fabric.common.FabricThread;
 import fabric.common.InternalError;
+import fabric.common.OidKeyHashMap;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyMap;
 import fabric.core.InProcessCore;
@@ -161,7 +162,7 @@ public final class TransactionManager {
         logger.finest(current + " got abort signal");
         // Abort the transaction.
         // TODO Provide a reason for the abort.
-        throw new AbortException(null);
+        throw new AbortException();
       }
     }
   }
@@ -526,7 +527,7 @@ public final class TransactionManager {
     synchronized (current.commitState) {
       current.commitState.value = COMMITTED;
     }
-    
+
     current = null;
   }
 
@@ -559,6 +560,9 @@ public final class TransactionManager {
     // Grab a write lock on the object.
     obj.$writer = current;
     obj.$writeLockHolder = current;
+    
+    // Own the object.
+    obj.$isOwned = true;
 
     // Add the object to our creates set.
     synchronized (current.creates) {
@@ -568,38 +572,55 @@ public final class TransactionManager {
 
   public void registerRead($Impl obj) {
     synchronized (obj) {
-      // Nothing to do if the object's $reader is us or we're not in a
-      // transaction.
-      if (obj.$reader == current || current == null) return;
+      if (obj.$reader == current
+          && obj.$updateMapVersion == current.updateMap.version) return;
 
-      // Make sure we're not supposed to abort.
-      checkAbortSignal();
+      // Nothing to do if we're not in a transaction.
+      if (current == null) return;
 
-      // Check read condition: wait until all writers are in our ancestry.
-      boolean hadToWait = false;
-      while (obj.$writeLockHolder != null
-          && !current.isDescendantOf(obj.$writeLockHolder)) {
-        try {
-          logger.finest(current + " wants to read " + obj.$getCore() + "/"
-              + obj.$getOnum() + " (" + obj.getClass()
-              + "); waiting on writer " + obj.$writeLockHolder);
-          hadToWait = true;
-          obj.$numWaiting++;
-          obj.wait();
-        } catch (InterruptedException e) {
-        }
-        obj.$numWaiting--;
-
-        // Make sure we weren't aborted while we were waiting.
-        checkAbortSignal();
-      }
-
-      // Set the object's reader stamp to the current transaction.
-      obj.$reader = current;
-
-      current.acquireReadLock(obj);
-      if (hadToWait) logger.finest(current + " got read lock");
+      ensureReadLock(obj);
+      ensureObjectUpToDate(obj);
     }
+  }
+
+  /**
+   * Ensures the current transaction has a read lock for the given object,
+   * blocking if necessary. This method assumes we are synchronized on the
+   * object.
+   */
+  private void ensureReadLock($Impl obj) {
+    if (obj.$reader == current) return;
+
+    // Make sure we're not supposed to abort.
+    checkAbortSignal();
+
+    // Check read condition: wait until all writers are in our ancestry.
+    boolean hadToWait = false;
+    while (obj.$writeLockHolder != null
+        && !current.isDescendantOf(obj.$writeLockHolder)) {
+      try {
+        logger.finest(current + " wants to read " + obj.$getCore() + "/"
+            + obj.$getOnum() + " (" + obj.getClass() + "); waiting on writer "
+            + obj.$writeLockHolder);
+        hadToWait = true;
+        obj.$numWaiting++;
+        obj.wait();
+      } catch (InterruptedException e) {
+      }
+      obj.$numWaiting--;
+
+      // Make sure we weren't aborted while we were waiting.
+      checkAbortSignal();
+    }
+
+    // Set the object's reader stamp to the current transaction.
+    obj.$reader = current;
+
+    // Reset the object's update-map version stamp.
+    obj.$updateMapVersion = -1;
+
+    current.acquireReadLock(obj);
+    if (hadToWait) logger.finest(current + " got read lock");
   }
 
   /**
@@ -608,81 +629,129 @@ public final class TransactionManager {
    * @return whether a new (top-level) transaction was created.
    */
   public boolean registerWrite($Impl obj) {
-    boolean needTransaction = current == null;
+    boolean needTransaction = (current == null);
     if (needTransaction) startTransaction();
 
     synchronized (obj) {
-      // Nothing to do if the write stamp is us.
-      if (obj.$writer == current) return needTransaction;
+      if (obj.$writer == current
+          && obj.$updateMapVersion == current.updateMap.version && obj.$isOwned)
+        return needTransaction;
 
-      // Make sure we're not supposed to abort.
-      if (!needTransaction) checkAbortSignal();
-
-      // Check write condition: wait until writer is in our ancestry and all
-      // readers are in our ancestry.
-      boolean hadToWait = false;
-      while (true) {
-        // Make sure writer is in our ancestry.
-        if (obj.$writeLockHolder != null
-            && !current.isDescendantOf(obj.$writeLockHolder)) {
-          logger.finest(current + " wants to write " + obj.$getCore() + "/"
-              + obj.$getOnum() + " (" + obj.getClass()
-              + "); waiting on writer " + obj.$writeLockHolder);
-          hadToWait = true;
-        } else {
-          // Abort any incompatible readers.
-          ReadMapEntry readMapEntry = obj.$readMapEntry;
-          if (readMapEntry != null) {
-            synchronized (readMapEntry) {
-              boolean allReadersInAncestry = true;
-              for (Log lock : readMapEntry.readLocks) {
-                if (!current.isDescendantOf(lock)) {
-                  logger.finest(current + " wants to write " + obj.$getCore()
-                      + "/" + obj.$getOnum() + " (" + obj.getClass()
-                      + "); aborting reader " + lock);
-                  lock.flagAbort();
-                  allReadersInAncestry = false;
-                }
-              }
-
-              if (allReadersInAncestry) break;
-            }
-          }
-        }
-
-        try {
-          obj.$numWaiting++;
-          obj.wait();
-        } catch (InterruptedException e) {
-        }
-        obj.$numWaiting--;
-
-        // Make sure we weren't aborted while we were waiting.
-        checkAbortSignal();
-      }
-
-      // Set the write stamp.
-      obj.$writer = current;
-
-      if (hadToWait) logger.finest(current + " got write lock");
-
-      if (obj.$writeLockHolder == current) return needTransaction;
-
-      // Create a backup object, grab the write lock, and add the object to our
-      // write set.
-      obj.$history = obj.clone();
-      obj.$writeLockHolder = current;
-      synchronized (current.writes) {
-        current.writes.add(obj);
-      }
-
-      if (obj.$reader != current) {
-        // Clear the read stamp -- the reader's read condition no longer holds.
-        obj.$reader = null;
-      }
+      ensureWriteLock(obj);
+      ensureObjectUpToDate(obj);
+      ensureOwnership(obj);
     }
 
     return needTransaction;
+  }
+
+  /**
+   * Ensures the current transaction has a write lock for the given object,
+   * blocking if necessary. This method assumes we are synchronized on the
+   * object.
+   */
+  private void ensureWriteLock($Impl obj) {
+    // Nothing to do if the write stamp is us.
+    if (obj.$writer == current) return;
+
+    // Make sure we're not supposed to abort.
+    checkAbortSignal();
+
+    // Check write condition: wait until writer is in our ancestry and all
+    // readers are in our ancestry.
+    boolean hadToWait = false;
+    while (true) {
+      // Make sure writer is in our ancestry.
+      if (obj.$writeLockHolder != null
+          && !current.isDescendantOf(obj.$writeLockHolder)) {
+        logger.finest(current + " wants to write " + obj.$getCore() + "/"
+            + obj.$getOnum() + " (" + obj.getClass() + "); waiting on writer "
+            + obj.$writeLockHolder);
+        hadToWait = true;
+      } else {
+        // Abort any incompatible readers.
+        ReadMapEntry readMapEntry = obj.$readMapEntry;
+        if (readMapEntry != null) {
+          synchronized (readMapEntry) {
+            boolean allReadersInAncestry = true;
+            for (Log lock : readMapEntry.readLocks) {
+              if (!current.isDescendantOf(lock)) {
+                logger.finest(current + " wants to write " + obj.$getCore()
+                    + "/" + obj.$getOnum() + " (" + obj.getClass()
+                    + "); aborting reader " + lock);
+                lock.flagAbort();
+                allReadersInAncestry = false;
+              }
+            }
+
+            if (allReadersInAncestry) break;
+          }
+        }
+      }
+
+      try {
+        obj.$numWaiting++;
+        obj.wait();
+      } catch (InterruptedException e) {
+      }
+      obj.$numWaiting--;
+
+      // Make sure we weren't aborted while we were waiting.
+      checkAbortSignal();
+    }
+
+    // Set the write stamp.
+    obj.$writer = current;
+
+    if (hadToWait) logger.finest(current + " got write lock");
+
+    if (obj.$writeLockHolder == current) return;
+
+    // Create a backup object, grab the write lock, and add the object to our
+    // write set.
+    obj.$history = obj.clone();
+    obj.$writeLockHolder = current;
+    synchronized (current.writes) {
+      current.writes.add(obj);
+    }
+
+    if (obj.$reader != current) {
+      // Clear the read stamp -- the reader's read condition no longer holds.
+      obj.$reader = Log.NO_READER;
+    }
+  }
+
+  /**
+   * Ensures the client has ownership of the object. This method assumes we are
+   * synchronized on the object.
+   */
+  private void ensureOwnership($Impl obj) {
+    if (obj.$isOwned) return;
+
+    // Check the update map to see if another client currently owns the object.
+    RemoteClient owner = current.updateMap.lookup(obj.$getProxy());
+    if (owner != null)
+      owner.takeOwnership(current.tid, obj.$getCore(), obj.$getOnum());
+
+    obj.$isOwned = true;
+    current.updateMap.put(obj.$getProxy(), Client.getClient().getLocalClient());
+  }
+
+  /**
+   * Checks the update map and fetches from the object's owner as necessary.
+   * This method assumes we are synchronized on the object.
+   */
+  private void ensureObjectUpToDate($Impl obj) {
+    // Check the object's update-map version stamp.
+    if (obj.$updateMapVersion == current.updateMap.version) return;
+
+    // Check the update map.
+    RemoteClient owner = current.updateMap.lookup(obj.$getProxy());
+    if (owner == null || owner == Client.getClient().getLocalClient()) return;
+
+    // Need to fetch from the owner.
+    ensureWriteLock(obj);
+    owner.readObject(current.tid, obj);
   }
 
   /**
@@ -695,8 +764,8 @@ public final class TransactionManager {
 
   /**
    * Starts a new transaction with the given tid. The given tid is assumed to be
-   * a valid descendent of the current tid. If the given tid is null, a random
-   * tid is generated for the subtransaction.
+   * a valid descendant of the current tid. If the given tid is null, a random
+   * tid is generated for the sub-transaction.
    */
   public void startTransaction(TransactionID tid) {
     if (current != null) checkAbortSignal();

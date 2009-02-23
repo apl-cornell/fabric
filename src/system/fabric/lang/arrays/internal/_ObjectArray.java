@@ -138,12 +138,12 @@ public interface _ObjectArray<T extends Object> extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$copyStateFrom(fabric.lang.Object.$Impl)
+     * @see fabric.lang.Object.$Impl#$copyAppStateFrom(fabric.lang.Object.$Impl)
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void $copyStateFrom(Object.$Impl other) {
-      super.$copyStateFrom(other);
+    public void $copyAppStateFrom(Object.$Impl other) {
+      super.$copyAppStateFrom(other);
       _ObjectArray.$Impl<T> src = (_ObjectArray.$Impl<T>) other;
       value = new Object[src.value.length];
       System.arraycopy(src.value, 0, value, 0, src.value.length);

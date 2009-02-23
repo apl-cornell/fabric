@@ -11,10 +11,14 @@ import javax.security.auth.x500.X500Principal;
 
 import fabric.client.*;
 import fabric.client.remote.messages.InterClientMessage;
+import fabric.client.remote.messages.ReadMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
+import fabric.client.remote.messages.TakeOwnershipMessage;
 import fabric.client.transaction.TransactionManager;
+import fabric.common.InternalError;
 import fabric.common.NoSuchNodeError;
 import fabric.common.TransactionID;
+import fabric.lang.Object.$Impl;
 import fabric.lang.Object.$Proxy;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
@@ -163,8 +167,8 @@ public final class RemoteClient implements RemoteNode {
     Class<?> receiverProxyClass = receiver.fetch().$getProxy().getClass();
 
     RemoteCallMessage.Response response =
-        new RemoteCallMessage(tid, receiverProxyClass, receiver,
-            methodName, parameterTypes, args).send(this);
+        new RemoteCallMessage(tid, receiverProxyClass, receiver, methodName,
+            parameterTypes, args).send(this);
     return response.result;
   }
 
@@ -184,9 +188,40 @@ public final class RemoteClient implements RemoteNode {
       throw new TransactionCommitFailedException(response.message);
   }
 
+  /**
+   * Informs the remote client that a transaction is aborting.
+   * 
+   * @param tid
+   *          the tid for the transaction that is aborting.
+   */
   public void abortTransaction(TransactionID tid)
       throws UnreachableNodeException {
     new AbortTransactionMessage(tid).send(this);
+  }
+
+  /**
+   * Reads the given object from the remote client, updating the object's state.
+   * 
+   * @param tid
+   *          the tid for the current transaction.
+   */
+  public void readObject(TransactionID tid, $Impl obj) {
+    ReadMessage.Response response =
+        new ReadMessage(tid, obj.$getCore(), obj.$getOnum()).send(this);
+
+    if (response.obj == null)
+      throw new InternalError("Inter-client object read failed.");
+    obj.$copyAppStateFrom(response.obj);
+  }
+
+  /**
+   * Unsets the ownership bit for the given object at the remote client.
+   * 
+   * @param tid
+   *          the tid for the current transaction.
+   */
+  public void takeOwnership(TransactionID tid, Core core, long onum) {
+    new TakeOwnershipMessage(tid, core, onum).send(this);
   }
 
   public String name() {

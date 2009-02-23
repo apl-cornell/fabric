@@ -3,9 +3,10 @@ package fabric.client.transaction;
 import java.util.*;
 
 import fabric.client.Core;
-import fabric.client.OidKeyHashMap;
 import fabric.client.remote.RemoteClient;
+import fabric.client.remote.UpdateMap;
 import fabric.client.transaction.LockList.Node;
+import fabric.common.OidKeyHashMap;
 import fabric.common.Pair;
 import fabric.common.TransactionID;
 import fabric.common.Util;
@@ -18,6 +19,8 @@ import fabric.lang.Object.$Impl;
  * read, and written during a single nested transaction.
  */
 public final class Log {
+  public static final Log NO_READER = new Log((Log) null);
+
   /**
    * The transaction ID for this log.
    */
@@ -29,6 +32,11 @@ public final class Log {
    * tid should be checked to determine whether this transaction is top-level.
    */
   final Log parent;
+
+  /**
+   * A map indicating where to fetch objects from.
+   */
+  UpdateMap updateMap;
 
   /**
    * The sub-transaction.
@@ -93,7 +101,7 @@ public final class Log {
     public static enum Values {
       UNPREPARED, PREPARING, PREPARED, COMMITTING, COMMITTED, ABORTING, ABORTED
     }
-    
+
     public Values value = Values.UNPREPARED;
   }
 
@@ -125,12 +133,14 @@ public final class Log {
     this.clientsCalled = new ArrayList<RemoteClient>();
 
     if (parent != null) {
+      this.updateMap = new UpdateMap(parent.updateMap);
       synchronized (parent) {
         parent.child = this;
       }
 
       commitState = parent.commitState;
     } else {
+      this.updateMap = new UpdateMap();
       commitState = new CommitState();
     }
   }
@@ -168,10 +178,12 @@ public final class Log {
   Set<Core> coresToContact() {
     Set<Core> result = new HashSet<Core>();
     result.addAll(reads.coreSet());
-    for ($Impl obj : writes)
-      result.add(obj.$getCore());
-    for ($Impl obj : creates)
-      result.add(obj.$getCore());
+    for ($Impl obj : writes) {
+      if (obj.$isOwned) result.add(obj.$getCore());
+    }
+    for ($Impl obj : creates) {
+      if (obj.$isOwned) result.add(obj.$getCore());
+    }
     return result;
   }
 
@@ -206,7 +218,7 @@ public final class Log {
     Map<Pair<Core, Long>, $Impl> result =
         new HashMap<Pair<Core, Long>, $Impl>();
     for ($Impl obj : writes)
-      if (obj.$getCore() == core)
+      if (obj.$getCore() == core && obj.$isOwned)
         result.put(new Pair<Core, Long>(obj.$getCore(), obj.$getOnum()), obj);
 
     for ($Impl create : creates)
@@ -224,7 +236,7 @@ public final class Log {
     Map<Pair<Core, Long>, $Impl> result =
         new HashMap<Pair<Core, Long>, $Impl>();
     for ($Impl obj : creates)
-      if (obj.$getCore() == core)
+      if (obj.$getCore() == core && obj.$isOwned)
         result.put(new Pair<Core, Long>(obj.$getCore(), obj.$getOnum()), obj);
 
     return result.values();
@@ -297,6 +309,12 @@ public final class Log {
       creates.clear();
       writes.clear();
       clientsCalled.clear();
+
+      if (parent != null) {
+        updateMap = new UpdateMap(parent.updateMap);
+      } else {
+        updateMap = new UpdateMap();
+      }
 
       if (abortSignal != null) {
         synchronized (this) {

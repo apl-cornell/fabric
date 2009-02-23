@@ -331,9 +331,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create serializers.
     members.addAll(makeSerializers(pr, members));
 
-    // Create the $copyStateFrom method.
-    ClassMember copyStateFrom = makeCopyStateFrom(pr, members);
-    if (copyStateFrom != null) members.add(copyStateFrom);
+    // Create the $copyAppStateFrom method.
+    ClassMember copyAppStateFrom = makeCopyAppStateFrom(pr, members);
+    if (copyAppStateFrom != null) members.add(copyAppStateFrom);
 
     // Create the class declaration.
     ClassDecl result =
@@ -530,7 +530,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     return result;
   }
 
-  private ClassMember makeCopyStateFrom(ProxyRewriter pr,
+  private ClassMember makeCopyAppStateFrom(ProxyRewriter pr,
       List<ClassMember> members) {
     QQ qq = pr.qq();
     StringBuilder body = new StringBuilder();
@@ -547,8 +547,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     if (body.length() == 0) return null;
 
     return qq
-        .parseMember("public void $copyStateFrom(fabric.lang.Object.$Impl other) {"
-            + "super.$copyStateFrom(other);"
+        .parseMember("public void $copyAppStateFrom(fabric.lang.Object.$Impl other) {"
+            + "super.$copyAppStateFrom(other);"
             + implType
             + " src = ("
             + implType

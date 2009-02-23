@@ -1,15 +1,16 @@
 package fabric.core;
 
 import java.security.PrivateKey;
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
 
-import jif.lang.Label;
-import jif.lang.LabelUtil;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.AccessException;
+import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.util.LongHashSet;
@@ -129,7 +130,8 @@ public class TransactionManager {
         }
 
         // Check write permissions
-        if (!isWritePermitted(client, coreCopy.getLabelOnum())) {
+        if (!AuthorizationUtil.isWritePermitted(client, Client.getClient()
+            .getCore(store.getName()), coreCopy.getLabelOnum())) {
           throw new TransactionPrepareFailedException("Insufficient privilege "
               + "to write object " + o.getOnum());
         }
@@ -210,32 +212,6 @@ public class TransactionManager {
   }
 
   /**
-   * Returns the label at the given onum.
-   */
-  private Label getLabelByOnum(long labelOnum) {
-    Core core = Client.getClient().getCore(store.getName());
-    return new Label.$Proxy(core, labelOnum);
-  }
-
-  /**
-   * Determines whether the given principal is permitted to write according to
-   * the label at the given onum.
-   */
-  private boolean isWritePermitted(final Principal principal, long labelOnum) {
-    // Allow the core's client principal to do anything. We use pointer equality
-    // here to avoid having to call into the client.
-    if (principal == Client.getClient().getPrincipal()) return true;
-
-    // Call into the Jif label framework to perform the label check.
-    final Label label = getLabelByOnum(labelOnum);
-    return Client.runInTransaction(new Client.Code<Boolean>() {
-      public Boolean run() {
-        return LabelUtil.$Impl.isWritableBy(label, principal);
-      }
-    });
-  }
-
-  /**
    * Returns a Glob containing the specified object.
    * 
    * @param key
@@ -250,21 +226,21 @@ public class TransactionManager {
       glob = store.getCachedGlob(onum);
     }
     if (glob != null) return glob;
-    
+
     ObjectGroup group = readGroup(null, onum, true, null);
     if (group == null) throw new AccessException();
-    
+
     Core core = Client.getClient().getCore(store.getName());
     glob = new Glob(core, group, key);
-    
+
     // Cache the glob.
     synchronized (store) {
       store.cacheGlob(group.objects().keySet(), glob);
     }
-    
+
     worker.numGlobsCreated++;
     worker.numGlobbedObjects += group.objects().size();
-    
+
     return glob;
   }
 
@@ -286,21 +262,21 @@ public class TransactionManager {
     if (dissem) principal = Client.getClient().getPrincipal();
     SerializedObject obj = read(principal, onum);
     if (obj == null) return null;
-    
+
     long headLabelOnum = obj.getLabelOnum();
-    
+
     LongKeyMap<SerializedObject> group =
         new LongKeyHashMap<SerializedObject>(MAX_GROUP_SIZE);
     Queue<SerializedObject> toVisit = new LinkedList<SerializedObject>();
     LongSet seen = new LongHashSet();
-    
+
     // Do a breadth-first traversal and add objects to an object group.
     toVisit.add(obj);
     seen.add(onum);
     while (!toVisit.isEmpty()) {
       SerializedObject curObj = toVisit.remove();
       group.put(curObj.getOnum(), curObj);
-      
+
       if (worker != null) {
         int count = 0;
         worker.numObjectsSent++;
@@ -309,24 +285,24 @@ public class TransactionManager {
         count++;
         worker.numSendsByType.put(curObj.getClassName(), count);
       }
-      
+
       if (group.size() == MAX_GROUP_SIZE) break;
-      
+
       for (Iterator<Long> it = curObj.getIntracoreRefIterator(); it.hasNext();) {
         long relatedOnum = it.next();
         if (seen.contains(relatedOnum)) continue;
         seen.add(relatedOnum);
-        
+
         if (dissem) {
           // Ensure that the related object hasn't been globbed already.
           synchronized (store) {
             if (store.getCachedGlob(relatedOnum) != null) continue;
           }
         }
-        
+
         SerializedObject related = read(principal, relatedOnum, true);
         if (related == null) continue;
-        
+
         if (dissem) {
           // Ensure that the related object's label is the same as the head
           // object's label. We could be smarter here, but to avoid calling into
@@ -334,11 +310,11 @@ public class TransactionManager {
           long relatedLabelOnum = related.getLabelOnum();
           if (headLabelOnum != relatedLabelOnum) continue;
         }
-        
+
         toVisit.add(related);
       }
     }
-    
+
     return new ObjectGroup(group);
   }
 
@@ -362,77 +338,12 @@ public class TransactionManager {
     synchronized (store) {
       obj = store.read(onum);
     }
-    
+
     if (obj == null) return null;
-    if (isReadPermitted(client, obj.getLabelOnum())) return obj;
+    if (AuthorizationUtil.isReadPermitted(client, Client.getClient().getCore(
+        store.getName()), obj.getLabelOnum())) return obj;
     if (denyWithNull) return null;
     throw new AccessException();
-  }
-
-  /**
-   * This is the cache for authorizing reads. The keys in this map are label
-   * onums and principals. The values are booleans that specify whether the
-   * principal is authorized to read according to the label. We're not using the
-   * caches in LabelUtil because the transaction management is too slow (!!).
-   */
-  private static final LongKeyMap<Map<Principal, Boolean>> cachedReadAuthorizations =
-      new LongKeyHashMap<Map<Principal, Boolean>>();
-
-  private static Boolean checkAuthorizationCache(
-      LongKeyMap<Map<Principal, Boolean>> cache, Principal principal,
-      long labelOnum) {
-    Map<Principal, Boolean> submap;
-    synchronized (cache) {
-      submap = cache.get(labelOnum);
-      if (submap == null) return null;
-    }
-
-    synchronized (submap) {
-      return submap.get(principal);
-    }
-  }
-
-  private static void cacheAuthorization(
-      LongKeyMap<Map<Principal, Boolean>> cache, Principal principal,
-      long labelOnum, Boolean result) {
-    Map<Principal, Boolean> submap;
-    synchronized (cache) {
-      submap = cache.get(labelOnum);
-      if (submap == null) {
-        submap = new HashMap<Principal, Boolean>();
-        cache.put(labelOnum, submap);
-      }
-    }
-
-    synchronized (submap) {
-      submap.put(principal, result);
-    }
-  }
-
-  /**
-   * Determines whether the given principal is permitted to read according to
-   * the label at the given onum.
-   */
-  private boolean isReadPermitted(final Principal principal, long labelOnum) {
-    // Allow the core's client principal to do anything. We use pointer equality
-    // here to avoid having to call into the client.
-    if (principal == Client.getClient().getPrincipal()) return true;
-
-    Boolean result =
-        checkAuthorizationCache(cachedReadAuthorizations, principal, labelOnum);
-    if (result != null) return result;
-
-    // Call into the Jif label framework to perform the label check.
-    final Label label = getLabelByOnum(labelOnum);
-    result = Client.runInTransaction(new Client.Code<Boolean>() {
-      public Boolean run() {
-        return LabelUtil.$Impl.isReadableBy(label, principal);
-      }
-    });
-
-    cacheAuthorization(cachedReadAuthorizations, principal, labelOnum, result);
-
-    return result;
   }
 
   /**

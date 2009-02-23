@@ -12,15 +12,17 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import fabric.client.*;
+import fabric.client.remote.messages.ReadMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
+import fabric.client.remote.messages.TakeOwnershipMessage;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.TransactionManager;
-import fabric.common.FabricThread;
-import fabric.common.MessageHandler;
-import fabric.common.TransactionID;
+import fabric.common.*;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Principal;
+import fabric.lang.Object.$Impl;
+import fabric.lang.Object.$Proxy;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.Message;
@@ -254,6 +256,22 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     }
   }
 
+  /**
+   * Associates the given log with this worker's transaction manager and
+   * synchronizes the log with the given tid.
+   */
+  private void associateAndSyncLog(Log log, TransactionID tid) {
+    TransactionManager tm = getTransactionManager();
+    TransactionID commonAncestor = log.getTid().getLowestCommonAncestor(tid);
+
+    // Do the commits that we've missed.
+    for (int i = log.getTid().depth; i > commonAncestor.depth; i--)
+      tm.commitTransaction();
+
+    // Start new transactions if necessary.
+    if (commonAncestor.depth != tid.depth) tm.startTransaction(tid);
+  }
+
   public RemoteCallMessage.Response handle(
       final RemoteCallMessage remoteCallMessage) throws RemoteCallException {
     // We assume that this thread's transaction manager is free (i.e., it's not
@@ -262,24 +280,10 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
     // XXX TODO Security checks.
 
-    TransactionManager tm = getTransactionManager();
     TransactionID tid = remoteCallMessage.tid;
-
     if (tid != null) {
       Log log = getLogByTid(tid, true);
-      tm.associateLog(log);
-
-      // Synchronize the log stack...
-      TransactionID commonAncestor =
-          log.getTid().getLowestCommonAncestor(remoteCallMessage.tid);
-
-      // Do the commits that we've missed.
-      for (int i = log.getTid().depth; i > commonAncestor.depth; i--)
-        tm.commitTransaction();
-
-      // Start new transactions if necessary.
-      if (commonAncestor.depth != remoteCallMessage.tid.depth)
-        tm.startTransaction(remoteCallMessage.tid);
+      associateAndSyncLog(log, tid);
     }
 
     try {
@@ -335,16 +339,18 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   }
 
   public void handle(AbortTransactionMessage abortTransactionMessage) {
+    // XXX TODO Security checks.
     Log log = getLogByTid(abortTransactionMessage.tid, false);
     if (log == null) return;
 
     TransactionManager tm = getTransactionManager();
-    tm.associateLog(log);
+    associateAndSyncLog(log, abortTransactionMessage.tid);
     tm.abortTransaction();
   }
 
   public PrepareTransactionMessage.Response handle(
       PrepareTransactionMessage prepareTransactionMessage) {
+    // XXX TODO Security checks.
     Log log = getLogByTopTid(prepareTransactionMessage.tid);
     if (log == null)
       return new PrepareTransactionMessage.Response(false,
@@ -359,12 +365,13 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
     Map<RemoteNode, TransactionPrepareFailedException> failures =
         tm.sendPrepareMessages();
-    
+
     return new PrepareTransactionMessage.Response(failures.isEmpty());
   }
 
   public CommitTransactionMessage.Response handle(
       CommitTransactionMessage commitTransactionMessage) {
+    // XXX TODO Security checks.
     Log log = getLogByTopTid(commitTransactionMessage.transactionID);
     if (log == null)
       return new CommitTransactionMessage.Response(false, "No such transaction");
@@ -378,5 +385,53 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     }
 
     return new CommitTransactionMessage.Response(true);
+  }
+
+  public ReadMessage.Response handle(ReadMessage readMessage) {
+    Log log = getLogByTid(readMessage.tid, false);
+    if (log == null) return new ReadMessage.Response(null);
+
+    associateAndSyncLog(log, readMessage.tid);
+
+    $Impl obj = new $Proxy(readMessage.core, readMessage.onum).fetch();
+
+    // Ensure this client owns the object.
+    synchronized (obj) {
+      if (!obj.$isOwned) {
+        return new ReadMessage.Response(null);
+      }
+    }
+
+    // Ensure that the remote client is allowed to read the object.
+    if (!AuthorizationUtil.isReadPermitted(remoteClient, readMessage.core,
+        readMessage.onum)) return new ReadMessage.Response(null);
+
+    return new ReadMessage.Response(obj);
+  }
+
+  public TakeOwnershipMessage.Response handle(
+      TakeOwnershipMessage takeOwnershipMessage) {
+    Log log = getLogByTid(takeOwnershipMessage.tid, false);
+    if (log == null) return new TakeOwnershipMessage.Response(false);
+
+    associateAndSyncLog(log, takeOwnershipMessage.tid);
+
+    $Impl obj =
+        new $Proxy(takeOwnershipMessage.core, takeOwnershipMessage.onum)
+            .fetch();
+
+    // Ensure this client owns the object.
+    synchronized (obj) {
+      if (!obj.$isOwned) {
+        return new TakeOwnershipMessage.Response(false);
+      }
+    }
+
+    // Ensure that the remote client is allowed to write the object.
+    if (!AuthorizationUtil.isWritePermitted(remoteClient,
+        takeOwnershipMessage.core, takeOwnershipMessage.onum))
+      return new TakeOwnershipMessage.Response(false);
+
+    return new TakeOwnershipMessage.Response(true);
   }
 }
