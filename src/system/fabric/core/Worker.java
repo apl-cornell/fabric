@@ -92,7 +92,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
    * Instantiates a new worker thread and starts it running.
    */
   public Worker(Node node) {
-    super("Core worker");
+    super("Core worker -- initializing");
     this.node = node;
     fabric.client.transaction.TransactionManager.startThread(this);
   }
@@ -118,12 +118,16 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   @Override
   public synchronized void run() {
     while (true) {
+      Thread.currentThread().setName("Core worker -- idle");
+      
       // Wait for the node to signal this thread (done via a call to handle()).
       try {
         wait();
       } catch (InterruptedException e) {
         continue;
       }
+      
+      Thread.currentThread().setName("Core worker -- active");
 
       reset();
 
