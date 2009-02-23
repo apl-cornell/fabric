@@ -471,7 +471,7 @@
 
   <!-- Compiles the Fabric runtime -->
   <target name="fabric-runtime"
-      depends="init,fabil-compiler,fabil-signatures,fabric-arrays">
+      depends="init,fabil-compiler,fabil-signatures,fabric-arrays,fabric-signatures">
     <mkdir dir="${runtime.classes}" />
 
     <condition property="runtime.opt" value="-O0">
