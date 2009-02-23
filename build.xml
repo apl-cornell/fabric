@@ -181,7 +181,7 @@
 
   <!-- Compiles Fabric -->
   <target name="all"
-    depends="fabric-compiler,fabil-compiler,fabric-system,client-debug,tests"
+    depends="fabric-compiler,fabil-compiler,fabric-system,client-debug,tests,fabric-signatures"
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
@@ -361,7 +361,7 @@
   </target>
 
   <!-- Compiles the Fabric signatures -->
-  <target name="fabric-signatures" depends="init,fabric-compiler,bin">
+  <target name="fabric-signatures" depends="init,fabric-compiler,bin,fabric-runtime">
     <mkdir dir="${signatures.fabric.classes}" />
 
     <apply executable="bash"
@@ -471,7 +471,7 @@
 
   <!-- Compiles the Fabric runtime -->
   <target name="fabric-runtime"
-      depends="init,fabil-compiler,fabil-signatures,fabric-arrays,fabric-signatures">
+      depends="init,fabil-compiler,fabil-signatures,fabric-arrays">
     <mkdir dir="${runtime.classes}" />
 
     <condition property="runtime.opt" value="-O0">
