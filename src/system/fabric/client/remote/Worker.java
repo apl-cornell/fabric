@@ -265,13 +265,14 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
             // Ensure the receiver and arguments have the right dynamic types.
             fabric.lang.Object receiver =
                 remoteCallMessage.receiver.fetch().$getProxy();
-            Object[] args = new Object[remoteCallMessage.args.length];
+            Object[] args = new Object[remoteCallMessage.args.length+1];
+            args[0] = remoteClient;
             for (int i = 0; i < args.length; i++) {
               Object arg = remoteCallMessage.args[i];
               if (arg instanceof fabric.lang.Object) {
                 arg = ((fabric.lang.Object) arg).fetch().$getProxy();
               }
-              args[i] = arg;
+              args[i+1] = arg;
             }
 
             return remoteCallMessage.getMethod().invoke(receiver,
