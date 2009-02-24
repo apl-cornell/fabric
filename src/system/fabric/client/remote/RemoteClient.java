@@ -206,12 +206,16 @@ public final class RemoteClient implements RemoteNode {
    *          the tid for the current transaction.
    */
   public void readObject(TransactionID tid, $Impl obj) {
-    ReadMessage.Response response =
-        new ReadMessage(tid, obj.$getCore(), obj.$getOnum()).send(this);
+    $Impl remoteObj = readObject(tid, obj.$getCore(), obj.$getOnum());
 
-    if (response.obj == null)
+    if (remoteObj == null)
       throw new InternalError("Inter-client object read failed.");
-    obj.$copyAppStateFrom(response.obj);
+    obj.$copyAppStateFrom(remoteObj);
+  }
+
+  public $Impl readObject(TransactionID tid, Core core, long onum) {
+    ReadMessage.Response response = new ReadMessage(tid, core, onum).send(this);
+    return response.obj;
   }
 
   /**
@@ -227,7 +231,7 @@ public final class RemoteClient implements RemoteNode {
   public String name() {
     return name;
   }
- 
+
   /**
    * @return the principal associated with the remote client.
    */

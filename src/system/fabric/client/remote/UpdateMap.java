@@ -11,6 +11,8 @@ import java.util.Map;
 
 import javax.crypto.Cipher;
 
+import jif.lang.Label;
+
 import fabric.client.AbortException;
 import fabric.client.Client;
 import fabric.client.Core;
@@ -87,17 +89,31 @@ public class UpdateMap implements FastSerializable {
   public RemoteClient lookup($Proxy proxy) {
     // First, check the cache.
     if (readCache.containsKey(proxy)) return readCache.get(proxy);
+    if (map.isEmpty()) return null;
 
-    RemoteClient result = slowLookup(proxy);
+    RemoteClient result = slowLookup(proxy, getKey(proxy));
     readCache.put(proxy, result);
     return result;
   }
 
-  private RemoteClient slowLookup($Proxy proxy) {
+  /**
+   * This version of the lookup avoids having to fetch the proxy to determine
+   * its label.
+   * 
+   * @param label
+   *          the label corresponding to the given proxy.
+   */
+  public RemoteClient lookup($Proxy proxy, Label label) {
+    if (readCache.containsKey(proxy)) return readCache.get(proxy);
     if (map.isEmpty()) return null;
-    
+
+    RemoteClient result = slowLookup(proxy, getKey(label));
+    readCache.put(proxy, result);
+    return result;
+  }
+
+  private RemoteClient slowLookup($Proxy proxy, byte[] encryptKey) {
     try {
-      byte[] encryptKey = getKey(proxy);
       byte[] mapKey = hash(proxy, encryptKey);
       Pair<byte[], byte[]> encHost = map.get(mapKey);
 
@@ -197,9 +213,17 @@ public class UpdateMap implements FastSerializable {
    * given object. If the object is public, null is returned.
    */
   private byte[] getKey($Proxy proxy) {
-    KeyObject keyObject = proxy.get$label().keyObject();
-    if (keyObject == null) return null;
+    return getKey(proxy.get$label());
+  }
 
+  /**
+   * Returns a byte array containing the symmetric encryption key protecting
+   * given label. If the label is not protected with such a key (e.g., the label
+   * is publicly readable), then null is returned.
+   */
+  private byte[] getKey(Label label) {
+    KeyObject keyObject = label.keyObject();
+    if (keyObject == null) return null;
     return keyObject.getKey().getEncoded();
   }
 

@@ -9,6 +9,7 @@ import java.util.List;
 
 import jif.lang.Label;
 import fabric.client.*;
+import fabric.client.remote.RemoteClient;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.ReadMapEntry;
 import fabric.client.transaction.TransactionManager;
@@ -97,10 +98,18 @@ public interface Object {
       if (result == null) {
         // Object has been evicted.
         try {
-          if (this instanceof KeyObject) {
-            // Bypass dissemination when reading key objects.
+          // Check the current transaction's create map.
+          TransactionManager tm = TransactionManager.getInstance();
+          RemoteClient client = tm.getFetchClient(this);
+          if (client != null) {
+            // Fetch from the client.
+            result = client.readObject(tm.getCurrentTid(), ref.core, ref.onum);
+          } else if (this instanceof KeyObject) {
+            // Fetch from the core. Bypass dissemination when reading key
+            // objects.
             result = ref.core.readObjectNoDissem(ref.onum);
           } else {
+            // Fetch from the core.
             result = ref.core.readObject(ref.onum);
           }
         } catch (FetchException e) {

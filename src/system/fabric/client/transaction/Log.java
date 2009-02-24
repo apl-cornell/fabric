@@ -3,6 +3,7 @@ package fabric.client.transaction;
 import java.util.*;
 
 import fabric.client.Core;
+import fabric.client.remote.CreateMap;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.UpdateMap;
 import fabric.client.transaction.LockList.Node;
@@ -37,6 +38,12 @@ public final class Log {
    * A map indicating where to fetch objects from.
    */
   UpdateMap updateMap;
+
+  /**
+   * A map giving the key objects for objects that were created by this
+   * transaction or an ancestor.
+   */
+  CreateMap createMap;
 
   /**
    * The sub-transaction.
@@ -134,6 +141,7 @@ public final class Log {
 
     if (parent != null) {
       this.updateMap = new UpdateMap(parent.updateMap);
+      this.createMap = new CreateMap(parent.createMap);
       synchronized (parent) {
         parent.child = this;
       }
@@ -141,9 +149,10 @@ public final class Log {
       commitState = parent.commitState;
     } else {
       this.updateMap = new UpdateMap();
+      this.createMap = new CreateMap();
       commitState = new CommitState();
-      
-      // New top-level frame.  Register it in the transaction registry.
+
+      // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
     }
   }
@@ -315,8 +324,10 @@ public final class Log {
 
       if (parent != null) {
         updateMap = new UpdateMap(parent.updateMap);
+        createMap = new CreateMap(parent.createMap);
       } else {
         updateMap = new UpdateMap();
+        createMap = new CreateMap();
       }
 
       if (abortSignal != null) {

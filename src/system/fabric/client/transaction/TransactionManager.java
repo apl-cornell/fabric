@@ -5,6 +5,7 @@ import static fabric.client.transaction.Log.CommitState.Values.*;
 import java.util.*;
 import java.util.logging.Logger;
 
+import jif.lang.Label;
 import fabric.client.*;
 import fabric.client.remote.RemoteClient;
 import fabric.common.FabricThread;
@@ -14,6 +15,7 @@ import fabric.common.TransactionID;
 import fabric.common.util.LongKeyMap;
 import fabric.core.InProcessCore;
 import fabric.lang.Object.$Impl;
+import fabric.lang.Object.$Proxy;
 
 /**
  * Holds transaction management information for a single thread. Each thread has
@@ -213,17 +215,17 @@ public final class TransactionManager {
     current.abort();
     logger.finest(current + " aborted");
 
-    if (current.tid.parent == null || current.parent != null
-        && current.parent.tid == current.tid.parent) {
-      // The parent frame represents the parent transaction. Pop the stack.
-      current = current.parent;
-    } else {
-      // Reuse the current frame for the parent transaction.
-      current.tid = current.tid.parent;
-    }
-
     synchronized (current.commitState) {
       current.commitState.value = ABORTED;
+
+      if (current.tid.parent == null || current.parent != null
+          && current.parent.tid == current.tid.parent) {
+        // The parent frame represents the parent transaction. Pop the stack.
+        current = current.parent;
+      } else {
+        // Reuse the current frame for the parent transaction.
+        current.tid = current.tid.parent;
+      }
     }
   }
 
@@ -560,9 +562,10 @@ public final class TransactionManager {
     // Grab a write lock on the object.
     obj.$writer = current;
     obj.$writeLockHolder = current;
-    
+
     // Own the object.
-    obj.$isOwned = true;
+    ensureOwnership(obj);
+    current.createMap.put(obj.$getProxy(), obj.get$label());
 
     // Add the object to our creates set.
     synchronized (current.creates) {
@@ -835,5 +838,22 @@ public final class TransactionManager {
    */
   public void associateLog(Log log) {
     current = log;
+  }
+
+  public TransactionID getCurrentTid() {
+    if (current == null) return null;
+    return current.tid;
+  }
+
+  /**
+   * @return the client on which the object resides. An object resides on a
+   *         client if it is either on that client's local core, or if it was
+   *         created by the current transaction and is owned by that client.
+   */
+  public RemoteClient getFetchClient($Proxy proxy) {
+    if (current == null || !current.createMap.containsKey(proxy)) return null;
+    Label label = current.createMap.lookup(proxy);
+
+    return current.updateMap.lookup(proxy, label);
   }
 }
