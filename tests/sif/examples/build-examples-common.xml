@@ -1,4 +1,4 @@
-<project name="examples-common" default="usage" basedir=".">
+<project name="fabric-servlet-examples-common" default="usage" basedir=".">
   <description>
     SIF Examples common build file
   </description>
@@ -109,19 +109,6 @@
     <!-- Hooks for examples to extend or modify the behavior of compile -->
     <target name="precompile"/>
     <target name="postcompile"/>
-
-    <target name="java-src" depends="init"
-            if="java-code-src"
-            description="Builds the Java src in the directory ${java-code-src}, if that variable is defined.">
-        <javac srcdir="${java-code-src}" destdir="${basedir}/${destdir}">
-            <classpath refid="example.classpath" />
-        </javac>
-    </target>
-
-    <target name="install-java"
-            if="java-code-src"
-            description="Builds and installs the Java src in the directory ${java-code-src}, if that variable is defined."
-            depends="java-src,install-quick"/>
 
     <target name="install-quick"
             depends="configure-install">

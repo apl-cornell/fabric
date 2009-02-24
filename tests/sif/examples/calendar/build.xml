@@ -17,14 +17,14 @@
     <target name="compile" depends="init,configure,principals"
             description="Compile the Jif code for this example">
         <antcall target="precompile"/>
-        <apply executable="sh"
+        <apply executable="bash"
                parallel="true"
                failonerror="true"
                dest="${basedir}"
                relative="true"
                skipemptyfilesets="true"
                vmlauncher="false">
-	    <arg value="${jif.home}/bin/jifc" />
+	    <arg value="${fabric.home}/bin/fabc" />
             <arg value="-robust" />
             <arg value="-d" />
             <arg value="${destdir}" />

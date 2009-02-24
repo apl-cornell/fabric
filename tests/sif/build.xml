@@ -30,9 +30,9 @@
         <!-- Delete the ${sif.classes} directory tree -->
         <delete dir="${sif.classes}" />
         <delete dir="${sif.sig-classes}" />
-        <subant target="clean">
+        <!--subant target="clean">
             <fileset dir="examples" includes="*/build.xml"/>
-        </subant>
+        </subant-->
     </target>
 
     <target name="clobber" depends="clean" />
@@ -133,8 +133,7 @@
                skipemptyfilesets="true"
                vmlauncher="false">
             <arg value="${fabric.home}/bin/fabc" />
-        	  <arg value="-sigcp"			 /> <arg value="${fabric.home}/sig-classes/fabric"/>
-        	  <arg value="-filsigcp"	 /> <arg value="${fabric.home}/sig-classes/fabil"/>
+        	  <arg value="-cp"				 /> <arg value="${basedir}/classes"/>
         	  <arg value="-sig"/>
             <arg value="-d"          /> <arg value="sig-classes" />
             <arg value="-sourcepath" /> <arg value="sig-src" />
