@@ -133,7 +133,9 @@
                skipemptyfilesets="true"
                vmlauncher="false">
             <arg value="${fabric.home}/bin/fabc" />
-            <arg value="-cp"         /> <arg pathref="standard.classpath" />
+        	  <arg value="-sigcp"			 /> <arg value="${fabric.home}/sig-classes/fabric"/>
+        	  <arg value="-filsigcp"	 /> <arg value="${fabric.home}/sig-classes/fabil"/>
+        	  <arg value="-sig"/>
             <arg value="-d"          /> <arg value="sig-classes" />
             <arg value="-sourcepath" /> <arg value="sig-src" />
             <srcfile />
