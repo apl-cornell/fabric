@@ -26,9 +26,11 @@ classpath="$classpath:$POLYGLOT/lib/JFlex.jar"
 classpath="$classpath:$JIF/classes"
 
 sigcp="$TOP/sig-classes/fabric:$TOP/lib/fabric-sig.jar"
+filsigcp="$TOP/sig-classes/fabil:$TOP/lib/fabil-sig.jar"
 
 command="\"$JAVA\" $vmargs -classpath \"$(fixpath $classpath)\" \
-                   fabric.Main -sigcp \"$(fixpath $sigcp)\" $args"
+                   fabric.Main -sigcp \"$(fixpath $sigcp)\" \
+                               -filsigcp \"$(fixpath $filsigcp)\" $args"
 
 if [ -n "$verbose" ]
 then
