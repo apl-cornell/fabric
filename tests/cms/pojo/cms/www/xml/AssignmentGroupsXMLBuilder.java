@@ -348,7 +348,7 @@ public class AssignmentGroupsXMLBuilder {
         Object sid = avgIterator.next();
         
         ArrayList grades = (ArrayList) subproblemGradeMap.get(sid);
-        Element xGrade = xml.createElementNS(XMLBuilder.TAG_GRADE + sid, 
+        Element xGrade = xml.createElementNS(XMLBuilder.TAG_GRADE + sid.toString(), 
           XMLBuilder.TAG_GRADE);
         
         float avg = 0f;

@@ -79,13 +79,13 @@ public class Assignment implements Comparable {
     
     this.solutionFile        = null;
     this.grades              = new HashMap/*Grade*/();
-    this.subProblems         = new ArrayList/*SubProblem*/();
+    this.subProblems         = new LinkedList/*SubProblem*/();
     this.subProblemGrades    = new HashMap()/*Student, Set<Grade>*/;
     this.items               = new ArrayList/*AssignmentItem*/();
     this.answerSets          = new ArrayList/*AnswerSet*/();
     this.timeSlots           = new ArrayList/*TimeSlot*/();
     this.requiredSubmissions = new ArrayList/*RequiredSubmission*/();
-    this.groups              = new ArrayList/*Group*/();
+    this.groups              = new LinkedList/*Group*/();
     this.regradeRequests = new HashMap();
     this.groupMemberIndex = new HashMap();
     
@@ -330,7 +330,7 @@ public class Assignment implements Comparable {
   }
 
   public Collection/*Grade*/ getGrades() {
-    Collection allGrades = new ArrayList();
+    Collection allGrades = new LinkedList();
     allGrades.addAll(grades.values());
     for(Iterator i = subProblemGrades.values().iterator(); i.hasNext();) {
       allGrades.addAll((Collection)i.next());

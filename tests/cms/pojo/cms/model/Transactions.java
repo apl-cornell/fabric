@@ -148,7 +148,7 @@ public class Transactions {
         staffMems.add(staff.getUser().getNetID());
       }
       //TODO: Look into why on the production version of CMS, this just returns null
-      Collection graded = new ArrayList();
+      Collection graded = new LinkedList();
       for (int j=0; j < netIDs.size(); j++) {
         String netID = (String)netIDs.get(j);
         User studentUser = database.getUser(netID);
@@ -331,11 +331,11 @@ public class Transactions {
     d.setAssignment(assignment);
   }
   
-  public static void appendDetail(Log log, String detail) {
+  public void appendDetail(Log log, String detail) {
     new LogDetail(log, detail);
   }
   
-  public static void appendDetail(Log log, String detail, User affected) {
+  public void appendDetail(Log log, String detail, User affected) {
     new LogDetail(log, detail, affected);
   }
         
@@ -999,13 +999,13 @@ public class Transactions {
       Grade grade = (Grade) i.next();
       float score = grade.getGrade().floatValue();
       // [sum of current scores (null if no scores), old total score (null if none)]
-      Float[] sum = (Float[]) studentSums.get(grade.getUser());
+      Object[] sum = (Object[]) studentSums.get(grade.getUser());
       if (!(grade.getSubProblem() == null && hasSubProblems)) {
         if (sum != null) {
           sum[0] = sum[0] == null ? new Float(score) : 
-            new Float(sum[0].floatValue() + score);
+            new Float(((Float)sum[0]).floatValue() + score);
         } else {
-          sum = new Float[2];
+          sum = new Object[2];
           sum[0] = new Float(score);
           sum[1] = null;
         }
@@ -1013,7 +1013,7 @@ public class Transactions {
         if (sum != null) {
             sum[1] = new Float(score);
         } else {
-            sum = new Float[2];
+            sum = new Object[2];
             sum[0] = null;
             sum[1] = new Float(score);
         }
@@ -1048,7 +1048,7 @@ public class Transactions {
     // Enter newly summed total grades into the database and compute the mean score
     i = students.iterator();
     float total = 0;
-    ArrayList scores = new ArrayList();
+    LinkedList scores = new LinkedList();
     /* This loop finds a total of all assignment grades (for getting the mean), 
      *  and creates a grade entry for the student's total assignment grade 
      *  if necessary. */
@@ -1089,7 +1089,7 @@ public class Transactions {
                   (sums[0] == null ? " erased" : " calculated to be " + 
                       sums[0].floatValue() + (sums[1] == null ? "" : (" (" + 
                           (diff > 0 ? "+" : "") + diff + ")"))),
-                          student.getUser(), assignment);
+                          student.getUser(), assignment); 
         }
       }
     }
@@ -1112,8 +1112,8 @@ public class Transactions {
       stdev = new Float((float) Math.sqrt(sstotal / scores.size()));
       // Find median
       median = new Float(0);
-      Object[] sortedScores = scores.toArray();
-      Arrays.sort(sortedScores);
+      Float[] sortedScores = (Float[])scores.toArray();
+      /*Arrays.*/sort(sortedScores);
       if (sortedScores.length % 2 == 0) {
               median = new Float(sortedScores.length == 0 ? 0 : (((Float) sortedScores[sortedScores.length / 2 - 1]).floatValue() 
                               + ((Float) sortedScores[sortedScores.length / 2]).floatValue()) / 2.0f);
@@ -1171,6 +1171,19 @@ public class Transactions {
     }
   }
 
+  private void sort(Float[] x) {
+    for (int i=0; i<x.length-1; i++) {
+      for (int j=i+1; j<x.length; j++) {
+          if (x[i].floatValue() > x[j].floatValue()) {
+              Float temp = x[i];
+              x[i] = x[j];
+              x[j] = temp;
+          }
+      }
+  }
+
+  }
+  
   public void computeTotalScores(User p, Course course, Log log) {
     Profiler.enterMethod("Transactions.computeTotalScores", "CourseID: " + 
         course.toString());
@@ -1242,7 +1255,8 @@ public class Transactions {
       float[] sortedScores;
       if (i < ss.size()) {
         sortedScores = new float[i];
-        System.arraycopy(scoresArray, 0, sortedScores, 0, i);
+        for(int j = 0; j < i; j++)
+          sortedScores[j] = scoresArray[i];
         Arrays.sort(sortedScores);
       } else {
         Arrays.sort(scoresArray);
