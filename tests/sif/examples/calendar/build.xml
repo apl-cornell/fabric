@@ -5,10 +5,6 @@
 
   <property name="app.name" value="calendar" />
 
-  <property name="java-code-src" value="${basedir}/web/WEB-INF/classes" />
-
-  
-
   <import file="../build-examples-common.xml" />
 
     <!-- Redefine the class path to include the User stuff -->
@@ -18,9 +14,6 @@
         <pathelement location="${examples-common.basedir}/user/classes" />
     </path>
 	
-	<target name="dummy">
-	</target>
-
     <target name="compile" depends="init,configure,principals"
             description="Compile the Jif code for this example">
         <antcall target="precompile"/>
