@@ -13,9 +13,6 @@ import jif.ast.AmbPrincipalNode_c;
  * In Fabric, objects of <code>Client</code> and <code>RemoteClient</code> are 
  * treated as principals automatically.
  * 
- * TODO For now, we only allow <code>Client</code>/<code>RemoteClient</code> 
- * variables to appear as principals. 
- * 
  * @author qixin
  */
 public class FabricAmbPrincipalNode_c extends AmbPrincipalNode_c {

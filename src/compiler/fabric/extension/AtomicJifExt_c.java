@@ -42,7 +42,7 @@ public class AtomicJifExt_c extends JifBlockExt {
                  A.labelEnv(), 
                  atomic.position(), 
                  false, 
-                 new ConstraintMessage() {
+                 new ConstraintMessage() {      
       @Override
       public String technicalMsg() {
         return "_pc_(atomic {S}) <= _pc_(S)";

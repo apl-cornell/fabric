@@ -1,7 +1,7 @@
 package fabric.ast;
 
-import polyglot.ast.Expr;
+import polyglot.ast.*;
 
-public interface Client extends Expr {
+public interface Client extends Local {
 
 }

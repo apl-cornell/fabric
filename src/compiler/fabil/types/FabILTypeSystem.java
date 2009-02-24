@@ -39,6 +39,8 @@ public interface FabILTypeSystem extends TypeSystem {
   ClassType RemoteClient();
   
   ClassType RemoteCallException();
+  
+  ClassType Client();
 
   /**
    * @return true iff the given type is a primitive, an array of Fabric types,

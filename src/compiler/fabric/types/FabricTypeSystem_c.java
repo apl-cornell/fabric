@@ -4,14 +4,22 @@ import java.util.List;
 
 import polyglot.frontend.Source;
 import polyglot.types.ClassType;
+import polyglot.types.Flags;
 import polyglot.types.ImportTable;
 import polyglot.types.LazyClassInitializer;
+import polyglot.types.LocalInstance;
 import polyglot.types.Package;
 import polyglot.types.ParsedClassType;
+import polyglot.types.SemanticException;
+import polyglot.types.Type;
 import polyglot.types.TypeSystem;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 
 import fabil.types.FabILImportTable;
+import fabric.translate.DynamicPrincipalToFabilExpr_c;
+import jif.ast.JifUtil;
+import jif.translate.PrincipalToJavaExpr;
 import jif.types.JifTypeSystem_c;
 import jif.types.principal.Principal;
 
@@ -32,7 +40,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     List<String> result = super.defaultPackageImports();
     result.add("fabric.lang");
     result.add("fabric.client");
-    result.add("fabric.client.remote");
     return result;
   }
   
@@ -57,14 +64,56 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   }
 
   public ClassType RemoteClient() {
-    return load("fabric.client.remote.RemoteClient");
+    return load("fabric.client.RemoteClient");
   }
   
   public ClassType Client() {
-    return load("fabric.client.Client");
+    return load("fabric.client.FabricClient");
   }
 
+  public LocalInstance clientLocalInstance(Position pos) {
+    return localInstance(pos, Flags.FINAL, Client(), "client$");
+  }
+  
   public Principal clientPrincipal(Position pos) {
-    return dynamicPrincipal(pos, new AccessPathClient(pos, this));
+//    return dynamicPrincipal(pos, new AccessPathClient(pos, this));
+    try {
+      return dynamicPrincipal(pos, JifUtil.varInstanceToAccessPath(clientLocalInstance(pos), pos));
+    }
+    catch (SemanticException e) {
+      // shouldn't happen
+      throw new InternalCompilerError(e);
+    }
+  }
+
+  @Override
+  public boolean isCastValid(Type fromType, Type toType) {
+    Type strpFromType = strip(fromType);
+    Type strpToType = strip(toType);
+
+    if ((equals(strpFromType, Client()) || equals(strpFromType, RemoteClient())) 
+        && equals(strpToType, Principal())) {
+      return true;
+    }
+    
+    return super.isCastValid(fromType, toType);
+  }
+  
+  @Override
+  public boolean isImplicitCastValid(Type fromType, Type toType) {
+    Type strpFromType = strip(fromType);
+    Type strpToType = strip(toType);
+
+    if ((equals(strpFromType, Client()) || equals(strpFromType, RemoteClient())) 
+        && equals(strpToType, Principal())) {
+      return true;
+    }
+    
+    return super.isImplicitCastValid(fromType, toType);
+  }
+  
+  @Override
+  protected PrincipalToJavaExpr dynamicPrincipalTranslator() {
+    return new DynamicPrincipalToFabilExpr_c();
   }
 }

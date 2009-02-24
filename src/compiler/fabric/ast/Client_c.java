@@ -1,24 +1,29 @@
 package fabric.ast;
 
-import java.util.List;
+import fabric.types.FabricTypeSystem;
 
-import polyglot.ast.Expr_c;
-import polyglot.ast.Term;
+import polyglot.ast.*;
+import polyglot.types.SemanticException;
 import polyglot.util.Position;
-import polyglot.visit.CFGBuilder;
+import polyglot.visit.TypeChecker;
 
-public class Client_c extends Expr_c implements Client {
-  public Client_c(Position pos) {
-    super(pos);
+public class Client_c extends Local_c implements Client {
+  public Client_c(Position pos, NodeFactory nf) {
+    super(pos, nf.Id(pos, "client$"));
   }
   
-  @SuppressWarnings("unchecked")
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
-    return succs;
-  }
+  public Node typeCheck(TypeChecker tc) throws SemanticException {
+    FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
 
-  public Term firstChild() {
-    return null;
+    Client c = (Client)this.type(ts.Client());
+    c = (Client)c.localInstance(ts.clientLocalInstance(position()));
+    
+    return c;
+  }
+  
+  @Override
+  public String toString() {
+    return "client$";
   }
 }

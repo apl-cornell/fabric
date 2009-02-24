@@ -50,6 +50,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
     return load("fabric.client.remote.RemoteCallException");
   }
   
+  public ClassType Client() {
+    return load("fabric.client.Client");
+  }
+  
   /*
    * (non-Javadoc)
    * 

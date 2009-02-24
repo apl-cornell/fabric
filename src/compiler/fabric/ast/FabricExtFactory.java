@@ -9,4 +9,6 @@ public interface FabricExtFactory extends JifExtFactory {
   Ext extAtomic();
   Ext extAbort();
   Ext extRetry();
+  Ext extClient();
+  Ext extRemoteClientGetter();
 }

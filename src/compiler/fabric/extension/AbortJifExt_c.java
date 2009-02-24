@@ -44,6 +44,20 @@ public class AbortJifExt_c extends JifBranchExt {
                  A.labelEnv(), abort.position(),
                  new ConstraintMessage() {
       @Override
+      public String msg() {
+        return "The information revealed by aborting an atomic block " +
+               "may be more restrictive than the information that " +
+               "should be revealed by reaching the entry of the atomic block.";
+      }
+
+      @Override
+      public String detailMsg() {
+        return "The program counter label at entry of atomic block " +
+               "is at least as restrictive as the program counter label at " +
+               "the abort statement.";
+      }
+      
+      @Override
       public String technicalMsg() {
         return "_pc_(abort) <= _pc_(S) in atomic { S }";
       }

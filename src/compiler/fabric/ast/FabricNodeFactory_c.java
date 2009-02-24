@@ -5,20 +5,8 @@ import java.util.List;
 
 import fabric.extension.LocatedExt_c;
 
-import jif.ast.JifClassDecl;
-import jif.ast.JifNodeFactory_c;
-import polyglot.ast.Call;
-import polyglot.ast.ClassBody;
-import polyglot.ast.ClassDecl;
-import polyglot.ast.Expr;
-import polyglot.ast.Ext;
-import polyglot.ast.Id;
-import polyglot.ast.New;
-import polyglot.ast.NewArray;
-import polyglot.ast.Node;
-import polyglot.ast.Receiver;
-import polyglot.ast.Stmt;
-import polyglot.ast.TypeNode;
+import jif.ast.*;
+import polyglot.ast.*;
 import polyglot.types.Flags;
 import polyglot.util.Position;
 
@@ -193,9 +181,9 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
   }
   
   public Client Client(Position pos) {
-    Client n = new Client_c(pos);
+    Client n = new Client_c(pos, this);
     // TODO add the real extension and delegation for Client.
-    n = (Client)n.ext(extFactory().extExpr());
+    n = (Client)n.ext(fabricExtFactory().extClient());
     n = (Client)n.del(delFactory().delExpr());
     return n;
   }
@@ -203,8 +191,24 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
   public RemoteClientGetter RemoteClientGetter(Position pos, Expr remoteName) {
     RemoteClientGetter n = new RemoteClientGetter_c(pos, remoteName);
     // TODO add the real extension and delegation for RemoteClientGetter.
-    n = (RemoteClientGetter)n.ext(extFactory().extExpr());
+    n = (RemoteClientGetter)n.ext(fabricExtFactory().extRemoteClientGetter());
     n = (RemoteClientGetter)n.del(delFactory().delExpr());
     return n;
   }
+  
+//  @Override
+//  public AmbPrincipalNode AmbPrincipalNode(Position pos, Expr expr) {
+//    AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, expr);
+//    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
+//    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
+//    return n;
+//  }
+//
+//  @Override
+//  public AmbPrincipalNode AmbPrincipalNode(Position pos, Id name) {
+//    AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, name);
+//    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
+//    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
+//    return n;
+//  }
 }

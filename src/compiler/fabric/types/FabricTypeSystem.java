@@ -1,6 +1,7 @@
 package fabric.types;
 
 import polyglot.types.ClassType;
+import polyglot.types.LocalInstance;
 import polyglot.util.Position;
 import jif.types.JifTypeSystem;
 import jif.types.principal.*;
@@ -21,4 +22,6 @@ public interface FabricTypeSystem extends JifTypeSystem {
    * @return
    */
   Principal clientPrincipal(Position pos);
+  
+  LocalInstance clientLocalInstance(Position pos);
 }

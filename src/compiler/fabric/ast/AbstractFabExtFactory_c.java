@@ -80,4 +80,42 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
   protected Ext postExtRetry(Ext e) {
     return postExtStmt(e);
   }
+
+  public final Ext extClient() {
+    Ext e = extClientImpl();
+    if (nextExtFactory() != null && 
+        nextExtFactory() instanceof FabricExtFactory) {
+      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
+      Ext e2 = nextFac.extClient();
+      e = composeExts(e2, e);
+    }
+    return postExtClient(e);
+  }
+  
+  protected Ext extClientImpl() {
+    return extExprImpl();
+  }
+  
+  protected Ext postExtClient(Ext e) {
+    return postExtExpr(e);
+  }
+  
+  public final Ext extRemoteClientGetter() {
+    Ext e = extRemoteClientGetterImpl();
+    if (nextExtFactory() != null && 
+        nextExtFactory() instanceof FabricExtFactory) {
+      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
+      Ext e2 = nextFac.extRemoteClientGetter();
+      e = composeExts(e2, e);
+    }
+    return postExtRemoteClientGetter(e);
+  }
+  
+  protected Ext extRemoteClientGetterImpl() {
+    return extExprImpl();
+  }
+  
+  protected Ext postExtRemoteClientGetter(Ext e) {
+    return postExtExpr(e);
+  }
 }

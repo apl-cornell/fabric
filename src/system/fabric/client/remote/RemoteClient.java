@@ -231,7 +231,7 @@ public final class RemoteClient implements RemoteNode {
   /**
    * @return the principal associated with the remote client.
    */
-  public Principal getPrincipal() {
+  public fabric.lang.Principal getPrincipal() {
     // TODO fill in the real implementation.
     return null;
   }

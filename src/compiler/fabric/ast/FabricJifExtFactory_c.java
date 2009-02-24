@@ -1,15 +1,18 @@
 package fabric.ast;
 
-import fabric.extension.AbortJifExt_c;
-import fabric.extension.AtomicJifExt_c;
-import fabric.extension.RetryJifExt_c;
+import fabric.extension.*;
 import fabric.translate.AbortToFabilExt_c;
 import fabric.translate.AtomicToFabilExt_c;
+import fabric.translate.BinaryToFabilExt_c;
 import fabric.translate.CallToFabilExt_c;
+import fabric.translate.ClientToFabilExt_c;
+import fabric.translate.MethodDeclToFabilExt_c;
+import fabric.translate.RemoteClientGetterToFabilExt_c;
 import fabric.translate.RetryToFabilExt_c;
 import polyglot.ast.Ext;
 import jif.ast.JifExtFactory_c;
-import jif.extension.JifCallExt;
+import jif.extension.JifBinaryExt;
+import jif.extension.JifMethodDeclExt;
 
 /**
  * This class extends the Jif Extension factory to provide Jif extension objects
@@ -38,6 +41,24 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   
   @Override
   public Ext extCallImpl() {
-    return new JifCallExt(new CallToFabilExt_c());
+    return new CallJifExt_c(new CallToFabilExt_c());
+  }
+  
+  public Ext extClient() {
+    return new ClientJifExt_c(new ClientToFabilExt_c());
+  }
+  
+  public Ext extRemoteClientGetter() {
+    return new RemoteClientGetterJifExt_c(new RemoteClientGetterToFabilExt_c());
+  }
+  
+  @Override
+  public Ext extMethodDeclImpl() {
+    return new JifMethodDeclExt(new MethodDeclToFabilExt_c());
+  }
+  
+  @Override
+  public Ext extBinaryImpl() {
+    return new JifBinaryExt(new BinaryToFabilExt_c());
   }
 }
