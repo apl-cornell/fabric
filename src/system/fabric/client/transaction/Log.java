@@ -142,6 +142,9 @@ public final class Log {
     } else {
       this.updateMap = new UpdateMap();
       commitState = new CommitState();
+      
+      // New top-level frame.  Register it in the transaction registry.
+      TransactionRegistry.register(this);
     }
   }
 
@@ -552,10 +555,11 @@ public final class Log {
   void waitForThreads() {
   }
 
-  /**
-   * @return
-   */
   public TransactionID getTid() {
     return tid;
+  }
+
+  public Log getChild() {
+    return child;
   }
 }

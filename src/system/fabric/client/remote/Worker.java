@@ -17,9 +17,11 @@ import fabric.client.remote.messages.RemoteCallMessage;
 import fabric.client.remote.messages.TakeOwnershipMessage;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.TransactionManager;
-import fabric.common.*;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
+import fabric.client.transaction.TransactionRegistry;
+import fabric.common.AuthorizationUtil;
+import fabric.common.FabricThread;
+import fabric.common.MessageHandler;
+import fabric.common.TransactionID;
 import fabric.lang.Principal;
 import fabric.lang.Object.$Impl;
 import fabric.lang.Object.$Proxy;
@@ -50,13 +52,6 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
   private static final Logger logger =
       Logger.getLogger("fabric.client.remote.Worker");
-
-  /**
-   * For each active transaction, maps the top-level transaction IDs to
-   * top-level transaction log.
-   */
-  private static final LongKeyMap<Log> runningTransactions =
-      new LongKeyHashMap<Log>();
 
   /**
    * Instantiates a new worker thread and starts it running.
@@ -229,34 +224,6 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   }
 
   /**
-   * Returns the Log for the given transaction id.
-   * 
-   * @param createIfMissing
-   *          if this is true and there is no log for the given tid, then one
-   *          will be created.
-   */
-  private Log getLogByTid(TransactionID tid, boolean createIfMissing) {
-    Log log;
-    synchronized (runningTransactions) {
-      log = getLogByTopTid(tid.topTid);
-      if (log == null && createIfMissing) {
-        log = new Log(new TransactionID());
-        runningTransactions.put(tid.topTid, log);
-      }
-    }
-    return log;
-  }
-
-  /**
-   * Returns the Log for the given top-level transaction id.
-   */
-  private Log getLogByTopTid(long tid) {
-    synchronized (runningTransactions) {
-      return runningTransactions.get(tid);
-    }
-  }
-
-  /**
    * Associates the given log with this worker's transaction manager and
    * synchronizes the log with the given tid.
    */
@@ -282,7 +249,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
     TransactionID tid = remoteCallMessage.tid;
     if (tid != null) {
-      Log log = getLogByTid(tid, true);
+      Log log = TransactionRegistry.getOrCreateInnermostLog(tid);
       associateAndSyncLog(log, tid);
     }
 
@@ -340,7 +307,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
   public void handle(AbortTransactionMessage abortTransactionMessage) {
     // XXX TODO Security checks.
-    Log log = getLogByTid(abortTransactionMessage.tid, false);
+    Log log =
+        TransactionRegistry.getInnermostLog(abortTransactionMessage.tid.topTid);
     if (log == null) return;
 
     TransactionManager tm = getTransactionManager();
@@ -351,7 +319,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   public PrepareTransactionMessage.Response handle(
       PrepareTransactionMessage prepareTransactionMessage) {
     // XXX TODO Security checks.
-    Log log = getLogByTopTid(prepareTransactionMessage.tid);
+    Log log =
+        TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
     if (log == null)
       return new PrepareTransactionMessage.Response(false,
           "No such transaction");
@@ -372,7 +341,9 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   public CommitTransactionMessage.Response handle(
       CommitTransactionMessage commitTransactionMessage) {
     // XXX TODO Security checks.
-    Log log = getLogByTopTid(commitTransactionMessage.transactionID);
+    Log log =
+        TransactionRegistry
+            .getInnermostLog(commitTransactionMessage.transactionID);
     if (log == null)
       return new CommitTransactionMessage.Response(false, "No such transaction");
 
@@ -388,7 +359,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   }
 
   public ReadMessage.Response handle(ReadMessage readMessage) {
-    Log log = getLogByTid(readMessage.tid, false);
+    Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
     if (log == null) return new ReadMessage.Response(null);
 
     associateAndSyncLog(log, readMessage.tid);
@@ -411,7 +382,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
   public TakeOwnershipMessage.Response handle(
       TakeOwnershipMessage takeOwnershipMessage) {
-    Log log = getLogByTid(takeOwnershipMessage.tid, false);
+    Log log =
+        TransactionRegistry.getInnermostLog(takeOwnershipMessage.tid.topTid);
     if (log == null) return new TakeOwnershipMessage.Response(false);
 
     associateAndSyncLog(log, takeOwnershipMessage.tid);
