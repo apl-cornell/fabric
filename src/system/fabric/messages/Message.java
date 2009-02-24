@@ -9,6 +9,7 @@ import java.util.List;
 import fabric.client.Client;
 import fabric.client.RemoteNode;
 import fabric.client.UnreachableNodeException;
+import fabric.client.remote.messages.GetPrincipalMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
 import fabric.client.remote.messages.TakeOwnershipMessage;
 import fabric.common.*;
@@ -293,7 +294,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
         AbortTransactionMessage.class), DISSEM_READ_ONUM(
         DissemReadMessage.class), REMOTE_CALL(RemoteCallMessage.class), INTERCLIENT_READ(
         fabric.client.remote.messages.ReadMessage.class), TAKE_OWNERSHIP(
-        TakeOwnershipMessage.class);
+        TakeOwnershipMessage.class), GET_PRINCIPAL(GetPrincipalMessage.class);
 
     private final Class<? extends Message<?, ?>> messageClass;
 

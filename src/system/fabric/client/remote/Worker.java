@@ -12,9 +12,11 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import fabric.client.*;
+import fabric.client.remote.messages.GetPrincipalMessage;
 import fabric.client.remote.messages.ReadMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
 import fabric.client.remote.messages.TakeOwnershipMessage;
+import fabric.client.remote.messages.GetPrincipalMessage.Response;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.TransactionManager;
 import fabric.client.transaction.TransactionRegistry;
@@ -405,5 +407,9 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       return new TakeOwnershipMessage.Response(false);
 
     return new TakeOwnershipMessage.Response(true);
+  }
+
+  public Response handle(GetPrincipalMessage getPrincipalMessage) {
+    return new GetPrincipalMessage.Response(Client.getClient().getPrincipal());
   }
 }

@@ -10,10 +10,7 @@ import javax.net.ssl.SSLSocket;
 import javax.security.auth.x500.X500Principal;
 
 import fabric.client.*;
-import fabric.client.remote.messages.InterClientMessage;
-import fabric.client.remote.messages.ReadMessage;
-import fabric.client.remote.messages.RemoteCallMessage;
-import fabric.client.remote.messages.TakeOwnershipMessage;
+import fabric.client.remote.messages.*;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.InternalError;
 import fabric.common.NoSuchNodeError;
@@ -236,7 +233,7 @@ public final class RemoteClient implements RemoteNode {
    * @return the principal associated with the remote client.
    */
   public fabric.lang.Principal getPrincipal() {
-    // TODO fill in the real implementation.
-    return null;
+    GetPrincipalMessage.Response response = new GetPrincipalMessage().send(this);
+    return response.principal;
   }
 }
