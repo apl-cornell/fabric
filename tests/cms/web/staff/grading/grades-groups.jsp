@@ -1,12 +1,12 @@
 <%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*" %><%
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
-Element assignment= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT);
-String assignid= assignment.getAttribute(XMLBuilder.A_ASSIGNID);
-Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
-boolean isAdmin = course.hasAttribute(XMLBuilder.A_ISADMIN);
-boolean isGrades = course.hasAttribute(XMLBuilder.A_ISGRADES);
-boolean isGroups = course.hasAttribute(XMLBuilder.A_ISGROUPS);%>
+Element assignment= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_ASSIGNMENT);
+String assignid= assignment.getAttribute(XMLBuilder.$Static.A_ASSIGNID);
+Element course= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_COURSE);
+boolean isAdmin = course.hasAttribute(XMLBuilder.$Static.A_ISADMIN);
+boolean isGrades = course.hasAttribute(XMLBuilder.$Static.A_ISGRADES);
+boolean isGroups = course.hasAttribute(XMLBuilder.$Static.A_ISGROUPS);%>
 <div>
 <%	if(isAdmin || isGrades)
 	{%>

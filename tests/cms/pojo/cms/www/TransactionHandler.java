@@ -90,7 +90,7 @@ public class TransactionHandler {
   public TransactionHandler(final CMSRoot database) {
     this.database     = database;
     this.transactions = new Transactions(database); 
-    this.localCore    = Client.getClient().getCore("core0");//Client.getClient().getLocalCore();
+    this.localCore    = Client.getClient().getLocalCore();
     this.dlabel       = Client.getClient().getLocalCore().getEmptyLabel();
   }
 
@@ -711,7 +711,7 @@ public class TransactionHandler {
    * @return TransactionResult
    */
   public TransactionResult addStudentsToCourse(User pr, Course course,
-      HttpServletRequest request) {
+      HttpServletRequest request) throws Exception {
     TransactionResult result = new TransactionResult();
     try {
       if (courseIsFrozen(course)) {
@@ -751,7 +751,10 @@ public class TransactionHandler {
           return result;
         }
         if (isList) {
-          netids.addAll(StringUtil.parseNetIDList(list));
+          List l = StringUtil.parseNetIDList(list);
+          for(int y = 0; y < l.size(); y++)
+            netids.add(l.get(y));
+          
         } else // isFile
         {
           InputStream stream = file.getInputStream();
@@ -776,6 +779,7 @@ public class TransactionHandler {
     } catch (Exception e) {
       e.printStackTrace();
       result.addError("Unexpected error; could not add students");
+      throw e;
     }
     return result;
   }

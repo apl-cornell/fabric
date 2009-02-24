@@ -1,23 +1,23 @@
 <%@page language="java" import="org.w3c.dom.*, cms.www.*, cms.model.*, cms.www.xml.*"%><%
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
-Element assign= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_ASSIGNMENT); 
-Element groupsnode= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_GROUPS);
-Element probsnode= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_SUBPROBS);
+Element assign= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_ASSIGNMENT); 
+Element groupsnode= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_GROUPS);
+Element probsnode= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_SUBPROBS);
 NodeList groups= groupsnode.getChildNodes();
 NodeList probs= probsnode.getChildNodes();
 int numgroups= groups.getLength();
 int numprobs= probs.getLength();
-String assignid= assign.getAttribute(XMLBuilder.A_ID);
-Element course= XMLUtil.getFirstChildByTagName(root, XMLBuilder.TAG_COURSE);
-String courseid= course.getAttribute(XMLBuilder.A_COURSEID);
-int assignType = Integer.parseInt(assign.getAttribute(XMLBuilder.A_ASSIGNTYPE));
-boolean isAssignment = (assignType == Assignment.ASSIGNMENT);
-boolean hasSection = course.hasAttribute(XMLBuilder.A_HASSECTION);
-boolean isAdmin = course.hasAttribute(XMLBuilder.A_ISADMIN);
-boolean isGrades = course.hasAttribute(XMLBuilder.A_ISGRADES);
-boolean isGroups = course.hasAttribute(XMLBuilder.A_ISGROUPS);
-boolean assignedGraders = assign.hasAttribute(XMLBuilder.A_ASSIGNEDGRADERS);
+String assignid= assign.getAttribute(XMLBuilder.$Static.A_ID);
+Element course= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_COURSE);
+String courseid= course.getAttribute(XMLBuilder.$Static.A_COURSEID);
+int assignType = Integer.parseInt(assign.getAttribute(XMLBuilder.$Static.A_ASSIGNTYPE));
+boolean isAssignment = (assignType == Assignment.$Static.ASSIGNMENT);
+boolean hasSection = course.hasAttribute(XMLBuilder.$Static.A_HASSECTION);
+boolean isAdmin = course.hasAttribute(XMLBuilder.$Static.A_ISADMIN);
+boolean isGrades = course.hasAttribute(XMLBuilder.$Static.A_ISGRADES);
+boolean isGroups = course.hasAttribute(XMLBuilder.$Static.A_ISGROUPS);
+boolean assignedGraders = assign.hasAttribute(XMLBuilder.$Static.A_ASSIGNEDGRADERS);
 int assignedCount = 0;
 %>
 <link href="calstyle.css" rel="stylesheet" type="text/css">
@@ -78,13 +78,13 @@ var numprobs = <%= numprobs %>;
 <%--- ASSIGNEDTO HEADER CELLS BEGIN -----%>
 <%	for (int i= 0; i != numprobs; i++) {
 		Element prob= (Element)probs.item(i);%>
-    <th nowrap style="display: none" align="center" class="scores" id="assigned_<%= assignedCount++ %>" name="assigned"><%= prob.getAttribute(XMLBuilder.A_NAME) %></th><%
+    <th nowrap style="display: none" align="center" class="scores" id="assigned_<%= assignedCount++ %>" name="assigned"><%= prob.getAttribute(XMLBuilder.$Static.A_NAME) %></th><%
 	}%>
 <%--- ASSIGNEDTO HEADER CELLS END -----%>
 <%--- SUBPROBLEM GRADE HEADER CELLS BEGIN -----%>
 <% 	for(int j= 0; j < numprobs; j++) {
 		Element prob= (Element)probs.item(j);
-		String text = (isAssignment) ? prob.getAttribute(XMLBuilder.A_NAME) : prob.getAttribute(XMLBuilder.A_ORDER); %>
+		String text = (isAssignment) ? prob.getAttribute(XMLBuilder.$Static.A_NAME) : prob.getAttribute(XMLBuilder.$Static.A_ORDER); %>
 	<th nowrap align="center" class="subprob_score_cell"><%= text %></th>
 <%  }%>
 
@@ -98,22 +98,22 @@ var numprobs = <%= numprobs %>;
 for (int i= 0; i != numgroups; i++)
 	{
   Element group= (Element)groups.item(i);
-  String groupid= group.getAttribute(XMLBuilder.A_GROUPID);
-  int remainingsubs= Integer.parseInt(group.getAttribute(XMLBuilder.A_REMAININGSUBS));
-  NodeList members= group.getElementsByTagName(XMLBuilder.TAG_MEMBER); 
+  String groupid= group.getAttribute(XMLBuilder.$Static.A_GROUPID);
+  int remainingsubs= Integer.parseInt(group.getAttribute(XMLBuilder.$Static.A_REMAININGSUBS));
+  NodeList members= group.getElementsByTagName(XMLBuilder.$Static.TAG_MEMBER); 
   int nummembers= members.getLength();
-  String lateTag = group.hasAttribute(XMLBuilder.A_LATESUBMISSION) ? " style=\"background-color: rgb(218, 186, 186);\"" : ""; 
+  String lateTag = group.hasAttribute(XMLBuilder.$Static.A_LATESUBMISSION) ? " style=\"background-color: rgb(218, 186, 186);\"" : ""; 
   /* 0 for the total score */
-  Element grade= (Element)group.getElementsByTagNameNS(XMLBuilder.TAG_GRADE + "0", XMLBuilder.TAG_GRADE).item(0); 
-  Element regrade= (Element)group.getElementsByTagName(XMLBuilder.TAG_REGRADE).item(0);
-  String status= regrade != null ? regrade.getAttribute(XMLBuilder.A_STATUS) : ""; 
-  boolean overMax= (grade==null ? false : grade.hasAttribute(XMLBuilder.A_OVERMAX));
-  boolean isAveraged = (grade == null) ? false : grade.hasAttribute(XMLBuilder.A_ISAVERAGE);
-  boolean hasExtension=group.hasAttribute(XMLBuilder.A_EXTENSION);
-  boolean canGrade = isAdmin || (isGrades && (!assignedGraders || group.hasAttribute(XMLBuilder.A_CANGRADE)));
+  Element grade= (Element)group.getElementsByTagNameNS(XMLBuilder.$Static.TAG_GRADE + "0", XMLBuilder.$Static.TAG_GRADE).item(0); 
+  Element regrade= (Element)group.getElementsByTagName(XMLBuilder.$Static.TAG_REGRADE).item(0);
+  String status= regrade != null ? regrade.getAttribute(XMLBuilder.$Static.A_STATUS) : ""; 
+  boolean overMax= (grade==null ? false : grade.hasAttribute(XMLBuilder.$Static.A_OVERMAX));
+  boolean isAveraged = (grade == null) ? false : grade.hasAttribute(XMLBuilder.$Static.A_ISAVERAGE);
+  boolean hasExtension=group.hasAttribute(XMLBuilder.$Static.A_EXTENSION);
+  boolean canGrade = isAdmin || (isGrades && (!assignedGraders || group.hasAttribute(XMLBuilder.$Static.A_CANGRADE)));
    %>
   <tr <%
-  if (status.equals(RegradeRequest.PENDING)) { %> class="pending"<%
+  if (status.equals(RegradeRequest.$Static.PENDING)) { %> class="pending"<%
   } else if (grade == null) {%> class="ungraded"<%
   } %>>
     <td class="index" id="cg<%= groupid %>"<%= lateTag %>><%= i + 1 %></td>
@@ -124,7 +124,7 @@ for (int i= 0; i != numgroups; i++)
     Element member= (Element)members.item(j);
     String startTag = null, endTag = null;
      String gradeURL = "?" + AccessController.P_ACTION + "=" + AccessController.ACT_STUDENTALLGRADES + "&" 
-          + AccessController.P_COURSEID + "=" + courseid + "&" + AccessController.P_NETID + "=" + member.getAttribute(XMLBuilder.A_NETID);
+          + AccessController.P_COURSEID + "=" + courseid + "&" + AccessController.P_NETID + "=" + member.getAttribute(XMLBuilder.$Static.A_NETID);
     if (isAdmin) {
       startTag = "<a href=\"" + gradeURL + "\">";
       endTag = "</a>";
@@ -133,7 +133,7 @@ for (int i= 0; i != numgroups; i++)
       endTag = "";
     }
 %>
-    <%= startTag + member.getAttribute(XMLBuilder.A_NETID) + endTag %>
+    <%= startTag + member.getAttribute(XMLBuilder.$Static.A_NETID) + endTag %>
     <% if (j!=members.getLength()-1) { %> <br> <% } %>
     
     
@@ -145,12 +145,12 @@ for (int i= 0; i != numgroups; i++)
     String section = "";
   for (int j= 0; j != members.getLength(); j++) {
     Element member= (Element)members.item(j);
-    if (member.hasAttribute(XMLBuilder.A_SECTION)) {
-    	section = member.getAttribute(XMLBuilder.A_SECTION);
+    if (member.hasAttribute(XMLBuilder.$Static.A_SECTION)) {
+    	section = member.getAttribute(XMLBuilder.$Static.A_SECTION);
     	if ((section == "") || (section == null)) section = "&nbsp;";
     }
 %>
-   <%=  member.getAttribute(XMLBuilder.A_LASTNAME) + ", " + member.getAttribute(XMLBuilder.A_FIRSTNAME)+" "%>
+   <%=  member.getAttribute(XMLBuilder.$Static.A_LASTNAME) + ", " + member.getAttribute(XMLBuilder.$Static.A_FIRSTNAME)+" "%>
     <% if (j!=members.getLength()-1) { %> <br> <% } %>
     
     
@@ -159,7 +159,7 @@ for (int i= 0; i != numgroups; i++)
 <% if (isAdmin || isGrades) { %>
   <% String hiddenAppend;
      if (hasExtension) {
-        hiddenAppend= "<div style=\"display: none;\">"+group.getAttribute(XMLBuilder.A_EXTVAL)+"</div>";
+        hiddenAppend= "<div style=\"display: none;\">"+group.getAttribute(XMLBuilder.$Static.A_EXTVAL)+"</div>";
     } else {
     hiddenAppend= "<div style=\"display: none;\">A</div>";
     
@@ -176,12 +176,12 @@ for (int i= 0; i != numgroups; i++)
  <%--                          EXTENSION                    --%>
     <td align="center"<%= lateTag %>>      <%=hiddenAppend%>
     <%
-    String extAMPM = group.hasAttribute(XMLBuilder.A_EXTAMPM) ? group.getAttribute(XMLBuilder.A_EXTAMPM) : assign.getAttribute(XMLBuilder.A_DUEAMPM); 
-    String extTime = group.hasAttribute(XMLBuilder.A_EXTTIME) ? group.getAttribute(XMLBuilder.A_EXTTIME) : assign.getAttribute(XMLBuilder.A_DUETIME);
+    String extAMPM = group.hasAttribute(XMLBuilder.$Static.A_EXTAMPM) ? group.getAttribute(XMLBuilder.$Static.A_EXTAMPM) : assign.getAttribute(XMLBuilder.$Static.A_DUEAMPM); 
+    String extTime = group.hasAttribute(XMLBuilder.$Static.A_EXTTIME) ? group.getAttribute(XMLBuilder.$Static.A_EXTTIME) : assign.getAttribute(XMLBuilder.$Static.A_DUETIME);
 	if (hasExtension) {%>
 	  <div style="background-color: #FFFFCC; text-align: center">
          <b>Extended Until:</b><br>
-         <%=group.getAttribute(XMLBuilder.A_EXTENSION)%>, <%=extTime%> <%=extAMPM%>&nbsp;<%
+         <%=group.getAttribute(XMLBuilder.$Static.A_EXTENSION)%>, <%=extTime%> <%=extAMPM%>&nbsp;<%
     } else { %>
       <div><%
     } %>
@@ -194,11 +194,11 @@ for (int i= 0; i != numgroups; i++)
             <script type="text/javascript">
               var cal= new CalendarPopup();
             </script>
-            <input id="datebox_<%=groupid%>" type="text" size="17" name="<%= AccessController.P_DUEDATE + groupid%>" value="<%= hasExtension ? group.getAttribute(XMLBuilder.A_EXTENSION) : assign.getAttribute(XMLBuilder.A_DUEDATE) %>">
+            <input id="datebox_<%=groupid%>" type="text" size="17" name="<%= AccessController.P_DUEDATE + groupid%>" value="<%= hasExtension ? group.getAttribute(XMLBuilder.$Static.A_EXTENSION) : assign.getAttribute(XMLBuilder.$Static.A_DUEDATE) %>">
             <a href="#" id="datelink_<%=groupid%>" name="datelink" onclick="cal.select(getElementById('datebox_<%=groupid%>'), 'datelink_<%=groupid%>', 'MMM d, yyyy'); return false;">
               <img class="calicon" src="../images/cal.gif" alt="Select" width="16px" height="16px">
             </a><br>
-            <span class="example">e.g. <%= root.getAttribute(XMLBuilder.A_EXAMPLEDATE) %></span><br>
+            <span class="example">e.g. <%= root.getAttribute(XMLBuilder.$Static.A_EXAMPLEDATE) %></span><br>
             <input type="text" size="5" name="<%=AccessController.P_DUETIME%><%=groupid%>" value="<%=extTime%>">
             <select name="<%=AccessController.P_DUEAMPM%><%=groupid%>">
               <option<%="AM".equals(extAMPM) ? " selected" : "" %>>AM</option>
@@ -226,9 +226,9 @@ for (int i= 0; i != numgroups; i++)
 <%
   String assignee="";
   if (numprobs == 0) {
-    Element assignedto= (Element)group.getElementsByTagNameNS(XMLBuilder.TAG_ASSIGNEDTO + "0", XMLBuilder.TAG_ASSIGNEDTO).item(0); 
+    Element assignedto= (Element)group.getElementsByTagNameNS(XMLBuilder.$Static.TAG_ASSIGNEDTO + "0", XMLBuilder.$Static.TAG_ASSIGNEDTO).item(0); 
     if (assignedto != null) { 
-        assignee= assignedto.getAttribute(XMLBuilder.A_FIRSTNAME)+" "+assignedto.getAttribute(XMLBuilder.A_LASTNAME);
+        assignee= assignedto.getAttribute(XMLBuilder.$Static.A_FIRSTNAME)+" "+assignedto.getAttribute(XMLBuilder.$Static.A_LASTNAME);
     }
   %>
     <td nowrap align="center" style="display: none" id="assigned_<%= assignedCount++ %>" name="assigned"<%= lateTag %>>
@@ -236,16 +236,16 @@ for (int i= 0; i != numgroups; i++)
                 &nbsp;
         <% } else { %>
             <div onMouseover="ddrivetip('<%=assignee%>')"; onMouseout="hideddrivetip()" >
-            <%=assignedto.getAttribute(XMLBuilder.A_NETID) %></div>  
+            <%=assignedto.getAttribute(XMLBuilder.$Static.A_NETID) %></div>  
         <% }%>
 </td><%
   }
   for (int j= 0; j != numprobs; j++) { 
     Element prob= (Element)probs.item(j); 
-    String id= prob.getAttribute(XMLBuilder.A_SUBPROBID); 
-    Element assignedto= (Element)group.getElementsByTagNameNS(XMLBuilder.TAG_ASSIGNEDTO + id, XMLBuilder.TAG_ASSIGNEDTO).item(0); 
+    String id= prob.getAttribute(XMLBuilder.$Static.A_SUBPROBID); 
+    Element assignedto= (Element)group.getElementsByTagNameNS(XMLBuilder.$Static.TAG_ASSIGNEDTO + id, XMLBuilder.$Static.TAG_ASSIGNEDTO).item(0); 
   if (assignedto!=null)
-    assignee= assignedto.getAttribute(XMLBuilder.A_FIRSTNAME)+" "+assignedto.getAttribute(XMLBuilder.A_LASTNAME);
+    assignee= assignedto.getAttribute(XMLBuilder.$Static.A_FIRSTNAME)+" "+assignedto.getAttribute(XMLBuilder.$Static.A_LASTNAME);
 		    %>
     <td nowrap align="center" style="display: none" id="assigned_<%= assignedCount++ %>" name="assigned"<%= lateTag %>>
 
@@ -255,7 +255,7 @@ for (int i= 0; i != numgroups; i++)
                 &nbsp;
         <% } else { %>
             <div onMouseover="ddrivetip('<%=assignee%>');" onMouseout="hideddrivetip();">
-            <%=assignedto.getAttribute(XMLBuilder.A_NETID) %></div>  
+            <%=assignedto.getAttribute(XMLBuilder.$Static.A_NETID) %></div>  
         <% }%>
 
 
@@ -269,28 +269,28 @@ for (int i= 0; i != numgroups; i++)
 <%	boolean overMaxProb = false;
 	for(int j = 0; j < numprobs; j++) {
 		Element prob= (Element)probs.item(j);
-		Element probGrade= (Element)group.getElementsByTagNameNS(XMLBuilder.TAG_GRADE + prob.getAttribute(XMLBuilder.A_SUBPROBID), XMLBuilder.TAG_GRADE).item(0);
-		overMaxProb = (probGrade==null ? false : probGrade.hasAttribute(XMLBuilder.A_OVERMAX));%>
-	<td nowrap align="right" class="subprob_score_cell"<%= group.hasAttribute(XMLBuilder.A_LATESUBMISSION) ? " style=\"background-color: rgb(218, 186, 186)\"" : "" %>">
+		Element probGrade= (Element)group.getElementsByTagNameNS(XMLBuilder.$Static.TAG_GRADE + prob.getAttribute(XMLBuilder.$Static.A_SUBPROBID), XMLBuilder.$Static.TAG_GRADE).item(0);
+		overMaxProb = (probGrade==null ? false : probGrade.hasAttribute(XMLBuilder.$Static.A_OVERMAX));%>
+	<td nowrap align="right" class="subprob_score_cell"<%= group.hasAttribute(XMLBuilder.$Static.A_LATESUBMISSION) ? " style=\"background-color: rgb(218, 186, 186)\"" : "" %>">
 <%		if(overMaxProb) {%>
 		<img src="images/warning.gif" height="15px" alt="(Over Max Score)">
 <%		}%>
-		<%= probGrade == null ? " " : probGrade.getAttribute(XMLBuilder.A_SCORE) %>
+		<%= probGrade == null ? " " : probGrade.getAttribute(XMLBuilder.$Static.A_SCORE) %>
 	</td>
 <%	}%>
 
 <%---------------------------- Subproblem grade Columns END ----------------------------------%>
 
     <td nowrap align="right"<%= lateTag %>>&nbsp;
-<%	if(status.equals(RegradeRequest.PENDING)) {%>
+<%	if(status.equals(RegradeRequest.$Static.PENDING)) {%>
       <img src="images/tag_red.gif" alt="(Regrade pending)"><%
-	} else if(status.equals(RegradeRequest.REGRADED)) {%>
+	} else if(status.equals(RegradeRequest.$Static.REGRADED)) {%>
       <img src="images/tag_orange.gif" alt="(Regraded)"><%
 	}
 	if(overMax) {%>
      <img src="images/warning.gif" height="15px" alt="(Over Max)">
 <%	} %>
-		<%= (grade == null) ? "&nbsp;" : grade.getAttribute(XMLBuilder.A_SCORE) %><%
+		<%= (grade == null) ? "&nbsp;" : grade.getAttribute(XMLBuilder.$Static.A_SCORE) %><%
   	if(isAveraged) {%>
 		<b>~</b>
 <%	}%>

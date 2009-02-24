@@ -931,7 +931,7 @@ public class AccessController extends HttpServlet {
         }
       }
       if (transactions == null) {
-        transactions = new TransactionHandler~label@localCore(database);
+        transactions = new TransactionHandler~label@core(database);
       }
   
       debug = xmlBuilder.getDatabase().getDebugMode();
@@ -1162,7 +1162,7 @@ public class AccessController extends HttpServlet {
    */
   private RequestHandlerInfo handleSpecificAction(String action,
       HttpServletRequest request, HttpServletResponse response,
-      HttpSession session, User user) throws IOException, FileUploadException {
+      HttpSession session, User user) throws IOException, FileUploadException, Exception {
     // the values to be filled in and returned in some form
     String buildURL = null;
     Document xml = null;

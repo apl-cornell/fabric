@@ -123,7 +123,7 @@ public class Transactions {
   }
 
   public TransactionResult addStudentsToCourse(User p, ArrayList netIDs, Course course, boolean sendEmail) {
-    Profiler.enterMethod("Transactions.addStudentsToCourse", "CourseID: " + course);
+    Profiler.enterMethod("Transactions.addStudentsToCourse", "CourseID: " + course.toString());
     TransactionResult result = new TransactionResult();
     try {
       /*
@@ -229,7 +229,7 @@ public class Transactions {
       }
       computeTotalScores(p, course, log);
       Profiler.exitMethod("Transactions.addStudentsToCourse", "CourseID: " + 
-          course);
+          course.toString());
       return result;
     }
     catch(Exception e) {
@@ -238,7 +238,8 @@ public class Transactions {
       result.getErrors().clear();
       result.addError("An unexpected error occurred, could not add students");
     }
-    Profiler.exitMethod("Transactions.addStudentsToCourse", "CourseID: " +  course);
+    Profiler.exitMethod("Transactions.addStudentsToCourse", "CourseID: " +  
+        course.toString());
     return result;
   }
 
