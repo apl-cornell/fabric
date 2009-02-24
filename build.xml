@@ -207,6 +207,9 @@
     <delete>
       <fileset dir="${lib}" includes="${name}*.jar"/>
     </delete>
+  	<subant target="clean">
+  		<fileset file="tests/sif/build.xml"/>
+  	</subant>
   </target>
 
   <target name="clobber" depends="clean"
