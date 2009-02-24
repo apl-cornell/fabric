@@ -233,7 +233,18 @@ public final class RemoteClient implements RemoteNode {
    * @return the principal associated with the remote client.
    */
   public fabric.lang.Principal getPrincipal() {
-    GetPrincipalMessage.Response response = new GetPrincipalMessage().send(this);
-    return response.principal;
+    GetPrincipalMessage.Response response =
+        new GetPrincipalMessage().send(this);
+    final fabric.lang.Principal principal = response.principal;
+    
+    boolean authenticated = Client.runInTransaction(new Client.Code<Boolean>() {
+      public Boolean run() {
+        return principal.name().equals(name);
+      }
+    });
+
+    if (authenticated)
+      return principal;
+    else return null;
   }
 }
