@@ -196,7 +196,7 @@ public class RemoteCallMessage extends
     mangledParamTypes[0] = Principal.class;
     for (int i = 0; i < parameterTypes.length; i++)
       mangledParamTypes[i + 1] = parameterTypes[i];
-    return receiverType.getMethod(methodName + "$remote", mangledParamTypes);
+    return receiverType.getMethod(methodName + "_remote", mangledParamTypes);
   }
 
 }
