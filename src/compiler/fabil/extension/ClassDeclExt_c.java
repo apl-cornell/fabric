@@ -112,9 +112,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       members.addAll(ext(m).interfaceMember(pr, classDecl));
       
       // Preserve the Polyglot type information from fabc.
-      if (!(m instanceof Field)) continue;
+      if (!(m instanceof FieldDecl)) continue;
       
-      Field f = (Field) m;
+      FieldDecl f = (FieldDecl) m;
       Flags fieldFlags = f.flags();
       if (!(fieldFlags.isStatic() && fieldFlags.isFinal() && fieldFlags
           .isPublic())) continue;
