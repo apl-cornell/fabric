@@ -46,6 +46,8 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
         if (cm instanceof JifMethodDecl) {
           JifMethodDecl md = (JifMethodDecl)cm;
           if (!md.flags().isPublic() || md.flags().isStatic()) continue;
+          // Also skip abstract method.
+          if (md.body() == null) continue;
           
           JifMethodInstance mi = (JifMethodInstance)md.methodInstance();
           
@@ -53,10 +55,14 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
                                Flags.FINAL, 
                                nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Principal()), 
                                nf.Id(Position.compilerGenerated(), "client$principal"));
+          Label defaultBound = ts.defaultSignature().defaultArgBound(f);
           JifLocalInstance li = (JifLocalInstance)ts.localInstance(f.position(), Flags.FINAL, ts.Principal(), "client$principal");
           ArgLabel al = ts.argLabel(f.position(), li, null);
+          al.setUpperBound(defaultBound);
           li.setLabel(al);
           f = f.localInstance(li);
+          Type labeled = ts.labeledType(Position.compilerGenerated(), ts.Principal(), al);
+          f = f.type(f.type().type(labeled));
           
           List<Formal> formals = new ArrayList<Formal>(md.formals().size() + 1);
           formals.add(f);
@@ -121,7 +127,7 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
             nf.JifMethodDecl(Position.compilerGenerated(), 
                              md.flags(), 
                              md.returnType(), 
-                             nf.Id(Position.compilerGenerated(), md.name() + "$remote"), 
+                             nf.Id(Position.compilerGenerated(), md.name() + "_remote"), 
                              md.startLabel(), 
                              formals, 
                              md.returnLabel(), 
@@ -131,7 +137,7 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
           
           MethodInstance wrapperMi = (MethodInstance)mi.copy();
           List<Type> ftypes = new ArrayList<Type>(mi.formalTypes().size() + 1);
-          ftypes.add(ts.Principal());
+          ftypes.add(f.type().type());
           ftypes.addAll(mi.formalTypes());
           wrapperMi.setFormalTypes(ftypes);
           
