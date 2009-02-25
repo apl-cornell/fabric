@@ -157,4 +157,8 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
     throw new InternalError("Unsupported operation");
   }
   
+  public History createHistory() {
+    return DefaultHistory.instance;
+  }
+  
 }

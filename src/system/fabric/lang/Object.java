@@ -58,6 +58,9 @@ public interface Object {
    * @deprecated
    */
   void $forceRenumber(long onum);
+  
+  /** create a History object to determine promises for this Object. */
+  History createHistory();
 
   /**
    * $Proxy objects behave like regular objects by delegating to $Impl objects,
@@ -198,6 +201,10 @@ public interface Object {
      */
     public final void $forceRenumber(long onum) {
       fetch().$forceRenumber(onum);
+    }
+    
+    public History createHistory() {
+      return fetch().createHistory();
     }
   }
 
@@ -411,6 +418,10 @@ public interface Object {
 
     public final $Impl fetch() {
       return this;
+    }
+    
+    public History createHistory() {
+      return DefaultHistory.instance;
     }
 
     /**
