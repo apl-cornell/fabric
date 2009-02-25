@@ -529,6 +529,8 @@ public final class Client {
       T result = code.run();
       tm.commitTransaction();
       return result;
+    } catch (AbortException e) {
+      throw e;
     } catch (RuntimeException t) {
       tm.abortTransaction();
       throw t;
