@@ -20,6 +20,7 @@ import rice.pastry.standard.RandomNodeIdFactory;
  * pastry node created.
  */
 public class Node {
+  private static int DEFAULT_PORT = 13373;
 
   protected Environment env;
   protected SocketPastryNodeFactory pnf;
@@ -35,11 +36,11 @@ public class Node {
     
     // convert "localhost" into actual host name. needed to work on windows
     h = h.equals("localhost") ? InetAddress.getLocalHost().getHostName() : h;
-    int p = parts.length == 2 ? Integer.parseInt(parts[1]) : 3373;
+    int p = parts.length == 2 ? Integer.parseInt(parts[1]) : DEFAULT_PORT;
     InetSocketAddress boot = new InetSocketAddress(h, p);
     
     // use 3373 as default port. should be in params file?
-    int port = findFreePort(3373);
+    int port = findFreePort(DEFAULT_PORT);
     NodeIdFactory idf = new RandomNodeIdFactory(env);
     pnf = new SocketPastryNodeFactory(idf, port, env);
     

@@ -3,19 +3,23 @@ package fabric.client.remote;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Stack;
 
 import javax.net.ssl.SSLSocketFactory;
 
 import fabric.client.Client;
-import fabric.client.Options;
 
 /**
  * A thread that handles incoming requests from other clients.
  */
 public class RemoteCallManager extends Thread {
+  private final int POOL_SIZE = 10;
+  private final int MAX_CONNECTS = 25;
 
-  final Options opts;
+  volatile boolean shuttingDown;
 
   /**
    * The number of additional connections the node can handle.
@@ -27,13 +31,20 @@ public class RemoteCallManager extends Thread {
    */
   private final Stack<Worker> pool;
 
-  public RemoteCallManager(Options opts) {
-    this.opts = opts;
+  /**
+   * The set of running (active and idle) worker threads.
+   */
+  final Set<Worker> workers;
+
+  public RemoteCallManager() {
+    super("remote call manager");
+    this.shuttingDown = false;
+    this.workers = new HashSet<Worker>();
 
     // Set up the thread pool.
-    this.availConns = opts.maxConnect;
+    this.availConns = MAX_CONNECTS;
     this.pool = new Stack<Worker>();
-    for (int i = 0; i < opts.threadPool; i++)
+    for (int i = 0; i < POOL_SIZE; i++)
       pool.push(new Worker(this));
   }
 
@@ -53,18 +64,29 @@ public class RemoteCallManager extends Thread {
   public void run() {
     try {
       // Start listening.
-      ServerSocket server = new ServerSocket(opts.port);
+      ServerSocket server = new ServerSocket(Client.getClient().port);
+      server.setSoTimeout(1000);
 
       // The main server loop.
-      while (true) {
-        // Accept a connection and give it to a worker thread.
-        Worker worker = getWorker();
-        Socket client = server.accept();
-
-        worker.handle(client);
+      while (!shuttingDown) {
+        try {
+          // Accept a connection and give it to a worker thread.
+          Socket client = server.accept();
+          getWorker().handle(client);
+        } catch (SocketTimeoutException e) {
+          continue;
+        }
       }
     } catch (IOException e) {
       e.printStackTrace();
+    }
+  }
+
+  public void shutdown() {
+    this.shuttingDown = true;
+    synchronized (workers) {
+      for (Worker worker : workers)
+        worker.interrupt();
     }
   }
 
@@ -99,7 +121,7 @@ public class RemoteCallManager extends Thread {
     this.notify();
 
     // Clean up the worker and add it to the thread pool if there's room.
-    if (pool.size() == opts.threadPool) return true;
+    if (shuttingDown || pool.size() == POOL_SIZE) return true;
     worker.cleanup();
     pool.push(worker);
     return false;

@@ -16,8 +16,6 @@ public class Options extends fabric.common.Options {
   // be created; otherwise, this is null.
   public String core;
 
-  public int port;
-
   public int threadPool;
   public int maxConnect;
 
@@ -34,7 +32,6 @@ public class Options extends fabric.common.Options {
     // null
     this.app = null;
     this.core = null;
-    this.port = 3373;
     this.threadPool = 10;
     this.maxConnect = 25;
   }
@@ -48,8 +45,6 @@ public class Options extends fabric.common.Options {
     out.println("  [param...] are the parameters to the Fabric application");
     out.println("and [options] includes:");
     usageForFlag(out, "--name <name>", "this client's name", defaults.name);
-    usageForFlag(out, "--port <number>",
-        "port on which to listen for remote requests", defaults.port);
     usageForFlag(out, "--pool <number>", "size of worker thread pool for "
         + "serving remote requests", defaults.threadPool);
     usageForFlag(out, "--conn <number>", "maximum number of simultaneous "
@@ -75,16 +70,6 @@ public class Options extends fabric.common.Options {
     if (args[i].equals("--name")) {
       this.name = args[i + 1];
       return i + 2;
-    }
-
-    if (args[i].equals("--port")) {
-      i++;
-      try {
-        this.port = new Integer(args[i]).intValue();
-      } catch (NumberFormatException e) {
-        throw new UsageError("Invalid port number: " + args[i]);
-      }
-      return i + 1;
     }
 
     if (args[i].equals("--pool")) {

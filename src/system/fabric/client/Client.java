@@ -18,6 +18,7 @@ import jif.lang.ConfPolicy;
 import jif.lang.IntegPolicy;
 import jif.lang.Label;
 import jif.lang.LabelUtil;
+import fabric.client.remote.RemoteCallManager;
 import fabric.client.remote.RemoteClient;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.*;
@@ -36,6 +37,8 @@ import fabric.lang.arrays.ObjectArray;
  */
 public final class Client {
   public final String name;
+  
+  public final int port;
 
   // A map from core hostnames to Core objects
   protected final Map<String, RemoteCore> cores;
@@ -75,6 +78,8 @@ public final class Client {
   protected final FetchManager fetchManager;
 
   protected final ThreadLocal<Label> label;
+  
+  private final RemoteCallManager remoteCallManager;
 
   public static final Random RAND = new Random();
   private static final int DEFAULT_TIMEOUT = 2;
@@ -106,7 +111,7 @@ public final class Client {
    *                Whether SSL encryption is desired. Used for debugging
    *                purposes.
    */
-  public static Client initialize(String name, String principalURL,
+  public static Client initialize(String name, int port, String principalURL,
       KeyStore keyStore, char[] passwd, KeyStore trustStore,
       int maxConnections, int timeout, int retries, boolean useSSL,
       String fetcher, PostInitExec postInitExec) throws InternalError,
@@ -122,8 +127,10 @@ public final class Client {
     log.config("retries:             " + retries);
     log.config("use ssl:             " + useSSL);
     instance =
-        new Client(name, principalURL, keyStore, passwd, trustStore,
+        new Client(name, port, principalURL, keyStore, passwd, trustStore,
             maxConnections, timeout, retries, useSSL, fetcher);
+    
+    instance.remoteCallManager.start();
     
     if (postInitExec != null) postInitExec.run(instance);
     
@@ -137,7 +144,7 @@ public final class Client {
    */
   protected static Client instance;
 
-  private Client(String name, String principalURL, KeyStore keyStore,
+  private Client(String name, int port, String principalURL, KeyStore keyStore,
       char[] passwd, KeyStore trustStore, int maxConnections, int timeout,
       int retries, boolean useSSL, String fetcher) throws InternalError,
       UnrecoverableKeyException, UsageError {
@@ -145,6 +152,7 @@ public final class Client {
     if (timeout < 1) timeout = DEFAULT_TIMEOUT;
 
     this.name = name;
+    this.port = port;
     this.timeout = 1000 * timeout;
     this.retries = retries;
     this.useSSL = useSSL;
@@ -196,6 +204,8 @@ public final class Client {
     } else {
       this.principal = null;
     }
+    
+    this.remoteCallManager = new RemoteCallManager();
 
     // Initialize the fetch manager. This MUST be the last thing done in the
     // constructor, or the fetch manager will not be properly shut down if
@@ -316,6 +326,7 @@ public final class Client {
    */
   public void shutdown() {
     shutdown_();
+    remoteCallManager.shutdown();
     fetchManager.destroy();
   }
 
@@ -381,6 +392,7 @@ public final class Client {
     trustStore.load(in, trustPass.toCharArray());
     in.close();
 
+    int port = Integer.parseInt(p.getProperty("fabric.client.port", "3373"));
     int maxConnections =
         Integer.parseInt(p.getProperty("fabric.client.maxConnections", "50"));
     int timeout = Integer.parseInt(p.getProperty("fabric.client.timeout", "2"));
@@ -393,8 +405,9 @@ public final class Client {
     boolean useSSL =
         Boolean.parseBoolean(p.getProperty("fabric.client.useSSL", "true"));
 
-    initialize(name, principalURL, keyStore, passwd.toCharArray(), trustStore,
-        maxConnections, timeout, retries, useSSL, fetcher, postInitExec);
+    initialize(name, port, principalURL, keyStore, passwd.toCharArray(),
+        trustStore, maxConnections, timeout, retries, useSSL, fetcher,
+        postInitExec);
   }
 
   // TODO: throws exception?

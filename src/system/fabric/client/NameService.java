@@ -15,10 +15,17 @@ import javax.security.auth.x500.X500Principal;
  */
 public class NameService {
   private static final Map<String, String> aliases;
+  private static final Map<String, Integer> clientPorts;
   
   static {
     aliases = new HashMap<String, String>();
     aliases.put("core00", "core00.systems.cs.cornell.edu");
+    
+    clientPorts = new HashMap<String, Integer>();
+    clientPorts.put("core0", 3373);
+    clientPorts.put("core1", 3373);
+    clientPorts.put("client0", 3374);
+    clientPorts.put("client1", 3375);
   }
   
   /**
@@ -27,6 +34,14 @@ public class NameService {
   static String resolveAlias(String name) {
     String result = aliases.get(name);
     return result == null ? name : result;
+  }
+  
+  /**
+   * Maps from client names to their port numbers.
+   */
+  static int resolveClientPort(String name) {
+    if (!clientPorts.containsKey(name)) return 3373;
+    return clientPorts.get(name);
   }
   
   /**
@@ -44,7 +59,7 @@ public class NameService {
    */
   public Pair<List<InetSocketAddress>, Principal> lookup(
       RemoteClient client) throws UnknownHostException {
-    return lookup(client, 3373);
+    return lookup(client, resolveClientPort(client.name()));
   }
   
   /**
