@@ -110,6 +110,18 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     List<ClassMember> members = new ArrayList<ClassMember>(oldMembers.size());
     for (ClassMember m : oldMembers) {
       members.addAll(ext(m).interfaceMember(pr, classDecl));
+      
+      // Preserve the Polyglot type information from fabc.
+      if (!(m instanceof Field)) continue;
+      
+      Field f = (Field) m;
+      Flags fieldFlags = f.flags();
+      if (!(fieldFlags.isStatic() && fieldFlags.isFinal() && fieldFlags
+          .isPublic())) continue;
+      
+      if (!f.name().startsWith("jlc$")) continue;
+      
+      members.add(m);
     }
 
     // Add the $Proxy, $Impl, and $Static classes.
