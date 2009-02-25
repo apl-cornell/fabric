@@ -3,8 +3,10 @@ package fabric.visit;
 import java.util.*;
 
 import jif.ast.*;
+import jif.types.JifLocalInstance;
 import jif.types.JifMethodInstance;
 import jif.types.label.AccessPath;
+import jif.types.label.ArgLabel;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
 
@@ -49,9 +51,12 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
           
           Formal f = nf.Formal(Position.compilerGenerated(), 
                                Flags.FINAL, 
-                               nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Label()), 
+                               nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Principal()), 
                                nf.Id(Position.compilerGenerated(), "client$principal"));
-          f = f.localInstance(ts.localInstance(f.position(), Flags.FINAL, ts.Label(), "client$principal"));
+          JifLocalInstance li = (JifLocalInstance)ts.localInstance(f.position(), Flags.FINAL, ts.Principal(), "client$principal");
+          ArgLabel al = ts.argLabel(f.position(), li, null);
+          li.setLabel(al);
+          f = f.localInstance(li);
           
           List<Formal> formals = new ArrayList<Formal>(md.formals().size() + 1);
           formals.add(f);
@@ -70,10 +75,10 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
             throw new InternalCompilerError(e);
           }
           
-          System.err.println(md);
-          System.err.println(mi.container());
-          System.err.println(startLabel);
-          System.err.println(returnLabel);
+//          System.err.println(md);
+//          System.err.println(mi.container());
+//          System.err.println(startLabel);
+//          System.err.println(returnLabel);
           
           // {C(rv), client$<-} <= {client$->, I(m)}
           Label left = ts.pairLabel(Position.compilerGenerated(), 
