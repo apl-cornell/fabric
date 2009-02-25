@@ -637,8 +637,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       if (!(cm instanceof MethodDecl)) continue;
       
       MethodDecl md = (MethodDecl)cm;
-      if (md.flags().isPublic() && !md.flags().isStatic()) {
-        // Every public instance method has a wrapper method for remote calls
+      if (md.flags().isPublic() && !md.flags().isStatic() && !md.name().endsWith("$remote")) {
+        // Every public instance method has a wrapper method for remote calls.
+        // XXX however, wrappers generated in Fabric do not have another wrapper.
         
         // First, use a static field to store the parameter types.
         String fieldName = "$paramTypes" + (freshTid++);

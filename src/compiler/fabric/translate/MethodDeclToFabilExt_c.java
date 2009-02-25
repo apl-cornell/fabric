@@ -4,7 +4,7 @@ import java.util.*;
 
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
-import fabric.ast.FabricNodeFactory;
+import polyglot.ast.If;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.ast.Stmt;
@@ -28,6 +28,14 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     
     FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
     FabILTypeSystem ts = (FabILTypeSystem)rw.java_ts();
+    
+    if (md.name().endsWith("$remote")) {
+      // Fabric wrapper
+      // The body has to be an if statement
+      If ifStmt = (If)md.body().statements().get(0);
+      ifStmt = ifStmt.alternative(rw.qq().parseStmt("throw new java.lang.InternalError()"));
+      return md.body(nf.Block(Position.compilerGenerated(), ifStmt));
+    }
     
     List<Stmt> stmts = new ArrayList<Stmt>(md.body().statements().size() + 1);
     
