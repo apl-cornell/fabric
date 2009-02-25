@@ -106,7 +106,7 @@ public final class Log {
 
   public static class CommitState {
     public static enum Values {
-      UNPREPARED, PREPARING, PREPARED, COMMITTING, COMMITTED, ABORTING, ABORTED
+      UNPREPARED, PREPARING, PREPARED, PREPARE_FAILED, COMMITTING, COMMITTED, ABORTING, ABORTED
     }
 
     public Values value = Values.UNPREPARED;

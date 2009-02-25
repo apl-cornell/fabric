@@ -41,7 +41,7 @@ public class TransactionManager {
   public void abortTransaction(Principal client, long transactionID)
       throws AccessException {
     synchronized (store) {
-      store.rollback(client, transactionID);
+      store.rollback(transactionID, client);
     }
   }
 
@@ -52,7 +52,7 @@ public class TransactionManager {
       throws TransactionCommitFailedException {
     synchronized (store) {
       try {
-        store.commit(client, transactionID);
+        store.commit(transactionID, client);
       } catch (final AccessException e) {
         throw new TransactionCommitFailedException("Insufficient Authorization");
       } catch (final RuntimeException e) {
@@ -113,14 +113,14 @@ public class TransactionManager {
         long onum = o.getOnum();
         SerializedObject coreCopy;
         synchronized (store) {
-          if (store.isPrepared(onum))
+          if (store.isPrepared(onum, tid))
             throw new TransactionPrepareFailedException("Object " + onum
                 + " has been locked by an uncommitted transaction");
 
           coreCopy = store.read(onum);
 
           // Register the update with the store.
-          store.registerUpdate(tid, o);
+          store.registerUpdate(tid, client, o);
         }
 
         // Make sure the object actually exists.
@@ -152,7 +152,7 @@ public class TransactionManager {
           long onum = o.getOnum();
 
           // Make sure no one else is using the object.
-          if (store.isPrepared(onum))
+          if (store.isPrepared(onum, tid))
             throw new TransactionPrepareFailedException("Object " + onum
                 + " has been locked by an " + "uncommitted transaction");
 
@@ -164,7 +164,7 @@ public class TransactionManager {
           // Set the initial version number and register the update with the
           // store.
           o.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
-          store.registerUpdate(tid, o);
+          store.registerUpdate(tid, client, o);
         }
       }
 
@@ -185,20 +185,20 @@ public class TransactionManager {
           if (curVersion != version) versionError(onum, curVersion, version);
 
           // Register the read with the store.
-          store.registerRead(tid, onum);
+          store.registerRead(tid, client, onum);
         }
       }
 
-      store.finishPrepare(tid);
+      store.finishPrepare(tid, client);
     } catch (TransactionPrepareFailedException e) {
       synchronized (store) {
-        store.abortPrepare(tid);
+        store.abortPrepare(tid, client);
         throw e;
       }
     } catch (RuntimeException e) {
       synchronized (store) {
         e.printStackTrace();
-        store.abortPrepare(tid);
+        store.abortPrepare(tid, client);
         throw e;
       }
     }

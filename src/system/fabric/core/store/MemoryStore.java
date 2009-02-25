@@ -5,10 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.logging.Logger;
 
-import fabric.common.AccessException;
-import fabric.common.ONumConstants;
-import fabric.common.Resources;
-import fabric.common.SerializedObject;
+import fabric.common.*;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Principal;
@@ -42,7 +39,7 @@ public class MemoryStore extends ObjectStore {
    * Maps 48-bit object numbers to SerializedObjects.
    */
   private LongKeyMap<SerializedObject> objectTable;
-  
+
   /**
    * The next free glob ID.
    */
@@ -66,14 +63,14 @@ public class MemoryStore extends ObjectStore {
           new ObjectInputStream(Resources.readFile("var", name));
 
       this.isInitialized = oin.readBoolean();
-      
+
       this.nextOnum = oin.readLong();
 
       int size = oin.readInt();
       this.objectTable = new LongKeyHashMap<SerializedObject>(size);
       for (int i = 0; i < size; i++)
         this.objectTable.put(oin.readLong(), new SerializedObject(oin));
-      
+
       this.nextGlobID = oin.readLong();
     } catch (Exception e) {
       // TODO: distinguish invalid files from nonexistent
@@ -85,24 +82,24 @@ public class MemoryStore extends ObjectStore {
   }
 
   @Override
-  public void finishPrepare(long tid) {
+  public void finishPrepare(long tid, Principal client) {
   }
 
   @Override
-  public void commit(Principal client, long tid) throws AccessException {
+  public void commit(long tid, Principal client) throws AccessException {
     PendingTransaction tx = remove(client, tid);
 
     // merge in the objects
     for (SerializedObject o : tx.modData) {
       objectTable.put(o.getOnum(), o);
-      
+
       // Remove any cached globs containing the old version of this object.
       removeGlobByOnum(o.getOnum());
     }
   }
 
   @Override
-  public void rollback(Principal client, long tid) throws AccessException {
+  public void rollback(long tid, Principal client) throws AccessException {
     remove(client, tid);
   }
 
@@ -118,7 +115,7 @@ public class MemoryStore extends ObjectStore {
 
   @Override
   public boolean exists(long onum) {
-    return isPrepared(onum) || objectTable.containsKey(onum);
+    return rwLocks.get(onum) != null || objectTable.containsKey(onum);
   }
 
   @Override
@@ -138,17 +135,17 @@ public class MemoryStore extends ObjectStore {
     ObjectOutputStream oout =
         new ObjectOutputStream(Resources.writeFile("var", name));
     oout.writeBoolean(isInitialized);
-    
+
     oout.writeLong(nextOnum);
-    
+
     oout.writeInt(this.objectTable.size());
     for (LongKeyMap.Entry<SerializedObject> entry : this.objectTable.entrySet()) {
       oout.writeLong(entry.getKey());
       entry.getValue().write(oout);
     }
-    
+
     oout.writeLong(this.nextGlobID);
-    
+
     oout.flush();
     oout.close();
   }
@@ -159,7 +156,10 @@ public class MemoryStore extends ObjectStore {
    */
   private PendingTransaction remove(Principal client, long tid)
       throws AccessException {
-    PendingTransaction tx = pendingByTid.remove(tid);
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    PendingTransaction tx = submap.remove(client);
+    if (submap.isEmpty()) pendingByTid.remove(tid);
+
     if (tx == null) throw new AccessException();
 
     // XXX Check if the client acts for the owner.

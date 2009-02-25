@@ -16,48 +16,66 @@ import fabric.lang.Object;
 public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   Map<Core, LongKeyMap<V>> map;
 
+  boolean hasNullEntry;
+  V nullEntry;
+
   public OidKeyHashMap() {
     map = new HashMap<Core, LongKeyMap<V>>();
+    hasNullEntry = false;
+    nullEntry = null;
   }
-  
+
   /**
    * Copy constructor.
    */
   public OidKeyHashMap(OidKeyHashMap<V> other) {
     this();
-    
+
     for (Map.Entry<Core, LongKeyMap<V>> entry : other.map.entrySet()) {
       this.map.put(entry.getKey(), new LongKeyHashMap<V>(entry.getValue()));
     }
+
+    this.hasNullEntry = other.hasNullEntry;
+    this.nullEntry = other.nullEntry;
   }
 
   public LongKeyMap<V> get(Core core) {
     return map.get(core);
   }
-  
+
   public void clear() {
     map.clear();
+    hasNullEntry = false;
+    nullEntry = null;
   }
-  
+
   public boolean containsKey(Object obj) {
-    return containsKey(obj.$getCore(), obj.$getOnum());
+    return obj == null ? hasNullEntry : containsKey(obj.$getCore(), obj
+        .$getOnum());
   }
-  
+
   public boolean containsKey(Core core, long onum) {
     LongKeyMap<V> submap = map.get(core);
     return submap != null && submap.containsKey(onum);
   }
-  
+
   public V get(Object obj) {
-    return get(obj.$getCore(), obj.$getOnum());
+    return obj == null ? nullEntry : get(obj.$getCore(), obj.$getOnum());
   }
 
   public V get(Core core, long onum) {
     LongKeyMap<V> submap = map.get(core);
     return submap == null ? null : submap.get(onum);
   }
-  
+
   public V put(Object obj, V val) {
+    if (obj == null) {
+      hasNullEntry = true;
+      V result = nullEntry;
+      nullEntry = val;
+      return result;
+    }
+    
     return put(obj.$getCore(), obj.$getOnum(), val);
   }
 
@@ -70,8 +88,15 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
 
     return submap.put(onum, val);
   }
-  
+
   public V remove(Object obj) {
+    if (obj == null) {
+      V result = nullEntry;
+      hasNullEntry = false;
+      nullEntry = null;
+      return result;
+    }
+    
     return remove(obj.$getCore(), obj.$getOnum());
   }
 
@@ -90,5 +115,9 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
 
   public Iterator<LongKeyMap<V>> iterator() {
     return map.values().iterator();
+  }
+
+  public boolean isEmpty() {
+    return !hasNullEntry && map.isEmpty();
   }
 }

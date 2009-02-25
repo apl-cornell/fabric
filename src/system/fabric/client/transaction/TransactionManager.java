@@ -182,6 +182,7 @@ public final class TransactionManager {
 
         switch (current.commitState.value) {
         case UNPREPARED:
+        case PREPARE_FAILED:
         case PREPARED:
           current.commitState.value = ABORTING;
           break;
@@ -322,6 +323,7 @@ public final class TransactionManager {
         logger.fine("Ignoring prepare request (transaction state = "
             + current.commitState.value + ")");
         return failures;
+      case PREPARE_FAILED:
       case ABORTING:
       case ABORTED:
         // XXX HACK UGLY
@@ -407,11 +409,11 @@ public final class TransactionManager {
       logger.fine(logMessage);
 
       sendAbortMessages(cores, clients, failures.keySet());
-    } else {
-      synchronized (current.commitState) {
-        current.commitState.value = PREPARED;
-        current.commitState.notifyAll();
-      }
+    }
+    
+    synchronized (current.commitState) {
+      current.commitState.value = failures.isEmpty() ? PREPARED : PREPARE_FAILED;
+      current.commitState.notifyAll();
     }
 
     return failures;
@@ -445,6 +447,7 @@ public final class TransactionManager {
       case COMMITTING:
       case COMMITTED:
         return;
+      case PREPARE_FAILED:
       case ABORTING:
       case ABORTED:
         throw new TransactionAtomicityViolationException();

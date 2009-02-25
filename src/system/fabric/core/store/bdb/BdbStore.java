@@ -8,10 +8,8 @@ import java.util.logging.Logger;
 
 import com.sleepycat.je.*;
 
-import fabric.common.FastSerializable;
+import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.common.ONumConstants;
-import fabric.common.SerializedObject;
 import fabric.core.store.ObjectStore;
 import fabric.lang.Principal;
 
@@ -78,13 +76,15 @@ public class BdbStore extends ObjectStore {
   }
 
   @Override
-  public void finishPrepare(long tid) {
+  public void finishPrepare(long tid, Principal client) {
     // Move the transaction data out of memory and into BDB.
-    PendingTransaction pending = pendingByTid.remove(tid);
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    PendingTransaction pending = submap.remove(client);
+    if (submap.isEmpty()) pendingByTid.remove(tid);
 
     try {
       Transaction txn = env.beginTransaction(null, null);
-      DatabaseEntry key = new DatabaseEntry(toBytes(tid));
+      DatabaseEntry key = new DatabaseEntry(toBytes(tid, client));
       DatabaseEntry data = new DatabaseEntry(toBytes(pending));
       prepared.put(txn, key, data);
       txn.commit();
@@ -96,7 +96,7 @@ public class BdbStore extends ObjectStore {
   }
 
   @Override
-  public void commit(Principal client, long tid) {
+  public void commit(long tid, Principal client) {
     log.finer("Bdb commit begin tid " + tid);
 
     try {
@@ -110,7 +110,7 @@ public class BdbStore extends ObjectStore {
           DatabaseEntry onumData = new DatabaseEntry(toBytes(onum));
           DatabaseEntry objData = new DatabaseEntry(toBytes(o));
           store.put(txn, onumData, objData);
-          
+
           // Remove any cached globs containing the old version of this object.
           removeGlobByOnum(toLong(onumData.getData()));
         }
@@ -129,7 +129,7 @@ public class BdbStore extends ObjectStore {
   }
 
   @Override
-  public void rollback(Principal client, long tid) {
+  public void rollback(long tid, Principal client) {
     log.finer("Bdb rollback begin tid " + tid);
 
     try {
@@ -188,7 +188,7 @@ public class BdbStore extends ObjectStore {
     DatabaseEntry data = new DatabaseEntry();
 
     try {
-      if (rwCount.get(onum) != null
+      if (rwLocks.get(onum) != null
           || store.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
         return true;
       }
@@ -302,7 +302,7 @@ public class BdbStore extends ObjectStore {
    */
   private PendingTransaction remove(Principal client, Transaction txn, long tid)
       throws DatabaseException {
-    DatabaseEntry key = new DatabaseEntry(toBytes(tid));
+    DatabaseEntry key = new DatabaseEntry(toBytes(tid, client));
     DatabaseEntry data = new DatabaseEntry();
 
     if (prepared.get(txn, key, data, LockMode.DEFAULT) == SUCCESS) {
@@ -336,6 +336,20 @@ public class BdbStore extends ObjectStore {
     return data;
   }
 
+  private byte[] toBytes(long tid, Principal client) {
+    try {
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      DataOutputStream dos = new DataOutputStream(bos);
+      dos.writeLong(tid);
+      dos.writeUTF(client.$getCore().name());
+      dos.writeLong(client.$getOnum());
+      dos.flush();
+      return bos.toByteArray();
+    } catch (IOException e) {
+      throw new InternalError(e);
+    }
+  }
+
   private long toLong(byte[] data) {
     long i = 0;
 
@@ -358,7 +372,7 @@ public class BdbStore extends ObjectStore {
       throw new InternalError(e);
     }
   }
-  
+
   private PendingTransaction toPendingTransaction(byte[] data) {
     try {
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
