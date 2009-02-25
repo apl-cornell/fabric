@@ -2,12 +2,8 @@ package fabric;
 
 import java.io.Reader;
 
+import polyglot.frontend.*;
 import polyglot.frontend.Compiler;
-import polyglot.frontend.CupParser;
-import polyglot.frontend.FileSource;
-import polyglot.frontend.Job;
-import polyglot.frontend.Parser;
-import polyglot.frontend.Scheduler;
 import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
 import polyglot.util.ErrorQueue;
@@ -108,6 +104,11 @@ public class ExtensionInfo extends jif.ExtensionInfo {
   @Override
   public FabricScheduler scheduler() {
     return (FabricScheduler) super.scheduler();
+  }
+
+  @Override
+  public Version version() {
+    return new Version();
   }
   
 }
