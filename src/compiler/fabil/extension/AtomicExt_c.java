@@ -85,15 +85,16 @@ public class AtomicExt_c extends FabILExt_c {
     		   "      if (" + flag + ") {\n" +
     		   "        try {\n" +
     		   "          %S\n" +
-//    		   "          break " + label + ";\n" +
     		   "        }\n" +
     		   "        catch (final fabric.client.AbortException " + e + ") {\n" +
     		   "          " + flag + " = false;\n" +
     		   "        }\n" +
     		   "      }\n" +
-    		   "      if (!" + flag + ") {\n" +
-   		   "        { %LS }\n" +
+    		   "      else {\n" +
     		   "        %S\n" +
+    		   "      }" +
+    		   "      if (!" + flag + ") {\n" +
+   		   "        %LS\n" +
     		   "      }\n" +
     		   "    }\n" +
     		   "  }\n" +
@@ -104,7 +105,7 @@ public class AtomicExt_c extends FabILExt_c {
 //                   "  try { %LS }\n" +
 //                   "  catch (final Throwable $_) { "+flag+" = false; throw new fabric.client.AbortException($_); }\n" +
 //                   "  finally { if ("+flag+") {%S} else {%S} } }\n";
-    return ar.qq().parseStmt(block, lds, begin, atomic.statements(), commit, restores, abort);
+    return ar.qq().parseStmt(block, lds, begin, atomic.statements(), commit, abort, restores);
   }
 
   private static int freshTid = 0;

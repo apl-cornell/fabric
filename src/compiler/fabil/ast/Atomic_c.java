@@ -37,8 +37,10 @@ public class Atomic_c extends Block_c implements Atomic {
     List<AbortStmt> aborts = new ArrayList<AbortStmt>();
     List<RetryStmt> retries = new ArrayList<RetryStmt>();
     
-    AbortRetryCollector c = new AbortRetryCollector(aborts, retries);
-    this.visit(c);
+    for (Stmt s : (List<Stmt>)statements()) {
+      AbortRetryCollector c = new AbortRetryCollector(aborts, retries);
+      s.visit(c);
+    }
     
     for (AbortStmt abort : aborts) {
       v.edge(abort, this, EXIT);
