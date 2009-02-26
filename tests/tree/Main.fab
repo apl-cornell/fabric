@@ -3,13 +3,12 @@ package tree;
 //import java.util.Random;
 import fabric.client.AbortException;
 import fabric.client.Core;
-import fabric.client.Client;
 import fabric.util.Map;
 
 public class Main {
   public static void main(principal pp, String[] args) throws AbortException, SecurityException {
 	Runtime[pp] runtime = Runtime[pp].getRuntime();
-	PrintStream[{pp→;⊥←⊥}] out;
+	PrintStream[{pp→;_!:_}] out;
 	
 	if(runtime != null) {
 		out = runtime.out();
@@ -20,14 +19,13 @@ public class Main {
       return;
     }
     
-    Client client = fabric.client.Client.getClient();
-    Map root = (Map) client.getCore("core1").getRoot();
+    Map root = (Map) client$.getCore("core1").getRoot();
 //    Random random = new Random();
     Tree tree;
     if (args[0].equals("create")) {
       atomic {
-        Core treeCore = client.getCore("core0");
-        Core nodeCore = client.getCore("core1");
+        Core treeCore = client$.getCore("core0");
+        Core nodeCore = client$.getCore("core1");
         tree = new Tree@treeCore(nodeCore);
         root.put("theTree", tree);
         for (int i = 0; i < 500; i++) {
