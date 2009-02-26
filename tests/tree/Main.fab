@@ -4,11 +4,13 @@ package tree;
 import fabric.client.AbortException;
 import fabric.client.Core;
 import fabric.util.Map;
+import jif.runtime.Runtime;
+import java.io.PrintStream;
 
 public class Main {
   public static void main(principal pp, String[] args) throws AbortException, SecurityException {
 	Runtime[pp] runtime = Runtime[pp].getRuntime();
-	PrintStream[{pp→;_!:_}] out;
+	PrintStream[{pp→;⊥←⊥}] out;
 	
 	if(runtime != null) {
 		out = runtime.out();
@@ -19,13 +21,14 @@ public class Main {
       return;
     }
     
-    Map root = (Map) client$.getCore("core1").getRoot();
+    FabricClient client = client$;
+    Map root = (Map) client.getCore("core1").getRoot();
 //    Random random = new Random();
     Tree tree;
     if (args[0].equals("create")) {
       atomic {
-        Core treeCore = client$.getCore("core0");
-        Core nodeCore = client$.getCore("core1");
+        Core treeCore = client.getCore("core0");
+        Core nodeCore = client.getCore("core1");
         tree = new Tree@treeCore(nodeCore);
         root.put("theTree", tree);
         for (int i = 0; i < 500; i++) {
@@ -45,8 +48,10 @@ public class Main {
     int cycle = 0;
     while (true) {
       atomic {
-        int toFind = random.nextInt();
-        tree.lookup(toFind);
+//        int toFind = random.nextInt();
+//        tree.lookup(toFind);
+
+    	  tree.lookup(cycle);
       }
 
       if (++cycle % 100 == 0)
