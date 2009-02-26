@@ -1,18 +1,12 @@
 package fabric.ast;
 
 import fabric.extension.*;
-import fabric.translate.AbortToFabilExt_c;
-import fabric.translate.AtomicToFabilExt_c;
-import fabric.translate.BinaryToFabilExt_c;
-import fabric.translate.CallToFabilExt_c;
-import fabric.translate.ClientToFabilExt_c;
-import fabric.translate.MethodDeclToFabilExt_c;
-import fabric.translate.RemoteClientGetterToFabilExt_c;
-import fabric.translate.RetryToFabilExt_c;
+import fabric.translate.*;
 import polyglot.ast.Ext;
 import jif.ast.JifExtFactory_c;
 import jif.extension.JifBinaryExt;
 import jif.extension.JifMethodDeclExt;
+import jif.translate.ClassBodyToJavaExt_c;
 
 /**
  * This class extends the Jif Extension factory to provide Jif extension objects
@@ -60,5 +54,10 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   @Override
   public Ext extBinaryImpl() {
     return new JifBinaryExt(new BinaryToFabilExt_c());
+  }
+  
+  @Override
+  public Ext extClassBodyImpl() {
+    return new ClassBodyJifExt_c(new ClassBodyToJavaExt_c());
   }
 }

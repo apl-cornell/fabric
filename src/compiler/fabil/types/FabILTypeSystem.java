@@ -41,6 +41,8 @@ public interface FabILTypeSystem extends TypeSystem {
   ClassType RemoteCallException();
   
   ClassType Client();
+  
+  ClassType InternalError();
 
   /**
    * @return true iff the given type is a primitive, an array of Fabric types,

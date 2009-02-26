@@ -29,11 +29,12 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
     FabILTypeSystem ts = (FabILTypeSystem)rw.java_ts();
     
-    if (md.name().endsWith("$remote")) {
+    if (md.name().endsWith("_remote")) {
       // Fabric wrapper
       // The body has to be an if statement
       If ifStmt = (If)md.body().statements().get(0);
-      ifStmt = ifStmt.alternative(rw.qq().parseStmt("throw new java.lang.InternalError()"));
+//      ifStmt = ifStmt.alternative(rw.qq().parseStmt("throw new java.lang.InternalError()"));
+      ifStmt = ifStmt.alternative(nf.Throw(Position.compilerGenerated(), nf.New(Position.compilerGenerated(), nf.CanonicalTypeNode(Position.compilerGenerated(), ts.InternalError()), Collections.EMPTY_LIST)));
       return md.body(nf.Block(Position.compilerGenerated(), ifStmt));
     }
     

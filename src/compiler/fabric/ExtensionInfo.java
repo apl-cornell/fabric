@@ -2,6 +2,8 @@ package fabric;
 
 import java.io.Reader;
 
+import jif.visit.LabelChecker;
+
 import polyglot.frontend.*;
 import polyglot.frontend.Compiler;
 import polyglot.frontend.goals.Goal;
@@ -14,6 +16,7 @@ import fabric.parse.Grm;
 import fabric.parse.Lexer_c;
 import fabric.types.FabricTypeSystem;
 import fabric.types.FabricTypeSystem_c;
+import fabric.visit.FabricLabelChecker;
 
 /**
  * Extension information for fabric extension.
@@ -111,4 +114,8 @@ public class ExtensionInfo extends jif.ExtensionInfo {
     return new Version();
   }
   
+  @Override
+  public LabelChecker createLabelChecker(Job job, boolean solvePerClassBody, boolean solvePerMethod, boolean doLabelSubst) {
+    return new FabricLabelChecker(job, typeSystem(), nodeFactory(), solvePerClassBody, solvePerMethod, doLabelSubst);
+  }
 }

@@ -21,6 +21,7 @@ import fabric.translate.DynamicPrincipalToFabilExpr_c;
 import jif.ast.JifUtil;
 import jif.translate.PrincipalToJavaExpr;
 import jif.types.JifTypeSystem_c;
+import jif.types.Solver;
 import jif.types.principal.Principal;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
@@ -115,5 +116,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   @Override
   protected PrincipalToJavaExpr dynamicPrincipalTranslator() {
     return new DynamicPrincipalToFabilExpr_c();
+  }
+  
+  @Override
+  public Solver createSolver(String solverName) {
+    return new SilenceableSolverGLB(this, extInfo.compiler(), solverName);
   }
 }

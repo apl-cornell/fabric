@@ -54,6 +54,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
     return load("fabric.client.Client");
   }
   
+  public ClassType InternalError() {
+    return load("java.lang.InternalError");
+  }
+  
   /*
    * (non-Javadoc)
    * 

@@ -7,10 +7,12 @@ import fabric.types.FabricTypeSystem;
 import fabric.visit.ExplicitSuperclassAdder;
 import fabric.visit.FabricToFabilRewriter;
 import fabric.visit.FabricTypeBuilder;
+import fabric.visit.RemoteCallWrapperAdder;
 
 import polyglot.ast.Node;
 import polyglot.frontend.CyclicDependencyException;
 import polyglot.frontend.Job;
+import polyglot.frontend.Scheduler;
 import polyglot.frontend.Source;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.VisitorGoal;
@@ -78,6 +80,32 @@ public class FabricScheduler extends JifScheduler {
     return g;
   }
 
+  public Goal RemoteCallWrappersAdded(final Job job) {
+    FabricTypeSystem ts = fabext.typeSystem();
+    FabricNodeFactory nf = fabext.nodeFactory();
+    Goal g = internGoal(new VisitorGoal(job, new RemoteCallWrapperAdder(job, ts, nf)) {
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler s) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(Disambiguated(job));
+        return l;
+      }
+    });
+    return g;
+  }
+
+  @Override
+  public Goal TypeChecked(Job job) {
+    Goal g = super.TypeChecked(job);
+    try {
+      addPrerequisiteDependency(g, RemoteCallWrappersAdded(job));
+    }
+    catch (CyclicDependencyException e) {
+      throw new InternalCompilerError(e);
+    }
+    return g;
+  }
+  
   public Goal FabricToFabilRewritten(Job job) {
     FabricTypeSystem  ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
@@ -98,6 +126,7 @@ public class FabricScheduler extends JifScheduler {
     return g;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public boolean runToCompletion() {
     /* Note: this call to super.runToCompletion also adds a goal to the jlext
