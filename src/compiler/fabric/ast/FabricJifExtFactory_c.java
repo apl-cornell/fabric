@@ -5,6 +5,8 @@ import fabric.translate.*;
 import polyglot.ast.Ext;
 import jif.ast.JifExtFactory_c;
 import jif.extension.JifBinaryExt;
+import jif.extension.JifClassDeclExt;
+import jif.extension.JifConstructorDeclExt;
 import jif.extension.JifMethodDeclExt;
 import jif.translate.ClassBodyToJavaExt_c;
 
@@ -49,6 +51,16 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   @Override
   public Ext extMethodDeclImpl() {
     return new JifMethodDeclExt(new MethodDeclToFabilExt_c());
+  }
+  
+  @Override
+  public Ext extConstructorDeclImpl() {
+    return new JifConstructorDeclExt(new ConstructorDeclToFabilExt_c());
+  }
+  
+  @Override
+  public Ext extClassDeclImpl() {
+    return new JifClassDeclExt(new ClassDeclToFabilExt_c());
   }
   
   @Override

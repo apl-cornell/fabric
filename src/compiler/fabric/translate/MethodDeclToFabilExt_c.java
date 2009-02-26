@@ -40,9 +40,6 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     
     List<Stmt> stmts = new ArrayList<Stmt>(md.body().statements().size() + 1);
     
-//    TypeNode client = nf.AmbTypeNode(Position.compilerGenerated(), 
-//                                     nf.Id(Position.compilerGenerated(), 
-//                                           "fabric.client.Client"));
     TypeNode client = nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Client());
     stmts.add(nf.LocalDecl(Position.compilerGenerated(), 
                            Flags.FINAL, 

@@ -26,4 +26,9 @@ public class Client_c extends Local_c implements Client {
   public String toString() {
     return "client$";
   }
+  
+//  @Override
+//  public boolean isConstant() {
+//    return true;
+//  }
 }
