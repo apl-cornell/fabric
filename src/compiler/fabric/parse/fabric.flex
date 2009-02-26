@@ -412,6 +412,8 @@ OctalEscape = \\ [0-7]
     "\u2294" { return op(sym.JOIN); }
     "\u2190" { return op(sym.LEFTARROW); }
     "\u2192" { return op(sym.RIGHTARROW); }
+    "\u22a4" { return op(sym.TOP);      }
+    "\u22a5" { return op(sym.BOTTOM);   }    
 }
 
 <TRADITIONAL_COMMENT> {
