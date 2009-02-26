@@ -119,14 +119,14 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   public synchronized void run() {
     while (true) {
       Thread.currentThread().setName("Core worker -- idle");
-      
+
       // Wait for the node to signal this thread (done via a call to handle()).
       try {
         wait();
       } catch (InterruptedException e) {
         continue;
       }
-      
+
       Thread.currentThread().setName("Core worker -- active");
 
       reset();
@@ -410,9 +410,10 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       pendingLogs.put(req.tid, new LogRecord(msg.serializedCreates.size(),
           msg.serializedWrites.size()));
 
-      return new PrepareTransactionMessage.Response(true);
+      return new PrepareTransactionMessage.Response();
     } catch (TransactionPrepareFailedException e) {
-      return new PrepareTransactionMessage.Response(false, e.getMessage());
+      return new PrepareTransactionMessage.Response(e.getMessage(),
+          e.versionConflicts);
     }
   }
 

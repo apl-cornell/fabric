@@ -209,7 +209,8 @@ public class RemoteCore implements Core, RemoteNode {
         new PrepareTransactionMessage(tid, toCreate, reads, writes).send(this);
 
     if (!response.success)
-      throw new TransactionPrepareFailedException(response.message);
+      throw new TransactionPrepareFailedException(response.versionConflicts,
+          response.message);
   }
 
   /**

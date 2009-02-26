@@ -3,9 +3,7 @@ package fabric.messages;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 
 import fabric.client.RemoteNode;
 import fabric.client.UnreachableNodeException;
@@ -28,13 +26,34 @@ public class PrepareTransactionMessage extends
     public final boolean success;
     public final String message;
 
-    public Response(boolean success) {
-      this(success, null);
+    /**
+     * A set of oids involved in the transaction that were out of date.
+     */
+    public final Set<Long> versionConflicts;
+
+    /**
+     * Creates a Response indicating a successful prepare.
+     */
+    public Response() {
+      this.success = true;
+      this.message = null;
+      this.versionConflicts = null;
     }
 
-    public Response(boolean success, String message) {
-      this.success = success;
+    /**
+     * Creates a Response indicating a failed prepare.
+     */
+    public Response(String message) {
+      this(message, null);
+    }
+
+    /**
+     * Creates a Response indicating a failed prepare.
+     */
+    public Response(String message, Set<Long> versionConflicts) {
+      this.success = false;
       this.message = message;
+      this.versionConflicts = versionConflicts;
     }
 
     /**
@@ -50,6 +69,11 @@ public class PrepareTransactionMessage extends
       if (in.readBoolean())
         this.message = in.readUTF();
       else this.message = null;
+
+      int size = in.readInt();
+      this.versionConflicts = new HashSet<Long>(size);
+      for (int i = 0; i < size; i++)
+        versionConflicts.add(in.readLong());
     }
 
     /*
@@ -62,6 +86,14 @@ public class PrepareTransactionMessage extends
         out.writeBoolean(true);
         out.writeUTF(message);
       } else out.writeBoolean(false);
+
+      if (versionConflicts == null)
+        out.writeInt(0);
+      else {
+        out.writeInt(versionConflicts.size());
+        for (long onum : versionConflicts)
+          out.writeLong(onum);
+      }
     }
   }
 

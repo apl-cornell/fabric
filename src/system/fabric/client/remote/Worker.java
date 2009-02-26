@@ -239,6 +239,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
    */
   private void associateAndSyncLog(Log log, TransactionID tid) {
     TransactionManager tm = getTransactionManager();
+    tm.associateLog(log);
+    
     TransactionID commonAncestor = log.getTid().getLowestCommonAncestor(tid);
 
     // Do the commits that we've missed.
@@ -275,7 +277,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
                 remoteCallMessage.receiver.fetch().$getProxy();
             Object[] args = new Object[remoteCallMessage.args.length + 1];
             args[0] = remoteClient;
-            for (int i = 0; i < args.length; i++) {
+            for (int i = 0; i < remoteCallMessage.args.length; i++) {
               Object arg = remoteCallMessage.args[i];
               if (arg instanceof fabric.lang.Object) {
                 arg = ((fabric.lang.Object) arg).fetch().$getProxy();
@@ -283,8 +285,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
               args[i + 1] = arg;
             }
 
-            return remoteCallMessage.getMethod().invoke(receiver,
-                remoteCallMessage.args);
+            return remoteCallMessage.getMethod().invoke(receiver, args);
           } catch (IllegalArgumentException e) {
             throw new RuntimeException(e);
           } catch (SecurityException e) {
@@ -333,8 +334,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     Log log =
         TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
     if (log == null)
-      return new PrepareTransactionMessage.Response(false,
-          "No such transaction");
+      return new PrepareTransactionMessage.Response("No such transaction");
 
     TransactionManager tm = getTransactionManager();
     tm.associateLog(log);
@@ -346,7 +346,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     Map<RemoteNode, TransactionPrepareFailedException> failures =
         tm.sendPrepareMessages();
 
-    return new PrepareTransactionMessage.Response(failures.isEmpty());
+    if (failures.isEmpty()) return new PrepareTransactionMessage.Response();
+    return new PrepareTransactionMessage.Response("Transaction prepare failed.");
   }
 
   public CommitTransactionMessage.Response handle(

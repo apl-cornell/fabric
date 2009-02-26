@@ -401,8 +401,20 @@ public final class TransactionManager {
     if (!failures.isEmpty()) {
       String logMessage =
           "Transaction tid=" + current.tid.topTid + ":  prepare failed.";
+
       for (Map.Entry<RemoteNode, TransactionPrepareFailedException> entry : failures
           .entrySet()) {
+        if (entry.getKey() instanceof RemoteCore) {
+          // Remove old objects from our cache.
+          Core core = (Core) entry.getKey();
+          Set<Long> versionConflicts = entry.getValue().versionConflicts;
+          if (versionConflicts != null) {
+            for (long onum : versionConflicts) {
+              // XXX TODO somehow evict (core, onum) from cache.
+            }
+          }
+        }
+
         logMessage +=
             "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
       }
@@ -410,9 +422,10 @@ public final class TransactionManager {
 
       sendAbortMessages(cores, clients, failures.keySet());
     }
-    
+
     synchronized (current.commitState) {
-      current.commitState.value = failures.isEmpty() ? PREPARED : PREPARE_FAILED;
+      current.commitState.value =
+          failures.isEmpty() ? PREPARED : PREPARE_FAILED;
       current.commitState.notifyAll();
     }
 

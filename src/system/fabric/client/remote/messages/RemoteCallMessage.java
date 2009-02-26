@@ -125,7 +125,7 @@ public class RemoteCallMessage extends
     this.receiver = readRef(receiverType, ois);
 
     this.methodName = ois.readUTF();
-    this.parameterTypes = new Class<?>[in.readInt()];
+    this.parameterTypes = new Class<?>[ois.readInt()];
     this.args = new Object[parameterTypes.length];
 
     for (int i = 0; i < args.length; i++) {

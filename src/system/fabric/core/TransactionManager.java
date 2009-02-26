@@ -1,9 +1,7 @@
 package fabric.core;
 
 import java.security.PrivateKey;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 import fabric.client.Client;
 import fabric.client.Core;
@@ -106,6 +104,9 @@ public class TransactionManager {
     }
 
     try {
+      // This will store the set of onums of objects that were out of date.
+      Set<Long> versionConflicts = new HashSet<Long>();
+
       // Check writes and update version numbers
       for (SerializedObject o : req.writes) {
         // Make sure no one else is using the object and fetch the old copy from
@@ -139,8 +140,10 @@ public class TransactionManager {
         // Check version numbers.
         int coreVersion = coreCopy.getVersion();
         int clientVersion = o.getVersion();
-        if (coreVersion != clientVersion)
-          versionError(onum, coreVersion, clientVersion);
+        if (coreVersion != clientVersion) {
+          versionConflicts.add(onum);
+          continue;
+        }
 
         // Update the version number on the prepared copy of the object.
         o.setVersion(coreVersion + 1);
@@ -153,13 +156,14 @@ public class TransactionManager {
 
           // Make sure no one else is using the object.
           if (store.isPrepared(onum, tid))
-            throw new TransactionPrepareFailedException("Object " + onum
-                + " has been locked by an " + "uncommitted transaction");
+            throw new TransactionPrepareFailedException(versionConflicts,
+                "Object " + onum + " has been locked by an "
+                    + "uncommitted transaction");
 
           // Make sure the onum isn't already taken.
           if (store.exists(onum))
-            throw new TransactionPrepareFailedException("Object " + onum
-                + " already exists");
+            throw new TransactionPrepareFailedException(versionConflicts,
+                "Object " + onum + " already exists");
 
           // Set the initial version number and register the update with the
           // store.
@@ -176,17 +180,25 @@ public class TransactionManager {
         synchronized (store) {
           // Make sure no one else is using the object.
           if (store.isWritten(onum))
-            throw new TransactionPrepareFailedException("Object " + onum
-                + " has been locked by an uncommitted transaction");
+            throw new TransactionPrepareFailedException(versionConflicts,
+                "Object " + onum + " has been locked by an uncommitted "
+                    + "transaction");
 
           // Check version numbers.
           SerializedObject obj = store.read(onum);
           int curVersion = obj.getVersion();
-          if (curVersion != version) versionError(onum, curVersion, version);
+          if (curVersion != version) {
+            versionConflicts.add(onum);
+            continue;
+          }
 
           // Register the read with the store.
           store.registerRead(tid, client, onum);
         }
+      }
+      
+      if (!versionConflicts.isEmpty()) {
+        throw new TransactionPrepareFailedException(versionConflicts);
       }
 
       store.finishPrepare(tid, client);
@@ -202,13 +214,6 @@ public class TransactionManager {
         throw e;
       }
     }
-  }
-
-  private void versionError(long onum, int coreVersion, int clientVersion)
-      throws TransactionPrepareFailedException {
-    throw new TransactionPrepareFailedException("Object " + onum
-        + " is out of date (client used v" + clientVersion + " but core has v"
-        + coreVersion + ")");
   }
 
   /**
