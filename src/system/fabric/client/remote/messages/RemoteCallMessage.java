@@ -92,7 +92,8 @@ public class RemoteCallMessage extends
       Object[] args) {
     super(MessageType.REMOTE_CALL);
 
-    if (parameterTypes.length != args.length)
+    if (parameterTypes == null ? args != null
+        : parameterTypes.length != args.length)
       throw new IllegalArgumentException();
 
     this.tid = tid;
@@ -149,7 +150,8 @@ public class RemoteCallMessage extends
     } catch (RemoteCallException e) {
       throw e;
     } catch (FabricException e) {
-      throw new InternalError("Unexpected response from client.", e);
+      throw new InternalError("Unexpected response from client " + client.name,
+          e);
     }
   }
 
@@ -170,16 +172,18 @@ public class RemoteCallMessage extends
     writeRef(receiver, oos);
 
     oos.writeUTF(methodName);
-    oos.writeInt(args.length);
+    oos.writeInt(args == null ? 0 : args.length);
 
-    for (int i = 0; i < args.length; i++) {
-      oos.writeObject(parameterTypes[i]);
-      if (args[i] instanceof $Proxy) {
-        oos.writeBoolean(true);
-        writeRef(($Proxy) args[i], oos);
-      } else {
-        oos.writeBoolean(false);
-        oos.writeObject(args[i]);
+    if (args != null) {
+      for (int i = 0; i < args.length; i++) {
+        oos.writeObject(parameterTypes[i]);
+        if (args[i] instanceof $Proxy) {
+          oos.writeBoolean(true);
+          writeRef(($Proxy) args[i], oos);
+        } else {
+          oos.writeBoolean(false);
+          oos.writeObject(args[i]);
+        }
       }
     }
 

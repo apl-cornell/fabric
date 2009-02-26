@@ -121,13 +121,13 @@ public final class RemoteClient implements RemoteNode {
       }
 
       out =
-          new ObjectOutputStream(new BufferedOutputStream(socket
+          new ObjectOutputStream(new BufferedOutputStream(sslSocket
               .getOutputStream()));
       out.flush();
       in =
-          new ObjectInputStream(
-              new BufferedInputStream(socket.getInputStream()));
-      conn = socket;
+          new ObjectInputStream(new BufferedInputStream(sslSocket
+              .getInputStream()));
+      conn = sslSocket;
     } else {
       out =
           new ObjectOutputStream(new BufferedOutputStream(socket
@@ -161,10 +161,11 @@ public final class RemoteClient implements RemoteNode {
     TransactionID tid =
         TransactionManager.getInstance().registerRemoteCall(this);
 
-    Class<?> receiverProxyClass = receiver.fetch().$getProxy().getClass();
+    Class<?> receiverClass =
+        receiver.fetch().$getProxy().getClass().getEnclosingClass();
 
     RemoteCallMessage.Response response =
-        new RemoteCallMessage(tid, receiverProxyClass, receiver, methodName,
+        new RemoteCallMessage(tid, receiverClass, receiver, methodName,
             parameterTypes, args).send(this);
     return response.result;
   }
@@ -236,7 +237,7 @@ public final class RemoteClient implements RemoteNode {
     GetPrincipalMessage.Response response =
         new GetPrincipalMessage().send(this);
     final fabric.lang.Principal principal = response.principal;
-    
+
     boolean authenticated = Client.runInTransaction(new Client.Code<Boolean>() {
       public Boolean run() {
         return principal.name().equals(name);
@@ -246,5 +247,10 @@ public final class RemoteClient implements RemoteNode {
     if (authenticated)
       return principal;
     else return null;
+  }
+
+  @Override
+  public String toString() {
+    return name;
   }
 }
