@@ -1,4 +1,10 @@
 package fabric.util;
 
 public interface Map {
+	static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+	Object put(Object key, Object value);
+
+	Object get(Object key);
+
 }

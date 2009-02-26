@@ -8,56 +8,67 @@ import jif.runtime.Runtime;
 import java.io.PrintStream;
 
 public class Main {
-  public static void main(principal pp, String[] args) throws AbortException, SecurityException {
-	Runtime[pp] runtime = Runtime[pp].getRuntime();
-	PrintStream[{pp→;⊥←⊥}] out;
-	
-	if(runtime != null) {
+	public static void main{pp→;pp←}(principal{pp→;pp←} pp, String{pp→;pp←}[]{pp→;pp←} args)
+	throws (AbortException{pp→;pp←}, SecurityException{pp→;pp←}) {
+		final label lbl = new label {pp→;pp←};
+		Runtime[pp] runtime = Runtime[pp].getRuntime();
+		FabricClient client = client$;
+		if(runtime == null || args == null || client == null) return;
+
+		String arg = null;
+		PrintStream[{pp→;⊥←⊥}] out = null;
 		out = runtime.out();
+		
+		try {
+			if (args.length != 1 || !args[0].equals("create") && !args[0].equals("read")) {
+				out.println("Usage: tree.Main [create|read]");
+				return;
+			} else {
+				arg = args[0];
+			}
+		} catch (ArrayIndexOutOfBoundsException imposs) {}
+		catch (NullPointerException imposs) {}
+
+		if(out == null || arg == null) return;
+		try {
+			Map root = (Map) client.getCore("core1").getRoot();
+			//    Random random = new Random();
+			Tree[lbl] tree;
+			if (arg.equals("create")) {
+				atomic {
+					Core treeCore = client.getCore("core0");
+					Core nodeCore = client.getCore("core1");
+					tree = new Tree[lbl]@treeCore(nodeCore);
+					root.put("theTree", tree);
+					for (int i = 0; i < 500; i++) {
+						atomic {
+							//            int toInsert = random.nextInt();
+							//            tree.insertIterative(toInsert);
+							tree.insertIterative(i);
+
+						}
+					}
+				}
+				return;
+			}
+
+			tree = (Tree[lbl]) root.get("theTree"); 
+
+			int cycle = 0;
+			while (true) {
+				atomic {
+					//        int toFind = random.nextInt();
+					//        tree.lookup(toFind);
+
+					tree.lookup(cycle);
+				}
+
+				if (++cycle % 100 == 0)
+					out.println(cycle + " lookups done.");
+			}
+		} catch (NullPointerException unlikely) {}
+		  catch (ClassCastException unlikely) {}
 	}
-	if(out == null) return;
-    if (args.length != 1 || !args[0].equals("create") && !args[0].equals("read")) {
-      out.println("Usage: tree.Main [create|read]");
-      return;
-    }
-    
-    FabricClient client = client$;
-    Map root = (Map) client.getCore("core1").getRoot();
-//    Random random = new Random();
-    Tree tree;
-    if (args[0].equals("create")) {
-      atomic {
-        Core treeCore = client.getCore("core0");
-        Core nodeCore = client.getCore("core1");
-        tree = new Tree@treeCore(nodeCore);
-        root.put("theTree", tree);
-        for (int i = 0; i < 500; i++) {
-          atomic {
-//            int toInsert = random.nextInt();
-//            tree.insertIterative(toInsert);
-            tree.insertIterative(i);
-        	  
-          }
-        }
-      }
-      return;
-    }
-
-    tree = (Tree) root.get("theTree"); 
-
-    int cycle = 0;
-    while (true) {
-      atomic {
-//        int toFind = random.nextInt();
-//        tree.lookup(toFind);
-
-    	  tree.lookup(cycle);
-      }
-
-      if (++cycle % 100 == 0)
-      out.println(cycle + " lookups done.");
-    }
-  }
 }
 
 /*

@@ -1,14 +1,14 @@
 package tree;
 
-class TreeNode {
-  TreeNode left, right;
-  int value;
+class TreeNode[label L] {
+  TreeNode[L]{L} left, right;
+  int{L} value;
 
-  public TreeNode(int value) {
+  public TreeNode{L}(int{L} value) {
     this(null, null, value);
   }
 
-  public TreeNode(TreeNode left, TreeNode right, int value) {
+  public TreeNode{L}(TreeNode[L]{L} left, TreeNode[L]{L} right, int{L} value) {
     this.left = left;
     this.right = right;
     this.value = value;
