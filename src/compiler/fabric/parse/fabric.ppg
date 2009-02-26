@@ -79,7 +79,7 @@ remote_client ::=
 			{: RESULT = parser.nf.RemoteClientGetter(parser.pos(a, c), b); :}
 	;
 
-extend postfix_expression ::=
+extend primary_no_new_array ::=
 		local_client:a
 			{: RESULT = a; :}
 	|	remote_client:a
