@@ -265,7 +265,7 @@ public class TransactionManager {
   public ObjectGroup readGroup(Principal principal, long onum, boolean dissem,
       Worker worker) throws AccessException {
     if (dissem) principal = Client.getClient().getPrincipal();
-    SerializedObject obj = read(principal, onum);
+    SerializedObject obj = checkRead(principal, onum);
     if (obj == null) return null;
 
     long headLabelOnum = obj.getLabelOnum();
@@ -305,7 +305,7 @@ public class TransactionManager {
           }
         }
 
-        SerializedObject related = read(principal, relatedOnum, true);
+        SerializedObject related = read(principal, relatedOnum);
         if (related == null) continue;
 
         if (dissem) {
@@ -327,9 +327,12 @@ public class TransactionManager {
    * @throws AccessException
    *           if the principal is not allowed to read the object.
    */
-  public SerializedObject read(Principal client, long onum)
+  public SerializedObject checkRead(Principal client, long onum)
       throws AccessException {
-    return read(client, onum, false);
+    SerializedObject result = read(client, onum);
+    if (result == null)
+      throw new AccessException();
+    return result;
   }
 
   /**
@@ -337,18 +340,20 @@ public class TransactionManager {
    *          If true, this method will return null instead of throwing an
    *          AccessException if the client has insufficient privileges.
    */
-  private SerializedObject read(Principal client, long onum,
-      boolean denyWithNull) throws AccessException {
+  private SerializedObject read(Principal client, long onum) {
     SerializedObject obj;
     synchronized (store) {
       obj = store.read(onum);
     }
 
-    if (obj == null) return null;
-    if (AuthorizationUtil.isReadPermitted(client, Client.getClient().getCore(
-        store.getName()), obj.getLabelOnum())) return obj;
-    if (denyWithNull) return null;
-    throw new AccessException();
+    if (obj == null)
+      return null;
+    if (!AuthorizationUtil.isReadPermitted(client,
+                                           Client.getClient().getCore(store.getName()),
+                                           obj.getLabelOnum()))
+      return null;
+    
+    return obj;
   }
 
   /**
