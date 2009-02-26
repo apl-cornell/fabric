@@ -1,0 +1,4 @@
+package fabric.util;
+
+public interface Map {
+}

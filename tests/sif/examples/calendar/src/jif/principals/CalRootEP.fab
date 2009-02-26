@@ -6,7 +6,7 @@ public class CalRootEP extends ExternalPrincipal {
     }
 
     private static CalRootEP{*!:} P;
-    public static Principal{*!:} getInstance{*!:}() {
+    public static jif.lang.Principal{*!:} getInstance{*!:}() {
 	if (P == null) {
 	    P = new CalRootEP();
 	}

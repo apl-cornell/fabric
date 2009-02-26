@@ -133,7 +133,7 @@
                skipemptyfilesets="true"
                vmlauncher="false">
             <arg value="${fabric.home}/bin/fabc" />
-        	  <arg value="-cp"				 /> <arg value="${basedir}/classes"/>
+        	  <arg value="-cp"				 /> <arg value="${fabric.home}/tests/jif/classes"/>
         	  <arg value="-sig"/>
             <arg value="-d"          /> <arg value="sig-classes" />
             <arg value="-sourcepath" /> <arg value="sig-src" />
@@ -143,6 +143,7 @@
         </apply>
 
     </target>
+	
 
     <target name="sif-examples"
             depends="sif"
