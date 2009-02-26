@@ -12,9 +12,17 @@ public interface ConfPolicy extends Policy {
    */
   ConfPolicy join(Core core, ConfPolicy p, Set/* <DelegationPair> */dependencies);
 
+  ConfPolicy join(ConfPolicy p, Set/* <DelegationPair> */dependencies);
+
   ConfPolicy meet(Core core, ConfPolicy p, Set/* <DelegationPair> */dependencies);
+
+  ConfPolicy meet(ConfPolicy p, Set/* <DelegationPair> */dependencies);
 
   ConfPolicy join(Core core, ConfPolicy p);
 
+  ConfPolicy join(ConfPolicy p);
+
   ConfPolicy meet(Core core, ConfPolicy p);
+
+  ConfPolicy meet(ConfPolicy p);
 }

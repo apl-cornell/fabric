@@ -158,6 +158,10 @@ public final class LabelUtil {
     }
   }
 
+  public static ConfPolicy readerPolicty(Principal owner, Principal reader) {
+    return readerPolicy(localCore, owner, reader);
+  }
+
   public static ConfPolicy readerPolicy(Core core, Principal owner,
       Collection/* <Principal> */readers) {
     try {
@@ -167,6 +171,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static ConfPolicy readerPolicy(Principal owner, Collection/* <Principal> */readers) {
+    return readerPolicy(localCore, owner, readers);
   }
 
   /**
@@ -184,6 +192,10 @@ public final class LabelUtil {
     }
   }
 
+  public static ConfPolicy readerPolicy(Label lbl, Principal owner, Principal[] readers) {
+    return readerPolicy(localCore, lbl, owner, readers);
+  }
+
   public static ConfPolicy readerPolicy(Core core, Principal owner,
       PrincipalSet writers) {
     try {
@@ -194,6 +206,10 @@ public final class LabelUtil {
     }
   }
 
+  public static ConfPolicy readerPolicy(Principal owner, PrincipalSet writers) {
+    return readerPolicy(localCore, owner, writers);
+  }
+
   public static Label readerPolicyLabel(Core core, Principal owner,
       Principal reader) {
     try {
@@ -202,6 +218,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static Label readerPolicyLabel(Principal owner, Principal reader) {
+  	return readerPolicyLabel(localCore, owner, reader);
   }
 
   public static Label readerPolicyLabel(Core core, Principal owner,
@@ -215,6 +235,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static Label readerPolicyLabel(Principal owner, Collection/* <Principal> */readers) {
+    return readerPolicyLabel(localCore, owner, readers);
   }
 
   /**
@@ -232,6 +256,10 @@ public final class LabelUtil {
     }
   }
 
+  public static Label readerPolicyLabel(Label lbl, Principal owner, Principal[] readers) {
+    return readerPolicyLabel(localCore, lbl, owner, readers);
+  }
+
   public static Label readerPolicyLabel(Core core, Principal owner,
       PrincipalSet readers) {
     try {
@@ -241,6 +269,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static Label readerPolicyLabel(Principal owner, PrincipalSet readers) {
+    return readerPolicyLabel(localCore, owner, readers);
   }
 
   public static IntegPolicy writerPolicy(Core core, Principal owner, Principal writer) {
@@ -253,6 +285,10 @@ public final class LabelUtil {
     }
   }
 
+  public static IntegPolicy writerPolicy(Principal owner, Principal writer) {
+    return writerPolicy(localCore, owner, writer);
+  }
+
   public static IntegPolicy writerPolicy(Core core, Principal owner,
       Collection/* <Principal> */writers) {
     try {
@@ -261,6 +297,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static IntegPolicy writerPolicy(Principal owner, Collection/* <Principal> */writers) {
+    return writerPolicy(localCore, owner, writers);
   }
 
   public static Label writerPolicyLabel(Core core, Principal owner, Principal writer) {
@@ -272,6 +312,10 @@ public final class LabelUtil {
     }
   }
 
+  public static Label writerPolicyLabel(Principal owner, Principal writer) {
+    return writerPolicyLabel(localCore, owner, writer);
+  }
+
   public static Label writerPolicyLabel(Core core, Principal owner,
       Collection/* <Principal> */writers) {
     try {
@@ -281,6 +325,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static Label writerPolicyLabel(Principal owner, Collection/* <Principal> */writers) {
+  	return writerPolicyLabel(localCore, owner, writers);
   }
 
   /**
@@ -298,6 +346,10 @@ public final class LabelUtil {
     }
   }
 
+  public static Label writerPolicyLabel(Label lbl, Principal owner, Principal[] writers) {
+    return writerPolicyLabel(localCore, lbl, owner, writers);
+  }
+
   /**
    * See the Jif signature for the explanation of lbl.
    */
@@ -313,6 +365,10 @@ public final class LabelUtil {
     }
   }
 
+  public static IntegPolicy writerPolicy(Label lbl, Principal owner, Principal[] writers) {
+    return writerPolicy(localCore, lbl, owner, writers);
+  }
+
   public static IntegPolicy writerPolicy(Core core, Principal owner,
       PrincipalSet writers) {
     try {
@@ -321,6 +377,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static IntegPolicy writerPolicy(Principal owner, PrincipalSet writers) {
+    return writerPolicy(localCore, owner, writers);
   }
 
   public static Label toLabel(Core core, ConfPolicy cPolicy, IntegPolicy iPolicy) {
@@ -334,6 +394,10 @@ public final class LabelUtil {
     }
   }
 
+  public static Label toLabel(ConfPolicy cPolicy, IntegPolicy iPolicy) {
+    return toLabel(localCore, cPolicy, iPolicy);
+  }
+
   public static Label toLabel(Core core, ConfPolicy policy) {
     try {
       enterTiming();
@@ -343,6 +407,10 @@ public final class LabelUtil {
     }
   }
 
+  public static Label toLabel(ConfPolicy policy) {
+    return toLabel(localCore, policy);
+  }
+
   public static Label toLabel(Core core, IntegPolicy policy) {
     try {
       enterTiming();
@@ -350,6 +418,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static Label toLabel(IntegPolicy policy) {
+    return toLabel(localCore, policy);
   }
 
   public static Label join(Core core, Label l1, Label l2) {
@@ -397,6 +469,10 @@ public final class LabelUtil {
     }
   }
 
+  public static Label join(Label l1, Label l2) {
+    return join(localCore, l1, l2);
+  }
+
   public static Label meetLbl(Core core, Label l1, Label l2) {
     try {
       enterTiming();
@@ -404,6 +480,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static Label meetLbl(Label l1, Label l2) {
+  	return meetLbl(localCore, l1, l2);
   }
 
   public static Label meet(Core core, Label l1, Label l2) {
@@ -451,6 +531,10 @@ public final class LabelUtil {
     }
   }
 
+  public static Label meet(Label l1, Label l2) {
+    return meet(localCore, l1, l2);
+  }
+
   public static ConfPolicy join(Core core, ConfPolicy p1, ConfPolicy p2) {
     try {
       enterTiming();
@@ -458,6 +542,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static ConfPolicy join(ConfPolicy p1, ConfPolicy p2) {
+    return join(localCore, p1, p2);
   }
 
   protected static ConfPolicy join(Core core, ConfPolicy p1, ConfPolicy p2,
@@ -487,6 +575,10 @@ public final class LabelUtil {
 
   }
 
+  protected static ConfPolicy join(ConfPolicy p1, ConfPolicy p2, Set/* <DelegationPair> */s) {
+    return join(localCore, p1, p2, s);
+  }
+
   public static IntegPolicy join(Core core, IntegPolicy p1, IntegPolicy p2) {
     try {
       enterTiming();
@@ -494,6 +586,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static IntegPolicy join(IntegPolicy p1, IntegPolicy p2) {
+  	return join(localCore, p1, p2);
   }
 
   static IntegPolicy join(Core core, IntegPolicy p1, IntegPolicy p2, Set/* <DelegationPair> */s) {
@@ -522,6 +618,10 @@ public final class LabelUtil {
 
   }
 
+  static IntegPolicy join(IntegPolicy p1, IntegPolicy p2, Set/* <DelegationPair> */s) {
+    return join(localCore, p1, p2, s);
+  }
+
   public static ConfPolicy meetPol(Core core, ConfPolicy p1, ConfPolicy p2) {
     try {
       enterTiming();
@@ -529,6 +629,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static ConfPolicy meetPol(ConfPolicy p1, ConfPolicy p2) {
+    return meetPol(localCore, p1, p2);
   }
 
   protected static ConfPolicy meet(Core core, ConfPolicy p1, ConfPolicy p2,
@@ -557,6 +661,10 @@ public final class LabelUtil {
     }
   }
 
+  protected static ConfPolicy meet(ConfPolicy p1, ConfPolicy p2, Set/* <DelegationPair> */s) {
+    return meet(localCore, p1, p2, s);
+  }
+
   public static IntegPolicy meetPol(Core core, IntegPolicy p1, IntegPolicy p2) {
     try {
       enterTiming();
@@ -564,6 +672,10 @@ public final class LabelUtil {
     } finally {
       exitTiming();
     }
+  }
+
+  public static IntegPolicy meetPol(IntegPolicy p1, IntegPolicy p2) {
+    return meetPol(localCore, p1, p2);
   }
 
   static IntegPolicy meet(Core core, IntegPolicy p1, IntegPolicy p2, Set/* <DelegationPair> */s) {
@@ -590,6 +702,10 @@ public final class LabelUtil {
       exitTiming();
     }
 
+  }
+
+  static IntegPolicy meet(IntegPolicy p1, IntegPolicy p2, Set/* <DelegationPair> */s) {
+    return meet(localCore, p1, p2, s);
   }
 
   public static boolean equivalentTo(Label l1, Label l2) {

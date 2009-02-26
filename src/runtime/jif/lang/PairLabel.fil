@@ -85,8 +85,16 @@ public final class PairLabel implements Label {
     return LabelUtil.join(core, this, l);
   }
 
+  public final Label join(Label l) {
+    return LabelUtil.join(this, l);
+  }
+
   public Label meet(Core core, Label l) {
     return LabelUtil.meet(core, this, l);
+  }
+
+  public Label meet(Label l) {
+    return LabelUtil.meet(this, l);
   }
 
   public ConfPolicy confPolicy() {

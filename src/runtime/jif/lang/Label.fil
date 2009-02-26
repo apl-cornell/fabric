@@ -16,7 +16,11 @@ public interface Label {
 
   Label join(Core core, Label l);
 
+  Label join(Label l);
+
   Label meet(Core core, Label l);
+
+  Label meet(Label l);
 
   ConfPolicy confPolicy();
 
