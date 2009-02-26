@@ -23,5 +23,5 @@ public interface FabricTypeSystem extends JifTypeSystem {
    */
   Principal clientPrincipal(Position pos);
   
-  LocalInstance clientLocalInstance(Position pos);
+  LocalInstance clientLocalInstance();
 }

@@ -17,7 +17,7 @@ public class Client_c extends Local_c implements Client {
     FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
 
     Client c = (Client)this.type(ts.Client());
-    c = (Client)c.localInstance(ts.clientLocalInstance(position()));
+    c = (Client)c.localInstance(ts.clientLocalInstance());
     
     return c;
   }

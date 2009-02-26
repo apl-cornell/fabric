@@ -72,14 +72,21 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return load("fabric.client.FabricClient");
   }
 
-  public LocalInstance clientLocalInstance(Position pos) {
-    return localInstance(pos, Flags.FINAL, Client(), "client$");
+  private LocalInstance clientLocalInstance = null;
+  
+  public LocalInstance clientLocalInstance() {
+    if (clientLocalInstance == null) {
+      // Always use the same local instance, because jif now use pointer identity to compare local instances
+      // for the purpose of label checking.
+      clientLocalInstance = localInstance(Position.compilerGenerated(), Flags.FINAL, Client(), "client$");
+    }
+    return clientLocalInstance;
   }
   
   public Principal clientPrincipal(Position pos) {
 //    return dynamicPrincipal(pos, new AccessPathClient(pos, this));
     try {
-      return dynamicPrincipal(pos, JifUtil.varInstanceToAccessPath(clientLocalInstance(pos), pos));
+      return dynamicPrincipal(pos, JifUtil.varInstanceToAccessPath(clientLocalInstance(), pos));
     }
     catch (SemanticException e) {
       // shouldn't happen

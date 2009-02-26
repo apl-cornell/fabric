@@ -1,7 +1,6 @@
 package fabric.translate;
 
 import fabil.ast.FabILNodeFactory;
-import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.Expr;
 import polyglot.types.LocalInstance;
@@ -14,6 +13,7 @@ import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
 
 public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c {
+  @Override
   public Expr toJava(Principal principal, JifToJavaRewriter rw) throws SemanticException {
     DynamicPrincipal dp = (DynamicPrincipal)principal;
     if (dp.path() instanceof AccessPathLocal) {
@@ -23,7 +23,7 @@ public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c 
       FabricTypeSystem ts = (FabricTypeSystem)rw.jif_ts();
       FabILNodeFactory nf = (FabILNodeFactory)rw.java_nf();
 
-      if (ts.equals(li, ts.clientLocalInstance(li.position()))) {
+      if (ts.equals(li, ts.clientLocalInstance())) {
         // Local client.
         return nf.Call(li.position(), 
                        nf.Local(li.position(), nf.Id(li.position(), "client$")), 
