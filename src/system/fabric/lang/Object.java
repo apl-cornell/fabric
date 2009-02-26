@@ -316,6 +316,7 @@ public interface Object {
      */
     public $Impl(Core core, Label label) throws UnreachableNodeException {
       this(core, core.createOnum(), 0, label);
+      core.cache(this);
 
       // Register the new object with the transaction manager.
       TransactionManager.getInstance().registerCreate(this);

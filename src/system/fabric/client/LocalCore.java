@@ -172,6 +172,14 @@ public final class LocalCore implements Core {
     // nothing to do
   }
 
+  public void evict(long onum) {
+    // nothing to do
+  }
+
+  public void cache($Impl impl) {
+    // nothing to do
+  }
+
   public void initialize() {
     // Bootstrap labels with some proxies. Any remaining references to these
     // proxies will be resolved by the hack in readObject().

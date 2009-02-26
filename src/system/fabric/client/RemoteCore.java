@@ -20,6 +20,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
+import fabric.lang.Object.$Impl;
 import fabric.messages.*;
 import fabric.util.Map;
 
@@ -436,6 +437,26 @@ public class RemoteCore implements Core, RemoteNode {
       if (r != null && r.get() == null) {
         objects.remove(onum);
       }
+    }
+  }
+
+  public void evict(long onum) {
+    synchronized (objects) {
+      FabricSoftRef r = objects.get(onum);
+      r.evict();
+    }
+  }
+
+  public void cache($Impl impl) {
+    FabricSoftRef ref = impl.$ref;
+    if (ref.core != this)
+      throw new InternalError("Caching object at wrong core");
+    
+    synchronized (objects) {
+      if (objects.get(ref.onum) != null)
+        throw new InternalError("Conflicting cache entry");
+      
+      objects.put(ref.onum, ref);
     }
   }
 

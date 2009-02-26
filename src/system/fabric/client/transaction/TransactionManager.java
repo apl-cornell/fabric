@@ -409,9 +409,8 @@ public final class TransactionManager {
           Core core = (Core) entry.getKey();
           Set<Long> versionConflicts = entry.getValue().versionConflicts;
           if (versionConflicts != null) {
-            for (long onum : versionConflicts) {
-              // XXX TODO somehow evict (core, onum) from cache.
-            }
+            for (long onum : versionConflicts)
+              core.evict(onum);
           }
         }
 

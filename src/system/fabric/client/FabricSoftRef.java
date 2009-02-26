@@ -34,6 +34,15 @@ public class FabricSoftRef extends SoftReference<$Impl> {
     this.onum = onum;
   }
   
+  /**
+   * Evicts the Impl associated with this soft reference from the client's cache.
+   */
+  public void evict() {
+    clear();
+    core.notifyEvict(onum);
+    if (readMapEntry.depin()) readMapEntry = null;
+  }
+  
   public void readMapEntry(ReadMapEntry readMapEntry) {
     this.readMapEntry = readMapEntry;
   }

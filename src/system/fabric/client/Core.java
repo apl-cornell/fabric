@@ -95,4 +95,14 @@ public interface Core {
    *          Onum of the object that was evicted.
    */
   public void notifyEvict(long onum);
+
+  /**
+   * Evicts the object with the given onum from cache.
+   */
+  public void evict(long onum);
+
+  /**
+   * Adds the given object to the cache.
+   */
+  public void cache($Impl impl);
 }
