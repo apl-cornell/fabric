@@ -49,7 +49,7 @@ public class TakeOwnershipMessage extends
     this.onum = onum;
   }
 
-  protected TakeOwnershipMessage(DataInput in) throws IOException {
+  public TakeOwnershipMessage(DataInput in) throws IOException {
     this(new TransactionID(in), Client.getClient().getCore(in.readUTF()), in
         .readLong());
   }

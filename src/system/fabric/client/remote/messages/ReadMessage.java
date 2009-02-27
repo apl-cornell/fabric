@@ -67,7 +67,7 @@ public class ReadMessage extends InterClientMessage<ReadMessage.Response> {
     this.onum = onum;
   }
 
-  protected ReadMessage(DataInput in) throws IOException {
+  public ReadMessage(DataInput in) throws IOException {
     this(new TransactionID(in), Client.getClient().getCore(in.readUTF()), in
         .readLong());
   }

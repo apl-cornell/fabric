@@ -39,7 +39,7 @@ public class GetPrincipalMessage extends
     super(MessageType.GET_PRINCIPAL);
   }
 
-  protected GetPrincipalMessage(DataInput in) {
+  public GetPrincipalMessage(DataInput in) {
     this();
   }
 
