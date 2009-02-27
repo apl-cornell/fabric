@@ -2,10 +2,7 @@ package fabric.common;
 
 import java.security.*;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -80,6 +77,8 @@ public final class Crypto {
   public static Cipher cipherInstance(int opmode, byte[] key, byte[] iv)
       throws NoSuchAlgorithmException, NoSuchPaddingException,
       InvalidKeyException, InvalidAlgorithmParameterException {
+    if (key == null) return new NullCipher();
+    
     Cipher result = Cipher.getInstance(ALG_SECRET_CRYPTO);
 
     if (iv != null) {
