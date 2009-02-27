@@ -38,7 +38,7 @@ public class NewArrayExt_c extends AnnotatedExt_c {
     if (baseType.isReference()) {
       if (ts.isPureFabricType(baseType)) typeArg = baseType.toString();
       else typeArg = "fabric.lang.Object";
-      typeArg += "$Proxy.class, ";
+      typeArg += ".$Proxy.class, ";
     }
     return qq.parseExpr("(%T) new %T(%E, %E, " + typeArg + "%E).$getProxy()",
         arrayType, arrayImplType, location(), label(), size);
