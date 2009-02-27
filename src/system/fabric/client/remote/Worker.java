@@ -101,7 +101,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
         continue;
       }
       
-      Thread.currentThread().setName("RCM worker -- idle");
+      Thread.currentThread().setName("RCM worker -- active");
 
       SSLSocket sslSocket = null;
       try {
