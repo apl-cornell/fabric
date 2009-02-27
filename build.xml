@@ -209,6 +209,7 @@
     </delete>
   	<subant target="clean">
   		<fileset file="tests/sif/build.xml"/>
+  		<fileset file="tests/jif/build.xml"/>
   	</subant>
   </target>
 

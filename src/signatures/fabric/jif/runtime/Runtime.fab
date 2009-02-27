@@ -7,8 +7,9 @@ public class Runtime[principal P]
     private Runtime(principal{this} pp) { }
 
     public static native Runtime[P]{P!:} getRuntime() throws SecurityException;
-    public static native principal{*!:*} user();
-    public static native principal getUser(String username);
+// TODO: Use JNI to support this    
+//    public static native principal{*!:*} user();
+//    public static native principal getUser(String username);
 
     public native FileOutputStream[{*L}]{P:;P!:} openFileWrite(String{*L} name, boolean{*L} append, label L)
 	throws (IOException{*L;L}, SecurityException{*L;L});

@@ -158,7 +158,7 @@ public final class LabelUtil {
     }
   }
 
-  public static ConfPolicy readerPolicty(Principal owner, Principal reader) {
+  public static ConfPolicy readerPolicy(Principal owner, Principal reader) {
     return readerPolicy(localCore, owner, reader);
   }
 
