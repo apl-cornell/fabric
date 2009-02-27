@@ -21,6 +21,7 @@ public final class MainThread extends Thread implements FabricThread {
   private Throwable uncaughtException;
 
   private MainThread(Options opts, Method main, Object args) {
+    super("Main client application");
     this.tm = null;
     this.opts = opts;
     this.main = main;
