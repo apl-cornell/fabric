@@ -409,6 +409,11 @@ public final class Log {
           parent.clientsCalled.add(client);
       }
     }
+    
+    // Merge the update map.
+    synchronized (parent.updateMap) {
+      parent.updateMap.putAll(updateMap);
+    }
 
     synchronized (parent) {
       parent.child = null;
