@@ -245,7 +245,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    */
   public R dispatch(Worker handler) throws FabricException {
     throw new InternalError(
-        "Invalid, unsupported, or unimplemented core message");
+        "Invalid, unsupported, or unimplemented core message: " + getClass());
   }
 
   /**
@@ -257,7 +257,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    */
   public R dispatch(fabric.client.remote.Worker handler) throws FabricException {
     throw new InternalError(
-        "Invalid, unsupported, or unimplemented client message");
+        "Invalid, unsupported, or unimplemented client message: " + getClass());
   }
 
   /**
