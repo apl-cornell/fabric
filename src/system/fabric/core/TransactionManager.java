@@ -233,7 +233,7 @@ public class TransactionManager {
     if (glob != null) return glob;
 
     ObjectGroup group = readGroup(null, onum, true, null);
-    if (group == null) throw new AccessException();
+    if (group == null) throw new AccessException(store.getName(), onum);
 
     Core core = Client.getClient().getCore(store.getName());
     glob = new Glob(core, group, key);
@@ -331,7 +331,7 @@ public class TransactionManager {
       throws AccessException {
     SerializedObject result = read(client, onum);
     if (result == null)
-      throw new AccessException();
+      throw new AccessException(store.getName(), onum);
     return result;
   }
 

@@ -160,7 +160,7 @@ public class MemoryStore extends ObjectStore {
     PendingTransaction tx = submap.remove(client);
     if (submap.isEmpty()) pendingByTid.remove(tid);
 
-    if (tx == null) throw new AccessException();
+    if (tx == null) throw new AccessException("Invalid transaction id: " + tid);
 
     // XXX Check if the client acts for the owner.
 
