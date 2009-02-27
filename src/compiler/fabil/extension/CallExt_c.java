@@ -106,7 +106,15 @@ public class CallExt_c extends ExprExt_c {
     args.add(c.remoteClient());
     args.addAll(c.arguments());
     
-    Expr target = rr.qq().parseExpr("(" + ((ClassType)c.target().type()).fullName() + ".$Proxy)" + c.target());
+    Expr target = (Expr) c.target();
+    if (target instanceof Special) {
+      target = rr.qq().parseExpr("%E.$getProxy()", target);
+    }
+    
+    target =
+        rr.qq().parseExpr(
+            "(" + ((ClassType) c.target().type()).fullName() + ".$Proxy) %E",
+            target);
     return nf.Call(Position.compilerGenerated(), 
                    target, 
                    nf.Id(Position.compilerGenerated(), c.name() + "$remote"), 
