@@ -1,0 +1,35 @@
+package system;
+
+public class RemoteCall01 {
+  int i;
+
+  public void m() {
+    i++;
+  }
+
+  public void m_remote(fabric.lang.Principal p) {
+    i++;
+  }
+
+  public static void main(String[] args) {
+    RemoteCall01 t = null;
+    Core core = Client.getClient().getCore("core0");
+    RemoteClient remoteClient = Client.getClient().getClient("core0");
+    atomic {
+      t = new RemoteCall01@core();
+    }
+
+    atomic {
+      t.m@remoteClient();
+    }
+
+    int curI = 0;
+    atomic {
+      curI = t.i;
+    }
+
+    if (curI == 1) System.out.println("TEST PASSED.");
+    else System.out.println("TEST FAILED: expected t.i == 1 but got " + curI);
+  }
+}
+

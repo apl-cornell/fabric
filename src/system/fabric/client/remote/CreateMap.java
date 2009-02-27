@@ -5,7 +5,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import fabric.client.Client;
@@ -24,17 +26,17 @@ public class CreateMap {
   /**
    * Maps md5(oid) to Label
    */
-  private Map<byte[], Label> map;
+  private Map<List<Byte>, Label> map;
 
   public CreateMap() {
-    this.map = new HashMap<byte[], Label>();
+    this.map = new HashMap<List<Byte>, Label>();
   }
 
   /**
    * Copy constructor.
    */
   public CreateMap(CreateMap map) {
-    this.map = new HashMap<byte[], Label>(map.map);
+    this.map = new HashMap<List<Byte>, Label>(map.map);
   }
 
   /**
@@ -46,8 +48,12 @@ public class CreateMap {
     Client client = Client.getClient();
     int size = in.readInt();
     for (int i = 0; i < size; i++) {
-      byte[] key = new byte[in.readInt()];
-      in.readFully(key);
+      byte[] buf = new byte[in.readInt()];
+      in.readFully(buf);
+
+      List<Byte> key = new ArrayList<Byte>(buf.length);
+      for (byte b : buf)
+        key.add(b);
 
       Label.$Proxy val = null;
       if (in.readBoolean()) {
@@ -59,7 +65,7 @@ public class CreateMap {
       map.put(key, val);
     }
   }
-  
+
   public boolean containsKey($Proxy proxy) {
     try {
       return map.containsKey(hash(proxy));
@@ -84,7 +90,7 @@ public class CreateMap {
     }
   }
 
-  private byte[] hash($Proxy proxy) throws NoSuchAlgorithmException {
+  private List<Byte> hash($Proxy proxy) throws NoSuchAlgorithmException {
     MessageDigest md5 = MessageDigest.getInstance(ALG_HASH);
     Core core = proxy.$getCore();
     long onum = proxy.$getOnum();
@@ -99,17 +105,25 @@ public class CreateMap {
     md5.update((byte) (onum >>> 48));
     md5.update((byte) (onum >>> 56));
 
-    return md5.digest();
+    byte[] buf = md5.digest();
+
+    List<Byte> result = new ArrayList<Byte>(buf.length);
+    for (byte b : buf)
+      result.add(b);
+
+    return result;
   }
 
   public void write(DataOutput out) throws IOException {
     out.writeInt(map.size());
-    for (Map.Entry<byte[], Label> entry : map.entrySet()) {
-      byte[] key = entry.getKey();
+    for (Map.Entry<List<Byte>, Label> entry : map.entrySet()) {
+      List<Byte> key = entry.getKey();
       Label value = entry.getValue();
 
-      out.writeInt(key.length);
-      out.write(key);
+      out.writeInt(key.size());
+      for (byte b : key)
+        out.writeByte(b);
+
       if (value != null) {
         out.writeBoolean(true);
         out.writeUTF(value.$getCore().name());

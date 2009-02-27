@@ -308,7 +308,7 @@ public final class Log {
       }
     }
 
-    if (parent != null && parent.tid == tid.parent) {
+    if (parent != null && parent.tid.equals(tid.parent)) {
       // The parent frame represents the parent transaction. Null out its child.
       synchronized (parent) {
         parent.child = null;
@@ -358,7 +358,7 @@ public final class Log {
   void commitNested() {
     // TODO See if lazy merging of logs helps performance.
 
-    if (parent == null || parent.tid != tid.parent) {
+    if (parent == null || !parent.tid.equals(tid.parent)) {
       // Reuse this frame for the parent transaction.
       return;
     }
@@ -442,13 +442,20 @@ public final class Log {
     for (Pair<LockList.Node<Log>, ReadMapEntry> entry : readsReadByParent)
       entry.second.releaseLock(entry.first);
 
-    // Release write locks and update version numbers.
+    // Release write locks and ownerships; update version numbers.
     for ($Impl obj : writes) {
+      if (!obj.$isOwned) {
+        // The cached object is out-of-date.  Evict it.
+        obj.$ref.evict();
+        continue;
+      }
+      
       synchronized (obj) {
         obj.$writer = null;
         obj.$writeLockHolder = null;
         obj.$version++;
         obj.$readMapEntry.versionNumber++;
+        obj.$isOwned = false;
 
         // Discard one layer of history.
         obj.$history = obj.$history.$history;
@@ -460,10 +467,17 @@ public final class Log {
 
     // Release write locks on created objects and set version numbers.
     for ($Impl obj : creates) {
+      if (!obj.$isOwned) {
+        // The cached object is out-of-date.  Evict it.
+        obj.$ref.evict();
+        continue;
+      }
+      
       obj.$writer = null;
       obj.$writeLockHolder = null;
       obj.$version = 1;
       obj.$readMapEntry.versionNumber = 1;
+      obj.$isOwned = false;
     }
   }
 

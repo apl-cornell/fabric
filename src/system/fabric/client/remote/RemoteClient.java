@@ -11,7 +11,9 @@ import javax.security.auth.x500.X500Principal;
 
 import fabric.client.*;
 import fabric.client.remote.messages.*;
+import fabric.client.transaction.Log;
 import fabric.client.transaction.TransactionManager;
+import fabric.client.transaction.TransactionRegistry;
 import fabric.common.InternalError;
 import fabric.common.NoSuchNodeError;
 import fabric.common.TransactionID;
@@ -158,15 +160,30 @@ public final class RemoteClient implements RemoteNode {
   public Object issueRemoteCall($Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
       throws UnreachableNodeException, RemoteCallException {
-    TransactionID tid =
-        TransactionManager.getInstance().registerRemoteCall(this);
+    TransactionManager tm = TransactionManager.getInstance();
+    tm.registerRemoteCall(this);
+
+    TransactionID tid = tm.getCurrentTid();
+    UpdateMap updateMap = tm.getUpdateMap();
 
     Class<?> receiverClass =
         receiver.fetch().$getProxy().getClass().getEnclosingClass();
 
     RemoteCallMessage.Response response =
-        new RemoteCallMessage(tid, receiverClass, receiver, methodName,
-            parameterTypes, args).send(this);
+        new RemoteCallMessage(tid, updateMap, receiverClass, receiver,
+            methodName, parameterTypes, args).send(this);
+
+    // Commit any outstanding subtransactions that occurred as a result of the
+    // remote call.
+    Log innermost = TransactionRegistry.getInnermostLog(tid.topTid);
+    tm.associateLog(innermost);
+    for (int i = innermost.getTid().depth; i > tid.depth; i--)
+      tm.commitTransaction();
+
+    // Merge in the update map we got.
+    if (response.updateMap != null)
+      tm.getUpdateMap().putAll(response.updateMap);
+
     return response.result;
   }
 

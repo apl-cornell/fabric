@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import jif.lang.Label;
 import fabric.client.*;
 import fabric.client.remote.RemoteClient;
+import fabric.client.remote.UpdateMap;
 import fabric.common.FabricThread;
 import fabric.common.InternalError;
 import fabric.common.OidKeyHashMap;
@@ -220,7 +221,7 @@ public final class TransactionManager {
       current.commitState.value = ABORTED;
 
       if (current.tid.parent == null || current.parent != null
-          && current.parent.tid == current.tid.parent) {
+          && current.parent.tid.equals(current.tid.parent)) {
         // The parent frame represents the parent transaction. Pop the stack.
         current = current.parent;
       } else {
@@ -258,7 +259,7 @@ public final class TransactionManager {
       // Update data structures to reflect the commit.
       current.commitNested();
       logger.finest(current + " committed");
-      if (parent.tid == current.tid.parent) {
+      if (parent.tid.equals(current.tid.parent)) {
         // Parent frame represents parent transaction. Pop the stack.
         current = parent;
       } else {
@@ -836,16 +837,12 @@ public final class TransactionManager {
 
   /**
    * Registers a remote call to the given client.
-   * 
-   * @return the current transaction ID.
    */
-  public TransactionID registerRemoteCall(RemoteClient client) {
+  public void registerRemoteCall(RemoteClient client) {
     if (current != null) {
       if (!current.clientsCalled.contains(client))
         current.clientsCalled.add(client);
     }
-
-    return current.tid;
   }
 
   /**
@@ -858,6 +855,11 @@ public final class TransactionManager {
   public TransactionID getCurrentTid() {
     if (current == null) return null;
     return current.tid;
+  }
+  
+  public UpdateMap getUpdateMap() {
+    if (current == null) return null;
+    return current.updateMap;
   }
 
   /**

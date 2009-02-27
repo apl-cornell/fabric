@@ -136,8 +136,8 @@ public class TransactionID implements FastSerializable {
       ancestor2 = ancestor2.parent;
 
     // Walk up until the ancestors match.
-    while (ancestor1 != ancestor2
-        && (ancestor1.tid != ancestor2.tid || ancestor1.equals(ancestor2))) {
+    while (ancestor1 != ancestor2 && ancestor1.tid != ancestor2.tid
+        && !ancestor1.equals(ancestor2)) {
       ancestor1 = ancestor1.parent;
       ancestor2 = ancestor2.parent;
     }

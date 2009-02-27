@@ -6,8 +6,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import javax.crypto.Cipher;
 
@@ -32,7 +31,7 @@ public class UpdateMap implements FastSerializable {
   /**
    * Maps md5(oid, object key) to (iv, enc(hostname, object key, iv)).
    */
-  private Map<byte[], Pair<byte[], byte[]>> map;
+  private Map<List<Byte>, Pair<byte[], byte[]>> map;
 
   /**
    * Cache for map entries and non-entries that have been discovered.
@@ -47,7 +46,7 @@ public class UpdateMap implements FastSerializable {
   public int version;
 
   public UpdateMap() {
-    this.map = new HashMap<byte[], Pair<byte[], byte[]>>();
+    this.map = new HashMap<List<Byte>, Pair<byte[], byte[]>>();
     this.readCache = new OidKeyHashMap<RemoteClient>();
     this.writeCache = new OidKeyHashMap<Pair<$Proxy, RemoteClient>>();
     this.version = 0;
@@ -57,7 +56,7 @@ public class UpdateMap implements FastSerializable {
    * Copy constructor.
    */
   public UpdateMap(UpdateMap map) {
-    this.map = new HashMap<byte[], Pair<byte[], byte[]>>(map.map);
+    this.map = new HashMap<List<Byte>, Pair<byte[], byte[]>>(map.map);
     this.readCache = new OidKeyHashMap<RemoteClient>(map.readCache);
     this.writeCache =
         new OidKeyHashMap<Pair<$Proxy, RemoteClient>>(map.writeCache);
@@ -67,14 +66,17 @@ public class UpdateMap implements FastSerializable {
   /**
    * Deserialization constructor.
    */
-  public UpdateMap(int version, DataInput in) throws IOException {
+  public UpdateMap(DataInput in) throws IOException {
     this();
-    this.version = version;
+    this.version = -1;
 
     int size = in.readInt();
     for (int i = 0; i < size; i++) {
-      byte[] key = new byte[in.readInt()];
-      in.readFully(key);
+      byte[] buf = new byte[in.readInt()];
+      in.readFully(buf);
+      List<Byte> key = new ArrayList<Byte>(buf.length);
+      for (byte b : buf)
+        key.add(b);
 
       byte[] iv = new byte[in.readInt()];
       in.readFully(iv);
@@ -114,7 +116,7 @@ public class UpdateMap implements FastSerializable {
 
   private RemoteClient slowLookup($Proxy proxy, byte[] encryptKey) {
     try {
-      byte[] mapKey = hash(proxy, encryptKey);
+      List<Byte> mapKey = hash(proxy, encryptKey);
       Pair<byte[], byte[]> encHost = map.get(mapKey);
 
       if (encHost == null) return null;
@@ -172,7 +174,7 @@ public class UpdateMap implements FastSerializable {
   private void slowPut($Proxy proxy, RemoteClient client) {
     try {
       byte[] encryptKey = getKey(proxy);
-      byte[] mapKey = hash(proxy, encryptKey);
+      List<Byte> mapKey = hash(proxy, encryptKey);
       byte[] iv = Crypto.makeIV();
 
       Cipher cipher =
@@ -189,7 +191,8 @@ public class UpdateMap implements FastSerializable {
    * Given a proxy and an encryption key, hashes the object location and the
    * key.
    */
-  private byte[] hash($Proxy proxy, byte[] key) throws NoSuchAlgorithmException {
+  private List<Byte> hash($Proxy proxy, byte[] key)
+      throws NoSuchAlgorithmException {
     MessageDigest md5 = MessageDigest.getInstance(ALG_HASH);
     Core core = proxy.$getCore();
     long onum = proxy.$getOnum();
@@ -203,9 +206,16 @@ public class UpdateMap implements FastSerializable {
     md5.update((byte) (onum >>> 40));
     md5.update((byte) (onum >>> 48));
     md5.update((byte) (onum >>> 56));
-    md5.update(key);
 
-    return md5.digest();
+    if (key != null) md5.update(key);
+
+    byte[] buf = md5.digest();
+
+    List<Byte> result = new ArrayList<Byte>(buf.length);
+    for (byte b : buf)
+      result.add(b);
+
+    return result;
   }
 
   /**
@@ -231,12 +241,14 @@ public class UpdateMap implements FastSerializable {
     flushWriteCache();
 
     out.writeInt(map.size());
-    for (Map.Entry<byte[], Pair<byte[], byte[]>> entry : map.entrySet()) {
-      byte[] key = entry.getKey();
+    for (Map.Entry<List<Byte>, Pair<byte[], byte[]>> entry : map.entrySet()) {
+      List<Byte> key = entry.getKey();
       Pair<byte[], byte[]> val = entry.getValue();
 
-      out.writeInt(key.length);
-      out.write(key);
+      out.writeInt(key.size());
+      for (byte b : key)
+        out.writeByte(b);
+
       out.writeInt(val.first.length);
       out.write(val.first);
       out.writeInt(val.second.length);

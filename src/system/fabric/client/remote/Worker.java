@@ -11,6 +11,8 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
+import jif.lang.Label;
+
 import fabric.client.*;
 import fabric.client.remote.messages.GetPrincipalMessage;
 import fabric.client.remote.messages.ReadMessage;
@@ -240,7 +242,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   private void associateAndSyncLog(Log log, TransactionID tid) {
     TransactionManager tm = getTransactionManager();
     tm.associateLog(log);
-    
+
     TransactionID commonAncestor = log.getTid().getLowestCommonAncestor(tid);
 
     // Do the commits that we've missed.
@@ -263,6 +265,10 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     if (tid != null) {
       Log log = TransactionRegistry.getOrCreateInnermostLog(tid);
       associateAndSyncLog(log, tid);
+
+      // Merge in the update map we got.
+      TransactionManager.getInstance().getUpdateMap().putAll(
+          remoteCallMessage.updateMap);
     }
 
     try {
@@ -303,7 +309,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       });
 
       // Return the result.
-      return new RemoteCallMessage.Response(result);
+      UpdateMap updateMap = TransactionManager.getInstance().getUpdateMap();
+      return new RemoteCallMessage.Response(result, updateMap);
     } catch (RuntimeException e) {
       Throwable cause = e.getCause();
       if (cause instanceof IllegalArgumentException
@@ -386,8 +393,9 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     }
 
     // Ensure that the remote client is allowed to read the object.
-    if (!AuthorizationUtil.isReadPermitted(remoteClient, readMessage.core,
-        readMessage.onum)) return new ReadMessage.Response(null);
+    Label label = obj.get$label();
+    if (!AuthorizationUtil.isReadPermitted(remoteClient, label.$getCore(),
+        label.$getOnum())) return new ReadMessage.Response(null);
 
     return new ReadMessage.Response(obj);
   }
@@ -412,9 +420,12 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     }
 
     // Ensure that the remote client is allowed to write the object.
-    if (!AuthorizationUtil.isWritePermitted(remoteClient,
-        takeOwnershipMessage.core, takeOwnershipMessage.onum))
-      return new TakeOwnershipMessage.Response(false);
+    Label label = obj.get$label();
+    if (!AuthorizationUtil.isWritePermitted(remoteClient, label.$getCore(),
+        label.$getOnum())) return new TakeOwnershipMessage.Response(false);
+    
+    // Relinquish ownership.
+    obj.$isOwned = false;
 
     return new TakeOwnershipMessage.Response(true);
   }

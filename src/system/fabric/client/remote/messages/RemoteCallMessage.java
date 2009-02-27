@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import fabric.client.UnreachableNodeException;
 import fabric.client.remote.RemoteCallException;
 import fabric.client.remote.RemoteClient;
+import fabric.client.remote.UpdateMap;
 import fabric.client.remote.Worker;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
@@ -18,6 +19,7 @@ public class RemoteCallMessage extends
     InterClientMessage<RemoteCallMessage.Response> {
 
   public final TransactionID tid;
+  public final UpdateMap updateMap;
   public final Class<?> receiverType;
   public final $Proxy receiver;
   public final String methodName;
@@ -26,9 +28,11 @@ public class RemoteCallMessage extends
 
   public static class Response implements Message.Response {
     public final Object result;
+    public final UpdateMap updateMap;
 
-    public Response(Object result) {
+    public Response(Object result, UpdateMap updateMap) {
       this.result = result;
+      this.updateMap = updateMap;
     }
 
     /**
@@ -56,6 +60,10 @@ public class RemoteCallMessage extends
           throw new RemoteCallException(e);
         }
       }
+
+      if (in.readBoolean())
+        updateMap = new UpdateMap(in);
+      else updateMap = null;
     }
 
     public void write(DataOutput out) throws IOException {
@@ -73,6 +81,9 @@ public class RemoteCallMessage extends
         out.writeInt(buf.length);
         out.write(buf);
       }
+
+      out.writeBoolean(updateMap != null);
+      if (updateMap != null) updateMap.write(out);
     }
   }
 
@@ -87,9 +98,9 @@ public class RemoteCallMessage extends
    * @param args
    *          The arguments to the method.
    */
-  public RemoteCallMessage(TransactionID tid, Class<?> receiverType,
-      $Proxy receiver, String methodName, Class<?>[] parameterTypes,
-      Object[] args) {
+  public RemoteCallMessage(TransactionID tid, UpdateMap updateMap,
+      Class<?> receiverType, $Proxy receiver, String methodName,
+      Class<?>[] parameterTypes, Object[] args) {
     super(MessageType.REMOTE_CALL);
 
     if (parameterTypes == null ? args != null
@@ -97,6 +108,7 @@ public class RemoteCallMessage extends
       throw new IllegalArgumentException();
 
     this.tid = tid;
+    this.updateMap = updateMap;
     this.receiverType = receiverType;
     this.receiver = receiver;
     this.methodName = methodName;
@@ -114,6 +126,10 @@ public class RemoteCallMessage extends
     if (in.readBoolean())
       this.tid = new TransactionID(in);
     else this.tid = null;
+
+    if (in.readBoolean())
+      this.updateMap = new UpdateMap(in);
+    else this.updateMap = null;
 
     byte[] buf = new byte[in.readInt()];
     in.readFully(buf);
@@ -165,6 +181,9 @@ public class RemoteCallMessage extends
   public void write(DataOutput out) throws IOException {
     out.writeBoolean(tid != null);
     if (tid != null) tid.write(out);
+
+    out.writeBoolean(updateMap != null);
+    if (updateMap != null) updateMap.write(out);
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
