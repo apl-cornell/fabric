@@ -12,6 +12,7 @@ import java.util.Map;
 
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.client.LocalCore;
 import fabric.common.InternalError;
 import fabric.common.ONumConstants;
 import jif.lang.Label;
@@ -90,6 +91,10 @@ public class CreateMap {
   }
 
   public void put($Proxy proxy, Label keyObject) {
+    // Don't put in entries for global constants or objects on local core.
+    if (ONumConstants.isGlobalConstant(proxy.$getOnum())
+        || proxy.$getCore() instanceof LocalCore) return;
+    
     try {
       map.put(hash(proxy), keyObject);
     } catch (NoSuchAlgorithmException e) {

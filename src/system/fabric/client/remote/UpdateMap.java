@@ -15,6 +15,7 @@ import jif.lang.Label;
 import fabric.client.AbortException;
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.client.LocalCore;
 import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.common.util.LongKeyMap;
@@ -142,6 +143,10 @@ public class UpdateMap implements FastSerializable {
   }
 
   public void put($Proxy proxy, RemoteClient client) {
+    // Don't put in entries for global constants or objects on local core.
+    if (ONumConstants.isGlobalConstant(proxy.$getOnum())
+        || proxy.$getCore() instanceof LocalCore) return;
+    
     writeCache.put(proxy, new Pair<$Proxy, RemoteClient>(proxy, client));
     readCache.put(proxy, client);
   }
