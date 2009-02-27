@@ -11,24 +11,35 @@ public class Main {
 	public final principal{*bot} pp = new jif.lang.ExternalPrincipal("localhost");
 	public final label{*bot} lbl = new label {pp→;pp←};
 	public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
-	
+
 	public static void main{*bot}(String{*bot}[]{*bot} args) {
 		if(args == null) return;
-		final Main m = new Main();
-		String{*m.lbl}[]{*m.lbl} argsCopy = new String[args.length];
+		Main m_ = null;
+		atomic {
+			m_ = new Main();
+		}
+		final Main m = m_;
+		String{*m.lbl}[]{*m.lbl} argsCopy = null;
+		atomic {
+			argsCopy = new String[args.length];
+		}
+
 		try {
 			for(int i = 0; i < args.length; i++) {
 				argsCopy[i] = args[i];
 			}
 			m.begin(argsCopy);
 		} catch (ArrayIndexOutOfBoundsException imposs) {}
-		  catch (AbortException e) { /* do nothing for now */ }
-		  catch (SecurityException e) { /* do nothing for now */ }
+		catch (AbortException e) { /* do nothing for now */ }
+		catch (SecurityException e) { /* do nothing for now */ }
 	}
 
 	public void begin{*lbl}(String{*lbl}[]{*lbl} args)
 	throws (AbortException{*lbl}, SecurityException{*lbl}) {
-		Runtime[pp] runtime = Runtime[pp].getRuntime();
+		Runtime[pp] runtime = null;
+		atomic {
+			runtime = Runtime[pp].getRuntime();
+		}
 		if(runtime == null || args == null) return;
 
 		String arg = null;
@@ -56,7 +67,7 @@ public class Main {
 					Core nodeCore = client$.getCore("core1");
 					treeVar = new Tree[lbl]@treeCore(nodeCore);
 					root.put("theTree", treeVar);
-					for (int i = 0; i < 500; i++) {
+					for (int i = 0; i < 10; i++) {
 						atomic {
 							//            int toInsert = random.nextInt();
 							//            tree.insertIterative(toInsert);
@@ -67,7 +78,7 @@ public class Main {
 				return;
 			}
 
-			treeVar = (Tree[lbl]) root.get("theTree"); 
+			treeVar = (Tree[lbl]) root.get("theTree");
 
 			int cycle = 0;
 			while (true) {
