@@ -50,6 +50,10 @@ public class FabricSoftRef extends SoftReference<$Impl> {
   private static class RefCollector extends Thread {
     private boolean destroyed;
     
+    RefCollector() {
+      super("Reference collector");
+    }
+    
     @Override
     public void destroy() {
       destroyed = true;
