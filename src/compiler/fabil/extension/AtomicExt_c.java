@@ -8,10 +8,13 @@ import polyglot.ast.Id;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.Stmt;
+import polyglot.types.ArrayType;
 import polyglot.types.Flags;
 import polyglot.types.LocalInstance;
+import polyglot.types.Type;
 import polyglot.util.Position;
 import fabil.ast.Atomic;
+import fabil.types.FabILTypeSystem;
 import fabil.visit.AtomicRewriter;
 
 public class AtomicExt_c extends FabILExt_c {
@@ -32,6 +35,8 @@ public class AtomicExt_c extends FabILExt_c {
    
 //    Id flag = nf.Id(CG, "$commit" + (freshTid++));
     
+    FabILTypeSystem ts = ar.typeSystem();
+    
     List<Stmt> lds = new ArrayList<Stmt>();
     List<Stmt> restores = new ArrayList<Stmt>();
     
@@ -40,10 +45,21 @@ public class AtomicExt_c extends FabILExt_c {
                        li.name());
       Id vName = nf.Id(Position.compilerGenerated(), 
                        li.name() + "$var" + (freshTid++));
+      
+      Type lt = li.type();
+      if (lt.isArray()) {
+        // Arrays have been translated in ProxyRewriter, 
+        // so we have to do it manually here.
+        ArrayType at = lt.toArray();
+        if (ts.isPureFabricType(at)) {
+          lt = ts.toFArray(at);
+        }
+      }
+      
       lds.add(nf.LocalDecl(Position.compilerGenerated(), 
                            Flags.NONE, 
                            nf.CanonicalTypeNode(Position.compilerGenerated(), 
-                                                li.type()), 
+                                                lt), 
                            vName,
                            nf.Local(Position.compilerGenerated(), 
                                     lName)));

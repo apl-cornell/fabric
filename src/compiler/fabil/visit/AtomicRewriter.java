@@ -98,6 +98,10 @@ public class AtomicRewriter extends NodeVisitor {
     return nf;
   }
   
+  public FabILTypeSystem typeSystem() {
+    return ts;
+  }
+  
   // TODO: move this into atomicExt?
   public Receiver transactionManager() {
     return tm;
