@@ -3,7 +3,11 @@ package fabric.core.store;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+
+import javax.security.auth.x500.X500Principal;
 
 import jif.lang.Label;
 import jif.lang.PairLabel;
@@ -175,8 +179,7 @@ public abstract class ObjectStore {
 
   protected ObjectStore(String name) {
     this.name = name;
-    this.pendingByTid =
-        new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
+    this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
     this.rwLocks = new LongKeyHashMap<Pair<Long, LongSet>>();
     this.globIDByOnum = new LongKeyHashMap<Long>();
     this.globTable = new LongKeyHashMap<Pair<Glob, MutableInteger>>();
@@ -481,8 +484,12 @@ public abstract class ObjectStore {
       public Void run() {
         // No need to initialize global constants here, as those objects will be
         // supplied by the clients' local core.
+        String principalName =
+            new X500Principal("CN=" + name
+                + ",OU=Fabric,O=Cornell University,L=Ithaca,ST=NY,C=US")
+                .getName();
         Principal.$Impl principal =
-            new Principal.$Impl(core, publicReadonlyLabel(), name);
+            new Principal.$Impl(core, publicReadonlyLabel(), principalName);
         principal.$forceRenumber(ONumConstants.CORE_PRINCIPAL);
 
         // Create the label {core->_; core<-_} for the root map.
