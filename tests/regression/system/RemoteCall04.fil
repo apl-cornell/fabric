@@ -1,0 +1,53 @@
+package system;
+
+public class RemoteCall04 {
+  int i;
+  RemoteCall04 child;
+
+  public void m() {
+    i++;
+
+    Core core = Client.getClient().getCore("core0");
+    child = new RemoteCall04@core();
+  }
+
+  public void m_remote(fabric.lang.Principal p) {
+    m();
+  }
+
+  public static void main(String[] args) {
+    RemoteCall04 t = null;
+    Core core = Client.getClient().getCore("core0");
+    RemoteClient remoteClient = Client.getClient().getClient("core0");
+    atomic {
+      t = new RemoteCall04@core();
+      t.i = 10;
+      t.m@remoteClient();
+      t.child.i = 42;
+      t.child.m@remoteClient();
+    }
+
+    int curI = -1;
+    int curChildI = -1;
+    int curGrandchildI = -1;
+    atomic {
+      curI = t.i;
+      curChildI = t.child.i;
+      curGrandchildI = t.child.child.i;
+    }
+
+    if (curI == 11 && curChildI == 43 && curGrandchildI == 0)
+      System.out.println("TEST PASSED.");
+    else {
+      if (curI != 11)
+	System.out.println("TEST FAILED: expected t.i == 11 but got " + curI);
+      if (curChildI != 43)
+	System.out.println("TEST FAILED: expected t.child.i == 43 but got "
+	  + curChildI);
+      if (curGrandchildI != 0)
+	System.out.println("TEST FAILED: expected t.child.child.i == 0 but got "
+	  + curGrandchildI);
+    }
+  }
+}
+

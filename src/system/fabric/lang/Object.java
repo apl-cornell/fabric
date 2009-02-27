@@ -102,21 +102,28 @@ public interface Object {
       if (result == null) {
         // Object has been evicted.
         try {
-          // Check the current transaction's create map.
-          TransactionManager tm = TransactionManager.getInstance();
-          RemoteClient client = tm.getFetchClient(this);
-          RemoteClient localClient = Client.getClient().getLocalClient();
-          if (client != null && client != localClient) {
-            // Fetch from the client.
-            result = client.readObject(tm.getCurrentTid(), ref.core, ref.onum);
-          } else if (client != localClient && this instanceof KeyObject) {
-            // Fetch from the core. Bypass dissemination when reading key
-            // objects.
-            result = ref.core.readObjectNoDissem(ref.onum);
-          } else {
-            // Fetch from the core.
-            result = ref.core.readObject(ref.onum);
+          // First, check the client's cache.
+          result = ref.core.readObjectFromCache(ref.onum);
+          
+          if (result == null) {
+            // Next, check the current transaction's create map.
+            TransactionManager tm = TransactionManager.getInstance();
+            RemoteClient client = tm.getFetchClient(this);
+            RemoteClient localClient = Client.getClient().getLocalClient();
+            if (client != null && client != localClient) {
+              // Fetch from the client.
+              result = client.readObject(tm.getCurrentTid(), ref.core, ref.onum);
+              ref.core.cache(result);
+            } else if (client != localClient && this instanceof KeyObject) {
+              // Fetch from the core. Bypass dissemination when reading key
+              // objects.
+              result = ref.core.readObjectNoDissem(ref.onum);
+            } else {
+              // Fetch from the core.
+              result = ref.core.readObject(ref.onum);
+            }
           }
+          
         } catch (FetchException e) {
           // TODO figure out how to communicate error
           throw new InternalError(e);
