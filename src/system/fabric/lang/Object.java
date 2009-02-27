@@ -74,7 +74,6 @@ public interface Object {
      * This is used only to pin the $Impl in the case where it's a object on the
      * local core.
      */
-    @SuppressWarnings("unused")
     private transient final $Impl anchor;
 
     public $Proxy(Core core, long onum) {
@@ -97,6 +96,8 @@ public interface Object {
 
     public final $Impl fetch() {
       $Impl result = ref.get();
+      
+      if (result == null) result = anchor;
 
       if (result == null) {
         // Object has been evicted.
