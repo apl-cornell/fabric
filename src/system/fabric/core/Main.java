@@ -32,6 +32,13 @@ public class Main {
       Properties p = new Properties(System.getProperties());
       p.load(in);
       in.close();
+
+      String loggingProperties = p.getProperty("java.util.logging.config.file");
+      if (loggingProperties != null) {
+        p.setProperty("java.util.logging.config.file", Resources
+            .relpathRewrite(loggingProperties));
+      }
+
       System.setProperties(p);
     } catch (final IOException exc) {
       System.err.println("Failed to load core configuration file");
