@@ -40,7 +40,7 @@ public class FabricSoftRef extends SoftReference<$Impl> {
   public void evict() {
     clear();
     core.notifyEvict(onum);
-    if (readMapEntry.depin()) readMapEntry = null;
+    if (readMapEntry != null && readMapEntry.depin()) readMapEntry = null;
   }
   
   public void readMapEntry(ReadMapEntry readMapEntry) {
