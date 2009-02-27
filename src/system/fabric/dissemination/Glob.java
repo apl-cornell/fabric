@@ -137,22 +137,21 @@ public class Glob implements FastSerializable {
 
   private Cipher makeCipher(final KeyObject keyObject, int opmode, byte[] iv)
       throws GeneralSecurityException {
-    if (keyObject == null) {
-      return new NullCipher();
-    } else {
-      byte[] key = Client.runInTransaction(new Code<SecretKey>() {
+    byte[] key = null;
+    if (keyObject != null) {
+      key = Client.runInTransaction(new Code<SecretKey>() {
         public SecretKey run() {
           return keyObject.getKey();
         }
       }).getEncoded();
-
-      return Crypto.cipherInstance(opmode, key, iv);
     }
+
+    return Crypto.cipherInstance(opmode, key, iv);
   }
 
   private Label getLabel(Core core, ObjectGroup group) {
     SerializedObject obj =
-      group.objects().entrySet().iterator().next().getValue();
+        group.objects().entrySet().iterator().next().getValue();
     return new Label.$Proxy(core, obj.getLabelOnum());
   }
 
