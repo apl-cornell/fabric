@@ -117,7 +117,7 @@ public interface Object {
           }
         } catch (FetchException e) {
           // TODO figure out how to communicate error
-          e.printStackTrace();
+          throw new InternalError(e);
         }
 
         ref = result.$ref;

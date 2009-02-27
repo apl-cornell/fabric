@@ -17,6 +17,7 @@ import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.*;
+import fabric.common.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
@@ -296,7 +297,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
           return client.name().equals(name);
         } catch (ClassCastException e) {
           return false;
-        } catch (NullPointerException e) {
+        } catch (InternalError e) {
           // XXX For ease of debugging, assume that if the client principal
           // XXX doesn't exist, it's about to be created.
           client = null;
