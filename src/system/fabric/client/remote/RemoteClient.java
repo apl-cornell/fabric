@@ -164,14 +164,15 @@ public final class RemoteClient implements RemoteNode {
     tm.registerRemoteCall(this);
 
     TransactionID tid = tm.getCurrentTid();
+    CreateMap createMap = tm.getCreateMap();
     UpdateMap updateMap = tm.getUpdateMap();
 
     Class<?> receiverClass =
         receiver.fetch().$getProxy().getClass().getEnclosingClass();
 
     RemoteCallMessage.Response response =
-        new RemoteCallMessage(tid, updateMap, receiverClass, receiver,
-            methodName, parameterTypes, args).send(this);
+        new RemoteCallMessage(tid, createMap, updateMap, receiverClass,
+            receiver, methodName, parameterTypes, args).send(this);
 
     // Commit any outstanding subtransactions that occurred as a result of the
     // remote call.

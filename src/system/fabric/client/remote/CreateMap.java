@@ -13,6 +13,7 @@ import java.util.Map;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.common.InternalError;
+import fabric.common.ONumConstants;
 import jif.lang.Label;
 import fabric.lang.Object.$Proxy;
 
@@ -57,8 +58,14 @@ public class CreateMap {
 
       Label.$Proxy val = null;
       if (in.readBoolean()) {
-        Core core = client.getCore(in.readUTF());
+        String coreName = in.readUTF();
         long onum = in.readLong();
+        
+        Core core = client.getLocalCore();
+        if (!ONumConstants.isGlobalConstant(onum)) {
+          core = client.getCore(coreName);
+        }
+        
         val = new Label.$Proxy(core, onum);
       }
 
@@ -88,6 +95,10 @@ public class CreateMap {
     } catch (NoSuchAlgorithmException e) {
       throw new InternalError(e);
     }
+  }
+
+  public void putAll(CreateMap map) {
+    this.map.putAll(map.map);
   }
 
   private List<Byte> hash($Proxy proxy) throws NoSuchAlgorithmException {

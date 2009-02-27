@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import jif.lang.Label;
 import fabric.client.*;
+import fabric.client.remote.CreateMap;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.UpdateMap;
 import fabric.common.FabricThread;
@@ -855,6 +856,11 @@ public final class TransactionManager {
   public TransactionID getCurrentTid() {
     if (current == null) return null;
     return current.tid;
+  }
+
+  public CreateMap getCreateMap() {
+    if (current == null) return null;
+    return current.createMap;
   }
   
   public UpdateMap getUpdateMap() {

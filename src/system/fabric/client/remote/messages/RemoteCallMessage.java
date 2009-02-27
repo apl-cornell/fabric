@@ -4,10 +4,7 @@ import java.io.*;
 import java.lang.reflect.Method;
 
 import fabric.client.UnreachableNodeException;
-import fabric.client.remote.RemoteCallException;
-import fabric.client.remote.RemoteClient;
-import fabric.client.remote.UpdateMap;
-import fabric.client.remote.Worker;
+import fabric.client.remote.*;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
 import fabric.common.TransactionID;
@@ -19,6 +16,7 @@ public class RemoteCallMessage extends
     InterClientMessage<RemoteCallMessage.Response> {
 
   public final TransactionID tid;
+  public final CreateMap createMap;
   public final UpdateMap updateMap;
   public final Class<?> receiverType;
   public final $Proxy receiver;
@@ -98,9 +96,9 @@ public class RemoteCallMessage extends
    * @param args
    *          The arguments to the method.
    */
-  public RemoteCallMessage(TransactionID tid, UpdateMap updateMap,
-      Class<?> receiverType, $Proxy receiver, String methodName,
-      Class<?>[] parameterTypes, Object[] args) {
+  public RemoteCallMessage(TransactionID tid, CreateMap createMap,
+      UpdateMap updateMap, Class<?> receiverType, $Proxy receiver,
+      String methodName, Class<?>[] parameterTypes, Object[] args) {
     super(MessageType.REMOTE_CALL);
 
     if (parameterTypes == null ? args != null
@@ -108,6 +106,7 @@ public class RemoteCallMessage extends
       throw new IllegalArgumentException();
 
     this.tid = tid;
+    this.createMap = createMap;
     this.updateMap = updateMap;
     this.receiverType = receiverType;
     this.receiver = receiver;
@@ -126,6 +125,10 @@ public class RemoteCallMessage extends
     if (in.readBoolean())
       this.tid = new TransactionID(in);
     else this.tid = null;
+    
+    if (in.readBoolean())
+      this.createMap = new CreateMap(in);
+    else this.createMap = null;
 
     if (in.readBoolean())
       this.updateMap = new UpdateMap(in);
@@ -181,6 +184,9 @@ public class RemoteCallMessage extends
   public void write(DataOutput out) throws IOException {
     out.writeBoolean(tid != null);
     if (tid != null) tid.write(out);
+    
+    out.writeBoolean(createMap != null);
+    if (createMap != null) createMap.write(out);
 
     out.writeBoolean(updateMap != null);
     if (updateMap != null) updateMap.write(out);
