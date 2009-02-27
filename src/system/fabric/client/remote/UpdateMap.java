@@ -228,6 +228,7 @@ public class UpdateMap implements FastSerializable {
     if (map.updates.isEmpty()) return;
 
     flushWriteCache();
+    map.flushWriteCache();
     this.updates.putAll(map.updates);
     this.readCache.clear();
 
