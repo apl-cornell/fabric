@@ -104,10 +104,11 @@ public interface Object {
           // Check the current transaction's create map.
           TransactionManager tm = TransactionManager.getInstance();
           RemoteClient client = tm.getFetchClient(this);
-          if (client != null) {
+          RemoteClient localClient = Client.getClient().getLocalClient();
+          if (client != null && client != localClient) {
             // Fetch from the client.
             result = client.readObject(tm.getCurrentTid(), ref.core, ref.onum);
-          } else if (this instanceof KeyObject) {
+          } else if (client != localClient && this instanceof KeyObject) {
             // Fetch from the core. Bypass dissemination when reading key
             // objects.
             result = ref.core.readObjectNoDissem(ref.onum);
