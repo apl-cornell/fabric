@@ -72,6 +72,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   public ClassType Client() {
     return load("fabric.client.FabricClient");
   }
+  
+  public ClassType Core() {
+    return load("fabric.client.Core");
+  }
 
   private LocalInstance clientLocalInstance = null;
   

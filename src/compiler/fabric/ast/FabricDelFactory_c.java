@@ -1,5 +1,7 @@
 package fabric.ast;
 
+import fabric.extension.FabricNewArrayDel;
+import fabric.extension.FabricNewDel;
 import jif.ast.JifDelFactory_c;
 import polyglot.ast.JL;
 
@@ -25,4 +27,13 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
     return postDelBlock(e);
   }
 
+  @Override
+  protected JL delNewImpl() {
+    return new FabricNewDel();
+  }
+  
+  @Override
+  public JL delNewArrayImpl() {
+    return new FabricNewArrayDel();
+  }
 }

@@ -8,12 +8,17 @@ import fabil.types.FabILTypeSystem;
 
 import polyglot.ast.ClassBody;
 import polyglot.ast.TypeNode;
+import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.util.Position;
 import jif.translate.ClassDeclToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
 
 public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
+  protected static final String jifConstructorTranslatedName(ClassType ct) {
+    return ClassDeclToJavaExt_c.constructorTranslatedName(ct);
+  }
+  
   @Override
   protected ClassBody addInitializer(ClassBody cb, JifToJavaRewriter rw) {
     List inits = new ArrayList(rw.getInitializations());

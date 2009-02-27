@@ -12,6 +12,8 @@ public interface FabricTypeSystem extends JifTypeSystem {
   ClassType RemoteClient();
   
   ClassType Client();
+  
+  ClassType Core();
 
   /**
    * Constructs a principal for the local client. 

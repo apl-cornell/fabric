@@ -8,6 +8,8 @@ import jif.extension.JifBinaryExt;
 import jif.extension.JifClassDeclExt;
 import jif.extension.JifConstructorDeclExt;
 import jif.extension.JifMethodDeclExt;
+import jif.extension.JifNewArrayExt;
+import jif.extension.JifNewExt;
 import jif.translate.ClassBodyToJavaExt_c;
 
 /**
@@ -71,5 +73,15 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   @Override
   public Ext extClassBodyImpl() {
     return new ClassBodyJifExt_c(new ClassBodyToJavaExt_c());
+  }
+  
+  @Override
+  public Ext extNewImpl() {
+    return new JifNewExt(new NewToFabilExt_c());
+  }
+  
+  @Override
+  public Ext extNewArrayImpl() {
+    return new JifNewArrayExt(new NewArrayToFabilExt_c());
   }
 }
