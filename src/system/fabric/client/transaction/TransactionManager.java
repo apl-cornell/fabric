@@ -753,8 +753,16 @@ public final class TransactionManager {
     if (owner != null)
       owner.takeOwnership(current.tid, obj.$getCore(), obj.$getOnum());
 
+    // We now own the object.
     obj.$isOwned = true;
     current.updateMap.put(obj.$getProxy(), Client.getClient().getLocalClient());
+    
+    // If the object is fresh, add it to our set of creates.
+    if (obj.$version == 0) {
+      synchronized (current.creates) {
+        current.creates.add(obj);
+      }
+    }
   }
 
   /**
@@ -772,6 +780,9 @@ public final class TransactionManager {
     // Need to fetch from the owner.
     ensureWriteLock(obj);
     owner.readObject(current.tid, obj);
+    
+    // Set the update-map version stamp on the object.
+    obj.$updateMapVersion = current.updateMap.version;
   }
 
   /**
