@@ -61,7 +61,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
    * Instantiates a new worker thread and starts it running.
    */
   public Worker(RemoteCallManager rcm) {
-    super("RCM worker");
+    super("RCM worker -- initializing");
     this.rcm = rcm;
     synchronized (rcm.workers) {
       rcm.workers.add(this);
@@ -91,6 +91,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   @Override
   public synchronized void run() {
     while (!rcm.shuttingDown) {
+      Thread.currentThread().setName("RCM worker -- idle");
+      
       // Wait for the remote call manager to signal this thread (done via a call
       // to handle()).
       try {
@@ -98,6 +100,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       } catch (InterruptedException e) {
         continue;
       }
+      
+      Thread.currentThread().setName("RCM worker -- idle");
 
       SSLSocket sslSocket = null;
       try {
