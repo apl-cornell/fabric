@@ -4,6 +4,7 @@ import java.util.List;
 
 import polyglot.frontend.Source;
 import polyglot.types.ClassType;
+import polyglot.types.Context;
 import polyglot.types.Flags;
 import polyglot.types.ImportTable;
 import polyglot.types.LazyClassInitializer;
@@ -128,5 +129,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   @Override
   public Solver createSolver(String solverName) {
     return new SilenceableSolverGLB(this, extInfo.compiler(), solverName);
+  }
+  
+  @Override
+  public Context createContext() {
+    return new FabricContext_c(this, jlts);
   }
 }

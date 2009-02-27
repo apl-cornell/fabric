@@ -196,19 +196,19 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return n;
   }
   
-//  @Override
-//  public AmbPrincipalNode AmbPrincipalNode(Position pos, Expr expr) {
-//    AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, expr);
-//    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
-//    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
-//    return n;
-//  }
-//
-//  @Override
-//  public AmbPrincipalNode AmbPrincipalNode(Position pos, Id name) {
-//    AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, name);
-//    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
-//    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
-//    return n;
-//  }
+  @Override
+  public AmbPrincipalNode AmbPrincipalNode(Position pos, Expr expr) {
+    AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, expr);
+    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
+    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
+    return n;
+  }
+
+  @Override
+  public AmbPrincipalNode AmbPrincipalNode(Position pos, Id name) {
+    AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, name);
+    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
+    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
+    return n;
+  }
 }

@@ -86,6 +86,11 @@ extend primary_no_new_array ::=
 			{: RESULT = a; :}
 	;
 
+extend principal_base ::=
+		local_client:a
+			{: RESULT = parser.nf.AmbPrincipalNode(parser.pos(a), a); :}
+	;
+
 ////////////////////////////////////////////////////////////////////////
 // Locations for constructors                                         //
 ////////////////////////////////////////////////////////////////////////
