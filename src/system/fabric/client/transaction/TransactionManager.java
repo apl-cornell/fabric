@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 
 import jif.lang.Label;
 import fabric.client.*;
-import fabric.client.remote.CreateMap;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.UpdateMap;
 import fabric.common.FabricThread;
@@ -582,7 +581,7 @@ public final class TransactionManager {
 
     // Own the object.
     ensureOwnership(obj);
-    current.createMap.put(obj.$getProxy(), obj.get$label());
+    current.updateMap.put(obj.$getProxy(), obj.get$label());
 
     // Add the object to our creates set.
     synchronized (current.creates) {
@@ -749,7 +748,7 @@ public final class TransactionManager {
     if (obj.$isOwned) return;
 
     // Check the update map to see if another client currently owns the object.
-    RemoteClient owner = current.updateMap.lookup(obj.$getProxy());
+    RemoteClient owner = current.updateMap.getUpdate(obj.$getProxy());
     if (owner != null)
       owner.takeOwnership(current.tid, obj.$getCore(), obj.$getOnum());
 
@@ -774,7 +773,7 @@ public final class TransactionManager {
     if (obj.$updateMapVersion == current.updateMap.version) return;
 
     // Check the update map.
-    RemoteClient owner = current.updateMap.lookup(obj.$getProxy());
+    RemoteClient owner = current.updateMap.getUpdate(obj.$getProxy());
     if (owner == null || owner == Client.getClient().getLocalClient()) return;
 
     // Need to fetch from the owner.
@@ -868,11 +867,6 @@ public final class TransactionManager {
     if (current == null) return null;
     return current.tid;
   }
-
-  public CreateMap getCreateMap() {
-    if (current == null) return null;
-    return current.createMap;
-  }
   
   public UpdateMap getUpdateMap() {
     if (current == null) return null;
@@ -885,9 +879,9 @@ public final class TransactionManager {
    *         created by the current transaction and is owned by that client.
    */
   public RemoteClient getFetchClient($Proxy proxy) {
-    if (current == null || !current.createMap.containsKey(proxy)) return null;
-    Label label = current.createMap.lookup(proxy);
+    if (current == null || !current.updateMap.containsCreate(proxy)) return null;
+    Label label = current.updateMap.getCreate(proxy);
 
-    return current.updateMap.lookup(proxy, label);
+    return current.updateMap.getUpdate(proxy, label);
   }
 }

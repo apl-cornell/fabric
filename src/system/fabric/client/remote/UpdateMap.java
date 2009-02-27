@@ -24,30 +24,37 @@ import fabric.lang.Object.$Proxy;
 
 /**
  * Maps proxies to the host that holds the most up-to-date copy of that object.
+ * Also maps proxies of newly created objects to their corresponding labels.
  */
 public class UpdateMap implements FastSerializable {
 
   private static String ALG_HASH = "MD5";
+  
+  /**
+   * Maps md5(oid) to Label.  These are the "create" entries.
+   */
+  private Map<List<Byte>, Label> creates;
 
   /**
    * Maps md5(oid, object key) to (iv, enc(hostname, object key, iv)).
    */
-  private Map<List<Byte>, Pair<byte[], byte[]>> map;
+  private Map<List<Byte>, Pair<byte[], byte[]>> updates;
 
   /**
-   * Cache for map entries and non-entries that have been discovered.
+   * Cache for "update" entries and non-entries that have been discovered.
    */
   private OidKeyHashMap<RemoteClient> readCache;
 
   /**
-   * Cache for map entries that haven't been encrypted yet.
+   * Cache for "update" entries that haven't been encrypted yet.
    */
   private OidKeyHashMap<Pair<$Proxy, RemoteClient>> writeCache;
 
   public int version;
 
   public UpdateMap() {
-    this.map = new HashMap<List<Byte>, Pair<byte[], byte[]>>();
+    this.creates = new HashMap<List<Byte>, Label>();
+    this.updates = new HashMap<List<Byte>, Pair<byte[], byte[]>>();
     this.readCache = new OidKeyHashMap<RemoteClient>();
     this.writeCache = new OidKeyHashMap<Pair<$Proxy, RemoteClient>>();
     this.version = 0;
@@ -57,7 +64,8 @@ public class UpdateMap implements FastSerializable {
    * Copy constructor.
    */
   public UpdateMap(UpdateMap map) {
-    this.map = new HashMap<List<Byte>, Pair<byte[], byte[]>>(map.map);
+    this.creates = new HashMap<List<Byte>, Label>(map.creates);
+    this.updates = new HashMap<List<Byte>, Pair<byte[], byte[]>>(map.updates);
     this.readCache = new OidKeyHashMap<RemoteClient>(map.readCache);
     this.writeCache =
         new OidKeyHashMap<Pair<$Proxy, RemoteClient>>(map.writeCache);
@@ -70,8 +78,37 @@ public class UpdateMap implements FastSerializable {
   public UpdateMap(DataInput in) throws IOException {
     this();
     this.version = -1;
-
+    
+    Client client = Client.getClient();
+    
+    // Read creates.
     int size = in.readInt();
+    for (int i = 0; i < size; i++) {
+      byte[] buf = new byte[in.readInt()];
+      in.readFully(buf);
+
+      List<Byte> key = new ArrayList<Byte>(buf.length);
+      for (byte b : buf)
+        key.add(b);
+
+      Label.$Proxy val = null;
+      if (in.readBoolean()) {
+        String coreName = in.readUTF();
+        long onum = in.readLong();
+        
+        Core core = client.getLocalCore();
+        if (!ONumConstants.isGlobalConstant(onum)) {
+          core = client.getCore(coreName);
+        }
+        
+        val = new Label.$Proxy(core, onum);
+      }
+
+      creates.put(key, val);
+    }
+
+    // Read updates.
+    size = in.readInt();
     for (int i = 0; i < size; i++) {
       byte[] buf = new byte[in.readInt()];
       in.readFully(buf);
@@ -85,14 +122,33 @@ public class UpdateMap implements FastSerializable {
       byte[] data = new byte[in.readInt()];
       in.readFully(data);
 
-      map.put(key, new Pair<byte[], byte[]>(iv, data));
+      updates.put(key, new Pair<byte[], byte[]>(iv, data));
+    }
+  }
+  
+  /**
+   * Determines whether this map has a "create" entry for the given object.
+   */
+  public boolean containsCreate($Proxy proxy) {
+    try {
+      return creates.containsKey(hash(proxy));
+    } catch (NoSuchAlgorithmException e) {
+      throw new InternalError(e);
+    }
+  }
+  
+  public Label getCreate($Proxy proxy) {
+    try {
+      return creates.get(hash(proxy));
+    } catch (NoSuchAlgorithmException e) {
+      throw new InternalError(e);
     }
   }
 
-  public RemoteClient lookup($Proxy proxy) {
+  public RemoteClient getUpdate($Proxy proxy) {
     // First, check the cache.
     if (readCache.containsKey(proxy)) return readCache.get(proxy);
-    if (map.isEmpty()) return null;
+    if (updates.isEmpty()) return null;
 
     RemoteClient result = slowLookup(proxy, getKey(proxy));
     readCache.put(proxy, result);
@@ -106,9 +162,9 @@ public class UpdateMap implements FastSerializable {
    * @param label
    *          the label corresponding to the given proxy.
    */
-  public RemoteClient lookup($Proxy proxy, Label label) {
+  public RemoteClient getUpdate($Proxy proxy, Label label) {
     if (readCache.containsKey(proxy)) return readCache.get(proxy);
-    if (map.isEmpty()) return null;
+    if (updates.isEmpty()) return null;
 
     RemoteClient result = slowLookup(proxy, getKey(label));
     readCache.put(proxy, result);
@@ -118,7 +174,7 @@ public class UpdateMap implements FastSerializable {
   private RemoteClient slowLookup($Proxy proxy, byte[] encryptKey) {
     try {
       List<Byte> mapKey = hash(proxy, encryptKey);
-      Pair<byte[], byte[]> encHost = map.get(mapKey);
+      Pair<byte[], byte[]> encHost = updates.get(mapKey);
 
       if (encHost == null) return null;
 
@@ -141,6 +197,18 @@ public class UpdateMap implements FastSerializable {
     // XXX TODO
     return true;
   }
+  
+  public void put($Proxy proxy, Label keyObject) {
+    // Don't put in entries for global constants or objects on local core.
+    if (ONumConstants.isGlobalConstant(proxy.$getOnum())
+        || proxy.$getCore() instanceof LocalCore) return;
+    
+    try {
+      creates.put(hash(proxy), keyObject);
+    } catch (NoSuchAlgorithmException e) {
+      throw new InternalError(e);
+    }
+  }
 
   public void put($Proxy proxy, RemoteClient client) {
     // Don't put in entries for global constants or objects on local core.
@@ -155,10 +223,12 @@ public class UpdateMap implements FastSerializable {
    * Puts all the entries from the given map into this map.
    */
   public void putAll(UpdateMap map) {
-    if (map.map.isEmpty()) return;
+    this.creates.putAll(map.creates);
+    
+    if (map.updates.isEmpty()) return;
 
     flushWriteCache();
-    this.map.putAll(map.map);
+    this.updates.putAll(map.updates);
     this.readCache.clear();
 
     if (map.version > version)
@@ -186,10 +256,14 @@ public class UpdateMap implements FastSerializable {
           Crypto.cipherInstance(Cipher.ENCRYPT_MODE, encryptKey, iv);
       Pair<byte[], byte[]> encHost =
           new Pair<byte[], byte[]>(iv, cipher.doFinal(client.name.getBytes()));
-      map.put(mapKey, encHost);
+      updates.put(mapKey, encHost);
     } catch (GeneralSecurityException e) {
       throw new InternalError(e);
     }
+  }
+  
+  private List<Byte> hash($Proxy proxy) throws NoSuchAlgorithmException {
+    return hash(proxy, null);
   }
 
   /**
@@ -244,9 +318,27 @@ public class UpdateMap implements FastSerializable {
 
   public void write(DataOutput out) throws IOException {
     flushWriteCache();
+    
+    // Write creates.
+    out.writeInt(creates.size());
+    for (Map.Entry<List<Byte>, Label> entry : creates.entrySet()) {
+      List<Byte> key = entry.getKey();
+      Label value = entry.getValue();
 
-    out.writeInt(map.size());
-    for (Map.Entry<List<Byte>, Pair<byte[], byte[]>> entry : map.entrySet()) {
+      out.writeInt(key.size());
+      for (byte b : key)
+        out.writeByte(b);
+
+      if (value != null) {
+        out.writeBoolean(true);
+        out.writeUTF(value.$getCore().name());
+        out.writeLong(value.$getOnum());
+      } else out.writeBoolean(false);
+    }
+
+    // Write updates.
+    out.writeInt(updates.size());
+    for (Map.Entry<List<Byte>, Pair<byte[], byte[]>> entry : updates.entrySet()) {
       List<Byte> key = entry.getKey();
       Pair<byte[], byte[]> val = entry.getValue();
 

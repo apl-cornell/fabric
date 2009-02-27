@@ -271,9 +271,6 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       associateAndSyncLog(log, tid);
       
       TransactionManager tm = TransactionManager.getInstance();
-      
-      // Merge in the create map we got.
-      tm.getCreateMap().putAll(remoteCallMessage.createMap);
 
       // Merge in the update map we got.
       tm.getUpdateMap().putAll(remoteCallMessage.updateMap);
