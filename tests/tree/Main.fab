@@ -60,12 +60,13 @@ public class Main {
 		try {
 			Map root = (Map) client$.getCore("core1").getRoot();
 			//    Random random = new Random();
-			Tree[lbl] treeVar = null;
 			if (arg.equals("create")) {
 				atomic {
 					Core treeCore = client$.getCore("core0");
 					Core nodeCore = client$.getCore("core1");
-					treeVar = new Tree[lbl]@treeCore(nodeCore);
+					final label plbl = new label {*lbl}@treeCore;
+					Tree[plbl] treeVar = null;
+					treeVar = new Tree[plbl]@treeCore(nodeCore);
 					root.put("theTree", treeVar);
 					for (int i = 0; i < 10; i++) {
 						atomic {
@@ -76,21 +77,23 @@ public class Main {
 					}
 				}
 				return;
-			}
+			} else {
+				Tree[lbl] treeVar;
 
-			treeVar = (Tree[lbl]) root.get("theTree");
+				treeVar = (Tree[lbl]) root.get("theTree");
 
-			int cycle = 0;
-			while (true) {
-				atomic {
-					//        int toFind = random.nextInt();
-					//        tree.lookup(toFind);
+				int cycle = 0;
+				while (true) {
+					atomic {
+						//        int toFind = random.nextInt();
+						//        tree.lookup(toFind);
 
-					treeVar.lookup(cycle);
+						treeVar.lookup(cycle);
+					}
+
+					if (++cycle % 100 == 0)
+						out.println(cycle + " lookups done.");
 				}
-
-				if (++cycle % 100 == 0)
-					out.println(cycle + " lookups done.");
 			}
 		} catch (NullPointerException unlikely) {}
 		catch (ClassCastException unlikely) {}
