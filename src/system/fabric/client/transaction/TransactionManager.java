@@ -584,14 +584,10 @@ public final class TransactionManager {
     obj.$writer = current;
     obj.$writeLockHolder = current;
 
-    // Own the object.
+    // Own the object. The call to ensureOwnership is responsible for adding the
+    // object to the set of created objects.
     ensureOwnership(obj);
     current.updateMap.put(obj.$getProxy(), obj.get$label());
-
-    // Add the object to our creates set.
-    synchronized (current.creates) {
-      current.creates.add(obj);
-    }
   }
 
   public void registerRead($Impl obj) {
@@ -776,6 +772,9 @@ public final class TransactionManager {
   private void ensureObjectUpToDate($Impl obj) {
     // Check the object's update-map version stamp.
     if (obj.$updateMapVersion == current.updateMap.version) return;
+    
+    // Set the update-map version stamp on the object.
+    obj.$updateMapVersion = current.updateMap.version;
 
     // Check the update map.
     RemoteClient owner = current.updateMap.getUpdate(obj.$getProxy());
@@ -784,9 +783,6 @@ public final class TransactionManager {
     // Need to fetch from the owner.
     ensureWriteLock(obj);
     owner.readObject(current.tid, obj);
-    
-    // Set the update-map version stamp on the object.
-    obj.$updateMapVersion = current.updateMap.version;
   }
 
   /**
