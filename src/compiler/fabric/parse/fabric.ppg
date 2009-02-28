@@ -63,6 +63,11 @@ retry_stmt ::=
 			{: RESULT = parser.nf.RetryStmt(parser.pos(a, b)); :}
 	;
 
+extend modifier ::=
+        ATOMIC:a
+            {: RESULT = FabricFlags.ATOMIC; :}
+    ;
+
 ////////////////////////////////////////////////////////////////////////
 // Local and remote clients                                           //
 ////////////////////////////////////////////////////////////////////////
@@ -123,10 +128,20 @@ override array_creation_expression ::=
                                            b.intValue(), c); :}
     ;
 
-extend modifier ::=
-        ATOMIC:a
-            {: RESULT = FabricFlags.ATOMIC; :}
-    ;
+drop {
+	primary ::=
+        	NEW LABEL label
+        ;
+}
+
+extend primary ::=
+        NEW:n LABEL label:a location_expr_opt:loc
+            {: RESULT = parser.nf.NewLabel(parser.pos(n, loc), a, loc); :}
+	;
+
+////////////////////////////////////////////////////////////////////////
+// Locations for remote calls                                         //
+////////////////////////////////////////////////////////////////////////
 
 drop {
     method_invocation ::=

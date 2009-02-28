@@ -7,6 +7,7 @@ import jif.ast.JifExtFactory_c;
 import jif.extension.JifBinaryExt;
 import jif.extension.JifClassDeclExt;
 import jif.extension.JifConstructorDeclExt;
+import jif.extension.JifLabelExprExt;
 import jif.extension.JifMethodDeclExt;
 import jif.extension.JifNewArrayExt;
 import jif.extension.JifNewExt;
@@ -83,5 +84,10 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   @Override
   public Ext extNewArrayImpl() {
     return new JifNewArrayExt(new NewArrayToFabilExt_c());
+  }
+  
+  @Override
+  public Ext extNewLabelImpl() {
+    return new JifLabelExprExt(new NewLabelToFabilExt_c());
   }
 }

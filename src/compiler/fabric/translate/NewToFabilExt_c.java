@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import fabil.ast.FabILNodeFactory;
+import fabric.ast.FabricUtil;
 import fabric.extension.NewExt_c;
 
 import polyglot.ast.Expr;
@@ -26,8 +27,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
 
     FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
 
-    Ext jifExt = n.ext();
-    NewExt_c ext = (NewExt_c)jifExt.ext();
+    NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
     Expr loc = ext.location();
     
     // TODO pass on the field label.

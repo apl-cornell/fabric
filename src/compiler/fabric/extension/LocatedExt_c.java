@@ -1,8 +1,6 @@
 package fabric.extension;
 
 import polyglot.ast.Expr;
-import polyglot.ast.Node;
-import polyglot.visit.NodeVisitor;
 
 /**
  * This class provides common functionality to the New and NewArray for managing

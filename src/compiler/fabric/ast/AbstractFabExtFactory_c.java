@@ -30,7 +30,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
             nextExtFactory() instanceof FabricExtFactory) {
         FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
         Ext e2 = nextFac.extAtomic();
-        e = composeExts(e2, e);
+        e = composeExts(e, e2);
     }
     return postExtAtomic(e);
   }
@@ -49,7 +49,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
         nextExtFactory() instanceof FabricExtFactory) {
       FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
       Ext e2 = nextFac.extAbort();
-      e = composeExts(e2, e);
+      e = composeExts(e, e2);
     }
     return postExtAbort(e);
   }
@@ -68,7 +68,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
         nextExtFactory() instanceof FabricExtFactory) {
       FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
       Ext e2 = nextFac.extRetry();
-      e = composeExts(e2, e);
+      e = composeExts(e, e2);
     }
     return postExtRetry(e);
   }
@@ -87,7 +87,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
         nextExtFactory() instanceof FabricExtFactory) {
       FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
       Ext e2 = nextFac.extClient();
-      e = composeExts(e2, e);
+      e = composeExts(e, e2);
     }
     return postExtClient(e);
   }
@@ -106,7 +106,7 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
         nextExtFactory() instanceof FabricExtFactory) {
       FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
       Ext e2 = nextFac.extRemoteClientGetter();
-      e = composeExts(e2, e);
+      e = composeExts(e, e2);
     }
     return postExtRemoteClientGetter(e);
   }

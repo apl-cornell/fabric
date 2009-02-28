@@ -2,6 +2,7 @@ package fabric.ast;
 
 import fabric.extension.FabricNewArrayDel;
 import fabric.extension.FabricNewDel;
+import fabric.extension.FabricNewLabelDel;
 import jif.ast.JifDelFactory_c;
 import polyglot.ast.JL;
 
@@ -33,7 +34,12 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
   }
   
   @Override
-  public JL delNewArrayImpl() {
+  protected JL delNewArrayImpl() {
     return new FabricNewArrayDel();
+  }
+  
+  @Override
+  protected JL delNewLabelImpl() {
+    return new FabricNewLabelDel();
   }
 }

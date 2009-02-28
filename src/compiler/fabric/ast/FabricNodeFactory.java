@@ -3,6 +3,8 @@ package fabric.ast;
 import java.util.List;
 
 import jif.ast.JifNodeFactory;
+import jif.ast.LabelNode;
+import jif.ast.NewLabel;
 import polyglot.ast.*;
 import polyglot.util.Position;
 
@@ -31,4 +33,6 @@ public interface FabricNodeFactory extends JifNodeFactory {
   Client Client(Position pos);
   
   RemoteClientGetter RemoteClientGetter(Position pos, Expr remoteName);
+  
+  NewLabel NewLabel(Position pos, LabelNode label, Expr location);
 }

@@ -33,4 +33,9 @@ public class FabricFabExtFactory_c extends AbstractFabExtFactory_c {
   protected FabricExt extNewArrayImpl() {
     return new NewArrayExt_c();
   }
+  
+  @Override
+  protected FabricExt extNewLabelImpl() {
+    return new NewLabelExt_c();
+  }
 }

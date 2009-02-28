@@ -3,6 +3,7 @@ package fabric.ast;
 import java.util.Collections;
 import java.util.List;
 
+import fabric.extension.FabricExt;
 import fabric.extension.LocatedExt_c;
 
 import jif.ast.*;
@@ -92,6 +93,42 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     result = (NewArray) setLocation(result, location);
     return result;
   }
+
+  public NewLabel NewLabel(Position pos, LabelNode label, Expr location) {
+    NewLabel result = super.NewLabel(pos, label);
+    result = (NewLabel)setLocation(result, location);
+    return result;
+  }
+  
+  public RetryStmt RetryStmt(Position pos) {
+    RetryStmt s = new RetryStmt_c(pos);
+    s = (RetryStmt)s.ext(fabricExtFactory().extRetry());
+    s = (RetryStmt)s.del(fabricDelFactory().delStmt());
+    return s;
+  }
+  
+  public AbortStmt AbortStmt(Position pos) {
+    AbortStmt s = new AbortStmt_c(pos);
+    s = (AbortStmt)s.ext(fabricExtFactory().extAbort());
+    s = (AbortStmt)s.del(fabricDelFactory().delStmt());
+    return s;
+  }
+  
+  public Client Client(Position pos) {
+    Client n = new Client_c(pos, this);
+    // TODO add the real extension and delegation for Client.
+    n = (Client)n.ext(fabricExtFactory().extClient());
+    n = (Client)n.del(delFactory().delExpr());
+    return n;
+  }
+  
+  public RemoteClientGetter RemoteClientGetter(Position pos, Expr remoteName) {
+    RemoteClientGetter n = new RemoteClientGetter_c(pos, remoteName);
+    // TODO add the real extension and delegation for RemoteClientGetter.
+    n = (RemoteClientGetter)n.ext(fabricExtFactory().extRemoteClientGetter());
+    n = (RemoteClientGetter)n.del(delFactory().delExpr());
+    return n;
+  }
   
   //////////////////////////////////////////////////////////////////////////////
   // overridden factory methods                                               //
@@ -114,13 +151,42 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
                                    List params, 
                                    TypeNode superClass, List interfaces,
                                    List authority, ClassBody body) {
-  JifClassDecl n = new ClassDecl_c(pos, flags, name, params, superClass,
-                                   interfaces, authority, body);
-  n = (JifClassDecl)n.ext(extFactory().extClassDecl());
-  n = (JifClassDecl)n.del(delFactory().delClassDecl());
-  return n;
-}
+    JifClassDecl n = new ClassDecl_c(pos, flags, name, params, superClass,
+                                     interfaces, authority, body);
+    n = (JifClassDecl)n.ext(extFactory().extClassDecl());
+    n = (JifClassDecl)n.del(delFactory().delClassDecl());
+    return n;
+  }
 
+  @SuppressWarnings("unchecked")
+  @Override
+  public Call Call(Position pos, Receiver target, Id name, List args) {
+    return Call(pos, target, name, null, args);
+  }
+  
+  @SuppressWarnings("unchecked")
+  public Call Call(Position pos, Receiver target, Id name, Expr remoteClient, List args) {
+    Call n = new FabricCall_c(pos, target, name, remoteClient, args);
+    n = (Call)n.ext(extFactory().extCall());
+    n = (Call)n.del(delFactory().delCall());
+    return n;
+  }
+  
+  @Override
+  public AmbPrincipalNode AmbPrincipalNode(Position pos, Expr expr) {
+    AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, expr);
+    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
+    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
+    return n;
+  }
+
+  @Override
+  public AmbPrincipalNode AmbPrincipalNode(Position pos, Id name) {
+    AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, name);
+    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
+    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
+    return n;
+  }
   
   //////////////////////////////////////////////////////////////////////////////
   // private helper methods                                                   //
@@ -142,73 +208,16 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
    *                 updated with the location
    */
   private Node setLocation(Node result, Expr location) {
-    Ext jifExt = result.ext();
-    Ext fabExt = jifExt.ext();
+    FabricExt fabExt = FabricUtil.fabricExt(result);
+//    Ext jifExt = result.ext();
+//    Ext fabExt = jifExt.ext();
     
     fabExt = ((LocatedExt_c) fabExt).location(location);
-    jifExt = jifExt.ext(fabExt);
-    result = result.ext(jifExt);
+    
+    result = FabricUtil.updateFabricExt(result, fabExt);
+//    jifExt = jifExt.ext(fabExt);
+//    result = result.ext(jifExt);
     
     return result;
-  }
-  
-  public RetryStmt RetryStmt(Position pos) {
-    RetryStmt s = new RetryStmt_c(pos);
-    s = (RetryStmt)s.ext(fabricExtFactory().extRetry());
-    s = (RetryStmt)s.del(fabricDelFactory().delStmt());
-    return s;
-  }
-  
-  public AbortStmt AbortStmt(Position pos) {
-    AbortStmt s = new AbortStmt_c(pos);
-    s = (AbortStmt)s.ext(fabricExtFactory().extAbort());
-    s = (AbortStmt)s.del(fabricDelFactory().delStmt());
-    return s;
-  }
-  
-  @SuppressWarnings("unchecked")
-  @Override
-  public Call Call(Position pos, Receiver target, Id name, List args) {
-    return Call(pos, target, name, null, args);
-  }
-  
-  @SuppressWarnings("unchecked")
-  public Call Call(Position pos, Receiver target, Id name, Expr remoteClient, List args) {
-    Call n = new FabricCall_c(pos, target, name, remoteClient, args);
-    n = (Call)n.ext(extFactory().extCall());
-    n = (Call)n.del(delFactory().delCall());
-    return n;
-  }
-  
-  public Client Client(Position pos) {
-    Client n = new Client_c(pos, this);
-    // TODO add the real extension and delegation for Client.
-    n = (Client)n.ext(fabricExtFactory().extClient());
-    n = (Client)n.del(delFactory().delExpr());
-    return n;
-  }
-  
-  public RemoteClientGetter RemoteClientGetter(Position pos, Expr remoteName) {
-    RemoteClientGetter n = new RemoteClientGetter_c(pos, remoteName);
-    // TODO add the real extension and delegation for RemoteClientGetter.
-    n = (RemoteClientGetter)n.ext(fabricExtFactory().extRemoteClientGetter());
-    n = (RemoteClientGetter)n.del(delFactory().delExpr());
-    return n;
-  }
-  
-  @Override
-  public AmbPrincipalNode AmbPrincipalNode(Position pos, Expr expr) {
-    AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, expr);
-    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
-    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
-    return n;
-  }
-
-  @Override
-  public AmbPrincipalNode AmbPrincipalNode(Position pos, Id name) {
-    AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, name);
-    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
-    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
-    return n;
   }
 }
