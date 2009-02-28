@@ -344,6 +344,14 @@
     </apply>
   </target>
 
+  <target name="fablib" depends="client,fabric-runtime,fabric-signatures">
+  	<subant target="">
+  		<fileset file="tests/jif/build.xml"/>
+  		<fileset file="tests/sif/build.xml"/>
+  	</subant>
+  </target>
+  
+
   <!-- Compiles the Fabric system-debugging tools -->
   <target name="client-debug" depends="client,fabric-runtime">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
@@ -526,7 +534,7 @@
   </target>
 
   <!-- Compiles the Fabric test programs -->
-  <target name="tests" depends="init,fabric-system,nfsserver">
+  <target name="tests" depends="init,fabric-system,nfsserver,fablib">
     <javac target="1.5" srcdir="${src}" destdir="${classes}" debug="on"
         includes="tests/**">
       <classpath refid="standard.classpath"/>
