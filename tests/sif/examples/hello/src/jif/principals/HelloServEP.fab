@@ -1,0 +1,15 @@
+package jif.principals;
+
+public class HelloServEP extends ExternalPrincipal {
+    public HelloServEP() {
+	super("calendar.HelloServEP");
+    }
+
+    private static HelloServEP{*!:*} P;
+    public static jif.lang.Principal getInstance{*!:*}() {
+	if (P == null) {
+	    P = new HelloServEP();
+	}
+	return P;
+    }
+}

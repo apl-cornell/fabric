@@ -32,7 +32,7 @@
   <target name="clobber" depends="clean" />
 
   <!-- initialize the build -->
-  <target name="init" depends="configure">
+  <target name="init">
     <!-- Create the time stamp -->
     <tstamp />
     <!-- Create the build directory structures used by compile -->
@@ -49,7 +49,7 @@
         <echo message="This is a build file with common Ant definitions. Use the build files in the subdirectories." />
     </target>
 
-    <target name="principals" depends="init,configure"
+    <target name="principals" depends="init"
             description="Compile the Jif code for principals (in src/jif/princpals)">
         <apply executable="sh"
                parallel="true"
@@ -74,7 +74,7 @@
         </apply>
     </target>
 
-    <target name="compile" depends="init,configure,principals"
+    <target name="compile" depends="init,principals"
             description="Compile the Jif code for this example">
         <antcall target="precompile"/>
         <apply executable="sh"

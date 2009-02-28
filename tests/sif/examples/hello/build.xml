@@ -1,0 +1,66 @@
+<project name="hello-siffabric-example" default="compile" basedir=".">
+  <description>
+    Build file for the Hello sample SIFFABRIC application.
+  </description>
+	
+  <import file="${basedir}/../../config.xml"/>
+	
+
+  <property name="app.name" value="hello" />
+	
+	<target name="principals" description="Compiles the principals necessary for this app">
+    <apply executable="bash"
+                    parallel="true"
+                    failonerror="true"
+                    dest="${basedir}"
+                    relative="true"
+                    skipemptyfilesets="true"
+                    vmlauncher="false">
+        <arg value="${fabric.home}/bin/fabc"/>
+        <arg value="-d"/>
+        <arg value="${basedir}/web/WEB-INF/classes"/>
+  			<arg value="-cp" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes" />
+        <arg value="-sigcp"/>
+        <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
+        <srcfile />
+        <fileset dir="${basedir}" includes="src/jif/principals/*.fab" />
+        <mapper type="regexp"
+                from="^src(.*)\.fab"
+                to="classes\1\.class" />            
+    </apply>
+		
+	</target>
+	
+	<target name="compile" depends="principals"
+		description="Compiles the application code">
+    <apply executable="bash"
+                    parallel="true"
+                    failonerror="true"
+                    dest="${basedir}"
+                    relative="true"
+                    skipemptyfilesets="true"
+                    vmlauncher="false">
+        <arg value="${fabric.home}/bin/fabc"/>
+        <arg value="-d"/>
+        <arg value="${basedir}/web/WEB-INF/classes"/>
+  			<arg value="-cp" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/web/WEB-INF/classes" />
+        <arg value="-sigcp"/>
+        <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
+        <srcfile />
+        <fileset dir="${basedir}" includes="src/hello/*.fab" />
+        <mapper type="regexp"
+                from="^src(.*)\.fab"
+                to="classes\1\.class" />            
+    </apply>
+		
+	</target>
+	
+  <target name="clean" description="clean up">
+      <delete dir="${basedir}/web/WEB-INF/classes" />
+  </target>
+
+
+</project>
+
