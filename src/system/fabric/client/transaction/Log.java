@@ -3,6 +3,7 @@ package fabric.client.transaction;
 import java.util.*;
 
 import fabric.client.Core;
+import fabric.client.LocalCore;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.UpdateMap;
 import fabric.client.transaction.LockList.Node;
@@ -461,7 +462,7 @@ public final class Log {
 
     // Release write locks on created objects and set version numbers.
     for ($Impl obj : creates) {
-      if (!obj.$isOwned) {
+      if (!obj.$isOwned /*XXX The following conjunct is a temporary hack until I figure out what's going on.  -MJL*/&& !(obj.$getCore() instanceof LocalCore)) {
         // The cached object is out-of-date.  Evict it.
         obj.$ref.evict();
         continue;
