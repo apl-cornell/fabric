@@ -6,19 +6,20 @@ public class InternalError extends Error {
 
   public InternalError(Throwable cause) {
     super(cause);
-    reportCause(cause);
+    report();
   }
 
   public InternalError(String msg) {
     super(msg);
+    report();
   }
 
   public InternalError(String msg, Throwable cause) {
     super(msg, cause);
-    reportCause(cause);
+    report();
   }
   
-  private void reportCause(Throwable cause) {
+  private void report() {
     System.err.println("Creating InternalError exception:");
     System.err.println("================ BEGIN STACK TRACE ================");
     printStackTrace();
