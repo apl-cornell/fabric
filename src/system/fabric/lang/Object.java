@@ -59,8 +59,8 @@ public interface Object {
    */
   void $forceRenumber(long onum);
   
-  /** create a History object to determine promises for this Object. */
-  History createHistory();
+  /** create a Statistics object to determine promises for this Object. */
+  Statistics createStatistics();
 
   /**
    * $Proxy objects behave like regular objects by delegating to $Impl objects,
@@ -212,8 +212,8 @@ public interface Object {
       fetch().$forceRenumber(onum);
     }
     
-    public History createHistory() {
-      return fetch().createHistory();
+    public Statistics createStatistics() {
+      return fetch().createStatistics();
     }
   }
 
@@ -293,7 +293,7 @@ public interface Object {
     /**
      * A private constructor for initializing transaction-management state.
      */
-    private $Impl(Core core, long onum, int version, Label label) {
+    private $Impl(Core core, long onum, int version, long expiry, Label label) {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
@@ -301,7 +301,7 @@ public interface Object {
       this.$history = null;
       this.$numWaiting = 0;
       this.$ref = new FabricSoftRef(core, onum, this);
-      this.$readMapEntry = TransactionManager.getReadMapEntry(this);
+      this.$readMapEntry = TransactionManager.getReadMapEntry(this, expiry);
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
       this.$updateMapVersion = -1;
@@ -324,7 +324,7 @@ public interface Object {
      *          the security label for the object
      */
     public $Impl(Core core, Label label) throws UnreachableNodeException {
-      this(core, core.createOnum(), 0, label);
+      this(core, core.createOnum(), 0, 0, label);
       core.cache(this);
 
       // Register the new object with the transaction manager.
@@ -430,8 +430,8 @@ public interface Object {
       return this;
     }
     
-    public History createHistory() {
-      return DefaultHistory.instance;
+    public Statistics createStatistics() {
+      return DefaultStatistics.instance;
     }
 
     /**
@@ -490,11 +490,11 @@ public interface Object {
      *          onum.
      */
     @SuppressWarnings("unused")
-    public $Impl(Core core, long onum, int version, long label,
+    public $Impl(Core core, long onum, int version, long expiry, long label, 
         ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
-      this(core, onum, version, new Label.$Proxy(core, label));
+      this(core, onum, version, expiry, new Label.$Proxy(core, label));
     }
 
     /**

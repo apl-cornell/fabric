@@ -17,6 +17,8 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.core.store.ObjectStore;
 import fabric.dissemination.Glob;
+import fabric.lang.DefaultStatistics;
+import fabric.lang.Statistics;
 import fabric.lang.Principal;
 
 public class TransactionManager {
@@ -28,9 +30,14 @@ public class TransactionManager {
    * The object store of the core for which we're managing transactions.
    */
   protected final ObjectStore store;
+  protected final LongKeyMap<Statistics> objectStats;
+  protected final ReadHistory            readHistory;
+  protected static final Random rand = new Random();
 
   public TransactionManager(ObjectStore store) {
     this.store = store;
+    this.objectStats = new LongKeyHashMap<Statistics>();
+    this.readHistory = new ReadHistory();
   }
 
   /**
@@ -74,6 +81,8 @@ public class TransactionManager {
    * but not committed or aborted.</li>
    * <li>The client has appropriate permissions to read/write/create</li>
    * <li>Created objects don't already exist</li>
+   * <li>Updated objects cannot have been read since the proposed commit time.</li>
+   * <li>Updated objects do not have valid outstanding promises</li>
    * <li>Modified and read objects do exist</li>
    * <li>Read objects are still valid (version numbers match)</li>
    * <li>TODO: duplicate objects within sets / between sets?</li>
@@ -129,6 +138,12 @@ public class TransactionManager {
           throw new TransactionPrepareFailedException("Object " + o.getOnum()
               + " does not exist.");
         }
+        
+        // check promises
+        if (coreCopy.getExpiry() > req.commitTime) {
+          throw new TransactionPrepareFailedException("Update to object" + onum +
+              " violates an outstanding promise");
+        }
 
         // Check write permissions
         if (!AuthorizationUtil.isWritePermitted(client, Client.getClient()
@@ -144,7 +159,16 @@ public class TransactionManager {
           versionConflicts.add(onum);
           continue;
         }
-
+        
+        // Check against read history
+        if (!readHistory.check(onum, req.commitTime)) {
+          throw new TransactionPrepareFailedException("Object " + onum +
+              " has been read since it's proposed commit time.");
+        }
+        
+        // Update promise statistics
+        ensureStatistics(onum).commitWrote();
+        
         // Update the version number on the prepared copy of the object.
         o.setVersion(coreVersion + 1);
       }
@@ -192,6 +216,9 @@ public class TransactionManager {
             continue;
           }
 
+          // inform the object statistics of the read
+          ensureStatistics(onum).commitRead();
+          
           // Register the read with the store.
           store.registerRead(tid, client, onum);
         }
@@ -201,6 +228,7 @@ public class TransactionManager {
         throw new TransactionPrepareFailedException(versionConflicts);
       }
 
+      readHistory.record(req);
       store.finishPrepare(tid, client);
     } catch (TransactionPrepareFailedException e) {
       synchronized (store) {
@@ -335,11 +363,6 @@ public class TransactionManager {
     return result;
   }
 
-  /**
-   * @param denyWithNull
-   *          If true, this method will return null instead of throwing an
-   *          AccessException if the client has insufficient privileges.
-   */
   private SerializedObject read(Principal client, long onum) {
     SerializedObject obj;
     synchronized (store) {
@@ -353,7 +376,69 @@ public class TransactionManager {
                                            obj.getLabelOnum()))
       return null;
     
+    // create promise if necessary.
+    long now = System.currentTimeMillis();
+    if (obj.getExpiry() < now) {
+      Statistics history = getStatistics(onum);
+      if (history != null) {
+        int promise = history.generatePromise();
+        if (promise > 0) {
+          synchronized (store) {
+            // create a promise
+            
+            if (store.isWritten(onum))
+              // object has been written - no promise for you!
+              return obj;
+            
+            // check to see if someone else has created a promise
+            SerializedObject newObj = store.read(onum);
+            long time = newObj.getExpiry();
+            
+            if (time < now + promise) try {
+              // update the promise
+              newObj.setExpiry(now + promise);
+              long tid = rand.nextLong();
+              store.beginTransaction(tid, client);
+              store.registerUpdate(tid, client, newObj);
+              store.finishPrepare(tid, client);
+              store.commit(tid, client);
+            } catch(AccessException exc) {
+              // TODO: this should probably use the core principal instead of
+              // the client principal, and AccessExceptions should be impossible
+              return obj;
+            }
+          }
+        }
+      }
+    }
+    
     return obj;
+  }
+
+  /**
+   * Return the statistics object associated with onum, or null if there isn't
+   * one
+   */
+  private Statistics getStatistics(long onum) {
+    synchronized (objectStats) {
+      return objectStats.get(onum);
+    }
+  }
+  
+  /**
+   * Return the statistics object associated with onum, creating one if it
+   * doesn't exist already.
+   */
+  private Statistics ensureStatistics(long onum) {
+    synchronized (objectStats) {
+      Statistics stats = getStatistics(onum);
+      if (stats == null) {
+        // TODO: create Stats
+        stats = DefaultStatistics.instance;
+        objectStats.put(onum, stats);
+      }
+      return stats;
+    }
   }
 
   /**

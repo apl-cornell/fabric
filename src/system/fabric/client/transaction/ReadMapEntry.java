@@ -6,13 +6,15 @@ import fabric.lang.Object.$Impl;
 public final class ReadMapEntry {
   FabricSoftRef obj;
   LockList<Log> readLocks;
-  int versionNumber;
+  int  versionNumber;
+  long promise;
   int pinCount;
 
-  ReadMapEntry($Impl obj) {
+  ReadMapEntry($Impl obj, long expiry) {
     this.obj = obj.$ref;
     this.readLocks = new LockList<Log>();
     this.versionNumber = obj.$version;
+    this.promise  = expiry;
     this.pinCount = 1;
   }
   

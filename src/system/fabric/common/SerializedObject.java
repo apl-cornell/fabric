@@ -20,6 +20,7 @@ public final class SerializedObject implements FastSerializable {
    * <ul>
    * <li>long onum</li>
    * <li>int version number</li>
+   * <li>long promise expiration</li>
    * <li>byte whether the label pointer is an intercore ref</li>
    * <li>short label's core's name length (only present if intercore)</li>
    * <li>byte[] label's core's name data (only present if intercore)</li>
@@ -99,6 +100,9 @@ public final class SerializedObject implements FastSerializable {
 
       // Version number.
       out.writeInt(0);
+      
+      // Promise expiry
+      out.writeLong(0);
 
       // Label reference.
       out.writeBoolean(false);
@@ -160,11 +164,34 @@ public final class SerializedObject implements FastSerializable {
   }
 
   /**
+   * @return the offset in objectData representing the start of the promise
+   *         expiry
+   */
+  private final int expiryPos() {
+    return versionPos() + 4;
+  }
+  
+  /**
+   * @return the serialized object's promise expiration time
+   */
+  public long getExpiry() {
+    return longAt(expiryPos());
+  }
+
+  /**
+   * Modifies the serialized object's promise expiry
+   * @param expiry
+   */
+  public void setExpiry(long expiry) {
+    setLongAt(expiryPos(), expiry);
+  }
+  
+  /**
    * @return the offset in objectData representing the start of a boolean that
    *         indicates whether the label pointer is an intercore reference.
    */
   private final int isIntercoreLabelPos() {
-    return versionPos() + 4;
+    return expiryPos() + 8;
   }
 
   /**
@@ -520,6 +547,7 @@ public final class SerializedObject implements FastSerializable {
     // Write out the object header.
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
+    out.writeLong(0);
     out.writeBoolean(interCoreLabel);
     if (interCoreLabel) out.writeUTF(labelCore.name());
     out.writeLong(labelOnum);
@@ -584,9 +612,9 @@ public final class SerializedObject implements FastSerializable {
     // The buffer for copying stuff.
     byte[] buf = new byte[BUF_LEN];
 
-    // Copy the onum and version number.
-    in.readFully(buf, 0, 12);
-    out.write(buf, 0, 12);
+    // Copy the onum, version number, and promise expiry.
+    in.readFully(buf, 0, 20);
+    out.write(buf, 0, 20);
 
     // Copy the label pointer.
     boolean isIntercoreLabel = in.readBoolean();
@@ -674,8 +702,8 @@ public final class SerializedObject implements FastSerializable {
 
     try {
       return ($Impl) c.getConstructor(Core.class, long.class, int.class,
-          long.class, ObjectInput.class, Iterator.class, Iterator.class)
-          .newInstance(core, getOnum(), getVersion(), getLabelOnum(),
+          long.class, long.class, ObjectInput.class, Iterator.class, Iterator.class)
+          .newInstance(core, getOnum(), getVersion(), getExpiry(), getLabelOnum(),
               new ObjectInputStream(getSerializedDataStream()),
               getRefTypeIterator(), getIntracoreRefIterator());
     } catch (Exception e) {
@@ -694,40 +722,56 @@ public final class SerializedObject implements FastSerializable {
    * Returns the unsigned short that starts at the given position in objectData.
    */
   private final int unsignedShortAt(int pos) {
-    return ((objectData[pos] & 0xff) << 8) | (objectData[pos + 1] & 0xff);
+    return ((objectData[pos + 0] & 0xff) << 8)
+         | ((objectData[pos + 1] & 0xff) << 0);
   }
 
   /**
    * Returns the int that starts at the given position in objectData.
    */
   private final int intAt(int pos) {
-    return ((objectData[pos] & 0xff) << 24)
-        | ((objectData[pos + 1] & 0xff) << 16)
-        | ((objectData[pos + 2] & 0xff) << 8) | (objectData[pos + 3] & 0xff);
+    return ((objectData[pos + 0] & 0xff) << 24)
+         | ((objectData[pos + 1] & 0xff) << 16)
+         | ((objectData[pos + 2] & 0xff) <<  8)
+         | ((objectData[pos + 3] & 0xff) <<  0);
   }
 
   /**
    * Sets the int that starts at the given position in objectData.
    */
   private final void setIntAt(int pos, int value) {
-    objectData[pos] = (byte) (0xff & (value >> 24));
+    objectData[pos + 0] = (byte) (0xff & (value >> 24));
     objectData[pos + 1] = (byte) (0xff & (value >> 16));
-    objectData[pos + 2] = (byte) (0xff & (value >> 8));
-    objectData[pos + 3] = (byte) (0xff & value);
+    objectData[pos + 2] = (byte) (0xff & (value >>  8));
+    objectData[pos + 3] = (byte) (0xff & (value >>  0));
   }
 
   /**
    * Returns the long that starts at the given position in objectData.
    */
   private final long longAt(int pos) {
-    return ((long) (objectData[pos] & 0xff) << 56)
-        | ((long) (objectData[pos + 1] & 0xff) << 48)
-        | ((long) (objectData[pos + 2] & 0xff) << 40)
-        | ((long) (objectData[pos + 3] & 0xff) << 32)
-        | ((long) (objectData[pos + 4] & 0xff) << 24)
-        | ((long) (objectData[pos + 5] & 0xff) << 16)
-        | ((long) (objectData[pos + 6] & 0xff) << 8)
-        | (objectData[pos + 7] & 0xff);
+    return ((long) (objectData[pos + 0] & 0xff) << 56)
+         | ((long) (objectData[pos + 1] & 0xff) << 48)
+         | ((long) (objectData[pos + 2] & 0xff) << 40)
+         | ((long) (objectData[pos + 3] & 0xff) << 32)
+         | ((long) (objectData[pos + 4] & 0xff) << 24)
+         | ((long) (objectData[pos + 5] & 0xff) << 16)
+         | ((long) (objectData[pos + 6] & 0xff) <<  8)
+         | ((long) (objectData[pos + 7] & 0xff) <<  0);
+  }
+  
+  /**
+   * Sets the long that starts at the given position in objectData.
+   */
+  private final void setLongAt(int pos, long value) {
+    objectData[pos + 0] = (byte) (0xff & (value >> 56));
+    objectData[pos + 1] = (byte) (0xff & (value >> 48));
+    objectData[pos + 2] = (byte) (0xff & (value >> 40));
+    objectData[pos + 3] = (byte) (0xff & (value >> 32));
+    objectData[pos + 4] = (byte) (0xff & (value >> 24));
+    objectData[pos + 5] = (byte) (0xff & (value >> 16));
+    objectData[pos + 6] = (byte) (0xff & (value >>  8));
+    objectData[pos + 7] = (byte) (0xff & (value >>  0));
   }
 
 }

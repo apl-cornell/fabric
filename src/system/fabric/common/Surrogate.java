@@ -29,10 +29,10 @@ public final class Surrogate extends $Impl {
    */
   private final String coreName;
 
-  public Surrogate(Core core, long onum, int version, long label,
+  public Surrogate(Core core, long onum, int version, long expiry, long label,
       ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
       Iterator<Long> intracoreRefs) throws IOException, ClassNotFoundException {
-    super(core, onum, version, label, serializedInput, refTypes, intracoreRefs);
+    super(core, onum, version, expiry, label, serializedInput, refTypes, intracoreRefs);
     this.coreName = serializedInput.readUTF();
     this.core = Client.getClient().getCore(coreName);
     this.onum = serializedInput.readLong();

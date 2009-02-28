@@ -82,19 +82,19 @@ public final class TransactionManager {
   static final OidKeyHashMap<ReadMapEntry> readMap =
       new OidKeyHashMap<ReadMapEntry>();
 
-  public static ReadMapEntry getReadMapEntry($Impl impl) {
+  public static ReadMapEntry getReadMapEntry($Impl impl, long expiry) {
     FabricSoftRef ref = impl.$ref;
 
     // Optimization: if the impl lives on the local core, it will never be
     // evicted, so no need to store the entry in the read map.
-    if (ref.core.isLocalCore()) return new ReadMapEntry(impl);
+    if (ref.core.isLocalCore()) return new ReadMapEntry(impl, expiry);
 
     while (true) {
       ReadMapEntry result;
       synchronized (readMap) {
         result = readMap.get(ref.core, ref.onum);
         if (result == null) {
-          result = new ReadMapEntry(impl);
+          result = new ReadMapEntry(impl, expiry);
           readMap.put(ref.core, ref.onum, result);
           return result;
         }
@@ -107,6 +107,7 @@ public final class TransactionManager {
 
           result.obj = impl.$ref;
           result.pinCount++;
+          result.promise = result.promise > expiry ? result.promise : expiry;
           int ver = impl.$getVersion();
           if (ver == result.versionNumber) return result;
 
@@ -236,6 +237,10 @@ public final class TransactionManager {
    */
   public void commitTransaction() throws AbortException,
       TransactionAtomicityViolationException {
+    commitTransactionAt(System.currentTimeMillis());
+  }
+  
+  public void commitTransactionAt(long commitTime) {
     logger.finest(current + " attempting to commit");
     // Assume only one thread will be executing this.
 
@@ -278,7 +283,7 @@ public final class TransactionManager {
 
     // Send prepare messages to our cohorts.
     Map<RemoteNode, TransactionPrepareFailedException> failures =
-        sendPrepareMessages(cores, clients);
+        sendPrepareMessages(commitTime, cores, clients);
 
     if (!failures.isEmpty()) {
       failures.remove(null);
@@ -297,8 +302,8 @@ public final class TransactionManager {
    * Sends prepare messages to the cohorts. Also sends abort messages if any
    * cohort fails to prepare.
    */
-  public Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages() {
-    return sendPrepareMessages(current.coresToContact(), current.clientsCalled);
+  public Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(long commitTime) {
+    return sendPrepareMessages(commitTime, current.coresToContact(), current.clientsCalled);
   }
 
   /**
@@ -306,7 +311,7 @@ public final class TransactionManager {
    * abort messages if any of them fails to prepare.
    */
   private Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
-      Set<Core> cores, List<RemoteClient> clients) {
+      final long commitTime, Set<Core> cores, List<RemoteClient> clients) {
     final Map<RemoteNode, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
@@ -341,7 +346,7 @@ public final class TransactionManager {
         @Override
         public void run() {
           try {
-            client.prepareTransaction(current.tid.topTid);
+            client.prepareTransaction(current.tid.topTid, commitTime);
           } catch (UnreachableNodeException e) {
             failures.put(client, new TransactionPrepareFailedException(
                 "Unreachable client"));
@@ -364,7 +369,7 @@ public final class TransactionManager {
             Collection<$Impl> creates = current.getCreatesForCore(core);
             LongKeyMap<Integer> reads = current.getReadsForCore(core);
             Collection<$Impl> writes = current.getWritesForCore(core);
-            core.prepareTransaction(current.tid.topTid, creates, reads, writes);
+            core.prepareTransaction(current.tid.topTid, commitTime, creates, reads, writes);
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) core, e);
           } catch (UnreachableNodeException e) {

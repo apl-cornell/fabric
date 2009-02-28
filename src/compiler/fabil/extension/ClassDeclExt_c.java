@@ -532,10 +532,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         qq
             .parseMember(
                 "public $Impl(fabric.client.Core core, long onum, int version, "
-                    + "long label, java.io.ObjectInput in, "
+                    + "long expiry, long label, java.io.ObjectInput in, "
                     + "java.util.Iterator refTypes, java.util.Iterator intracoreRefs) "
                     + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-                    + "super(core, onum, version, label, in, refTypes, intracoreRefs);"
+                    + "super(core, onum, version, expiry, label, in, refTypes, intracoreRefs);"
                     + in + " }", inSubst);
     result.add(deserialize);
 

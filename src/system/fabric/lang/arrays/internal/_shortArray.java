@@ -52,11 +52,11 @@ public interface _shortArray extends Object {
     /**
      * Used for deserializing.
      */
-    public $Impl(Core core, long onum, int version, long label,
+    public $Impl(Core core, long onum, int version, long expiry, long label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
-      super(core, onum, version, label, in, refTypes, intracoreRefs);
+      super(core, onum, version, expiry, label, in, refTypes, intracoreRefs);
       value = new short[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readShort();

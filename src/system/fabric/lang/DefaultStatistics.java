@@ -1,6 +1,6 @@
 package fabric.lang;
 
-public class DefaultHistory implements History {
+public class DefaultStatistics implements Statistics {
 
   public void commitRead()  { }
 
@@ -10,5 +10,5 @@ public class DefaultHistory implements History {
     return 0;
   }
 
-  public static final DefaultHistory instance = new DefaultHistory();
+  public static final DefaultStatistics instance = new DefaultStatistics();
 }

@@ -21,7 +21,7 @@ public interface Core {
   /**
    * Notifies the core that the transaction is entering the Prepare phase.
    */
-  void prepareTransaction(long tid, Collection<$Impl> toCreate,
+  void prepareTransaction(long tid, long commitTime, Collection<$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<$Impl> writes)
       throws UnreachableNodeException, TransactionPrepareFailedException;
 

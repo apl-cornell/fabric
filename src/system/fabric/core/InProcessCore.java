@@ -56,7 +56,7 @@ public class InProcessCore extends RemoteCore {
 
   @Override
   @SuppressWarnings("deprecation")
-  public void prepareTransaction(long tid, Collection<$Impl> toCreate,
+  public void prepareTransaction(long tid, long commitTime, Collection<$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<$Impl> writes)
       throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
@@ -71,7 +71,7 @@ public class InProcessCore extends RemoteCore {
       serializedWrites.add(new SerializedObject(o));
     
     PrepareRequest req =
-        new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
+        new PrepareRequest(tid, commitTime, serializedCreates, serializedWrites, reads);
     
     tm.prepare(Client.getClient().getPrincipal(), req);
   }

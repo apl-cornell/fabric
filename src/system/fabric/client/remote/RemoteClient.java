@@ -187,10 +187,10 @@ public final class RemoteClient implements RemoteNode {
     return response.result;
   }
 
-  public void prepareTransaction(long tid) throws UnreachableNodeException,
+  public void prepareTransaction(long tid, long commitTime) throws UnreachableNodeException,
       TransactionPrepareFailedException {
     PrepareTransactionMessage.Response response =
-        new PrepareTransactionMessage(tid).send(this);
+        new PrepareTransactionMessage(tid, commitTime).send(this);
     if (!response.success)
       throw new TransactionPrepareFailedException(response.message);
   }

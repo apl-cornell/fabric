@@ -203,11 +203,11 @@ public class RemoteCore implements Core, RemoteNode {
   /**
    * Sends a PREPARE message to the core.
    */
-  public void prepareTransaction(long tid, Collection<Object.$Impl> toCreate,
+  public void prepareTransaction(long tid, long commitTime, Collection<Object.$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object.$Impl> writes)
       throws TransactionPrepareFailedException, UnreachableNodeException {
     PrepareTransactionMessage.Response response =
-        new PrepareTransactionMessage(tid, toCreate, reads, writes).send(this);
+        new PrepareTransactionMessage(tid, commitTime, toCreate, reads, writes).send(this);
 
     if (!response.success)
       throw new TransactionPrepareFailedException(response.versionConflicts,

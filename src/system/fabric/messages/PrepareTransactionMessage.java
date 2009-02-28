@@ -98,6 +98,8 @@ public class PrepareTransactionMessage extends
   }
 
   public final long tid;
+  
+  public final long commitTime;
 
   public final LongKeyMap<Integer> reads;
 
@@ -132,18 +134,19 @@ public class PrepareTransactionMessage extends
   /**
    * Used to prepare transactions at remote clients.
    */
-  public PrepareTransactionMessage(long tid) {
-    this(tid, null, null, null);
+  public PrepareTransactionMessage(long tid, long commitTime) {
+    this(tid, commitTime, null, null, null);
   }
 
   /**
    * Only used by the client.
    */
-  public PrepareTransactionMessage(long tid, Collection<$Impl> toCreate,
+  public PrepareTransactionMessage(long tid, long commitTime, Collection<$Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<$Impl> writes) {
     super(MessageType.PREPARE_TRANSACTION);
 
     this.tid = tid;
+    this.commitTime = commitTime;
     this.creates = toCreate;
     this.reads = reads;
     this.writes = writes;
@@ -163,6 +166,7 @@ public class PrepareTransactionMessage extends
 
     // Read the TID.
     this.tid = in.readLong();
+    this.commitTime = in.readLong();
 
     // Read reads.
     int size = in.readInt();
@@ -232,6 +236,9 @@ public class PrepareTransactionMessage extends
   public void write(DataOutput out) throws IOException {
     // Serialize tid.
     out.writeLong(tid);
+    
+    // Serialize commitTime
+    out.writeLong(commitTime);
 
     // Serialize reads.
     if (reads == null) {

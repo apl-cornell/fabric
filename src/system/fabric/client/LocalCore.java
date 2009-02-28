@@ -38,7 +38,7 @@ public final class LocalCore implements Core {
 
   private static final Logger log = Logger.getLogger("fabric.client.LocalCore");
 
-  public synchronized void prepareTransaction(long tid,
+  public synchronized void prepareTransaction(long tid, long commitTime,
       Collection<Object.$Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<Object.$Impl> writes) {
     // Note: since we assume local single threading we can ignore reads

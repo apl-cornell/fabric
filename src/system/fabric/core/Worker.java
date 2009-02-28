@@ -396,7 +396,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     this.numPrepares++;
 
     PrepareRequest req =
-        new PrepareRequest(msg.tid, msg.serializedCreates,
+        new PrepareRequest(msg.tid, msg.commitTime, msg.serializedCreates,
             msg.serializedWrites, msg.reads);
 
     surrogateManager.createSurrogates(req);

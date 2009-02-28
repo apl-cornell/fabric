@@ -353,13 +353,15 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
     // Commit up to the top level.
     for (int i = 0; i < log.getTid().depth; i++)
-      tm.commitTransaction();
+      tm.commitTransactionAt(prepareTransactionMessage.commitTime);
 
     Map<RemoteNode, TransactionPrepareFailedException> failures =
-        tm.sendPrepareMessages();
+        tm.sendPrepareMessages(prepareTransactionMessage.commitTime);
 
-    if (failures.isEmpty()) return new PrepareTransactionMessage.Response();
-    return new PrepareTransactionMessage.Response("Transaction prepare failed.");
+    if (failures.isEmpty())
+      return new PrepareTransactionMessage.Response();
+    else
+      return new PrepareTransactionMessage.Response("Transaction prepare failed.");
   }
 
   public CommitTransactionMessage.Response handle(

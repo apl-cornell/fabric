@@ -1,14 +1,18 @@
 package fabric.lang;
 
-/** A History encapsulates the history of read and write requests for an object.
- *  It is maintained at the Core and is used to generate promise durations for
- *  the object.
- *  
- *  History objects are created by the {@link fabric.lang.Object#createHistory}
- *  method.  They are only heuristic information and may be discarded and
- *  recreated at any time. 
+/**
+ * <p>
+ * A Statistics encapsulates the history of read and write requests for an
+ * object. It is maintained at the Core and is used to generate promise
+ * durations for the object.
+ * </p>
+ * <p>
+ * Statistics objects are created by the
+ * {@link fabric.lang.Object#createStatistics} method. They are only heuristic
+ * information and may be discarded and recreated at any time.
+ * </p>
  */
-public interface History {
+public interface Statistics {
   /** Called whenever a transaction that read  the object is committed */
   void commitRead();
   
