@@ -1,0 +1,59 @@
+package system;
+
+public class RemoteCall05 {
+  int i = 0;
+
+  public void f_core0(int n) {
+    if (n <= 0) return;
+
+    RemoteClient remoteClient = Client.getClient().getClient("core0");
+    f_client0@remoteClient(n-1);
+    f_client0@remoteClient(n-1);
+    i += n;
+  }
+
+  public void f_core0_remote(fabric.lang.Principal p, int n) {
+    f_core0(n);
+  }
+
+  public void f_client0(int n) {
+    if (n <= 0) return;
+
+    RemoteClient remoteClient = Client.getClient().getClient("client0");
+    i += n;
+    f_core0@remoteClient(n-1);
+    f_core0@remoteClient(n-1);
+  }
+
+  public void f_client0_remote(fabric.lang.Principal p, int n) {
+    f_client0(n);
+  }
+
+  public static void main(String[] args) {
+    Core core = Client.getClient().getCore("core0");
+    RemoteCall05 t = null;
+    int result1 = 0;
+    atomic {
+      t = new RemoteCall05@core();
+      t.f_core0(5);
+      result1 = t.i;
+    }
+
+    int result2 = 0;
+    atomic {
+      result2 = t.i;
+    }
+
+    if (result1 == 57 && result2 == 57)
+      System.out.println("TEST PASSED.");
+    else {
+      if (result1 != 57)
+	System.out.println("TEST FAILED: expected result1 == 57 but got "
+	  + result1);
+      if (result2 != 57)
+	System.out.println("TEST FAILED: expected result2 == 57 but got "
+	  + result2);
+    }
+  }
+}
+
