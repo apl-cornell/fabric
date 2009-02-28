@@ -433,8 +433,10 @@ public class TransactionManager {
     synchronized (objectStats) {
       Statistics stats = getStatistics(onum);
       if (stats == null) {
-        // TODO: create Stats
-        stats = DefaultStatistics.instance;
+        // TODO: potential deadlock
+        Core local = Client.getClient().getCore(store.getName());
+        fabric.lang.Object.$Proxy object = new fabric.lang.Object.$Proxy(local,onum);
+        stats = object.createStatistics();
         objectStats.put(onum, stats);
       }
       return stats;
