@@ -38,6 +38,10 @@ public class FabricSoftRef extends SoftReference<$Impl> {
    * Evicts the Impl associated with this soft reference from the client's cache.
    */
   public void evict() {
+    if (core instanceof LocalCore) {
+      throw new InternalError("evicting local core object");
+    }
+    
     clear();
     core.notifyEvict(onum);
     if (readMapEntry != null && readMapEntry.depin()) readMapEntry = null;
