@@ -1,0 +1,54 @@
+package system;
+
+import jif.runtime.Runtime;
+import java.io.PrintStream;
+
+public class RemoteCall01 {
+  static final label{*bot} bot = new label{_->_; *<-*};
+  final principal{*bot} p = new jif.lang.ExternalPrincipal("user");
+  final label{*bot} lbl = new label{p->;p<-};
+
+  final RemoteClient{*bot} remoteClient = client$("core0");
+
+  int{*bot} i;
+
+  public void m{*bot}() {
+    i++;
+  }
+
+  void run{*bot}() {
+    try {
+//      Core core = null;
+//      try {
+//	core = client$.getCore("core0");
+//      } catch (NullPointerException e) {
+//	return;
+//      }
+
+      atomic {
+	m@remoteClient();
+      }
+
+      int{*bot} curI = 0;
+      atomic {
+	curI = i;
+      }
+
+      Runtime runtime = null;
+      atomic {
+	runtime = Runtime.getRuntime();
+      }
+      if (runtime == null) return;
+
+      PrintStream out = null;
+      out = runtime.out();
+      if (out == null) return;
+      out.println();
+
+      if (curI == 1) out.println("TEST PASSED.");
+      else out.println("TEST FAILED: expected t.i == 1 but got " + curI);
+    } catch (SecurityException e) {
+    }
+  }
+}
+
