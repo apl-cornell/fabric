@@ -27,8 +27,6 @@ public interface Principal extends jif.lang.Principal, Object {
         Label lb, boolean executeNow);
 
     public native String name();
-
-    public static native Principal getInstance(Core core, String name);
   }
 
   public static class $Impl extends fabric.lang.Object.$Impl implements
