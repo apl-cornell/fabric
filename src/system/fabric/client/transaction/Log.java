@@ -68,7 +68,7 @@ public final class Log {
   protected final OidKeyHashMap<Pair<LockList.Node<Log>, ReadMapEntry>> reads;
 
   /**
-   * TODO: DOCO
+   * Reads on objects that have been read by an ancestor transaction.
    */
   protected final List<Pair<LockList.Node<Log>, ReadMapEntry>> readsReadByParent;
 
