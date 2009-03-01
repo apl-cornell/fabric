@@ -9,11 +9,20 @@ import polyglot.ast.NewArray;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
+import polyglot.visit.NodeVisitor;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.NewArrayToJavaExt_c;
 import jif.types.label.Label;
 
 public class NewArrayToFabilExt_c extends NewArrayToJavaExt_c {
+  protected Type baseType;
+  
+  @Override
+  public NodeVisitor toJavaEnter(JifToJavaRewriter rw) throws SemanticException {
+    NewArray n = (NewArray)node();
+    baseType = n.baseType().type();
+    return rw;
+  }
   @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
@@ -23,7 +32,7 @@ public class NewArrayToFabilExt_c extends NewArrayToJavaExt_c {
     FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
     FabricTypeSystem ts = (FabricTypeSystem)rw.jif_ts();
 
-    Type base = n.type();
+    Type base = baseType;
     while (base.isArray()) {
       base = base.toArray().base();
     }

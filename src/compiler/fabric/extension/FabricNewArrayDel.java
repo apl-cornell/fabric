@@ -3,8 +3,10 @@ package fabric.extension;
 import fabric.ast.FabricUtil;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.Expr;
+import polyglot.ast.NewArray;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
+import polyglot.types.Type;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import jif.extension.JifNewArrayDel;
@@ -24,7 +26,13 @@ public class FabricNewArrayDel extends JifNewArrayDel {
   
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
-    Node n = super.typeCheck(tc);
+    NewArray n = (NewArray)super.typeCheck(tc);
+    
+    // XXX Jif only updated the label of the type of the NewArray expression,
+    // but not the type of the base TypeNode.
+    Type baseType = n.type().toArray().base();
+    n = n.baseType(n.baseType().type(baseType));
+    
     NewArrayExt_c ext = (NewArrayExt_c)FabricUtil.fabricExt(n);
     FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
     if (ext.location() != null) {

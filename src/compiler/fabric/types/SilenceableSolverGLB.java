@@ -1,6 +1,10 @@
 package fabric.types;
 
+import java.util.Iterator;
+
 import polyglot.types.SemanticException;
+import polyglot.util.ErrorInfo;
+import jif.types.Constraint;
 import jif.types.JifTypeSystem;
 import jif.types.SolverGLB;
 import jif.types.VarMap;
@@ -42,6 +46,12 @@ public class SilenceableSolverGLB extends SolverGLB {
             report(1, "   " + staticFailedConstraints.size() + " statically failed constraint");
         }
         setStatus(STATUS_NO_SOLUTION);
+      }
+      
+      for (Iterator iter = staticFailedConstraints.iterator(); iter.hasNext();) {
+        Constraint cons = (Constraint)iter.next();
+        System.err.println("Runtime check does not type-check, due to\n" + cons.technicalMsg() + 
+                           "\nin the constraint\n" + cons + "\nat " + cons.position());
       }
     }
 
