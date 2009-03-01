@@ -2,16 +2,25 @@ package fabric.ast;
 
 import java.util.List;
 
+import jif.types.label.Label;
+
+import fabric.types.FabricParsedClassType;
 import fabric.types.FabricTypeSystem;
 
 import polyglot.ast.ClassBody;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
+import polyglot.ast.FieldDecl;
 import polyglot.ast.Id;
+import polyglot.ast.Node;
 import polyglot.ast.TypeNode;
 import polyglot.main.Report;
 import polyglot.types.Flags;
 import polyglot.types.SemanticException;
+import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
+import polyglot.visit.TypeChecker;
 
 public class ClassDecl_c extends jif.ast.JifClassDecl_c {
 
@@ -48,5 +57,35 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
             + ts.FObject());
       type.superType(ts.FObject());
     }
+  }
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  public Node typeCheck(TypeChecker tc) throws SemanticException {
+    ClassDecl cd = (ClassDecl)super.typeCheck(tc);
+    FabricParsedClassType pct = (FabricParsedClassType)cd.type();
+    Label defaultFieldLabel = pct.defaultFieldLabel();
+    
+    FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
+    
+    for (ClassMember cm : (List<ClassMember>)cd.body().members()) {
+      if (cm instanceof FieldDecl) {
+        FieldDecl fd = (FieldDecl)cm;
+
+        // Skip static fields.
+        if (fd.flags().isStatic()) continue;
+        
+        Type ft = fd.type().type();
+        Label fl = ts.labelOfType(ft);
+        if (!ts.equals(defaultFieldLabel, fl)) {
+          throw new SemanticException("The field " + fd.fieldInstance() + " has a different label than " +
+          		              "the default field label " + defaultFieldLabel + 
+          		              "of the class " + pct + ".",
+                                      fd.position());
+        }
+      }
+    }
+    
+    return cd;
   }
 }
