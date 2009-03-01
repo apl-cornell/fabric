@@ -276,6 +276,9 @@ public final class TransactionManager {
 
     // Commit top-level transaction.
 
+    // Remove and unlock reads that have valid promises on them
+    current.removePromisedReads(commitTime);
+    
     // Go through the transaction log and figure out the cores we need to
     // contact.
     Set<Core> cores = current.coresToContact();

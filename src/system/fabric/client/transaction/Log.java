@@ -433,9 +433,10 @@ public final class Log {
       }
     }
 
-    for (Pair<LockList.Node<Log>, ReadMapEntry> entry : readsReadByParent)
-      entry.second.releaseLock(entry.first);
-
+    // sanity check
+    if (!readsReadByParent.isEmpty())
+      throw new InternalError("something was read by a non-existent parent");
+    
     // Release write locks and ownerships; update version numbers.
     for ($Impl obj : writes) {
       if (!obj.$isOwned) {
@@ -580,5 +581,31 @@ public final class Log {
 
   public Log getChild() {
     return child;
+  }
+
+  void removePromisedReads(long commitTime) {
+    // Generics.  Ugh.
+    
+    Iterator<LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>>> outer = reads.iterator();
+    while (outer.hasNext()) {
+      Collection<Pair<LockList.Node<Log>, ReadMapEntry>> values = outer.next().values();
+
+      Iterator  <Pair<LockList.Node<Log>, ReadMapEntry>> inner  = values.iterator();
+      while (inner.hasNext()) {
+        Pair<LockList.Node<Log>, ReadMapEntry> entry = inner.next();
+        
+        if (entry.second.promise > commitTime) {
+          entry.second.releaseLock(entry.first);
+          inner.remove();
+        }
+      }
+      
+      if (values.isEmpty())
+        outer.remove();
+    }
+    
+    //  sanity check
+    if (!readsReadByParent.isEmpty())
+      throw new InternalError("something was read by a non-existent parent");
   }
 }
