@@ -16,6 +16,10 @@ public class FabricContext_c extends JifContext_c {
     if (name.equals("client$")) {
       return ((FabricTypeSystem)typeSystem()).clientLocalInstance();
     }
+    else if (name.endsWith("'")) {
+      // XXX HACK!
+      return super.findLocal(name.substring(0, name.length() - 1));
+    }
     return super.findLocal(name);
   }
 }
