@@ -1,0 +1,14 @@
+package OO7;
+
+/** Stupid implementation of Statistics that always gives a 1 minute lease. */
+class OO7Statistics implements Statistics {
+  public void commitRead() {
+  }
+  
+  public void commitWrote() {
+  }
+  
+  public int generatePromise() {
+  	return 1000 * 60;
+  }
+}
