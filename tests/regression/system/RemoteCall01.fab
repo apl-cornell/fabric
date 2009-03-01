@@ -10,14 +10,16 @@ public class RemoteCall01 {
 
   final RemoteClient{*bot} remoteClient = client$("core0");
 
-  int{*bot} i;
+  final RemoteCall01Data[lbl]{*bot} data = new RemoteCall01Data[lbl]();
 
-  public void m{*bot}() {
-    i++;
+  public void moo{p->;p<-}() : {p->;p<-} {
+    if (data == null) return;
+    data.i++;
   }
 
   void run{*bot}() {
     try {
+// TODO: create a main method to instantiate an object and call run() on it.
 //      Core core = null;
 //      try {
 //	core = client$.getCore("core0");
@@ -26,15 +28,17 @@ public class RemoteCall01 {
 //      }
 
       atomic {
-	m@remoteClient();
+	if (remoteClient actsfor p && client$ actsfor p)
+	  moo@remoteClient();
       }
 
-      int{*bot} curI = 0;
+      int{*lbl} curI = 0;
       atomic {
-	curI = i;
+	if (data == null) return;
+	curI = data.i;
       }
 
-      Runtime runtime = null;
+      Runtime[p] runtime = null;
       atomic {
 	runtime = Runtime.getRuntime();
       }
@@ -50,5 +54,9 @@ public class RemoteCall01 {
     } catch (SecurityException e) {
     }
   }
+}
+
+class RemoteCall01Data[label L] {
+  int{L} i;
 }
 
