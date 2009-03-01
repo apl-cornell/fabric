@@ -384,15 +384,17 @@
            relative="false"
            skipemptyfilesets="true"
            vmlauncher="false">
-      <arg value="${fabc}"     />
-      <arg value="-sigcp"      /> <arg value="sig-classes/fabric:sig-classes/fabil"/>
-      <arg value="-sig"        />
-      <arg value="-nooutput"   />
-      <arg value="-d"          /> <arg value="sig-classes/fabric"    />
-      <arg value="-sourcepath" /> <arg value="src/signatures/fabric" />
+      <arg value="${fabc}" />
+      <arg value="-nooutput" />
+      <arg value="-sig" />
+      <arg value="-d" />
+      <arg value="sig-classes/fabric" />
+      <arg value="-sourcepath" />
+      <arg value="src/signatures/fabric" />
+      <arg value="-sigcp" />
+      <arg value="sig-classes/fabric"/>
       <srcfile />
-      <fileset dir="${signatures.fabric.src}">
-        </fileset>
+      <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
 
