@@ -17,9 +17,8 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.core.store.ObjectStore;
 import fabric.dissemination.Glob;
-import fabric.lang.DefaultStatistics;
-import fabric.lang.Statistics;
 import fabric.lang.Principal;
+import fabric.lang.Statistics;
 
 public class TransactionManager {
 
