@@ -1,0 +1,24 @@
+package jif.lang;
+
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.lang.Object;
+
+/**
+ * This is an abstract implementation of the principal interface.
+ * It provides convenience methods for delgating authority to superiors.
+ * This class assumes that principals are equal if they are the same class
+ * with the same name.
+ */
+public class ExternalPrincipal extends AbstractPrincipal {
+    public ExternalPrincipal() { super(); }
+    
+    private void jif$init() {  }
+    
+    protected ExternalPrincipal jif$lang$ExternalPrincipal$(final String name) {
+        this.jif$init();
+        { this.jif$lang$AbstractPrincipal$(name); }
+        return this;
+    }
+}
