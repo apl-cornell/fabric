@@ -23,6 +23,7 @@ public class NewArrayToFabilExt_c extends NewArrayToJavaExt_c {
     baseType = n.baseType().type();
     return rw;
   }
+  
   @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {

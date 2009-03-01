@@ -3,7 +3,6 @@ package fabric.types;
 import java.util.Iterator;
 
 import polyglot.types.SemanticException;
-import polyglot.util.ErrorInfo;
 import jif.types.Constraint;
 import jif.types.JifTypeSystem;
 import jif.types.SolverGLB;
@@ -53,6 +52,8 @@ public class SilenceableSolverGLB extends SolverGLB {
         System.err.println("Runtime check does not type-check, due to\n" + cons.technicalMsg() + 
                            "\nin the constraint\n" + cons + "\nat " + cons.position());
       }
+      
+      staticFailedConstraints.clear();
     }
 
     return super.solve();
