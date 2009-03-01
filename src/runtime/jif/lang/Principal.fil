@@ -4,17 +4,19 @@ package jif.lang;
  * This code is mostly copied from Jif. See the documentation for the Jif source
  * file, $JIF/sig-src/jif/lang/Principal.jif.
  */
-public interface Principal {
-  String name();
+public abstract class Principal {
+  public abstract String name();
 
-  boolean delegatesTo(final Principal p);
+  public abstract boolean delegatesTo(final Principal p);
 
-  boolean equals(final Principal p);
+  public abstract boolean equals(final Principal p);
 
-  boolean isAuthorized(final java.lang.Object authPrf, final Closure closure,
-      final Label lb, final boolean executeNow);
+  public abstract boolean isAuthorized(final java.lang.Object authPrf,
+      final Closure closure, final Label lb, final boolean executeNow);
 
-  ActsForProof findProofUpto(final Core core, final Principal p, final java.lang.Object searchState);
+  public abstract ActsForProof findProofUpto(final Core core,
+      final Principal p, final java.lang.Object searchState);
 
-  ActsForProof findProofDownto(final Core core, final Principal q, final java.lang.Object searchState);
+  public abstract ActsForProof findProofDownto(final Core core,
+      final Principal q, final java.lang.Object searchState);
 }

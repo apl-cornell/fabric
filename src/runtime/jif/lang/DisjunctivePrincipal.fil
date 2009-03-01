@@ -8,7 +8,7 @@ import fabric.util.*;
  * A disjunction of two (non-null) principals. This code is mostly copied from
  * Jif.
  */
-public final class DisjunctivePrincipal implements Principal {
+public final class DisjunctivePrincipal extends Principal {
   final Set disjuncts;
   private Integer hashCode = null;
   public static final Core localCore = Client.getClient().getLocalCore();

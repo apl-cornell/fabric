@@ -10,7 +10,7 @@ import fabric.util.Map;
 
 import jif.lang.*;
 
-public class Principal implements jif.lang.Principal {
+public class Principal extends jif.lang.Principal {
   private final String name;
 
   public Principal(String name) {

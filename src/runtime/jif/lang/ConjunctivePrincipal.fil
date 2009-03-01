@@ -8,7 +8,7 @@ import fabric.util.*;
  * A conjunction of two or more (non-null) principals. This code is mostly
  * copied from Jif.
  */
-public final class ConjunctivePrincipal implements Principal {
+public final class ConjunctivePrincipal extends Principal {
   final Set conjuncts;
   private Integer hashCode;
   public static final Core localCore = Client.getClient().getLocalCore();

@@ -1,23 +1,23 @@
 package jif.lang;
 
-public interface Principal {
+public abstract class Principal {
     static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 
-    String{this} name();
+    public abstract String{this} name();
     
-    boolean{this; p; this←} delegatesTo(principal p);
+    public abstract boolean{this; p; this←} delegatesTo(principal p);
     
-    boolean equals(Principal p);
+    public abstract boolean equals(Principal p);
     
-    boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+    public abstract boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
 	isAuthorized{this←}(java.lang.Object authPrf, 
 			    Closure[this, lb] closure,
 			    label lb,
 			    boolean executeNow) where authority (this);
     
-    ActsForProof{this; p; this←; p←}
+    public abstract ActsForProof{this; p; this←; p←}
 	findProofUpto{this←}(Core c, Principal p, java.lang.Object searchState);
     
-    ActsForProof{this; q; q←; this←}
+    public abstract ActsForProof{this; q; q←; this←}
 	findProofDownto{this←}(Core c, Principal q, java.lang.Object searchState);    
 }

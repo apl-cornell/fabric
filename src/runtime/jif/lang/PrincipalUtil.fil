@@ -566,7 +566,7 @@ public class PrincipalUtil {
 
   }
 
-  public static final class TopPrincipal implements Principal {
+  public static final class TopPrincipal extends Principal {
     public TopPrincipal() {
     }
 
