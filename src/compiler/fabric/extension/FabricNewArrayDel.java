@@ -31,6 +31,9 @@ public class FabricNewArrayDel extends JifNewArrayDel {
     // XXX Jif only updated the label of the type of the NewArray expression,
     // but not the type of the base TypeNode.
     Type baseType = n.type().toArray().base();
+    while (baseType.isArray()) {
+      baseType = baseType.toArray().base();
+    }
     n = n.baseType(n.baseType().type(baseType));
     
     NewArrayExt_c ext = (NewArrayExt_c)FabricUtil.fabricExt(n);
