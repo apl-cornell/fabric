@@ -3,10 +3,16 @@ package fabric.types;
 import java.util.*;
 
 import jif.ast.JifUtil;
+import jif.translate.DynamicPrincipalToJavaExpr_c;
 import jif.translate.PrincipalToJavaExpr;
 import jif.types.JifLocalInstance;
 import jif.types.JifTypeSystem_c;
 import jif.types.Solver;
+import jif.types.label.AccessPath;
+import jif.types.label.AccessPathConstant;
+import jif.types.label.AccessPathLocal;
+import jif.types.principal.DynamicPrincipal;
+import jif.types.principal.DynamicPrincipal_c;
 import jif.types.principal.Principal;
 import polyglot.ext.param.types.Subst;
 import polyglot.frontend.Source;
@@ -157,5 +163,31 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   @Override
   public Subst subst(Map substMap, Map cache) {
     return new FabricSubst_c(this, substMap, cache);
+  }
+  
+  @Override
+  public DynamicPrincipal dynamicPrincipal(Position pos, AccessPath path) {
+    DynamicPrincipal t =
+        new FabricDynamicPrincipal_c(path, this, pos, dynamicPrincipalTranslator());
+    return t;
+  }
+
+  @Override
+  public Principal pathToPrincipal(Position pos, AccessPath path) {
+    if (path instanceof AccessPathConstant) {
+      AccessPathConstant apc = (AccessPathConstant) path;
+      if (!apc.isPrincipalConstant()) {
+        throw new InternalCompilerError(
+            "Dynamic principal with a constant access path: " + apc);
+      }
+      return (Principal) apc.constantValue();
+    }
+    DynamicPrincipal t =
+        new FabricDynamicPrincipal_c(path, this, pos, dynamicPrincipalTranslator());
+    return t;
+  }
+  
+  public boolean isLocalClientAccessPath(AccessPath ap) {
+    return ap instanceof AccessPathLocal && ((AccessPathLocal)ap).localInstance() == clientLocalInstance();
   }
 }

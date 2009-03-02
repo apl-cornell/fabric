@@ -51,7 +51,9 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         catch (SemanticException e) {
           throw new InternalCompilerError(e);
         }
-          
+
+//        Principal clientPrincipal = ts.clientPrincipal(Position.compilerGenerated());
+        
 //          Label defaultBound = ts.defaultSignature().defaultArgBound(f);
 //          JifLocalInstance li = (JifLocalInstance)ts.localInstance(f.position(), Flags.FINAL, ts.Principal(), "client$principal");
 //          ArgLabel al = ts.argLabel(f.position(), li, null);

@@ -655,6 +655,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         
         String realName = md.name().substring(0, md.name().length() - 7);
         List<Formal> realFormals = md.formals().subList(1, md.formals().size());
+//        List<Formal> realFormals = md.formals();
         
         // First, use a static field to store the parameter types.
         String fieldName = "$paramTypes" + (freshTid++);

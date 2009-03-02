@@ -5,14 +5,13 @@ import java.io.PrintStream;
 
 public class RemoteCall01 {
   static final label{*bot} bot = new label{_->_; *<-*};
-  final principal{*bot} p = new jif.lang.ExternalPrincipal("user");
-  final label{*bot} lbl = new label{p->;p<-};
+  final label{*bot} lbl = new label{client$->;client$<-};
 
   final RemoteClient{*bot} remoteClient = client$("core0");
 
   final RemoteCall01Data[lbl]{*bot} data = new RemoteCall01Data[lbl]();
 
-  public void moo{p->;p<-}() : {p->;p<-} {
+  public void moo{client$->;client$<-}() : {client$->;client$<-} {
     if (data == null) return;
     data.i++;
   }
@@ -28,7 +27,7 @@ public class RemoteCall01 {
 //      }
 
       atomic {
-	if (remoteClient actsfor p && client$ actsfor p)
+	if (remoteClient actsfor client$)
 	  moo@remoteClient();
       }
 
@@ -38,7 +37,7 @@ public class RemoteCall01 {
 	curI = data.i;
       }
 
-      Runtime[p] runtime = null;
+      Runtime[client$] runtime = null;
       atomic {
 	runtime = Runtime.getRuntime();
       }

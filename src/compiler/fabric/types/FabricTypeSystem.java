@@ -5,6 +5,8 @@ import polyglot.types.LocalInstance;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import jif.types.JifTypeSystem;
+import jif.types.label.AccessPath;
+import jif.types.label.AccessPathField;
 import jif.types.principal.*;
 
 public interface FabricTypeSystem extends JifTypeSystem {
@@ -29,4 +31,6 @@ public interface FabricTypeSystem extends JifTypeSystem {
   LocalInstance clientLocalInstance();
   
   Type strip(Type type);
+  
+  boolean isLocalClientAccessPath(AccessPath ap);
 }

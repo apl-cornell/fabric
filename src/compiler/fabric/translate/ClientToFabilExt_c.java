@@ -11,6 +11,7 @@ public class ClientToFabilExt_c extends ExprToJavaExt_c {
   @Override
   public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {
     FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
-    return nf.Local(Position.compilerGenerated(), nf.Id(Position.compilerGenerated(), "client$"));
+//    return nf.Local(Position.compilerGenerated(), nf.Id(Position.compilerGenerated(), "client$"));
+    return rw.qq().parseExpr("client$");
   }
 }

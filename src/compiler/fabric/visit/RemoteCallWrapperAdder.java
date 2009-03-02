@@ -3,6 +3,7 @@ package fabric.visit;
 import java.util.*;
 
 import jif.ast.*;
+import jif.types.principal.Principal;
 
 import fabric.ast.FabricCall;
 import fabric.ast.FabricNodeFactory;
@@ -56,20 +57,24 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
           // Also skip abstract method.
           if (md.body() == null) continue;
 
+          Principal clientPrincipal = ts.clientPrincipal(Position.compilerGenerated());
+          
           List<PolicyNode> components = new ArrayList<PolicyNode>(2);
-          PolicyNode reader = 
-            nf.ReaderPolicyNode(Position.compilerGenerated(), 
-                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
-                                    nf.Id(Position.compilerGenerated(), "client$principal")), 
-                                Collections.singletonList(nf.CanonicalPrincipalNode(Position.compilerGenerated(), 
-                                    ts.bottomPrincipal(Position.compilerGenerated()))));
+//          PolicyNode reader = 
+//            nf.ReaderPolicyNode(Position.compilerGenerated(), 
+//                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
+//                                    nf.Id(Position.compilerGenerated(), "client$principal")), 
+//                                Collections.singletonList(nf.CanonicalPrincipalNode(Position.compilerGenerated(), 
+//                                    ts.bottomPrincipal(Position.compilerGenerated()))));
           PolicyNode writer = 
-            nf.WriterPolicyNode(Position.compilerGenerated(), 
-                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
-                                    nf.Id(Position.compilerGenerated(), "client$principal")), 
-                                Collections.singletonList(nf.AmbPrincipalNode(Position.compilerGenerated(), 
-                                    nf.Id(Position.compilerGenerated(), "client$principal"))));
-          components.add(reader);
+            nf.WriterPolicyNode(Position.compilerGenerated(),
+                                nf.CanonicalPrincipalNode(clientPrincipal.position(), clientPrincipal),
+//                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
+//                                    nf.Id(Position.compilerGenerated(), "client$")),
+                                Collections.EMPTY_LIST);
+//                                Collections.singletonList(nf.AmbPrincipalNode(Position.compilerGenerated(), 
+//                                    nf.Id(Position.compilerGenerated(), "client$principal"))));
+//          components.add(reader);
           components.add(writer);
           
           TypeNode formalType = 

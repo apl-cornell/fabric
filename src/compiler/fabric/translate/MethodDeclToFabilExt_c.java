@@ -41,15 +41,15 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     List<Stmt> stmts = new ArrayList<Stmt>(md.body().statements().size() + 1);
     
     TypeNode client = nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Client());
-    stmts.add(nf.LocalDecl(Position.compilerGenerated(), 
-                           Flags.FINAL, 
-                           client, 
-                           nf.Id(Position.compilerGenerated(), 
-                                 "client$"),
-                           nf.Call(Position.compilerGenerated(), 
-                                   client, 
-                                   nf.Id(Position.compilerGenerated(), 
-                                         "getClient"))));
+//    stmts.add(nf.LocalDecl(Position.compilerGenerated(), 
+//                           Flags.FINAL, 
+//                           client, 
+//                           nf.Id(Position.compilerGenerated(), 
+//                                 "client$"),
+//                           nf.Call(Position.compilerGenerated(), 
+//                                   client, 
+//                                   nf.Id(Position.compilerGenerated(), 
+//                                         "getClient"))));
     stmts.addAll(md.body().statements());
     
     return md.body(nf.Block(md.body().position(), stmts));

@@ -105,7 +105,8 @@ public class CallExt_c extends ExprExt_c {
     List<Expr> args = new ArrayList<Expr>(c.arguments().size());
     // The first argument is changed from the local client to the remote client.
     args.add(c.remoteClient());
-    args.addAll(c.arguments().subList(1, c.arguments().size()));
+//    args.addAll(c.arguments().subList(1, c.arguments().size()));
+    args.addAll(c.arguments());
     
     Expr target = (Expr) c.target();
     if (target instanceof Special) {

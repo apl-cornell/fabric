@@ -27,8 +27,9 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
         result = result.remoteClient(c.remoteClient());
         List<Expr> args = new ArrayList<Expr>(result.arguments().size());
         // The first argument is actually a principal.
-        args.add(nf.Call(Position.compilerGenerated(), 
-                         nf.Local(Position.compilerGenerated(), nf.Id(Position.compilerGenerated(), "client$")), 
+        args.add(nf.Call(Position.compilerGenerated(),
+                         rw.qq().parseExpr("client$"),
+//                         nf.Local(Position.compilerGenerated(), nf.Id(Position.compilerGenerated(), "client$")), 
                          nf.Id(Position.compilerGenerated(), "getPrincipal")));
         args.addAll(result.arguments().subList(1, result.arguments().size()));
         result = (FabILCall)result.arguments(args);

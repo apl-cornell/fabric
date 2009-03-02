@@ -26,7 +26,8 @@ public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c 
       if (ts.equals(li, ts.clientLocalInstance())) {
         // Local client.
         return nf.Call(li.position(), 
-                       nf.Local(li.position(), nf.Id(li.position(), "client$")), 
+//                       nf.Local(li.position(), nf.Id(li.position(), "client$")),
+                       rw.qq().parseExpr("client$"),
                        nf.Id(Position.compilerGenerated(), "getPrincipal"));
       }
       else if (ts.equals(li.type(), ts.RemoteClient())) {

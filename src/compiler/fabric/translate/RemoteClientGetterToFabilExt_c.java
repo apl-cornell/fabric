@@ -15,9 +15,10 @@ public class RemoteClientGetterToFabilExt_c extends ExprToJavaExt_c {
     
     RemoteClientGetter rcg = (RemoteClientGetter)node();
     
-    return nf.Call(rcg.position(), 
-                   nf.Local(Position.compilerGenerated(), 
-                            nf.Id(Position.compilerGenerated(), "client$")), 
+    return nf.Call(rcg.position(),
+                   rw.qq().parseExpr("client$"),
+//                   nf.Local(Position.compilerGenerated(), 
+//                            nf.Id(Position.compilerGenerated(), "client$")), 
                    nf.Id(Position.compilerGenerated(), "getClient"), 
                    rcg.remoteClientName());
   }
