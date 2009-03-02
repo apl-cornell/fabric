@@ -20,15 +20,15 @@ public interface PrincipalUtil extends Object {
 
       @Override
       public native ActsForProof findProofDownto(Core core, Principal q,
-          Object searchState);
+          java.lang.Object searchState);
 
       @Override
       public native ActsForProof findProofUpto(Core core, Principal p,
-          Object searchState);
+          java.lang.Object searchState);
 
       @Override
-      public native boolean isAuthorized(Object authPrf, Closure closure,
-          Label lb, boolean executeNow);
+      public native boolean isAuthorized(java.lang.Object authPrf,
+          Closure closure, Label lb, boolean executeNow);
 
       @Override
       public native String name();

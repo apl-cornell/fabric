@@ -428,7 +428,7 @@
       <arg value="-d" />
       <arg value="sig-classes/fabil" />
       <arg value="-sourcepath" />
-      <arg value="src/signatures/fabil" />
+      <arg value="src/signatures/fabil:src/runtime" />
       <arg value="-sigcp" />
       <arg value="sig-classes/fabil" />
       <srcfile />
@@ -496,6 +496,23 @@
       <include name="fabric/client/RetryException.java" />
       <include name="fabric/client/UserAbortException.java" />
     </javac>
+
+    <!-- XXX HACK -->
+    <delete>
+      <fileset dir="${signatures.fabil.classes}">
+	<include name="jif/lang/ConfPolicy.class" />
+	<include name="jif/lang/IntegPolicy.class" />
+	<include name="jif/lang/ActsForProof.class" />
+	<include name="jif/lang/Policy.class" />
+	<include name="jif/lang/Label.class" />
+	<include name="jif/lang/Closure.class" />
+	<include name="fabric/lang/KeyObject.class" />
+	<include name="fabric/util/Iterable.class" />
+	<include name="fabric/util/Set.class" />
+	<include name="fabric/util/Iterator.class" />
+	<include name="fabric/util/Collection.class" />
+      </fileset>
+    </delete>
 
     <apply executable="bash"
         parallel="true"

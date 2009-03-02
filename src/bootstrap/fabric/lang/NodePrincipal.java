@@ -18,13 +18,13 @@ public interface NodePrincipal extends Principal, Object {
     public native boolean equals(Principal p);
 
     public native ActsForProof findProofDownto(Core core, Principal q,
-        Object searchState);
+        java.lang.Object searchState);
 
     public native ActsForProof findProofUpto(Core core, Principal p,
-        Object searchState);
+        java.lang.Object searchState);
 
-    public native boolean isAuthorized(Object authPrf, Closure closure,
-        Label lb, boolean executeNow);
+    public native boolean isAuthorized(java.lang.Object authPrf,
+        Closure closure, Label lb, boolean executeNow);
 
     public native String name();
   }
@@ -41,13 +41,13 @@ public interface NodePrincipal extends Principal, Object {
     public native boolean equals(Principal p);
 
     public native ActsForProof findProofDownto(Core core, Principal q,
-        Object searchState);
+        java.lang.Object searchState);
 
     public native ActsForProof findProofUpto(Core core, Principal p,
-        Object searchState);
+        java.lang.Object searchState);
 
-    public native boolean isAuthorized(Object authPrf, Closure closure, Label lb,
-        boolean executeNow);
+    public native boolean isAuthorized(java.lang.Object authPrf,
+        Closure closure, Label lb, boolean executeNow);
 
     public native String name();
   }
