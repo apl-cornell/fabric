@@ -489,7 +489,7 @@ public abstract class ObjectStore {
                 + ",OU=Fabric,O=Cornell University,L=Ithaca,ST=NY,C=US")
                 .getName();
         NodePrincipal.$Impl principal =
-            new NodePrincipal.$Impl(core, publicReadonlyLabel(), principalName);
+            new NodePrincipal.$Impl(core, null, principalName);
         principal.$forceRenumber(ONumConstants.CORE_PRINCIPAL);
 
         // Create the label {core->_; core<-_} for the root map.

@@ -54,6 +54,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
     return load("fabric.client.Client");
   }
   
+  public ClassType Principal() {
+    return load("fabric.lang.Principal");
+  }
+  
   public ClassType InternalError() {
     return load("java.lang.InternalError");
   }
@@ -259,6 +263,18 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
    */
   public boolean isFabricClass(TypeNode type) {
     return isFabricClass(type.type());
+  }
+
+  public boolean isPrincipalClass(ClassType type) {
+    return isSubtype(type, Principal());
+  }
+
+  public boolean isPrincipalClass(Type type) {
+    return type.isClass() && isPrincipalClass(type.toClass());
+  }
+
+  public boolean isPrincipalClass(TypeNode type) {
+    return isPrincipalClass(type.type());
   }
 
   /*

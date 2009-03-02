@@ -47,8 +47,14 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     if (label != null) return expr;
     
     NodeFactory nf = la.nodeFactory();
-    FabILTypeSystem ts = la.typeSystem();
     QQ qq = la.qq();
+    
+    // Need a label. Use null by default for principal objects. The Principal
+    // constructor will fill in the appropriate label.
+    FabILTypeSystem ts = la.typeSystem();
+    if (ts.isPrincipalClass(expr.type())) {
+      return label(qq.parseExpr("null"));
+    }
     
     // Need a label. By default, we use the same label as the context.
     Context context = la.context();

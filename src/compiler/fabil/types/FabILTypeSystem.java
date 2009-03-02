@@ -20,10 +20,10 @@ public interface FabILTypeSystem extends TypeSystem {
 
   /** The ClassType of fabric.lang.WrappedJavaInlineable. */
   ClassType WrappedJavaInlineable();
-  
+
   /** The ClassType of fabric.common.FabricThread. */
   ClassType FabricThread();
-  
+
   /** The ClassType of java.lang.Thread. */
   ClassType Thread();
 
@@ -34,14 +34,16 @@ public interface FabILTypeSystem extends TypeSystem {
   ClassType toFArray(ArrayType type);
 
   ClassType AbortException();
-  
+
   /** The ClassType of fabric.client.remote.RemoteClient. */
   ClassType RemoteClient();
-  
+
   ClassType RemoteCallException();
-  
+
   ClassType Client();
-  
+
+  ClassType Principal();
+
   ClassType InternalError();
 
   /**
@@ -106,6 +108,24 @@ public interface FabILTypeSystem extends TypeSystem {
   boolean isFabricClass(TypeNode type);
 
   /**
+   * @return true iff the given class type is a subtype of
+   *         fabric.lang.Principal.
+   */
+  boolean isPrincipalClass(ClassType type);
+
+  /**
+   * @return true iff the given type is a class type that is a subtype of
+   *         fabric.lang.Principal.
+   */
+  boolean isPrincipalClass(Type type);
+
+  /**
+   * @return true iff the given type is a class type that is a subtype of
+   *         fabric.lang.Principal.
+   */
+  boolean isPrincipalClass(TypeNode type);
+
+  /**
    * @return true iff the given type is an array of Fabric types.
    */
   boolean isFabricArray(ArrayType type);
@@ -127,7 +147,7 @@ public interface FabILTypeSystem extends TypeSystem {
   boolean isJavaInlineable(Type type);
 
   boolean isJavaInlineable(TypeNode type);
-  
+
   /**
    * Determines whether the given ClassType was compiled with fabc.
    */

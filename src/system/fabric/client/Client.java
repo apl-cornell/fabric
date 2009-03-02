@@ -454,12 +454,10 @@ public final class Client {
         // Create a principal object on the given core.
         final String name = client.getJavaPrincipal().getName();
         final Core core = client.getCore(opts.core);
-        final LocalCore localCore = client.getLocalCore();
         
         runInTransaction(new Code<Void>() {
           public Void run() {
-            Label publicLabel = localCore.getEmptyLabel();
-            NodePrincipal principal = new NodePrincipal.$Impl(core, publicLabel, name);
+            NodePrincipal principal = new NodePrincipal.$Impl(core, null, name);
             
             System.out.println("Client principal created:");
             System.out.println("fab://" + opts.core + "/" + principal.$getOnum());

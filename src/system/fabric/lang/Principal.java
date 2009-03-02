@@ -17,7 +17,7 @@ import fabric.common.RefTypeEnum;
  * This is implemented in Java so that we can provide the $Impl(Core)
  * constructor for labelling Principal objects p with {p→_, p←p}.
  */
-public interface Principal extends fabric.lang.Object {
+public interface Principal extends Object {
 
   String name();
 
@@ -34,7 +34,7 @@ public interface Principal extends fabric.lang.Object {
   ActsForProof findProofDownto(final Core core, final Principal q,
       final java.lang.Object searchState);
 
-  public static class $Proxy extends fabric.lang.Object.$Proxy implements
+  public static class $Proxy extends Object.$Proxy implements
       Principal {
 
     public $Proxy(Principal.$Impl impl) {
@@ -74,7 +74,7 @@ public interface Principal extends fabric.lang.Object {
     }
   }
 
-  abstract public static class $Impl extends fabric.lang.Object.$Impl implements
+  abstract public static class $Impl extends Object.$Impl implements
       Principal {
 
     public $Impl(Core location, Label label) {
@@ -87,7 +87,9 @@ public interface Principal extends fabric.lang.Object {
         // Replace the temporary label with {this <- this}.
         ConfPolicy bottomConf =
             Client.getClient().getLocalCore().getBottomConfidPolicy();
-        IntegPolicy integ = LabelUtil.$Impl.writerPolicy(location, this, this);
+        Principal.$Proxy thisProxy = (Principal.$Proxy) this.$getProxy();
+        IntegPolicy integ =
+            LabelUtil.$Impl.writerPolicy(location, thisProxy, thisProxy);
         this.$label = LabelUtil.$Impl.toLabel(location, bottomConf, integ);
       }
     }
@@ -108,7 +110,7 @@ public interface Principal extends fabric.lang.Object {
         final Principal q, final java.lang.Object searchState);
 
     @Override
-    protected fabric.lang.Object.$Proxy $makeProxy() {
+    protected Object.$Proxy $makeProxy() {
       return new Principal.$Proxy(this);
     }
 
@@ -127,8 +129,8 @@ public interface Principal extends fabric.lang.Object {
     }
   }
 
-  interface $Static extends fabric.lang.Object, Cloneable {
-    final class $Proxy extends fabric.lang.Object.$Proxy implements
+  interface $Static extends Object, Cloneable {
+    final class $Proxy extends Object.$Proxy implements
         Principal.$Static {
 
       public $Proxy(Principal.$Static.$Impl impl) {
@@ -143,14 +145,14 @@ public interface Principal extends fabric.lang.Object {
 
       static {
         Principal.$Static.$Impl impl =
-            (Principal.$Static.$Impl) fabric.lang.Object.$Static.$Proxy
+            (Principal.$Static.$Impl) Object.$Static.$Proxy
                 .$makeStaticInstance(Principal.$Static.$Impl.class);
         $instance = (Principal.$Static) impl.$getProxy();
         impl.$init();
       }
     }
 
-    class $Impl extends fabric.lang.Object.$Impl implements
+    class $Impl extends Object.$Impl implements
         fabric.lang.Principal.$Static {
 
       public $Impl(Core core, Label label) throws UnreachableNodeException {
@@ -158,7 +160,7 @@ public interface Principal extends fabric.lang.Object {
       }
 
       @Override
-      protected fabric.lang.Object.$Proxy $makeProxy() {
+      protected Object.$Proxy $makeProxy() {
         return new fabric.lang.Principal.$Static.$Proxy(this);
       }
 
