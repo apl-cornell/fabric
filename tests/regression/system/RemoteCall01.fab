@@ -18,14 +18,6 @@ public class RemoteCall01 {
 
   void run{*bot}() {
     try {
-// TODO: create a main method to instantiate an object and call run() on it.
-//      Core core = null;
-//      try {
-//	core = client$.getCore("core0");
-//      } catch (NullPointerException e) {
-//	return;
-//      }
-
       atomic {
 	if (remoteClient actsfor client$)
 	  moo@remoteClient();
@@ -52,6 +44,17 @@ public class RemoteCall01 {
       else out.println("TEST FAILED: expected t.i == 1 but got " + curI);
     } catch (SecurityException e) {
     }
+  }
+  
+  public static void main{*bot}(String[] args) {
+    Core core = null;
+    try {
+      core = client$.getCore("core0");
+    } catch (NullPointerException e) {
+      return;
+    }
+    
+    new RemoteCall01@core().run();
   }
 }
 
