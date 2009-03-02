@@ -2,8 +2,10 @@
 
 # Base directory of Jif installation
 #   Will override the value defined in environment variable $JIF.
-#jif.home=../jif
+#   Must be an absolute path.
+#jif.home=/home/user/jif
 
 # Base directory of Polyglot installation
 #   Will override the value defined in environment variable $POLYGLOT
-#polyglot.home=../polyglot
+#   Must be an absolute path.
+#polyglot.home=/home/user/polyglot
