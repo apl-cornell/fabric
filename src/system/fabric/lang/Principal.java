@@ -77,21 +77,19 @@ public interface Principal extends fabric.lang.Object {
   abstract public static class $Impl extends fabric.lang.Object.$Impl implements
       Principal {
 
-    public $Impl(Core location) {
-      // Temporarily create the object with an overly restrictive label.
-      super(location, Client.getClient().getLocalCore()
-          .getPublicReadonlyLabel());
-
-      // Replace the temporary label with {this <- this}.
-      ConfPolicy bottomConf =
-          Client.getClient().getLocalCore().getBottomConfidPolicy();
-      IntegPolicy integ =
-        LabelUtil.$Impl.writerPolicy(location, this, this);
-      this.$label = LabelUtil.$Impl.toLabel(location, bottomConf, integ);
-    }
-    
     public $Impl(Core location, Label label) {
-      super(location, label);
+      // If the given label is null, temporarily create the object with an
+      // overly restrictive label.
+      super(location, label == null ? Client.getClient().getLocalCore()
+          .getPublicReadonlyLabel() : label);
+
+      if (label == null) {
+        // Replace the temporary label with {this <- this}.
+        ConfPolicy bottomConf =
+            Client.getClient().getLocalCore().getBottomConfidPolicy();
+        IntegPolicy integ = LabelUtil.$Impl.writerPolicy(location, this, this);
+        this.$label = LabelUtil.$Impl.toLabel(location, bottomConf, integ);
+      }
     }
 
     abstract public String name();
