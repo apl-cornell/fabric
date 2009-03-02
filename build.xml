@@ -279,7 +279,7 @@
   </target>
 
   <!-- Compiles the Fabric core -->
-  <target name="core" depends="init,native,fabric-runtime">
+  <target name="core" depends="init,native,fabil-runtime">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/core/**" />
       <include name="fabric/common/**" />
@@ -292,7 +292,7 @@
   </target>
 
   <!-- Compiles the Fabric client API -->
-  <target name="client" depends="init,native,fabric-runtime">
+  <target name="client" depends="init,native,fabil-runtime">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/client/**" />
       <include name="fabric/common/**" />
@@ -316,7 +316,7 @@
     </javac>
   </target>
 
-  <target name="nfsserver" depends="client,fabric-runtime">
+  <target name="nfsserver" depends="client,fabil-runtime">
     <javac target="1.5" srcdir="${tests.fabnfs}" destdir="${tests.classes}"
         debug="on">
       <include name="fabnfs/**" />
@@ -353,7 +353,7 @@
   
 
   <!-- Compiles the Fabric system-debugging tools -->
-  <target name="client-debug" depends="client,fabric-runtime">
+  <target name="client-debug" depends="client,fabil-runtime">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/client/debug/**" />
       <classpath>
@@ -373,7 +373,7 @@
   </target>
 
   <!-- Compiles the Fabric signatures -->
-  <target name="fabric-signatures" depends="init,fabric-compiler,bin,fabric-runtime">
+  <target name="fabric-signatures" depends="init,fabric-compiler,bin,fabil-runtime">
     <mkdir dir="${signatures.fabric.classes}" />
 
     <apply executable="bash"
@@ -444,7 +444,7 @@
   <!--
     Compiles the Fabric array classes.
 
-    Though these are technically part of fabric-runtime, they need to be
+    Though these are technically part of fabil-runtime, they need to be
     compiled separately because the compiler uses the generated class files for
     typing information.  Things are done this way because we don't want to
     hardcode this typing information in the compiler in case it changes due to
@@ -483,8 +483,8 @@
     </apply>
   </target>
 
-  <!-- Compiles the Fabric runtime -->
-  <target name="fabric-runtime"
+  <!-- Compiles the part of the Fabric runtime that is implemented in FabIL -->
+  <target name="fabil-runtime"
       depends="init,fabil-compiler,fabil-signatures,fabric-arrays">
     <mkdir dir="${runtime.classes}" />
 
@@ -535,6 +535,41 @@
     </apply>
   </target>
 
+  <!-- Compiles the part of the runtime that is implemented in Fabric -->
+  <target name="fabric-runtime"
+      depends="fabric-signatures,fabil-runtime">
+    <mkdir dir="${runtime.classes}" />
+
+    <condition property="runtime.opt" value="-O0">
+      <not><isset property="runtime.opt" /></not>
+    </condition>
+
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${basedir}"
+        dest="${runtime.classes}"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${fabc}" />
+      <arg value="${runtime.opt}" />
+      <arg value="-d" />
+      <arg value="rt-classes" />
+      <arg value="-sigcp" />
+      <arg value="sig-classes/fabric" />
+      <arg value="-sourcepath" />
+      <arg value="src/runtime" />
+      <arg value="-j" />
+      <arg value="-Xmx256M" />
+      <srcfile />
+      <fileset dir="${runtime.src}"
+          includes="**/*.fab" />
+
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+  </target>
+
   <!-- Compiles the Fabric test programs -->
   <target name="tests" depends="init,fabric-system,nfsserver,fablib">
     <javac target="1.5" srcdir="${src}" destdir="${classes}" debug="on"
@@ -551,7 +586,7 @@
     <jar jarfile="${base.jar}" basedir="${classes}" excludes="**/*.java" />
   </target>
 
-  <target name="jar-runtime" depends="fabric-runtime">
+  <target name="jar-runtime" depends="fabil-runtime,fabric-runtime">
     <jar jarfile="${runtime.jar}" basedir="${runtime.classes}"
         excludes="**/*.java" />
   </target>
