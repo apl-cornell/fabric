@@ -25,8 +25,9 @@ public class CallExt_c extends ExprExt_c {
 
   /*
    * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
+   * @see
+   * fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter
+   * )
    */
   @SuppressWarnings("unchecked")
   @Override
@@ -56,8 +57,8 @@ public class CallExt_c extends ExprExt_c {
 
   /*
    * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
+   * @see
+   * fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
    */
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
@@ -97,37 +98,34 @@ public class CallExt_c extends ExprExt_c {
   @SuppressWarnings("unchecked")
   @Override
   public Node rewriteRemoteCalls(RemoteCallRewriter rr) {
-    FabILCall c = (FabILCall)node();
+    FabILCall c = (FabILCall) node();
     if (c.remoteClient() == null) return c;
 
     NodeFactory nf = rr.nodeFactory();
-    
+
     List<Expr> args = new ArrayList<Expr>(c.arguments().size());
     // The first argument is changed from the local client to the remote client.
     args.add(c.remoteClient());
-//    args.addAll(c.arguments().subList(1, c.arguments().size()));
     args.addAll(c.arguments());
-    
+
     Expr target = (Expr) c.target();
     if (target instanceof Special) {
       target = rr.qq().parseExpr("%E.$getProxy()", target);
     }
-    
+
     target =
         rr.qq().parseExpr(
             "(" + ((ClassType) c.target().type()).fullName() + ".$Proxy) %E",
             target);
-    return nf.Call(Position.compilerGenerated(), 
-                   target, 
-                   // <name>_remote => <name>$remote
-                   nf.Id(Position.compilerGenerated(), 
-                         c.name().substring(0, c.name().length() - 7) + "$remote"), 
-                   args);
+    return nf.Call(Position.compilerGenerated(), target,
+    // <name>_remote => <name>$remote
+        nf.Id(Position.compilerGenerated(), c.name().substring(0,
+            c.name().length() - 7)
+            + "$remote"), args);
   }
-  
+
   /*
    * (non-Javadoc)
-   * 
    * @see polyglot.ast.Ext_c#node()
    */
   @Override

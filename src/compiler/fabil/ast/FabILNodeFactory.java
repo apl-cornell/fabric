@@ -10,7 +10,7 @@ import polyglot.util.Position;
  */
 public interface FabILNodeFactory extends NodeFactory {
   Atomic Atomic(Position pos, List<Stmt> statements);
-  
+
   New New(Position pos, TypeNode type, Expr label, Expr location,
       List<Expr> args);
 
@@ -22,7 +22,7 @@ public interface FabILNodeFactory extends NodeFactory {
 
   New New(Position pos, Expr outer, TypeNode objectType, Expr label,
       Expr location, List<Expr> args, ClassBody body);
-  
+
   NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
       List<Expr> dims);
 
@@ -34,10 +34,14 @@ public interface FabILNodeFactory extends NodeFactory {
 
   NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
       List<Expr> dims, int addDims, ArrayInit init);
-  
+
+  ArrayInit ArrayInit(Position position, Expr label, Expr location,
+      List<Expr> elements);
+
   RetryStmt RetryStmt(Position pos);
+
   AbortStmt AbortStmt(Position pos);
-  
+
   @SuppressWarnings("unchecked")
   Call Call(Position pos, Receiver target, Id name, Expr remoteClient, List args);
 }

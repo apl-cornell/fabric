@@ -6,6 +6,7 @@ import polyglot.qq.QQ;
 import polyglot.types.SemanticException;
 import polyglot.visit.ContextVisitor;
 import fabil.ExtensionInfo;
+import fabil.ast.FabILNodeFactory;
 import fabil.extension.FabILExt;
 import fabil.types.FabILTypeSystem;
 
@@ -25,6 +26,11 @@ public class LocationAssigner extends ContextVisitor {
     return qq;
   }
   
+  @Override
+  public FabILNodeFactory nodeFactory() {
+    return (FabILNodeFactory) super.nodeFactory();
+  }
+
   @Override
   public FabILTypeSystem typeSystem() {
     return (FabILTypeSystem) super.typeSystem();

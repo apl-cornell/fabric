@@ -44,6 +44,12 @@ public interface FabILTypeSystem extends TypeSystem {
 
   ClassType Principal();
 
+  /** The ClassType of fabric.client.Core. */
+  Type Core();
+
+  /** The ClassType of jif.lang.Label. */
+  Type Label();
+
   ClassType InternalError();
 
   /**

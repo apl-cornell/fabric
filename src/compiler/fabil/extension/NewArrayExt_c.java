@@ -4,6 +4,8 @@ import polyglot.ast.*;
 import polyglot.qq.QQ;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
+import fabil.ast.ArrayInit;
+import fabil.ast.NewArray;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
@@ -41,7 +43,7 @@ public class NewArrayExt_c extends AnnotatedExt_c {
       typeArg += ".$Proxy.class, ";
     }
     return qq.parseExpr("(%T) new %T(%E, %E, " + typeArg + "%E).$getProxy()",
-        arrayType, arrayImplType, location(), label(), size);
+        arrayType, arrayImplType, newArray.location(), newArray.label(), size);
   }
 
   /*
@@ -58,8 +60,7 @@ public class NewArrayExt_c extends AnnotatedExt_c {
     if (!ts.isFabricArray(newArray.type())) return null;
 
     if (newArray.init() != null) {
-      ArrayInit init = newArray.init();
-      init = ((ArrayInitExt_c) init.ext()).location(location());
+      ArrayInit init = newArray.init().location(newArray.location());
       newArray = newArray.init(init);
 
       // Translation of initializer will be the array itself.

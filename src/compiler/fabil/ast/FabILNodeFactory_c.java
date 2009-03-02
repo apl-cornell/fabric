@@ -1,16 +1,15 @@
 package fabil.ast;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 
 import polyglot.ast.*;
 import polyglot.ast.Assign.Operator;
 import polyglot.types.Flags;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
-
 import fabil.extension.FabILExtFactory;
 import fabil.extension.FabILExtFactory_c;
-import fabil.extension.AnnotatedExt_c;
 
 /**
  * NodeFactory for FabIL extension.
@@ -29,10 +28,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   /*
    * (non-Javadoc)
-   * 
    * @see polyglot.ast.NodeFactory_c#ArrayAccessAssign(polyglot.util.Position,
-   *      polyglot.ast.ArrayAccess, polyglot.ast.Assign.Operator,
-   *      polyglot.ast.Expr)
+   * polyglot.ast.ArrayAccess, polyglot.ast.Assign.Operator, polyglot.ast.Expr)
    */
   @Override
   public ArrayAccessAssign ArrayAccessAssign(Position pos, ArrayAccess left,
@@ -41,6 +38,20 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     aaa = (ArrayAccessAssign) aaa.ext(extFactory().extArrayAccessAssign());
     aaa = (ArrayAccessAssign) aaa.del(delFactory().delArrayAccessAssign());
     return aaa;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public ArrayInit ArrayInit(Position pos, List elements) {
+    return ArrayInit(pos, null, null, elements);
+  }
+
+  public ArrayInit ArrayInit(Position pos, Expr label, Expr location,
+      List<Expr> elements) {
+    ArrayInit ai = new ArrayInit_c(pos, elements, label, location);
+    ai = (ArrayInit) ai.ext(extFactory().extArrayInit());
+    ai = (ArrayInit) ai.del(delFactory().delArrayInit());
+    return ai;
   }
 
   public Atomic Atomic(Position pos, List<Stmt> statements) {
@@ -52,9 +63,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   /*
    * (non-Javadoc)
-   * 
    * @see polyglot.ast.NodeFactory_c#Cast(polyglot.util.Position,
-   *      polyglot.ast.TypeNode, polyglot.ast.Expr)
+   * polyglot.ast.TypeNode, polyglot.ast.Expr)
    */
   @Override
   public Cast Cast(Position pos, TypeNode type, Expr expr) {
@@ -66,10 +76,9 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   /*
    * (non-Javadoc)
-   * 
    * @see polyglot.ast.NodeFactory_c#ClassDecl(polyglot.util.Position,
-   *      polyglot.types.Flags, polyglot.ast.Id, polyglot.ast.TypeNode,
-   *      java.util.List, polyglot.ast.ClassBody)
+   * polyglot.types.Flags, polyglot.ast.Id, polyglot.ast.TypeNode,
+   * java.util.List, polyglot.ast.ClassBody)
    */
   @SuppressWarnings("unchecked")
   @Override
@@ -88,24 +97,21 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
       Expr location, List<Expr> args, ClassBody body) {
     New n =
         new New_c(pos, outer, objectType, CollectionUtil.nonNullList(args),
-            body);
+            body, label, location);
     n = (New) n.ext(extFactory().extNew());
     n = (New) n.del(delFactory().delNew());
-    n = (New) ((AnnotatedExt_c) n.ext()).label(label);
-    n = (New) ((AnnotatedExt_c) n.ext()).location(location);
 
     return n;
   }
 
-  public NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
-      List<Expr> dims, int addDims, ArrayInit init) {
+  @SuppressWarnings("unchecked")
+  public NewArray NewArray(Position pos, TypeNode base, Expr label,
+      Expr location, List<Expr> dims, int addDims, ArrayInit init) {
     NewArray result =
         new NewArray_c(pos, base, CollectionUtil.nonNullList(dims), addDims,
-            init);
+            init, label, location);
     result = (NewArray) result.ext(extFactory().extNewArray());
     result = (NewArray) result.del(delFactory().delNewArray());
-    result = (NewArray) ((AnnotatedExt_c) result.ext()).label(label);
-    result = (NewArray) ((AnnotatedExt_c) result.ext()).location(location);
     return result;
   }
 
@@ -136,8 +142,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   @Override
   @SuppressWarnings("unchecked")
   public final NewArray NewArray(Position pos, TypeNode base, List dims,
-      int addDims, ArrayInit init) {
-    return NewArray(pos, base, null, null, dims, addDims, init);
+      int addDims, polyglot.ast.ArrayInit init) {
+    return NewArray(pos, base, null, null, dims, addDims, (ArrayInit) init);
   }
 
   public final NewArray NewArray(Position pos, TypeNode base, Expr label,
@@ -158,29 +164,30 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   public RetryStmt RetryStmt(Position pos) {
     RetryStmt s = new RetryStmt_c(pos);
-    s = (RetryStmt)s.ext(extFactory().extRetry());
-    s = (RetryStmt)s.del(delFactory().delStmt());
+    s = (RetryStmt) s.ext(extFactory().extRetry());
+    s = (RetryStmt) s.del(delFactory().delStmt());
     return s;
   }
-  
+
   public AbortStmt AbortStmt(Position pos) {
     AbortStmt s = new AbortStmt_c(pos);
-    s = (AbortStmt)s.ext(extFactory().extAbort());
-    s = (AbortStmt)s.del(delFactory().delStmt());
+    s = (AbortStmt) s.ext(extFactory().extAbort());
+    s = (AbortStmt) s.del(delFactory().delStmt());
     return s;
   }
-  
+
   @SuppressWarnings("unchecked")
   @Override
   public Call Call(Position pos, Receiver target, Id name, List args) {
     return Call(pos, target, name, null, args);
   }
-  
+
   @SuppressWarnings("unchecked")
-  public Call Call(Position pos, Receiver target, Id name, Expr remoteClient, List args) {
+  public Call Call(Position pos, Receiver target, Id name, Expr remoteClient,
+      List args) {
     Call n = new FabILCall_c(pos, target, name, remoteClient, args);
-    n = (Call)n.ext(extFactory().extCall());
-    n = (Call)n.del(delFactory().delCall());
+    n = (Call) n.ext(extFactory().extCall());
+    n = (Call) n.del(delFactory().delCall());
     return n;
   }
 }

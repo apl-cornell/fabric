@@ -58,6 +58,14 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
     return load("fabric.lang.Principal");
   }
   
+  public Type Core() {
+    return load("fabric.client.Core");
+  }
+  
+  public Type Label() {
+    return load("jif.lang.Label");
+  }
+
   public ClassType InternalError() {
     return load("java.lang.InternalError");
   }
