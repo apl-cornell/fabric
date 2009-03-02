@@ -11,7 +11,7 @@ import com.sleepycat.je.*;
 import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.core.store.ObjectStore;
-import fabric.lang.Principal;
+import fabric.lang.NodePrincipal;
 
 /**
  * An ObjectStore backed by a Berkeley Database.
@@ -76,7 +76,7 @@ public class BdbStore extends ObjectStore {
   }
 
   @Override
-  public void finishPrepare(long tid, Principal client) {
+  public void finishPrepare(long tid, NodePrincipal client) {
     // Move the transaction data out of memory and into BDB.
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     PendingTransaction pending = submap.remove(client);
@@ -96,7 +96,7 @@ public class BdbStore extends ObjectStore {
   }
 
   @Override
-  public void commit(long tid, Principal client) {
+  public void commit(long tid, NodePrincipal client) {
     log.finer("Bdb commit begin tid " + tid);
 
     try {
@@ -129,7 +129,7 @@ public class BdbStore extends ObjectStore {
   }
 
   @Override
-  public void rollback(long tid, Principal client) {
+  public void rollback(long tid, NodePrincipal client) {
     log.finer("Bdb rollback begin tid " + tid);
 
     try {
@@ -300,7 +300,7 @@ public class BdbStore extends ObjectStore {
    * @throws DatabaseException
    *           if a database error occurs
    */
-  private PendingTransaction remove(Principal client, Transaction txn, long tid)
+  private PendingTransaction remove(NodePrincipal client, Transaction txn, long tid)
       throws DatabaseException {
     DatabaseEntry key = new DatabaseEntry(toBytes(tid, client));
     DatabaseEntry data = new DatabaseEntry();
@@ -336,7 +336,7 @@ public class BdbStore extends ObjectStore {
     return data;
   }
 
-  private byte[] toBytes(long tid, Principal client) {
+  private byte[] toBytes(long tid, NodePrincipal client) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       DataOutputStream dos = new DataOutputStream(bos);

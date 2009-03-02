@@ -7,7 +7,7 @@ import jif.lang.Label;
 import jif.lang.LabelUtil;
 import fabric.client.Client;
 import fabric.client.Core;
-import fabric.lang.Principal;
+import fabric.lang.NodePrincipal;
 
 public class AuthorizationUtil {
 
@@ -17,13 +17,13 @@ public class AuthorizationUtil {
    * principal is authorized to read according to the label. We're not using the
    * caches in LabelUtil because the transaction management is too slow (!!).
    */
-  private static final OidKeyHashMap<Map<Principal, Boolean>> cachedReadAuthorizations =
-      new OidKeyHashMap<Map<Principal, Boolean>>();
+  private static final OidKeyHashMap<Map<NodePrincipal, Boolean>> cachedReadAuthorizations =
+      new OidKeyHashMap<Map<NodePrincipal, Boolean>>();
 
   private static Boolean checkAuthorizationCache(
-      OidKeyHashMap<Map<Principal, Boolean>> cache, Principal principal,
+      OidKeyHashMap<Map<NodePrincipal, Boolean>> cache, NodePrincipal principal,
       Core core, long labelOnum) {
-    Map<Principal, Boolean> submap;
+    Map<NodePrincipal, Boolean> submap;
     synchronized (cache) {
       submap = cache.get(core, labelOnum);
       if (submap == null) return null;
@@ -35,13 +35,13 @@ public class AuthorizationUtil {
   }
 
   private static void cacheAuthorization(
-      OidKeyHashMap<Map<Principal, Boolean>> cache, Principal principal,
+      OidKeyHashMap<Map<NodePrincipal, Boolean>> cache, NodePrincipal principal,
       Core core, long labelOnum, Boolean result) {
-    Map<Principal, Boolean> submap;
+    Map<NodePrincipal, Boolean> submap;
     synchronized (cache) {
       submap = cache.get(core, labelOnum);
       if (submap == null) {
-        submap = new HashMap<Principal, Boolean>();
+        submap = new HashMap<NodePrincipal, Boolean>();
         cache.put(core, labelOnum, submap);
       }
     }
@@ -55,7 +55,7 @@ public class AuthorizationUtil {
    * Determines whether the given principal is permitted to read according to
    * the label at the given oid.
    */
-  public static boolean isReadPermitted(final Principal principal, Core core,
+  public static boolean isReadPermitted(final NodePrincipal principal, Core core,
       long labelOnum) {
     // Allow the core's client principal to do anything. We use pointer equality
     // here to avoid having to call into the client.
@@ -84,7 +84,7 @@ public class AuthorizationUtil {
    * Determines whether the given principal is permitted to write according to
    * the label at the given onum.
    */
-  public static boolean isWritePermitted(final Principal principal, Core core,
+  public static boolean isWritePermitted(final NodePrincipal principal, Core core,
       long labelOnum) {
     // Allow the core's client principal to do anything. We use pointer equality
     // here to avoid having to call into the client.

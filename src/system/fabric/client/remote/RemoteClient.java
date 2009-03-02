@@ -19,6 +19,7 @@ import fabric.common.NoSuchNodeError;
 import fabric.common.TransactionID;
 import fabric.lang.Object.$Impl;
 import fabric.lang.Object.$Proxy;
+import fabric.lang.NodePrincipal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.PrepareTransactionMessage;
@@ -145,7 +146,7 @@ public final class RemoteClient implements RemoteNode {
     }
 
     // Send a pointer to our principal object.
-    fabric.lang.Principal principal = client.getPrincipal();
+    NodePrincipal principal = client.getPrincipal();
     InterClientMessage.writeRef(($Proxy) principal, out);
   }
 
@@ -250,10 +251,10 @@ public final class RemoteClient implements RemoteNode {
   /**
    * @return the principal associated with the remote client.
    */
-  public fabric.lang.Principal getPrincipal() {
+  public NodePrincipal getPrincipal() {
     GetPrincipalMessage.Response response =
         new GetPrincipalMessage().send(this);
-    final fabric.lang.Principal principal = response.principal;
+    final NodePrincipal principal = response.principal;
 
     boolean authenticated = Client.runInTransaction(new Client.Code<Boolean>() {
       public Boolean run() {

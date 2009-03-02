@@ -21,6 +21,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
 import fabric.lang.Object.$Impl;
+import fabric.lang.NodePrincipal;
 import fabric.messages.*;
 import fabric.util.Map;
 
@@ -181,7 +182,7 @@ public class RemoteCore implements Core, RemoteNode {
 
     if (withSSL) {
       // Send to the core a pointer to our principal object.
-      fabric.lang.Principal principal = client.getPrincipal();
+      NodePrincipal principal = client.getPrincipal();
       sslOut.writeBoolean(principal != null);
       if (principal != null) {
         sslOut.writeUTF(principal.$getCore().name());

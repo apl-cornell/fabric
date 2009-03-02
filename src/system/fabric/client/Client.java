@@ -25,7 +25,7 @@ import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.dissemination.FetchManager;
 import fabric.lang.Object;
-import fabric.lang.Principal;
+import fabric.lang.NodePrincipal;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
 
@@ -55,7 +55,7 @@ public final class Client {
   public final SSLSocketFactory sslSocketFactory;
 
   // The principal on whose behalf this client is running.
-  protected final Principal principal;
+  protected final NodePrincipal principal;
   public final java.security.Principal javaPrincipal;
 
   // Whether SSL encryption is desired.
@@ -197,7 +197,7 @@ public final class Client {
         URI principalPath = new URI(principalURL);
         Core core = getCore(principalPath.getHost());
         long onum = Long.parseLong(principalPath.getPath().substring(1));
-        this.principal = new Principal.$Proxy(core, onum);
+        this.principal = new NodePrincipal.$Proxy(core, onum);
       } catch (URISyntaxException e) {
         throw new UsageError("Invalid principal URL specified.", 1);
       }
@@ -296,7 +296,7 @@ public final class Client {
   /**
    * @return the Fabric notion of the client principal.
    */
-  public Principal getPrincipal() {
+  public NodePrincipal getPrincipal() {
     return principal;
   }
   
@@ -459,7 +459,7 @@ public final class Client {
         runInTransaction(new Code<Void>() {
           public Void run() {
             Label publicLabel = localCore.getEmptyLabel();
-            Principal principal = new Principal.$Impl(core, publicLabel, name);
+            NodePrincipal principal = new NodePrincipal.$Impl(core, publicLabel, name);
             
             System.out.println("Client principal created:");
             System.out.println("fab://" + opts.core + "/" + principal.$getOnum());
@@ -471,7 +471,7 @@ public final class Client {
       }
       
       // Attempt to read the principal object to ensure that it exists.
-      final Principal clientPrincipal = client.getPrincipal();
+      final NodePrincipal clientPrincipal = client.getPrincipal();
       runInTransaction(new Code<Void>() {
         public Void run() {
           log.config("Client principal is " + clientPrincipal);

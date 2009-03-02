@@ -18,7 +18,7 @@ import fabric.client.Core;
 import fabric.common.*;
 import fabric.common.util.*;
 import fabric.dissemination.Glob;
-import fabric.lang.Principal;
+import fabric.lang.NodePrincipal;
 
 /**
  * <p>
@@ -47,7 +47,7 @@ import fabric.lang.Principal;
 public abstract class ObjectStore {
 
   protected final String name;
-  private Principal corePrincipal;
+  private NodePrincipal corePrincipal;
   private Label publicReadonlyLabel;
 
   /**
@@ -68,7 +68,7 @@ public abstract class ObjectStore {
   protected static final class PendingTransaction implements FastSerializable,
       Iterable<Long> {
     public final long tid;
-    public final Principal owner;
+    public final NodePrincipal owner;
     public final Collection<Long> reads;
 
     /**
@@ -76,7 +76,7 @@ public abstract class ObjectStore {
      */
     public final Collection<SerializedObject> modData;
 
-    PendingTransaction(long tid, Principal owner) {
+    PendingTransaction(long tid, NodePrincipal owner) {
       this.tid = tid;
       this.owner = owner;
       this.reads = new ArrayList<Long>();
@@ -91,7 +91,7 @@ public abstract class ObjectStore {
 
       if (in.readBoolean()) {
         Core core = Client.getClient().getCore(in.readUTF());
-        this.owner = new Principal.$Proxy(core, in.readLong());
+        this.owner = new NodePrincipal.$Proxy(core, in.readLong());
       } else {
         this.owner = null;
       }
@@ -193,7 +193,7 @@ public abstract class ObjectStore {
    * @throws AccessException
    *           if the client has insufficient privileges.
    */
-  public final void beginTransaction(long tid, Principal client)
+  public final void beginTransaction(long tid, NodePrincipal client)
       throws AccessException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
@@ -207,7 +207,7 @@ public abstract class ObjectStore {
   /**
    * Registers that a transaction has read an object.
    */
-  public final void registerRead(long tid, Principal client, long onum) {
+  public final void registerRead(long tid, NodePrincipal client, long onum) {
     addReadLock(onum, tid);
     pendingByTid.get(tid).get(client).reads.add(onum);
   }
@@ -222,7 +222,7 @@ public abstract class ObjectStore {
    * @param obj
    *          the updated object.
    */
-  public final void registerUpdate(long tid, Principal client,
+  public final void registerUpdate(long tid, NodePrincipal client,
       SerializedObject obj) {
     addWriteLock(obj.getOnum(), tid);
     pendingByTid.get(tid).get(client).modData.add(obj);
@@ -257,7 +257,7 @@ public abstract class ObjectStore {
    * Rolls back a partially prepared transaction. (i.e., one for which
    * finishPrepare() has yet to be called.)
    */
-  public final void abortPrepare(long tid, Principal client) {
+  public final void abortPrepare(long tid, NodePrincipal client) {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     unpin(submap.remove(client));
     if (submap.isEmpty()) pendingByTid.remove(tid);
@@ -277,7 +277,7 @@ public abstract class ObjectStore {
    * failure.
    * </p>
    */
-  public abstract void finishPrepare(long tid, Principal client);
+  public abstract void finishPrepare(long tid, NodePrincipal client);
 
   /**
    * Cause the objects prepared in transaction [tid] to be committed. The
@@ -290,7 +290,7 @@ public abstract class ObjectStore {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid, Principal client)
+  public abstract void commit(long tid, NodePrincipal client)
       throws AccessException;
 
   /**
@@ -303,7 +303,7 @@ public abstract class ObjectStore {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void rollback(long tid, Principal client)
+  public abstract void rollback(long tid, NodePrincipal client)
       throws AccessException;
 
   /**
@@ -488,8 +488,8 @@ public abstract class ObjectStore {
             new X500Principal("CN=" + name
                 + ",OU=Fabric,O=Cornell University,L=Ithaca,ST=NY,C=US")
                 .getName();
-        Principal.$Impl principal =
-            new Principal.$Impl(core, publicReadonlyLabel(), principalName);
+        NodePrincipal.$Impl principal =
+            new NodePrincipal.$Impl(core, publicReadonlyLabel(), principalName);
         principal.$forceRenumber(ONumConstants.CORE_PRINCIPAL);
 
         // Create the label {core->_; core<-_} for the root map.
@@ -513,10 +513,10 @@ public abstract class ObjectStore {
     setInitialized();
   }
 
-  private final Principal corePrincipal() {
+  private final NodePrincipal corePrincipal() {
     if (corePrincipal == null) {
       Core core = Client.getClient().getCore(name);
-      corePrincipal = new Principal.$Proxy(core, ONumConstants.CORE_PRINCIPAL);
+      corePrincipal = new NodePrincipal.$Proxy(core, ONumConstants.CORE_PRINCIPAL);
     }
 
     return corePrincipal;

@@ -11,22 +11,22 @@ import fabric.client.remote.RemoteClient;
 import fabric.client.remote.Worker;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
-import fabric.lang.Principal;
+import fabric.lang.NodePrincipal;
 import fabric.messages.Message;
 
 public class GetPrincipalMessage extends
     InterClientMessage<GetPrincipalMessage.Response> {
 
   public static class Response implements Message.Response {
-    public final Principal principal;
+    public final NodePrincipal principal;
 
-    public Response(Principal principal) {
+    public Response(NodePrincipal principal) {
       this.principal = principal;
     }
 
     Response(DataInput in) throws IOException {
       Core core = Client.getClient().getCore(in.readUTF());
-      this.principal = new Principal.$Proxy(core, in.readLong());
+      this.principal = new NodePrincipal.$Proxy(core, in.readLong());
     }
 
     public void write(DataOutput out) throws IOException {

@@ -3,24 +3,25 @@ package fabric.lang;
 import jif.lang.ActsForProof;
 import jif.lang.Closure;
 import jif.lang.Label;
+import jif.lang.Principal;
 import fabric.client.Core;
 
-public interface Principal extends jif.lang.Principal, Object {
+public interface NodePrincipal extends Principal, Object {
   public static class $Proxy extends fabric.lang.Object.$Proxy implements
-      fabric.lang.Principal {
+      NodePrincipal {
 
     public $Proxy(Core core, long onum) {
       super(core, onum);
     }
 
-    public native boolean delegatesTo(jif.lang.Principal p);
+    public native boolean delegatesTo(Principal p);
 
-    public native boolean equals(jif.lang.Principal p);
+    public native boolean equals(Principal p);
 
-    public native ActsForProof findProofDownto(Core core, jif.lang.Principal q,
+    public native ActsForProof findProofDownto(Core core, Principal q,
         Object searchState);
 
-    public native ActsForProof findProofUpto(Core core, jif.lang.Principal p,
+    public native ActsForProof findProofUpto(Core core, Principal p,
         Object searchState);
 
     public native boolean isAuthorized(Object authPrf, Closure closure,
@@ -29,21 +30,21 @@ public interface Principal extends jif.lang.Principal, Object {
     public native String name();
   }
 
-  public static class $Impl extends fabric.lang.Object.$Impl implements
-      fabric.lang.Principal {
+  public static final class $Impl extends fabric.lang.Object.$Impl implements
+      NodePrincipal {
     public $Impl(fabric.client.Core $location, jif.lang.Label $label,
         java.lang.String name) {
       super($location, $label);
     }
 
-    public native boolean delegatesTo(jif.lang.Principal p);
+    public native boolean delegatesTo(Principal p);
 
-    public native boolean equals(jif.lang.Principal p);
+    public native boolean equals(Principal p);
 
-    public native ActsForProof findProofDownto(Core core, jif.lang.Principal q,
+    public native ActsForProof findProofDownto(Core core, Principal q,
         Object searchState);
 
-    public native ActsForProof findProofUpto(Core core, jif.lang.Principal p,
+    public native ActsForProof findProofUpto(Core core, Principal p,
         Object searchState);
 
     public native boolean isAuthorized(Object authPrf, Closure closure, Label lb,

@@ -10,10 +10,10 @@ import fabric.util.Map;
 
 import jif.lang.*;
 
-public class Principal extends jif.lang.Principal {
+public final class NodePrincipal extends jif.lang.Principal {
   private final String name;
 
-  public Principal(String name) {
+  public NodePrincipal(String name) {
     this.name = name;
   }
 
@@ -45,8 +45,8 @@ public class Principal extends jif.lang.Principal {
 
   public boolean equals(Object o) {
     if (o == null) return false;
-    if (o instanceof Principal) {
-      return equals((Principal) o);
+    if (o instanceof NodePrincipal) {
+      return equals((NodePrincipal) o);
     }
     return false;
   }

@@ -17,7 +17,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.core.store.ObjectStore;
 import fabric.dissemination.Glob;
-import fabric.lang.Principal;
+import fabric.lang.NodePrincipal;
 import fabric.lang.Statistics;
 
 public class TransactionManager {
@@ -42,7 +42,7 @@ public class TransactionManager {
   /**
    * Instruct the transaction manager that the given transaction is aborting
    */
-  public void abortTransaction(Principal client, long transactionID)
+  public void abortTransaction(NodePrincipal client, long transactionID)
       throws AccessException {
     synchronized (store) {
       store.rollback(transactionID, client);
@@ -52,7 +52,7 @@ public class TransactionManager {
   /**
    * Execute the commit phase of two phase commit.
    */
-  public void commitTransaction(Principal client, long transactionID)
+  public void commitTransaction(NodePrincipal client, long transactionID)
       throws TransactionCommitFailedException {
     synchronized (store) {
       try {
@@ -100,7 +100,7 @@ public class TransactionManager {
    *           If the transaction would cause a conflict or if the client is
    *           insufficiently privileged to execute the transaction.
    */
-  public void prepare(Principal client, PrepareRequest req)
+  public void prepare(NodePrincipal client, PrepareRequest req)
       throws TransactionPrepareFailedException {
     final long tid = req.tid;
     synchronized (store) {
@@ -289,7 +289,7 @@ public class TransactionManager {
    * @param worker
    *          Used to track read statistics.
    */
-  public ObjectGroup readGroup(Principal principal, long onum, boolean dissem,
+  public ObjectGroup readGroup(NodePrincipal principal, long onum, boolean dissem,
       Worker worker) throws AccessException {
     if (dissem) principal = Client.getClient().getPrincipal();
     SerializedObject obj = checkRead(principal, onum);
@@ -354,7 +354,7 @@ public class TransactionManager {
    * @throws AccessException
    *           if the principal is not allowed to read the object.
    */
-  public SerializedObject checkRead(Principal client, long onum)
+  public SerializedObject checkRead(NodePrincipal client, long onum)
       throws AccessException {
     SerializedObject result = read(client, onum);
     if (result == null)
@@ -362,7 +362,7 @@ public class TransactionManager {
     return result;
   }
 
-  private SerializedObject read(Principal client, long onum) {
+  private SerializedObject read(NodePrincipal client, long onum) {
     SerializedObject obj;
     synchronized (store) {
       obj = store.read(onum);
@@ -446,7 +446,7 @@ public class TransactionManager {
    * @throws AccessException
    *           if the principal is not allowed to create objects on this core.
    */
-  public long[] newOnums(Principal client, int num) throws AccessException {
+  public long[] newOnums(NodePrincipal client, int num) throws AccessException {
     synchronized (store) {
       return store.newOnums(num);
     }

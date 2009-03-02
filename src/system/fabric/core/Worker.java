@@ -21,7 +21,7 @@ import fabric.common.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
-import fabric.lang.Principal;
+import fabric.lang.NodePrincipal;
 import fabric.messages.*;
 
 /**
@@ -38,7 +38,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   /**
    * The client that we're serving.
    */
-  private Principal client;
+  private NodePrincipal client;
   private String clientName;
   private boolean clientIsDissem;
 
@@ -274,7 +274,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       Core principalCore = Client.getClient().getCore(principalCoreName);
       long principalOnum = in.readLong();
       this.client =
-          new fabric.lang.Principal.$Proxy(principalCore, principalOnum);
+          new NodePrincipal.$Proxy(principalCore, principalOnum);
     } else {
       this.client = null;
     }

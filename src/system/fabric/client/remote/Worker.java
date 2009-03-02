@@ -26,7 +26,7 @@ import fabric.common.AuthorizationUtil;
 import fabric.common.FabricThread;
 import fabric.common.MessageHandler;
 import fabric.common.TransactionID;
-import fabric.lang.Principal;
+import fabric.lang.NodePrincipal;
 import fabric.lang.Object.$Impl;
 import fabric.lang.Object.$Proxy;
 import fabric.messages.AbortTransactionMessage;
@@ -44,7 +44,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   /**
    * The remote client that we're serving.
    */
-  private Principal remoteClient;
+  private NodePrincipal remoteClient;
   private String remoteClientName;
 
   // The socket and associated I/O streams for communicating with the remote
@@ -206,7 +206,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     Core principalCore = Client.getClient().getCore(principalCoreName);
     long principalOnum = in.readLong();
     this.remoteClient =
-        new fabric.lang.Principal.$Proxy(principalCore, principalOnum);
+        new NodePrincipal.$Proxy(principalCore, principalOnum);
 
     // Authenticate the client.
     return Client.runInTransaction(new Client.Code<Boolean>() {

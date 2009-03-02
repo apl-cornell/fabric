@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import fabric.common.*;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.lang.Principal;
+import fabric.lang.NodePrincipal;
 
 /**
  * <p>
@@ -82,11 +82,11 @@ public class MemoryStore extends ObjectStore {
   }
 
   @Override
-  public void finishPrepare(long tid, Principal client) {
+  public void finishPrepare(long tid, NodePrincipal client) {
   }
 
   @Override
-  public void commit(long tid, Principal client) throws AccessException {
+  public void commit(long tid, NodePrincipal client) throws AccessException {
     PendingTransaction tx = remove(client, tid);
 
     // merge in the objects
@@ -99,7 +99,7 @@ public class MemoryStore extends ObjectStore {
   }
 
   @Override
-  public void rollback(long tid, Principal client) throws AccessException {
+  public void rollback(long tid, NodePrincipal client) throws AccessException {
     remove(client, tid);
   }
 
@@ -154,7 +154,7 @@ public class MemoryStore extends ObjectStore {
    * Helper method to check permissions and update the pending object table for
    * a commit or roll-back.
    */
-  private PendingTransaction remove(Principal client, long tid)
+  private PendingTransaction remove(NodePrincipal client, long tid)
       throws AccessException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     PendingTransaction tx = submap.remove(client);

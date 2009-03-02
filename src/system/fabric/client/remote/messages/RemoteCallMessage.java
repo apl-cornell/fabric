@@ -8,7 +8,7 @@ import fabric.client.remote.*;
 import fabric.common.FabricException;
 import fabric.common.InternalError;
 import fabric.common.TransactionID;
-import fabric.lang.Principal;
+import fabric.lang.NodePrincipal;
 import fabric.lang.Object.$Proxy;
 import fabric.messages.Message;
 
@@ -213,7 +213,7 @@ public class RemoteCallMessage extends
 
   public Method getMethod() throws SecurityException, NoSuchMethodException {
     Class<?>[] mangledParamTypes = new Class<?>[parameterTypes.length + 1];
-    mangledParamTypes[0] = Principal.class;
+    mangledParamTypes[0] = NodePrincipal.class;
     for (int i = 0; i < parameterTypes.length; i++)
       mangledParamTypes[i + 1] = parameterTypes[i];
     return receiverType.getMethod(methodName + "_remote", mangledParamTypes);
