@@ -102,9 +102,10 @@ public class CallExt_c extends ExprExt_c {
 
     NodeFactory nf = rr.nodeFactory();
     
-    List<Expr> args = new ArrayList<Expr>(c.arguments().size() + 1);
+    List<Expr> args = new ArrayList<Expr>(c.arguments().size());
+    // The first argument is changed from the local client to the remote client.
     args.add(c.remoteClient());
-    args.addAll(c.arguments());
+    args.addAll(c.arguments().subList(1, c.arguments().size()));
     
     Expr target = (Expr) c.target();
     if (target instanceof Special) {
@@ -117,7 +118,9 @@ public class CallExt_c extends ExprExt_c {
             target);
     return nf.Call(Position.compilerGenerated(), 
                    target, 
-                   nf.Id(Position.compilerGenerated(), c.name() + "$remote"), 
+                   // <name>_remote => <name>$remote
+                   nf.Id(Position.compilerGenerated(), 
+                         c.name().substring(0, c.name().length() - 7) + "$remote"), 
                    args);
   }
   

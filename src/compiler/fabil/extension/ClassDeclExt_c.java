@@ -649,15 +649,19 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       if (!(cm instanceof MethodDecl)) continue;
       
       MethodDecl md = (MethodDecl)cm;
-      if (md.flags().isPublic() && !md.flags().isStatic() && !md.name().endsWith("_remote")) {
+      if (md.flags().isPublic() && !md.flags().isStatic() && md.name().endsWith("_remote")) {
         // Every public instance method has a wrapper method for remote calls.
-        // XXX however, wrappers generated in Fabric do not have another wrapper.
+        // XXX Generate a fabil remote call wrapper for each fabric remote call wrapper.
+        
+        String realName = md.name().substring(0, md.name().length() - 7);
+        List<Formal> realFormals = md.formals().subList(1, md.formals().size());
         
         // First, use a static field to store the parameter types.
         String fieldName = "$paramTypes" + (freshTid++);
         
-        List<Expr> formalTypes = new ArrayList<Expr>(md.formals().size());
-        for (Formal f : (List<Formal>)md.formals()) {
+        // Skip the first formal in the Fabric remote wrapper
+        List<Expr> formalTypes = new ArrayList<Expr>(realFormals.size());
+        for (Formal f : realFormals) {
           TypeNode tn = f.type();
           formalTypes.add(nf.ClassLit(Position.compilerGenerated(), tn));
         }
@@ -677,8 +681,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         members.add(fd);
         
         // Now create the wrapper method.
-        List<Local> locals = new ArrayList<Local>(md.formals().size());
-        for (Formal f : (List<Formal>)md.formals()) {
+        List<Local> locals = new ArrayList<Local>(realFormals.size());
+        for (Formal f : realFormals) {
           locals.add(nf.Local(Position.compilerGenerated(), f.id()));
         }
         
@@ -696,7 +700,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         
         List<Expr> arguments = new ArrayList<Expr>(4);
         arguments.add(nf.This(Position.compilerGenerated()));
-        arguments.add(nf.StringLit(Position.compilerGenerated(), md.name()));
+        arguments.add(nf.StringLit(Position.compilerGenerated(), realName));
         arguments.add(nf.AmbExpr(Position.compilerGenerated(), 
                       nf.Id(Position.compilerGenerated(), 
                             fieldName)));
@@ -755,7 +759,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         MethodDecl wrapper = nf.MethodDecl(Position.compilerGenerated(),
                                            Flags.PUBLIC, 
                                            md.returnType(), 
-                                           nf.Id(Position.compilerGenerated(), md.name() + "$remote"), 
+                                           nf.Id(Position.compilerGenerated(), realName + "$remote"), 
                                            newFormals, 
                                            md.throwTypes(), 
                                            nf.Block(Position.compilerGenerated(), tryCatch));

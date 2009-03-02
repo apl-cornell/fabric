@@ -8,6 +8,7 @@ import fabric.visit.ExplicitSuperclassAdder;
 import fabric.visit.FabricToFabilRewriter;
 import fabric.visit.FabricTypeBuilder;
 import fabric.visit.RemoteCallWrapperAdder;
+import fabric.visit.RemoteCallWrapperUpdater;
 
 import polyglot.ast.Node;
 import polyglot.frontend.CyclicDependencyException;
@@ -65,6 +66,20 @@ public class FabricScheduler extends JifScheduler {
     return g;
   }
   
+  public Goal RemoteCallWrappersAdded(final Job job) {
+    FabricTypeSystem ts = fabext.typeSystem();
+    FabricNodeFactory nf = fabext.nodeFactory();
+    Goal g = internGoal(new VisitorGoal(job, new RemoteCallWrapperAdder(job, ts, nf)) {
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler s) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(Parsed(job));
+        return l;
+      }
+    });
+    return g;
+  }
+
   @Override
   public Goal TypesInitialized(Job job) {
     FabricTypeSystem ts = fabext.typeSystem();
@@ -73,6 +88,7 @@ public class FabricScheduler extends JifScheduler {
     try {
       addPrerequisiteDependency(g, Parsed(job));
       addPrerequisiteDependency(g, ExplicitSuperclassesAdded(job));
+      addPrerequisiteDependency(g, RemoteCallWrappersAdded(job));
     }
     catch (CyclicDependencyException e) {
       throw new InternalCompilerError(e);
@@ -80,10 +96,10 @@ public class FabricScheduler extends JifScheduler {
     return g;
   }
 
-  public Goal RemoteCallWrappersAdded(final Job job) {
+  public Goal RemoteCallWrappersUpdated(final Job job) {
     FabricTypeSystem ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
-    Goal g = internGoal(new VisitorGoal(job, new RemoteCallWrapperAdder(job, ts, nf)) {
+    Goal g = internGoal(new VisitorGoal(job, new RemoteCallWrapperUpdater(job, ts, nf)) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler s) {
         List<Goal> l = new ArrayList<Goal>();
@@ -98,7 +114,7 @@ public class FabricScheduler extends JifScheduler {
   public Goal TypeChecked(Job job) {
     Goal g = super.TypeChecked(job);
     try {
-      addPrerequisiteDependency(g, RemoteCallWrappersAdded(job));
+      addPrerequisiteDependency(g, RemoteCallWrappersUpdated(job));
     }
     catch (CyclicDependencyException e) {
       throw new InternalCompilerError(e);

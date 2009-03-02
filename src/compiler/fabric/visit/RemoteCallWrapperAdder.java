@@ -3,19 +3,13 @@ package fabric.visit;
 import java.util.*;
 
 import jif.ast.*;
-import jif.types.JifLocalInstance;
-import jif.types.JifMethodInstance;
-import jif.types.label.AccessPath;
-import jif.types.label.ArgLabel;
-import jif.types.label.Label;
-import jif.types.principal.Principal;
 
+import fabric.ast.FabricCall;
 import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.*;
 import polyglot.frontend.Job;
-import polyglot.types.*;
-import polyglot.util.InternalCompilerError;
+import polyglot.types.Flags;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 
@@ -33,7 +27,20 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
   @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
-    if (n instanceof ClassDecl) {
+    if (n instanceof FabricCall) {
+      FabricCall c = (FabricCall)n;
+      if (c.remoteClient() != null) {
+        c = (FabricCall)c.name(c.name() + "_remote");
+        
+        List<Expr> args = new ArrayList<Expr>();
+        args.add(nf.Client(Position.compilerGenerated()));
+        args.addAll(c.arguments());
+        c = (FabricCall)c.arguments(args);
+      }
+      
+      return c;
+    }
+    else if (n instanceof ClassDecl) {
       // Now add wrappers for remote call authentication check.
       ClassDecl cd = (ClassDecl)n;
       
@@ -48,38 +55,68 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
           if (!md.flags().isPublic() || md.flags().isStatic()) continue;
           // Also skip abstract method.
           if (md.body() == null) continue;
+
+          List<PolicyNode> components = new ArrayList<PolicyNode>(2);
+          PolicyNode reader = 
+            nf.ReaderPolicyNode(Position.compilerGenerated(), 
+                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
+                                    nf.Id(Position.compilerGenerated(), "client$principal")), 
+                                Collections.singletonList(nf.CanonicalPrincipalNode(Position.compilerGenerated(), 
+                                    ts.bottomPrincipal(Position.compilerGenerated()))));
+          PolicyNode writer = 
+            nf.WriterPolicyNode(Position.compilerGenerated(), 
+                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
+                                    nf.Id(Position.compilerGenerated(), "client$principal")), 
+                                Collections.singletonList(nf.AmbPrincipalNode(Position.compilerGenerated(), 
+                                    nf.Id(Position.compilerGenerated(), "client$principal"))));
+          components.add(reader);
+          components.add(writer);
           
-          JifMethodInstance mi = (JifMethodInstance)md.methodInstance();
+          TypeNode formalType = 
+            nf.LabeledTypeNode(Position.compilerGenerated(), 
+                               nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Principal()), 
+                               nf.JoinLabelNode(Position.compilerGenerated(), components));
           
           Formal f = nf.Formal(Position.compilerGenerated(), 
-                               Flags.FINAL, 
-                               nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Principal()), 
+                               Flags.FINAL,
+                               formalType, 
                                nf.Id(Position.compilerGenerated(), "client$principal"));
-          Label defaultBound = ts.defaultSignature().defaultArgBound(f);
-          JifLocalInstance li = (JifLocalInstance)ts.localInstance(f.position(), Flags.FINAL, ts.Principal(), "client$principal");
-          ArgLabel al = ts.argLabel(f.position(), li, null);
-          al.setUpperBound(defaultBound);
-          li.setLabel(al);
-          f = f.localInstance(li);
-          Type labeled = ts.labeledType(Position.compilerGenerated(), ts.Principal(), al);
-          f = f.type(f.type().type(labeled));
+
+//          Label defaultBound = ts.defaultSignature().defaultArgBound(f);
+//          JifLocalInstance li = (JifLocalInstance)ts.localInstance(f.position(), Flags.FINAL, ts.Principal(), "client$principal");
+//          ArgLabel al = ts.argLabel(f.position(), li, null);
+//          al.setUpperBound(defaultBound);
+//          li.setLabel(al);
+//          f = f.localInstance(li);
+//          Type labeled = ts.labeledType(Position.compilerGenerated(), ts.Principal(), al);
+//          f = f.type(f.type().type(labeled));
           
+//          Label startLabel = mi.pcBound();
+//          Label returnLabel = mi.returnLabel();
+          
+//          Principal clientPrincipal;
+//          
+//          try {
+//            AccessPath ap = JifUtil.varInstanceToAccessPath(li, li.position());
+//            clientPrincipal = ts.dynamicPrincipal(ap.position(), ap);
+//          }
+//          catch (SemanticException e) {
+//            throw new InternalCompilerError(e);
+//          }
+//          
+//          Label clientLabel = 
+//            ts.pairLabel(li.position(), 
+//                         ts.readerPolicy(li.position(), 
+//                                         clientPrincipal, ts.bottomPrincipal(li.position())), 
+//                         ts.writerPolicy(li.position(), 
+//                                         clientPrincipal, clientPrincipal));
+//          li.setLabel(clientLabel);
+//          Type labeled = ts.labeledType(Position.compilerGenerated(), ts.Principal(), clientLabel);
+//          f = f.type(f.type().type(labeled));
+
           List<Formal> formals = new ArrayList<Formal>(md.formals().size() + 1);
           formals.add(f);
           formals.addAll(md.formals());
-          
-          Label startLabel = mi.pcBound();
-          Label returnLabel = mi.returnLabel();
-          
-          Principal clientPrincipal;
-          
-          try {
-            AccessPath ap = JifUtil.varInstanceToAccessPath(f.localInstance(), f.position());
-            clientPrincipal = ts.dynamicPrincipal(ap.position(), ap);
-          }
-          catch (SemanticException e) {
-            throw new InternalCompilerError(e);
-          }
           
 //          System.err.println(md);
 //          System.err.println(mi.container());
@@ -87,42 +124,30 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 //          System.err.println(returnLabel);
           
           // {C(rv), client$<-} <= {client$->, I(m)}
-          Label left = ts.pairLabel(Position.compilerGenerated(), 
-                                    ts.confProjection(returnLabel), 
-                                    ts.writerPolicy(Position.compilerGenerated(), 
-                                                    clientPrincipal, clientPrincipal));
-          Label right = ts.pairLabel(Position.compilerGenerated(), 
-                                     ts.readerPolicy(Position.compilerGenerated(), 
-                                                     clientPrincipal, clientPrincipal), 
-                                     ts.integProjection(startLabel));
-          LabelExpr leftExpr = nf.LabelExpr(left.position(), left);
-          LabelExpr rightExpr = nf.LabelExpr(Position.compilerGenerated(), right);
-          
-          Expr labelComp = nf.Binary(Position.compilerGenerated(), leftExpr, Binary.LE, rightExpr);
-
+//          Label left = ts.pairLabel(Position.compilerGenerated(), 
+//                                    ts.confProjection(returnLabel), 
+//                                    ts.writerPolicy(Position.compilerGenerated(), 
+//                                                    clientPrincipal, clientPrincipal));
+//          Label right = ts.pairLabel(Position.compilerGenerated(), 
+//                                     ts.readerPolicy(Position.compilerGenerated(), 
+//                                                     clientPrincipal, clientPrincipal), 
+//                                     ts.integProjection(startLabel));
+//          LabelExpr leftExpr = nf.LabelExpr(left.position(), left);
+//          LabelExpr rightExpr = nf.LabelExpr(Position.compilerGenerated(), right);
+//          
+//          Expr labelComp = nf.Binary(Position.compilerGenerated(), leftExpr, Binary.LE, rightExpr);
+//
           List<Expr> args = new ArrayList<Expr>(md.formals().size());
           for (Formal formal : (List<Formal>)md.formals()) {
             Local l = nf.Local(Position.compilerGenerated(), formal.id());
-            l = l.localInstance(formal.localInstance());
             args.add(l);
           }
-          
-          Stmt conseq;
-          if (mi.returnType().isVoid()) {
-            conseq = nf.Eval(Position.compilerGenerated(), 
-                             nf.Call(Position.compilerGenerated(), 
-                                     nf.This(Position.compilerGenerated()), 
-                                     md.id(), args));
-          }
-          else {
-            conseq = nf.Return(Position.compilerGenerated(), 
-                               nf.Call(Position.compilerGenerated(), 
-                                       nf.This(Position.compilerGenerated()), 
-                                       md.id(), args));
-          }
-          
-          Stmt s = nf.If(Position.compilerGenerated(), labelComp, conseq, conseq);
-          
+
+          Stmt s = nf.Eval(Position.compilerGenerated(), 
+                           nf.Call(Position.compilerGenerated(), 
+                                   nf.This(Position.compilerGenerated()), 
+                                   md.id(), args));
+
           JifMethodDecl wrapper = 
             nf.JifMethodDecl(Position.compilerGenerated(), 
                              md.flags(), 
@@ -135,16 +160,7 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
                              md.constraints(), 
                              nf.Block(Position.compilerGenerated(), s));
           
-          MethodInstance wrapperMi = (MethodInstance)mi.copy();
-          List<Type> ftypes = new ArrayList<Type>(mi.formalTypes().size() + 1);
-          ftypes.add(f.type().type());
-          ftypes.addAll(mi.formalTypes());
-          wrapperMi.setFormalTypes(ftypes);
-          
-          wrapper = (JifMethodDecl)wrapper.methodInstance(wrapperMi);
           members.add(wrapper);
-          
-          cd.type().addMethod(wrapperMi);
         }
       }
       

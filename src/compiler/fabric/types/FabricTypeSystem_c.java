@@ -1,7 +1,6 @@
 package fabric.types;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import jif.ast.JifUtil;
 import jif.translate.PrincipalToJavaExpr;
@@ -17,6 +16,10 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import fabil.types.FabILImportTable;
 import fabric.translate.DynamicPrincipalToFabilExpr_c;
+import jif.ast.JifUtil;
+import jif.translate.PrincipalToJavaExpr;
+import jif.types.*;
+import jif.types.principal.Principal;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
 
@@ -77,13 +80,13 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
 
   private JifLocalInstance clientLocalInstance = null;
   
-  public LocalInstance clientLocalInstance() {
+  public JifLocalInstance clientLocalInstance() {
     if (clientLocalInstance == null) {
       // Always use the same local instance, because jif now use pointer identity to compare local instances
       // for the purpose of label checking.
       clientLocalInstance = (JifLocalInstance)localInstance(Position.compilerGenerated(), 
                                                             Flags.FINAL, Client(), "client$");
-      clientLocalInstance.setLabel(freshLabelVariable(clientLocalInstance.position(), "client$", "client$"));
+//      clientLocalInstance.setLabel(freshLabelVariable(clientLocalInstance.position(), "client$", "client$"));
     }
     return clientLocalInstance;
   }
@@ -91,7 +94,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   public Principal clientPrincipal(Position pos) {
 //    return dynamicPrincipal(pos, new AccessPathClient(pos, this));
     try {
-      return dynamicPrincipal(pos, JifUtil.varInstanceToAccessPath(clientLocalInstance(), pos));
+      JifLocalInstance li = clientLocalInstance();
+      Principal p = dynamicPrincipal(pos, JifUtil.varInstanceToAccessPath(li, pos));
+      li.setLabel(pairLabel(li.position(), 
+                  readerPolicy(li.position(), p, bottomPrincipal(li.position())), 
+                  writerPolicy(li.position(), p, p)));
+      return p;
     }
     catch (SemanticException e) {
       // shouldn't happen
