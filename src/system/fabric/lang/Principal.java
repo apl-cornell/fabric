@@ -6,14 +6,17 @@ import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.List;
 
-import jif.lang.ActsForProof;
-import jif.lang.Closure;
-import jif.lang.Label;
+import jif.lang.*;
+import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.UnreachableNodeException;
 import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 
+/**
+ * This is implemented in Java so that we can provide the $Impl(Core)
+ * constructor for labelling Principal objects p with {p→_, p←p}.
+ */
 public interface Principal extends fabric.lang.Object {
 
   String name();
@@ -74,8 +77,21 @@ public interface Principal extends fabric.lang.Object {
   abstract public static class $Impl extends fabric.lang.Object.$Impl implements
       Principal {
 
-    public $Impl(Core $location, Label $label) {
-      super($location, $label);
+    public $Impl(Core location) {
+      // Temporarily create the object with an overly restrictive label.
+      super(location, Client.getClient().getLocalCore()
+          .getPublicReadonlyLabel());
+
+      // Replace the temporary label with {this <- this}.
+      ConfPolicy bottomConf =
+          Client.getClient().getLocalCore().getBottomConfidPolicy();
+      IntegPolicy integ =
+        LabelUtil.$Impl.writerPolicy(location, this, this);
+      this.$label = LabelUtil.$Impl.toLabel(location, bottomConf, integ);
+    }
+    
+    public $Impl(Core location, Label label) {
+      super(location, label);
     }
 
     abstract public String name();

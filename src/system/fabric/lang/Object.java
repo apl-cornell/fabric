@@ -33,8 +33,6 @@ public interface Object {
   /** Label for this object */
   Label get$label();
 
-  Label set$label(Label label);
-
   /** Whether this object is "equal" to another object. */
   boolean equals(Object o);
 
@@ -145,10 +143,6 @@ public interface Object {
 
     public final Label get$label() {
       return fetch().get$label();
-    }
-
-    public final Label set$label(Label label) {
-      return fetch().set$label(label);
     }
 
     public final $Proxy $getProxy() {
@@ -410,11 +404,6 @@ public interface Object {
 
     public final Label get$label() {
       return $label;
-    }
-
-    public final Label set$label(Label label) {
-      $label = label;
-      return label;
     }
 
     public final int $getVersion() {
