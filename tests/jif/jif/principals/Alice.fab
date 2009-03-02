@@ -1,6 +1,6 @@
 package jif.principals;
 
-import jif.lang.Principal;
+import fabric.lang.Principal;
 
 public class Alice extends ExternalPrincipal {
     public Alice() {

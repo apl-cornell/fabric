@@ -1,6 +1,6 @@
 package jif.principals;
 
-import jif.lang.Principal;
+import fabric.lang.Principal;
 
 public class Dolores extends ExternalPrincipal {
     public Dolores{this:;this!:}() where authority (this) {

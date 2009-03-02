@@ -1,7 +1,6 @@
 package jif.lang;
 
 import jif.lang.Label;
-import jif.lang.Principal;
 import jif.lang.PrincipalUtil;
 import fabric.client.Client;
 import fabric.client.Core;

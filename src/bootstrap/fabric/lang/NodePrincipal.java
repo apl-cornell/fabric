@@ -3,7 +3,6 @@ package fabric.lang;
 import jif.lang.ActsForProof;
 import jif.lang.Closure;
 import jif.lang.Label;
-import jif.lang.Principal;
 import fabric.client.Core;
 
 public interface NodePrincipal extends Principal, Object {

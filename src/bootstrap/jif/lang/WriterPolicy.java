@@ -2,6 +2,7 @@ package jif.lang;
 
 import fabric.client.Core;
 import fabric.client.UnreachableNodeException;
+import fabric.lang.Principal;
 
 public interface WriterPolicy extends AbstractPolicy, IntegPolicy {
   public static class $Impl extends AbstractPolicy.$Impl implements

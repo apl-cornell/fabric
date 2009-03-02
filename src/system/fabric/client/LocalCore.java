@@ -9,7 +9,6 @@ import jif.lang.ConfPolicy;
 import jif.lang.IntegPolicy;
 import jif.lang.Label;
 import jif.lang.LabelUtil;
-import jif.lang.Principal;
 import jif.lang.PrincipalUtil.TopPrincipal;
 import fabric.common.InternalError;
 import fabric.common.ONumConstants;
@@ -18,6 +17,7 @@ import fabric.common.TransactionID;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;
 import fabric.lang.Object.$Impl;
+import fabric.lang.Principal;
 import fabric.util.HashMap;
 import fabric.util.Map;
 
@@ -26,7 +26,7 @@ public final class LocalCore implements Core {
   private long freshOID = ONumConstants.FIRST_UNRESERVED;
 
   private Map rootMap;
-  private jif.lang.Principal topPrincipal;
+  private Principal topPrincipal;
   private ConfPolicy topConfidPolicy;
   private ConfPolicy bottomConfidPolicy;
   private IntegPolicy topIntegPolicy;
@@ -127,7 +127,7 @@ public final class LocalCore implements Core {
     return localDelegates.contains(new Pair<Principal, Principal> (p,q));
   }
   
-  public jif.lang.Principal getTopPrincipal() {
+  public Principal getTopPrincipal() {
     return topPrincipal;
   }
 
@@ -199,7 +199,7 @@ public final class LocalCore implements Core {
 
         // Create the object representing the top principal.
         topPrincipal =
-            (jif.lang.Principal) new TopPrincipal.$Impl(LocalCore.this,
+            (Principal) new TopPrincipal.$Impl(LocalCore.this,
                 publicReadonlyLabel).$getProxy();
         topPrincipal.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 

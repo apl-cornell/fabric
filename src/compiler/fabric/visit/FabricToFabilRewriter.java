@@ -15,7 +15,6 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
 
   public FabricToFabilRewriter(Job job, FabricTypeSystem fab_ts, FabricNodeFactory fab_nf, fabil.ExtensionInfo fabil_ext) {
     super(job, fab_ts, fab_nf, fabil_ext);
-    // TODO Auto-generated constructor stub
   }
   
   @Override
@@ -32,9 +31,15 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     if (fabric_ts.typeEquals(t, fabric_ts.Client())) {
       return canonical(fabil_nf, fabil_ts.Client(), pos);
     }
-    else if (fabric_ts.typeEquals(t, fabric_ts.RemoteClient())) {
+    
+    if (fabric_ts.typeEquals(t, fabric_ts.RemoteClient())) {
       return canonical(fabil_nf, fabil_ts.RemoteClient(), pos);
     }
+    
+    if (fabric_ts.isPrincipal(t)) {
+      return fabil_nf.AmbTypeNode(pos, fabil_nf.PackageNode(pos, fabil_ts
+          .packageForName("fabric.lang")), fabil_nf.Id(pos, "Principal"));
+  }
     
     return super.typeToJava(t, pos);
   }

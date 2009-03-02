@@ -3,7 +3,7 @@ package sif.html;
 import sif.servlet.HTMLWriter;
 import sif.servlet.Servlet;
 import jif.lang.Label;
-import jif.lang.Principal;
+import fabric.lang.Principal;
 
 /** An input that allows typing in a single line of text. Appropriate
  * for most textual input. */

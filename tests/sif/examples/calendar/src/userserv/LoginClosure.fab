@@ -20,7 +20,7 @@ public class LoginClosure[principal servP, principal P] implements Closure[P, {P
     public final Object invoke{P:}() where caller(P), endorse({P:;P!:}) {
         // add the session principal as a delegate to the principal P.
         try {
-            final User[servP] u = (User[servP])(jif.lang.Principal)P;
+            final User[servP] u = (User[servP])(fabric.lang.Principal)P;
             if (u != null) PrincipalUtil.addDelegatesTo(u, endorse(sessionPrincipal, {P:} to {P:;P!:}));
         }
         catch (ClassCastException imposs) { }

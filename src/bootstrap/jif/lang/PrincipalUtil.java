@@ -3,6 +3,7 @@ package jif.lang;
 import fabric.client.Core;
 import fabric.client.UnreachableNodeException;
 import fabric.lang.Object;
+import fabric.lang.Principal;
 
 public interface PrincipalUtil extends Object {
   public interface TopPrincipal extends Principal, Object {

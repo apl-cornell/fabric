@@ -10,7 +10,7 @@ import fabric.util.Map;
 
 import jif.lang.*;
 
-public final class NodePrincipal extends jif.lang.Principal {
+public final class NodePrincipal extends Principal {
   private final String name;
 
   public NodePrincipal(String name) {
@@ -21,7 +21,7 @@ public final class NodePrincipal extends jif.lang.Principal {
     return name;
   }
 
-  public boolean delegatesTo(jif.lang.Principal p) {
+  public boolean delegatesTo(Principal p) {
     return false;
   }
 
@@ -31,14 +31,14 @@ public final class NodePrincipal extends jif.lang.Principal {
     return false;
   }
   
-  public ActsForProof findProofDownto(Core core, jif.lang.Principal q,
+  public ActsForProof findProofDownto(Core core, Principal q,
       java.lang.Object searchState) {
     // don't even try! We don't have any information
     // about who we can act for.
     return null;
   }
 
-  public ActsForProof findProofUpto(Core core, jif.lang.Principal p,
+  public ActsForProof findProofUpto(Core core, Principal p,
       java.lang.Object searchState) {
     return null;
   }
@@ -51,7 +51,7 @@ public final class NodePrincipal extends jif.lang.Principal {
     return false;
   }
   
-  public boolean equals(jif.lang.Principal p) {
+  public boolean equals(Principal p) {
     return p != null && (this.name == p.name() || (this.name != null && 
 	this.name.equals(p.name()))) && this.getClass() == p.getClass();        
   }

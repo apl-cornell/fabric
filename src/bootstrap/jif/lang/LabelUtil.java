@@ -2,6 +2,7 @@ package jif.lang;
 
 import fabric.client.Core;
 import fabric.lang.Object;
+import fabric.lang.Principal;
 
 public interface LabelUtil extends Object {
   

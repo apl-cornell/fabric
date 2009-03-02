@@ -1,4 +1,4 @@
-package jif.lang;
+package fabric.lang;
 
 /**
  * This code is mostly copied from Jif. See the documentation for the Jif source

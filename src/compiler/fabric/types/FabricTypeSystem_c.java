@@ -3,32 +3,20 @@ package fabric.types;
 import java.util.List;
 import java.util.Map;
 
-import polyglot.ext.param.types.Subst;
-import polyglot.frontend.Source;
-import polyglot.types.ClassType;
-import polyglot.types.Context;
-import polyglot.types.Flags;
-import polyglot.types.ImportTable;
-import polyglot.types.LazyClassInitializer;
-import polyglot.types.LocalInstance;
-import polyglot.types.Package;
-import polyglot.types.ParsedClassType;
-import polyglot.types.SemanticException;
-import polyglot.types.Type;
-import polyglot.types.TypeSystem;
-import polyglot.util.InternalCompilerError;
-import polyglot.util.Position;
-
-import fabil.types.FabILImportTable;
-import fabric.translate.DynamicPrincipalToFabilExpr_c;
 import jif.ast.JifUtil;
 import jif.translate.PrincipalToJavaExpr;
 import jif.types.JifLocalInstance;
-import jif.types.JifSubst_c;
 import jif.types.JifTypeSystem_c;
 import jif.types.Solver;
-import jif.types.label.VarLabel;
 import jif.types.principal.Principal;
+import polyglot.ext.param.types.Subst;
+import polyglot.frontend.Source;
+import polyglot.types.*;
+import polyglot.types.Package;
+import polyglot.util.InternalCompilerError;
+import polyglot.util.Position;
+import fabil.types.FabILImportTable;
+import fabric.translate.DynamicPrincipalToFabilExpr_c;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
 
@@ -38,6 +26,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   
   public FabricTypeSystem_c(TypeSystem jlts) {
     super(jlts);
+  }
+
+  @Override
+  public String PrincipalClassName() {
+    return "fabric.lang.Principal";
   }
 
   @SuppressWarnings("unchecked")
@@ -152,6 +145,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return super.strip(type);
   }
   
+  @SuppressWarnings("unchecked")
   @Override
   public Subst subst(Map substMap, Map cache) {
     return new FabricSubst_c(this, substMap, cache);

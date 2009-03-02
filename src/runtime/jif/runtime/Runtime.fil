@@ -15,10 +15,10 @@ public class Runtime {
     /**
      * The principal under whose authority the JVM is running.
      */
-    private jif.lang.Principal dynp;
+    private Principal dynp;
     private Core local;
 
-    private Runtime(jif.lang.Principal p) {
+    private Runtime(Principal p) {
         this.dynp = p;
         this.local = Client.getClient().getLocalCore();
     }
@@ -27,10 +27,10 @@ public class Runtime {
      * Gets a <code>Runtime</code> object parameterized with the
      * principal <code>p</code>.
      */
-    public static Runtime getRuntime(jif.lang.Principal p) throws SecurityException {
+    public static Runtime getRuntime(Principal p) throws SecurityException {
         //check if the current user can act for p
 // TODO: Still need to perform this check; but putting it off for now    	
-//        jif.lang.Principal user = user(p);
+//        Principal user = user(p);
 //        if (!PrincipalUtil.actsFor(user, p)) {
 //            throw new SecurityException("The current user does not act for "
 //                    + p.name() + ".");
@@ -40,12 +40,12 @@ public class Runtime {
 
 // TODO: Requires using JNI    
 //    /** Get the current user  */
-//    public static jif.lang.Principal user(jif.lang.Principal parameter) {
+//    public static Principal user(Principal parameter) {
 //        String username = currentUser();
 //        return NativePrincipal.getInstance(username);
 //    }
 //    /** Get a native user  */
-//    public static jif.lang.Principal getUser(jif.lang.Principal parameter, String username) {
+//    public static Principal getUser(Principal parameter, String username) {
 //        return NativePrincipal.getInstance(username);
 //    }
 
@@ -58,65 +58,67 @@ public class Runtime {
         return LabelUtil.toLabel(ip);
     }
 
-    /**
-     * Opens a file output stream to write a file with the specific <code>name</code>.
-     *
-     * @param name     the file name
-     * @param append   if true, then bytes will be written to the end of the file
-     *                 rather than the beginning
-     * @param L        the label parameter of the resulting <code>FileOutputStream</code>
-     *
-     * @exception  FileNotFoundException
-     *      if the file exists but is a directory rather than a regular file,
-     *      does not exist but cannot be created, or cannot be opened for any
-     *      other reason.
-     *
-     * @exception  SecurityException
-     *      if <code>l</code> is unable to relabel to the Jif label derived from
-     *      the ACL of the file.
-     */
-    public FileOutputStream openFileWrite(String name, boolean append, Label L)
-            throws IOException, SecurityException {
-        File f = new File(name);
-        boolean existed = f.exists();
-
-        if (existed) {
-            Label acLabel = FileSystem.labelOf(name);
-            if (!LabelUtil.relabelsTo(L, acLabel)) {
-                throw new SecurityException("The file " + name
-                        + "doesn't have sufficient access restrictions.");
-            }
-        }
-
-        FileOutputStream fos = new FileOutputStream(name, append);
-
-        if (!existed) {
-            fos.flush();
-//            FileSystem.setPolicy(name, (PrivacyPolicy)L.policy());
-        }
-        return fos;
-    }
-
-    /** Opens a file input stream for reading from the file with the specific
-     *  <code>name</code>.
-     *
-     *  @param name     the file name
-     *  @param L        the the label parameter of the resulting <code>FileInputStream</code>
-     *
-     *  @exception  SecurityException
-     *      if <code>l</code> is less restrictive than the Jif label derived from
-     *      the ACL of the file.
-     */
-    public FileInputStream openFileRead(String name, Label L)
-            throws FileNotFoundException, SecurityException {
-        Label acLabel = FileSystem.labelOf(name);
-        
-        if (LabelUtil.relabelsTo(acLabel, L)) return new FileInputStream(name);
-        
-        throw new SecurityException("The file has label " + LabelUtil.stringValue(acLabel) + 
-                                    ", which is more restrictive than " +
-                                    L.toString());
-    }
+// XXX The following is commented out until we port the FileSystem class from the Jif runtime. -MJL 
+//
+//    /**
+//     * Opens a file output stream to write a file with the specific <code>name</code>.
+//     *
+//     * @param name     the file name
+//     * @param append   if true, then bytes will be written to the end of the file
+//     *                 rather than the beginning
+//     * @param L        the label parameter of the resulting <code>FileOutputStream</code>
+//     *
+//     * @exception  FileNotFoundException
+//     *      if the file exists but is a directory rather than a regular file,
+//     *      does not exist but cannot be created, or cannot be opened for any
+//     *      other reason.
+//     *
+//     * @exception  SecurityException
+//     *      if <code>l</code> is unable to relabel to the Jif label derived from
+//     *      the ACL of the file.
+//     */
+//    public FileOutputStream openFileWrite(String name, boolean append, Label L)
+//            throws IOException, SecurityException {
+//        File f = new File(name);
+//        boolean existed = f.exists();
+//
+//        if (existed) {
+//            Label acLabel = FileSystem.labelOf(name);
+//            if (!LabelUtil.relabelsTo(L, acLabel)) {
+//                throw new SecurityException("The file " + name
+//                        + "doesn't have sufficient access restrictions.");
+//            }
+//        }
+//
+//        FileOutputStream fos = new FileOutputStream(name, append);
+//
+//        if (!existed) {
+//            fos.flush();
+////            FileSystem.setPolicy(name, (PrivacyPolicy)L.policy());
+//        }
+//        return fos;
+//    }
+//
+//    /** Opens a file input stream for reading from the file with the specific
+//     *  <code>name</code>.
+//     *
+//     *  @param name     the file name
+//     *  @param L        the the label parameter of the resulting <code>FileInputStream</code>
+//     *
+//     *  @exception  SecurityException
+//     *      if <code>l</code> is less restrictive than the Jif label derived from
+//     *      the ACL of the file.
+//     */
+//    public FileInputStream openFileRead(String name, Label L)
+//            throws FileNotFoundException, SecurityException {
+//        Label acLabel = FileSystem.labelOf(name);
+//        
+//        if (LabelUtil.relabelsTo(acLabel, L)) return new FileInputStream(name);
+//        
+//        throw new SecurityException("The file has label " + LabelUtil.stringValue(acLabel) + 
+//                                    ", which is more restrictive than " +
+//                                    L.toString());
+//    }
 
     /**
      * Gets the standard error output.
@@ -181,22 +183,22 @@ public class Runtime {
 //    }
 //    private static native String currentUserImpl();
 
-    public static int currentYear(jif.lang.Principal dummy) {
+    public static int currentYear(Principal dummy) {
         return new GregorianCalendar().get(Calendar.YEAR);
     }
-    public static int currentMonth(jif.lang.Principal dummy) {
+    public static int currentMonth(Principal dummy) {
         return new GregorianCalendar().get(Calendar.MONTH) - Calendar.JANUARY + 1;
     }
-    public static int currentDayOfMonth(jif.lang.Principal dummy) {
+    public static int currentDayOfMonth(Principal dummy) {
         return new GregorianCalendar().get(Calendar.DAY_OF_MONTH);
     }
-    public static int currentHour(jif.lang.Principal dummy) {
+    public static int currentHour(Principal dummy) {
         return new GregorianCalendar().get(Calendar.HOUR_OF_DAY);
     }
-    public static int currentMinute(jif.lang.Principal dummy) {
+    public static int currentMinute(Principal dummy) {
         return new GregorianCalendar().get(Calendar.MINUTE);
     }
-    public static void sleep(jif.lang.Principal dummy, int s) {
+    public static void sleep(Principal dummy, int s) {
         try {
             // add some noise...
             double noise = 0.15; 

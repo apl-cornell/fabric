@@ -6,7 +6,7 @@ public class HelloServEP extends ExternalPrincipal {
     }
 
     private static HelloServEP{*!:*} P;
-    public static jif.lang.Principal getInstance{*!:*}() {
+    public static fabric.lang.Principal getInstance{*!:*}() {
 	if (P == null) {
 	    P = new HelloServEP();
 	}
