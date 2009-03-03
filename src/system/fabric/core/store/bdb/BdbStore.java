@@ -341,8 +341,10 @@ public class BdbStore extends ObjectStore {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       DataOutputStream dos = new DataOutputStream(bos);
       dos.writeLong(tid);
-      dos.writeUTF(client.$getCore().name());
-      dos.writeLong(client.$getOnum());
+      if (client != null) {
+        dos.writeUTF(client.$getCore().name());
+        dos.writeLong(client.$getOnum());
+      }
       dos.flush();
       return bos.toByteArray();
     } catch (IOException e) {
