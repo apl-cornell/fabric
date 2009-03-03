@@ -8,7 +8,7 @@ import jif.lang.LabelUtil;
  *  It can be written out to an HTMLWriter in a
  *  somewhat pretty-printed style.
  **/
-public abstract class Node {        
+public abstract class Node extends java.lang.Object {        
     final Label L;
     final Label E;
     

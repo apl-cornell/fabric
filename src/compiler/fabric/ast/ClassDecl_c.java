@@ -4,6 +4,8 @@ import java.util.List;
 
 import jif.types.label.Label;
 
+import fabric.ExtensionInfo;
+import fabric.FabricOptions;
 import fabric.types.FabricParsedClassType;
 import fabric.types.FabricTypeSystem;
 
@@ -75,9 +77,14 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
         // Skip static fields.
         if (fd.flags().isStatic()) continue;
         
+        // If this is a signature then dont' apply the default field restriction
+        FabricOptions opts = (FabricOptions) ((ExtensionInfo) tc.job().extensionInfo()).getOptions();
+        boolean sigMode = opts.signatureMode();
+        
         Type ft = fd.type().type();
         Label fl = ts.labelOfType(ft);
-        if (!ts.equals(defaultFieldLabel, fl)) {
+        // TODO: Enable this for fabric signatures for fabil classes 
+        if (!ts.equals(defaultFieldLabel, fl) && !sigMode) {
           throw new SemanticException("The field " + fd.fieldInstance() + " has a different label than " +
           		              "the default field label " + defaultFieldLabel + 
           		              "of the class " + pct + ".",
