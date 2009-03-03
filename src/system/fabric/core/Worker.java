@@ -54,6 +54,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
   /**
    * The private signing key for the object core that the client is talking to.
+   * XXX This is currently the SSL private key.  Should use the NodePrincipal's key instead.
    */
   private PrivateKey privateKey;
 

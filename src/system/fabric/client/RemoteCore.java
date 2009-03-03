@@ -60,7 +60,8 @@ public class RemoteCore implements Core, RemoteNode {
   private transient ObjectOutputStream unencryptedOut;
 
   /**
-   * The core's public key.
+   * The core's public SSL key.  Used for verifying signatures on object groups.
+   * XXX Should use core's NodePrincipal key instead.
    */
   private transient final PublicKey publicKey;
 
