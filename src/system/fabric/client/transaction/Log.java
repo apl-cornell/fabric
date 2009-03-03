@@ -205,9 +205,10 @@ public final class Log {
       result.put(entry.getKey(), entry.getValue().second.versionNumber);
     }
 
-    for ($Impl create : Util.chain(writes, creates))
-      result.remove(create.$getOnum());
-
+    for ($Impl write : Util.chain(writes, creates))
+      if (write.$getCore() == core)
+        result.remove(write.$getOnum());
+    
     return result;
   }
 
@@ -217,15 +218,16 @@ public final class Log {
    */
   Collection<$Impl> getWritesForCore(Core core) {
     // This should be a Set of $Impl, but we have a map indexed by OID to
-    // avoid calling methods on the $Impls.
-    Map<Pair<Core, Long>, $Impl> result =
-        new HashMap<Pair<Core, Long>, $Impl>();
+    // avoid calling hashCode and equals on the $Impls.
+    LongKeyMap<$Impl> result = new LongKeyHashMap<$Impl>();
+    
     for ($Impl obj : writes)
       if (obj.$getCore() == core && obj.$isOwned)
-        result.put(new Pair<Core, Long>(obj.$getCore(), obj.$getOnum()), obj);
+        result.put(obj.$getOnum(), obj);
 
     for ($Impl create : creates)
-      result.remove(new Pair<Core, Long>(create.$getCore(), create.$getOnum()));
+      if (create.$getCore() == core)
+        result.remove(create.$getOnum());
 
     return result.values();
   }
@@ -236,11 +238,10 @@ public final class Log {
   Collection<$Impl> getCreatesForCore(Core core) {
     // This should be a Set of $Impl, but to avoid calling methods on the
     // $Impls, we instead use a map keyed on OID.
-    Map<Pair<Core, Long>, $Impl> result =
-        new HashMap<Pair<Core, Long>, $Impl>();
+    LongKeyMap<$Impl> result = new LongKeyHashMap<$Impl>();
     for ($Impl obj : creates)
       if (obj.$getCore() == core && obj.$isOwned)
-        result.put(new Pair<Core, Long>(obj.$getCore(), obj.$getOnum()), obj);
+        result.put(obj.$getOnum(), obj);
 
     return result.values();
   }
