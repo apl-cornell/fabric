@@ -911,14 +911,18 @@ public class AccessController extends HttpServlet {
     core = Client.getClient().getCore("core0");
     label = localCore.getEmptyLabel();
     CMSRoot database = null;
+
+    Map root = (Map) core.getRoot();
     
     atomic {
-      // TODO: fetch CMS root
-      database = new CMSRoot~label@core();
-      
-      // add test data
-      CreateDB driver = new CreateDB~label@core();
-      driver.create(database);
+      //database = (CMSRoot)root.get("cms_db");
+      if(database == null) {
+        // create and add test data
+        database = new CMSRoot~label@core();
+        CreateDB driver = new CreateDB~label@core();
+        driver.create(database);
+        root.put("cms_db", database);
+      }
     }
     
     
@@ -927,11 +931,13 @@ public class AccessController extends HttpServlet {
         try {
           xmlBuilder = new XMLBuilder~label@localCore(database);
         } catch (ParserConfigurationException e) {
-          throw new ServletException~label@core(e);
+          throw new ServletException~label@localCore(e);
         }
       }
+      //transactions = (TransactionHandler)root.get("cms_transactions");
       if (transactions == null) {
         transactions = new TransactionHandler~label@core(database);
+        root.put("cms_transactions", transactions);
       }
   
       debug = xmlBuilder.getDatabase().getDebugMode();

@@ -122,7 +122,7 @@ public class Transactions {
     throw new NotImplementedException();
   }
 
-  public TransactionResult addStudentsToCourse(User p, ArrayList netIDs, Course course, boolean sendEmail) {
+  public TransactionResult addStudentsToCourse(User p, LinkedList netIDs, Course course, boolean sendEmail) {
     Profiler.enterMethod("Transactions.addStudentsToCourse", "CourseID: " + course.toString());
     TransactionResult result = new TransactionResult();
     try {
@@ -254,9 +254,9 @@ public class Transactions {
    * @return A TransactionResult describing the result of the transaction
    *  
    */
-  protected TransactionResult ensureUserExistence(ArrayList netIDs, Log log) {
+  protected TransactionResult ensureUserExistence(LinkedList netIDs, Log log) {
     TransactionResult result = new TransactionResult();
-    Collection LDAPInput = new ArrayList();
+    Collection LDAPInput = new LinkedList();
     HashMap existingUsers = new HashMap();
     try {
       for(int i = 0; i < netIDs.size(); i++) {
@@ -319,7 +319,7 @@ public class Transactions {
         e.printStackTrace();
             result.setException(e);
             result.addError("Could not add users due to an unexpected error");
-            netIDs = new ArrayList();
+            netIDs = new LinkedList();
     }
     return result;
   }

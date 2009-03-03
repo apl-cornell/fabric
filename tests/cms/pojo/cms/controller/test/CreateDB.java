@@ -47,8 +47,8 @@ public class CreateDB {
         
         if(!next.getHidden()) {
           //Create fake test data
-          createFakeUsersForCourse(database, c, 20);
-          createFakeAssignments(andru, c, 4, transactions);
+          createFakeUsersForCourse(database, c, 194);
+          createFakeAssignments(andru, c, 6, transactions);
         }
       }
     }

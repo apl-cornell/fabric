@@ -717,7 +717,7 @@ public class TransactionHandler {
       if (courseIsFrozen(course)) {
         result.addError("Course is frozen; no changes may be made to it");
       } else {
-        ArrayList netids = new ArrayList();
+        LinkedList netids = new LinkedList();
         ExcelCSVParser p;
         boolean isFile = false;
         boolean isList = false;
@@ -2482,7 +2482,7 @@ public class TransactionHandler {
           result.addError(user.getNetID()
               + " has not been previously enrolled in this class");
         } else {
-          ArrayList n = new ArrayList();
+          LinkedList n = new LinkedList();
           n.add(user);
           result = transactions.addStudentsToCourse(p, n, course, emailOn);
           if (!result.hasErrors()) {
