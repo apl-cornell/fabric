@@ -39,7 +39,7 @@ public class BdbStore extends ObjectStore {
   public BdbStore(String name) {
     super(name);
 
-    String path = "var/bdb/" + name;
+    String path = Resources.relpathRewrite("var", "bdb",  name);
     new File(path).mkdirs(); // create path if it does not exist
 
     try {
