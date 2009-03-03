@@ -15,13 +15,18 @@ public final class Crypto {
   public static final String ALG_SECRET_KEY_GEN = "AES";
   public static final int SIZE_SECRET_KEY = 128;
   public static final String ALG_SECRET_CRYPTO = "AES/CBC/PKCS5Padding";
+  
+  public static final String ALG_PUBLIC_KEY_GEN = "RSA";
+  public static final int SIZE_PUBLIC_KEY = 1024;
 
   private static final KeyGenerator secretKeyGen;
+  private static final KeyPairGenerator publicKeyGen;
   private static final SecureRandom random = new SecureRandom();
 
   static {
     try {
       secretKeyGen = secretKeyGenInstance();
+      publicKeyGen = publicKeyGenInstance();
     } catch (NoSuchAlgorithmException e) {
       throw new InternalError(e);
     }
@@ -41,6 +46,18 @@ public final class Crypto {
   public static SecretKey genSecretKey() {
     synchronized (secretKeyGen) {
       return secretKeyGen.generateKey();
+    }
+  }
+  
+  public static KeyPairGenerator publicKeyGenInstance() throws NoSuchAlgorithmException {
+    KeyPairGenerator result = KeyPairGenerator.getInstance(ALG_PUBLIC_KEY_GEN);
+    result.initialize(SIZE_PUBLIC_KEY);
+    return result;
+  }
+  
+  public static KeyPair genKeyPair() {
+    synchronized (publicKeyGen) {
+      return publicKeyGen.generateKeyPair();
     }
   }
 

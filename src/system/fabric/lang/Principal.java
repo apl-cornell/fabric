@@ -3,6 +3,8 @@ package fabric.lang;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Iterator;
 import java.util.List;
 
@@ -10,6 +12,8 @@ import jif.lang.*;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.UnreachableNodeException;
+import fabric.client.transaction.TransactionManager;
+import fabric.common.Crypto;
 import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 
@@ -34,8 +38,11 @@ public interface Principal extends Object {
   ActsForProof findProofDownto(final Core core, final Principal q,
       final java.lang.Object searchState);
 
-  public static class $Proxy extends Object.$Proxy implements
-      Principal {
+  PublicKey getPublicKey();
+
+  PrivateKeyObject getPrivateKeyObject();
+
+  public static class $Proxy extends Object.$Proxy implements Principal {
 
     public $Proxy(Principal.$Impl impl) {
       super(impl);
@@ -72,26 +79,48 @@ public interface Principal extends Object {
         java.lang.Object searchState) {
       return ((Principal) fetch()).findProofDownto(core, q, searchState);
     }
+
+    public PublicKey getPublicKey() {
+      return ((Principal) fetch()).getPublicKey();
+    }
+
+    public PrivateKeyObject getPrivateKeyObject() {
+      return ((Principal) fetch()).getPrivateKeyObject();
+    }
   }
 
-  abstract public static class $Impl extends Object.$Impl implements
-      Principal {
+  abstract public static class $Impl extends Object.$Impl implements Principal {
 
-    public $Impl(Core location, Label label) {
+    private PublicKey publicKey;
+    private PrivateKeyObject privateKeyObject;
+
+    public $Impl(Core core, Label label) {
       // If the given label is null, temporarily create the object with an
       // overly restrictive label.
-      super(location, label == null ? Client.getClient().getLocalCore()
+      super(core, label == null ? Client.getClient().getLocalCore()
           .getPublicReadonlyLabel() : label);
+      
+      Principal.$Proxy thisProxy = (Principal.$Proxy) this.$getProxy();
+      IntegPolicy integ =
+        LabelUtil.$Impl.writerPolicy(core, thisProxy, thisProxy);
 
       if (label == null) {
         // Replace the temporary label with {this <- this}.
         ConfPolicy bottomConf =
             Client.getClient().getLocalCore().getBottomConfidPolicy();
-        Principal.$Proxy thisProxy = (Principal.$Proxy) this.$getProxy();
-        IntegPolicy integ =
-            LabelUtil.$Impl.writerPolicy(location, thisProxy, thisProxy);
-        this.$label = LabelUtil.$Impl.toLabel(location, bottomConf, integ);
+        this.$label = LabelUtil.$Impl.toLabel(core, bottomConf, integ);
       }
+
+      // Generate a new key pair for this principal.
+      KeyPair keyPair = Crypto.genKeyPair();
+      this.publicKey = keyPair.getPublic();
+      
+      // Create the label {this->this; this<-this} for the private key object.
+      ConfPolicy conf =
+          LabelUtil.$Impl.readerPolicy(core, thisProxy, thisProxy);
+      Label privateLabel = LabelUtil.$Impl.toLabel(core, conf, integ);
+      this.privateKeyObject =
+          new PrivateKeyObject.$Impl(core, privateLabel, keyPair.getPrivate());
     }
 
     abstract public String name();
@@ -127,11 +156,20 @@ public interface Principal extends Object {
         ClassNotFoundException {
       super(core, onum, version, expiry, label, in, refTypes, intracoreRefs);
     }
+
+    public final PublicKey getPublicKey() {
+      TransactionManager.getInstance().registerRead(this);
+      return publicKey;
+    }
+
+    public final PrivateKeyObject getPrivateKeyObject() {
+      TransactionManager.getInstance().registerRead(this);
+      return privateKeyObject;
+    }
   }
 
   interface $Static extends Object, Cloneable {
-    final class $Proxy extends Object.$Proxy implements
-        Principal.$Static {
+    final class $Proxy extends Object.$Proxy implements Principal.$Static {
 
       public $Proxy(Principal.$Static.$Impl impl) {
         super(impl);
@@ -152,8 +190,7 @@ public interface Principal extends Object {
       }
     }
 
-    class $Impl extends Object.$Impl implements
-        fabric.lang.Principal.$Static {
+    class $Impl extends Object.$Impl implements fabric.lang.Principal.$Static {
 
       public $Impl(Core core, Label label) throws UnreachableNodeException {
         super(core, label);
