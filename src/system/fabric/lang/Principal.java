@@ -14,8 +14,8 @@ import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
 
 /**
- * This is implemented in Java so that we can provide the $Impl(Core)
- * constructor for labelling Principal objects p with {p→_, p←p}.
+ * This is implemented in Java so that the constructor can provide default
+ * labels so that a Principal p can be labelled with {p→_; p←p}.
  */
 public interface Principal extends Object {
 
