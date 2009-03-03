@@ -3,7 +3,6 @@ package fabil.extension;
 import java.util.Collections;
 
 import polyglot.ast.Call;
-import polyglot.ast.Field;
 import polyglot.ast.Receiver;
 import polyglot.qq.QQ;
 import polyglot.types.*;
@@ -43,27 +42,25 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
       throw new SemanticException("Missing label", expr.position());
     }
 
-    Position pos = Position.compilerGenerated();
+    Receiver receiver;
     if (context.inStaticContext()) {
-      Receiver receiver =
+      receiver =
           nf.CanonicalTypeNode(Position.compilerGenerated(), currentClass);
-      Field defaultLabel = nf.Field(pos, receiver, nf.Id(pos, "label"));
-      defaultLabel = (Field) defaultLabel.type(ts.Label());
-      defaultLabel =
-          defaultLabel.fieldInstance(ts.fieldInstance(pos, currentClass,
-              Flags.STATIC, ts.Label(), "label"));
-      return expr.label(defaultLabel);
+    } else {
+      receiver = qq.parseExpr("this").type(currentClass);
     }
-    
-    Receiver receiver = qq.parseExpr("this").type(currentClass);
+
+    Position pos = Position.compilerGenerated();
     Call defaultLabel = nf.Call(pos, receiver, nf.Id(pos, "get$label"));
 
     Flags flags = Flags.NONE;
+    if (context.inStaticContext()) flags = Flags.STATIC;
+    
     MethodInstance mi =
         ts.methodInstance(pos, currentClass, flags, ts.Label(), "get$label",
             Collections.emptyList(), Collections.emptyList());
+    defaultLabel = (Call) defaultLabel.type(ts.Label());
     defaultLabel = defaultLabel.methodInstance(mi);
-
     return expr.label(defaultLabel);
   }
 
@@ -101,8 +98,9 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     if (context.inStaticContext()) flags = Flags.STATIC;
 
     MethodInstance mi =
-        ts.methodInstance(pos, currentClass, flags, ts.Label(), "$getCore",
+        ts.methodInstance(pos, currentClass, flags, ts.Core(), "$getCore",
             Collections.emptyList(), Collections.emptyList());
+    defaultLocation = (Call) defaultLocation.type(ts.Core());
     defaultLocation = defaultLocation.methodInstance(mi);
     return expr.location(defaultLocation);
   }
