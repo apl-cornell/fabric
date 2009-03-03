@@ -46,7 +46,7 @@ public final class Input {
     public int hashCode() {
         return name.hashCode();
     }
-    public static boolean jif$Instanceof(jif.lang.Principal jif$servletP, Object o) {
+    public static boolean jif$Instanceof(fabric.lang.Principal jif$servletP, Object o) {
         if (o instanceof Input) {
             Input that = (Input)o;
             return PrincipalUtil.$Impl.equivalentTo(that.servletP, jif$servletP);
@@ -54,7 +54,7 @@ public final class Input {
         return false;
     }
           
-    public static Input jif$cast$sif_html_Input(jif.lang.Principal jif$servletP, Object o) {
+    public static Input jif$cast$sif_html_Input(fabric.lang.Principal jif$servletP, Object o) {
         if (o == null) return (Input)null;
         if (jif$Instanceof(jif$servletP, o))
             return (Input)o;

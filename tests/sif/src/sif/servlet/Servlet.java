@@ -15,7 +15,12 @@ import fabric.client.Core;
 
 import sif.html.*;
 
-import jif.lang.*;
+import fabric.lang.Principal;
+import jif.lang.Label;
+import jif.lang.PrincipalUtil;
+import jif.lang.LabelUtil;
+import jif.lang.JifObject;
+import jif.lang.JifString;
 
 /** A servlet contains the information that is shared across users and sessions.
  * It converts between the Java HttpServlet request processing style and this one. */
@@ -501,8 +506,10 @@ abstract public class Servlet extends HttpServlet {
         return LabelUtil.$Impl.readerPolicyLabel(local, ss.sessionPrincipal(), ss.sessionPrincipal());
     }
 
+// TODO: Enable createSessionState --KV    
     protected SessionState createSessionState(String id) {
-        return SessionState.$Impl.createSessionState(id);
+//        return SessionState.$Impl.createSessionState(id);
+      return null;
     }
 
     /**

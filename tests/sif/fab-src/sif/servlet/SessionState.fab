@@ -5,27 +5,27 @@ import fabric.lang.Principal;
  * Global state for a single session.
  */
 
-public class SessionState {
+public class SessionState[label T] {
 
-    protected SessionState(String{this} sessionId) {
-        this.sessionPrincipal = new SessionPrincipal(this);
+    protected SessionState(String{T} sessionId) {
+        this.sessionPrincipal = new SessionPrincipal[T](this);
         this.sessionId        = sessionId;
     }
 
-    private final Principal{this} sessionPrincipal;
-    private final String{this}    sessionId;
+    private final Principal{T} sessionPrincipal;
+    private final String{T}    sessionId;
 
-    public final String{this} getSessionId() {
+    public final String{T} getSessionId() {
         return this.sessionId;
     }
 
-    public final Principal{this} sessionPrincipal() {
+    public final Principal{T} sessionPrincipal() {
         return this.sessionPrincipal;
     }
     
     /** convenience method for non-fabric code */
-    public static SessionState createSessionState(String id) {
-      return new SessionState(id);
-    }
+//    public static SessionState[T] createSessionState(String{T} id) {
+//      return new SessionState[T](id);
+//    }
 }
 

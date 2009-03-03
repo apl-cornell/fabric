@@ -57,7 +57,7 @@
             description="Builds the Fabric-Servlet and all examples" />
 
     <target name="sif" depends="sif-base,sif-sig" 
-                        description="Builds the SIF framework, including signature files" />
+                        description="Builds the SIF framework, including signature files"/>
 
     <target name="sif-base"
             depends="init,configure,sif-fab"
@@ -105,12 +105,18 @@
             <arg value="${sif.classes}"/>
             <arg value="-sourcepath"/>
             <arg value="${fab-src}"/>
-      <arg value="-cp" />
-      <arg pathref="standard.classpath" />
+      			<arg value="-cp" />
+      			<arg pathref="standard.classpath" />
             <arg value="-sigcp"/>
             <arg value="${fabric.home}/sig-classes/fabric"/>
             <arg value="-filsigcp"/>
             <arg value="${fabric.home}/sig-classes/fabil"/>
+        	<!--        	
+        		<arg value="-report"/> <arg value="solver=3"/>
+        		<arg value="-print"/> <arg value="RemoteCallWrapperAdder"/>
+	      		<arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>
+        		<arg value="-debugpositions"/>
+        	-->        		
             <srcfile />
             <fileset dir="${basedir}" includes="fab-src/**/*.fab" />
             <mapper type="regexp"
