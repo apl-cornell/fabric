@@ -26,5 +26,5 @@ public interface Label {
 
   IntegPolicy integPolicy();
   
-  KeyObject keyObject();
+  SecretKeyObject keyObject();
 }

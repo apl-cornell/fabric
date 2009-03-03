@@ -112,7 +112,7 @@ public interface Object {
               // Fetch from the client.
               result = client.readObject(tm.getCurrentTid(), ref.core, ref.onum);
               ref.core.cache(result);
-            } else if (client != localClient && this instanceof KeyObject) {
+            } else if (client != localClient && this instanceof SecretKeyObject) {
               // Fetch from the core. Bypass dissemination when reading key
               // objects.
               result = ref.core.readObjectNoDissem(ref.onum);

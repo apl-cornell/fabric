@@ -16,7 +16,7 @@ import fabric.util.Set;
 public final class PairLabel implements Label {
   private final ConfPolicy confPol;
   private final IntegPolicy integPol;
-  private final KeyObject keyObject;
+  private final SecretKeyObject keyObject;
   private Integer hashCode = null;
 
   public PairLabel(ConfPolicy confPol, IntegPolicy integPol) {
@@ -32,7 +32,7 @@ public final class PairLabel implements Label {
     if (confPol == localCore.getBottomConfidPolicy()) {
       this.keyObject = null;
     } else {
-      this.keyObject = new KeyObject~this();
+      this.keyObject = new SecretKeyObject~this();
     }
   }
 
@@ -105,7 +105,7 @@ public final class PairLabel implements Label {
     return integPol;
   }
   
-  public KeyObject keyObject() {
+  public SecretKeyObject keyObject() {
     return keyObject;
   }
 }

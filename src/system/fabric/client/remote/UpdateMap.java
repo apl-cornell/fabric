@@ -19,7 +19,7 @@ import fabric.client.LocalCore;
 import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.common.util.LongKeyMap;
-import fabric.lang.KeyObject;
+import fabric.lang.SecretKeyObject;
 import fabric.lang.Object.$Proxy;
 
 /**
@@ -312,7 +312,7 @@ public class UpdateMap implements FastSerializable {
    * is publicly readable), then null is returned.
    */
   private byte[] getKey(Label label) {
-    KeyObject keyObject = label.keyObject();
+    SecretKeyObject keyObject = label.keyObject();
     if (keyObject == null) return null;
     return keyObject.getKey().getEncoded();
   }

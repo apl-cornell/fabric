@@ -2,7 +2,7 @@ package jif.lang;
 
 import fabric.client.Core;
 import fabric.client.UnreachableNodeException;
-import fabric.lang.KeyObject;
+import fabric.lang.SecretKeyObject;
 
 public interface PairLabel extends Label {
   public static class $Impl extends fabric.lang.Object.$Impl implements
@@ -12,6 +12,6 @@ public interface PairLabel extends Label {
       super(core, label);
     }
 
-    public native KeyObject keyObject();
+    public native SecretKeyObject keyObject();
   }
 }

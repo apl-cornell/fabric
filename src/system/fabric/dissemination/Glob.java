@@ -11,7 +11,7 @@ import fabric.client.Core;
 import fabric.client.Client.Code;
 import fabric.common.*;
 import fabric.common.InternalError;
-import fabric.lang.KeyObject;
+import fabric.lang.SecretKeyObject;
 
 /**
  * A glob is an ObjectGroup that has been encrypted and signed.
@@ -63,7 +63,7 @@ public class Glob implements FastSerializable {
   public Glob(Core core, ObjectGroup group, PrivateKey key) {
     this.timestamp = System.currentTimeMillis();
 
-    final KeyObject keyObject = getLabel(core, group).keyObject();
+    final SecretKeyObject keyObject = getLabel(core, group).keyObject();
     if (keyObject == null) {
       this.keyOnum = null;
       this.iv = null;
@@ -135,7 +135,7 @@ public class Glob implements FastSerializable {
     sig.update(data);
   }
 
-  private Cipher makeCipher(final KeyObject keyObject, int opmode, byte[] iv)
+  private Cipher makeCipher(final SecretKeyObject keyObject, int opmode, byte[] iv)
       throws GeneralSecurityException {
     byte[] key = null;
     if (keyObject != null) {
@@ -276,8 +276,8 @@ public class Glob implements FastSerializable {
    *          The core that this glob came from.
    */
   public ObjectGroup decrypt(Core core) {
-    KeyObject keyObject =
-        keyOnum == null ? null : new KeyObject.$Proxy(core, keyOnum);
+    SecretKeyObject keyObject =
+        keyOnum == null ? null : new SecretKeyObject.$Proxy(core, keyOnum);
 
     try {
       Cipher cipher = makeCipher(keyObject, Cipher.DECRYPT_MODE, iv);
