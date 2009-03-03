@@ -81,13 +81,7 @@ public class FieldExt_c extends ExprExt_c {
 
     if (flags.isStatic()) {
       ClassType targetClassType = (ClassType) container;
-      if (flags.isFinal()) {
-        // Static final fields are accessed directly from the $Static interface.
-        return qq.parseExpr(targetClassType.fullName() + ".$Static."
-            + field.name());
-      }
-
-      // Static non-final fields are accessed via accessor methods on the
+      // Static fields are accessed via accessor methods on the
       // $Static.$Proxy.$instance object.
       return qq.parseExpr(targetClassType.fullName()
           + ".$Static.$Proxy.$instance.get$" + field.name() + "()");

@@ -7,6 +7,10 @@ import fabil.visit.*;
 
 public class FabILExt_c extends Ext_c implements FabILExt {
 
+  public Node collectStaticInitializers(StaticInitializerCollector sc) {
+    return node();
+  }
+
   /**
    * @throws SemanticException
    *           when a label is missing and no default can be assigned.

@@ -458,6 +458,11 @@
       <not><isset property="runtime.opt" /></not>
     </condition>
 
+    <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
+      <include name="fabric/client/RetryException.java" />
+      <include name="fabric/client/UserAbortException.java" />
+    </javac>
+
     <apply executable="bash"
         parallel="true"
         failonerror="true"
@@ -476,7 +481,6 @@
       <arg value="src/runtime" />
       <arg value="-cp" />
       <arg value="${bootstrap.classes}" />
-      <!--arg value="-noserial" /-->
       <srcfile />
       <fileset dir="${runtime.src}" includes="fabric/lang/arrays/*.fil"/>
       <globmapper from="*.fil" to="*.class" />
@@ -491,11 +495,6 @@
     <condition property="runtime.opt" value="-O0">
       <not><isset property="runtime.opt" /></not>
     </condition>
-
-    <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
-      <include name="fabric/client/RetryException.java" />
-      <include name="fabric/client/UserAbortException.java" />
-    </javac>
 
     <!-- XXX HACK -->
     <delete>

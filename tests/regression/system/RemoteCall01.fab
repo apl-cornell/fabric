@@ -54,7 +54,12 @@ public class RemoteCall01 {
       return;
     }
     
-    new RemoteCall01@core().run();
+    RemoteCall01 obj = null;
+    atomic {
+      obj = new RemoteCall01@core();
+    }
+
+    obj.run();
   }
 }
 

@@ -93,6 +93,11 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   }
   
   @Override
+  protected Ext extClassBodyImpl() {
+    return new ClassBodyExt_c();
+  }
+
+  @Override
   protected Ext extClassDeclImpl() {
     return new ClassDeclExt_c();
   }

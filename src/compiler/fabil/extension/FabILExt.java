@@ -14,6 +14,11 @@ import fabil.visit.*;
 public interface FabILExt extends Ext {
 
   /**
+   * Used by <code>StaticInitializerCollector</code>.
+   */
+  public Node collectStaticInitializers(StaticInitializerCollector sc);
+
+  /**
    * Used by LabelAssigner to assign labels to all <code>new</code> expressions.
    */
   public Node assignLabels(LabelAssigner la) throws SemanticException;
