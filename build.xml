@@ -345,7 +345,7 @@
   </target>
 
   <target name="fablib" depends="client,fabric-runtime,fabric-signatures">
-  	<subant target="">
+  	<subant target="" failonerror="false">
   		<fileset file="tests/jif/build.xml"/>
   		<fileset file="tests/sif/build.xml"/>
   	</subant>
