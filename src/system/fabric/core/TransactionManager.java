@@ -7,10 +7,13 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
+import fabric.client.transaction.Log;
+import fabric.client.transaction.TransactionRegistry;
 import fabric.common.AccessException;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.TransactionID;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -166,7 +169,7 @@ public class TransactionManager {
         }
         
         // Update promise statistics
-        ensureStatistics(onum).commitWrote();
+        ensureStatistics(onum, req.tid).commitWrote();
         
         // Update the version number on the prepared copy of the object.
         o.setVersion(coreVersion + 1);
@@ -216,7 +219,7 @@ public class TransactionManager {
           }
 
           // inform the object statistics of the read
-          ensureStatistics(onum).commitRead();
+          ensureStatistics(onum, req.tid).commitRead();
           
           // Register the read with the store.
           store.registerRead(tid, client, onum);
@@ -428,14 +431,22 @@ public class TransactionManager {
    * Return the statistics object associated with onum, creating one if it
    * doesn't exist already.
    */
-  private Statistics ensureStatistics(long onum) {
+  private Statistics ensureStatistics(long onum, long tnum) {
     synchronized (objectStats) {
       Statistics stats = getStatistics(onum);
       if (stats == null) {
-        // TODO: potential deadlock
+        // set up to run as a sub-transaction of the current transaction.
+        TransactionID tid = new TransactionID(tnum);
+        Log           log = TransactionRegistry.getOrCreateInnermostLog(tid);
+        fabric.client.transaction.TransactionManager.getInstance().associateLog(log);
+        
         Core local = Client.getClient().getCore(store.getName());
-        fabric.lang.Object.$Proxy object = new fabric.lang.Object.$Proxy(local,onum);
-        stats = object.createStatistics();
+        final fabric.lang.Object.$Proxy object = new fabric.lang.Object.$Proxy(local,onum);
+        stats = Client.runInTransaction(new Client.Code<Statistics> () {
+          public Statistics run() {
+            return object.createStatistics();
+          }
+        });
         objectStats.put(onum, stats);
       }
       return stats;
