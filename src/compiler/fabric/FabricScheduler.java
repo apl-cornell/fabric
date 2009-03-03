@@ -16,6 +16,7 @@ import polyglot.frontend.Job;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.Source;
 import polyglot.frontend.goals.Goal;
+import polyglot.frontend.goals.Serialized;
 import polyglot.frontend.goals.VisitorGoal;
 import polyglot.util.InternalCompilerError;
 import jif.JifScheduler;
@@ -122,6 +123,25 @@ public class FabricScheduler extends JifScheduler {
     return g;
   }
   
+  @Override
+  public Goal Serialized(Job job) {
+    FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
+    if (!opts.signatureMode()) return super.Serialized(job);
+    
+    // Signature mode.  Don't run some passes.
+    Goal g = internGoal(new Serialized(job) {
+      @SuppressWarnings("unchecked")
+      @Override
+      public Collection prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(scheduler.TypeChecked(job));
+        l.add(scheduler.ExceptionsChecked(job));
+        return l;
+      }
+    });
+    return g;
+  }
+
   public Goal FabricToFabilRewritten(Job job) {
     FabricTypeSystem  ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();

@@ -11,6 +11,7 @@ import polyglot.frontend.CyclicDependencyException;
 import polyglot.frontend.JLScheduler;
 import polyglot.frontend.Job;
 import polyglot.frontend.Scheduler;
+import polyglot.frontend.goals.CodeGenerated;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.Serialized;
 import polyglot.frontend.goals.VisitorGoal;
@@ -378,4 +379,40 @@ public class FabILScheduler extends JLScheduler {
     });
     return g;
   }
+  
+  public Goal SignatureClean(final Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new SignatureCleaner()) {
+      @SuppressWarnings("unchecked")
+      @Override
+      public Collection prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.addAll(super.prerequisiteGoals(scheduler));
+        l.add(Serialized(job));
+        return l;
+      }
+      
+    });
+    return g;
+  }
+
+  @Override
+  public Goal CodeGenerated(final Job job) {
+    Goal g = internGoal(new CodeGenerated(job){
+      @SuppressWarnings("unchecked")
+      @Override
+      public Collection prerequisiteGoals(Scheduler scheduler) {
+        FabILOptions opts = (FabILOptions) job.extensionInfo().getOptions();
+        if (!opts.signatureMode()) return super.prerequisiteGoals(scheduler);
+        
+        // Compiling as a signature. Insert a pass to remove all non-signature
+        // cruft.
+        List<Goal> l = new ArrayList<Goal>();
+        l.addAll(super.prerequisiteGoals(scheduler));
+        l.add(SignatureClean(job));
+        return l;
+      }
+    });
+    return g;
+  }
+  
 }

@@ -8,6 +8,7 @@ import fabric.extension.NewExt_c;
 import fabric.types.FabricClassType;
 import fabric.types.FabricParsedClassType;
 import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricToFabilRewriter;
 
 import polyglot.ast.Expr;
 import polyglot.ast.New;
@@ -24,6 +25,7 @@ import jif.types.label.Label;
 public class NewToFabilExt_c extends NewToJavaExt_c {
   @Override
   public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {
+    boolean sigMode = ((FabricToFabilRewriter) rw).inSignatureMode();
     New n = (New) node();
     FabricClassType ct = (FabricClassType)objectType.toClass();
 
@@ -35,7 +37,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
     
     Label fieldLabel = ct.defaultFieldLabel();
     Expr labelExpr = null;
-    if (fieldLabel != null) {
+    if (fieldLabel != null && !sigMode) {
       labelExpr = rw.labelToJava(fieldLabel);
     }
     
