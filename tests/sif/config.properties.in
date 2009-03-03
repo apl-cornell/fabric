@@ -3,7 +3,7 @@
 # Base directory of Jif installation
 #   Will override the value defined in environment variable $JIF.
 
-jif.home=/home/mdgeorge/src/jif
+jif.home=${env.HOME}/jif
 
 # Tomcat 5 installation directory
 #   Will override the value defined in environment variable $CATALINA_HOME.
@@ -12,4 +12,4 @@ jif.home=/home/mdgeorge/src/jif
 # Base directory of the Fabric installation
 #  Will override the value defined in the environment variable $FABRIC
 
-fabric.home=/home/mdgeorge/src/fabric
+fabric.home=${env.HOME}/fabric
