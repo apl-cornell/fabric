@@ -33,6 +33,13 @@ public class TransactionID implements FastSerializable {
   public TransactionID() {
     this((TransactionID) null);
   }
+  
+  /**
+   * Creates a new top-level transaction id with the given id.
+   */
+  public TransactionID(long tid) {
+    this(null, tid);
+  }
 
   /**
    * Creates a new transaction ID that is a child of the given tid.
