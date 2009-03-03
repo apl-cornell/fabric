@@ -41,6 +41,9 @@ public class ArrayInitExt_c extends AnnotatedExt_c {
 
     arrayInit = arrayInit.elements(newElements);
     arrayInit = (ArrayInit) arrayInit.visitChildren(rewriter);
+    
+    location = arrayInit.location();
+    label = arrayInit.label();
 
     Type oldBase = arrayInit.type().toArray().base();
     Type newBase = oldBase.isPrimitive() ? oldBase : ts.FObject();
