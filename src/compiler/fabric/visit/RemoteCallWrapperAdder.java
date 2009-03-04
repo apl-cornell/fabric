@@ -11,6 +11,7 @@ import fabric.types.FabricTypeSystem;
 import polyglot.ast.*;
 import polyglot.frontend.Job;
 import polyglot.types.Flags;
+import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 
@@ -62,7 +63,8 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
           if(md.formals().size()<=0) continue;
           Formal firstFormal = (Formal) md.formals().get(0);
           LabeledTypeNode typeNode = (LabeledTypeNode) firstFormal.type();
-          if(!typeNode.typePart().type().equals(ts.Label())) continue;
+          Type formalType = typeNode.typePart().type(); 
+          if(formalType == null || !formalType.equals(ts.Label())) continue;
 
           Principal clientPrincipal = ts.clientPrincipal(Position.compilerGenerated());
 
