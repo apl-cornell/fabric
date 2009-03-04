@@ -53,19 +53,19 @@ public final class RemoteClient implements RemoteNode {
     this.name = name;
   }
 
-  public DataInputStream objectInputStream() {
+  public DataInputStream dataInputStream() {
     return in;
   }
 
-  public DataInputStream objectInputStream(boolean useSSL) {
+  public DataInputStream dataInputStream(boolean useSSL) {
     return in;
   }
 
-  public DataOutputStream objectOutputStream() {
+  public DataOutputStream dataOutputStream() {
     return out;
   }
 
-  public DataOutputStream objectOutputStream(boolean useSSL) {
+  public DataOutputStream dataOutputStream(boolean useSSL) {
     return out;
   }
 

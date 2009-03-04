@@ -81,12 +81,12 @@ public class RemoteCore implements Core, RemoteNode {
     this.publicKey = key;
   }
 
-  public DataInputStream objectInputStream(boolean ssl) {
+  public DataInputStream dataInputStream(boolean ssl) {
     if (ssl) return sslIn;
     return unencryptedIn;
   }
 
-  public DataOutputStream objectOutputStream(boolean ssl) {
+  public DataOutputStream dataOutputStream(boolean ssl) {
     if (ssl) return sslOut;
     return unencryptedOut;
   }

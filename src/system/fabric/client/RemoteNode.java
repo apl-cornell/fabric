@@ -50,15 +50,15 @@ public interface RemoteNode {
    * @param useSSL
    *          Whether SSL is being used. This is ignored if the node type
    *          doesn't support non-SSL connections.
-   * @return the object input stream to use for communicating with the node.
+   * @return the data input stream to use for communicating with the node.
    */
-  DataInputStream objectInputStream(boolean useSSL);
+  DataInputStream dataInputStream(boolean useSSL);
 
   /**
    * @param useSSL
    *          Whether SSL is being used. This is ignored if the node type
    *          doesn't support non-SSL connections.
-   * @return the object output stream to use for communicating with the node.
+   * @return the data output stream to use for communicating with the node.
    */
-  DataOutputStream objectOutputStream(boolean useSSL);
+  DataOutputStream dataOutputStream(boolean useSSL);
 }

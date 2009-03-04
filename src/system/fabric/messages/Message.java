@@ -80,8 +80,8 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
           }
 
           // Attempt to send our message and obtain a reply.
-          return send(node, node.objectInputStream(useSSL), node
-              .objectOutputStream(useSSL));
+          return send(node, node.dataInputStream(useSSL), node
+              .dataOutputStream(useSSL));
         } catch (NoSuchNodeError e) {
           // Connected to a system that doesn't host the node we're interested
           // in.
