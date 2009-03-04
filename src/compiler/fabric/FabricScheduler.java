@@ -11,6 +11,7 @@ import fabric.visit.RemoteCallWrapperAdder;
 import fabric.visit.RemoteCallWrapperUpdater;
 
 import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
 import polyglot.frontend.CyclicDependencyException;
 import polyglot.frontend.Job;
 import polyglot.frontend.Scheduler;
@@ -18,6 +19,7 @@ import polyglot.frontend.Source;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.Serialized;
 import polyglot.frontend.goals.VisitorGoal;
+import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import jif.JifScheduler;
 
@@ -83,13 +85,18 @@ public class FabricScheduler extends JifScheduler {
 
   @Override
   public Goal TypesInitialized(Job job) {
+    FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
     FabricTypeSystem ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
     Goal g = internGoal(new VisitorGoal(job, new FabricTypeBuilder(job, ts, nf)));
     try {
       addPrerequisiteDependency(g, Parsed(job));
       addPrerequisiteDependency(g, ExplicitSuperclassesAdded(job));
-      addPrerequisiteDependency(g, RemoteCallWrappersAdded(job));
+      if(!opts.signatureMode()) {
+        addPrerequisiteDependency(g, RemoteCallWrappersAdded(job));
+      } else {
+        addPrerequisiteDependency(g, Parsed(job));
+      }
     }
     catch (CyclicDependencyException e) {
       throw new InternalCompilerError(e);
@@ -110,12 +117,32 @@ public class FabricScheduler extends JifScheduler {
     });
     return g;
   }
+  
+  public Goal DisambiguationAfterWrappers(final Job job) {
+    TypeSystem ts = job.extensionInfo().typeSystem();
+    NodeFactory nf = job.extensionInfo().nodeFactory();
+    Goal g = internGoal(new polyglot.frontend.goals.Disambiguated(job, ts, nf) {
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(RemoteCallWrappersUpdated(job));
+        return l;
+      }
+    });
+    return g;
+    
+  }
 
   @Override
   public Goal TypeChecked(Job job) {
+    FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();    
     Goal g = super.TypeChecked(job);
     try {
-      addPrerequisiteDependency(g, RemoteCallWrappersUpdated(job));
+      if(!opts.signatureMode()) {
+        addPrerequisiteDependency(g, DisambiguationAfterWrappers(job));
+      } else {
+        addPrerequisiteDependency(g, Disambiguated(job));
+      }
     }
     catch (CyclicDependencyException e) {
       throw new InternalCompilerError(e);

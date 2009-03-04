@@ -6,6 +6,7 @@ import java.util.List;
 import fabil.ast.FabILCall;
 import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricCall;
+import fabric.types.FabricTypeSystem;
 import polyglot.ast.Expr;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
@@ -22,7 +23,11 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
       FabILNodeFactory nf = (FabILNodeFactory)rw.java_nf();
       
       FabILCall result = (FabILCall)e;
-      
+      // Make sure that the first argument is a label
+      if(result.methodInstance() == null) return result;
+      List formalTypes = result.methodInstance().formalTypes();
+      if(formalTypes.size() <= 0 || !formalTypes.get(0).equals(((FabricTypeSystem)rw.typeSystem()).Label())) 
+        throw new SemanticException("Method " + result.id() + " cannot be called remotely since its first argument is not of label type");
       if (c.remoteClient() != null) {
         result = result.remoteClient(c.remoteClient());
         List<Expr> args = new ArrayList<Expr>(result.arguments().size());
