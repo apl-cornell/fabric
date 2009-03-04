@@ -11,7 +11,7 @@ public final class FileChooser[principal servletP, label L, label E] extends Inp
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
 
-    public FileChooser(Input[servletP]{L} input, int{L} size) 
+    public FileChooser(Input[servletP, L]{L} input, int{L} size) 
     where {L;E} <= {*input.inputLbl} { 
         super(input);
     }

@@ -19,7 +19,7 @@ public final class Select extends InputNode {
         selected = selected_;    
     }
     public Select(Principal servletP, Label L, Label E, Servlet s, Label inputLabel, int selected_, String[] options_) {
-        super(servletP, L, E, new Input(servletP, s, inputLabel));
+        super(servletP, L, E, new Input(servletP, L, s, inputLabel));
         options = options_;
         selected = selected_;    
     }

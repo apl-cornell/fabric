@@ -7,16 +7,16 @@ import sif.servlet.Servlet;
  * @author andru
  *
  */
-public final class Input[principal servletP] extends java.lang.Object {
+public final class Input[principal servletP, covariant label T] extends java.lang.Object {
 	private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 	private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
 
 	//    private final String{servletP:;servletP!:;this} name;
 
-	public final label{this} inputLbl;
+	public final label{T} inputLbl;
 
 	/** Construct an input with an automatically generated name. */
-	public Input(Servlet[servletP]{this} s, label{this} inputLbl){
+	public Input(Servlet[servletP]{T} s, label{T} inputLbl){
 		this.inputLbl = inputLbl;
 	}
 
@@ -25,7 +25,7 @@ public final class Input[principal servletP] extends java.lang.Object {
 	 * @param s the servlet
 	 * @param n the name of the input
 	 */
-	public Input(String{s} n, Servlet[servletP]{this} s, label{this} inputLbl) throws (IllegalArgumentException{s}) {
+	public Input(String{s} n, Servlet[servletP]{T} s, label{T} inputLbl) throws (IllegalArgumentException{s}) {
 		this.inputLbl = inputLbl;
 	}
 

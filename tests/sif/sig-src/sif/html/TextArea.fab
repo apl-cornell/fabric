@@ -16,7 +16,7 @@ public final class TextArea[principal servletP, label L, label E] extends InputN
     private final int{L} cols;
     private final String{L} initial_text;
     
-    public TextArea(Input[servletP]{L} input, int{L} rows, int{L} cols, String{L} initial) 
+    public TextArea(Input[servletP, L]{L} input, int{L} rows, int{L} cols, String{L} initial) 
     where {L;E} <= {*input.inputLbl} {
         super(input);
         this.rows = rows;

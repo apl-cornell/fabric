@@ -12,12 +12,14 @@ import sif.servlet.Servlet;
 public final class Input {
     private final String name;
     public final Label inputLbl;
+    public final Label thisLabel;
     final Servlet servlet;
     private final Principal servletP;
     
     /** Construct an input with an automatically generated name. */
-    public Input(Principal servletP, Servlet s, Label inputLabel) {
+    public Input(Principal servletP, Label thisLabel, Servlet s, Label inputLabel) {
         this.inputLbl = inputLabel;
+        this.thisLabel = thisLabel;
         this.servlet = s;
         this.servletP = servletP;
     	this.name = "i" + s.generateNonce();
@@ -29,8 +31,9 @@ public final class Input {
      * @param s the servlet
      * @param n the name of the input
      */
-    public Input(Principal servletP, String n, Servlet s, Label inputLabel) {
+    public Input(Principal servletP, Label thisLabel, String n, Servlet s, Label inputLabel) {
         this.inputLbl = inputLabel;
+        this.thisLabel = thisLabel;
         this.servlet = s;
         this.servletP = servletP;
         this.name = n;

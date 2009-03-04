@@ -19,9 +19,9 @@ public final class Request[principal servletP] extends java.lang.Object {
     
     // the input from the client's browser would be labeled here
     // i wonder when it would be dynamically labeled
-    public native String{*inp.inputLbl; inp; *!:session} getParam(Input[servletP] inp);
+    public native String{*inp.inputLbl; inp; *!:session} getParam(Input[servletP, {this}] inp);
     public native String{*eLbl;*n.input.inputLbl; n; *!:session} getParam(label{*lbl} lbl, label{*lbl} eLbl, InputNode[servletP, lbl, eLbl] n);
-    public native InputStream[{*inp.inputLbl; inp; *!:session}]{*inp.inputLbl; inp; *!:session} getFile(Input[servletP] inp);
+    public native InputStream[{*inp.inputLbl; inp; *!:session}]{*inp.inputLbl; inp; *!:session} getFile(Input[servletP, {this}] inp);
     public native InputStream[{*eLbl; *n.input.inputLbl; n; *!:session}]{*n.input.inputLbl; n; *!:session} getFile(label{*lbl} lbl, label{*lbl} eLbl, InputNode[servletP, lbl, eLbl] n);
 
         

@@ -26,7 +26,7 @@ public abstract class InputNode extends Node {
         input = i;
     }
     InputNode(Principal servletP, Label L, Label E, Servlet s, Label inputLabel) {
-        this(servletP, L, E, new Input(servletP, s, inputLabel));
+        this(servletP, L, E, new Input(servletP, L, s, inputLabel));
     }
     
     public static boolean jif$Instanceof(Principal P, Label l, Label e, Object o) {

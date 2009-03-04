@@ -23,7 +23,7 @@ public final class TextArea extends InputNode {
         initial_text = initial;
     }
     public TextArea(Principal servletP, Label L, Label E, Servlet s, Label inputLabel, int rows, int cols, String initial) {
-        super(servletP, L, E, new Input(servletP, s, inputLabel));
+        super(servletP, L, E, new Input(servletP, L, s, inputLabel));
         this.rows = rows;
         this.cols = cols;
         initial_text = initial;

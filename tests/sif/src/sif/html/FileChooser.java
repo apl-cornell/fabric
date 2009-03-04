@@ -19,7 +19,7 @@ public final class FileChooser extends InputNode {
         this.size = size;
     }
     public FileChooser(Principal servletP, Label L, Label E, Servlet s, Label inputLabel, int size) {
-        super(servletP, L, E, new Input(servletP, s, inputLabel));
+        super(servletP, L, E, new Input(servletP, L, s, inputLabel));
         this.size = size;
     }
     /* (non-Javadoc)
