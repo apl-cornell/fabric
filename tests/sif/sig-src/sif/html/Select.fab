@@ -9,7 +9,7 @@ public final class Select[principal servletP, label L, label E] extends InputNod
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
     
-    public Select(Input[servletP]{L} input, int{L} selected_, String{L}[]{L} options_) 
+    public Select(Input[servletP, L]{L} input, int{L} selected_, String{L}[]{L} options_) 
     where {L;E} <= {*input.inputLbl} {
         super(input);
     }
