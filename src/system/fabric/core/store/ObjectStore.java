@@ -17,7 +17,6 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.common.*;
 import fabric.common.util.*;
-import fabric.dissemination.Glob;
 import fabric.lang.NodePrincipal;
 
 /**
@@ -51,16 +50,18 @@ public abstract class ObjectStore {
   private Label publicReadonlyLabel;
 
   /**
-   * Maps object numbers to globIDs. The glob with ID globIDByOnum(onum) holds a
-   * copy of object onum.
+   * Maps object numbers to globIDs. The group container with ID
+   * globIDByOnum(onum) holds a copy of object onum. (globIDs really ought to be
+   * called group-container IDs, but we're sticking with globID for historical
+   * reasons and because it's shorter.)
    */
   private final LongKeyMap<Long> globIDByOnum;
 
   /**
-   * Maps globIDs to Globs and the number of times the glob is referenced in
-   * globIDByOnum.
+   * Maps globIDs to GroupContainers and the number of times the GroupContainer
+   * is referenced in globIDByOnum.
    */
-  private final LongKeyMap<Pair<Glob, MutableInteger>> globTable;
+  private final LongKeyMap<Pair<GroupContainer, MutableInteger>> globTable;
 
   /**
    * The data stored for a partially prepared transaction.
@@ -182,7 +183,7 @@ public abstract class ObjectStore {
     this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
     this.rwLocks = new LongKeyHashMap<Pair<Long, LongSet>>();
     this.globIDByOnum = new LongKeyHashMap<Long>();
-    this.globTable = new LongKeyHashMap<Pair<Glob, MutableInteger>>();
+    this.globTable = new LongKeyHashMap<Pair<GroupContainer, MutableInteger>>();
   }
 
   /**
@@ -321,25 +322,25 @@ public abstract class ObjectStore {
   protected abstract long nextGlobID();
 
   /**
-   * Returns the cached Glob containing the given onum. Null is returned if no
-   * such Glob exists.
+   * Returns the cached GroupContainer containing the given onum. Null is
+   * returned if no such GroupContainer exists.
    */
-  public final Glob getCachedGlob(long onum) {
+  public final GroupContainer getCachedGroupContainer(long onum) {
     Long globID = globIDByOnum.get(onum);
     if (globID == null) return null;
 
-    Pair<Glob, MutableInteger> entry = globTable.get(globID);
+    Pair<GroupContainer, MutableInteger> entry = globTable.get(globID);
     if (entry == null) return null;
     return entry.first;
   }
 
   /**
-   * Inserts the given glob into the cache for the given onums.
+   * Inserts the given group container into the cache for the given onums.
    */
-  public final void cacheGlob(LongSet onums, Glob glob) {
+  public final void cacheGroupContainer(LongSet onums, GroupContainer container) {
     // Get a new ID for the glob and insert into the glob table.
     long globID = nextGlobID();
-    globTable.put(globID, new Pair<Glob, MutableInteger>(glob,
+    globTable.put(globID, new Pair<GroupContainer, MutableInteger>(container,
         new MutableInteger(onums.size())));
 
     // Establish globID bindings for all onums we're given.
@@ -349,7 +350,7 @@ public abstract class ObjectStore {
       Long oldGlobID = globIDByOnum.put(onum, globID);
       if (oldGlobID == null) continue;
 
-      Pair<Glob, MutableInteger> entry = globTable.get(oldGlobID);
+      Pair<GroupContainer, MutableInteger> entry = globTable.get(oldGlobID);
       if (entry == null) continue;
 
       if (entry.second.value == 1) {

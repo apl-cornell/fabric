@@ -430,7 +430,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     this.numReads++;
 
     ObjectGroup group =
-        transactionManager.readGroup(client, msg.onum, false, this);
+        transactionManager.getGroup(client, msg.onum, this);
     return new ReadMessage.Response(group);
   }
 
