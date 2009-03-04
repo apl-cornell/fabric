@@ -61,8 +61,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   // The socket and associated I/O streams for communicating with the client.
   private Socket socket;
   private SSLSocket sslSocket;
-  private ObjectInputStream in;
-  private ObjectOutputStream out;
+  private DataInputStream in;
+  private DataOutputStream out;
 
   // Bookkeeping information for debugging/monitoring purposes:
   private int numReads;
@@ -228,11 +228,11 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     if (clientIsDissem) {
       // Connection from dissemination node.
       this.out =
-          new ObjectOutputStream(new BufferedOutputStream(socket
+          new DataOutputStream(new BufferedOutputStream(socket
               .getOutputStream()));
       this.out.flush();
       this.in =
-          new ObjectInputStream(
+          new DataInputStream(
               new BufferedInputStream(socket.getInputStream()));
       this.clientName = null;
       this.client = null;
@@ -251,20 +251,20 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       sslSocket.setNeedClientAuth(true);
       sslSocket.startHandshake();
       this.out =
-          new ObjectOutputStream(new BufferedOutputStream(sslSocket
+          new DataOutputStream(new BufferedOutputStream(sslSocket
               .getOutputStream()));
       this.out.flush();
       this.in =
-          new ObjectInputStream(new BufferedInputStream(sslSocket
+          new DataInputStream(new BufferedInputStream(sslSocket
               .getInputStream()));
       this.clientName = sslSocket.getSession().getPeerPrincipal().getName();
     } else {
       this.out =
-          new ObjectOutputStream(new BufferedOutputStream(socket
+          new DataOutputStream(new BufferedOutputStream(socket
               .getOutputStream()));
       this.out.flush();
       this.in =
-          new ObjectInputStream(
+          new DataInputStream(
               new BufferedInputStream(socket.getInputStream()));
       this.clientName = in.readUTF();
     }

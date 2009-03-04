@@ -1,10 +1,8 @@
 package fabric.common;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.lang.reflect.Constructor;
+import java.util.*;
 
 import fabric.client.Core;
 import fabric.lang.Object.$Impl;
@@ -109,7 +107,9 @@ public final class SerializedObject implements FastSerializable {
       out.writeLong(label);
 
       // Class name.
-      out.writeUTF(Surrogate.class.getName());
+      byte[] className = Surrogate.class.getName().getBytes("UTF-8");
+      out.writeShort(className.length);
+      out.write(className);
 
       // Number of ref types and intracore refs.
       out.writeInt(0);
@@ -262,13 +262,11 @@ public final class SerializedObject implements FastSerializable {
   public String getClassName() {
     if (className == null) {
       int classNamePos = classNamePos();
-      DataInput in =
-          new DataInputStream(new ByteArrayInputStream(objectData,
-              classNamePos, objectData.length - classNamePos));
+      int length = unsignedShortAt(classNamePos);
       try {
-        className = in.readUTF();
-      } catch (IOException e) {
-        throw new InternalError("Error while reading class name.", e);
+        className = new String(objectData, classNamePos + 2, length, "UTF-8");
+      } catch (UnsupportedEncodingException e) {
+        throw new InternalError(e);
       }
     }
 
@@ -551,7 +549,10 @@ public final class SerializedObject implements FastSerializable {
     out.writeBoolean(interCoreLabel);
     if (interCoreLabel) out.writeUTF(labelCore.name());
     out.writeLong(labelOnum);
-    out.writeUTF(impl.getClass().getName());
+    
+    byte[] className = impl.getClass().getName().getBytes("UTF-8");
+    out.writeShort(className.length);
+    out.write(className);
 
     // Get the object to serialize itself into a bunch of buffers.
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -687,6 +688,12 @@ public final class SerializedObject implements FastSerializable {
     in.readFully(buf, 0, length & BUF_LEN_MASK);
     out.write(buf, 0, length & BUF_LEN_MASK);
   }
+  
+  /**
+   * Maps class names to their deserialization constructors.
+   */
+  private static final Map<String, Constructor<?>> constructorTable =
+      Collections.synchronizedMap(new HashMap<String, Constructor<?>>());
 
   /**
    * Used by the client to deserialize this object.
@@ -698,14 +705,21 @@ public final class SerializedObject implements FastSerializable {
    *           Thrown when the class for this object is unavailable.
    */
   public $Impl deserialize(Core core) throws ClassNotFoundException {
-    Class<?> c = Class.forName(getClassName());
+    String className = getClassName();
+    Constructor<?> constructor = constructorTable.get(className);
 
     try {
-      return ($Impl) c.getConstructor(Core.class, long.class, int.class,
-          long.class, long.class, ObjectInput.class, Iterator.class, Iterator.class)
-          .newInstance(core, getOnum(), getVersion(), getExpiry(), getLabelOnum(),
-              new ObjectInputStream(getSerializedDataStream()),
-              getRefTypeIterator(), getIntracoreRefIterator());
+      if (constructor == null) {
+        Class<?> c = Class.forName(getClassName());
+        constructor = c.getConstructor(Core.class, long.class, int.class,
+            long.class, long.class, ObjectInput.class, Iterator.class, Iterator.class);
+        constructorTable.put(className, constructor);
+      }
+      
+      return ($Impl) constructor.newInstance(core, getOnum(), getVersion(),
+          getExpiry(), getLabelOnum(), new ObjectInputStream(
+              getSerializedDataStream()), getRefTypeIterator(),
+          getIntracoreRefIterator());
     } catch (Exception e) {
       throw new InternalError(e);
     }

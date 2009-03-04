@@ -51,8 +51,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
   // client.
   private Socket socket;
   private SSLSocket sslSocket;
-  private ObjectInputStream in;
-  private ObjectOutputStream out;
+  private DataInputStream in;
+  private DataOutputStream out;
 
   private static final Logger logger =
       Logger.getLogger("fabric.client.remote.Worker");
@@ -180,23 +180,23 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       sslSocket.startHandshake();
 
       this.out =
-          new ObjectOutputStream(new BufferedOutputStream(sslSocket
+          new DataOutputStream(new BufferedOutputStream(sslSocket
               .getOutputStream()));
       this.out.flush();
 
       this.in =
-          new ObjectInputStream(new BufferedInputStream(sslSocket
+          new DataInputStream(new BufferedInputStream(sslSocket
               .getInputStream()));
 
       this.remoteClientName =
           sslSocket.getSession().getPeerPrincipal().getName();
     } else {
       this.out =
-          new ObjectOutputStream(new BufferedOutputStream(socket
+          new DataOutputStream(new BufferedOutputStream(socket
               .getOutputStream()));
       this.out.flush();
       this.in =
-          new ObjectInputStream(
+          new DataInputStream(
               new BufferedInputStream(socket.getInputStream()));
       this.remoteClientName = in.readUTF();
     }

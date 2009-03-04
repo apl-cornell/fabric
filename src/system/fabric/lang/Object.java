@@ -4,8 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Constructor;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import jif.lang.Label;
 import fabric.client.*;
@@ -485,6 +484,13 @@ public interface Object {
         ClassNotFoundException {
       this(core, onum, version, expiry, new Label.$Proxy(core, label));
     }
+    
+    /**
+     * Maps proxy classes to their constructors.
+     */
+    private static final Map<Class<? extends Object.$Proxy>, Constructor<? extends Object.$Proxy>> constructorTable =
+        Collections
+            .synchronizedMap(new HashMap<Class<? extends Object.$Proxy>, Constructor<? extends Object.$Proxy>>());
 
     /**
      * A helper method for reading a pointer during object deserialization.
@@ -519,7 +525,14 @@ public interface Object {
 
       case ONUM:
         try {
-          return proxyClass.getConstructor(Core.class, long.class).newInstance(
+          Constructor<? extends Object.$Proxy> constructor =
+              constructorTable.get(proxyClass);
+          if (constructor == null) {
+            constructor = proxyClass.getConstructor(Core.class, long.class);
+            constructorTable.put(proxyClass, constructor);
+          }
+          
+          return constructor.newInstance(
               core, intracoreRefs.next());
         } catch (Exception e) {
           throw new InternalError(e);

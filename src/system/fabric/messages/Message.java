@@ -130,7 +130,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    * @throws IOException
    *           if an I/O error occurs during serialization/deserialization.
    */
-  private R send(N node, ObjectInputStream in, ObjectOutputStream out)
+  private R send(N node, DataInputStream in, DataOutputStream out)
       throws FabricException, IOException {
     // Write this message out.
     out.writeByte(messageType.ordinal());
@@ -141,7 +141,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
     if (in.readBoolean()) {
       try {
         // We have an error.
-        FabricException exc = (FabricException) in.readObject();
+        FabricException exc = (FabricException) readObject(in);
         exc.fillInStackTrace();
         throw exc;
       } catch (ClassNotFoundException e) {
@@ -175,7 +175,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    *           the i/o streams provided.
    * @throws ClassNotFoundException
    */
-  public static void receive(ObjectInput in, ObjectOutputStream out,
+  public static void receive(DataInput in, DataOutputStream out,
       MessageHandler handler) throws IOException {
 
     try {
@@ -204,7 +204,6 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
 
       // Write out the response.
       r.write(out);
-      out.reset();
       out.flush();
     } catch (final FabricException e) {
       // Clear out the stack trace before sending the exception to the client.
@@ -212,7 +211,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
 
       // Signal that an error occurred and write out the exception.
       out.writeBoolean(true);
-      out.writeUnshared(e);
+      writeObject(e, out);
       out.flush();
     } catch (final FabricRuntimeException e) {
       // TODO: this is copied and pasted from above. We need to figure out what
@@ -223,9 +222,22 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
 
       // Signal that an error occurred and write out the exception.
       out.writeBoolean(true);
-      out.writeUnshared(e);
+      writeObject(e, out);
       out.flush();
     }
+  }
+  
+  private static void writeObject(Object o, DataOutputStream out)
+      throws IOException {
+    ObjectOutputStream oos = new ObjectOutputStream(out);
+    oos.writeObject(o);
+    oos.flush();
+  }
+  
+  private static Object readObject(DataInputStream in) throws IOException,
+      ClassNotFoundException {
+    ObjectInputStream ois = new ObjectInputStream(in);
+    return ois.readObject();
   }
 
   private final R dispatch(MessageHandler handler) throws FabricException {

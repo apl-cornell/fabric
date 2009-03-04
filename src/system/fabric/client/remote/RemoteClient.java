@@ -42,8 +42,8 @@ public final class RemoteClient implements RemoteNode {
   /**
    * The connection to the actual client.
    */
-  private ObjectInputStream in;
-  private ObjectOutputStream out;
+  private DataInputStream in;
+  private DataOutputStream out;
 
   /**
    * This should only be called by fabric.client.Client. If you want a
@@ -53,20 +53,20 @@ public final class RemoteClient implements RemoteNode {
     this.name = name;
   }
 
-  public ObjectInputStream objectInputStream() {
+  public DataInputStream objectInputStream() {
     return in;
   }
 
-  public ObjectInputStream objectInputStream(boolean useSSL) {
-    return objectInputStream();
+  public DataInputStream objectInputStream(boolean useSSL) {
+    return in;
   }
 
-  public ObjectOutputStream objectOutputStream() {
+  public DataOutputStream objectOutputStream() {
     return out;
   }
 
-  public ObjectOutputStream objectOutputStream(boolean useSSL) {
-    return objectOutputStream();
+  public DataOutputStream objectOutputStream(boolean useSSL) {
+    return out;
   }
 
   public void connect(boolean useSSL, InetSocketAddress host,
@@ -124,22 +124,22 @@ public final class RemoteClient implements RemoteNode {
       }
 
       out =
-          new ObjectOutputStream(new BufferedOutputStream(sslSocket
+          new DataOutputStream(new BufferedOutputStream(sslSocket
               .getOutputStream()));
       out.flush();
       in =
-          new ObjectInputStream(new BufferedInputStream(sslSocket
+          new DataInputStream(new BufferedInputStream(sslSocket
               .getInputStream()));
       conn = sslSocket;
     } else {
       out =
-          new ObjectOutputStream(new BufferedOutputStream(socket
+          new DataOutputStream(new BufferedOutputStream(socket
               .getOutputStream()));
       out.writeUTF(client.javaPrincipal.getName());
       out.flush();
 
       in =
-          new ObjectInputStream(
+          new DataInputStream(
               new BufferedInputStream(socket.getInputStream()));
 
       conn = socket;

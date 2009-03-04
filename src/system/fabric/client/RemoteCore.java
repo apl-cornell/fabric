@@ -54,10 +54,10 @@ public class RemoteCore implements Core, RemoteNode {
   /**
    * The connections to the actual Core.
    */
-  private transient ObjectInputStream sslIn;
-  private transient ObjectOutputStream sslOut;
-  private transient ObjectInputStream unencryptedIn;
-  private transient ObjectOutputStream unencryptedOut;
+  private transient DataInputStream sslIn;
+  private transient DataOutputStream sslOut;
+  private transient DataInputStream unencryptedIn;
+  private transient DataOutputStream unencryptedOut;
 
   /**
    * The core's public SSL key.  Used for verifying signatures on object groups.
@@ -81,12 +81,12 @@ public class RemoteCore implements Core, RemoteNode {
     this.publicKey = key;
   }
 
-  public ObjectInputStream objectInputStream(boolean ssl) {
+  public DataInputStream objectInputStream(boolean ssl) {
     if (ssl) return sslIn;
     return unencryptedIn;
   }
 
-  public ObjectOutputStream objectOutputStream(boolean ssl) {
+  public DataOutputStream objectOutputStream(boolean ssl) {
     if (ssl) return sslOut;
     return unencryptedOut;
   }
@@ -152,22 +152,22 @@ public class RemoteCore implements Core, RemoteNode {
       }
 
       sslOut =
-          new ObjectOutputStream(new BufferedOutputStream(sslSocket
+          new DataOutputStream(new BufferedOutputStream(sslSocket
               .getOutputStream()));
       sslOut.flush();
       sslIn =
-          new ObjectInputStream(new BufferedInputStream(sslSocket
+          new DataInputStream(new BufferedInputStream(sslSocket
               .getInputStream()));
 
       sslConn = sslSocket;
     } else {
-      ObjectOutputStream out =
-          new ObjectOutputStream(new BufferedOutputStream(socket
+      DataOutputStream out =
+          new DataOutputStream(new BufferedOutputStream(socket
               .getOutputStream()));
       if (withSSL) out.writeUTF(client.javaPrincipal.getName());
       out.flush();
-      ObjectInputStream in =
-          new ObjectInputStream(
+      DataInputStream in =
+          new DataInputStream(
               new BufferedInputStream(socket.getInputStream()));
 
       if (withSSL) {
