@@ -56,8 +56,16 @@ public interface Object {
    */
   void $forceRenumber(long onum);
   
-  /** create a Statistics object to determine promises for this Object. */
+  /**
+   * Creates a Statistics object to determine promises for this Object.
+   */
   Statistics createStatistics();
+
+  /**
+   * A dummy method. This is a hack for working around reachability problems in
+   * generated code.
+   */
+  void _npe(final Label lbl) throws NullPointerException;
 
   /**
    * $Proxy objects behave like regular objects by delegating to $Impl objects,
@@ -207,6 +215,9 @@ public interface Object {
     
     public Statistics createStatistics() {
       return fetch().createStatistics();
+    }
+    
+    public final void _npe(final Label lbl) {
     }
   }
 
@@ -640,6 +651,9 @@ public interface Object {
      */
     public final void $forceRenumber(long onum) {
       this.$ref.onum = onum;
+    }
+    
+    public final void _npe(final Label lbl) {
     }
   }
 

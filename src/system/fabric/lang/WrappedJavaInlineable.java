@@ -161,4 +161,6 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
     return DefaultStatistics.instance;
   }
   
+  public final void _npe(final Label lbl) {
+  }
 }
