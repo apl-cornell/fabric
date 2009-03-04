@@ -14,6 +14,7 @@ import fabric.client.transaction.ReadMapEntry;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.*;
 import fabric.common.InternalError;
+import fabric.core.InProcessCore;
 
 /**
  * All Fabric objects implement this interface.
@@ -108,14 +109,20 @@ public interface Object {
             // Next, check the current transaction's create map.
             TransactionManager tm = TransactionManager.getInstance();
             RemoteClient client = tm.getFetchClient(this);
-            RemoteClient localClient = Client.getClient().getLocalClient();
-            if (client != null && client != localClient) {
+            if (client != null) {
+              // Sanity check.
+              RemoteClient localClient = Client.getClient().getLocalClient();
+              if (client == localClient) {
+                throw new InternalError();
+              }
+              
               // Fetch from the client.
               result = client.readObject(tm.getCurrentTid(), ref.core, ref.onum);
               ref.core.cache(result);
-            } else if (client != localClient && this instanceof SecretKeyObject) {
+            } else if (this instanceof SecretKeyObject
+                || ref.core instanceof InProcessCore) {
               // Fetch from the core. Bypass dissemination when reading key
-              // objects.
+              // objects and when reading from an in-process core.
               result = ref.core.readObjectNoDissem(ref.onum);
             } else {
               // Fetch from the core.
