@@ -160,7 +160,4 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   public Statistics createStatistics() {
     return DefaultStatistics.instance;
   }
-  
-  public final void _npe(final Label lbl) {
-  }
 }

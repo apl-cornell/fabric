@@ -62,12 +62,6 @@ public interface Object {
   Statistics createStatistics();
 
   /**
-   * A dummy method. This is a hack for working around reachability problems in
-   * generated code.
-   */
-  void _npe(final Label lbl) throws NullPointerException;
-
-  /**
    * $Proxy objects behave like regular objects by delegating to $Impl objects,
    * pointed to by a soft reference. This class abstracts away the code for
    * maintaining that soft reference.
@@ -217,7 +211,11 @@ public interface Object {
       return fetch().createStatistics();
     }
     
-    public final void _npe(final Label lbl) {
+    /**
+     * A dummy method. This is a hack for working around reachability problems in
+     * generated code.
+     */
+    public static void _npe(final Label lbl) throws NullPointerException {
     }
   }
 
@@ -653,7 +651,12 @@ public interface Object {
       this.$ref.onum = onum;
     }
     
-    public final void _npe(final Label lbl) {
+
+    /**
+     * A dummy method. This is a hack for working around reachability problems in
+     * generated code.
+     */
+    public static void _npe(final Label lbl) throws NullPointerException {
     }
   }
 
