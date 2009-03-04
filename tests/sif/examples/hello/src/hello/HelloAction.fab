@@ -12,74 +12,75 @@ import java.io.*;
 /**
  * HelloAction is a session-specific action.
  */
-public class HelloAction extends Action[HelloServEP] {
-    public HelloAction{this}(Main{this} m) throws ServletException {
-        super();
-        this.nameInp = new Input[HelloServEP](m, new label {});
-        this.fileInp = new Input[HelloServEP](m, new label {});
-        initFields(m);
-    }
+public class HelloAction[label T] extends Action[HelloServEP] {
+	public HelloAction{T}(Main{T} m) throws ServletException {
+		super();
+		this.nameInp = new Input[HelloServEP, T](m, new label {});
+		this.fileInp = new Input[HelloServEP, T](m, new label {});
+		initFields(m);
+	}
 
-    final Input[HelloServEP]{this} nameInp;
-    final Input[HelloServEP]{this} fileInp;
+	final Input[HelloServEP, T]{T} nameInp;
+	final Input[HelloServEP, T]{T} fileInp;
 
-    public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
-    where caller(req.session),
-          {*lbl} <= {*:req.session} {
-        Servlet[HelloServEP] s = getServlet();       
-        if (s == null || req == null) return;
+	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
+	where caller(req.session),
+	{*lbl} <= {*:req.session} {
+		Servlet[HelloServEP] s = getServlet();       
+		if (s == null || req == null) return;
+		if (T equiv lbl) {
 
-//        Page[{*:req.session}, lbl] ret = null;
+			NodeList[this.nameInp.inputLbl, lbl] content = null;    
 
-        NodeList[this.nameInp.inputLbl, lbl] content = null;    
-        
-        // extract the name, if it exists.        
-        try {
-            if (lbl <= this.nameInp.inputLbl && this.nameInp.inputLbl equiv this.fileInp.inputLbl) {
-                if (this.nameInp.inputLbl <= new label {*:req.session} && this.fileInp.inputLbl <= new label {*:req.session}) {
-                    if (new label {*!:req.session} <= this.nameInp.inputLbl && new label {*!:req.session} <= this.fileInp.inputLbl) {
-                    String name = req.getParam(nameInp);
-                    String fileContents = "";
+			// extract the name, if it exists.        
+			try {
+				if (lbl <= this.nameInp.inputLbl && this.nameInp.inputLbl equiv this.fileInp.inputLbl) {
+					if (this.nameInp.inputLbl <= new label {*:req.session} && this.fileInp.inputLbl <= new label {*:req.session}) {
+						if (new label {*!:req.session} <= this.nameInp.inputLbl && new label {*!:req.session} <= this.fileInp.inputLbl) {
+							String name = req.getParam(nameInp);
+							String fileContents = "";
 
-                    try {
-                        InputStream[{*this.fileInp.inputLbl; this; *!:req.session}] file = req.getFile(fileInp);
-                        BufferedReader[{*this.fileInp.inputLbl; this; *!:req.session}] br = new BufferedReader[{*this.fileInp.inputLbl; this; *!:req.session}](new InputStreamReader[{*this.fileInp.inputLbl; this; *!:req.session}](file));
-                        while (br.ready()) {
-                            fileContents += br.readLine() + "\n";
-                        }
-                    }
-                    catch (IOException ignore) { }
-                    catch (NullPointerException ignore) { }
-                    
-                    if (name == null || name.length() == 0) name = "world";
-                    
-                    NodeList[this.nameInp.inputLbl, lbl] formEntries = 
-                        new NodeList[this.nameInp.inputLbl, lbl](lbl, lbl, new Text[lbl, lbl]("What is your good name? "), this.nameInp.inputLbl, lbl, new Br[this.nameInp.inputLbl, lbl](),
-                        		nameInp.inputLbl, lbl, new TextInput[HelloServEP, nameInp.inputLbl, lbl](nameInp, 40, name), this.nameInp.inputLbl, lbl, new Br[this.nameInp.inputLbl, lbl](),
-                        		lbl, lbl, new Text[lbl, lbl]("Choose a (small) text file to upload and display: "), this.nameInp.inputLbl, lbl, new Br[this.nameInp.inputLbl, lbl](),
-                        		fileInp.inputLbl, lbl, new FileChooser[HelloServEP, fileInp.inputLbl, lbl](fileInp, 40), this.nameInp.inputLbl, lbl, new Br[this.nameInp.inputLbl, lbl](),
-                        		lbl, lbl, new SubmitButton[HelloServEP, lbl, lbl](s, lbl, "Submit"));
-                    Node[this.nameInp.inputLbl, lbl] form = s.createForm(this.nameInp.inputLbl, lbl, this, this.nameInp.inputLbl, lbl, formEntries);
-                    
-                    content =
-                        new NodeList[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl,
-                                new Paragraph[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl,
-                                        new NodeList[this.nameInp.inputLbl, lbl](lbl, lbl,
-                                                new Text[lbl, lbl]("Hello "),
-                                                this.nameInp.inputLbl, lbl, new Text[this.nameInp.inputLbl, lbl](name),
-                                                lbl, lbl, new Text[lbl, lbl](" !!!"))),
-                                                lbl, lbl, new HRule[lbl, lbl](),
-                                                this.nameInp.inputLbl, lbl, new Paragraph[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl, form),
-                                                lbl, lbl, new HRule[lbl, lbl](),
-                                                lbl, lbl, new Paragraph[lbl, lbl]("File contents: "),
-                                                this.nameInp.inputLbl, lbl, new Paragraph[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl, new Pre[this.nameInp.inputLbl, lbl](fileContents)));
-                    s.createPage(req, "Hello webapp", this.nameInp.inputLbl, lbl, content);
-                }
-            }
-            }
-        }
-        catch (NullPointerException impossible) { }
-        
-    }
+							try {
+								InputStream file = req.getFile(fileInp);
+								BufferedReader br = 
+									new BufferedReader(new InputStreamReader(file));
+								while (br.ready()) {
+									fileContents += br.readLine() + "\n";
+								}
+							}
+							catch (IOException ignore) { }
+							catch (NullPointerException ignore) { }
+
+							if (name == null || name.length() == 0) name = "world";
+
+							NodeList[this.nameInp.inputLbl, lbl] formEntries = 
+								new NodeList(lbl, lbl, new Text("What is your good name? "), this.nameInp.inputLbl, lbl, new Br(),
+										nameInp.inputLbl, lbl, new TextInput(nameInp, 40, name), this.nameInp.inputLbl, lbl, new Br[this.nameInp.inputLbl, lbl](),
+										lbl, lbl, new Text[lbl, lbl]("Choose a (small) text file to upload and display: "), this.nameInp.inputLbl, lbl, new Br[this.nameInp.inputLbl, lbl](),
+										fileInp.inputLbl, lbl, new FileChooser(fileInp, 40), this.nameInp.inputLbl, lbl, new Br(),
+										lbl, lbl, new SubmitButton[HelloServEP, lbl, lbl](s, lbl, "Submit"));
+							Node[this.nameInp.inputLbl, lbl] form = s.createForm(this.nameInp.inputLbl, lbl, this, this.nameInp.inputLbl, lbl, formEntries);
+
+							content =
+								new NodeList[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl,
+										new Paragraph[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl,
+												new NodeList[this.nameInp.inputLbl, lbl](lbl, lbl,
+														new Text[lbl, lbl]("Hello "),
+														this.nameInp.inputLbl, lbl, new Text[this.nameInp.inputLbl, lbl](name),
+														lbl, lbl, new Text[lbl, lbl](" !!!"))),
+														lbl, lbl, new HRule[lbl, lbl](),
+														this.nameInp.inputLbl, lbl, new Paragraph[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl, form),
+														lbl, lbl, new HRule[lbl, lbl](),
+														lbl, lbl, new Paragraph[lbl, lbl]("File contents: "),
+														this.nameInp.inputLbl, lbl, new Paragraph[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl, new Pre[this.nameInp.inputLbl, lbl](fileContents)));
+							s.createPage(req, "Hello webapp", this.nameInp.inputLbl, lbl, content);
+						}
+					}
+				}
+			}
+			catch (NullPointerException impossible) { }
+		}
+
+	}
 }
 

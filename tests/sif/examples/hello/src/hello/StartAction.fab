@@ -12,24 +12,23 @@ import sif.servlet.Servlet;
  * HelloAction.
  */
 public class StartAction extends Action[HelloServEP] {
-    public StartAction(Main{this} m) throws ServletException {
-        super();
-        initFields("greet", m);
-    }
-    
-    public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
-    throws (ServletException{*:req.session;req.session:})
-    where caller(req.session),
-          {*lbl} <= {*:req.session} 
-    {
-	// create a session-specific HelloAction, and hand off control...
-	try {
-	    HelloAction ha = new HelloAction((Main)this.getServlet());
-	
-	    ha.invoke(lbl, req);
+	public StartAction(Main m) throws ServletException {
+		super();
+		initFields("greet", m);
 	}
-	catch (ClassCastException impossible) { }
-	catch (NullPointerException impossible) { }
-    }
+
+	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
+	throws (ServletException{*:req.session;req.session:})
+	where caller(req.session),
+	{*lbl} <= {*:req.session} 
+	{
+		// create a session-specific HelloAction, and hand off control...
+		try {
+			HelloAction ha = new HelloAction[lbl]((Main)this.getServlet());
+			ha.invoke(lbl, req);
+		}
+		catch (ClassCastException impossible) { }
+		catch (NullPointerException impossible) { }
+	}
 }
 

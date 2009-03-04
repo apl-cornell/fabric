@@ -112,10 +112,10 @@
             <arg value="-filsigcp"/>
             <arg value="${fabric.home}/sig-classes/fabil"/>
         	<!--        	
-        		<arg value="-report"/> <arg value="solver=3"/>
         		<arg value="-print"/> <arg value="RemoteCallWrapperAdder"/>
 	      		<arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>
         		<arg value="-debugpositions"/>
+        		<arg value="-report"/> <arg value="frontend=1"/>
         	-->        		
             <srcfile />
             <fileset dir="${basedir}" includes="fab-src/**/*.fab" />
@@ -141,6 +141,9 @@
             <arg value="${fabric.home}/bin/fabc" />
         	  <arg value="-cp"				 /> <arg value="${fabric.home}/tests/jif/classes"/>
         	  <arg value="-sig"/>
+        	<!--        	
+        		<arg value="-report"/> <arg value="frontend=1"/>
+        	-->        		
             <arg value="-d"          /> <arg value="sig-classes" />
             <arg value="-sourcepath" /> <arg value="sig-src" />
             <srcfile />
