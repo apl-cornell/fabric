@@ -27,6 +27,14 @@ public class PrepareTransactionMessage extends
     public final String message;
 
     /**
+     * If the remote node is a core, this will indicate whether the client
+     * should send a commit/abort message to the core's client to commit/abort a
+     * sub-transaction. (This happens when Statistics objects are created during
+     * transaction prepare.)
+     */
+    public final boolean subTransactionCreated;
+
+    /**
      * A set of oids involved in the transaction that were out of date.
      */
     public final Set<Long> versionConflicts;
@@ -35,7 +43,12 @@ public class PrepareTransactionMessage extends
      * Creates a Response indicating a successful prepare.
      */
     public Response() {
+      this(false);
+    }
+    
+    public Response(boolean subTransactionCreated) {
       this.success = true;
+      this.subTransactionCreated = subTransactionCreated;
       this.message = null;
       this.versionConflicts = null;
     }
@@ -52,6 +65,7 @@ public class PrepareTransactionMessage extends
      */
     public Response(String message, Set<Long> versionConflicts) {
       this.success = false;
+      this.subTransactionCreated = false;
       this.message = message;
       this.versionConflicts = versionConflicts;
     }
@@ -66,6 +80,7 @@ public class PrepareTransactionMessage extends
      */
     Response(RemoteNode node, DataInput in) throws IOException {
       this.success = in.readBoolean();
+      this.subTransactionCreated = in.readBoolean();
       if (in.readBoolean())
         this.message = in.readUTF();
       else this.message = null;
@@ -82,6 +97,7 @@ public class PrepareTransactionMessage extends
      */
     public void write(DataOutput out) throws IOException {
       out.writeBoolean(success);
+      out.writeBoolean(subTransactionCreated);
       if (message != null) {
         out.writeBoolean(true);
         out.writeUTF(message);

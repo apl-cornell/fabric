@@ -364,6 +364,7 @@ public final class TransactionManager {
     }
 
     // Go through each core and send prepare messages in parallel.
+    final Client client = Client.getClient();
     for (Iterator<Core> coreIt = cores.iterator(); coreIt.hasNext();) {
       final Core core = coreIt.next();
       Runnable runnable = new Runnable() {
@@ -372,7 +373,16 @@ public final class TransactionManager {
             Collection<$Impl> creates = current.getCreatesForCore(core);
             LongKeyMap<Integer> reads = current.getReadsForCore(core);
             Collection<$Impl> writes = current.getWritesForCore(core);
-            core.prepareTransaction(current.tid.topTid, commitTime, creates, reads, writes);
+            boolean subTransactionCreated =
+                core.prepareTransaction(current.tid.topTid, commitTime,
+                    creates, reads, writes);
+            
+            if (subTransactionCreated) {
+              RemoteClient coreClient = client.getClient(core.name());
+              synchronized (current.clientsCalled) {
+                current.clientsCalled.add(coreClient);
+              }
+            }
           } catch (TransactionPrepareFailedException e) {
             failures.put((RemoteNode) core, e);
           } catch (UnreachableNodeException e) {

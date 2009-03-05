@@ -267,10 +267,13 @@ public final class Client {
     
     if (name == null) throw new NullPointerException();
     
-    RemoteClient result = remoteClients.get(name);
-    if (result == null) {
-      result = new RemoteClient(name);
-      remoteClients.put(name, result);
+    RemoteClient result;
+    synchronized (remoteClients) {
+      result = remoteClients.get(name);
+      if (result == null) {
+        result = new RemoteClient(name);
+        remoteClients.put(name, result);
+      }
     }
     return result;
   }

@@ -20,10 +20,14 @@ public interface Core {
 
   /**
    * Notifies the core that the transaction is entering the Prepare phase.
+   * 
+   * @return whether a subtransaction was created on the core as a result of the
+   *         prepare.
    */
-  void prepareTransaction(long tid, long commitTime, Collection<$Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<$Impl> writes)
-      throws UnreachableNodeException, TransactionPrepareFailedException;
+  boolean prepareTransaction(long tid, long commitTime,
+      Collection<$Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<$Impl> writes) throws UnreachableNodeException,
+      TransactionPrepareFailedException;
 
   /**
    * Returns the requested $Impl object. If the object is not resident, it is

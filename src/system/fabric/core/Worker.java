@@ -403,7 +403,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     surrogateManager.createSurrogates(req);
 
     try {
-      transactionManager.prepare(client, req);
+      boolean subTransactionCreated = transactionManager.prepare(client, req);
 
       logger.fine("Transaction " + req.tid + " prepared");
       // Store the size of the transaction for debugging at the end of the
@@ -412,7 +412,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       pendingLogs.put(req.tid, new LogRecord(msg.serializedCreates.size(),
           msg.serializedWrites.size()));
 
-      return new PrepareTransactionMessage.Response();
+      return new PrepareTransactionMessage.Response(subTransactionCreated);
     } catch (TransactionPrepareFailedException e) {
       return new PrepareTransactionMessage.Response(e.getMessage(),
           e.versionConflicts);

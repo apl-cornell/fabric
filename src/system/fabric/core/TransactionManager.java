@@ -9,11 +9,7 @@ import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.TransactionRegistry;
-import fabric.common.AccessException;
-import fabric.common.AuthorizationUtil;
-import fabric.common.ObjectGroup;
-import fabric.common.SerializedObject;
-import fabric.common.TransactionID;
+import fabric.common.*;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -100,13 +96,16 @@ public class TransactionManager {
    *          The set of objects to be updated in this transaction
    * @param reads
    *          The set of objects that the transaction read
+   * @return whether a subtransaction was created for making Statistics objects.
    * @throws TransactionPrepareFailedException
    *           If the transaction would cause a conflict or if the client is
    *           insufficiently privileged to execute the transaction.
    */
-  public void prepare(NodePrincipal client, PrepareRequest req)
+  public boolean prepare(NodePrincipal client, PrepareRequest req)
       throws TransactionPrepareFailedException {
     final long tid = req.tid;
+    boolean result = false;
+    
     synchronized (store) {
       try {
         store.beginTransaction(tid, client);
@@ -170,7 +169,9 @@ public class TransactionManager {
         }
 
         // Update promise statistics
-        ensureStatistics(onum, req.tid).commitWrote();
+        Pair<Statistics, Boolean> pair = ensureStatistics(onum, req.tid);
+        pair.first.commitWrote();
+        result |= pair.second;
 
         // Update the version number on the prepared copy of the object.
         o.setVersion(coreVersion + 1);
@@ -220,7 +221,9 @@ public class TransactionManager {
           }
 
           // inform the object statistics of the read
-          ensureStatistics(onum, req.tid).commitRead();
+          Pair<Statistics, Boolean> pair = ensureStatistics(onum, req.tid);
+          pair.first.commitRead();
+          result |= pair.second;
 
           // Register the read with the store.
           store.registerRead(tid, client, onum);
@@ -233,6 +236,8 @@ public class TransactionManager {
 
       readHistory.record(req);
       store.finishPrepare(tid, client);
+      
+      return result;
     } catch (TransactionPrepareFailedException e) {
       synchronized (store) {
         store.abortPrepare(tid, client);
@@ -438,12 +443,14 @@ public class TransactionManager {
 
   /**
    * Return the statistics object associated with onum, creating one if it
-   * doesn't exist already.
+   * doesn't exist already. Also returns a boolean indicating whether the
+   * Statistics object is freshly created.
    */
-  private Statistics ensureStatistics(long onum, long tnum) {
+  private Pair<Statistics, Boolean> ensureStatistics(long onum, long tnum) {
     synchronized (objectStats) {
       Statistics stats = getStatistics(onum);
-      if (stats == null) {
+      boolean fresh = stats == null;
+      if (fresh) {
         // set up to run as a sub-transaction of the current transaction.
         TransactionID tid = new TransactionID(tnum);
         Log log = TransactionRegistry.getOrCreateInnermostLog(tid);
@@ -460,7 +467,7 @@ public class TransactionManager {
         });
         objectStats.put(onum, stats);
       }
-      return stats;
+      return new Pair<Statistics, Boolean>(stats, fresh);
     }
   }
 
