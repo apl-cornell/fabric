@@ -1,4 +1,4 @@
-package fabric.common;
+package fabric.common.exceptions;
 
 public class FetchException extends FabricException {
   public FetchException() {

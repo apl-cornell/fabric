@@ -13,8 +13,8 @@ import rice.p2p.commonapi.rawserialization.RawMessage;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.common.BadSignatureException;
-import fabric.common.Pair;
+import fabric.common.exceptions.BadSignatureException;
+import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 
 /**

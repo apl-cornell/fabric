@@ -8,8 +8,8 @@ import java.util.List;
 
 import fabric.client.Core;
 import fabric.client.transaction.TransactionManager;
-import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
+import fabric.common.util.Pair;
 import fabric.lang.Object;
 import jif.lang.Label;
 

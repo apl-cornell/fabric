@@ -6,6 +6,8 @@ import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import fabric.common.exceptions.InternalError;
+
 /**
  * This is the clearinghouse for all things crypto.
  */

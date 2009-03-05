@@ -4,9 +4,9 @@ import java.security.PrivateKey;
 
 import fabric.client.Core;
 import fabric.common.AuthorizationUtil;
-import fabric.common.InternalError;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.exceptions.InternalError;
 import fabric.dissemination.Glob;
 import fabric.lang.NodePrincipal;
 

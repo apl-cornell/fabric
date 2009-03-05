@@ -1,4 +1,4 @@
-package fabric.common;
+package fabric.common.util;
 
 public class MutableInteger {
   public int value;

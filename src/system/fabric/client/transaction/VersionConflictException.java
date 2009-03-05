@@ -1,6 +1,6 @@
 package fabric.client.transaction;
 
-import fabric.common.FabricRuntimeException;
+import fabric.common.exceptions.FabricRuntimeException;
 import fabric.lang.Object.$Impl;
 import fabric.lang.Object.$Proxy;
 

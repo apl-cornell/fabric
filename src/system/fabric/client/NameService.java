@@ -1,8 +1,8 @@
 package fabric.client;
 
 import fabric.client.remote.RemoteClient;
-import fabric.common.InternalError;
-import fabric.common.Pair;
+import fabric.common.exceptions.InternalError;
+import fabric.common.util.Pair;
 
 import java.net.*;
 import java.util.*;

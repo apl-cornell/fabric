@@ -2,8 +2,8 @@ package fabric.client;
 
 import java.util.Collection;
 
-import fabric.common.FetchException;
 import fabric.common.TransactionID;
+import fabric.common.exceptions.FetchException;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object.$Impl;
 

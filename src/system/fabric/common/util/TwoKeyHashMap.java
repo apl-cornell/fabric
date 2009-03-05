@@ -1,9 +1,8 @@
-package fabric.common;
+package fabric.common.util;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import fabric.common.util.LongKeyHashMap;
 
 public class TwoKeyHashMap {
   public static <T, U, V> boolean containsKey(Map<T, HashMap<U,V>> map, T t, U u) {

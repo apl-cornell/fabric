@@ -17,9 +17,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import fabric.client.Client;
-import fabric.common.InternalError;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
+import fabric.common.exceptions.InternalError;
 import fabric.core.Options.CoreKeyStores;
 import fabric.core.store.ObjectStore;
 

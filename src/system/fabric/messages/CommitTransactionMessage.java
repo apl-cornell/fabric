@@ -7,9 +7,9 @@ import java.io.IOException;
 import fabric.client.RemoteNode;
 import fabric.client.UnreachableNodeException;
 import fabric.client.remote.Worker;
-import fabric.common.FabricException;
-import fabric.common.InternalError;
-import fabric.common.ProtocolError;
+import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.ProtocolError;
 
 public class CommitTransactionMessage extends
     Message<RemoteNode, CommitTransactionMessage.Response> {

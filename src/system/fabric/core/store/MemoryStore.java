@@ -6,8 +6,10 @@ import java.io.ObjectOutputStream;
 import java.util.logging.Logger;
 
 import fabric.common.*;
+import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
 import fabric.lang.NodePrincipal;
 
 /**

@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.security.Principal;
 
-import fabric.common.NoSuchNodeError;
+import fabric.common.exceptions.NoSuchNodeError;
 
 /**
  * Abstracts remote cores and remote clients.

@@ -1,6 +1,6 @@
 package fabric.dissemination.pastry;
 
-import fabric.common.FetchException;
+import fabric.common.exceptions.FetchException;
 
 /**
  * Indicates that a fetch from the dissemination network took too long.

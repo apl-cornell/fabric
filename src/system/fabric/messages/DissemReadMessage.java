@@ -5,8 +5,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.client.RemoteCore;
-import fabric.common.*;
-import fabric.common.InternalError;
+import fabric.common.exceptions.*;
+import fabric.common.exceptions.InternalError;
 import fabric.core.Worker;
 import fabric.dissemination.Glob;
 

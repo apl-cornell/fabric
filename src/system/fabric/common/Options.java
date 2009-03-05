@@ -3,6 +3,8 @@ package fabric.common;
 import java.io.PrintStream;
 import java.util.StringTokenizer;
 
+import fabric.common.exceptions.UsageError;
+
 public abstract class Options {
   protected Options() {
     setDefaultValues();

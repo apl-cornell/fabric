@@ -13,7 +13,9 @@ import fabric.client.transaction.Log;
 import fabric.client.transaction.ReadMapEntry;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.*;
-import fabric.common.InternalError;
+import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.InternalError;
+import fabric.common.util.Pair;
 import fabric.core.InProcessCore;
 
 /**

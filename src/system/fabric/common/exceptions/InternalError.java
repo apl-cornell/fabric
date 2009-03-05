@@ -1,4 +1,4 @@
-package fabric.common;
+package fabric.common.exceptions;
 
 public class InternalError extends Error {
   public InternalError() {

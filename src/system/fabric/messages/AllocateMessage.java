@@ -5,10 +5,10 @@ import java.io.*;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.client.UnreachableNodeException;
-import fabric.common.AccessException;
-import fabric.common.FabricException;
-import fabric.common.InternalError;
-import fabric.common.ProtocolError;
+import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.ProtocolError;
 import fabric.core.Worker;
 
 /**

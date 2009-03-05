@@ -9,7 +9,7 @@ import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
 import fabric.client.Client;
-import fabric.common.BadSignatureException;
+import fabric.common.exceptions.BadSignatureException;
 import fabric.dissemination.Glob;
 
 /**

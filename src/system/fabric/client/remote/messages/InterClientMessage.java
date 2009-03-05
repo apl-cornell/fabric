@@ -9,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.remote.RemoteClient;
-import fabric.common.InternalError;
+import fabric.common.exceptions.InternalError;
 import fabric.lang.Object.$Proxy;
 import fabric.messages.Message;
 import fabric.messages.Message.Response;

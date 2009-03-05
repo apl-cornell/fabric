@@ -15,7 +15,10 @@ import javax.net.ssl.SSLSocket;
 import javax.security.auth.x500.X500Principal;
 
 import fabric.common.*;
-import fabric.common.InternalError;
+import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.NoSuchNodeError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;

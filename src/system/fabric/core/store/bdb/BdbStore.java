@@ -9,7 +9,8 @@ import java.util.logging.Logger;
 import com.sleepycat.je.*;
 
 import fabric.common.*;
-import fabric.common.InternalError;
+import fabric.common.exceptions.InternalError;
+import fabric.common.util.OidKeyHashMap;
 import fabric.core.store.ObjectStore;
 import fabric.lang.NodePrincipal;
 

@@ -3,9 +3,9 @@ package fabric.dissemination.pastry;
 import java.io.IOException;
 
 import fabric.client.RemoteCore;
-import fabric.common.FetchException;
-import fabric.common.InternalError;
 import fabric.common.ObjectGroup;
+import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.InternalError;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 

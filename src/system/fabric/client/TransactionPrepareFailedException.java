@@ -2,7 +2,7 @@ package fabric.client;
 
 import java.util.*;
 
-import fabric.common.FabricException;
+import fabric.common.exceptions.FabricException;
 
 public class TransactionPrepareFailedException extends FabricException {
   /**

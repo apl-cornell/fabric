@@ -8,6 +8,8 @@ import java.util.List;
 
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.common.exceptions.InternalError;
+import fabric.common.util.Pair;
 import fabric.lang.Object.$Impl;
 
 /**

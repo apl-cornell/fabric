@@ -11,8 +11,8 @@ import java.util.Set;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.common.FetchException;
-import fabric.common.Pair;
+import fabric.common.exceptions.FetchException;
+import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 
 /**

@@ -1,7 +1,7 @@
 package fabric.client;
 
-import fabric.common.FetchException;
 import fabric.common.ObjectGroup;
+import fabric.common.exceptions.FetchException;
 import fabric.dissemination.FetchManager;
 
 /**

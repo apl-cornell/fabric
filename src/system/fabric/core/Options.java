@@ -12,9 +12,9 @@ import java.security.cert.CertificateException;
 import java.util.Map;
 import java.util.TreeMap;
 
-import fabric.common.InternalError;
-import fabric.common.TerminationException;
-import fabric.common.UsageError;
+import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.TerminationException;
+import fabric.common.exceptions.UsageError;
 
 public class Options extends fabric.common.Options {
 

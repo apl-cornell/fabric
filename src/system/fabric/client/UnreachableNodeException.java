@@ -1,6 +1,6 @@
 package fabric.client;
 
-import fabric.common.FabricRuntimeException;
+import fabric.common.exceptions.FabricRuntimeException;
 
 /**
  * An <code>UnreachableNodeException</code> is used to indicate that an attempt

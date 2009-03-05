@@ -1,4 +1,4 @@
-package fabric.common;
+package fabric.common.exceptions;
 
 import fabric.client.Core;
 

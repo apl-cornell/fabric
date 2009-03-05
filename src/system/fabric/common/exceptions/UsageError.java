@@ -1,4 +1,4 @@
-package fabric.common;
+package fabric.common.exceptions;
 
 /**
  * An exception used to indicate an command-line usage error.

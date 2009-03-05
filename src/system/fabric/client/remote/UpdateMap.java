@@ -17,8 +17,10 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.LocalCore;
 import fabric.common.*;
-import fabric.common.InternalError;
+import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Pair;
 import fabric.lang.SecretKeyObject;
 import fabric.lang.Object.$Proxy;
 

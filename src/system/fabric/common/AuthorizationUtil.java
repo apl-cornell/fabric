@@ -7,6 +7,7 @@ import jif.lang.Label;
 import jif.lang.LabelUtil;
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.common.util.OidKeyHashMap;
 import fabric.lang.NodePrincipal;
 
 public class AuthorizationUtil {

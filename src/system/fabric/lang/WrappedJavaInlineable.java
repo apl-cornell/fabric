@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import fabric.client.Core;
-import fabric.common.InternalError;
+import fabric.common.exceptions.InternalError;
 import fabric.lang.arrays.ObjectArray;
 import jif.lang.Label;
 

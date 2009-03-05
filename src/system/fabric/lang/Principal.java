@@ -14,8 +14,8 @@ import fabric.client.Core;
 import fabric.client.UnreachableNodeException;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.Crypto;
-import fabric.common.Pair;
 import fabric.common.RefTypeEnum;
+import fabric.common.util.Pair;
 
 /**
  * This is implemented in Java so that the constructor can provide default

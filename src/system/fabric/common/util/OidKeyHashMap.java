@@ -1,4 +1,4 @@
-package fabric.common;
+package fabric.common.util;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Set;
 
 import fabric.client.Core;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
 import fabric.lang.Object;
 
 /**

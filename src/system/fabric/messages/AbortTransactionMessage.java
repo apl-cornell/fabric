@@ -6,7 +6,10 @@ import java.io.IOException;
 
 import fabric.client.RemoteNode;
 import fabric.common.*;
-import fabric.common.InternalError;
+import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.ProtocolError;
 
 public class AbortTransactionMessage extends
     Message<RemoteNode, AbortTransactionMessage.Response> {

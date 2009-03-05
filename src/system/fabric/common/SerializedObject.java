@@ -5,6 +5,9 @@ import java.lang.reflect.Constructor;
 import java.util.*;
 
 import fabric.client.Core;
+import fabric.common.exceptions.InternalError;
+import fabric.common.util.ComparablePair;
+import fabric.common.util.Pair;
 import fabric.lang.Object.$Impl;
 import jif.lang.Label;
 

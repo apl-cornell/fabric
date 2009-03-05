@@ -2,10 +2,10 @@ package fabric.core;
 
 import java.util.*;
 
-import fabric.common.ComparablePair;
 import fabric.common.RefTypeEnum;
 import fabric.common.SerializedObject;
 import fabric.common.Util;
+import fabric.common.util.ComparablePair;
 
 /**
  * This is a simple surrogate policy. It keeps no state between requests, and

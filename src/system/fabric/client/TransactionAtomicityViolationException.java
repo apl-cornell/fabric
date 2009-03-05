@@ -3,7 +3,7 @@ package fabric.client;
 import java.util.Collections;
 import java.util.List;
 
-import fabric.common.InternalError;
+import fabric.common.exceptions.InternalError;
 
 public class TransactionAtomicityViolationException extends InternalError {
   public final List<RemoteNode> failed;

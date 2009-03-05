@@ -2,8 +2,8 @@ package fabric.client;
 
 import java.io.PrintStream;
 
-import fabric.common.TerminationException;
-import fabric.common.UsageError;
+import fabric.common.exceptions.TerminationException;
+import fabric.common.exceptions.UsageError;
 
 public class Options extends fabric.common.Options {
   // The application to run and its parameters.

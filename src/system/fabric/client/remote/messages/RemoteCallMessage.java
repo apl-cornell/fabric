@@ -5,9 +5,9 @@ import java.lang.reflect.Method;
 
 import fabric.client.UnreachableNodeException;
 import fabric.client.remote.*;
-import fabric.common.FabricException;
-import fabric.common.InternalError;
 import fabric.common.TransactionID;
+import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.InternalError;
 import fabric.lang.NodePrincipal;
 import fabric.lang.Object.$Proxy;
 import fabric.messages.Message;

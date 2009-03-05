@@ -15,7 +15,7 @@ import jif.lang.*;
 import fabric.client.Core;
 import fabric.client.UnreachableNodeException;
 import fabric.common.Crypto;
-import fabric.common.InternalError;
+import fabric.common.exceptions.InternalError;
 import fabric.util.Iterator;
 
 /**

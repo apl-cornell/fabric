@@ -6,12 +6,12 @@ import fabric.client.Core;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.UpdateMap;
 import fabric.client.transaction.LockList.Node;
-import fabric.common.OidKeyHashMap;
-import fabric.common.Pair;
 import fabric.common.TransactionID;
 import fabric.common.Util;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Pair;
 import fabric.lang.Object.$Impl;
 
 /**

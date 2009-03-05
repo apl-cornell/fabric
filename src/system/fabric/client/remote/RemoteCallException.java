@@ -1,6 +1,6 @@
 package fabric.client.remote;
 
-import fabric.common.FabricException;
+import fabric.common.exceptions.FabricException;
 
 /**
  * Thrown to indicate a remote call had an exceptional result.

@@ -1,4 +1,4 @@
-package fabric.common;
+package fabric.common.exceptions;
 
 /**
  * A <code>FabricException</code> represents an error that may be communicated

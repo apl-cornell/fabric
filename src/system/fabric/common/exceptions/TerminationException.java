@@ -1,4 +1,4 @@
-package fabric.common;
+package fabric.common.exceptions;
 
 /**
  * This exception signals termination of the Fabric node. It should be used

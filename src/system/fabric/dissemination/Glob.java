@@ -10,7 +10,8 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.Client.Code;
 import fabric.common.*;
-import fabric.common.InternalError;
+import fabric.common.exceptions.BadSignatureException;
+import fabric.common.exceptions.InternalError;
 import fabric.lang.SecretKeyObject;
 
 /**

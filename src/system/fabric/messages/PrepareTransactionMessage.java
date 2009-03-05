@@ -7,10 +7,10 @@ import java.util.*;
 
 import fabric.client.RemoteNode;
 import fabric.client.UnreachableNodeException;
-import fabric.common.FabricException;
-import fabric.common.InternalError;
-import fabric.common.ProtocolError;
 import fabric.common.SerializedObject;
+import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object.$Impl;

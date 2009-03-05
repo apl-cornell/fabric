@@ -1,6 +1,6 @@
 package fabric.client;
 
-import fabric.common.FabricException;
+import fabric.common.exceptions.FabricException;
 
 public class TransactionCommitFailedException extends FabricException {
   public TransactionCommitFailedException(String message) {

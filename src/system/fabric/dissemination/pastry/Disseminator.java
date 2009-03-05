@@ -19,7 +19,7 @@ import rice.pastry.routing.RoutingTable;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.common.Pair;
+import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.messages.*;
 

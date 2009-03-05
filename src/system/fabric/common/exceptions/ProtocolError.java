@@ -1,4 +1,5 @@
-package fabric.common;
+package fabric.common.exceptions;
+
 
 
 /**

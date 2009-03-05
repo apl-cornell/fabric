@@ -8,9 +8,9 @@ import java.util.logging.Logger;
 
 
 import fabric.common.Resources;
-import fabric.common.TerminationException;
-import fabric.common.UsageError;
 import fabric.common.Version;
+import fabric.common.exceptions.TerminationException;
+import fabric.common.exceptions.UsageError;
 
 // TODO: load resources
 
