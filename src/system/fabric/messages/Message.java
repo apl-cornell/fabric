@@ -5,6 +5,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.security.Principal;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import fabric.client.Client;
 import fabric.client.RemoteNode;
@@ -22,6 +24,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    * The <code>MessageType</code> corresponding to this class.
    */
   protected final MessageType messageType;
+  protected final static Logger logger = Logger.getLogger("fabric.messages");
 
   protected Message(MessageType messageType) {
     this.messageType = messageType;
@@ -86,6 +89,9 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
           // Connected to a system that doesn't host the node we're interested
           // in.
           // Increment loop counter variables.
+          
+          logger.log(Level.WARNING, "Failed to connect", e);
+          
           hostIdx++;
           if (hostIdx == numHosts) {
             hostIdx = 0;
@@ -94,6 +100,9 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
           continue;
         } catch (IOException e) {
           // Retry.
+          
+          logger.log(Level.WARNING, "Failed to connect", e);
+          
           if (hosts == null) {
             // Attempt to reuse an existing connection failed. Just restart the
             // loop.
