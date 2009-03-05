@@ -10,7 +10,6 @@ import fabric.client.TransactionPrepareFailedException;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
-import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.*;
 import fabric.core.store.GroupContainer;
@@ -446,24 +445,28 @@ public class TransactionManager {
    * Statistics object is freshly created.
    */
   private Pair<Statistics, Boolean> ensureStatistics(long onum, long tnum) {
-    synchronized (objectStats) {
-      Statistics stats = getStatistics(onum);
-      boolean fresh = stats == null;
-      if (fresh) {
-        // set up to run as a sub-transaction of the current transaction.
-        TransactionID tid = new TransactionID(tnum);
-        Core local = Client.getClient().getCore(store.getName());
-        final fabric.lang.Object.$Proxy object =
-            new fabric.lang.Object.$Proxy(local, onum);
-        stats = Client.runInTransaction(tid, new Client.Code<Statistics>() {
-          public Statistics run() {
-            return object.createStatistics();
-          }
-        });
-        objectStats.put(onum, stats);
-      }
-      return new Pair<Statistics, Boolean>(stats, fresh);
-    }
+    // Disabled statistics generation for now.  -MJL
+    return new Pair<Statistics, Boolean>(fabric.lang.DefaultStatistics.instance,
+        false);
+    
+    // synchronized (objectStats) {
+    // Statistics stats = getStatistics(onum);
+    // boolean fresh = stats == null;
+    // if (fresh) {
+    // // set up to run as a sub-transaction of the current transaction.
+    // TransactionID tid = new TransactionID(tnum);
+    // Core local = Client.getClient().getCore(store.getName());
+    // final fabric.lang.Object.$Proxy object =
+    // new fabric.lang.Object.$Proxy(local, onum);
+    // stats = Client.runInTransaction(tid, new Client.Code<Statistics>() {
+    // public Statistics run() {
+    // return object.createStatistics();
+    // }
+    // });
+    // objectStats.put(onum, stats);
+    // }
+    // return new Pair<Statistics, Boolean>(stats, fresh);
+    // }
   }
 
   /**
