@@ -160,6 +160,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
             }
             run_();
           }
+          else
+            logger.info("Core " + coreName + " did not accept connection");
         } else {
           // Indicate that the core doesn't exist here.
           out.write(0);
