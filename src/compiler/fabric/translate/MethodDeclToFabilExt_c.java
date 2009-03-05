@@ -4,10 +4,12 @@ import java.util.*;
 
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
+import polyglot.ast.Eval;
 import polyglot.ast.If;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.ast.Stmt;
+import polyglot.ast.Try;
 import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
 import polyglot.types.SemanticException;
@@ -31,11 +33,14 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     
     if (md.name().endsWith("_remote")) {
       // Fabric wrapper
-      // The body has to be an if statement
-      If ifStmt = (If)md.body().statements().get(0);
+      // Rewrite the else block to throw an exception
+      Try tryStmt = (Try)md.body().statements().get(0);
+      Eval npecall = (Eval) tryStmt.tryBlock().statements().get(0);
+      If ifStmt = (If)tryStmt.tryBlock().statements().get(1);
 //      ifStmt = ifStmt.alternative(rw.qq().parseStmt("throw new java.lang.InternalError()"));
       ifStmt = ifStmt.alternative(nf.Throw(Position.compilerGenerated(), nf.New(Position.compilerGenerated(), nf.CanonicalTypeNode(Position.compilerGenerated(), ts.InternalError()), Collections.EMPTY_LIST)));
-      return md.body(nf.Block(Position.compilerGenerated(), ifStmt));
+      tryStmt = tryStmt.tryBlock(nf.Block(Position.compilerGenerated(), npecall, ifStmt));
+      return md.body(nf.Block(Position.compilerGenerated(), tryStmt));
     }
     
     List<Stmt> stmts = new ArrayList<Stmt>(md.body().statements().size() + 1);

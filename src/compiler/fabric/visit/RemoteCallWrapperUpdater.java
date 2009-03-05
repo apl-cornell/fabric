@@ -150,35 +150,37 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
           conseq = nf.Return(eval.position(), eval.expr());
         }
 
+//        Stmt t = qq.parseStmt("try { _npe(lbl); %S; } catch (NullPointerException e) {}", s);
+
         Stmt s = nf.If(Position.compilerGenerated(), labelComp, conseq, conseq);
-        
         
         Call npecall = nf.Call(Position.compilerGenerated(),
             nf.TypeNodeFromQualifiedName(Position.compilerGenerated(), "fabric.lang.Object"),
             nf.Id(Position.compilerGenerated(), "_npe"));
         ClassType objtype = null;
-        //        Stmt t = qq.parseStmt("try { %S } catch (NullPointerException e) {}", s);
         LabeledTypeNode npe = null;
         Type npetype = null;
         try {
           objtype = (ClassType) ts.typeForName("fabric.lang.Object");          
           npetype = ts.typeForName("java.lang.NullPointerException");
         } catch (SemanticException e1) {
-          // TODO Auto-generated catch block
           e1.printStackTrace();
         } 
         MethodInstance npemi = (MethodInstance) objtype.methodsNamed("_npe").get(0);
         npecall = npecall.methodInstance(npemi);
-        npecall = (Call) npecall.arguments(Collections.singletonList(nf.Local(Position.compilerGenerated(), lbf.id())));
+        Local npearg = nf.Local(Position.compilerGenerated(), lbf.id());
+        npearg = npearg.localInstance(lbf.localInstance());
+        npecall = (Call) npecall.arguments(Collections.singletonList(npearg));
 
+        Label unknownLabel = ts.freshLabelVariable(Position.compilerGenerated(), "np", "The label of the exception");
         npe = nf.LabeledTypeNode(Position.compilerGenerated(), 
             nf.CanonicalTypeNode(Position.compilerGenerated(), npetype),
-            nf.AmbDynamicLabelNode(Position.compilerGenerated(), nf.LabelExpr(Position.compilerGenerated(), startLabel)));
-        LabeledType npeltype = ts.labeledType(Position.compilerGenerated(), npetype, startLabel);
+            nf.AmbDynamicLabelNode(Position.compilerGenerated(), nf.LabelExpr(Position.compilerGenerated(), unknownLabel)));
+        LabeledType npeltype = ts.labeledType(Position.compilerGenerated(), npetype, unknownLabel);
 
         JifLocalInstance npeli = (JifLocalInstance) ts.localInstance(Position.compilerGenerated(), Flags.NONE, npeltype, "e");
         npeli = (JifLocalInstance) npeli.type(npeltype);
-        npeli.setLabel(startLabel);
+        npeli.setLabel(unknownLabel);
 
         Formal npeformal = nf.Formal(Position.compilerGenerated(), Flags.NONE, npe, nf.Id(Position.compilerGenerated(), "e"));
         npeformal = npeformal.localInstance(npeli);
