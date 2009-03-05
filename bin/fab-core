@@ -11,6 +11,10 @@ while true; do
             vmargs="$vmargs '$1'"
             shift
             ;;
+    --debug)
+            shift
+            vmargs="$vmargs -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3374"
+            ;;
     *) args="$args '$1'"; shift;;
   esac
 done
@@ -19,6 +23,7 @@ classpath="$JIF/rt-classes:$classpath"
 classpath="$TOP/classes:$TOP/rt-classes:$classpath"
 classpath="$TOP/lib/fabric.jar:$classpath"
 classpath="$TOP/lib/je-3.2.68.jar:$classpath"
+classpath="$TOP/lib/FreePastry-2.0_04.jar:$classpath"
 
 command="\"$JAVA\" $vmargs -classpath \"$(fixpath $classpath)\" fabric.core.Main $args"
 
