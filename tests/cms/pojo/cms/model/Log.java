@@ -121,13 +121,18 @@ public class Log {
   public static final long LOG_CATEGORY = 16;
 
   public static String logTypeToString(int type) {
-    switch(type) {
+    if(type == LOG_ADMIN) return ADMIN;
+    if(type == LOG_COURSE) return COURSE;
+    if(type == LOG_GROUP) return GROUP;
+    if(type == LOG_GRADE) return GRADE;
+    return CATEGORY;
+    /*switch(type) {
       case LOG_ADMIN:  return ADMIN;
       case LOG_COURSE: return COURSE;
       case LOG_GROUP:  return GROUP;
       case LOG_GRADE:  return GRADE;
       default:         return CATEGORY;
-    }
+    }*/
   }
 
   //////////////////////////////////////////////////////////////////////////////

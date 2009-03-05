@@ -4,7 +4,7 @@ Element root = (Element) displayData.getChildNodes().item(0);
 User p = (User)session.getAttribute(AccessController.A_PRINCIPAL);
 String NetID = "";
 boolean debug= ((Boolean)session.getAttribute(AccessController.A_DEBUG)).booleanValue(); 
-if (debug && p != null) {
+if (debug && p != null && false) {
 	NetID = p.getNetID();
 } %>
         <tr>
@@ -12,7 +12,7 @@ if (debug && p != null) {
        
             <span class="spacer300">&nbsp;</span>
             <span class="joke">
-<% if (debug) {
+<% if (debug && false) {
      long now= System.currentTimeMillis();
      long then= ((Long)session.getAttribute(AccessController.A_TIME)).longValue();
      now= now-then; %>
@@ -37,7 +37,7 @@ if (debug && p != null) {
     </div>
   </div>
      
-<% if (debug) { 
+<% if (debug && false) { 
    /* Display debug id and text box to switch id */ %>
    <span><a target="_blank" href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_PROFILER %>">View Profiler Output</a></span>
    <div align="right">
@@ -52,8 +52,8 @@ if (debug && p != null) {
    <%--<jsp:include page="print-xml-tree.jsp" /> moved to top of each page --%>
 <% } %>
   <script type="text/javascript">
-    <% if (root.hasAttribute(XMLBuilder.$Static.A_JUMPTOGROUP)) { %>
-      window.location='<%= "#" + root.getAttribute(XMLBuilder.$Static.A_JUMPTOGROUP) %>';
+    <% if (root.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_JUMPTOGROUP())) { %>
+      window.location='<%= "#" + root.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_JUMPTOGROUP()) %>';
 	<% } %>
 		
   </script>

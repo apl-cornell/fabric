@@ -1642,6 +1642,7 @@ public class AccessController extends HttpServlet {
         String id = request.getParameter(P_ID);
         CMSRoot database = xmlBuilder.getDatabase();
         FileEntry entry = null;
+        /*
         switch (type) {
         case XMLBuilder.T_SOLFILE:
           entry = database.getSolutionFile(id);
@@ -1661,7 +1662,20 @@ public class AccessController extends HttpServlet {
         case XMLBuilder.T_COMMENTFILE:
           entry = database.getCommentFile(id);
           break;
-        }
+        } */
+        if(type == XMLBuilder.T_SOLFILE) 
+          entry = database.getSolutionFile(id);
+        else if(type == XMLBuilder.T_ITEMFILE) 
+          entry = database.getAssignmentItem(id).getAssignmentFile();
+        else if(type == XMLBuilder.T_FILEFILE)
+          entry = database.getAssignmentFile(id);
+        else if(type ==  XMLBuilder.T_GROUPFILE)
+          entry = database.getSubmittedFile(id);
+        else if(type == XMLBuilder.T_CATFILE)
+          entry = database.getCategoryContentsFileEntry(id);
+        else if(type == XMLBuilder.T_COMMENTFILE)
+          entry = database.getCommentFile(id);
+         
         if (entry.isFileAuthorized(user)) {
           sendFile(entry.getFile(), response);
           buildURL = null;

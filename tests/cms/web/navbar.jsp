@@ -1,14 +1,14 @@
 <%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.auth.*, cms.model.*, cms.www.xml.*" %><%
  Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
  Element root = (Element) displayData.getChildNodes().item(0);
- Element course = XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_COURSE);
- boolean isStudent = course != null ? course.hasAttribute(XMLBuilder.$Static.A_ISSTUDENT) : false;
- String courseid = (course != null ? course.getAttribute(XMLBuilder.$Static.A_COURSEID) : null);
+ Element course = XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.$Proxy.$instance.get$TAG_COURSE());
+ boolean isStudent = course != null ? course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISSTUDENT()) : false;
+ String courseid = (course != null ? course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID()) : null);
  String URL = request.getServletPath();
  Principal p = (Principal)session.getAttribute(AccessController.A_PRINCIPAL);
  NodeList allassigns = new CMSNodeList();
  try {
- 	Element assigns = (Element) root.getElementsByTagName(XMLBuilder.$Static.TAG_ASSIGNMENTS).item(0);
+ 	Element assigns = (Element) root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_ASSIGNMENTS()).item(0);
  	if (assigns != null) {
  		allassigns = assigns.getChildNodes();
  	}
@@ -23,8 +23,8 @@
   <ul><%
 if (courseid != null) {%>
   <li>
-   <span class="course"><%=course.getAttribute(XMLBuilder.$Static.A_DISPLAYEDCODE)%></span><br/>
-   <span class="semester">(<%=course.getAttribute(XMLBuilder.$Static.A_SEMESTER)%>)</span>
+   <span class="course"><%=course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_DISPLAYEDCODE())%></span><br/>
+   <span class="semester">(<%=course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_SEMESTER())%>)</span>
   </li>
   <li class="sep"><hr></li>
   <li><a <%= URL.equals(AccessController.COURSE_URL) ? "class=\"currentpage\"" : "" %> href="?<%=AccessController.P_ACTION%>=<%=AccessController.ACT_COURSE%>&amp;<%=AccessController.P_COURSEID%>=<%=courseid%>">
@@ -41,23 +41,23 @@ if (courseid != null) {%>
 	{
 		Element xAssign = (Element) allassigns.item(i);
 		/* it could also be a survey/quiz... Panut needs to commit!  This was crashing me - Alex*/
-		if (xAssign.getNodeName().equals(XMLBuilder.$Static.A_ASSIGNMENT)) {
-			String status = xAssign.getAttribute(XMLBuilder.$Static.A_STATUS);
-		    boolean isHidden = status.equals(Assignment.$Static.HIDDEN);
-			int type = Integer.parseInt(xAssign.getAttribute(XMLBuilder.$Static.A_ASSIGNTYPE));
+		if (xAssign.getNodeName().equals(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNMENT())) {
+			String status = xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STATUS());
+		    boolean isHidden = status.equals(Assignment.$Static.$Proxy.$instance.get$HIDDEN());
+			int type = Integer.parseInt(xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNTYPE()));
 			String action = "";
 			
-			if (type == Assignment.$Static.ASSIGNMENT)
+			if (type == Assignment.$Static.$Proxy.$instance.get$ASSIGNMENT())
 				action = AccessController.ACT_ASSIGN;
-			else if (type == Assignment.$Static.SURVEY)
+			else if (type == Assignment.$Static.$Proxy.$instance.get$SURVEY())
 				action = AccessController.ACT_SURVEY;
-			else if (type == Assignment.$Static.QUIZ)
+			else if (type == Assignment.$Static.$Proxy.$instance.get$QUIZ())
 				action = AccessController.ACT_QUIZ;
 			
-			isHidden = status.equals(Assignment.$Static.HIDDEN);
+			isHidden = status.equals(Assignment.$Static.$Proxy.$instance.get$HIDDEN());
 			if (!isHidden) {%>
-	<li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_ASSIGN%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xAssign.getAttribute(XMLBuilder.$Static.A_ASSIGNID)%>">
-	  &bull; <%= xAssign.getAttribute(XMLBuilder.$Static.A_NAME) %>
+	<li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_ASSIGN%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNID())%>">
+	  &bull; <%= xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME()) %>
 	</a></li><%
 			}
 		}
