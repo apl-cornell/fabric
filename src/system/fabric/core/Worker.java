@@ -292,7 +292,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     // This is safe because everyone acts for null anyway.
     if (client == null) return true;
 
-    return Client.runInTransaction(new Client.Code<Boolean>() {
+    return Client.runInTransaction(null, new Client.Code<Boolean>() {
       public Boolean run() {
         try {
           return client.name().equals(name);
@@ -436,9 +436,6 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
   /**
    * Processes the given dissemination-read request.
-   * 
-   * @throws AccessException
-   *           if
    */
   public DissemReadMessage.Response handle(DissemReadMessage msg)
       throws AccessException {

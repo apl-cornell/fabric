@@ -190,7 +190,7 @@ public final class LocalCore implements Core {
     this.publicReadonlyLabel =
         new Label.$Proxy(LocalCore.this, ONumConstants.PUBLIC_READONLY_LABEL);
 
-    Client.runInTransaction(new Client.Code<Void>() {
+    Client.runInSubTransaction(new Client.Code<Void>() {
       @SuppressWarnings("deprecation")
       public Void run() {
         // Create global constant objects. We force renumbering on these because

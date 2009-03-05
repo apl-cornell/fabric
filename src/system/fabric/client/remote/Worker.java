@@ -209,7 +209,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
         new NodePrincipal.$Proxy(principalCore, principalOnum);
 
     // Authenticate the client.
-    return Client.runInTransaction(new Client.Code<Boolean>() {
+    return Client.runInTransaction(null, new Client.Code<Boolean>() {
       public Boolean run() {
         try {
           return remoteClient.name().equals(remoteClientName);
@@ -239,24 +239,6 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     socket = null;
   }
 
-  /**
-   * Associates the given log with this worker's transaction manager and
-   * synchronizes the log with the given tid.
-   */
-  private void associateAndSyncLog(Log log, TransactionID tid) {
-    TransactionManager tm = getTransactionManager();
-    tm.associateLog(log);
-
-    TransactionID commonAncestor = log.getTid().getLowestCommonAncestor(tid);
-
-    // Do the commits that we've missed.
-    for (int i = log.getTid().depth; i > commonAncestor.depth; i--)
-      tm.commitTransaction();
-
-    // Start new transactions if necessary.
-    if (commonAncestor.depth != tid.depth) tm.startTransaction(tid);
-  }
-
   public RemoteCallMessage.Response handle(
       final RemoteCallMessage remoteCallMessage) throws RemoteCallException {
     // We assume that this thread's transaction manager is free (i.e., it's not
@@ -266,19 +248,18 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     // XXX TODO Security checks.
 
     TransactionID tid = remoteCallMessage.tid;
+    TransactionManager tm = TransactionManager.getInstance();
     if (tid != null) {
       Log log = TransactionRegistry.getOrCreateInnermostLog(tid);
-      associateAndSyncLog(log, tid);
+      tm.associateAndSyncLog(log, tid);
       
-      TransactionManager tm = TransactionManager.getInstance();
-
       // Merge in the update map we got.
       tm.getUpdateMap().putAll(remoteCallMessage.updateMap);
     }
 
     try {
       // Execute the requested method.
-      Object result = Client.runInTransaction(new Client.Code<Object>() {
+      Object result = Client.runInSubTransaction(new Client.Code<Object>() {
         public Object run() {
           // This is ugly. Wrap all exceptions that can be thrown with a runtime
           // exception and do the actual handling below.
@@ -326,9 +307,15 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
         throw new RemoteCallException(cause);
 
       throw e;
+    } finally {
+      tm.associateLog(null);
     }
   }
 
+  /**
+   * In each message handler, we maintain the invariant that upon exit, the
+   * worker's TransactionManager is associated with a null log.
+   */
   public void handle(AbortTransactionMessage abortTransactionMessage) {
     // XXX TODO Security checks.
     Log log =
@@ -336,8 +323,9 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     if (log == null) return;
 
     TransactionManager tm = getTransactionManager();
-    associateAndSyncLog(log, abortTransactionMessage.tid);
+    tm.associateAndSyncLog(log, abortTransactionMessage.tid);
     tm.abortTransaction();
+    tm.associateLog(null);
   }
 
   public PrepareTransactionMessage.Response handle(
@@ -357,6 +345,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
     Map<RemoteNode, TransactionPrepareFailedException> failures =
         tm.sendPrepareMessages(prepareTransactionMessage.commitTime);
+    
+    tm.associateLog(null);
 
     if (failures.isEmpty())
       return new PrepareTransactionMessage.Response();
@@ -364,6 +354,10 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       return new PrepareTransactionMessage.Response("Transaction prepare failed.");
   }
 
+  /**
+   * In each message handler, we maintain the invariant that upon exit, the
+   * worker's TransactionManager is associated with a null log.
+   */
   public CommitTransactionMessage.Response handle(
       CommitTransactionMessage commitTransactionMessage) {
     // XXX TODO Security checks.
@@ -378,6 +372,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     try {
       tm.sendCommitMessagesAndCleanUp();
     } catch (TransactionAtomicityViolationException e) {
+      tm.associateLog(null);
       return new CommitTransactionMessage.Response(false);
     }
 
@@ -388,8 +383,6 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
     if (log == null) return new ReadMessage.Response(null);
 
-    associateAndSyncLog(log, readMessage.tid);
-
     $Impl obj = new $Proxy(readMessage.core, readMessage.onum).fetch();
 
     // Ensure this client owns the object.
@@ -399,11 +392,19 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       }
     }
 
+    // Run the authorization in the remote client's transaction.
+    TransactionManager tm = TransactionManager.getInstance();
+    tm.associateAndSyncLog(log, readMessage.tid);
+    
     // Ensure that the remote client is allowed to read the object.
     Label label = obj.get$label();
     if (!AuthorizationUtil.isReadPermitted(remoteClient, label.$getCore(),
-        label.$getOnum())) return new ReadMessage.Response(null);
-
+        label.$getOnum())) {
+      obj = null;
+    }
+    
+    tm.associateLog(null);
+    
     return new ReadMessage.Response(obj);
   }
 
@@ -412,8 +413,6 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     Log log =
         TransactionRegistry.getInnermostLog(takeOwnershipMessage.tid.topTid);
     if (log == null) return new TakeOwnershipMessage.Response(false);
-
-    associateAndSyncLog(log, takeOwnershipMessage.tid);
 
     $Impl obj =
         new $Proxy(takeOwnershipMessage.core, takeOwnershipMessage.onum)
@@ -425,16 +424,25 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
         return new TakeOwnershipMessage.Response(false);
       }
     }
+    
+    // Run the authorization in the remote client transaction.
+    TransactionManager tm = TransactionManager.getInstance();
+    tm.associateAndSyncLog(log, takeOwnershipMessage.tid);
 
     // Ensure that the remote client is allowed to write the object.
     Label label = obj.get$label();
-    if (!AuthorizationUtil.isWritePermitted(remoteClient, label.$getCore(),
-        label.$getOnum())) return new TakeOwnershipMessage.Response(false);
+    boolean authorized = !AuthorizationUtil.isWritePermitted(
+        remoteClient, label.$getCore(), label.$getOnum());
     
-    // Relinquish ownership.
-    obj.$isOwned = false;
+    tm.associateLog(null);
+    
+    if (authorized) {
+      // Relinquish ownership.
+      obj.$isOwned = false;
+      return new TakeOwnershipMessage.Response(true);
+    }
 
-    return new TakeOwnershipMessage.Response(true);
+    return new TakeOwnershipMessage.Response(false);
   }
 
   public Response handle(GetPrincipalMessage getPrincipalMessage) {

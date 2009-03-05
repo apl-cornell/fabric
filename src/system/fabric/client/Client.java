@@ -20,7 +20,9 @@ import jif.lang.Label;
 import jif.lang.LabelUtil;
 import fabric.client.remote.RemoteCallManager;
 import fabric.client.remote.RemoteClient;
+import fabric.client.transaction.Log;
 import fabric.client.transaction.TransactionManager;
+import fabric.client.transaction.TransactionRegistry;
 import fabric.common.*;
 import fabric.common.InternalError;
 import fabric.dissemination.FetchManager;
@@ -458,7 +460,7 @@ public final class Client {
         final String name = client.getJavaPrincipal().getName();
         final Core core = client.getCore(opts.core);
         
-        runInTransaction(new Code<Void>() {
+        runInSubTransaction(new Code<Void>() {
           public Void run() {
             NodePrincipal principal = new NodePrincipal.$Impl(core, null, name);
             
@@ -473,7 +475,7 @@ public final class Client {
       
       // Attempt to read the principal object to ensure that it exists.
       final NodePrincipal clientPrincipal = client.getPrincipal();
-      runInTransaction(new Code<Void>() {
+      runInSubTransaction(new Code<Void>() {
         public Void run() {
           log.config("Client principal is " + clientPrincipal);
           return null;
@@ -499,7 +501,7 @@ public final class Client {
         newArgs[i] = opts.app[i + 1];
 
       final Core local = client.getLocalCore();
-      Object argsProxy = runInTransaction(new Code<Object>() {
+      Object argsProxy = runInSubTransaction(new Code<Object>() {
         public Object run() {
           ConfPolicy conf =
               LabelUtil.$Impl.readerPolicy(local, clientPrincipal,
@@ -537,8 +539,30 @@ public final class Client {
    * Executes the given code from within a Fabric transaction. Should not be
    * called by generated code. This is here to abstract away the details of
    * starting and finishing transactions.
+   * 
+   * @param tid
+   *          The parent transaction for the subtransaction that will be created.
    */
-  public static <T> T runInTransaction(Code<T> code) {
+  public static <T> T runInTransaction(TransactionID tid, Code<T> code) {
+    TransactionManager tm = TransactionManager.getInstance();
+    Log oldLog = tm.getCurrentLog();
+
+    Log log = TransactionRegistry.getOrCreateInnermostLog(tid);
+    tm.associateAndSyncLog(log, tid);
+
+    try {
+      return runInSubTransaction(code);
+    } finally {
+      tm.associateLog(oldLog);
+    }
+  }
+
+  /**
+   * Executes the given code from within a Fabric subtransaction of the current
+   * transaction. Should not be called by generated code. This is here to
+   * abstract away the details of starting and finishing transactions.
+   */
+  public static <T> T runInSubTransaction(Code<T> code) {
     TransactionManager tm = TransactionManager.getInstance();
     tm.startTransaction();
     try {

@@ -691,7 +691,7 @@ public interface Object {
         // XXX Need a real core and a real label. (Should be given as args.)
         final LocalCore core = Client.getClient().getLocalCore();
 
-        return Client.runInTransaction(new Client.Code<Object>() {
+        return Client.runInSubTransaction(new Client.Code<Object>() {
           public Object run() {
             try {
               Constructor<? extends Object.$Impl> constr =

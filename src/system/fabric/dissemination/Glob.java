@@ -139,7 +139,7 @@ public class Glob implements FastSerializable {
       throws GeneralSecurityException {
     byte[] key = null;
     if (keyObject != null) {
-      key = Client.runInTransaction(new Code<SecretKey>() {
+      key = Client.runInSubTransaction(new Code<SecretKey>() {
         public SecretKey run() {
           return keyObject.getKey();
         }

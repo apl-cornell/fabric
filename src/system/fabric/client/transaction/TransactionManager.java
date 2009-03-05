@@ -876,6 +876,10 @@ public final class TransactionManager {
   public void associateLog(Log log) {
     current = log;
   }
+  
+  public Log getCurrentLog() {
+    return current;
+  }
 
   public TransactionID getCurrentTid() {
     if (current == null) return null;
@@ -898,4 +902,26 @@ public final class TransactionManager {
 
     return current.updateMap.getUpdate(proxy, label);
   }
+
+  /**
+   * Associates the given log with this worker's transaction manager and
+   * synchronizes the log with the given tid.
+   */
+  public void associateAndSyncLog(Log log, TransactionID tid) {
+    associateLog(log);
+    
+    if (log == null) {
+      startTransaction(tid);
+      return;
+    }
+
+    // Do the commits that we've missed.
+    TransactionID commonAncestor = log.getTid().getLowestCommonAncestor(tid);
+    for (int i = log.getTid().depth; i > commonAncestor.depth; i--)
+      commitTransaction();
+
+    // Start new transactions if necessary.
+    if (commonAncestor.depth != tid.depth) startTransaction(tid);
+  }
+
 }

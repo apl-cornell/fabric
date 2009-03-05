@@ -34,6 +34,8 @@ public final class TransactionRegistry {
    * and is returned.
    */
   public static Log getOrCreateInnermostLog(TransactionID tid) {
+    if (tid == null) return null;
+    
     Log log;
     synchronized (registry) {
       log = registry.get(tid.topTid);

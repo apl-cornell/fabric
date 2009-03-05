@@ -481,7 +481,7 @@ public abstract class ObjectStore {
 
     final Core core = Client.getClient().getCore(name);
 
-    Client.runInTransaction(new Client.Code<Void>() {
+    Client.runInSubTransaction(new Client.Code<Void>() {
       public Void run() {
         // No need to initialize global constants here, as those objects will be
         // supplied by the clients' local core.

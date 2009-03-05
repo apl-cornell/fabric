@@ -7,8 +7,6 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
-import fabric.client.transaction.Log;
-import fabric.client.transaction.TransactionRegistry;
 import fabric.common.*;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyHashMap;
@@ -453,14 +451,10 @@ public class TransactionManager {
       if (fresh) {
         // set up to run as a sub-transaction of the current transaction.
         TransactionID tid = new TransactionID(tnum);
-        Log log = TransactionRegistry.getOrCreateInnermostLog(tid);
-        fabric.client.transaction.TransactionManager.getInstance()
-            .associateLog(log);
-
         Core local = Client.getClient().getCore(store.getName());
         final fabric.lang.Object.$Proxy object =
             new fabric.lang.Object.$Proxy(local, onum);
-        stats = Client.runInTransaction(new Client.Code<Statistics>() {
+        stats = Client.runInTransaction(tid, new Client.Code<Statistics>() {
           public Statistics run() {
             return object.createStatistics();
           }

@@ -256,11 +256,12 @@ public final class RemoteClient implements RemoteNode {
         new GetPrincipalMessage().send(this);
     final NodePrincipal principal = response.principal;
 
-    boolean authenticated = Client.runInTransaction(new Client.Code<Boolean>() {
-      public Boolean run() {
-        return principal.name().equals(name);
-      }
-    });
+    boolean authenticated =
+        Client.runInTransaction(null, new Client.Code<Boolean>() {
+          public Boolean run() {
+            return principal.name().equals(name);
+          }
+        });
 
     if (authenticated)
       return principal;

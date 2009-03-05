@@ -53,10 +53,11 @@ public class AuthorizationUtil {
 
   /**
    * Determines whether the given principal is permitted to read according to
-   * the label at the given oid.
+   * the label at the given oid. This is run as a subtransaction of the current
+   * transaction.
    */
-  public static boolean isReadPermitted(final NodePrincipal principal, Core core,
-      long labelOnum) {
+  public static boolean isReadPermitted(final NodePrincipal principal,
+      Core core, long labelOnum) {
     // Allow the core's client principal to do anything. We use pointer equality
     // here to avoid having to call into the client.
     if (principal == Client.getClient().getPrincipal()) return true;
@@ -68,7 +69,7 @@ public class AuthorizationUtil {
 
     // Call into the Jif label framework to perform the label check.
     final Label label = new Label.$Proxy(core, labelOnum);
-    result = Client.runInTransaction(new Client.Code<Boolean>() {
+    result = Client.runInSubTransaction(new Client.Code<Boolean>() {
       public Boolean run() {
         return LabelUtil.$Impl.isReadableBy(label, principal);
       }
@@ -82,17 +83,18 @@ public class AuthorizationUtil {
 
   /**
    * Determines whether the given principal is permitted to write according to
-   * the label at the given onum.
+   * the label at the given onum. This is run as a subtransaction of the current
+   * transaction.
    */
-  public static boolean isWritePermitted(final NodePrincipal principal, Core core,
-      long labelOnum) {
+  public static boolean isWritePermitted(final NodePrincipal principal,
+      Core core, long labelOnum) {
     // Allow the core's client principal to do anything. We use pointer equality
     // here to avoid having to call into the client.
     if (principal == Client.getClient().getPrincipal()) return true;
 
     // Call into the Jif label framework to perform the label check.
     final Label label = new Label.$Proxy(core, labelOnum);
-    return Client.runInTransaction(new Client.Code<Boolean>() {
+    return Client.runInSubTransaction(new Client.Code<Boolean>() {
       public Boolean run() {
         return LabelUtil.$Impl.isWritableBy(label, principal);
       }
