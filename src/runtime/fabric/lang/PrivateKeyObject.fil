@@ -6,7 +6,7 @@ import java.security.PrivateKey;
 import javax.crypto.KeyGenerator;
 
 import fabric.common.Crypto;
-import fabric.common.InternalError;
+import fabric.common.exceptions.InternalError;
 
 /**
  * This wraps a Java PrivateKey object.
