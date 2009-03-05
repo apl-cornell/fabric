@@ -12,6 +12,10 @@ public interface PairLabel extends Label {
       super(core, label);
     }
 
+    public native ConfPolicy confPolicy();
+
+    public native IntegPolicy integPolicy();
+
     public native SecretKeyObject keyObject();
   }
 }

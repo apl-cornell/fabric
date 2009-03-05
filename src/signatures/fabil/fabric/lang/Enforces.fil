@@ -1,0 +1,13 @@
+package fabric.lang;
+
+import java.security.SignatureException;
+
+public final class Enforces {
+  public native Principal signer();
+  
+  public native Principal subject();
+  
+  public native Label label();
+  
+  public native boolean validate() throws SignatureException;
+}

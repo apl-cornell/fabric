@@ -6,6 +6,10 @@ import fabric.lang.Object;
 import fabric.util.Set;
 
 public interface Label extends Object {
+  ConfPolicy confPolicy();
+
+  IntegPolicy integPolicy();
+  
   SecretKeyObject keyObject();
   
   public class $Proxy extends Object.$Proxy implements Label {

@@ -14,7 +14,8 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
   public final Core localCore = Client.getClient().getLocalCore();
 
   JoinPolicy(Set policies) {
-    components = Collections.unmodifiableSet(policies);
+    // Copy the contents into a linked hash set so we can sign these policies.
+    components = Collections.unmodifiableSet(new LinkedHashSet(policies));
   }
 
   public Set joinComponents() {
