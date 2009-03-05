@@ -22,10 +22,7 @@ import fabric.client.remote.messages.GetPrincipalMessage.Response;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.TransactionManager;
 import fabric.client.transaction.TransactionRegistry;
-import fabric.common.AuthorizationUtil;
-import fabric.common.FabricThread;
-import fabric.common.MessageHandler;
-import fabric.common.TransactionID;
+import fabric.common.*;
 import fabric.lang.NodePrincipal;
 import fabric.lang.Object.$Impl;
 import fabric.lang.Object.$Proxy;
@@ -169,7 +166,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     Client client = Client.getClient();
     if (client.useSSL) {
       // Initiate the SSL handshake and initialize the fields.
-      SSLSocketFactory sslSocketFactory = rcm.getSSLSocketFactory(clientName);
+      SSLSocketFactory sslSocketFactory = SSLSocketFactoryTable.get(clientName);
       synchronized (sslSocketFactory) {
         sslSocket =
             (SSLSocket) sslSocketFactory.createSocket(socket, null, 0, true);

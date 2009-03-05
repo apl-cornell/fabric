@@ -19,6 +19,7 @@ import javax.net.ssl.TrustManagerFactory;
 import fabric.client.Client;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
+import fabric.common.SSLSocketFactoryTable;
 import fabric.common.exceptions.InternalError;
 import fabric.core.Options.CoreKeyStores;
 import fabric.core.store.ObjectStore;
@@ -99,6 +100,7 @@ public class Node {
             (PrivateKey) keyStores.keyStore
                 .getKey(coreName, keyStores.password);
         addCore(coreName, sslSocketFactory, store, publicKey, privateKey);
+        SSLSocketFactoryTable.register(coreName, sslSocketFactory);
       } catch (KeyManagementException e) {
         throw new InternalError("Unable to initialise key manager factory.", e);
       } catch (UnrecoverableKeyException e1) {

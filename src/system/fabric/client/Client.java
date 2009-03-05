@@ -183,6 +183,7 @@ public final class Client {
       }
       sslContext.init(kmf.getKeyManagers(), tm, null);
       this.sslSocketFactory = sslContext.getSocketFactory();
+      SSLSocketFactoryTable.register(name, sslSocketFactory);
 
       this.javaPrincipal =
           ((X509KeyManager) kmf.getKeyManagers()[0])

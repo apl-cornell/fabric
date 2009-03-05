@@ -8,8 +8,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
 
-import javax.net.ssl.SSLSocketFactory;
-
 import fabric.client.Client;
 
 /**
@@ -46,18 +44,6 @@ public class RemoteCallManager extends Thread {
     this.pool = new Stack<Worker>();
     for (int i = 0; i < POOL_SIZE; i++)
       pool.push(new Worker(this));
-  }
-
-  /**
-   * Given the host name for a client, returns its corresponding
-   * <code>SSLSocketFactory</code>.
-   */
-  public SSLSocketFactory getSSLSocketFactory(String clientName) {
-    // We ought to be able to support virtual hosting of client nodes.
-    // For now, just have a single host.
-    Client client = Client.getClient();
-    if (client.name.equals(clientName)) return client.sslSocketFactory;
-    return null;
   }
 
   @Override
