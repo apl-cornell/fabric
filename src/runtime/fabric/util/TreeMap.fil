@@ -108,15 +108,7 @@ public class TreeMap extends AbstractMap
    * to be black. This object must never be used as a key in a TreeMap, or
    * it will break bounds checking of a SubMap.
    */
-  static Node nil;
-  static
-    {
-      // Nil is self-referential, so we must initialize it after creation.
-	  nil = new Node(null, null, BLACK);
-      nil.parent = nil;
-      nil.left = nil;
-      nil.right = nil;
-    }
+  final Node nil;
 
   /**
    * The root node of this TreeMap.
@@ -160,11 +152,11 @@ public class TreeMap extends AbstractMap
     int color;
 
     /** The left child node. */
-    Node left = nil;
+    Node left;
     /** The right child node. */
-    Node right = nil;
+    Node right;
     /** The parent node. */
-    Node parent = nil;
+    Node parent;
 
     /**
      * Simple constructor.
@@ -203,6 +195,11 @@ public class TreeMap extends AbstractMap
    */
   public TreeMap(Comparator c)
   {
+	// Nil is self-referential, so we must initialize it after creation.
+	nil = new Node(null, null, BLACK);
+	nil.parent = nil;
+	nil.left = nil;
+	nil.right = nil;
     comparator = c;
     fabricateTree(0);
   }
@@ -522,6 +519,9 @@ public class TreeMap extends AbstractMap
 
     // Set up new node.
     Node n = new Node(key, value, RED);
+    n.left = nil;
+    n.right = nil;
+    n.parent = nil;
     n.parent = parent;
 
     // Insert node in tree.
@@ -824,6 +824,9 @@ public class TreeMap extends AbstractMap
 
     // Make the root node.
     root = new Node(null, null, BLACK);
+    root.left = nil;
+    root.right = nil;
+    root.parent = nil;
     size = count;
     Node row = root;
     int rowsize;
@@ -837,6 +840,9 @@ public class TreeMap extends AbstractMap
           {
             Node left = new Node(null, null, BLACK);
             Node right = new Node(null, null, BLACK);
+            left.left = nil;
+            right.left = nil;
+            right.right = nil;
             left.parent = parent;
             left.right = right;
             right.parent = parent;
@@ -859,6 +865,12 @@ public class TreeMap extends AbstractMap
       {
         Node left = new Node(null, null, RED);
         Node right = new Node(null, null, RED);
+        left.left = nil;
+        left.right = nil;
+        left.parent = nil;
+        right.left = nil;
+        right.right = nil;
+        right.parent = nil;
         left.parent = parent;
         right.parent = parent;
         parent.left = left;
@@ -870,6 +882,8 @@ public class TreeMap extends AbstractMap
     if (i - overflow == 0)
       {
         Node left = new Node(null, null, RED);
+        left.left = nil;
+        left.right = nil;
         left.parent = parent;
         parent.left = left;
         parent = parent.right;
