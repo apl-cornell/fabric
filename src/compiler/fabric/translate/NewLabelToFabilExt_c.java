@@ -21,14 +21,29 @@ public class NewLabelToFabilExt_c extends NewLabelToJavaExt_c {
     
     if (loc != null && n instanceof Call) {
       // Add loc as the first parameter.
+      // Add this recursively for all parameters which are themselves instance of Call
+      this.loc = loc;
       Call c = (Call)n;
-      List<Expr> newArgs = new ArrayList<Expr>(c.arguments().size() + 1);
-      newArgs.add(loc);
-      newArgs.addAll(c.arguments());
-      c = (Call)c.arguments(newArgs);
-      return c;
+      return addLoc(c);
     }
-    
+
     return n;
+  }
+  
+  private Expr loc;
+  private Call addLoc(Call c) {
+    List<Expr> args = new ArrayList<Expr>(c.arguments().size() + 1);
+    args.add(loc);
+    for(Expr expr : (List<Expr>)c.arguments()) {
+      Expr addExpr = expr;
+      if(expr instanceof Call) {
+        Call subcall = (Call) expr;
+        addExpr = addLoc(subcall);
+      }
+      args.add(addExpr);
+    }
+    c = (Call)c.arguments(args);
+    return c;
+    
   }
 }

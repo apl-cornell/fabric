@@ -8,9 +8,22 @@ import jif.runtime.Runtime;
 import java.io.PrintStream;
 
 public class Main {
-	public final principal{*bot} pp = new jif.lang.ExternalPrincipal("localhost");
-	public final label{*bot} lbl = new label {pp→;pp←};
+	public Core{*bot} treeCore;
+	public Core{*bot} nodeCore;
+	public final principal{*bot} pp;
+	public final label{*bot} lbl;
 	public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
+
+	public Main() {
+		if(client$ != null) {
+			treeCore = client$.getCore("core0");
+			nodeCore = client$.getCore("core1");
+		}
+		atomic {
+			pp = new jif.lang.ExternalPrincipal@treeCore("localhost");
+			lbl = new label {pp→;pp←}@treeCore;
+		}
+	}
 
 	public static void main{*bot}(String{*bot}[]{*bot} args) {
 		if(args == null) return;
@@ -28,14 +41,19 @@ public class Main {
 			for(int i = 0; i < args.length; i++) {
 				argsCopy[i] = args[i];
 			}
-			m.begin(argsCopy);
+			atomic {
+				if(m.lbl <= new label {m.pp→;m.pp←} && new label {m.pp→;m.pp←} <= m.lbl) {
+					m.begin(argsCopy);
+				}
+			}
 		} catch (ArrayIndexOutOfBoundsException imposs) {}
 		catch (AbortException e) { /* do nothing for now */ }
 		catch (SecurityException e) { /* do nothing for now */ }
 	}
 
 	public void begin{*lbl}(String{*lbl}[]{*lbl} args)
-	throws (AbortException{*lbl}, SecurityException{*lbl}) {
+	throws (AbortException{*lbl}, SecurityException{*lbl}) 
+	where lbl <= {pp→;pp←}, {pp→;pp←} <= lbl {
 		Runtime[pp] runtime = null;
 		atomic {
 			runtime = Runtime[pp].getRuntime();
@@ -45,8 +63,10 @@ public class Main {
 		String arg = null;
 		PrintStream[{pp→;⊥←⊥}] out = null;
 		out = runtime.out();
+		
 
 		try {
+			out.println("Console handle created");
 			if (args.length != 1 || !args[0].equals("create") && !args[0].equals("read")) {
 				out.println("Usage: tree.Main [create|read]");
 				return;
@@ -62,11 +82,9 @@ public class Main {
 			//    Random random = new Random();
 			if (arg.equals("create")) {
 				atomic {
-					Core treeCore = client$.getCore("core0");
-					Core nodeCore = client$.getCore("core1");
-					final label plbl = new label {*lbl}@treeCore;
-					Tree[plbl] treeVar = null;
-					treeVar = new Tree[plbl]@treeCore(nodeCore);
+					//					final label plbl = new label {*lbl}@treeCore;
+					Tree[lbl] treeVar = null;
+					treeVar = new Tree[lbl]@treeCore(nodeCore);
 					root.put("theTree", treeVar);
 					for (int i = 0; i < 10; i++) {
 						atomic {
@@ -74,6 +92,7 @@ public class Main {
 							//            tree.insertIterative(toInsert);
 							treeVar.insertIterative(i);
 						}
+						out.println("Added element " + i);
 					}
 				}
 				return;
@@ -91,7 +110,7 @@ public class Main {
 						treeVar.lookup(cycle);
 					}
 
-					if (++cycle % 100 == 0)
+					if (++cycle % 10 == 0)
 						out.println(cycle + " lookups done.");
 				}
 			}

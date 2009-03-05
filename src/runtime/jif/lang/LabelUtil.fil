@@ -145,6 +145,19 @@ public final class LabelUtil {
   public static IntegPolicy topInteg() {
     return localCore.getTopIntegPolicy();
   }
+  
+  public static ConfPolicy bottomConf(Core core) {
+	  return localCore.getBottomConfidPolicy();
+  }
+
+  public static ConfPolicy topConf(Core core) {
+	  return localCore.getTopConfidPolicy();
+  }
+
+  public static IntegPolicy topInteg(Core core) {
+	  return localCore.getTopIntegPolicy();
+  }
+  
 
   public static ConfPolicy readerPolicy(Core core, Principal owner,
       Principal reader) {
