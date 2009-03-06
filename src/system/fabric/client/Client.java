@@ -336,6 +336,12 @@ public final class Client {
     shutdown_();
     remoteCallManager.shutdown();
     fetchManager.destroy();
+    
+    for (Core core : cores.values()) {
+      if (core instanceof RemoteCore) {
+        ((RemoteCore) core).destroy();
+      }
+    }
   }
 
   /**

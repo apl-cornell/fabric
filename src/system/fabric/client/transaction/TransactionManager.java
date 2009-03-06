@@ -563,6 +563,8 @@ public final class TransactionManager {
     synchronized (current.commitState) {
       current.commitState.value = COMMITTED;
     }
+    
+    TransactionRegistry.remove(current.tid.topTid);
 
     current = null;
   }

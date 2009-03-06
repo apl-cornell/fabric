@@ -58,6 +58,12 @@ public final class TransactionRegistry {
     }
   }
 
+  public static void remove(long topTid) {
+    synchronized (registry) {
+      registry.remove(topTid);
+    }
+  }
+
   private static Log innermostLog(Log log) {
     Log child = log.getChild();
     while (child != null) {

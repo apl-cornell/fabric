@@ -361,8 +361,11 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     Log log =
         TransactionRegistry
             .getInnermostLog(commitTransactionMessage.transactionID);
-    if (log == null)
-      return new CommitTransactionMessage.Response(false, "No such transaction");
+    if (log == null) {
+      // If no log exists, assume that another client in the transaction has
+      // already committed the requested transaction.
+      return new CommitTransactionMessage.Response(true);
+    }
 
     TransactionManager tm = getTransactionManager();
     tm.associateLog(log);

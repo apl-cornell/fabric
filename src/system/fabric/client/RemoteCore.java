@@ -1,6 +1,7 @@
 package fabric.client;
 
 import java.io.*;
+import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -63,7 +64,7 @@ public class RemoteCore implements Core, RemoteNode {
   private transient DataOutputStream unencryptedOut;
 
   /**
-   * The core's public SSL key.  Used for verifying signatures on object groups.
+   * The core's public SSL key. Used for verifying signatures on object groups.
    * XXX Should use core's NodePrincipal key instead.
    */
   private transient final PublicKey publicKey;
@@ -71,7 +72,40 @@ public class RemoteCore implements Core, RemoteNode {
   /**
    * Cache of serialized objects that the core has sent us.
    */
-  private transient LongKeyMap<SoftReference<SerializedObject>> serialized;
+  private transient LongKeyMap<SerializedObjectSoftRef> serialized;
+  final transient ReferenceQueue<SerializedObject> serializedRefQueue;
+
+  /**
+   * A thread for removing entries from <code>serialized</code> as
+   * SerializedObjects are collected from memory.
+   */
+  private transient final SerializedCollector collector;
+
+  private class SerializedCollector extends Thread {
+    private final ReferenceQueue<SerializedObject> queue;
+    private boolean destroyed;
+
+    SerializedCollector() {
+      super("Serialized object collector for core " + name);
+      queue = new ReferenceQueue<SerializedObject>();
+      destroyed = false;
+    }
+    
+    @Override
+    public void run() {
+      while (!destroyed) {
+        try {
+          SerializedObjectSoftRef ref =
+              (SerializedObjectSoftRef) queue.remove();
+          
+          synchronized (serialized) {
+            serialized.remove(ref.onum);
+          }
+        } catch (InterruptedException e) {
+        }
+      }
+    }
+  }
 
   /**
    * Creates a core representing the core at the given host name.
@@ -80,8 +114,11 @@ public class RemoteCore implements Core, RemoteNode {
     this.name = name;
     this.objects = new LongKeyHashMap<FabricSoftRef>();
     this.fresh_ids = new LinkedList<Long>();
-    this.serialized = new LongKeyHashMap<SoftReference<SerializedObject>>();
+    this.serialized = new LongKeyHashMap<SerializedObjectSoftRef>();
     this.publicKey = key;
+    this.serializedRefQueue = new ReferenceQueue<SerializedObject>();
+    this.collector = new SerializedCollector();
+    this.collector.start();
   }
 
   public DataInputStream dataInputStream(boolean ssl) {
@@ -92,6 +129,14 @@ public class RemoteCore implements Core, RemoteNode {
   public DataOutputStream dataOutputStream(boolean ssl) {
     if (ssl) return sslOut;
     return unencryptedOut;
+  }
+  
+  /**
+   * Cleans up the SerializedObject collector thread.
+   */
+  public void destroy() {
+    collector.destroyed = true;
+    collector.interrupt();
   }
 
   /**
@@ -170,8 +215,7 @@ public class RemoteCore implements Core, RemoteNode {
       if (withSSL) out.writeUTF(client.javaPrincipal.getName());
       out.flush();
       DataInputStream in =
-          new DataInputStream(
-              new BufferedInputStream(socket.getInputStream()));
+          new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 
       if (withSSL) {
         sslOut = out;
@@ -208,16 +252,18 @@ public class RemoteCore implements Core, RemoteNode {
   /**
    * Sends a PREPARE message to the core.
    */
-  public boolean prepareTransaction(long tid, long commitTime, Collection<Object.$Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Object.$Impl> writes)
+  public boolean prepareTransaction(long tid, long commitTime,
+      Collection<Object.$Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<Object.$Impl> writes)
       throws TransactionPrepareFailedException, UnreachableNodeException {
     PrepareTransactionMessage.Response response =
-        new PrepareTransactionMessage(tid, commitTime, toCreate, reads, writes).send(this);
+        new PrepareTransactionMessage(tid, commitTime, toCreate, reads, writes)
+            .send(this);
 
     if (!response.success)
       throw new TransactionPrepareFailedException(response.versionConflicts,
           response.message);
-    
+
     return response.subTransactionCreated;
   }
 
@@ -283,7 +329,12 @@ public class RemoteCore implements Core, RemoteNode {
   private Object.$Impl fetchObject(boolean useDissem, long onum)
       throws FetchException {
     Object.$Impl result = null;
-    SoftReference<SerializedObject> serialRef = serialized.remove(onum);
+    SoftReference<SerializedObject> serialRef;
+    // Lock the table to keep the serialized-reference collector from altering
+    // it.
+    synchronized (serialized) {
+      serialRef = serialized.remove(onum);
+    }
 
     if (serialRef != null) {
       SerializedObject serial = serialRef.get();
@@ -304,20 +355,24 @@ public class RemoteCore implements Core, RemoteNode {
         g = readObjectFromCore(onum);
       }
 
-      for (LongKeyMap.Entry<SerializedObject> entry : g.objects().entrySet()) {
-        long curOnum = entry.getKey();
-        SerializedObject curObj = entry.getValue();
+      // Lock the table to keep the serialized-reference collector from altering
+      // it.
+      synchronized (serialized) {
+        for (LongKeyMap.Entry<SerializedObject> entry : g.objects().entrySet()) {
+          long curOnum = entry.getKey();
+          SerializedObject curObj = entry.getValue();
 
-        if (curOnum == onum) {
-          try {
-            result = curObj.deserialize(this);
-          } catch (ClassNotFoundException e) {
-            throw new InternalError(e);
+          if (curOnum == onum) {
+            try {
+              result = curObj.deserialize(this);
+            } catch (ClassNotFoundException e) {
+              throw new InternalError(e);
+            }
+          } else {
+            // Add to the cache if object not already in memory.
+            serialized.put(entry.getKey(), new SerializedObjectSoftRef(this,
+                entry.getValue()));
           }
-        } else {
-          // Add to the cache if object not already in memory.
-          serialized.put(entry.getKey(), new SoftReference<SerializedObject>(
-              entry.getValue()));
         }
       }
     }
@@ -460,11 +515,11 @@ public class RemoteCore implements Core, RemoteNode {
     FabricSoftRef ref = impl.$ref;
     if (ref.core != this)
       throw new InternalError("Caching object at wrong core");
-    
+
     synchronized (objects) {
       if (objects.get(ref.onum) != null)
         throw new InternalError("Conflicting cache entry");
-      
+
       objects.put(ref.onum, ref);
     }
   }
