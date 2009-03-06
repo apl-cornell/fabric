@@ -325,7 +325,9 @@ public class RemoteCore implements Core, RemoteNode {
     while (result instanceof Surrogate) {
       // XXX Track surrogates for reuse?
       Surrogate surrogate = (Surrogate) result;
-      result = surrogate.core.readObject(surrogate.onum);
+      if (useDissem)
+        result = surrogate.core.readObject(surrogate.onum);
+      else result = surrogate.core.readObjectNoDissem(surrogate.onum);
     }
 
     synchronized (objects) {
