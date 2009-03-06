@@ -7,6 +7,7 @@ import fabric.types.FabricTypeSystem;
 import fabric.visit.ExplicitSuperclassAdder;
 import fabric.visit.FabricToFabilRewriter;
 import fabric.visit.FabricTypeBuilder;
+import fabric.visit.PrincipalCastAdder;
 import fabric.visit.RemoteCallWrapperAdder;
 import fabric.visit.RemoteCallWrapperUpdater;
 
@@ -169,6 +170,23 @@ public class FabricScheduler extends JifScheduler {
     return g;
   }
 
+  public Goal PrincipalCastsAdded(Job job) {
+    FabricTypeSystem ts = fabext.typeSystem();
+    FabricNodeFactory nf = fabext.nodeFactory();
+    
+    Goal g = internGoal(new VisitorGoal(job, new PrincipalCastAdder(job, ts, nf)) {
+      @SuppressWarnings("unchecked")
+      @Override
+      public Collection prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(Serialized(job));
+        return l;
+      }
+    });
+    
+    return g;
+  }
+  
   public Goal FabricToFabilRewritten(Job job) {
     FabricTypeSystem  ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
@@ -176,6 +194,7 @@ public class FabricScheduler extends JifScheduler {
 
     try {
         addPrerequisiteDependency(g, this.Serialized(job));
+        addPrerequisiteDependency(g, this.PrincipalCastsAdded(job));
         
         // make sure that if Object.fab is being compiled, it is always
         // written to FabIL before any other job.
