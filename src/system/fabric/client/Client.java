@@ -569,17 +569,47 @@ public final class Client {
    */
   public static <T> T runInSubTransaction(Code<T> code) {
     TransactionManager tm = TransactionManager.getInstance();
-    tm.startTransaction();
-    try {
-      T result = code.run();
-      tm.commitTransaction();
-      return result;
-    } catch (AbortException e) {
-      throw e;
-    } catch (RuntimeException t) {
-      tm.abortTransaction();
-      throw t;
+    
+    boolean success = false;
+    int backoff = 1;
+    while (!success) {
+      if (backoff > 32) {
+        while (true) {
+          try {
+            Thread.sleep(backoff);
+            break;
+          } catch (InterruptedException e) {
+          }
+        }
+      }
+      
+      if (backoff < 5000) backoff *= 2;
+      
+      success = true;
+      tm.startTransaction();
+      
+      try {
+        return code.run();
+      } catch (RetryException e) {
+        success = false;
+        continue;
+      } catch (Throwable e) {
+        success = false;
+        throw new AbortException(e);
+      } finally {
+        if (success) {
+          try {
+            tm.commitTransaction();
+          } catch (AbortException e) {
+            success = false;
+          }
+        } else {
+          tm.abortTransaction();
+        }
+      }
     }
+    
+    throw new InternalError();
   }
   
   public static interface Code<T> {
