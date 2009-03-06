@@ -3,11 +3,14 @@ package fabric.core;
 import java.security.PrivateKey;
 import java.util.*;
 
+import jif.lang.Label;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
+import fabric.client.Client.Code;
 import fabric.common.AuthorizationUtil;
+import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
@@ -104,6 +107,15 @@ public class TransactionManager {
     final long tid = req.tid;
     boolean result = false;
     
+    // First, check write permissions. We do this before we attempt to do the
+    // actual prepare because we want to run the permissions check in a
+    // transaction outside of the client's transaction.
+    Core core = Client.getClient().getCore(store.getName());
+    if (client == null || client.$getCore() != core
+        || client.$getOnum() != ONumConstants.CORE_PRINCIPAL) {
+      checkWritePerms(client, req.writes);
+    }
+    
     synchronized (store) {
       try {
         store.beginTransaction(tid, client);
@@ -133,23 +145,10 @@ public class TransactionManager {
           store.registerUpdate(tid, client, o);
         }
 
-        // Make sure the object actually exists.
-        if (coreCopy == null) {
-          throw new TransactionPrepareFailedException("Object " + o.getOnum()
-              + " does not exist.");
-        }
-
         // check promises
         if (coreCopy.getExpiry() > req.commitTime) {
           throw new TransactionPrepareFailedException("Update to object" + onum
               + " violates an outstanding promise");
-        }
-
-        // Check write permissions
-        if (!AuthorizationUtil.isWritePermitted(client, Client.getClient()
-            .getCore(store.getName()), coreCopy.getLabelOnum())) {
-          throw new TransactionPrepareFailedException("Insufficient privilege "
-              + "to write object " + o.getOnum());
         }
 
         // Check version numbers.
@@ -248,6 +247,45 @@ public class TransactionManager {
         throw e;
       }
     }
+  }
+
+  /**
+   * Checks that the client principal has permissions to write the given
+   * objects. If it doesn't, a TransactionPrepareFailedException is thrown.
+   */
+  private void checkWritePerms(final NodePrincipal client,
+      final Collection<SerializedObject> writes)
+      throws TransactionPrepareFailedException {
+    // The code that does the actual checking.
+    Code<TransactionPrepareFailedException> checker =
+        new Code<TransactionPrepareFailedException>() {
+          public TransactionPrepareFailedException run() {
+            Core core = Client.getClient().getCore(store.getName());
+
+            for (SerializedObject o : writes) {
+              long onum = o.getOnum();
+
+              fabric.lang.Object coreCopy =
+                  new fabric.lang.Object.$Proxy(core, onum);
+              
+              Label label = coreCopy.get$label();
+              
+              // Check write permissions.
+              if (!AuthorizationUtil.isWritePermitted(client, label.$getCore(),
+                  label.$getOnum())) {
+                return new TransactionPrepareFailedException("Insufficient "
+                    + "privileges to write object " + onum);
+              }
+            }
+            
+            return null;
+          }
+        };
+
+    TransactionPrepareFailedException failure =
+        Client.runInTransaction(null, checker);
+
+    if (failure != null) throw failure;
   }
 
   /**
