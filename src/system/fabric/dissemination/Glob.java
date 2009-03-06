@@ -27,7 +27,7 @@ public class Glob implements FastSerializable {
    * A pointer to the encryption key. This can be null if the null cipher was
    * used. (This can happen, for example, if the data was public.)
    */
-  private final Long keyOnum;
+  private final SecretKeyObject keyObject;
 
   /**
    * The initialization vector for decrypting. Can be null if the null cipher
@@ -64,12 +64,10 @@ public class Glob implements FastSerializable {
   public Glob(Core core, ObjectGroup group, PrivateKey key) {
     this.timestamp = System.currentTimeMillis();
 
-    final SecretKeyObject keyObject = getLabel(core, group).keyObject();
+    this.keyObject = getLabel(core, group).keyObject();
     if (keyObject == null) {
-      this.keyOnum = null;
       this.iv = null;
     } else {
-      this.keyOnum = keyObject.$getOnum();
       this.iv = Crypto.makeIV();
     }
 
@@ -116,9 +114,15 @@ public class Glob implements FastSerializable {
     sig.update((byte) (timestamp >>> 8));
     sig.update((byte) timestamp);
 
-    // Update with keyOnum, if non-null.
-    if (keyOnum != null) {
-      long val = keyOnum;
+    // Update with keyObject pointer, if non-null.
+    if (keyObject != null) {
+      try {
+        sig.update(keyObject.$getCore().name().getBytes("UTF8"));
+      } catch (UnsupportedEncodingException e) {
+        throw new InternalError(e);
+      }
+      
+      long val = keyObject.$getOnum();
       sig.update((byte) (val >>> 56));
       sig.update((byte) (val >>> 48));
       sig.update((byte) (val >>> 40));
@@ -215,11 +219,12 @@ public class Glob implements FastSerializable {
   /** Serializer. */
   public void write(DataOutput out) throws IOException {
     out.writeLong(timestamp);
-    if (keyOnum == null) {
+    if (keyObject == null) {
       out.writeBoolean(false);
     } else {
       out.writeBoolean(true);
-      out.writeLong(keyOnum);
+      out.writeUTF(keyObject.$getCore().name());
+      out.writeLong(keyObject.$getOnum());
     }
 
     if (iv == null) {
@@ -246,9 +251,10 @@ public class Glob implements FastSerializable {
   public Glob(PublicKey key, DataInput in) throws IOException,
       BadSignatureException {
     this.timestamp = in.readLong();
-    if (in.readBoolean())
-      this.keyOnum = in.readLong();
-    else this.keyOnum = null;
+    if (in.readBoolean()) {
+      Core core = Client.getClient().getCore(in.readUTF());
+      this.keyObject = new SecretKeyObject.$Proxy(core, in.readLong());
+    } else this.keyObject = null;
 
     int ivLength = in.readInt();
     if (ivLength > 0) {
@@ -277,9 +283,6 @@ public class Glob implements FastSerializable {
    *          The core that this glob came from.
    */
   public ObjectGroup decrypt(Core core) {
-    SecretKeyObject keyObject =
-        keyOnum == null ? null : new SecretKeyObject.$Proxy(core, keyOnum);
-
     try {
       Cipher cipher = makeCipher(keyObject, Cipher.DECRYPT_MODE, iv);
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
