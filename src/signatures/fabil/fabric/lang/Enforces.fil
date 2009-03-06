@@ -1,5 +1,6 @@
 package fabric.lang;
 
+import jif.lang.Label;
 import java.security.SignatureException;
 
 public final class Enforces {

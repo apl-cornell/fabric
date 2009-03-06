@@ -1,8 +1,8 @@
 package jif.lang;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
+import fabric.util.Map;
+import fabric.util.HashMap;
+import fabric.util.Iterator;
 import java.lang.Object;
 
 
@@ -12,11 +12,8 @@ import java.lang.Object;
  * This class assumes that principals are equal if they are the same class
  * with the same name.
  */
-public abstract class AbstractPrincipal extends Principal {
+public abstract class AbstractPrincipal extends DelegatingPrincipal {
     private String name;
-    private static Principal NULL_PRINCIPAL = new AbstractPrincipal("NULL PRINCIPAL") { 
-        public boolean equals(Object o) { return this == o; }
-    };
 
     private Map superiors = new HashMap(); // treat this like a set
 
@@ -39,24 +36,23 @@ public abstract class AbstractPrincipal extends Principal {
     }
 
     public boolean delegatesTo(Principal p) {
-        return superiorsContains((Principal)p);
+        return superiorsContains(p);
     }
 
     public void addDelegatesTo(Principal p) {
-        if (p == null) p = NULL_PRINCIPAL;
         if (this.superiors.put(p, this) == null) {
-            PrincipalUtil.notifyNewDelegation(this, p);
+          // Need to figure out how to properly cache delegations. -MJL
+          // PrincipalUtil.notifyNewDelegation(this, p);
         }
     }
     public void removeDelegatesTo(Principal p) {
-        if (p == null) p = NULL_PRINCIPAL;
         if (this.superiors.remove(p) != null) {
-            PrincipalUtil.notifyRevokeDelegation(this, p);            
+          // Need to figure out how to properly cache delegations. -MJL
+          // PrincipalUtil.notifyRevokeDelegation(this, p);
         }
     }
 
     protected boolean superiorsContains(Principal p) {
-        if (p == null) p = NULL_PRINCIPAL;
         return this.superiors.containsKey(p);
     }
 

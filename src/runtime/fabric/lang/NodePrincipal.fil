@@ -10,53 +10,9 @@ import fabric.util.Map;
 
 import jif.lang.*;
 
-public final class NodePrincipal extends Principal {
-  private final String name;
+public final class NodePrincipal extends AbstractPrincipal {
 
   public NodePrincipal(String name) {
-    this.name = name;
-  }
-
-  public String name() {
-    return name;
-  }
-
-  public boolean delegatesTo(Principal p) {
-    return false;
-  }
-
-  public boolean isAuthorized(java.lang.Object authorizationProof, Closure closure,
-      Label lb, boolean executeNow) {
-    // The default is that this principal authorizes no closures.
-    return false;
-  }
-  
-  public ActsForProof findProofDownto(Core core, Principal q,
-      java.lang.Object searchState) {
-    // don't even try! We don't have any information
-    // about who we can act for.
-    return null;
-  }
-
-  public ActsForProof findProofUpto(Core core, Principal p,
-      java.lang.Object searchState) {
-    return null;
-  }
-
-  public boolean equals(Object o) {
-    if (o == null) return false;
-    if (o instanceof NodePrincipal) {
-      return equals((NodePrincipal) o);
-    }
-    return false;
-  }
-  
-  public boolean equals(Principal p) {
-    return p != null && (this.name == p.name() || (this.name != null && 
-	this.name.equals(p.name()))) && this.getClass() == p.getClass();        
-  }
-  
-  public int hashCode() {
-    return name.hashCode();
+    super(name);
   }
 }

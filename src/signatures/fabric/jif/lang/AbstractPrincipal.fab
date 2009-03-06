@@ -7,7 +7,7 @@ package jif.lang;
  * This class assumes that principals are equal if they are the same class
  * with the same name.
  */
-public class AbstractPrincipal extends Principal {
+public abstract class AbstractPrincipal extends DelegatingPrincipal {
         
     protected AbstractPrincipal(String{this} name) {
     }
@@ -15,9 +15,6 @@ public class AbstractPrincipal extends Principal {
     public native String{this} name();
     
     public native boolean{this;p;this!:} delegatesTo(principal p);
-    
-    public native void addDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);    
-    public native void removeDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);
 
     protected native boolean{this;p;this!:} superiorsContains(Principal p) where authority (this);
     

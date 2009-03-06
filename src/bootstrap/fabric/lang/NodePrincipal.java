@@ -1,12 +1,13 @@
 package fabric.lang;
 
+import jif.lang.AbstractPrincipal;
 import jif.lang.ActsForProof;
 import jif.lang.Closure;
 import jif.lang.Label;
 import fabric.client.Core;
 
-public interface NodePrincipal extends Principal, Object {
-  public static class $Proxy extends Principal.$Proxy implements
+public interface NodePrincipal extends AbstractPrincipal, Object {
+  public static class $Proxy extends AbstractPrincipal.$Proxy implements
       NodePrincipal {
 
     public $Proxy(Core core, long onum) {
@@ -35,11 +36,11 @@ public interface NodePrincipal extends Principal, Object {
     public native String name();
   }
 
-  public static final class $Impl extends Principal.$Impl implements
+  public static final class $Impl extends AbstractPrincipal.$Impl implements
       NodePrincipal {
     public $Impl(fabric.client.Core $location, jif.lang.Label $label,
         java.lang.String name) {
-      super($location, $label);
+      super($location, $label, name);
     }
 
     @Override

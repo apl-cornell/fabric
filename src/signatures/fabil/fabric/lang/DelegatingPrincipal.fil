@@ -1,0 +1,8 @@
+package fabric.lang;
+
+public abstract class DelegatingPrincipal extends Principal {
+
+  public abstract void addDelegatesTo(final Principal p);
+  
+  public abstract void removeDelegatesTo(final Principal p);
+}

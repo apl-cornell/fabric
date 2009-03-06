@@ -17,17 +17,20 @@ import fabric.util.LinkedHashSet;
  * Utility methods for principals. This code is mostly copied from Jif.
  */
 public class PrincipalUtil {
+  
+        // Need to figure out how to properly cache things.  -MJL
+  
 	// caches
-	private static final Map/* <ActsForPair, ActsForProof> */cacheActsFor =
-		new HashMap/* <ActsForPair, ActsForProof> */();
-	private static final Set/* <ActsForPair, ActsForPair> */cacheNotActsFor =
-		new HashSet/* <ActsForPair, ActsForPair> */();
-
-	// map from DelegationPairs to sets of ActsForPairs. If (p, q) is
-	// in the set of the map of delegation d, then p actsfor q, and the
-	// proof depends on the delegation d
-	private static final Map/* <DelegationPair, Set<ActsForPair>> */cacheActsForDependencies =
-		new HashMap/* <DelegationPair, Set<ActsForPair>> */();
+//	private static final Map/* <ActsForPair, ActsForProof> */cacheActsFor =
+//		new HashMap/* <ActsForPair, ActsForProof> */();
+//	private static final Set/* <ActsForPair, ActsForPair> */cacheNotActsFor =
+//		new HashSet/* <ActsForPair, ActsForPair> */();
+//
+//	// map from DelegationPairs to sets of ActsForPairs. If (p, q) is
+//	// in the set of the map of delegation d, then p actsfor q, and the
+//	// proof depends on the delegation d
+//	private static final Map/* <DelegationPair, Set<ActsForPair>> */cacheActsForDependencies =
+//		new HashMap/* <DelegationPair, Set<ActsForPair>> */();
 
 	/**
 	 * Returns true if and only if the principal p acts for the principal q. A
@@ -60,12 +63,12 @@ public class PrincipalUtil {
 			LabelUtil.enterTiming();
 			// try cache
 			ActsForPair pair = new ActsForPair@localCore(p, q);
-			if (LabelUtil.USE_CACHING) {
-				if (cacheActsFor.containsKey(pair)) {
-					return (ActsForProof) cacheActsFor.get(pair);
-				}
-				if (cacheNotActsFor.contains(pair)) return null;
-			}
+//			if (LabelUtil.USE_CACHING) {
+//				if (cacheActsFor.containsKey(pair)) {
+//					return (ActsForProof) cacheActsFor.get(pair);
+//				}
+//				if (cacheNotActsFor.contains(pair)) return null;
+//			}
 
 			if (delegatesTo(q, p)) return new DelegatesProof@core(p, q);
 
@@ -78,31 +81,31 @@ public class PrincipalUtil {
 			// try searching
 			ActsForProof prf = findActsForProof(core, p, q, null);
 			if (prf != null && (verifyProof(prf, p, q))) {
-				if (LabelUtil.USE_CACHING) {
-					cacheActsFor.put(pair, prf);
-				}
+//				if (LabelUtil.USE_CACHING) {
+//					cacheActsFor.put(pair, prf);
+//				}
 				// add dependencies that this actsfor replies on.
 				Set s = new HashSet@localCore();
 				prf.gatherDelegationDependencies(s);
 				// for each DelegationPair in s, if that delegation is removed, the
 				// proof is no longer valid.
-				if (LabelUtil.USE_CACHING) {
-					for (Iterator iter = s.iterator(); iter.hasNext();) {
-						DelegationPair del = (DelegationPair) iter.next();
-						Set/* <ActsForPair> */deps = (Set) cacheActsForDependencies.get(del);
-						if (deps == null) {
-							deps = new HashSet/* <ActsForPair> */();
-							cacheActsForDependencies.put(del, deps);
-						}
-						deps.add(pair);
-					}
-				}
+//				if (LabelUtil.USE_CACHING) {
+//					for (Iterator iter = s.iterator(); iter.hasNext();) {
+//						DelegationPair del = (DelegationPair) iter.next();
+//						Set/* <ActsForPair> */deps = (Set) cacheActsForDependencies.get(del);
+//						if (deps == null) {
+//							deps = new HashSet/* <ActsForPair> */();
+//							cacheActsForDependencies.put(del, deps);
+//						}
+//						deps.add(pair);
+//					}
+//				}
 				return prf;
 			}
 
-			if (LabelUtil.USE_CACHING) {
-				cacheNotActsFor.add(pair);
-			}
+//			if (LabelUtil.USE_CACHING) {
+//				cacheNotActsFor.add(pair);
+//			}
 			return null;
 		} finally {
 			LabelUtil.exitTiming();
@@ -117,9 +120,9 @@ public class PrincipalUtil {
 		if (!delegatesTo(granter, superior)) return;
 
 		// XXX for the moment, just clear out all cached negative results
-		if (LabelUtil.USE_CACHING) {
-			cacheNotActsFor.clear();
-		}
+//		if (LabelUtil.USE_CACHING) {
+//			cacheNotActsFor.clear();
+//		}
 
 		// need to notify the label cache too
 		LabelUtil.notifyNewDelegation(granter, superior);
@@ -131,16 +134,16 @@ public class PrincipalUtil {
 	public static void notifyRevokeDelegation(Principal granter,
 			Principal superior) {
 		final Core localCore = Client.getClient().getLocalCore();
-		if (LabelUtil.USE_CACHING) {
-			DelegationPair del = new DelegationPair@localCore(superior, granter);
-			Set deps = (Set) cacheActsForDependencies.remove(del);
-			if (deps != null) {
-				for (Iterator iter = deps.iterator(); iter.hasNext();) {
-					ActsForPair afp = (ActsForPair) iter.next();
-					cacheActsFor.remove(afp);
-				}
-			}
-		}
+//		if (LabelUtil.USE_CACHING) {
+//			DelegationPair del = new DelegationPair@localCore(superior, granter);
+//			Set deps = (Set) cacheActsForDependencies.remove(del);
+//			if (deps != null) {
+//				for (Iterator iter = deps.iterator(); iter.hasNext();) {
+//					ActsForPair afp = (ActsForPair) iter.next();
+//					cacheActsFor.remove(afp);
+//				}
+//			}
+//		}
 		// need to notify the label cache too
 		LabelUtil.notifyRevokeDelegation(granter, superior);
 	}
@@ -221,7 +224,8 @@ public class PrincipalUtil {
 		private ProofSearchState(ProofSearchState ss, Principal p, Principal q) {
 			int len = ss.goalstack.length + 1;
 			goalstack = new ActsForPair[len];
-			System.arraycopy(ss.goalstack, 0, goalstack, 0, len-1);
+			for (int i = 0; i < len-1; i++)
+			  goalstack[i] = ss.goalstack[i];
 			goalstack[len-1] = new ActsForPair(p, q);
 		}
 		public boolean contains(Principal p, Principal q) {

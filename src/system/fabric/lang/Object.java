@@ -82,7 +82,8 @@ public interface Object {
       if (core.isLocalCore() && onum != ONumConstants.EMPTY_LABEL
           && onum != ONumConstants.PUBLIC_READONLY_LABEL)
         throw new InternalError(
-            "Attempted to create unresolved reference to a local object.");
+            "Attempted to create unresolved reference to a local object (onum="
+                + onum + ").");
 
       this.ref = new FabricSoftRef(core, onum, null);
       this.anchor = null;
