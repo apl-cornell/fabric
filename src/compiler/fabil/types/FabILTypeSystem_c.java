@@ -58,6 +58,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
     return load("fabric.lang.Principal");
   }
   
+  public ClassType DelegatingPrincipal() {
+    return load("fabric.lang.DelegatingPrincipal");
+  }
+  
   public Type Core() {
     return load("fabric.client.Core");
   }

@@ -12,7 +12,8 @@ import fabric.dissemination.Glob;
 
 /**
  * A <code>DissemReadMessage</code> represents a request from a dissemination
- * node to read an object at a core.
+ * node to read an object at a core. This implicitly subscribes the client to
+ * receive the next update to the object.
  */
 public final class DissemReadMessage extends
     Message<RemoteCore, DissemReadMessage.Response> {

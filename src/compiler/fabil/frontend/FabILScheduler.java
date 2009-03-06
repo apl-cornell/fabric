@@ -282,6 +282,20 @@ public class FabILScheduler extends JLScheduler {
 
     return g;
   }
+  
+  public Goal PrincipalsDelegated(final Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new PrincipalDelegator(extInfo)) {
+      @SuppressWarnings("unchecked")
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(LocationsAssigned(job));
+        l.addAll(super.prerequisiteGoals(scheduler));
+        return l;
+      }
+    });
+    return g;
+  }
 
   public Goal RewriteProxies(final Job job) {
     Goal g = internGoal(new VisitorGoal(job, new ProxyRewriter(extInfo)) {
@@ -292,6 +306,7 @@ public class FabILScheduler extends JLScheduler {
         l.add(WrapInlineables(job));
         l.add(LocationsAssigned(job));
         l.add(LabelsAssigned(job));
+        l.add(PrincipalsDelegated(job));
 
         if (extInfo.getFabILOptions().optLevel() > 0) {
           l.add(ReadWriteChecked(job));

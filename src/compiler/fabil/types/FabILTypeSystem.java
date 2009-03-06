@@ -44,6 +44,8 @@ public interface FabILTypeSystem extends TypeSystem {
 
   ClassType Principal();
 
+  ClassType DelegatingPrincipal();
+
   /** The ClassType of fabric.client.Core. */
   Type Core();
 
