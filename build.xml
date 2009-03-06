@@ -129,7 +129,7 @@
     <echo message="java version is ${java.version}"/>
     <echo message="current directory is ${user.dir}"/>
     <echo message="Java home directory is ${java.home}"/>
-    <echo message="Polglot home directory is ${polyglot.home}"/>
+    <echo message="Polyglot home directory is ${polyglot.home}"/>
     <echo message="Jif home directory is ${jif.home}" />
 
     <property name="configure.up-to-date" value="true"/>
