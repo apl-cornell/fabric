@@ -51,8 +51,15 @@ public class CallExt_c extends ExprExt_c {
 
     Id name = (Id) call.visitChild(call.id(), pr);
     List<Expr> arguments = call.visitList(call.arguments(), pr);
-    call = (Call) call.target(target).id(name).arguments(arguments);
+    
+    if (name.id().equals("getClass") && arguments.isEmpty()) {
+      // Calls to getClass() are rewritten so that the call target is an exact
+      // proxy.
+      target =
+          pr.qq().parseExpr("fabric.lang.Object.$Proxy.$getProxy(%E)", target);
+    }
 
+    call = (Call) call.target(target).id(name).arguments(arguments);
     return ((CallExt_c) call.ext()).rewriteProxiesImpl(pr);
   }
 
