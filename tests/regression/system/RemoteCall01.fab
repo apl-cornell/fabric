@@ -4,26 +4,36 @@ import jif.runtime.Runtime;
 import java.io.PrintStream;
 
 public class RemoteCall01 {
-  static final label{*bot} bot = new label{_->_; *<-*};
-  final label{*bot} lbl = new label{client$->;client$<-};
+  final Core{_->_; *<-*} core;
 
-  final RemoteClient{*bot} remoteClient = client$("core0");
+  final RemoteClient{_->_; *<-*} remoteClient;
 
-  final RemoteCall01Data[lbl]{*bot} data = new RemoteCall01Data[lbl]();
+  final RemoteCall01Data[{client$->; client$<-}]{_->_; *<-*} data;
 
-  public void moo{client$->;client$<-}() : {client$->;client$<-} {
+  RemoteCall01() {
+    try {
+      core = client$.getCore("core0");
+    } catch (NullPointerException e) {
+      core = null;
+    }
+
+    remoteClient = client$("core0");
+    data = new RemoteCall01Data[{client$->; client$<-}]@core();
+  }
+
+  public void moo{client$->;client$<-}(label{*lbl} lbl) : {client$->;client$<-} {
     if (data == null) return;
     data.i++;
   }
 
-  void run{*bot}() {
+  void run{client$->;client$<-}() {
     try {
       atomic {
 	if (remoteClient actsfor client$)
-	  moo@remoteClient();
+	  moo@remoteClient(new label {client$->; client$<-});
       }
 
-      int{*lbl} curI = 0;
+      int{client$->; client$<-} curI = 0;
       atomic {
 	if (data == null) return;
 	curI = data.i;
@@ -46,7 +56,7 @@ public class RemoteCall01 {
     }
   }
   
-  public static void main{*bot}(String[] args) {
+  public static void main{_->_; *<-*}(String[] args) {
     Core core = null;
     try {
       core = client$.getCore("core0");
