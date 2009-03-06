@@ -1,19 +1,31 @@
 package sif.servlet;
+import fabric.lang.Principal;
 
 /**
  * Global state for a single session.
  */
 
-public class SessionState extends java.lang.Object {
-    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
-    private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
+public class SessionState[label T] {
 
-    protected SessionState() {
-        sessionPrincipal = null; // dummy only
+    protected SessionState{T}(String{T} sessionId) {
+        this.sessionPrincipal = new SessionPrincipal[T](this);
+        this.sessionId        = sessionId;
     }
 
-    public final principal{this} sessionPrincipal;
+    private final Principal{T} sessionPrincipal;
+    private final String{T}    sessionId;
+
+    public final String{T} getSessionId() {
+        return this.sessionId;
+    }
+
+    public final Principal{T} sessionPrincipal() {
+        return this.sessionPrincipal;
+    }
     
-    public native final String{this} getSessionId();
+    /** convenience method for non-fabric code */
+    public static SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id) {
+      return new SessionState[lbl](id);
+    }
 }
 

@@ -24,11 +24,10 @@ public final class Request[principal servletP] extends java.lang.Object {
     public native InputStream[{*inp.inputLbl; inp; *!:session}]{*inp.inputLbl; inp; *!:session} getFile(Input[servletP, {this}] inp);
     public native InputStream[{*eLbl; *n.input.inputLbl; n; *!:session}]{*n.input.inputLbl; n; *!:session} getFile(label{*lbl} lbl, label{*lbl} eLbl, InputNode[servletP, lbl, eLbl] n);
 
-        
-        //      public native String action_name();
+//      public native String action_name();
 //      public native String remoteAddr();
 //      public native String servletURL();
     public native String{this} contextURL();
-    public native SessionState{this} getSessionState();
+    public native SessionState[lbl] getSessionState(label lbl);
     public native void invalidateSession{*:session;session:}();
 }

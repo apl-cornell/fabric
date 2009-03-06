@@ -8,6 +8,7 @@ import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 
 import jif.lang.Label;
+import jif.lang.LabelUtil;
 import fabric.lang.Principal;
 
 import org.apache.commons.fileupload.FileItem;
@@ -142,16 +143,20 @@ public final class Request {
         //return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + request.getServletPath();
     }
     
-    public SessionState getSessionState() {        
+    public SessionState getSessionState(Label lbl) {
 	SessionState result =
 	  (SessionState)request.getSession(true).getAttribute("session_state");
 
 	if (result == null) {
-	    result = servlet.createSessionState(request.getSession().getId());
+	    result = servlet.createSessionState(lbl, request.getSession().getId());
 	    request.getSession(true).setAttribute("session_state", result);
 	}
 
 	return result;
+    }
+    
+    public SessionState getSessionState() {
+      return getSessionState(LabelUtil.$Impl.noComponents());
     }
     
     public void invalidateSession() {

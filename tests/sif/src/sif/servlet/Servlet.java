@@ -34,6 +34,17 @@ abstract public class Servlet extends HttpServlet {
 
     static final int DEBUG_LEVEL = -1;
     public static final PrintStream DEBUG = System.err;
+    
+    static {
+      try {
+        Client.initialize("client0");
+      } catch(IllegalStateException e) {
+        // TODO: need to fix this up
+        // do nothing, client already initialized.
+      } catch (final Exception e) {
+        System.out.println("Fabric: Client unable to initialize");
+      }      
+    }
 
 
     protected Servlet(Principal servletP) {
@@ -51,6 +62,7 @@ abstract public class Servlet extends HttpServlet {
                 }
             }
         };
+        
         startActions = new HashMap<String, Action>();
         this.jif$invokeDefConstructor();
 
@@ -282,8 +294,9 @@ abstract public class Servlet extends HttpServlet {
                 t);
         }
 
+        // TODO KV: Replace the null label with something more sensible
         if (!req.returnPageSet()) {
-            reportError(sessionPrincipalLabel(req.getSessionState()), req,  
+            reportError(sessionPrincipalLabel(req.getSessionState(null)), req,  
                 "Error handling request", "Error Handling Request",
                 "The servlet did not generate any output for your request. " +
             "This probably means that your request was ill-formed.");
@@ -292,9 +305,13 @@ abstract public class Servlet extends HttpServlet {
     }
 
 
-    Label trustedBySessionLabel(Request req) {
-        Core local = Client.getClient().getLocalCore();
-        return LabelUtil.$Impl.writerPolicyLabel(local, req.session, req.session);        
+    Label trustedBySessionLabel(final Request req) {
+      return Client.runInSubTransaction(new fabric.client.Client.Code<Label>() {
+        public Label run() {
+          Core local = Client.getClient().getLocalCore();
+          return LabelUtil.$Impl.writerPolicyLabel(local, req.session, req.session);        
+        }
+      });
     }
 
     /**
@@ -302,7 +319,8 @@ abstract public class Servlet extends HttpServlet {
      */
     protected void invalidActionRequested(Request req, String action_name) throws ServletException {
         if (action_name == null) {
-            reportError(sessionPrincipalLabel(req.getSessionState()), req, "Access violation", "Improper request",
+          // TODO KV: the null param is a hack
+            reportError(sessionPrincipalLabel(req.getSessionState(null)), req, "Access violation", "Improper request",
             "The request includes no action identifier.");
         }
         reportError(sessionPrincipalLabel(req.getSessionState()), req, "Access violation", "Invalid Action",
@@ -501,15 +519,18 @@ abstract public class Servlet extends HttpServlet {
     }
 
 
-    private Label sessionPrincipalLabel(SessionState ss) {
-        Core local = Client.getClient().getLocalCore();
-        return LabelUtil.$Impl.readerPolicyLabel(local, ss.sessionPrincipal(), ss.sessionPrincipal());
+    private Label sessionPrincipalLabel(final SessionState ss) {
+      return Client.runInSubTransaction(new fabric.client.Client.Code<Label>() {
+        public Label run() {
+          Core local = Client.getClient().getLocalCore();
+          return LabelUtil.$Impl.readerPolicyLabel(local, ss.sessionPrincipal(), ss.sessionPrincipal());
+        }
+      });
     }
 
-// TODO: Enable createSessionState --KV    
-    protected SessionState createSessionState(String id) {
-//        return SessionState.$Impl.createSessionState(id);
-      return null;
+// TODO: Is the first argument to createSessionState necessary?
+    protected SessionState createSessionState(Label lbl, String id) {
+        return SessionState.$Impl.createSessionState(lbl, lbl, id);
     }
 
     /**
@@ -519,9 +540,13 @@ abstract public class Servlet extends HttpServlet {
     public static Label getOutputChannelBound(Request request) {
         return getOutputChannelBound(request.session);
     }
-    public static Label getOutputChannelBound(Principal session) {
-        Core local = Client.getClient().getLocalCore();
-        return LabelUtil.$Impl.toLabel(local, PrincipalUtil.$Impl.readableByPrinPolicy(local,session));
+    public static Label getOutputChannelBound(final Principal session) {
+      return Client.runInSubTransaction(new fabric.client.Client.Code<Label>() {
+        public Label run() {
+          Core local = Client.getClient().getLocalCore();
+          return LabelUtil.$Impl.toLabel(local, PrincipalUtil.$Impl.readableByPrinPolicy(local,session));
+        }
+      });
         //return LabelUtil.privacyPolicyLabel(session, Collections.EMPTY_LIST);
     }
 

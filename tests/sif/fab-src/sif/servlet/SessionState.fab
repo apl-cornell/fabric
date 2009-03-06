@@ -5,9 +5,9 @@ import fabric.lang.Principal;
  * Global state for a single session.
  */
 
-public class SessionState[label T] {
+public class SessionState[covariant label T] {
 
-    protected SessionState(String{T} sessionId) {
+    private SessionState{T}(String{T} sessionId) {
         this.sessionPrincipal = new SessionPrincipal[T](this);
         this.sessionId        = sessionId;
     }
@@ -24,8 +24,10 @@ public class SessionState[label T] {
     }
     
     /** convenience method for non-fabric code */
-//    public static SessionState[T] createSessionState(String{T} id) {
-//      return new SessionState[T](id);
-//    }
+    public static SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id) {
+    	atomic {
+    		return new SessionState[lbl](id);
+    	}
+    }
 }
 

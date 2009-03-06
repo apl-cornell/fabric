@@ -3,7 +3,7 @@ package sif.servlet;
 /**
  * A session principal. This principal represents an HTTP session.
  */
-public final class SessionPrincipal[covariant label T] extends AbstractPrincipal {
+public final class SessionPrincipal[label T] extends AbstractPrincipal {
     final SessionState[T]{T} session;
     public SessionPrincipal(SessionState[T]{T} session) {
 	this.session = session;

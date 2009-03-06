@@ -79,7 +79,7 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
      * @return the default action, used if the request does not specify an
      *         action.
      */
-    protected native Action[servletP]{servletP:;req} defaultAction(Request[servletP] req);
+    protected native Action[servletP]{servletP:;req} defaultAction(label lbl, Request[servletP] req);
     
     /**
      * If the request does not specify an action name, 
@@ -90,7 +90,7 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
      * @return the default action name, used if the request does not specify an
      *         action.
      */
-    protected native String{servletP:;req} defaultActionName(Request[servletP] req);
+    protected native String{servletP:;req} defaultActionName(label lbl, Request[servletP] req);
 
 //    protected native Page[lbl] reportError(label{*lbl} lbl, Request[servletP]{*lbl} req, String{*lbl} title, String{*lbl} header, String{*lbl} explanation) 
 //    throws (ServletException{title;header;explanation;req});
@@ -109,5 +109,7 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
     public native final Action[servletP]{req;action_name} findStartAction(Request[servletP]{*:req.session} req, String{*:req.session} action_name);
 
     public native final String{*!:*} generateNonce();       
-    protected native SessionState{servletP:;servletP!:} createSessionState();
+//    protected native SessionState[{servletP:;servletP!:}]{servletP:;servletP!:} createSessionState(String id);
+    protected native SessionState[lbl]{*lbl} createSessionState(label{*lbl} lbl, String{*lbl} id);
+    
 }
