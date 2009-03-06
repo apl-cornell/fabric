@@ -16,30 +16,30 @@ public class Main {
     Client client = fabric.client.Client.getClient();
     Map root = (Map) client.getCore("core1").getRoot();
     Random random = new Random();
-    Tree tree;
+    Tree theTree = null;
     if (args[0].equals("create")) {
       atomic {
         Core treeCore = client.getCore("core0");
         Core nodeCore = client.getCore("core1");
-        tree = new Tree@treeCore(nodeCore);
-        root.put("theTree", tree);
+        theTree = new Tree@treeCore(nodeCore);
+        root.put("theTree", theTree);
         for (int i = 0; i < 500; i++) {
           atomic {
             int toInsert = random.nextInt();
-            tree.insertIterative(toInsert);
+            theTree.insertIterative(toInsert);
           }
         }
       }
       return;
     }
 
-    tree = (Tree) root.get("theTree"); 
+    theTree = (Tree) root.get("theTree"); 
 
     int cycle = 0;
     while (true) {
       atomic {
         int toFind = random.nextInt();
-        tree.lookup(toFind);
+        theTree.lookup(toFind);
       }
 
       if (++cycle % 100 == 0)
