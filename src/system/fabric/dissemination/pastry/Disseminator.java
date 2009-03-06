@@ -369,6 +369,7 @@ public class Disseminator implements Application {
             RemoteCore c = (RemoteCore) k.first;
             Long onum = k.second;
             Glob g = cache.get(c, onum);
+            if (g.level() > level) continue;
             
             globs.put(k, g);
             
