@@ -13,6 +13,7 @@ import polyglot.util.Position;
 import jif.translate.JifToJavaRewriter;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
+  protected boolean principalExpected = false;
 
   public FabricToFabilRewriter(Job job, FabricTypeSystem fab_ts,
       FabricNodeFactory fab_nf, fabil.ExtensionInfo fabil_ext) {

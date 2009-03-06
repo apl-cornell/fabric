@@ -5,6 +5,7 @@ import fabric.translate.*;
 import polyglot.ast.Ext;
 import jif.ast.JifExtFactory_c;
 import jif.extension.JifBinaryExt;
+import jif.extension.JifCastExt;
 import jif.extension.JifClassDeclExt;
 import jif.extension.JifConstructorDeclExt;
 import jif.extension.JifLabelExprExt;
@@ -89,5 +90,10 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   @Override
   public Ext extNewLabelImpl() {
     return new JifLabelExprExt(new NewLabelToFabilExt_c());
+  }
+  
+  @Override
+  public Ext extCastImpl() {
+    return new JifCastExt(new CastToFabilExt_c());
   }
 }
