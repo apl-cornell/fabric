@@ -911,7 +911,7 @@ public final class TransactionManager {
     associateLog(log);
     
     if (log == null) {
-      startTransaction(tid);
+      if (tid != null) startTransaction(tid);
       return;
     }
 
