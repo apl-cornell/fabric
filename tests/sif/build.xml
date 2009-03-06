@@ -63,7 +63,7 @@
             depends="init,configure,sif-fab"
             description="Build the base SIF framework using the Java compiler, not including the signature files">
         
-        <javac source="1.5" target="1.5" srcdir="${src}" destdir="${sif.classes}">
+        <javac source="1.5" target="1.5" srcdir="${src}" destdir="${sif.classes}" debug="true" debuglevel="lines,vars,source">
             <classpath refid="standard.classpath" />
         </javac>
         
@@ -111,7 +111,9 @@
             <arg value="${fabric.home}/sig-classes/fabric"/>
             <arg value="-filsigcp"/>
             <arg value="${fabric.home}/sig-classes/fabil"/>
+        		<arg value="-e" />
         	<!--        	
+	      		<arg value="-report"/> <arg value="solver=5"/>
         		<arg value="-print"/> <arg value="RemoteCallWrapperAdder"/>
 	      		<arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>
         		<arg value="-debugpositions"/>
@@ -175,9 +177,19 @@
             <fileset dir="${sif.classes}" defaultexcludes="yes">
             </fileset>
         </copy>
-        <copy todir="${catalina.home}/shared/lib">
-            <fileset dir="${basedir}/lib" includes="common*.jar,mysql*.jar,sif.jar,jif.jar,jiflib.jar,jifrt.jar"    defaultexcludes="yes"/>
+        <delete dir="${catalina.home}/shared/classes/fabric" />
+        <copy todir="${catalina.home}/shared/classes" includeEmptyDirs="no">
+            <fileset dir="${fabric.home}/classes" defaultexcludes="yes">
+            </fileset>
+            <fileset dir="${fabric.home}/rt-classes" defaultexcludes="yes">
+            </fileset>            
         </copy>
+        <copy todir="${catalina.home}/shared/lib">
+            <fileset dir="${basedir}/lib" includes="common*.jar,sif.jar,jif.jar,jiflib.jar,jifrt.jar"    defaultexcludes="yes"/>
+        </copy>
+        <copy todir="${catalina.home}/shared/lib">
+            <fileset dir="${fabric.home}/lib" includes="FreePastry*.jar, commons*.jar"    defaultexcludes="yes"/>
+        </copy>        
         <copy todir="${catalina.home}/webapps/ROOT">
             <fileset dir="${basedir}/src" includes="preamble.js" defaultexcludes="yes"/>
         </copy>
