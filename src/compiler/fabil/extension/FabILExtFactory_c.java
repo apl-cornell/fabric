@@ -143,6 +143,11 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
+  protected Ext extInstanceofImpl() {
+    return new InstanceofExt_c();
+  }
+
+  @Override
   protected Ext extMethodDeclImpl() {
     return new MethodDeclExt_c();
   }
