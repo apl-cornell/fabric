@@ -15,9 +15,11 @@ import java.io.*;
 public class HelloAction[label T] extends Action[HelloServEP] {
 	public HelloAction{T}(Main{T} m) throws ServletException {
 		super();
-		this.nameInp = new Input[HelloServEP, T](m, new label {});
-		this.fileInp = new Input[HelloServEP, T](m, new label {});
-		initFields(m);
+		{
+			this.nameInp = new Input[HelloServEP, T](m, new label {});
+			this.fileInp = new Input[HelloServEP, T](m, new label {});
+		}
+			initFields(m);
 	}
 
 	final Input[HelloServEP, T]{T} nameInp;
@@ -32,6 +34,7 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 
 			NodeList[this.nameInp.inputLbl, lbl] content = null;    
 
+			atomic {
 			// extract the name, if it exists.        
 			try {
 				if (lbl <= this.nameInp.inputLbl && this.nameInp.inputLbl equiv this.fileInp.inputLbl) {
@@ -79,6 +82,7 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 				}
 			}
 			catch (NullPointerException impossible) { }
+			}
 		}
 
 	}

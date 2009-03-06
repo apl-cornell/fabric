@@ -24,8 +24,10 @@ public class StartAction extends Action[HelloServEP] {
 	{
 		// create a session-specific HelloAction, and hand off control...
 		try {
-			HelloAction ha = new HelloAction[lbl]((Main)this.getServlet());
-			ha.invoke(lbl, req);
+			atomic {
+				HelloAction ha = new HelloAction[lbl]((Main)this.getServlet());
+				ha.invoke(lbl, req);
+			}
 		}
 		catch (ClassCastException impossible) { }
 		catch (NullPointerException impossible) { }

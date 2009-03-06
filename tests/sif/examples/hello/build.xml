@@ -5,7 +5,6 @@
 	
   <import file="${basedir}/../../config.xml"/>
 	
-
   <property name="app.name" value="hello" />
 	
 	<target name="principals" description="Compiles the principals necessary for this app">
@@ -51,10 +50,11 @@
     		<arg value="-filsigcp"/>
     		<arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
         <arg value="-e"/>
+	  		<arg value="-report"/> <arg value="frontend=1"/>
+    		<arg value="-print" /> <arg value="FieldLabelResolver"/>
     	<!--
 	      <arg value="-debugpositions"/>
     		<arg value="-dump"/> <arg value="RemoteCallWrapperUpdater"/>
-	  		<arg value="-report"/> <arg value="frontend=1"/>
 	  		<arg value="-report"/> <arg value="error=5"/>
 	  		<arg value="-report"/> <arg value="errors=5"/>
     	  <arg value="-report"/> <arg value="debug=5" />
@@ -70,6 +70,15 @@
 	
   <target name="clean" description="clean up">
       <delete dir="${basedir}/web/WEB-INF/classes" />
+  </target>
+
+  <target name="install" depends="configure-install, compile" description="Copies the classes to the tomcat directory">
+    <fail unless="catalina.home.defined"
+          message="The Tomcat installation directory is unknown. Please either edit config.properties, or set the envirnoment variable CATALINA_HOME to the Tomcat installation directory." />
+    <delete dir="${catalina.home}/webapps/hello" />
+    <copy todir="${catalina.home}/webapps/hello" includeEmptyDirs="no">
+		<fileset dir="${basedir}/web" defaultexcludes="yes"/>
+	</copy>
   </target>
 
 
