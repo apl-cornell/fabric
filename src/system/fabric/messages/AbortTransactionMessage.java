@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.client.RemoteNode;
+import fabric.client.debug.Timing;
 import fabric.common.*;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
@@ -69,9 +70,12 @@ public class AbortTransactionMessage extends
 
   public Response send(RemoteNode node) {
     try {
+      Timing.CORE.begin();
       return send(node, true);
     } catch (FabricException e) {
       throw new InternalError(e);
+    } finally {
+      Timing.CORE.end();
     }
   }
 

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import fabric.client.debug.Timing;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.FabricThread;
 
@@ -37,8 +38,10 @@ public final class MainThread extends Thread implements FabricThread {
 
   @Override
   public void run() {
+    Timing.APP.begin();
     try {
       main.invoke(null, args);
+      
     } catch (InvocationTargetException e) {
       Throwable cause = e.getCause();
       // Trim the stack trace to omit stuff dealing with the client framework.
@@ -58,6 +61,9 @@ public final class MainThread extends Thread implements FabricThread {
       uncaughtException = cause;
     } catch (Throwable t) {
       uncaughtException = t;
+    } finally {
+      Timing.APP.end();
+      Timing.printStats();
     }
   }
 

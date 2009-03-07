@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import jif.lang.Label;
 import fabric.client.*;
+import fabric.client.debug.Timing;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.UpdateMap;
 import fabric.common.FabricThread;
@@ -237,7 +238,12 @@ public final class TransactionManager {
    */
   public void commitTransaction() throws AbortException,
       TransactionAtomicityViolationException {
-    commitTransactionAt(System.currentTimeMillis());
+    Timing.COMMIT.begin();
+    try {
+      commitTransactionAt(System.currentTimeMillis());
+    } finally {
+      Timing.COMMIT.end();
+    }
   }
   
   public void commitTransactionAt(long commitTime) {
@@ -261,6 +267,7 @@ public final class TransactionManager {
 
     Log parent = current.parent;
     if (current.tid.parent != null) {
+      Timing.SUBTX.begin();
       // Update data structures to reflect the commit.
       current.commitNested();
       logger.finest(current + " committed");
@@ -271,6 +278,7 @@ public final class TransactionManager {
         // Reuse the current frame for the parent transaction. Update its TID.
         current.tid = current.tid.parent;
       }
+      Timing.SUBTX.end();
       return;
     }
 
@@ -589,32 +597,42 @@ public final class TransactionManager {
   }
 
   public void registerCreate($Impl obj) {
-    if (current == null)
-      throw new InternalError("Cannot create objects outside a transaction");
+    Timing.TXLOG.begin();
+    try {
+      if (current == null)
+        throw new InternalError("Cannot create objects outside a transaction");
 
-    // Make sure we're not supposed to abort.
-    checkAbortSignal();
+      // Make sure we're not supposed to abort.
+      checkAbortSignal();
 
-    // Grab a write lock on the object.
-    obj.$writer = current;
-    obj.$writeLockHolder = current;
+      // Grab a write lock on the object.
+      obj.$writer = current;
+      obj.$writeLockHolder = current;
 
-    // Own the object. The call to ensureOwnership is responsible for adding the
-    // object to the set of created objects.
-    ensureOwnership(obj);
-    current.updateMap.put(obj.$getProxy(), obj.get$label());
+      // Own the object. The call to ensureOwnership is responsible for adding the
+      // object to the set of created objects.
+      ensureOwnership(obj);
+      current.updateMap.put(obj.$getProxy(), obj.get$label());
+    } finally {
+      Timing.TXLOG.end();
+    }
   }
 
   public void registerRead($Impl obj) {
-    synchronized (obj) {
-      if (obj.$reader == current
-          && obj.$updateMapVersion == current.updateMap.version) return;
+    Timing.TXLOG.begin();
+    try {
+      synchronized (obj) {
+        if (obj.$reader == current
+            && obj.$updateMapVersion == current.updateMap.version) return;
 
-      // Nothing to do if we're not in a transaction.
-      if (current == null) return;
+        // Nothing to do if we're not in a transaction.
+        if (current == null) return;
 
-      ensureReadLock(obj);
-      ensureObjectUpToDate(obj);
+        ensureReadLock(obj);
+        ensureObjectUpToDate(obj);
+      }
+    } finally {
+      Timing.TXLOG.end();
     }
   }
 
@@ -664,20 +682,26 @@ public final class TransactionManager {
    * @return whether a new (top-level) transaction was created.
    */
   public boolean registerWrite($Impl obj) {
-    boolean needTransaction = (current == null);
-    if (needTransaction) startTransaction();
+    Timing.TXLOG.begin();
+    try {
+      boolean needTransaction = (current == null);
+      if (needTransaction) startTransaction();
 
-    synchronized (obj) {
-      if (obj.$writer == current
-          && obj.$updateMapVersion == current.updateMap.version && obj.$isOwned)
-        return needTransaction;
+      synchronized (obj) {
+        if (obj.$writer == current
+            && obj.$updateMapVersion == current.updateMap.version && obj.$isOwned)
+          return needTransaction;
 
-      ensureWriteLock(obj);
-      ensureObjectUpToDate(obj);
-      ensureOwnership(obj);
+        ensureWriteLock(obj);
+        ensureObjectUpToDate(obj);
+        ensureOwnership(obj);
+      }
+      
+      return needTransaction;
+    } finally {
+      Timing.TXLOG.end();
     }
 
-    return needTransaction;
   }
 
   /**
@@ -816,9 +840,11 @@ public final class TransactionManager {
   public void startTransaction(TransactionID tid) {
     if (current != null) checkAbortSignal();
 
+    Timing.BEGIN.begin();
     current = new Log(current, tid);
     logger.finest(current.parent + " started subtx " + current + " in thread "
         + Thread.currentThread());
+    Timing.BEGIN.end();
   }
 
   /**
@@ -836,18 +862,23 @@ public final class TransactionManager {
    * called before the thread is started.
    */
   public void registerThread(Thread thread) {
-    // XXX Eventually, we will want to support threads in transactions.
-    if (current != null)
-      throw new InternalError("Cannot create threads within transactions");
+    Timing.TXLOG.begin();
+    try {
+      // XXX Eventually, we will want to support threads in transactions.
+      if (current != null)
+        throw new InternalError("Cannot create threads within transactions");
 
-    TransactionManager tm = new TransactionManager();
+      TransactionManager tm = new TransactionManager();
 
-    if (thread instanceof FabricThread) {
-      ((FabricThread) thread).setTransactionManager(tm);
-    } else {
-      synchronized (instanceMap) {
-        instanceMap.put(thread, tm);
+      if (thread instanceof FabricThread) {
+        ((FabricThread) thread).setTransactionManager(tm);
+      } else {
+        synchronized (instanceMap) {
+          instanceMap.put(thread, tm);
+        }
       }
+    } finally {
+      Timing.TXLOG.end();
     }
   }
 

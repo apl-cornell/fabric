@@ -3,6 +3,7 @@ package fabric.client.transaction;
 import java.util.*;
 
 import fabric.client.Core;
+import fabric.client.debug.Timing;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.UpdateMap;
 import fabric.common.TransactionID;
@@ -128,12 +129,14 @@ public final class Log {
     this.clientsCalled = new ArrayList<RemoteClient>();
 
     if (parent != null) {
+      Timing.SUBTX.begin();
       this.updateMap = new UpdateMap(parent.updateMap);
       synchronized (parent) {
         parent.child = this;
       }
 
       commitState = parent.commitState;
+      Timing.SUBTX.end();
     } else {
       this.updateMap = new UpdateMap();
       commitState = new CommitState();

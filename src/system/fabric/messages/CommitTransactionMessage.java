@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import fabric.client.RemoteNode;
 import fabric.client.UnreachableNodeException;
+import fabric.client.debug.Timing;
 import fabric.client.remote.Worker;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
@@ -81,11 +82,14 @@ public class CommitTransactionMessage extends
 
   public Response send(RemoteNode node) throws UnreachableNodeException {
     try {
+      Timing.CORE.begin();
       return super.send(node, true);
     } catch (UnreachableNodeException e) {
       throw e;
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from node.", e);
+    } finally {
+      Timing.CORE.end();
     }
   }
 

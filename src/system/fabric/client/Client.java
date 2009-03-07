@@ -18,6 +18,7 @@ import jif.lang.ConfPolicy;
 import jif.lang.IntegPolicy;
 import jif.lang.Label;
 import jif.lang.LabelUtil;
+import fabric.client.debug.Timing;
 import fabric.client.remote.RemoteCallManager;
 import fabric.client.remote.RemoteClient;
 import fabric.client.transaction.Log;
@@ -88,6 +89,9 @@ public final class Client {
   public static final Random RAND = new Random();
   private static final int DEFAULT_TIMEOUT = 2;
 
+  // force Timing to load
+  static final Timing t = Timing.INIT;
+  
   /**
    * Initializes the Fabric <code>Client</code>. When connecting to a core,
    * the client will retry each core node the specified number of times before

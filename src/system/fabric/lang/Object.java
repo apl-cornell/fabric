@@ -8,6 +8,7 @@ import java.util.*;
 
 import jif.lang.Label;
 import fabric.client.*;
+import fabric.client.debug.Timing;
 import fabric.client.remote.RemoteClient;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.ReadMapEntry;
@@ -105,6 +106,7 @@ public interface Object {
       if (result == null) {
         // Object has been evicted.
         try {
+          Timing.FETCH.begin();
           // First, check the client's cache.
           result = ref.core.readObjectFromCache(ref.onum);
           
@@ -136,6 +138,8 @@ public interface Object {
         } catch (FetchException e) {
           // TODO figure out how to communicate error
           throw new InternalError(e);
+        } finally {
+          Timing.FETCH.end();
         }
 
         ref = result.$ref;

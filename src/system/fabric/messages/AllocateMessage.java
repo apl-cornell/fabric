@@ -5,6 +5,7 @@ import java.io.*;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
 import fabric.client.UnreachableNodeException;
+import fabric.client.debug.Timing;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
@@ -85,11 +86,14 @@ public final class AllocateMessage extends
    */
   public Response send(RemoteCore core) throws UnreachableNodeException {
     try {
+      Timing.CORE.begin();
       return send(core, true);
     } catch (UnreachableNodeException e) {
       throw e;
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from core.", e);
+    } finally {
+      Timing.CORE.end();
     }
   }
 
