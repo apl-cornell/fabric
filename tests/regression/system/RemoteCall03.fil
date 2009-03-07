@@ -18,7 +18,7 @@ public class RemoteCall03 {
     atomic {
       t = new RemoteCall03@core();
       t.i = 10;
-      t.m@remoteClient();
+      t.m_remote@remoteClient(Client.getClient().getPrincipal());
     }
 
     int curI = 0;

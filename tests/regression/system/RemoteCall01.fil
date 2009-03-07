@@ -20,7 +20,7 @@ public class RemoteCall01 {
     }
 
     atomic {
-      t.m@remoteClient();
+      t.m_remote@remoteClient(Client.getClient().getPrincipal());
     }
 
     int curI = 0;

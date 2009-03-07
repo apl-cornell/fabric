@@ -22,9 +22,9 @@ public class RemoteCall04 {
     atomic {
       t = new RemoteCall04@core();
       t.i = 10;
-      t.m@remoteClient();
+      t.m_remote@remoteClient(Client.getClient().getPrincipal());
       t.child.i = 42;
-      t.child.m@remoteClient();
+      t.child.m_remote@remoteClient(Client.getClient().getPrincipal());
     }
 
     int curI = -1;
