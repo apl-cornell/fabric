@@ -38,7 +38,9 @@ public final class MainThread extends Thread implements FabricThread {
 
   @Override
   public void run() {
-    Timing.APP.begin();
+    System.out.println("Initialization stats:");
+    Timing.printStats();
+    Timing.reset();
     try {
       main.invoke(null, args);
       
@@ -61,9 +63,6 @@ public final class MainThread extends Thread implements FabricThread {
       uncaughtException = cause;
     } catch (Throwable t) {
       uncaughtException = t;
-    } finally {
-      Timing.APP.end();
-      Timing.printStats();
     }
   }
 

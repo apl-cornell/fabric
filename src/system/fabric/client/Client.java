@@ -89,9 +89,6 @@ public final class Client {
   public static final Random RAND = new Random();
   private static final int DEFAULT_TIMEOUT = 2;
 
-  // force Timing to load
-  static final Timing t = Timing.INIT;
-  
   /**
    * Initializes the Fabric <code>Client</code>. When connecting to a core,
    * the client will retry each core node the specified number of times before

@@ -7,7 +7,6 @@ import java.util.Deque;
 /** A utility class for recording the timing of various categories. */
 public enum Timing {
 
-  INIT,          // everything before the client app is run
   APP,           // application code
   BEGIN, COMMIT, // local transaction management
   TXLOG,         // logging reads, writes, creates, etc
@@ -16,23 +15,22 @@ public enum Timing {
   CORE;          // other communication with the core
   
   /** The time attributed to this category so far */
-  private long time  = 0;
+  private long time;
   /** The number of additions used to generate time */
-  private int  count = 0;
+  private int  count;
   
-  private static Deque<Timing> scope = new ArrayDeque<Timing>();
-  private static long          stamp = System.currentTimeMillis();
+  private static Deque<Timing> scope;
+  private static long          stamp;
   private static boolean       debug = true;
   
   static {
-    scope.push(INIT);
+    reset();
   }
 
-  private void attribute() {
+  private static void attribute() {
     long now  = System.currentTimeMillis();
-    long diff = now - stamp; 
-    Timing t = scope.peek();
-    t.time += diff;
+    Timing t  = scope.peek();
+    t.time += now - stamp;
     t.count++;
     stamp = now;
   }
@@ -61,27 +59,30 @@ public enum Timing {
   
   /** Print a summary of the time spent in each category to the provided OutputStream */
   public static void printStats(PrintStream out) {
+    attribute();
+    
     long total = 0;
     for (Timing t : Timing.values()) {
       total += t.time;
     }
-    out.println("Category  Time (ms)  Stdev    Percent of total\n");
+    out.println("Category  Time (ms)   Stdev   Percent of total\n");
     for (Timing t : Timing.values()) {
-      out.format("%6s:   %7dms  +/-%4d  %d%%\n",
+      out.format("%6s:  %6d ms   +/-%4d        %2d%%\n",
                         t.name(), t.time, (int) Math.sqrt(t.count), t.time * 100 / total);
     }
-    out.format("\n Total:  %8dms\n", total);
+    out.format("\n Total: %7d ms\n", total);
   }
   
-  /** Reset all of the statistics. */
+  /** Reset all of the statistics, and begin timing in cat */
   public static void reset() {
+    
     for (Timing t : values()) {
       t.time  = 0;
       t.count = 0;
     }
     
-    scope.clear();
-    scope.push(INIT);
+    scope = new ArrayDeque<Timing>();
+    scope.push(APP);
     stamp = System.currentTimeMillis();
   }
   
