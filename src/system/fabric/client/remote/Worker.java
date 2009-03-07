@@ -431,7 +431,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
 
     // Ensure that the remote client is allowed to write the object.
     Label label = obj.get$label();
-    boolean authorized = !AuthorizationUtil.isWritePermitted(
+    boolean authorized = AuthorizationUtil.isWritePermitted(
         remoteClient, label.$getCore(), label.$getOnum());
     
     tm.associateLog(null);
