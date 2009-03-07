@@ -1,5 +1,7 @@
 package fabric.extension;
 
+import java.util.List;
+
 import fabric.ast.FabricCall;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.Node;
@@ -92,6 +94,35 @@ public class CallJifExt_c extends JifCallExt {
           return "C(m) <= {c->} and {c<-} <= I(rv) for obj.m@c(...)";
         }        
       });
+      
+      for (Assertion as : (List<Assertion>)mi.constraints()) {
+        if (as instanceof CallerConstraint) {
+          CallerConstraint cc = (CallerConstraint)as;
+          for (Principal p : (List<Principal>)cc.principals()) {
+            lc.constrain(remotePrincipal, 
+                         PrincipalConstraint.ACTSFOR, 
+                         p, 
+                         A.labelEnv(), 
+                         c.position(), 
+                         new ConstraintMessage() {
+              @Override
+              public String msg() {
+                return "The principal of the remote client must act for every principal in the caller constraint.";
+              }
+              
+              @Override
+              public String detailMsg() {
+                return "The principal of the remote client must act for every principal in the caller constraint.";
+              }
+              
+              @Override
+              public String technicalMsg() {
+                return "c acts for p in obj.m@c(...) with the constraint caller(p)";
+              }
+            });
+          }
+        }
+      }
 //      lc.constrain(c.remoteClientPrincipal(), 
 //                   PrincipalConstraint.ACTSFOR, 
 //                   ts.clientPrincipal(c.position()), 

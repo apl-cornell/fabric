@@ -1,17 +1,9 @@
 package fabric.translate;
 
-import java.util.*;
-
 import fabil.ast.FabILNodeFactory;
-import fabil.types.FabILTypeSystem;
-import polyglot.ast.Eval;
 import polyglot.ast.If;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
-import polyglot.ast.Stmt;
-import polyglot.ast.Try;
-import polyglot.ast.TypeNode;
-import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import jif.translate.JifToJavaRewriter;
@@ -29,23 +21,25 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     }
     
     FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
-    FabILTypeSystem ts = (FabILTypeSystem)rw.java_ts();
+//    FabILTypeSystem ts = (FabILTypeSystem)rw.java_ts();
     
     if (md.name().endsWith("_remote")) {
       // Fabric wrapper
       // Rewrite the else block to throw an exception
-      Try tryStmt = (Try)md.body().statements().get(0);
-      Eval npecall = (Eval) tryStmt.tryBlock().statements().get(0);
-      If ifStmt = (If)tryStmt.tryBlock().statements().get(1);
-//      ifStmt = ifStmt.alternative(rw.qq().parseStmt("throw new java.lang.InternalError()"));
-      ifStmt = ifStmt.alternative(nf.Throw(Position.compilerGenerated(), nf.New(Position.compilerGenerated(), nf.CanonicalTypeNode(Position.compilerGenerated(), ts.InternalError()), Collections.EMPTY_LIST)));
-      tryStmt = tryStmt.tryBlock(nf.Block(Position.compilerGenerated(), npecall, ifStmt));
-      return md.body(nf.Block(Position.compilerGenerated(), tryStmt));
+//      Try tryStmt = (Try)md.body().statements().get(0);
+//      Eval npecall = (Eval) tryStmt.tryBlock().statements().get(0);
+//      If ifStmt = (If)tryStmt.tryBlock().statements().get(1);
+      If ifStmt = (If)md.body().statements().get(0);
+      ifStmt = ifStmt.alternative(rw.qq().parseStmt("throw new java.lang.InternalError();"));
+//      ifStmt = ifStmt.alternative(nf.Throw(Position.compilerGenerated(), nf.New(Position.compilerGenerated(), nf.CanonicalTypeNode(Position.compilerGenerated(), ts.InternalError()), Collections.EMPTY_LIST)));
+//      tryStmt = tryStmt.tryBlock(nf.Block(Position.compilerGenerated(), npecall, ifStmt));
+      return md.body(nf.Block(Position.compilerGenerated(), ifStmt));
     }
     
-    List<Stmt> stmts = new ArrayList<Stmt>(md.body().statements().size() + 1);
+    return md;
+//    List<Stmt> stmts = new ArrayList<Stmt>(md.body().statements().size() + 1);
     
-    TypeNode client = nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Client());
+//    TypeNode client = nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Client());
 //    stmts.add(nf.LocalDecl(Position.compilerGenerated(), 
 //                           Flags.FINAL, 
 //                           client, 
@@ -55,8 +49,8 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
 //                                   client, 
 //                                   nf.Id(Position.compilerGenerated(), 
 //                                         "getClient"))));
-    stmts.addAll(md.body().statements());
+//    stmts.addAll(md.body().statements());
     
-    return md.body(nf.Block(md.body().position(), stmts));
+//    return md.body(nf.Block(md.body().position(), stmts));
   }
 }

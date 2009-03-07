@@ -21,7 +21,7 @@ public class RemoteCall01 {
     data = new RemoteCall01Data[{client$->; client$<-}]@core();
   }
 
-  public void moo{client$->;client$<-}(label{*lbl} lbl) : {client$->;client$<-} {
+  public void moo{client$->;client$<-}() : {client$->;client$<-} {
     if (data == null) return;
     data.i++;
   }
@@ -30,7 +30,7 @@ public class RemoteCall01 {
     try {
       atomic {
 	if (remoteClient actsfor client$)
-	  moo@remoteClient(new label {client$->; client$<-});
+	  moo@remoteClient();
       }
 
       int{client$->; client$<-} curI = 0;

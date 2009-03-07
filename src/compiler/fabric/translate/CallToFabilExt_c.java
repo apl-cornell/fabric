@@ -6,7 +6,6 @@ import java.util.List;
 import fabil.ast.FabILCall;
 import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricCall;
-import fabric.types.FabricTypeSystem;
 import polyglot.ast.Expr;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
@@ -23,12 +22,13 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
       FabILNodeFactory nf = (FabILNodeFactory)rw.java_nf();
       
       FabILCall result = (FabILCall)e;
-      // Make sure that the first argument is a label
-      if(result.methodInstance() == null) return result;
-      List formalTypes = result.methodInstance().formalTypes();
-      if(formalTypes.size() <= 0 || !formalTypes.get(0).equals(((FabricTypeSystem)rw.typeSystem()).Label())) 
-        throw new SemanticException("Method " + result.id() + " cannot be called remotely since its first argument is not of label type");
+//      // Make sure that the first argument is a label
+//      if(result.methodInstance() == null) return result;
+//      List formalTypes = result.methodInstance().formalTypes();
+//      if(formalTypes.size() <= 0 || !formalTypes.get(0).equals(((FabricTypeSystem)rw.typeSystem()).Label())) 
+//        throw new SemanticException("Method " + result.id() + " cannot be called remotely since its first argument is not of label type");
       if (c.remoteClient() != null) {
+        result = (FabILCall)result.name(result.name() + "_remote");
         result = result.remoteClient(c.remoteClient());
         List<Expr> args = new ArrayList<Expr>(result.arguments().size());
         // The first argument is actually a principal.
@@ -36,7 +36,8 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
                          rw.qq().parseExpr("client$"),
 //                         nf.Local(Position.compilerGenerated(), nf.Id(Position.compilerGenerated(), "client$")), 
                          nf.Id(Position.compilerGenerated(), "getPrincipal")));
-        args.addAll(result.arguments().subList(1, result.arguments().size()));
+//        args.addAll(result.arguments().subList(1, result.arguments().size()));
+        args.addAll(result.arguments());
         result = (FabILCall)result.arguments(args);
       }
 

@@ -5,25 +5,17 @@ import java.util.Collections;
 import jif.ast.JifMethodDecl;
 import jif.ast.JifUtil;
 import jif.ast.LabelExpr;
-import jif.ast.LabeledTypeNode;
-import jif.types.JifLocalInstance;
 import jif.types.JifMethodInstance;
-import jif.types.LabeledType;
 import jif.types.label.AccessPath;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
-import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.*;
 import polyglot.frontend.Job;
 import polyglot.qq.QQ;
-import polyglot.types.ClassType;
-import polyglot.types.Flags;
 import polyglot.types.LocalInstance;
-import polyglot.types.MethodInstance;
 import polyglot.types.SemanticException;
-import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
@@ -51,7 +43,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         JifMethodInstance mi = (JifMethodInstance)md.methodInstance();
 
         Formal f = (Formal)md.formals().get(0);
-        Formal lbf = (Formal)md.formals().get(1);
+//        Formal lbf = (Formal)md.formals().get(1);
         LocalInstance li = f.localInstance();
 
         Principal clientPrincipal;
@@ -154,46 +146,48 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
 
         Stmt s = nf.If(Position.compilerGenerated(), labelComp, conseq, conseq);
         
-        Call npecall = nf.Call(Position.compilerGenerated(),
-            nf.TypeNodeFromQualifiedName(Position.compilerGenerated(), "fabric.lang.Object"),
-            nf.Id(Position.compilerGenerated(), "_npe"));
-        ClassType objtype = null;
-        LabeledTypeNode npe = null;
-        Type npetype = null;
-        try {
-          objtype = (ClassType) ts.typeForName("fabric.lang.Object");          
-          npetype = ts.typeForName("java.lang.NullPointerException");
-        } catch (SemanticException e1) {
-          e1.printStackTrace();
-        } 
-        MethodInstance npemi = (MethodInstance) objtype.methodsNamed("_npe").get(0);
-        npecall = npecall.methodInstance(npemi);
-        Local npearg = nf.Local(Position.compilerGenerated(), lbf.id());
-        npearg = npearg.localInstance(lbf.localInstance());
-        npecall = (Call) npecall.arguments(Collections.singletonList(npearg));
+//        Call npecall = nf.Call(Position.compilerGenerated(),
+//            nf.TypeNodeFromQualifiedName(Position.compilerGenerated(), "fabric.lang.Object"),
+//            nf.Id(Position.compilerGenerated(), "_npe"));
+//        ClassType objtype = null;
+//        LabeledTypeNode npe = null;
+////        Type npetype = null;
+//        Type npetype = ts.NullPointerException();
+        
+//        try {
+//          objtype = (ClassType) ts.typeForName("fabric.lang.Object");          
+//          npetype = ts.typeForName("java.lang.NullPointerException");
+//        } catch (SemanticException e1) {
+//          e1.printStackTrace();
+//        } 
+//        MethodInstance npemi = (MethodInstance) objtype.methodsNamed("_npe").get(0);
+//        npecall = npecall.methodInstance(npemi);
+//        Local npearg = nf.Local(Position.compilerGenerated(), lbf.id());
+//        npearg = npearg.localInstance(lbf.localInstance());
+//        npecall = (Call) npecall.arguments(Collections.singletonList(npearg));
 
-        Label unknownLabel = ts.freshLabelVariable(Position.compilerGenerated(), "np", "The label of the exception");
-        npe = nf.LabeledTypeNode(Position.compilerGenerated(), 
-            nf.CanonicalTypeNode(Position.compilerGenerated(), npetype),
-            nf.AmbDynamicLabelNode(Position.compilerGenerated(), nf.LabelExpr(Position.compilerGenerated(), unknownLabel)));
-        LabeledType npeltype = ts.labeledType(Position.compilerGenerated(), npetype, unknownLabel);
+//        Label unknownLabel = ts.freshLabelVariable(Position.compilerGenerated(), "np", "The label of the exception");
+//        npe = nf.LabeledTypeNode(Position.compilerGenerated(), 
+//            nf.CanonicalTypeNode(Position.compilerGenerated(), npetype),
+//            nf.AmbDynamicLabelNode(Position.compilerGenerated(), nf.LabelExpr(Position.compilerGenerated(), unknownLabel)));
+//        LabeledType npeltype = ts.labeledType(Position.compilerGenerated(), npetype, unknownLabel);
 
-        JifLocalInstance npeli = (JifLocalInstance) ts.localInstance(Position.compilerGenerated(), Flags.NONE, npeltype, "e");
-        npeli = (JifLocalInstance) npeli.type(npeltype);
-        npeli.setLabel(unknownLabel);
+//        JifLocalInstance npeli = (JifLocalInstance) ts.localInstance(Position.compilerGenerated(), Flags.NONE, npeltype, "e");
+//        npeli = (JifLocalInstance) npeli.type(npeltype);
+//        npeli.setLabel(unknownLabel);
 
-        Formal npeformal = nf.Formal(Position.compilerGenerated(), Flags.NONE, npe, nf.Id(Position.compilerGenerated(), "e"));
-        npeformal = npeformal.localInstance(npeli);
+//        Formal npeformal = nf.Formal(Position.compilerGenerated(), Flags.NONE, npe, nf.Id(Position.compilerGenerated(), "e"));
+//        npeformal = npeformal.localInstance(npeli);
 
-        Try t = nf.Try(Position.compilerGenerated(), 
-            nf.Block(Position.compilerGenerated(), nf.Eval(Position.compilerGenerated(), npecall), s),
-            Collections.singletonList(
-                nf.Catch(Position.compilerGenerated(),
-                    npeformal,
-                    nf.Block(Position.compilerGenerated(md.name())))));
+//        Try t = nf.Try(Position.compilerGenerated(), 
+//            nf.Block(Position.compilerGenerated(), nf.Eval(Position.compilerGenerated(), npecall), s),
+//            Collections.singletonList(
+//                nf.Catch(Position.compilerGenerated(),
+//                    npeformal,
+//                    nf.Block(Position.compilerGenerated(md.name())))));
 
 
-        md = (JifMethodDecl)md.body(md.body().statements(Collections.singletonList(t)));
+        md = (JifMethodDecl)md.body(md.body().statements(Collections.singletonList(s)));
       }
 
       return md;

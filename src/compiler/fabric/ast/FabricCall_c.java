@@ -1,5 +1,6 @@
 package fabric.ast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import fabric.types.FabricTypeSystem;
@@ -8,7 +9,9 @@ import polyglot.ast.Expr;
 import polyglot.ast.Id;
 import polyglot.ast.Node;
 import polyglot.ast.Receiver;
+import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
+import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
@@ -76,6 +79,17 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
       FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
       JifContext context = (JifContext)tc.context();
 
+      // The type must have a remote version.
+      ReferenceType rcvrType = (ReferenceType)c.target().type();
+      List<Type> argTypes = new ArrayList<Type>(c.methodInstance().formalTypes().size() + 1);
+      argTypes.add(ts.Principal());
+      argTypes.addAll(c.methodInstance().formalTypes());
+      if (rcvrType.methods(c.name() + "_remote", argTypes).isEmpty()) {
+        throw new SemanticException("Illegal remote call \"" + c + "\", " +
+        		            "because the dynamic label check might leak information.",
+        		            c.position());
+      }
+      
       return c.remoteClientPrincipal(JifUtil.exprToPrincipal(ts, c.remoteClient(), context));
     }
     
