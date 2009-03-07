@@ -37,6 +37,10 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
     Expr labelExpr = null;
     if (fieldLabel != null && !sigMode) {
       labelExpr = rw.labelToJava(fieldLabel);
+      if (loc != null) {
+        FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
+        labelExpr = ffrw.updateLabelLocation(labelExpr, loc);
+      }
     }
     
     if (! rw.jif_ts().isParamsRuntimeRep(ct) || (ct instanceof JifSubstType && !rw.jif_ts().isParamsRuntimeRep(((JifSubstType)ct).base()))) {
@@ -54,8 +58,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
         JifSubstType t = (JifSubstType)ct;
         JifSubst subst = (JifSubst)t.subst();
         JifPolyType base = (JifPolyType)t.base();
-        for (Iterator<ParamInstance> iter = base.params().iterator(); iter
-          .hasNext();) {
+        for (Iterator<ParamInstance> iter = base.params().iterator(); iter.hasNext();) {
             ParamInstance pi = iter.next();
             paramargs.add(rw.paramToJava(subst.get(pi)));
         }

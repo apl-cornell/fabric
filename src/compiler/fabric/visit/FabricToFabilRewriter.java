@@ -1,10 +1,15 @@
 package fabric.visit;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
+import polyglot.ast.Call;
+import polyglot.ast.Expr;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.Job;
 import polyglot.types.SemanticException;
@@ -51,5 +56,49 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     FabILOptions opts =
         (FabILOptions) ((fabil.ExtensionInfo) java_ext).getOptions();
     return opts.signatureMode();
+  }
+  
+//private Expr loc;
+//private Call addLoc(Call c) {
+//  List<Expr> args = new ArrayList<Expr>(c.arguments().size() + 1);
+//  args.add(loc);
+//  for(Expr expr : (List<Expr>)c.arguments()) {
+//    Expr addExpr = expr;
+//    if(expr instanceof Call) {
+//      Call subcall = (Call) expr;
+//      addExpr = addLoc(subcall);
+//    }
+//    args.add(addExpr);
+//  }
+//  c = (Call)c.arguments(args);
+//  return c;
+//  
+//}
+
+  public Expr updateLabelLocation(Expr labelExpr, Expr locExpr) {
+    if (labelExpr instanceof Call) {
+      Call c = (Call)labelExpr;
+      
+      // XXX Hack
+      // Several special cases, for which no change should be made.
+      if (c.name().equals("getPrincipal") && c.arguments().size() == 0) {
+        return c;
+      }
+      
+      List<Expr> args = new ArrayList<Expr>(c.arguments().size() + 1);
+      args.add(locExpr);
+      for (Expr expr : (List<Expr>)c.arguments()) {
+        if (expr instanceof Call) {
+          args.add(updateLabelLocation(expr, locExpr));
+        }
+        else {
+          args.add(expr);
+        }
+      }
+      c = (Call)c.arguments(args);
+      return c;
+    }
+    
+    return labelExpr;
   }
 }

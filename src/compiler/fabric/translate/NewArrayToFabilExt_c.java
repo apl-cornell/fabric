@@ -14,6 +14,7 @@ import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricUtil;
 import fabric.extension.NewArrayExt_c;
 import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricToFabilRewriter;
 
 public class NewArrayToFabilExt_c extends NewArrayToJavaExt_c {
   protected Type baseType;
@@ -43,6 +44,10 @@ public class NewArrayToFabilExt_c extends NewArrayToJavaExt_c {
     Expr labelExpr = null;
     if (baseLabel != null) {
       labelExpr = rw.labelToJava(baseLabel);
+      if (ext.location() != null) {
+        FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
+        labelExpr = ffrw.updateLabelLocation(labelExpr, ext.location());
+      }
     }
 
     return nf.NewArray(n.position(), n.baseType(), labelExpr, ext.location(), n

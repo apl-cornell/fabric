@@ -11,11 +11,7 @@ public class RemoteCall01 {
   final RemoteCall01Data[{client$->; client$<-}]{_->_; *<-*} data;
 
   RemoteCall01() {
-    try {
       core = client$.getCore("core0");
-    } catch (NullPointerException e) {
-      core = null;
-    }
 
     remoteClient = client$("core0");
     data = new RemoteCall01Data[{client$->; client$<-}]@core();
@@ -58,11 +54,7 @@ public class RemoteCall01 {
   
   public static void main{_->_; *<-*}(String[] args) {
     Core core = null;
-    try {
       core = client$.getCore("core0");
-    } catch (NullPointerException e) {
-      return;
-    }
     
     RemoteCall01 obj = null;
     atomic {
