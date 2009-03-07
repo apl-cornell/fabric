@@ -4,11 +4,14 @@ import java.io.*;
 import java.lang.reflect.Method;
 
 import fabric.client.UnreachableNodeException;
-import fabric.client.remote.*;
+import fabric.client.remote.RemoteCallException;
+import fabric.client.remote.RemoteClient;
+import fabric.client.remote.UpdateMap;
+import fabric.client.remote.Worker;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
-import fabric.lang.NodePrincipal;
+import fabric.lang.Principal;
 import fabric.lang.Object.$Proxy;
 import fabric.messages.Message;
 
@@ -213,7 +216,7 @@ public class RemoteCallMessage extends
 
   public Method getMethod() throws SecurityException, NoSuchMethodException {
     Class<?>[] mangledParamTypes = new Class<?>[parameterTypes.length + 1];
-    mangledParamTypes[0] = NodePrincipal.class;
+    mangledParamTypes[0] = Principal.class;
     for (int i = 0; i < parameterTypes.length; i++)
       mangledParamTypes[i + 1] = parameterTypes[i];
     return receiverType.getMethod(methodName + "_remote", mangledParamTypes);
