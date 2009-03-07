@@ -1,10 +1,15 @@
 package fabric.visit;
 
 import java.util.Collections;
+import java.util.List;
 
+import jif.ast.ConstraintNode_c;
 import jif.ast.JifMethodDecl;
 import jif.ast.JifUtil;
 import jif.ast.LabelExpr;
+import jif.extension.JifBinaryDel;
+import jif.types.Assertion;
+import jif.types.CallerConstraint;
 import jif.types.JifMethodInstance;
 import jif.types.label.AccessPath;
 import jif.types.label.Label;
@@ -130,7 +135,22 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         //            l = l.localInstance(formal.localInstance());
         //            args.add(l);
         //          }
-
+        
+        for (Assertion as : (List<Assertion>)mi.constraints()) {
+          if (as instanceof CallerConstraint) {
+            CallerConstraint cc = (CallerConstraint)as;
+            for (Principal p : (List<Principal>)cc.principals()) {
+              Expr check = 
+                nf.Binary(as.position(), 
+                          nf.CanonicalPrincipalNode(clientPrincipal.position(), clientPrincipal), 
+                          JifBinaryDel.ACTSFOR, 
+                          nf.CanonicalPrincipalNode(p.position(), p));
+              labelComp = nf.Binary(Position.compilerGenerated(), labelComp, Binary.COND_AND, check);
+            }
+          }
+          // TODO other constraints in the where clause of the method.
+        }
+        
         Eval eval = (Eval)md.body().statements().get(0);
 
         Stmt conseq;
