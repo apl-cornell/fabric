@@ -38,9 +38,6 @@ public final class MainThread extends Thread implements FabricThread {
 
   @Override
   public void run() {
-    System.out.println("Initialization stats:");
-    Timing.printStats();
-    Timing.reset();
     try {
       main.invoke(null, args);
       
