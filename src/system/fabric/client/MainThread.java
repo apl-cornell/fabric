@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-import fabric.client.debug.Timing;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.FabricThread;
 

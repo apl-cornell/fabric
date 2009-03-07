@@ -90,6 +90,7 @@ public final class Client {
   private static final int DEFAULT_TIMEOUT = 2;
 
   // force Timing to load.
+  @SuppressWarnings("unused")
   private static final Timing t = Timing.APP;
 
   /**
