@@ -3,16 +3,11 @@ package fabric.types;
 import java.util.*;
 
 import jif.ast.JifUtil;
-import jif.translate.DynamicPrincipalToJavaExpr_c;
+import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
-import jif.types.JifLocalInstance;
-import jif.types.JifTypeSystem_c;
-import jif.types.Solver;
-import jif.types.label.AccessPath;
-import jif.types.label.AccessPathConstant;
-import jif.types.label.AccessPathLocal;
+import jif.types.*;
+import jif.types.label.*;
 import jif.types.principal.DynamicPrincipal;
-import jif.types.principal.DynamicPrincipal_c;
 import jif.types.principal.Principal;
 import polyglot.ext.param.types.Subst;
 import polyglot.frontend.Source;
@@ -22,10 +17,7 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import fabil.types.FabILImportTable;
 import fabric.translate.DynamicPrincipalToFabilExpr_c;
-import jif.ast.JifUtil;
-import jif.translate.PrincipalToJavaExpr;
-import jif.types.*;
-import jif.types.principal.Principal;
+import fabric.translate.FabricPairLabelToFabilExpr_c;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSystem {
 
@@ -189,5 +181,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   
   public boolean isLocalClientAccessPath(AccessPath ap) {
     return ap instanceof AccessPathLocal && ((AccessPathLocal)ap).localInstance() == clientLocalInstance();
+  }
+  
+  @Override
+  protected LabelToJavaExpr pairLabelTranslator() {
+    return new FabricPairLabelToFabilExpr_c();
   }
 }

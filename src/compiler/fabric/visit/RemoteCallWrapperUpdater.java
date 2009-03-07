@@ -1,18 +1,11 @@
 package fabric.visit;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-import jif.ast.ConstraintNode_c;
-import jif.ast.JifMethodDecl;
-import jif.ast.JifUtil;
-import jif.ast.LabelExpr;
+import jif.ast.*;
 import jif.extension.JifBinaryDel;
-import jif.types.Assertion;
-import jif.types.CallerConstraint;
-import jif.types.JifMethodInstance;
-import jif.types.label.AccessPath;
-import jif.types.label.Label;
+import jif.types.*;
+import jif.types.label.*;
 import jif.types.principal.Principal;
 import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
@@ -89,43 +82,42 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         //          formals.add(f);
         //          formals.addAll(md.formals());
 
-        //          System.err.println(md);
-        //          System.err.println(mi.container());
-        //          System.err.println(startLabel);
-        //          System.err.println(returnLabel);
+//        // (rv meet {conf.top;integ.bot}) join ({client$<-}) <= ({client$->}) join (m meet {conf.bot;integ.top})
+//        Label left = ts.join(
+//            ts.meet(
+//                returnLabel,
+//                ts.pairLabel(Position.compilerGenerated(),
+//                    ts.topConfPolicy(Position.compilerGenerated()), 
+//                    ts.bottomIntegPolicy(Position.compilerGenerated()))),
+//                    ts.pairLabel(Position.compilerGenerated(),
+//                        ts.bottomConfPolicy(Position.compilerGenerated()),
+//                        ts.writerPolicy(Position.compilerGenerated(), clientPrincipal, clientPrincipal)));
+//
+//        Label right = ts.join(
+//            ts.meet(
+//                startLabel,
+//                ts.pairLabel(Position.compilerGenerated(),
+//                    ts.bottomConfPolicy(Position.compilerGenerated()), 
+//                    ts.topIntegPolicy(Position.compilerGenerated()))),
+//                    ts.pairLabel(Position.compilerGenerated(),
+//                        ts.readerPolicy(Position.compilerGenerated(), clientPrincipal, clientPrincipal),
+//                        ts.bottomIntegPolicy(Position.compilerGenerated())));
 
-        // {C(rv), client$<-} <= {client$->, I(m)}
-        // (rv meet {conf.top;integ.bot}) join ({client$<-}) <= ({client$->}) join (m meet {conf.bot;integ.top})
-        Label left = ts.join(
-            ts.meet(
-                returnLabel,
-                ts.pairLabel(Position.compilerGenerated(),
-                    ts.topConfPolicy(Position.compilerGenerated()), 
-                    ts.bottomIntegPolicy(Position.compilerGenerated()))),
-                    ts.pairLabel(Position.compilerGenerated(),
-                        ts.bottomConfPolicy(Position.compilerGenerated()),
-                        ts.writerPolicy(Position.compilerGenerated(), clientPrincipal, clientPrincipal)));
+        // {C(rv), *<-client$} <= {*->client$, I(m)}
+        // XXX Note, it is better NOT to blindly insert the projection translation, if not needed.
+        Label left = ts.pairLabel(Position.compilerGenerated(md.name()), 
+                                  ts.confProjection(returnLabel), 
+                                  ts.writerPolicy(Position.compilerGenerated(), 
+                                                  ts.topPrincipal(Position.compilerGenerated()), 
+                                                  clientPrincipal));
+        Label right = ts.pairLabel(Position.compilerGenerated(), 
+                                   ts.readerPolicy(Position.compilerGenerated(), 
+                                                   ts.topPrincipal(Position.compilerGenerated()), 
+                                                   clientPrincipal), 
+                                   ts.integProjection(startLabel));
 
-        Label right = ts.join(
-            ts.meet(
-                startLabel,
-                ts.pairLabel(Position.compilerGenerated(),
-                    ts.bottomConfPolicy(Position.compilerGenerated()), 
-                    ts.topIntegPolicy(Position.compilerGenerated()))),
-                    ts.pairLabel(Position.compilerGenerated(),
-                        ts.readerPolicy(Position.compilerGenerated(), clientPrincipal, clientPrincipal),
-                        ts.bottomIntegPolicy(Position.compilerGenerated())));
-
-        //        Label left = ts.pairLabel(Position.compilerGenerated(md.name()), 
-        //                                  ts.confProjection(returnLabel), 
-        //                                  ts.writerPolicy(Position.compilerGenerated(), 
-        //                                                  clientPrincipal, clientPrincipal));
-        //        Label right = ts.pairLabel(Position.compilerGenerated(), 
-        //                                   ts.readerPolicy(Position.compilerGenerated(), 
-        //                                                   clientPrincipal, clientPrincipal), 
-        //                                   ts.integProjection(startLabel));
         LabelExpr leftExpr = nf.LabelExpr(left.position(), left);
-        LabelExpr rightExpr = nf.LabelExpr(Position.compilerGenerated(md.name()), right);
+        LabelExpr rightExpr = nf.LabelExpr(right.position(), right);
 
         Expr labelComp = nf.Binary(Position.compilerGenerated(), leftExpr, Binary.LE, rightExpr);
 
