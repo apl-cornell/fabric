@@ -80,7 +80,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   public V put(Core core, long onum, V val) {
     LongKeyMap<V> submap = map.get(core);
     if (submap == null) {
-      submap = new LongKeyHashMap<V>(4096);
+      submap = new LongKeyHashMap<V>();
       map.put(core, submap);
     }
 
