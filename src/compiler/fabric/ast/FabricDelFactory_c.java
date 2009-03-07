@@ -1,5 +1,6 @@
 package fabric.ast;
 
+import fabric.extension.FabricCallDel;
 import fabric.extension.FabricNewArrayDel;
 import fabric.extension.FabricNewDel;
 import fabric.extension.FabricNewLabelDel;
@@ -41,5 +42,10 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
   @Override
   protected JL delNewLabelImpl() {
     return new FabricNewLabelDel();
+  }
+  
+  @Override
+  protected JL delCallImpl() {
+    return new FabricCallDel();
   }
 }
