@@ -14,8 +14,12 @@ import polyglot.ast.TypeNode;
 import polyglot.frontend.Job;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import jif.translate.JifToJavaRewriter;
+import jif.types.Param;
+import jif.types.label.Label;
+import jif.types.principal.Principal;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
   protected boolean principalExpected = false;
@@ -100,5 +104,14 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     }
     
     return labelExpr;
+  }
+  
+  public Expr paramToJava(Param param, Expr locExpr) throws SemanticException {
+    if (param instanceof Label) {
+      Expr labelExpr = labelToJava((Label)param);
+      return updateLabelLocation(labelExpr, locExpr);
+    }
+    
+    return super.paramToJava(param);
   }
 }

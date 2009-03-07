@@ -29,7 +29,8 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
     FabricClassType ct = (FabricClassType)objectType.toClass();
 
     FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
-
+    FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
+    
     NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
     Expr loc = ext.location();
     
@@ -38,7 +39,6 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
     if (fieldLabel != null && !sigMode) {
       labelExpr = rw.labelToJava(fieldLabel);
       if (loc != null) {
-        FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
         labelExpr = ffrw.updateLabelLocation(labelExpr, loc);
       }
     }
@@ -60,7 +60,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
         JifPolyType base = (JifPolyType)t.base();
         for (Iterator<ParamInstance> iter = base.params().iterator(); iter.hasNext();) {
             ParamInstance pi = iter.next();
-            paramargs.add(rw.paramToJava(subst.get(pi)));
+            paramargs.add(ffrw.paramToJava(subst.get(pi), loc));
         }
     }
 
