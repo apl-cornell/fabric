@@ -15,19 +15,24 @@ import java.lang.Object;
 public abstract class AbstractPrincipal extends DelegatingPrincipal {
     private String name;
 
-    private Map superiors = new HashMap(); // treat this like a set
+    private Map superiors; // treat this like a set
 
-    public AbstractPrincipal() { super(); }
+    public AbstractPrincipal() {
+      super();
+      this.jif$init();
+    }
     
-    private void jif$init() {  }
+    private void jif$init() {
+      superiors = new HashMap();
+    }
     
     protected AbstractPrincipal jif$lang$AbstractPrincipal$(final String name) {
-        this.jif$init();
         { this.name = name; }
         return this;
     }
 
     protected AbstractPrincipal(String name) {
+        this();
         this.name = name;
     }
 
