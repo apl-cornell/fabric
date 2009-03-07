@@ -1,18 +1,21 @@
 package fabric.client.transaction;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import fabric.client.FabricSoftRef;
 import fabric.lang.Object.$Impl;
 
 public final class ReadMapEntry {
   FabricSoftRef obj;
-  LockList<Log> readLocks;
+  List<Log> readLocks;
   int  versionNumber;
   long promise;
   int pinCount;
 
   ReadMapEntry($Impl obj, long expiry) {
     this.obj = obj.$ref;
-    this.readLocks = new LockList<Log>();
+    this.readLocks = new ArrayList<Log>();
     this.versionNumber = obj.$version;
     this.promise  = expiry;
     this.pinCount = 1;
@@ -21,9 +24,9 @@ public final class ReadMapEntry {
   /**
    * Removes the lock owned by the given transaction log.
    */
-  void releaseLock(LockList.Node<Log> lockNode) {
+  void releaseLock(Log lockHolder) {
     synchronized (this) {
-      readLocks.remove(lockNode);
+      readLocks.remove(lockHolder);
       unpin();
     }
 

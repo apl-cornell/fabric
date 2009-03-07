@@ -5,13 +5,11 @@ import java.util.*;
 import fabric.client.Core;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.UpdateMap;
-import fabric.client.transaction.LockList.Node;
 import fabric.common.TransactionID;
 import fabric.common.Util;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -58,19 +56,17 @@ public final class Log {
   /**
    * Maps OIDs to <code>readMap</code> entries for objects read in this
    * transaction or completed sub-transactions. Reads from running or aborted
-   * sub-transactions don't count here. <code>readMap</code> entries are paired
-   * with the specific <code>LockList.Node</code> containing the read lock for
-   * this transaction.
+   * sub-transactions don't count here.
    */
-  // Proxy objects aren't used here because doing so would result in calls to
-  // hashcode() and equals() on such objects, resulting in fetching the
+  // Proxy objects aren't used for keys here because doing so would result in
+  // calls to hashcode() and equals() on such objects, resulting in fetching the
   // corresponding Impls from the core.
-  protected final OidKeyHashMap<Pair<LockList.Node<Log>, ReadMapEntry>> reads;
+  protected final OidKeyHashMap<ReadMapEntry> reads;
 
   /**
    * Reads on objects that have been read by an ancestor transaction.
    */
-  protected final List<Pair<LockList.Node<Log>, ReadMapEntry>> readsReadByParent;
+  protected final List<ReadMapEntry> readsReadByParent;
 
   /**
    * A collection of all objects created in this transaction or completed
@@ -125,9 +121,8 @@ public final class Log {
     this.child = null;
     this.thread = Thread.currentThread();
     this.abortSignal = null;
-    this.reads = new OidKeyHashMap<Pair<LockList.Node<Log>, ReadMapEntry>>();
-    this.readsReadByParent =
-        new ArrayList<Pair<LockList.Node<Log>, ReadMapEntry>>();
+    this.reads = new OidKeyHashMap<ReadMapEntry>();
+    this.readsReadByParent = new ArrayList<ReadMapEntry>();
     this.creates = new ArrayList<$Impl>();
     this.writes = new ArrayList<$Impl>();
     this.clientsCalled = new ArrayList<RemoteClient>();
@@ -197,12 +192,11 @@ public final class Log {
   @SuppressWarnings("unchecked")
   LongKeyMap<Integer> getReadsForCore(Core core) {
     LongKeyMap<Integer> result = new LongKeyHashMap<Integer>();
-    LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap = reads.get(core);
+    LongKeyMap<ReadMapEntry> submap = reads.get(core);
     if (submap == null) return result;
 
-    for (LongKeyMap.Entry<Pair<LockList.Node<Log>, ReadMapEntry>> entry : submap
-        .entrySet()) {
-      result.put(entry.getKey(), entry.getValue().second.versionNumber);
+    for (LongKeyMap.Entry<ReadMapEntry> entry : submap.entrySet()) {
+      result.put(entry.getKey(), entry.getValue().versionNumber);
     }
 
     for ($Impl write : Util.chain(writes, creates))
@@ -281,14 +275,14 @@ public final class Log {
     }
 
     // Release read locks.
-    for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
-      for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {
-        entry.second.releaseLock(entry.first);
+    for (LongKeyMap<ReadMapEntry> submap : reads) {
+      for (ReadMapEntry entry : submap.values()) {
+        entry.releaseLock(this);
       }
     }
 
-    for (Pair<LockList.Node<Log>, ReadMapEntry> entry : readsReadByParent)
-      entry.second.releaseLock(entry.first);
+    for (ReadMapEntry entry : readsReadByParent)
+      entry.releaseLock(this);
 
     // Roll back writes and release write locks.
     for ($Impl write : writes) {
@@ -354,23 +348,19 @@ public final class Log {
     }
 
     // Merge reads and transfer read locks.
-    for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
-      for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {
-        parent.transferReadLock(entry);
+    for (LongKeyMap<ReadMapEntry> submap : reads) {
+      for (ReadMapEntry entry : submap.values()) {
+        parent.transferReadLock(this, entry);
       }
     }
 
-    int size = readsReadByParent.size();
-    for (int i = 0; i < size; i++) {
-      Pair<LockList.Node<Log>, ReadMapEntry> entry = readsReadByParent.get(i);
-      entry.second.releaseLock(entry.first);
+    for (ReadMapEntry entry : readsReadByParent) {
+      entry.releaseLock(this);
     }
 
     // Merge writes and transfer write locks.
     List<$Impl> parentWrites = parent.writes;
-    size = writes.size();
-    for (int i = 0; i < size; i++) {
-      $Impl obj = writes.get(i);
+    for ($Impl obj : writes) {
       synchronized (obj) {
         if (obj.$history.$writeLockHolder == parent) {
           // The parent transaction already wrote to the object. Discard one
@@ -394,10 +384,8 @@ public final class Log {
 
     // Merge creates and transfer write locks.
     List<$Impl> parentCreates = parent.creates;
-    size = creates.size();
     synchronized (parentCreates) {
-      for (int i = 0; i < size; i++) {
-        $Impl obj = creates.get(i);
+      for ($Impl obj : creates) {
         parentCreates.add(obj);
         obj.$writeLockHolder = parent;
       }
@@ -428,9 +416,9 @@ public final class Log {
    */
   void commitTopLevel() {
     // Release read locks.
-    for (LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>> submap : reads) {
-      for (Pair<LockList.Node<Log>, ReadMapEntry> entry : submap.values()) {
-        entry.second.releaseLock(entry.first);
+    for (LongKeyMap<ReadMapEntry> submap : reads) {
+      for (ReadMapEntry entry : submap.values()) {
+        entry.releaseLock(this);
       }
     }
 
@@ -480,42 +468,36 @@ public final class Log {
   /**
    * Transfers a read lock from a child transaction.
    */
-  private void transferReadLock(Pair<Node<Log>, ReadMapEntry> childEntry) {
-    ReadMapEntry readMapEntry = childEntry.second;
-
+  private void transferReadLock(Log child, ReadMapEntry readMapEntry) {
     // If we already have a read lock, return; otherwise, register a read lock.
     boolean lockedByAncestor = false;
     synchronized (readMapEntry) {
       // Release child's read lock.
-      readMapEntry.readLocks.remove(childEntry.first);
+      readMapEntry.readLocks.remove(child);
 
       // Scan the list for an existing read lock. At the same time, check if
       // any of our ancestors already has a read lock.
-      LockList.Node<Log> cur = readMapEntry.readLocks.head;
-      while (cur != null) {
-        if (cur.data == this) {
+      for (Log cur : readMapEntry.readLocks) {
+        if (cur == this) {
           // We already have a lock; nothing to do.
           return;
         }
 
-        if (!lockedByAncestor && isDescendantOf(cur.data))
+        if (!lockedByAncestor && isDescendantOf(cur))
           lockedByAncestor = true;
-
-        cur = cur.next;
       }
 
-      childEntry.first.data = this;
-      readMapEntry.readLocks.add(childEntry.first);
+      readMapEntry.readLocks.add(this);
     }
 
     // Only record the read in this transaction if none of our ancestors have
     // read this object.
     if (!lockedByAncestor) {
       synchronized (reads) {
-        reads.put(readMapEntry.obj.core, readMapEntry.obj.onum, childEntry);
+        reads.put(readMapEntry.obj.core, readMapEntry.obj.onum, readMapEntry);
       }
     } else {
-      readsReadByParent.add(childEntry);
+      readsReadByParent.add(readMapEntry);
     }
 
     // Signal any readers/writers and clear the $reader stamp.
@@ -529,25 +511,21 @@ public final class Log {
     // If we already have a read lock, return; otherwise, register a read
     // lock.
     ReadMapEntry readMapEntry = obj.$readMapEntry;
-    LockList.Node<Log> lockListNode;
     boolean lockedByAncestor = false;
     synchronized (readMapEntry) {
       // Scan the list for an existing read lock. At the same time, check if
       // any of our ancestors already has a read lock.
-      LockList.Node<Log> cur = readMapEntry.readLocks.head;
-      while (cur != null) {
-        if (cur.data == this) {
+      for (Log cur : readMapEntry.readLocks) {
+        if (cur == this) {
           // We already have a lock; nothing to do.
           return;
         }
 
-        if (!lockedByAncestor && isDescendantOf(cur.data))
+        if (!lockedByAncestor && isDescendantOf(cur))
           lockedByAncestor = true;
-
-        cur = cur.next;
       }
 
-      lockListNode = readMapEntry.readLocks.add(this);
+      readMapEntry.readLocks.add(this);
     }
 
     if (obj.$writer != this) {
@@ -560,13 +538,10 @@ public final class Log {
     // read this object.
     if (!lockedByAncestor) {
       synchronized (reads) {
-        reads.put(obj.$ref.core, obj.$ref.onum,
-            new Pair<LockList.Node<Log>, ReadMapEntry>(lockListNode,
-                readMapEntry));
+        reads.put(obj.$ref.core, obj.$ref.onum, readMapEntry);
       }
     } else {
-      readsReadByParent.add(new Pair<LockList.Node<Log>, ReadMapEntry>(
-          lockListNode, readMapEntry));
+      readsReadByParent.add(readMapEntry);
     }
   }
 
@@ -587,16 +562,16 @@ public final class Log {
   void removePromisedReads(long commitTime) {
     // Generics.  Ugh.
     
-    Iterator<LongKeyMap<Pair<LockList.Node<Log>, ReadMapEntry>>> outer = reads.iterator();
+    Iterator<LongKeyMap<ReadMapEntry>> outer = reads.iterator();
     while (outer.hasNext()) {
-      Collection<Pair<LockList.Node<Log>, ReadMapEntry>> values = outer.next().values();
+      Collection<ReadMapEntry> values = outer.next().values();
 
-      Iterator  <Pair<LockList.Node<Log>, ReadMapEntry>> inner  = values.iterator();
+      Iterator  <ReadMapEntry> inner  = values.iterator();
       while (inner.hasNext()) {
-        Pair<LockList.Node<Log>, ReadMapEntry> entry = inner.next();
+        ReadMapEntry entry = inner.next();
         
-        if (entry.second.promise > commitTime) {
-          entry.second.releaseLock(entry.first);
+        if (entry.promise > commitTime) {
+          entry.releaseLock(this);
           inner.remove();
         }
       }
