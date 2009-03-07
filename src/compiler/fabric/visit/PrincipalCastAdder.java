@@ -1,6 +1,7 @@
 package fabric.visit;
 
 import fabric.types.FabricTypeSystem;
+import polyglot.ast.Cast;
 import polyglot.ast.Expr;
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.Job;
@@ -21,7 +22,10 @@ public class PrincipalCastAdder extends AscriptionVisitor {
     if (ts.isPrincipal(toType) 
      && (ts.typeEquals(ts.Client(), e.type()) 
       || ts.typeEquals(ts.RemoteClient(), e.type()))) {
-      return nf.Cast(e.position(), nf.CanonicalTypeNode(Position.compilerGenerated(), toType), e);
+      Cast result = nf.Cast(e.position(), 
+                            nf.CanonicalTypeNode(Position.compilerGenerated(), toType), 
+                            e);
+      return result.type(toType);
     }
     return e;
   }
