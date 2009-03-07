@@ -207,7 +207,7 @@ public final class TransactionManager {
       }
     }
 
-    logger.finest(current + " aborting");
+    logger.warning(current + " aborting");
     // Assume only one thread will be executing this.
 
     // Set the abort flag in all our children.
@@ -217,7 +217,7 @@ public final class TransactionManager {
     current.waitForThreads();
 
     current.abort();
-    logger.finest(current + " aborted");
+    logger.warning(current + " aborted");
 
     synchronized (current.commitState) {
       current.commitState.value = ABORTED;
@@ -300,7 +300,7 @@ public final class TransactionManager {
       failures.remove(null);
       TransactionPrepareFailedException e =
           new TransactionPrepareFailedException(failures);
-      logger.finest(current + " error committing: abort exception: " + e);
+      logger.warning(current + " error committing: abort exception: " + e);
       abortTransaction();
       throw new AbortException(e);
     }
