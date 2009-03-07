@@ -241,7 +241,14 @@ public final class RemoteClient implements RemoteNode {
    *          the tid for the current transaction.
    */
   public void takeOwnership(TransactionID tid, Core core, long onum) {
-    new TakeOwnershipMessage(tid, core, onum).send(this);
+    TakeOwnershipMessage.Response response =
+        new TakeOwnershipMessage(tid, core, onum).send(this);
+    if (!response.success) {
+      throw new InternalError(
+          "Unable to take ownership of object fab://" + core.name()
+              + "/" + onum + " from " + name + " -- either " + name
+              + " doesn't own the object or authorization has failed.");
+    }
   }
 
   public String name() {
