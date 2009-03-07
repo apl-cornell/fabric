@@ -6,17 +6,17 @@
 
    Document displayData  = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
    Element  root         = (Element)  displayData.getChildNodes().item(0); 
-   Element  course       = XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_COURSE); 
-   String   courseID     = (course != null) ? course.getAttribute(XMLBuilder.$Static.A_COURSEID):"0"; 
-   NodeList categoryList = root.getElementsByTagName(XMLBuilder.$Static.TAG_CATEGORY);
+   Element  course       = XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.$Proxy.$instance.get$TAG_COURSE()); 
+   String   courseID     = (course != null) ? course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID()):"0"; 
+   NodeList categoryList = root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_CATEGORY());
 
    String   URL = request.getServletPath();
    User p= (User) session.getAttribute(AccessController.A_PRINCIPAL);
 
    boolean isAdmin = false, isCategory = false;
    if (!p.isInStaffAsBlankMode()) {
-     isAdmin= course.hasAttribute(XMLBuilder.$Static.A_ISADMIN);
-     isCategory = course.hasAttribute(XMLBuilder.$Static.A_ISCATEGORY);
+     isAdmin= course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISADMIN());
+     isCategory = course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISCATEGORY());
    }
 
    if(categoryList == null || categoryList.getLength() == 0) {
@@ -25,18 +25,18 @@
    else {
       for(int i = 0; i < categoryList.getLength(); i++) {
          Element cat = (Element)categoryList.item(i);
-         int num2Show = Integer.parseInt(cat.getAttribute(XMLBuilder.$Static.A_NUMSHOW));
+         int num2Show = Integer.parseInt(cat.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NUMSHOW()));
 
-         if(cat.getAttribute(XMLBuilder.$Static.A_HIDDEN).equals("false")) {
-            String categoryID = cat.getAttribute(XMLBuilder.$Static.A_ID);
-            String display = num2Show < Category.$Static.SHOWALL ? "": "style = \"display:none\" ";
+         if(cat.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_HIDDEN()).equals("false")) {
+            String categoryID = cat.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ID());
+            String display = num2Show < Category.$Static.$Proxy.$instance.get$SHOWALL() ? "": "style = \"display:none\" ";
             NodeList columnList = CategoryXMLUtil.$Proxy.getVisibleColumnList(cat);
             NodeList rowList = CategoryXMLUtil.$Proxy.getVisibleRowList(cat);
             boolean showExpand = num2Show < rowList.getLength();%>
 
 <div class="assignment_left">
   <h2>
-    <%= cat.getAttribute(XMLBuilder.$Static.A_NAME) %>
+    <%= cat.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME()) %>
     <span id="category<%=i%>head">
       <a id="category<%=i%>showhide" href="#" onclick="hide<%= showExpand ? "Category" : "" %>('category<%= i %>', '(hide)', '(show)'); return false;" class = "hide">(hide)</a>
        <%   if (showExpand)
@@ -59,7 +59,7 @@
 <%             for(int column=0; column < columnList.getLength(); column ++)
                {
                   Element ctgCol = (Element)columnList.item(column);%>
-       <th><%=ctgCol.getAttribute(XMLBuilder.$Static.A_NAME)%></th>
+       <th><%=ctgCol.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME())%></th>
 <%             }
                if(isAdmin || isCategory) /* header for column of row-remove buttons */
                {%>
@@ -70,31 +70,31 @@
                {%>
      <tr>
 <%                Element ctgRow = (Element)rowList.item(row);
-                  String ctgRowID = ctgRow.getAttribute(XMLBuilder.$Static.A_ID);
+                  String ctgRowID = ctgRow.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ID());
                   NodeList contentList = CategoryXMLUtil.$Proxy.getContentList(ctgRow);
                   for(int column=0; column<contentList.getLength(); column++)
                   {
                      Element content = (Element)contentList.item(column);
                      String data = "";
-                     String datatype = content.getAttribute(XMLBuilder.$Static.A_TYPE);%>
+                     String datatype = content.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_TYPE());%>
          <td align="center">
-<%                   if(datatype.equalsIgnoreCase(CategoryColumn.$Static.FILE))
+<%                   if(datatype.equalsIgnoreCase(CategoryColumn.$Static.$Proxy.$instance.get$FILE()))
                      {%>
                   <%= CategoryXMLUtil.$Proxy.printFile(content) %>
 <%                   }
-                     else if(datatype.equalsIgnoreCase(CategoryColumn.$Static.DATE))
+                     else if(datatype.equalsIgnoreCase(CategoryColumn.$Static.$Proxy.$instance.get$DATE()))
                      {%>
                   <%= CategoryXMLUtil.$Proxy.printDate(content) %>
 <%                   }
-                     else if(datatype.equalsIgnoreCase(CategoryColumn.$Static.TEXT))
+                     else if(datatype.equalsIgnoreCase(CategoryColumn.$Static.$Proxy.$instance.get$TEXT()))
                      {%>
                   <%= CategoryXMLUtil.$Proxy.printText(content) %>
 <%                   }
-                     else if(datatype.equalsIgnoreCase(CategoryColumn.$Static.LINK))
+                     else if(datatype.equalsIgnoreCase(CategoryColumn.$Static.$Proxy.$instance.get$LINK()))
                      {%>
                   <%= CategoryXMLUtil.$Proxy.printURL(content) %>
 <%                   }
-                     else if(datatype.equalsIgnoreCase(CategoryColumn.$Static.NUMBER))
+                     else if(datatype.equalsIgnoreCase(CategoryColumn.$Static.$Proxy.$instance.get$NUMBER()))
                      {%>
                   <%= CategoryXMLUtil.$Proxy.printNumber(content) %>
 <%                   }%>
@@ -120,7 +120,7 @@
 <%          }%>
     <br>
   </div>
-<%          if(num2Show < Category.$Static.SHOWALL)
+<%          if(num2Show < Category.$Static.$Proxy.$instance.get$SHOWALL())
             {%>
   <!-- show only top items in the above category table -->
   <script type="text/javascript">

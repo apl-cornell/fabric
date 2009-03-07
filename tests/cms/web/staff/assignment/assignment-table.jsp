@@ -4,17 +4,17 @@ display table of assignments on staff-side
 main course page
 *********************************************/
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
-Element root= (Element) displayData.getElementsByTagName(XMLBuilder.$Static.TAG_ROOT).item(0);
-Element course= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_COURSE); 
-boolean isadmin= course.hasAttribute(XMLBuilder.$Static.A_ISADMIN);
-boolean isgroups= course.hasAttribute(XMLBuilder.$Static.A_ISGROUPS);
-boolean isgrades= course.hasAttribute(XMLBuilder.$Static.A_ISGRADES);
-boolean isassign= course.hasAttribute(XMLBuilder.$Static.A_ISASSIGN);
-boolean iscategory = course.hasAttribute(XMLBuilder.$Static.A_ISCATEGORY);
+Element root= (Element) displayData.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_ROOT()).item(0);
+Element course= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.$Proxy.$instance.get$TAG_COURSE()); 
+boolean isadmin= course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISADMIN());
+boolean isgroups= course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISGROUPS());
+boolean isgrades= course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISGRADES());
+boolean isassign= course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISASSIGN());
+boolean iscategory = course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISCATEGORY());
 boolean isstaff = isadmin || isgroups || isgrades || isassign || iscategory;
 String URL= request.getServletPath(); 
 boolean isAssignOnly = URL.equals(AccessController.ASSIGNLISTADMIN_URL);
-NodeList hiddenAssigns = ((Element) root.getElementsByTagName(XMLBuilder.$Static.TAG_HIDDENASSIGNMENTS).item(0)).getChildNodes();
+NodeList hiddenAssigns = ((Element) root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_HIDDENASSIGNMENTS()).item(0)).getChildNodes();
 %><div class="assignment_left">
 <% if (isAssignOnly) { %>
   <span class="assignment_title">Assignments</span>
@@ -28,8 +28,8 @@ NodeList hiddenAssigns = ((Element) root.getElementsByTagName(XMLBuilder.$Static
 <div id="assignments" class="showhide">        
 <% } %>
 <% 
-Element l= (Element) root.getElementsByTagName(XMLBuilder.$Static.TAG_ASSIGNMENTS).item(0);
-NodeList list= l.getElementsByTagName(XMLBuilder.$Static.TAG_ASSIGNMENT);
+Element l= (Element) root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_ASSIGNMENTS()).item(0);
+NodeList list= l.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_ASSIGNMENT());
 int length= list.getLength();
 if (length == 0) { %>
           <p>No assignments have yet been posted.<br><%
@@ -58,24 +58,24 @@ if (length == 0) { %>
            </tr><%
   for (int i= 0; i != length; i++) { 
     Element item= (Element) list.item(i); 
-    int assignType = Integer.parseInt(item.getAttribute(XMLBuilder.$Static.A_ASSIGNTYPE));
-    if (assignType == Assignment.$Static.SURVEY) continue;
+    int assignType = Integer.parseInt(item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNTYPE()));
+    if (assignType == Assignment.$Static.$Proxy.$instance.get$SURVEY()) continue;
     
-    String assignid= item.getAttribute(XMLBuilder.$Static.A_ID); 
-    String total = item.getAttribute(XMLBuilder.$Static.A_TOTALSCORE),
-      mean = item.hasAttribute(XMLBuilder.$Static.A_STATMEAN) ? item.getAttribute(XMLBuilder.$Static.A_STATMEAN) : null, 
-      max = item.hasAttribute(XMLBuilder.$Static.A_STATMAX) ? item.getAttribute(XMLBuilder.$Static.A_STATMAX) : null, 
-      median = item.hasAttribute(XMLBuilder.$Static.A_STATMEDIAN) ? item.getAttribute(XMLBuilder.$Static.A_STATMEDIAN) : null, 
-      dev = item.hasAttribute(XMLBuilder.$Static.A_STATDEV) ? item.getAttribute(XMLBuilder.$Static.A_STATDEV) : null,
-      weight = item.hasAttribute(XMLBuilder.$Static.A_WEIGHT) ? item.getAttribute(XMLBuilder.$Static.A_WEIGHT) : null;
-  	int type = item.hasAttribute(XMLBuilder.$Static.A_ASSIGNTYPE) ? Integer.parseInt(item.getAttribute(XMLBuilder.$Static.A_ASSIGNTYPE)) : -1;     
+    String assignid= item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ID()); 
+    String total = item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_TOTALSCORE()),
+      mean = item.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STATMEAN()) ? item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STATMEAN()) : null, 
+      max = item.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STATMAX()) ? item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STATMAX()) : null, 
+      median = item.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STATMEDIAN()) ? item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STATMEDIAN()) : null, 
+      dev = item.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STATDEV()) ? item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STATDEV()) : null,
+      weight = item.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_WEIGHT()) ? item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_WEIGHT()) : null;
+  	int type = item.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNTYPE()) ? Integer.parseInt(item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNTYPE())) : -1;     
 	String action = AccessController.ACT_ASSIGNADMIN;
-	if (type == Assignment.$Static.QUIZ) action = AccessController.ACT_QUIZADMIN;
-	else if (type == Assignment.$Static.SURVEY) action = AccessController.ACT_SURVEYADMIN;
+	if (type == Assignment.$Static.$Proxy.$instance.get$QUIZ()) action = AccessController.ACT_QUIZADMIN;
+	else if (type == Assignment.$Static.$Proxy.$instance.get$SURVEY()) action = AccessController.ACT_SURVEYADMIN;
   %>
             <tr>
               <td nowrap>
-                <%= item.getAttribute(XMLBuilder.$Static.A_NAME) %>
+                <%= item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME()) %>
 <% 
 
 String assignactbegin1= "<a href=\"?" + AccessController.P_ACTION + "=";
@@ -96,7 +96,7 @@ if (isadmin || isassign) {
 }
 if (isadmin || isgrades || isgroups) {
 	String groupAction = AccessController.ACT_GRADEASSIGN;
-	if (type == Assignment.$Static.SURVEY) {
+	if (type == Assignment.$Static.$Proxy.$instance.get$SURVEY()) {
 		groupAction = AccessController.ACT_SURVEYRESULT;
 		groupAnchor = "result";
 	}
@@ -106,7 +106,7 @@ if (isadmin || isgrades || isgroups) {
   begingrade= "<span class=\"noaccess\">";
   endgrade= "</span>"; 
 }
-if (!item.getAttribute(XMLBuilder.$Static.A_USESCHEDULE).equals("") && /*(isadmin || isassign)*/isstaff) {
+if (!item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_USESCHEDULE()).equals("") && /*(isadmin || isassign)*/isstaff) {
   beginschedule= assignactbegin1 + AccessController.ACT_SCHEDULE + assignactbegin2 + assignid + assignactbegin3;
   endschedule= assignactend+")";
 } else {
@@ -122,7 +122,7 @@ if (!item.getAttribute(XMLBuilder.$Static.A_USESCHEDULE).equals("") && /*(isadmi
                 </font>	
               </td>
               <% } %>
-              <td align="center"><%= item.getAttribute(XMLBuilder.$Static.A_DUEDATE) %></td>
+              <td align="center"><%= item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_DUEDATE()) %></td>
               <% if (isadmin || isgrades || isassign) { %>
                     <td align="center"><%= weight == null ? "&nbsp" : weight %></td>
                     <td align="center"><%= total %></td>
@@ -139,7 +139,7 @@ if (!item.getAttribute(XMLBuilder.$Static.A_USESCHEDULE).equals("") && /*(isadmi
                     <td align="center" colspan="4">No Statistics Available</td>
                 <% } %>
 							<% } %>
-              <td align="center"><%= item.getAttribute(XMLBuilder.$Static.A_STATUS) %></td>
+              <td align="center"><%= item.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STATUS()) %></td>
               <% if (isadmin || isassign) { %>
               <td align="center">
          
@@ -156,11 +156,11 @@ if (!item.getAttribute(XMLBuilder.$Static.A_USESCHEDULE).equals("") && /*(isadmi
 				<td style="color: #ab1a2a" nowrap>Total Weighted Score</td>
 				<td colspan="2">&nbsp;</td>
 				<td>&nbsp;</td>
-				<td align="center" style="color: #ab1a2a"><%= course.getAttribute(XMLBuilder.$Static.A_MAXTOTALSCORE) %></td>
-				<td align="center" style="color: #ab1a2a"><%= course.getAttribute(XMLBuilder.$Static.A_HIGHTOTALSCORE) %></td>
-				<td align="center" style="color: #ab1a2a"><%= course.getAttribute(XMLBuilder.$Static.A_MEANTOTALSCORE) %></td>
-				<td align="center" style="color: #ab1a2a"><%= course.getAttribute(XMLBuilder.$Static.A_MEDIANTOTALSCORE) %></td>
-				<td align="center" style="color: #ab1a2a"><%= course.getAttribute(XMLBuilder.$Static.A_STDEVTOTALSCORE) %></td>
+				<td align="center" style="color: #ab1a2a"><%= course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_MAXTOTALSCORE()) %></td>
+				<td align="center" style="color: #ab1a2a"><%= course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_HIGHTOTALSCORE()) %></td>
+				<td align="center" style="color: #ab1a2a"><%= course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_MEANTOTALSCORE()) %></td>
+				<td align="center" style="color: #ab1a2a"><%= course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_MEDIANTOTALSCORE()) %></td>
+				<td align="center" style="color: #ab1a2a"><%= course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STDEVTOTALSCORE()) %></td>
 				<td colspan="2">&nbsp;</td>				
 			</tr>
 <% } %>
@@ -170,8 +170,8 @@ if (!item.getAttribute(XMLBuilder.$Static.A_USESCHEDULE).equals("") && /*(isadmi
 <br />
 <!-- Surveys -->
 	<h2>Surveys</h2>
-<% 	Element surveyRoot = (Element) root.getElementsByTagName(XMLBuilder.$Static.TAG_SURVEYS).item(0);
-	NodeList surveys = surveyRoot.getElementsByTagName(XMLBuilder.$Static.TAG_SURVEY); 
+<% 	Element surveyRoot = (Element) root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_SURVEYS()).item(0);
+	NodeList surveys = surveyRoot.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_SURVEY()); 
 	int numSurveys = surveys.getLength();
 	if (numSurveys == 0) { %>
 	<p>No surveys have yet been posted</p>
@@ -191,7 +191,7 @@ if (!item.getAttribute(XMLBuilder.$Static.A_USESCHEDULE).equals("") && /*(isadmi
 	<%
 		for(int j = 0; j < numSurveys; j++) {
 			Element survey = (Element) surveys.item(j); 	
-			String assignid = survey.getAttribute(XMLBuilder.$Static.A_ASSIGNID);
+			String assignid = survey.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNID());
 			
 			String p_action = AccessController.P_ACTION;
 			String p_assignid = AccessController.P_ASSIGNID;
@@ -202,7 +202,7 @@ if (!item.getAttribute(XMLBuilder.$Static.A_USESCHEDULE).equals("") && /*(isadmi
 			boolean displayEdit = isadmin || isassign;
 	%>	
 		<tr>
-			<td nowrap><%= survey.getAttribute(XMLBuilder.$Static.A_NAME) %></td>
+			<td nowrap><%= survey.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME()) %></td>
 			 <% if (isadmin || isgrades || isgroups || isassign) { %>
               <td nowrap>
                 <font size=1>                
@@ -213,15 +213,15 @@ if (!item.getAttribute(XMLBuilder.$Static.A_USESCHEDULE).equals("") && /*(isadmi
 					<span class="noaccess">edit</span> |
 				<% } %>	
 					<a href='<%= "?" + p_action + "=" + act_surveyresult + "&amp;" + p_assignid + "=" + assignid %>'>result</a> |  
-					<% if (!survey.getAttribute(XMLBuilder.$Static.A_USESCHEDULE).equals("") && isstaff) { %>
+					<% if (!survey.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_USESCHEDULE()).equals("") && isstaff) { %>
 					<a href='<%= "?" + p_action + "=" + act_surveyadmin + "&amp;" + p_assignid + "=" + assignid %>'>schedule</a>
                 	<% } else { %><span class="noaccess">schedule</span><% } %>)
                 </font>	
               </td>
               <% } %>
-			<td align="center"><%= survey.getAttribute(XMLBuilder.$Static.A_DUEDATE) %></td>
-			<td align="center"><%= survey.getAttribute(XMLBuilder.$Static.A_STATUS) %></td>
-			<td align="center"><%= survey.getAttribute(XMLBuilder.$Static.A_COUNT) %></td>
+			<td align="center"><%= survey.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_DUEDATE()) %></td>
+			<td align="center"><%= survey.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STATUS()) %></td>
+			<td align="center"><%= survey.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COUNT()) %></td>
 		</tr>
 	<% } %> 
 	</table>
@@ -233,8 +233,8 @@ if (!item.getAttribute(XMLBuilder.$Static.A_USESCHEDULE).equals("") && /*(isadmi
     <table>
     <% for (int j=0; j < hiddenAssigns.getLength(); j++) { 
         Element ha = (Element) hiddenAssigns.item(j); %>
-      <tr><td><%= ha.getAttribute(XMLBuilder.$Static.A_ASSIGNNAME) %></td><td>(<%= ha.getAttribute(XMLBuilder.$Static.A_NAMESHORT) %>)</td>
-      <td><a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_RESTOREASSIGN + "&amp;" + AccessController.P_ASSIGNID + "=" + ha.getAttribute(XMLBuilder.$Static.A_ASSIGNID) %>">Restore</a></td>
+      <tr><td><%= ha.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNNAME()) %></td><td>(<%= ha.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAMESHORT()) %>)</td>
+      <td><a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_RESTOREASSIGN + "&amp;" + AccessController.P_ASSIGNID + "=" + ha.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNID()) %>">Restore</a></td>
       </tr>
     <% } %>
     </table>
