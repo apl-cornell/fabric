@@ -267,19 +267,22 @@ public final class TransactionManager {
 
     Log parent = current.parent;
     if (current.tid.parent != null) {
-      Timing.SUBTX.begin();
-      // Update data structures to reflect the commit.
-      current.commitNested();
-      logger.finest(current + " committed");
-      if (parent.tid.equals(current.tid.parent)) {
-        // Parent frame represents parent transaction. Pop the stack.
-        current = parent;
-      } else {
-        // Reuse the current frame for the parent transaction. Update its TID.
-        current.tid = current.tid.parent;
+      try {
+        Timing.SUBTX.begin();
+        // Update data structures to reflect the commit.
+        current.commitNested();
+        logger.finest(current + " committed");
+        if (parent.tid.equals(current.tid.parent)) {
+          // Parent frame represents parent transaction. Pop the stack.
+          current = parent;
+        } else {
+          // Reuse the current frame for the parent transaction. Update its TID.
+          current.tid = current.tid.parent;
+        }
+        return;
+      } finally {
+        Timing.SUBTX.end();
       }
-      Timing.SUBTX.end();
-      return;
     }
 
     // Commit top-level transaction.
@@ -840,11 +843,14 @@ public final class TransactionManager {
   public void startTransaction(TransactionID tid) {
     if (current != null) checkAbortSignal();
 
-    Timing.BEGIN.begin();
-    current = new Log(current, tid);
-    logger.finest(current.parent + " started subtx " + current + " in thread "
-        + Thread.currentThread());
-    Timing.BEGIN.end();
+    try {
+      Timing.BEGIN.begin();
+      current = new Log(current, tid);
+      logger.finest(current.parent + " started subtx " + current + " in thread "
+          + Thread.currentThread());
+    } finally {
+      Timing.BEGIN.end();
+    }
   }
 
   /**

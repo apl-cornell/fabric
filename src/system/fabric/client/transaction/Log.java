@@ -129,14 +129,17 @@ public final class Log {
     this.clientsCalled = new ArrayList<RemoteClient>();
 
     if (parent != null) {
-      Timing.SUBTX.begin();
-      this.updateMap = new UpdateMap(parent.updateMap);
-      synchronized (parent) {
-        parent.child = this;
-      }
+      try {
+        Timing.SUBTX.begin();
+        this.updateMap = new UpdateMap(parent.updateMap);
+        synchronized (parent) {
+          parent.child = this;
+        }
 
-      commitState = parent.commitState;
-      Timing.SUBTX.end();
+        commitState = parent.commitState;
+      } finally {
+        Timing.SUBTX.end();
+      }
     } else {
       this.updateMap = new UpdateMap();
       commitState = new CommitState();
