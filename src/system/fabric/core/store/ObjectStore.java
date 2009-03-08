@@ -51,6 +51,7 @@ public abstract class ObjectStore {
   protected final String name;
   private NodePrincipal corePrincipal;
   private Label publicReadonlyLabel;
+  private long nextGlobID;
 
   /**
    * Maps object numbers to globIDs. The group container with ID
@@ -187,6 +188,7 @@ public abstract class ObjectStore {
     this.rwLocks = new LongKeyHashMap<Pair<Long, LongSet>>();
     this.globIDByOnum = new LongKeyHashMap<Long>();
     this.globTable = new GroupContainerTable();
+    this.nextGlobID = 0;
   }
 
   /**
@@ -320,11 +322,6 @@ public abstract class ObjectStore {
   public abstract SerializedObject read(long onum);
 
   /**
-   * Returns a fresh globID.
-   */
-  protected abstract long nextGlobID();
-
-  /**
    * Returns the cached GroupContainer containing the given onum. Null is
    * returned if no such GroupContainer exists.
    */
@@ -339,7 +336,7 @@ public abstract class ObjectStore {
    */
   public final void cacheGroupContainer(LongSet onums, GroupContainer container) {
     // Get a new ID for the glob and insert into the glob table.
-    long globID = nextGlobID();
+    long globID = nextGlobID++;
     globTable.put(globID, container, onums.size());
 
     // Establish globID bindings for all onums we're given.

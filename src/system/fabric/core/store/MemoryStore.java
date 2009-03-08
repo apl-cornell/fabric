@@ -111,11 +111,6 @@ public class MemoryStore extends ObjectStore {
   }
 
   @Override
-  protected long nextGlobID() {
-    return nextGlobID++;
-  }
-
-  @Override
   public boolean exists(long onum) {
     return rwLocks.get(onum) != null || objectTable.containsKey(onum);
   }

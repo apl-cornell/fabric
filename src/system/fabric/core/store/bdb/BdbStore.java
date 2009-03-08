@@ -26,9 +26,17 @@ public class BdbStore extends ObjectStore {
 
   private final DatabaseEntry initializationStatus;
   private final DatabaseEntry onumCounter;
-  private final DatabaseEntry globIDCounter;
 
   private Logger log = Logger.getLogger("fabric.core.store.bdb");
+  
+  private long nextOnum;
+
+  /**
+   * To prevent touching BDB on every onum reservation request, we keep a bunch
+   * of onums in reserve. If nextOnum > lastReservedOnum, it's time to touch BDB
+   * again to reserve more onums.
+   */
+  private long lastReservedOnum;
 
   /**
    * Creates a new BdbStore for the core specified. A new database will be
@@ -70,10 +78,12 @@ public class BdbStore extends ObjectStore {
       initializationStatus =
           new DatabaseEntry("initialization_status".getBytes("UTF-8"));
       onumCounter = new DatabaseEntry("onum_counter".getBytes("UTF-8"));
-      globIDCounter = new DatabaseEntry("globID_counter".getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
       throw new InternalError(e);
     }
+
+    this.nextOnum = -1;
+    this.lastReservedOnum = -2;
   }
 
   @Override
@@ -163,27 +173,6 @@ public class BdbStore extends ObjectStore {
   }
 
   @Override
-  protected long nextGlobID() {
-    try {
-      Transaction txn = env.beginTransaction(null, null);
-
-      // Get a new ID for the glob.
-      DatabaseEntry globIDData = new DatabaseEntry();
-      if (meta.get(txn, globIDCounter, globIDData, LockMode.DEFAULT) != SUCCESS)
-        globIDData.setData(toBytes(0L));
-      long nextGlobID = toLong(globIDData.getData()) + 1;
-      DatabaseEntry nextGlobIDData = new DatabaseEntry(toBytes(nextGlobID));
-      meta.put(txn, globIDCounter, nextGlobIDData);
-
-      txn.commit();
-      return toLong(globIDData.getData());
-    } catch (DatabaseException e) {
-      log.log(Level.SEVERE, "Bdb error in nextGlobID: ", e);
-      throw new InternalError(e);
-    }
-  }
-
-  @Override
   public boolean exists(long onum) {
     DatabaseEntry key = new DatabaseEntry(toBytes(onum));
     DatabaseEntry data = new DatabaseEntry();
@@ -200,31 +189,38 @@ public class BdbStore extends ObjectStore {
 
     return false;
   }
+  
+  private final long ONUM_RESERVE_SIZE = 10240;
 
   @Override
   public long[] newOnums(int num) {
     log.fine("Bdb new onums begin");
 
     try {
-      Transaction txn = env.beginTransaction(null, null);
-      DatabaseEntry data = new DatabaseEntry();
-      long c = ONumConstants.FIRST_UNRESERVED;
-
-      if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
-        c = toLong(data.getData());
-      }
-
-      data.setData(toBytes(c + num));
-      meta.put(txn, onumCounter, data);
-      txn.commit();
-
       long[] onums = new long[num];
-
       for (int i = 0; i < num; i++) {
-        onums[i] = c + i;
-      }
+        if (nextOnum > lastReservedOnum) {
+          // Reserve more onums from BDB.
+          Transaction txn = env.beginTransaction(null, null);
+          DatabaseEntry data = new DatabaseEntry();
+          nextOnum = ONumConstants.FIRST_UNRESERVED;
 
-      log.fine("Bdb new onums " + c + "--" + (c + num - 1));
+          if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
+            nextOnum = toLong(data.getData());
+          }
+          
+          lastReservedOnum = nextOnum + ONUM_RESERVE_SIZE + num - i - 1;
+
+          data.setData(toBytes(lastReservedOnum + 1));
+          meta.put(txn, onumCounter, data);
+          txn.commit();
+
+          log.fine("Bdb reserved onums " + nextOnum + "--" + lastReservedOnum);
+        }
+        
+        onums[i] = nextOnum++;
+      }
+      
       return onums;
     } catch (DatabaseException e) {
       log.log(Level.SEVERE, "Bdb error in newOnums: ", e);
