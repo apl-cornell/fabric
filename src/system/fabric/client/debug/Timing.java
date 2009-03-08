@@ -7,24 +7,20 @@ import java.util.Deque;
 /** A utility class for recording the timing of various categories. */
 public enum Timing {
 
-  APP(    false),  // application code
-  BEGIN(  false),  // local transaction management
-  COMMIT( false), 
-  TXLOG(  false),  // logging reads, writes, creates, etc
-  SUBTX(  false),  // merging of logs and other subtx management
-  FETCH(  false),  // fetching objects
-  CORE (  false);  // other communication with the core
+  APP,    // application code
+  BEGIN,  // local transaction begin
+  COMMIT, // local transaction commit processing
+  TXLOG,  // logging reads, writes, creates, etc
+  SUBTX,  // merging of logs and other subtx management
+  FETCH,  // fetching objects
+  CORE;   // other communication with the core
   
   /** The time attributed to this category so far */
   private long time;
   /** The number of additions used to generate time */
   private int  count;
   /** Whether or not to record time for this category */
-  private boolean enabled;
-  
-  private Timing(boolean enabled) {
-    this.enabled = enabled;
-  }
+  public boolean enabled = false;
   
   private static Deque<Timing> scope;
   private static long          stamp;

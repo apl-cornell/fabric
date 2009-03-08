@@ -5,6 +5,8 @@ import java.io.PrintStream;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
 
+import fabric.client.debug.Timing;
+
 public class Options extends fabric.common.Options {
   // The application to run and its parameters.
   public String[] app;
@@ -46,12 +48,23 @@ public class Options extends fabric.common.Options {
     usageForFlag(out, "--name <name>", "this client's name", defaults.name);
     usageForFlag(out, "--pool <number>", "size of worker thread pool for "
         + "serving remote requests", defaults.threadPool);
+    usageForFlag(out, "--time <category>", "enable timing of category");
     usageForFlag(out, "--conn <number>", "maximum number of simultaneous "
         + "connections to support", defaults.maxConnect);
     usageForFlag(out, "--make-principal <core>",
         "create a new principal for this client on the given core and exit");
     usageForFlag(out, "--version", "print version info and exit");
     usageForFlag(out, "--help", "print this message");
+  }
+  
+  private String timeUsage() {
+    StringBuffer message = new StringBuffer("possible categories for --time:\n");
+    message.append("all");
+    for (Timing t : Timing.values()) {
+      message.append(", ");
+      message.append(t.name().toLowerCase());
+    }
+    return message.toString();
   }
 
   @Override
@@ -94,6 +107,25 @@ public class Options extends fabric.common.Options {
     if (args[i].equals("--make-principal")) {
       this.core = args[i + 1];
       return i + 2;
+    }
+    
+    if (args[i].equals("--time")) {
+      if (i + 1 >= args.length)
+        throw new UsageError(timeUsage());
+      
+      for (Timing t : Timing.values()) {
+        if (t.name().equalsIgnoreCase(args[i + 1])) {
+          t.enabled = true;
+          return i + 2;
+        }
+      }
+      if (args[i].equals("all")) {
+        for (Timing t : Timing.values())
+          t.enabled = true;
+        return i + 2;
+      }
+      
+      throw new UsageError(timeUsage());
     }
 
     this.app = new String[args.length - i];
