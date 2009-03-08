@@ -64,7 +64,7 @@ public abstract class ObjectStore {
    * Maps globIDs to GroupContainers and the number of times the GroupContainer
    * is referenced in globIDByOnum.
    */
-  private final LongKeyMap<Pair<GroupContainer, MutableInteger>> globTable;
+  private final GroupContainerTable globTable;
 
   /**
    * The data stored for a partially prepared transaction.
@@ -186,7 +186,7 @@ public abstract class ObjectStore {
     this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
     this.rwLocks = new LongKeyHashMap<Pair<Long, LongSet>>();
     this.globIDByOnum = new LongKeyHashMap<Long>();
-    this.globTable = new LongKeyHashMap<Pair<GroupContainer, MutableInteger>>();
+    this.globTable = new GroupContainerTable();
   }
 
   /**
@@ -331,10 +331,7 @@ public abstract class ObjectStore {
   public final GroupContainer getCachedGroupContainer(long onum) {
     Long globID = globIDByOnum.get(onum);
     if (globID == null) return null;
-
-    Pair<GroupContainer, MutableInteger> entry = globTable.get(globID);
-    if (entry == null) return null;
-    return entry.first;
+    return globTable.getContainer(globID);
   }
 
   /**
@@ -343,8 +340,7 @@ public abstract class ObjectStore {
   public final void cacheGroupContainer(LongSet onums, GroupContainer container) {
     // Get a new ID for the glob and insert into the glob table.
     long globID = nextGlobID();
-    globTable.put(globID, new Pair<GroupContainer, MutableInteger>(container,
-        new MutableInteger(onums.size())));
+    globTable.put(globID, container, onums.size());
 
     // Establish globID bindings for all onums we're given.
     for (LongIterator it = onums.iterator(); it.hasNext();) {
@@ -353,15 +349,7 @@ public abstract class ObjectStore {
       Long oldGlobID = globIDByOnum.put(onum, globID);
       if (oldGlobID == null) continue;
 
-      Pair<GroupContainer, MutableInteger> entry = globTable.get(oldGlobID);
-      if (entry == null) continue;
-
-      if (entry.second.value == 1) {
-        // We've removed the last pin. Evict the old glob from the glob table.
-        globTable.remove(oldGlobID);
-      } else {
-        entry.second.value--;
-      }
+      globTable.unpin(oldGlobID);
     }
   }
 
@@ -370,7 +358,9 @@ public abstract class ObjectStore {
    */
   protected final void removeGlobByOnum(long onum) {
     Long globID = globIDByOnum.remove(onum);
-    if (globID != null) globTable.remove(globID);
+    if (globID != null) {
+      globTable.remove(globID);
+    }
   }
 
   /**
@@ -520,7 +510,8 @@ public abstract class ObjectStore {
   private final NodePrincipal corePrincipal() {
     if (corePrincipal == null) {
       Core core = Client.getClient().getCore(name);
-      corePrincipal = new NodePrincipal.$Proxy(core, ONumConstants.CORE_PRINCIPAL);
+      corePrincipal =
+          new NodePrincipal.$Proxy(core, ONumConstants.CORE_PRINCIPAL);
     }
 
     return corePrincipal;
