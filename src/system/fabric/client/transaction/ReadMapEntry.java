@@ -66,7 +66,7 @@ public final class ReadMapEntry {
    */
   void signalObject() {
     $Impl obj = this.obj.get();
-    if (obj == null) {
+    if (obj == null && !this.obj.core.isLocalCore()) {
       obj = this.obj.core.readObjectFromCache(this.obj.onum);
       if (obj == null) return;
 

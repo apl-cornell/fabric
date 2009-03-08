@@ -2,6 +2,7 @@ package fabric.client.transaction;
 
 import java.util.*;
 
+import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.debug.Timing;
 import fabric.client.remote.RemoteClient;
@@ -11,6 +12,7 @@ import fabric.common.Util;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.SoftReferenceArrayList;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -72,16 +74,29 @@ public final class Log {
   /**
    * A collection of all objects created in this transaction or completed
    * sub-transactions. Objects created in running or aborted sub-transactions
-   * don't count here.
+   * don't count here. To keep them from being pinned, objects on local core are
+   * not tracked here.
    */
   protected final List<$Impl> creates;
 
   /**
+   * Tracks objects created on local core. See <code>creates</code>.
+   */
+  protected final SoftReferenceArrayList<$Impl> localcoreCreates;
+
+  /**
    * A collection of all objects modified in this transaction or completed
    * sub-transactions. Objects modified in running or aborted sub-transactions
-   * don't count here.
+   * don't count here. To keep them from being pinned, objects on local core are
+   * not tracked here.
    */
   protected final List<$Impl> writes;
+
+  /**
+   * Tracks objects on local core that have been modified. See
+   * <code>writes</code>.
+   */
+  protected final SoftReferenceArrayList<$Impl> localcoreWrites;
 
   /**
    * The set of clients called by this transaction and completed
@@ -125,7 +140,9 @@ public final class Log {
     this.reads = new OidKeyHashMap<ReadMapEntry>();
     this.readsReadByParent = new ArrayList<ReadMapEntry>();
     this.creates = new ArrayList<$Impl>();
+    this.localcoreCreates = new SoftReferenceArrayList<$Impl>();
     this.writes = new ArrayList<$Impl>();
+    this.localcoreWrites = new SoftReferenceArrayList<$Impl>();
     this.clientsCalled = new ArrayList<RemoteClient>();
 
     if (parent != null) {
@@ -181,13 +198,21 @@ public final class Log {
    */
   Set<Core> coresToContact() {
     Set<Core> result = new HashSet<Core>();
+
     result.addAll(reads.coreSet());
+
     for ($Impl obj : writes) {
       if (obj.$isOwned) result.add(obj.$getCore());
     }
+
     for ($Impl obj : creates) {
       if (obj.$isOwned) result.add(obj.$getCore());
     }
+
+    if (!localcoreWrites.isEmpty() || !localcoreCreates.isEmpty()) {
+      result.add(Client.getClient().getLocalCore());
+    }
+
     return result;
   }
 
@@ -205,10 +230,14 @@ public final class Log {
       result.put(entry.getKey(), entry.getValue().versionNumber);
     }
 
-    for ($Impl write : Util.chain(writes, creates))
-      if (write.$getCore() == core)
+    if (core.isLocalCore()) {
+      for ($Impl write : Util.chain(localcoreWrites, localcoreCreates))
         result.remove(write.$getOnum());
-    
+    } else {
+      for ($Impl write : Util.chain(writes, creates))
+        if (write.$getCore() == core) result.remove(write.$getOnum());
+    }
+
     return result;
   }
 
@@ -220,14 +249,23 @@ public final class Log {
     // This should be a Set of $Impl, but we have a map indexed by OID to
     // avoid calling hashCode and equals on the $Impls.
     LongKeyMap<$Impl> result = new LongKeyHashMap<$Impl>();
-    
-    for ($Impl obj : writes)
-      if (obj.$getCore() == core && obj.$isOwned)
-        result.put(obj.$getOnum(), obj);
 
-    for ($Impl create : creates)
-      if (create.$getCore() == core)
+    if (core.isLocalCore()) {
+      for ($Impl obj : localcoreWrites) {
+        result.put(obj.$getOnum(), obj);
+      }
+      
+      for ($Impl create : localcoreCreates) {
         result.remove(create.$getOnum());
+      }
+    } else {
+      for ($Impl obj : writes)
+        if (obj.$getCore() == core && obj.$isOwned)
+          result.put(obj.$getOnum(), obj);
+
+      for ($Impl create : creates)
+        if (create.$getCore() == core) result.remove(create.$getOnum());
+    }
 
     return result.values();
   }
@@ -239,9 +277,16 @@ public final class Log {
     // This should be a Set of $Impl, but to avoid calling methods on the
     // $Impls, we instead use a map keyed on OID.
     LongKeyMap<$Impl> result = new LongKeyHashMap<$Impl>();
-    for ($Impl obj : creates)
-      if (obj.$getCore() == core && obj.$isOwned)
+    
+    if (core.isLocalCore()) {
+      for ($Impl obj : localcoreCreates) {
         result.put(obj.$getOnum(), obj);
+      }
+    } else {
+      for ($Impl obj : creates)
+        if (obj.$getCore() == core && obj.$isOwned)
+          result.put(obj.$getOnum(), obj);
+    }
 
     return result.values();
   }
@@ -266,6 +311,7 @@ public final class Log {
    * Updates logs and data structures in <code>$Impl</code>s to abort this
    * transaction. All locks held by this transaction are released.
    */
+  @SuppressWarnings("unchecked")
   void abort() {
     // Contact all remote clients that we've called and have them abort.
     List<Thread> abortThreads = new ArrayList<Thread>(clientsCalled.size());
@@ -291,7 +337,7 @@ public final class Log {
       entry.releaseLock(this);
 
     // Roll back writes and release write locks.
-    for ($Impl write : writes) {
+    for ($Impl write : Util.chain(writes, localcoreWrites)) {
       synchronized (write) {
         write.$copyStateFrom(write.$history);
 
@@ -311,7 +357,9 @@ public final class Log {
       reads.clear();
       readsReadByParent.clear();
       creates.clear();
+      localcoreCreates.clear();
       writes.clear();
+      localcoreWrites.clear();
       clientsCalled.clear();
 
       if (parent != null) {
@@ -387,12 +435,45 @@ public final class Log {
         if (obj.$numWaiting > 0) obj.notifyAll();
       }
     }
+    
+    SoftReferenceArrayList<$Impl> parentLocalcoreWrites =
+        parent.localcoreWrites;
+    for ($Impl obj : localcoreWrites) {
+      synchronized (obj) {
+        if (obj.$history.$writeLockHolder == parent) {
+          // The parent transaction already wrote to the object. Discard one
+          // layer of history. In doing so, we also end up releasing this
+          // transaction's write lock.
+          obj.$history = obj.$history.$history;
+        } else {
+          // The parent transaction didn't write to the object. Add write to
+          // parent and transfer our write lock.
+          synchronized (parentLocalcoreWrites) {
+            parentLocalcoreWrites.add(obj);
+          }
+        }
+        obj.$writer = null;
+        obj.$writeLockHolder = parent;
+
+        // Signal any readers/writers.
+        if (obj.$numWaiting > 0) obj.notifyAll();
+      }
+    }
 
     // Merge creates and transfer write locks.
     List<$Impl> parentCreates = parent.creates;
     synchronized (parentCreates) {
       for ($Impl obj : creates) {
         parentCreates.add(obj);
+        obj.$writeLockHolder = parent;
+      }
+    }
+    
+    SoftReferenceArrayList<$Impl> parentLocalcoreCreates =
+        parent.localcoreCreates;
+    synchronized (parentLocalcoreCreates) {
+      for ($Impl obj : localcoreCreates) {
+        parentLocalcoreCreates.add(obj);
         obj.$writeLockHolder = parent;
       }
     }
@@ -404,7 +485,7 @@ public final class Log {
           parent.clientsCalled.add(client);
       }
     }
-    
+
     // Merge the update map.
     synchronized (parent.updateMap) {
       parent.updateMap.putAll(updateMap);
@@ -420,6 +501,7 @@ public final class Log {
    * transaction. Assumes this is a top-level transaction. All locks held by
    * this transaction are released.
    */
+  @SuppressWarnings("unchecked")
   void commitTopLevel() {
     // Release read locks.
     for (LongKeyMap<ReadMapEntry> submap : reads) {
@@ -431,15 +513,15 @@ public final class Log {
     // sanity check
     if (!readsReadByParent.isEmpty())
       throw new InternalError("something was read by a non-existent parent");
-    
+
     // Release write locks and ownerships; update version numbers.
-    for ($Impl obj : writes) {
+    for ($Impl obj : Util.chain(writes, localcoreWrites)) {
       if (!obj.$isOwned) {
-        // The cached object is out-of-date.  Evict it.
+        // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
         continue;
       }
-      
+
       synchronized (obj) {
         obj.$writer = null;
         obj.$writeLockHolder = null;
@@ -456,13 +538,13 @@ public final class Log {
     }
 
     // Release write locks on created objects and set version numbers.
-    for ($Impl obj : creates) {
+    for ($Impl obj : Util.chain(creates, localcoreCreates)) {
       if (!obj.$isOwned) {
-        // The cached object is out-of-date.  Evict it.
+        // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
         continue;
       }
-      
+
       obj.$writer = null;
       obj.$writeLockHolder = null;
       obj.$version = 1;
@@ -489,8 +571,7 @@ public final class Log {
           return;
         }
 
-        if (!lockedByAncestor && isDescendantOf(cur))
-          lockedByAncestor = true;
+        if (!lockedByAncestor && isDescendantOf(cur)) lockedByAncestor = true;
       }
 
       readMapEntry.readLocks.add(this);
@@ -527,8 +608,7 @@ public final class Log {
           return;
         }
 
-        if (!lockedByAncestor && isDescendantOf(cur))
-          lockedByAncestor = true;
+        if (!lockedByAncestor && isDescendantOf(cur)) lockedByAncestor = true;
       }
 
       readMapEntry.readLocks.add(this);
@@ -566,27 +646,26 @@ public final class Log {
   }
 
   void removePromisedReads(long commitTime) {
-    // Generics.  Ugh.
-    
+    // Generics. Ugh.
+
     Iterator<LongKeyMap<ReadMapEntry>> outer = reads.iterator();
     while (outer.hasNext()) {
       Collection<ReadMapEntry> values = outer.next().values();
 
-      Iterator  <ReadMapEntry> inner  = values.iterator();
+      Iterator<ReadMapEntry> inner = values.iterator();
       while (inner.hasNext()) {
         ReadMapEntry entry = inner.next();
-        
+
         if (entry.promise > commitTime) {
           entry.releaseLock(this);
           inner.remove();
         }
       }
-      
-      if (values.isEmpty())
-        outer.remove();
+
+      if (values.isEmpty()) outer.remove();
     }
-    
-    //  sanity check
+
+    // sanity check
     if (!readsReadByParent.isEmpty())
       throw new InternalError("something was read by a non-existent parent");
   }

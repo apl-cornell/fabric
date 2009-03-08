@@ -773,8 +773,15 @@ public final class TransactionManager {
     // write set.
     obj.$history = obj.clone();
     obj.$writeLockHolder = current;
-    synchronized (current.writes) {
-      current.writes.add(obj);
+    
+    if (obj.$getCore().isLocalCore()) {
+      synchronized (current.localcoreWrites) {
+        current.localcoreWrites.add(obj);
+      }
+    } else {
+      synchronized (current.writes) {
+        current.writes.add(obj);
+      }
     }
 
     if (obj.$reader != current) {
@@ -801,8 +808,14 @@ public final class TransactionManager {
     
     // If the object is fresh, add it to our set of creates.
     if (obj.$version == 0) {
-      synchronized (current.creates) {
-        current.creates.add(obj);
+      if (obj.$getCore().isLocalCore()) {
+        synchronized (current.localcoreCreates) {
+          current.localcoreCreates.add(obj);
+        }
+      } else {
+        synchronized (current.creates) {
+          current.creates.add(obj);
+        }
       }
     }
   }
