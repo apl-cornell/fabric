@@ -81,8 +81,6 @@ public final class Client {
 
   // The manager to use for fetching objects from cores.
   protected final FetchManager fetchManager;
-
-  protected final ThreadLocal<Label> label;
   
   private final RemoteCallManager remoteCallManager;
 
@@ -171,8 +169,6 @@ public final class Client {
     this.remoteClients = new HashMap<String, RemoteClient>();
     this.localCore = new LocalCore();
     this.trustStore = trustStore;
-
-    this.label = new ThreadLocal<Label>();
 
     // Set up the SSL socket factory.
     try {
@@ -318,20 +314,6 @@ public final class Client {
    */
   public java.security.Principal getJavaPrincipal() {
     return javaPrincipal;
-  }
-
-  /**
-   * Sets the principal of the currently executing thread.
-   * 
-   * @param p
-   *                The principal to use.
-   */
-  public void setLabel(Label l) {
-    label.set(l);
-  }
-
-  public Label getLabel() {
-    return label.get();
   }
 
   /**
