@@ -28,8 +28,7 @@ public class Options extends fabric.common.Options {
 
   @Override
   public void setDefaultValues() {
-    this.name = "client0"; // XXX this is for debugging convenience; should be
-    // null
+    this.name = System.getenv("HOSTNAME");
     this.app = null;
     this.core = null;
     this.threadPool = 10;

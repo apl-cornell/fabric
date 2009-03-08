@@ -22,8 +22,6 @@ public class NameService {
     aliases.put("core00", "core00.systems.cs.cornell.edu");
     
     clientPorts = new HashMap<String, Integer>();
-    clientPorts.put("core0", 3373);
-    clientPorts.put("core1", 3373);
     clientPorts.put("client0", 3374);
     clientPorts.put("client1", 3375);
   }
