@@ -82,7 +82,7 @@ public class TreeSet extends AbstractSet
    */
   // Not final because of readObject. This will always be one of TreeMap or
   // TreeMap.SubMap, which both extend AbstractMap.
-  private transient SortedMap map;
+  private SortedMap map;
 
   /**
    * Construct a new TreeSet whose backing TreeMap using the "natural"

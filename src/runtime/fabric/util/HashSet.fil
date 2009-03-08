@@ -87,7 +87,7 @@ public class HashSet extends AbstractSet
   /**
    * The HashMap which backs this Set.
    */
-  private transient HashMap map;
+  private HashMap map;
 
   /**
    * Construct a new, empty HashSet whose backing HashMap has the default

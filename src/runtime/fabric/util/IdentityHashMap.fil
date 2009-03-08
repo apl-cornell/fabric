@@ -120,13 +120,13 @@ public class IdentityHashMap extends AbstractMap
   /**
    * The table itself. Package visible for use by nested classes.
    */
-  transient Object[] table;
+  Object[] table;
 
   /**
    * The number of structural modifications made so far. Package visible for
    * use by nested classes.
    */
-  transient int modCount;
+  int modCount;
 
   /**
    * The cache for {@link #entrySet()}.
@@ -136,7 +136,7 @@ public class IdentityHashMap extends AbstractMap
   /**
    * The threshold for rehashing, which is 75% of (table.length / 2).
    */
-  private transient int threshold;
+  private int threshold;
 
   /**
    * Create a new IdentityHashMap with the default capacity (21 entries).

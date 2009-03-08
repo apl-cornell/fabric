@@ -17,7 +17,7 @@ public final class PairLabel implements Label {
   private final ConfPolicy confPol;
   private final IntegPolicy integPol;
   private final SecretKeyObject keyObject;
-  private Integer hashCode = null;
+  private transient Integer hashCode = null;
 
   public PairLabel(ConfPolicy confPol, IntegPolicy integPol) {
     this.confPol = confPol;

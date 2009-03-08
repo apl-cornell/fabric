@@ -139,20 +139,20 @@ public class Hashtable extends Dictionary
    * Array containing the actual key-value mappings.
    */
   // Package visible for use by nested classes.
-  transient HashEntry[] buckets;
+  HashEntry[] buckets;
 
   /**
    * Counts the number of modifications this Hashtable has undergone, used
    * by Iterators to know when to throw ConcurrentModificationExceptions.
    */
   // Package visible for use by nested classes.
-  transient int modCount;
+  int modCount;
 
   /**
    * The size of this Hashtable:  denotes the number of key-value pairs.
    */
   // Package visible for use by nested classes.
-  transient int size;
+  int size;
 
   /**
    * The cache for {@link #keySet()}.

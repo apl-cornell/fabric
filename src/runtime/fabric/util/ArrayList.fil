@@ -103,7 +103,7 @@ public class ArrayList extends AbstractList
   /**
    * Where the data is stored.
    */
-  private transient Object[] data;
+  private Object[] data;
 
   /**
    * Construct a new ArrayList with the supplied initial capacity.

@@ -113,12 +113,12 @@ public class TreeMap extends AbstractMap
   /**
    * The root node of this TreeMap.
    */
-  private transient Node root;
+  private Node root;
 
   /**
    * The size of this TreeMap. Package visible for use by nested classes.
    */
-  transient int size;
+  int size;
 
   /**
    * The cache for {@link #entrySet()}.
@@ -130,7 +130,7 @@ public class TreeMap extends AbstractMap
    * by Iterators to know when to throw ConcurrentModificationExceptions.
    * Package visible for use by nested classes.
    */
-  transient int modCount;
+  int modCount;
 
   /**
    * This TreeMap's comparator, or null for natural ordering.

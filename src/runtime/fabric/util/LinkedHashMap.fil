@@ -116,7 +116,7 @@ public class LinkedHashMap extends HashMap
   /**
    * The oldest Entry to begin iteration at.
    */
-  transient LinkedHashEntry root;
+  LinkedHashEntry root;
 
   /**
    * The iteration order of this linked hash map: <code>true</code> for

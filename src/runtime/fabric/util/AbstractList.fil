@@ -89,7 +89,7 @@ public abstract class AbstractList extends AbstractCollection implements List
    * <code>add(int, Object)</code> and <code>remove(int)</code> methods.
    * Otherwise, this field may be ignored.
    */
-  protected transient int modCount;
+  protected int modCount;
 
   /**
    * The main constructor, for use by subclasses.

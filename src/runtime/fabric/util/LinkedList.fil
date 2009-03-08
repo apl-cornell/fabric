@@ -82,17 +82,17 @@ public class LinkedList extends AbstractSequentialList
   /**
    * The first element in the list.
    */
-  transient Entry first;
+  Entry first;
 
   /**
    * The last element in the list.
    */
-  transient Entry last;
+  Entry last;
 
   /**
    * The current length of the list.
    */
-  transient int size = 0;
+  int size = 0;
 
   /**
    * Class to represent an entry in the list. Holds a single element.

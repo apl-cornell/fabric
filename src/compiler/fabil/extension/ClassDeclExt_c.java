@@ -471,7 +471,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       if (m instanceof FieldDecl) {
         FieldDecl f = (FieldDecl) m;
         TypeNode fieldType = f.type();
-        if (ts.isFabricType(fieldType)) fields.add(f);
+        if (ts.isFabricType(fieldType) && !f.flags().isTransient())
+          fields.add(f);
       }
     }
 
