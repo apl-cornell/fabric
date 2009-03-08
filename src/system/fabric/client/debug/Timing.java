@@ -7,17 +7,24 @@ import java.util.Deque;
 /** A utility class for recording the timing of various categories. */
 public enum Timing {
 
-  APP,           // application code
-  BEGIN, COMMIT, // local transaction management
-  TXLOG,         // logging reads, writes, creates, etc
-  SUBTX,         // merging of logs and other subtx management
-  FETCH,         // fetching objects
-  CORE;          // other communication with the core
+  APP(    false),  // application code
+  BEGIN(  false),  // local transaction management
+  COMMIT( false), 
+  TXLOG(  false),  // logging reads, writes, creates, etc
+  SUBTX(  false),  // merging of logs and other subtx management
+  FETCH(  false),  // fetching objects
+  CORE (  false);  // other communication with the core
   
   /** The time attributed to this category so far */
   private long time;
   /** The number of additions used to generate time */
   private int  count;
+  /** Whether or not to record time for this category */
+  private boolean enabled;
+  
+  private Timing(boolean enabled) {
+    this.enabled = enabled;
+  }
   
   private static Deque<Timing> scope;
   private static long          stamp;
@@ -39,17 +46,21 @@ public enum Timing {
     
   /** Begin recording time into the given category (exclusively) */
   public void begin() {
-    attribute();
-    scope.push(this);
+    if (enabled) {
+      attribute();
+      scope.push(this);
+    }
   }
   
   /** Stop recording time into the given category, and begin recording to the
    *  former category.
    */
   public void end() {
-    attribute();
-    if (scope.pop() != this && debug)
-      throw new AssertionError();
+    if (enabled) {
+      attribute();
+      if (scope.pop() != this && debug)
+        throw new AssertionError();
+    }
   }
   
   /** Print a summary of the time spent in each category to standard output. */

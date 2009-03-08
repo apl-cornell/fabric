@@ -622,20 +622,20 @@ public final class TransactionManager {
   }
 
   public void registerRead($Impl obj) {
-    Timing.TXLOG.begin();
-    try {
-      synchronized (obj) {
-        if (obj.$reader == current
-            && obj.$updateMapVersion == current.updateMap.version) return;
+    synchronized (obj) {
+      if (obj.$reader == current
+          && obj.$updateMapVersion == current.updateMap.version) return;
 
-        // Nothing to do if we're not in a transaction.
-        if (current == null) return;
+      // Nothing to do if we're not in a transaction.
+      if (current == null) return;
 
+      Timing.TXLOG.begin();
+      try {
         ensureReadLock(obj);
         ensureObjectUpToDate(obj);
+      } finally {
+        Timing.TXLOG.end();
       }
-    } finally {
-      Timing.TXLOG.end();
     }
   }
 
@@ -685,25 +685,25 @@ public final class TransactionManager {
    * @return whether a new (top-level) transaction was created.
    */
   public boolean registerWrite($Impl obj) {
-    Timing.TXLOG.begin();
-    try {
-      boolean needTransaction = (current == null);
-      if (needTransaction) startTransaction();
+    boolean needTransaction = (current == null);
+    if (needTransaction) startTransaction();
 
-      synchronized (obj) {
-        if (obj.$writer == current
-            && obj.$updateMapVersion == current.updateMap.version && obj.$isOwned)
-          return needTransaction;
+    synchronized (obj) {
+      if (obj.$writer == current
+          && obj.$updateMapVersion == current.updateMap.version && obj.$isOwned)
+        return needTransaction;
 
+      try {
+        Timing.TXLOG.begin();
         ensureWriteLock(obj);
         ensureObjectUpToDate(obj);
         ensureOwnership(obj);
+      } finally {
+        Timing.TXLOG.end();
       }
-      
-      return needTransaction;
-    } finally {
-      Timing.TXLOG.end();
     }
+
+      return needTransaction;
 
   }
 

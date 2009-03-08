@@ -106,40 +106,42 @@ public interface Object {
       if (result == null) {
         // Object has been evicted.
         try {
-          Timing.FETCH.begin();
           // First, check the client's cache.
           result = ref.core.readObjectFromCache(ref.onum);
           
           if (result == null) {
             // Next, check the current transaction's create map.
-            TransactionManager tm = TransactionManager.getInstance();
-            RemoteClient client = tm.getFetchClient(this);
-            if (client != null) {
-              // Sanity check.
-              RemoteClient localClient = Client.getClient().getLocalClient();
-              if (client == localClient) {
-                throw new InternalError();
+            try {
+              Timing.FETCH.begin();
+              TransactionManager tm = TransactionManager.getInstance();
+              RemoteClient client = tm.getFetchClient(this);
+              if (client != null) {
+                // Sanity check.
+                RemoteClient localClient = Client.getClient().getLocalClient();
+                if (client == localClient) {
+                  throw new InternalError();
+                }
+
+                // Fetch from the client.
+                result = client.readObject(tm.getCurrentTid(), ref.core, ref.onum);
+                ref.core.cache(result);
+              } else if (this instanceof SecretKeyObject
+                  || ref.core instanceof InProcessCore) {
+                // Fetch from the core. Bypass dissemination when reading key
+                // objects and when reading from an in-process core.
+                result = ref.core.readObjectNoDissem(ref.onum);
+              } else {
+                // Fetch from the core.
+                result = ref.core.readObject(ref.onum);
               }
-              
-              // Fetch from the client.
-              result = client.readObject(tm.getCurrentTid(), ref.core, ref.onum);
-              ref.core.cache(result);
-            } else if (this instanceof SecretKeyObject
-                || ref.core instanceof InProcessCore) {
-              // Fetch from the core. Bypass dissemination when reading key
-              // objects and when reading from an in-process core.
-              result = ref.core.readObjectNoDissem(ref.onum);
-            } else {
-              // Fetch from the core.
-              result = ref.core.readObject(ref.onum);
+            } finally {
+              Timing.FETCH.end();
             }
           }
           
         } catch (FetchException e) {
           // TODO figure out how to communicate error
           throw new InternalError(e);
-        } finally {
-          Timing.FETCH.end();
         }
 
         ref = result.$ref;
