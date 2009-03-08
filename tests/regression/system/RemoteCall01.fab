@@ -4,17 +4,22 @@ import jif.runtime.Runtime;
 import java.io.PrintStream;
 
 public class RemoteCall01 {
-  final Core{_->_; *<-*} core;
+  final Core{_->_; client$<-*} core;
 
-  final RemoteClient{_->_; *<-*} remoteClient;
+  final RemoteClient{_->_; client$<-*} remoteClient;
 
-  final RemoteCall01Data[{client$->; client$<-}]{_->_; *<-*} data;
+  final RemoteCall01Data[{client$->; client$<-}]{_->_; client$<-*} data;
 
   RemoteCall01() {
-      core = client$.getCore("core0");
+    core = client$.getCore("core0");
 
     remoteClient = client$("core0");
-    data = new RemoteCall01Data[{client$->; client$<-}]@core();
+	if (core actsfor client$) {
+      data = new RemoteCall01Data[{client$->; client$<-}]@core();
+	}
+	else {
+      data = null;
+	}
   }
 
   public void moo{client$->;client$<-}() : {client$->;client$<-} {
@@ -25,19 +30,19 @@ public class RemoteCall01 {
   void run{client$->;client$<-}() {
     try {
       atomic {
-	if (remoteClient actsfor client$)
-	  moo@remoteClient();
+        if (remoteClient actsfor client$)
+          moo@remoteClient();
       }
 
       int{client$->; client$<-} curI = 0;
       atomic {
-	if (data == null) return;
-	curI = data.i;
+        if (data == null) return;
+        curI = data.i;
       }
 
       Runtime[client$] runtime = null;
       atomic {
-	runtime = Runtime.getRuntime();
+        runtime = Runtime.getRuntime();
       }
       if (runtime == null) return;
 
@@ -53,15 +58,16 @@ public class RemoteCall01 {
   }
   
   public static void main{_->_; *<-*}(String[] args) {
-    Core core = null;
-      core = client$.getCore("core0");
+    final Core core = client$.getCore("core0");
     
     RemoteCall01 obj = null;
     atomic {
-      obj = new RemoteCall01@core();
+      if (core actsfor client$) {
+        obj = new RemoteCall01@core();
+      }
     }
 
-    obj.run();
+    if (obj != null) obj.run();
   }
 }
 
