@@ -15,6 +15,7 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
+import fabric.lang.NodePrincipal;
 import fabric.lang.Object;
 import fabric.lang.Object.$Impl;
 import fabric.lang.Principal;
@@ -158,6 +159,10 @@ public final class LocalCore implements Core {
 
   public String name() {
     return "local";
+  }
+  
+  public NodePrincipal getPrincipal() {
+    return Client.getClient().getPrincipal();
   }
   
   public boolean isLocalCore() {

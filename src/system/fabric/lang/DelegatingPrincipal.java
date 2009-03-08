@@ -7,10 +7,7 @@ import java.util.Iterator;
 import jif.lang.Label;
 import fabric.client.Client;
 import fabric.client.Core;
-import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
-import fabric.lang.NodePrincipal;
-import fabric.lang.Principal;
 
 public interface DelegatingPrincipal extends Principal {
   void addDelegatesTo(Principal p);
@@ -56,8 +53,7 @@ public interface DelegatingPrincipal extends Principal {
     }
 
     public static DelegatingPrincipal $addDefaultDelegates(DelegatingPrincipal p) {
-      NodePrincipal core =
-          new NodePrincipal.$Proxy(p.$getCore(), ONumConstants.CORE_PRINCIPAL);
+      NodePrincipal core = p.$getCore().getPrincipal();
       p.addDelegatesTo(core);
       
       NodePrincipal client = Client.getClient().getPrincipal();

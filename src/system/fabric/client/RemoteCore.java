@@ -481,6 +481,10 @@ public class RemoteCore implements Core, RemoteNode {
   public final String name() {
     return name;
   }
+  
+  public NodePrincipal getPrincipal() {
+    return new NodePrincipal.$Proxy(this, ONumConstants.CORE_PRINCIPAL);
+  }
 
   public final boolean isLocalCore() {
     return false;

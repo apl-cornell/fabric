@@ -477,8 +477,7 @@ public final class Client {
         runInSubTransaction(new Code<Void>() {
           public Void run() {
             NodePrincipal principal = new NodePrincipal.$Impl(core, null, name);
-            principal.addDelegatesTo(new NodePrincipal.$Proxy(core,
-                ONumConstants.CORE_PRINCIPAL));
+            principal.addDelegatesTo(core.getPrincipal());
             
             System.out.println("Client principal created:");
             System.out.println("fab://" + opts.core + "/" + principal.$getOnum());

@@ -5,6 +5,7 @@ import java.util.Collection;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FetchException;
 import fabric.common.util.LongKeyMap;
+import fabric.lang.NodePrincipal;
 import fabric.lang.Object.$Impl;
 
 public interface Core {
@@ -12,6 +13,11 @@ public interface Core {
    * Returns this core's host name.
    */
   public String name();
+  
+  /**
+   * Returns the NodePrincipal associated with this core.
+   */
+  public NodePrincipal getPrincipal();
   
   /**
    * Determines whether this is the local core.
