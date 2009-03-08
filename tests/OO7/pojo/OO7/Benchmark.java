@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Benchmark.java,v 1.3 2009-03-08 21:11:50 qixin Exp $
+// $Id: Benchmark.java,v 1.4 2009-03-08 22:27:25 qixin Exp $
 
 package OO7;
 
@@ -136,6 +136,7 @@ public class Benchmark {
     System.err.println("Benchmarks:      1");
     System.err.println("Modules:         " + modulesById().size());
     System.err.println("Base Assemblies: " + baseAssembliesById().size());
+    System.err.println("Cplx Assemblies: " + complexAssembliesById().size());
     System.err.println("Composite Parts: " + compositePartsById().size());
     System.err.println("Atomic Parts:    " + atomicPartsById().size());
     System.err.println("Documents:       " + documentsById().size());
