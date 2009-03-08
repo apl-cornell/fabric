@@ -29,7 +29,7 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
   @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
-    if (n instanceof FabricCall) {
+//    if (n instanceof FabricCall) {
 //      FabricCall c = (FabricCall)n;
 //      if (c.remoteClient() != null) {
 //        c = (FabricCall)c.name(c.name() + "_remote");
@@ -41,8 +41,8 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 //      }
 //
 //      return c;
-    }
-    else if (n instanceof ClassDecl) {
+//    }
+    if (n instanceof ClassDecl) {
       // Now add wrappers for remote call authentication check.
       ClassDecl cd = (ClassDecl)n;
 

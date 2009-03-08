@@ -14,6 +14,7 @@ import polyglot.frontend.Job;
 import polyglot.qq.QQ;
 import polyglot.types.LocalInstance;
 import polyglot.types.SemanticException;
+import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
@@ -65,22 +66,8 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         //          Type labeled = ts.labeledType(Position.compilerGenerated(), ts.Principal(), al);
         //          f = f.type(f.type().type(labeled));
 
-        Label startLabel = mi.pcBound();
+        Label startLabel = mi.pcBound();        
         Label returnLabel = mi.returnLabel();
-
-        //          Label clientLabel = 
-        //            ts.pairLabel(li.position(), 
-        //                         ts.readerPolicy(li.position(), 
-        //                                         clientPrincipal, ts.bottomPrincipal(li.position())), 
-        //                         ts.writerPolicy(li.position(), 
-        //                                         clientPrincipal, clientPrincipal));
-        //          li.setLabel(clientLabel);
-        //          Type labeled = ts.labeledType(Position.compilerGenerated(), ts.Principal(), clientLabel);
-        //          f = f.type(f.type().type(labeled));
-
-        //          List<Formal> formals = new ArrayList<Formal>(md.formals().size() + 1);
-        //          formals.add(f);
-        //          formals.addAll(md.formals());
 
 //        // (rv meet {conf.top;integ.bot}) join ({client$<-}) <= ({client$->}) join (m meet {conf.bot;integ.top})
 //        Label left = ts.join(
@@ -103,6 +90,17 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
 //                        ts.readerPolicy(Position.compilerGenerated(), clientPrincipal, clientPrincipal),
 //                        ts.bottomIntegPolicy(Position.compilerGenerated())));
 
+        // Fold in all integrity policies of method parameters.
+        IntegPolicy startIntegPolicy = ts.integProjection(startLabel);
+        Iterator<Type> it = ((List<Type>)mi.formalTypes()).iterator();
+        it.next();
+        while (it.hasNext()) {
+          Type ft = it.next();
+          Label l = ts.labelOfType(ft);
+          IntegPolicy ip = ts.integProjection(l);
+          startIntegPolicy = ts.meet(startIntegPolicy, ip);
+        }
+        
         // {C(rv), *<-client$} <= {*->client$, I(m)}
         // XXX Note, it is better NOT to blindly insert the projection translation, if not needed.
         Label left = ts.pairLabel(Position.compilerGenerated(md.name()), 
@@ -114,7 +112,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
                                    ts.readerPolicy(Position.compilerGenerated(), 
                                                    ts.topPrincipal(Position.compilerGenerated()), 
                                                    clientPrincipal), 
-                                   ts.integProjection(startLabel));
+                                   startIntegPolicy);
 
         LabelExpr leftExpr = nf.LabelExpr(left.position(), left);
         LabelExpr rightExpr = nf.LabelExpr(right.position(), right);
@@ -197,7 +195,6 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
 //                nf.Catch(Position.compilerGenerated(),
 //                    npeformal,
 //                    nf.Block(Position.compilerGenerated(md.name())))));
-
 
         md = (JifMethodDecl)md.body(md.body().statements(Collections.singletonList(s)));
       }

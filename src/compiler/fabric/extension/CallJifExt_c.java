@@ -6,11 +6,12 @@ import fabric.ast.FabricCall;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
+import polyglot.types.Type;
 import polyglot.util.Position;
 import jif.extension.JifCallExt;
 import jif.translate.ToJavaExt;
 import jif.types.*;
-import jif.types.label.Label;
+import jif.types.label.*;
 import jif.types.principal.Principal;
 import jif.visit.LabelChecker;
 
@@ -35,6 +36,18 @@ public class CallJifExt_c extends JifCallExt {
       Principal localPrincipal = ts.clientPrincipal(Position.compilerGenerated());
       Principal remotePrincipal = c.remoteClientPrincipal();
       
+      // Fold in the policies of all the parameters.
+      // Note that we are calling the original method, rather than the _remote version
+      ConfPolicy entryConfPolicy = ts.confProjection(entryLabel);
+      IntegPolicy entryIntegPolicy = ts.integProjection(entryLabel);
+      for (Type ft : (List<Type>)mi.formalTypes()) {
+        Label fl = ts.labelOfType(ft);
+        ConfPolicy cp = ts.confProjection(fl);
+        IntegPolicy ip = ts.integProjection(fl);
+        entryConfPolicy = ts.join(entryConfPolicy, cp);
+        entryIntegPolicy = ts.meet(entryIntegPolicy, ip);
+      }
+      
       lc.constrain(new NamedLabel("{C(rv), *<-client$}", 
                                   ts.pairLabel(Position.compilerGenerated(), 
                                                ts.confProjection(returnLabel), 
@@ -47,7 +60,7 @@ public class CallJifExt_c extends JifCallExt {
                                                ts.readerPolicy(Position.compilerGenerated(), 
                                                                ts.topPrincipal(Position.compilerGenerated()), 
                                                                localPrincipal), 
-                                               ts.integProjection(entryLabel))), 
+                                               entryIntegPolicy)), 
                                   A.labelEnv(), 
                                   c.position(), 
                                   new ConstraintMessage() {
@@ -69,7 +82,7 @@ public class CallJifExt_c extends JifCallExt {
       
       lc.constrain(new NamedLabel("{C(m), *<-c}", 
                                   ts.pairLabel(Position.compilerGenerated(), 
-                                               ts.confProjection(entryLabel), 
+                                               entryConfPolicy, 
                                                ts.writerPolicy(Position.compilerGenerated(), 
                                                                ts.topPrincipal(Position.compilerGenerated()), 
                                                                remotePrincipal))), 
