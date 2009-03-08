@@ -17,7 +17,7 @@ public final class PairLabel implements Label {
   private final ConfPolicy confPol;
   private final IntegPolicy integPol;
   private final SecretKeyObject keyObject;
-  private Integer hashCode = null;
+  private final int hashCode;
 
   public PairLabel(ConfPolicy confPol, IntegPolicy integPol) {
     this.confPol = confPol;
@@ -34,6 +34,8 @@ public final class PairLabel implements Label {
     } else {
       this.keyObject = new SecretKeyObject~this();
     }
+
+    hashCode = confPol.hashCode() ^ integPol.hashCode();
   }
 
   public boolean relabelsTo(Label l, Set s) {
@@ -53,10 +55,7 @@ public final class PairLabel implements Label {
   }
 
   public int hashCode() {
-    if (hashCode == null) {
-      hashCode = new Integer(confPol.hashCode() ^ integPol.hashCode());
-    }
-    return hashCode.intValue();
+    return hashCode;
   }
 
   public boolean equals(Object o) {
