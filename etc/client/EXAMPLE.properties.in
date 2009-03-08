@@ -3,7 +3,7 @@
 
 
 # File in ${FABRIC_HOME}/etc/keys that holds the client's private key store.
-# This configuration parameter must be supplied.
+# This is optional.  By default, this is <client name>.keystore.
 #
 # Create the private key store with:
 #   ${FABRIC_HOME}/bin/genkey <client name>
@@ -31,6 +31,8 @@
 
 
 # The port on which to listen for remote-call requests. This is optional.
+# This is only needed if you're running the client on the same machine as a
+# core (e.g., for testing purposes).
 #
 # The default value is 3373. If a different value is supplied here, it must
 # match what is configured in fabric.client.NameService.clientPorts.
