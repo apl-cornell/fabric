@@ -26,7 +26,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
     /**
      * The table, resized as necessary. Length MUST Always be a power of two.
      */
-    transient HashMapEntry[K,V]{K}[]{K} table;
+    HashMapEntry[K,V]{K}[]{K} table;
     
     /**
      * Head of the doubly linked list of entries.
@@ -41,7 +41,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
     /**
      * The number of key-value mappings contained in this identity hash map.
      */
-    transient int{K} size;
+    int{K} size;
   
     /**
      * The next size value at which to resize (capacity * load factor).
