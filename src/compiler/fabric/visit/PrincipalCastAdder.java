@@ -21,7 +21,8 @@ public class PrincipalCastAdder extends AscriptionVisitor {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
     if (ts.isPrincipal(toType) 
      && (ts.typeEquals(ts.Client(), e.type()) 
-      || ts.typeEquals(ts.RemoteClient(), e.type()))) {
+      || ts.typeEquals(ts.RemoteClient(), e.type())
+      || ts.typeEquals(ts.Core(), e.type()))) {
       Cast result = nf.Cast(e.position(), 
                             nf.CanonicalTypeNode(Position.compilerGenerated(), toType), 
                             e);

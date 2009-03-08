@@ -110,7 +110,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     Type strpFromType = strip(fromType);
     Type strpToType = strip(toType);
 
-    if ((equals(strpFromType, Client()) || equals(strpFromType, RemoteClient())) 
+    if ((equals(strpFromType, Client()) || equals(strpFromType, RemoteClient()) || equals(strpFromType, Core())) 
         && equals(strpToType, Principal())) {
       return true;
     }
@@ -123,7 +123,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     Type strpFromType = strip(fromType);
     Type strpToType = strip(toType);
 
-    if ((equals(strpFromType, Client()) || equals(strpFromType, RemoteClient())) 
+    if ((equals(strpFromType, Client()) || equals(strpFromType, RemoteClient()) || equals(strpFromType, Core())) 
         && equals(strpToType, Principal())) {
       return true;
     }

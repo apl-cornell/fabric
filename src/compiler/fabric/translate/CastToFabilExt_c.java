@@ -30,7 +30,8 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
     
     if (ts.isPrincipal(castType) 
      && (ts.typeEquals(ts.Client(), exprType) 
-      || ts.typeEquals(ts.RemoteClient(), exprType))) {
+      || ts.typeEquals(ts.RemoteClient(), exprType))
+      || ts.typeEquals(ts.Core(), exprType)) {
       return nf.Call(c.position(), c.expr(), nf.Id(Position.compilerGenerated(), "getPrincipal"));
     }
     

@@ -61,9 +61,9 @@ public class CallJifExt_c extends JifCallExt {
                                                                ts.topPrincipal(Position.compilerGenerated()), 
                                                                localPrincipal), 
                                                entryIntegPolicy)), 
-                                  A.labelEnv(), 
-                                  c.position(), 
-                                  new ConstraintMessage() {
+                   A.labelEnv(), 
+                   c.position(), 
+                   new ConstraintMessage() {
         @Override
         public String msg() {
           return "C(rv) <= {*->client$} and {*<-client$} <= I(m) for obj.m@c(...)";
@@ -93,9 +93,9 @@ public class CallJifExt_c extends JifCallExt {
                                                                ts.topPrincipal(Position.compilerGenerated()), 
                                                                remotePrincipal), 
                                                ts.integProjection(returnLabel))), 
-                                  A.labelEnv(), 
-                                  c.position(), 
-                                  new ConstraintMessage() {
+                   A.labelEnv(), 
+                   c.position(), 
+                   new ConstraintMessage() {
         @Override
         public String msg() {
           return "C(m) <= {*->c} and {*<-c} <= I(rv) for obj.m@c(...)";

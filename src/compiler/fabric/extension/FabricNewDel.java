@@ -1,5 +1,7 @@
 package fabric.extension;
 
+import jif.ast.JifUtil;
+import jif.types.JifContext;
 import fabric.ast.FabricUtil;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.Expr;
@@ -32,6 +34,9 @@ public class FabricNewDel extends JL_c {
       if (!ts.isSubtype(ext.location().type(), ts.Core())) {
         throw new SemanticException("The location needs to be a Core.", ext.location().position());
       }
+      JifContext context = (JifContext)tc.context();
+      ext = (NewExt_c)ext.corePrincipal(JifUtil.exprToPrincipal(ts, ext.location(), context));
+      n = FabricUtil.updateFabricExt(n, ext);
     }
     return n;
   }
