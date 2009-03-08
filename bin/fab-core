@@ -13,7 +13,7 @@ while true; do
             ;;
     --debug)
             shift
-            vmargs="$vmargs -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3374"
+            vmargs="$vmargs -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3370"
             ;;
     *) args="$args '$1'"; shift;;
   esac
