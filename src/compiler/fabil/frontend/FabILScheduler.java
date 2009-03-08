@@ -364,6 +364,22 @@ public class FabILScheduler extends JLScheduler {
         });
     return g;
   }
+  
+  public Goal Memoized(final Job job) {
+    TypeSystem ts = extInfo.typeSystem();
+    NodeFactory nf = extInfo.nodeFactory();
+    
+    Goal g = internGoal(new VisitorGoal(job, new Memoizer(job, ts, nf)) {
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler s) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(RewriteProxies(job));
+        return l;
+      }
+    });
+    
+    return g;
+  }
 
   @Override
   public Goal Serialized(Job job) {
@@ -377,6 +393,7 @@ public class FabILScheduler extends JLScheduler {
           l.add(RewriteProxies(job));
           l.add(RewriteAtomic(job));
           l.add(RewriteRemoteCalls(job));
+          l.add(Memoized(job));
           l.add(InstrumentThreads(job));
         }
         return l;
