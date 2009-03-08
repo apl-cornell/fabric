@@ -66,7 +66,12 @@ public final class ReadMapEntry {
    */
   void signalObject() {
     $Impl obj = this.obj.get();
-    if (obj == null && !this.obj.core.isLocalCore()) {
+    if (obj == null) {
+      // Object evicted from cache.
+      
+      // If object was a local-core object, it doesn't exist anymore.
+      if (this.obj.core.isLocalCore()) return;
+      
       obj = this.obj.core.readObjectFromCache(this.obj.onum);
       if (obj == null) return;
 
