@@ -2,19 +2,24 @@
 
 source "$(dirname $0)/defs"
 
-if [[ $# != 1 ]] ; then
+if [[ $# -eq 0 || "$1" == "-h" || "$1" == "--help" ]] ; then
   echo "Generates SSL keys and certificates for a core or client"
-  echo "and adds them to the common trust store."
+  echo "and adds them to the common trust store. Note you can"
+  echo "mention more than one host at a time.
   echo 
-  echo "Usage: $(basename $0) <core hostname | client name>"
+  echo "Usage: $(basename $0) <core hostname | client name> ..."
+  echo
+  echo "  e.g. $(basename $0) core0 client1 core2 core3 client4
   exit 1
 fi
 
 DIR="${TOP}/etc/keys"
 
-keytool -genkey -alias $1 -keyalg rsa -keysize 1024 -dname "CN=$1, OU=Fabric, O=Cornell University, L=Ithaca, ST=NY, C=US" -keypass 'password' -keystore "$(fixfilename ${DIR}/$1.keystore)" -storepass 'password'
-keytool -export -alias $1 -keystore "$(fixfilename ${DIR}/$1.keystore)" -keypass 'password' -file "$(fixfilename ${DIR}/$1.cert)" -storepass 'password'
+for i in "$@" ; do
+  keytool -genkey -alias "$i" -keyalg rsa -keysize 1024 -dname "CN="$i", OU=Fabric, O=Cornell University, L=Ithaca, ST=NY, C=US" -keypass 'password' -keystore "$(fixfilename ${DIR}/"$i".keystore)" -storepass 'password'
+  keytool -export -alias "$i" -keystore "$(fixfilename ${DIR}/"$i".keystore)" -keypass 'password' -file "$(fixfilename ${DIR}/"$i".cert)" -storepass 'password'
 
-keytool -import -alias $1 -keystore "$(fixfilename ${DIR}/trust.keystore)" -file "$(fixfilename ${DIR}/$1.cert)" -storepass 'password'
-rm "${DIR}/$1".cert
+  keytool -import -alias "$i" -keystore "$(fixfilename ${DIR}/trust.keystore)" -file "$(fixfilename ${DIR}/"$i".cert)" -storepass 'password'
+  rm "${DIR}/$i".cert
+done
 
