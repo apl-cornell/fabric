@@ -31,13 +31,13 @@ public class TransactionManager {
    */
   protected final ObjectStore store;
   protected final LongKeyMap<Statistics> objectStats;
-  protected final ReadHistory readHistory;
+//  protected final ReadHistory readHistory;
   protected static final Random rand = new Random();
 
   public TransactionManager(ObjectStore store) {
     this.store = store;
     this.objectStats = new LongKeyHashMap<Statistics>();
-    this.readHistory = new ReadHistory();
+//    this.readHistory = new ReadHistory();
   }
 
   /**
@@ -159,11 +159,11 @@ public class TransactionManager {
           continue;
         }
 
-        // Check against read history
-        if (!readHistory.check(onum, req.commitTime)) {
-          throw new TransactionPrepareFailedException("Object " + onum
-              + " has been read since it's proposed commit time.");
-        }
+//        // Check against read history
+//        if (!readHistory.check(onum, req.commitTime)) {
+//          throw new TransactionPrepareFailedException("Object " + onum
+//              + " has been read since it's proposed commit time.");
+//        }
 
         // Update promise statistics
         Pair<Statistics, Boolean> pair = ensureStatistics(onum, req.tid);
@@ -231,7 +231,7 @@ public class TransactionManager {
         throw new TransactionPrepareFailedException(versionConflicts);
       }
 
-      readHistory.record(req);
+//      readHistory.record(req);
       store.finishPrepare(tid, client);
       
       return result;
