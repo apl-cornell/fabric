@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Benchmark.java,v 1.2 2008-03-07 19:46:24 jed Exp $
+// $Id: Benchmark.java,v 1.3 2009-03-08 21:11:50 qixin Exp $
 
 package OO7;
 
@@ -51,6 +51,7 @@ public class Benchmark {
   // Map/*String,Document*/ documentsByTitle;
   Map/* Integer,Document */documentsById;
   Map/* Integer,BaseAssembly */baseAssembliesById;
+  Map/* Integer,ComplexAssembly */complexAssembliesById;
   Map/* Integer,Module */modulesById;
 
   public Map atomicPartsById() {
@@ -83,6 +84,10 @@ public class Benchmark {
   public Map baseAssembliesById() {
     return baseAssembliesById;
     // TODO: return Collections.unmodifiableMap(baseAssembliesById);
+  }
+
+  public Map complexAssembliesById() {
+    return complexAssembliesById;
   }
 
   public Map modulesById() {
@@ -121,6 +126,7 @@ public class Benchmark {
     // this.documentsByTitle = new HashMap@documentCore();
     this.documentsById = new HashMap();
     this.baseAssembliesById = new HashMap();
+    this.complexAssembliesById = new HashMap();
     this.modulesById = new HashMap();
 
     // Create content

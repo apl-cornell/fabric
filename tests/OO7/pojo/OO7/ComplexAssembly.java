@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: ComplexAssembly.java,v 1.2 2008-03-07 19:46:24 jed Exp $
+// $Id: ComplexAssembly.java,v 1.3 2009-03-08 21:11:50 qixin Exp $
 
 package OO7;
 
@@ -20,6 +20,7 @@ public class ComplexAssembly extends Assembly {
 
   public ComplexAssembly(Benchmark db) {
     super(db);
+    db.complexAssembliesById.put(new Integer(id()), this);
 
     subAssemblies = new LinkedList();
   }
