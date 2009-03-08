@@ -138,7 +138,22 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
               labelComp = nf.Binary(Position.compilerGenerated(), labelComp, Binary.COND_AND, check);
             }
           }
-          // TODO other constraints in the where clause of the method.
+          else if (as instanceof ActsForConstraint) {
+            ActsForConstraint afc = (ActsForConstraint)as;
+            Expr check = nf.Binary(afc.position(), 
+                                   nf.CanonicalPrincipalNode(afc.actor().position(), afc.actor()), 
+                                   afc.isEquiv() ? JifBinaryDel.EQUIV : JifBinaryDel.ACTSFOR, 
+                                   nf.CanonicalPrincipalNode(afc.granter().position(), afc.granter()));
+            labelComp = nf.Binary(Position.compilerGenerated(), labelComp, Binary.COND_AND, check);
+          }
+          else if (as instanceof LabelLeAssertion) {
+            LabelLeAssertion lla = (LabelLeAssertion)as;
+            Expr check = nf.Binary(lla.position(), 
+                                   nf.LabelExpr(lla.lhs().position(), lla.lhs()), 
+                                   Binary.LE, 
+                                   nf.LabelExpr(lla.rhs().position(), lla.rhs()));
+            labelComp = nf.Binary(Position.compilerGenerated(), labelComp, Binary.COND_AND, check);
+          }
         }
         
         Eval eval = (Eval)md.body().statements().get(0);

@@ -5,7 +5,6 @@ import java.util.*;
 import jif.ast.*;
 import jif.types.principal.Principal;
 
-import fabric.ast.FabricCall;
 import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.*;
@@ -83,32 +82,32 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 //              pcfType,
 //              nf.Id(Position.compilerGenerated(), "pcLabel"));
 
-                    List<PolicyNode> components = new ArrayList<PolicyNode>(2);
-          //          PolicyNode reader = 
-          //            nf.ReaderPolicyNode(Position.compilerGenerated(), 
-          //                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
-          //                                    nf.Id(Position.compilerGenerated(), "client$principal")), 
-          //                                Collections.singletonList(nf.CanonicalPrincipalNode(Position.compilerGenerated(), 
-          //                                    ts.bottomPrincipal(Position.compilerGenerated()))));
-                    PolicyNode writer = 
-                      nf.WriterPolicyNode(Position.compilerGenerated(),
-                                          nf.CanonicalPrincipalNode(clientPrincipal.position(), clientPrincipal),
-          //                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
-          //                                    nf.Id(Position.compilerGenerated(), "client$")),
-                                          Collections.EMPTY_LIST);
-          //                                Collections.singletonList(nf.AmbPrincipalNode(Position.compilerGenerated(), 
-          //                                    nf.Id(Position.compilerGenerated(), "client$principal"))));
-          //          components.add(reader);
-                    components.add(writer);
+          List<PolicyNode> components = new ArrayList<PolicyNode>(2);
+//          PolicyNode reader = 
+//            nf.ReaderPolicyNode(Position.compilerGenerated(), 
+//                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
+//                                    nf.Id(Position.compilerGenerated(), "client$principal")), 
+//                                Collections.singletonList(nf.CanonicalPrincipalNode(Position.compilerGenerated(), 
+//                                    ts.bottomPrincipal(Position.compilerGenerated()))));
+          PolicyNode writer = 
+            nf.WriterPolicyNode(Position.compilerGenerated(),
+                                nf.CanonicalPrincipalNode(clientPrincipal.position(), clientPrincipal),
+//                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
+//                                    nf.Id(Position.compilerGenerated(), "client$")),
+                                Collections.EMPTY_LIST);
+//                                Collections.singletonList(nf.AmbPrincipalNode(Position.compilerGenerated(), 
+//                                    nf.Id(Position.compilerGenerated(), "client$principal"))));
+//          components.add(reader);
+          components.add(writer);
 
-                    TypeNode formalType = 
-                      nf.LabeledTypeNode(Position.compilerGenerated(), 
-                                         nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Principal()),
-                                         nf.JoinLabelNode(Position.compilerGenerated(), components));
-                    Formal f = nf.Formal(Position.compilerGenerated(), 
-                                         Flags.FINAL,
-                                         formalType, 
-                                         nf.Id(Position.compilerGenerated(), "client$principal"));
+          TypeNode formalType = 
+            nf.LabeledTypeNode(Position.compilerGenerated(), 
+                               nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Principal()),
+                               nf.JoinLabelNode(Position.compilerGenerated(), components));
+          Formal f = nf.Formal(Position.compilerGenerated(), 
+                               Flags.FINAL,
+                               formalType, 
+                               nf.Id(Position.compilerGenerated(), "client$principal"));
                     
 //          LabelNode pclbl = nf.AmbDynamicLabelNode(Position.compilerGenerated(),
 //              nf.Local(Position.compilerGenerated(), nf.Id(Position.compilerGenerated(), firstFormal.name())));
