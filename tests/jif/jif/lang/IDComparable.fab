@@ -8,7 +8,7 @@ package jif.lang;
  * <code>obj</code> and the fields of a class, this interface
  * is parameterized on a label.
  */
-public interface IDComparable[covariant label L] {
+nonfabric public interface IDComparable[covariant label L] {
     boolean{L; obj} equals(IDComparable[L] obj);
     boolean{L; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj);
 }

@@ -7,6 +7,6 @@ package jif.lang;
  * will contain information about the fields of a class, this interface
  * is parameterized on a label.
  */
-public interface ToStringable[covariant label L] {
+nonfabric public interface ToStringable[covariant label L] {
     String{L} toString();
 }
