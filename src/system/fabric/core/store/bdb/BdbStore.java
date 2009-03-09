@@ -3,12 +3,14 @@ package fabric.core.store.bdb;
 import static com.sleepycat.je.OperationStatus.SUCCESS;
 
 import java.io.*;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.sleepycat.je.*;
 
 import fabric.common.*;
+import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.OidKeyHashMap;
 import fabric.core.store.ObjectStore;
@@ -28,7 +30,7 @@ public class BdbStore extends ObjectStore {
   private final DatabaseEntry onumCounter;
 
   private Logger log = Logger.getLogger("fabric.core.store.bdb");
-  
+
   private long nextOnum;
 
   /**
@@ -37,6 +39,12 @@ public class BdbStore extends ObjectStore {
    * again to reserve more onums.
    */
   private long lastReservedOnum;
+
+  /**
+   * Cache: maps onums to object versions of objects that are currently stored
+   * in BDB.
+   */
+  private final WeakHashMap<Long, Integer> cachedVersions;
 
   /**
    * Creates a new BdbStore for the core specified. A new database will be
@@ -48,7 +56,7 @@ public class BdbStore extends ObjectStore {
   public BdbStore(String name) {
     super(name);
 
-    String path = Resources.relpathRewrite("var", "bdb",  name);
+    String path = Resources.relpathRewrite("var", "bdb", name);
     new File(path).mkdirs(); // create path if it does not exist
 
     try {
@@ -84,6 +92,7 @@ public class BdbStore extends ObjectStore {
 
     this.nextOnum = -1;
     this.lastReservedOnum = -2;
+    this.cachedVersions = new WeakHashMap<Long, Integer>();
   }
 
   @Override
@@ -124,6 +133,9 @@ public class BdbStore extends ObjectStore {
 
           // Remove any cached globs containing the old version of this object.
           removeGlobByOnum(toLong(onumData.getData()));
+          
+          // Update the version-number cache.
+          cachedVersions.put(onum, o.getVersion());
         }
 
         txn.commit();
@@ -134,6 +146,9 @@ public class BdbStore extends ObjectStore {
         throw new InternalError("Unknown transaction id " + tid);
       }
     } catch (DatabaseException e) {
+      // Problem.  Clear out cached versions.
+      cachedVersions.clear();
+      
       log.log(Level.SEVERE, "Bdb error in commit: ", e);
       throw new InternalError(e);
     }
@@ -162,7 +177,12 @@ public class BdbStore extends ObjectStore {
 
     try {
       if (store.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
-        return toSerializedObject(data.getData());
+        SerializedObject result = toSerializedObject(data.getData());
+        if (result != null) {
+          cachedVersions.put(onum, result.getVersion());
+        }
+        
+        return result;
       }
     } catch (DatabaseException e) {
       log.log(Level.SEVERE, "Bdb error in read: ", e);
@@ -170,6 +190,14 @@ public class BdbStore extends ObjectStore {
     }
 
     return null;
+  }
+
+  @Override
+  public int getVersion(long onum) throws AccessException {
+    Integer ver = cachedVersions.get(onum);
+    if (ver != null) return ver;
+
+    return super.getVersion(onum);
   }
 
   @Override
@@ -189,7 +217,7 @@ public class BdbStore extends ObjectStore {
 
     return false;
   }
-  
+
   private final long ONUM_RESERVE_SIZE = 10240;
 
   @Override
@@ -208,7 +236,7 @@ public class BdbStore extends ObjectStore {
           if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
             nextOnum = toLong(data.getData());
           }
-          
+
           lastReservedOnum = nextOnum + ONUM_RESERVE_SIZE + num - i - 1;
 
           data.setData(toBytes(lastReservedOnum + 1));
@@ -217,10 +245,10 @@ public class BdbStore extends ObjectStore {
 
           log.fine("Bdb reserved onums " + nextOnum + "--" + lastReservedOnum);
         }
-        
+
         onums[i] = nextOnum++;
       }
-      
+
       return onums;
     } catch (DatabaseException e) {
       log.log(Level.SEVERE, "Bdb error in newOnums: ", e);
@@ -297,8 +325,8 @@ public class BdbStore extends ObjectStore {
    * @throws DatabaseException
    *           if a database error occurs
    */
-  private PendingTransaction remove(NodePrincipal client, Transaction txn, long tid)
-      throws DatabaseException {
+  private PendingTransaction remove(NodePrincipal client, Transaction txn,
+      long tid) throws DatabaseException {
     DatabaseEntry key = new DatabaseEntry(toBytes(tid, client));
     DatabaseEntry data = new DatabaseEntry();
 

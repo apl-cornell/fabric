@@ -31,13 +31,13 @@ public class TransactionManager {
    */
   protected final ObjectStore store;
   protected final LongKeyMap<Statistics> objectStats;
-//  protected final ReadHistory readHistory;
+  // protected final ReadHistory readHistory;
   protected static final Random rand = new Random();
 
   public TransactionManager(ObjectStore store) {
     this.store = store;
     this.objectStats = new LongKeyHashMap<Statistics>();
-//    this.readHistory = new ReadHistory();
+    // this.readHistory = new ReadHistory();
   }
 
   /**
@@ -106,7 +106,7 @@ public class TransactionManager {
       throws TransactionPrepareFailedException {
     final long tid = req.tid;
     boolean result = false;
-    
+
     // First, check write permissions. We do this before we attempt to do the
     // actual prepare because we want to run the permissions check in a
     // transaction outside of the client's transaction.
@@ -115,7 +115,7 @@ public class TransactionManager {
         || client.$getOnum() != ONumConstants.CORE_PRINCIPAL) {
       checkWritePerms(client, req.writes);
     }
-    
+
     synchronized (store) {
       try {
         store.beginTransaction(tid, client);
@@ -159,11 +159,11 @@ public class TransactionManager {
           continue;
         }
 
-//        // Check against read history
-//        if (!readHistory.check(onum, req.commitTime)) {
-//          throw new TransactionPrepareFailedException("Object " + onum
-//              + " has been read since it's proposed commit time.");
-//        }
+        // // Check against read history
+        // if (!readHistory.check(onum, req.commitTime)) {
+        // throw new TransactionPrepareFailedException("Object " + onum
+        // + " has been read since it's proposed commit time.");
+        // }
 
         // Update promise statistics
         Pair<Statistics, Boolean> pair = ensureStatistics(onum, req.tid);
@@ -210,8 +210,13 @@ public class TransactionManager {
                     + "transaction");
 
           // Check version numbers.
-          SerializedObject obj = store.read(onum);
-          int curVersion = obj.getVersion();
+          int curVersion;
+          try {
+            curVersion = store.getVersion(onum);
+          } catch (AccessException e) {
+            throw new TransactionPrepareFailedException(versionConflicts,
+                e.getMessage());
+          }
           if (curVersion != version) {
             versionConflicts.add(onum);
             continue;
@@ -231,9 +236,9 @@ public class TransactionManager {
         throw new TransactionPrepareFailedException(versionConflicts);
       }
 
-//      readHistory.record(req);
+      // readHistory.record(req);
       store.finishPrepare(tid, client);
-      
+
       return result;
     } catch (TransactionPrepareFailedException e) {
       synchronized (store) {
@@ -267,9 +272,9 @@ public class TransactionManager {
 
               fabric.lang.Object coreCopy =
                   new fabric.lang.Object.$Proxy(core, onum);
-              
+
               Label label = coreCopy.get$label();
-              
+
               // Check write permissions.
               if (!AuthorizationUtil.isWritePermitted(client, label.$getCore(),
                   label.$getOnum())) {
@@ -277,7 +282,7 @@ public class TransactionManager {
                     + "privileges to write object " + onum);
               }
             }
-            
+
             return null;
           }
         };
@@ -483,10 +488,10 @@ public class TransactionManager {
    * Statistics object is freshly created.
    */
   private Pair<Statistics, Boolean> ensureStatistics(long onum, long tnum) {
-    // Disabled statistics generation for now.  -MJL
-    return new Pair<Statistics, Boolean>(fabric.lang.DefaultStatistics.instance,
-        false);
-    
+    // Disabled statistics generation for now. -MJL
+    return new Pair<Statistics, Boolean>(
+        fabric.lang.DefaultStatistics.instance, false);
+
     // synchronized (objectStats) {
     // Statistics stats = getStatistics(onum);
     // boolean fresh = stats == null;

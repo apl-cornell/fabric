@@ -322,6 +322,19 @@ public abstract class ObjectStore {
   public abstract SerializedObject read(long onum);
 
   /**
+   * Returns the version number on the object stored at a particular onum.
+   * 
+   * @throws AccessException
+   *           if no object exists at the given onum.
+   */
+  public int getVersion(long onum) throws AccessException {
+    SerializedObject obj = read(onum);
+    if (obj == null) throw new AccessException(name, onum);
+    
+    return read(onum).getVersion();
+  }
+
+  /**
    * Returns the cached GroupContainer containing the given onum. Null is
    * returned if no such GroupContainer exists.
    */
