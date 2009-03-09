@@ -128,7 +128,7 @@ public class UpdateMap implements FastSerializable {
    * Determines whether this map has a "create" entry for the given object.
    */
   public boolean containsCreate($Proxy proxy) {
-    if (creates.size() == 0) return false;
+    if (creates.isEmpty()) return false;
     
     try {
       return creates.containsKey(hash(proxy));
@@ -138,6 +138,8 @@ public class UpdateMap implements FastSerializable {
   }
 
   public Label getCreate($Proxy proxy) {
+    if (creates.isEmpty()) return null;
+    
     try {
       return creates.get(hash(proxy));
     } catch (NoSuchAlgorithmException e) {
