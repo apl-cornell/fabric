@@ -7,6 +7,9 @@ import polyglot.util.Position;
 import jif.types.JifTypeSystem;
 import jif.types.label.AccessPath;
 import jif.types.label.AccessPathField;
+import jif.types.label.ConfPolicy;
+import jif.types.label.IntegPolicy;
+import jif.types.label.Label;
 import jif.types.principal.*;
 
 public interface FabricTypeSystem extends JifTypeSystem {
@@ -33,4 +36,7 @@ public interface FabricTypeSystem extends JifTypeSystem {
   Type strip(Type type);
   
   boolean isLocalClientAccessPath(AccessPath ap);
+  
+  ConfPolicy representableConfProjection(Label L);
+  IntegPolicy representableIntegProjection(Label L);
 }

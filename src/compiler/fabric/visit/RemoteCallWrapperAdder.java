@@ -9,7 +9,7 @@ import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.*;
 import polyglot.frontend.Job;
-import polyglot.types.ClassType;
+import polyglot.qq.QQ;
 import polyglot.types.Flags;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
@@ -18,11 +18,13 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
   protected Job job;
   protected FabricTypeSystem ts;
   protected FabricNodeFactory nf;
+  protected QQ qq;
 
   public RemoteCallWrapperAdder(Job job, FabricTypeSystem ts, FabricNodeFactory nf) {
     this.job = job;
     this.ts = ts;
     this.nf = nf;
+    this.qq = new QQ(job.extensionInfo());
   }
 
   @SuppressWarnings("unchecked")
@@ -173,14 +175,16 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
           //
           List<Expr> args = new ArrayList<Expr>(md.formals().size());
           for (Formal formal : (List<Formal>)md.formals()) {
-            Local l = nf.Local(Position.compilerGenerated(), formal.id());
+            Local l = nf.Local(Position.compilerGenerated(md.name() + " " + formal.name()), formal.id());
             args.add(l);
           }
 
-          Stmt s = nf.Eval(Position.compilerGenerated(), 
+          Stmt s1 = nf.Eval(Position.compilerGenerated(), 
                            nf.Call(Position.compilerGenerated(), 
                                    nf.This(Position.compilerGenerated()), 
                                    md.id(), args));
+          
+          Stmt s2 = qq.parseStmt("throw new java.lang.NullPointerException();");
 
 //          List constraints = md.constraints();
 //          List newConstraints = new ArrayList();
@@ -197,12 +201,26 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
           List<TypeNode> throwTypes = new ArrayList<TypeNode>(md.throwTypes().size() + 1);
           throwTypes.addAll(md.throwTypes());
           
-          ClassType npeType = ts.NullPointerException();
-          TypeNode npeTypeNode = nf.CanonicalTypeNode(Position.compilerGenerated(), npeType);
-          if (md.returnLabel() != null) {
-            npeTypeNode = nf.LabeledTypeNode(Position.compilerGenerated(), npeTypeNode, md.returnLabel());
-          }
-          throwTypes.add(npeTypeNode);
+//          TypeNode retType = md.returnType();
+//          if (retType instanceof LabeledTypeNode) {
+//            retType = ((LabeledTypeNode)retType).typePart();
+//          }
+//          
+//          if (retType instanceof CanonicalTypeNode && ((CanonicalTypeNode)retType).type().isVoid()) {
+//            s = qq.parseStmt("try { %S } catch (NullPointerException $e) {}", s);
+//          }
+//          else {
+//            ClassType npeType = ts.NullPointerException();
+//            TypeNode npeTypeNode = nf.CanonicalTypeNode(Position.compilerGenerated(), npeType);
+//  //          npeTypeNode = nf.LabeledTypeNode(Position.compilerGenerated(), 
+//  //                                           npeTypeNode, 
+//  //                                           nf.CanonicalLabelNode(Position.compilerGenerated(), 
+//  //                                                                 ts.topLabel()));
+//            if (md.returnLabel() != null) {
+//              npeTypeNode = nf.LabeledTypeNode(Position.compilerGenerated(), npeTypeNode, md.returnLabel());
+//            }
+//            throwTypes.add(npeTypeNode);
+//          }
           
           JifMethodDecl wrapper = 
             nf.JifMethodDecl(Position.compilerGenerated(), 
@@ -214,7 +232,7 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
                              md.returnLabel(), 
                              throwTypes, 
                              md.constraints(), 
-                             nf.Block(Position.compilerGenerated(), s));
+                             nf.Block(Position.compilerGenerated(), s1, s2));
 
           members.add(wrapper);
         }

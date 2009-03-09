@@ -11,7 +11,6 @@ import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.*;
 import polyglot.frontend.Job;
-import polyglot.qq.QQ;
 import polyglot.types.LocalInstance;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
@@ -23,13 +22,13 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
   protected Job job;
   protected FabricTypeSystem ts;
   protected FabricNodeFactory nf;
-  protected QQ qq;
+//  protected QQ qq;
 
   public RemoteCallWrapperUpdater(Job job, FabricTypeSystem ts, FabricNodeFactory nf) {
     this.job = job;
     this.ts = ts;
     this.nf = nf;
-    this.qq = new QQ(job.extensionInfo());
+//    this.qq = new QQ(job.extensionInfo());
   }
 
   @Override
@@ -91,20 +90,20 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
 //                        ts.bottomIntegPolicy(Position.compilerGenerated())));
 
         // Fold in all integrity policies of method parameters.
-        IntegPolicy startIntegPolicy = ts.integProjection(startLabel);
+        IntegPolicy startIntegPolicy = ts.representableIntegProjection(startLabel);
         Iterator<Type> it = ((List<Type>)mi.formalTypes()).iterator();
         it.next();
         while (it.hasNext()) {
           Type ft = it.next();
           Label l = ts.labelOfType(ft);
-          IntegPolicy ip = ts.integProjection(l);
+          IntegPolicy ip = ts.representableIntegProjection(l);
           startIntegPolicy = ts.meet(startIntegPolicy, ip);
         }
         
         // {C(rv), *<-client$} <= {*->client$, I(m)}
         // XXX Note, it is better NOT to blindly insert the projection translation, if not needed.
         Label left = ts.pairLabel(Position.compilerGenerated(md.name()), 
-                                  ts.confProjection(returnLabel), 
+                                  ts.representableConfProjection(returnLabel), 
                                   ts.writerPolicy(Position.compilerGenerated(), 
                                                   ts.topPrincipal(Position.compilerGenerated()), 
                                                   clientPrincipal));
@@ -166,10 +165,12 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         else {
           conseq = nf.Return(eval.position(), eval.expr());
         }
-
+        
+        Stmt alter = (Stmt)md.body().statements().get(1);
+        
 //        Stmt t = qq.parseStmt("try { _npe(lbl); %S; } catch (NullPointerException e) {}", s);
 
-        Stmt s = nf.If(Position.compilerGenerated(), labelComp, conseq, conseq);
+        Stmt s = nf.If(Position.compilerGenerated(), labelComp, conseq, alter);
         
 //        Call npecall = nf.Call(Position.compilerGenerated(),
 //            nf.TypeNodeFromQualifiedName(Position.compilerGenerated(), "fabric.lang.Object"),

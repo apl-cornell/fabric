@@ -187,4 +187,18 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   protected LabelToJavaExpr pairLabelTranslator() {
     return new FabricPairLabelToFabilExpr_c();
   }
+  
+  public ConfPolicy representableConfProjection(Label L) {
+    if (L instanceof ArgLabel) {
+      return super.confProjection(((ArgLabel) L).upperBound());
+    }
+    return super.confProjection(L);
+  }
+  
+  public IntegPolicy representableIntegProjection(Label L) {
+    if (L instanceof ArgLabel) {
+      return super.integProjection(((ArgLabel) L).upperBound());
+    }
+    return super.integProjection(L);
+  }
 }

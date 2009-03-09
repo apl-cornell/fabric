@@ -5,6 +5,7 @@ import java.util.*;
 import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.ExplicitSuperclassAdder;
+import fabric.visit.FabricExceptionChecker;
 import fabric.visit.FabricToFabilRewriter;
 import fabric.visit.FabricTypeBuilder;
 import fabric.visit.PrincipalCastAdder;
@@ -208,6 +209,28 @@ public class FabricScheduler extends JifScheduler {
     return g;
   }
 
+  @Override
+  public Goal ExceptionsChecked(Job job) {
+    TypeSystem ts = extInfo.typeSystem();
+    NodeFactory nf = extInfo.nodeFactory();
+    Goal g = internGoal(new VisitorGoal(job, new FabricExceptionChecker(job, ts, nf)){
+      @SuppressWarnings("unchecked")
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(scheduler.TypeChecked(job));
+        l.add(scheduler.ReachabilityChecked(job));
+        FabricScheduler s = (FabricScheduler)scheduler;
+        l.add(s.NotNullChecker(job));
+        l.add(s.PreciseClassChecker(job));
+        l.add(s.IntegerBoundsChecker(job));
+        l.addAll(super.prerequisiteGoals(scheduler));
+        return l;
+      }
+    });
+    return g;
+  }
+  
   @SuppressWarnings("unchecked")
   @Override
   public boolean runToCompletion() {

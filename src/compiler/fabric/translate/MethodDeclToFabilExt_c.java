@@ -10,7 +10,6 @@ import jif.translate.JifToJavaRewriter;
 import jif.translate.MethodDeclToJavaExt_c;
 
 public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
-  @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     MethodDecl md = (MethodDecl)super.toJava(rw);
