@@ -256,6 +256,14 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
    * @see fabil.types.FabILTypeSystem#isFabricClass(polyglot.types.ClassType)
    */
   public boolean isFabricClass(ClassType type) {
+//    return isSubtype(type, FObject());
+    if (!type.flags().isInterface()) {
+      while (type != null) {
+        if (typeEquals(type, FObject())) return true;
+        type = (ClassType)type.superType();
+      }
+      return false;
+    }
     return isSubtype(type, FObject());
   }
 
