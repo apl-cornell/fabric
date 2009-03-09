@@ -233,6 +233,19 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   }
   
   public boolean isFabricClass(Type type) {
-    return isSubtype(type, FObject());
+    if (type instanceof ClassType) {
+      ClassType ct = (ClassType)type;
+      
+      // XXX Interfaces are excluded for now.
+      if (ct.flags().isInterface()) return false;
+      
+      while (ct != null) {
+        if (typeEquals(ct, FObject())) {
+          return true;
+        }
+        ct = (ClassType)ct.superType();
+      }
+    }
+    return false;
   }
 }
