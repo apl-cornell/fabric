@@ -2,6 +2,8 @@ package fabil.types;
 
 import java.util.List;
 
+import fabric.types.FabricFlags;
+
 import polyglot.ast.TypeNode;
 import polyglot.frontend.Source;
 import polyglot.types.*;
@@ -256,7 +258,9 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
    * @see fabil.types.FabILTypeSystem#isFabricClass(polyglot.types.ClassType)
    */
   public boolean isFabricClass(ClassType type) {
-//    return isSubtype(type, FObject());
+    if (type.flags().contains(FabILFlags.NONFABRIC)) {
+      return false;
+    }
     if (!type.flags().isInterface()) {
       while (type != null) {
         if (typeEquals(type, FObject())) return true;
@@ -369,5 +373,19 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
       throw new InternalCompilerError("Cannot find runtime class \"" + name
           + "\"; " + e.getMessage(), e);
     }
+  }
+  
+  @Override
+  public Flags legalTopLevelClassFlags() {
+    Flags f = super.legalTopLevelClassFlags();
+    f = f.set(FabILFlags.NONFABRIC);
+    return f;
+  }
+  
+  @Override
+  public Flags legalInterfaceFlags() {
+    Flags f = super.legalInterfaceFlags();
+    f = f.set(FabILFlags.NONFABRIC);
+    return f;
   }
 }

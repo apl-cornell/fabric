@@ -26,6 +26,7 @@ terminal Token ATOMIC;
 terminal Token ABORT;
 terminal Token RETRY;
 terminal Token CLIENT;
+terminal Token NONFABRIC;
 
 non terminal Atomic atomic_statement;
 non terminal Expr   location_expr_opt;
@@ -66,6 +67,8 @@ retry_stmt ::=
 extend modifier ::=
         ATOMIC:a
             {: RESULT = FabricFlags.ATOMIC; :}
+    |   NONFABRIC:a
+    		{: RESULT = FabricFlags.NONFABRIC; :}
     ;
 
 ////////////////////////////////////////////////////////////////////////

@@ -2,12 +2,14 @@ package fabil.ast;
 
 import java.util.List;
 
+import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
 
 import polyglot.ast.ClassBody;
 import polyglot.ast.Id;
 import polyglot.ast.TypeNode;
 import polyglot.main.Report;
+import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
@@ -41,10 +43,15 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
       // Compiling a Fabric class with an unspecified superclass, and the type
       // is not the same as ts.Object() nor ts.FObject(). As such, the default
       // superclass is ts.FObject().
+      ClassType supType = ts.FObject();
+      if (flags().contains(FabILFlags.NONFABRIC)) {
+        supType = ts.Object();
+      }
+      
       if (Report.should_report(Report.types, 3))
         Report.report(3, "setting superclass of " + type + " to "
-            + ts.FObject());
-      type.superType(ts.FObject());
+            + supType);
+      type.superType(supType);
     }
   }
 }

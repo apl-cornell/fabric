@@ -10,6 +10,7 @@ import polyglot.types.MethodInstance;
 import polyglot.types.PrimitiveType;
 import polyglot.types.Type;
 import polyglot.util.Position;
+import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.RemoteCallRewriter;
@@ -47,6 +48,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   public Node rewriteProxies(ProxyRewriter pr) {
     ClassDecl classDecl = node();
 
+    classDecl = classDecl.flags(classDecl.flags().clear(FabILFlags.NONFABRIC));
+    
     // Only translate if we're processing a Fabric class.
     if (!pr.typeSystem().isFabricClass(classDecl.type()))
     // Tag for type serialization.

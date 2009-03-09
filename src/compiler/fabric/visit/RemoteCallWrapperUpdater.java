@@ -197,46 +197,6 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
 
         Stmt s = nf.If(Position.compilerGenerated(), labelComp, conseq, alter);
         
-//        Call npecall = nf.Call(Position.compilerGenerated(),
-//            nf.TypeNodeFromQualifiedName(Position.compilerGenerated(), "fabric.lang.Object"),
-//            nf.Id(Position.compilerGenerated(), "_npe"));
-//        ClassType objtype = null;
-//        LabeledTypeNode npe = null;
-////        Type npetype = null;
-//        Type npetype = ts.NullPointerException();
-        
-//        try {
-//          objtype = (ClassType) ts.typeForName("fabric.lang.Object");          
-//          npetype = ts.typeForName("java.lang.NullPointerException");
-//        } catch (SemanticException e1) {
-//          e1.printStackTrace();
-//        } 
-//        MethodInstance npemi = (MethodInstance) objtype.methodsNamed("_npe").get(0);
-//        npecall = npecall.methodInstance(npemi);
-//        Local npearg = nf.Local(Position.compilerGenerated(), lbf.id());
-//        npearg = npearg.localInstance(lbf.localInstance());
-//        npecall = (Call) npecall.arguments(Collections.singletonList(npearg));
-
-//        Label unknownLabel = ts.freshLabelVariable(Position.compilerGenerated(), "np", "The label of the exception");
-//        npe = nf.LabeledTypeNode(Position.compilerGenerated(), 
-//            nf.CanonicalTypeNode(Position.compilerGenerated(), npetype),
-//            nf.AmbDynamicLabelNode(Position.compilerGenerated(), nf.LabelExpr(Position.compilerGenerated(), unknownLabel)));
-//        LabeledType npeltype = ts.labeledType(Position.compilerGenerated(), npetype, unknownLabel);
-
-//        JifLocalInstance npeli = (JifLocalInstance) ts.localInstance(Position.compilerGenerated(), Flags.NONE, npeltype, "e");
-//        npeli = (JifLocalInstance) npeli.type(npeltype);
-//        npeli.setLabel(unknownLabel);
-
-//        Formal npeformal = nf.Formal(Position.compilerGenerated(), Flags.NONE, npe, nf.Id(Position.compilerGenerated(), "e"));
-//        npeformal = npeformal.localInstance(npeli);
-
-//        Try t = nf.Try(Position.compilerGenerated(), 
-//            nf.Block(Position.compilerGenerated(), nf.Eval(Position.compilerGenerated(), npecall), s),
-//            Collections.singletonList(
-//                nf.Catch(Position.compilerGenerated(),
-//                    npeformal,
-//                    nf.Block(Position.compilerGenerated(md.name())))));
-
         md = (JifMethodDecl)md.body(md.body().statements(Collections.singletonList(s)));
       }
 

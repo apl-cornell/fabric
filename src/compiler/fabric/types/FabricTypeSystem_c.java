@@ -248,4 +248,18 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     }
     return false;
   }
+  
+  @Override
+  public Flags legalTopLevelClassFlags() {
+    Flags f = super.legalTopLevelClassFlags();
+    f = f.set(FabricFlags.NONFABRIC);
+    return f;
+  }
+  
+  @Override
+  public Flags legalInterfaceFlags() {
+    Flags f = super.legalInterfaceFlags();
+    f = f.set(FabricFlags.NONFABRIC);
+    return f;
+  }
 }

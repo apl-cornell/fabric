@@ -31,6 +31,11 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
   public boolean descendsFromImpl(Type ancestor) {
     FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
 
+    if (flags().contains(FabricFlags.NONFABRIC) && ts.typeEquals(ancestor, ts.FObject())) {
+      // XXX nonfabric interfaces do not descend from fabric.lang.Object.
+      return false;
+    }
+    
     // All Fabric interface types descend from fabric.lang.Object.
     if (ancestor.isCanonical() && !ancestor.isNull()
         && !ts.typeEquals(this, ancestor) && ancestor.isReference()

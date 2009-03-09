@@ -24,6 +24,7 @@ terminal Token AT;
 terminal Token ATOMIC;
 terminal Token ABORT;
 terminal Token RETRY;
+terminal Token NONFABRIC;
 
 non terminal Atomic atomic_statement;
 non terminal Expr   location_expr_opt;
@@ -171,4 +172,6 @@ extend explicit_constructor_invocation ::=
 extend modifier ::=
         ATOMIC:a
             {: RESULT = FabILFlags.ATOMIC; :}
+    |   NONFABRIC:a
+    		{: RESULT = FabILFlags.NONFABRIC; :}
     ;
