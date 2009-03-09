@@ -6,13 +6,13 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: AtomicPart.fil,v 1.1 2009-01-23 16:20:36 jed Exp $
+// $Id: AtomicPart.fil,v 1.2 2009-03-09 09:32:20 jed Exp $
 
 package OO7;
 import OO7.traversals.Traversal;
 
 import fabric.util.Collection;
-import fabric.util.LinkedList;
+import fabric.util.ArrayList;
 import fabric.util.List;
 
 public class AtomicPart extends DesignObject {
@@ -30,8 +30,8 @@ public class AtomicPart extends DesignObject {
     
     db.atomicPartsById.put(new Integer(id()), this);
     
-    to   = new LinkedList();
-    from = new LinkedList();
+    to   = new ArrayList();
+    from = new ArrayList();
   }
   
   public void setBuildDate(long buildDate) {

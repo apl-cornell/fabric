@@ -6,28 +6,28 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BaseAssembly.fil,v 1.1 2009-01-23 16:20:36 jed Exp $
+// $Id: BaseAssembly.fil,v 1.2 2009-03-09 09:32:21 jed Exp $
 
 package OO7;
 import OO7.traversals.Traversal;
 
 import fabric.util.Collection;
-import fabric.util.LinkedList;
+import fabric.util.ArrayList;
 
 public class BaseAssembly extends Assembly {
-  LinkedList/*CompositePart*/ componentsPriv;
-  LinkedList/*CompositePart*/ componentsShar;
+  ArrayList/*CompositePart*/ componentsPriv;
+  ArrayList/*CompositePart*/ componentsShar;
 
   public BaseAssembly(Benchmark db) {
     super(db);
     db.baseAssembliesById.put(new Integer(id()), this);
 
-    componentsPriv = new LinkedList();
-    componentsShar = new LinkedList();
+    componentsPriv = new ArrayList();
+    componentsShar = new ArrayList();
   }
 
   public void addComponentsPriv(CompositePart x) {
-    componentsPriv.addLast(x);
+    componentsPriv.add(x);
   }
 
   public Collection componentsPriv() {
@@ -35,7 +35,7 @@ public class BaseAssembly extends Assembly {
   }
 
   public void addComponentsShar(CompositePart x) {
-    componentsShar.addLast(x);
+    componentsShar.add(x);
   }
 
   public Collection componentsShar() {

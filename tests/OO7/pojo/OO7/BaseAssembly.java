@@ -6,29 +6,29 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: BaseAssembly.java,v 1.2 2008-03-07 19:46:24 jed Exp $
+// $Id: BaseAssembly.java,v 1.3 2009-03-09 09:32:21 jed Exp $
 
 package OO7;
 
 import OO7.traversals.Traversal;
 
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 public class BaseAssembly extends Assembly {
-  LinkedList/* CompositePart */componentsPriv;
-  LinkedList/* CompositePart */componentsShar;
+  ArrayList/* CompositePart */componentsPriv;
+  ArrayList/* CompositePart */componentsShar;
 
   public BaseAssembly(Benchmark db) {
     super(db);
     db.baseAssembliesById.put(new Long(id()), this);
 
-    componentsPriv = new LinkedList();
-    componentsShar = new LinkedList();
+    componentsPriv = new ArrayList();
+    componentsShar = new ArrayList();
   }
 
   public void addComponentsPriv(CompositePart x) {
-    componentsPriv.addLast(x);
+    componentsPriv.add(x);
   }
 
   public Collection componentsPriv() {
@@ -36,7 +36,7 @@ public class BaseAssembly extends Assembly {
   }
 
   public void addComponentsShar(CompositePart x) {
-    componentsShar.addLast(x);
+    componentsShar.add(x);
   }
 
   public Collection componentsShar() {

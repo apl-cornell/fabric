@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: CompositePart.java,v 1.2 2008-03-07 19:46:24 jed Exp $
+// $Id: CompositePart.java,v 1.3 2009-03-09 09:32:21 jed Exp $
 
 package OO7;
 
@@ -14,13 +14,13 @@ import OO7.traversals.Traversal;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 public class CompositePart extends DesignObject {
   Document documentation;
 
-  LinkedList/* BaseAssembly */usedInPriv;
-  LinkedList/* BaseAssembly */usedInShar;
+  ArrayList/* BaseAssembly */usedInPriv;
+  ArrayList/* BaseAssembly */usedInShar;
   List/* AtomicPart */parts;
 
   AtomicPart rootPart;
@@ -29,9 +29,9 @@ public class CompositePart extends DesignObject {
     super(db);
     db.compositePartsById.put(new Integer(id()), this);
 
-    usedInPriv = new LinkedList();
-    usedInShar = new LinkedList();
-    parts = new LinkedList();
+    usedInPriv = new ArrayList();
+    usedInShar = new ArrayList();
+    parts = new ArrayList();
   }
 
   public void setDocumentation(Document d) {
@@ -43,7 +43,7 @@ public class CompositePart extends DesignObject {
   }
 
   public void addUsedInPriv(BaseAssembly ba) {
-    usedInPriv.addLast(ba);
+    usedInPriv.add(ba);
   }
 
   public Collection usedInPriv() {
@@ -51,7 +51,7 @@ public class CompositePart extends DesignObject {
   }
 
   public void addUsedInShar(BaseAssembly ba) {
-    usedInShar.addLast(ba);
+    usedInShar.add(ba);
   }
 
   public Collection usedInShar() {
