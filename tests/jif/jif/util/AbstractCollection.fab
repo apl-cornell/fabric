@@ -158,22 +158,22 @@ public abstract class AbstractCollection[label L] extends java.lang.Object imple
     }
 
     public JifObject[L]{L}[]{L} toArray{L}() {
-        try {
-            JifObject[L]{L}[] newArray = new JifObject[L][this.size()]; 
-            Iterator[L] e = iterator();
-            int index = 0;
-            while (e != null && e.hasNext()) {
-                try {
-                    JifObject[L] o = e.next();
-                    newArray[index] = o;
-                }
-                catch (NoSuchElementException impossible) { }
-                catch (ArrayIndexOutOfBoundsException impossible) { }
-                index++;
-            }
-            return newArray;
-        }
-        catch (NegativeArraySizeException impossible) { }
+//        try {
+//            JifObject[L]{L}[] newArray = new JifObject[L][this.size()]; 
+//            Iterator[L] e = iterator();
+//            int index = 0;
+//            while (e != null && e.hasNext()) {
+//                try {
+//                    JifObject[L] o = e.next();
+//                    newArray[index] = o;
+//                }
+//                catch (NoSuchElementException impossible) { }
+//                catch (ArrayIndexOutOfBoundsException impossible) { }
+//                index++;
+//            }
+//            return newArray;
+//        }
+//        catch (NegativeArraySizeException impossible) { }
         return null;
     }
     public JifObject[L]{L}const[]{L} toConstArray{L}() {

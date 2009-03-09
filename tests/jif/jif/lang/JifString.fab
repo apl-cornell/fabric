@@ -4,7 +4,7 @@
  */
 package jif.lang;
 
-public final class JifString[covariant label L] implements JifObject[L] {
+public final class JifString[covariant label L] extends java.lang.Object implements JifObject[L] {
     public final String{L} s;
     public JifString(String{L} s) { this.s = s; }
 
