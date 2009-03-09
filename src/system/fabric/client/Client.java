@@ -427,7 +427,7 @@ public final class Client {
         initialize(opts.name);
 
         client = getClient();
-        if (client.getPrincipal() == null && opts.core == null) {
+        if (client.getPrincipal() == null && opts.core == null && opts.app != null) {
           throw new UsageError(
               "No fabric.client.principal specified in the client "
                   + "configuration.  Either\nspecify one or create a principal "
@@ -470,15 +470,6 @@ public final class Client {
         
         return;
       }
-      
-      // Attempt to read the principal object to ensure that it exists.
-      final NodePrincipal clientPrincipal = client.getPrincipal();
-      runInSubTransaction(new Code<Void>() {
-        public Void run() {
-          log.config("Client principal is " + clientPrincipal);
-          return null;
-        }
-      });
 
       if (opts.app == null) {
         // Act as a dissemination node.
@@ -489,6 +480,15 @@ public final class Client {
           }
         }
       }
+      
+      // Attempt to read the principal object to ensure that it exists.
+      final NodePrincipal clientPrincipal = client.getPrincipal();
+      runInSubTransaction(new Code<Void>() {
+        public Void run() {
+          log.config("Client principal is " + clientPrincipal);
+          return null;
+        }
+      });
       
       // Run the requested application.
       Class<?> mainClass = Class.forName(opts.app[0] + "$$Impl");
