@@ -152,7 +152,7 @@ public abstract class AbstractList[label L] extends AbstractCollection[L]
 
 }
 
-class ListItr[label L]  implements ListIterator[L] {
+class ListItr[label L]  extends java.lang.Object implements ListIterator[L] {
     // This class maintains the invariant that 0 <= nextIndex <= list.size()
     private int{L} nextIndex;
     private int{L} lastIndexReturned;
