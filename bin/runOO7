@@ -38,8 +38,13 @@ def main():
 	print "===== Creating database  ====="
 	result = sh( "bin/fab --name %s --time all OO7.Benchmark     fab://%s/OO7 %s 3" % (client, core, size) )
 
-	print "===== Executing %3s ===========" % "T1"
-	runTraversalCombined("T1")
+	for traversal in ("T1", "T6"):
+		print "===== Executing %3s ===========" % traversal
+		runTraversal(traversal)
+
+	
+	print "===== Executing T2b ==========="
+	
 
 	print "===== Raw Data ================"
 	for test in names:
@@ -54,54 +59,22 @@ def main():
 				alpha, catNoTiming = computeCatTime(run.time, run.categories[cat], run.count, total)
 				print "    %-7s %6d / %6d with %8d measurements ==> %5d (%5.4f)" % (cat + ":", run.categories[cat], run.time, run.count, catNoTiming, alpha)
 
-	return
-	for traversal in ["T1", "T2a", "T6"]:
-		print "===== Executing %3s ===========" % traversal
-		runTraversal(traversal)
-
-	print "===== Raw Data ================"
-	for test in resultnames:
-		print test
-		for cat in categories:
-			catTime, totalTime, count = results[test][cat]
-			appTime                   = results[test]["app"][0]
-
-			alpha, catNoTiming = computeCatTime(totalTime, catTime, count, appTime)
-			print "    %6s: %6d / %6d with %8d measurements ==> %5d (%5.4f)" % (cat, catTime, totalTime, count, catNoTiming, alpha)
 
 	print "===== Report =================="
 	out =    "%15s & Total time (ms)" % ''
 	for cat in categories:
 		out += " & \multicolumn{2}{c}{%6s}" % cat
 
-	alphas = []
-	for test in resultnames:
-		cats = results[test]
-		totalNoTiming = cats["app"][1]
-		out += "\n%-15s & %15s" % (test, totalNoTiming)
-		line = ""
-		appNoTiming = totalNoTiming
+	for test in names:
+		runs    = timed[test]
+		num     = len(runs)
+		average = sum([run.time for run in runs]) / num
+		out += "\n%-15s & %15d" % (test, average)
 		for cat in categories:
-			if cat != "app":
-				cat, total, count = cats[cat]
-				alpha, catNoTiming = computeCatTime(total, cat, count, totalNoTiming)
-				alphas.append(alpha)
-				appNoTiming -= catNoTiming
-
-				line += " & %8d           & %3d\\%%" % (catNoTiming, catNoTiming * 100 / totalNoTiming)
-
-		out += " & %8d           & %3d\\%%" % (appNoTiming, appNoTiming * 100 / totalNoTiming)
-		out += line
+			time = sum([run.categories[cat] for run in runs]) / num
+			out += " & %8d           & %3d\\%%" % (time, time * 100 / average)
 
 	print out
-
-	
-			
-
-		
-
-catExpr = re.compile(r" *(?P<cat>.+):\s*(?P<time>\d+) ms\Z")
-totExpr = re.compile(r" Total: +(?P<time>\d+) ms \((?P<count>\d+) +measurements\)\Z")
 
 # name -> [time]
 untimed = {}
@@ -123,7 +96,10 @@ class TimedRun():
 		self.time  = int(match.group("time"))
 
 
-def runTraversalCombined(traversal):
+catExpr = re.compile(r" *(?P<cat>.+):\s*(?P<time>\d+) ms\Z")
+totExpr = re.compile(r" Total: +(?P<time>\d+) ms \((?P<count>\d+) +measurements\)\Z")
+
+def runTraversal(traversal):
 	coldname = traversal + " " + size + " cold"
 	hotname  = traversal + " " + size + " hot "
 
@@ -141,8 +117,8 @@ def runTraversalCombined(traversal):
 		result = sh( "bin/fab --name %s --time all OO7.traversals.%s fab://%s/OO7 --hot 3" % (client, traversal, core) )
 		lines  = result.split("\n")
 
-		timed[hotname ].append(TimedRun(lines[2:10]))
-		timed[coldname].append(TimedRun(lines[13:21]))
+		timed[coldname].append(TimedRun(lines[2:10]))
+		timed[ hotname].append(TimedRun(lines[13:21]))
 
 
 	# run 3 times with timing off, collect total time
@@ -156,51 +132,10 @@ def runTraversalCombined(traversal):
 		match  = totExpr.match(lines[6])
 		untimed[hotname ].append(int(match.group("time")))
 
-def runTraversal(traversal):
-	global categories, size
-
-	coldname = traversal + " " + size + " cold"
-	hotname  = traversal + " " + size + " hot "
-	resultnames.append(coldname)
-	resultnames.append(hotname)
-
-	for cat in categories:
-		result = sh( "bin/fab --name %s --time %s  OO7.traversals.%s fab://%s/OO7 --hot" % (client, cat, traversal, core) )
-		lines  = result.split("\n")
-
-		match  = catExpr.match(lines[2])
-		ccat   = match.group("cat")
-		ctime  = match.group("time")
-
-		match  = totExpr.match(lines[3])
-		ctotal = match.group("time")
-		ccount = match.group("count")
-
-		match  = catExpr.match(lines[7])
-		hcat   = match.group("cat")
-		htime  = match.group("time")
-
-		match  = totExpr.match(lines[8])
-		htotal = match.group("time")
-		hcount = match.group("count")
-
-		assert cat == ccat == hcat
-
-		register(coldname, cat, int(ctime), int(ctotal), int(ccount))
-		register(hotname,  cat, int(htime), int(htotal), int(hcount))
-
-
-results = {}
-resultnames=[]
-def register(name, cat, catTime, totalTime, count):
-	if not results.has_key(name):
-		results[name] = {}
-	results[name][cat] = (catTime, totalTime, count)
-
 def computeCatTime(totalWithTiming, catWithTiming, count, totalWithoutTiming):
-	global overhead
+	global overhead, categories
 	alpha = (totalWithTiming - count * overhead) / totalWithoutTiming - 1
-	catWithoutTiming = (catWithTiming - count * overhead / 2) / (1 + alpha)
+	catWithoutTiming = (catWithTiming - count * overhead / len(categories)) / (1 + alpha)
 
 	return alpha, catWithoutTiming
 
