@@ -38,7 +38,23 @@ def main():
 	print "===== Creating database  ====="
 	result = sh( "bin/fab --name %s --time all OO7.Benchmark     fab://%s/OO7 %s 3" % (client, core, size) )
 
+	print "===== Executing %3s ===========" % "T1"
+	runTraversalCombined("T1")
 
+	print "===== Raw Data ================"
+	for test in names:
+		print test, "no timing"
+		total = sum(untimed[test]) / len(untimed[test])
+		print "    %s" % ', '.join([str(t) for t in untimed[test]])
+		print "    %d" % total
+
+		print test, "timing enabled"
+		for cat in categories:
+			for run in timed[test]:
+				alpha, catNoTiming = computeCatTime(run.time, run.categories[cat], run.count, total)
+				print "    %-7s %6d / %6d with %8d measurements ==> %5d (%5.4f)" % (cat + ":", run.categories[cat], run.time, run.count, catNoTiming, alpha)
+
+	return
 	for traversal in ["T1", "T2a", "T6"]:
 		print "===== Executing %3s ===========" % traversal
 		runTraversal(traversal)
@@ -86,6 +102,59 @@ def main():
 
 catExpr = re.compile(r" *(?P<cat>.+):\s*(?P<time>\d+) ms\Z")
 totExpr = re.compile(r" Total: +(?P<time>\d+) ms \((?P<count>\d+) +measurements\)\Z")
+
+# name -> [time]
+untimed = {}
+# name -> [TimedRun]
+timed   = {}
+# [name]
+names   = []
+
+# cat->time, count, time
+class TimedRun():
+	def __init__(self, lines):
+		self.categories = {}
+		for line in lines[:-1]:
+			match = catExpr.match(line)
+			self.categories[match.group("cat")] = int(match.group("time"))
+
+		match = totExpr.match(lines[-1])
+		self.count = int(match.group("count"))
+		self.time  = int(match.group("time"))
+
+
+def runTraversalCombined(traversal):
+	coldname = traversal + " " + size + " cold"
+	hotname  = traversal + " " + size + " hot "
+
+	names.append(coldname)
+	names.append(hotname)
+
+	timed[coldname] = []
+	timed[hotname]  = []
+
+	untimed[coldname] = []
+	untimed[hotname]  = []
+
+	# run 3 times with timing on.
+	for i in range(3):
+		result = sh( "bin/fab --name %s --time all OO7.traversals.%s fab://%s/OO7 --hot 3" % (client, traversal, core) )
+		lines  = result.split("\n")
+
+		timed[hotname ].append(TimedRun(lines[2:10]))
+		timed[coldname].append(TimedRun(lines[13:21]))
+
+
+	# run 3 times with timing off, collect total time
+	for i in range(3):
+		result = sh( "bin/fab --name %s            OO7.traversals.%s fab://%s/OO7 --hot 3" % (client, traversal, core) )
+		lines  = result.split("\n")
+
+		match  = totExpr.match(lines[2])
+		untimed[coldname].append(int(match.group("time")))
+
+		match  = totExpr.match(lines[6])
+		untimed[hotname ].append(int(match.group("time")))
 
 def runTraversal(traversal):
 	global categories, size
@@ -137,7 +206,9 @@ def computeCatTime(totalWithTiming, catWithTiming, count, totalWithoutTiming):
 
 def sh(cmd, stderr = None):
 	print ">> ", cmd
-	return Popen(cmd, stdout=PIPE, stderr=stderr, shell=True).communicate()[0]
+	result = Popen(cmd, stdout=PIPE, stderr=stderr, shell=True).communicate()[0]
+	print  result
+	return result
 
 if __name__ == '__main__':
 	main()
