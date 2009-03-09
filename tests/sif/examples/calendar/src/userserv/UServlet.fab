@@ -35,8 +35,8 @@ public abstract class UServlet[principal servP] extends Servlet[servP]  {
         ServletException{*lbl;req.session!:} ex = null;
         boolean{*lbl;req.session!:} ret = true;
         try {
-            final USessState[servP] css = (USessState[servP])req.getSessionState();
-            final LoginAction[servP, lbl] la = new LoginAction[servP, lbl](this, successAction, req.session); 
+            final USessState[servP, lbl] css = (USessState[servP, lbl])req.getSessionState(lbl);
+            final LoginAction[servP] la = new LoginAction[servP](this, successAction, req.session); 
             
             if (css != null && 
                     css.sessionPrincipal equiv la.session && 
@@ -63,7 +63,7 @@ public abstract class UServlet[principal servP] extends Servlet[servP]  {
     /**
      * Look up a User from a given user id
      */
-    protected abstract User[servP]{p:;p!:;p} 
+    protected abstract User[servP, {p→;p←}]{p:;p!:;p} 
     lookupUserID{p:; p!:}(
     		String{p:; p!:} userID,
     		principal{p:; p!:} p)

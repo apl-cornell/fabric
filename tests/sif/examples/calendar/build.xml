@@ -56,8 +56,8 @@
   			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes" />
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
-	  		<arg value="-report"/> <arg value="frontend=1"/>
     	<!--
+	  		<arg value="-report"/> <arg value="frontend=1"/>
 	  	-->
     	
         <srcfile />
@@ -88,9 +88,9 @@
     		<arg value="-filsigcp"/>
     		<arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
         <arg value="-e"/>
+    	<!--
   		<arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>
   		<arg value="-report"/> <arg value="frontend=1"/>
-    	<!--
       <arg value="-debugpositions"/>
   		<arg value="-print" /> <arg value="FieldLabelResolver"/>
 	  		<arg value="-report"/> <arg value="error=5"/>

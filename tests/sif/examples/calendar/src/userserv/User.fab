@@ -3,9 +3,9 @@ package userserv;
 /**
  * Represents a user, as would be found in a database. 
  */
-public class User[principal servP] extends AbstractPrincipal implements JifObject[{servP:;servP!:}] {
-    public User(String{this} name, 
-                String{this} password, 
+public class User[principal servP, covariant label T] extends AbstractPrincipal implements JifObject[{servP:;servP!:}] {
+    public User(String{T} name, 
+                String{T} password, 
                 String{servP:;servP!:} firstName, 
                 String{servP:;servP!:} lastName) where authority (this) {
         this.password = password;
@@ -13,10 +13,15 @@ public class User[principal servP] extends AbstractPrincipal implements JifObjec
         super(name);        
     }
 
-    private final User$1[servP]{this} remote1;
-    private final String{this} password; // XXX should be a secure hash of it 
+    private final User$1[servP]{T} remote1;
+    private final String{T} password; // XXX should be a secure hash of it 
+    
+    User(User$1{T} remote1, String{T} password) {
+    	this.remote1 = remote1;
+    	this.password = password;
+    }
 
-    public String{this} getPassword() {
+    public String{T} getPassword() {
         return this.password;
     }
     public String{servP:;servP!:} getFirstName() {
@@ -29,11 +34,11 @@ public class User[principal servP] extends AbstractPrincipal implements JifObjec
         return remote1.lastName;
     }
 
-    public String{servP:;servP!: ; this} getRepresentation() {
+    public String{servP:;servP!: ; T} getRepresentation() {
         return this.displayString() + " <" + this.name() + ">";
     }
 
-    public boolean{authPrf; closure; lb; executeNow; *lb; this} isAuthorized(Object authPrf, 
+    public boolean{authPrf; closure; lb; executeNow; *lb; T} isAuthorized(Object authPrf, 
                                                             Closure[this, lb] closure,
                                                             label lb,
                                                             boolean executeNow) where authority (this) {
@@ -73,5 +78,13 @@ public class User[principal servP] extends AbstractPrincipal implements JifObjec
     public boolean{servP:;servP!:;o;lbl;*lbl} equals(label lbl, IDComparable[lbl] o) {
         Object obj = o;
         return equals(obj);
+    }
+    
+    public static User[servP,{P←}]{P←} declassifyUser{P←}(principal{P←} P, User[servP,{P→;P←}]{P←} user) 
+    where caller(P) {
+    	final User$1[servP]{P←} nremote1 = declassify(user.remote1, {P→;P←} to {P←});
+    	final String{P←} npassword = declassify(user.password, {P→;P←} to {P←});
+    	return new User[servP,{P←}](nremote1, npassword);
+    	
     }
 }

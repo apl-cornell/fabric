@@ -4,33 +4,30 @@ import userserv.*;
 import sif.servlet.SessionState;
 import jif.util.*;
 
-class State[covariant label T] {
-    State(User[CalServEP]{T} currentUser, 
-          Date[{currentUser←}]{T} displayDate, 
-          int{T} displayKind, 
-          User[CalServEP]{T} displayUser) {
+class State {
+    State(User[CalServEP]{this} currentUser, 
+          Date[{currentUser!:}]{this} displayDate, 
+          int{this} displayKind, 
+          User[CalServEP]{this} displayUser) {
         this.currentUser = currentUser;
         this.displayDate = displayDate;
         this.displayKind = displayKind;
         this.displayUser = displayUser;
     }
-    final User[CalServEP]{T} currentUser;
-    final jif.util.Date[{currentUser←}]{T} displayDate;
-    final int{T} displayKind;
-    final User[CalServEP]{T} displayUser;
+    final User[CalServEP]{this} currentUser;
+    final jif.util.Date[{currentUser!:}]{this} displayDate;
+    final int{this} displayKind;
+    final User[CalServEP]{this} displayUser;
     
-    State[lbl] changeDisplayUser{*lbl}(label{*lbl} lbl, User[CalServEP]{*lbl} displayUser)
-    where T <= lbl {
-        return new State[lbl](this.currentUser, this.displayDate, this.displayKind, displayUser);
+    State changeDisplayUser(User[CalServEP] displayUser) {
+        return new State(this.currentUser, this.displayDate, this.displayKind, displayUser);
     }
     
-    State[lbl] changeDisplayDate{*lbl}(label{*lbl} lbl, Date[{currentUser←}]{*lbl} displayDate, int{*lbl} displayKind)
-    where T <= lbl {
-        return new State[lbl](this.currentUser, displayDate, displayKind, this.displayUser);
+    State changeDisplayDate(Date[{currentUser!:}] displayDate, int displayKind) {
+        return new State(this.currentUser, displayDate, displayKind, this.displayUser);
     }
-    State[lbl] changeDisplayDate{*lbl}(label{*lbl} lbl, Date[{currentUser←}]{*lbl} displayDate)
-    where T <= lbl {
-        return new State[lbl](this.currentUser, displayDate, this.displayKind, this.displayUser);
+    State changeDisplayDate(Date[{currentUser!:}] displayDate) {
+        return new State(this.currentUser, displayDate, this.displayKind, this.displayUser);
     }
 }
 

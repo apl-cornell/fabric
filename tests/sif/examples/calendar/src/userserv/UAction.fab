@@ -42,11 +42,11 @@ abstract public class UAction[principal servP] extends Action[servP] {
         }
 
         final label newLbl = new label {*lbl; req.session!:};
-        SessionState ss = req.getSessionState();
-        if (!(ss instanceof USessState[servP])) throw new ServletException("Incorrect session state"); 
-        final USessState[servP] css = (USessState[servP])ss;
+        SessionState ss = req.getSessionState(lbl);
+        if (!(ss instanceof USessState[servP, lbl])) throw new ServletException("Incorrect session state");
+        final USessState[servP, lbl] css = (USessState[servP, lbl])ss;
         
-        if (req.session equiv css.sessionPrincipal) {            
+        if (req.session equiv css.sessionPrincipal) {
             this.invokeImpl(newLbl, req, m, css);
         }
         else {

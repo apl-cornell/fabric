@@ -8,204 +8,158 @@ import sif.html.Page;
 import javax.servlet.ServletException;
 
 public final class Main extends UServlet[CalServEP] authority (CalServEP) {
-	final private CalendarDB{⊥→⊥;⊤←⊤} cal;
+    final private CalendarDB{this} cal;
+    
+    public Main() {
+        this.cal =  new CalendarDB();
+        super();
+    }
+    
+    public void initialize{CalServEP:;CalServEP!:}() throws ServletException {
+        //!@! ADD THIS BACK IN, AND REMOVE FOLLOWING LINE super.initialize();
+        addStartAction(new LogoffAction[CalServEP](this));
 
-	public Main() {
-		this.cal =  new CalendarDB();
-		super();
-	}
+        if (cal != null)
+            cal.initialize();
+        addStartAction(new ShowCalendar(this));
+    }
+    
+    public SessionState createSessionState() {
+        return new CalendarSessionState();
+    }
+    
+    protected String defaultActionName(Request[CalServEP] req) {
+        return "show";
+    }
+    
+    public String getPrivateHostID() throws ServletException {
+        return "";
+    }
+    
+        
+    // DOWNGRADE REASON: transfer User from CalServEP to p &&& access control
+    public User[CalServEP]{p:; p!:} lookupUserID{p:; p!:}(String{p:; p!:} userID, principal{p:; p!:} p) 
+    where authority (CalServEP), caller(p), endorse({p:; p!: meet CalServEP!:}) {
+        User[CalServEP] u = cal==null?null:cal.lookupUserID(userID);
+        
+        User[CalServEP] u1 = endorse(u, {CalServEP:;p:;p!: meet CalServEP!:});
+        User[CalServEP] u2 = declassify(u1, {p:;p!: meet CalServEP!:}); 
+        return u2;
+    }
+    
+    // DOWNGRADE REASON: Hide the side effect at level CalServEP!:, and endorse the PC (i.e., the CalServEP has no trouble handing out fresh user ids to whoever asks)
+    // &&& access control
+    private int{CalServEP:;CalServEP!:} getFreshUid{p:;p!:}(principal p) 
+    where authority (CalServEP), caller(p), endorse({p:;p!: meet CalServEP!:}) {
+        declassify ({CalServEP:;p!: meet CalServEP!:}) {
+            if (cal != null) return cal.getFreshUid();
+            return -1;
+        }
+    }
+    /**
+     * Returns a new Event, filled out with default values.
+     */
+    Event{currUser!:} defaultEvent{currUser!:}(User[CalServEP]{currUser!:} currUser) 
+             where authority(CalServEP),
+                   caller(currUser) {
+        Date[{*!:}] now = new Date[{*!:}]();
+        int uid = this.getFreshUid(currUser);
 
-	public void initialize{CalServEP:;CalServEP!:}() throws ServletException {
-		//!@! ADD THIS BACK IN, AND REMOVE FOLLOWING LINE super.initialize();
-		addStartAction(new LogoffAction[CalServEP](this));
+        return new Event(uid, 
+                         new label {currUser!:}, 
+                         new label {currUser:;currUser!:}, // default info label only readable by currUser
+                         now,
+                         now,
+                         "",
+                         "",
+                         new LinkedList[{CalServEP:;CalServEP!:}](),
+                         new LinkedList[{CalServEP:;CalServEP!:}](),
+                         currUser);
+    }
+    
+    void updateEventInCalendar{p:;p!:}(principal{p:;p!:} p, Request[CalServEP]{p:;p!:} req, Event{p:;p!:} newEvent) 
+       where {p!:} <= newEvent.infoLbl,
+             caller(p), authority(CalServEP), endorse({p:;p!: meet CalServEP!:}) {
+        if (cal != null) {
 
-		if (cal != null)
-			cal.initialize();
-		addStartAction(new ShowCalendar(this));
-	}
+            // DOWNGRADE REASON: handover from newEvent from p to CalServEP
+            declassify ({CalServEP!: meet p!:}) {
+                Event e = sanitizeEvent(declassify(newEvent, {p!:}));
+                // sanitize the event to prevent SQL attacks
+                Event e1 = endorse(e, {p:;CalServEP:;CalServEP!:; p!:} to {p:;CalServEP:;p!: meet CalServEP!:});
+                Event e2 = declassify(e1, {p:;CalServEP:;p!: meet CalServEP!:} to {CalServEP:; CalServEP!:});
+                cal.updateEvent(e2);
+            }
+        }
+    }
+    
+    Event sanitizeEvent{*e.infoLbl}(Event{*e.infoLbl} e) {
+        if (e == null || cal == null || e.remote1 == null) {
+            return e;
+        }
+        String name = cal.escapeString(e.remote1.name);
+        String note = cal.escapeString(e.remote1.note);
 
-	public SessionState createSessionState() {
-		return new CalendarSessionState();
-	}
-
-	protected String defaultActionName(Request[CalServEP] req) {
-		return "show";
-	}
-
-	public String getPrivateHostID() throws ServletException {
-		return "";
-	}
-
-
-	// DOWNGRADE REASON: transfer User from CalServEP to p &&& access control
-	public User[CalServEP]{p:; p!:} lookupUserID{p:; p!:}(String{p:; p!:} userID, principal{p:; p!:} p) 
-	where authority (CalServEP), caller(p), endorse({p:; p!: meet CalServEP!:}) {
-		User[CalServEP] u = cal==null?null:cal.lookupUserID(userID);
-
-		User[CalServEP] u1 = endorse(u, {CalServEP:;p:;p!: meet CalServEP!:});
-		User[CalServEP] u2 = declassify(u1, {p:;p!: meet CalServEP!:}); 
-		return u2;
-	}
-
-	// DOWNGRADE REASON: Hide the side effect at level CalServEP!:, and endorse the PC (i.e., the CalServEP has no trouble handing out fresh user ids to whoever asks)
-	// &&& access control
-	private int{CalServEP:;CalServEP!:} getFreshUid{p:;p!:}(principal p) 
-	where authority (CalServEP), caller(p), endorse({p:;p!: meet CalServEP!:}) {
-		declassify ({CalServEP:;p!: meet CalServEP!:}) {
-			if (cal != null) return cal.getFreshUid();
-			return -1;
-		}
-	}
-	/**
-	 * Returns a new Event, filled out with default values.
-	 */
-	Event[{currUser!:}]{currUser!:} defaultEvent{currUser!:}(User[CalServEP]{currUser!:} currUser) 
-	where authority(CalServEP),
-	caller(currUser) {
-		Date[{*!:}] now = new Date[{*!:}]();
-		int uid = this.getFreshUid(currUser);
-
-		return new Event[{currUser!:}](uid, 
-				new label {currUser!:}, 
-				new label {currUser:;currUser!:}, // default info label only readable by currUser
-				now,
-				now,
-				"",
-				"",
-				new LinkedList[{CalServEP:;CalServEP!:}](),
-				new LinkedList[{CalServEP:;CalServEP!:}](),
-				currUser);
-	}
-
-	void updateEventInCalendar{p→;p←}(principal{p→;p←} p, Request[CalServEP]{p→;p←} req, Event[{p→;p←}]{p→;p←} ueicEvent) 
-	where {p→;p←} <= ueicEvent.infoLbl,
-	caller(p), authority(CalServEP), endorse({p→;p← meet CalServEP←}) {
-		if (cal != null) {
-
-			// sanitize the event to prevent SQL attacks
-			final Event e = endorse(sanitizeEvent(p, declassify(ueicEvent, {p←})), {p→;p← meet CalServEP←});
-			if(e == null) return;
-			// DOWNGRADE REASON: handover ueicEvent from p to CalServEP
-			declassify ({p← meet CalServEP←}) {
-//				final label ntimeLbl = endorse(e.timeLbl, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
-//				final label ninfoLbl = endorse(e.infoLbl, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
-//				Event$1[e.infoLbl] e1r = e.remote1;
-//				Event$1[ninfoLbl] nremote1 = endorse(e1r, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
-//				Date[e.timeLbl] e1s = e.startTime;
-//				Date[e.timeLbl] e1e = e.endTime;
-//				Date[ntimeLbl] nstartTime = endorse(e1s, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
-//				Date[ntimeLbl] nendTime = endorse(e1e, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
-//
-//				final Event e1_ = new Event[{p→;CalServEP→;p← meet CalServEP←}](
-//							endorse(e.uid, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←}),
-//							ntimeLbl,
-//							ninfoLbl,
-//							nstartTime,
-//							nendTime,
-//							nremote1
-//					);
-//
-//				final Event[{p→;CalServEP→;p← meet CalServEP←}] e1 = 
-//					endorse(e1_, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
-//				
-//				int muid_ = endorse(e1.uid, {p→;CalServEP→;CalServEP←} to {p→;CalServEP→;p← meet CalServEP←});
-//				int muid = declassify(muid_, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
-//
-//				final label mtimeLbl = declassify(e1.timeLbl, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
-//				final label minfoLbl = declassify(e1.infoLbl, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
-//				Event$1[e1.infoLbl] e2r = e1.remote1;
-//				Event$1[minfoLbl] mremote1 = declassify(e2r, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
-//				Date[e1.timeLbl] e2s = e1.startTime;
-//				Date[e1.timeLbl] e2e = e1.endTime;
-//				Date[mtimeLbl] mstartTime = declassify(e2s, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
-//				Date[mtimeLbl] mendTime = declassify(e2s, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
-//				Event[{CalServEP→; CalServEP←}] e2_ =
-//					new Event[{CalServEP→; CalServEP←}](
-//							muid,
-//							mtimeLbl,
-//							minfoLbl,
-//							mstartTime,
-//							mendTime,
-//							mremote1
-//					);
-//				final Event e2 = declassify(e2_, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
-				
-				Event e2 = CalServDeclassifier.handOverEvent(p, CalServEP, ueicEvent);
-				cal.updateEvent(e2);
-			}
-		}
-	}
-	
-	/**
-	 * Get the event identified by the id
-	 */
-	Event[{p→;p←}]{p:;p!:}
-	retrieveEvent{p:;p!:}(principal{p!:;p:} p, int{p!:;p:} eventID)
-	where caller(p), authority(CalServEP), endorse({p:;p!: meet CalServEP!:}) {
-		declassify ({p!: meet CalServEP!:}) {
-			int{CalServEP:; p!:} eid1 = declassify(eventID, {p:; p!:} to {CalServEP:; p!:});
-			int{CalServEP:; CalServEP!:} eid2 = endorse(eid1, {CalServEP:; p!:} to {CalServEP:; CalServEP!:});
-
-			Event e = cal==null?null:cal.retrieveEvent(eid2);
-
-//			Event e1 = endorse(e, {CalServEP:;CalServEP!:;eventID; p} to {p:;CalServEP:;CalServEP!: meet p!:});
-//			Event e2 = declassify(e1,{CalServEP:;p:;CalServEP!: meet p!:} to {p:;CalServEP!: meet p!:});
-			Event e2 = CalServDeclassifier.handOverEvent(CalServEP, p, e);
-			return e2;
-		}
-	}
-
-	// TODO: Tentative where clause, not sure if it holds at runtime
-	Event[{p→;p←}]{p→;p←} sanitizeEvent{p→;p←}(principal{p→;p←} p, Event[{p→;p←}]{p→;p←} e)
-	where {p→;p←} <= e.infoLbl {
-		if (e == null || cal == null || e.remote1 == null) {
-			return e;
-		}
-		String name = cal.escapeString(e.remote1.name);
-		String note = cal.escapeString(e.remote1.note);
-
-		// need to construct a new event...
-		return new Event[{p→;p←}](e.uid,
-				e.timeLbl,
-				e.infoLbl,
-				e.startTime,
-				e.endTime,
-				name,
-				note,
-				e.remote1.attendees,
-				e.remote1.viewers,
-				e.remote1.creator);
-	}
-
-	/**
-	 * Get the subset of events that start on or after dt, and before end.
-	 */
-	List[{CalServEP:;CalServEP!:}]{p!:} 
-	eventSubset{p!:}(principal{p!:} p,
-			Date[{p!:}]{p!:} start, 
-			Date[{p!:}]{p!:} end,
-			User[CalServEP]{p!:} displayUser)
-			where caller(p), authority(CalServEP), endorse({p!: meet CalServEP!:}) {
-		// DOWNGRADE REASON: need to convert a Date[{p!:}] to a Date[{CalServEP:;CalServEP!:}], then transfer ownership of usr, then get the result, and transfer it back to p
-		Date[{CalServEP:;CalServEP!:}] startDate = CalServDeclassifier.declassDate(p, CalServEP, start);
-		Date[{CalServEP:;CalServEP!:}] endDate = CalServDeclassifier.declassDate(p, CalServEP, end);
-
-		User{CalServEP!:} us1 = endorse(displayUser, {p!:} to {CalServEP!:}); 
-
-		List[{CalServEP:;CalServEP!:}] subset = cal==null?null:cal.eventSubset(startDate, endDate, us1);
-
-		List[{CalServEP:;CalServEP!:}] subset1 = endorse(subset, {CalServEP:;CalServEP!:;p!:} to {CalServEP:;CalServEP!: meet p!:});
-		List[{CalServEP:;CalServEP!:}] subset2 = declassify(subset1,{CalServEP:;CalServEP!: meet p!:} to {CalServEP!: meet p!:});
-		return subset2;
-	}
-
-	boolean{p:; p!:} compareDates{p:; p!:}(
-			principal{p:; p!:} p,
-			Date[{CalRootEP:; p!:}]{p:; p!:} c,
-			Date[{CalRootEP:; p!:}]{p:; p!:} d) 
-			where caller(p),
-			CalRootEP actsfor p {
-		return cal != null && cal.compareDates(p, c, d); 
-	}
+        // need to construct a new event...
+        return new Event(e.uid,
+                         e.timeLbl,
+                         e.infoLbl,
+                         e.startTime,
+                         e.endTime,
+                         name,
+                         note,
+                         e.remote1.attendees,
+                         e.remote1.viewers,
+                         e.remote1.creator);
+    }
+    
+    /**
+     * Get the subset of events that start on or after dt, and before end.
+     */
+    List[{CalServEP:;CalServEP!:}]{p!:} 
+     eventSubset{p!:}(principal{p!:} p,
+                              Date[{p!:}]{p!:} start, 
+                              Date[{p!:}]{p!:} end,
+                              User[CalServEP]{p!:} displayUser)
+                              where caller(p), authority(CalServEP), endorse({p!: meet CalServEP!:}) {
+         // DOWNGRADE REASON: need to convert a Date[{p!:}] to a Date[{CalServEP:;CalServEP!:}], then transfer ownership of usr, then get the result, and transfer it back to p
+             Date[{CalServEP:;CalServEP!:}] startDate = CalServDeclassifier.declassDate(p, CalServEP, start);
+             Date[{CalServEP:;CalServEP!:}] endDate = CalServDeclassifier.declassDate(p, CalServEP, end);
+             
+             User{CalServEP!:} us1 = endorse(displayUser, {p!:} to {CalServEP!:}); 
+             
+             List[{CalServEP:;CalServEP!:}] subset = cal==null?null:cal.eventSubset(startDate, endDate, us1);
+             
+             List[{CalServEP:;CalServEP!:}] subset1 = endorse(subset, {CalServEP:;CalServEP!:;p!:} to {CalServEP:;CalServEP!: meet p!:});
+             List[{CalServEP:;CalServEP!:}] subset2 = declassify(subset1,{CalServEP:;CalServEP!: meet p!:} to {CalServEP!: meet p!:});
+             return subset2;
+    }
+     
+     /**
+      * Get the event identified by the id
+      */
+     Event{p:;p!:}
+      retrieveEvent{p:;p!:}(principal{p!:;p:} p, int{p!:;p:} eventID)
+                               where caller(p), authority(CalServEP), endorse({p:;p!: meet CalServEP!:}) {
+              declassify ({p!: meet CalServEP!:}) {
+                  int{CalServEP:; p!:} eid1 = declassify(eventID, {p:; p!:} to {CalServEP:; p!:});
+                  int{CalServEP:; CalServEP!:} eid2 = endorse(eid1, {CalServEP:; p!:} to {CalServEP:; CalServEP!:});
+                  
+                  Event e = cal==null?null:cal.retrieveEvent(eid2);
+                  
+                  Event e1 = endorse(e, {CalServEP:;CalServEP!:;eventID; p} to {p:;CalServEP:;CalServEP!: meet p!:});
+                  Event e2 = declassify(e1,{CalServEP:;p:;CalServEP!: meet p!:} to {p:;CalServEP!: meet p!:});
+                  return e2;
+              }
+     }
+      
+     boolean{p:; p!:} compareDates{p:; p!:}(
+         principal{p:; p!:} p,
+         Date[{CalRootEP:; p!:}]{p:; p!:} c,
+         Date[{CalRootEP:; p!:}]{p:; p!:} d) 
+         where caller(p),
+         CalRootEP actsfor p {
+    	 return cal != null && cal.compareDates(p, c, d); 
+     }
 }
 

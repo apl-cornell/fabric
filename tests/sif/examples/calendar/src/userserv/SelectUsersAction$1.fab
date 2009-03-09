@@ -1,6 +1,6 @@
 package userserv;
 
-import jif.util.*;
+import jif.util.List;
 
 public class SelectUsersAction$1[label L, principal servP] {
 	

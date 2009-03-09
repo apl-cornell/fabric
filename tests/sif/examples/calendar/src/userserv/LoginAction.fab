@@ -6,75 +6,51 @@ import sif.html.*;
 
 import jif.util.*;
 
-public class LoginAction[principal servP, covariant label T] extends USessAction[servP, T] {
-    final UAction[servP]{T} successAction;
-    final Input[servP]{T} inpUserID;
-    final Input[servP]{T} inpPassword;
+public class LoginAction[principal servP] extends USessAction[servP] {
+    final UAction[servP]{this} successAction;
     
-    protected boolean ensureLoggedIn() { return false; }
+    final Input[servP]{this} inpUserID;
+    final Input[servP]{this} inpPassword;
+    
+    protected boolean{this} ensureLoggedIn() { return false; }
 
-    public LoginAction(UServlet[servP]{T} servlet, 
-                       UAction[servP]{T} successAction, 
-                       principal{T} session) {
+    public LoginAction(UServlet[servP]{this} servlet, 
+                       UAction[servP]{this} successAction, 
+                       principal{this} session) {
         this.successAction = successAction;
-        this.inpUserID = new Input[servP](servlet, new label {session←});
-        this.inpPassword = new Input[servP](servlet, new label {session→;session←});
-        super(servlet, session);
+        this.inpUserID = new Input[servP](servlet, new label {session!:});
+        this.inpPassword = new Input[servP](servlet, new label {session:;session!:});
+        super(servlet, session);        
     }
 
-    public void invokeSessImpl{*lbl;session←}(label{*lbl;session←} lbl ,
-            Request[servP]{*lbl;session←} req,
-            UServlet[servP]{*lbl;session←} servlet,
-            USessState[servP, {*lbl;session←}]{*lbl;session←} state,
-            User[servP]{*lbl;session←} currentUser) 
-   throws (ServletException{*lbl;session←})
+    public void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
+            Request[servP]{*lbl;session!:} req,
+            UServlet[servP]{*lbl;session!:} servlet,
+            USessState[servP, {*lbl;session!:}]{*lbl;session!:} state,
+            User[servP, {*lbl;session!:}]{*lbl;session!:} currentUser) 
+   throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
               session equiv state.sessionPrincipal,
               session actsfor currentUser,              
-              lbl <= {*→req.session},
+              lbl <= {*:req.session},
               caller(session)
     {
-    	if(T <= lbl) {
-    		invokeSessImplImpl(lbl, req, servlet, state, currentUser, this.inpUserID, this.inpPassword, this.session);
-    	}
-    }
-    
-    public void invokeSessImplImpl{*lbl;session←}(label{*lbl;session←} lbl ,
-            Request[servP]{*lbl;session←} req,
-            UServlet[servP]{*lbl;session←} servlet,
-            USessState[servP, {*lbl;session←}]{*lbl;session←} state,
-            User[servP]{*lbl;session←} currentUser,
-            Input[servP]{*lbl;session←} inpUserID,
-            Input[servP]{*lbl;session←} inpPassword,
-            principal{*lbl;session←} session) 
-   throws (ServletException{*lbl;session←})
-        where session equiv req.session, 
-              session equiv state.sessionPrincipal,
-              session actsfor currentUser,
-              session equiv this.session,
-              inpUserID.inputLbl <= this.inpUserID.inputLbl,
-              this.inpUserID.inputLbl <= inpUserID.inputLbl,
-              this.inpPassword.inputLbl <= inpPassword.inputLbl,
-              inpPassword.inputLbl <= this.inpPassword.inputLbl,              
-              lbl <= {*→req.session},
-              T <= lbl,
-              caller(session)
-    {
-    	// when this action is invoked, just produce the login page.
-    	final label sessLbl = new label {session→;session←};
-    	if (lbl <= sessLbl && inpPassword != null && inpUserID != null 
-    			&& inpUserID.inputLbl <= sessLbl && inpPassword.inputLbl equiv sessLbl 
-    			&& new label {*lbl; session←} <= inpUserID.inputLbl) {
-    		producePage(new label {*lbl;session←}, req, servlet, state, null, null);
-    	}
-    	else {
-    		String lblString = null;
-    		try {
-    			lblString = LabelUtil.singleton().toString(lbl);
-    		}
-    		catch (NullPointerException imposs) { }
-    		throw new ServletException("LoginAction.producePage: lbl too high: " + lblString);
-    	}
+
+        // when this action is invoked, just produce the login page.
+        final label sessLbl = new label {session:;session!:};
+        if (lbl <= sessLbl && inpPassword != null && inpUserID != null 
+                && inpUserID.inputLbl <= sessLbl && inpPassword.inputLbl equiv sessLbl 
+                && new label {*lbl; session!:} <= inpUserID.inputLbl) {
+            producePage(new label {*lbl;session!:}, req, servlet, state, null, null);
+        }
+        else {
+            String lblString = null;
+            try {
+                lblString = LabelUtil.singleton().toString(lbl);
+            }
+            catch (NullPointerException imposs) { }
+            throw new ServletException("LoginAction.producePage: lbl too high: " + lblString);
+        }
     }
     
     protected void producePage{*lbl}(label{*lbl} lbl,
@@ -85,14 +61,13 @@ public class LoginAction[principal servP, covariant label T] extends USessAction
                                            String{*lbl} passwdError) 
              where session equiv req.session, 
                    session equiv state.sessionPrincipal,
-                   lbl <= {*→req.session},
-                   {session←} <= lbl,
-                   {*this.inpUserID.inputLbl} <= {session→;session←},
-                   {*this.inpPassword.inputLbl} <= {session→;session←},
+                   lbl <= {*:req.session},
+                   {session!:} <= lbl,
+                   {*this.inpUserID.inputLbl} <= {session:;session!:},
+                   {*this.inpPassword.inputLbl} <= {session:;session!:},
                    lbl <= {*this.inpUserID.inputLbl},
-                   {session→;session←} <= {*this.inpPassword.inputLbl},
-                   caller(session),
-                   T <= lbl
+                   {session:;session!:} <= {*this.inpPassword.inputLbl},
+                   caller(session)
     {
         Node[lbl, lbl] userIDText = desc(lbl, "User ID:");
         Node[lbl, lbl] passwordText = desc(lbl, "Password:");
@@ -109,7 +84,7 @@ public class LoginAction[principal servP, covariant label T] extends USessAction
                 inpNode(lbl, new PasswordInput[servP, lbl, lbl](inpPassword, 40, ""), passwdError))));
         entries = entries == null?null:entries.append(lbl, lbl, new TRow[lbl, lbl](lbl, lbl,
                 new TCell[lbl, lbl](lbl, lbl, new SubmitButton[servP, lbl, lbl](servlet, lbl, "Login"))));
-        Node[lbl, lbl] form = servlet.createForm(lbl, lbl, new SubmitLoginAction[servP, lbl](servlet, session, this),
+        Node[lbl, lbl] form = servlet.createForm(lbl, lbl, new SubmitLoginAction[servP](servlet, session, this),
                                                                 lbl, lbl, 
                                                                 new Table[lbl, lbl](lbl, lbl, entries)); 
         Node[lbl, lbl] content = new NodeList[lbl, lbl](lbl, lbl, banner, createBody(lbl, lbl, new NodeList[lbl, lbl](lbl, lbl, welcomeText, form)));
@@ -134,63 +109,55 @@ public class LoginAction[principal servP, covariant label T] extends USessAction
     }
 }
 
-class SubmitLoginAction[principal servP, covariant label T] extends USessAction[servP, T] {
-    private final LoginAction[servP, T]{T} loginAct;
-    public SubmitLoginAction(UServlet[servP]{T} s, principal{T} session, LoginAction[servP, T]{T} loginAct) {
+class SubmitLoginAction[principal servP] extends USessAction[servP] {
+    private final LoginAction[servP]{this} loginAct;
+    public SubmitLoginAction(UServlet[servP]{this} s, principal{this} session, LoginAction[servP]{this} loginAct) {
         this.loginAct = loginAct;
         super(s, session);
     }
 
-    protected boolean ensureLoggedIn() { return false; }
+    protected boolean{this} ensureLoggedIn() { return false; }
 
-    public void invokeSessImpl{*lbl;session←}(label{*lbl;session←} lbl,
-            Request[servP]{*lbl;session←} req,
-            UServlet[servP]{*lbl;session←} servlet,
-            USessState[servP, {*lbl;session←}]{*lbl;session←} state,
-            User[servP]{*lbl;session←} currentUser) 
-   throws (ServletException{*lbl;req.session←})
+    public void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
+            Request[servP]{*lbl;session!:} req,
+            UServlet[servP]{*lbl;session!:} servlet,
+            USessState[servP, {*lbl;session!:}]{*lbl;session!:} state,
+            User[servP, {*lbl;session!:}]{*lbl;session!:} currentUser) 
+   throws (ServletException{*lbl;req.session!:})
         where session equiv req.session, 
               session equiv state.sessionPrincipal,
               session actsfor currentUser,              
-              lbl <= {*→req.session},
+              lbl <= {*:req.session},
               caller(session)
     {
-        if(T equiv lbl) {
-        final LoginAction[servP, lbl]{*lbl} loginAct = this.loginAct; 	
-        final principal{*lbl} session = this.session;
         if (req == null || servlet == null || state == null) 
             throw new ServletException("invalid args");
+        
         if (loginAct == null) throw new ServletException("loginAct is null!");
         
-        	if (session equiv loginAct.session && lbl <= new label{session→}) {
-        		this.submit(lbl, req, servlet, state, session, loginAct);
-        	}
-        	else {
-        		String lblString = null;
-        		try {
-        			lblString = LabelUtil.singleton().toString(lbl);
-        		}
-        		catch (NullPointerException imposs) { }
-        		throw new ServletException("SubmitLoginAction.invokeSessImpl: lbl is too high: " + lblString);
-        	}
+        if (session equiv loginAct.session && lbl <= new label{session:}) {
+                this.submit(lbl, req, servlet, state);
+        }
+        else {
+            String lblString = null;
+            try {
+                lblString = LabelUtil.singleton().toString(lbl);
+            }
+            catch (NullPointerException imposs) { }
+            throw new ServletException("SubmitLoginAction.invokeSessImpl: lbl is too high: " + lblString);
         }
     }
-    
-    protected void submit{*lbl;session←}(label{*lbl;session←} lbl,
-                                Request[servP]{*lbl;session←} req,
-                                UServlet[servP]{*lbl;session←} servlet,
-                                USessState[servP, {*lbl;session←}]{*lbl;session←} state,
-                                principal{*lbl;session←} session,
-                                LoginAction[servP, {*lbl;session←}]{*lbl;session←} loginAct) 
-        throws (ServletException{*lbl;session←})
+    protected void submit{*lbl;session!:}(label{*lbl;session!:} lbl,
+                                Request[servP]{*lbl;session!:} req,
+                                UServlet[servP]{*lbl;session!:} servlet,
+                                USessState[servP, {*lbl;session!:}]{*lbl;session!:} state) 
+        throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
               session equiv state.sessionPrincipal,
               session equiv loginAct.session,
-              session equiv this.session,
-              lbl <= {*→req.session},
+              lbl <= {*:req.session},
               caller(session)
     {
-    	if(T <= lbl) {
  
         if (req == null || servlet == null || state == null || !(session instanceof SessionPrincipal)) 
             return;
@@ -198,18 +165,17 @@ class SubmitLoginAction[principal servP, covariant label T] extends USessAction[
         if (loginAct == null || loginAct.successAction == null || 
                 loginAct.inpUserID == null || loginAct.inpPassword == null) return;
 
-        if(T equiv lbl) {
         ServletException ex = null;
         // user has submitted username and password.
         // extract data from request
         if (loginAct.inpUserID == null || loginAct.inpPassword == null) {
             return;        
         }
-        final label sessLbl = new label{session→;session←};
+        final label sessLbl = new label{session:;session!:};
         if (loginAct.inpUserID.inputLbl <= sessLbl && 
                 loginAct.inpPassword.inputLbl <= sessLbl &&
-                new label {*lbl; session←} <= loginAct.inpUserID.inputLbl &&
-                lbl <= new label {session→;session←} &&
+                new label {*lbl; session!:} <= loginAct.inpUserID.inputLbl &&
+                lbl <= new label {session:;session!:} &&
                 sessLbl <= loginAct.inpPassword.inputLbl) {
             String userID = req.getParam(loginAct.inpUserID);
             String password = req.getParam(loginAct.inpPassword);
@@ -218,7 +184,7 @@ class SubmitLoginAction[principal servP, covariant label T] extends USessAction[
             String uidErr = null;
             String passwordErr = null;
             
-            final User[servP] loginUser = servlet.lookupUserID(userID, req.session);
+            final User loginUser = servlet.lookupUserID(userID, req.session);
             
             if (userID == null || userID.length() == 0) {
                 // invalid user ID
@@ -239,10 +205,10 @@ class SubmitLoginAction[principal servP, covariant label T] extends USessAction[
                 // there were errors, send the user back to the login page.
                 // DOWNGRADE REASON: The PC depends here on confidential info (i.e., the password). 
                 // We're prepared to declassify that the logon failed.
-                declassify ({*lbl;session←}) { // declassify the fact that the uid/password was wrong.
-                    loginAct.producePage(new label {*lbl;session←}, req, servlet, state, 
-                                         declassify(uidErr, {*lbl;session←}), 
-                                         declassify(passwordErr, {*lbl;session←}));
+                declassify ({*lbl;session!:}) { // declassify the fact that the uid/password was wrong.
+                    loginAct.producePage(new label {*lbl;session!:}, req, servlet, state, 
+                                         declassify(uidErr, {*lbl;session!:}), 
+                                         declassify(passwordErr, {*lbl;session!:}));
                 }
             }
             else {
@@ -252,12 +218,13 @@ class SubmitLoginAction[principal servP, covariant label T] extends USessAction[
                 // DOWNGRADE REASON: The current user is publically readable info. Here, we
                 // depend on confidential information, i.e. the password. But we're happy to declassify
                 // the fact that the user has logged on successfully.
-                declassify({session→;session←} to {session←}) {                     
-                    User[servP] logU = declassify(endorse(loginUser, {session→;session←}), {session←});
-                    declassify(state,{session←}).currentUser(logU);
+                declassify({session:;session!:} to {session!:}) {                     
+                    User[servP, {session:;session!:}] logU_ = declassify(endorse(loginUser, {session:;session!:}), {session!:});
+                    User[servP, {session!:}] logU = User.declassifyUser(session, logU_);
+                    declassify(state,{session!:}).currentUser(logU);
                     
-                    final label newLbl = new label {*lbl; req.session←};
-                    final LoginAction[servP, newLbl] loginActPrime = loginAct;
+                    final label newLbl = new label {*lbl; req.session!:};
+                    final LoginAction[servP] loginAct = this.loginAct;
                     if (loginAct != null && loginAct.successAction != null) {
                         try {
                             loginAct.successAction.invokeImpl(newLbl, req, servlet, state);
@@ -270,24 +237,23 @@ class SubmitLoginAction[principal servP, covariant label T] extends USessAction[
             }
         }
         if (ex != null) throw ex;
-        }
-    	}
     }        
     
-    private String{session→;session←} runClosure{session→;session←}(User[servP]{session→;session←} loginUser, 
-                                                  SessionPrincipal{session→;session←} sp, 
-                                                  String{session→;session←} password) 
+    private String{session:;session!:} runClosure{session:;session!:}(User[servP, {session:;session!:}]{session:;session!:} loginUser, 
+                                                  SessionPrincipal{session:;session!:} sp, 
+                                                  String{session:;session!:} password) 
      where caller(session) {
         // DOWNGRADE REASON: Has effects at level {loginUser:}, which we need to hide away, since
         // session does not yet act for loginUser.
-        declassify ({session←}) { 
-            final User[servP] logUser = declassify(loginUser, {session←});
-            LoginClosure[servP, logUser] lc = new LoginClosure[servP, logUser](declassify(sp, {session←})); 
-            Capability[logUser, {logUser→}] cap = 
+        declassify ({session!:}) { 
+            final User[servP, {session:;session!:}] logUser_ = declassify(loginUser, {session!:});
+            final User[servP, {session!:}] logUser = User.declassifyUser(session, logUser_);
+            LoginClosure[servP, logUser] lc = new LoginClosure[servP, logUser](declassify(sp, {session!:})); 
+            Capability[logUser, {logUser:}] cap = 
                 PrincipalUtil.authorize(logUser, 
-                                        declassify(password, {session←}),
+                                        declassify(password, {session!:}),
                                         lc,
-                                        new label {logUser→});
+                                        new label {logUser:});
             if (cap == null) {                                                
                 return "Unknown or incorrect username and password.";
             }
