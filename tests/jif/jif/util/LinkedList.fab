@@ -252,7 +252,7 @@ public class LinkedList[label L] extends AbstractList[L]
 
 }
 
-class LinkedListEntry[label L] {
+class LinkedListEntry[label L] extends java.lang.Object {
     LinkedListEntry() {}
     LinkedListEntry[L]{L} next;
     LinkedListEntry[L]{L} prev;

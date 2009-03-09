@@ -5,7 +5,7 @@ package jif.util;
  *
  * @see jif.util.Collection
  */
-public interface List[label L] extends Collection[L] {
+nonfabric public interface List[label L] extends Collection[L] {
     JifObject[L]{L;index} get(int index):{L;index}
 	throws (IndexOutOfBoundsException{L;index});
     JifObject[L]{L} set{L}(int{L} index, JifObject[L]{L} element):{L}
