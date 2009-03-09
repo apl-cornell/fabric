@@ -251,7 +251,6 @@ public final class Client {
       throw new NullPointerException();
     }
 
-    System.out.println("Trying to obtain certificate for " + name);
     RemoteCore result = cores.get(name);
     if (result == null) {
       try {
