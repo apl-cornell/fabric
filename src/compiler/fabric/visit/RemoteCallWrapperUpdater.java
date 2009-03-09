@@ -108,7 +108,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
                                   ts.writerPolicy(Position.compilerGenerated(), 
                                                   ts.topPrincipal(Position.compilerGenerated()), 
                                                   clientPrincipal));
-        Label right = ts.pairLabel(Position.compilerGenerated(), 
+        Label right = ts.pairLabel(Position.compilerGenerated(md.name()), 
                                    ts.readerPolicy(Position.compilerGenerated(), 
                                                    ts.topPrincipal(Position.compilerGenerated()), 
                                                    clientPrincipal), 
