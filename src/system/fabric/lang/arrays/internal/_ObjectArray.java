@@ -3,8 +3,7 @@ package fabric.lang.arrays.internal;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import fabric.client.Core;
 import fabric.client.transaction.TransactionManager;
@@ -76,6 +75,10 @@ public interface _ObjectArray<T extends Object> extends Object {
             $readRef(proxyType, refTypes.next(), in, core, intracoreRefs);
       }
     }
+    
+    private static final Map<Class<?>, Class<? extends fabric.lang.Object.$Proxy>> proxyCache =
+        Collections
+            .synchronizedMap(new HashMap<Class<?>, Class<? extends fabric.lang.Object.$Proxy>>());
 
     /**
      * Given a Fabric class, returns the corresponding $Proxy class. If the
@@ -87,13 +90,23 @@ public interface _ObjectArray<T extends Object> extends Object {
      */
     @SuppressWarnings("unchecked")
     private Class<? extends fabric.lang.Object.$Proxy> getProxy(Class<?> c) {
-      if (c.getSimpleName().equals("$Proxy"))
-        return (Class<? extends fabric.lang.Object.$Proxy>) c;
+      Class<? extends fabric.lang.Object.$Proxy> result =
+        proxyCache.get(c);
+      if (result != null) return result;
+      
+      if (c.getSimpleName().equals("$Proxy")) {
+        result = (Class<? extends fabric.lang.Object.$Proxy>) c;
+        proxyCache.put(c, result);
+        return result;
+      }
 
       Class<?>[] classes = c.getClasses();
       for (Class<?> c_ : classes) {
-        if (c_.getSimpleName().equals("$Proxy"))
-          return (Class<? extends fabric.lang.Object.$Proxy>) c_;
+        if (c_.getSimpleName().equals("$Proxy")) {
+          result = (Class<? extends fabric.lang.Object.$Proxy>) c_;
+          proxyCache.put(c, result);
+          return result;
+        }
       }
 
       throw new InternalError("Error finding $Proxy class in " + c);
