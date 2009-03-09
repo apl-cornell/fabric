@@ -32,8 +32,6 @@ public abstract class Traversal {
       Core   core = Client.getClient().getCore(addr.getHost());
       Benchmark b = (Benchmark) ((Map) core.getRoot()).get(addr.getPath());
 
-      System.out.println("Initialization stats:");
-      Timing.printStats();
       Timing.reset();
      
       System.out.println();

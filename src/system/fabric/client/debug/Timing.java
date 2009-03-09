@@ -69,15 +69,17 @@ public enum Timing {
     attribute();
     
     long total = 0;
+    int  count = 0;
     for (Timing t : Timing.values()) {
       total += t.time;
+      count += t.count;
     }
-    out.println("Category  Time (ms)   Stdev   Percent of total\n");
     for (Timing t : Timing.values()) {
-      out.format("%6s:  %6d ms   +/-%4d        %2d%%\n",
-                        t.name(), t.time, (int) Math.sqrt(t.count), t.time * 100 / total);
+      if (t.enabled)
+        out.format("%6s:  %6d ms\n",
+                   t.name().toLowerCase(), t.time);
     }
-    out.format("\n Total: %7d ms\n", total);
+    out.format(" Total: %7d ms (%-8d measurements)\n", total, count);
   }
   
   /** Reset all of the statistics, and begin timing in cat */
@@ -90,34 +92,21 @@ public enum Timing {
     
     scope = new ArrayDeque<Timing>();
     scope.push(APP);
+    APP.count = 1;
     stamp = System.currentTimeMillis();
   }
   
   // unit test ///////////////////////////////////////////////////////////////
   
   public static void main(String[] args) throws InterruptedException {
-    Object o = new Object();
-    synchronized(o) {
-      o.wait(100);
-
-      Timing.COMMIT.begin();
-      o.wait(50);
-
-      Timing.CORE.begin();
-      o.wait(150);
-
-      Timing.CORE.end();
-      o.wait(35);
-
-      Timing.SUBTX.begin();
-      o.wait(90);
-
-      Timing.SUBTX.end();
-      o.wait(120);
-
-      Timing.COMMIT.end();
-      
-      Timing.printStats();
+    long begin = System.currentTimeMillis();
+    int  n = 500000;
+    APP.enabled = true;
+    for (int i = 0; i < n; i++) {
+      APP.begin();
+      APP.end();
     }
+    long end = System.currentTimeMillis();
+    System.out.println(((double) end - begin) / 2 / n);
   }
 }

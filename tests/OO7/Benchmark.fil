@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Benchmark.fil,v 1.4 2009-03-07 08:10:11 mdgeorge Exp $
+// $Id: Benchmark.fil,v 1.5 2009-03-09 01:20:43 mdgeorge Exp $
 
 package OO7;
 
@@ -17,6 +17,8 @@ import fabric.util.HashMap;
 
 import fabric.client.Core;
 import fabric.client.Client;
+
+import fabric.client.debug.Timing;
 
 public class Benchmark {
   // database parameters
@@ -155,7 +157,7 @@ public class Benchmark {
       atomic {
         compositeParts[i] = createCompositePart();
         if (i % 20 == 0)
-          System.out.println("Composite part " + i + " created");
+          System.err.println("Composite part " + i + " created");
       }
 
     atomic {
@@ -239,8 +241,8 @@ public class Benchmark {
     }
 
     try {
-      long start = System.currentTimeMillis();
-
+      Timing.reset();
+      
       URI  path = new URI(args[0]);
       Core core = fabric.client.Client.getClient().getCore(path.getHost());
       Map  root = (Map) core.getRoot();
@@ -303,9 +305,7 @@ public class Benchmark {
         root.put(path.getPath(), b);
       }
 
-      System.out.println("elapsed time: " + (System.currentTimeMillis() - start)
-          + "msec");
-
+      Timing.printStats();
     } catch (Exception e) {
       System.out.println(e);
       e.printStackTrace();

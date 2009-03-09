@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+
+#
+# Usage:   runOO7 <core> <client> <size>
+# Example: runOO7  core0  client0  small
+#
+# - creates a principal
+# - creates a OO7 database
+# - runs T1, T2, and T6 against it, hot and cold
+# - computes and reports timing information
+
+from subprocess import Popen, PIPE
+import sys
+import re
+
+def main():
+	global categories, core, client, size, overhead
+
+	core   = sys.argv[1]
+	client = sys.argv[2]
+	size   = sys.argv[3]
+
+	print "===== Finding categories ======"
+	result     = sh( "bin/fab --time", PIPE )
+	categories = result.split("\n")[1].split(", ")
+	categories.remove("all")
+	print categories
+
+	print "===== Computing timing overhead ====="
+	result     = sh( "bin/calibrate" )
+	overhead   = float(result)
+	print overhead, " ms"
+
+	print "===== Creating principal ====="
+	result = sh( "bin/fab --name %s --make-principal %s" % (client, core) )
+	print result
+
+	print "===== Creating database  ====="
+	result = sh( "bin/fab --name %s --time all OO7.Benchmark     fab://%s/OO7 %s 3" % (client, core, size) )
+
+
+	for traversal in ["T1", "T2a", "T6"]:
+		print "===== Executing %3s ===========" % traversal
+		runTraversal(traversal)
+
+	print "===== Raw Data ================"
+	for test in resultnames:
+		print test
+		for cat in categories:
+			catTime, totalTime, count = results[test][cat]
+			appTime                   = results[test]["app"][0]
+
+			alpha, catNoTiming = computeCatTime(totalTime, catTime, count, appTime)
+			print "    %6s: %6d / %6d with %8d measurements ==> %5d (%5.4f)" % (cat, catTime, totalTime, count, catNoTiming, alpha)
+
+	print "===== Report =================="
+	out =    "%15s & Total time (ms)" % ''
+	for cat in categories:
+		out += " & \multicolumn{2}{c}{%6s}" % cat
+
+	alphas = []
+	for test in resultnames:
+		cats = results[test]
+		totalNoTiming = cats["app"][1]
+		out += "\n%-15s & %15s" % (test, totalNoTiming)
+		line = ""
+		appNoTiming = totalNoTiming
+		for cat in categories:
+			if cat != "app":
+				cat, total, count = cats[cat]
+				alpha, catNoTiming = computeCatTime(total, cat, count, totalNoTiming)
+				alphas.append(alpha)
+				appNoTiming -= catNoTiming
+
+				line += " & %8d           & %3d\\%%" % (catNoTiming, catNoTiming * 100 / totalNoTiming)
+
+		out += " & %8d           & %3d\\%%" % (appNoTiming, appNoTiming * 100 / totalNoTiming)
+		out += line
+
+	print out
+
+	
+			
+
+		
+
+catExpr = re.compile(r" *(?P<cat>.+):\s*(?P<time>\d+) ms\Z")
+totExpr = re.compile(r" Total: +(?P<time>\d+) ms \((?P<count>\d+) +measurements\)\Z")
+
+def runTraversal(traversal):
+	global categories, size
+
+	coldname = traversal + " " + size + " cold"
+	hotname  = traversal + " " + size + " hot "
+	resultnames.append(coldname)
+	resultnames.append(hotname)
+
+	for cat in categories:
+		result = sh( "bin/fab --name %s --time %s  OO7.traversals.%s fab://%s/OO7 --hot" % (client, cat, traversal, core) )
+		lines  = result.split("\n")
+
+		match  = catExpr.match(lines[2])
+		ccat   = match.group("cat")
+		ctime  = match.group("time")
+
+		match  = totExpr.match(lines[3])
+		ctotal = match.group("time")
+		ccount = match.group("count")
+
+		match  = catExpr.match(lines[7])
+		hcat   = match.group("cat")
+		htime  = match.group("time")
+
+		match  = totExpr.match(lines[8])
+		htotal = match.group("time")
+		hcount = match.group("count")
+
+		assert cat == ccat == hcat
+
+		register(coldname, cat, int(ctime), int(ctotal), int(ccount))
+		register(hotname,  cat, int(htime), int(htotal), int(hcount))
+
+
+results = {}
+resultnames=[]
+def register(name, cat, catTime, totalTime, count):
+	if not results.has_key(name):
+		results[name] = {}
+	results[name][cat] = (catTime, totalTime, count)
+
+def computeCatTime(totalWithTiming, catWithTiming, count, totalWithoutTiming):
+	global overhead
+	alpha = (totalWithTiming - count * overhead) / totalWithoutTiming - 1
+	catWithoutTiming = (catWithTiming - count * overhead / 2) / (1 + alpha)
+
+	return alpha, catWithoutTiming
+
+def sh(cmd, stderr = None):
+	print ">> ", cmd
+	return Popen(cmd, stdout=PIPE, stderr=stderr, shell=True).communicate()[0]
+
+if __name__ == '__main__':
+	main()
+

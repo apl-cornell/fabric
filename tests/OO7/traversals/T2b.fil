@@ -18,7 +18,7 @@ public class T2b extends PrivatePartTraversal {
 
   public static void main(String[] args) {
     Core local = Client.getClient().getLocalCore();
-    new T2b@local().mainImpl(args);
+    atomic {new T2b@local().mainImpl(args); }
   }
 
   public void visitAtomicPart (AtomicPart current) {

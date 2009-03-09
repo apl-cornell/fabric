@@ -110,8 +110,10 @@ public class Options extends fabric.common.Options {
     }
     
     if (args[i].equals("--time")) {
-      if (i + 1 >= args.length)
-        throw new UsageError(timeUsage());
+      if (i + 1 >= args.length) {
+        System.out.println(timeUsage());
+        throw new UsageError("Invalid timing category");
+      }
       
       for (Timing t : Timing.values()) {
         if (t.name().equalsIgnoreCase(args[i + 1])) {
@@ -119,13 +121,14 @@ public class Options extends fabric.common.Options {
           return i + 2;
         }
       }
-      if (args[i].equals("all")) {
+      if (args[i + 1].equalsIgnoreCase("all")) {
         for (Timing t : Timing.values())
           t.enabled = true;
         return i + 2;
       }
       
-      throw new UsageError(timeUsage());
+      System.out.println(timeUsage());
+      throw new UsageError("Invalid timing category");
     }
 
     this.app = new String[args.length - i];
