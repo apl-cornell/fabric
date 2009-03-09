@@ -303,84 +303,87 @@ while (i.hasNext())
    */
   public Iterator iterator(fabric.client.Core core)
   {
-	final int initSize = size();
-	final int initModCount = modCount;
     // Bah, Sun's implementation forbids using listIterator(0).
-    return new Iterator@core()
-    {
-      private int pos = 0;
-      private int size = initSize;
-      private int last = -1;
-      private int knownMod = initModCount;
+    return new AnonymousIterator@core();
+  }
+  
+  private class AnonymousIterator implements Iterator {
+    
+    
+    final int initSize;
+    final int initModCount;
+    private int pos;
+    private int size;
+    private int last;
+    private int knownMod;
+    
+    AnonymousIterator() {
+      this.initSize = size();
+      this.initModCount = modCount;
+      this.pos = 0;
+      this.size = initSize;
+      this.last = -1;
+      this.knownMod = initModCount;
+    }
 
-      // This will get inlined, since it is private.
-      /**
-       * Checks for modifications made to the list from
-       * elsewhere while iteration is in progress.
-       *
-       * @throws ConcurrentModificationException if the
-       *         list has been modified elsewhere.
-       */
-      private void checkMod()
-      {
-        if (knownMod != modCount)
-          throw new ConcurrentModificationException();
-      }
+    // This will get inlined, since it is private.
+    /**
+     * Checks for modifications made to the list from elsewhere while iteration
+     * is in progress.
+     * 
+     * @throws ConcurrentModificationException
+     *           if the list has been modified elsewhere.
+     */
+    private void checkMod() {
+      if (knownMod != modCount) throw new ConcurrentModificationException();
+    }
 
-      /**
-       * Tests to see if there are any more objects to
-       * return.
-       *
-       * @return True if the end of the list has not yet been
-       *         reached.
-       */
-      public boolean hasNext()
-      {
-        return pos < size;
-      }
+    /**
+     * Tests to see if there are any more objects to return.
+     * 
+     * @return True if the end of the list has not yet been reached.
+     */
+    public boolean hasNext() {
+      return pos < size;
+    }
 
-      /**
-       * Retrieves the next object from the list.
-       *
-       * @return The next object.
-       * @throws NoSuchElementException if there are
-       *         no more objects to retrieve.
-       * @throws ConcurrentModificationException if the
-       *         list has been modified elsewhere.
-       */
-      public Object next()
-      {
-        checkMod();
-        if (pos == size)
-          throw new NoSuchElementException();
-        last = pos;
-        return get(pos++);
-      }
+    /**
+     * Retrieves the next object from the list.
+     * 
+     * @return The next object.
+     * @throws NoSuchElementException
+     *           if there are no more objects to retrieve.
+     * @throws ConcurrentModificationException
+     *           if the list has been modified elsewhere.
+     */
+    public Object next() {
+      checkMod();
+      if (pos == size) throw new NoSuchElementException();
+      last = pos;
+      return get(pos++);
+    }
 
-      /**
-       * Removes the last object retrieved by <code>next()</code>
-       * from the list, if the list supports object removal.
-       *
-       * @throws ConcurrentModificationException if the list
-       *         has been modified elsewhere.
-       * @throws IllegalStateException if the iterator is positioned
-       *         before the start of the list or the last object has already
-       *         been removed.
-       * @throws UnsupportedOperationException if the list does
-       *         not support removing elements.
-       */
-      public void remove()
-      {
-        checkMod();
-        if (last < 0)
-          throw new IllegalStateException();
-        AbstractList.this.remove(last);
-        pos--;
-        size--;
-        last = -1;
-        knownMod = modCount;
-      }
-    };
+    /**
+     * Removes the last object retrieved by <code>next()</code> from the list,
+     * if the list supports object removal.
+     * 
+     * @throws ConcurrentModificationException
+     *           if the list has been modified elsewhere.
+     * @throws IllegalStateException
+     *           if the iterator is positioned before the start of the list or
+     *           the last object has already been removed.
+     * @throws UnsupportedOperationException
+     *           if the list does not support removing elements.
+     */
+    public void remove() {
+      checkMod();
+      if (last < 0) throw new IllegalStateException();
+      AbstractList.this.remove(last);
+      pos--;
+      size--;
+      last = -1;
+      knownMod = modCount;
+    }
   }
 
   /**
