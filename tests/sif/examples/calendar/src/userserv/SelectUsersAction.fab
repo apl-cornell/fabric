@@ -360,7 +360,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
               caller(session),
               authority(servP)
       {
-          List[{servP:;servP!:}] validatedUsers = new ArrayList[new label {servP:;servP!:}]();
+          List[{servP:;servP!:}] validatedUsers = new LinkedList[new label {servP:;servP!:}]();
           
           if (req == null || servlet == null || state == null) 
               throw new ServletException("invalid args");
@@ -503,7 +503,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
        */
       private String{*lbl}[]{*lbl} splitInput{*lbl}(label{*lbl} lbl, String{*lbl} input) {
           if (input == null) return null;
-          ArrayList[lbl] l = new ArrayList[lbl]();
+          LinkedList[lbl] l = new LinkedList[lbl]();
           String s = "";
           for (int i = 0; i < input.length(); i++) {
               try {

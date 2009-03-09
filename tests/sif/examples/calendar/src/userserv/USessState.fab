@@ -4,13 +4,26 @@ import sif.servlet.SessionState;
 import jif.util.*;
 
 public class USessState[principal servP, covariant label T] extends SessionState[T] {
-    private User[servP,{sessionPrincipal!:}]{sessionPrincipal!:} currentUser = null;
+    private UserWrapper[servP,{sessionPrincipal!:}]{⊥→⊥;⊤←⊤} uwrapper;
     
-    public User[servP,{sessionPrincipal!:}]{sessionPrincipal!:} currentUser() { 
-        return currentUser;
+    public User[servP,{sessionPrincipal!:}]{sessionPrincipal!:} currentUser() {
+    	if(uwrapper == null) return null;
+        return uwrapper.currentUser;
     }
     
     void currentUser{sessionPrincipal!:}(User[servP,{sessionPrincipal!:}]{sessionPrincipal!:} cu) { 
+    	if(uwrapper == null) {
+    		uwrapper = new UserWrapper[servP,{sessionPrincipal!:}]();
+    	}
+		uwrapper.currentUser(cu); 
+    }
+}
+
+class UserWrapper[principal servP, label L] {
+
+	User[servP,{L}]{L} currentUser = null;
+    void currentUser{L}(User[servP,{L}]{L} cu) { 
         currentUser = cu; 
     }
+	
 }

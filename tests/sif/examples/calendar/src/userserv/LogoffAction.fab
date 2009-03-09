@@ -31,7 +31,7 @@ public class LogoffAction[principal servP] extends UAction[servP] {
             throw new ServletException("invalid args");
         
         
-        final User[servP,{req.session!:}]{req.session!:} currentUser = state.currentUser();
+        final User[servP,{req.session!:}]{req.session!:;*lbl} currentUser = state.currentUser();
         if (currentUser != null && 
                 req.session actsfor currentUser && 
                 lbl <= new label {currentUser:;currentUser!:}) {

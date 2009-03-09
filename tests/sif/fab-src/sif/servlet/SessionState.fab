@@ -8,25 +8,26 @@ import fabric.lang.Principal;
 public class SessionState[covariant label T] {
 
     protected SessionState{T}(String{T} sessionId) {
-        this.sessionPrincipal = new SessionPrincipal[T](this);
-        this.sessionId        = sessionId;
+    	this.remote = new SSW(new SessionPrincipal[T](this), sessionId);
     }
     
     protected SessionState{T}() {
-        this.sessionPrincipal = new SessionPrincipal[T](this);
-        this.sessionId        = "<uninitialized>";
+    	this.remote = new SSW(new SessionPrincipal[T](this), "<uninitialized>");
     }
     
+    public SSW[T]{⊥→⊥;⊤←⊤} remote;
 
-    public final Principal{T} sessionPrincipal;
-    private final String{T}    sessionId;
 
-    public final String{T} getSessionId() {
-        return this.sessionId;
+    public final String{T;this} getSessionId() {
+    	try {
+    		return remote.sessionId;
+    	} catch(NullPointerException e) {return null;} 
     }
 
-    public final Principal{T} sessionPrincipal() {
-        return this.sessionPrincipal;
+    public final Principal{T;this} sessionPrincipal() {
+    	try {
+    		return remote.sessionPrincipal;
+    	} catch(NullPointerException e) {return null;}
     }
     
     /** convenience method for non-fabric code */
@@ -35,5 +36,15 @@ public class SessionState[covariant label T] {
     		return new SessionState[lbl](id);
     	}
     }
+}
+
+class SSW[covariant label T] {
+    public final Principal{T} sessionPrincipal;
+    final String{T}    sessionId;
+    SSW(Principal{T} sessionPrincipal, String{T} sessionID) {
+    	this.sessionPrincipal = sessionPrincipal;
+    	this.sessionId = sessionId;
+    }
+	
 }
 

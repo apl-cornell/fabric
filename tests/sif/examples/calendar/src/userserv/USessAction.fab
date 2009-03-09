@@ -26,11 +26,11 @@ abstract public class USessAction[principal servP] extends UAction[servP] {
                 req.session equiv state.sessionPrincipal
     {
         if (req == null || servlet == null || 
-                state == null || !(session instanceof SessionPrincipal)) 
+                state == null || !(session instanceof SessionPrincipal[lbl])) 
             throw new ServletException("invalid args");
 
         if (req.session equiv this.session) {
-            final User[servP] currentUser = state.currentUser(); 
+            final User[servP, {req.session←}] currentUser = state.currentUser(); 
             if (req.session actsfor currentUser) {
                 this.invokeSessImpl(lbl, req, servlet, state, currentUser);
             }
@@ -44,7 +44,7 @@ abstract public class USessAction[principal servP] extends UAction[servP] {
                         Request[servP]{*lbl;session!:} req,
                         UServlet[servP]{*lbl;session!:} servlet,
                         USessState[servP, {*lbl;session!:}]{*lbl;session!:} state,
-                        User[servP]{*lbl;session!:} currentUser) 
+                        User[servP,{*lbl;session!:}]{*lbl;session!:} currentUser) 
                throws (ServletException{*lbl;req.session!:})
         where session equiv req.session, 
               session equiv state.sessionPrincipal,
