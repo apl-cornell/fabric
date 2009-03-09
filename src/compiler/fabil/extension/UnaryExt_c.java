@@ -33,23 +33,29 @@ public class UnaryExt_c extends ExprExt_c {
       }
     }
 
-    Call getterCall = (Call) unary.visitChild(expr, rewriter);
-    if (op.isPrefix()) {
-      // XXX Hacky. Mangle the getter call to obtain a setter call.
+    Expr getter = (Expr)unary.visitChild(expr, rewriter);
+    if (getter instanceof Call) {
+      Call getterCall = (Call)getter;
+      if (op.isPrefix()) {
+        // XXX Hacky. Mangle the getter call to obtain a setter call.
+        String name = getterCall.name();
+        name = "set" + name.substring(3);
+  
+        Call setterCall = getterCall.name(name);
+        Expr arg =
+            rewriter.qq().parseExpr(
+                "%E " + (op == Unary.PRE_DEC ? "-" : "+") + " 1", getterCall);
+        return (Expr) setterCall.arguments(Collections.singletonList(arg));
+      }
+  
+      // XXX Hacky. Mangle the getter call to obtain a post-inc/dec call.
       String name = getterCall.name();
-      name = "set" + name.substring(3);
-
-      Call setterCall = getterCall.name(name);
-      Expr arg =
-          rewriter.qq().parseExpr(
-              "%E " + (op == Unary.PRE_DEC ? "-" : "+") + " 1", getterCall);
-      return (Expr) setterCall.arguments(Collections.singletonList(arg));
+      name = (op == Unary.POST_DEC ? "postDec" : "postInc") + name.substring(3);
+      return getterCall.name(name);
     }
-
-    // XXX Hacky. Mangle the getter call to obtain a post-inc/dec call.
-    String name = getterCall.name();
-    name = (op == Unary.POST_DEC ? "postDec" : "postInc") + name.substring(3);
-    return getterCall.name(name);
+    else {
+      return unary.expr(getter);
+    }
   }
 
   /*
