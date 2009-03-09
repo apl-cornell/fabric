@@ -73,7 +73,7 @@ public final class charArray {
     this.length = length;
 
     // Compute required height (height starts at 1).
-    this.height = length == 0 ? 1 : getCounter(length - 1) + 1;
+    this.height = getHeight(length);
 
     switch (height) {
     case 1:
@@ -91,14 +91,22 @@ public final class charArray {
     return length;
   }
 
-  private int getCounter(int i) {
-    int counter = 0;
-    while (i > 0) {
-      i = (i >> this.CHUNK_SIZE_LOG2);
-      counter++;
+  /**
+   * Ceiling(log_{CHUNK_SIZE}(length)).  (Except returns 1 if length <= 1.)
+   * This basically returns the height of the tree for a given array length.
+   */
+  private int getHeight(int length) {
+    if (length <= 1) return 1;
+    
+    int result = 0;
+    
+    // Start with tmp == 1 and shift left until tmp >= length.
+    int tmp = 1;
+    while (tmp < length) {
+      tmp <<= this.CHUNK_SIZE_LOG2;
+      result++;
     }
-    counter--;
-    return counter;
+    return result;
   }
 
   private void setZeroLength() {
@@ -111,8 +119,7 @@ public final class charArray {
     if (newSize < 0) throw new NegativeArraySizeException();
     if (newSize == 0) setZeroLength();
     
-    int counter = getCounter(newSize - 1);
-    int newHeight = counter + 1;
+    int newHeight = getHeight(newSize);
     int oldHeight = this.height;
     int difference = newHeight - oldHeight;
     this.height = newHeight;
@@ -149,6 +156,7 @@ public final class charArray {
         _ObjectArray curNode = (_ObjectArray) root;
         int curIndex = newSize - 1;
         int curHeight = newHeight;
+        int counter = newHeight - 1;
         int firstDigit;
         while (curHeight > 1 && curNode != null) {
           firstDigit = (curIndex >> (counter * this.CHUNK_SIZE_LOG2));

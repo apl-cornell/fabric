@@ -71,8 +71,14 @@ public class FieldAssignExt_c extends ExprExt_c {
       subs.add(target);
     }
     subs.add(rhs);
+    
+    String setterName = "set$" + name;
+    if (target.type().isArray() && name.equals("length")) {
+      // Changing the length of an array.  The setter here is different.
+      setterName = "setLength";
+    }
 
-    return pr.qq().parseExpr(quote + ".set$" + name + "(%E)", subs);
+    return pr.qq().parseExpr(quote + "." + setterName + "(%E)", subs);
   }
 
   /*
