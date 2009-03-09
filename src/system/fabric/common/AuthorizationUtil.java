@@ -1,8 +1,5 @@
 package fabric.common;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import jif.lang.Label;
 import jif.lang.LabelUtil;
 import fabric.client.Client;
@@ -13,42 +10,51 @@ import fabric.lang.NodePrincipal;
 public class AuthorizationUtil {
 
   /**
-   * This is the cache for authorizing reads. The keys in this map are label
-   * onums and principals. The values are booleans that specify whether the
-   * principal is authorized to read according to the label. We're not using the
-   * caches in LabelUtil because the transaction management is too slow (!!).
+   * This is the cache for authorized reads. The keys in this map are label
+   * onums. The values are sets of oids of principals that are authorized to
+   * read according to the label. We're not using the caches in LabelUtil
+   * because the transaction management is too slow (!!).
    */
-  private static final OidKeyHashMap<Map<NodePrincipal, Boolean>> cachedReadAuthorizations =
-      new OidKeyHashMap<Map<NodePrincipal, Boolean>>();
+  private static final OidKeyHashMap<OidKeyHashMap<Void>> cachedReadAuthorizations =
+      new OidKeyHashMap<OidKeyHashMap<Void>>();
 
-  private static Boolean checkAuthorizationCache(
-      OidKeyHashMap<Map<NodePrincipal, Boolean>> cache, NodePrincipal principal,
-      Core core, long labelOnum) {
-    Map<NodePrincipal, Boolean> submap;
+  /**
+   * This is the cache for authorizing writes. The keys in this map are label
+   * onums. The values are principals that are authorized to write according to
+   * the label. We're not using the caches in LabelUtil because the transaction
+   * management is too slow (!!).
+   */
+  private static final OidKeyHashMap<OidKeyHashMap<Void>> cachedWriteAuthorizations =
+      new OidKeyHashMap<OidKeyHashMap<Void>>();
+
+  private static boolean checkAuthorizationCache(
+      OidKeyHashMap<OidKeyHashMap<Void>> cache,
+      NodePrincipal principal, Core core, long labelOnum) {
+    OidKeyHashMap<Void> submap;
     synchronized (cache) {
       submap = cache.get(core, labelOnum);
-      if (submap == null) return null;
+      if (submap == null) return false;
     }
 
     synchronized (submap) {
-      return submap.get(principal);
+      return submap.containsKey(principal);
     }
   }
 
   private static void cacheAuthorization(
-      OidKeyHashMap<Map<NodePrincipal, Boolean>> cache, NodePrincipal principal,
-      Core core, long labelOnum, Boolean result) {
-    Map<NodePrincipal, Boolean> submap;
+      OidKeyHashMap<OidKeyHashMap<Void>> cache, NodePrincipal principal,
+      Core core, long labelOnum) {
+    OidKeyHashMap<Void> submap;
     synchronized (cache) {
       submap = cache.get(core, labelOnum);
       if (submap == null) {
-        submap = new HashMap<NodePrincipal, Boolean>();
+        submap = new OidKeyHashMap<Void>();
         cache.put(core, labelOnum, submap);
       }
     }
 
     synchronized (submap) {
-      submap.put(principal, result);
+      submap.put(principal, null);
     }
   }
 
@@ -63,21 +69,20 @@ public class AuthorizationUtil {
     // here to avoid having to call into the client.
     if (principal == Client.getClient().getPrincipal()) return true;
 
-    Boolean result =
-        checkAuthorizationCache(cachedReadAuthorizations, principal, core,
-            labelOnum);
-    if (result != null) return result;
+    if (checkAuthorizationCache(cachedReadAuthorizations, principal, core,
+        labelOnum)) return true;
 
     // Call into the Jif label framework to perform the label check.
     final Label label = new Label.$Proxy(core, labelOnum);
-    result = Client.runInSubTransaction(new Client.Code<Boolean>() {
+    boolean result = Client.runInSubTransaction(new Client.Code<Boolean>() {
       public Boolean run() {
         return LabelUtil.$Impl.isReadableBy(label, principal);
       }
     });
 
-    cacheAuthorization(cachedReadAuthorizations, principal, core, labelOnum,
-        result);
+    if (result) {
+      cacheAuthorization(cachedReadAuthorizations, principal, core, labelOnum);
+    }
 
     return result;
   }
@@ -93,12 +98,20 @@ public class AuthorizationUtil {
     // here to avoid having to call into the client.
     if (principal == Client.getClient().getPrincipal()) return true;
 
+    if (checkAuthorizationCache(cachedWriteAuthorizations, principal, core,
+        labelOnum)) return true;
+
     // Call into the Jif label framework to perform the label check.
     final Label label = new Label.$Proxy(core, labelOnum);
-    return Client.runInSubTransaction(new Client.Code<Boolean>() {
+    boolean result = Client.runInSubTransaction(new Client.Code<Boolean>() {
       public Boolean run() {
         return LabelUtil.$Impl.isWritableBy(label, principal);
       }
     });
+
+    if (result) {
+      cacheAuthorization(cachedWriteAuthorizations, principal, core, labelOnum);
+    }
+    return result;
   }
 }
