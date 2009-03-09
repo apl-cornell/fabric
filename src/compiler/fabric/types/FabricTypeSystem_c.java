@@ -188,16 +188,46 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return new FabricPairLabelToFabilExpr_c();
   }
   
+  @SuppressWarnings("unchecked")
   public ConfPolicy representableConfProjection(Label L) {
     if (L instanceof ArgLabel) {
       return super.confProjection(((ArgLabel) L).upperBound());
     }
+    else if (L instanceof MeetLabel) {
+      Set<ConfPolicy> confPols = new HashSet<ConfPolicy>();
+      for (Label l : (Collection<Label>)((MeetLabel)L).meetComponents()) {
+        confPols.add(representableConfProjection(l));
+      }
+      return meetConfPolicy(L.position(), confPols);
+    }
+    else if (L instanceof JoinLabel) {
+      Set<ConfPolicy> confPols = new HashSet<ConfPolicy>();
+      for (Label l : (Collection<Label>)((JoinLabel)L).joinComponents()) {
+        confPols.add(representableConfProjection(l));
+      }
+      return joinConfPolicy(L.position(), confPols);
+    }
     return super.confProjection(L);
   }
   
+  @SuppressWarnings("unchecked")
   public IntegPolicy representableIntegProjection(Label L) {
     if (L instanceof ArgLabel) {
       return super.integProjection(((ArgLabel) L).upperBound());
+    }
+    else if (L instanceof MeetLabel) {
+      Set<IntegPolicy> integPols = new HashSet<IntegPolicy>();
+      for (Label l : (Collection<Label>)((MeetLabel)L).meetComponents()) {
+        integPols.add(representableIntegProjection(l));
+      }
+      return meetIntegPolicy(L.position(), integPols);
+    }
+    else if (L instanceof JoinLabel) {
+      Set<IntegPolicy> integPols = new HashSet<IntegPolicy>();
+      for (Label l : (Collection<Label>)((JoinLabel)L).joinComponents()) {
+        integPols.add(representableIntegProjection(l));
+      }
+      return joinIntegPolicy(L.position(), integPols);
     }
     return super.integProjection(L);
   }
