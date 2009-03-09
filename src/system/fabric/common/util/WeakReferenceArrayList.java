@@ -1,27 +1,27 @@
 package fabric.common.util;
 
-import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * An array list of soft references. List elements are removed as the soft
+ * An array list of weak references. List elements are removed as the weak
  * references are broken.
  */
-public class SoftReferenceArrayList<T> implements Iterable<T> {
+public class WeakReferenceArrayList<T> implements Iterable<T> {
   /**
    * The array backing this data structure.
    */
-  private SoftReference<T>[] data;
+  private WeakReference<T>[] data;
 
   private int size;
 
   private int modCount;
 
   @SuppressWarnings("unchecked")
-  public SoftReferenceArrayList() {
-    data = new SoftReference[10];
+  public WeakReferenceArrayList() {
+    data = new WeakReference[10];
     size = 0;
     modCount = 0;
   }
@@ -46,7 +46,7 @@ public class SoftReferenceArrayList<T> implements Iterable<T> {
     if (size == data.length) {
       ensureCapacity(size + 1);
     }
-    data[size++] = new SoftReference<T>(e);
+    data[size++] = new WeakReference<T>(e);
     return true;
   }
 
@@ -74,7 +74,7 @@ public class SoftReferenceArrayList<T> implements Iterable<T> {
       int newCap = current * 2;
       if (minCapacity > newCap) newCap = minCapacity;
 
-      SoftReference<T>[] newData = new SoftReference[newCap];
+      WeakReference<T>[] newData = new WeakReference[newCap];
       for (int i = 0; i < size; i++) {
         newData[i] = data[i];
       }
@@ -87,7 +87,7 @@ public class SoftReferenceArrayList<T> implements Iterable<T> {
     return new Iterator<T>() {
       private int knownMod = modCount;
       private int position = 0;
-      private int size = SoftReferenceArrayList.this.size;
+      private int size = WeakReferenceArrayList.this.size;
       private T nextElement = null;
 
       private void checkMod() {

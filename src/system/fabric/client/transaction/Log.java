@@ -12,7 +12,7 @@ import fabric.common.Util;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.SoftReferenceArrayList;
+import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object.$Impl;
 
 /**
@@ -82,7 +82,7 @@ public final class Log {
   /**
    * Tracks objects created on local core. See <code>creates</code>.
    */
-  protected final SoftReferenceArrayList<$Impl> localcoreCreates;
+  protected final WeakReferenceArrayList<$Impl> localcoreCreates;
 
   /**
    * A collection of all objects modified in this transaction or completed
@@ -96,7 +96,7 @@ public final class Log {
    * Tracks objects on local core that have been modified. See
    * <code>writes</code>.
    */
-  protected final SoftReferenceArrayList<$Impl> localcoreWrites;
+  protected final WeakReferenceArrayList<$Impl> localcoreWrites;
 
   /**
    * The set of clients called by this transaction and completed
@@ -140,9 +140,9 @@ public final class Log {
     this.reads = new OidKeyHashMap<ReadMapEntry>();
     this.readsReadByParent = new ArrayList<ReadMapEntry>();
     this.creates = new ArrayList<$Impl>();
-    this.localcoreCreates = new SoftReferenceArrayList<$Impl>();
+    this.localcoreCreates = new WeakReferenceArrayList<$Impl>();
     this.writes = new ArrayList<$Impl>();
-    this.localcoreWrites = new SoftReferenceArrayList<$Impl>();
+    this.localcoreWrites = new WeakReferenceArrayList<$Impl>();
     this.clientsCalled = new ArrayList<RemoteClient>();
 
     if (parent != null) {
@@ -436,7 +436,7 @@ public final class Log {
       }
     }
     
-    SoftReferenceArrayList<$Impl> parentLocalcoreWrites =
+    WeakReferenceArrayList<$Impl> parentLocalcoreWrites =
         parent.localcoreWrites;
     for ($Impl obj : localcoreWrites) {
       synchronized (obj) {
@@ -469,7 +469,7 @@ public final class Log {
       }
     }
     
-    SoftReferenceArrayList<$Impl> parentLocalcoreCreates =
+    WeakReferenceArrayList<$Impl> parentLocalcoreCreates =
         parent.localcoreCreates;
     synchronized (parentLocalcoreCreates) {
       for ($Impl obj : localcoreCreates) {
