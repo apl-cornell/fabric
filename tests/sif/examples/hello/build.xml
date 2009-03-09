@@ -51,10 +51,10 @@
     		<arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
         <arg value="-e"/>
     	<!--
-	  		<arg value="-report"/> <arg value="frontend=1"/>
-    		<arg value="-print" /> <arg value="FieldLabelResolver"/>
-	      <arg value="-debugpositions"/>
-    		<arg value="-dump"/> <arg value="RemoteCallWrapperUpdater"/>
+      <arg value="-debugpositions"/>
+  		<arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>
+  		<arg value="-report"/> <arg value="frontend=1"/>
+  		<arg value="-print" /> <arg value="FieldLabelResolver"/>
 	  		<arg value="-report"/> <arg value="error=5"/>
 	  		<arg value="-report"/> <arg value="errors=5"/>
     	  <arg value="-report"/> <arg value="debug=5" />

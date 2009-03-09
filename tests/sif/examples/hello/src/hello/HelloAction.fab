@@ -15,15 +15,15 @@ import java.io.*;
 public class HelloAction[label T] extends Action[HelloServEP] {
 	public HelloAction{T}(Main{T} m) throws ServletException {
 		super();
-		{
-			this.nameInp = new Input[HelloServEP, T](m, new label {});
-			this.fileInp = new Input[HelloServEP, T](m, new label {});
+		atomic {
+			this.nameInp = new Input[HelloServEP](m, new label {});
+			this.fileInp = new Input[HelloServEP](m, new label {});
 		}
-			initFields(m);
+		initFields(m);
 	}
 
-	final Input[HelloServEP, T]{T} nameInp;
-	final Input[HelloServEP, T]{T} fileInp;
+	final Input[HelloServEP]{T} nameInp;
+	final Input[HelloServEP]{T} fileInp;
 
 	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
 	where caller(req.session),

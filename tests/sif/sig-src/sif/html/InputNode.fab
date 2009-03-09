@@ -16,9 +16,9 @@ public abstract class InputNode[principal servletP, label L, label E] extends No
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
 
-    public final Input[servletP, L]{L} input;
+    public final Input[servletP]{L} input;
     
-    InputNode(Input[servletP, L]{L} i) 
+    InputNode(Input[servletP]{L} i) 
     where {L;E} <= {*i.inputLbl} {
         super();
         input = i;
@@ -27,6 +27,6 @@ public abstract class InputNode[principal servletP, label L, label E] extends No
     InputNode{L}(Servlet[servletP]{L} s, label{L} inputLabel) 
     where {L;E} <= {*inputLabel} {
         super();
-        input = new Input[servletP, L](s, inputLabel);
+        input = new Input[servletP](s, inputLabel);
     }
 }

@@ -13,62 +13,62 @@ import sif.html.*;
  * can be instantiated with a specific message to display, and with a mutable List
  * of Users, in which the selected user(s) will be returned.
  */
-public class SelectUsersAction[principal servP] extends USessAction[servP] authority(servP) {
+public class SelectUsersAction[principal servP, covariant label T] extends USessAction[servP, T] authority(servP) {
     /**
      * Are we selecting a single user, or multiple users?
      */
-    final boolean{this} singleMode;    
+    final boolean{T} singleMode;    
 
     /**
      * The label of the input level
      */
-    final label{this} inputLbl;
+    final label{T} inputLbl;
     
-    final SelectUsersAction$1[inputLbl, servP]{this} remote1;
+    final SelectUsersAction$1[inputLbl, servP]{T} remote1;
 
     
-    final User[servP]{this} currentUser;
+    final User[servP]{T} currentUser;
     
     /**
      * The message to display when selecting users.
      */
-    private final String{this} message;
+    private final String{T} message;
     
     /**
      * Action to invoke upon the sucessful selection of user(s).
      */
-    final UAction[servP]{this} successAction;
+    final UAction[servP]{T} successAction;
     /**
      * Action to invoke upon the cancelation of user selection.
      */
-    final UAction[servP]{this} cancelAction;
+    final UAction[servP]{T} cancelAction;
     
     /**
      * Input used to store the user(s) entered by the logged-in user.
      */
-    final Input[servP]{this} inpUsers;
+    final Input[servP]{T} inpUsers;
     
-    public SelectUsersAction{currentUser:;currentUser!:}(boolean{this} singleMode,
-            UServlet[servP]{this} servlet, 
-            principal{this} session,
-            User[servP]{this} currentUser,
-            UAction[servP]{this} successAction, 
-            UAction[servP]{this} cancelAction, 
-            List[{servP:;servP!:}]{currentUser:;currentUser!:} selectedUsers, 
-            String{this} message) where caller (servP)
+    public SelectUsersAction{currentUser→;currentUser←}(boolean{T} singleMode,
+            UServlet[servP]{T} servlet, 
+            principal{T} session,
+            User[servP]{T} currentUser,
+            UAction[servP]{T} successAction, 
+            UAction[servP]{T} cancelAction, 
+            List[{servP→;servP←}]{currentUser→;currentUser←} selectedUsers, 
+            String{T} message) where caller (servP)
     {
-        this(singleMode, servlet, session, currentUser, successAction, cancelAction, selectedUsers, message, new label {currentUser:;currentUser!:});
+        this(singleMode, servlet, session, currentUser, successAction, cancelAction, selectedUsers, message, new label {currentUser→;currentUser←});
     }
-    public SelectUsersAction{*inpLbl}(boolean{this} singleMode,
-                             UServlet[servP]{this} servlet, 
-                             principal{this} session,
-                             User[servP]{this} currentUser,
-                             UAction[servP]{this} successAction, 
-                             UAction[servP]{this} cancelAction, 
-                             List[{servP:;servP!:}]{*inpLbl} selectedUsers, 
-                             String{this} message,
-                             label{this} inpLbl)
-    where inpLbl <= {currentUser:;currentUser!:}
+    public SelectUsersAction{*inpLbl}(boolean{T} singleMode,
+                             UServlet[servP]{T} servlet, 
+                             principal{T} session,
+                             User[servP]{T} currentUser,
+                             UAction[servP]{T} successAction, 
+                             UAction[servP]{T} cancelAction, 
+                             List[{servP→;servP←}]{*inpLbl} selectedUsers, 
+                             String{T} message,
+                             label{T} inpLbl)
+    where inpLbl <= {currentUser→;currentUser←}
     {
         this.successAction = successAction;
         this.cancelAction = cancelAction;
@@ -93,38 +93,42 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
         super(servlet, session);
     }
     
-    public void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
-            Request[servP]{*lbl;session!:} req,
-            UServlet[servP]{*lbl;session!:} servlet,
-            USessState[servP]{*lbl;session!:} state,
-            User[servP]{*lbl;session!:} currentUser) 
-    throws (ServletException{*lbl;session!:})
+    public void invokeSessImpl{*lbl;session←}(label{*lbl;session←} lbl,
+            Request[servP]{*lbl;session←} req,
+            UServlet[servP]{*lbl;session←} servlet,
+            USessState[servP]{*lbl;session←} state,
+            User[servP]{*lbl;session←} currentUser) 
+    throws (ServletException{*lbl;session←})
         where session equiv req.session, 
               session equiv state.sessionPrincipal,
-              session actsfor currentUser,              
-              lbl <= {*:req.session},
+              session actsfor currentUser,
+              lbl <= {*→req.session},
               caller(session)
     {
+    	if(req == null) throw new ServletException("invalid args");
+    	if(T <= new label {*lbl;req.session←}) {
         if (req == null || servlet == null || state == null) 
             throw new ServletException("invalid args");
+        	final Input[servP]{*lbl;req.session←} inpUsers = this.inpUsers;
+        	final label{*lbl;req.session←} inputLbl = this.inputLbl;
 
-
-        if (this.inpUsers != null && new label {*lbl; session!:} <= this.inpUsers.inputLbl && 
-                this.inpUsers.inputLbl <= new label {*:session} && new label {currentUser!:} <= this.inpUsers.inputLbl &&
-                this.inpUsers.inputLbl equiv this.inputLbl && 
-                this.inputLbl <= new label {currentUser:;currentUser!:} && 
-                currentUser equiv this.currentUser &&
-                state.sessionPrincipal equiv session) {
-            producePage(new label {*lbl; session!:}, req, servlet, state, null);
-        }
-        else {
-            String lblString = null;
-            try {
-                lblString = LabelUtil.singleton().toString(lbl);
-            }
-            catch (NullPointerException imposs) { }            
-            throw new ServletException("SelectUsersAction.invokeSessImpl: lbl was unexpectedly high: " + lblString);
-        }
+        	if (inpUsers != null && new label {*lbl; req.session←} <= inpUsers.inputLbl && 
+        			inpUsers.inputLbl <= new label {⊤→req.session} && new label {currentUser←} <= inpUsers.inputLbl &&
+        			inpUsers.inputLbl equiv inputLbl && 
+        			inputLbl <= new label {currentUser→;currentUser←} && 
+//        			currentUser equiv this.currentUser &&
+        			state.sessionPrincipal equiv req.session) {
+        		producePage(new label {*lbl; session←}, req, servlet, state, null, inpUsers, inputLbl, currentUser);
+        	}
+        	else {
+        		String lblString = null;
+        		try {
+        			lblString = LabelUtil.singleton().toString(lbl);
+        		}
+        		catch (NullPointerException imposs) { }            
+        		throw new ServletException("SelectUsersAction.invokeSessImpl: lbl was unexpectedly high: " + lblString);
+        	}
+    	}
     }
 
     /**
@@ -136,18 +140,24 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
     protected void producePage{*bnd}(label{*bnd} bnd, Request[servP]{*bnd} req,
             UServlet[servP]{*bnd} servlet,
             USessState[servP]{*bnd} state,
-            String{*bnd} errMessage) 
+            String{*bnd} errMessage,
+            Input[servP]{*bnd} inpUsers,
+            label{*bnd} inputLbl,
+            User[servP]{*bnd} currentUser) 
       where req.session equiv state.sessionPrincipal,
             req.session equiv session,
-            session actsfor this.currentUser,
-            {*bnd} <= {*this.inpUsers.inputLbl},
-            {session!:} <= {*bnd},
-            {currentUser!:} <= {*this.inpUsers.inputLbl},
-            {*this.inpUsers.inputLbl} equiv {*this.inputLbl},
-            {*this.inputLbl} <= {currentUser:;currentUser!:},
+            session actsfor currentUser,
+            {*bnd} <= {*inpUsers.inputLbl},
+            {session←} <= {*bnd},
+            {currentUser←} <= {*inpUsers.inputLbl},
+            {*inpUsers.inputLbl} equiv {*inputLbl},
+            {*inputLbl} <= {currentUser→;currentUser←},
             caller(session),
             authority(servP)
     {
+        if(T equiv bnd) {
+        if(this.inpUsers == null) return;
+        if(this.inputLbl equiv inputLbl && this.inpUsers.inputLbl equiv inputLbl) {
 
         String title = "Select User" + (singleMode?"":"s");
         Node[bnd, bnd] banner = createBanner(bnd, title);
@@ -161,10 +171,10 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
         if (req == null || servlet == null || state == null || inpUsers == null) 
             return; // throw new ServletException("invalid args");
                     
-        NodeList[inpUsers.inputLbl, inpUsers.inputLbl] entries = new NodeList[this.inpUsers.inputLbl, inpUsers.inputLbl](bnd, inpUsers.inputLbl, instructions);
+        NodeList[inpUsers.inputLbl, inpUsers.inputLbl] entries = new NodeList[inpUsers.inputLbl, inpUsers.inputLbl](bnd, inpUsers.inputLbl, instructions);
         
 
-        String defaultUsers = defaultUsers(bnd, req);
+        String defaultUsers = defaultUsers(bnd, req, currentUser);
         InputNode[servP, inpUsers.inputLbl, inpUsers.inputLbl] inp;
         if (singleMode) {
             inp = new TextInput[servP, inpUsers.inputLbl, inpUsers.inputLbl](inpUsers, 40, defaultUsers);
@@ -179,12 +189,15 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
                                                   new NBSP[bnd, inpUsers.inputLbl](),
                                                   new Hyperlink[servP, bnd, inpUsers.inputLbl](cancelAction, "Cancel")); 
         entries = entries==null?null:entries.append(bnd, inpUsers.inputLbl, new TRow[bnd, inpUsers.inputLbl](new TCell[bnd, inpUsers.inputLbl](null, buttonRow, 2, false)));
-        Node[inpUsers.inputLbl,inpUsers.inputLbl] content = servlet.createForm(inpUsers.inputLbl, inpUsers.inputLbl, new FinishSelectUsers[servP](servlet, session, this),
+        Node[inpUsers.inputLbl,inpUsers.inputLbl] content = servlet.createForm(inpUsers.inputLbl, inpUsers.inputLbl, new FinishSelectUsers[servP, T](servlet, session, this),
                                                                  inpUsers.inputLbl, inpUsers.inputLbl, new Table[inpUsers.inputLbl, inpUsers.inputLbl](entries)); 
         servlet.createPage(req, title, inpUsers.inputLbl, bnd, 
                            new NodeList[inpUsers.inputLbl, bnd](bnd,bnd, 
                                    banner, inpUsers.inputLbl, bnd,createBody(inpUsers.inputLbl, bnd, 
                                                       new NodeList[inpUsers.inputLbl, bnd](bnd,bnd, blurb, inpUsers.inputLbl, inpUsers.inputLbl, content))));
+        }
+        }
+        	
     }
 
     /**
@@ -193,17 +206,18 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
      * value is used; otherwise, a string is produced from the list of Users, 
      * this.selectedUsers.
      */
-    String{*lbl; *inpUsers.inputLbl; *!:session} defaultUsers{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
+    String{*lbl; *inpUsers.inputLbl; *←session; T} defaultUsers{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req, User[servP]{*lbl} currentUser) 
             where authority(servP), 
-                  req.session actsfor this.currentUser, 
+                  req.session actsfor currentUser, 
                   req.session equiv this.session, 
-                  {*lbl} <= {this.currentUser:;this.currentUser!:},
-                  {*this.inputLbl} <= {this.currentUser:;this.currentUser!:},
+                  {*lbl} <= {currentUser→;currentUser←},
+                  {*this.inputLbl} <= {currentUser→;currentUser←},
                   {*inpUsers.inputLbl} equiv {*this.inputLbl},
-                  {this.currentUser!:} <= inpUsers.inputLbl,
+                  {currentUser←} <= inpUsers.inputLbl,
                   caller(this.session)
     {
         String defaultUsers = null;
+        if(T <= new label {currentUser→;currentUser←}) {
         if (req != null && inpUsers != null && this.remote1 != null) {
             String users = req.getParam(inpUsers);
             if (users != null) {
@@ -213,11 +227,12 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
                 defaultUsers = declassUserListStringToString(currentUser, inpUsers.inputLbl, userListToString(currentUser, this.remote1.selectedUsers, false));                
             }
         }
+        }
         return defaultUsers;        
     }
     
-    private String{servP:;servP!:;p:;p!:} userListToString{p:;p!:}(principal{users} p, 
-                                                               List[{servP:;servP!:}]{p:;p!:} users, 
+    private String{servP→;servP←;p→;p←} userListToString{p→;p←}(principal{users} p, 
+                                                               List[{servP→;servP←}]{p→;p←} users, 
                                                                boolean{users} useDisplayString) {
         String sb = "";
         if (users != null) {
@@ -247,10 +262,10 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
     }
     
     // DOWNGRADE REASON: transfer ownership from servP. servP needs to be prepared to give the ownership away, hence the autoendorse. &&& access control
-    private String{*lbl} declassUserListStringToString{p:;p!:}(principal{s} p, label lbl, String{servP:;servP!:;p:;p!:} s)
-    where lbl <= {p:;p!:}, {p!:} <= lbl, caller (servP, p), endorse({p:;p!: meet servP!:}) {
-        String s1 = endorse(s, {servP:;servP!:;p:;p!:} to {servP:;p:;servP!: meet p!:});
-        String s2 = declassify(s1, {servP:;p:;servP!: meet p!:} to {servP!: meet p!:});
+    private String{*lbl} declassUserListStringToString{p→;p←}(principal{s} p, label lbl, String{servP→;servP←;p→;p←} s)
+    where lbl <= {p→;p←}, {p←} <= lbl, caller (servP, p), endorse({p→;p← meet servP←}) {
+        String s1 = endorse(s, {servP→;servP←;p→;p←} to {servP→;p→;servP← meet p←});
+        String s2 = declassify(s1, {servP→;p→;servP← meet p←} to {servP← meet p←});
         return s2;    
     }
     
@@ -292,43 +307,48 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
  * or the list selectedUsers in the SelectUsersAction is updated, and the
  * session directed to the success action.
  */
-class FinishSelectUsers[principal servP] extends USessAction[servP] authority(servP) {
+class FinishSelectUsers[principal servP, covariant label T] extends USessAction[servP, T] authority(servP) {
     /**
      * The SelectUsersAction that created this Action.
      */
-    private final SelectUsersAction[servP]{this} selectUsersAction;
+    private final SelectUsersAction[servP, T]{T} selectUsersAction;
 
-    public FinishSelectUsers(UServlet[servP]{this} s, 
-                             principal{this} session, 
-                             SelectUsersAction[servP]{this} selectUsersAction) {
+    public FinishSelectUsers(UServlet[servP]{T} s, 
+                             principal{T} session, 
+                             SelectUsersAction[servP, T]{T} selectUsersAction) {
         this.selectUsersAction = selectUsersAction;
         super(s, session);
     }
 
         
-    public void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
-            Request[servP]{*lbl;session!:} req,
-            UServlet[servP]{*lbl;session!:} servlet,
-            USessState[servP]{*lbl;session!:} state,
-            User[servP]{*lbl;session!:} currentUser) 
-    throws (ServletException{*lbl;session!:})
+    public void invokeSessImpl{*lbl;session←}(label{*lbl;session←} lbl,
+            Request[servP]{*lbl;session←} req,
+            UServlet[servP]{*lbl;session←} servlet,
+            USessState[servP]{*lbl;session←} state,
+            User[servP]{*lbl;session←} currentUser) 
+    throws (ServletException{*lbl;session←})
         where session equiv req.session, 
               session equiv state.sessionPrincipal,
               session actsfor currentUser,              
-              lbl <= {*:req.session},
+              lbl <= {*→req.session},
               caller(session)
     {
+    	if(T equiv lbl) {
         if (req == null || servlet == null || state == null) 
             throw new ServletException("invalid args");
 
-        if (selectUsersAction == null || selectUsersAction.inpUsers == null) 
+        final SelectUsersAction[servP, {*lbl;req.session←}]{*lbl;req.session←} selectUsersAction = this.selectUsersAction;
+        if(selectUsersAction == null) return;
+        final Input[servP]{*lbl;req.session←} inpUsers = selectUsersAction.inpUsers; 
+
+        if (selectUsersAction == null || inpUsers == null) 
             throw new ServletException("selectUsersAction is null!");
         
-        if (session equiv selectUsersAction.session && currentUser equiv selectUsersAction.currentUser &&
-                session equiv state.sessionPrincipal && selectUsersAction.inpUsers.inputLbl equiv selectUsersAction.inputLbl &&
-                selectUsersAction.inputLbl <= new label {currentUser:;currentUser!:} &&
+        if (req.session equiv selectUsersAction.session && currentUser equiv selectUsersAction.currentUser &&
+        		req.session equiv state.sessionPrincipal && inpUsers.inputLbl equiv selectUsersAction.inputLbl &&
+                selectUsersAction.inputLbl <= new label {currentUser→;currentUser←} &&
                 lbl equiv selectUsersAction.inputLbl) {
-            this.submit(lbl, req, servlet, state, currentUser);
+        		this.submit(lbl, req, servlet, state, currentUser, selectUsersAction);
         }
         else {
             String lblString = null;
@@ -338,29 +358,33 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
             catch (NullPointerException imposs) { }            
             throw new ServletException("FinishSelectUsers.invokeSessImpl: lbl is too high: " + lblString);
         }
+    	}
     }
 
     /**
      * Process the submitted list of users.
      */
-    protected void submit{*lbl;session!:}(label{*lbl;session!:} lbl,
-            Request[servP]{*lbl;session!:} req,
-            UServlet[servP]{*lbl;session!:} servlet,
-            USessState[servP]{*lbl;session!:} state,
-            User[servP]{*lbl;session!:} currentUser)
-    throws (ServletException{*lbl;session!:})
+    protected void submit{*lbl;session←}(label{*lbl;session←} lbl,
+            Request[servP]{*lbl;session←} req,
+            UServlet[servP]{*lbl;session←} servlet,
+            USessState[servP]{*lbl;session←} state,
+            User[servP]{*lbl;session←} currentUser,
+            SelectUsersAction[servP, {*lbl;session←}]{*lbl;session←} selectUsersAction)
+    throws (ServletException{*lbl;session←})
         where session equiv req.session, 
               session equiv state.sessionPrincipal,
               session actsfor currentUser,              
-              currentUser equiv selectUsersAction.currentUser,              
-              lbl <= {*:req.session},
-              {*selectUsersAction.inputLbl} <= {currentUser:;currentUser!:},
+              currentUser equiv selectUsersAction.currentUser,
+              selectUsersAction.session equiv req.session,
+              lbl <= {*→req.session},
+              {*selectUsersAction.inputLbl} <= {currentUser→;currentUser←},
               {*lbl} equiv {*selectUsersAction.inputLbl},
               {*selectUsersAction.inpUsers.inputLbl} equiv {*selectUsersAction.inputLbl},
               caller(session),
               authority(servP)
       {
-          List[{servP:;servP!:}] validatedUsers = new ArrayList[new label {servP:;servP!:}]();
+          if(T equiv lbl) {
+          List[{servP→;servP←}] validatedUsers = new ArrayList[new label {servP→;servP←}]();
           
           if (req == null || servlet == null || state == null) 
               throw new ServletException("invalid args");
@@ -372,10 +396,10 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
           
           // user has finished editing.
           // validate data
-          final label bnd = new label {*lbl;*selectUsersAction.inpUsers.inputLbl;session!:};
+          final label bnd = new label {*lbl;*selectUsersAction.inpUsers.inputLbl;session←};
           
           String errMessage = null;
-          ServletException{*lbl;session!:} ex = null;
+          ServletException{*lbl;session←} ex = null;
 
           // get the list of user ids              
           String input = req.getParam(selectUsersAction.inpUsers);
@@ -405,15 +429,16 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
               }
           }          
 
-          String em = declassErrMessage(errMessage, lbl, currentUser);
+          String em = declassErrMessage(errMessage, lbl, currentUser, selectUsersAction);
           if (em != null) {
+        	  if(T <= bnd) {
+        		  final Input[servP]{*bnd} inpUsers = selectUsersAction.inpUsers;
+        		  final label{*bnd} inputLbl = inpUsers.inputLbl;
               // send user back to page as the data is not validated
-              if (bnd <= selectUsersAction.inpUsers.inputLbl && selectUsersAction.inpUsers.inputLbl <= new label {currentUser:;currentUser!:} && 
-                      new label {currentUser!:} <= selectUsersAction.inpUsers.inputLbl && selectUsersAction.session equiv req.session) 
-                              selectUsersAction.producePage(bnd,
-                                                            req, servlet,
-                                                            state, 
-                                                            em);              
+              if (bnd <= selectUsersAction.inpUsers.inputLbl && selectUsersAction.inpUsers.inputLbl <= new label {currentUser→;currentUser←} && 
+                      new label {currentUser←} <= selectUsersAction.inpUsers.inputLbl && selectUsersAction.session equiv req.session) 
+                              selectUsersAction.producePage(bnd, req, servlet, state, em, inpUsers, inputLbl, currentUser);            
+        	  }
           }
           else {
               // list is valid, so store the users into the user list
@@ -421,45 +446,47 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
               
               // send user back to return action.
               try {
-                  selectUsersAction.successAction.invokeImpl(new label{*lbl; session!:}, req, servlet, state);
+                  selectUsersAction.successAction.invokeImpl(new label{*lbl; session←}, req, servlet, state);
               }
               catch (ServletException e) {
                   ex = e;
               }
           }
           if (ex != null) throw ex;
+          }
       }   
     
-      // DOWNGRADE REASON: downgrade the error message to *lbl;session!:. i.e., the session user is prepared to
+      // DOWNGRADE REASON: downgrade the error message to *lbl;session←. i.e., the session user is prepared to
       // endorse whether there were errors, and the current user is prepared to declassify the result (possibly down to public). &&& imprecision
-      private String{*lbl;session!:} declassErrMessage{currentUser:;currentUser!:}(String{currentUser:;currentUser!:} errMess,
-                                                       label{*lbl;session!:} lbl,
-                                                       User[servP]{*lbl;session!:} currentUser) 
+      private String{*lbl;session←} declassErrMessage{currentUser→;currentUser←}(String{currentUser→;currentUser←} errMess,
+                                                       label{*lbl;session←} lbl,
+                                                       User[servP]{*lbl;session←} currentUser,
+                                                       SelectUsersAction[servP, {*lbl;session←}]{*lbl;session←} selectUsersAction) 
         where session actsfor currentUser,              
               currentUser equiv selectUsersAction.currentUser,              
-              lbl <= {currentUser:;currentUser!:},
+              lbl <= {currentUser→;currentUser←},
               caller(session),
               authority(servP),
-              endorse({currentUser:;session!:})
+              endorse({currentUser→;session←})
       {
-          String em1 = endorse(errMess, {currentUser:;currentUser!:} to {*lbl;currentUser:;session!:});
-          String em2 = declassify(em1, {*lbl;currentUser:;session!:} to {*lbl;session!:});
+          String em1 = endorse(errMess, {currentUser→;currentUser←} to {*lbl;currentUser→;session←});
+          String em2 = declassify(em1, {*lbl;currentUser→;session←} to {*lbl;session←});
           return em2;
       }
     
       // DOWNGRADE REASON: transfer ownership from currentUser to servP, and hide side effcts &&& access control
-      private void addToUserList{currentUser:;currentUser!:}(User[servP]{currentUser:;currentUser!:} currentUser,
-                                 List[{servP:;servP!:}]{currentUser:;currentUser!:} userList, 
-                                 User[servP]{currentUser:;currentUser!:} u) 
+      private void addToUserList{currentUser→;currentUser←}(User[servP]{currentUser→;currentUser←} currentUser,
+                                 List[{servP→;servP←}]{currentUser→;currentUser←} userList, 
+                                 User[servP]{currentUser→;currentUser←} u) 
                            where caller(currentUser), 
                                  caller(servP),
-                                 endorse({currentUser:;currentUser!: meet servP!:}) {
-          declassify ({currentUser!: meet servP!:}) {
-              User[servP] u1 = endorse(u, {currentUser:;servP:;currentUser!:; servP!:} to {currentUser:;servP:;currentUser!: meet servP!:});
-              User[servP] u2 = declassify(u1, {servP:;currentUser:;currentUser!: meet servP!:} to {servP:;currentUser!: meet servP!:});
+                                 endorse({currentUser→;currentUser← meet servP←}) {
+          declassify ({currentUser← meet servP←}) {
+              User[servP] u1 = endorse(u, {currentUser→;servP→;currentUser←; servP←} to {currentUser→;servP→;currentUser← meet servP←});
+              User[servP] u2 = declassify(u1, {servP→;currentUser→;currentUser← meet servP←} to {servP→;currentUser← meet servP←});
               
-              List[{servP:;servP!:}] ul1 = endorse(userList, {currentUser:;currentUser!:;servP:;servP!:} to {currentUser:;servP:;currentUser!: meet servP!:});
-              List[{servP:;servP!:}] ul2 = declassify(ul1, {servP:;currentUser:;currentUser!: meet servP!:} to {servP:;currentUser!: meet servP!:});
+              List[{servP→;servP←}] ul1 = endorse(userList, {currentUser→;currentUser←;servP→;servP←} to {currentUser→;servP→;currentUser← meet servP←});
+              List[{servP→;servP←}] ul2 = declassify(ul1, {servP→;currentUser→;currentUser← meet servP←} to {servP→;currentUser← meet servP←});
               
               try {
                   if (ul2 != null) 
@@ -472,18 +499,18 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
       }
 
       // DOWNGRADE REASON: transfer ownership from currentUser to servP, and hide side effcts of copying list      
-      private void copyUserList{currentUser:;currentUser!:}(User[servP]{currentUser:;currentUser!:} currentUser,
-              List[{servP:;servP!:}]{currentUser:;currentUser!:} source, 
-              List[{servP:;servP!:}]{currentUser:;currentUser!:} target) 
+      private void copyUserList{currentUser→;currentUser←}(User[servP]{currentUser→;currentUser←} currentUser,
+              List[{servP→;servP←}]{currentUser→;currentUser←} source, 
+              List[{servP→;servP←}]{currentUser→;currentUser←} target) 
               where caller(currentUser), 
                     caller(servP),
-                    endorse({currentUser:;currentUser!: meet servP!:}) {          
-          declassify ({currentUser!: meet servP!:}) {
-              List[{servP:;servP!:}] s1 = endorse(source, {currentUser:;currentUser!:;servP:;servP!:} to {currentUser:;servP:;currentUser!: meet servP!:});
-              List[{servP:;servP!:}] s2 = declassify(s1, {servP:;currentUser:;currentUser!: meet servP!:} to {servP:;currentUser!: meet servP!:});
+                    endorse({currentUser→;currentUser← meet servP←}) {          
+          declassify ({currentUser← meet servP←}) {
+              List[{servP→;servP←}] s1 = endorse(source, {currentUser→;currentUser←;servP→;servP←} to {currentUser→;servP→;currentUser← meet servP←});
+              List[{servP→;servP←}] s2 = declassify(s1, {servP→;currentUser→;currentUser← meet servP←} to {servP→;currentUser← meet servP←});
               
-              List[{servP:;servP!:}] t1 = endorse(target, {currentUser:;currentUser!:;servP:;servP!:} to {currentUser:;servP:;currentUser!: meet servP!:});
-              List[{servP:;servP!:}] t2 = declassify(t1, {servP:;currentUser:;currentUser!: meet servP!:} to {servP:;currentUser!: meet servP!:});
+              List[{servP→;servP←}] t1 = endorse(target, {currentUser→;currentUser←;servP→;servP←} to {currentUser→;servP→;currentUser← meet servP←});
+              List[{servP→;servP←}] t2 = declassify(t1, {servP→;currentUser→;currentUser← meet servP←} to {servP→;currentUser← meet servP←});
               
               try {
                   if (s2 != null && t2 != null) {

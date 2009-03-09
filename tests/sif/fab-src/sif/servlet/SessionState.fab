@@ -7,12 +7,18 @@ import fabric.lang.Principal;
 
 public class SessionState[covariant label T] {
 
-    private SessionState{T}(String{T} sessionId) {
+    protected SessionState{T}(String{T} sessionId) {
         this.sessionPrincipal = new SessionPrincipal[T](this);
         this.sessionId        = sessionId;
     }
+    
+    protected SessionState{T}() {
+        this.sessionPrincipal = new SessionPrincipal[T](this);
+        this.sessionId        = "<uninitialized>";
+    }
+    
 
-    private final Principal{T} sessionPrincipal;
+    public final Principal{T} sessionPrincipal;
     private final String{T}    sessionId;
 
     public final String{T} getSessionId() {

@@ -6,7 +6,7 @@ public class CalServEP extends ExternalPrincipal {
     }
 
     private static CalServEP{*!:} P;
-    public static fabric.lang.Principal{*!:} getInstance{*!:}() {
+    public static Principal{*!:} getInstance{*!:}() {
 	if (P == null) {
 	    P = new CalServEP();
 	}

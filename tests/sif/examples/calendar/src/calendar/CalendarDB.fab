@@ -1,7 +1,6 @@
 package calendar;
 
 import userserv.*;
-
 import jif.util.*;
 import jif.lang.LabelUtil;
 
@@ -11,62 +10,46 @@ import jif.lang.LabelUtil;
 public class CalendarDB authority(CalServEP, CalRootEP) {
 
 	// TODO: This should be replaced with a map (ConcurrentHashMap?)
-	private User[CalServEP]{CalServEP:;CalServEP!:}@backend[]{CalServEP:;CalServEP!:}@backend users;
+	private User[CalServEP]{CalServEP:;CalServEP!:}[]{CalServEP:;CalServEP!:} users;
 
 	// counter for unique ids for events
-	private int{CalServEP:;CalServEP!:}@backend uidCounter = 0;
+	private int{CalServEP:;CalServEP!:} uidCounter = 0;
 
 	// central repository of events.
-	private Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}@backend events;
+	private Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} events;
 
-	private Core backend;
-	private RemoteClient coreClient;
-
-	public CalendarDB(Core core) {
-		backend = core;
-		Client local = Client.getClient();
-		coreClient = c.getClient(backend.name())
+	public CalendarDB() {
 		// fabric init stuff here
 	}
 
 	public void initialize{CalServEP:;CalServEP!:}() {
 		// There's a bug here, I can't put the new statements directly in the array initializer.
-		atomic {
-			User[CalServEP] a = new CalUser("liujed", "password", "Jed", "Liu");
-			User[CalServEP] b = new CalUser("kvikram", "password", "Krishnaprasad", "Vikram");
-			User[CalServEP] c = new CalUser("andru", "password", "Andrew", "Myers");
-			User[CalServEP] d = new CalUser("schong", "password", "Steve", "Chong");
-			User[CalServEP] e = new CalUser("michael", "password", "Michael", "Clarkson");
-			User[CalServEP] f = new CalUser("nate", "password", "Nathaniel", "Nystrom");
-			User[CalServEP] g = new CalUser("xin", "password", "Xin", "Qi");
-			User[CalServEP] h = new CalUser("mdgeorge", "password", "Michael", "George");
-			User[CalServEP] i = new CalUser("lantian", "password", "Lantian", "Zheng");
-			User[CalServEP] j = new CalUser("maksim", "password", "Maksim", "Orlovich");
-			User[CalServEP] k = new CalUser("siggi", "password", "Sigmund", "Cherem");
-			User[CalServEP] l = new CalUser("radu", "password", "Radu", "Rugina");
+		//      User[CalServEP] a = new CalUser("liujed", "password", "Jed", "Liu");
+		//      User[CalServEP] b = new CalUser("kvikram", "password", "Krishnaprasad", "Vikram");
+		//      User[CalServEP] c = new CalUser("andru", "password", "Andrew", "Myers");
+		//      User[CalServEP] d = new CalUser("schong", "password", "Steve", "Chong");
+		//      User[CalServEP] e = new CalUser("michael", "password", "Michael", "Clarkson");
+		//      User[CalServEP] f = new CalUser("nate", "password", "Nathaniel", "Nystrom");
+		//      User[CalServEP] g = new CalUser("xin", "password", "Xin", "Qi");
+		//      User[CalServEP] h = new CalUser("mdgeorge", "password", "Michael", "George");
+		//      User[CalServEP] i = new CalUser("lantian", "password", "Lantian", "Zheng");
+		//      User[CalServEP] j = new CalUser("maksim", "password", "Maksim", "Orlovich");
+		//      User[CalServEP] k = new CalUser("siggi", "password", "Sigmund", "Cherem");
+		//      User[CalServEP] l = new CalUser("radu", "password", "Radu", "Rugina");
 
-			users = new User[CalServEP]@backend[] { a,b,c,d,e,f,g,h,i,j,k,l };
+		//      users = new User[CalServEP][] { a,b,c,d,e,f,g,h,i,j,k,l };
 
-			events = new HashSet[{CalServEP:;CalServEP!:}]@backend();
-		}
+		//      events = new HashSet[{CalServEP:;CalServEP!:}]();
 	}
 
 	public int{CalServEP:;CalServEP!:} 
 	getFreshUid{CalServEP:;CalServEP!:}() 
 	where authority(CalServEP) {
-		atomic {
-			return uidCounter++;
-		}
+		return uidCounter++;
 	}
-	
-	public User[CalServEP]{CalServEP:; CalServEP!:; userID} 
-	lookupUserID(String userID) {
-		lookupUserIDRemote@coreClient(userID);
-	}
-	
 
 	public User[CalServEP]{CalServEP:; CalServEP!:; userID} 
-	lookupUserIDRemote(String userID) {
+	lookupUserID(String userID) {
 		User[CalServEP]{CalServEP:;CalServEP!:}[] users = this.users;
 		if (users == null || userID == null) return null;
 		for (int i = 0; i < users.length; i++) {
@@ -80,20 +63,13 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		}
 		return null;
 	}
-	
-	public Event{CalServEP:;CalServEP!:} 
-	retrieveEvent{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
-	where caller(CalServEP) {
-		retrieveEventRemote@coreClient(eventID);
-	}
-	
 
-	public Event{CalServEP:;CalServEP!:} 
-	retrieveEvent{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
+	public Event[{CalServEP→;CalServEP←}]{CalServEP→;CalServEP←} 
+	retrieveEvent{CalServEP→;CalServEP←}(int{CalServEP→;CalServEP←} eventID) 
 	where caller(CalServEP) {
-		Set[{CalServEP:;CalServEP!:}] es = this.events;
+		Set[{CalServEP→;CalServEP←}] es = this.events;
 		if (es != null) {
-			for (Iterator[{CalServEP:;CalServEP!:}] iter = es.iterator();
+			for (Iterator[{CalServEP→;CalServEP←}] iter = es.iterator();
 			iter!=null && iter.hasNext(); ) {
 				Event e = null;
 				try {
@@ -111,41 +87,29 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		return null;
 	}
 
-	public boolean updateEvent{CalServEP:;CalServEP!:}(Event{CalServEP:;CalServEP!:} newEvent) where caller(CalServEP) {
-		Set[{CalServEP:;CalServEP!:}] es = this.events;
+	public boolean updateEvent{CalServEP→;CalServEP←}(Event[{CalServEP→;CalServEP←}]{CalServEP→;CalServEP←} newEvent) where caller(CalServEP) {
+		Set[{CalServEP→;CalServEP←}] es = this.events;
 		if (es != null) {
 			try {
-				atomic {
-					// remove any old copies...
-					es.remove(newEvent);
+				// remove any old copies...
+				es.remove(newEvent);
 
-					// add the new/modified event
-					es.add(newEvent);
-				}
+				// add the new/modified event
+				es.add(newEvent);
 			}
 			catch (ClassCastException impossible) { }
 			catch (IllegalArgumentException impossible) { }
 		}
 		return true;
 	}
-	
-	List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
-	eventSubset{CalServEP:;CalServEP!:}(
-			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
-			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
-			User[CalServEP]{CalServEP:;CalServEP!:} displayUser)
-			where authority(CalRootEP), authority(CalServEP) {
-		eventSubsetRemote@coreClient(start, end, displayUser);
-	}
-	
-	
+
 	/**
 	 * Get the subset of events that start on or after dt, and before end, 
 	 * for which user is either an attendee, or created the event. (i.e.,
 	 * if the info label is readable by user).
 	 */
 	List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
-	eventSubsetRemote{CalServEP:;CalServEP!:}(
+	eventSubset{CalServEP:;CalServEP!:}(
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
 			User[CalServEP]{CalServEP:;CalServEP!:} displayUser)
@@ -165,36 +129,34 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 				catch (ClassCastException impossible) { }
 				final Event{CalServEP:;CalServEP!:} event = e;
 
-				atomic {
-					if (event != null) {
-						if (event.timeLbl <= new label {CalRootEP:; CalServEP!:}) {
-							// should always be true!
-							Date[{CalRootEP:; CalServEP!:}]{CalServEP:;CalServEP!:} eventStartR = event.startTime;
-							Date[{CalServEP:; CalServEP!:}]{CalServEP:;CalServEP!:;CalRootEP:} eventStart = null;
+				if (event != null) {
+					if (event.timeLbl <= new label {CalRootEP:; CalServEP!:}) {
+						// should always be true!
+						Date[{CalRootEP:; CalServEP!:}]{CalServEP:;CalServEP!:} eventStartR = event.startTime;
+						Date[{CalServEP:; CalServEP!:}]{CalServEP:;CalServEP!:;CalRootEP:} eventStart = null;
 
-							if (eventStartR != null) {
-								try {
-									eventStart = new Date[{CalServEP:;CalServEP!:}](
-											eventStartR.getYear(),
-											eventStartR.getMonth(),
-											eventStartR.getDay());
-								}
-								catch (IllegalArgumentException impossible) {}
+						if (eventStartR != null) {
+							try {
+								eventStart = new Date[{CalServEP:;CalServEP!:}](
+										eventStartR.getYear(),
+										eventStartR.getMonth(),
+										eventStartR.getDay());
 							}
-							if ((start == null || !start.after(eventStart)) && 
-									(end == null || end.after(eventStart))) {
-								// is the event on user's calendar?
-								boolean{CalServEP:;CalServEP!:} readable = false;
-								try {
-									readable = LabelUtil.singleton().isReadableBy(
-											event.infoLbl, displayUser);
-								} catch (NullPointerException imposs) {}
-								if (readable) {
-									// add event to the return subset.
-									transferEvent(sub, event);
-								}
-							}                    
+							catch (IllegalArgumentException impossible) {}
 						}
+						if ((start == null || !start.after(eventStart)) && 
+								(end == null || end.after(eventStart))) {
+							// is the event on user's calendar?
+							boolean{CalServEP:;CalServEP!:} readable = false;
+							try {
+								readable = LabelUtil.singleton().isReadableBy(
+										event.infoLbl, displayUser);
+							} catch (NullPointerException imposs) {}
+							if (readable) {
+								// add event to the return subset.
+								transferEvent(sub, event);
+							}
+						}                    
 					}
 				}
 			}
@@ -203,23 +165,23 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	}
 
 	String escapeString(String s) {
-		return s;
+        if (s == null) return null;
+        return s.replaceAll("'", "''");
 	}
 
 	private void 
 	transferEvent{CalServEP:;CalRootEP:}(
 			List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:;CalRootEP:} c, 
-			Event{CalServEP:;CalRootEP:} e) 
+			Event[{CalServEP:;CalRootEP:}]{CalServEP:;CalRootEP:} e_) 
 			where caller(CalServEP,CalRootEP),
 			endorse({CalServEP:;CalRootEP:; CalServEP!: meet CalRootEP!:}) {
 
 		declassify({CalServEP:;CalRootEP:; CalServEP!: meet CalRootEP!:} to {CalServEP:;CalServEP!: meet CalRootEP!:}) {
-			Event e1 = endorse(e, {CalServEP:;CalRootEP:} to {CalServEP:;CalRootEP:;CalServEP!: meet CalRootEP!:});
-			Event e2 = declassify(e1, {CalServEP:;CalRootEP:;CalServEP!: meet CalRootEP!:} to {CalServEP:;CalServEP!: meet CalRootEP!:});
+			Event e = CalServDeclassifier.transferEvent(CalRootEP, CalServEP, e_);
 			List[{CalServEP:;CalServEP!:}] c1 = endorse(c, {CalServEP:;CalRootEP:} to {CalServEP:;CalRootEP:;CalServEP!: meet CalRootEP!:});
 			List[{CalServEP:;CalServEP!:}] c2 = declassify(c1, {CalServEP:;CalRootEP:;CalServEP!: meet CalRootEP!:} to {CalServEP:;CalServEP!: meet CalRootEP!:});
 			try {
-				c2.add(e2);
+				c2.add(e);
 			}
 			catch (ClassCastException impossible) { }
 			catch (IllegalArgumentException impossible) { }
@@ -227,14 +189,14 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		}
 	}
 
-	boolean{p:; p!:} compareDates{p:; p!:}(
-			principal{p:; p!:} p,
-			Date[{CalRootEP:; p!:}]{p:; p!:} c,
-			Date[{CalRootEP:; p!:}]{p:; p!:} d) 
-			where caller(p),
-			authority(CalRootEP),
-			endorse({p:; CalRootEP!:}),
-			CalRootEP actsfor p {
+    boolean{p:; p!:} compareDates{p:; p!:}(
+            principal{p:; p!:} p,
+            Date[{CalRootEP:; p!:}]{p:; p!:} c,
+            Date[{CalRootEP:; p!:}]{p:; p!:} d) 
+            where caller(p),
+            authority(CalRootEP),
+            endorse({p:; CalRootEP!:}),
+            CalRootEP actsfor p {
 		boolean ret0 =  (c != null && c.before(d));
 		boolean ret1 = endorse(ret0, {CalRootEP:; p!:} to {CalRootEP:; CalRootEP!:});
 		boolean ret = declassify(ret1, {CalRootEP:; CalRootEP!:} to {p:; CalRootEP!:});

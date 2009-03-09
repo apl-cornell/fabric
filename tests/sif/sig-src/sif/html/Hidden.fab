@@ -11,7 +11,7 @@ public final class Hidden[principal servletP, label L, label E] extends InputNod
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
 
     private final String{L} data;
-    public Hidden(Input[servletP, L]{L} i, String{L} data_) 
+    public Hidden(Input[servletP]{L} i, String{L} data_) 
     where {L;E} <= {*i.inputLbl} {
         super(i);
         data = null; // dummy

@@ -9,16 +9,16 @@ import sif.html.*;
  * A User Action class.
  */
 abstract public class UAction[principal servP] extends Action[servP] {
-    public UAction(UServlet[servP]{this} m) {
+    public UAction(UServlet[servP] m) {
         super();
         initFields(m);
     }
-    public UAction(String{this} name, UServlet[servP]{this} m) {
+    public UAction(String name, UServlet[servP] m) {
         super();
         initFields(name, m);
     }
     
-    protected boolean{this} ensureLoggedIn() { return true; }
+    protected boolean ensureLoggedIn() { return true; }
     
     protected UAction[servP] directAfterLogin{*:req.session}(Request[servP]{*:req.session} req, UServlet[servP]{*:req.session} servlet) { 
         return null;
@@ -58,7 +58,7 @@ abstract public class UAction[principal servP] extends Action[servP] {
     public abstract void invokeImpl{*lbl}(label{*lbl} lbl,
                                       Request[servP]{*lbl} req,
                                       UServlet[servP]{*lbl} servlet,
-                                      USessState[servP]{*lbl} state) 
+                                      USessState[servP, lbl]{*lbl} state) 
         throws (ServletException{*lbl;req.session!:})
           where caller(req.session),
           lbl <= {*:req.session},

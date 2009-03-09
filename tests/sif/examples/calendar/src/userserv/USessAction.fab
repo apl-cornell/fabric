@@ -8,9 +8,9 @@ import sif.html.Page;
 /**
  * A session-specific User Action class.
  */
-abstract public class USessAction[principal servP] extends UAction[servP] {
-    public final principal{this} session;
-    public USessAction(UServlet[servP]{this} m, principal{this} session)
+abstract public class USessAction[principal servP, covariant label T] extends UAction[servP] {
+    public final principal{T} session;
+    public USessAction(UServlet[servP]{T} m, principal{T} session)
     {
         this.session = session;
         super(m);
@@ -25,21 +25,24 @@ abstract public class USessAction[principal servP] extends UAction[servP] {
                 lbl <= {*:req.session},
                 req.session equiv state.sessionPrincipal
     {
-        if (req == null || servlet == null || 
-                state == null || !(session instanceof SessionPrincipal)) 
-            throw new ServletException("invalid args");
-
-        if (req.session equiv this.session) {
-            final User[servP] currentUser = state.currentUser(); 
-            if (req.session actsfor currentUser) {
-                this.invokeSessImpl(lbl, req, servlet, state, currentUser);
-            }
-        }
-        else {
-            throw new ServletException("req.session not equivalent to this.session"); 
-        }
+    	if(req == null) throw new ServletException("invalid args");
+    	if(T <= new label {*lbl; req.session←}) {
+    		final principal{*lbl;req.session←} session = this.session; 
+    		if (servlet == null || state == null || !(session instanceof SessionPrincipal)) 
+    			throw new ServletException("invalid args");
+    		if (req.session equiv session) {
+    			final User[servP] currentUser = state.currentUser(); 
+    			if (req.session actsfor currentUser) {
+    				this.invokeSessImpl(lbl, req, servlet, state, currentUser);
+    			}
+    			return;
+    		}
+    		else {
+    			throw new ServletException("req.session not equivalent to this.session");
+    		}
+    	}
     }
-
+    
     public abstract void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
                         Request[servP]{*lbl;session!:} req,
                         UServlet[servP]{*lbl;session!:} servlet,

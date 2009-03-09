@@ -23,11 +23,6 @@ public class User[principal servP] extends AbstractPrincipal implements JifObjec
     	if(remote1 == null) return null;
         return remote1.firstName;
     }
-    
-    public boolean delegatesTo(Principal p) {
-    	// XXX TODO
-    }
-    
 
     public String{servP:;servP!:} getLastName() {
     	if(remote1 == null) return null;

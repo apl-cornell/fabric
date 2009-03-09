@@ -3,7 +3,7 @@ package userserv;
 import sif.servlet.SessionState;
 import jif.util.*;
 
-public class USessState[principal servP] extends SessionState {
+public class USessState[principal servP, covariant label T] extends SessionState[T] {
     private User[servP]{sessionPrincipal!:} currentUser = null;
     
     public User[servP]{sessionPrincipal!:} currentUser() { 

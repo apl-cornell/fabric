@@ -21,7 +21,7 @@ public class LogoffAction[principal servP] extends UAction[servP] {
     public void invokeImpl{*lbl}(label{*lbl} lbl,
             Request[servP]{*lbl} req,
             UServlet[servP]{*lbl} servlet,
-            USessState[servP]{*lbl} state) 
+            USessState[servP, lbl]{*lbl} state) 
      throws (ServletException{*lbl})
           where caller(req.session),
           lbl <= {*:req.session},

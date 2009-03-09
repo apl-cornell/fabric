@@ -5,26 +5,120 @@
 
   <property name="app.name" value="calendar" />
 
-  <import file="../build-examples-common.xml" />
+  <import file="${basedir}/../../config.xml" />
 
     <!-- Redefine the class path to include the User stuff -->
     <path id="example.classpath">
       <path refid="standard.classpath" />
         <pathelement location="${basedir}/${destdir}" />
-        <pathelement location="${examples-common.basedir}/user/classes" />
+        <pathelement location="${examples-common.basedir}/userSplitNoThis/classes" />
     </path>
 	
-    <target name="compile" depends="init,configure,principals"
+	<target name="dummy">
+	</target>
+	
+	<target name="principals" description="Compiles the principals necessary for this app">
+    <apply executable="bash"
+                    parallel="true"
+                    failonerror="true"
+                    dest="${basedir}"
+                    relative="true"
+                    skipemptyfilesets="true"
+                    vmlauncher="false">
+        <arg value="${fabric.home}/bin/fabc"/>
+        <arg value="-d"/>
+        <arg value="${basedir}/web/WEB-INF/classes"/>
+  			<arg value="-cp" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes" />
+        <arg value="-sigcp"/>
+        <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
+        <srcfile />
+        <fileset dir="${basedir}" includes="src/jif/principals/*.fab" />
+        <mapper type="regexp"
+                from="^src(.*)\.fab"
+                to="classes\1\.class" />
+    </apply>
+		
+	</target>
+	
+	<target name="user" description="Compiles the user library for this app">
+    <apply executable="bash"
+                    parallel="true"
+                    failonerror="true"
+                    dest="${basedir}"
+                    relative="true"
+                    skipemptyfilesets="true"
+                    vmlauncher="false">
+        <arg value="${fabric.home}/bin/fabc"/>
+        <arg value="-d"/>
+        <arg value="${basedir}/web/WEB-INF/classes"/>
+  			<arg value="-cp" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes" />
+        <arg value="-sigcp"/>
+        <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
+	  		<arg value="-report"/> <arg value="frontend=1"/>
+    	<!--
+	  	-->
+    	
+        <srcfile />
+        <fileset dir="${basedir}" includes="src/userserv/*.fab" />
+        <mapper type="regexp"
+                from="^src(.*)\.fab"
+                to="classes\1\.class" />
+    </apply>
+		
+	</target>
+	
+	<target name="compile" depends="user,principals"
+		description="Compiles the calendar application code">
+    <apply executable="bash"
+                    parallel="true"
+                    failonerror="true"
+                    dest="${basedir}"
+                    relative="true"
+                    skipemptyfilesets="true"
+                    vmlauncher="false">
+        <arg value="${fabric.home}/bin/fabc"/>
+        <arg value="-d"/>
+        <arg value="${basedir}/web/WEB-INF/classes"/>
+  			<arg value="-cp" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/web/WEB-INF/classes:${fabric.home}/lib/servlet-api.jar" />
+        <arg value="-sigcp"/>
+        <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
+    		<arg value="-filsigcp"/>
+    		<arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
+        <arg value="-e"/>
+  		<arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>
+  		<arg value="-report"/> <arg value="frontend=1"/>
+    	<!--
+      <arg value="-debugpositions"/>
+  		<arg value="-print" /> <arg value="FieldLabelResolver"/>
+	  		<arg value="-report"/> <arg value="error=5"/>
+	  		<arg value="-report"/> <arg value="errors=5"/>
+    	  <arg value="-report"/> <arg value="debug=5" />
+    	-->
+        <srcfile />
+        <fileset dir="${basedir}" includes="src/calendar/*.fab" />
+        <mapper type="regexp"
+                from="^src(.*)\.fab"
+                to="classes\1\.class" />            
+    </apply>
+		
+	</target>
+	
+	
+
+    <target name="compileold" depends="user,principals"
             description="Compile the Jif code for this example">
         <antcall target="precompile"/>
-        <apply executable="bash"
+        <apply executable="sh"
                parallel="true"
                failonerror="true"
                dest="${basedir}"
                relative="true"
                skipemptyfilesets="true"
                vmlauncher="false">
-	    <arg value="${fabric.home}/bin/fabc" />
+	    <arg value="${jif.home}/bin/fabc" />
             <arg value="-robust" />
             <arg value="-d" />
             <arg value="${destdir}" />
@@ -37,22 +131,29 @@
             <arg value="-cp" />
             <arg pathref="example.classpath" />
             <arg value="-e" />
-<!--
+        	<!--
+	          <arg value="-report" />
+  	        <arg value="solver=3" />
             <arg value="-report" />
-            <arg value="solver=5" />
+            <arg value="frontend=1" />
             <arg value="-report" />
             <arg value="labelEnv=3" />
             <arg value="-report" />
             <arg value="jif=3" />
 -->
             <srcfile />
-            <fileset dir="${basedir}" includes="src/**/*.jif" excludes="src/jif/principals/*.jif"/>
+            <fileset dir="${basedir}" includes="src/calendar/*.jif" />
             <mapper type="regexp"
                     from="^src(.*)\.jif"
                     to="${destdir}\1\.class" />
         </apply>
         <antcall target="postcompile"/>
     </target>
+	
+  <target name="clean" description="clean up">
+      <delete dir="${basedir}/web/WEB-INF/classes" />
+  </target>
+	
 
 </project>
 

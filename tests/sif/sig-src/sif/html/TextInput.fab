@@ -10,7 +10,7 @@ public class TextInput[principal servletP, label L, label E] extends InputNode[s
 
     private final int{L} size;
     private final String{L} initialText;
-    public TextInput(Input[servletP, L]{L} input, int{L} size, String{L} initial) 
+    public TextInput(Input[servletP]{L} input, int{L} size, String{L} initial) 
     where {L;E} <= {*input.inputLbl} {
         super(input);
         this.size = size;

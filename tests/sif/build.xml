@@ -1,4 +1,4 @@
-<project name="sif" default="sif" basedir=".">
+<project name="sif" default="all" basedir=".">
     <description>
     SIF build file
   </description>
@@ -30,9 +30,10 @@
         <!-- Delete the ${sif.classes} directory tree -->
         <delete dir="${sif.classes}" />
         <delete dir="${sif.sig-classes}" />
-        <!--subant target="clean">
-            <fileset dir="examples" includes="*/build.xml"/>
-        </subant-->
+        <subant target="clean">
+            <fileset dir="examples" includes="hello/build.xml"/>
+	          <fileset dir="examples" includes="calendar/build.xml"/>
+        </subant>
     </target>
 
     <target name="clobber" depends="clean" />
@@ -160,11 +161,12 @@
             depends="sif"
             description="Builds all examples">
         <!-- compile the user example first, since other examples depend on it -->
-        <subant target="compile">
+        <!--subant target="compile">
             <fileset dir="examples" includes="user/build.xml"/>
-        </subant>
+        </subant-->
         <subant target="compile">
-            <fileset dir="examples" includes="*/build.xml" excludes="user/build.xml"/>
+          <fileset dir="examples" includes="hello/build.xml"/>
+          <!--fileset dir="examples" includes="calendar/build.xml"/-->
         </subant>
     </target>
 
@@ -205,11 +207,12 @@
             depends="install"
             description="Installs the SIF code and the examples to the Tomcat.">
         <!-- compile the user example first, since other examples depend on it -->
-        <subant target="install">
+        <!--subant target="install">
             <fileset dir="examples" includes="user/build.xml"/>
-        </subant>
+        </subant-->
         <subant target="install">
-            <fileset dir="examples" includes="*/build.xml" excludes="user/build.xml"/>
+            <fileset dir="examples" includes="hello/build.xml"/>
+          	<!--fileset dir="examples" includes="calendar/build.xml"/-->
         </subant>
     </target>
 
