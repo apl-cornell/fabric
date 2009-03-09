@@ -50,7 +50,7 @@ public final class JifString[covariant label L] extends java.lang.Object impleme
     public int{L; anotherString} compareTo(JifString[L] anotherString) throws (NullPointerException{L;anotherString}) {
         return compareTo(anotherString.s);        
     }
-    public int{L; o} compareTo(Object o) throws (ClassCastException{o}, NullPointerException{L;o}) {
+    public int{L; o} compareTo(java.lang.Object o) throws (ClassCastException{o}, NullPointerException{L;o}) {
         if (o instanceof String) return compareTo((String)o);
         return compareTo((JifString[L])o); 
     }
