@@ -91,14 +91,22 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 //                                    nf.Id(Position.compilerGenerated(), "client$principal")), 
 //                                Collections.singletonList(nf.CanonicalPrincipalNode(Position.compilerGenerated(), 
 //                                    ts.bottomPrincipal(Position.compilerGenerated()))));
+//          PolicyNode writer = 
+//            nf.WriterPolicyNode(Position.compilerGenerated(),
+//                                nf.CanonicalPrincipalNode(clientPrincipal.position(), clientPrincipal),
+//                                Collections.EMPTY_LIST);
+          List<PrincipalNode> writers = new ArrayList<PrincipalNode>();
+//          writers.add(nf.CanonicalPrincipalNode(clientPrincipal.position(), 
+//                                                clientPrincipal));
+//          writers.add(nf.AmbPrincipalNode(Position.compilerGenerated(), 
+//                                          nf.Id(Position.compilerGenerated(), "client$principal")));
+          writers.add(nf.CanonicalPrincipalNode(Position.compilerGenerated(), 
+                      ts.topPrincipal(Position.compilerGenerated())));
           PolicyNode writer = 
             nf.WriterPolicyNode(Position.compilerGenerated(),
-                                nf.CanonicalPrincipalNode(clientPrincipal.position(), clientPrincipal),
-//                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
-//                                    nf.Id(Position.compilerGenerated(), "client$")),
-                                Collections.EMPTY_LIST);
-//                                Collections.singletonList(nf.AmbPrincipalNode(Position.compilerGenerated(), 
-//                                    nf.Id(Position.compilerGenerated(), "client$principal"))));
+                                nf.CanonicalPrincipalNode(Position.compilerGenerated(), 
+                                                          ts.topPrincipal(Position.compilerGenerated())),
+                                writers);
 //          components.add(reader);
           components.add(writer);
 

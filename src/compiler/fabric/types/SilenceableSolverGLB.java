@@ -1,5 +1,6 @@
 package fabric.types;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import polyglot.types.SemanticException;
@@ -57,5 +58,17 @@ public class SilenceableSolverGLB extends SolverGLB {
     }
 
     return super.solve();
+  }
+  
+  @Override
+  protected void reportError(Constraint c, Collection variables) throws SemanticException {
+    if (muted()) {
+      setStatus(STATUS_NO_SOLUTION);
+      System.err.println("Runtime check does not type-check, due to\n" + errorMsg(c) + 
+          "\nin the constraint\n" + c + "\nat " + c.position());
+    }
+    else {
+      super.reportError(c, variables);
+    }
   }
 }
