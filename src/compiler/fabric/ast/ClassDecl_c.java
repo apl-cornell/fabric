@@ -70,6 +70,11 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
     
     FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
     
+    if (!ts.isFabricClass(pct)) {
+      // No need to check Java classes implemented in Fabric.
+      return cd;
+    }
+    
     for (ClassMember cm : (List<ClassMember>)cd.body().members()) {
       if (cm instanceof FieldDecl) {
         FieldDecl fd = (FieldDecl)cm;

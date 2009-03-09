@@ -6,7 +6,6 @@ import polyglot.types.Type;
 import polyglot.util.Position;
 import jif.types.JifTypeSystem;
 import jif.types.label.AccessPath;
-import jif.types.label.AccessPathField;
 import jif.types.label.ConfPolicy;
 import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
@@ -39,4 +38,12 @@ public interface FabricTypeSystem extends JifTypeSystem {
   
   ConfPolicy representableConfProjection(Label L);
   IntegPolicy representableIntegProjection(Label L);
+  
+  /**
+   * Checks whether <code>type</code> is a Fabric class, 
+   * that is, inherits <code>fabric.lang.Object</code>.
+   * @param type
+   * @return
+   */
+  boolean isFabricClass(Type type);
 }

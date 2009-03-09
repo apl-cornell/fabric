@@ -13,6 +13,7 @@ import fabil.ast.ArrayInit;
 import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricUtil;
 import fabric.extension.NewArrayExt_c;
+import fabric.types.FabricClassType;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
 
@@ -40,7 +41,10 @@ public class NewArrayToFabilExt_c extends NewArrayToJavaExt_c {
       base = base.toArray().base();
     }
 
-    Label baseLabel = ts.labelOfType(base);
+    Label baseLabel = null;
+    if (base instanceof FabricClassType && ts.isFabricClass(base)) {
+      baseLabel = ((FabricClassType)base).defaultFieldLabel();
+    }
     Expr labelExpr = null;
     if (baseLabel != null) {
       labelExpr = rw.labelToJava(baseLabel);

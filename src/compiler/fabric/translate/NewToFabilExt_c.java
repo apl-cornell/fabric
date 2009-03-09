@@ -18,6 +18,7 @@ import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricUtil;
 import fabric.extension.NewExt_c;
 import fabric.types.FabricClassType;
+import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
 
 public class NewToFabilExt_c extends NewToJavaExt_c {
@@ -28,18 +29,24 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
     New n = (New) node();
     FabricClassType ct = (FabricClassType)objectType.toClass();
 
+    FabricTypeSystem ts = (FabricTypeSystem)rw.jif_ts();
     FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
     
-    NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
-    Expr loc = ext.location();
-    
-    Label fieldLabel = ct.defaultFieldLabel();
+    Expr loc = null;
     Expr labelExpr = null;
-    if (fieldLabel != null && !sigMode) {
-      labelExpr = rw.labelToJava(fieldLabel);
-      if (loc != null) {
-        labelExpr = ffrw.updateLabelLocation(labelExpr, loc);
+    
+    if (ts.isFabricClass(ct)) {
+      // For non-fabric classes, there cannot be location or field label.
+      NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
+      loc = ext.location();
+      
+      Label fieldLabel = ct.defaultFieldLabel();
+      if (fieldLabel != null && !sigMode) {
+        labelExpr = rw.labelToJava(fieldLabel);
+        if (loc != null) {
+          labelExpr = ffrw.updateLabelLocation(labelExpr, loc);
+        }
       }
     }
     

@@ -14,6 +14,9 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements Fabri
   
   public Label defaultFieldLabel() {
     FabricParsedClassType base = (FabricParsedClassType)base();
+    Label l = base.defaultFieldLabel();
+    if (l == null) return null;
+    
     JifSubst subst = (JifSubst)subst();
     return subst.substLabel(base.defaultFieldLabel());
   }

@@ -201,4 +201,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     }
     return super.integProjection(L);
   }
+  
+  public boolean isFabricClass(Type type) {
+    return isSubtype(type, FObject());
+  }
 }

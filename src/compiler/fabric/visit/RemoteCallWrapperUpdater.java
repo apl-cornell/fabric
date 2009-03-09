@@ -8,10 +8,12 @@ import jif.types.*;
 import jif.types.label.*;
 import jif.types.principal.Principal;
 import fabric.ast.FabricNodeFactory;
+import fabric.types.FabricParsedClassType;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.*;
 import polyglot.frontend.Job;
 import polyglot.types.LocalInstance;
+import polyglot.types.MethodInstance;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
@@ -33,7 +35,30 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
 
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
-    if (n instanceof JifMethodDecl) {
+    if (n instanceof ClassDecl) {
+      ClassDecl cd = (ClassDecl)n;
+      FabricParsedClassType pct = (FabricParsedClassType)cd.type();
+      
+      if (!ts.isFabricClass(pct)) {
+        // Remove all the remote wrappers.
+        List<ClassMember> members = new ArrayList<ClassMember>();
+        for (ClassMember cm : (List<ClassMember>)cd.body().members()) {
+          if (cm instanceof MethodDecl) {
+            MethodDecl md = (MethodDecl)cm;
+            if (md.name().endsWith("_remote")) {
+              // Skip remote wrappers.
+              MethodInstance mi = md.methodInstance();
+              pct.removeMethod(mi);
+              continue;
+            }
+          }
+          members.add(cm);
+        }
+        
+        return cd.body(cd.body().members(members));
+      }
+    }
+    else if (n instanceof JifMethodDecl) {
       // Now add wrappers for remote call authentication check.
       JifMethodDecl md = (JifMethodDecl)n;
 

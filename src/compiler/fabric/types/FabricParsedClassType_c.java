@@ -1,5 +1,7 @@
 package fabric.types;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import jif.types.JifParsedPolyType_c;
@@ -49,22 +51,32 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
 
     if (!fieldLabelFound) {
-      FabricClassType superType = (FabricClassType)superType();
-      if (superType != null && superType.defaultFieldLabel() != null) {
-        defaultFieldLabel = superType.defaultFieldLabel();
-      }
-      else {
-        for (FieldInstance fi : (List<FieldInstance>)fields()) {
-          if (fi.flags().isStatic()) continue;
-          Type t = fi.type();
-          if (ts.isLabeled(t)) {
-            defaultFieldLabel = ts.labelOfType(t);
-            break;
+      if (ts.isFabricClass(this)) {
+        FabricClassType superType = (FabricClassType)superType();
+        if (superType != null && superType.defaultFieldLabel() != null) {
+          defaultFieldLabel = superType.defaultFieldLabel();
+        }
+        else {
+          for (FieldInstance fi : (List<FieldInstance>)fields()) {
+            if (fi.flags().isStatic()) continue;
+            Type t = fi.type();
+            if (ts.isLabeled(t)) {
+              defaultFieldLabel = ts.labelOfType(t);
+              break;
+            }
           }
         }
       }
       fieldLabelFound = true;
     }
     return defaultFieldLabel;
+  }
+  
+  public void removeMethod(MethodInstance mi) {
+    for (Iterator<MethodInstance> it = methods.iterator(); it.hasNext(); ) {
+      if (it.next() == mi) {
+        it.remove();
+      }
+    }
   }
 }
