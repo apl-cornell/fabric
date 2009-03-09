@@ -98,7 +98,7 @@ public enum Timing {
   
   // unit test ///////////////////////////////////////////////////////////////
   
-  public static void main(String[] args) throws InterruptedException {
+  public static void main(String[] args) {
     long begin = System.currentTimeMillis();
     int  n = 500000;
     APP.enabled = true;
