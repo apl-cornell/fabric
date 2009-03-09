@@ -3,7 +3,7 @@ package jif.util;
 /**
  * Base implementation for Collection.
  */
-public abstract class AbstractCollection[label L] implements Collection[L] {
+public abstract class AbstractCollection[label L] extends java.lang.Object implements Collection[L] {
     /**
      * Sole constructor.  (For invocation by subclass constructors, typically
      * implicit.)
