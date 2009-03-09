@@ -17,7 +17,11 @@ public class T6 extends PrivatePartTraversal {
 
   public static void main(String[] args) {
     Core local = Client.getClient().getLocalCore();
-    atomic { new T6@local().mainImpl(args); }
+    T6 t6 = null;
+    atomic {
+      t6 = new T6@local();
+    }
+    t6.mainImpl(args);
   }
 
   public void visitAtomicPart (AtomicPart current) {

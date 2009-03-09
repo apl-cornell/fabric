@@ -31,33 +31,39 @@ public abstract class Traversal {
       URI    addr = new URI(args[0]);
       Core   core = Client.getClient().getCore(addr.getHost());
       Benchmark b = (Benchmark) ((Map) core.getRoot()).get(addr.getPath());
-
-      Timing.reset();
      
       System.out.println();
       System.out.println("Cold stats:");
 
+      Timing.reset();
       atomic {
 	this.visitBenchmark (b);
-	
-	if (args.length >= 2 && args[1].equals("--hot")) {
-	  Timing.printStats();
-	  Timing.reset();
-	  long start = System.currentTimeMillis(); 
-	  int n = 3;
-	  if (args.length >= 3) n = Integer.parseInt(args[2]);
-	  for (int i = 0; i < n; i++)
-	    this.visitBenchmark(b);
-	  long end   = System.currentTimeMillis();
-	  
-	  System.out.println();
-	  System.out.println("Average time: " + (end - start) / n + "msec");
-	  System.out.println("Hot stats (" + n + " runs):");
-	}
       }
-
       Timing.printStats();
-      Timing.reset();
+	
+      if (args.length >= 2 && args[1].equals("--hot")) {
+	int n = 3;
+	if (args.length >= 3) n = Integer.parseInt(args[2]);
+
+	long accumTime = 0;
+	Timing.reset();
+
+	for (int i = 0; i < n; i++) {
+	  atomic {
+	    long start = System.currentTimeMillis(); 
+	    this.visitBenchmark(b);
+	    long end   = System.currentTimeMillis();
+	    accumTime += end - start;
+	  }
+	}
+	
+	System.out.println();
+	System.out.println("Average time: " + accumTime / n + "msec");
+	System.out.println("Hot stats (" + n + " runs):");
+
+	Timing.printStats();
+	Timing.reset();
+      }
     } catch(Exception exc) {
       exc.printStackTrace();
       printUsage();

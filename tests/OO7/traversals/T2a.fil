@@ -16,15 +16,17 @@ public class T2a extends PrivatePartTraversal {
 
   public static void main(String[] args) {
     Core local = Client.getClient().getLocalCore();
-    atomic { new T2a@local().mainImpl(args); }
+    T2a t2 = null;
+    atomic {
+      t2 = new T2a@local();
+    }
+    t2.mainImpl(args);
   }
 
   public void visitAtomicPart (AtomicPart current) {
-    atomic {
-      long x = current.x();
-      current.setX(current.y());
-      current.setY(x);
-    }
+    long x = current.x();
+    current.setX(current.y());
+    current.setY(x);
   }
 
   public void visitCompositePart (CompositePart p) {
