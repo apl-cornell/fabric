@@ -11,6 +11,16 @@ while true; do
             vmargs="$vmargs '$1'"
             shift
             ;;
+	-sigcp)
+			shift
+			sigcp="$sigcp:'$1'"
+			shift
+			;;
+	-cp)
+			shift
+			cp="$cp:'$1'"
+			shift
+			;;
     *) args="$args '$1'"; shift;;
   esac
 done
@@ -24,8 +34,9 @@ classpath="$classpath:$POLYGLOT/lib/polyglot.jar"
 classpath="$classpath:$POLYGLOT/lib/java_cup.jar"
 classpath="$classpath:$POLYGLOT/lib/JFlex.jar"
 classpath="$classpath:$JIF/classes"
+classpath="$classpath:$cp"
 
-sigcp="$TOP/sig-classes/fabric:$TOP/lib/fabric-sig.jar"
+sigcp="$TOP/sig-classes/fabric:$TOP/lib/fabric-sig.jar:$sigcp"
 filsigcp="$TOP/sig-classes/fabil:$TOP/lib/fabil-sig.jar"
 
 command="\"$JAVA\" $vmargs -classpath \"$(fixpath $classpath)\" \
