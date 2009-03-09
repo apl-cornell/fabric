@@ -6,23 +6,23 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: ComplexAssembly.java,v 1.4 2009-03-09 09:32:21 jed Exp $
+// $Id: ComplexAssembly.java,v 1.5 2009-03-09 13:47:53 jed Exp $
 
 package OO7;
 
 import OO7.traversals.Traversal;
 
 import java.util.Collection;
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class ComplexAssembly extends Assembly {
-  ArrayList subAssemblies;
+  LinkedList subAssemblies;
 
   public ComplexAssembly(Benchmark db) {
     super(db);
     db.complexAssembliesById.put(new Integer(id()), this);
 
-    subAssemblies = new ArrayList();
+    subAssemblies = new LinkedList();
   }
 
   public void addSubAssembly(Assembly x) {

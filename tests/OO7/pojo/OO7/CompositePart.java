@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: CompositePart.java,v 1.3 2009-03-09 09:32:21 jed Exp $
+// $Id: CompositePart.java,v 1.4 2009-03-09 13:47:53 jed Exp $
 
 package OO7;
 
@@ -14,13 +14,13 @@ import OO7.traversals.Traversal;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class CompositePart extends DesignObject {
   Document documentation;
 
-  ArrayList/* BaseAssembly */usedInPriv;
-  ArrayList/* BaseAssembly */usedInShar;
+  LinkedList/* BaseAssembly */usedInPriv;
+  LinkedList/* BaseAssembly */usedInShar;
   List/* AtomicPart */parts;
 
   AtomicPart rootPart;
@@ -29,9 +29,9 @@ public class CompositePart extends DesignObject {
     super(db);
     db.compositePartsById.put(new Integer(id()), this);
 
-    usedInPriv = new ArrayList();
-    usedInShar = new ArrayList();
-    parts = new ArrayList();
+    usedInPriv = new LinkedList();
+    usedInShar = new LinkedList();
+    parts = new LinkedList();
   }
 
   public void setDocumentation(Document d) {

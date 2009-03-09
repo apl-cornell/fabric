@@ -6,14 +6,14 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: AtomicPart.java,v 1.3 2009-03-09 09:32:21 jed Exp $
+// $Id: AtomicPart.java,v 1.4 2009-03-09 13:47:53 jed Exp $
 
 package OO7;
 
 import OO7.traversals.Traversal;
 
 import java.util.Collection;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class AtomicPart extends DesignObject {
@@ -31,8 +31,8 @@ public class AtomicPart extends DesignObject {
 
     db.atomicPartsById.put(new Integer(id()), this);
 
-    to = new ArrayList();
-    from = new ArrayList();
+    to = new LinkedList();
+    from = new LinkedList();
   }
 
   public void setBuildDate(long buildDate) {

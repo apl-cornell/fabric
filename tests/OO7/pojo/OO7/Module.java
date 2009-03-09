@@ -6,7 +6,7 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Module.java,v 1.3 2009-03-09 09:32:21 jed Exp $
+// $Id: Module.java,v 1.4 2009-03-09 13:47:53 jed Exp $
 
 package OO7;
 
@@ -14,18 +14,18 @@ import OO7.traversals.Traversal;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class Module extends DesignObject {
   Manual man;
-  ArrayList/* Assembly */assemblies;
+  LinkedList/* Assembly */assemblies;
   ComplexAssembly designRoot;
 
   public Module(Benchmark db) {
     super(db);
     db.modulesById.put(new Integer(id()), this);
 
-    assemblies = new ArrayList();
+    assemblies = new LinkedList();
   }
 
   public void setManual(Manual x) {

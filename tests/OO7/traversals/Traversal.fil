@@ -36,24 +36,26 @@ public abstract class Traversal {
      
       System.out.println();
       System.out.println("Cold stats:");
+
       atomic {
-        this.visitBenchmark (b);
-        
-        if (args.length >= 2 && args[1].equals("--hot")) {
-          Timing.printStats();
-          Timing.reset();
-          long start = System.currentTimeMillis(); 
-          int n = 3;
-          if (args.length >= 3) n = Integer.parseInt(args[2]);
-          for (int i = 0; i < n; i++)
-            this.visitBenchmark(b);
-          long end   = System.currentTimeMillis();
-          
-          System.out.println();
-          System.out.println("Average time: " + (end - start) / n + "msec");
-          System.out.println("Hot stats (" + n + " runs):");
-        }
+	this.visitBenchmark (b);
+	
+	if (args.length >= 2 && args[1].equals("--hot")) {
+	  Timing.printStats();
+	  Timing.reset();
+	  long start = System.currentTimeMillis(); 
+	  int n = 3;
+	  if (args.length >= 3) n = Integer.parseInt(args[2]);
+	  for (int i = 0; i < n; i++)
+	    this.visitBenchmark(b);
+	  long end   = System.currentTimeMillis();
+	  
+	  System.out.println();
+	  System.out.println("Average time: " + (end - start) / n + "msec");
+	  System.out.println("Hot stats (" + n + " runs):");
+	}
       }
+
       Timing.printStats();
       Timing.reset();
     } catch(Exception exc) {
