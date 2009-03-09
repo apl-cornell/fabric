@@ -16,7 +16,7 @@ public class TextInput extends InputNode {
         initialText = initial;
     }
     public TextInput(Principal servletP, Label L, Label E, Servlet s, Label inputLabel, int size, String initial) {
-        super(servletP, L, E, new Input(servletP, L, s, inputLabel));
+        super(servletP, L, E, new Input(servletP, s, inputLabel));
         this.size = size;
         initialText = initial;
     }

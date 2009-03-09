@@ -18,7 +18,7 @@ public final class SubmitButton extends InputNode {
         name = name_;
     }
     public SubmitButton(Principal servletP, Label L, Label E, Servlet s, Label inputLabel, String name_) {
-        super(servletP, L, E, new Input(servletP, L, s, inputLabel));
+        super(servletP, L, E, new Input(servletP, s, inputLabel));
         name = name_;
     }
     /* (non-Javadoc)
