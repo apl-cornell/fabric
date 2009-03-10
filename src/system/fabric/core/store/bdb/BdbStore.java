@@ -3,7 +3,7 @@ package fabric.core.store.bdb;
 import static com.sleepycat.je.OperationStatus.SUCCESS;
 
 import java.io.*;
-import java.util.WeakHashMap;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,7 +44,7 @@ public class BdbStore extends ObjectStore {
    * Cache: maps onums to object versions of objects that are currently stored
    * in BDB.
    */
-  private final WeakHashMap<Long, Integer> cachedVersions;
+  private final HashMap<Long, Integer> cachedVersions;
 
   /**
    * Creates a new BdbStore for the core specified. A new database will be
@@ -92,7 +92,7 @@ public class BdbStore extends ObjectStore {
 
     this.nextOnum = -1;
     this.lastReservedOnum = -2;
-    this.cachedVersions = new WeakHashMap<Long, Integer>();
+    this.cachedVersions = new HashMap<Long, Integer>();
   }
 
   @Override
