@@ -24,13 +24,11 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
   protected Job job;
   protected FabricTypeSystem ts;
   protected FabricNodeFactory nf;
-//  protected QQ qq;
 
   public RemoteCallWrapperUpdater(Job job, FabricTypeSystem ts, FabricNodeFactory nf) {
     this.job = job;
     this.ts = ts;
     this.nf = nf;
-//    this.qq = new QQ(job.extensionInfo());
   }
 
   @Override
@@ -65,6 +63,8 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
       if (md.name().endsWith("_remote")) {
         JifMethodInstance mi = (JifMethodInstance)md.methodInstance();
 
+        FabricParsedClassType pct = (FabricParsedClassType)mi.container();
+        
         Formal f = (Formal)md.formals().get(0);
 //        Formal lbf = (Formal)md.formals().get(1);
         LocalInstance li = f.localInstance();
@@ -79,20 +79,15 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
           throw new InternalCompilerError(e);
         }
 
-        //        Principal clientPrincipal = ts.clientPrincipal(Position.compilerGenerated());
-
-        //          Label defaultBound = ts.defaultSignature().defaultArgBound(f);
-        //          JifLocalInstance li = (JifLocalInstance)ts.localInstance(f.position(), Flags.FINAL, ts.Principal(), "client$principal");
-        //          ArgLabel al = ts.argLabel(f.position(), li, null);
-        //          al.setUpperBound(defaultBound);
-        //          li.setLabel(al);
-        //          f = f.localInstance(li);
-        //          Type labeled = ts.labeledType(Position.compilerGenerated(), ts.Principal(), al);
-        //          f = f.type(f.type().type(labeled));
-
         Label startLabel = mi.pcBound();        
         Label returnLabel = mi.returnLabel();
 
+        if (ts.containsThisLabel(startLabel) || ts.containsThisLabel(returnLabel)) {
+          // If the "this" label is used in the signature, then we does not allow remote calls.
+          pct.removeMethod(mi);
+          return null;
+        }
+        
 //        // (rv meet {conf.top;integ.bot}) join ({client$<-}) <= ({client$->}) join (m meet {conf.bot;integ.top})
 //        Label left = ts.join(
 //            ts.meet(
@@ -121,6 +116,10 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         while (it.hasNext()) {
           Type ft = it.next();
           Label l = ts.labelOfType(ft);
+          if (ts.containsThisLabel(l)) {
+            pct.removeMethod(mi);
+            return null;
+          }
           IntegPolicy ip = ts.representableIntegProjection(l);
           startIntegPolicy = ts.meet(startIntegPolicy, ip);
         }
@@ -192,8 +191,6 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         }
         
         Stmt alter = (Stmt)md.body().statements().get(1);
-        
-//        Stmt t = qq.parseStmt("try { _npe(lbl); %S; } catch (NullPointerException e) {}", s);
 
         Stmt s = nf.If(Position.compilerGenerated(), labelComp, conseq, alter);
         

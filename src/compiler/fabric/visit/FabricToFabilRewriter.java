@@ -80,7 +80,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
 //}
 
   public Expr updateLabelLocation(Expr labelExpr, Expr locExpr) {
-    if (labelExpr instanceof Call) {
+    if (labelExpr instanceof Call && locExpr != null) {
       Call c = (Call)labelExpr;
       
       // XXX Hack

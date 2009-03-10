@@ -2,8 +2,6 @@ package fabil.types;
 
 import java.util.List;
 
-import fabric.types.FabricFlags;
-
 import polyglot.ast.TypeNode;
 import polyglot.frontend.Source;
 import polyglot.types.*;

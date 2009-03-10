@@ -46,4 +46,6 @@ public interface FabricTypeSystem extends JifTypeSystem {
    * @return
    */
   boolean isFabricClass(Type type);
+  
+  boolean containsThisLabel(Label label);
 }

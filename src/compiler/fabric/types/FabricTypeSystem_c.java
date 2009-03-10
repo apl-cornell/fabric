@@ -262,4 +262,24 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     f = f.set(FabricFlags.NONFABRIC);
     return f;
   }
+  
+  public boolean containsThisLabel(Label label) {
+    if (label instanceof ThisLabel) {
+      return true;
+    }
+    else if (label instanceof MeetLabel) {
+      MeetLabel ml = (MeetLabel)label;
+      for (Label l : (Collection<Label>)ml.meetComponents()) {
+        if (containsThisLabel(l)) return true;
+      }
+    }
+    else if (label instanceof JoinLabel) {
+      JoinLabel jl = (JoinLabel)label;
+      for (Label l : (Collection<Label>)jl.joinComponents()) {
+        if (containsThisLabel(l)) return true;
+      }
+    }
+    
+    return false;
+  }
 }
