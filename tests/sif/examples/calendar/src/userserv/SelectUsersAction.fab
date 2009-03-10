@@ -17,7 +17,7 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
     /**
      * Are we selecting a single user, or multiple users?
      */
-    final boolean{this} singleMode;    
+    final boolean{this} singleMode;
 
     /**
      * The label of the input level
@@ -100,12 +100,12 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
             User[servP,{*lbl;session!:}]{*lbl;session!:} currentUser) 
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
-              session equiv state.sessionPrincipal,
+              session equiv state.remote.sessionPrincipal,
               session actsfor currentUser,              
               lbl <= {*:req.session},
               caller(session)
     {
-        if (req == null || servlet == null || state == null) 
+        if (req == null || servlet == null || state == null || state.remote == null) 
             throw new ServletException("invalid args");
 
 
@@ -114,15 +114,12 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
                 this.inpUsers.inputLbl equiv this.inputLbl && 
                 this.inputLbl <= new label {currentUser:;currentUser!:} && 
                 currentUser equiv this.currentUser &&
-                state.sessionPrincipal equiv session) {
+                state.remote.sessionPrincipal equiv session) {
             producePage(new label {*lbl; session!:}, req, servlet, state, null);
         }
         else {
             String lblString = null;
-            try {
-                lblString = LabelUtil.singleton().toString(lbl);
-            }
-            catch (NullPointerException imposs) { }            
+                lblString = LabelUtil.toString(lbl);
             throw new ServletException("SelectUsersAction.invokeSessImpl: lbl was unexpectedly high: " + lblString);
         }
     }
@@ -137,7 +134,7 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
             UServlet[servP]{*bnd} servlet,
             USessState[servP, bnd]{*bnd} state,
             String{*bnd} errMessage) 
-      where req.session equiv state.sessionPrincipal,
+      where req.session equiv state.remote.sessionPrincipal,
             req.session equiv session,
             session actsfor this.currentUser,
             {*bnd} <= {*this.inpUsers.inputLbl},
@@ -313,29 +310,26 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
             User[servP,{*lbl;session!:}]{*lbl;session!:} currentUser) 
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
-              session equiv state.sessionPrincipal,
+              session equiv state.remote.sessionPrincipal,
               session actsfor currentUser,              
               lbl <= {*:req.session},
               caller(session)
     {
-        if (req == null || servlet == null || state == null) 
+        if (req == null || servlet == null || state == null || state.remote == null) 
             throw new ServletException("invalid args");
 
         if (selectUsersAction == null || selectUsersAction.inpUsers == null) 
             throw new ServletException("selectUsersAction is null!");
         
         if (session equiv selectUsersAction.session && currentUser equiv selectUsersAction.currentUser &&
-                session equiv state.sessionPrincipal && selectUsersAction.inpUsers.inputLbl equiv selectUsersAction.inputLbl &&
+                session equiv state.remote.sessionPrincipal && selectUsersAction.inpUsers.inputLbl equiv selectUsersAction.inputLbl &&
                 selectUsersAction.inputLbl <= new label {currentUser:;currentUser!:} &&
                 lbl equiv selectUsersAction.inputLbl) {
             this.submit(lbl, req, servlet, state, currentUser);
         }
         else {
             String lblString = null;
-            try {
-                lblString = LabelUtil.singleton().toString(lbl);
-            }
-            catch (NullPointerException imposs) { }            
+                lblString = LabelUtil.toString(lbl);
             throw new ServletException("FinishSelectUsers.invokeSessImpl: lbl is too high: " + lblString);
         }
     }
@@ -350,7 +344,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
             User[servP,{*lbl;session!:}]{*lbl;session!:} currentUser)
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
-              session equiv state.sessionPrincipal,
+              session equiv state.remote.sessionPrincipal,
               session actsfor currentUser,              
               currentUser equiv selectUsersAction.currentUser,              
               lbl <= {*:req.session},

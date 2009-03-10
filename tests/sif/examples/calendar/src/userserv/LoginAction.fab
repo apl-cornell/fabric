@@ -30,7 +30,7 @@ public class LoginAction[principal servP] extends USessAction[servP] {
             User[servP, {*lbl;session!:}]{*lbl;session!:} currentUser) 
    throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
-              session equiv state.sessionPrincipal,
+              session equiv state.remote.sessionPrincipal,
               session actsfor currentUser,              
               lbl <= {*:req.session},
               caller(session)
@@ -45,10 +45,7 @@ public class LoginAction[principal servP] extends USessAction[servP] {
         }
         else {
             String lblString = null;
-            try {
-                lblString = LabelUtil.singleton().toString(lbl);
-            }
-            catch (NullPointerException imposs) { }
+                lblString = LabelUtil.toString(lbl);
             throw new ServletException("LoginAction.producePage: lbl too high: " + lblString);
         }
     }
@@ -60,7 +57,7 @@ public class LoginAction[principal servP] extends USessAction[servP] {
                                            String{*lbl} uidError, 
                                            String{*lbl} passwdError) 
              where session equiv req.session, 
-                   session equiv state.sessionPrincipal,
+                   session equiv state.remote.sessionPrincipal,
                    lbl <= {*:req.session},
                    {session!:} <= lbl,
                    {*this.inpUserID.inputLbl} <= {session:;session!:},
@@ -125,7 +122,7 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
             User[servP, {*lbl;session!:}]{*lbl;session!:} currentUser) 
    throws (ServletException{*lbl;req.session!:})
         where session equiv req.session, 
-              session equiv state.sessionPrincipal,
+              session equiv state.remote.sessionPrincipal,
               session actsfor currentUser,              
               lbl <= {*:req.session},
               caller(session)
@@ -140,10 +137,7 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
         }
         else {
             String lblString = null;
-            try {
-                lblString = LabelUtil.singleton().toString(lbl);
-            }
-            catch (NullPointerException imposs) { }
+                lblString = LabelUtil.toString(lbl);
             throw new ServletException("SubmitLoginAction.invokeSessImpl: lbl is too high: " + lblString);
         }
     }
@@ -153,13 +147,13 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
                                 USessState[servP, {*lbl;session!:}]{*lbl;session!:} state) 
         throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
-              session equiv state.sessionPrincipal,
+              session equiv state.remote.sessionPrincipal,
               session equiv loginAct.session,
               lbl <= {*:req.session},
               caller(session)
     {
  
-        if (req == null || servlet == null || state == null || !(session instanceof SessionPrincipal)) 
+        if (req == null || servlet == null || state == null || !(session instanceof SessionPrincipal[lbl])) 
             return;
 
         if (loginAct == null || loginAct.successAction == null || 
@@ -220,8 +214,14 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
                 // the fact that the user has logged on successfully.
                 declassify({session:;session!:} to {session!:}) {                     
                     User[servP, {session:;session!:}] logU_ = declassify(endorse(loginUser, {session:;session!:}), {session!:});
-                    User[servP, {session!:}] logU = User.declassifyUser(session, logU_);
-                    declassify(state,{session!:}).currentUser(logU);
+                    User[servP, {session!:}] logU = User.declassifyUser(session, servP, logU_);
+                    try {
+                    	final USessState[servP, {session!:}] uss = (USessState[servP, {session!:}])SessionState[{session!:}].declassifySS(state, session);
+                    	if(uss.remote.sessionPrincipal equiv session) {
+                    		uss.currentUser(logU);
+                    	}
+                    } catch(ClassCastException e) {}
+                    catch (NullPointerException e) {}
                     
                     final label newLbl = new label {*lbl; req.session!:};
                     final LoginAction[servP] loginAct = this.loginAct;
@@ -240,15 +240,17 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
     }        
     
     private String{session:;session!:} runClosure{session:;session!:}(User[servP, {session:;session!:}]{session:;session!:} loginUser, 
-                                                  SessionPrincipal{session:;session!:} sp, 
+                                                  SessionPrincipal[{session:;session!:}]{session:;session!:} sp, 
                                                   String{session:;session!:} password) 
      where caller(session) {
         // DOWNGRADE REASON: Has effects at level {loginUser:}, which we need to hide away, since
         // session does not yet act for loginUser.
         declassify ({session!:}) { 
             final User[servP, {session:;session!:}] logUser_ = declassify(loginUser, {session!:});
-            final User[servP, {session!:}] logUser = User.declassifyUser(session, logUser_);
-            LoginClosure[servP, logUser] lc = new LoginClosure[servP, logUser](declassify(sp, {session!:})); 
+            final User[servP, {session!:}] logUser = User.declassifyUser(session, servP, logUser_);
+            
+            LoginClosure[servP, logUser] lc = new LoginClosure[servP, logUser](
+            		SessionPrincipal[{session!:}].declassifySP(sp, session)); 
             Capability[logUser, {logUser:}] cap = 
                 PrincipalUtil.authorize(logUser, 
                                         declassify(password, {session!:}),

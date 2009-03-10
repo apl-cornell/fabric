@@ -23,7 +23,7 @@ abstract public class USessAction[principal servP] extends UAction[servP] {
    throws (ServletException{*lbl;req.session!:})
           where caller(req.session),
                 lbl <= {*:req.session},
-                req.session equiv state.sessionPrincipal
+                req.session equiv state.remote.sessionPrincipal
     {
         if (req == null || servlet == null || 
                 state == null || !(session instanceof SessionPrincipal[lbl])) 
@@ -47,7 +47,7 @@ abstract public class USessAction[principal servP] extends UAction[servP] {
                         User[servP,{*lbl;session!:}]{*lbl;session!:} currentUser) 
                throws (ServletException{*lbl;req.session!:})
         where session equiv req.session, 
-              session equiv state.sessionPrincipal,
+              session equiv state.remote.sessionPrincipal,
               session actsfor currentUser,              
               lbl <= {*:req.session},
               caller(session);

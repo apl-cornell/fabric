@@ -57,8 +57,8 @@
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
     		<arg value="-e"/>
-	  		<arg value="-report"/> <arg value="frontend=1"/>
     	<!--
+	  		<arg value="-report"/> <arg value="frontend=1"/>
 	  	-->
     	
         <srcfile />

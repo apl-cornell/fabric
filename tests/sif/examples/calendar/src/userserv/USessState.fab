@@ -1,25 +1,76 @@
 package userserv;
 
 import sif.servlet.SessionState;
+import sif.servlet.SSW;
 import jif.util.*;
 
 public class USessState[principal servP, covariant label T] extends SessionState[T] {
-    UserWrapper[servP,{remote.sessionPrincipal!:}]{⊥→⊥;⊤←⊤} uwrapper;
+    final UserWrapper[servP,{remote.sessionPrincipal!:}, T]{T} uwrapper;
     
-    public User[servP,{this.remote.sessionPrincipal!:}]{this.remote.sessionPrincipal!:} currentUser() {
-    	if(uwrapper == null) return null;
-        return uwrapper.currentUser;
-    }
-    
-    void currentUser{remote.sessionPrincipal!:}(User[servP,{remote.sessionPrincipal!:}]{remote.sessionPrincipal!:} cu) { 
-    	if(uwrapper == null) {
-    		uwrapper = new UserWrapper[servP,{remote.sessionPrincipal!:}]();
+    public USessState() {
+    	UserWrapper[servP,{remote.sessionPrincipal!:}, T]{T} uwrapper_;
+    	if(remote != null) {
+    		uwrapper_ = new UserWrapper[servP,{remote.sessionPrincipal!:},T]();
+    	} else {
+    		uwrapper_ = null;
     	}
-		uwrapper.currentUser(cu); 
+    	uwrapper = uwrapper_;
+    	super();
     }
+    
+    public USessState(SSW[T]{T} rem, UserWrapper[servP, {rem.sessionPrincipal!:}, T]{T} uwrap) {
+    	UserWrapper local = null;
+    	if(rem != null && remote != null && rem.sessionPrincipal equiv remote.sessionPrincipal) {
+    		local = uwrap;
+    	}
+    	this.uwrapper = local;
+    	super(rem);
+    }
+    
+    public User[servP,{remote.sessionPrincipal!:}]{remote.sessionPrincipal!:;T} currentUser() {
+    	try {
+    		return uwrapper.currentUser;
+    	} catch (NullPointerException e) {return null;}
+    }
+    
+    void currentUser{remote.sessionPrincipal!:}(User[servP,{remote.sessionPrincipal!:}]{remote.sessionPrincipal!:} cu) 
+    where T <= {remote.sessionPrincipal!:} {
+    	try {
+    		uwrapper.currentUser(cu);
+    	} catch (NullPointerException e) {}
+    }
+    
+    
+    
+    public static USessState[Q, {P←}]{P←} declassifySS{P←}(USessState[Q, {P→;P←}]{P→;P←} ss_, principal{P←} P, principal{P←} Q)
+    where caller(P) {
+    	final USessState[Q,{P→;P←}]{P←} ss = declassify(ss_, {P→;P←} to {P←});
+    	if(ss == null) return null;
+    	final SSW[{P→;P←}]{P←} ssremote = declassify(ss.remote, {P→;P←} to {P←});
+    	if(ssremote == null) return null;
+        final Principal{P←} sessionPrincipal = declassify(ssremote.sessionPrincipal, {P→;P←} to {P←});
+        final String{P←}    sessionId = declassify(ssremote.sessionId, {P→;P←} to {P←});
+        final SSW[{P←}] rem = new SSW[{P←}](sessionPrincipal, sessionId);
+        UserWrapper[Q,{rem.sessionPrincipal←},{P→;P←}]{P←} ssuwrapper = null;
+        UserWrapper[Q,{ssremote.sessionPrincipal←},{P→;P←}]{P→;P←} ssuwrapper_ = ss.uwrapper;
+        if(ssremote.sessionPrincipal equiv rem.sessionPrincipal) {
+        	ssuwrapper = declassify(ssuwrapper_, {P→;P←} to {P←});
+        }
+        if(ssuwrapper == null) return null;
+        final User[Q,{rem.sessionPrincipal←}] currentUser = ssuwrapper.currentUser;
+        final UserWrapper[Q, {rem.sessionPrincipal←}, {P←}] uw = new UserWrapper[Q, {rem.sessionPrincipal←}, {P←}]();
+        if(P equiv rem.sessionPrincipal) {
+        	uw.currentUser(currentUser);
+        }
+        return new USessState[Q,{P←}](rem, uw);
+    	
+    }
+    
 }
 
-class UserWrapper[principal servP, label L] {
+class UserWrapper[principal servP, label L, covariant label T] {
+	
+	public UserWrapper() {}
 
 	User[servP,{L}]{L} currentUser = null;
     void currentUser{L}(User[servP,{L}]{L} cu) { 

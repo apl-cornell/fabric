@@ -10,5 +10,14 @@ public final class SessionPrincipal[covariant label T] extends AbstractPrincipal
         super("");
     }
     
+    
+    public static SessionPrincipal[{P←}]{P←} declassifySP{P←}(SessionPrincipal[{P→;P←}]{P→;P←} sp_, principal{P←} P)
+    where caller(P) {
+    	final SessionPrincipal[{P→;P←}]{P←} sp = declassify(sp_, {P→;P←} to {P←});
+    	if(sp == null) return null;
+    	final SessionState[{P←}]{P←} ss = SessionState[{P←}].declassifySS(sp.session, P);
+    	return new SessionPrincipal[{P←}](ss);
+    }
+    
 
 }

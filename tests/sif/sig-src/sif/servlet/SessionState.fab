@@ -7,15 +7,20 @@ import fabric.lang.Principal;
 
 public class SessionState[covariant label T] {
 
-    protected SessionState{T}(String{T} sessionId) {
+    protected SessionState(String{T} sessionId) {
     	this.remote = new SSW[T](new SessionPrincipal[T](this), sessionId);
     }
     
-    protected SessionState{T}() {
+    protected SessionState() {
     	this.remote = new SSW[T](new SessionPrincipal[T](this), "<uninitialized>");
     }
     
-    public final SSW[T]{⊥→⊥;⊤←⊤} remote;
+    public SessionState(SSW[T]{T} remote) {
+    	this.remote = remote;
+    }
+
+    
+    public final SSW[T]{T} remote;
 
 
     public final String{T;this} getSessionId() {
@@ -36,15 +41,20 @@ public class SessionState[covariant label T] {
     		return new SessionState[lbl](id);
     	}
     }
-}
-
-class SSW[covariant label T] {
-    public final Principal{T} sessionPrincipal;
-    final String{T}    sessionId;
-    SSW(Principal{T} sessionPrincipal, String{T} sessionID) {
-    	this.sessionPrincipal = sessionPrincipal;
-    	this.sessionId = sessionId;
+    
+    
+    public static SessionState[{P←}]{P←} declassifySS{P←}(SessionState[{P→;P←}]{P→;P←} ss_, principal{P←} P)
+    where caller(P) {
+    	final SessionState[{P→;P←}]{P←} ss = declassify(ss_, {P→;P←} to {P←});
+    	if(ss == null) return null;
+    	final SSW[{P→;P←}]{P←} ssremote = declassify(ss.remote, {P→;P←} to {P←});
+    	if(ssremote == null) return null;
+        final Principal{P←} sessionPrincipal = declassify(ssremote.sessionPrincipal, {P→;P←} to {P←});
+        final String{P←}    sessionId = declassify(ssremote.sessionId, {P→;P←} to {P←});
+        final SSW[{P←}] rem = new SSW[{P←}](sessionPrincipal, sessionId);
+        return new SessionState[{P←}](rem);
+    	
     }
-	
+    
 }
 

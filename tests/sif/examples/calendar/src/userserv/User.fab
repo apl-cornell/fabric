@@ -4,7 +4,7 @@ package userserv;
  * Represents a user, as would be found in a database. 
  */
 public class User[principal servP, covariant label T] extends AbstractPrincipal implements JifObject[{servP:;servP!:}] {
-    public User(String{T} name, 
+    public User(String{this} name, 
                 String{T} password, 
                 String{servP:;servP!:} firstName, 
                 String{servP:;servP!:} lastName) where authority (this) {
@@ -16,20 +16,21 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
     private final User$1[servP]{T} remote1;
     private final String{T} password; // XXX should be a secure hash of it 
     
-    User(User$1{T} remote1, String{T} password) {
+    User(User$1[servP]{T} remote1, String{T} password, String{this} name) {
     	this.remote1 = remote1;
     	this.password = password;
+    	super(name);
     }
 
     public String{T} getPassword() {
         return this.password;
     }
-    public String{servP:;servP!:} getFirstName() {
+    public String{servP:;servP!:;T} getFirstName() {
     	if(remote1 == null) return null;
         return remote1.firstName;
     }
 
-    public String{servP:;servP!:} getLastName() {
+    public String{servP:;servP!:;T} getLastName() {
     	if(remote1 == null) return null;
         return remote1.lastName;
     }
@@ -63,7 +64,7 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
         return this.name();
     }
 
-    public String{servP:;servP!:} displayString() {
+    public String{servP:;servP!:;T} displayString() {
         return this.getFirstName()+" "+this.getLastName();
     }
 
@@ -76,15 +77,20 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
         return equals(new label {servP:;servP!:}, o);
     }
     public boolean{servP:;servP!:;o;lbl;*lbl} equals(label lbl, IDComparable[lbl] o) {
-        Object obj = o;
+    	if(o instanceof Object) {
+        Object obj = (Object)o;
         return equals(obj);
+    	} 
+    	return false;
     }
     
-    public static User[servP,{P←}]{P←} declassifyUser{P←}(principal{P←} P, User[servP,{P→;P←}]{P←} user) 
+    public static User[Q,{P←}]{P←} declassifyUser{P←}(principal{P←} P, principal{P←} Q, User[Q,{P→;P←}]{P←} user) 
     where caller(P) {
-    	final User$1[servP]{P←} nremote1 = declassify(user.remote1, {P→;P←} to {P←});
+    	if(user == null) return null;
+    	final User$1[Q]{P←} nremote1 = declassify(user.remote1, {P→;P←} to {P←});
     	final String{P←} npassword = declassify(user.password, {P→;P←} to {P←});
-    	return new User[servP,{P←}](nremote1, npassword);
+    	final String{P←} nname = declassify(user.name(), {P→;P←} to {P←});
+    	return new User[Q,{P←}](nremote1, npassword, nname);
     	
     }
 }
