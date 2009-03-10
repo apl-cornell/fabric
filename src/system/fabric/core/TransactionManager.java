@@ -9,6 +9,7 @@ import fabric.client.Core;
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.client.Client.Code;
+import fabric.client.debug.Timing;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
@@ -45,8 +46,13 @@ public class TransactionManager {
    */
   public void abortTransaction(NodePrincipal client, long transactionID)
       throws AccessException {
-    synchronized (store) {
-      store.rollback(transactionID, client);
+    try {
+      Timing.ABORT.begin();
+      synchronized (store) {
+        store.rollback(transactionID, client);
+      }
+    } finally {
+      Timing.ABORT.end();
     }
   }
 
@@ -55,14 +61,20 @@ public class TransactionManager {
    */
   public void commitTransaction(NodePrincipal client, long transactionID)
       throws TransactionCommitFailedException {
-    synchronized (store) {
-      try {
-        store.commit(transactionID, client);
-      } catch (final AccessException e) {
-        throw new TransactionCommitFailedException("Insufficient Authorization");
-      } catch (final RuntimeException e) {
-        throw new TransactionCommitFailedException("something went wrong", e);
+    try {
+      Timing.COMMIT.begin();
+      synchronized (store) {
+        try {
+          store.commit(transactionID, client);
+        } catch (final AccessException e) {
+          throw new TransactionCommitFailedException(
+              "Insufficient Authorization");
+        } catch (final RuntimeException e) {
+          throw new TransactionCommitFailedException("something went wrong", e);
+        }
       }
+    } finally {
+      Timing.COMMIT.end();
     }
   }
 
@@ -125,119 +137,132 @@ public class TransactionManager {
     }
 
     try {
-      // This will store the set of onums of objects that were out of date.
-      Set<Long> versionConflicts = new HashSet<Long>();
+      try {
+        Timing.PREPARE_CHECK.begin();
 
-      // Check writes and update version numbers
-      for (SerializedObject o : req.writes) {
-        // Make sure no one else is using the object and fetch the old copy from
-        // the core.
-        long onum = o.getOnum();
-        SerializedObject coreCopy;
-        synchronized (store) {
-          if (store.isPrepared(onum, tid))
-            throw new TransactionPrepareFailedException("Object " + onum
-                + " has been locked by an uncommitted transaction");
+        // This will store the set of onums of objects that were out of date.
+        Set<Long> versionConflicts = new HashSet<Long>();
 
-          coreCopy = store.read(onum);
-
-          // Register the update with the store.
-          store.registerUpdate(tid, client, o);
-        }
-
-        // check promises
-        if (coreCopy.getExpiry() > req.commitTime) {
-          throw new TransactionPrepareFailedException("Update to object" + onum
-              + " violates an outstanding promise");
-        }
-
-        // Check version numbers.
-        int coreVersion = coreCopy.getVersion();
-        int clientVersion = o.getVersion();
-        if (coreVersion != clientVersion) {
-          versionConflicts.add(onum);
-          continue;
-        }
-
-        // // Check against read history
-        // if (!readHistory.check(onum, req.commitTime)) {
-        // throw new TransactionPrepareFailedException("Object " + onum
-        // + " has been read since it's proposed commit time.");
-        // }
-
-        // Update promise statistics
-        Pair<Statistics, Boolean> pair = ensureStatistics(onum, req.tid);
-        pair.first.commitWrote();
-        result |= pair.second;
-
-        // Update the version number on the prepared copy of the object.
-        o.setVersion(coreVersion + 1);
-      }
-
-      // Check creates.
-      synchronized (store) {
-        for (SerializedObject o : req.creates) {
+        // Check writes and update version numbers
+        for (SerializedObject o : req.writes) {
+          // Make sure no one else is using the object and fetch the old copy
+          // from
+          // the core.
           long onum = o.getOnum();
+          SerializedObject coreCopy;
+          synchronized (store) {
+            if (store.isPrepared(onum, tid))
+              throw new TransactionPrepareFailedException("Object " + onum
+                  + " has been locked by an uncommitted transaction");
 
-          // Make sure no one else is using the object.
-          if (store.isPrepared(onum, tid))
-            throw new TransactionPrepareFailedException(versionConflicts,
-                "Object " + onum + " has been locked by an "
-                    + "uncommitted transaction");
+            coreCopy = store.read(onum);
 
-          // Make sure the onum isn't already taken.
-          if (store.exists(onum))
-            throw new TransactionPrepareFailedException(versionConflicts,
-                "Object " + onum + " already exists");
+            // Register the update with the store.
+            store.registerUpdate(tid, client, o);
+          }
 
-          // Set the initial version number and register the update with the
-          // store.
-          o.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
-          store.registerUpdate(tid, client, o);
-        }
-      }
-
-      // Check reads
-      for (LongKeyMap.Entry<Integer> entry : req.reads.entrySet()) {
-        long onum = entry.getKey();
-        int version = entry.getValue().intValue();
-
-        synchronized (store) {
-          // Make sure no one else is using the object.
-          if (store.isWritten(onum))
-            throw new TransactionPrepareFailedException(versionConflicts,
-                "Object " + onum + " has been locked by an uncommitted "
-                    + "transaction");
+          // check promises
+          if (coreCopy.getExpiry() > req.commitTime) {
+            throw new TransactionPrepareFailedException("Update to object"
+                + onum + " violates an outstanding promise");
+          }
 
           // Check version numbers.
-          int curVersion;
-          try {
-            curVersion = store.getVersion(onum);
-          } catch (AccessException e) {
-            throw new TransactionPrepareFailedException(versionConflicts,
-                e.getMessage());
-          }
-          if (curVersion != version) {
+          int coreVersion = coreCopy.getVersion();
+          int clientVersion = o.getVersion();
+          if (coreVersion != clientVersion) {
             versionConflicts.add(onum);
             continue;
           }
 
-          // inform the object statistics of the read
+          // // Check against read history
+          // if (!readHistory.check(onum, req.commitTime)) {
+          // throw new TransactionPrepareFailedException("Object " + onum
+          // + " has been read since it's proposed commit time.");
+          // }
+
+          // Update promise statistics
           Pair<Statistics, Boolean> pair = ensureStatistics(onum, req.tid);
-          pair.first.commitRead();
+          pair.first.commitWrote();
           result |= pair.second;
 
-          // Register the read with the store.
-          store.registerRead(tid, client, onum);
+          // Update the version number on the prepared copy of the object.
+          o.setVersion(coreVersion + 1);
         }
+
+        // Check creates.
+        synchronized (store) {
+          for (SerializedObject o : req.creates) {
+            long onum = o.getOnum();
+
+            // Make sure no one else is using the object.
+            if (store.isPrepared(onum, tid))
+              throw new TransactionPrepareFailedException(versionConflicts,
+                  "Object " + onum + " has been locked by an "
+                      + "uncommitted transaction");
+
+            // Make sure the onum isn't already taken.
+            if (store.exists(onum))
+              throw new TransactionPrepareFailedException(versionConflicts,
+                  "Object " + onum + " already exists");
+
+            // Set the initial version number and register the update with the
+            // store.
+            o.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
+            store.registerUpdate(tid, client, o);
+          }
+        }
+
+        // Check reads
+        for (LongKeyMap.Entry<Integer> entry : req.reads.entrySet()) {
+          long onum = entry.getKey();
+          int version = entry.getValue().intValue();
+
+          synchronized (store) {
+            // Make sure no one else is using the object.
+            if (store.isWritten(onum))
+              throw new TransactionPrepareFailedException(versionConflicts,
+                  "Object " + onum + " has been locked by an uncommitted "
+                      + "transaction");
+
+            // Check version numbers.
+            int curVersion;
+            try {
+              curVersion = store.getVersion(onum);
+            } catch (AccessException e) {
+              throw new TransactionPrepareFailedException(versionConflicts, e
+                  .getMessage());
+            }
+            if (curVersion != version) {
+              versionConflicts.add(onum);
+              continue;
+            }
+
+            // inform the object statistics of the read
+            Pair<Statistics, Boolean> pair = ensureStatistics(onum, req.tid);
+            pair.first.commitRead();
+            result |= pair.second;
+
+            // Register the read with the store.
+            store.registerRead(tid, client, onum);
+          }
+        }
+
+        if (!versionConflicts.isEmpty()) {
+          throw new TransactionPrepareFailedException(versionConflicts);
+        }
+      } finally {
+        Timing.PREPARE_CHECK.end();
       }
 
-      if (!versionConflicts.isEmpty()) {
-        throw new TransactionPrepareFailedException(versionConflicts);
-      }
+      try {
+        Timing.PREPARE_STABLE.begin();
 
-      // readHistory.record(req);
-      store.finishPrepare(tid, client);
+        // readHistory.record(req);
+        store.finishPrepare(tid, client);
+      } finally {
+        Timing.PREPARE_STABLE.end();
+      }
 
       return result;
     } catch (TransactionPrepareFailedException e) {
@@ -261,36 +286,42 @@ public class TransactionManager {
   private void checkWritePerms(final NodePrincipal client,
       final Collection<SerializedObject> writes)
       throws TransactionPrepareFailedException {
-    // The code that does the actual checking.
-    Code<TransactionPrepareFailedException> checker =
-        new Code<TransactionPrepareFailedException>() {
-          public TransactionPrepareFailedException run() {
-            Core core = Client.getClient().getCore(store.getName());
+    try {
+      Timing.WRITE_CHECK.begin();
 
-            for (SerializedObject o : writes) {
-              long onum = o.getOnum();
+      // The code that does the actual checking.
+      Code<TransactionPrepareFailedException> checker =
+          new Code<TransactionPrepareFailedException>() {
+            public TransactionPrepareFailedException run() {
+              Core core = Client.getClient().getCore(store.getName());
 
-              fabric.lang.Object coreCopy =
-                  new fabric.lang.Object.$Proxy(core, onum);
+              for (SerializedObject o : writes) {
+                long onum = o.getOnum();
 
-              Label label = coreCopy.get$label();
+                fabric.lang.Object coreCopy =
+                    new fabric.lang.Object.$Proxy(core, onum);
 
-              // Check write permissions.
-              if (!AuthorizationUtil.isWritePermitted(client, label.$getCore(),
-                  label.$getOnum())) {
-                return new TransactionPrepareFailedException("Insufficient "
-                    + "privileges to write object " + onum);
+                Label label = coreCopy.get$label();
+
+                // Check write permissions.
+                if (!AuthorizationUtil.isWritePermitted(client, label
+                    .$getCore(), label.$getOnum())) {
+                  return new TransactionPrepareFailedException("Insufficient "
+                      + "privileges to write object " + onum);
+                }
               }
+
+              return null;
             }
+          };
 
-            return null;
-          }
-        };
+      TransactionPrepareFailedException failure =
+          Client.runInTransaction(null, checker);
 
-    TransactionPrepareFailedException failure =
-        Client.runInTransaction(null, checker);
-
-    if (failure != null) throw failure;
+      if (failure != null) throw failure;
+    } finally {
+      Timing.WRITE_CHECK.end();
+    }
   }
 
   /**
@@ -301,27 +332,33 @@ public class TransactionManager {
    */
   private GroupContainer getGroupContainer(long onum, Worker worker)
       throws AccessException {
-    GroupContainer container;
-    synchronized (store) {
-      container = store.getCachedGroupContainer(onum);
+    try {
+      Timing.GROUP.begin();
+
+      GroupContainer container;
+      synchronized (store) {
+        container = store.getCachedGroupContainer(onum);
+      }
+      if (container != null) return container;
+
+      ObjectGroup group = readGroup(onum, worker);
+      if (group == null) throw new AccessException(store.getName(), onum);
+
+      Core core = Client.getClient().getCore(store.getName());
+      container = new GroupContainer(core, group);
+
+      // Cache the container.
+      synchronized (store) {
+        store.cacheGroupContainer(group.objects().keySet(), container);
+      }
+
+      worker.numGlobsCreated++;
+      worker.numGlobbedObjects += group.objects().size();
+
+      return container;
+    } finally {
+      Timing.GROUP.end();
     }
-    if (container != null) return container;
-
-    ObjectGroup group = readGroup(onum, worker);
-    if (group == null) throw new AccessException(store.getName(), onum);
-
-    Core core = Client.getClient().getCore(store.getName());
-    container = new GroupContainer(core, group);
-
-    // Cache the container.
-    synchronized (store) {
-      store.cacheGroupContainer(group.objects().keySet(), container);
-    }
-
-    worker.numGlobsCreated++;
-    worker.numGlobbedObjects += group.objects().size();
-
-    return container;
   }
 
   /**
@@ -363,58 +400,64 @@ public class TransactionManager {
    *          Used to track read statistics.
    */
   private ObjectGroup readGroup(long onum, Worker worker) {
-    SerializedObject obj = read(onum);
-    if (obj == null) return null;
+    try {
+      Timing.GROUP_MAKE.begin();
 
-    long headLabelOnum = obj.getLabelOnum();
+      SerializedObject obj = read(onum);
+      if (obj == null) return null;
 
-    LongKeyMap<SerializedObject> group =
-        new LongKeyHashMap<SerializedObject>(MAX_GROUP_SIZE);
-    Queue<SerializedObject> toVisit = new LinkedList<SerializedObject>();
-    LongSet seen = new LongHashSet();
+      long headLabelOnum = obj.getLabelOnum();
 
-    // Do a breadth-first traversal and add objects to an object group.
-    toVisit.add(obj);
-    seen.add(onum);
-    while (!toVisit.isEmpty()) {
-      SerializedObject curObj = toVisit.remove();
-      group.put(curObj.getOnum(), curObj);
+      LongKeyMap<SerializedObject> group =
+          new LongKeyHashMap<SerializedObject>(MAX_GROUP_SIZE);
+      Queue<SerializedObject> toVisit = new LinkedList<SerializedObject>();
+      LongSet seen = new LongHashSet();
 
-      if (worker != null) {
-        int count = 0;
-        worker.numObjectsSent++;
-        if (worker.numSendsByType.containsKey(curObj.getClassName()))
-          count = worker.numSendsByType.get(curObj.getClassName());
-        count++;
-        worker.numSendsByType.put(curObj.getClassName(), count);
-      }
+      // Do a breadth-first traversal and add objects to an object group.
+      toVisit.add(obj);
+      seen.add(onum);
+      while (!toVisit.isEmpty()) {
+        SerializedObject curObj = toVisit.remove();
+        group.put(curObj.getOnum(), curObj);
 
-      if (group.size() == MAX_GROUP_SIZE) break;
-
-      for (Iterator<Long> it = curObj.getIntracoreRefIterator(); it.hasNext();) {
-        long relatedOnum = it.next();
-        if (seen.contains(relatedOnum)) continue;
-        seen.add(relatedOnum);
-
-        // Ensure that the related object hasn't been globbed already.
-        synchronized (store) {
-          if (store.getCachedGroupContainer(relatedOnum) != null) continue;
+        if (worker != null) {
+          int count = 0;
+          worker.numObjectsSent++;
+          if (worker.numSendsByType.containsKey(curObj.getClassName()))
+            count = worker.numSendsByType.get(curObj.getClassName());
+          count++;
+          worker.numSendsByType.put(curObj.getClassName(), count);
         }
 
-        SerializedObject related = read(relatedOnum);
-        if (related == null) continue;
+        if (group.size() == MAX_GROUP_SIZE) break;
 
-        // Ensure that the related object's label is the same as the head
-        // object's label. We could be smarter here, but to avoid calling into
-        // the client, let's hope pointer-equality is sufficient.
-        long relatedLabelOnum = related.getLabelOnum();
-        if (headLabelOnum != relatedLabelOnum) continue;
+        for (Iterator<Long> it = curObj.getIntracoreRefIterator(); it.hasNext();) {
+          long relatedOnum = it.next();
+          if (seen.contains(relatedOnum)) continue;
+          seen.add(relatedOnum);
 
-        toVisit.add(related);
+          // Ensure that the related object hasn't been globbed already.
+          synchronized (store) {
+            if (store.getCachedGroupContainer(relatedOnum) != null) continue;
+          }
+
+          SerializedObject related = read(relatedOnum);
+          if (related == null) continue;
+
+          // Ensure that the related object's label is the same as the head
+          // object's label. We could be smarter here, but to avoid calling into
+          // the client, let's hope pointer-equality is sufficient.
+          long relatedLabelOnum = related.getLabelOnum();
+          if (headLabelOnum != relatedLabelOnum) continue;
+
+          toVisit.add(related);
+        }
       }
-    }
 
-    return new ObjectGroup(group);
+      return new ObjectGroup(group);
+    } finally {
+      Timing.GROUP_MAKE.end();
+    }
   }
 
   /**
@@ -527,8 +570,14 @@ public class TransactionManager {
    * core.
    */
   long[] newOnums(int num) {
-    synchronized (store) {
-      return store.newOnums(num);
+    try {
+      Timing.ONUM_CREATE.begin();
+
+      synchronized (store) {
+        return store.newOnums(num);
+      }
+    } finally {
+      Timing.ONUM_CREATE.end();
     }
   }
 
