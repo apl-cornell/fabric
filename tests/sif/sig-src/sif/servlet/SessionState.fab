@@ -8,14 +8,14 @@ import fabric.lang.Principal;
 public class SessionState[covariant label T] {
 
     protected SessionState{T}(String{T} sessionId) {
-    	this.remote = new SSW(new SessionPrincipal[T](this), sessionId);
+    	this.remote = new SSW[T](new SessionPrincipal[T](this), sessionId);
     }
     
     protected SessionState{T}() {
-    	this.remote = new SSW(new SessionPrincipal[T](this), "<uninitialized>");
+    	this.remote = new SSW[T](new SessionPrincipal[T](this), "<uninitialized>");
     }
     
-    public SSW[T]{⊥→⊥;⊤←⊤} remote;
+    public final SSW[T]{⊥→⊥;⊤←⊤} remote;
 
 
     public final String{T;this} getSessionId() {
