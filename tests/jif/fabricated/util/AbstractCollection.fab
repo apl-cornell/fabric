@@ -157,7 +157,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
         }
     }
 
-    public JifObject[L]{L}[]{L} toArray{L}() {
+//    public JifObject[L]{L}[]{L} toArray{L}() {
 //        try {
 //            JifObject[L]{L}[] newArray = new JifObject[L][this.size()]; 
 //            Iterator[L] e = iterator();
@@ -174,15 +174,16 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
 //            return newArray;
 //        }
 //        catch (NegativeArraySizeException impossible) { }
-        return null;
-    }
-    public JifObject[L]{L}const[]{L} toConstArray{L}() {
-        try {
-            return toArray().clone();
-        }
-        catch (NullPointerException imposs) { }
-        return null;
-    }
+//        return null;
+//    }
+    
+//    public JifObject[L]{L}const[]{L} toConstArray{L}() {
+//        try {
+//            return toArray().clone();
+//        }
+//        catch (NullPointerException imposs) { }
+//        return null;
+//    }
 
     public String{L} toString() {
         String s = "[";
