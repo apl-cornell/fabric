@@ -16,8 +16,9 @@
 						vmlauncher="false">
 				<arg value="${fabric.home}/bin/fabc" />
 				<arg value="-d" /> <arg value="classes"/>
+				<arg value="-e" />
 				<srcfile />
-				<fileset dir="${basedir}" includes="jif/util/Map.fab, jif/lang/ExternalPrincipal.fab, jif/util/List.fab, jif/util/ArrayList.fab" />
+				<fileset dir="${basedir}" includes="jif/util/Map.fab, jif/lang/ExternalPrincipal.fab, jif/util/List.fab, jif/util/LinkedList.fab, jif/lang/JifString.fab, jif/util/Set.fab" />
 				<globmapper from="*.fab" to="classes/*.class" handledirsep="true"/>
 			</apply>
 		</target>
