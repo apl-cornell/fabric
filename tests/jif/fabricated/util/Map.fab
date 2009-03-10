@@ -36,11 +36,11 @@ public interface Map[label K, label V] extends JifObject[{K;V}] {
     void clear{K}();
 
     // Views
-    Set[K]{K} keySet() where {this} <= K;
+//    Set[K]{K} keySet();
 
     // the following is removed since it can be emulated with the keySet and get methods
     //Collection[{K;V}] values();
 
     // Set of MapEntry[K,V]
-    Set[K]{K} entrySet(); 
+//    Set[K]{K} entrySet(); 
 }
