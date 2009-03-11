@@ -3,7 +3,6 @@ package fabric.core.store;
 import java.security.PrivateKey;
 
 import fabric.client.Core;
-import fabric.client.debug.Timing;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -41,14 +40,8 @@ public final class GroupContainer {
    * @return null if the given principal is not allowed to read the group.
    */
   public ObjectGroup getGroup(NodePrincipal principal) {
-    try {
-      Timing.READ_CHECK.begin();
-
-      if (!AuthorizationUtil.isReadPermitted(principal, core, labelOnum))
-        return null;
-    } finally {
-      Timing.READ_CHECK.end();
-    }
+    if (!AuthorizationUtil.isReadPermitted(principal, core, labelOnum))
+      return null;
 
     ObjectGroup group;
     Glob glob;

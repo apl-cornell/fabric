@@ -13,16 +13,7 @@ public enum Timing {
   TXLOG,  // logging reads, writes, creates, etc
   SUBTX,  // merging of logs and other subtx management
   FETCH,  // fetching objects
-  CORE,   // other communication with the core
-  ABORT,  // aborting transactions
-  GROUP,  // finding/building object groups
-  GROUP_MAKE, // building object groups
-  READ_CHECK, // checking read permissions
-  WRITE_CHECK, // checking write permissions
-  ONUM_CREATE, // creating new onums
-  PREPARE_CHECK, // checking prepares
-  PREPARE_STABLE, // writing prepares to stable storage
-  ;
+  CORE;   // other communication with the core
   
   /** The time attributed to this category so far */
   private long time;
