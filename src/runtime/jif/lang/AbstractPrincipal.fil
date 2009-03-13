@@ -93,7 +93,8 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     public int hashCode() {
         return this.name == null ? 0 : this.name.hashCode();
     }
-    public boolean equals(Object o) {
+    
+    public boolean equals(fabric.lang.Object o) {
         if (o instanceof Principal) {
             Principal p = (Principal)o;
             return (this.name == p.name() || (this.name != null && 
