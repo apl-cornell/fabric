@@ -1,8 +1,7 @@
 package fabric.client.debug;
 
 import java.io.PrintStream;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.Stack;
 
 /** A utility class for recording the timing of various categories. */
 public enum Timing {
@@ -22,7 +21,7 @@ public enum Timing {
   /** Whether or not to record time for this category */
   public boolean enabled = false;
   
-  private static Deque<Timing> scope;
+  private static Stack<Timing> scope;
   private static long          stamp;
   private static boolean       debug = true;
   
@@ -90,7 +89,7 @@ public enum Timing {
       t.count = 0;
     }
     
-    scope = new ArrayDeque<Timing>();
+    scope = new Stack<Timing>();
     scope.push(APP);
     APP.count = 1;
     stamp = System.currentTimeMillis();
