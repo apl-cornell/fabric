@@ -5,4 +5,8 @@ public class FabricClient {
   private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
 
   public native Core getCore(String str);
+  public native Core getLocalCore();
+  
+  public native static FabricClient getClient();
+  
 }

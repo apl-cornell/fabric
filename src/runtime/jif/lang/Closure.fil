@@ -4,7 +4,7 @@ package jif.lang;
  * This code is mostly copied from Jif.
  */
 public interface Closure {
-  Object invoke();
+  java.lang.Object invoke();
 
   Principal jif$getjif_lang_Closure_P();
 

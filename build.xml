@@ -578,6 +578,9 @@
       <arg value="src/runtime" />
       <arg value="-j" />
       <arg value="-Xmx256M" />
+    	<!--
+    	<arg value="-report"/> <arg value="serialize=2"/>
+    	-->
       <srcfile />
       <fileset dir="${runtime.src}"
           includes="**/*.fab" />

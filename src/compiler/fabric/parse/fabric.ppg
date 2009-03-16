@@ -19,6 +19,7 @@ parser Grm extends jif.parse.Grm {:
         ts = t;
         nf = n;
     }
+    
 :};
 
 terminal Token AT;
@@ -29,7 +30,7 @@ terminal Token CLIENT;
 terminal Token NONFABRIC;
 
 non terminal Atomic atomic_statement;
-non terminal Expr   location_expr_opt;
+non terminal Expr   location_expr_opt, location_expr;
 non terminal Stmt	abort_stmt, retry_stmt;
 non terminal Client local_client;
 non terminal RemoteClientGetter remote_client;
@@ -106,13 +107,13 @@ extend principal_base ::=
 location_expr_opt ::=
                     // Expr
             {: RESULT = null; :}
-    |   AT name:a
+    |   AT simple_name:a
             {: RESULT = a.toExpr(); :}
     ;
-
+    
 override class_instance_creation_expression ::=
                     // Expr
-            NEW:x objtype_or_expr:a label_opt:lab location_expr_opt:loc LPAREN argument_list_opt:b RPAREN:y
+            NEW:x objtype_or_expr:a label_opt:lab LPAREN argument_list_opt:b RPAREN:y location_expr_opt:loc
                 {:  TypeNode tn = a.toUnlabeledType();
                     if (lab != null)
                         tn = parser.nf.LabeledTypeNode(parser.pos(a,lab), tn, lab);
@@ -120,7 +121,7 @@ override class_instance_creation_expression ::=
     ;
 
 override array_creation_expression ::=
-        NEW:n objtype_or_expr:a dims:b location_expr_opt:loc array_initializer:c
+        NEW:n objtype_or_expr:a dims:b array_initializer:c location_expr_opt:loc
             {: RESULT = parser.nf.NewArray(parser.pos(n,c), a.toType(), loc,
                                        b.intValue(), c); :}
     |   NEW:n primitive_type:a dim_exprs:b dims_opt:c location_expr_opt:loc
@@ -134,12 +135,17 @@ override array_creation_expression ::=
 drop {
 	primary ::=
         	NEW LABEL label
+    |   NEW objtype_or_expr dims_opt        	
         ;
 }
 
 extend primary ::=
         NEW:n LABEL label:a location_expr_opt:loc
             {: RESULT = parser.nf.NewLabel(parser.pos(n, loc), a, loc); :}
+    |   NEW:n objtype_or_expr:a dims_opt:b location_expr_opt:loc 
+            {: 	NewArray toReturn = (NewArray)a.toNewArray(parser.pos(n, a), b);
+            		RESULT = (Expr)parser.nf.setLocation(toReturn, loc); :}
+            
 	;
 
 ////////////////////////////////////////////////////////////////////////
@@ -155,7 +161,7 @@ drop {
 
 extend method_invocation ::=
                     // Call
-        reftype_or_expr:a location_expr_opt:b LPAREN argument_list_opt:c RPAREN:d
+        reftype_or_expr:a LPAREN argument_list_opt:c RPAREN:d location_expr_opt:b
 	        {: if (! (a instanceof Name)) parser.die(parser.pos(a));
 	           Name n = (Name) a;
                RESULT = parser.nf.Call(parser.pos(a,d),
@@ -163,7 +169,7 @@ extend method_invocation ::=
 						                                : n.prefix.toReceiver(),
 	                                   parser.nf.Id(parser.pos(n), n.name), 
 	                                   b, c); :}
-    |   primary_no_new_array:a DOT IDENTIFIER:b location_expr_opt:c LPAREN argument_list_opt:d RPAREN:e
+    |   primary_no_new_array:a DOT IDENTIFIER:b LPAREN argument_list_opt:d RPAREN:e location_expr_opt:c
             {: RESULT = parser.nf.Call(parser.pos(b,e), a,
                                        parser.nf.Id(parser.pos(b), b.getIdentifier()), 
                                        c, d); :}

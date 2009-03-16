@@ -35,4 +35,6 @@ public interface FabricNodeFactory extends JifNodeFactory {
   RemoteClientGetter RemoteClientGetter(Position pos, Expr remoteName);
   
   NewLabel NewLabel(Position pos, LabelNode label, Expr location);
+  Node setLocation(Node result, Expr location);
+  
 }

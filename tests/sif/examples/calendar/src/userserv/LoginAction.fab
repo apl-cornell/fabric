@@ -248,9 +248,12 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
         declassify ({session!:}) { 
             final User[servP, {session:;session!:}] logUser_ = declassify(loginUser, {session!:});
             final User[servP, {session!:}] logUser = User.declassifyUser(session, servP, logUser_);
+            FabricClient client = FabricClient.getClient();
+            if(client == null) return null;
             
-            LoginClosure[servP, logUser] lc = new LoginClosure[servP, logUser](
-            		SessionPrincipal[{session!:}].declassifySP(sp, session)); 
+            final Core{session!:} localCore = client.getLocalCore();
+            SessionPrincipal[{session!:}] spdeclass = SessionPrincipal[{session!:}].declassifySP(sp, session); 
+            LoginClosure[servP, logUser] lc = new LoginClosure[servP, logUser]{session!:}@localCore(spdeclass);
             Capability[logUser, {logUser:}] cap = 
                 PrincipalUtil.authorize(logUser, 
                                         declassify(password, {session!:}),

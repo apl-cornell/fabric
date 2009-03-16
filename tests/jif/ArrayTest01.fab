@@ -1,0 +1,9 @@
+public class ArrayTest01 extends java.lang.Object {
+    void m{*!:*}() throws (Exception{*!:*}) {
+        FabricClient cl = FabricClient.getClient();
+        if(cl == null) return;
+        Core localCore = cl.getLocalCore();
+        int{Bob:}[] y = new int[2]@localCore;
+        String{}[] z = new String[3]@localCore;
+    }
+}

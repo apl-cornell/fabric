@@ -16,7 +16,7 @@ public final class Capability {
     return closure;
   }
 
-  public Object invoke() {
+  public java.lang.Object invoke() {
     if (closure == null) return null;
     return closure.invoke();
   }

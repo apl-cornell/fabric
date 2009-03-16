@@ -207,7 +207,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
    * @return         a copy of <code>result</code> with the fabric extension
    *                 updated with the location
    */
-  private Node setLocation(Node result, Expr location) {
+  public Node setLocation(Node result, Expr location) {
     FabricExt fabExt = FabricUtil.fabricExt(result);
 //    Ext jifExt = result.ext();
 //    Ext fabExt = jifExt.ext();

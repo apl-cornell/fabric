@@ -56,9 +56,11 @@
   			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes" />
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
+    		<arg value="-filsigcp"/>
+    		<arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
     		<arg value="-e"/>
-    	<!--
 	  		<arg value="-report"/> <arg value="frontend=1"/>
+    	<!--
 	  	-->
     	
         <srcfile />
