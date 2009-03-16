@@ -42,13 +42,13 @@ public interface Principal extends Object {
 
   PrivateKeyObject getPrivateKeyObject();
 
-  public static class $Proxy extends Object.$Proxy implements Principal {
+  public static class _Proxy extends Object._Proxy implements Principal {
 
-    public $Proxy(Principal.$Impl impl) {
+    public _Proxy(Principal._Impl impl) {
       super(impl);
     }
 
-    public $Proxy(fabric.client.Core core, long onum) {
+    public _Proxy(fabric.client.Core core, long onum) {
       super(core, onum);
     }
 
@@ -89,26 +89,26 @@ public interface Principal extends Object {
     }
   }
 
-  abstract public static class $Impl extends Object.$Impl implements Principal {
+  abstract public static class _Impl extends Object._Impl implements Principal {
 
     private PublicKey publicKey;
     private PrivateKeyObject privateKeyObject;
 
-    public $Impl(Core core, Label label) {
+    public _Impl(Core core, Label label) {
       // If the given label is null, temporarily create the object with an
       // overly restrictive label.
       super(core, label == null ? Client.getClient().getLocalCore()
           .getPublicReadonlyLabel() : label);
       
-      Principal.$Proxy thisProxy = (Principal.$Proxy) this.$getProxy();
+      Principal._Proxy thisProxy = (Principal._Proxy) this.$getProxy();
       IntegPolicy integ =
-        LabelUtil.$Impl.writerPolicy(core, thisProxy, thisProxy);
+        LabelUtil._Impl.writerPolicy(core, thisProxy, thisProxy);
 
       if (label == null) {
         // Replace the temporary label with {this <- this}.
         ConfPolicy bottomConf =
             Client.getClient().getLocalCore().getBottomConfidPolicy();
-        this.$label = LabelUtil.$Impl.toLabel(core, bottomConf, integ);
+        this.$label = LabelUtil._Impl.toLabel(core, bottomConf, integ);
       }
 
       // Generate a new key pair for this principal.
@@ -117,10 +117,10 @@ public interface Principal extends Object {
       
       // Create the label {this->this; this<-this} for the private key object.
       ConfPolicy conf =
-          LabelUtil.$Impl.readerPolicy(core, thisProxy, thisProxy);
-      Label privateLabel = LabelUtil.$Impl.toLabel(core, conf, integ);
+          LabelUtil._Impl.readerPolicy(core, thisProxy, thisProxy);
+      Label privateLabel = LabelUtil._Impl.toLabel(core, conf, integ);
       this.privateKeyObject =
-          new PrivateKeyObject.$Impl(core, privateLabel, keyPair.getPrivate());
+          new PrivateKeyObject._Impl(core, privateLabel, keyPair.getPrivate());
     }
 
     abstract public String name();
@@ -139,8 +139,8 @@ public interface Principal extends Object {
         final Principal q, final java.lang.Object searchState);
 
     @Override
-    protected Object.$Proxy $makeProxy() {
-      return new Principal.$Proxy(this);
+    protected Object._Proxy $makeProxy() {
+      return new Principal._Proxy(this);
     }
 
     @Override
@@ -150,7 +150,7 @@ public interface Principal extends Object {
       super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
     }
 
-    public $Impl(Core core, long onum, int version, long expiry, long label,
+    public _Impl(Core core, long onum, int version, long expiry, long label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws java.io.IOException,
         ClassNotFoundException {
@@ -168,37 +168,37 @@ public interface Principal extends Object {
     }
   }
 
-  interface $Static extends Object, Cloneable {
-    final class $Proxy extends Object.$Proxy implements Principal.$Static {
+  interface _Static extends Object, Cloneable {
+    final class _Proxy extends Object._Proxy implements Principal._Static {
 
-      public $Proxy(Principal.$Static.$Impl impl) {
+      public _Proxy(Principal._Static._Impl impl) {
         super(impl);
       }
 
-      public $Proxy(Core core, long onum) {
+      public _Proxy(Core core, long onum) {
         super(core, onum);
       }
 
-      final public static Principal.$Static $instance;
+      final public static Principal._Static $instance;
 
       static {
-        Principal.$Static.$Impl impl =
-            (Principal.$Static.$Impl) Object.$Static.$Proxy
-                .$makeStaticInstance(Principal.$Static.$Impl.class);
-        $instance = (Principal.$Static) impl.$getProxy();
+        Principal._Static._Impl impl =
+            (Principal._Static._Impl) Object._Static._Proxy
+                .$makeStaticInstance(Principal._Static._Impl.class);
+        $instance = (Principal._Static) impl.$getProxy();
         impl.$init();
       }
     }
 
-    class $Impl extends Object.$Impl implements fabric.lang.Principal.$Static {
+    class _Impl extends Object._Impl implements fabric.lang.Principal._Static {
 
-      public $Impl(Core core, Label label) throws UnreachableNodeException {
+      public _Impl(Core core, Label label) throws UnreachableNodeException {
         super(core, label);
       }
 
       @Override
-      protected Object.$Proxy $makeProxy() {
-        return new fabric.lang.Principal.$Static.$Proxy(this);
+      protected Object._Proxy $makeProxy() {
+        return new fabric.lang.Principal._Static._Proxy(this);
       }
 
       private void $init() {

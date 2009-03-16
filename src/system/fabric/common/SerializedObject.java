@@ -8,11 +8,11 @@ import fabric.client.Core;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.ComparablePair;
 import fabric.common.util.Pair;
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object._Impl;
 import jif.lang.Label;
 
 /**
- * <code>$Impl</code> objects are stored on cores in serialized form as
+ * <code>_Impl</code> objects are stored on cores in serialized form as
  * <code>SerializedObject</code>s.
  */
 public final class SerializedObject implements FastSerializable {
@@ -56,7 +56,7 @@ public final class SerializedObject implements FastSerializable {
    *          The object to serialize.
    * @deprecated
    */
-  public SerializedObject($Impl obj) {
+  public SerializedObject(_Impl obj) {
     try {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       DataOutputStream out = new DataOutputStream(baos);
@@ -530,14 +530,14 @@ public final class SerializedObject implements FastSerializable {
   }
 
   /**
-   * Writes the given $Impl out to the given output stream. The behaviour of
+   * Writes the given _Impl out to the given output stream. The behaviour of
    * this method should mirror write(DataOutput).
    * 
    * @see SerializedObject#write(DataOutput)
    * @see SerializedObject#readImpl(Core, DataInput)
    * @see SerializedObject#SerializedObject(DataInput)
    */
-  public static void write($Impl impl, DataOutput out) throws IOException {
+  public static void write(_Impl impl, DataOutput out) throws IOException {
     Label label = impl.get$label();
     Core labelCore = label.$getCore();
     long labelOnum = label.$getOnum();
@@ -590,9 +590,9 @@ public final class SerializedObject implements FastSerializable {
 
   /**
    * Writes this SerializedObject out to the given output stream. The behavior
-   * of this method should mirror write($Impl, DataOutput).
+   * of this method should mirror write(_Impl, DataOutput).
    * 
-   * @see SerializedObject#write($Impl, DataOutput)
+   * @see SerializedObject#write(_Impl, DataOutput)
    * @see SerializedObject#readImpl(Core, DataInput)
    * @see SerializedObject#SerializedObject(DataInput)
    */
@@ -606,7 +606,7 @@ public final class SerializedObject implements FastSerializable {
    * @param in
    *          An input stream containing a serialized object.
    * @see SerializedObject#write(DataOutput)
-   * @see SerializedObject#write($Impl, DataOutput)
+   * @see SerializedObject#write(_Impl, DataOutput)
    * @see SerializedObject#readImpl(Core, DataInput)
    */
   public SerializedObject(DataInput in) throws IOException {
@@ -707,7 +707,7 @@ public final class SerializedObject implements FastSerializable {
    * @throws ClassNotFoundException
    *           Thrown when the class for this object is unavailable.
    */
-  public $Impl deserialize(Core core) throws ClassNotFoundException {
+  public _Impl deserialize(Core core) throws ClassNotFoundException {
     String className = getClassName();
     Constructor<?> constructor = constructorTable.get(className);
 
@@ -719,7 +719,7 @@ public final class SerializedObject implements FastSerializable {
         constructorTable.put(className, constructor);
       }
       
-      return ($Impl) constructor.newInstance(core, getOnum(), getVersion(),
+      return (_Impl) constructor.newInstance(core, getOnum(), getVersion(),
           getExpiry(), getLabelOnum(), new ObjectInputStream(
               getSerializedDataStream()), getRefTypeIterator(),
           getIntracoreRefIterator());

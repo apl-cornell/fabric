@@ -85,7 +85,7 @@ public class ObjectCount {
       long onum = toVisit.pop();
       visited.add(onum);
 
-      Object.$Impl impl = null;
+      Object._Impl impl = null;
       try {
         impl = core.readObject(onum);
       } catch (Exception e) {

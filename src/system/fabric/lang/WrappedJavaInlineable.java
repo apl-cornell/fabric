@@ -53,7 +53,7 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * system's point of view.
    */
   public static ObjectArray $wrap(Core core, Label label, java.lang.Object[] array) {
-    ObjectArray result = new ObjectArray.$Impl(core, label, Object.$Proxy.class,
+    ObjectArray result = new ObjectArray._Impl(core, label, Object._Proxy.class,
         array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, $wrap(array[i]));
@@ -91,7 +91,7 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * 
    * @see fabric.lang.Object#$getProxy()
    */
-  public fabric.lang.Object.$Proxy $getProxy() {
+  public fabric.lang.Object._Proxy $getProxy() {
     throw new InternalError("WrappedJavaInlineables don't have proxies.");
   }
 

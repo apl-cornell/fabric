@@ -20,7 +20,7 @@ public interface _byteArray extends Object {
 
   byte get(int i);
 
-  public static class $Impl extends Object.$Impl implements _byteArray {
+  public static class _Impl extends Object._Impl implements _byteArray {
     private byte[] value;
 
     /**
@@ -31,7 +31,7 @@ public interface _byteArray extends Object {
      * @param length
      *                The length of the array.
      */
-    public $Impl(Core core, Label label, int length) {
+    public _Impl(Core core, Label label, int length) {
       this(core, label, new byte[length]);
     }
 
@@ -44,7 +44,7 @@ public interface _byteArray extends Object {
      * @param value
      *                The backing array to use.
      */
-    public $Impl(Core core, Label label, byte[] value) {
+    public _Impl(Core core, Label label, byte[] value) {
       super(core, label);
       this.value = value;
     }
@@ -52,7 +52,7 @@ public interface _byteArray extends Object {
     /**
      * Used for deserializing.
      */
-    public $Impl(Core core, long onum, int version, long expiry, long label,
+    public _Impl(Core core, long onum, int version, long expiry, long label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
@@ -98,12 +98,12 @@ public interface _byteArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$copyAppStateFrom(fabric.lang.Object.$Impl)
+     * @see fabric.lang.Object._Impl#$copyAppStateFrom(fabric.lang.Object._Impl)
      */
     @Override
-    public void $copyAppStateFrom(Object.$Impl other) {
+    public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
-      _byteArray.$Impl src = (_byteArray.$Impl) other;
+      _byteArray._Impl src = (_byteArray._Impl) other;
       value = new byte[src.value.length];
       System.arraycopy(src.value, 0, value, 0, src.value.length);
     }
@@ -111,17 +111,17 @@ public interface _byteArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$makeProxy()
+     * @see fabric.lang.Object._Impl#$makeProxy()
      */
     @Override
-    protected _byteArray.$Proxy $makeProxy() {
-      return new _byteArray.$Proxy(this);
+    protected _byteArray._Proxy $makeProxy() {
+      return new _byteArray._Proxy(this);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$serialize(java.io.ObjectOutput)
+     * @see fabric.lang.Object._Impl#$serialize(java.io.ObjectOutput)
      */
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
@@ -134,13 +134,13 @@ public interface _byteArray extends Object {
     }
   }
 
-  public static class $Proxy extends Object.$Proxy implements _byteArray {
+  public static class _Proxy extends Object._Proxy implements _byteArray {
 
-    public $Proxy(Core core, long onum) {
+    public _Proxy(Core core, long onum) {
       super(core, onum);
     }
 
-    public $Proxy(_byteArray.$Impl impl) {
+    public _Proxy(_byteArray._Impl impl) {
       super(impl);
     }
 

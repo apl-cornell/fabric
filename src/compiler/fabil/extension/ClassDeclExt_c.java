@@ -127,7 +127,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       members.add(m);
     }
 
-    // Add the $Proxy, $Impl, and $Static classes.
+    // Add the _Proxy, _Impl, and _Static classes.
     ClassType superType = (ClassType) superClass.type();
     members.add(makeProxy(pr, superType));
     members.add(makeImpl(pr, superType));
@@ -160,20 +160,20 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     if (!classDecl.flags().isInterface()) {
       ClassMember implConstr =
-          qq.parseMember("public $Proxy(" + classDecl.id() + ".$Impl impl) {"
+          qq.parseMember("public _Proxy(" + classDecl.id() + "._Impl impl) {"
               + "super(impl); }");
       members.add(implConstr);
     }
 
     ClassMember oidConstr =
-        qq.parseMember("public $Proxy(fabric.client.Core core, long onum) {"
+        qq.parseMember("public _Proxy(fabric.client.Core core, long onum) {"
             + "super(core, onum); }");
     members.add(oidConstr);
 
     // Create the class declaration.
     ClassDecl result =
-        qq.parseDecl("public static class $Proxy extends "
-            + superClass.fullName() + ".$Proxy implements %T {%LM}", classDecl
+        qq.parseDecl("public static class _Proxy extends "
+            + superClass.fullName() + "._Proxy implements %T {%LM}", classDecl
             .type(), members);
     return result.type(classDecl.type());
   }
@@ -305,7 +305,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Figure out the call target.
     String implType = node().type().fullName();
     if (flags.isStatic()) {
-      methodDecl.append(implType + ".$Impl");
+      methodDecl.append(implType + "._Impl");
     } else {
       methodDecl.append("((" + implType + ") fetch())");
     }
@@ -339,8 +339,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the $makeProxy method.
     QQ qq = pr.qq();
     ClassMember makeProxyDecl =
-        qq.parseMember("protected fabric.lang.Object.$Proxy $makeProxy() {"
-            + "return new " + classType.fullName() + ".$Proxy(this); }");
+        qq.parseMember("protected fabric.lang.Object._Proxy $makeProxy() {"
+            + "return new " + classType.fullName() + "._Proxy(this); }");
     members.add(makeProxyDecl);
 
     // Create serializers.
@@ -352,13 +352,13 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Create the class declaration.
     ClassDecl result =
-        qq.parseDecl(flags + " class $Impl extends " + superClass.fullName()
-            + ".$Impl implements %T {%LM}", classType, members);
+        qq.parseDecl(flags + " class _Impl extends " + superClass.fullName()
+            + "._Impl implements %T {%LM}", classType, members);
     return result.type(classDecl.type());
   }
 
   /**
-   * Produces the $Static interface declaration for the static non-final fields.
+   * Produces the _Static interface declaration for the static non-final fields.
    */
   @SuppressWarnings("unchecked")
   private List<ClassMember> makeStatic(ProxyRewriter pr, ClassType superClass) {
@@ -387,17 +387,17 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // static proxy members.
     QQ qq = pr.qq();
     ClassMember proxyConstructorDecl =
-        qq.parseMember("public $Proxy(" + classType.fullName()
-            + ".$Static.$Impl impl) { super(impl); }");
+        qq.parseMember("public _Proxy(" + classType.fullName()
+            + "._Static._Impl impl) { super(impl); }");
     proxyMembers.add(proxyConstructorDecl);
     proxyConstructorDecl =
-        qq.parseMember("public $Proxy(fabric.client.Core core, long onum) {"
+        qq.parseMember("public _Proxy(fabric.client.Core core, long onum) {"
             + "super(core, onum); }");
     proxyMembers.add(proxyConstructorDecl);
     
     // Create the $instance declaration and add it to the list of static proxy
     // members.
-    String staticIfaceName = classType.fullName() + ".$Static";
+    String staticIfaceName = classType.fullName() + "._Static";
     FieldDecl fieldDecl =
         (FieldDecl) qq.parseMember("public static final " + staticIfaceName
             + " $instance;");
@@ -406,10 +406,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the static initializer for initializing $instance.
     Initializer init =
         (Initializer) qq.parseMember("static {"
-            + staticIfaceName + ".$Impl impl = "
-            + "  (" + staticIfaceName + ".$Impl)"
-            + "    fabric.lang.Object.$Static.$Proxy.$makeStaticInstance("
-            + "      " + staticIfaceName + ".$Impl.class);"
+            + staticIfaceName + "._Impl impl = "
+            + "  (" + staticIfaceName + "._Impl)"
+            + "    fabric.lang.Object._Static._Proxy.$makeStaticInstance("
+            + "      " + staticIfaceName + "._Impl.class);"
             + "$instance = (" + staticIfaceName + ") impl.$getProxy();"
             + "impl.$init();"
             + "}");
@@ -417,15 +417,15 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Create the proxy declaration and add it to the list of interface members.
     ClassDecl proxyDecl =
-        qq.parseDecl("final class $Proxy extends fabric.lang.Object.$Proxy "
-            + "implements " + classType.fullName() + ".$Static {%LM}",
+        qq.parseDecl("final class _Proxy extends fabric.lang.Object._Proxy "
+            + "implements " + classType.fullName() + "._Static {%LM}",
             (Object) proxyMembers);
     interfaceMembers.add(proxyDecl);
 
     // Create the impl constructor declarations and add them to the list of
     // static impl members.
     ClassMember implConstructorDecl =
-        qq.parseMember("public $Impl(fabric.client.Core core, "
+        qq.parseMember("public _Impl(fabric.client.Core core, "
             + "jif.lang.Label label) "
             + "throws fabric.client.UnreachableNodeException {"
             + "super(core, label); }");
@@ -434,9 +434,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the $makeProxy method declaration and add it to the list of static
     // impl members.
     ClassMember makeProxyDecl =
-        qq.parseMember("protected fabric.lang.Object.$Proxy "
+        qq.parseMember("protected fabric.lang.Object._Proxy "
             + "$makeProxy() { return new " + classType.fullName()
-            + ".$Static.$Proxy(this); }");
+            + "._Static._Proxy(this); }");
     implMembers.add(makeProxyDecl);
     
     // Create the $init method declaration and add it to the list of static impl
@@ -448,14 +448,14 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Create the impl declaration and add it to the list of interface members.
     ClassDecl implDecl =
-        qq.parseDecl("class $Impl extends fabric.lang.Object.$Impl "
-            + "implements " + classType.fullName() + ".$Static {%LM}",
+        qq.parseDecl("class _Impl extends fabric.lang.Object._Impl "
+            + "implements " + classType.fullName() + "._Static {%LM}",
             (Object) implMembers);
     interfaceMembers.add(implDecl);
 
     // Create the interface declaration.
     ClassDecl interfaceDecl =
-        qq.parseDecl("interface $Static extends fabric.lang.Object, Cloneable "
+        qq.parseDecl("interface _Static extends fabric.lang.Object, Cloneable "
             + "{%LM}", (Object) interfaceMembers);
 
     List<ClassMember> result = new ArrayList<ClassMember>(2);
@@ -519,7 +519,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         out.append("$writeRef($getCore(), this." + f.name() + ", refTypes, "
             + "out, intracoreRefs, intercoreRefs);");
         in.append("this." + f.name() + " = (" + f.declType() + ") $readRef("
-            + f.declType() + ".$Proxy.class, " + "(fabric.common.RefTypeEnum) "
+            + f.declType() + "._Proxy.class, " + "(fabric.common.RefTypeEnum) "
             + "refTypes.next(), in, core, intracoreRefs);");
       }
     }
@@ -535,7 +535,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     ClassMember deserialize =
         qq
             .parseMember(
-                "public $Impl(fabric.client.Core core, long onum, int version, "
+                "public _Impl(fabric.client.Core core, long onum, int version, "
                     + "long expiry, long label, java.io.ObjectInput in, "
                     + "java.util.Iterator refTypes, java.util.Iterator intracoreRefs) "
                     + "throws java.io.IOException, java.lang.ClassNotFoundException {"
@@ -550,7 +550,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       List<ClassMember> members) {
     QQ qq = pr.qq();
     StringBuilder body = new StringBuilder();
-    String implType = node().type().fullName() + ".$Impl";
+    String implType = node().type().fullName() + "._Impl";
 
     // Determine the list of fields to copy.
     for (ClassMember m : members) {
@@ -563,7 +563,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     if (body.length() == 0) return null;
 
     return qq
-        .parseMember("public void $copyAppStateFrom(fabric.lang.Object.$Impl other) {"
+        .parseMember("public void $copyAppStateFrom(fabric.lang.Object._Impl other) {"
             + "super.$copyAppStateFrom(other);"
             + implType
             + " src = ("
@@ -638,7 +638,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     FabILTypeSystem ts = rr.typeSystem();
     
     ClassDecl cd = node();
-    if (!cd.name().equals("$Proxy")) {
+    if (!cd.name().equals("_Proxy")) {
       // Only translate the proxy class.
       return cd;
     }

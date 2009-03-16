@@ -6,9 +6,9 @@ import fabric.lang.Principal;
 
 public interface LabelUtil extends Object {
   
-  public static class $Impl extends Object.$Impl implements LabelUtil {
+  public static class _Impl extends Object._Impl implements LabelUtil {
 
-    protected $Impl(Core core, Label label) {
+    protected _Impl(Core core, Label label) {
       super(core, label);
     }
     

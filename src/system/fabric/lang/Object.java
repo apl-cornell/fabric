@@ -31,7 +31,7 @@ public interface Object {
   long $getOnum();
 
   /** A proxy for this object. */
-  $Proxy $getProxy();
+  _Proxy $getProxy();
 
   /** Label for this object */
   Label get$label();
@@ -66,20 +66,20 @@ public interface Object {
   Statistics createStatistics();
 
   /**
-   * $Proxy objects behave like regular objects by delegating to $Impl objects,
+   * _Proxy objects behave like regular objects by delegating to _Impl objects,
    * pointed to by a soft reference. This class abstracts away the code for
    * maintaining that soft reference.
    */
-  public static class $Proxy implements Object {
+  public static class _Proxy implements Object {
     private transient FabricSoftRef ref;
 
     /**
-     * This is used only to pin the $Impl in the case where it's a object on the
+     * This is used only to pin the _Impl in the case where it's a object on the
      * local core.
      */
-    private transient final $Impl anchor;
+    private transient final _Impl anchor;
 
-    public $Proxy(Core core, long onum) {
+    public _Proxy(Core core, long onum) {
       if (core.isLocalCore() && onum != ONumConstants.EMPTY_LABEL
           && onum != ONumConstants.PUBLIC_READONLY_LABEL)
         throw new InternalError(
@@ -90,7 +90,7 @@ public interface Object {
       this.anchor = null;
     }
 
-    public $Proxy($Impl impl) {
+    public _Proxy(_Impl impl) {
       this.ref = impl.$ref;
       Core core = impl.$getCore();
       if (core instanceof LocalCore)
@@ -98,8 +98,8 @@ public interface Object {
       else this.anchor = null;
     }
 
-    public final $Impl fetch() {
-      $Impl result = ref.get();
+    public final _Impl fetch() {
+      _Impl result = ref.get();
       
       if (result == null) result = anchor;
 
@@ -162,7 +162,7 @@ public interface Object {
       return fetch().get$label();
     }
 
-    public final $Proxy $getProxy() {
+    public final _Proxy $getProxy() {
       return fetch().$getProxy();
     }
 
@@ -236,21 +236,21 @@ public interface Object {
   }
 
   /**
-   * $Impl objects hold the actual code and data of Fabric objects and may be
+   * _Impl objects hold the actual code and data of Fabric objects and may be
    * evicted from memory.
    */
-  public static class $Impl implements Object, Cloneable {
+  public static class _Impl implements Object, Cloneable {
     /**
      * The cached exact proxy for this object.
      */
-    private $Proxy $proxy;
+    private _Proxy $proxy;
 
     public final FabricSoftRef $ref;
 
     /**
      * A reference to the class object. TODO Figure out class loading.
      */
-    protected $Proxy $class;
+    protected _Proxy $class;
 
     protected Label $label;
 
@@ -284,7 +284,7 @@ public interface Object {
      * acquired a write lock on an object if any entry in this history has
      * $writer set to that transaction's log.
      */
-    public $Impl $history;
+    public _Impl $history;
 
     /**
      * A reference to the global read list for this object.
@@ -311,7 +311,7 @@ public interface Object {
     /**
      * A private constructor for initializing transaction-management state.
      */
-    private $Impl(Core core, long onum, int version, long expiry, Label label) {
+    private _Impl(Core core, long onum, int version, long expiry, Label label) {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
@@ -341,7 +341,7 @@ public interface Object {
      * @param label
      *          the security label for the object
      */
-    public $Impl(Core core, Label label) throws UnreachableNodeException {
+    public _Impl(Core core, Label label) throws UnreachableNodeException {
       this(core, core.createOnum(), 0, 0, label);
       core.cache(this);
 
@@ -350,9 +350,9 @@ public interface Object {
     }
 
     @Override
-    public final $Impl clone() {
+    public final _Impl clone() {
       try {
-        return ($Impl) super.clone();
+        return (_Impl) super.clone();
       } catch (Exception e) {
         throw new InternalError(e);
       }
@@ -396,7 +396,7 @@ public interface Object {
      * This is used to restore the state of the object during transaction
      * roll-back.
      */
-    public final void $copyStateFrom($Impl other) {
+    public final void $copyStateFrom(_Impl other) {
       $writer = null;
       $writeLockHolder = other.$writeLockHolder;
       $reader = other.$reader;
@@ -411,7 +411,7 @@ public interface Object {
      * override this method and call
      * <code>super.copyAppStateFrom(other)</code>.
      */
-    public void $copyAppStateFrom($Impl other) {
+    public void $copyAppStateFrom(_Impl other) {
     }
 
     public final Core $getCore() {
@@ -422,7 +422,7 @@ public interface Object {
       return $ref.onum;
     }
 
-    public final $Proxy $getClass() {
+    public final _Proxy $getClass() {
       return $class;
     }
 
@@ -434,12 +434,12 @@ public interface Object {
       return $version;
     }
 
-    public final $Proxy $getProxy() {
+    public final _Proxy $getProxy() {
       if ($proxy == null) $proxy = $makeProxy();
       return $proxy;
     }
 
-    public final $Impl fetch() {
+    public final _Impl fetch() {
       return this;
     }
     
@@ -472,7 +472,7 @@ public interface Object {
     public void $serialize(ObjectOutput serializedOutput,
         List<RefTypeEnum> refTypes, List<Long> intracoreRefs,
         List<Pair<String, Long>> intercoreRefs) throws IOException {
-      // Nothing to output here. SerializedObject.write($Impl, DataOutput) takes
+      // Nothing to output here. SerializedObject.write(_Impl, DataOutput) takes
       // care of writing the onum, version, label onum, and type information.
       return;
     }
@@ -503,19 +503,19 @@ public interface Object {
      *          onum.
      */
     @SuppressWarnings("unused")
-    public $Impl(Core core, long onum, int version, long expiry, long label, 
+    public _Impl(Core core, long onum, int version, long expiry, long label, 
         ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
-      this(core, onum, version, expiry, new Label.$Proxy(core, label));
+      this(core, onum, version, expiry, new Label._Proxy(core, label));
     }
     
     /**
      * Maps proxy classes to their constructors.
      */
-    private static final Map<Class<? extends Object.$Proxy>, Constructor<? extends Object.$Proxy>> constructorTable =
+    private static final Map<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>> constructorTable =
         Collections
-            .synchronizedMap(new HashMap<Class<? extends Object.$Proxy>, Constructor<? extends Object.$Proxy>>());
+            .synchronizedMap(new HashMap<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>>());
 
     /**
      * A helper method for reading a pointer during object deserialization.
@@ -538,7 +538,7 @@ public interface Object {
      *           <code>ObjectInput</code> stream.
      */
     protected static final Object $readRef(
-        Class<? extends Object.$Proxy> proxyClass, RefTypeEnum refType,
+        Class<? extends Object._Proxy> proxyClass, RefTypeEnum refType,
         ObjectInput in, Core core, Iterator<Long> intracoreRefs)
         throws IOException, ClassNotFoundException {
       switch (refType) {
@@ -550,7 +550,7 @@ public interface Object {
 
       case ONUM:
         try {
-          Constructor<? extends Object.$Proxy> constructor =
+          Constructor<? extends Object._Proxy> constructor =
               constructorTable.get(proxyClass);
           if (constructor == null) {
             constructor = proxyClass.getConstructor(Core.class, long.class);
@@ -618,7 +618,7 @@ public interface Object {
         return;
       }
 
-      $Proxy p = ($Proxy) obj;
+      _Proxy p = (_Proxy) obj;
       if (ONumConstants.isGlobalConstant(p.ref.onum) || p.ref.core.equals(core)) {
         // Intracore reference.
         refType.add(RefTypeEnum.ONUM);
@@ -642,8 +642,8 @@ public interface Object {
     /**
      * Subclasses should override this method.
      */
-    protected $Proxy $makeProxy() {
-      return new $Proxy(this);
+    protected _Proxy $makeProxy() {
+      return new _Proxy(this);
     }
 
     public final java.lang.Object $unwrap() {
@@ -677,33 +677,33 @@ public interface Object {
   }
 
   /**
-   * $Static objects hold all static state for the class.
+   * _Static objects hold all static state for the class.
    */
-  public static interface $Static extends Object, Cloneable {
-    public static class $Proxy extends Object.$Proxy implements $Static {
-      public $Proxy($Static.$Impl impl) {
+  public static interface _Static extends Object, Cloneable {
+    public static class _Proxy extends Object._Proxy implements _Static {
+      public _Proxy(_Static._Impl impl) {
         super(impl);
       }
 
-      public $Proxy(Core core, long onum) {
+      public _Proxy(Core core, long onum) {
         super(core, onum);
       }
 
       /**
-       * Used to initialize the $Static.$Proxy.$instance variables.
+       * Used to initialize the _Static._Proxy.$instance variables.
        * 
        * @param c
        *          The class to instantiate.
        */
       public static final Object $makeStaticInstance(
-          final Class<? extends Object.$Impl> c) {
+          final Class<? extends Object._Impl> c) {
         // XXX Need a real core and a real label. (Should be given as args.)
         final LocalCore core = Client.getClient().getLocalCore();
 
         return Client.runInSubTransaction(new Client.Code<Object>() {
           public Object run() {
             try {
-              Constructor<? extends Object.$Impl> constr =
+              Constructor<? extends Object._Impl> constr =
                   c.getConstructor(Core.class, Label.class);
               Label emptyLabel = core.getEmptyLabel();
               return constr.newInstance(core, emptyLabel);
@@ -715,14 +715,14 @@ public interface Object {
       }
     }
 
-    public static class $Impl extends Object.$Impl implements $Static {
-      public $Impl(Core core, Label label) throws UnreachableNodeException {
+    public static class _Impl extends Object._Impl implements _Static {
+      public _Impl(Core core, Label label) throws UnreachableNodeException {
         super(core, label);
       }
 
       @Override
-      protected Object.$Proxy $makeProxy() {
-        return new $Static.$Proxy(this);
+      protected Object._Proxy $makeProxy() {
+        return new _Static._Proxy(this);
       }
     }
   }

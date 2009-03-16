@@ -5,9 +5,9 @@ import fabric.client.UnreachableNodeException;
 import fabric.lang.SecretKeyObject;
 
 public interface PairLabel extends Label {
-  public static class $Impl extends fabric.lang.Object.$Impl implements
+  public static class _Impl extends fabric.lang.Object._Impl implements
       PairLabel {
-    public $Impl(Core core, Label label, ConfPolicy conf, IntegPolicy integ)
+    public _Impl(Core core, Label label, ConfPolicy conf, IntegPolicy integ)
         throws UnreachableNodeException {
       super(core, label);
     }

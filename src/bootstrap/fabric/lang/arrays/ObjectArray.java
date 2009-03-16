@@ -9,8 +9,8 @@ public interface ObjectArray extends Object {
 
   Object set(int i, Object value);
 
-  public static class $Impl extends Object.$Impl implements ObjectArray {
-    public $Impl(Core core, Label label, Class<?> proxyClass, int length) {
+  public static class _Impl extends Object._Impl implements ObjectArray {
+    public _Impl(Core core, Label label, Class<?> proxyClass, int length) {
       super(core, label);
     }
 

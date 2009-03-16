@@ -24,8 +24,8 @@ import fabric.client.transaction.TransactionManager;
 import fabric.client.transaction.TransactionRegistry;
 import fabric.common.*;
 import fabric.lang.NodePrincipal;
-import fabric.lang.Object.$Impl;
-import fabric.lang.Object.$Proxy;
+import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.Message;
@@ -203,7 +203,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     Core principalCore = Client.getClient().getCore(principalCoreName);
     long principalOnum = in.readLong();
     this.remoteClient =
-        new NodePrincipal.$Proxy(principalCore, principalOnum);
+        new NodePrincipal._Proxy(principalCore, principalOnum);
 
     // Authenticate the client.
     return Client.runInTransaction(null, new Client.Code<Boolean>() {
@@ -383,7 +383,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
     if (log == null) return new ReadMessage.Response(null);
 
-    $Impl obj = new $Proxy(readMessage.core, readMessage.onum).fetch();
+    _Impl obj = new _Proxy(readMessage.core, readMessage.onum).fetch();
 
     // Ensure this client owns the object.
     synchronized (obj) {
@@ -414,8 +414,8 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
         TransactionRegistry.getInnermostLog(takeOwnershipMessage.tid.topTid);
     if (log == null) return new TakeOwnershipMessage.Response(false);
 
-    $Impl obj =
-        new $Proxy(takeOwnershipMessage.core, takeOwnershipMessage.onum)
+    _Impl obj =
+        new _Proxy(takeOwnershipMessage.core, takeOwnershipMessage.onum)
             .fetch();
 
     // Ensure this client owns the object.

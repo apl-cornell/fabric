@@ -9,9 +9,9 @@ public interface WriterPolicy extends AbstractPolicy, IntegPolicy {
 
   Principal writer();
 
-  public static class $Impl extends AbstractPolicy.$Impl implements
+  public static class _Impl extends AbstractPolicy._Impl implements
       WriterPolicy {
-    public $Impl(Core core, Label label, Principal owner, Principal writer)
+    public _Impl(Core core, Label label, Principal owner, Principal writer)
         throws UnreachableNodeException {
       super(core, label);
     }

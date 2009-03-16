@@ -24,7 +24,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object._Impl;
 import fabric.lang.NodePrincipal;
 import fabric.messages.*;
 import fabric.util.Map;
@@ -253,8 +253,8 @@ public class RemoteCore implements Core, RemoteNode {
    * Sends a PREPARE message to the core.
    */
   public boolean prepareTransaction(long tid, long commitTime,
-      Collection<Object.$Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<Object.$Impl> writes)
+      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<Object._Impl> writes)
       throws TransactionPrepareFailedException, UnreachableNodeException {
     PrepareTransactionMessage.Response response =
         new PrepareTransactionMessage(tid, commitTime, toCreate, reads, writes)
@@ -268,7 +268,7 @@ public class RemoteCore implements Core, RemoteNode {
   }
 
   /**
-   * Returns the requested $Impl object. If the object is not resident, it is
+   * Returns the requested _Impl object. If the object is not resident, it is
    * fetched from the Core via dissemination.
    * 
    * @param onum
@@ -276,7 +276,7 @@ public class RemoteCore implements Core, RemoteNode {
    * @return The requested object
    * @throws FabricException
    */
-  public final Object.$Impl readObject(long onum) throws FetchException {
+  public final Object._Impl readObject(long onum) throws FetchException {
     return readObject(true, onum);
   }
 
@@ -284,11 +284,11 @@ public class RemoteCore implements Core, RemoteNode {
    * (non-Javadoc)
    * @see fabric.client.Core#readObjectNoDissem(long)
    */
-  public final Object.$Impl readObjectNoDissem(long onum) throws FetchException {
+  public final Object._Impl readObjectNoDissem(long onum) throws FetchException {
     return readObject(false, onum);
   }
 
-  private final Object.$Impl readObject(boolean useDissem, long onum)
+  private final Object._Impl readObject(boolean useDissem, long onum)
       throws FetchException {
     // Intercept reads of global constants and redirect them to the local core.
     if (ONumConstants.isGlobalConstant(onum))
@@ -300,13 +300,13 @@ public class RemoteCore implements Core, RemoteNode {
     // XXX Deadlock if we simultaneously fetch surrogates from two cores that
     // refer to each other.
     synchronized (objects) {
-      Object.$Impl result = readObjectFromCache(onum);
+      Object._Impl result = readObjectFromCache(onum);
       if (result != null) return result;
       return fetchObject(useDissem, onum);
     }
   }
 
-  public Object.$Impl readObjectFromCache(long onum) {
+  public Object._Impl readObjectFromCache(long onum) {
     synchronized (objects) {
       FabricSoftRef ref = objects.get(onum);
       if (ref == null) return null;
@@ -323,12 +323,12 @@ public class RemoteCore implements Core, RemoteNode {
    *          dissemination network will be bypassed.
    * @param onum
    *          The object number to fetch
-   * @return The constructed $Impl
+   * @return The constructed _Impl
    * @throws FabricException
    */
-  private Object.$Impl fetchObject(boolean useDissem, long onum)
+  private Object._Impl fetchObject(boolean useDissem, long onum)
       throws FetchException {
-    Object.$Impl result = null;
+    Object._Impl result = null;
     SoftReference<SerializedObject> serialRef;
     // Lock the table to keep the serialized-reference collector from altering
     // it.
@@ -475,7 +475,7 @@ public class RemoteCore implements Core, RemoteNode {
   }
 
   public Map getRoot() {
-    return new Map.$Proxy(this, ONumConstants.ROOT_MAP);
+    return new Map._Proxy(this, ONumConstants.ROOT_MAP);
   }
 
   public final String name() {
@@ -483,7 +483,7 @@ public class RemoteCore implements Core, RemoteNode {
   }
   
   public NodePrincipal getPrincipal() {
-    return new NodePrincipal.$Proxy(this, ONumConstants.CORE_PRINCIPAL);
+    return new NodePrincipal._Proxy(this, ONumConstants.CORE_PRINCIPAL);
   }
 
   public final boolean isLocalCore() {
@@ -515,7 +515,7 @@ public class RemoteCore implements Core, RemoteNode {
     }
   }
 
-  public void cache($Impl impl) {
+  public void cache(_Impl impl) {
     FabricSoftRef ref = impl.$ref;
     if (ref.core != this)
       throw new InternalError("Caching object at wrong core");

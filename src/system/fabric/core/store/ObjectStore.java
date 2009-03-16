@@ -96,7 +96,7 @@ public abstract class ObjectStore {
 
       if (in.readBoolean()) {
         Core core = Client.getClient().getCore(in.readUTF());
-        this.owner = new NodePrincipal.$Proxy(core, in.readLong());
+        this.owner = new NodePrincipal._Proxy(core, in.readLong());
       } else {
         this.owner = null;
       }
@@ -492,22 +492,22 @@ public abstract class ObjectStore {
             new X500Principal("CN=" + name
                 + ",OU=Fabric,O=Cornell University,L=Ithaca,ST=NY,C=US")
                 .getName();
-        NodePrincipal.$Impl principal =
-            new NodePrincipal.$Impl(core, null, principalName);
+        NodePrincipal._Impl principal =
+            new NodePrincipal._Impl(core, null, principalName);
         principal.$forceRenumber(ONumConstants.CORE_PRINCIPAL);
 
         // Create the label {core->_; core<-_} for the root map.
         ReaderPolicy confid =
-            (ReaderPolicy) new ReaderPolicy.$Impl(core, publicReadonlyLabel(),
+            (ReaderPolicy) new ReaderPolicy._Impl(core, publicReadonlyLabel(),
                 corePrincipal(), null).$getProxy();
         WriterPolicy integ =
-            (WriterPolicy) new WriterPolicy.$Impl(core, publicReadonlyLabel(),
+            (WriterPolicy) new WriterPolicy._Impl(core, publicReadonlyLabel(),
                 corePrincipal(), null).$getProxy();
         Label label =
-            (Label) new PairLabel.$Impl(core, null, confid, integ).$getProxy();
+            (Label) new PairLabel._Impl(core, null, confid, integ).$getProxy();
 
-        fabric.util.HashMap.$Impl map =
-            new fabric.util.HashMap.$Impl(core, label);
+        fabric.util.HashMap._Impl map =
+            new fabric.util.HashMap._Impl(core, label);
         map.$forceRenumber(ONumConstants.ROOT_MAP);
 
         return null;
@@ -521,7 +521,7 @@ public abstract class ObjectStore {
     if (corePrincipal == null) {
       Core core = Client.getClient().getCore(name);
       corePrincipal =
-          new NodePrincipal.$Proxy(core, ONumConstants.CORE_PRINCIPAL);
+          new NodePrincipal._Proxy(core, ONumConstants.CORE_PRINCIPAL);
     }
 
     return corePrincipal;
@@ -531,7 +531,7 @@ public abstract class ObjectStore {
     if (publicReadonlyLabel == null) {
       Core core = Client.getClient().getCore(name);
       publicReadonlyLabel =
-          new Label.$Proxy(core, ONumConstants.PUBLIC_READONLY_LABEL);
+          new Label._Proxy(core, ONumConstants.PUBLIC_READONLY_LABEL);
     }
 
     return publicReadonlyLabel;

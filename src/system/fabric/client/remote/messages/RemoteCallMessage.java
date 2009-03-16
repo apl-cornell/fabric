@@ -12,7 +12,7 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.lang.Principal;
-import fabric.lang.Object.$Proxy;
+import fabric.lang.Object._Proxy;
 import fabric.messages.Message;
 
 public class RemoteCallMessage extends
@@ -21,7 +21,7 @@ public class RemoteCallMessage extends
   public final TransactionID tid;
   public final UpdateMap updateMap;
   public final Class<?> receiverType;
-  public final $Proxy receiver;
+  public final _Proxy receiver;
   public final String methodName;
   public final Class<?>[] parameterTypes;
   public final Object[] args;
@@ -67,9 +67,9 @@ public class RemoteCallMessage extends
     }
 
     public void write(DataOutput out) throws IOException {
-      out.writeBoolean(result instanceof $Proxy);
-      if (result instanceof $Proxy)
-        writeRef(($Proxy) result, out);
+      out.writeBoolean(result instanceof _Proxy);
+      if (result instanceof _Proxy)
+        writeRef((_Proxy) result, out);
       else {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -99,7 +99,7 @@ public class RemoteCallMessage extends
    *          The arguments to the method.
    */
   public RemoteCallMessage(TransactionID tid, UpdateMap updateMap,
-      Class<?> receiverType, $Proxy receiver, String methodName,
+      Class<?> receiverType, _Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args) {
     super(MessageType.REMOTE_CALL);
 
@@ -196,9 +196,9 @@ public class RemoteCallMessage extends
     if (args != null) {
       for (int i = 0; i < args.length; i++) {
         oos.writeObject(parameterTypes[i]);
-        if (args[i] instanceof $Proxy) {
+        if (args[i] instanceof _Proxy) {
           oos.writeBoolean(true);
-          writeRef(($Proxy) args[i], oos);
+          writeRef((_Proxy) args[i], oos);
         } else {
           oos.writeBoolean(false);
           oos.writeObject(args[i]);

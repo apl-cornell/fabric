@@ -16,8 +16,8 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.core.InProcessCore;
-import fabric.lang.Object.$Impl;
-import fabric.lang.Object.$Proxy;
+import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 
 /**
  * Holds transaction management information for a single thread. Each thread has
@@ -25,11 +25,11 @@ import fabric.lang.Object.$Proxy;
  * <p>
  * We say that a transaction has acquired a write lock on an object if any entry
  * in the object's <code>$history</code> list has <code>$writeLockHolder</code>
- * set to that transaction. @see fabric.lang.Object.$Impl
+ * set to that transaction. @see fabric.lang.Object._Impl
  * </p>
  * <p>
  * We say that a transaction has acquired a read lock if it is in the
- * "read list" for that object. @see fabric.lang.Object.$Impl.$readMapEntry
+ * "read list" for that object. @see fabric.lang.Object._Impl.$readMapEntry
  * </p>
  * <p>
  * When a transaction acquires a read lock, we ensure that the <i>read
@@ -83,7 +83,7 @@ public final class TransactionManager {
   static final OidKeyHashMap<ReadMapEntry> readMap =
       new OidKeyHashMap<ReadMapEntry>();
 
-  public static ReadMapEntry getReadMapEntry($Impl impl, long expiry) {
+  public static ReadMapEntry getReadMapEntry(_Impl impl, long expiry) {
     FabricSoftRef ref = impl.$ref;
 
     // Optimization: if the impl lives on the local core, it will never be
@@ -381,9 +381,9 @@ public final class TransactionManager {
       Runnable runnable = new Runnable() {
         public void run() {
           try {
-            Collection<$Impl> creates = current.getCreatesForCore(core);
+            Collection<_Impl> creates = current.getCreatesForCore(core);
             LongKeyMap<Integer> reads = current.getReadsForCore(core);
-            Collection<$Impl> writes = current.getWritesForCore(core);
+            Collection<_Impl> writes = current.getWritesForCore(core);
             boolean subTransactionCreated =
                 core.prepareTransaction(current.tid.topTid, commitTime,
                     creates, reads, writes);
@@ -599,7 +599,7 @@ public final class TransactionManager {
       if (!fails.contains(client)) client.abortTransaction(current.tid);
   }
 
-  public void registerCreate($Impl obj) {
+  public void registerCreate(_Impl obj) {
     Timing.TXLOG.begin();
     try {
       if (current == null)
@@ -621,7 +621,7 @@ public final class TransactionManager {
     }
   }
 
-  public void registerRead($Impl obj) {
+  public void registerRead(_Impl obj) {
     synchronized (obj) {
       if (obj.$reader == current
           && obj.$updateMapVersion == current.updateMap.version) return;
@@ -644,7 +644,7 @@ public final class TransactionManager {
    * blocking if necessary. This method assumes we are synchronized on the
    * object.
    */
-  private void ensureReadLock($Impl obj) {
+  private void ensureReadLock(_Impl obj) {
     if (obj.$reader == current) return;
 
     // Make sure we're not supposed to abort.
@@ -684,7 +684,7 @@ public final class TransactionManager {
    * 
    * @return whether a new (top-level) transaction was created.
    */
-  public boolean registerWrite($Impl obj) {
+  public boolean registerWrite(_Impl obj) {
     boolean needTransaction = (current == null);
     if (needTransaction) startTransaction();
 
@@ -712,7 +712,7 @@ public final class TransactionManager {
    * blocking if necessary. This method assumes we are synchronized on the
    * object.
    */
-  private void ensureWriteLock($Impl obj) {
+  private void ensureWriteLock(_Impl obj) {
     // Nothing to do if the write stamp is us.
     if (obj.$writer == current) return;
 
@@ -794,7 +794,7 @@ public final class TransactionManager {
    * Ensures the client has ownership of the object. This method assumes we are
    * synchronized on the object.
    */
-  private void ensureOwnership($Impl obj) {
+  private void ensureOwnership(_Impl obj) {
     if (obj.$isOwned) return;
 
     // Check the update map to see if another client currently owns the object.
@@ -824,7 +824,7 @@ public final class TransactionManager {
    * Checks the update map and fetches from the object's owner as necessary.
    * This method assumes we are synchronized on the object.
    */
-  private void ensureObjectUpToDate($Impl obj) {
+  private void ensureObjectUpToDate(_Impl obj) {
     // Check the object's update-map version stamp.
     if (obj.$updateMapVersion == current.updateMap.version) return;
     
@@ -948,7 +948,7 @@ public final class TransactionManager {
    *         client if it is either on that client's local core, or if it was
    *         created by the current transaction and is owned by that client.
    */
-  public RemoteClient getFetchClient($Proxy proxy) {
+  public RemoteClient getFetchClient(_Proxy proxy) {
     if (current == null || !current.updateMap.containsCreate(proxy)) return null;
     Label label = current.updateMap.getCreate(proxy);
 

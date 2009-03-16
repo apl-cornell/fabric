@@ -271,7 +271,7 @@ public class TransactionManager {
               long onum = o.getOnum();
 
               fabric.lang.Object coreCopy =
-                  new fabric.lang.Object.$Proxy(core, onum);
+                  new fabric.lang.Object._Proxy(core, onum);
 
               Label label = coreCopy.get$label();
 
@@ -499,8 +499,8 @@ public class TransactionManager {
     // // set up to run as a sub-transaction of the current transaction.
     // TransactionID tid = new TransactionID(tnum);
     // Core local = Client.getClient().getCore(store.getName());
-    // final fabric.lang.Object.$Proxy object =
-    // new fabric.lang.Object.$Proxy(local, onum);
+    // final fabric.lang.Object._Proxy object =
+    // new fabric.lang.Object._Proxy(local, onum);
     // stats = Client.runInTransaction(tid, new Client.Code<Statistics>() {
     // public Statistics run() {
     // return object.createStatistics();

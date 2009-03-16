@@ -29,8 +29,8 @@ public class Memoizer extends NodeVisitor {
   public NodeVisitor enter(Node n) {
     if (n instanceof ClassDecl) {
       ClassDecl cd = (ClassDecl)n;
-      if (cd.name().equals("$Impl")) {
-        // XXX Memoizer runs after ProxyRewriter, and only changes the $Impl class.
+      if (cd.name().equals("_Impl")) {
+        // XXX Memoizer runs after ProxyRewriter, and only changes the _Impl class.
         Memoizer v = (Memoizer)this.copy();
         v.addedMembers = new ArrayList<ClassMember>();
         return v;

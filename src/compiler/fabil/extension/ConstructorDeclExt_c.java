@@ -28,7 +28,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     // TODO add Core parameters?
     ConstructorDecl node = (ConstructorDecl) node();
-    node = node.name("$Impl");
+    node = node.name("_Impl");
     return Collections.singletonList((ClassMember) node);
   }
 

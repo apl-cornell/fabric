@@ -9,8 +9,8 @@ public interface floatArray extends Object {
 
   float set(int i, float value);
 
-  public static class $Impl extends Object.$Impl implements floatArray {
-    public $Impl(Core core, Label label, int length) {
+  public static class _Impl extends Object._Impl implements floatArray {
+    public _Impl(Core core, Label label, int length) {
       super(core, label);
     }
 

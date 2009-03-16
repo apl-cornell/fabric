@@ -14,7 +14,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.core.Node.Core;
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object._Impl;
 
 /**
  * In-process implementation of the Core interface for use when a client is
@@ -59,17 +59,17 @@ public class InProcessCore extends RemoteCore {
   @Override
   @SuppressWarnings("deprecation")
   public boolean prepareTransaction(long tid, long commitTime,
-      Collection<$Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<$Impl> writes) throws TransactionPrepareFailedException {
+      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<_Impl> writes) throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<SerializedObject>(toCreate.size());
     Collection<SerializedObject> serializedWrites =
         new ArrayList<SerializedObject>(writes.size());
 
-    for ($Impl o : toCreate)
+    for (_Impl o : toCreate)
       serializedCreates.add(new SerializedObject(o));
 
-    for ($Impl o : writes)
+    for (_Impl o : writes)
       serializedWrites.add(new SerializedObject(o));
 
     PrepareRequest req =

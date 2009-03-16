@@ -14,7 +14,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object._Impl;
 
 /**
  * A <code>PrepareTransactionMessage</code> represents a transaction request to
@@ -125,7 +125,7 @@ public class PrepareTransactionMessage extends
    * non-null on the client. The core should use the
    * <code>serializedCreates</code> field instead.
    */
-  public final Collection<$Impl> creates;
+  public final Collection<_Impl> creates;
 
   /**
    * The objects created during the transaction, serialized. This will only be
@@ -139,7 +139,7 @@ public class PrepareTransactionMessage extends
    * be non-null on the client. The core should use the
    * <code>serializedWrites</code> field instead.
    */
-  public final Collection<$Impl> writes;
+  public final Collection<_Impl> writes;
 
   /**
    * The objects modified during the transaction, serialized. This will only be
@@ -158,8 +158,8 @@ public class PrepareTransactionMessage extends
   /**
    * Only used by the client.
    */
-  public PrepareTransactionMessage(long tid, long commitTime, Collection<$Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<$Impl> writes) {
+  public PrepareTransactionMessage(long tid, long commitTime, Collection<_Impl> toCreate,
+      LongKeyMap<Integer> reads, Collection<_Impl> writes) {
     super(MessageType.PREPARE_TRANSACTION);
 
     this.tid = tid;
@@ -276,7 +276,7 @@ public class PrepareTransactionMessage extends
       out.writeInt(0);
     } else {
       out.writeInt(creates.size());
-      for ($Impl impl : creates)
+      for (_Impl impl : creates)
         SerializedObject.write(impl, out);
     }
 
@@ -285,7 +285,7 @@ public class PrepareTransactionMessage extends
       out.writeInt(0);
     } else {
       out.writeInt(writes.size());
-      for ($Impl impl : writes)
+      for (_Impl impl : writes)
         SerializedObject.write(impl, out);
     }
   }

@@ -12,8 +12,8 @@ public interface Label extends Object {
   
   SecretKeyObject keyObject();
   
-  public class $Proxy extends Object.$Proxy implements Label {
-    public $Proxy(Core core, long onum) {
+  public class _Proxy extends Object._Proxy implements Label {
+    public _Proxy(Core core, long onum) {
       super(core, onum);
     }
 

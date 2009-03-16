@@ -23,9 +23,9 @@ public class SpecialExt_c extends ExprExt_c {
     TypeNode qualifier = special.qualifier();
     QQ qq = pr.qq();
     if (qualifier != null) {
-      // Tack on a ".$Impl" to the qualifier.
+      // Tack on a "._Impl" to the qualifier.
       special =
-          (Special) qq.parseExpr(qualifier + ".$Impl." + special.kind()).type(
+          (Special) qq.parseExpr(qualifier + "._Impl." + special.kind()).type(
               special.type());
     }
 

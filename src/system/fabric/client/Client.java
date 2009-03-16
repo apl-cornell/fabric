@@ -203,7 +203,7 @@ public final class Client {
         URI principalPath = new URI(principalURL);
         Core core = getCore(principalPath.getHost());
         long onum = Long.parseLong(principalPath.getPath().substring(1));
-        this.principal = new NodePrincipal.$Proxy(core, onum);
+        this.principal = new NodePrincipal._Proxy(core, onum);
       } catch (URISyntaxException e) {
         throw new UsageError("Invalid principal URL specified.", 1);
       }
@@ -458,7 +458,7 @@ public final class Client {
         
         runInSubTransaction(new Code<Void>() {
           public Void run() {
-            NodePrincipal principal = new NodePrincipal.$Impl(core, null, name);
+            NodePrincipal principal = new NodePrincipal._Impl(core, null, name);
             principal.addDelegatesTo(core.getPrincipal());
             
             System.out.println("Client principal created:");
@@ -490,7 +490,7 @@ public final class Client {
       });
       
       // Run the requested application.
-      Class<?> mainClass = Class.forName(opts.app[0] + "$$Impl");
+      Class<?> mainClass = Class.forName(opts.app[0] + "$_Impl");
       Method main =
           mainClass.getMethod("main", new Class[] { ObjectArray.class });
       final String[] newArgs = new String[opts.app.length - 1];
@@ -501,12 +501,12 @@ public final class Client {
       Object argsProxy = runInSubTransaction(new Code<Object>() {
         public Object run() {
           ConfPolicy conf =
-              LabelUtil.$Impl.readerPolicy(local, clientPrincipal,
+              LabelUtil._Impl.readerPolicy(local, clientPrincipal,
                   clientPrincipal);
           IntegPolicy integ =
-              LabelUtil.$Impl.writerPolicy(local, clientPrincipal,
+              LabelUtil._Impl.writerPolicy(local, clientPrincipal,
                   clientPrincipal);
-          Label label = LabelUtil.$Impl.toLabel(local, conf, integ);
+          Label label = LabelUtil._Impl.toLabel(local, conf, integ);
           return WrappedJavaInlineable.$wrap(local, label, newArgs);
         }
       });

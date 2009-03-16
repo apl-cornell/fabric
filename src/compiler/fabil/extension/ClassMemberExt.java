@@ -9,8 +9,8 @@ import fabil.visit.ProxyRewriter;
 
 public interface ClassMemberExt extends FabILExt {
   /**
-   * Returns the $Proxy translation of the class member. The result is a list of
-   * class members to be included in the $Proxy class.
+   * Returns the _Proxy translation of the class member. The result is a list of
+   * class members to be included in the _Proxy class.
    */
   List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent);
 
@@ -21,32 +21,32 @@ public interface ClassMemberExt extends FabILExt {
   List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent);
 
   /**
-   * Returns the $Impl translation of the class member. The result is a list of
-   * class members to be included in the $Impl class.
+   * Returns the _Impl translation of the class member. The result is a list of
+   * class members to be included in the _Impl class.
    */
   List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent);
 
   /**
-   * Returns the $Static-interface translation of the class member. The result
-   * is a list of class members to be included in the $Static interface.
+   * Returns the _Static-interface translation of the class member. The result
+   * is a list of class members to be included in the _Static interface.
    */
   List<ClassMember> staticInterfaceMember(ProxyRewriter pr, ClassDecl classDecl);
 
   /**
-   * Returns the $Static.$Proxy translation of the class member. The result is a
-   * list of class members to be included in the $Static.$Proxy class.
+   * Returns the _Static._Proxy translation of the class member. The result is a
+   * list of class members to be included in the _Static._Proxy class.
    */
   List<ClassMember> staticProxyMember(ProxyRewriter pr, ClassDecl classDecl);
 
   /**
-   * Returns the $Static.$Impl translation of the class member. The result is a
-   * list of class members to be included in the $Static.$Impl class.
+   * Returns the _Static._Impl translation of the class member. The result is a
+   * list of class members to be included in the _Static._Impl class.
    */
   List<ClassMember> staticImplMember(ProxyRewriter pr, ClassDecl classDecl);
   
   /**
-   * Returns the $Static.$Impl.$init translation of the class member. The result
-   * is a list of statements to be included in the $Static.$Impl.$init method.
+   * Returns the _Static._Impl.$init translation of the class member. The result
+   * is a list of statements to be included in the _Static._Impl.$init method.
    */
   List<Stmt> staticImplInitMember(ProxyRewriter pr);
 }

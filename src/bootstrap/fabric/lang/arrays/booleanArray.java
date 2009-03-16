@@ -9,8 +9,8 @@ public interface booleanArray extends Object {
 
   boolean set(int i, boolean value);
 
-  public static class $Impl extends Object.$Impl implements booleanArray {
-    public $Impl(Core core, Label label, int length) {
+  public static class _Impl extends Object._Impl implements booleanArray {
+    public _Impl(Core core, Label label, int length) {
       super(core, label);
     }
 

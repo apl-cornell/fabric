@@ -73,10 +73,10 @@ public class AuthorizationUtil {
         labelOnum)) return true;
 
     // Call into the Jif label framework to perform the label check.
-    final Label label = new Label.$Proxy(core, labelOnum);
+    final Label label = new Label._Proxy(core, labelOnum);
     boolean result = Client.runInSubTransaction(new Client.Code<Boolean>() {
       public Boolean run() {
-        return LabelUtil.$Impl.isReadableBy(label, principal);
+        return LabelUtil._Impl.isReadableBy(label, principal);
       }
     });
 
@@ -102,10 +102,10 @@ public class AuthorizationUtil {
         labelOnum)) return true;
 
     // Call into the Jif label framework to perform the label check.
-    final Label label = new Label.$Proxy(core, labelOnum);
+    final Label label = new Label._Proxy(core, labelOnum);
     boolean result = Client.runInSubTransaction(new Client.Code<Boolean>() {
       public Boolean run() {
-        return LabelUtil.$Impl.isWritableBy(label, principal);
+        return LabelUtil._Impl.isWritableBy(label, principal);
       }
     });
 

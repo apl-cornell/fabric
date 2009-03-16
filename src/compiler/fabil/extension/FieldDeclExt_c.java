@@ -84,7 +84,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
    */
   @Override
   public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
-    // Omit static fields. These will be put in the $Static type.
+    // Omit static fields. These will be put in the _Static type.
     if (node().flags().isStatic()) return super.interfaceMember(pr, parent);
 
     List<ClassMember> result = new ArrayList<ClassMember>();
@@ -133,8 +133,8 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
 
     // Figure out the call target for the delegates.
     String target =
-        "((" + parent.type().fullName() + (doStatic ? ".$Static" : "")
-            + ".$Impl) fetch())";
+        "((" + parent.type().fullName() + (doStatic ? "._Static" : "")
+            + "._Impl) fetch())";
 
     QQ qq = pr.qq();
     List<ClassMember> result = new ArrayList<ClassMember>(4);

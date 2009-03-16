@@ -7,10 +7,10 @@ import jif.lang.Label;
 import fabric.client.Core;
 
 public interface NodePrincipal extends AbstractPrincipal, Object {
-  public static class $Proxy extends AbstractPrincipal.$Proxy implements
+  public static class _Proxy extends AbstractPrincipal._Proxy implements
       NodePrincipal {
 
-    public $Proxy(Core core, long onum) {
+    public _Proxy(Core core, long onum) {
       super(core, onum);
     }
 
@@ -36,9 +36,9 @@ public interface NodePrincipal extends AbstractPrincipal, Object {
     public native String name();
   }
 
-  public static final class $Impl extends AbstractPrincipal.$Impl implements
+  public static final class _Impl extends AbstractPrincipal._Impl implements
       NodePrincipal {
-    public $Impl(fabric.client.Core $location, jif.lang.Label $label,
+    public _Impl(fabric.client.Core $location, jif.lang.Label $label,
         java.lang.String name) {
       super($location, $label, name);
     }

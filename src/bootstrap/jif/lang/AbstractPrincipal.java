@@ -6,14 +6,14 @@ import fabric.lang.Principal;
 
 public interface AbstractPrincipal extends DelegatingPrincipal,
     fabric.lang.Object {
-  public static class $Proxy extends DelegatingPrincipal.$Proxy implements
+  public static class _Proxy extends DelegatingPrincipal._Proxy implements
       AbstractPrincipal {
 
-    public $Proxy(AbstractPrincipal.$Impl impl) {
+    public _Proxy(AbstractPrincipal._Impl impl) {
       super(impl);
     }
 
-    public $Proxy(Core core, long onum) {
+    public _Proxy(Core core, long onum) {
       super(core, onum);
     }
 
@@ -24,10 +24,10 @@ public interface AbstractPrincipal extends DelegatingPrincipal,
     public native void removeDelegatesTo(Principal p);
   }
 
-  public abstract static class $Impl extends DelegatingPrincipal.$Impl
+  public abstract static class _Impl extends DelegatingPrincipal._Impl
       implements AbstractPrincipal {
 
-    public $Impl(Core core, Label label, String name) {
+    public _Impl(Core core, Label label, String name) {
       super(core, label);
     }
 

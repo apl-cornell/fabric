@@ -50,7 +50,7 @@ public final class MainThread extends Thread implements FabricThread {
       for (ListIterator<StackTraceElement> it =
           trace.listIterator(trace.size()); it.hasPrevious();) {
         StackTraceElement elt = it.previous();
-        if (elt.getClassName().equals(opts.app[0] + "$$Impl")) break;
+        if (elt.getClassName().equals(opts.app[0] + "$_Impl")) break;
         it.remove();
       }
 

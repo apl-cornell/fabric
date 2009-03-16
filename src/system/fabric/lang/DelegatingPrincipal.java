@@ -14,14 +14,14 @@ public interface DelegatingPrincipal extends Principal {
 
   void removeDelegatesTo(Principal p);
 
-  public static class $Proxy extends Principal.$Proxy implements
+  public static class _Proxy extends Principal._Proxy implements
       DelegatingPrincipal {
 
-    public $Proxy(DelegatingPrincipal.$Impl impl) {
+    public _Proxy(DelegatingPrincipal._Impl impl) {
       super(impl);
     }
 
-    public $Proxy(Core core, long onum) {
+    public _Proxy(Core core, long onum) {
       super(core, onum);
     }
 
@@ -34,18 +34,18 @@ public interface DelegatingPrincipal extends Principal {
     }
 
     public static DelegatingPrincipal $addDefaultDelegates(DelegatingPrincipal p) {
-      return DelegatingPrincipal.$Impl.$addDefaultDelegates(p);
+      return DelegatingPrincipal._Impl.$addDefaultDelegates(p);
     }
   }
 
-  public abstract static class $Impl extends Principal.$Impl implements
+  public abstract static class _Impl extends Principal._Impl implements
       DelegatingPrincipal {
 
-    public $Impl(Core core, Label label) {
+    public _Impl(Core core, Label label) {
       super(core, label);
     }
 
-    public $Impl(Core core, long onum, int version, long expiry, long label,
+    public _Impl(Core core, long onum, int version, long expiry, long label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {

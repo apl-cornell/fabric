@@ -17,8 +17,8 @@ import fabric.client.transaction.TransactionRegistry;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NoSuchNodeError;
-import fabric.lang.Object.$Impl;
-import fabric.lang.Object.$Proxy;
+import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 import fabric.lang.NodePrincipal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
@@ -147,7 +147,7 @@ public final class RemoteClient implements RemoteNode {
 
     // Send a pointer to our principal object.
     NodePrincipal principal = client.getPrincipal();
-    InterClientMessage.writeRef(($Proxy) principal, out);
+    InterClientMessage.writeRef((_Proxy) principal, out);
   }
 
   public boolean isConnected(boolean useSSL) {
@@ -158,7 +158,7 @@ public final class RemoteClient implements RemoteNode {
     return conn != null && !conn.isClosed();
   }
 
-  public Object issueRemoteCall($Proxy receiver, String methodName,
+  public Object issueRemoteCall(_Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
       throws UnreachableNodeException, RemoteCallException {
     TransactionManager tm = TransactionManager.getInstance();
@@ -221,15 +221,15 @@ public final class RemoteClient implements RemoteNode {
    * @param tid
    *          the tid for the current transaction.
    */
-  public void readObject(TransactionID tid, $Impl obj) {
-    $Impl remoteObj = readObject(tid, obj.$getCore(), obj.$getOnum());
+  public void readObject(TransactionID tid, _Impl obj) {
+    _Impl remoteObj = readObject(tid, obj.$getCore(), obj.$getOnum());
 
     if (remoteObj == null)
       throw new InternalError("Inter-client object read failed.");
     obj.$copyAppStateFrom(remoteObj);
   }
 
-  public $Impl readObject(TransactionID tid, Core core, long onum) {
+  public _Impl readObject(TransactionID tid, Core core, long onum) {
     ReadMessage.Response response = new ReadMessage(tid, core, onum).send(this);
     return response.obj;
   }

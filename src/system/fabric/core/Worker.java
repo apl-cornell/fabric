@@ -281,7 +281,7 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
       Core principalCore = Client.getClient().getCore(principalCoreName);
       long principalOnum = in.readLong();
       this.client =
-          new NodePrincipal.$Proxy(principalCore, principalOnum);
+          new NodePrincipal._Proxy(principalCore, principalOnum);
     } else {
       this.client = null;
     }

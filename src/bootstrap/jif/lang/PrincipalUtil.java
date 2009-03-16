@@ -7,8 +7,8 @@ import fabric.lang.Principal;
 
 public interface PrincipalUtil extends Object {
   public interface TopPrincipal extends Principal, Object {
-    public static class $Impl extends Principal.$Impl implements TopPrincipal {
-      public $Impl(Core core, Label label) throws UnreachableNodeException {
+    public static class _Impl extends Principal._Impl implements TopPrincipal {
+      public _Impl(Core core, Label label) throws UnreachableNodeException {
         super(core, label);
       }
 

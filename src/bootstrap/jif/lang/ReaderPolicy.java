@@ -9,9 +9,9 @@ public interface ReaderPolicy extends AbstractPolicy, ConfPolicy {
   
   Principal reader();
   
-  public static class $Impl extends AbstractPolicy.$Impl implements
+  public static class _Impl extends AbstractPolicy._Impl implements
       ReaderPolicy {
-    public $Impl(Core core, Label label, Principal owner, Principal reader)
+    public _Impl(Core core, Label label, Principal owner, Principal reader)
         throws UnreachableNodeException {
       super(core, label);
     }

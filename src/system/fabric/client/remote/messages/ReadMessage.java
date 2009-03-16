@@ -13,7 +13,7 @@ import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object._Impl;
 import fabric.messages.Message;
 
 /**
@@ -27,9 +27,9 @@ public class ReadMessage extends InterClientMessage<ReadMessage.Response> {
 
   public static class Response implements Message.Response {
 
-    public final $Impl obj;
+    public final _Impl obj;
 
-    public Response($Impl obj) {
+    public Response(_Impl obj) {
       this.obj = obj;
     }
 

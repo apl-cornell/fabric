@@ -31,12 +31,12 @@ public interface Enforces extends Object {
 
   boolean validate() throws SignatureException;
 
-  public static final class $Proxy extends Object.$Proxy implements Enforces {
-    public $Proxy(Enforces.$Impl impl) {
+  public static final class _Proxy extends Object._Proxy implements Enforces {
+    public _Proxy(Enforces._Impl impl) {
       super(impl);
     }
 
-    public $Proxy(Core core, long onum) {
+    public _Proxy(Core core, long onum) {
       super(core, onum);
     }
 
@@ -57,14 +57,14 @@ public interface Enforces extends Object {
     }
   }
 
-  public static final class $Impl extends Object.$Impl implements Enforces {
+  public static final class _Impl extends Object._Impl implements Enforces {
 
     private final Principal signer;
     private final Principal subject;
     private final Label label;
     private final byte[] signature;
 
-    public $Impl(Core core, Label label_, Principal signer, Principal subject,
+    public _Impl(Core core, Label label_, Principal signer, Principal subject,
         Label label) throws UnreachableNodeException, SignatureException {
       super(core, label_);
 

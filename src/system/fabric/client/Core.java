@@ -6,7 +6,7 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.FetchException;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.NodePrincipal;
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object._Impl;
 
 public interface Core {
   /**
@@ -31,39 +31,39 @@ public interface Core {
    *         prepare.
    */
   boolean prepareTransaction(long tid, long commitTime,
-      Collection<$Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<$Impl> writes) throws UnreachableNodeException,
+      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<_Impl> writes) throws UnreachableNodeException,
       TransactionPrepareFailedException;
 
   /**
-   * Returns the requested $Impl object. If the object is not resident, it is
+   * Returns the requested _Impl object. If the object is not resident, it is
    * fetched from the Core via dissemination.
    * 
    * @param onum
    *          The identifier of the requested object
    * @return The requested object
    */
-  $Impl readObject(long onum) throws FetchException;
+  _Impl readObject(long onum) throws FetchException;
 
   /**
-   * Returns the requested $Impl object, fetching it directly from the Core if
+   * Returns the requested _Impl object, fetching it directly from the Core if
    * it is not resident.
    * 
    * @param onum
    *          The identifier of the requested object
    * @return The requested object
    */
-  $Impl readObjectNoDissem(long onum) throws FetchException;
+  _Impl readObjectNoDissem(long onum) throws FetchException;
 
   /**
-   * Returns the requested $Impl object if it exists in the object cache.
+   * Returns the requested _Impl object if it exists in the object cache.
    * 
    * @param onum
    *          The identifier of the requested object.
    * @return The requested object if it exists in the object cache; otherwise,
    *         null.
    */
-  $Impl readObjectFromCache(long onum);
+  _Impl readObjectFromCache(long onum);
 
   /**
    * Notifies the core that the transaction is being Aborted.
@@ -98,7 +98,7 @@ public interface Core {
   public fabric.util.Map getRoot();
   
   /**
-   * Notifies this Core object that an $Impl has been evicted, so that it can
+   * Notifies this Core object that an _Impl has been evicted, so that it can
    * perform the necessary cache maintenance.
    * 
    * @param onum
@@ -114,5 +114,5 @@ public interface Core {
   /**
    * Adds the given object to the cache.
    */
-  public void cache($Impl impl);
+  public void cache(_Impl impl);
 }

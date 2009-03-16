@@ -20,7 +20,7 @@ public class InstanceofExt_c extends ExprExt_c {
     // Get the exact proxy before checking instanceof.
     QQ qq = pr.qq();
     return qq.parseExpr(
-        "fabric.lang.Object.$Proxy.$getProxy(%E) instanceof %T", node.expr(),
+        "fabric.lang.Object._Proxy.$getProxy(%E) instanceof %T", node.expr(),
         compareType);
   }
 

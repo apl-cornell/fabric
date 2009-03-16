@@ -132,8 +132,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
 
   public ClassType fArrayImplOf(Type type) {
     if (type.isReference())
-      return loadRuntime("fabric.lang.arrays.ObjectArray.$Impl");
-    return loadRuntime("fabric.lang.arrays." + type.toString() + "Array.$Impl");
+      return loadRuntime("fabric.lang.arrays.ObjectArray._Impl");
+    return loadRuntime("fabric.lang.arrays." + type.toString() + "Array._Impl");
   }
 
   /*

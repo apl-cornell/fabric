@@ -213,7 +213,7 @@ public class ProxyRewriter extends NodeVisitor {
           ts.WrappedJavaInlineable().isImplicitCastValid(c)) {
         return c.fullName();
       } else {
-        return c.fullName() + ".$Impl";
+        return c.fullName() + "._Impl";
       }
     }
   }

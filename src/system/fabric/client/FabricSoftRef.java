@@ -4,11 +4,11 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 
 import fabric.client.transaction.ReadMapEntry;
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object._Impl;
 
-public class FabricSoftRef extends SoftReference<$Impl> {
+public class FabricSoftRef extends SoftReference<_Impl> {
   
-  private static final ReferenceQueue<$Impl> queue = new ReferenceQueue<$Impl>();
+  private static final ReferenceQueue<_Impl> queue = new ReferenceQueue<_Impl>();
   private static final RefCollector collector;
   
   static {
@@ -28,7 +28,7 @@ public class FabricSoftRef extends SoftReference<$Impl> {
     collector.destroy();
   }
 
-  public FabricSoftRef(Core core, long onum, $Impl impl) {
+  public FabricSoftRef(Core core, long onum, _Impl impl) {
     super(impl, queue);
     this.core = core;
     this.onum = onum;

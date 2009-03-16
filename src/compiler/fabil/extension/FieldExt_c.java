@@ -82,9 +82,9 @@ public class FieldExt_c extends ExprExt_c {
     if (flags.isStatic()) {
       ClassType targetClassType = (ClassType) container;
       // Static fields are accessed via accessor methods on the
-      // $Static.$Proxy.$instance object.
+      // _Static._Proxy.$instance object.
       return qq.parseExpr(targetClassType.fullName()
-          + ".$Static.$Proxy.$instance.get$" + field.name() + "()");
+          + "._Static._Proxy.$instance.get$" + field.name() + "()");
     }
 
     Call getter = (Call) qq.parseExpr("get$" + field.name() + "()");

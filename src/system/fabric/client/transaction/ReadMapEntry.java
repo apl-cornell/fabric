@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fabric.client.FabricSoftRef;
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object._Impl;
 
 public final class ReadMapEntry {
   FabricSoftRef obj;
@@ -13,7 +13,7 @@ public final class ReadMapEntry {
   long promise;
   int pinCount;
 
-  ReadMapEntry($Impl obj, long expiry) {
+  ReadMapEntry(_Impl obj, long expiry) {
     this.obj = obj.$ref;
     this.readLocks = new ArrayList<Log>();
     this.versionNumber = obj.$version;
@@ -65,7 +65,7 @@ public final class ReadMapEntry {
    * After signalling, this method clears the $reader stamp of the object.
    */
   void signalObject() {
-    $Impl obj = this.obj.get();
+    _Impl obj = this.obj.get();
     if (obj == null) {
       // Object evicted from cache.
       

@@ -4,8 +4,8 @@ import fabric.client.Core;
 import fabric.lang.Object;
 
 public interface Policy extends Object {
-  public static class $Proxy extends Object.$Proxy implements Policy {
-    public $Proxy(Core core, long onum) {
+  public static class _Proxy extends Object._Proxy implements Policy {
+    public _Proxy(Core core, long onum) {
       super(core, onum);
     }
   }

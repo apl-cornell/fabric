@@ -9,8 +9,8 @@ public interface doubleArray extends Object {
 
   double set(int i, double value);
 
-  public static class $Impl extends Object.$Impl implements doubleArray {
-    public $Impl(Core core, Label label, int length) {
+  public static class _Impl extends Object._Impl implements doubleArray {
+    public _Impl(Core core, Label label, int length) {
       super(core, label);
     }
 

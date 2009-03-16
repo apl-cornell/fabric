@@ -9,8 +9,8 @@ public interface byteArray extends Object {
 
   byte set(int i, byte value);
 
-  public static class $Impl extends Object.$Impl implements byteArray {
-    public $Impl(Core core, Label label, int length) {
+  public static class _Impl extends Object._Impl implements byteArray {
+    public _Impl(Core core, Label label, int length) {
       super(core, label);
     }
 

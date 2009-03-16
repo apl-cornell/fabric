@@ -9,8 +9,8 @@ public interface charArray extends Object {
 
   char set(int i, char value);
 
-  public static class $Impl extends Object.$Impl implements charArray {
-    public $Impl(Core core, Label label, int length) {
+  public static class _Impl extends Object._Impl implements charArray {
+    public _Impl(Core core, Label label, int length) {
       super(core, label);
     }
 

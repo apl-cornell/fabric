@@ -26,7 +26,7 @@ public class GetPrincipalMessage extends
 
     Response(DataInput in) throws IOException {
       Core core = Client.getClient().getCore(in.readUTF());
-      this.principal = new NodePrincipal.$Proxy(core, in.readLong());
+      this.principal = new NodePrincipal._Proxy(core, in.readLong());
     }
 
     public void write(DataOutput out) throws IOException {

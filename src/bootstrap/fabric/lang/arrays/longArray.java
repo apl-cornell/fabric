@@ -9,8 +9,8 @@ public interface longArray extends Object {
 
   long set(int i, long value);
 
-  public static class $Impl extends Object.$Impl implements longArray {
-    public $Impl(Core core, Label label, int length) {
+  public static class _Impl extends Object._Impl implements longArray {
+    public _Impl(Core core, Label label, int length) {
       super(core, label);
     }
 

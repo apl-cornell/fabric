@@ -56,7 +56,7 @@ public class CallExt_c extends ExprExt_c {
       // Calls to getClass() are rewritten so that the call target is an exact
       // proxy.
       target =
-          pr.qq().parseExpr("fabric.lang.Object.$Proxy.$getProxy(%E)", target);
+          pr.qq().parseExpr("fabric.lang.Object._Proxy.$getProxy(%E)", target);
     }
 
     call = (Call) call.target(target).id(name).arguments(arguments);
@@ -90,11 +90,11 @@ public class CallExt_c extends ExprExt_c {
       // the static instance object.
       newTarget =
           qq.parseExpr(target.type().toClass().fullName()
-              + ".$Static.$Proxy.$instance");
+              + "._Static._Proxy.$instance");
     } else {
       newTarget =
           nf.AmbReceiver(Position.compilerGenerated(), target, nf.Id(Position
-              .compilerGenerated(), "$Impl"));
+              .compilerGenerated(), "_Impl"));
     }
     return call.target(newTarget).targetImplicit(false);
   }
@@ -135,7 +135,7 @@ public class CallExt_c extends ExprExt_c {
 
     target =
         rr.qq().parseExpr(
-            "(" + ((ClassType) c.target().type()).fullName() + ".$Proxy) %E",
+            "(" + ((ClassType) c.target().type()).fullName() + "._Proxy) %E",
             target);
     return nf.Call(Position.compilerGenerated(), target,
     // <name>_remote => <name>$remote

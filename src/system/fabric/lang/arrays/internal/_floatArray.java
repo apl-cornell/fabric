@@ -20,7 +20,7 @@ public interface _floatArray extends Object {
 
   float get(int i);
 
-  public static class $Impl extends Object.$Impl implements _floatArray {
+  public static class _Impl extends Object._Impl implements _floatArray {
     private float[] value;
 
     /**
@@ -31,7 +31,7 @@ public interface _floatArray extends Object {
      * @param length
      *                The length of the array.
      */
-    public $Impl(Core core, Label label, int length) {
+    public _Impl(Core core, Label label, int length) {
       this(core, label, new float[length]);
     }
 
@@ -44,7 +44,7 @@ public interface _floatArray extends Object {
      * @param value
      *                The backing array to use.
      */
-    public $Impl(Core core, Label label, float[] value) {
+    public _Impl(Core core, Label label, float[] value) {
       super(core, label);
       this.value = value;
     }
@@ -52,7 +52,7 @@ public interface _floatArray extends Object {
     /**
      * Used for deserializing.
      */
-    public $Impl(Core core, long onum, int version, long expiry, long label,
+    public _Impl(Core core, long onum, int version, long expiry, long label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intracoreRefs) throws IOException,
         ClassNotFoundException {
@@ -98,12 +98,12 @@ public interface _floatArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$copyAppStateFrom(fabric.lang.Object.$Impl)
+     * @see fabric.lang.Object._Impl#$copyAppStateFrom(fabric.lang.Object._Impl)
      */
     @Override
-    public void $copyAppStateFrom(Object.$Impl other) {
+    public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
-      _floatArray.$Impl src = (_floatArray.$Impl) other;
+      _floatArray._Impl src = (_floatArray._Impl) other;
       value = new float[src.value.length];
       System.arraycopy(src.value, 0, value, 0, src.value.length);
     }
@@ -111,17 +111,17 @@ public interface _floatArray extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$makeProxy()
+     * @see fabric.lang.Object._Impl#$makeProxy()
      */
     @Override
-    protected _floatArray.$Proxy $makeProxy() {
-      return new _floatArray.$Proxy(this);
+    protected _floatArray._Proxy $makeProxy() {
+      return new _floatArray._Proxy(this);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$serialize(java.io.ObjectOutput)
+     * @see fabric.lang.Object._Impl#$serialize(java.io.ObjectOutput)
      */
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
@@ -134,13 +134,13 @@ public interface _floatArray extends Object {
     }
   }
 
-  public static class $Proxy extends Object.$Proxy implements _floatArray {
+  public static class _Proxy extends Object._Proxy implements _floatArray {
 
-    public $Proxy(Core core, long onum) {
+    public _Proxy(Core core, long onum) {
       super(core, onum);
     }
 
-    public $Proxy(_floatArray.$Impl impl) {
+    public _Proxy(_floatArray._Impl impl) {
       super(impl);
     }
 

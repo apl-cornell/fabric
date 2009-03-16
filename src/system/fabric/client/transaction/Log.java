@@ -13,7 +13,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object._Impl;
 
 /**
  * Stores per-transaction information. Records the objects that are created,
@@ -77,12 +77,12 @@ public final class Log {
    * don't count here. To keep them from being pinned, objects on local core are
    * not tracked here.
    */
-  protected final List<$Impl> creates;
+  protected final List<_Impl> creates;
 
   /**
    * Tracks objects created on local core. See <code>creates</code>.
    */
-  protected final WeakReferenceArrayList<$Impl> localcoreCreates;
+  protected final WeakReferenceArrayList<_Impl> localcoreCreates;
 
   /**
    * A collection of all objects modified in this transaction or completed
@@ -90,13 +90,13 @@ public final class Log {
    * don't count here. To keep them from being pinned, objects on local core are
    * not tracked here.
    */
-  protected final List<$Impl> writes;
+  protected final List<_Impl> writes;
 
   /**
    * Tracks objects on local core that have been modified. See
    * <code>writes</code>.
    */
-  protected final WeakReferenceArrayList<$Impl> localcoreWrites;
+  protected final WeakReferenceArrayList<_Impl> localcoreWrites;
 
   /**
    * The set of clients called by this transaction and completed
@@ -139,10 +139,10 @@ public final class Log {
     this.abortSignal = null;
     this.reads = new OidKeyHashMap<ReadMapEntry>();
     this.readsReadByParent = new ArrayList<ReadMapEntry>();
-    this.creates = new ArrayList<$Impl>();
-    this.localcoreCreates = new WeakReferenceArrayList<$Impl>();
-    this.writes = new ArrayList<$Impl>();
-    this.localcoreWrites = new WeakReferenceArrayList<$Impl>();
+    this.creates = new ArrayList<_Impl>();
+    this.localcoreCreates = new WeakReferenceArrayList<_Impl>();
+    this.writes = new ArrayList<_Impl>();
+    this.localcoreWrites = new WeakReferenceArrayList<_Impl>();
     this.clientsCalled = new ArrayList<RemoteClient>();
 
     if (parent != null) {
@@ -201,11 +201,11 @@ public final class Log {
 
     result.addAll(reads.coreSet());
 
-    for ($Impl obj : writes) {
+    for (_Impl obj : writes) {
       if (obj.$isOwned) result.add(obj.$getCore());
     }
 
-    for ($Impl obj : creates) {
+    for (_Impl obj : creates) {
       if (obj.$isOwned) result.add(obj.$getCore());
     }
 
@@ -231,10 +231,10 @@ public final class Log {
     }
 
     if (core.isLocalCore()) {
-      for ($Impl write : Util.chain(localcoreWrites, localcoreCreates))
+      for (_Impl write : Util.chain(localcoreWrites, localcoreCreates))
         result.remove(write.$getOnum());
     } else {
-      for ($Impl write : Util.chain(writes, creates))
+      for (_Impl write : Util.chain(writes, creates))
         if (write.$getCore() == core) result.remove(write.$getOnum());
     }
 
@@ -245,25 +245,25 @@ public final class Log {
    * Returns a collection of objects modified at the given core. Writes on
    * created objects are not included.
    */
-  Collection<$Impl> getWritesForCore(Core core) {
-    // This should be a Set of $Impl, but we have a map indexed by OID to
-    // avoid calling hashCode and equals on the $Impls.
-    LongKeyMap<$Impl> result = new LongKeyHashMap<$Impl>();
+  Collection<_Impl> getWritesForCore(Core core) {
+    // This should be a Set of _Impl, but we have a map indexed by OID to
+    // avoid calling hashCode and equals on the _Impls.
+    LongKeyMap<_Impl> result = new LongKeyHashMap<_Impl>();
 
     if (core.isLocalCore()) {
-      for ($Impl obj : localcoreWrites) {
+      for (_Impl obj : localcoreWrites) {
         result.put(obj.$getOnum(), obj);
       }
       
-      for ($Impl create : localcoreCreates) {
+      for (_Impl create : localcoreCreates) {
         result.remove(create.$getOnum());
       }
     } else {
-      for ($Impl obj : writes)
+      for (_Impl obj : writes)
         if (obj.$getCore() == core && obj.$isOwned)
           result.put(obj.$getOnum(), obj);
 
-      for ($Impl create : creates)
+      for (_Impl create : creates)
         if (create.$getCore() == core) result.remove(create.$getOnum());
     }
 
@@ -273,17 +273,17 @@ public final class Log {
   /**
    * Returns a collection of objects created at the given core.
    */
-  Collection<$Impl> getCreatesForCore(Core core) {
-    // This should be a Set of $Impl, but to avoid calling methods on the
-    // $Impls, we instead use a map keyed on OID.
-    LongKeyMap<$Impl> result = new LongKeyHashMap<$Impl>();
+  Collection<_Impl> getCreatesForCore(Core core) {
+    // This should be a Set of _Impl, but to avoid calling methods on the
+    // _Impls, we instead use a map keyed on OID.
+    LongKeyMap<_Impl> result = new LongKeyHashMap<_Impl>();
     
     if (core.isLocalCore()) {
-      for ($Impl obj : localcoreCreates) {
+      for (_Impl obj : localcoreCreates) {
         result.put(obj.$getOnum(), obj);
       }
     } else {
-      for ($Impl obj : creates)
+      for (_Impl obj : creates)
         if (obj.$getCore() == core && obj.$isOwned)
           result.put(obj.$getOnum(), obj);
     }
@@ -308,7 +308,7 @@ public final class Log {
   }
 
   /**
-   * Updates logs and data structures in <code>$Impl</code>s to abort this
+   * Updates logs and data structures in <code>_Impl</code>s to abort this
    * transaction. All locks held by this transaction are released.
    */
   @SuppressWarnings("unchecked")
@@ -337,7 +337,7 @@ public final class Log {
       entry.releaseLock(this);
 
     // Roll back writes and release write locks.
-    for ($Impl write : Util.chain(writes, localcoreWrites)) {
+    for (_Impl write : Util.chain(writes, localcoreWrites)) {
       synchronized (write) {
         write.$copyStateFrom(write.$history);
 
@@ -388,7 +388,7 @@ public final class Log {
   }
 
   /**
-   * Updates logs and data structures in <code>$Impl</code>s to commit this
+   * Updates logs and data structures in <code>_Impl</code>s to commit this
    * transaction. Assumes there is a parent transaction. This transaction log is
    * merged into the parent's log and any locks held are transferred to the
    * parent.
@@ -413,8 +413,8 @@ public final class Log {
     }
 
     // Merge writes and transfer write locks.
-    List<$Impl> parentWrites = parent.writes;
-    for ($Impl obj : writes) {
+    List<_Impl> parentWrites = parent.writes;
+    for (_Impl obj : writes) {
       synchronized (obj) {
         if (obj.$history.$writeLockHolder == parent) {
           // The parent transaction already wrote to the object. Discard one
@@ -436,9 +436,9 @@ public final class Log {
       }
     }
     
-    WeakReferenceArrayList<$Impl> parentLocalcoreWrites =
+    WeakReferenceArrayList<_Impl> parentLocalcoreWrites =
         parent.localcoreWrites;
-    for ($Impl obj : localcoreWrites) {
+    for (_Impl obj : localcoreWrites) {
       synchronized (obj) {
         if (obj.$history.$writeLockHolder == parent) {
           // The parent transaction already wrote to the object. Discard one
@@ -461,18 +461,18 @@ public final class Log {
     }
 
     // Merge creates and transfer write locks.
-    List<$Impl> parentCreates = parent.creates;
+    List<_Impl> parentCreates = parent.creates;
     synchronized (parentCreates) {
-      for ($Impl obj : creates) {
+      for (_Impl obj : creates) {
         parentCreates.add(obj);
         obj.$writeLockHolder = parent;
       }
     }
     
-    WeakReferenceArrayList<$Impl> parentLocalcoreCreates =
+    WeakReferenceArrayList<_Impl> parentLocalcoreCreates =
         parent.localcoreCreates;
     synchronized (parentLocalcoreCreates) {
-      for ($Impl obj : localcoreCreates) {
+      for (_Impl obj : localcoreCreates) {
         parentLocalcoreCreates.add(obj);
         obj.$writeLockHolder = parent;
       }
@@ -497,7 +497,7 @@ public final class Log {
   }
 
   /**
-   * Updates logs and data structures in <code>$Impl</code>s to commit this
+   * Updates logs and data structures in <code>_Impl</code>s to commit this
    * transaction. Assumes this is a top-level transaction. All locks held by
    * this transaction are released.
    */
@@ -515,7 +515,7 @@ public final class Log {
       throw new InternalError("something was read by a non-existent parent");
 
     // Release write locks and ownerships; update version numbers.
-    for ($Impl obj : Util.chain(writes, localcoreWrites)) {
+    for (_Impl obj : Util.chain(writes, localcoreWrites)) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
@@ -538,7 +538,7 @@ public final class Log {
     }
 
     // Release write locks on created objects and set version numbers.
-    for ($Impl obj : Util.chain(creates, localcoreCreates)) {
+    for (_Impl obj : Util.chain(creates, localcoreCreates)) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
@@ -594,7 +594,7 @@ public final class Log {
   /**
    * Grabs a read lock for the given object.
    */
-  void acquireReadLock($Impl obj) {
+  void acquireReadLock(_Impl obj) {
     // If we already have a read lock, return; otherwise, register a read
     // lock.
     ReadMapEntry readMapEntry = obj.$readMapEntry;

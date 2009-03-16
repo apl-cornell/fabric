@@ -157,7 +157,7 @@ public class Glob implements FastSerializable {
   private Label getLabel(Core core, ObjectGroup group) {
     SerializedObject obj =
         group.objects().entrySet().iterator().next().getValue();
-    return new Label.$Proxy(core, obj.getLabelOnum());
+    return new Label._Proxy(core, obj.getLabelOnum());
   }
 
   /** The dissemination level of the glob. 0 is replicated to all nodes. */
@@ -253,7 +253,7 @@ public class Glob implements FastSerializable {
     this.timestamp = in.readLong();
     if (in.readBoolean()) {
       Core core = Client.getClient().getCore(in.readUTF());
-      this.keyObject = new SecretKeyObject.$Proxy(core, in.readLong());
+      this.keyObject = new SecretKeyObject._Proxy(core, in.readLong());
     } else this.keyObject = null;
 
     int ivLength = in.readInt();

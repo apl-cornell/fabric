@@ -17,7 +17,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.lang.NodePrincipal;
 import fabric.lang.Object;
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object._Impl;
 import fabric.lang.Principal;
 import fabric.util.HashMap;
 import fabric.util.Map;
@@ -40,8 +40,8 @@ public final class LocalCore implements Core {
   private static final Logger log = Logger.getLogger("fabric.client.LocalCore");
 
   public synchronized boolean prepareTransaction(long tid, long commitTime,
-      Collection<Object.$Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<Object.$Impl> writes) {
+      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<Object._Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     log.fine("Local transaction preparing");
@@ -60,43 +60,43 @@ public final class LocalCore implements Core {
     return freshOID++;
   }
 
-  public synchronized Object.$Impl readObject(long onum) {
+  public synchronized Object._Impl readObject(long onum) {
     return readObjectNoDissem(onum);
   }
   
-  public synchronized Object.$Impl readObjectNoDissem(long onum) {
+  public synchronized Object._Impl readObjectNoDissem(long onum) {
     if (!ONumConstants.isGlobalConstant(onum))
       throw new InternalError("Not supported.");
 
     if (Integer.MIN_VALUE <= onum && onum <= Integer.MAX_VALUE) {
       switch ((int) onum) {
       case ONumConstants.TOP_PRINCIPAL:
-        return ($Impl) topPrincipal.fetch();
+        return (_Impl) topPrincipal.fetch();
 
       case ONumConstants.TOP_CONFIDENTIALITY:
-        return ($Impl) topConfidPolicy.fetch();
+        return (_Impl) topConfidPolicy.fetch();
 
       case ONumConstants.BOTTOM_CONFIDENTIALITY:
-        return ($Impl) bottomConfidPolicy.fetch();
+        return (_Impl) bottomConfidPolicy.fetch();
 
       case ONumConstants.TOP_INTEGRITY:
-        return ($Impl) topIntegPolicy.fetch();
+        return (_Impl) topIntegPolicy.fetch();
 
       case ONumConstants.BOTTOM_INTEGRITY:
-        return ($Impl) bottomIntegPolicy.fetch();
+        return (_Impl) bottomIntegPolicy.fetch();
 
       case ONumConstants.EMPTY_LABEL:
-        return ($Impl) emptyLabel.fetch();
+        return (_Impl) emptyLabel.fetch();
 
       case ONumConstants.PUBLIC_READONLY_LABEL:
-        return ($Impl) publicReadonlyLabel.fetch();
+        return (_Impl) publicReadonlyLabel.fetch();
       }
     }
 
     throw new InternalError("Unknown global constant: onum " + onum);
   }
 
-  public Object.$Impl readObjectFromCache(long onum) {
+  public Object._Impl readObjectFromCache(long onum) {
     return readObject(onum);
   }
 
@@ -182,7 +182,7 @@ public final class LocalCore implements Core {
     // nothing to do
   }
 
-  public void cache($Impl impl) {
+  public void cache(_Impl impl) {
     // nothing to do
   }
 
@@ -190,10 +190,10 @@ public final class LocalCore implements Core {
     // Bootstrap labels with some proxies. Any remaining references to these
     // proxies will be resolved by the hack in readObject().
     this.emptyLabel =
-        new Label.$Proxy(LocalCore.this, ONumConstants.EMPTY_LABEL);
+        new Label._Proxy(LocalCore.this, ONumConstants.EMPTY_LABEL);
 
     this.publicReadonlyLabel =
-        new Label.$Proxy(LocalCore.this, ONumConstants.PUBLIC_READONLY_LABEL);
+        new Label._Proxy(LocalCore.this, ONumConstants.PUBLIC_READONLY_LABEL);
 
     Client.runInSubTransaction(new Client.Code<Void>() {
       @SuppressWarnings("deprecation")
@@ -205,43 +205,43 @@ public final class LocalCore implements Core {
 
         // Create the object representing the top principal.
         topPrincipal =
-            (Principal) new TopPrincipal.$Impl(LocalCore.this,
+            (Principal) new TopPrincipal._Impl(LocalCore.this,
                 publicReadonlyLabel).$getProxy();
         topPrincipal.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 
         // Create the object representing the bottom confidentiality policy.
         bottomConfidPolicy =
-            LabelUtil.$Impl
+            LabelUtil._Impl
                 .readerPolicy(LocalCore.this, null, (Principal) null);
         bottomConfidPolicy.$forceRenumber(ONumConstants.BOTTOM_CONFIDENTIALITY);
 
         // Create the object representing the bottom integrity policy.
         bottomIntegPolicy =
-            LabelUtil.$Impl.writerPolicy(LocalCore.this, topPrincipal,
+            LabelUtil._Impl.writerPolicy(LocalCore.this, topPrincipal,
                 topPrincipal);
         bottomIntegPolicy.$forceRenumber(ONumConstants.BOTTOM_INTEGRITY);
 
         // Create the object representing the public readonly label.
         publicReadonlyLabel =
-            LabelUtil.$Impl.toLabel(LocalCore.this, bottomConfidPolicy,
+            LabelUtil._Impl.toLabel(LocalCore.this, bottomConfidPolicy,
                 bottomIntegPolicy);
         publicReadonlyLabel.$forceRenumber(ONumConstants.PUBLIC_READONLY_LABEL);
 
         // Create the object representing the top confidentiality policy.
         topConfidPolicy =
-            LabelUtil.$Impl.readerPolicy(LocalCore.this, topPrincipal,
+            LabelUtil._Impl.readerPolicy(LocalCore.this, topPrincipal,
                 topPrincipal);
         topConfidPolicy.$forceRenumber(ONumConstants.TOP_CONFIDENTIALITY);
 
         // Create the object representing the top integrity policy.
         topIntegPolicy =
-            LabelUtil.$Impl
+            LabelUtil._Impl
                 .writerPolicy(LocalCore.this, null, (Principal) null);
         topIntegPolicy.$forceRenumber(ONumConstants.TOP_INTEGRITY);
 
         // Create the object representing the empty label.
         emptyLabel =
-            LabelUtil.$Impl.toLabel(LocalCore.this, bottomConfidPolicy,
+            LabelUtil._Impl.toLabel(LocalCore.this, bottomConfidPolicy,
                 topIntegPolicy);
         emptyLabel.$forceRenumber(ONumConstants.EMPTY_LABEL);
 
@@ -250,12 +250,12 @@ public final class LocalCore implements Core {
         // should not be leaking to remote cores.
         Principal clientPrincipal = Client.getClient().getPrincipal();
         ConfPolicy conf =
-            LabelUtil.$Impl.readerPolicy(LocalCore.this, clientPrincipal, (Principal) null);
+            LabelUtil._Impl.readerPolicy(LocalCore.this, clientPrincipal, (Principal) null);
         IntegPolicy integ =
-            LabelUtil.$Impl.writerPolicy(LocalCore.this, clientPrincipal, (Principal) null);
-        Label label = LabelUtil.$Impl.toLabel(LocalCore.this, conf, integ);
+            LabelUtil._Impl.writerPolicy(LocalCore.this, clientPrincipal, (Principal) null);
+        Label label = LabelUtil._Impl.toLabel(LocalCore.this, conf, integ);
 
-        rootMap = (Map) new HashMap.$Impl(LocalCore.this, label).$getProxy();
+        rootMap = (Map) new HashMap._Impl(LocalCore.this, label).$getProxy();
         localDelegates = new HashSet<Pair<Principal, Principal>>();
 
         return null;

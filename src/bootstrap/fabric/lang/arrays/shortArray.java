@@ -9,8 +9,8 @@ public interface shortArray extends Object {
 
   short set(int i, short value);
 
-  public static class $Impl extends Object.$Impl implements shortArray {
-    public $Impl(Core core, Label label, int length) {
+  public static class _Impl extends Object._Impl implements shortArray {
+    public _Impl(Core core, Label label, int length) {
       super(core, label);
     }
 

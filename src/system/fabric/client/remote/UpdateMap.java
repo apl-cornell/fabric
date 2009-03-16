@@ -22,7 +22,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.SecretKeyObject;
-import fabric.lang.Object.$Proxy;
+import fabric.lang.Object._Proxy;
 
 /**
  * Maps proxies to the host that holds the most up-to-date copy of that object.
@@ -50,7 +50,7 @@ public class UpdateMap implements FastSerializable {
   /**
    * Cache for "update" entries that haven't been encrypted yet.
    */
-  private OidKeyHashMap<Pair<$Proxy, RemoteClient>> writeCache;
+  private OidKeyHashMap<Pair<_Proxy, RemoteClient>> writeCache;
 
   public int version;
 
@@ -58,7 +58,7 @@ public class UpdateMap implements FastSerializable {
     this.creates = new HashMap<Hash, Label>();
     this.updates = new HashMap<Hash, Pair<byte[], byte[]>>();
     this.readCache = new OidKeyHashMap<RemoteClient>();
-    this.writeCache = new OidKeyHashMap<Pair<$Proxy, RemoteClient>>();
+    this.writeCache = new OidKeyHashMap<Pair<_Proxy, RemoteClient>>();
     this.version = 0;
   }
 
@@ -70,7 +70,7 @@ public class UpdateMap implements FastSerializable {
     this.updates = new HashMap<Hash, Pair<byte[], byte[]>>(map.updates);
     this.readCache = new OidKeyHashMap<RemoteClient>(map.readCache);
     this.writeCache =
-        new OidKeyHashMap<Pair<$Proxy, RemoteClient>>(map.writeCache);
+        new OidKeyHashMap<Pair<_Proxy, RemoteClient>>(map.writeCache);
     this.version = map.version;
   }
 
@@ -91,7 +91,7 @@ public class UpdateMap implements FastSerializable {
 
       Hash key = new Hash(buf);
 
-      Label.$Proxy val = null;
+      Label._Proxy val = null;
       if (in.readBoolean()) {
         String coreName = in.readUTF();
         long onum = in.readLong();
@@ -101,7 +101,7 @@ public class UpdateMap implements FastSerializable {
           core = client.getCore(coreName);
         }
 
-        val = new Label.$Proxy(core, onum);
+        val = new Label._Proxy(core, onum);
       }
 
       creates.put(key, val);
@@ -127,7 +127,7 @@ public class UpdateMap implements FastSerializable {
   /**
    * Determines whether this map has a "create" entry for the given object.
    */
-  public boolean containsCreate($Proxy proxy) {
+  public boolean containsCreate(_Proxy proxy) {
     if (creates.isEmpty()) return false;
     
     try {
@@ -137,7 +137,7 @@ public class UpdateMap implements FastSerializable {
     }
   }
 
-  public Label getCreate($Proxy proxy) {
+  public Label getCreate(_Proxy proxy) {
     if (creates.isEmpty()) return null;
     
     try {
@@ -147,7 +147,7 @@ public class UpdateMap implements FastSerializable {
     }
   }
 
-  public RemoteClient getUpdate($Proxy proxy) {
+  public RemoteClient getUpdate(_Proxy proxy) {
     // First, check the cache.
     if (readCache.containsKey(proxy)) return readCache.get(proxy);
     if (updates.isEmpty()) return null;
@@ -164,7 +164,7 @@ public class UpdateMap implements FastSerializable {
    * @param label
    *          the label corresponding to the given proxy.
    */
-  public RemoteClient getUpdate($Proxy proxy, Label label) {
+  public RemoteClient getUpdate(_Proxy proxy, Label label) {
     if (readCache.containsKey(proxy)) return readCache.get(proxy);
     if (updates.isEmpty()) return null;
 
@@ -173,7 +173,7 @@ public class UpdateMap implements FastSerializable {
     return result;
   }
 
-  private RemoteClient slowLookup($Proxy proxy, byte[] encryptKey) {
+  private RemoteClient slowLookup(_Proxy proxy, byte[] encryptKey) {
     try {
       Hash mapKey = hash(proxy, encryptKey);
       Pair<byte[], byte[]> encHost = updates.get(mapKey);
@@ -195,12 +195,12 @@ public class UpdateMap implements FastSerializable {
     }
   }
 
-  private boolean isValidWriter(RemoteClient client, $Proxy proxy) {
+  private boolean isValidWriter(RemoteClient client, _Proxy proxy) {
     // XXX TODO
     return true;
   }
 
-  public void put($Proxy proxy, Label keyObject) {
+  public void put(_Proxy proxy, Label keyObject) {
     // Don't put in entries for global constants or objects on local core.
     if (ONumConstants.isGlobalConstant(proxy.$getOnum())
         || proxy.$getCore() instanceof LocalCore) return;
@@ -212,12 +212,12 @@ public class UpdateMap implements FastSerializable {
     }
   }
 
-  public void put($Proxy proxy, RemoteClient client) {
+  public void put(_Proxy proxy, RemoteClient client) {
     // Don't put in entries for global constants or objects on local core.
     if (ONumConstants.isGlobalConstant(proxy.$getOnum())
         || proxy.$getCore() instanceof LocalCore) return;
 
-    writeCache.put(proxy, new Pair<$Proxy, RemoteClient>(proxy, client));
+    writeCache.put(proxy, new Pair<_Proxy, RemoteClient>(proxy, client));
     readCache.put(proxy, client);
   }
 
@@ -240,8 +240,8 @@ public class UpdateMap implements FastSerializable {
   }
 
   private void flushWriteCache() {
-    for (LongKeyMap<Pair<$Proxy, RemoteClient>> entry : writeCache) {
-      for (Pair<$Proxy, RemoteClient> val : entry.values()) {
+    for (LongKeyMap<Pair<_Proxy, RemoteClient>> entry : writeCache) {
+      for (Pair<_Proxy, RemoteClient> val : entry.values()) {
         slowPut(val.first, val.second);
       }
     }
@@ -249,7 +249,7 @@ public class UpdateMap implements FastSerializable {
     writeCache.clear();
   }
 
-  private void slowPut($Proxy proxy, RemoteClient client) {
+  private void slowPut(_Proxy proxy, RemoteClient client) {
     try {
       byte[] encryptKey = getKey(proxy);
       Hash mapKey = hash(proxy, encryptKey);
@@ -265,7 +265,7 @@ public class UpdateMap implements FastSerializable {
     }
   }
 
-  private Hash hash($Proxy proxy) throws NoSuchAlgorithmException {
+  private Hash hash(_Proxy proxy) throws NoSuchAlgorithmException {
     return hash(proxy, null);
   }
 
@@ -273,7 +273,7 @@ public class UpdateMap implements FastSerializable {
    * Given a proxy and an encryption key, hashes the object location and the
    * key.
    */
-  private Hash hash($Proxy proxy, byte[] key)
+  private Hash hash(_Proxy proxy, byte[] key)
       throws NoSuchAlgorithmException {
     MessageDigest md5 = MessageDigest.getInstance(ALG_HASH);
     Core core = proxy.$getCore();
@@ -298,7 +298,7 @@ public class UpdateMap implements FastSerializable {
    * Returns a byte array containing the symmetric encryption key protecting the
    * given object. If the object is public, null is returned.
    */
-  private byte[] getKey($Proxy proxy) {
+  private byte[] getKey(_Proxy proxy) {
     return getKey(proxy.get$label());
   }
 

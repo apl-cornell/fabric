@@ -1,18 +1,18 @@
 package fabric.client.transaction;
 
 import fabric.common.exceptions.FabricRuntimeException;
-import fabric.lang.Object.$Impl;
-import fabric.lang.Object.$Proxy;
+import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 
 public final class VersionConflictException extends
     FabricRuntimeException {
-  public $Proxy reference;
+  public _Proxy reference;
 
-  public VersionConflictException($Impl obj) {
+  public VersionConflictException(_Impl obj) {
     this(obj.$getProxy());
   }
 
-  public VersionConflictException($Proxy reference) {
+  public VersionConflictException(_Proxy reference) {
     this.reference = reference;
   }
 }

@@ -20,12 +20,12 @@ public interface _ObjectArray<T extends Object> extends Object {
 
   T get(int i);
 
-  public static class $Impl<T extends Object> extends Object.$Impl implements
+  public static class _Impl<T extends Object> extends Object._Impl implements
       _ObjectArray<T> {
     /**
      * The class representing the proxy type for the array elements.
      */
-    private final Class<? extends Object.$Proxy> proxyType;
+    private final Class<? extends Object._Proxy> proxyType;
 
     private Object[] value;
 
@@ -37,8 +37,8 @@ public interface _ObjectArray<T extends Object> extends Object {
      * @param length
      *                The length of the array.
      */
-    public $Impl(Core core, Label label,
-        Class<? extends Object.$Proxy> proxyType, int length) {
+    public _Impl(Core core, Label label,
+        Class<? extends Object._Proxy> proxyType, int length) {
       super(core, label);
       this.proxyType = getProxy(proxyType);
       value = new Object[length];
@@ -53,8 +53,8 @@ public interface _ObjectArray<T extends Object> extends Object {
      * @param value
      *                The backing array to use.
      */
-    public $Impl(Core core, Label label,
-        Class<? extends Object.$Proxy> proxyType, T[] value) {
+    public _Impl(Core core, Label label,
+        Class<? extends Object._Proxy> proxyType, T[] value) {
       super(core, label);
       this.proxyType = getProxy(proxyType);
       this.value = value;
@@ -64,11 +64,11 @@ public interface _ObjectArray<T extends Object> extends Object {
      * Used for deserializing.
      */
     @SuppressWarnings("unchecked")
-    public $Impl(Core core, long onum, int version, long expiry, long label, ObjectInput in,
+    public _Impl(Core core, long onum, int version, long expiry, long label, ObjectInput in,
         Iterator<RefTypeEnum> refTypes, Iterator<Long> intracoreRefs)
         throws IOException, ClassNotFoundException {
       super(core, onum, version, expiry, label, in, refTypes, intracoreRefs);
-      proxyType = (Class<? extends Object.$Proxy>) Class.forName(in.readUTF());
+      proxyType = (Class<? extends Object._Proxy>) Class.forName(in.readUTF());
       value = new Object[in.readInt()];
       for (int i = 0; i < value.length; i++) {
         value[i] =
@@ -76,40 +76,40 @@ public interface _ObjectArray<T extends Object> extends Object {
       }
     }
     
-    private static final Map<Class<?>, Class<? extends fabric.lang.Object.$Proxy>> proxyCache =
+    private static final Map<Class<?>, Class<? extends fabric.lang.Object._Proxy>> proxyCache =
         Collections
-            .synchronizedMap(new HashMap<Class<?>, Class<? extends fabric.lang.Object.$Proxy>>());
+            .synchronizedMap(new HashMap<Class<?>, Class<? extends fabric.lang.Object._Proxy>>());
 
     /**
-     * Given a Fabric class, returns the corresponding $Proxy class. If the
-     * given class is already a $Proxy class, it is returned back to the caller.
+     * Given a Fabric class, returns the corresponding _Proxy class. If the
+     * given class is already a _Proxy class, it is returned back to the caller.
      * This is a hack -- we need a value for the <code>proxyType</code> field
      * (used during deserialization), but the array classes in
      * fabric.lang.arrays are implemented in Fabric, which isn't able to talk
-     * about the $Proxy classes.
+     * about the _Proxy classes.
      */
     @SuppressWarnings("unchecked")
-    private Class<? extends fabric.lang.Object.$Proxy> getProxy(Class<?> c) {
-      Class<? extends fabric.lang.Object.$Proxy> result =
+    private Class<? extends fabric.lang.Object._Proxy> getProxy(Class<?> c) {
+      Class<? extends fabric.lang.Object._Proxy> result =
         proxyCache.get(c);
       if (result != null) return result;
       
-      if (c.getSimpleName().equals("$Proxy")) {
-        result = (Class<? extends fabric.lang.Object.$Proxy>) c;
+      if (c.getSimpleName().equals("_Proxy")) {
+        result = (Class<? extends fabric.lang.Object._Proxy>) c;
         proxyCache.put(c, result);
         return result;
       }
 
       Class<?>[] classes = c.getClasses();
       for (Class<?> c_ : classes) {
-        if (c_.getSimpleName().equals("$Proxy")) {
-          result = (Class<? extends fabric.lang.Object.$Proxy>) c_;
+        if (c_.getSimpleName().equals("_Proxy")) {
+          result = (Class<? extends fabric.lang.Object._Proxy>) c_;
           proxyCache.put(c, result);
           return result;
         }
       }
 
-      throw new InternalError("Error finding $Proxy class in " + c);
+      throw new InternalError("Error finding _Proxy class in " + c);
     }
 
     /*
@@ -151,13 +151,13 @@ public interface _ObjectArray<T extends Object> extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$copyAppStateFrom(fabric.lang.Object.$Impl)
+     * @see fabric.lang.Object._Impl#$copyAppStateFrom(fabric.lang.Object._Impl)
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void $copyAppStateFrom(Object.$Impl other) {
+    public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
-      _ObjectArray.$Impl<T> src = (_ObjectArray.$Impl<T>) other;
+      _ObjectArray._Impl<T> src = (_ObjectArray._Impl<T>) other;
       value = new Object[src.value.length];
       System.arraycopy(src.value, 0, value, 0, src.value.length);
     }
@@ -165,17 +165,17 @@ public interface _ObjectArray<T extends Object> extends Object {
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$makeProxy()
+     * @see fabric.lang.Object._Impl#$makeProxy()
      */
     @Override
-    protected _ObjectArray.$Proxy<T> $makeProxy() {
-      return new _ObjectArray.$Proxy<T>(this);
+    protected _ObjectArray._Proxy<T> $makeProxy() {
+      return new _ObjectArray._Proxy<T>(this);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fabric.lang.Object.$Impl#$serialize(java.io.ObjectOutput)
+     * @see fabric.lang.Object._Impl#$serialize(java.io.ObjectOutput)
      */
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
@@ -190,14 +190,14 @@ public interface _ObjectArray<T extends Object> extends Object {
     }
   }
 
-  public static class $Proxy<T extends Object> extends Object.$Proxy implements
+  public static class _Proxy<T extends Object> extends Object._Proxy implements
       _ObjectArray<T> {
 
-    public $Proxy(Core core, long onum) {
+    public _Proxy(Core core, long onum) {
       super(core, onum);
     }
 
-    public $Proxy(_ObjectArray.$Impl<T> impl) {
+    public _Proxy(_ObjectArray._Impl<T> impl) {
       super(impl);
     }
 

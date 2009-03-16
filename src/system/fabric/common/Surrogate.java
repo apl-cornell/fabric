@@ -10,12 +10,12 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
-import fabric.lang.Object.$Impl;
+import fabric.lang.Object._Impl;
 
 /**
  * Encapsulates an intercore pointer.
  */
-public final class Surrogate extends $Impl {
+public final class Surrogate extends _Impl {
   /**
    * The core for the object being pointed to.
    */
@@ -43,17 +43,17 @@ public final class Surrogate extends $Impl {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.lang.Object.$Impl#$makeProxy()
+   * @see fabric.lang.Object._Impl#$makeProxy()
    */
   @Override
-  protected $Proxy $makeProxy() {
+  protected _Proxy $makeProxy() {
     throw new InternalError("Attempted to make proxy for a surrogate.");
   }
 
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.lang.Object.$Impl#$serialize(java.io.ObjectOutput,
+   * @see fabric.lang.Object._Impl#$serialize(java.io.ObjectOutput,
    *      java.util.List, java.util.List, java.util.List)
    */
   @Override

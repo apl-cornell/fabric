@@ -5,8 +5,8 @@ import fabric.client.Core;
 import fabric.lang.Object;
 
 public interface HashMap extends Map, AbstractMap {
-  public static class $Impl extends AbstractMap.$Impl implements HashMap {
-    public $Impl(Core core, Label label) {
+  public static class _Impl extends AbstractMap._Impl implements HashMap {
+    public _Impl(Core core, Label label) {
       super(core, label);
     }
     

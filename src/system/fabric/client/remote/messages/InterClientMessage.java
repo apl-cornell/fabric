@@ -10,7 +10,7 @@ import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.remote.RemoteClient;
 import fabric.common.exceptions.InternalError;
-import fabric.lang.Object.$Proxy;
+import fabric.lang.Object._Proxy;
 import fabric.messages.Message;
 import fabric.messages.Message.Response;
 
@@ -24,7 +24,7 @@ public abstract class InterClientMessage<R extends Response> extends
   /**
    * Used for passing object references between clients.
    */
-  public static void writeRef($Proxy ref, DataOutput out) throws IOException {
+  public static void writeRef(_Proxy ref, DataOutput out) throws IOException {
     out.writeUTF(ref.$getCore().name());
     out.writeLong(ref.$getOnum());
   }
@@ -34,16 +34,16 @@ public abstract class InterClientMessage<R extends Response> extends
    * 
    * @param type
    *          The type of the reference being read. This must be the interface
-   *          corresponding to the Fabric type, and not the $Proxy or $Impl
+   *          corresponding to the Fabric type, and not the _Proxy or _Impl
    *          classes.
    */
   @SuppressWarnings("unchecked")
-  public static $Proxy readRef(Class<?> type, DataInput in) throws IOException {
+  public static _Proxy readRef(Class<?> type, DataInput in) throws IOException {
     Core core = Client.getClient().getCore(in.readUTF());
-    Class<? extends $Proxy> proxyType = null;
+    Class<? extends _Proxy> proxyType = null;
     for (Class<?> c : type.getClasses()) {
-      if (c.getSimpleName().equals("$Proxy")) {
-        proxyType = (Class<? extends $Proxy>) c;
+      if (c.getSimpleName().equals("_Proxy")) {
+        proxyType = (Class<? extends _Proxy>) c;
         break;
       }
     }
@@ -52,7 +52,7 @@ public abstract class InterClientMessage<R extends Response> extends
       throw new InternalError("Unable to find proxy class for " + type);
 
     try {
-      Constructor<? extends $Proxy> constructor =
+      Constructor<? extends _Proxy> constructor =
           proxyType.getConstructor(Core.class, long.class);
 
       return constructor.newInstance(core, in.readLong());
