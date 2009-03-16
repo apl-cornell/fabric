@@ -49,6 +49,7 @@ public class Memoizer extends NodeVisitor {
     return this;
   }
   
+  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     Memoizer mv = (Memoizer)v;
@@ -87,6 +88,7 @@ public class Memoizer extends NodeVisitor {
     return n;
   }
   
+  @SuppressWarnings("unchecked")
   protected MethodDecl transform(MethodDecl md, MethodInstance mi) {
     Id flagId = nf.Id(Position.compilerGenerated(), flagName);
     Id valueId = nf.Id(Position.compilerGenerated(), valueName);
