@@ -131,11 +131,11 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
     return fabricRuntimeArrayOf(type.base());
   }
 
-  public ArrayType fabricArrayOf(Type type, int dims) {
+  public FabricArrayType fabricArrayOf(Type type, int dims) {
     return fabricArrayOf(null, type, dims);
   }
   
-  public ArrayType fabricArrayOf(Position pos, Type type, int dims) {
+  public FabricArrayType fabricArrayOf(Position pos, Type type, int dims) {
     if (dims > 1)
       return fabricArrayOf(pos, fabricArrayOf(pos, type, dims - 1));
     
@@ -145,16 +145,20 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
         "Must call fabricArrayOf(type, dims) with dims > 0");
   }
   
-  public ArrayType fabricArrayOf(Position pos, Type type) {
+  public FabricArrayType fabricArrayOf(Type type) {
+    return fabricArrayOf(type.position(), type);
+  }
+  
+  public FabricArrayType fabricArrayOf(Position pos, Type type) {
     assert_(type);
     return fabricArrayType(pos, type);
   }
   
-  private Map<Type, ArrayType> fabricArrayTypeCache =
-      new HashMap<Type, ArrayType>();
+  private Map<Type, FabricArrayType> fabricArrayTypeCache =
+      new HashMap<Type, FabricArrayType>();
   
-  protected ArrayType fabricArrayType(Position pos, Type type) {
-    ArrayType t = fabricArrayTypeCache.get(type);
+  protected FabricArrayType fabricArrayType(Position pos, Type type) {
+    FabricArrayType t = fabricArrayTypeCache.get(type);
     if (t == null) {
       t = createFabricArrayType(pos, type);
       fabricArrayTypeCache.put(type, t);
@@ -163,7 +167,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
     return t;
   }
   
-  protected ArrayType createFabricArrayType(Position pos, Type type) {
+  protected FabricArrayType createFabricArrayType(Position pos, Type type) {
     return new FabricArrayType_c(this, pos, type);
   }
 

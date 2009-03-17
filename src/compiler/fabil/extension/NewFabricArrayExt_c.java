@@ -4,8 +4,8 @@ import polyglot.ast.*;
 import polyglot.qq.QQ;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
-import fabil.ast.ArrayInit;
-import fabil.ast.NewArray;
+import fabil.ast.FabricArrayInit;
+import fabil.ast.NewFabricArray;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
@@ -19,7 +19,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     QQ qq = pr.qq();
-    NewArray newArray = node();
+    NewFabricArray newArray = node();
 
     // Only rewrite if we have a Fabric array.
     FabILTypeSystem ts = pr.typeSystem();
@@ -53,14 +53,14 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
    */
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
-    NewArray newArray = node();
+    NewFabricArray newArray = node();
 
     // Only rewrite if we have a Fabric array.
     FabILTypeSystem ts = rewriter.typeSystem();
     if (!ts.isFabricArray(newArray.type())) return null;
 
     if (newArray.init() != null) {
-      ArrayInit init = newArray.init().location(newArray.location());
+      FabricArrayInit init = newArray.init().location(newArray.location());
       newArray = newArray.init(init);
 
       // Translation of initializer will be the array itself.
@@ -76,8 +76,8 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
    * @see polyglot.ast.Ext_c#node()
    */
   @Override
-  public NewArray node() {
-    return (NewArray) super.node();
+  public NewFabricArray node() {
+    return (NewFabricArray) super.node();
   }
 
 }

@@ -36,6 +36,10 @@ public class InlineableWrapper extends AscriptionVisitor {
       throws SemanticException {
     // Don't rewrite lvalues.
     if (parent instanceof Assign && ((Assign) parent).left() == old) return n;
+    
+    // Don't rewrite array accesses.
+    if (parent instanceof ArrayAccess && ((ArrayAccess) parent).array() == old)
+      return n;
     return super.leaveCall(parent, old, n, v);
   }
 

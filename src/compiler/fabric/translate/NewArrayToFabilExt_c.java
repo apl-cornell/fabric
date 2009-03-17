@@ -9,7 +9,7 @@ import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.visit.NodeVisitor;
-import fabil.ast.ArrayInit;
+import fabil.ast.FabricArrayInit;
 import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricUtil;
 import fabric.extension.NewArrayExt_c;
@@ -54,7 +54,7 @@ public class NewArrayToFabilExt_c extends NewArrayToJavaExt_c {
       }
     }
 
-    return nf.NewArray(n.position(), n.baseType(), labelExpr, ext.location(), n
-        .dims(), n.additionalDims(), (ArrayInit) n.init());
+    return nf.NewFabricArray(n.position(), n.baseType(), labelExpr, ext.location(), n
+        .dims(), n.additionalDims(), (FabricArrayInit) n.init());
   }
 }

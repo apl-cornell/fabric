@@ -47,20 +47,18 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return aaa;
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public ArrayInit ArrayInit(Position pos, List elements) {
-    return ArrayInit(pos, null, null, elements);
+  public FabricArrayInit FabricArrayInit(Position pos, List<Expr> elements) {
+    return FabricArrayInit(pos, null, null, elements);
   }
 
-  public ArrayInit ArrayInit(Position pos, Expr label, Expr location,
-      List<Expr> elements) {
-    ArrayInit ai = new ArrayInit_c(pos, elements, label, location);
-    ai = (ArrayInit) ai.ext(extFactory().extArrayInit());
-    ai = (ArrayInit) ai.del(delFactory().delArrayInit());
+  public FabricArrayInit FabricArrayInit(Position pos, Expr label,
+      Expr location, List<Expr> elements) {
+    FabricArrayInit ai = new FabricArrayInit_c(pos, elements, label, location);
+    ai = (FabricArrayInit) ai.ext(extFactory().extFabricArrayInit());
+    ai = (FabricArrayInit) ai.del(delFactory().delFabricArrayInit());
     return ai;
   }
-  
+
   @Override
   public ArrayTypeNode ArrayTypeNode(Position pos, TypeNode base) {
     // TODO Auto-generated method stub
@@ -125,13 +123,13 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   }
 
   @SuppressWarnings("unchecked")
-  public NewArray NewArray(Position pos, TypeNode base, Expr label,
-      Expr location, List<Expr> dims, int addDims, ArrayInit init) {
-    NewArray result =
-        new NewArray_c(pos, base, CollectionUtil.nonNullList(dims), addDims,
-            init, label, location);
-    result = (NewArray) result.ext(extFactory().extNewFabricArray());
-    result = (NewArray) result.del(delFactory().delNewArray());
+  public NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label,
+      Expr location, List<Expr> dims, int addDims, FabricArrayInit init) {
+    NewFabricArray result =
+        new NewFabricArray_c(pos, base, CollectionUtil.nonNullList(dims),
+            addDims, init, label, location);
+    result = (NewFabricArray) result.ext(extFactory().extNewFabricArray());
+    result = (NewFabricArray) result.del(delFactory().delNewArray());
     return result;
   }
 
@@ -159,27 +157,20 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return New(pos, null, type, label, location, args, body);
   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public final NewArray NewArray(Position pos, TypeNode base, List dims,
-      int addDims, polyglot.ast.ArrayInit init) {
-    return NewArray(pos, base, null, null, dims, addDims, (ArrayInit) init);
+  public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
+      Expr label, Expr location, List<Expr> dims) {
+    return NewFabricArray(pos, base, label, location, dims, 0, null);
   }
 
-  public final NewArray NewArray(Position pos, TypeNode base, Expr label,
-      Expr location, List<Expr> dims) {
-    return NewArray(pos, base, label, location, dims, 0, null);
+  public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
+      Expr label, Expr location, List<Expr> dims, int addDims) {
+    return NewFabricArray(pos, base, label, location, dims, addDims, null);
   }
 
-  public final NewArray NewArray(Position pos, TypeNode base, Expr label,
-      Expr location, List<Expr> dims, int addDims) {
-    return NewArray(pos, base, label, location, dims, addDims, null);
-  }
-
-  public final NewArray NewArray(Position pos, TypeNode base, Expr label,
-      Expr location, int addDims, ArrayInit init) {
+  public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
+      Expr label, Expr location, int addDims, FabricArrayInit init) {
     List<Expr> emptyList = Collections.emptyList();
-    return NewArray(pos, base, label, location, emptyList, addDims, init);
+    return NewFabricArray(pos, base, label, location, emptyList, addDims, init);
   }
 
   public RetryStmt RetryStmt(Position pos) {

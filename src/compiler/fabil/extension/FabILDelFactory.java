@@ -6,5 +6,6 @@ import polyglot.ast.JL;
 public interface FabILDelFactory extends DelFactory {
 
   JL delFabricArrayTypeNode();
+  JL delFabricArrayInit();
 
 }

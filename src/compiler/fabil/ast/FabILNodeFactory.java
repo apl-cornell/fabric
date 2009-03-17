@@ -10,7 +10,7 @@ import polyglot.util.Position;
  */
 public interface FabILNodeFactory extends NodeFactory {
   ArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type);
-  
+
   Atomic Atomic(Position pos, List<Stmt> statements);
 
   New New(Position pos, TypeNode type, Expr label, Expr location,
@@ -28,28 +28,30 @@ public interface FabILNodeFactory extends NodeFactory {
   /**
    * Creates an AST node representing the creation of a Fabric array.
    */
-  NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
-      List<Expr> dims);
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label,
+      Expr location, List<Expr> dims);
 
   /**
    * Creates an AST node representing the creation of a Fabric array.
    */
-  NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
-      List<Expr> dims, int addDims);
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label,
+      Expr location, List<Expr> dims, int addDims);
 
   /**
    * Creates an AST node representing the creation of a Fabric array.
    */
-  NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
-      int addDims, ArrayInit init);
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label,
+      Expr location, int addDims, FabricArrayInit init);
 
   /**
    * Creates an AST node representing the creation of a Fabric array.
    */
-  NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
-      List<Expr> dims, int addDims, ArrayInit init);
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr label,
+      Expr location, List<Expr> dims, int addDims, FabricArrayInit init);
 
-  ArrayInit ArrayInit(Position position, Expr label, Expr location,
+  FabricArrayInit FabricArrayInit(Position position, List<Expr> elements);
+
+  FabricArrayInit FabricArrayInit(Position position, Expr label, Expr location,
       List<Expr> elements);
 
   RetryStmt RetryStmt(Position pos);

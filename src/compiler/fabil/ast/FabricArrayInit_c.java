@@ -2,11 +2,10 @@ package fabil.ast;
 
 import java.util.List;
 
-import polyglot.ast.Expr;
-import polyglot.ast.Node;
-import polyglot.ast.NodeFactory;
-import polyglot.ast.Term;
+import polyglot.ast.*;
 import polyglot.types.SemanticException;
+import polyglot.types.Type;
+import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 import polyglot.util.TypedList;
@@ -15,13 +14,13 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
-public class ArrayInit_c extends polyglot.ast.ArrayInit_c implements ArrayInit,
+public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
     Annotated {
 
   protected Expr location;
   protected Expr label;
 
-  public ArrayInit_c(Position pos, List<Expr> elements, Expr label,
+  public FabricArrayInit_c(Position pos, List<Expr> elements, Expr label,
       Expr location) {
     super(pos, elements);
 
@@ -31,16 +30,16 @@ public class ArrayInit_c extends polyglot.ast.ArrayInit_c implements ArrayInit,
 
   @SuppressWarnings("unchecked")
   @Override
-  public ArrayInit elements(List elements) {
-    return (ArrayInit) super.elements(elements);
+  public FabricArrayInit elements(List elements) {
+    return (FabricArrayInit) super.elements(elements);
   }
 
   public Expr location() {
     return location;
   }
 
-  public ArrayInit_c location(Expr location) {
-    ArrayInit_c n = (ArrayInit_c) copy();
+  public FabricArrayInit_c location(Expr location) {
+    FabricArrayInit_c n = (FabricArrayInit_c) copy();
     n.location = location;
     return n;
   }
@@ -49,8 +48,8 @@ public class ArrayInit_c extends polyglot.ast.ArrayInit_c implements ArrayInit,
     return label;
   }
 
-  public ArrayInit_c label(Expr label) {
-    ArrayInit_c n = (ArrayInit_c) copy();
+  public FabricArrayInit_c label(Expr label) {
+    FabricArrayInit_c n = (FabricArrayInit_c) copy();
     n.label = label;
     return n;
   }
@@ -58,11 +57,11 @@ public class ArrayInit_c extends polyglot.ast.ArrayInit_c implements ArrayInit,
   /**
    * Reconstructs the initializer.
    */
-  protected ArrayInit_c reconstruct(List<Expr> elements, Expr location,
+  protected FabricArrayInit_c reconstruct(List<Expr> elements, Expr location,
       Expr label) {
     if (!CollectionUtil.equals(elements, this.elements)
         || location != this.location || label != this.label) {
-      ArrayInit_c n = (ArrayInit_c) copy();
+      FabricArrayInit_c n = (FabricArrayInit_c) copy();
       n.elements = TypedList.copyAndCheck(elements, Expr.class, true);
       n.location = location;
       n.label = label;
@@ -82,9 +81,9 @@ public class ArrayInit_c extends polyglot.ast.ArrayInit_c implements ArrayInit,
   }
 
   @Override
-  public ArrayInit_c typeCheck(TypeChecker tc) throws SemanticException {
+  public FabricArrayInit_c typeCheck(TypeChecker tc) throws SemanticException {
     FabILTypeSystem ts = (FabILTypeSystem) tc.typeSystem();
-    ArrayInit_c result = (ArrayInit_c) super.typeCheck(tc);
+    FabricArrayInit_c result = (FabricArrayInit_c) super.typeCheck(tc);
 
     if (location != null) {
       if (!ts.isImplicitCastValid(location.type(), ts.Core())) {
@@ -100,6 +99,11 @@ public class ArrayInit_c extends polyglot.ast.ArrayInit_c implements ArrayInit,
     }
 
     return result;
+  }
+
+  @Override
+  protected Type arrayOf(TypeSystem ts, Type baseType) {
+    return ((FabILTypeSystem) ts).fabricArrayOf(baseType);
   }
 
   @Override
@@ -134,7 +138,7 @@ public class ArrayInit_c extends polyglot.ast.ArrayInit_c implements ArrayInit,
   @Override
   public Node copy(NodeFactory nf) {
     FabILNodeFactory filNf = (FabILNodeFactory) nf;
-    return filNf.ArrayInit(this.position, this.label, this.location,
+    return filNf.FabricArrayInit(this.position, this.label, this.location,
         this.elements);
   }
 

@@ -2,25 +2,27 @@ package fabil.ast;
 
 import java.util.List;
 
-import fabil.types.FabILTypeSystem;
-
 import polyglot.ast.*;
+import polyglot.types.ArrayType;
 import polyglot.types.SemanticException;
+import polyglot.types.Type;
+import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
 import polyglot.util.TypedList;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
+import fabil.types.FabILTypeSystem;
 
-public class NewArray_c extends polyglot.ast.NewArray_c implements NewArray,
+public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     Annotated {
 
   protected Expr label;
   protected Expr location;
 
-  public NewArray_c(Position pos, TypeNode baseType, List<Expr> dims,
-      int addDims, ArrayInit init, Expr label, Expr location) {
+  public NewFabricArray_c(Position pos, TypeNode baseType, List<Expr> dims,
+      int addDims, FabricArrayInit init, Expr label, Expr location) {
     super(pos, baseType, dims, addDims, init);
 
     this.location = location;
@@ -28,21 +30,21 @@ public class NewArray_c extends polyglot.ast.NewArray_c implements NewArray,
   }
 
   @Override
-  public ArrayInit init() {
-    return (ArrayInit) super.init();
+  public FabricArrayInit init() {
+    return (FabricArrayInit) super.init();
   }
 
   @Override
-  public NewArray_c init(polyglot.ast.ArrayInit init) {
-    return (NewArray_c) super.init(init);
+  public NewFabricArray_c init(polyglot.ast.ArrayInit init) {
+    return (NewFabricArray_c) super.init(init);
   }
 
   public Expr label() {
     return label;
   }
 
-  public NewArray_c label(Expr label) {
-    NewArray_c n = (NewArray_c) copy();
+  public NewFabricArray_c label(Expr label) {
+    NewFabricArray_c n = (NewFabricArray_c) copy();
     n.label = label;
     return n;
   }
@@ -51,8 +53,8 @@ public class NewArray_c extends polyglot.ast.NewArray_c implements NewArray,
     return location;
   }
 
-  public NewArray_c location(Expr location) {
-    NewArray_c n = (NewArray_c) copy();
+  public NewFabricArray_c location(Expr location) {
+    NewFabricArray_c n = (NewFabricArray_c) copy();
     n.location = location;
     return n;
   }
@@ -60,12 +62,12 @@ public class NewArray_c extends polyglot.ast.NewArray_c implements NewArray,
   /**
    * Reconstructs the expression.
    */
-  protected NewArray_c reconstruct(TypeNode baseType, List<Expr> dims,
-      ArrayInit init, Expr location, Expr label) {
+  protected NewFabricArray_c reconstruct(TypeNode baseType, List<Expr> dims,
+      FabricArrayInit init, Expr location, Expr label) {
     if (baseType != this.baseType || !CollectionUtil.equals(dims, this.dims)
         || init != this.init || location != this.location
         || label != this.label) {
-      NewArray_c n = (NewArray_c) copy();
+      NewFabricArray_c n = (NewFabricArray_c) copy();
       n.baseType = baseType;
       n.dims = TypedList.copyAndCheck(dims, Expr.class, true);
       n.init = init;
@@ -82,16 +84,21 @@ public class NewArray_c extends polyglot.ast.NewArray_c implements NewArray,
   public Node visitChildren(NodeVisitor v) {
     TypeNode baseType = (TypeNode) visitChild(this.baseType, v);
     List<Expr> dims = visitList(this.dims, v);
-    ArrayInit init = (ArrayInit) visitChild(this.init, v);
+    FabricArrayInit init = (FabricArrayInit) visitChild(this.init, v);
     Expr location = (Expr) visitChild(this.location, v);
     Expr label = (Expr) visitChild(this.label, v);
     return reconstruct(baseType, dims, init, location, label);
   }
 
   @Override
-  public NewArray_c typeCheck(TypeChecker tc) throws SemanticException {
+  protected ArrayType arrayOf(TypeSystem ts, Type baseType, int dims) {
+    return ((FabILTypeSystem) ts).fabricArrayOf(baseType, dims);
+  }
+
+  @Override
+  public NewFabricArray_c typeCheck(TypeChecker tc) throws SemanticException {
     FabILTypeSystem ts = (FabILTypeSystem) tc.typeSystem();
-    NewArray_c result = (NewArray_c) super.typeCheck(tc);
+    NewFabricArray_c result = (NewFabricArray_c) super.typeCheck(tc);
 
     if (location != null) {
       if (!ts.isImplicitCastValid(location.type(), ts.Core())) {
@@ -158,8 +165,8 @@ public class NewArray_c extends polyglot.ast.NewArray_c implements NewArray,
   @Override
   public Node copy(NodeFactory nf) {
     FabILNodeFactory filNf = (FabILNodeFactory) nf;
-    return filNf.NewArray(this.position, this.baseType, this.label,
-        this.location, this.dims, this.addDims, (ArrayInit) this.init);
+    return filNf.NewFabricArray(this.position, this.baseType, this.label,
+        this.location, this.dims, this.addDims, (FabricArrayInit) this.init);
   }
 
 }

@@ -58,8 +58,9 @@ public interface FabILTypeSystem extends TypeSystem {
   /**
    * Returns the compile-time representation of a Fabric array type.
    */
-  ArrayType fabricArrayOf(Position pos, Type type);
-  ArrayType fabricArrayOf(Type type, int dims);
+  FabricArrayType fabricArrayOf(Type baseType);
+  FabricArrayType fabricArrayOf(Position pos, Type type);
+  FabricArrayType fabricArrayOf(Type type, int dims);
 
   /**
    * @return true iff the given type is a primitive, an array of Fabric types,

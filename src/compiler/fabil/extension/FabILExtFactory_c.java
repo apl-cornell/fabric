@@ -96,10 +96,25 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   protected Ext extArrayAccessImpl() {
     return new ArrayAccessExt_c();
   }
+  
+  public final Ext extFabricArrayInit() {
+    Ext e = extFabricArrayInitImpl();
+    
+    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
+    if (nextExtFactory != null) {
+      Ext e2 = nextExtFactory.extFabricArrayInit();
+      e = composeExts(e, e2);
+    }
+    
+    return postExtFabricArrayInit(e);
+  }
 
-  @Override
-  protected Ext extArrayInitImpl() {
-    return new ArrayInitExt_c();
+  protected Ext extFabricArrayInitImpl() {
+    return new FabricArrayInitExt_c();
+  }
+  
+  protected Ext postExtFabricArrayInit(Ext ext) {
+    return postExtArrayInit(ext);
   }
 
   @Override

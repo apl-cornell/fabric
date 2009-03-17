@@ -8,11 +8,11 @@ import polyglot.ast.NodeFactory;
 import polyglot.qq.QQ;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import fabil.ast.ArrayInit;
+import fabil.ast.FabricArrayInit;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
-public class ArrayInitExt_c extends AnnotatedExt_c {
+public class FabricArrayInitExt_c extends AnnotatedExt_c {
 
   /*
    * (non-Javadoc)
@@ -25,14 +25,14 @@ public class ArrayInitExt_c extends AnnotatedExt_c {
     QQ qq = rewriter.qq();
     FabILTypeSystem ts = rewriter.typeSystem();
 
-    ArrayInit arrayInit = node();
+    FabricArrayInit arrayInit = node();
     Expr location = arrayInit.location();
     Expr label = arrayInit.label();
 
     List<Expr> newElements = new ArrayList<Expr>(arrayInit.elements().size());
     for (Object e : arrayInit.elements()) {
-      if (e instanceof ArrayInit) {
-        ArrayInit ai = (ArrayInit) e;
+      if (e instanceof FabricArrayInit) {
+        FabricArrayInit ai = (FabricArrayInit) e;
         newElements.add(ai.location(location));
       } else {
         newElements.add((Expr) e);
@@ -40,7 +40,7 @@ public class ArrayInitExt_c extends AnnotatedExt_c {
     }
 
     arrayInit = arrayInit.elements(newElements);
-    arrayInit = (ArrayInit) arrayInit.visitChildren(rewriter);
+    arrayInit = (FabricArrayInit) arrayInit.visitChildren(rewriter);
     
     location = arrayInit.location();
     label = arrayInit.label();
@@ -62,8 +62,8 @@ public class ArrayInitExt_c extends AnnotatedExt_c {
    * @see polyglot.ast.Ext_c#node()
    */
   @Override
-  public ArrayInit node() {
-    return (ArrayInit) super.node();
+  public FabricArrayInit node() {
+    return (FabricArrayInit) super.node();
   }
 
 }

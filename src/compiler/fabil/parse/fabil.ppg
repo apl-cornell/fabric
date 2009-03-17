@@ -5,6 +5,7 @@ package fabil.parse;
 
 import fabil.ast.Atomic;
 import fabil.ast.FabILNodeFactory;
+import fabil.ast.FabricArrayInit;
 import fabil.ast.FabricArrayTypeNode;
 import polyglot.parse.*;
 import fabil.types.FabILTypeSystem;
@@ -24,6 +25,9 @@ parser Grm extends polyglot.parse.Grm {:
     public TypeNode fabricArray(TypeNode n, int dims) throws Exception {
       if (dims <= 0) return n;
       
+      if (n instanceof ArrayTypeNode && !(n instanceof FabricArrayTypeNode))
+        return javaArray(n, dims);
+      
       if (n instanceof CanonicalTypeNode) {
         Type t = ((CanonicalTypeNode) n).type();
         return nf.CanonicalTypeNode(pos(n), ts.fabricArrayOf(t, dims));
@@ -33,18 +37,12 @@ parser Grm extends polyglot.parse.Grm {:
     }
     
     public TypeNode array(TypeNode n, int dims) throws Exception {
-      if (dims <= 0) return n;
-      
-      if (n instanceof FabricArrayTypeNode) return fabricArray(n, dims);
-      
-      if (n instanceof CanonicalTypeNode) {
-        Type t = ((CanonicalTypeNode) n).type();
-        if (t instanceof FabricArrayType) return fabricArray(n, dims);
-        return nf.CanonicalTypeNode(pos(n), ts.arrayOf(t, dims));
-      }
-      
-      return nf.ArrayTypeNode(pos(n), array(n, dims - 1));
+      return fabricArray(n, dims);
     }
+    
+    public TypeNode javaArray(TypeNode n, int dims) throws Exception {
+      return super.array(n, dims);
+    } 
 :};
 
 terminal Token AT;
@@ -54,9 +52,10 @@ terminal Token RETRY;
 terminal Token NONFABRIC;
 
 non terminal Atomic atomic_statement;
-non terminal Expr   location_expr_opt;
+non terminal Expr location_expr_opt;
 non terminal Expr label_opt;
-non terminal Stmt	abort_stmt, retry_stmt;
+non terminal Stmt abort_stmt, retry_stmt;
+non terminal FabricArrayInit fabric_array_initializer;
 
 start with goal;
 
@@ -100,19 +99,6 @@ override array_type ::=
             {: RESULT = parser.fabricArray(a.toType(), b.intValue()); :}
     ;
 
-override cast_expression ::=
-                    // Cast
-        LPAREN:p primitive_type:a dims_opt:b RPAREN unary_expression:c
-            {: RESULT = parser.nf.Cast(parser.pos(p, c,a),
-                parser.fabricArray(a, b.intValue()), c); :}
-    |   LPAREN:p expression:a RPAREN unary_expression_not_plus_minus:b
-            {: RESULT = parser.nf.Cast(parser.pos(p, b,a),
-                parser.exprToType(a), b); :}
-    |   LPAREN:p name:a dims:b RPAREN unary_expression_not_plus_minus:c
-            {: RESULT = parser.nf.Cast(parser.pos(p, c,a),
-                parser.fabricArray(a.toType(), b.intValue()), c); :}
-    ;
-
 ////////////////////////////////////////////////////////////////////////
 // Labels and locations for constructors                              //
 ////////////////////////////////////////////////////////////////////////
@@ -152,17 +138,23 @@ override class_instance_creation_expression ::=
 override array_creation_expression ::=
                     // NewArray
         NEW:n primitive_type:a dim_exprs:b dims_opt:c label_opt:l location_expr_opt:loc
-            {: RESULT = parser.nf.NewArray(parser.pos(n, b), a, l, loc, b,
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, b), a, l, loc, b,
                 c.intValue()); :}
     |   NEW:n class_or_interface_type:a dim_exprs:b dims_opt:c label_opt:l location_expr_opt:loc
-            {: RESULT = parser.nf.NewArray(parser.pos(n, b), a, l, loc, b,
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, b), a, l, loc, b,
                 c.intValue()); :}
-    |   NEW:n primitive_type:a dims:b label_opt:l location_expr_opt:loc array_initializer:c
-            {: RESULT = parser.nf.NewArray(parser.pos(n, c), a, l, loc,
-                b.intValue(), (fabil.ast.ArrayInit) c); :}
-    |   NEW:n class_or_interface_type:a dims:b label_opt:l location_expr_opt:loc array_initializer:c
-            {: RESULT = parser.nf.NewArray(parser.pos(n, c), a, l, loc,
-                b.intValue(), (fabil.ast.ArrayInit) c); :}
+    |   NEW:n primitive_type:a dims:b label_opt:l location_expr_opt:loc fabric_array_initializer:c
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, c), a, l, loc,
+                b.intValue(), c); :}
+    |   NEW:n class_or_interface_type:a dims:b label_opt:l location_expr_opt:loc fabric_array_initializer:c
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, c), a, l, loc,
+                b.intValue(), c); :}
+    ;
+
+fabric_array_initializer ::=
+		    // FabricArrayInit
+	array_initializer:a
+	    {: RESULT = parser.nf.FabricArrayInit(a.position(), a.elements()); :}
     ;
 
 //
