@@ -104,7 +104,6 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
     return result;
   }
 
-  @Override
   protected Type arrayOf(TypeSystem ts, Type baseType) {
     return ((FabILTypeSystem) ts).fabricArrayOf(baseType);
   }
