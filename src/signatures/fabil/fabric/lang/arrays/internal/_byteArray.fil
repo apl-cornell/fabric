@@ -8,6 +8,6 @@ public class _byteArray {
   public _byteArray(int length) {
   }
 
-  public _byteArray(byte[] value) {
+  public _byteArray(byte native[] value) {
   }
 }

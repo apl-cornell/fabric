@@ -1,13 +1,11 @@
 package fabil.types;
 
-import polyglot.types.ArrayType_c;
-import polyglot.types.FieldInstance;
-import polyglot.types.Type;
-import polyglot.types.TypeSystem;
+import polyglot.types.*;
 import polyglot.util.Position;
 
 public class FabricArrayType_c extends ArrayType_c implements FabricArrayType {
 
+  /** Used for deserializing types. */
   protected FabricArrayType_c() {
   }
 
@@ -32,7 +30,6 @@ public class FabricArrayType_c extends ArrayType_c implements FabricArrayType {
 
   /*
    * (non-Javadoc)
-   * 
    * @see polyglot.types.ReferenceType_c#descendsFromImpl(polyglot.types.Type)
    */
   @Override
@@ -44,6 +41,30 @@ public class FabricArrayType_c extends ArrayType_c implements FabricArrayType {
         && ts.typeEquals(ancestor, ts.FObject()) && ts.isFabricArray(this))
       return true;
     return super.descendsFromImpl(ancestor);
+  }
+
+  @Override
+  public boolean equalsImpl(TypeObject t) {
+    return (t instanceof FabricArrayType) && super.equalsImpl(t);
+  }
+
+  @Override
+  public boolean typeEqualsImpl(Type t) {
+    return (t instanceof FabricArrayType) && super.typeEqualsImpl(t);
+  }
+
+  @Override
+  public boolean isImplicitCastValidImpl(Type toType) {
+    if (toType instanceof JavaArrayType) return false;
+
+    return super.isImplicitCastValidImpl(toType);
+  }
+
+  @Override
+  public boolean isCastValidImpl(Type toType) {
+    if (toType instanceof JavaArrayType) return false;
+
+    return super.isCastValidImpl(toType);
   }
 
 }

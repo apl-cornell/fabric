@@ -100,6 +100,12 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     FabILTypeSystem ts = (FabILTypeSystem) tc.typeSystem();
     NewFabricArray_c result = (NewFabricArray_c) super.typeCheck(tc);
 
+    if (!ts.isFabricType(result.baseType)) {
+      throw new SemanticException(
+          "Non-Fabric objects cannot be stored in Fabric arrays.", node()
+              .position());
+    }
+
     if (location != null) {
       if (!ts.isImplicitCastValid(location.type(), ts.Core())) {
         throw new SemanticException("Array location must be a core.", location

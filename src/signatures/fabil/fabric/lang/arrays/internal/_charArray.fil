@@ -8,6 +8,6 @@ public class _charArray {
   public _charArray(int length) {
   }
 
-  public _charArray(char[] value) {
+  public _charArray(char native[] value) {
   }
 }

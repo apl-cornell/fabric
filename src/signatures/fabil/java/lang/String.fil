@@ -9,37 +9,37 @@ public final class String implements fabric.lang.JavaInlineable,
   public String(java.lang.String arg0) {
   }
 
-  public String(char[] arg0) {
+  public String(char native[] arg0) {
   }
 
-  public String(char[] arg0, int arg1, int arg2) {
+  public String(char native[] arg0, int arg1, int arg2) {
   }
 
-  public String(int[] arg0, int arg1, int arg2) {
+  public String(int native[] arg0, int arg1, int arg2) {
   }
 
-  public String(byte[] arg0, int arg1, int arg2, int arg3) {
+  public String(byte native[] arg0, int arg1, int arg2, int arg3) {
   }
 
-  public String(byte[] arg0, int arg1) {
+  public String(byte native[] arg0, int arg1) {
   }
 
-  public String(byte[] arg0, int arg1, int arg2, java.lang.String arg3) {
+  public String(byte native[] arg0, int arg1, int arg2, java.lang.String arg3) {
   }
 
-  public String(byte[] arg0, int arg1, int arg2, java.nio.charset.Charset arg3) {
+  public String(byte native[] arg0, int arg1, int arg2, java.nio.charset.Charset arg3) {
   }
 
-  public String(byte[] arg0, java.lang.String arg1) {
+  public String(byte native[] arg0, java.lang.String arg1) {
   }
 
-  public String(byte[] arg0, java.nio.charset.Charset arg1) {
+  public String(byte native[] arg0, java.nio.charset.Charset arg1) {
   }
 
-  public String(byte[] arg0, int arg1, int arg2) {
+  public String(byte native[] arg0, int arg1, int arg2) {
   }
 
-  public String(byte[] arg0) {
+  public String(byte native[] arg0) {
   }
 
   public String(java.lang.StringBuffer arg0) {
@@ -84,30 +84,30 @@ public final class String implements fabric.lang.JavaInlineable,
 
   public native boolean contentEquals(java.lang.CharSequence arg0);
 
-  public static native java.lang.String copyValueOf(char[] arg0, int arg1,
+  public static native java.lang.String copyValueOf(char native[] arg0, int arg1,
       int arg2);
 
-  public static native java.lang.String copyValueOf(char[] arg0);
+  public static native java.lang.String copyValueOf(char native[] arg0);
 
   public native boolean endsWith(java.lang.String arg0);
 
   public native boolean equalsIgnoreCase(java.lang.String arg0);
 
   public static native java.lang.String format(java.lang.String arg0,
-      java.lang.Object[] arg1);
+      java.lang.Object native[] arg1);
 
   public static native java.lang.String format(java.util.Locale arg0,
-      java.lang.String arg1, java.lang.Object[] arg2);
+      java.lang.String arg1, java.lang.Object native[] arg2);
 
-  public native void getBytes(int arg0, int arg1, byte[] arg2, int arg3);
+  public native void getBytes(int arg0, int arg1, byte native[] arg2, int arg3);
 
-  public native byte[] getBytes(java.lang.String arg0);
+  public native byte native[] getBytes(java.lang.String arg0);
 
-  public native byte[] getBytes(java.nio.charset.Charset arg0);
+  public native byte native[] getBytes(java.nio.charset.Charset arg0);
 
-  public native byte[] getBytes();
+  public native byte native[] getBytes();
 
-  public native void getChars(int arg0, int arg1, char[] arg2, int arg3);
+  public native void getChars(int arg0, int arg1, char native[] arg2, int arg3);
 
   public native java.lang.String intern();
 
@@ -144,9 +144,9 @@ public final class String implements fabric.lang.JavaInlineable,
   public native java.lang.String replaceFirst(java.lang.String arg0,
       java.lang.String arg1);
 
-  public native java.lang.String[] split(java.lang.String arg0, int arg1);
+  public native java.lang.String native[] split(java.lang.String arg0, int arg1);
 
-  public native java.lang.String[] split(java.lang.String arg0);
+  public native java.lang.String native[] split(java.lang.String arg0);
 
   public native boolean startsWith(java.lang.String arg0, int arg1);
 
@@ -158,7 +158,7 @@ public final class String implements fabric.lang.JavaInlineable,
 
   public native java.lang.String substring(int arg0, int arg1);
 
-  public native char[] toCharArray();
+  public native char native[] toCharArray();
 
   public native java.lang.String toLowerCase(java.util.Locale arg0);
 
@@ -172,9 +172,9 @@ public final class String implements fabric.lang.JavaInlineable,
 
   public static native java.lang.String valueOf(java.lang.Object arg0);
 
-  public static native java.lang.String valueOf(char[] arg0);
+  public static native java.lang.String valueOf(char native[] arg0);
 
-  public static native java.lang.String valueOf(char[] arg0, int arg1, int arg2);
+  public static native java.lang.String valueOf(char native[] arg0, int arg1, int arg2);
 
   public static native java.lang.String valueOf(boolean arg0);
 

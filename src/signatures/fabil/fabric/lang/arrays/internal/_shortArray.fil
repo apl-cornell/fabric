@@ -8,6 +8,6 @@ public class _shortArray {
   public _shortArray(int length) {
   }
 
-  public _shortArray(short[] value) {
+  public _shortArray(short native[] value) {
   }
 }

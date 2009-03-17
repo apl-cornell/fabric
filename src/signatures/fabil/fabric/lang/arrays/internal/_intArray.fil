@@ -8,6 +8,6 @@ public class _intArray {
   public _intArray(int length) {
   }
 
-  public _intArray(int[] value) {
+  public _intArray(int native[] value) {
   }
 }

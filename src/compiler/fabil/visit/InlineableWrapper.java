@@ -10,6 +10,7 @@ import polyglot.visit.AscriptionVisitor;
 import polyglot.visit.NodeVisitor;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
+import fabil.types.FabricArrayType;
 
 /**
  * Traverses the AST and wraps/unwraps JavaInlineables as necessary.
@@ -37,7 +38,7 @@ public class InlineableWrapper extends AscriptionVisitor {
     // Don't rewrite lvalues.
     if (parent instanceof Assign && ((Assign) parent).left() == old) return n;
     
-    // Don't rewrite array accesses.
+    // Don't rewrite arrays of array accesses.
     if (parent instanceof ArrayAccess && ((ArrayAccess) parent).array() == old)
       return n;
     return super.leaveCall(parent, old, n, v);
@@ -68,10 +69,16 @@ public class InlineableWrapper extends AscriptionVisitor {
     else if (ts.isFabricReference(toType))
       toFabric = true;
     else toJava = true;
-
+    
+    // Determine whether the expression e is indexing into a Fabric array.
+    boolean isFabricArrayAccess =
+        e instanceof ArrayAccess
+            && ((ArrayAccess) e).array().type() instanceof FabricArrayType;
+    
     if (ts.isJavaInlineable(fromType)
-        // Stuff coming out of an array of inlineables will already be wrapped. 
-        && !(e instanceof ArrayAccess))
+        // Stuff coming out of a Fabric array of inlineables will already be
+        // wrapped.
+        && !isFabricArrayAccess)
       fromInlineable = true;
     else if (ts.isFabricReference(fromType))
       fromFabric = true;

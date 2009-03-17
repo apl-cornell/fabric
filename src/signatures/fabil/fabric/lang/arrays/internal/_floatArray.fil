@@ -8,6 +8,6 @@ public class _floatArray {
   public _floatArray(int length) {
   }
 
-  public _floatArray(float[] value) {
+  public _floatArray(float native[] value) {
   }
 }

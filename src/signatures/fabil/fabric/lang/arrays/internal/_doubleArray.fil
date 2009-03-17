@@ -8,6 +8,6 @@ public class _doubleArray {
   public _doubleArray(int length) {
   }
 
-  public _doubleArray(double[] value) {
+  public _doubleArray(double native[] value) {
   }
 }

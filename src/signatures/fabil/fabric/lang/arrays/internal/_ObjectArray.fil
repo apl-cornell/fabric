@@ -8,6 +8,6 @@ public class _ObjectArray {
   public _ObjectArray(Class proxyType, int length) {
   }
 
-  public _ObjectArray(Class proxyType, Object[] value) {
+  public _ObjectArray(Class proxyType, Object native[] value) {
   }
 }

@@ -1,5 +1,6 @@
 package fabil.ast;
 
+import java.util.Iterator;
 import java.util.List;
 
 import polyglot.ast.*;
@@ -7,8 +8,10 @@ import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.TypedList;
+import polyglot.visit.AscriptionVisitor;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
@@ -104,6 +107,20 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   @Override
   protected Type arrayOf(TypeSystem ts, Type baseType) {
     return ((FabILTypeSystem) ts).fabricArrayOf(baseType);
+  }
+
+  @Override
+  public Type childExpectedType(Expr child, AscriptionVisitor av) {
+    FabILTypeSystem ts = (FabILTypeSystem) av.typeSystem();
+    
+    if (child == location) return ts.Core();
+    if (child == label) return ts.Label();
+
+    Type t = av.toType();
+    Type baseType = t.toArray().base();
+    if (ts.isJavaInlineable(baseType)) return ts.FObject();
+    
+    return super.childExpectedType(child, av);
   }
 
   @Override

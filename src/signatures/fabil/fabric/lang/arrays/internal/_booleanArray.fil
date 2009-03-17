@@ -8,6 +8,6 @@ public class _booleanArray {
   public _booleanArray(int length) {
   }
 
-  public _booleanArray(boolean[] value) {
+  public _booleanArray(boolean native[] value) {
   }
 }

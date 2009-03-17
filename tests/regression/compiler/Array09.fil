@@ -2,8 +2,8 @@ package compiler;
 
 public class Array09 {
   void m() {
-	  byte[] a = "test".getBytes();
+	  byte native[] a = "test".getBytes();
 
-	  String[] splits = "test test".split(" ");
+	  String native[] splits = "test test".split(" ");
   }
 }

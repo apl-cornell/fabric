@@ -8,6 +8,6 @@ public class _longArray {
   public _longArray(int length) {
   }
 
-  public _longArray(long[] value) {
+  public _longArray(long native[] value) {
   }
 }
