@@ -113,7 +113,7 @@ location_expr_opt ::=
     
 override class_instance_creation_expression ::=
                     // Expr
-            NEW:x objtype_or_expr:a label_opt:lab LPAREN argument_list_opt:b RPAREN:y location_expr_opt:loc
+            NEW:x location_expr_opt:loc objtype_or_expr:a label_opt:lab LPAREN argument_list_opt:b RPAREN:y 
                 {:  TypeNode tn = a.toUnlabeledType();
                     if (lab != null)
                         tn = parser.nf.LabeledTypeNode(parser.pos(a,lab), tn, lab);
@@ -121,13 +121,13 @@ override class_instance_creation_expression ::=
     ;
 
 override array_creation_expression ::=
-        NEW:n objtype_or_expr:a dims:b array_initializer:c location_expr_opt:loc
+        NEW:n location_expr_opt:loc objtype_or_expr:a dims:b array_initializer:c 
             {: RESULT = parser.nf.NewArray(parser.pos(n,c), a.toType(), loc,
                                        b.intValue(), c); :}
-    |   NEW:n primitive_type:a dim_exprs:b dims_opt:c location_expr_opt:loc
+    |   NEW:n location_expr_opt:loc primitive_type:a dim_exprs:b dims_opt:c 
             {: RESULT = parser.nf.NewArray(parser.pos(n,b), a, loc, b,
                                            c.intValue()); :}
-    |   NEW:n primitive_type:a dims:b location_expr_opt:loc array_initializer:c
+    |   NEW:n location_expr_opt:loc primitive_type:a dims:b array_initializer:c
             {: RESULT = parser.nf.NewArray(parser.pos(n,c), a, loc,
                                            b.intValue(), c); :}
     ;
@@ -135,16 +135,20 @@ override array_creation_expression ::=
 drop {
 	primary ::=
         	NEW LABEL label
-    |   NEW objtype_or_expr dims_opt        	
+    |   NEW objtype_or_expr dims_opt   
+		|   NEW:n PRINCIPAL LPAREN principal_disjunctive:a RPAREN:z
+         	
         ;
 }
 
 extend primary ::=
-        NEW:n LABEL label:a location_expr_opt:loc
+        NEW:n location_expr_opt:loc LABEL label:a 
             {: RESULT = parser.nf.NewLabel(parser.pos(n, loc), a, loc); :}
-    |   NEW:n objtype_or_expr:a dims_opt:b location_expr_opt:loc 
+    |   NEW:n location_expr_opt:loc objtype_or_expr:a dims_opt:b  
             {: 	NewArray toReturn = (NewArray)a.toNewArray(parser.pos(n, a), b);
             		RESULT = (Expr)parser.nf.setLocation(toReturn, loc); :}
+    |   NEW:n location_expr_opt:loc PRINCIPAL LPAREN principal_disjunctive:a RPAREN:z
+            {: RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a); :}            		
             
 	;
 
@@ -161,7 +165,7 @@ drop {
 
 extend method_invocation ::=
                     // Call
-        reftype_or_expr:a LPAREN argument_list_opt:c RPAREN:d location_expr_opt:b
+        reftype_or_expr:a location_expr_opt:b LPAREN argument_list_opt:c RPAREN:d 
 	        {: if (! (a instanceof Name)) parser.die(parser.pos(a));
 	           Name n = (Name) a;
                RESULT = parser.nf.Call(parser.pos(a,d),
@@ -169,7 +173,7 @@ extend method_invocation ::=
 						                                : n.prefix.toReceiver(),
 	                                   parser.nf.Id(parser.pos(n), n.name), 
 	                                   b, c); :}
-    |   primary_no_new_array:a DOT IDENTIFIER:b LPAREN argument_list_opt:d RPAREN:e location_expr_opt:c
+    |   primary_no_new_array:a DOT IDENTIFIER:b location_expr_opt:c LPAREN argument_list_opt:d RPAREN:e 
             {: RESULT = parser.nf.Call(parser.pos(b,e), a,
                                        parser.nf.Id(parser.pos(b), b.getIdentifier()), 
                                        c, d); :}

@@ -208,7 +208,7 @@ public abstract class HTMLWriter  {
     	for(int i = 0; i < labels.length; i++) {
     		boolean isNew = true;
     		for(int j = 0; j < i; j++) {
-    			if(LabelUtil.$Impl.relabelsTo(labels[i], labels[j]) && LabelUtil.$Impl.relabelsTo(labels[j], labels[i])) {
+    			if(LabelUtil._Impl.relabelsTo(labels[i], labels[j]) && LabelUtil._Impl.relabelsTo(labels[j], labels[i])) {
     				isNew = false;
     				labelToActual.put(labels[i], labels[j]);
     				break;
@@ -236,7 +236,7 @@ public abstract class HTMLWriter  {
     	for(int i = 0; i < numConf; i++) {
     		for(int j = 0; j < numConf; j++) {
     			if(i != j) {
-    				if(confTable[i][j] == 0 && LabelUtil.$Impl.relabelsTo(confList[i], confList[j])) {
+    				if(confTable[i][j] == 0 && LabelUtil._Impl.relabelsTo(confList[i], confList[j])) {
     					confTable[i][j] = 1;
     					confTable[j][i] = -1;
     					for(int k = 0; k < numConf; k++) {
@@ -567,7 +567,7 @@ public abstract class HTMLWriter  {
         
     protected String labelToString(Label inputLbl) {
         if (inputLbl == null) return "<null label>";
-//        if (LabelUtil.$Impl.isReadableBy(inputLbl, PrincipalUtil.nullPrincipal())) {
+//        if (LabelUtil._Impl.isReadableBy(inputLbl, PrincipalUtil.nullPrincipal())) {
 //            return "public information";
 //        }
         return inputLbl.toString();
@@ -588,8 +588,8 @@ public abstract class HTMLWriter  {
         final Label currInputLvl;  // what the current input label being displayed is (null if none)      
         final boolean openedTag;   // was a tag opened when this LevelInfo was pushed?
         public String toString() {
-            return "[currOut="+LabelUtil.$Impl.toString(currOutputLvl)+
-                      "; currInp="+LabelUtil.$Impl.toString(currInputLvl)+
+            return "[currOut="+LabelUtil._Impl.toString(currOutputLvl)+
+                      "; currInp="+LabelUtil._Impl.toString(currInputLvl)+
                       "; opened="+openedTag+
                       "; "+n+"]";
         }
@@ -643,8 +643,8 @@ public abstract class HTMLWriter  {
             
             LevelInfo li = stack.get(stack.size()-1);
             
-            return !(LabelUtil.$Impl.equivalentTo(inputLevel, li.currInputLvl) && 
-                    LabelUtil.$Impl.equivalentTo(outputNodeLevel, li.currOutputLvl));
+            return !(LabelUtil._Impl.equivalentTo(inputLevel, li.currInputLvl) && 
+                    LabelUtil._Impl.equivalentTo(outputNodeLevel, li.currOutputLvl));
         }
         private Label outputLevel() {
             LevelInfo li = stack.get(stack.size()-1);

@@ -32,7 +32,7 @@ public abstract class InputNode extends Node {
     public static boolean jif$Instanceof(Principal P, Label l, Label e, Object o) {
         if ((o instanceof InputNode) && Node.jif$Instanceof(l, e, o)) {
             InputNode that = (InputNode)o;
-            return PrincipalUtil.$Impl.equivalentTo(that.servletP, P);
+            return PrincipalUtil._Impl.equivalentTo(that.servletP, P);
         }
         return false;
     }

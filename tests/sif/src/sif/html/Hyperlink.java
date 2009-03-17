@@ -83,7 +83,7 @@ public class Hyperlink extends Container {
     public static boolean jif$Instanceof(Principal P, Label l, Label e, Object o) {
         if ((o instanceof Hyperlink) && Node.jif$Instanceof(l, e, o)) {
             Hyperlink that = (Hyperlink)o;
-            return PrincipalUtil.$Impl.equivalentTo(that.servletP, P);
+            return PrincipalUtil._Impl.equivalentTo(that.servletP, P);
         }
         return false;
     }

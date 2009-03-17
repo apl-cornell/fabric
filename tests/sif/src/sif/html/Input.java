@@ -52,7 +52,7 @@ public final class Input {
     public static boolean jif$Instanceof(fabric.lang.Principal jif$servletP, Object o) {
         if (o instanceof Input) {
             Input that = (Input)o;
-            return PrincipalUtil.$Impl.equivalentTo(that.servletP, jif$servletP);
+            return PrincipalUtil._Impl.equivalentTo(that.servletP, jif$servletP);
         }
         return false;
     }

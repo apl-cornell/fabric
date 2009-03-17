@@ -156,7 +156,7 @@ public final class Request {
     }
     
     public SessionState getSessionState() {
-      return getSessionState(LabelUtil.$Impl.noComponents());
+      return getSessionState(LabelUtil._Impl.noComponents());
     }
     
     public void invalidateSession() {

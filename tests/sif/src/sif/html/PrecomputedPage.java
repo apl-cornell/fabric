@@ -80,7 +80,7 @@ public class PrecomputedPage {
     public static boolean jif$Instanceof(Label l, Label e, Object o) {
         if (o instanceof PrecomputedPage) {
             PrecomputedPage that = (PrecomputedPage)o;
-            return LabelUtil.$Impl.equivalentTo(that.L, l);
+            return LabelUtil._Impl.equivalentTo(that.L, l);
         }
         return false;
     }

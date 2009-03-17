@@ -249,7 +249,7 @@ abstract public class Servlet extends HttpServlet {
                     // ideally this might have to be 'met' with {servP!:} to ensure that servP believes so
                     laction = new LabeledAction(a, trustedBySessionLabel(req));
                 } else {
-                    laction = new LabeledAction(a, LabelUtil.$Impl.noComponents());
+                    laction = new LabeledAction(a, LabelUtil._Impl.noComponents());
                 }
             }
         }
@@ -270,11 +270,11 @@ abstract public class Servlet extends HttpServlet {
             if (debug(2)) {
                 // time the invocation of the action
                 DEBUG.print(laction.a.getName() + " " + laction.a.getClass()+ " ");
-                long clear = LabelUtil.$Impl.getAndClearTime();
+                long clear = LabelUtil._Impl.getAndClearTime();
                 long time_start = System.currentTimeMillis();
                 laction.a.invoke(laction.L, req);
                 long time_end = System.currentTimeMillis();
-                clear = LabelUtil.$Impl.getAndClearTime();
+                clear = LabelUtil._Impl.getAndClearTime();
                 DEBUG.print("Action " + (time_end - time_start) + " Dynamic_Security " + clear + " ");
             }
             else {
@@ -309,7 +309,7 @@ abstract public class Servlet extends HttpServlet {
       return Client.runInSubTransaction(new fabric.client.Client.Code<Label>() {
         public Label run() {
           Core local = Client.getClient().getLocalCore();
-          return LabelUtil.$Impl.writerPolicyLabel(local, req.session, req.session);        
+          return LabelUtil._Impl.writerPolicyLabel(local, req.session, req.session);        
         }
       });
     }
@@ -405,7 +405,7 @@ abstract public class Servlet extends HttpServlet {
         Node content = new NodeList(lbl, lbl, lbl, lbl, new Paragraph(lbl, lbl, lbl, lbl, new Text(lbl, lbl, explanation)),
             stackTrace);
 
-        Label none = LabelUtil.$Impl.noComponents();
+        Label none = LabelUtil._Impl.noComponents();
         Action a = findDefaultAction(req);
         if (a != null) {
             String url = req.contextURL();
@@ -523,14 +523,14 @@ abstract public class Servlet extends HttpServlet {
       return Client.runInSubTransaction(new fabric.client.Client.Code<Label>() {
         public Label run() {
           Core local = Client.getClient().getLocalCore();
-          return LabelUtil.$Impl.readerPolicyLabel(local, ss.sessionPrincipal(), ss.sessionPrincipal());
+          return LabelUtil._Impl.readerPolicyLabel(local, ss.sessionPrincipal(), ss.sessionPrincipal());
         }
       });
     }
 
 // TODO: Is the first argument to createSessionState necessary?
     protected SessionState createSessionState(Label lbl, String id) {
-        return SessionState.$Impl.createSessionState(lbl, lbl, id);
+        return SessionState._Impl.createSessionState(lbl, lbl, id);
     }
 
     /**
@@ -544,7 +544,7 @@ abstract public class Servlet extends HttpServlet {
       return Client.runInSubTransaction(new fabric.client.Client.Code<Label>() {
         public Label run() {
           Core local = Client.getClient().getLocalCore();
-          return LabelUtil.$Impl.toLabel(local, PrincipalUtil.$Impl.readableByPrinPolicy(local,session));
+          return LabelUtil._Impl.toLabel(local, PrincipalUtil._Impl.readableByPrinPolicy(local,session));
         }
       });
         //return LabelUtil.privacyPolicyLabel(session, Collections.EMPTY_LIST);

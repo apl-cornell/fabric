@@ -33,7 +33,7 @@ public abstract class Node extends java.lang.Object {
     public static boolean jif$Instanceof(Label l, Label e, Object o) {
         if (o instanceof Node) {
             Node that = (Node)o;
-            return LabelUtil.$Impl.equivalentTo(that.L, l) && LabelUtil.$Impl.equivalentTo(that.E, e);
+            return LabelUtil._Impl.equivalentTo(that.L, l) && LabelUtil._Impl.equivalentTo(that.E, e);
         }
         return false;
     }
