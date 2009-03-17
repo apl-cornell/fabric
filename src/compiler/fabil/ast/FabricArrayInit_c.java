@@ -1,6 +1,5 @@
 package fabil.ast;
 
-import java.util.Iterator;
 import java.util.List;
 
 import polyglot.ast.*;
@@ -8,7 +7,6 @@ import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
-import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.TypedList;
 import polyglot.visit.AscriptionVisitor;
