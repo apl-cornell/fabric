@@ -90,6 +90,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     return reconstruct(baseType, dims, init, location, label);
   }
 
+  @Override
   protected ArrayType arrayOf(TypeSystem ts, Type baseType, int dims) {
     return ((FabILTypeSystem) ts).fabricArrayOf(baseType, dims);
   }
