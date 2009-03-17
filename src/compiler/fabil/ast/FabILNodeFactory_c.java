@@ -8,6 +8,8 @@ import polyglot.ast.Assign.Operator;
 import polyglot.types.Flags;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
+import fabil.extension.FabILDelFactory;
+import fabil.extension.FabILDelFactory_c;
 import fabil.extension.FabILExtFactory;
 import fabil.extension.FabILExtFactory_c;
 
@@ -18,12 +20,17 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     FabILNodeFactory {
 
   public FabILNodeFactory_c() {
-    super(new FabILExtFactory_c());
+    super(new FabILExtFactory_c(), new FabILDelFactory_c());
   }
 
   @Override
   public FabILExtFactory extFactory() {
     return (FabILExtFactory) super.extFactory();
+  }
+
+  @Override
+  protected FabILDelFactory delFactory() {
+    return (FabILDelFactory) super.delFactory();
   }
 
   /*
@@ -52,6 +59,19 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     ai = (ArrayInit) ai.ext(extFactory().extArrayInit());
     ai = (ArrayInit) ai.del(delFactory().delArrayInit());
     return ai;
+  }
+  
+  @Override
+  public ArrayTypeNode ArrayTypeNode(Position pos, TypeNode base) {
+    // TODO Auto-generated method stub
+    return super.ArrayTypeNode(pos, base);
+  }
+
+  public FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type) {
+    FabricArrayTypeNode atn = new FabricArrayTypeNode_c(pos, type);
+    atn = (FabricArrayTypeNode) atn.ext(extFactory().extFabricArrayTypeNode());
+    atn = (FabricArrayTypeNode) atn.del(delFactory().delFabricArrayTypeNode());
+    return atn;
   }
 
   public Atomic Atomic(Position pos, List<Stmt> statements) {
@@ -110,7 +130,7 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     NewArray result =
         new NewArray_c(pos, base, CollectionUtil.nonNullList(dims), addDims,
             init, label, location);
-    result = (NewArray) result.ext(extFactory().extNewArray());
+    result = (NewArray) result.ext(extFactory().extNewFabricArray());
     result = (NewArray) result.del(delFactory().delNewArray());
     return result;
   }

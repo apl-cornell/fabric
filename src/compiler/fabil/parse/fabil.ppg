@@ -5,9 +5,11 @@ package fabil.parse;
 
 import fabil.ast.Atomic;
 import fabil.ast.FabILNodeFactory;
+import fabil.ast.FabricArrayTypeNode;
 import polyglot.parse.*;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILFlags;
+import fabil.types.FabricArrayType;
 
 parser Grm extends polyglot.parse.Grm {:
     public final FabILTypeSystem ts;
@@ -17,6 +19,31 @@ parser Grm extends polyglot.parse.Grm {:
         super(l, t, n, q);
         ts = (FabILTypeSystem) t;
         nf = (FabILNodeFactory) n;
+    }
+    
+    public TypeNode fabricArray(TypeNode n, int dims) throws Exception {
+      if (dims <= 0) return n;
+      
+      if (n instanceof CanonicalTypeNode) {
+        Type t = ((CanonicalTypeNode) n).type();
+        return nf.CanonicalTypeNode(pos(n), ts.fabricArrayOf(t, dims));
+      }
+        
+      return nf.FabricArrayTypeNode(pos(n), fabricArray(n, dims - 1));
+    }
+    
+    public TypeNode array(TypeNode n, int dims) throws Exception {
+      if (dims <= 0) return n;
+      
+      if (n instanceof FabricArrayTypeNode) return fabricArray(n, dims);
+      
+      if (n instanceof CanonicalTypeNode) {
+        Type t = ((CanonicalTypeNode) n).type();
+        if (t instanceof FabricArrayType) return fabricArray(n, dims);
+        return nf.CanonicalTypeNode(pos(n), ts.arrayOf(t, dims));
+      }
+      
+      return nf.ArrayTypeNode(pos(n), array(n, dims - 1));
     }
 :};
 
@@ -60,6 +87,31 @@ retry_stmt ::=
 		RETRY:a SEMICOLON:b
 			{: RESULT = parser.nf.RetryStmt(parser.pos(a, b)); :}
 	;
+
+////////////////////////////////////////////////////////////////////////
+// Array types                                                        //
+////////////////////////////////////////////////////////////////////////
+
+override array_type ::=
+                    // TypeNode
+        primitive_type:a dims:b
+            {: RESULT = parser.fabricArray(a, b.intValue()); :}
+    |   name:a dims:b
+            {: RESULT = parser.fabricArray(a.toType(), b.intValue()); :}
+    ;
+
+override cast_expression ::=
+                    // Cast
+        LPAREN:p primitive_type:a dims_opt:b RPAREN unary_expression:c
+            {: RESULT = parser.nf.Cast(parser.pos(p, c,a),
+                parser.fabricArray(a, b.intValue()), c); :}
+    |   LPAREN:p expression:a RPAREN unary_expression_not_plus_minus:b
+            {: RESULT = parser.nf.Cast(parser.pos(p, b,a),
+                parser.exprToType(a), b); :}
+    |   LPAREN:p name:a dims:b RPAREN unary_expression_not_plus_minus:c
+            {: RESULT = parser.nf.Cast(parser.pos(p, c,a),
+                parser.fabricArray(a.toType(), b.intValue()), c); :}
+    ;
 
 ////////////////////////////////////////////////////////////////////////
 // Labels and locations for constructors                              //

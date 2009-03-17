@@ -9,6 +9,26 @@ import polyglot.ast.Ext;
 public class FabILExtFactory_c extends AbstractExtFactory_c implements
     FabILExtFactory {
 
+  public Ext extFabricArrayTypeNode() {
+    Ext e = extFabricArrayTypeNodeImpl();
+    
+    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
+    if (nextExtFactory != null) {
+      Ext e2 = nextExtFactory.extFabricArrayTypeNode();
+      e = composeExts(e, e2);
+    }
+    
+    return postExtFabricArrayTypeNode(e);
+  }
+  
+  protected Ext extFabricArrayTypeNodeImpl() {
+    return extArrayTypeNodeImpl();
+  }
+  
+  protected Ext postExtFabricArrayTypeNode(Ext ext) {
+    return postExtArrayTypeNode(ext);
+  }
+
   /** Factory method for Atomic objects */
   public final Ext extAtomic() {
     Ext e = extAtomicImpl();
@@ -157,9 +177,24 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
     return new NewExt_c();
   }
 
-  @Override
-  protected Ext extNewArrayImpl() {
-    return new NewArrayExt_c();
+  public Ext extNewFabricArray() {
+    Ext e = extNewFabricArrayImpl();
+    
+    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
+    if (nextExtFactory != null) {
+      Ext e2 = nextExtFactory.extNewFabricArray();
+      e = composeExts(e, e2);
+    }
+    
+    return postExtNewFabricArray(e);
+  }
+
+  protected Ext extNewFabricArrayImpl() {
+    return new NewFabricArrayExt_c();
+  }
+  
+  protected Ext postExtNewFabricArray(Ext e) {
+    return postExtNewArray(e);
   }
 
   @Override

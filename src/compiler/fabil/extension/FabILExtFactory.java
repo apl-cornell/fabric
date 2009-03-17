@@ -7,4 +7,6 @@ public interface FabILExtFactory extends ExtFactory {
   Ext extAtomic();
   Ext extRetry();
   Ext extAbort();
+  Ext extFabricArrayTypeNode();
+  Ext extNewFabricArray();
 }

@@ -29,7 +29,7 @@ public class ArrayAccessExt_c extends ExprExt_c {
     if (ts.isFabricType(base) && !ts.isJavaInlineable(base)) {
       Type castType = aa.type();
       if (castType.isArray())
-        castType = ts.fArrayOf(castType.toArray().base());
+        castType = ts.fabricRuntimeArrayOf(castType.toArray().base());
       result = pr.qq().parseExpr("(%T) %E", castType, result);
     }
 

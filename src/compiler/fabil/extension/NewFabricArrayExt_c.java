@@ -9,7 +9,7 @@ import fabil.ast.NewArray;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
-public class NewArrayExt_c extends AnnotatedExt_c {
+public class NewFabricArrayExt_c extends AnnotatedExt_c {
 
   /*
    * (non-Javadoc)
@@ -34,8 +34,8 @@ public class NewArrayExt_c extends AnnotatedExt_c {
     Expr size = (Expr) newArray.dims().get(0);
 
     Type baseType = newArray.type().toArray().base();
-    Type arrayImplType = ts.fArrayImplOf(baseType);
-    Type arrayType = ts.fArrayOf(baseType);
+    Type arrayImplType = ts.fabricRuntimeArrayImplOf(baseType);
+    Type arrayType = ts.fabricRuntimeArrayOf(baseType);
     String typeArg = "";
     if (baseType.isReference()) {
       if (ts.isPureFabricType(baseType)) typeArg = baseType.toString();

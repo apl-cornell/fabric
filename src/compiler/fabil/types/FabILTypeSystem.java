@@ -2,6 +2,7 @@ package fabil.types;
 
 import polyglot.ast.TypeNode;
 import polyglot.types.*;
+import polyglot.util.Position;
 
 public interface FabILTypeSystem extends TypeSystem {
 
@@ -27,12 +28,6 @@ public interface FabILTypeSystem extends TypeSystem {
   /** The ClassType of java.lang.Thread. */
   ClassType Thread();
 
-  ClassType fArrayOf(Type type);
-
-  ClassType fArrayImplOf(Type type);
-
-  ClassType toFArray(ArrayType type);
-
   ClassType AbortException();
 
   /** The ClassType of fabric.client.remote.RemoteClient. */
@@ -53,6 +48,18 @@ public interface FabILTypeSystem extends TypeSystem {
   Type Label();
 
   ClassType InternalError();
+
+  ClassType fabricRuntimeArrayOf(Type type);
+
+  ClassType fabricRuntimeArrayImplOf(Type type);
+
+  ClassType toFabricRuntimeArray(ArrayType type);
+  
+  /**
+   * Returns the compile-time representation of a Fabric array type.
+   */
+  ArrayType fabricArrayOf(Position pos, Type type);
+  ArrayType fabricArrayOf(Type type, int dims);
 
   /**
    * @return true iff the given type is a primitive, an array of Fabric types,

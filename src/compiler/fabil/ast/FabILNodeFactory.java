@@ -9,6 +9,8 @@ import polyglot.util.Position;
  * NodeFactory for FabIL extension.
  */
 public interface FabILNodeFactory extends NodeFactory {
+  ArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type);
+  
   Atomic Atomic(Position pos, List<Stmt> statements);
 
   New New(Position pos, TypeNode type, Expr label, Expr location,
@@ -23,15 +25,27 @@ public interface FabILNodeFactory extends NodeFactory {
   New New(Position pos, Expr outer, TypeNode objectType, Expr label,
       Expr location, List<Expr> args, ClassBody body);
 
+  /**
+   * Creates an AST node representing the creation of a Fabric array.
+   */
   NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
       List<Expr> dims);
 
+  /**
+   * Creates an AST node representing the creation of a Fabric array.
+   */
   NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
       List<Expr> dims, int addDims);
 
+  /**
+   * Creates an AST node representing the creation of a Fabric array.
+   */
   NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
       int addDims, ArrayInit init);
 
+  /**
+   * Creates an AST node representing the creation of a Fabric array.
+   */
   NewArray NewArray(Position pos, TypeNode base, Expr label, Expr location,
       List<Expr> dims, int addDims, ArrayInit init);
 

@@ -1,6 +1,8 @@
 package fabil.types;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import polyglot.ast.TypeNode;
 import polyglot.frontend.Source;
@@ -73,17 +75,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
   public ClassType InternalError() {
     return load("java.lang.InternalError");
   }
-  
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.types.TypeSystem_c#createArrayType(polyglot.util.Position,
-   *      polyglot.types.Type)
-   */
-  @Override
-  protected ArrayType createArrayType(Position pos, Type type) {
-    return new FabILArrayType_c(this, pos, type);
-  }
 
   /*
    * (non-Javadoc)
@@ -124,25 +115,56 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
     return result;
   }
 
-  public ClassType fArrayOf(Type type) {
+  public ClassType fabricRuntimeArrayOf(Type type) {
     if (type.isReference())
       return loadRuntime("fabric.lang.arrays.ObjectArray");
     return loadRuntime("fabric.lang.arrays." + type.toString() + "Array");
   }
 
-  public ClassType fArrayImplOf(Type type) {
+  public ClassType fabricRuntimeArrayImplOf(Type type) {
     if (type.isReference())
       return loadRuntime("fabric.lang.arrays.ObjectArray._Impl");
     return loadRuntime("fabric.lang.arrays." + type.toString() + "Array._Impl");
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.types.FabILTypeSystem#toFArray(polyglot.types.ArrayType)
-   */
-  public ClassType toFArray(ArrayType type) {
-    return fArrayOf(type.base());
+  public ClassType toFabricRuntimeArray(ArrayType type) {
+    return fabricRuntimeArrayOf(type.base());
+  }
+
+  public ArrayType fabricArrayOf(Type type, int dims) {
+    return fabricArrayOf(null, type, dims);
+  }
+  
+  public ArrayType fabricArrayOf(Position pos, Type type, int dims) {
+    if (dims > 1)
+      return fabricArrayOf(pos, fabricArrayOf(pos, type, dims - 1));
+    
+    if (dims == 1) return fabricArrayOf(pos, type);
+    
+    throw new InternalCompilerError(
+        "Must call fabricArrayOf(type, dims) with dims > 0");
+  }
+  
+  public ArrayType fabricArrayOf(Position pos, Type type) {
+    assert_(type);
+    return fabricArrayType(pos, type);
+  }
+  
+  private Map<Type, ArrayType> fabricArrayTypeCache =
+      new HashMap<Type, ArrayType>();
+  
+  protected ArrayType fabricArrayType(Position pos, Type type) {
+    ArrayType t = fabricArrayTypeCache.get(type);
+    if (t == null) {
+      t = createFabricArrayType(pos, type);
+      fabricArrayTypeCache.put(type, t);
+    }
+    
+    return t;
+  }
+  
+  protected ArrayType createFabricArrayType(Position pos, Type type) {
+    return new FabricArrayType_c(this, pos, type);
   }
 
   /*
@@ -305,7 +327,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements
    * @see fabil.types.FabILTypeSystem#isFabricArray(polyglot.types.ArrayType)
    */
   public boolean isFabricArray(ArrayType type) {
-    return isFabricType(type.ultimateBase());
+    return type instanceof FabricArrayType;
   }
 
   /*

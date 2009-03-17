@@ -52,7 +52,7 @@ public class AtomicExt_c extends FabILExt_c {
         // so we have to do it manually here.
         ArrayType at = lt.toArray();
         if (ts.isPureFabricType(at)) {
-          lt = ts.toFArray(at);
+          lt = ts.toFabricRuntimeArray(at);
         }
       }
       

@@ -30,7 +30,7 @@ public class TypeNodeExt_c extends FabILExt_c {
     if (!ts.isPureFabricType(at)) return tn;
     
     NodeFactory nf = pr.nodeFactory();
-    return nf.CanonicalTypeNode(Position.compilerGenerated(), ts.toFArray(at));
+    return nf.CanonicalTypeNode(Position.compilerGenerated(), ts.toFabricRuntimeArray(at));
   }
 
   /*

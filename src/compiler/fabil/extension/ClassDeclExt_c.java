@@ -271,7 +271,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     methodDecl.append(flags + " ");
 
     Type returnType = mi.returnType();
-    if (returnType.isArray()) returnType = ts.toFArray(returnType.toArray());
+    if (returnType.isArray()) returnType = ts.toFabricRuntimeArray(returnType.toArray());
 
     String name = mi.name();
     methodDecl.append("%T " + name + "(");
@@ -286,7 +286,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       methodDecl.append((argCount == 1 ? "" : ", ") + "%T arg" + argCount);
       args.append((argCount == 1 ? "" : ", ") + "arg" + argCount);
 
-      if (t.isArray()) t = ts.toFArray(t.toArray());
+      if (t.isArray()) t = ts.toFabricRuntimeArray(t.toArray());
       subst.add(t);
       argCount++;
     }

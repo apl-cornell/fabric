@@ -205,7 +205,7 @@ public class ProxyRewriter extends NodeVisitor {
   private String toImplType(Type t) {
     if (t instanceof ArrayType) {
       ArrayType a = (ArrayType) t;
-      return ts.fArrayImplOf(a.base()).fullName();
+      return ts.fabricRuntimeArrayImplOf(a.base()).fullName();
     } else {
       ClassType c = (ClassType) t;
       

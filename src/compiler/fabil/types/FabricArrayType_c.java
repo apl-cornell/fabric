@@ -6,12 +6,12 @@ import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 
-public class FabILArrayType_c extends ArrayType_c {
+public class FabricArrayType_c extends ArrayType_c implements FabricArrayType {
 
-  protected FabILArrayType_c() {
+  protected FabricArrayType_c() {
   }
 
-  public FabILArrayType_c(TypeSystem ts, Position pos, Type base) {
+  public FabricArrayType_c(TypeSystem ts, Position pos, Type base) {
     super(ts, pos, base);
   }
 
