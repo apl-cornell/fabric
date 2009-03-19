@@ -19,7 +19,7 @@ parser Grm extends jif.parse.Grm {:
         ts = t;
         nf = n;
     }
-    
+
 :};
 
 terminal Token AT;
@@ -31,7 +31,7 @@ terminal Token NONFABRIC;
 
 non terminal Atomic atomic_statement;
 non terminal Expr   location_expr_opt, location_expr;
-non terminal Stmt	abort_stmt, retry_stmt;
+non terminal Stmt   abort_stmt, retry_stmt;
 non terminal Client local_client;
 non terminal RemoteClientGetter remote_client;
 
@@ -51,25 +51,26 @@ extend statement_without_trailing_substatement ::=
 
 atomic_statement ::=
                     // Atomic
-        ATOMIC:n block:a {: RESULT = parser.nf.Atomic(parser.pos(n,a), a.statements()); :};
+        ATOMIC:n block:a
+            {: RESULT = parser.nf.Atomic(parser.pos(n,a), a.statements()); :};
 
 abort_stmt ::=
-					// AbortStmt
-		ABORT:a SEMICOLON:b
-			{: RESULT = parser.nf.AbortStmt(parser.pos(a, b)); :}
-	;
-	
+                    // AbortStmt
+        ABORT:a SEMICOLON:b
+            {: RESULT = parser.nf.AbortStmt(parser.pos(a, b)); :}
+    ;
+    
 retry_stmt ::= 
-					// RetryStmt
-		RETRY:a SEMICOLON:b
-			{: RESULT = parser.nf.RetryStmt(parser.pos(a, b)); :}
-	;
+                    // RetryStmt
+        RETRY:a SEMICOLON:b
+            {: RESULT = parser.nf.RetryStmt(parser.pos(a, b)); :}
+    ;
 
 extend modifier ::=
         ATOMIC:a
             {: RESULT = FabricFlags.ATOMIC; :}
     |   NONFABRIC:a
-    		{: RESULT = FabricFlags.NONFABRIC; :}
+            {: RESULT = FabricFlags.NONFABRIC; :}
     ;
 
 ////////////////////////////////////////////////////////////////////////
@@ -77,28 +78,28 @@ extend modifier ::=
 ////////////////////////////////////////////////////////////////////////
 
 local_client ::=
-					// Client
-		CLIENT:a
-			{: RESULT = parser.nf.Client(parser.pos(a)); :}
-	;
+                    // Client
+        CLIENT:a
+            {: RESULT = parser.nf.Client(parser.pos(a)); :}
+    ;
 
 remote_client ::=
-					// RemoteClientGetter
-		CLIENT:a LPAREN expression:b RPAREN:c
-			{: RESULT = parser.nf.RemoteClientGetter(parser.pos(a, c), b); :}
-	;
+                    // RemoteClientGetter
+        CLIENT:a LPAREN expression:b RPAREN:c
+            {: RESULT = parser.nf.RemoteClientGetter(parser.pos(a, c), b); :}
+    ;
 
 extend primary_no_new_array ::=
-		local_client:a
-			{: RESULT = a; :}
-	|	remote_client:a
-			{: RESULT = a; :}
-	;
+        local_client:a
+            {: RESULT = a; :}
+    |   remote_client:a
+            {: RESULT = a; :}
+    ;
 
 extend principal_base ::=
-		local_client:a
-			{: RESULT = parser.nf.AmbPrincipalNode(parser.pos(a), a); :}
-	;
+        local_client:a
+            {: RESULT = parser.nf.AmbPrincipalNode(parser.pos(a), a); :}
+    ;
 
 ////////////////////////////////////////////////////////////////////////
 // Locations for constructors                                         //
@@ -110,7 +111,7 @@ location_expr_opt ::=
     |   AT simple_name:a
             {: RESULT = a.toExpr(); :}
     ;
-    
+
 override class_instance_creation_expression ::=
                     // Expr
             NEW:x location_expr_opt:loc objtype_or_expr:a label_opt:lab LPAREN argument_list_opt:b RPAREN:y 
@@ -133,24 +134,23 @@ override array_creation_expression ::=
     ;
 
 drop {
-	primary ::=
-        	NEW LABEL label
-    |   NEW objtype_or_expr dims_opt   
-		|   NEW:n PRINCIPAL LPAREN principal_disjunctive:a RPAREN:z
-         	
-        ;
+    primary ::=
+        NEW LABEL label
+    |   NEW objtype_or_expr dims_opt
+    |   NEW:n PRINCIPAL LPAREN principal_disjunctive:a RPAREN:z
+    ;
 }
 
 extend primary ::=
         NEW:n location_expr_opt:loc LABEL label:a 
             {: RESULT = parser.nf.NewLabel(parser.pos(n, loc), a, loc); :}
-    |   NEW:n location_expr_opt:loc objtype_or_expr:a dims_opt:b  
-            {: 	NewArray toReturn = (NewArray)a.toNewArray(parser.pos(n, a), b);
-            		RESULT = (Expr)parser.nf.setLocation(toReturn, loc); :}
+    |   NEW:n location_expr_opt:loc objtype_or_expr:a dims_opt:b
+            {: NewArray toReturn = (NewArray)a.toNewArray(parser.pos(n, a), b);
+               RESULT = (Expr)parser.nf.setLocation(toReturn, loc); :}
     |   NEW:n location_expr_opt:loc PRINCIPAL LPAREN principal_disjunctive:a RPAREN:z
-            {: RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a); :}            		
-            
-	;
+            {: RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a); :}
+
+    ;
 
 ////////////////////////////////////////////////////////////////////////
 // Locations for remote calls                                         //
@@ -158,21 +158,20 @@ extend primary ::=
 
 drop {
     method_invocation ::=
-	        reftype_or_expr:a LPAREN argument_list_opt:b RPAREN:y
-	    |   primary_no_new_array:a DOT IDENTIFIER:b LPAREN argument_list_opt:c RPAREN:y
-	    ;
+            reftype_or_expr:a LPAREN argument_list_opt:b RPAREN:y
+        |   primary_no_new_array:a DOT IDENTIFIER:b LPAREN argument_list_opt:c RPAREN:y
+        ;
 }
 
 extend method_invocation ::=
                     // Call
         reftype_or_expr:a location_expr_opt:b LPAREN argument_list_opt:c RPAREN:d 
-	        {: if (! (a instanceof Name)) parser.die(parser.pos(a));
-	           Name n = (Name) a;
+            {: if (! (a instanceof Name)) parser.die(parser.pos(a));
+               Name n = (Name) a;
                RESULT = parser.nf.Call(parser.pos(a,d),
                                        n.prefix == null ? null
-						                                : n.prefix.toReceiver(),
-	                                   parser.nf.Id(parser.pos(n), n.name), 
-	                                   b, c); :}
+                                                        : n.prefix.toReceiver(),
+                                       parser.nf.Id(parser.pos(n), n.name), b, c); :}
     |   primary_no_new_array:a DOT IDENTIFIER:b location_expr_opt:c LPAREN argument_list_opt:d RPAREN:e 
             {: RESULT = parser.nf.Call(parser.pos(b,e), a,
                                        parser.nf.Id(parser.pos(b), b.getIdentifier()), 
