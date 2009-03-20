@@ -108,13 +108,29 @@ extend principal_base ::=
 location_expr_opt ::=
                     // Expr
             {: RESULT = null; :}
-    |   AT simple_name:a
+    |   AT name:a
+            {: RESULT = a.toExpr(); :}
+    ;
+location_expr ::=
+                    // Expr
+        AT name:a
             {: RESULT = a.toExpr(); :}
     ;
 
 override class_instance_creation_expression ::=
                     // Expr
-            NEW:x location_expr_opt:loc objtype_or_expr:a label_opt:lab LPAREN argument_list_opt:b RPAREN:y 
+            NEW:x objtype_or_expr:a LPAREN argument_list_opt:b RPAREN:y 
+                {:  TypeNode tn = a.toUnlabeledType();
+                    RESULT = parser.nf.New(parser.pos(x,y), tn, (Expr) null, b); :}
+    |       NEW:x objtype_or_expr:a label:lab LPAREN argument_list_opt:b RPAREN:y 
+                {:  TypeNode tn = a.toUnlabeledType();
+                    if (lab != null)
+                        tn = parser.nf.LabeledTypeNode(parser.pos(a,lab), tn, lab);
+                    RESULT = parser.nf.New(parser.pos(x,y), tn, (Expr) null, b); :}
+    |       NEW:x objtype_or_expr:a location_expr:loc LPAREN argument_list_opt:b RPAREN:y 
+                {:  TypeNode tn = a.toUnlabeledType();
+                    RESULT = parser.nf.New(parser.pos(x,y), tn, loc, b); :}
+    |       NEW:x objtype_or_expr:a label:lab location_expr:loc LPAREN argument_list_opt:b RPAREN:y 
                 {:  TypeNode tn = a.toUnlabeledType();
                     if (lab != null)
                         tn = parser.nf.LabeledTypeNode(parser.pos(a,lab), tn, lab);
@@ -122,13 +138,16 @@ override class_instance_creation_expression ::=
     ;
 
 override array_creation_expression ::=
-        NEW:n location_expr_opt:loc objtype_or_expr:a dims:b array_initializer:c 
+        NEW:n objtype_or_expr:a dims:b array_initializer:c 
+            {: RESULT = parser.nf.NewArray(parser.pos(n,c), a.toType(), (Expr) null,
+                                       b.intValue(), c); :}
+    |   NEW:n objtype_or_expr:a dims:b location_expr:loc array_initializer:c 
             {: RESULT = parser.nf.NewArray(parser.pos(n,c), a.toType(), loc,
                                        b.intValue(), c); :}
-    |   NEW:n location_expr_opt:loc primitive_type:a dim_exprs:b dims_opt:c 
+    |   NEW:n primitive_type:a dim_exprs:b dims_opt:c location_expr_opt:loc
             {: RESULT = parser.nf.NewArray(parser.pos(n,b), a, loc, b,
                                            c.intValue()); :}
-    |   NEW:n location_expr_opt:loc primitive_type:a dims:b array_initializer:c
+    |   NEW:n primitive_type:a dims:b location_expr_opt:loc array_initializer:c
             {: RESULT = parser.nf.NewArray(parser.pos(n,c), a, loc,
                                            b.intValue(), c); :}
     ;
@@ -142,14 +161,19 @@ drop {
 }
 
 extend primary ::=
-        NEW:n location_expr_opt:loc LABEL label:a 
+        NEW:n LABEL label:a location_expr_opt:loc
             {: RESULT = parser.nf.NewLabel(parser.pos(n, loc), a, loc); :}
-    |   NEW:n location_expr_opt:loc objtype_or_expr:a dims_opt:b
+    |   NEW:n PRINCIPAL location_expr_opt:loc LPAREN principal_disjunctive:a RPAREN:z
+            {: RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a); :}
+    |   NEW:n objtype_or_expr:a dims_opt:b
+            {: NewArray toReturn = (NewArray)a.toNewArray(parser.pos(n, a), b);
+               RESULT = (Expr)parser.nf.setLocation(toReturn, null); :}
+    |   NEW:n objtype_or_expr:a location_expr:loc
+            {: NewArray toReturn = (NewArray)a.toNewArray(parser.pos(n, a), new Integer(0));
+               RESULT = (Expr)parser.nf.setLocation(toReturn, loc); :}
+    |   NEW:n objtype_or_expr:a dims:b location_expr:loc
             {: NewArray toReturn = (NewArray)a.toNewArray(parser.pos(n, a), b);
                RESULT = (Expr)parser.nf.setLocation(toReturn, loc); :}
-    |   NEW:n location_expr_opt:loc PRINCIPAL LPAREN principal_disjunctive:a RPAREN:z
-            {: RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a); :}
-
     ;
 
 ////////////////////////////////////////////////////////////////////////
