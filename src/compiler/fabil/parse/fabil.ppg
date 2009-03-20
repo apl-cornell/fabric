@@ -87,6 +87,13 @@ retry_stmt ::=
 			{: RESULT = parser.nf.RetryStmt(parser.pos(a, b)); :}
 	;
 
+extend modifier ::=
+        ATOMIC:a
+            {: RESULT = FabILFlags.ATOMIC; :}
+    |   NONFABRIC:a
+    		{: RESULT = FabILFlags.NONFABRIC; :}
+    ;
+
 ////////////////////////////////////////////////////////////////////////
 // Array types                                                        //
 ////////////////////////////////////////////////////////////////////////
@@ -223,11 +230,4 @@ extend explicit_constructor_invocation ::=
             {: RESULT = parser.nf.ThisCall(parser.pos(a, c, n), a, b); :}
     |   primary_no_new_array:a DOT SUPER:n LPAREN argument_list_opt:b RPAREN SEMICOLON:c
             {: RESULT = parser.nf.SuperCall(parser.pos(a, c, n), a, b); :}
-    ;
-
-extend modifier ::=
-        ATOMIC:a
-            {: RESULT = FabILFlags.ATOMIC; :}
-    |   NONFABRIC:a
-    		{: RESULT = FabILFlags.NONFABRIC; :}
     ;
