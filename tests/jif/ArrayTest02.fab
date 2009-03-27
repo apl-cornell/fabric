@@ -1,0 +1,10 @@
+public class ArrayTest02 extends java.lang.Object {
+    void m{*!:*}() throws (Exception{*!:*}) {
+        int{Bob:}[] y = new int native[10];
+        String{Bob:}[] z = new String native[10];
+        for(int i = 0; i < 10; i++) {
+        	y[i] = i;
+        	z[i] = "int:" + i;
+        }
+    }
+}
