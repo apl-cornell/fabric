@@ -41,6 +41,10 @@ parser Grm extends polyglot.parse.Grm {:
     }
     
     public TypeNode javaArray(TypeNode n, int dims) throws Exception {
+      if (dims > 0 && n instanceof AmbTypeNode) {
+        return nf.ArrayTypeNode(pos(n), javaArray(n, dims - 1));
+      }
+      
       return super.array(n, dims);
     } 
 :};
