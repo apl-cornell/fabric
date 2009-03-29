@@ -48,4 +48,9 @@ public interface FabricTypeSystem extends JifTypeSystem {
   boolean isFabricClass(Type type);
   
   boolean containsThisLabel(Label label);
+
+  FabricArrayType fabricArrayOf(Type t);
+  FabricArrayType fabricArrayOf(Type t, int dims);
+  FabricArrayType fabricArrayOf(Position pos, Type t);
+  FabricArrayType fabricArrayOf(Position pos, Type t, int dims);
 }

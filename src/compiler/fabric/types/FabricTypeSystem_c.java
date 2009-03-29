@@ -282,4 +282,23 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     
     return false;
   }
+
+  public FabricArrayType fabricArrayOf(Type t) {
+    return fabricArrayOf(null, t);
+  }
+
+  public FabricArrayType fabricArrayOf(Type t, int dims) {
+    return fabricArrayOf(null, t, dims); 
+  }
+
+  public FabricArrayType fabricArrayOf(Position pos, Type t) {
+    return new FabricArrayType_c(this, pos, t);
+  }
+
+  public FabricArrayType fabricArrayOf(Position pos, Type t, int dims) {
+    if (dims == 1)
+      return fabricArrayOf(pos, t);
+    else
+      return fabricArrayOf(pos, fabricArrayOf(pos, t, dims - 1));
+  }
 }

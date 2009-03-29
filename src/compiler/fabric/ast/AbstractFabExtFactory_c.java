@@ -99,6 +99,25 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
   protected Ext postExtClient(Ext e) {
     return postExtExpr(e);
   }
+
+  public final Ext extNewFabricArray() {
+    Ext e = extNewFabricArrayImpl();
+    if (nextExtFactory() != null &&
+        nextExtFactory() instanceof FabricExtFactory) {
+      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
+      Ext e2 = nextFac.extNewFabricArray();
+      e = composeExts(e, e2);
+    }
+    return postExtNewFabricArray(e);
+  }
+  
+  protected Ext extNewFabricArrayImpl() {
+    return extNewArrayImpl();
+  }
+  
+  protected Ext postExtNewFabricArray(Ext e) {
+    return postExtNewArray(e);
+  }
   
   public final Ext extRemoteClientGetter() {
     Ext e = extRemoteClientGetterImpl();
@@ -117,5 +136,43 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
   
   protected Ext postExtRemoteClientGetter(Ext e) {
     return postExtExpr(e);
+  }
+
+  public final Ext extFabricArrayInit() {
+    Ext e = extFabricArrayInitImpl();
+    if (nextExtFactory() != null &&
+        nextExtFactory() instanceof FabricExtFactory) {
+      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
+      Ext e2 = nextFac.extFabricArrayInit();
+      e = composeExts(e, e2);
+    }
+    return postExtFabricArrayInit(e);
+  }
+
+  protected Ext extFabricArrayInitImpl() {
+    return extArrayInitImpl();
+  }
+
+  protected Ext postExtFabricArrayInit(Ext e) {
+    return postExtArrayInit(e);
+  }
+
+  public Ext extFabricArrayTypeNode() {
+    Ext e = extFabricArrayTypeNodeImpl();
+    if (nextExtFactory() != null &&
+        nextExtFactory() instanceof FabricExtFactory) {
+      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
+      Ext e2 = nextFac.extFabricArrayTypeNode();
+      e = composeExts(e, e2);
+    }
+    return postExtFabricArrayTypeNode(e);
+  }
+
+  protected Ext extFabricArrayTypeNodeImpl() {
+    return extArrayTypeNodeImpl();
+  }
+
+  protected Ext postExtFabricArrayTypeNode(Ext e) {
+    return postExtArrayTypeNode(e);
   }
 }

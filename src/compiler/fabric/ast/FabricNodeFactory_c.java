@@ -46,6 +46,60 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return result;
   }
 
+  public NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims, polyglot.ast.ArrayInit init) {
+    NewFabricArray result = new NewFabricArray_c(pos, base, dims, addDims, init);
+    result = (NewFabricArray) result.ext(fabricExtFactory().extNewFabricArray());
+    result = (NewFabricArray) result.del(fabricDelFactory().delNewFabricArray());
+    return result;
+  }
+
+  public FabricArrayInit FabricArrayInit(Position position, Expr label, Expr location, List<Expr> elements) {
+    FabricArrayInit result = new FabricArrayInit_c(position, elements, label, location);
+    result = (FabricArrayInit) result.ext(fabricExtFactory().extFabricArrayInit());
+    result = (FabricArrayInit) result.del(fabricDelFactory().delFabricArrayInit());
+    return result;
+  }
+
+  public FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type) {
+    FabricArrayTypeNode result = new FabricArrayTypeNode_c(pos, type);
+    result = (FabricArrayTypeNode) result.ext(fabricExtFactory().extFabricArrayTypeNode());
+    result = (FabricArrayTypeNode) result.del(fabricDelFactory().delFabricArrayTypeNode());
+    return result;
+  }
+
+  public RetryStmt RetryStmt(Position pos) {
+    RetryStmt s = new RetryStmt_c(pos);
+    s = (RetryStmt)s.ext(fabricExtFactory().extRetry());
+    s = (RetryStmt)s.del(fabricDelFactory().delStmt());
+    return s;
+  }
+  
+  public AbortStmt AbortStmt(Position pos) {
+    AbortStmt s = new AbortStmt_c(pos);
+    s = (AbortStmt)s.ext(fabricExtFactory().extAbort());
+    s = (AbortStmt)s.del(fabricDelFactory().delStmt());
+    return s;
+  }
+  
+  public Client Client(Position pos) {
+    Client n = new Client_c(pos, this);
+    n = (Client)n.ext(fabricExtFactory().extClient());
+    n = (Client)n.del(fabricDelFactory().delClient());
+    return n;
+  }
+  
+  public RemoteClientGetter RemoteClientGetter(Position pos, Expr remoteName) {
+    RemoteClientGetter n = new RemoteClientGetter_c(pos, remoteName);
+    // TODO add the real extension and delegation for RemoteClientGetter.
+    n = (RemoteClientGetter)n.ext(fabricExtFactory().extRemoteClientGetter());
+    n = (RemoteClientGetter)n.del(fabricDelFactory().delRemoteClientGetter());
+    return n;
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////
+  // overloaded factory methods                                               //
+  //////////////////////////////////////////////////////////////////////////////  
+
   public New New(Position pos, TypeNode type, Expr location, List<Expr> args) {
     New result = super.New(pos, type, args);
     result = (New) setLocation(result, location);
@@ -70,28 +124,17 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return result;
   }
 
-  public NewArray NewArray(Position pos, TypeNode base, Expr location, List<Expr> dims) {
-    NewArray result = super.NewArray(pos, base, dims);
-    result = (NewArray) setLocation(result, location);
-    return result;
+  public final NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims) {
+    return NewFabricArray(pos, base, location, dims, 0, null);
   }
 
-  public NewArray NewArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims) {
-    NewArray result = super.NewArray(pos, base, dims, addDims);
-    result = (NewArray) setLocation(result, location);
-    return result;
+  public final NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims) {
+    return NewFabricArray(pos, base, location, dims, addDims, null);
   }
 
-  public NewArray NewArray(Position pos, TypeNode base, Expr location, int addDims, polyglot.ast.ArrayInit init) {
-    NewArray result = super.NewArray(pos, base, addDims, init);
-    result = (NewArray) setLocation(result, location);
-    return result;
-  }
-
-  public NewArray NewArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims, polyglot.ast.ArrayInit init) {
-    NewArray result = super.NewArray(pos, base, dims, addDims, init);
-    result = (NewArray) setLocation(result, location);
-    return result;
+  public final NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, int addDims, polyglot.ast.ArrayInit init) {
+    List<Expr> empty = Collections.emptyList();
+    return NewFabricArray(pos, base, location, empty, addDims, init);
   }
 
   public NewLabel NewLabel(Position pos, LabelNode label, Expr location) {
@@ -100,37 +143,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return result;
   }
   
-  public RetryStmt RetryStmt(Position pos) {
-    RetryStmt s = new RetryStmt_c(pos);
-    s = (RetryStmt)s.ext(fabricExtFactory().extRetry());
-    s = (RetryStmt)s.del(fabricDelFactory().delStmt());
-    return s;
-  }
-  
-  public AbortStmt AbortStmt(Position pos) {
-    AbortStmt s = new AbortStmt_c(pos);
-    s = (AbortStmt)s.ext(fabricExtFactory().extAbort());
-    s = (AbortStmt)s.del(fabricDelFactory().delStmt());
-    return s;
-  }
-  
-  public Client Client(Position pos) {
-    Client n = new Client_c(pos, this);
-    // TODO add the real extension and delegation for Client.
-    n = (Client)n.ext(fabricExtFactory().extClient());
-    n = (Client)n.del(delFactory().delExpr());
-    return n;
-  }
-  
-  public RemoteClientGetter RemoteClientGetter(Position pos, Expr remoteName) {
-    RemoteClientGetter n = new RemoteClientGetter_c(pos, remoteName);
-    // TODO add the real extension and delegation for RemoteClientGetter.
-    n = (RemoteClientGetter)n.ext(fabricExtFactory().extRemoteClientGetter());
-    n = (RemoteClientGetter)n.del(delFactory().delExpr());
-    return n;
-  }
-  
-  //////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
   // overridden factory methods                                               //
   //////////////////////////////////////////////////////////////////////////////  
 

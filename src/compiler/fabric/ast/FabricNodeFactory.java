@@ -19,10 +19,13 @@ public interface FabricNodeFactory extends JifNodeFactory {
   New New(Position pos, Expr outer, TypeNode objectType, Expr location, List<Expr> args);
   New New(Position pos, Expr outer, TypeNode objectType, Expr location, List<Expr> args, ClassBody body);
   
-  NewArray NewArray(Position pos, TypeNode base, Expr location, List<Expr> dims);
-  NewArray NewArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims);
-  NewArray NewArray(Position pos, TypeNode base, Expr location, int addDims, ArrayInit init);
-  NewArray NewArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims, ArrayInit init);
+  FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type);
+  FabricArrayInit     FabricArrayInit(Position pos, Expr label, Expr loc, List<Expr> elements);
+  
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims);
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims);
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, int addDims, ArrayInit init);
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims, ArrayInit init);
   
   RetryStmt RetryStmt(Position pos);
   AbortStmt AbortStmt(Position pos);
@@ -36,5 +39,4 @@ public interface FabricNodeFactory extends JifNodeFactory {
   
   NewLabel NewLabel(Position pos, LabelNode label, Expr location);
   Node setLocation(Node result, Expr location);
-  
 }
