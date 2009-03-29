@@ -19,7 +19,28 @@ parser Grm extends jif.parse.Grm {:
         ts = t;
         nf = n;
     }
-
+    
+    public TypeNode fabricArray(TypeNode n, int dims) throws Exception {
+      if (dims <= 0) return n;
+      
+      if (n instanceof ArrayTypeNode && !(n instanceof FabricArrayTypeNode))
+        return javaArray(n, dims);
+      
+      if (n instanceof CanonicalTypeNode) {
+        Type t = ((CanonicalTypeNode) n).type();
+        return nf.CanonicalTypeNode(pos(n), ts.fabricArrayOf(t, dims));
+      }
+        
+      return nf.FabricArrayTypeNode(pos(n), fabricArray(n, dims - 1));
+    }
+    
+    public TypeNode array(TypeNode n, int dims) throws Exception {
+      return fabricArray(n, dims);
+    }
+    
+    public TypeNode javaArray(TypeNode n, int dims) throws Exception {
+      return super.array(n, dims);
+    } 
 :};
 
 terminal Token AT;
@@ -102,6 +123,20 @@ extend principal_base ::=
     ;
 
 ////////////////////////////////////////////////////////////////////////
+// Array types                                                        //
+////////////////////////////////////////////////////////////////////////
+
+extend primitive_array_type ::=
+                    // TypeNode
+        labeled_primitive_type:a NATIVE LBRACK RBRACK:y
+            {: RESULT = new Array(parser, parser.pos(a,y), a,
+                                  /* isConst */ false, /* isNative */ true).toType(); :}
+    |   labeled_primitive_type:a NATIVE CONST LBRACK RBRACK:y
+            {: RESULT = new Array(parser, parser.pos(a,y), a, 
+                                  /* isConst */ true,  /* isNative */ true).toType(); :}
+	;
+
+////////////////////////////////////////////////////////////////////////
 // Locations for constructors                                         //
 ////////////////////////////////////////////////////////////////////////
 
@@ -139,17 +174,17 @@ override class_instance_creation_expression ::=
 
 override array_creation_expression ::=
         NEW:n objtype_or_expr:a dims:b array_initializer:c 
-            {: RESULT = parser.nf.NewArray(parser.pos(n,c), a.toType(), (Expr) null,
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n,c), a.toType(), (Expr) null,
                                        b.intValue(), c); :}
     |   NEW:n objtype_or_expr:a dims:b location_expr:loc array_initializer:c 
-            {: RESULT = parser.nf.NewArray(parser.pos(n,c), a.toType(), loc,
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n,c), a.toType(), loc,
                                        b.intValue(), c); :}
     |   NEW:n primitive_type:a dim_exprs:b dims_opt:c location_expr_opt:loc
-            {: RESULT = parser.nf.NewArray(parser.pos(n,b), a, loc, b,
-                                           c.intValue()); :}
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n,b), a, loc, b,
+                                       c.intValue()); :}
     |   NEW:n primitive_type:a dims:b location_expr_opt:loc array_initializer:c
-            {: RESULT = parser.nf.NewArray(parser.pos(n,c), a, loc,
-                                           b.intValue(), c); :}
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n,c), a, loc,
+                                       b.intValue(), c); :}
     ;
 
 drop {
