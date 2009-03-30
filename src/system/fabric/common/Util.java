@@ -1,9 +1,29 @@
 package fabric.common;
 
+import java.io.IOException;
+import java.security.MessageDigest;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+
 public final class Util {
+  /**
+   * Generates a cryptographically secure hash of the given class.
+   */
+  public static byte[] hash(Class<?> c) throws IOException {
+    MessageDigest digest = Crypto.digestInstance();
+    
+    do {
+      ClassWriter cw = new ClassWriter(new ClassReader(c.getName()), 0);
+      digest.update(cw.toByteArray());
+      c = c.getSuperclass();
+    } while (c != null);
+    
+    return digest.digest();
+  }
+  
   /**
    * <p>Returns an iterable that iterates over the elements of the iterables passed
    * in. The common use is:
