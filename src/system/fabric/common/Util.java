@@ -2,30 +2,41 @@ package fabric.common;
 
 import java.io.IOException;
 import java.security.MessageDigest;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
 public final class Util {
+
+  private static final Map<String, byte[]> classHashCache =
+      Collections.synchronizedMap(new HashMap<String, byte[]>());
+
   /**
    * Generates a cryptographically secure hash of the given class.
    */
   public static byte[] hash(Class<?> c) throws IOException {
+    String className = c.getName();
+    byte[] hash = classHashCache.get(className);
+    if (hash != null) return hash;
+
     MessageDigest digest = Crypto.digestInstance();
-    
+
     do {
-      ClassWriter cw = new ClassWriter(new ClassReader(c.getName()), 0);
+      ClassWriter cw = new ClassWriter(new ClassReader(className), 0);
       digest.update(cw.toByteArray());
       c = c.getSuperclass();
     } while (c != null);
-    
-    return digest.digest();
+
+    hash = digest.digest();
+    classHashCache.put(className, hash);
+
+    return hash;
   }
-  
+
   /**
-   * <p>Returns an iterable that iterates over the elements of the iterables passed
+   * <p>
+   * Returns an iterable that iterates over the elements of the iterables passed
    * in. The common use is:
    * 
    * <pre>
@@ -34,15 +45,17 @@ public final class Util {
    * </pre>
    * 
    * which will call f() on each element of a, then each element of b, then each
-   * element of c. </p>
-   * 
-   * <p>This is intended to be more efficient and easier than
-   * creating a new collection containing the contents.</p>
+   * element of c.
+   * </p>
+   * <p>
+   * This is intended to be more efficient and easier than creating a new
+   * collection containing the contents.
+   * </p>
    * 
    * @param <T>
-   *                the types of the elements of the iterables
+   *          the types of the elements of the iterables
    * @param iters
-   *                the iterables to chain
+   *          the iterables to chain
    * @return an object that can be used to traverse iters in order
    */
   public static <T> Iterable<T> chain(final Iterable<T>... iters) {

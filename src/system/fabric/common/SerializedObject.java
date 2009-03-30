@@ -28,6 +28,8 @@ public final class SerializedObject implements FastSerializable {
    * <li>long label's onum</li>
    * <li>short class name length</li>
    * <li>byte[] class name data</li>
+   * <li>short class hash length</li>
+   * <li>byte[] class hash data</li>
    * <li>int # ref types</li>
    * <li>int # intracore refs</li>
    * <li>int serialized data length</li>
@@ -275,6 +277,11 @@ public final class SerializedObject implements FastSerializable {
 
     return className;
   }
+  
+  private final int classHashPos() {
+    int classNamePos = classNamePos();
+    return classNamePos + 2 + unsignedShortAt(classNamePos);
+  }
 
   /**
    * @return the offset in objectData representing the start of an int
@@ -282,8 +289,8 @@ public final class SerializedObject implements FastSerializable {
    *         intercore/intracore/serialized).
    */
   private final int numRefTypesPos() {
-    int classPos = classNamePos();
-    return classPos + 2 + unsignedShortAt(classPos);
+    int classHashPos = classHashPos();
+    return classHashPos + 2 + unsignedShortAt(classHashPos);
   }
 
   /**
@@ -553,9 +560,14 @@ public final class SerializedObject implements FastSerializable {
     if (interCoreLabel) out.writeUTF(labelCore.name());
     out.writeLong(labelOnum);
     
-    byte[] className = impl.getClass().getName().getBytes("UTF-8");
+    // Write out the object's type information.
+    Class<?> implClass = impl.getClass();
+    byte[] className = implClass.getName().getBytes("UTF-8");
     out.writeShort(className.length);
     out.write(className);
+    byte[] hash = Util.hash(implClass);
+    out.writeShort(hash.length);
+    out.write(hash);
 
     // Get the object to serialize itself into a bunch of buffers.
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -635,6 +647,11 @@ public final class SerializedObject implements FastSerializable {
     int classNameLength = in.readUnsignedShort();
     out.writeShort(classNameLength);
     copyBytes(in, out, classNameLength, buf);
+    
+    // Copy the class hash.
+    int classHashLength = in.readUnsignedShort();
+    out.writeShort(classHashLength);
+    copyBytes(in, out, classHashLength, buf);
 
     // Copy the body.
     int numRefTypes = in.readInt();
