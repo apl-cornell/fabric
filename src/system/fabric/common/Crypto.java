@@ -17,32 +17,45 @@ public final class Crypto {
   public static final String ALG_SECRET_KEY_GEN = "AES";
   public static final int SIZE_SECRET_KEY = 128;
   public static final String ALG_SECRET_CRYPTO = "AES/CBC/PKCS5Padding";
-  
+
   public static final String ALG_PUBLIC_KEY_GEN = "RSA";
   public static final int SIZE_PUBLIC_KEY = 1024;
+
+  public static final String ALG_HASH = "SHA1";
 
   private static final KeyGenerator secretKeyGen;
   private static final KeyPairGenerator publicKeyGen;
   private static final SecureRandom random = new SecureRandom();
 
   static {
+    secretKeyGen = secretKeyGenInstance();
+    publicKeyGen = publicKeyGenInstance();
+  }
+
+  public static MessageDigest digestInstance() {
     try {
-      secretKeyGen = secretKeyGenInstance();
-      publicKeyGen = publicKeyGenInstance();
+      return MessageDigest.getInstance(ALG_HASH);
     } catch (NoSuchAlgorithmException e) {
       throw new InternalError(e);
     }
   }
 
-  public static Signature signatureInstance() throws NoSuchAlgorithmException {
-    return Signature.getInstance(ALG_SIGNATURE);
+  public static Signature signatureInstance() {
+    try {
+      return Signature.getInstance(ALG_SIGNATURE);
+    } catch (NoSuchAlgorithmException e) {
+      throw new InternalError(e);
+    }
   }
 
-  public static KeyGenerator secretKeyGenInstance()
-      throws NoSuchAlgorithmException {
-    KeyGenerator result = KeyGenerator.getInstance(ALG_SECRET_KEY_GEN);
-    result.init(SIZE_SECRET_KEY);
-    return result;
+  public static KeyGenerator secretKeyGenInstance() {
+    try {
+      KeyGenerator result = KeyGenerator.getInstance(ALG_SECRET_KEY_GEN);
+      result.init(SIZE_SECRET_KEY);
+      return result;
+    } catch (NoSuchAlgorithmException e) {
+      throw new InternalError(e);
+    }
   }
 
   public static SecretKey genSecretKey() {
@@ -50,13 +63,18 @@ public final class Crypto {
       return secretKeyGen.generateKey();
     }
   }
-  
-  public static KeyPairGenerator publicKeyGenInstance() throws NoSuchAlgorithmException {
-    KeyPairGenerator result = KeyPairGenerator.getInstance(ALG_PUBLIC_KEY_GEN);
-    result.initialize(SIZE_PUBLIC_KEY);
-    return result;
+
+  public static KeyPairGenerator publicKeyGenInstance() {
+    try {
+      KeyPairGenerator result =
+          KeyPairGenerator.getInstance(ALG_PUBLIC_KEY_GEN);
+      result.initialize(SIZE_PUBLIC_KEY);
+      return result;
+    } catch (NoSuchAlgorithmException e) {
+      throw new InternalError(e);
+    }
   }
-  
+
   public static KeyPair genKeyPair() {
     synchronized (publicKeyGen) {
       return publicKeyGen.generateKeyPair();
@@ -71,7 +89,7 @@ public final class Crypto {
       random.nextBytes(iv);
     }
   }
-  
+
   /**
    * Creates a new initialization vector.
    */
@@ -97,7 +115,7 @@ public final class Crypto {
       throws NoSuchAlgorithmException, NoSuchPaddingException,
       InvalidKeyException, InvalidAlgorithmParameterException {
     if (key == null) return new NullCipher();
-    
+
     Cipher result = Cipher.getInstance(ALG_SECRET_CRYPTO);
 
     if (iv != null) {

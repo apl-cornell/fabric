@@ -208,7 +208,7 @@ public class Glob implements FastSerializable {
   }
 
   public boolean verifySignature(PublicKey key) throws SignatureException,
-      NoSuchAlgorithmException, InvalidKeyException {
+      InvalidKeyException {
     // Check the signature.
     Signature verifier = Crypto.signatureInstance();
     verifier.initVerify(key);

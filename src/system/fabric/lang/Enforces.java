@@ -5,7 +5,6 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.util.HashSet;
@@ -97,8 +96,6 @@ public interface Enforces extends Object {
         verifier.initVerify(signer.getPublicKey());
         updateSignature(verifier, owners);
         if (!verifier.verify(signature)) return false;
-      } catch (NoSuchAlgorithmException e) {
-        throw new InternalError(e);
       } catch (InvalidKeyException e) {
         throw new InternalError(e);
       }
@@ -117,8 +114,6 @@ public interface Enforces extends Object {
         signer.initSign(this.signer.getPrivateKeyObject().getKey());
         updateSignature(signer, null);
         return signer.sign();
-      } catch (NoSuchAlgorithmException e) {
-        throw new InternalError(e);
       } catch (InvalidKeyException e) {
         throw new InternalError(e);
       }
