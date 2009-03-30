@@ -98,7 +98,6 @@
 
   <path id="standard.classpath">
     <pathelement location="${classes}"/>
-    <pathelement path="${java.class.path}" />
 
     <!-- jar files in the lib directory, excluding generated jars -->
     <fileset dir="${lib}">
@@ -121,6 +120,8 @@
       <include name="*.jar" />
     </fileset>
     <pathelement location="${jif.home}/src" />
+
+    <pathelement path="${java.class.path}" />
   </path>
 
   <target name="configure" description="Configures Fabric"
