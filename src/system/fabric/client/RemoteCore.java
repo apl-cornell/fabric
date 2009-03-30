@@ -338,12 +338,7 @@ public class RemoteCore implements Core, RemoteNode {
 
     if (serialRef != null) {
       SerializedObject serial = serialRef.get();
-      try {
-        if (serial != null) result = serial.deserialize(this);
-      } catch (ClassNotFoundException e) {
-        // TODO handle this
-        return null;
-      }
+      if (serial != null) result = serial.deserialize(this);
     }
 
     if (result == null) {
@@ -363,11 +358,7 @@ public class RemoteCore implements Core, RemoteNode {
           SerializedObject curObj = entry.getValue();
 
           if (curOnum == onum) {
-            try {
-              result = curObj.deserialize(this);
-            } catch (ClassNotFoundException e) {
-              throw new InternalError(e);
-            }
+            result = curObj.deserialize(this);
           } else {
             // Add to the cache if object not already in memory.
             serialized.put(entry.getKey(), new SerializedObjectSoftRef(this,

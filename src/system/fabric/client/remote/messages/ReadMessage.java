@@ -41,11 +41,7 @@ public class ReadMessage extends InterClientMessage<ReadMessage.Response> {
 
       Core core = Client.getClient().getCore(in.readUTF());
       SerializedObject serialized = new SerializedObject(in);
-      try {
-        this.obj = serialized.deserialize(core);
-      } catch (ClassNotFoundException e) {
-        throw new InternalError(e);
-      }
+      this.obj = serialized.deserialize(core);
     }
 
     public void write(DataOutput out) throws IOException {

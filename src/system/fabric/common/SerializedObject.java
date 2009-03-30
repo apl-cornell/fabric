@@ -103,7 +103,7 @@ public final class SerializedObject implements FastSerializable {
 
       // Version number.
       out.writeInt(0);
-      
+
       // Promise expiry
       out.writeLong(0);
 
@@ -175,7 +175,7 @@ public final class SerializedObject implements FastSerializable {
   private final int expiryPos() {
     return versionPos() + 4;
   }
-  
+
   /**
    * @return the serialized object's promise expiration time
    */
@@ -185,12 +185,13 @@ public final class SerializedObject implements FastSerializable {
 
   /**
    * Modifies the serialized object's promise expiry
+   * 
    * @param expiry
    */
   public void setExpiry(long expiry) {
     setLongAt(expiryPos(), expiry);
   }
-  
+
   /**
    * @return the offset in objectData representing the start of a boolean that
    *         indicates whether the label pointer is an intercore reference.
@@ -277,10 +278,21 @@ public final class SerializedObject implements FastSerializable {
 
     return className;
   }
-  
+
   private final int classHashPos() {
     int classNamePos = classNamePos();
     return classNamePos + 2 + unsignedShortAt(classNamePos);
+  }
+  
+  private boolean checkClassHash(byte[] hash) {
+    int classHashPos = classHashPos();
+    if (hash.length != unsignedShortAt(classHashPos)) return false;
+
+    for (int i = 0; i < hash.length; i++) {
+      if (hash[i] != objectData[classHashPos+i+2]) return false;
+    }
+    
+    return true;
   }
 
   /**
@@ -559,7 +571,7 @@ public final class SerializedObject implements FastSerializable {
     out.writeBoolean(interCoreLabel);
     if (interCoreLabel) out.writeUTF(labelCore.name());
     out.writeLong(labelOnum);
-    
+
     // Write out the object's type information.
     Class<?> implClass = impl.getClass();
     byte[] className = implClass.getName().getBytes("UTF-8");
@@ -647,7 +659,7 @@ public final class SerializedObject implements FastSerializable {
     int classNameLength = in.readUnsignedShort();
     out.writeShort(classNameLength);
     copyBytes(in, out, classNameLength, buf);
-    
+
     // Copy the class hash.
     int classHashLength = in.readUnsignedShort();
     out.writeShort(classHashLength);
@@ -708,7 +720,7 @@ public final class SerializedObject implements FastSerializable {
     in.readFully(buf, 0, length & BUF_LEN_MASK);
     out.write(buf, 0, length & BUF_LEN_MASK);
   }
-  
+
   /**
    * Maps class names to their deserialization constructors.
    */
@@ -724,18 +736,29 @@ public final class SerializedObject implements FastSerializable {
    * @throws ClassNotFoundException
    *           Thrown when the class for this object is unavailable.
    */
-  public _Impl deserialize(Core core) throws ClassNotFoundException {
-    String className = getClassName();
-    Constructor<?> constructor = constructorTable.get(className);
-
+  public _Impl deserialize(Core core) {
     try {
+      String className = getClassName();
+
+      // Check the class hash before deserializing.
+      if (!checkClassHash(Util.hashClass(className))) {
+        throw new InvalidClassException(
+            className,
+            "A class of the same name was found, but its hash did not match "
+                + "the hash in the object fab://" + core.name() + "/"
+                + getOnum());
+      }
+
+      Constructor<?> constructor = constructorTable.get(className);
+
       if (constructor == null) {
         Class<?> c = Class.forName(getClassName());
-        constructor = c.getConstructor(Core.class, long.class, int.class,
-            long.class, long.class, ObjectInput.class, Iterator.class, Iterator.class);
+        constructor =
+            c.getConstructor(Core.class, long.class, int.class, long.class,
+                long.class, ObjectInput.class, Iterator.class, Iterator.class);
         constructorTable.put(className, constructor);
       }
-      
+
       return (_Impl) constructor.newInstance(core, getOnum(), getVersion(),
           getExpiry(), getLabelOnum(), new ObjectInputStream(
               getSerializedDataStream()), getRefTypeIterator(),
@@ -757,7 +780,7 @@ public final class SerializedObject implements FastSerializable {
    */
   private final int unsignedShortAt(int pos) {
     return ((objectData[pos + 0] & 0xff) << 8)
-         | ((objectData[pos + 1] & 0xff) << 0);
+        | ((objectData[pos + 1] & 0xff) << 0);
   }
 
   /**
@@ -765,9 +788,9 @@ public final class SerializedObject implements FastSerializable {
    */
   private final int intAt(int pos) {
     return ((objectData[pos + 0] & 0xff) << 24)
-         | ((objectData[pos + 1] & 0xff) << 16)
-         | ((objectData[pos + 2] & 0xff) <<  8)
-         | ((objectData[pos + 3] & 0xff) <<  0);
+        | ((objectData[pos + 1] & 0xff) << 16)
+        | ((objectData[pos + 2] & 0xff) << 8)
+        | ((objectData[pos + 3] & 0xff) << 0);
   }
 
   /**
@@ -776,8 +799,8 @@ public final class SerializedObject implements FastSerializable {
   private final void setIntAt(int pos, int value) {
     objectData[pos + 0] = (byte) (0xff & (value >> 24));
     objectData[pos + 1] = (byte) (0xff & (value >> 16));
-    objectData[pos + 2] = (byte) (0xff & (value >>  8));
-    objectData[pos + 3] = (byte) (0xff & (value >>  0));
+    objectData[pos + 2] = (byte) (0xff & (value >> 8));
+    objectData[pos + 3] = (byte) (0xff & (value >> 0));
   }
 
   /**
@@ -785,15 +808,15 @@ public final class SerializedObject implements FastSerializable {
    */
   private final long longAt(int pos) {
     return ((long) (objectData[pos + 0] & 0xff) << 56)
-         | ((long) (objectData[pos + 1] & 0xff) << 48)
-         | ((long) (objectData[pos + 2] & 0xff) << 40)
-         | ((long) (objectData[pos + 3] & 0xff) << 32)
-         | ((long) (objectData[pos + 4] & 0xff) << 24)
-         | ((long) (objectData[pos + 5] & 0xff) << 16)
-         | ((long) (objectData[pos + 6] & 0xff) <<  8)
-         | ((long) (objectData[pos + 7] & 0xff) <<  0);
+        | ((long) (objectData[pos + 1] & 0xff) << 48)
+        | ((long) (objectData[pos + 2] & 0xff) << 40)
+        | ((long) (objectData[pos + 3] & 0xff) << 32)
+        | ((long) (objectData[pos + 4] & 0xff) << 24)
+        | ((long) (objectData[pos + 5] & 0xff) << 16)
+        | ((long) (objectData[pos + 6] & 0xff) << 8)
+        | ((long) (objectData[pos + 7] & 0xff) << 0);
   }
-  
+
   /**
    * Sets the long that starts at the given position in objectData.
    */
@@ -804,8 +827,8 @@ public final class SerializedObject implements FastSerializable {
     objectData[pos + 3] = (byte) (0xff & (value >> 32));
     objectData[pos + 4] = (byte) (0xff & (value >> 24));
     objectData[pos + 5] = (byte) (0xff & (value >> 16));
-    objectData[pos + 6] = (byte) (0xff & (value >>  8));
-    objectData[pos + 7] = (byte) (0xff & (value >>  0));
+    objectData[pos + 6] = (byte) (0xff & (value >> 8));
+    objectData[pos + 7] = (byte) (0xff & (value >> 0));
   }
 
 }

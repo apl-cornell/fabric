@@ -17,21 +17,28 @@ public final class Util {
    */
   public static byte[] hash(Class<?> c) throws IOException {
     String className = c.getName();
-    byte[] hash = classHashCache.get(className);
-    if (hash != null) return hash;
+    byte[] result = classHashCache.get(className);
+    if (result != null) return result;
 
     MessageDigest digest = Crypto.digestInstance();
 
-    do {
-      ClassWriter cw = new ClassWriter(new ClassReader(className), 0);
-      digest.update(cw.toByteArray());
-      c = c.getSuperclass();
-    } while (c != null);
+    ClassWriter cw = new ClassWriter(new ClassReader(className), 0);
+    digest.update(cw.toByteArray());
 
-    hash = digest.digest();
-    classHashCache.put(className, hash);
+    Class<?> superClass = c.getSuperclass();
+    if (superClass != null) digest.update(hash(superClass));
 
-    return hash;
+    result = digest.digest();
+    classHashCache.put(className, result);
+
+    return result;
+  }
+  
+  public static byte[] hashClass(String className) throws IOException,
+      ClassNotFoundException {
+    byte[] result = classHashCache.get(className);
+    if (result != null) return result;
+    return hash(Class.forName(className));
   }
 
   /**
