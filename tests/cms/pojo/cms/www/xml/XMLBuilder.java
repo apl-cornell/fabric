@@ -639,7 +639,7 @@ public class XMLBuilder {
       Exception e, String body) {
     root.setAttribute(A_ERR_NAME, e.getClass().getName());
     root.setAttribute(A_ERR_MSG, e.getMessage());
-    StackTraceElement[] s = e.getStackTrace();
+    StackTraceElement native[] s = e.getStackTrace();
     for (int i = 0; i < s.length; i++) {
       Element xErrorLine = xml.createElement(TAG_ERROR_LINE);
       xErrorLine.setAttribute(A_ERR_CLASS, s[i].getClassName());

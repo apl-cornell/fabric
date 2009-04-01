@@ -9,7 +9,6 @@ import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import cms.fabil.Kludge;
 import fabric.client.*;
 
 /**

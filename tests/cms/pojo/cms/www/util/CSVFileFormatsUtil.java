@@ -169,7 +169,8 @@ public class CSVFileFormatsUtil
 	 * @return An array of indices into ALLOWED_COLUMNS, where each index is -1 if the provided string
 	 * couldn't be recognized as any information we know
 	 */
-	public static int[] parseColumnNamesFlexibly(String[] line) throws CSVParseException {
+	public static int[] parseColumnNamesFlexibly(String[] line) 
+          throws CSVParseException {
 		int[] indices = new int[line.length];
 		HashMap seenIndices = new HashMap();
 		for(int i = 0; i < line.length; i++) {

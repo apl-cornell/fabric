@@ -21,7 +21,6 @@ import cms.www.TransactionResult;
 import cms.www.util.Emailer;
 import cms.www.util.Util;
 import cms.www.util.Profiler;
-import cms.fabil.Kludge;
 
 public class Transactions {
   private CMSRoot database;

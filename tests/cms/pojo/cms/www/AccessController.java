@@ -912,9 +912,10 @@ public class AccessController extends HttpServlet {
     label = localCore.getEmptyLabel();
     CMSRoot database = null;
 
-    Map root = (Map) core.getRoot();
-    
+    Map root = null;
     atomic {
+      root = new HashMap~label@core(); //(Map) core.getRoot();
+      
       //database = (CMSRoot)root.get("cms_db");
       if(database == null) {
         // create and add test data
@@ -1076,8 +1077,7 @@ public class AccessController extends HttpServlet {
         Iterator iter = reqmap.keySet().iterator();
         while (iter.hasNext()) {
           String key = (String) iter.next();
-          String[] vals = cms.fabil.Kludge.convertStringArray(localCore, label, 
-              reqmap.get(key));
+          String[] vals = (String[])reqmap.get(key);
           String value = vals[0];
           System.out.println("reqparam: " + key + "=" + value);
         }
@@ -2936,7 +2936,7 @@ public class AccessController extends HttpServlet {
     while(i.hasNext()) {
       String param = ((String)i.next()).trim();
       if(param.startsWith(P_GRADEGROUP)) {
-        Group group = (Group)getGroup((String)cms.fabil.Kludge.get(param.split(P_GRADEGROUP), 1));
+        Group group = (Group)getGroup(param.split(P_GRADEGROUP)[1]);
         if (group != null)
           result.add(group);
       }
