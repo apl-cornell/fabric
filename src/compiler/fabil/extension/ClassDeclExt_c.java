@@ -286,7 +286,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       methodDecl.append((argCount == 1 ? "" : ", ") + "%T arg" + argCount);
       args.append((argCount == 1 ? "" : ", ") + "arg" + argCount);
 
-      if (t.isArray()) t = ts.toFabricRuntimeArray(t.toArray());
+      if (ts.isFabricArray(t)) t = ts.toFabricRuntimeArray(t.toArray());
       subst.add(t);
       argCount++;
     }
