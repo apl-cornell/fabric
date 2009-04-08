@@ -1,16 +1,16 @@
 package fabric.common;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.*;
-
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
 
 public final class Util {
 
   private static final Map<String, byte[]> classHashCache =
       Collections.synchronizedMap(new HashMap<String, byte[]>());
+
+  private static final int BUF_LEN = 4096;
 
   /**
    * Generates a cryptographically secure hash of the given class.
@@ -22,8 +22,20 @@ public final class Util {
 
     MessageDigest digest = Crypto.digestInstance();
 
-    ClassWriter cw = new ClassWriter(new ClassReader(className), 0);
-    digest.update(cw.toByteArray());
+    InputStream classIn =
+        ClassLoader.getSystemResourceAsStream(className.replace('.', '/')
+            + ".class");
+
+    if (classIn == null)
+      throw new InternalError("Class not found: " + className);
+
+    byte[] buf = new byte[BUF_LEN];
+    int count = classIn.read(buf);
+    while (count != -1) {
+      digest.update(buf, 0, count);
+      count = classIn.read(buf);
+    }
+    classIn.close();
 
     Class<?> superClass = c.getSuperclass();
     if (superClass != null) digest.update(hash(superClass));
@@ -33,7 +45,7 @@ public final class Util {
 
     return result;
   }
-  
+
   public static byte[] hashClass(String className) throws IOException,
       ClassNotFoundException {
     byte[] result = classHashCache.get(className);
