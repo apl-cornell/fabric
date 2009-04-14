@@ -20,6 +20,7 @@ public interface FabricNodeFactory extends JifNodeFactory {
   New New(Position pos, Expr outer, TypeNode objectType, Expr location, List<Expr> args, ClassBody body);
   
   FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type);
+  FabricArrayInit     FabricArrayInit(Position pos, List<Expr> elements);
   FabricArrayInit     FabricArrayInit(Position pos, Expr label, Expr loc, List<Expr> elements);
   
   NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims);

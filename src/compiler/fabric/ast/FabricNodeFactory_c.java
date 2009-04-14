@@ -124,6 +124,10 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return result;
   }
 
+  public FabricArrayInit FabricArrayInit(Position position, List<Expr> elements) {
+    return FabricArrayInit(position, null, null, elements);
+  }
+  
   public final NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims) {
     return NewFabricArray(pos, base, location, dims, 0, null);
   }
