@@ -46,27 +46,6 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return result;
   }
 
-  public NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims, polyglot.ast.ArrayInit init) {
-    NewFabricArray result = new NewFabricArray_c(pos, base, dims, addDims, init);
-    result = (NewFabricArray) result.ext(fabricExtFactory().extNewFabricArray());
-    result = (NewFabricArray) result.del(fabricDelFactory().delNewFabricArray());
-    return result;
-  }
-
-  public FabricArrayInit FabricArrayInit(Position position, Expr label, Expr location, List<Expr> elements) {
-    FabricArrayInit result = new FabricArrayInit_c(position, elements, label, location);
-    result = (FabricArrayInit) result.ext(fabricExtFactory().extFabricArrayInit());
-    result = (FabricArrayInit) result.del(fabricDelFactory().delFabricArrayInit());
-    return result;
-  }
-
-  public FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type) {
-    FabricArrayTypeNode result = new FabricArrayTypeNode_c(pos, type);
-    result = (FabricArrayTypeNode) result.ext(fabricExtFactory().extFabricArrayTypeNode());
-    result = (FabricArrayTypeNode) result.del(fabricDelFactory().delFabricArrayTypeNode());
-    return result;
-  }
-
   public RetryStmt RetryStmt(Position pos) {
     RetryStmt s = new RetryStmt_c(pos);
     s = (RetryStmt)s.ext(fabricExtFactory().extRetry());
@@ -96,6 +75,27 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return n;
   }
   
+  public NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims, polyglot.ast.ArrayInit init) {
+    NewFabricArray result = new NewFabricArray_c(pos, base, dims, addDims, init);
+    result = (NewFabricArray) result.ext(fabricExtFactory().extNewFabricArray());
+    result = (NewFabricArray) result.del(fabricDelFactory().delNewFabricArray());
+    return result;
+  }
+
+  public FabricArrayInit FabricArrayInit(Position position, Expr label, Expr location, List<Expr> elements) {
+    FabricArrayInit result = new FabricArrayInit_c(position, elements, label, location);
+    result = (FabricArrayInit) result.ext(fabricExtFactory().extFabricArrayInit());
+    result = (FabricArrayInit) result.del(fabricDelFactory().delFabricArrayInit());
+    return result;
+  }
+
+  public FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type) {
+    FabricArrayTypeNode result = new FabricArrayTypeNode_c(pos, type);
+    result = (FabricArrayTypeNode) result.ext(fabricExtFactory().extFabricArrayTypeNode());
+    result = (FabricArrayTypeNode) result.del(fabricDelFactory().delFabricArrayTypeNode());
+    return result;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   // overloaded factory methods                                               //
   //////////////////////////////////////////////////////////////////////////////  

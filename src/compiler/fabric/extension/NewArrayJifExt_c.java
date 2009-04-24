@@ -18,7 +18,7 @@ public class NewArrayJifExt_c extends JifNewArrayExt {
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
     NewArray na = (NewArray)node();
-    NewArrayExt_c ext = (NewArrayExt_c)FabricUtil.fabricExt(na);
+    NewFabricArrayExt_c ext = (NewFabricArrayExt_c)FabricUtil.fabricExt(na);
     
     Type baseType = na.baseType().type();
     while (baseType.isArray()) {

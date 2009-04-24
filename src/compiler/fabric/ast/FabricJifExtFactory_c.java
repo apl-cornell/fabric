@@ -10,6 +10,7 @@ import jif.extension.JifClassDeclExt;
 import jif.extension.JifConstructorDeclExt;
 import jif.extension.JifLabelExprExt;
 import jif.extension.JifMethodDeclExt;
+import jif.extension.JifNewArrayExt;
 import jif.translate.ClassBodyToJavaExt_c;
 
 /**
@@ -17,6 +18,10 @@ import jif.translate.ClassBodyToJavaExt_c;
  * for atomic sections.
  */
 public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtFactory {
+  //////////////////////////////////////////////////////////////////////////////
+  // overridden Jif AST nodes (TODO: should be ext.del's?)                    //
+  //////////////////////////////////////////////////////////////////////////////
+  
   public FabricJifExtFactory_c() {
     super();
   }
@@ -25,14 +30,6 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
     super(next);
   }
 
-  public Ext extAbort() {
-    return new AbortJifExt_c(new AbortToFabilExt_c());
-  }
-  
-  public Ext extAtomic() {
-    return new AtomicJifExt_c(new AtomicToFabilExt_c());
-  }
-  
   @Override
   public Ext extBinaryImpl() {
     return new JifBinaryExt(new BinaryToFabilExt_c());
@@ -58,35 +55,14 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
     return new JifClassDeclExt(new ClassDeclToFabilExt_c());
   }
   
-  public Ext extClient() {
-    return new ClientJifExt_c(new ClientToFabilExt_c());
-  }
-  
   @Override
   public Ext extConstructorDeclImpl() {
     return new JifConstructorDeclExt(new ConstructorDeclToFabilExt_c());
   }
   
-  public Ext extFabricArrayInit() {
-    return extArrayInit();
-  }
-  
-  public Ext extFabricArrayTypeNode() {
-    return extArrayTypeNode();
-  }
-  
   @Override
   public Ext extMethodDeclImpl() {
     return new JifMethodDeclExt(new MethodDeclToFabilExt_c());
-  }
-  
-  @Override
-  public Ext extNewArrayImpl() {
-    return new NewArrayJifExt_c(new NewArrayToFabilExt_c());
-  }
-  
-  public Ext extNewFabricArray() {
-    return extNewArray();
   }
   
   @Override
@@ -99,11 +75,39 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
     return new JifLabelExprExt(new NewLabelToFabilExt_c());
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // new Fabric AST nodes                                                     //
+  //////////////////////////////////////////////////////////////////////////////
+
   public Ext extRemoteClientGetter() {
     return new RemoteClientGetterJifExt_c(new RemoteClientGetterToFabilExt_c());
   }
 
   public Ext extRetry() {
     return new RetryJifExt_c(new RetryToFabilExt_c());
+  }
+  
+  public Ext extAbort() {
+    return new AbortJifExt_c(new AbortToFabilExt_c());
+  }
+  
+  public Ext extAtomic() {
+    return new AtomicJifExt_c(new AtomicToFabilExt_c());
+  }
+  
+  public Ext extClient() {
+    return new ClientJifExt_c(new ClientToFabilExt_c());
+  }
+  
+  public Ext extFabricArrayInit() {
+    return extArrayInit();
+  }
+  
+  public Ext extFabricArrayTypeNode() {
+    return extArrayTypeNode();
+  }
+  
+  public Ext extNewFabricArray() {
+    return new NewFabricArrayJifExt_c(new NewFabricArrayToFabilExt_c());
   }
 }

@@ -12,17 +12,18 @@ import polyglot.visit.NodeVisitor;
 import fabil.ast.FabricArrayInit;
 import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricUtil;
-import fabric.extension.NewArrayExt_c;
+import fabric.ast.NewFabricArray;
+import fabric.extension.NewFabricArrayExt_c;
 import fabric.types.FabricClassType;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
 
-public class NewArrayToFabilExt_c extends NewArrayToJavaExt_c {
+public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
   protected Type baseType;
 
   @Override
   public NodeVisitor toJavaEnter(JifToJavaRewriter rw) {
-    NewArray n = (NewArray) node();
+    NewFabricArray n = (NewFabricArray) node();
     baseType = n.baseType().type();
     return rw;
   }
@@ -30,8 +31,8 @@ public class NewArrayToFabilExt_c extends NewArrayToJavaExt_c {
   @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    NewArray n = (NewArray) node();
-    NewArrayExt_c ext = (NewArrayExt_c) FabricUtil.fabricExt(n);
+    NewFabricArray n = (NewFabricArray) node();
+    NewFabricArrayExt_c ext = (NewFabricArrayExt_c) FabricUtil.fabricExt(n);
 
     FabILNodeFactory nf = (FabILNodeFactory) rw.nodeFactory();
     FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();
