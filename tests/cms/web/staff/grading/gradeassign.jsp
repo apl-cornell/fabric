@@ -4,13 +4,13 @@
 ******************************************************/
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
-Element course= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_COURSE);
-String courseID = course.getAttribute(XMLBuilder.$Static.A_COURSEID);
-Element assignment= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_ASSIGNMENT);
-String asgnID = assignment.getAttribute(XMLBuilder.$Static.A_ASSIGNID);
-Element status= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_STATUS);
-boolean isAdmin = course.hasAttribute(XMLBuilder.$Static.A_ISADMIN);
-boolean isGrades = course.hasAttribute(XMLBuilder.$Static.A_ISGRADES);%>
+Element course= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static.TAG_COURSE);
+String courseID = course.getAttribute(XMLBuilder._Static.A_COURSEID);
+Element assignment= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static.TAG_ASSIGNMENT);
+String asgnID = assignment.getAttribute(XMLBuilder._Static.A_ASSIGNID);
+Element status= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static.TAG_STATUS);
+boolean isAdmin = course.hasAttribute(XMLBuilder._Static.A_ISADMIN);
+boolean isGrades = course.hasAttribute(XMLBuilder._Static.A_ISGRADES);%>
 <jsp:include page="../../header.jsp" />
 <jsp:include page="../../header-page.jsp"/>
 <div id="course_wrapper_withnav">
@@ -20,7 +20,7 @@ boolean isGrades = course.hasAttribute(XMLBuilder.$Static.A_ISGRADES);%>
     <td valign="top" id="course_page_container">
       <div id="course_page">
 				<jsp:include page="../../problem-report.jsp"/>
-        <form action="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_APPLYTOGROUPS + "&amp;" + AccessController.P_ASSIGNID + "=" + assignment.getAttribute(XMLBuilder.$Static.A_ASSIGNID)%>" method="post">
+        <form action="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_APPLYTOGROUPS + "&amp;" + AccessController.P_ASSIGNID + "=" + assignment.getAttribute(XMLBuilder._Static.A_ASSIGNID)%>" method="post">
         	<jsp:include page="grades-summary.jsp"/>
           <jsp:include page="grades-table.jsp"/>
 <input type="hidden" id=<%= AccessController.P_COURSEID %> name=<%= AccessController.P_COURSEID %> value=<%= courseID %> />

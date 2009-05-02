@@ -5,17 +5,17 @@
 Document displayData= (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
 String meNetID = ((User) session.getAttribute(AccessController.A_PRINCIPAL)).getNetID();
-Element course= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_COURSE);
-String courseID = course.getAttribute(XMLBuilder.$Static.A_COURSEID);
-String asgnID = root.getAttribute(XMLBuilder.$Static.A_ASSIGNID);
-Element assigns = (Element)course.getElementsByTagName(XMLBuilder.$Static.TAG_ASSIGNMENTS).item(0);
-Element assignment= (Element)XMLUtil.$Proxy.getChildrenByTagNameAndAttributeValue(assigns, XMLBuilder.$Static.TAG_ASSIGNMENT, XMLBuilder.$Static.A_ASSIGNID, asgnID).item(0);
-NodeList groups= root.getElementsByTagName(XMLBuilder.$Static.TAG_GROUP);
+Element course= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static.TAG_COURSE);
+String courseID = course.getAttribute(XMLBuilder._Static.A_COURSEID);
+String asgnID = root.getAttribute(XMLBuilder._Static.A_ASSIGNID);
+Element assigns = (Element)course.getElementsByTagName(XMLBuilder._Static.TAG_ASSIGNMENTS).item(0);
+Element assignment= (Element)XMLUtil._Proxy.getChildrenByTagNameAndAttributeValue(assigns, XMLBuilder._Static.TAG_ASSIGNMENT, XMLBuilder._Static.A_ASSIGNID, asgnID).item(0);
+NodeList groups= root.getElementsByTagName(XMLBuilder._Static.TAG_GROUP);
 int numgroups= groups.getLength();
-NodeList submissions = root.getElementsByTagName(XMLBuilder.$Static.TAG_SUBMISSION);
-NodeList allprobs= root.getElementsByTagName(XMLBuilder.$Static.TAG_SUBPROBLEM);
+NodeList submissions = root.getElementsByTagName(XMLBuilder._Static.TAG_SUBMISSION);
+NodeList allprobs= root.getElementsByTagName(XMLBuilder._Static.TAG_SUBPROBLEM);
 // Find total score probs node & fill in other probs collection
-Element totalprob= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.TAG_TOTALPROBLEM);
+Element totalprob= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static.TAG_TOTALPROBLEM);
 Collection probs= new ArrayList();
 for (int j= 0; j != allprobs.getLength(); j++) {
   Element prob= (Element)allprobs.item(j);
@@ -23,11 +23,11 @@ for (int j= 0; j != allprobs.getLength(); j++) {
 } 
 int numprobs= probs.size();
 boolean probscol= numprobs > 0;
-boolean isAdmin = course.hasAttribute(XMLBuilder.$Static.A_ISADMIN);
-boolean isGrades = course.hasAttribute(XMLBuilder.$Static.A_ISGRADES);
-boolean assignedGraders = assignment.hasAttribute(XMLBuilder.$Static.A_ASSIGNEDGRADERS);
+boolean isAdmin = course.hasAttribute(XMLBuilder._Static.A_ISADMIN);
+boolean isGrades = course.hasAttribute(XMLBuilder._Static.A_ISGRADES);
+boolean assignedGraders = assignment.hasAttribute(XMLBuilder._Static.A_ASSIGNEDGRADERS);
 boolean checkCanGrade = !isAdmin && assignedGraders;
-boolean isQuiz = Integer.parseInt(assignment.getAttribute(XMLBuilder.$Static.A_ASSIGNTYPE)) == Assignment.$Static.QUIZ || Integer.parseInt(assignment.getAttribute(XMLBuilder.$Static.A_ASSIGNTYPE)) == Assignment.$Static.SURVEY;
+boolean isQuiz = Integer.parseInt(assignment.getAttribute(XMLBuilder._Static.A_ASSIGNTYPE)) == Assignment._Static.QUIZ || Integer.parseInt(assignment.getAttribute(XMLBuilder._Static.A_ASSIGNTYPE)) == Assignment._Static.SURVEY;
 %><jsp:include page="../../header.jsp"/>
 <style type="text/css">
   td.comments {text-align: center; width: 21em}
@@ -66,22 +66,22 @@ boolean isQuiz = Integer.parseInt(assignment.getAttribute(XMLBuilder.$Static.A_A
   var probnames= new Array();<%
 for (int i= 0; i != numgroups; i++) { 
   Element group= (Element)groups.item(i); 
-  String groupID= group.getAttribute(XMLBuilder.$Static.A_GROUPID); %>
+  String groupID= group.getAttribute(XMLBuilder._Static.A_GROUPID); %>
   scores['<%= groupID %>']= new Array();<%
   if (probs.size() == 0) {%>
   	scores['<%= groupID %>']['0'] = new Array();
 <%} else {
   	for (Iterator j= probs.iterator(); j.hasNext();) {
     	Element prob= (Element)j.next();
-    	String probID= prob.getAttribute(XMLBuilder.$Static.A_SUBPROBID); %>
+    	String probID= prob.getAttribute(XMLBuilder._Static.A_SUBPROBID); %>
   		scores['<%= groupID %>']['<%= probID %>']= new Array();<%
     }
   }
 } 
 for (Iterator j= probs.iterator(); j.hasNext();) {
 	Element prob= (Element)j.next();
-    String probID= prob.getAttribute(XMLBuilder.$Static.A_SUBPROBID); 
-    String probName = prob.getAttribute(XMLBuilder.$Static.A_NAME); %>
+    String probID= prob.getAttribute(XMLBuilder._Static.A_SUBPROBID); 
+    String probName = prob.getAttribute(XMLBuilder._Static.A_NAME); %>
 	probnames['<%= probID %>'] = '<%= probName %>';<%
 }%>
    
@@ -215,10 +215,10 @@ for (Iterator j= probs.iterator(); j.hasNext();) {
 <jsp:include page="../navbar.jsp"/>
     <td id="course_page_container">
       <div id="course_page">
-        <span class="assignment_title"><%= assignment.getAttribute(XMLBuilder.$Static.A_NAME) %>- Grade Students</span>
+        <span class="assignment_title"><%= assignment.getAttribute(XMLBuilder._Static.A_NAME) %>- Grade Students</span>
         <br><br>
 				<jsp:include page="../../problem-report.jsp"/>
-        <form action="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_SETSTUDENTGRADES %>&amp;<%= AccessController.P_ASSIGNID %>=<%= assignment.getAttribute(XMLBuilder.$Static.A_ASSIGNID) %>" method="post" enctype="multipart/form-data">
+        <form action="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_SETSTUDENTGRADES %>&amp;<%= AccessController.P_ASSIGNID %>=<%= assignment.getAttribute(XMLBuilder._Static.A_ASSIGNID) %>" method="post" enctype="multipart/form-data">
 <%
 /* if there's a cookie, sort groups according to it */
 Cookie[] cookies = (Cookie[])session.getAttribute(AccessController.A_COOKIES);
@@ -245,8 +245,8 @@ if(groupOrder != null)
 		System.out.println("group id: '" + groupIDOrder[i] + "'");
 		for(int j = 0; j < numgroups; j++)
 		{
-			System.out.println(" group id: '" + ((Element)groups.item(j)).getAttribute(XMLBuilder.$Static.A_GROUPID) + "'");
-			if(((Element)groups.item(j)).getAttribute(XMLBuilder.$Static.A_GROUPID).equals(groupIDOrder[i]))
+			System.out.println(" group id: '" + ((Element)groups.item(j)).getAttribute(XMLBuilder._Static.A_GROUPID) + "'");
+			if(((Element)groups.item(j)).getAttribute(XMLBuilder._Static.A_GROUPID).equals(groupIDOrder[i]))
 				sortedGroups.add((Element)groups.item(j));
 		}
 	}
@@ -259,19 +259,19 @@ else /* don't reorder groups */
 /* make a table for each group */
 for (int i= 0; i < numgroups; i++) { 
   Element group= (Element)sortedGroups.get(i);
-  String groupid= group.getAttribute(XMLBuilder.$Static.A_GROUPID);
-  NodeList members= group.getElementsByTagName(XMLBuilder.$Static.TAG_MEMBER);
+  String groupid= group.getAttribute(XMLBuilder._Static.A_GROUPID);
+  NodeList members= group.getElementsByTagName(XMLBuilder._Static.TAG_MEMBER);
   int nummembers= members.getLength(); 
-  NodeList files= group.getElementsByTagName(XMLBuilder.$Static.TAG_FILE);
+  NodeList files= group.getElementsByTagName(XMLBuilder._Static.TAG_FILE);
   int numfiles= files.getLength(); 
-  NodeList oldfiles= group.getElementsByTagName(XMLBuilder.$Static.TAG_OLDFILE); 
+  NodeList oldfiles= group.getElementsByTagName(XMLBuilder._Static.TAG_OLDFILE); 
   int numoldfiles= oldfiles.getLength();
-  NodeList regrades= group.getElementsByTagName(XMLBuilder.$Static.TAG_REGRADE);
-  NodeList comments= group.getElementsByTagName(XMLBuilder.$Static.TAG_COMMENT);
+  NodeList regrades= group.getElementsByTagName(XMLBuilder._Static.TAG_REGRADE);
+  NodeList comments= group.getElementsByTagName(XMLBuilder._Static.TAG_COMMENT);
   int numregrades= regrades.getLength(); 
   int numcomments= comments.getLength();
   int pendingregrades;
-  NodeList logs= group.getElementsByTagName(XMLBuilder.$Static.TAG_GRADELOG);
+  NodeList logs= group.getElementsByTagName(XMLBuilder._Static.TAG_GRADELOG);
   int numlogs= logs.getLength(); %>
         <input type="hidden" name="<%= AccessController.P_GROUPID + i %>" value="<%= groupid %>">
         <table class="gradeall_table" id="group_<%= groupid %>" cellpadding="0" cellspacing="0" >
@@ -280,13 +280,13 @@ for (int i= 0; i < numgroups; i++) {
   for (int j= 0; j != nummembers; j++) { 
     Element member= (Element)members.item(j); %>
               <%= j == 0 ? "" : "," %>
-               <%= member.getAttribute(XMLBuilder.$Static.A_FIRSTNAME) %> <%= member.getAttribute(XMLBuilder.$Static.A_LASTNAME) %>
+               <%= member.getAttribute(XMLBuilder._Static.A_FIRSTNAME) %> <%= member.getAttribute(XMLBuilder._Static.A_LASTNAME) %>
                 
                   (
 			              <% if (isAdmin) { %>
-			                <a style="color:white;" href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_STUDENTALLGRADES %>&amp;<%= AccessController.P_COURSEID %>=<%= courseID %>&amp;<%= AccessController.P_NETID %>=<%= member.getAttribute(XMLBuilder.$Static.A_NETID) %>">
+			                <a style="color:white;" href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_STUDENTALLGRADES %>&amp;<%= AccessController.P_COURSEID %>=<%= courseID %>&amp;<%= AccessController.P_NETID %>=<%= member.getAttribute(XMLBuilder._Static.A_NETID) %>">
 			              <% } %>
-		 								<%= member.getAttribute(XMLBuilder.$Static.A_NETID) %>
+		 								<%= member.getAttribute(XMLBuilder._Static.A_NETID) %>
 			              <% if (isAdmin) { %>
 			                </a>
 			              <% } %>
@@ -321,10 +321,10 @@ for (int i= 0; i < numgroups; i++) {
 	        Element file= (Element)files.item(j);%>
 	                <li>
 	                  <dl>
-	                    <dt><a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_DOWNLOAD %>&amp;<%= AccessController.P_DOWNLOADTYPE %>=<%= XMLBuilder.$Static.T_GROUPFILE %>&amp;<%= AccessController.P_ID %>=<%= file.getAttribute(XMLBuilder.$Static.A_SUBMITTEDFILEID) %>">
-	                      <%= file.getAttribute(XMLBuilder.$Static.A_FILENAME) %>
+	                    <dt><a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_DOWNLOAD %>&amp;<%= AccessController.P_DOWNLOADTYPE %>=<%= XMLBuilder._Static.T_GROUPFILE %>&amp;<%= AccessController.P_ID %>=<%= file.getAttribute(XMLBuilder._Static.A_SUBMITTEDFILEID) %>">
+	                      <%= file.getAttribute(XMLBuilder._Static.A_FILENAME) %>
 	                    </a></dt>
-	                    <dd><%= file.getAttribute(XMLBuilder.$Static.A_DATE) %></dd>
+	                    <dd><%= file.getAttribute(XMLBuilder._Static.A_DATE) %></dd>
 	                  </dl>
 	                </li><%
 	      } %>           
@@ -336,10 +336,10 @@ for (int i= 0; i < numgroups; i++) {
 	        Element oldfile= (Element)oldfiles.item(j);%>
 	                <li>
 	                  <dl>
-	                    <dt><a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_DOWNLOAD %>&amp;<%= AccessController.P_DOWNLOADTYPE %>=<%= XMLBuilder.$Static.T_GROUPFILE %>&amp;<%= AccessController.P_ID %>=<%= oldfile.getAttribute(XMLBuilder.$Static.A_SUBMITTEDFILEID) %>">
-	                      <%= oldfile.getAttribute(XMLBuilder.$Static.A_FILENAME) %>
+	                    <dt><a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_DOWNLOAD %>&amp;<%= AccessController.P_DOWNLOADTYPE %>=<%= XMLBuilder._Static.T_GROUPFILE %>&amp;<%= AccessController.P_ID %>=<%= oldfile.getAttribute(XMLBuilder._Static.A_SUBMITTEDFILEID) %>">
+	                      <%= oldfile.getAttribute(XMLBuilder._Static.A_FILENAME) %>
 	                    </a></dt>
-	                    <dd><%= oldfile.getAttribute(XMLBuilder.$Static.A_DATE) %></dd>
+	                    <dd><%= oldfile.getAttribute(XMLBuilder._Static.A_DATE) %></dd>
 	                  </dl>
 	                </li><%
 	      } %>           
@@ -349,9 +349,9 @@ for (int i= 0; i < numgroups; i++) {
 	              <table class="no_borders" cellpadding="0" cellspacing="0" width="100%" height="100%">
 	              <% for (int j=0; j < submissions.getLength(); j++) { 
 	                    Element sub = (Element) submissions.item(j); 
-	                    String subID = sub.getAttribute(XMLBuilder.$Static.A_ID); %>
+	                    String subID = sub.getAttribute(XMLBuilder._Static.A_ID); %>
 	                <tr valign="bottom"><td valign="bottom" align="left" style="border: none">
-	                  <%= sub.getAttribute(XMLBuilder.$Static.A_NAME) + ": " %>
+	                  <%= sub.getAttribute(XMLBuilder._Static.A_NAME) + ": " %>
 	                </td><td valign="bottom" align="right" style="border: none">
 	                  <input size="5" type="file" name="<%= AccessController.P_SUBMITTEDFILE + "_" + groupid + "_" + subID %>">
 	                </td></tr>
@@ -371,8 +371,8 @@ for (int i= 0; i < numgroups; i++) {
             </td><%
   } else { 
     Element member= (Element)members.item(0);
-    String netID= member.getAttribute(XMLBuilder.$Static.A_NETID);
-    NodeList probscores= member.getElementsByTagName(XMLBuilder.$Static.TAG_GRADE); %>
+    String netID= member.getAttribute(XMLBuilder._Static.A_NETID);
+    NodeList probscores= member.getElementsByTagName(XMLBuilder._Static.TAG_GRADE); %>
 						<td class="students">
 						  <% if (isAdmin) { %>
                 <a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_STUDENTALLGRADES %>&amp;<%= AccessController.P_COURSEID %>=<%= courseID %>&amp;<%= AccessController.P_NETID %>=<%= netID %>"><%= netID %></a>
@@ -390,16 +390,16 @@ for (int i= 0; i < numgroups; i++) {
 		int answerCount = 0;
 		for (Iterator k= probs.iterator(); k.hasNext();) {
             Element prob= (Element)k.next();
-			String probid= prob.getAttribute(XMLBuilder.$Static.A_SUBPROBID);
-			Element answer = (Element)member.getElementsByTagNameNS(XMLBuilder.$Static.TAG_ANSWERS + probid, XMLBuilder.$Static.TAG_ANSWERS).item(0); 
-			String probNumber = prob.getAttribute(XMLBuilder.$Static.A_ORDER);
+			String probid= prob.getAttribute(XMLBuilder._Static.A_SUBPROBID);
+			Element answer = (Element)member.getElementsByTagNameNS(XMLBuilder._Static.TAG_ANSWERS + probid, XMLBuilder._Static.TAG_ANSWERS).item(0); 
+			String probNumber = prob.getAttribute(XMLBuilder._Static.A_ORDER);
 			String problemPrefix = (probNumber.equals("0")) ? "" : probNumber + ". ";
 			
 			if(answer != null)
 			{
 				answerCount++;
 				%>
-					<%=problemPrefix + answer.getAttribute(XMLBuilder.$Static.A_ANSWERTEXT)%>
+					<%=problemPrefix + answer.getAttribute(XMLBuilder._Static.A_ANSWERTEXT)%>
 				<br>
 				<%
 			}	
@@ -416,15 +416,15 @@ for (int i= 0; i < numgroups; i++) {
 <%---------------------------------------------------------------------------------------------------------%>
 
             <td class="scores" style="vertical-align:top"><%
-      Element totalgrade= (Element)member.getElementsByTagNameNS(XMLBuilder.$Static.TAG_GRADE + totalprob.getAttribute(XMLBuilder.$Static.A_SUBPROBID), XMLBuilder.$Static.TAG_GRADE).item(0);
+      Element totalgrade= (Element)member.getElementsByTagNameNS(XMLBuilder._Static.TAG_GRADE + totalprob.getAttribute(XMLBuilder._Static.A_SUBPROBID), XMLBuilder._Static.TAG_GRADE).item(0);
       boolean hasTotal = totalgrade != null;
       System.out.println("Numprobs: " + numprobs);
       if (numprobs == 0 && hasTotal) { 
-         Element score= (Element)member.getElementsByTagNameNS(XMLBuilder.$Static.TAG_GRADE + "0", XMLBuilder.$Static.TAG_GRADE).item(0);
-         boolean canGrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder.$Static.A_CANGRADE));
+         Element score= (Element)member.getElementsByTagNameNS(XMLBuilder._Static.TAG_GRADE + "0", XMLBuilder._Static.TAG_GRADE).item(0);
+         boolean canGrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder._Static.A_CANGRADE));
               %>
-				<input type="hidden" name="<%= AccessController.P_OLDGRADE + "_" + netID + "_0_" + groupid %>" value="<%= score != null ? score.getAttribute(XMLBuilder.$Static.A_SCORE) : "" %>">
-              <ul><li><input id="totalscore_<%= netID + "_" + groupid %>" type="text" onkeyup="onKeyupHandlerNoProbs('<%= netID %>','<%= groupid %>','0');" size="3" name="<%= AccessController.P_GRADE %>_<%= netID %>_0_<%= groupid %>" <%= score != null ? "value=\"" + score.getAttribute(XMLBuilder.$Static.A_SCORE) + "\"" : "value=\"\"" %><%= canGrade ? "" : " disabled" %>> /<%= totalprob.getAttribute(XMLBuilder.$Static.A_SCORE) %></li></ul>
+				<input type="hidden" name="<%= AccessController.P_OLDGRADE + "_" + netID + "_0_" + groupid %>" value="<%= score != null ? score.getAttribute(XMLBuilder._Static.A_SCORE) : "" %>">
+              <ul><li><input id="totalscore_<%= netID + "_" + groupid %>" type="text" onkeyup="onKeyupHandlerNoProbs('<%= netID %>','<%= groupid %>','0');" size="3" name="<%= AccessController.P_GRADE %>_<%= netID %>_0_<%= groupid %>" <%= score != null ? "value=\"" + score.getAttribute(XMLBuilder._Static.A_SCORE) + "\"" : "value=\"\"" %><%= canGrade ? "" : " disabled" %>> /<%= totalprob.getAttribute(XMLBuilder._Static.A_SCORE) %></li></ul>
             <script type="text/javascript">
             	// Place above input in table
             	scores['<%= groupid %>']['0']['<%= netID %>']=  getElementById('totalscore_<%= netID + "_" + groupid %>');
@@ -435,30 +435,30 @@ for (int i= 0; i < numgroups; i++) {
       } else {
         if (numprobs == 1) {
           Element prob= (Element)probs.iterator().next();
-          String probid= prob.getAttribute(XMLBuilder.$Static.A_SUBPROBID);
-          Element score= (Element)member.getElementsByTagNameNS(XMLBuilder.$Static.TAG_GRADE + probid, XMLBuilder.$Static.TAG_GRADE).item(0); 
- 		  Element answer = (Element)member.getElementsByTagNameNS(XMLBuilder.$Static.TAG_ANSWERS + probid, XMLBuilder.$Static.TAG_ANSWERS).item(0); 
+          String probid= prob.getAttribute(XMLBuilder._Static.A_SUBPROBID);
+          Element score= (Element)member.getElementsByTagNameNS(XMLBuilder._Static.TAG_GRADE + probid, XMLBuilder._Static.TAG_GRADE).item(0); 
+ 		  Element answer = (Element)member.getElementsByTagNameNS(XMLBuilder._Static.TAG_ANSWERS + probid, XMLBuilder._Static.TAG_ANSWERS).item(0); 
           
-          String problemOrder = prob.getAttribute(XMLBuilder.$Static.A_ORDER);
-          String problemName = (problemOrder.equals("0")) ? prob.getAttribute(XMLBuilder.$Static.A_NAME) : problemOrder + ". " + prob.getAttribute(XMLBuilder.$Static.A_NAME);
+          String problemOrder = prob.getAttribute(XMLBuilder._Static.A_ORDER);
+          String problemName = (problemOrder.equals("0")) ? prob.getAttribute(XMLBuilder._Static.A_NAME) : problemOrder + ". " + prob.getAttribute(XMLBuilder._Static.A_NAME);
           
-          boolean canGrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder.$Static.A_CANGRADE));
+          boolean canGrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder._Static.A_CANGRADE));
           %>
 			<%-- Hidden input sends back the original score vales for conflict resolution --%>
-			<input type="hidden" name="<%= AccessController.P_OLDGRADE + "_" + netID + "_" + probid + "_" + groupid %>" value="<%= score != null ? score.getAttribute(XMLBuilder.$Static.A_SCORE) : "" %>">
+			<input type="hidden" name="<%= AccessController.P_OLDGRADE + "_" + netID + "_" + probid + "_" + groupid %>" value="<%= score != null ? score.getAttribute(XMLBuilder._Static.A_SCORE) : "" %>">
               <ul>
               		<li><%= problemName %>:<br />
               		
-              	<% if (prob.hasAttribute(XMLBuilder.$Static.A_CORRECTANSWER)) {%>
+              	<% if (prob.hasAttribute(XMLBuilder._Static.A_CORRECTANSWER)) {%>
 					<strong>Correct answer:</strong> 
-					<%= prob.getAttribute(XMLBuilder.$Static.A_CORRECTANSWER) %><br />
+					<%= prob.getAttribute(XMLBuilder._Static.A_CORRECTANSWER) %><br />
 				<% } %>
               		
               		<input id="score_<%= netID + "_" + probid + "_" + groupid %>" type="text" onkeyup="onKeyupHandlerNoProbs('<%= netID %>','<%= groupid %>','<%= probid %>');" size="3" name="<%= AccessController.P_GRADE + "_" + netID + "_" + probid + "_" + groupid %>" 
-			<%if(score != null && !score.getAttribute(XMLBuilder.$Static.A_SCORE).equals("")){%>
-			  <%="value=\"" + score.getAttribute(XMLBuilder.$Static.A_SCORE) + "\""%>
+			<%if(score != null && !score.getAttribute(XMLBuilder._Static.A_SCORE).equals("")){%>
+			  <%="value=\"" + score.getAttribute(XMLBuilder._Static.A_SCORE) + "\""%>
 			  <%}%>
-			<%= canGrade ? "" : " disabled" %>> /<%= prob.getAttribute(XMLBuilder.$Static.A_SCORE) %></li></ul>
+			<%= canGrade ? "" : " disabled" %>> /<%= prob.getAttribute(XMLBuilder._Static.A_SCORE) %></li></ul>
  			<script type="text/javascript">
              // Place above input in table
              scores['<%= groupid %>']['<%= probid %>']['<%= netID %>']=  getElementById('score_<%= netID + "_" + probid  + "_" + groupid %>');
@@ -469,30 +469,30 @@ for (int i= 0; i < numgroups; i++) {
 					<ul><%
           for (Iterator k= probs.iterator(); k.hasNext();) {
             Element prob= (Element)k.next();
-            String probid= prob.getAttribute(XMLBuilder.$Static.A_SUBPROBID);
-   			String probNumber = prob.getAttribute(XMLBuilder.$Static.A_ORDER);
-            Element score= (Element)member.getElementsByTagNameNS(XMLBuilder.$Static.TAG_GRADE + probid, XMLBuilder.$Static.TAG_GRADE).item(0); 
-   			Element answer = (Element)member.getElementsByTagNameNS(XMLBuilder.$Static.TAG_ANSWERS + probid, XMLBuilder.$Static.TAG_ANSWERS).item(0); 
+            String probid= prob.getAttribute(XMLBuilder._Static.A_SUBPROBID);
+   			String probNumber = prob.getAttribute(XMLBuilder._Static.A_ORDER);
+            Element score= (Element)member.getElementsByTagNameNS(XMLBuilder._Static.TAG_GRADE + probid, XMLBuilder._Static.TAG_GRADE).item(0); 
+   			Element answer = (Element)member.getElementsByTagNameNS(XMLBuilder._Static.TAG_ANSWERS + probid, XMLBuilder._Static.TAG_ANSWERS).item(0); 
             
-            String problemOrder = prob.getAttribute(XMLBuilder.$Static.A_ORDER);
-            String problemName = (problemOrder.equals("0")) ? prob.getAttribute(XMLBuilder.$Static.A_NAME) : problemOrder + ". " + prob.getAttribute(XMLBuilder.$Static.A_NAME);
+            String problemOrder = prob.getAttribute(XMLBuilder._Static.A_ORDER);
+            String problemName = (problemOrder.equals("0")) ? prob.getAttribute(XMLBuilder._Static.A_NAME) : problemOrder + ". " + prob.getAttribute(XMLBuilder._Static.A_NAME);
             
-            boolean canGrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder.$Static.A_CANGRADE)); 
+            boolean canGrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder._Static.A_CANGRADE)); 
             if (score != null)
             {%>
-				<input type="hidden" name="<%= AccessController.P_OLDGRADE + "_" + netID + "_" + probid + "_" + groupid %>" value="<%= score != null ? score.getAttribute(XMLBuilder.$Static.A_SCORE) : "" %>">
+				<input type="hidden" name="<%= AccessController.P_OLDGRADE + "_" + netID + "_" + probid + "_" + groupid %>" value="<%= score != null ? score.getAttribute(XMLBuilder._Static.A_SCORE) : "" %>">
                 <li><%= problemName %>:<br />
                 	
-                <% if (prob.hasAttribute(XMLBuilder.$Static.A_CORRECTANSWER)) {%>
+                <% if (prob.hasAttribute(XMLBuilder._Static.A_CORRECTANSWER)) {%>
 					<strong>Correct answer:</strong> 
-					<%= prob.getAttribute(XMLBuilder.$Static.A_CORRECTANSWER) %><br />
+					<%= prob.getAttribute(XMLBuilder._Static.A_CORRECTANSWER) %><br />
 				<% } %>
                 	
                 	<input <%= hasTotal ? "onkeyup=\"onkeyupHandler('" + netID + "', '" + probid + "', '" + groupid + "');\"" : "" %> id="score_<%= netID + "_" + probid + "_" + groupid %>" type="text" size="3" name="<%= AccessController.P_GRADE + "_" + netID + "_" + probid + "_" + groupid %>"
-				<%if(score != null && !score.getAttribute(XMLBuilder.$Static.A_SCORE).equals("")){%>
-				 	<%="value=\"" + score.getAttribute(XMLBuilder.$Static.A_SCORE) + "\""%>
+				<%if(score != null && !score.getAttribute(XMLBuilder._Static.A_SCORE).equals("")){%>
+				 	<%="value=\"" + score.getAttribute(XMLBuilder._Static.A_SCORE) + "\""%>
 				  <%}%>
-				<%= canGrade ? "" : " disabled" %>> /<%= prob.getAttribute(XMLBuilder.$Static.A_SCORE) %></li>
+				<%= canGrade ? "" : " disabled" %>> /<%= prob.getAttribute(XMLBuilder._Static.A_SCORE) %></li>
                 <script type="text/javascript">
                   // Place above input in table
                   scores['<%= groupid %>']['<%= probid %>']['<%= netID %>']=  getElementById('score_<%= netID + "_" + probid  + "_" + groupid %>');
@@ -500,7 +500,7 @@ for (int i= 0; i < numgroups; i++) {
 				}
           } %>
           <% if (hasTotal) { %>
-              <li><strong>Total:</strong>&nbsp;&nbsp;&nbsp;<span id="totalscore_<%= netID + "_" + groupid %>">&nbsp;<%= totalgrade == null ? "&nbsp;" : totalgrade.getAttribute(XMLBuilder.$Static.A_SCORE) %></span> /<%= totalprob.getAttribute(XMLBuilder.$Static.A_SCORE) %></li>
+              <li><strong>Total:</strong>&nbsp;&nbsp;&nbsp;<span id="totalscore_<%= netID + "_" + groupid %>">&nbsp;<%= totalgrade == null ? "&nbsp;" : totalgrade.getAttribute(XMLBuilder._Static.A_SCORE) %></span> /<%= totalprob.getAttribute(XMLBuilder._Static.A_SCORE) %></li>
           <% } %>
               </ul>
 <%        } 
@@ -514,23 +514,23 @@ for (int i= 0; i < numgroups; i++) {
     boolean isRespond = false;
     for (int j= 0; j != numregrades; j++) { 
       Element regrade= (Element)regrades.item(j);
-      String reqid= regrade.getAttribute(XMLBuilder.$Static.A_REQUESTID);
-      Element firstmem = (Element) group.getElementsByTagName(XMLBuilder.$Static.TAG_MEMBER).item(0);
-      Element score = (Element) firstmem.getElementsByTagNameNS(XMLBuilder.$Static.TAG_GRADE + regrade.getAttribute(XMLBuilder.$Static.A_SUBPROBID), XMLBuilder.$Static.TAG_GRADE).item(0);
-      boolean canRegrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder.$Static.A_CANGRADE));
-      if (RegradeRequest.$Static.PENDING.equals(regrade.getAttribute(XMLBuilder.$Static.A_STATUS))) {
+      String reqid= regrade.getAttribute(XMLBuilder._Static.A_REQUESTID);
+      Element firstmem = (Element) group.getElementsByTagName(XMLBuilder._Static.TAG_MEMBER).item(0);
+      Element score = (Element) firstmem.getElementsByTagNameNS(XMLBuilder._Static.TAG_GRADE + regrade.getAttribute(XMLBuilder._Static.A_SUBPROBID), XMLBuilder._Static.TAG_GRADE).item(0);
+      boolean canRegrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder._Static.A_CANGRADE));
+      if (RegradeRequest._Static.PENDING.equals(regrade.getAttribute(XMLBuilder._Static.A_STATUS))) {
         pendingregrades++; 
             if (canRegrade) {
                isRespond = true; %>
                 <li>
                   <label>
                     <input type="checkbox" name="<%= AccessController.P_REGRADERESPONSE + "_" + reqid + "_" + groupid %>">
-             <%     if (regrade.getAttribute(XMLBuilder.$Static.A_SUBPROBID).equals("0")) {
+             <%     if (regrade.getAttribute(XMLBuilder._Static.A_SUBPROBID).equals("0")) {
               %>
-                    <strong>Respond</strong> to request for regrade on <strong><%=assignment.getAttribute(XMLBuilder.$Static.A_NAME) %></strong>
+                    <strong>Respond</strong> to request for regrade on <strong><%=assignment.getAttribute(XMLBuilder._Static.A_NAME) %></strong>
              <%  } else { 
               %>     
-                    <strong>Respond</strong> to request for subproblem <strong><%=regrade.getAttribute(XMLBuilder.$Static.A_SUBPROBNAME) %></strong>
+                    <strong>Respond</strong> to request for subproblem <strong><%=regrade.getAttribute(XMLBuilder._Static.A_SUBPROBNAME) %></strong>
               <%  }
               %>      
                     
@@ -567,13 +567,13 @@ for (int i= 0; i < numgroups; i++) {
   if (nummembers != 1) {
     for (int j= 0; j != nummembers; j++) {
       Element member= (Element)members.item(j);
-      String netID= member.getAttribute(XMLBuilder.$Static.A_NETID); %>
+      String netID= member.getAttribute(XMLBuilder._Static.A_NETID); %>
           <tr>
             <td class="students">
               <% if (isAdmin) { %>
-                <a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_STUDENTALLGRADES %>&amp;<%= AccessController.P_COURSEID %>=<%= courseID %>&amp;<%= AccessController.P_NETID %>=<%= member.getAttribute(XMLBuilder.$Static.A_NETID) %>">
+                <a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_STUDENTALLGRADES %>&amp;<%= AccessController.P_COURSEID %>=<%= courseID %>&amp;<%= AccessController.P_NETID %>=<%= member.getAttribute(XMLBuilder._Static.A_NETID) %>">
               <% } %>							
-							<%= member.getAttribute(XMLBuilder.$Static.A_NETID) %>
+							<%= member.getAttribute(XMLBuilder._Static.A_NETID) %>
               <% if (isAdmin) { %>
                 </a>
               <% } %>
@@ -583,14 +583,14 @@ for (int i= 0; i < numgroups; i++) {
 
 				<td class="scores">
 <%
-      Element totalgrade= (Element)member.getElementsByTagNameNS(XMLBuilder.$Static.TAG_GRADE + totalprob.getAttribute(XMLBuilder.$Static.A_SUBPROBID), XMLBuilder.$Static.TAG_GRADE).item(0);
+      Element totalgrade= (Element)member.getElementsByTagNameNS(XMLBuilder._Static.TAG_GRADE + totalprob.getAttribute(XMLBuilder._Static.A_SUBPROBID), XMLBuilder._Static.TAG_GRADE).item(0);
       boolean hasTotal = totalgrade != null;
       if (numprobs == 0) {
-            Element score= (Element)member.getElementsByTagNameNS(XMLBuilder.$Static.TAG_GRADE + "0", XMLBuilder.$Static.TAG_GRADE).item(0); 
-            boolean canGrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder.$Static.A_CANGRADE)); 
+            Element score= (Element)member.getElementsByTagNameNS(XMLBuilder._Static.TAG_GRADE + "0", XMLBuilder._Static.TAG_GRADE).item(0); 
+            boolean canGrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder._Static.A_CANGRADE)); 
             if (score != null) {%> 
-				<input type="hidden" name="<%= AccessController.P_OLDGRADE + "_" + netID + "_0_" + groupid %>" value="<%= score != null ? score.getAttribute(XMLBuilder.$Static.A_SCORE) : "" %>">
-              <ul><li><input id="totalscore_<%= netID + "_" + groupid %>" type="text" onkeyup="onKeyupHandlerNoProbs('<%= netID %>','<%= groupid %>','0');" size="3" name="<%= AccessController.P_GRADE %>_<%= netID %>_0_<%= groupid %>" <%= score != null ? "value=\"" + score.getAttribute(XMLBuilder.$Static.A_SCORE) + "\"" : "value=\"\"" %><%= canGrade ? "" : " disabled" %>> /<%= totalprob.getAttribute(XMLBuilder.$Static.A_SCORE) %></li></ul>
+				<input type="hidden" name="<%= AccessController.P_OLDGRADE + "_" + netID + "_0_" + groupid %>" value="<%= score != null ? score.getAttribute(XMLBuilder._Static.A_SCORE) : "" %>">
+              <ul><li><input id="totalscore_<%= netID + "_" + groupid %>" type="text" onkeyup="onKeyupHandlerNoProbs('<%= netID %>','<%= groupid %>','0');" size="3" name="<%= AccessController.P_GRADE %>_<%= netID %>_0_<%= groupid %>" <%= score != null ? "value=\"" + score.getAttribute(XMLBuilder._Static.A_SCORE) + "\"" : "value=\"\"" %><%= canGrade ? "" : " disabled" %>> /<%= totalprob.getAttribute(XMLBuilder._Static.A_SCORE) %></li></ul>
             	<script type="text/javascript">
              		// Place above input in table
              		scores['<%= groupid %>']['0']['<%= netID %>']=  getElementById('totalscore_<%= netID + "_" + groupid %>');
@@ -600,11 +600,11 @@ for (int i= 0; i < numgroups; i++) {
       } else {
         if (numprobs == 1) {
           Element prob= (Element)probs.iterator().next();
-          String probid= prob.getAttribute(XMLBuilder.$Static.A_SUBPROBID);
-          Element score= (Element)member.getElementsByTagNameNS(XMLBuilder.$Static.TAG_GRADE + probid, XMLBuilder.$Static.TAG_GRADE).item(0); 
-          boolean canGrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder.$Static.A_CANGRADE)); %>
-			<input type="hidden" name="<%= AccessController.P_OLDGRADE + "_" + netID + "_" + probid + "_" + groupid %>" value="<%= score != null ? score.getAttribute(XMLBuilder.$Static.A_SCORE) : "" %>">
-              <ul><li><%= prob.getAttribute(XMLBuilder.$Static.A_NAME) %>:&nbsp;&nbsp;&nbsp;<input id="score_<%= netID + "_" + probid + "_" + groupid %>" type="text" onkeyup="onKeyupHandlerNoProbs('<%= netID %>','<%= groupid %>','<%= probid %>');" size="3" name="<%= AccessController.P_GRADE %>_<%= netID %>_<%= probid %>_<%= groupid %>" <%= score != null ? "value=\"" + score.getAttribute(XMLBuilder.$Static.A_SCORE) + "\"": "" %><%= canGrade ? "" : " disabled" %>> /<%= prob.getAttribute(XMLBuilder.$Static.A_SCORE) %></li></ul>
+          String probid= prob.getAttribute(XMLBuilder._Static.A_SUBPROBID);
+          Element score= (Element)member.getElementsByTagNameNS(XMLBuilder._Static.TAG_GRADE + probid, XMLBuilder._Static.TAG_GRADE).item(0); 
+          boolean canGrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder._Static.A_CANGRADE)); %>
+			<input type="hidden" name="<%= AccessController.P_OLDGRADE + "_" + netID + "_" + probid + "_" + groupid %>" value="<%= score != null ? score.getAttribute(XMLBuilder._Static.A_SCORE) : "" %>">
+              <ul><li><%= prob.getAttribute(XMLBuilder._Static.A_NAME) %>:&nbsp;&nbsp;&nbsp;<input id="score_<%= netID + "_" + probid + "_" + groupid %>" type="text" onkeyup="onKeyupHandlerNoProbs('<%= netID %>','<%= groupid %>','<%= probid %>');" size="3" name="<%= AccessController.P_GRADE %>_<%= netID %>_<%= probid %>_<%= groupid %>" <%= score != null ? "value=\"" + score.getAttribute(XMLBuilder._Static.A_SCORE) + "\"": "" %><%= canGrade ? "" : " disabled" %>> /<%= prob.getAttribute(XMLBuilder._Static.A_SCORE) %></li></ul>
         	<script type="text/javascript">
              // Place above input in table
              scores['<%= groupid %>']['<%= probid %>']['<%= netID %>']=  getElementById('score_<%= netID + "_" + probid  + "_" + groupid %>');
@@ -614,12 +614,12 @@ for (int i= 0; i < numgroups; i++) {
               <ul><%
           for (Iterator k= probs.iterator(); k.hasNext();) {
             Element prob= (Element)k.next();
-            String probid= prob.getAttribute(XMLBuilder.$Static.A_SUBPROBID);
-            Element score= (Element)member.getElementsByTagNameNS(XMLBuilder.$Static.TAG_GRADE + probid, XMLBuilder.$Static.TAG_GRADE).item(0); 
-            boolean canGrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder.$Static.A_CANGRADE)); 
+            String probid= prob.getAttribute(XMLBuilder._Static.A_SUBPROBID);
+            Element score= (Element)member.getElementsByTagNameNS(XMLBuilder._Static.TAG_GRADE + probid, XMLBuilder._Static.TAG_GRADE).item(0); 
+            boolean canGrade = !checkCanGrade || (score != null && score.hasAttribute(XMLBuilder._Static.A_CANGRADE)); 
                 if (score != null) {%>
-				<input type="hidden" name="<%= AccessController.P_OLDGRADE + "_" + netID + "_" + probid + "_" + groupid %>" value="<%= score != null ? score.getAttribute(XMLBuilder.$Static.A_SCORE) : "" %>">
-               		<li><%= prob.getAttribute(XMLBuilder.$Static.A_NAME) %>:&nbsp;&nbsp;&nbsp;<input <%= hasTotal ? "onkeyup=\"onkeyupHandler('" + netID + "', '" + probid + "', '" + groupid + "')\"" : "" %> id="score_<%= netID + "_" + probid  + "_" + groupid %>" type="text" size="3" name="<%= AccessController.P_GRADE %>_<%= netID %>_<%= probid %>_<%= groupid %>" <%= score != null ? "value=\"" + score.getAttribute(XMLBuilder.$Static.A_SCORE) + "\"" : "" %><%= canGrade ? "" : " disabled" %>> /<%= prob.getAttribute(XMLBuilder.$Static.A_SCORE) %></li>
+				<input type="hidden" name="<%= AccessController.P_OLDGRADE + "_" + netID + "_" + probid + "_" + groupid %>" value="<%= score != null ? score.getAttribute(XMLBuilder._Static.A_SCORE) : "" %>">
+               		<li><%= prob.getAttribute(XMLBuilder._Static.A_NAME) %>:&nbsp;&nbsp;&nbsp;<input <%= hasTotal ? "onkeyup=\"onkeyupHandler('" + netID + "', '" + probid + "', '" + groupid + "')\"" : "" %> id="score_<%= netID + "_" + probid  + "_" + groupid %>" type="text" size="3" name="<%= AccessController.P_GRADE %>_<%= netID %>_<%= probid %>_<%= groupid %>" <%= score != null ? "value=\"" + score.getAttribute(XMLBuilder._Static.A_SCORE) + "\"" : "" %><%= canGrade ? "" : " disabled" %>> /<%= prob.getAttribute(XMLBuilder._Static.A_SCORE) %></li>
                 <script type="text/javascript">
                   // Place above input in table
                   scores['<%= groupid %>']['<%= probid %>']['<%= netID %>']=  getElementById('score_<%= netID + "_" + probid  + "_" + groupid %>');
@@ -627,7 +627,7 @@ for (int i= 0; i < numgroups; i++) {
                 }
           } %>
             <% if (hasTotal) { %>
-              <li>Total:&nbsp;&nbsp;&nbsp;<span id="totalscore_<%= netID + "_" + groupid %>">&nbsp;<%= totalgrade == null ? "&nbsp;" : totalgrade.getAttribute(XMLBuilder.$Static.A_SCORE) %></span> /<%= totalprob.getAttribute(XMLBuilder.$Static.A_SCORE) %></li>
+              <li>Total:&nbsp;&nbsp;&nbsp;<span id="totalscore_<%= netID + "_" + groupid %>">&nbsp;<%= totalgrade == null ? "&nbsp;" : totalgrade.getAttribute(XMLBuilder._Static.A_SCORE) %></span> /<%= totalprob.getAttribute(XMLBuilder._Static.A_SCORE) %></li>
             <% } %>
               </ul>
 <%      } 
@@ -681,10 +681,10 @@ for (int i= 0; i < numgroups; i++) {
     for (int j= 0; j != numlogs; j++) {
       Element log= (Element)logs.item(j); %>
                   <tr class="<%= j % 2 == 0 ? "row_even" : "row_odd"%>">
-                    <td><%= log.getAttribute(XMLBuilder.$Static.A_DATE) %></td>
-                    <td><%= log.getAttribute(XMLBuilder.$Static.A_NETID) %></td>
-                    <td><%= log.getAttribute(XMLBuilder.$Static.A_GRADER) %></td>
-                    <td><%= log.getAttribute(XMLBuilder.$Static.A_TEXT) %></td>
+                    <td><%= log.getAttribute(XMLBuilder._Static.A_DATE) %></td>
+                    <td><%= log.getAttribute(XMLBuilder._Static.A_NETID) %></td>
+                    <td><%= log.getAttribute(XMLBuilder._Static.A_GRADER) %></td>
+                    <td><%= log.getAttribute(XMLBuilder._Static.A_TEXT) %></td>
                   </tr><%
     } %>
                 </table>
@@ -712,9 +712,9 @@ for (int i= 0; i < numgroups; i++) {
 		              All Parts<br><br><%
 		            for(int j= 0; j<allprobs.getLength(); j++){
 		              Element problem = (Element) allprobs.item(j); 
-		              String elemname = AccessController.P_REGRADESUB + "_" + problem.getAttribute(XMLBuilder.$Static.A_SUBPROBID) + "_" + groupid;%>
+		              String elemname = AccessController.P_REGRADESUB + "_" + problem.getAttribute(XMLBuilder._Static.A_SUBPROBID) + "_" + groupid;%>
 		              <input type="checkbox" name="<%=elemname%>" value="<%=elemname%>" onClick="otherClick('<%= groupid %>');">
-		              <%=problem.getAttribute(XMLBuilder.$Static.A_NAME)%><br>
+		              <%=problem.getAttribute(XMLBuilder._Static.A_NAME)%><br>
 		        <%    }%>
 		            </td><%
 		          }else{%>
@@ -737,8 +737,8 @@ for (int i= 0; i < numgroups; i++) {
   for (int j= 0; j != numregrades; j++) { 
     Element regrade= (Element)regrades.item(j);
     Text regradetext= (Text)regrade.getFirstChild();
-    Element regraderesponse= (Element)regrade.getElementsByTagName(XMLBuilder.$Static.TAG_RESPONSE).item(0); 
-    String checkname = regraderesponse == null ? "" : AccessController.P_REMOVECOMMENT + regraderesponse.getAttribute(XMLBuilder.$Static.A_COMMENTID);
+    Element regraderesponse= (Element)regrade.getElementsByTagName(XMLBuilder._Static.TAG_RESPONSE).item(0); 
+    String checkname = regraderesponse == null ? "" : AccessController.P_REMOVECOMMENT + regraderesponse.getAttribute(XMLBuilder._Static.A_COMMENTID);
     Integer count = (Integer) commentchks.get(checkname);
     if (count == null) {
         count = new Integer(1);
@@ -749,14 +749,14 @@ for (int i= 0; i < numgroups; i++) {
     %>
                 <div class="<%= j % 2 == 0 ? "row_even" : "row_odd"%>">
                 <dt>
-                  <h2><strong>Request:</strong> by <%= regrade.getAttribute(XMLBuilder.$Static.A_NETID) %> at <%= regrade.getAttribute(XMLBuilder.$Static.A_DATE) %></h2>
+                  <h2><strong>Request:</strong> by <%= regrade.getAttribute(XMLBuilder._Static.A_NETID) %> at <%= regrade.getAttribute(XMLBuilder._Static.A_DATE) %></h2>
                   <p><%= regradetext.getData() %>
                 </dt><% 
     if (regraderesponse != null) {
       Text responsetext= (Text)regraderesponse.getFirstChild(); 
-      boolean canRemove = !checkCanGrade || meNetID.equalsIgnoreCase(regraderesponse.getAttribute(XMLBuilder.$Static.A_NETID)); %>
+      boolean canRemove = !checkCanGrade || meNetID.equalsIgnoreCase(regraderesponse.getAttribute(XMLBuilder._Static.A_NETID)); %>
                 <dd>
-                  <h2><strong>Response:</strong> by <%= regraderesponse.getAttribute(XMLBuilder.$Static.A_NETID) %> at <%= regraderesponse.getAttribute(XMLBuilder.$Static.A_DATE) %>
+                  <h2><strong>Response:</strong> by <%= regraderesponse.getAttribute(XMLBuilder._Static.A_NETID) %> at <%= regraderesponse.getAttribute(XMLBuilder._Static.A_DATE) %>
                   <% if (canRemove) { %>
                   <span style="float: right"><input type="checkbox" name="<%= checkname %>" id="<%= checkname + count.toString() %>" onclick="checkLinkedComments(this.name, this.checked);"> Remove Response</span>
                   <% } %>
@@ -764,10 +764,10 @@ for (int i= 0; i < numgroups; i++) {
                   <p><%= responsetext.getData() %>
 
 
-<%      Element responseFile= (Element) (regraderesponse.getElementsByTagName(XMLBuilder.$Static.TAG_COMMENTFILE).item(0));
+<%      Element responseFile= (Element) (regraderesponse.getElementsByTagName(XMLBuilder._Static.TAG_COMMENTFILE).item(0));
         if (responseFile!=null) { 
 %>
-        <p style="margin-left: 20px">Attached file: <a href="?<%=AccessController.P_ACTION%>=<%=AccessController.ACT_DOWNLOAD%>&amp;<%=AccessController.P_ID%>=<%= responseFile.getAttribute(XMLBuilder.$Static.A_COMMENTFILEID)%>&amp;<%=AccessController.P_DOWNLOADTYPE%>=<%=XMLBuilder.$Static.T_COMMENTFILE%>"><%= responseFile.getAttribute(XMLBuilder.$Static.A_FILENAME) %>
+        <p style="margin-left: 20px">Attached file: <a href="?<%=AccessController.P_ACTION%>=<%=AccessController.ACT_DOWNLOAD%>&amp;<%=AccessController.P_ID%>=<%= responseFile.getAttribute(XMLBuilder._Static.A_COMMENTFILEID)%>&amp;<%=AccessController.P_DOWNLOADTYPE%>=<%=XMLBuilder._Static.T_COMMENTFILE%>"><%= responseFile.getAttribute(XMLBuilder._Static.A_FILENAME) %>
         </a></p>
 <%      } 
 %>
@@ -801,20 +801,20 @@ for (int i= 0; i < numgroups; i++) {
     for (int j= 0; j != numcomments; j++) { 
         Element comment= (Element)comments.item(j);
         String commentText= ((Text)comment.getFirstChild()).getData();         
-        boolean canRemove = !checkCanGrade || meNetID.equalsIgnoreCase(comment.getAttribute(XMLBuilder.$Static.A_NETID));
+        boolean canRemove = !checkCanGrade || meNetID.equalsIgnoreCase(comment.getAttribute(XMLBuilder._Static.A_NETID));
 %>
   <div class="<%= j % 2 == 0 ? "row_even" : "row_odd"%>">
 
-        <h2><strong>Comment:</strong> by <%=comment.getAttribute(XMLBuilder.$Static.A_NETID)%> on <%=comment.getAttribute(XMLBuilder.$Static.A_DATE)%>
+        <h2><strong>Comment:</strong> by <%=comment.getAttribute(XMLBuilder._Static.A_NETID)%> on <%=comment.getAttribute(XMLBuilder._Static.A_DATE)%>
         <% if (canRemove) { %>
-        <span style="float: right"><input type="checkbox" name="<%= AccessController.P_REMOVECOMMENT + comment.getAttribute(XMLBuilder.$Static.A_COMMENTID) %>"> Remove Comment</span>
+        <span style="float: right"><input type="checkbox" name="<%= AccessController.P_REMOVECOMMENT + comment.getAttribute(XMLBuilder._Static.A_COMMENTID) %>"> Remove Comment</span>
         <% } %>
         </h2>
         <p style="margin-left: 20px"><%= commentText %></p>
-<%      Element commentFile= (Element) (comment.getElementsByTagName(XMLBuilder.$Static.TAG_COMMENTFILE).item(0));
+<%      Element commentFile= (Element) (comment.getElementsByTagName(XMLBuilder._Static.TAG_COMMENTFILE).item(0));
         if (commentFile!=null) { 
 %>
-        <p style="margin-left: 20px">Attached file: <a href="?<%=AccessController.P_ACTION%>=<%=AccessController.ACT_DOWNLOAD%>&amp;<%=AccessController.P_ID%>=<%= commentFile.getAttribute(XMLBuilder.$Static.A_COMMENTFILEID)%>&amp;<%=AccessController.P_DOWNLOADTYPE%>=<%=XMLBuilder.$Static.T_COMMENTFILE%>"><%= commentFile.getAttribute(XMLBuilder.$Static.A_FILENAME) %>
+        <p style="margin-left: 20px">Attached file: <a href="?<%=AccessController.P_ACTION%>=<%=AccessController.ACT_DOWNLOAD%>&amp;<%=AccessController.P_ID%>=<%= commentFile.getAttribute(XMLBuilder._Static.A_COMMENTFILEID)%>&amp;<%=AccessController.P_DOWNLOADTYPE%>=<%=XMLBuilder._Static.T_COMMENTFILE%>"><%= commentFile.getAttribute(XMLBuilder._Static.A_FILENAME) %>
         </a></p>
 <%      } 
 %>

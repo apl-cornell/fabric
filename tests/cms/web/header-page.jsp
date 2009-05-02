@@ -24,13 +24,13 @@ document.onmousemove=positiontip
 <td id="topnav" nowrap align="left" valign="middle" rowspan="2">
 <ul>
 <%
-Node l = root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_STUDENTCOURSES()).item(0);
+Node l = root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_STUDENTCOURSES()).item(0);
 int length= 0;
 NodeList myCourses = l.getChildNodes();
 length= myCourses.getLength();
 String link=null;
 String courseName=null;
-boolean isAdminForAnyCourse= (root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_STAFFCOURSES()).item(0).getChildNodes().getLength()!=0);
+boolean isAdminForAnyCourse= (root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_STAFFCOURSES()).item(0).getChildNodes().getLength()!=0);
 String studentCourseMenuTitle= (isAdminForAnyCourse ? "Student Courses" : "Courses" );
 if (length!=0) {
 %>    
@@ -38,8 +38,8 @@ if (length!=0) {
     <ul><%
 for (int i = 0; i < length; i++) {
   Element course = (Element) myCourses.item(i); 
-  link= "?"+ AccessController.P_ACTION + "=" + AccessController.ACT_COURSE + "&amp;" + AccessController.P_COURSEID + "=" + course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID()) + "&amp;" + AccessController.P_RESET + "=1";
-  courseName=course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_DISPLAYEDCODE());
+  link= "?"+ AccessController.P_ACTION + "=" + AccessController.ACT_COURSE + "&amp;" + AccessController.P_COURSEID + "=" + course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID()) + "&amp;" + AccessController.P_RESET + "=1";
+  courseName=course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_DISPLAYEDCODE());
 %>   
        <li><a href="<%=link%>"><%=courseName %></a></li><%
 } %>
@@ -52,7 +52,7 @@ CMS Overview
 
 <%
 /* STAFF */
-l= root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_STAFFCOURSES()).item(0);
+l= root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_STAFFCOURSES()).item(0);
 myCourses= l.getChildNodes();
 length= myCourses.getLength();
 if (length!=0) {
@@ -61,8 +61,8 @@ if (length!=0) {
     <ul><%
 for (int i= 0; i != length; i++) { 
   Element course= (Element) myCourses.item(i); 
-  link= "?"+ AccessController.P_ACTION + "=" + AccessController.ACT_COURSEADMIN  + "&amp;" + AccessController.P_COURSEID + "=" + course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID());
-  courseName=course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_DISPLAYEDCODE());
+  link= "?"+ AccessController.P_ACTION + "=" + AccessController.ACT_COURSEADMIN  + "&amp;" + AccessController.P_COURSEID + "=" + course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID());
+  courseName=course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_DISPLAYEDCODE());
   
   %>
         <li><a href="<%=link%>"><%=courseName %></a></li><%
@@ -80,11 +80,11 @@ if(p.isCMSAdmin())
 </ul>
 </td>
 <%
-Element course= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.$Proxy.$instance.get$TAG_COURSE());
+Element course= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_COURSE());
 boolean showViewAs= false;
 String courseid=null;
 if (course!=null) {
-    courseid= course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID());
+    courseid= course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID());
     showViewAs= p.isAdminPrivByCourseID(courseid) || p.isInStaffAsBlankMode(); 
 }
 %>

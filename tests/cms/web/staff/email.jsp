@@ -137,7 +137,7 @@ boolean custom = (students != null && students.getChildNodes() != null && studen
                   var subj = getElementById('<%= AccessController.P_EMAIL_SUBJECT %>');
                   var body = getElementById('<%= AccessController.P_EMAIL_BODY %>');
                   var recp = getElementById('<%= AccessController.P_EMAIL_RECIPIENTS %>');
-                  subj.value = '<%= StringUtil.$Proxy.escapeQuote(xEmail.getAttribute(XMLBuilder.A_SUBJECT)) %>';
+                  subj.value = '<%= StringUtil._Proxy.escapeQuote(xEmail.getAttribute(XMLBuilder.A_SUBJECT)) %>';
                   body.value = getElementById('msgresend<%= emailID %>').innerHTML; //this id refers to Show Message
                   recp.selectedIndex = <%= recip.equals("3") ? "0" : recip %>;
                   return true;">View for Resend</a>
@@ -151,7 +151,7 @@ boolean custom = (students != null && students.getChildNodes() != null && studen
                  		</a>
                  		<%-- turn html tags into html special characters so they look right --%>
                  		<div id='emailmessage_<%= emailID %>' style="display:none">
-                 			<pre id="msgbody<%= emailID %>"><%= StringUtil.$Proxy.formatNoHTMLString(xEmail.getAttribute(XMLBuilder.A_MESSAGE)) %></pre>
+                 			<pre id="msgbody<%= emailID %>"><%= StringUtil._Proxy.formatNoHTMLString(xEmail.getAttribute(XMLBuilder.A_MESSAGE)) %></pre>
 							</div>
 							<%-- leave tags alone so they can show up correctly in the textbox above --%>
 							<div style="display:none">

@@ -4,15 +4,15 @@ Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYD
 String URL= request.getServletPath(); 
 User p = (User)session.getAttribute(AccessController.A_PRINCIPAL);
 Element root= (Element)displayData.getFirstChild();
-Element course= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.$Proxy.$instance.get$TAG_COURSE());
-Element category= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.$Proxy.$instance.get$TAG_CATEGORY());
+Element course= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_COURSE());
+Element category= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_CATEGORY());
 boolean isNewAssign= false; /* whether this is the new-assignment page   */
 boolean isEditPage= false;  /* whether this is the edit-assignment page */
-boolean showAddDrop= root.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_SHOWADDDROP());
+boolean showAddDrop= root.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_SHOWADDDROP());
 String assignID="";
-Element assignment= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.$Proxy.$instance.get$TAG_ASSIGNMENT()); 
-//Element surveys = XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.$Proxy.$instance.get$TAG_SURVEYS());
-assignID= assignment == null ? "" : assignment.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNID());
+Element assignment= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_ASSIGNMENT()); 
+//Element surveys = XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_SURVEYS());
+assignID= assignment == null ? "" : assignment.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNID());
 if (URL.equals(AccessController.ASSIGNADMIN_URL)) {
     if (assignID.equals("0")) {
       isEditPage= false;
@@ -23,20 +23,20 @@ if (URL.equals(AccessController.ASSIGNADMIN_URL)) {
     }
 }
 
-boolean isAdmin= course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISADMIN());
-boolean isGroups = course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISGROUPS());
-boolean isGrades = course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISGRADES());
-boolean isAssign = course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISASSIGN());
-boolean isCategory = course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISCATEGORY());
+boolean isAdmin= course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISADMIN());
+boolean isGroups = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISGROUPS());
+boolean isGrades = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISGRADES());
+boolean isAssign = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISASSIGN());
+boolean isCategory = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISCATEGORY());
 boolean studentsAccess = isAdmin || (isGroups && isGrades);
 boolean isPage = false;
-NodeList allassigns = (isAdmin || isGroups || isGrades || isAssign) ? XMLUtil.$Proxy.getFirstChildByTagName(course, XMLBuilder.$Static.$Proxy.$instance.get$TAG_ASSIGNMENTS()).getChildNodes() : null;
-NodeList allsurveys = (isAdmin || isGroups || isGrades || isAssign) ? XMLUtil.$Proxy.getFirstChildByTagName(course, XMLBuilder.$Static.$Proxy.$instance.get$TAG_SURVEYS()).getChildNodes() : null;
-NodeList allcats = (isAdmin || isCategory) ? XMLUtil.$Proxy.getFirstChildByTagName(course, XMLBuilder.$Static.$Proxy.$instance.get$TAG_CATEGORIES()).getChildNodes() : null;
+NodeList allassigns = (isAdmin || isGroups || isGrades || isAssign) ? XMLUtil._Proxy.getFirstChildByTagName(course, XMLBuilder._Static._Proxy.$instance.get$TAG_ASSIGNMENTS()).getChildNodes() : null;
+NodeList allsurveys = (isAdmin || isGroups || isGrades || isAssign) ? XMLUtil._Proxy.getFirstChildByTagName(course, XMLBuilder._Static._Proxy.$instance.get$TAG_SURVEYS()).getChildNodes() : null;
+NodeList allcats = (isAdmin || isCategory) ? XMLUtil._Proxy.getFirstChildByTagName(course, XMLBuilder._Static._Proxy.$instance.get$TAG_CATEGORIES()).getChildNodes() : null;
 allassigns = (allassigns == null ? new CMSNodeList() : allassigns);
 allsurveys = (allsurveys == null ? new CMSNodeList() : allsurveys);
 allcats = (allcats == null ? new CMSNodeList() : allcats);
-String courseid= course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID());
+String courseid= course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID());
 %>
 <td class="staff_navigation" rowspan="3" width="224px">
  <table border="0" cellpadding="0" cellspacing="0" width="224px">
@@ -45,8 +45,8 @@ String courseid= course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_C
   <td id="sidenav" colspan="2" width="170px">
   <ul>
   <li>
-   <span class="course"><%=course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_DISPLAYEDCODE())%></span><br/>
-   <span class="semester">(<%=course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_SEMESTER())%>)</span>
+   <span class="course"><%=course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_DISPLAYEDCODE())%></span><br/>
+   <span class="semester">(<%=course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_SEMESTER())%>)</span>
   </li>
   <li class="sep"><hr></li>
   <li><a <%= URL.equals(AccessController.COURSEADMIN_URL) ? "class=\"currentpage\"" : "" %> href="?<%=AccessController.P_ACTION%>=<%=AccessController.ACT_COURSEADMIN%>&amp;<%=AccessController.P_COURSEID%>=<%=courseid%>">
@@ -62,7 +62,7 @@ String courseid= course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_C
   /* Update Category Properties/Add new category */
 boolean noContent = allcats.getLength() == 0;
 boolean inCategoryAdmin = URL.equals(AccessController.CATEGORYADMIN_URL);
-boolean inNewCategory = category != null && category.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ID()).equals("0");
+boolean inNewCategory = category != null && category.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ID()).equals("0");
 if (isAdmin || isCategory) { %>
   <li><a <%= inCategoryAdmin && inNewCategory ? "class=\"currentpage\"" : "" %> href="?<%=AccessController.P_ACTION%>=<%=AccessController.ACT_NEWCATEGORY%>&amp;<%=AccessController.P_COURSEID%>=<%=courseid%>">
     Content
@@ -79,7 +79,7 @@ if (isAdmin || isCategory) { %>
     }
     else for (int i = 0; i < allcats.getLength(); i++) {
    	  Element xCat = (Element) allcats.item(i); %>
-      <li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_EDITCTG%>&amp;<%=AccessController.P_CATID%>=<%=xCat.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ID())%>">&bull;&nbsp;<%= xCat.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME()) %></a></li><%
+      <li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_EDITCTG%>&amp;<%=AccessController.P_CATID%>=<%=xCat.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ID())%>">&bull;&nbsp;<%= xCat.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME()) %></a></li><%
 	}%>
       </ul>
     </li>
@@ -94,7 +94,7 @@ if (isAdmin || isCategory) { %>
     }
     else for (int i = 0; i < allcats.getLength(); i++) {
    	  Element xCat = (Element) allcats.item(i); %>
-      <li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_ADDNEDITCONTENTS%>&amp;<%=AccessController.P_CATID%>=<%=xCat.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ID())%>">&bull;&nbsp;<%= xCat.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME()) %></a></li><%
+      <li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_ADDNEDITCONTENTS%>&amp;<%=AccessController.P_CATID%>=<%=xCat.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ID())%>">&bull;&nbsp;<%= xCat.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME()) %></a></li><%
 	}%>
       </ul>
     </li>
@@ -168,22 +168,22 @@ if (allassigns.getLength() == 0) { %>
    * Maybe create our own buffer?
    * Though, can use StringBuilder instead of concats if we move to 1.5 or above - Alex, Oct 2007 */
     Element xAssign = (Element) allassigns.item(i);
-    String assignType = xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNTYPE()); %>
+    String assignType = xAssign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNTYPE()); %>
         <li><a href="?<%= AccessController.P_ACTION%>=<%
-	if (assignType.equals(Integer.toString(Assignment.$Static.$Proxy.$instance.get$ASSIGNMENT())))
+	if (assignType.equals(Integer.toString(Assignment._Static._Proxy.$instance.get$ASSIGNMENT())))
 		{%><%=AccessController.ACT_ASSIGNADMIN%><%}
-	else if (assignType.equals(Integer.toString(Assignment.$Static.$Proxy.$instance.get$SURVEY())))
+	else if (assignType.equals(Integer.toString(Assignment._Static._Proxy.$instance.get$SURVEY())))
 		{%><%=AccessController.ACT_SURVEYADMIN%><%} 
-	else if (assignType.equals(Integer.toString(Assignment.$Static.$Proxy.$instance.get$QUIZ())))
+	else if (assignType.equals(Integer.toString(Assignment._Static._Proxy.$instance.get$QUIZ())))
 		{%><%=AccessController.ACT_QUIZADMIN%><%}
-	/*still not done with this link...*/%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNID())%>">
-	      &bull;&nbsp;<%=xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME())%>
+	/*still not done with this link...*/%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xAssign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNID())%>">
+	      &bull;&nbsp;<%=xAssign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME())%>
         </a></li><%
 } 
 	for (int i = 0; i < allsurveys.getLength(); i++) {
 		Element xSurvey = (Element) allsurveys.item(i);
-		String url  = "?" + AccessController.P_ACTION + "=" + AccessController.ACT_SURVEYADMIN + "&amp;" + AccessController.P_ASSIGNID + "=" + xSurvey.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNID());
-	%><li><a href="<%= url %>">&bull;&nbsp;<%=xSurvey.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME())%></a></li>
+		String url  = "?" + AccessController.P_ACTION + "=" + AccessController.ACT_SURVEYADMIN + "&amp;" + AccessController.P_ASSIGNID + "=" + xSurvey.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNID());
+	%><li><a href="<%= url %>">&bull;&nbsp;<%=xSurvey.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME())%></a></li>
 	<%}
 %>
       </ul>
@@ -199,8 +199,8 @@ if (isAdmin || isGroups || isGrades) {%>
         /* Decided @ meeting to not to bother with "make new" menu here because it's too hard to mouse over, and there's an obvious one anyway - Alex, Oct 2007*/
   } else for (int i = 0; i < allassigns.getLength(); i++) { 
     Element xAssign = (Element) allassigns.item(i); %>
-        <li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_GRADEASSIGN%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNID())%>">
-	      &bull;&nbsp;<%=xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME())%>
+        <li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_GRADEASSIGN%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xAssign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNID())%>">
+	      &bull;&nbsp;<%=xAssign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME())%>
         </a></li><%
   } %>
       </ul>
@@ -216,8 +216,8 @@ if (isAdmin || isGroups || isGrades) {%>
         /* Decided @ meeting to not to bother with "make new" menu here because it's too hard to mouse over, and there's an obvious one anyway - Alex, Oct 2007*/
   } else for (int i = 0; i < allsurveys.getLength(); i++) { 
     Element xSurvey = (Element) allsurveys.item(i); %>
-        <li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_SURVEYRESULT%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xSurvey.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNID())%>">
-	      &bull;&nbsp;<%=xSurvey.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME())%>
+        <li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_SURVEYRESULT%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xSurvey.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNID())%>">
+	      &bull;&nbsp;<%=xSurvey.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME())%>
         </a></li><%
   } %>
       </ul>
@@ -227,7 +227,7 @@ if (isAdmin || isGroups || isGrades) {%>
   boolean hasSchedules = false;
   for (int i = 0; i < allassigns.getLength(); i++) { 
     Element xAssign = (Element) allassigns.item(i);
-	if (xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_USESCHEDULE()).equals("true")) {
+	if (xAssign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_USESCHEDULE()).equals("true")) {
 	  if (!hasSchedules) /* first schedule that we came across */ {%>
       <a <%=URL.equals(AccessController.ASSIGNSCHED_URL) ? "class=\"currentpage\" " : ""%>href="#">
         Schedule
@@ -235,8 +235,8 @@ if (isAdmin || isGroups || isGrades) {%>
       <ul><%
       }
 	  hasSchedules = true;%>
-        <li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_SCHEDULE%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNID())%>">
-	      &bull;&nbsp;<%=xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME())%>
+        <li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_SCHEDULE%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xAssign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNID())%>">
+	      &bull;&nbsp;<%=xAssign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME())%>
         </a></li><%
     }
   }
@@ -262,8 +262,8 @@ if (isAdmin || isGrades) {%>
   } else for (int i = 0; i < allassigns.getLength(); i++) { 
     /* This is very similar to groups - Alex, Oct 2007 */
     Element xAssign = (Element) allassigns.item(i); %>
-        <li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_GRADEASSIGN%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNID())%>&amp;<%=AccessController.P_GRADEMESSAGE%>=<%=AccessController.P_TRUE%>">
-	      &bull;&nbsp;<%=xAssign.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME())%>
+        <li><a href="?<%= AccessController.P_ACTION%>=<%=AccessController.ACT_GRADEASSIGN%>&amp;<%=AccessController.P_ASSIGNID%>=<%=xAssign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNID())%>&amp;<%=AccessController.P_GRADEMESSAGE%>=<%=AccessController.P_TRUE%>">
+	      &bull;&nbsp;<%=xAssign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME())%>
         </a></li><%
   } %>
       </ul>

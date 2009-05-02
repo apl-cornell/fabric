@@ -914,7 +914,7 @@ public class AccessController extends HttpServlet {
 
     Map root = null;
     atomic {
-      root = new HashMap~label@core(); //(Map) core.getRoot();
+       root = new HashMap~label@core(); //(Map) core.getRoot();
       
       //database = (CMSRoot)root.get("cms_db");
       if(database == null) {
@@ -1077,8 +1077,7 @@ public class AccessController extends HttpServlet {
         Iterator iter = reqmap.keySet().iterator();
         while (iter.hasNext()) {
           String key = (String) iter.next();
-          String[] vals = (String[])reqmap.get(key);
-          String value = vals[0];
+          String value = "blank"; //XXX ((String native[])reqmap.get(key))[0];
           System.out.println("reqparam: " + key + "=" + value);
         }
         session.setAttribute(A_DEBUG, new Boolean~label@localCore(debug));

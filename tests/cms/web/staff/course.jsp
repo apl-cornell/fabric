@@ -5,17 +5,17 @@
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 User p = (User) session.getAttribute(AccessController.A_PRINCIPAL);
 String netid = p.getNetID();
-Element root = (Element) displayData.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_ROOT()).item(0);
-Element course = XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.$Proxy.$instance.get$TAG_COURSE()); 
-String courseID = course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID());
+Element root = (Element) displayData.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_ROOT()).item(0);
+Element course = XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_COURSE()); 
+String courseID = course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID());
 boolean isadmin = false, isgroups = false, isgrades = false, isassign = false, iscategory = false;
 if(!p.isInStaffAsBlankMode()) /* privileges are possible only if acting as staff */
 {
-	isadmin = course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISADMIN());
-	isgroups = course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISGROUPS());
-	isgrades = course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISGRADES());
-	isassign = course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISASSIGN());
-	iscategory = course.hasAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ISCATEGORY()); 
+	isadmin = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISADMIN());
+	isgroups = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISGROUPS());
+	isgrades = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISGRADES());
+	isassign = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISASSIGN());
+	iscategory = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISCATEGORY()); 
 }%>
 <jsp:include page="../header.jsp" />
 <style type="text/css">
@@ -25,14 +25,14 @@ if(!p.isInStaffAsBlankMode()) /* privileges are possible only if acting as staff
 <div id="course_wrapper_withnav">
 
 <table id="course_wrapper_table" summary="course wrapper" cellpadding="0" cellspacing="0" border="0" width="100%">
-<%Element status= (Element) root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_STATUS()).item(0); %>
+<%Element status= (Element) root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_STATUS()).item(0); %>
 <tr>
 	<jsp:include page="navbar.jsp"/>
   <td valign="top" id="course_page_container">
     <div id="course_page"> 
 	   <jsp:include page="../problem-report.jsp"/>  
        <jsp:include page="../course-title.jsp" /> 
-<%Element l= (Element) course.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_DESCRIPTION()).item(0);
+<%Element l= (Element) course.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_DESCRIPTION()).item(0);
 Text text= (Text)l.getFirstChild();
 if(isadmin)
 {%>

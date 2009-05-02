@@ -5,9 +5,9 @@
 ****************************************************************/
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getChildNodes().item(0);
-Node l = root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_ALLDUEASSIGNMENTS()).item(0); 
+Node l = root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_ALLDUEASSIGNMENTS()).item(0); 
 boolean isGuest= ((User) session.getAttribute(AccessController.A_PRINCIPAL)).isGuest();
-NodeList semesters = root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_SEMESTER());
+NodeList semesters = root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_SEMESTER());
 %>
 <jsp:include page="header.jsp" />
 <jsp:include page="header-page.jsp" />
@@ -21,7 +21,7 @@ NodeList semesters = root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instan
         <div id="course_page">
         <span class="course_title">CMS Overview</span>
            <br>
-<%	    NodeList curNotices = ((Element) root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_CURSITENOTICES()).item(0)).getChildNodes();
+<%	    NodeList curNotices = ((Element) root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_CURSITENOTICES()).item(0)).getChildNodes();
     	if (curNotices.getLength() != 0)
     	{ %>
            <div class="noticebox">
@@ -29,16 +29,16 @@ NodeList semesters = root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instan
 			for (int i = 0; i < curNotices.getLength(); i++)
 			{
 				Element entry = (Element) curNotices.item(i); %>
-              <span style="margin-left: 3em; font-size: smaller; float:right"><i><%= entry.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_POSTER()) %>, <%= entry.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_DATE()) %></i></span>
-              <p><%= entry.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_TEXT()) %><%=
-                (entry.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_HIDDEN()).equals("true")) ? " <span style=\"font-size: smaller; color:red\">(preview)</span>" : "" %><%=
-                (entry.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_EXPIRED()).equals("true")) ? " <span style=\"font-size: smaller; color:red\">(expired)</span>" : "" %></p><%
+              <span style="margin-left: 3em; font-size: smaller; float:right"><i><%= entry.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_POSTER()) %>, <%= entry.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_DATE()) %></i></span>
+              <p><%= entry.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_TEXT()) %><%=
+                (entry.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_HIDDEN()).equals("true")) ? " <span style=\"font-size: smaller; color:red\">(preview)</span>" : "" %><%=
+                (entry.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_EXPIRED()).equals("true")) ? " <span style=\"font-size: smaller; color:red\">(expired)</span>" : "" %></p><%
 			}%>
 		   </div><%
 		}%>
            <br><%
-            	   NodeList studentCourses = root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_STUDENTCOURSES()).item(0).getChildNodes();
-                   NodeList staffCourses = root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_STAFFCOURSES()).item(0).getChildNodes();
+            	   NodeList studentCourses = root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_STUDENTCOURSES()).item(0).getChildNodes();
+                   NodeList staffCourses = root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_STAFFCOURSES()).item(0).getChildNodes();
                    if (studentCourses.getLength()>0 || staffCourses.getLength()>0) { // ***%>
                  <div class="assignment_left">
             <h2>My Courses</h2>
@@ -48,15 +48,15 @@ NodeList semesters = root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instan
                    
                    for (int i=0; i < studentCourses.getLength(); i++) { 
                     Element xCourse = (Element) studentCourses.item(i); %>
-                    <tr><td><a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_COURSE + "&amp;" + AccessController.P_COURSEID + "=" + xCourse.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID()) %>">
-											<%= xCourse.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_CODE()) %></a></td>
-                    <td><%= xCourse.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSENAME()) %></td></tr>
+                    <tr><td><a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_COURSE + "&amp;" + AccessController.P_COURSEID + "=" + xCourse.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID()) %>">
+											<%= xCourse.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_CODE()) %></a></td>
+                    <td><%= xCourse.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSENAME()) %></td></tr>
                 <% } 
                    for (int i=0; i < staffCourses.getLength(); i++) { 
                     Element xCourse = (Element) staffCourses.item(i); %>
-                    <tr><td><a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_COURSEADMIN + "&amp;" + AccessController.P_COURSEID + "=" + xCourse.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID()) %>">
-                      <%= xCourse.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_CODE()) %></a> (Staff)</td>
-                    <td><%= xCourse.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSENAME()) %></td></tr>
+                    <tr><td><a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_COURSEADMIN + "&amp;" + AccessController.P_COURSEID + "=" + xCourse.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID()) %>">
+                      <%= xCourse.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_CODE()) %></a> (Staff)</td>
+                    <td><%= xCourse.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSENAME()) %></td></tr>
                 <% } %>
               </table>
                 </div>
@@ -78,20 +78,20 @@ for (int i = 0; i < myAssignments.getLength(); i++) {
   Element assignment = (Element) myAssignments.item(i); %>
                 <tr>
 		              <td style="text-align: left; white-space: nowrap">
-		                <a href="?<%= AccessController.P_ACTION %>=<%=AccessController.ACT_COURSE %>&amp;<%= AccessController.P_COURSEID %>=<%= assignment.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID()) %>">
-		          				<%= assignment.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSENAME()) %>
+		                <a href="?<%= AccessController.P_ACTION %>=<%=AccessController.ACT_COURSE %>&amp;<%= AccessController.P_COURSEID %>=<%= assignment.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID()) %>">
+		          				<%= assignment.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSENAME()) %>
                     </a>
 		              </td>
 		              <td style="text-align: left; white-space: nowrap">
-		                <a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_ASSIGN %>&amp;<%= AccessController.P_ASSIGNID %>=<%= assignment.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ASSIGNID()) %>">
-		        					<%= assignment.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME()) %>
+		                <a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_ASSIGN %>&amp;<%= AccessController.P_ASSIGNID %>=<%= assignment.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNID()) %>">
+		        					<%= assignment.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME()) %>
                     </a>
 		              </td>
 		              <td style="text-align: center; white-space: nowrap">
-		       					<%= assignment.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_DUEDATE()) %> 
+		       					<%= assignment.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_DUEDATE()) %> 
 		              </td>
 		              <td style="text-align: right; white-space: nowrap">
-		        				<%= assignment.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_STATUS()) %>
+		        				<%= assignment.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_STATUS()) %>
 		              </td>
 		            </tr><%
 } %>
@@ -99,7 +99,7 @@ for (int i = 0; i < myAssignments.getLength(); i++) {
   	        </div>
   	  <%
 } %>      
-  	  <%l = root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_ALLANNOUNCEMENTS()).item(0);
+  	  <%l = root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_ALLANNOUNCEMENTS()).item(0);
         NodeList myAnnouncements = l.getChildNodes();
   	        if (myAnnouncements.getLength() > 0) { %>
   	        <div class="assignment_left">
@@ -110,14 +110,14 @@ for (int i = 0; i < myAssignments.getLength(); i++) {
 
   for (int i = 0; i < myAnnouncements.getLength(); i++) {
     Element course = (Element) myAnnouncements.item(i); %>
-		            <a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_COURSE %>&amp;<%= AccessController.P_COURSEID %>=<%= course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID()) %>">
-		    					<%= course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSENAME()) %>
+		            <a href="?<%= AccessController.P_ACTION %>=<%= AccessController.ACT_COURSE %>&amp;<%= AccessController.P_COURSEID %>=<%= course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID()) %>">
+		    					<%= course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSENAME()) %>
                 </a><%
     NodeList announcements = course.getChildNodes();
     for (int j = 0; j < announcements.getLength(); j++) {
       Element announcement = (Element) announcements.item(j); %>
-                <p style="margin-left: 5em; font-size: smaller"><i><%= announcement.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_DATE()) %> by <%= announcement.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_POSTER()) %></i></p>
-		        <p style="margin-left: 3em"><%= announcement.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_TEXT()) %></p><%
+                <p style="margin-left: 5em; font-size: smaller"><i><%= announcement.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_DATE()) %> by <%= announcement.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_POSTER()) %></i></p>
+		        <p style="margin-left: 3em"><%= announcement.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_TEXT()) %></p><%
 
     } 
   } %>
@@ -127,7 +127,7 @@ for (int i = 0; i < myAssignments.getLength(); i++) {
 
 } %>
 <% } //close ***%>	          
-<% 	NodeList guestCourses = root.getElementsByTagName(XMLBuilder.$Static.$Proxy.$instance.get$TAG_GUESTCOURSE());
+<% 	NodeList guestCourses = root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_GUESTCOURSE());
 	if (isGuest || guestCourses.getLength() > 0) { %>	          
             <div class="assignment_left">
               <h2>Available Courses
@@ -144,9 +144,9 @@ for (int i = 0; i < myAssignments.getLength(); i++) {
 	                <tr><th>Course Code</th><th>Course Name</th></tr>
 	                <% for (int i=0; i < guestCourses.getLength(); i++) { 
 	                    Element xCourse = (Element) guestCourses.item(i); %>
-	                    <tr><td><a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_COURSE + "&amp;" + AccessController.P_COURSEID + "=" + xCourse.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID()) %>">
-	                      <%= xCourse.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_CODE()) %></a></td>
-	                    <td><%= xCourse.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSENAME()) %></td></tr>
+	                    <tr><td><a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_COURSE + "&amp;" + AccessController.P_COURSEID + "=" + xCourse.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID()) %>">
+	                      <%= xCourse.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_CODE()) %></a></td>
+	                    <td><%= xCourse.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSENAME()) %></td></tr>
 	                <% } %>
 	              </table>
 	         <% if (!isGuest) { %>
@@ -166,8 +166,8 @@ for (int i = 0; i < myAssignments.getLength(); i++) {
               <table class="assignment_table" cellpadding="0" cellspacing="0" border="0" style="width: 100%">
                 <% for (int i=0; i < semesters.getLength(); i++) { 
                     Element xSemester = (Element) semesters.item(i); %>
-                    <tr><td><a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_OVER + "&amp;" + AccessController.P_SEMESTERID + "=" + xSemester.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_ID()) %>">
-                      <%= xSemester.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NAME()) %></a></td></tr>
+                    <tr><td><a href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_OVER + "&amp;" + AccessController.P_SEMESTERID + "=" + xSemester.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ID()) %>">
+                      <%= xSemester.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME()) %></a></td></tr>
                 <% } %>
               </table>
             </div>

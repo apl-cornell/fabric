@@ -8,11 +8,11 @@ session.setAttribute(AccessController.A_URL, URL);
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 User p = (User)session.getAttribute(AccessController.A_PRINCIPAL);
 Element root= (Element)displayData.getFirstChild();
-Element course= XMLUtil.$Proxy.getFirstChildByTagName(root, XMLBuilder.$Static.$Proxy.$instance.get$TAG_COURSE());
+Element course= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_COURSE());
 boolean showViewAs= false;
 String courseid = null;
 if (course!=null) {
-    courseid= course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID());
+    courseid= course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID());
     showViewAs= p.isAdminPrivByCourseID(courseid) || p.isInStaffAsBlankMode(); 
 }%>
 
@@ -97,7 +97,7 @@ else {
 <%
 Element students= null;
 NodeList studs= null;
-CMSNodeList studentList= XMLUtil.$Proxy.getChildrenByTagNameAndAttributeValue(root,XMLBuilder.$Static.$Proxy.$instance.get$TAG_COURSESTUDENTS(),XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID(),course.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_COURSEID()));
+CMSNodeList studentList= XMLUtil._Proxy.getChildrenByTagNameAndAttributeValue(root,XMLBuilder._Static._Proxy.$instance.get$TAG_COURSESTUDENTS(),XMLBuilder._Static._Proxy.$instance.get$A_COURSEID(),course.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COURSEID()));
 if (studentList.getLength()!=0) {
     students= (Element) studentList.get(0);
     studs= students.getChildNodes();
@@ -132,7 +132,7 @@ font-size: 10px;">
         students = new Array(<%=studs.getLength()%>);
 <%      for (int i= 0; i < studs.getLength(); i++) {
             Element student= (Element) studs.item(i); 
-            studNetID= student.getAttribute(XMLBuilder.$Static.$Proxy.$instance.get$A_NETID());
+            studNetID= student.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NETID());
 %>
             students[<%=i%>]="<%=studNetID%>";
 <%      }
