@@ -14,29 +14,9 @@ public class User implements Principal {
   public static final int AUTHORIZATION_LEVEL_CORNELL_COMMUNITY = 3;
   public static final int AUTHORIZATION_LEVEL_GUEST = 3;
   
-  public static final Comparator LAST_NAME_COMPARATOR = new Comparator() {
-    public int compare(Object o1, Object o2) {
-      if (!(o1 instanceof User && o2 instanceof User)) return 0;
-      User u1 = (User) o1;
-      User u2 = (User) o2;
-      int result = u1.getLastName().compareTo(u2.getLastName());
-      if (result != 0) return result;
-      
-      result = u1.getFirstName().compareTo(u2.getFirstName());
-      if (result != 0) return result;
-      
-      return u1.getNetID().compareTo(u2.getNetID());
-    }
-  };
+  public static Comparator LAST_NAME_COMPARATOR;
   
-  public static final Comparator NETID_COMPARATOR = new Comparator() {
-    public int compare(Object o1, Object o2) {
-      if (!(o1 instanceof User && o2 instanceof User)) return 0;
-      User u1 = (User) o1;
-      User u2 = (User) o2;
-      return u1.getNetID().compareTo(u2.getNetID());
-    }
-  };
+  public static Comparator NETID_COMPARATOR;
   
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -91,6 +71,34 @@ public class User implements Principal {
   public String getCollege()   { return this.college;   }
   
   public User (CMSRoot db, String netID, String firstName, String lastName, String CUID, String college) {
+    if(LAST_NAME_COMPARATOR == null) {
+      LAST_NAME_COMPARATOR = new Comparator() {
+        public int compare(Object o1, Object o2) {
+          if (!(o1 instanceof User && o2 instanceof User)) return 0;
+          User u1 = (User) o1;
+          User u2 = (User) o2;
+          int result = u1.getLastName().compareTo(u2.getLastName());
+          if (result != 0) return result;
+          
+          result = u1.getFirstName().compareTo(u2.getFirstName());
+          if (result != 0) return result;
+          
+          return u1.getNetID().compareTo(u2.getNetID());
+        }
+      };
+    }
+    
+    if(NETID_COMPARATOR == null) {
+      NETID_COMPARATOR = new Comparator() {
+        public int compare(Object o1, Object o2) {
+          if (!(o1 instanceof User && o2 instanceof User)) return 0;
+          User u1 = (User) o1;
+          User u2 = (User) o2;
+          return u1.getNetID().compareTo(u2.getNetID());
+        }
+      };
+    }
+    
     this.db = db;
     this.isAdmin = false;
     this.studentIndex   = new HashMap/*Course, Student*/();

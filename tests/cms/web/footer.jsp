@@ -37,7 +37,7 @@ if (debug && p != null && false) {
     </div>
   </div>
      
-<% if (debug && false) { 
+<% if (debug) { 
    /* Display debug id and text box to switch id */ %>
    <span><a target="_blank" href="?<%= AccessController.P_ACTION + "=" + AccessController.ACT_PROFILER %>">View Profiler Output</a></span>
    <div align="right">

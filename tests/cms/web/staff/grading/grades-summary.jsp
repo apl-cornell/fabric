@@ -1,25 +1,25 @@
 <%@page language="java" import="org.w3c.dom.*, cms.www.*, cms.model.*, cms.www.xml.*"%><%
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
-Element assign= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static.TAG_ASSIGNMENT);
-Element assignment= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static.TAG_ASSIGNMENT);
-Element groupsnode= (Element)root.getElementsByTagName(XMLBuilder._Static.TAG_GROUPS).item(0);
+Element assign= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_ASSIGNMENT());
+Element assignment= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_ASSIGNMENT());
+Element groupsnode= (Element)root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_GROUPS()).item(0);
 NodeList groups= groupsnode.getChildNodes();
-NodeList graders= root.getElementsByTagName(XMLBuilder._Static.TAG_GRADER);
+NodeList graders= root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_GRADER());
 int numgroups= groupsnode.getChildNodes().getLength();
-Element probsnode= (Element)root.getElementsByTagName(XMLBuilder._Static.TAG_SUBPROBS).item(0);
+Element probsnode= (Element)root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_SUBPROBS()).item(0);
 NodeList probs= probsnode.getChildNodes();
 int numprobs= probs.getLength();
-Element course = XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static.TAG_COURSE);
-int assignType = Integer.parseInt(assign.getAttribute(XMLBuilder._Static.A_ASSIGNTYPE));
-boolean isAssignment = (assignType == Assignment._Static.ASSIGNMENT);
-boolean isAdmin = course.hasAttribute(XMLBuilder._Static.A_ISADMIN);
-boolean isGrades = course.hasAttribute(XMLBuilder._Static.A_ISGRADES);
-boolean isGroups = course.hasAttribute(XMLBuilder._Static.A_ISGROUPS);
-String assignid= assign.getAttribute(XMLBuilder._Static.A_ID);
-boolean showGradeMsg = root.hasAttribute(XMLBuilder._Static.A_GRADEMSG);
+Element course = XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_COURSE());
+int assignType = Integer.parseInt(assign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNTYPE()));
+boolean isAssignment = (assignType == Assignment._Static._Proxy.$instance.get$ASSIGNMENT());
+boolean isAdmin = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISADMIN());
+boolean isGrades = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISGRADES());
+boolean isGroups = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISGROUPS());
+String assignid= assign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ID());
+boolean showGradeMsg = root.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_GRADEMSG());
 %>
-<span class="assignment_title"><%= assignment.getAttribute(XMLBuilder._Static.A_NAME) %></span>
+<span class="assignment_title"><%= assignment.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME()) %></span>
 <br><br><%
           if (showGradeMsg) {%>
 <div class="noticebox" style="font-weight:bold">
@@ -32,10 +32,10 @@ boolean showGradeMsg = root.hasAttribute(XMLBuilder._Static.A_GRADEMSG);
 <% }%>
 <table cellpadding="0" cellspacing="0">
 	<tr><%
-String mingroup= assign.getAttribute(XMLBuilder._Static.A_MINGROUP);
-String maxgroup= assign.getAttribute(XMLBuilder._Static.A_MAXGROUP);
+String mingroup= assign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_MINGROUP());
+String maxgroup= assign.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_MAXGROUP());
 String groupstring = null;
-if (assign.hasAttribute(XMLBuilder._Static.A_ASSIGNEDGROUPS)) { groupstring= "Staff-created"; }
+if (assign.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNEDGROUPS())) { groupstring= "Staff-created"; }
 else if(mingroup.equals(maxgroup)) {
 	if ("1".equals(mingroup)){
 		groupstring= "1 student"; 
@@ -57,9 +57,9 @@ else { groupstring= mingroup + " to " + maxgroup + " students"; } %>
 			<span style="white-space: nowrap"><%= groupstring %></span>
 			<br><%= String.valueOf(numgroups) %>
 <%	if (isAdmin || isGrades) {%>
-			<br><%= groupsnode.getAttribute(XMLBuilder._Static.A_SUBMISSIONCOUNT) %>
-			<br><%= groupsnode.getAttribute(XMLBuilder._Static.A_PARTIAL) %>
-			<br><%= groupsnode.getAttribute(XMLBuilder._Static.A_COMPLETE) %>
+			<br><%= groupsnode.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_SUBMISSIONCOUNT()) %>
+			<br><%= groupsnode.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_PARTIAL()) %>
+			<br><%= groupsnode.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_COMPLETE()) %>
 <%	}%>
 		</td>
 <%	if(isAdmin || isGrades) { %>
@@ -82,8 +82,8 @@ else { groupstring= mingroup + " to " + maxgroup + " students"; } %>
 								<option>&lt;unassigned&gt;</option><%
 								for (int i= 0; i != graders.getLength(); i++) {
 								  	Element grader= (Element)graders.item(i);
-								  	String graderInfo= grader.getAttribute(XMLBuilder._Static.A_LASTNAME) + ", " + grader.getAttribute(XMLBuilder._Static.A_FIRSTNAME) + " ("+grader.getAttribute(XMLBuilder._Static.A_NETID)+")"; %> 
-									<option value="<%=grader.getAttribute(XMLBuilder._Static.A_NETID)%>"><%= graderInfo%></option><%
+								  	String graderInfo= grader.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_LASTNAME()) + ", " + grader.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_FIRSTNAME()) + " ("+grader.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NETID())+")"; %> 
+									<option value="<%=grader.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NETID())%>"><%= graderInfo%></option><%
 								}%>
 							</optgroup>
 						</select><%
@@ -93,7 +93,7 @@ else { groupstring= mingroup + " to " + maxgroup + " students"; } %>
 							<optgroup label="Select Problem(s)">
 <%			for (int i= 0; i != numprobs; i++) {
 				Element prob= (Element)probs.item(i);%>
-								<option value="<%= i %>"><%= prob.getAttribute(XMLBuilder._Static.A_NAME) %></option>
+								<option value="<%= i %>"><%= prob.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME()) %></option>
 <%			}%>
 							</optgroup>
 						</select><small><br>multiple selections allowed (hold ctrl + click)</small><%
@@ -120,13 +120,13 @@ else { groupstring= mingroup + " to " + maxgroup + " students"; } %>
 						<option>&lt;All Parts&gt;</option>
 <%				for (int i= 0; i != numprobs; i++) {
 					Element prob= (Element)probs.item(i);%>
-						<option><%= prob.getAttribute(XMLBuilder._Static.A_NAME) %></option>
+						<option><%= prob.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME()) %></option>
 <%				}%>
 					</optgroup>
 				</select>
 <%			} else if(numprobs == 1) {
 				Element prob = (Element)probs.item(0);%>
-				<input type="hidden" name="<%= AccessController.P_ASSIGNPROBNAME %>" value="<%= prob.getAttribute(XMLBuilder._Static.A_NAME) %>">
+				<input type="hidden" name="<%= AccessController.P_ASSIGNPROBNAME %>" value="<%= prob.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NAME()) %>">
 <% 			} else {%>
 				<input type="hidden" name="<%= AccessController.P_ASSIGNPROBNAME %>" value="&lt;All Parts&gt;">
 <%			} %>
@@ -136,8 +136,8 @@ else { groupstring= mingroup + " to " + maxgroup + " students"; } %>
 						<option>&lt;unassigned&gt;</option>
 <%			for (int i= 0; i != graders.getLength(); i++) {
 				Element grader= (Element)graders.item(i);
-				String graderInfo= grader.getAttribute(XMLBuilder._Static.A_LASTNAME) + ", " + grader.getAttribute(XMLBuilder._Static.A_FIRSTNAME) + " ("+grader.getAttribute(XMLBuilder._Static.A_NETID)+")"; %> 
-		            <option value="<%=grader.getAttribute(XMLBuilder._Static.A_NETID)%>"><%= graderInfo%></option>
+				String graderInfo= grader.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_LASTNAME()) + ", " + grader.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_FIRSTNAME()) + " ("+grader.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NETID())+")"; %> 
+		            <option value="<%=grader.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_NETID())%>"><%= graderInfo%></option>
 <%			}%>
 					</optgroup>
 				</select>

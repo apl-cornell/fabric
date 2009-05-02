@@ -1,12 +1,12 @@
 <%@ page language="java" import="org.w3c.dom.*, cms.www.*, cms.www.xml.*" %><%
 Document displayData= (Document)session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root= (Element)displayData.getFirstChild();
-Element assignment= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static.TAG_ASSIGNMENT);
-String assignid= assignment.getAttribute(XMLBuilder._Static.A_ASSIGNID);
-Element course= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static.TAG_COURSE);
-boolean isAdmin = course.hasAttribute(XMLBuilder._Static.A_ISADMIN);
-boolean isGrades = course.hasAttribute(XMLBuilder._Static.A_ISGRADES);
-boolean isGroups = course.hasAttribute(XMLBuilder._Static.A_ISGROUPS);%>
+Element assignment= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_ASSIGNMENT());
+String assignid= assignment.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ASSIGNID());
+Element course= XMLUtil._Proxy.getFirstChildByTagName(root, XMLBuilder._Static._Proxy.$instance.get$TAG_COURSE());
+boolean isAdmin = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISADMIN());
+boolean isGrades = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISGRADES());
+boolean isGroups = course.hasAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ISGROUPS());%>
 <div>
 <%	if(isAdmin || isGrades)
 	{%>
