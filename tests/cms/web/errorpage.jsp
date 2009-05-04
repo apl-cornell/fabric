@@ -2,10 +2,10 @@
 <%
 Document displayData = (Document) session.getAttribute(AccessController.A_DISPLAYDATA);
 Element root = (Element) displayData.getFirstChild();
-String action = root.getAttribute(XMLBuilder._Static.A_ACTION);
-String error = root.getAttribute(XMLBuilder._Static.A_ERR_NAME);
-String message = root.getAttribute(XMLBuilder._Static.A_ERR_MSG);
-NodeList errs = root.getElementsByTagName(XMLBuilder._Static.TAG_ERROR_LINE);
+String action = root.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ACTION());
+String error = root.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ERR_NAME());
+String message = root.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ERR_MSG());
+NodeList errs = root.getElementsByTagName(XMLBuilder._Static._Proxy.$instance.get$TAG_ERROR_LINE());
 %>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -55,7 +55,7 @@ NodeList errs = root.getElementsByTagName(XMLBuilder._Static.TAG_ERROR_LINE);
 	  			<br>
 	  			<% for (int i=0; i < errs.getLength(); i++) {
 	  				Element xErr = (Element) errs.item(i); %>
-					&nbsp;&nbsp;&nbsp;<%= xErr.getAttribute(XMLBuilder._Static.A_ERR_CLASS) %>.<%= xErr.getAttribute(XMLBuilder._Static.A_ERR_METHOD) %>(<%= xErr.getAttribute(XMLBuilder._Static.A_ERR_FILE) %>:<%= xErr.getAttribute(XMLBuilder._Static.A_ERR_LINE) %>)
+					&nbsp;&nbsp;&nbsp;<%= xErr.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ERR_CLASS()) %>.<%= xErr.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ERR_METHOD()) %>(<%= xErr.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ERR_FILE()) %>:<%= xErr.getAttribute(XMLBuilder._Static._Proxy.$instance.get$A_ERR_LINE()) %>)
 					<br>
 				<% } %>
 	  		</div>

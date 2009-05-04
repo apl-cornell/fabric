@@ -914,9 +914,9 @@ public class AccessController extends HttpServlet {
 
     Map root = null;
     atomic {
-       root = new HashMap~label@core(); //(Map) core.getRoot();
+       root = (Map) core.getRoot();
       
-      //database = (CMSRoot)root.get("cms_db");
+      database = (CMSRoot)root.get("cms_db");
       if(database == null) {
         // create and add test data
         database = new CMSRoot~label@core();
@@ -1069,6 +1069,8 @@ public class AccessController extends HttpServlet {
      * be retrieved for fast reference
      */
     try {
+      
+      double start = 0;
       atomic {
         // Check for a requested action
         System.out.println("The current action is: " + action);
@@ -1135,7 +1137,11 @@ public class AccessController extends HttpServlet {
   
           redirectTo(buildURL, request, response);
         }
+        
+        start = System.currentTimeMillis();
       }
+      request.getSession().getServletContext().log("Commit Time for "
+          + action + ": " + (System.currentTimeMillis() - start));
     } catch (Exception e) {
       System.out.println("Error in AccessController.processRequest(): " + e);
       e.printStackTrace();

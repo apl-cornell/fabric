@@ -4,6 +4,7 @@ import fabric.util.*;
 import java.util.Date;
 import java.util.Random;
 import cms.model.*;
+import cms.www.util.*;
 
 public class CreateDB {
   public void create(CMSRoot database) {
@@ -24,6 +25,8 @@ public class CreateDB {
     User xin    = new User(database, "xq24",  "Xin",     "Qi",     "55555", "Eng");
     
     andru.setCMSAdmin(true);
+    
+    
     
     // create courses
     for (Iterator sems = database.getAllSemesters().iterator(); sems.hasNext();) {
@@ -47,12 +50,11 @@ public class CreateDB {
         
         if(!next.getHidden()) {
           //Create fake test data
-          createFakeUsersForCourse(database, c, 194);
+          createFakeUsersForCourse(database, c, 200);
           createFakeAssignments(andru, c, 6, transactions);
         }
       }
-    }
-    
+    }    
   }
   
   public void createFakeUsersForCourse(CMSRoot database, Course course, int count) {

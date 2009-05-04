@@ -149,7 +149,7 @@ public class Transactions {
       //TODO: Look into why on the production version of CMS, this just returns null
       Collection graded = new LinkedList();
       for (int j=0; j < netIDs.size(); j++) {
-        String netID = (String)netIDs.get(j);
+        String netID = netIDs.get(j).toString();
         User studentUser = database.getUser(netID);
         if (staffMems.contains(netID)) {
             result.addError("Could not add '" + netID + "': " +
@@ -678,14 +678,20 @@ public class Transactions {
 
   public boolean setFinalGrades(User p, Course course, Collection grades) {
     try {
-      for(Iterator i = grades.iterator(); i.hasNext();) {
-        String[] gradePair = (String[])i.next();
-        User u = database.getUser(gradePair[0]);
-        String grade = gradePair[1];
-        
-        Student s = course.getStudent(u);
-        s.setFinalGrade(grade);
+      Profiler.enterMethod("Transactions.setFinalGrades", "grades updated: " +
+          grades.size());
+      atomic {
+        for(Iterator i = grades.iterator(); i.hasNext();) {
+          String[] gradePair = (String[])i.next();
+          User u = database.getUser(gradePair[0]);
+          String grade = gradePair[1];
+          
+          Student s = course.getStudent(u);
+          s.setFinalGrade(grade);
+        }
       }
+      Profiler.exitMethod("Transactions.setFinalGrades", "grades updated: " +
+          grades.size());
       return true;
     } catch(Exception ex) {
       return false;
