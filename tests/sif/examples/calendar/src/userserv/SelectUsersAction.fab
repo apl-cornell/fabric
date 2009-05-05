@@ -520,7 +520,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
           int size = l.size();
           final Core localCore = FabricClient.getClient().getLocalCore();
           int sz = size<0?0:size;
-          String{*lbl}[] array = new String[sz];
+          String{*lbl}[] array = new String native[sz];
           int count = 0;
           for (Iterator[lbl] iter = l.iterator(); iter != null && iter.hasNext(); ) {
               try {
