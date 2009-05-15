@@ -40,7 +40,46 @@ parser Grm extends jif.parse.Grm {:
 
     public TypeNode javaArray(TypeNode n, int dims) throws Exception {
       return super.array(n, dims);
-    } 
+    }
+
+    /**
+     * Converts an Amb a into an AST representing new a[][]...[]
+     * @return either a NewFabricArray or an AmbNewFabricArray
+     */
+    public Expr toNewFabricArray(Position pos, Amb a, int dims, Expr loc)
+                throws Exception {
+      Expr            expr = a.toNewArray(pos, dims);
+      FabricArrayInit init = null;
+
+      if (expr instanceof NewArray) {
+        NewArray newArray = (NewArray) expr;
+
+        if (newArray.init() != null)
+          init = nf.FabricArrayInit(newArray.init().position(),
+                                    newArray.init().elements());
+
+        return nf.NewFabricArray(newArray.position(),
+                                 newArray.baseType(),
+                                 loc,
+                                 newArray.dims(),
+                                 newArray.additionalDims(),
+                                 init);
+      }
+      else if (expr instanceof AmbNewArray) {
+        //AmbNewArray ambNewArray = (AmbNewArray) ambNewArray;
+        //
+        //return nf.AmbNewFabricArray(ambNewArray.position(),
+        //                            ambNewArray.baseType(),
+        //                            loc,
+        //                            ambNewArray.dims());
+        die(pos);
+        return null;
+      }
+      else {
+        die(pos);
+        return null;
+      }
+    }
 :};
 
 terminal Token AT;
@@ -147,7 +186,7 @@ location_expr_opt ::=
     |   AT name:a
             {: RESULT = a.toExpr(); :}
     ;
-    
+
 location_expr ::=
                     // Expr
         AT name:a
@@ -175,20 +214,22 @@ override class_instance_creation_expression ::=
     ;
 
 override array_creation_expression ::=
-                    // Expr
-        NEW:n objtype_or_expr:a dims:b fabric_array_initializer:c 
-            {: RESULT = parser.nf.NewFabricArray(parser.pos(n,c), a.toType(), (Expr) null,
-                                       b.intValue(), c); :}
-    |   NEW:n objtype_or_expr:a dims:b location_expr:loc array_initializer:c 
+                    // NewArray
+    //  NEW objtype_or_expr dim_exprs dims_opt location_expr_opt
+    //      is a primary, since it can return an AmbNewArray, which is not a NewArray
+    //
+        NEW:n objtype_or_expr:a dims:b location_expr_opt:loc fabric_array_initializer:c 
             {: RESULT = parser.nf.NewFabricArray(parser.pos(n,c), a.toType(), loc,
                                        b.intValue(), c); :}
     |   NEW:n primitive_type:a dim_exprs:b dims_opt:c location_expr_opt:loc
             {: RESULT = parser.nf.NewFabricArray(parser.pos(n,b), a, loc, b,
                                        c.intValue()); :}
-    |   NEW:n primitive_type:a dims:b location_expr_opt:loc array_initializer:c
+    |   NEW:n primitive_type:a dims:b location_expr_opt:loc fabric_array_initializer:c
             {: RESULT = parser.nf.NewFabricArray(parser.pos(n,c), a, loc,
                                        b.intValue(), c); :}
     // native variants
+    |   NEW:n objtype_or_expr:a NATIVE dim_exprs:b dims_opt:c
+            {: RESULT = parser.nf.NewArray(parser.pos(n,c), a.toType(), b, c.intValue()); :}
     |   NEW:n objtype_or_expr:a NATIVE dims:b array_initializer:c 
             {: RESULT = parser.nf.NewArray(parser.pos(n,c), a.toType(),
                                        b.intValue(), c); :}
@@ -219,15 +260,11 @@ extend primary ::=
             {: RESULT = parser.nf.NewLabel(parser.pos(n, loc), a, loc); :}
     |   NEW:n PRINCIPAL location_expr_opt:loc LPAREN principal_disjunctive:a RPAREN:z
             {: RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a); :}
+
     |   NEW:n objtype_or_expr:a dims_opt:b
-            {: NewArray toReturn = (NewArray)a.toNewArray(parser.pos(n, a), b);
-               RESULT = (Expr)parser.nf.setLocation(toReturn, null); :}
-    |   NEW:n objtype_or_expr:a location_expr:loc
-            {: NewArray toReturn = (NewArray)a.toNewArray(parser.pos(n, a), new Integer(0));
-               RESULT = (Expr)parser.nf.setLocation(toReturn, loc); :}
-    |   NEW:n objtype_or_expr:a dims:b location_expr:loc
-            {: NewArray toReturn = (NewArray)a.toNewArray(parser.pos(n, a), b);
-               RESULT = (Expr)parser.nf.setLocation(toReturn, loc); :}
+            {: RESULT = parser.toNewFabricArray(parser.pos(n,a), a, b, null); :}
+    |   NEW:n objtype_or_expr:a location_expr:loc dims_opt:b
+            {: RESULT = parser.toNewFabricArray(parser.pos(n,loc), a, b, loc); :}
     ;
 
 ////////////////////////////////////////////////////////////////////////

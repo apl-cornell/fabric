@@ -25,8 +25,8 @@ public interface FabricNodeFactory extends JifNodeFactory {
   
   NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims);
   NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims);
-  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, int addDims, ArrayInit init);
-  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims, ArrayInit init);
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, int addDims, FabricArrayInit init);
+  NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims, FabricArrayInit init);
   
   RetryStmt RetryStmt(Position pos);
   AbortStmt AbortStmt(Position pos);
@@ -39,5 +39,4 @@ public interface FabricNodeFactory extends JifNodeFactory {
   RemoteClientGetter RemoteClientGetter(Position pos, Expr remoteName);
   
   NewLabel NewLabel(Position pos, LabelNode label, Expr location);
-  Node setLocation(Node result, Expr location);
 }

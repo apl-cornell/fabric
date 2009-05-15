@@ -75,7 +75,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return n;
   }
   
-  public NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims, polyglot.ast.ArrayInit init) {
+  public NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, List<Expr> dims, int addDims, FabricArrayInit init) {
     NewFabricArray result = new NewFabricArray_c(pos, base, dims, addDims, init);
     result = (NewFabricArray) result.ext(fabricExtFactory().extNewFabricArray());
     result = (NewFabricArray) result.del(fabricDelFactory().delNewFabricArray());
@@ -136,7 +136,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return NewFabricArray(pos, base, location, dims, addDims, null);
   }
 
-  public final NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, int addDims, polyglot.ast.ArrayInit init) {
+  public final NewFabricArray NewFabricArray(Position pos, TypeNode base, Expr location, int addDims, FabricArrayInit init) {
     List<Expr> empty = Collections.emptyList();
     return NewFabricArray(pos, base, location, empty, addDims, init);
   }
@@ -224,7 +224,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
    * @return         a copy of <code>result</code> with the fabric extension
    *                 updated with the location
    */
-  public Node setLocation(Node result, Expr location) {
+  protected Node setLocation(Node result, Expr location) {
     FabricExt fabExt = FabricUtil.fabricExt(result);
 //    Ext jifExt = result.ext();
 //    Ext fabExt = jifExt.ext();
