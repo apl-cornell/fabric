@@ -21,10 +21,14 @@ public final class Util {
     if (result != null) return result;
 
     MessageDigest digest = Crypto.digestInstance();
+    
+    ClassLoader classLoader = c.getClassLoader();
+    if (classLoader == null) {
+      classLoader = ClassLoader.getSystemClassLoader();
+    }
 
     InputStream classIn =
-        ClassLoader.getSystemResourceAsStream(className.replace('.', '/')
-            + ".class");
+        classLoader.getResourceAsStream(className.replace('.', '/') + ".class");
 
     if (classIn == null)
       throw new InternalError("Class not found: " + className);

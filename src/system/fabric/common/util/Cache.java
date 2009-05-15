@@ -3,11 +3,14 @@ package fabric.common.util;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * A map with soft references to its values. When a value in the map is garbage
- * collected by the JVM, its corresponding key is removed from the map.
+ * A thread-safe map with soft references to its values. When a value in the map
+ * is garbage collected by the JVM, its corresponding key is removed from the
+ * map.
  */
 public class Cache<K, V> {
 
@@ -74,6 +77,16 @@ public class Cache<K, V> {
     ValueSoftRef<K, V> ref = map.remove(key);
     if (ref == null) return null;
     return ref.get();
+  }
+
+  /**
+   * Returns a snapshot of the keys currently in the cache. This set is NOT
+   * backed by the underlying map. If new keys are inserted or removed from the
+   * cache, they will not be reflected by the set returned. However, no
+   * synchronization is needed for working with the set.
+   */
+  public synchronized Set<K> keys() {
+    return new HashSet<K>(map.keySet());
   }
 
   public static final class Collector extends Thread {

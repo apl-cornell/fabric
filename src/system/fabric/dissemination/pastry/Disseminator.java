@@ -19,6 +19,7 @@ import rice.pastry.routing.RoutingTable;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.messages.*;
@@ -261,7 +262,7 @@ public class Disseminator implements Application {
     process(new Executable() {
       public Object execute() {
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
-        Set<Pair<Core, Long>> skip;
+        OidKeyHashMap<Long> skip;
         
         // get the closest neighbors in the leafset because they are special
         // cases in the beehive replication protocol. this is because the home
@@ -316,24 +317,28 @@ public class Disseminator implements Application {
       }
     });
   }
-  
+
   /**
-   * Builds a set of oids that do not need to be sent again by a decider.
+   * Builds a set of (oid, glob timestamp) pairs that do not need to be sent
+   * again by a decider.
    * 
-   * @param deciderId Pastry id of the decider.
-   * @param level Level under which globs are asked to be replicated.
+   * @param deciderId
+   *          Pastry id of the decider.
+   * @param level
+   *          Level under which globs are asked to be replicated.
    * @return A set of oids that don't need to be replicated again.
    */
-  private Set<Pair<Core, Long>> skipSet(rice.pastry.Id deciderId, int level) {
+  private OidKeyHashMap<Long> skipSet(
+      rice.pastry.Id deciderId, int level) {
     rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
-    Set<Pair<Core, Long>> skip = new HashSet<Pair<Core, Long>>();
+    OidKeyHashMap<Long> skip = new OidKeyHashMap<Long>();
     
-    for (Pair<Core, Long> k : cache.keys()) {
+    for (Pair<Pair<Core, Long>, Long> k : cache.timestamps()) {
       rice.pastry.Id id = (rice.pastry.Id) idf.buildId(k.first + "/" + k.second);
       boolean send = shouldReplicate(deciderId, me, id, level);
       
       if (send) {
-        skip.add(k);
+        skip.put(k.first.first, k.first.second, k.second);
       }
     }
     
@@ -350,15 +355,16 @@ public class Disseminator implements Application {
         NodeHandle sender = msg.sender();
         rice.pastry.Id senderId = (rice.pastry.Id) sender.getId();
         int level = msg.level();
-        Set<Pair<Core, Long>> skip = msg.skip();
+        OidKeyHashMap<Long> skip = msg.skip();
         
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
         
         Map<Pair<Core, Long>, Glob> globs = 
           new HashMap<Pair<Core, Long>, Glob>();
         
-        for (Pair<Core, Long> k : cache.sortedKeys()) {
-          if (skip.contains(k)) {
+        for (Pair<Pair<Core, Long>, Long> k : cache.sortedTimestamps()) {
+          Long skipTimestamp = skip.get(k.first.first, k.first.second);
+          if (skipTimestamp != null && skipTimestamp >= k.second) {
             continue;
           }
           
@@ -366,12 +372,12 @@ public class Disseminator implements Application {
           boolean send = shouldReplicate(me, senderId, id, level);
           
           if (send) {
-            RemoteCore c = (RemoteCore) k.first;
-            Long onum = k.second;
+            RemoteCore c = (RemoteCore) k.first.first;
+            Long onum = k.first.second;
             Glob g = cache.get(c, onum);
             if (g.level() > level) continue;
             
-            globs.put(k, g);
+            globs.put(k.first, g);
             
             // XXX hack. limit reply message to 10 globs at a time. don't want
             // the message to get so large that pastry rejects it.

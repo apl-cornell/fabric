@@ -298,4 +298,8 @@ public class Glob implements FastSerializable {
     }
   }
 
+  public long getTimestamp() {
+    return timestamp;
+  }
+
 }

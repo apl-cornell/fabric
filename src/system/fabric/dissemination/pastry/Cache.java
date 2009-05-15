@@ -1,13 +1,6 @@
 package fabric.dissemination.pastry;
 
-import java.lang.ref.SoftReference;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
@@ -22,8 +15,8 @@ import fabric.dissemination.Glob;
  */
 public class Cache {
   
-  protected HashMap<Pair<Core, Long>, SoftReference<Glob>> map = 
-      new HashMap<Pair<Core, Long>, SoftReference<Glob>>();
+  protected fabric.common.util.Cache<Pair<Core, Long>, Glob> map = 
+      new fabric.common.util.Cache<Pair<Core, Long>, Glob>();
   
   /**
    * Retrieves a glob from the cache, without trying to fetch it from the core.
@@ -52,17 +45,7 @@ public class Cache {
     if (fetch) {
       g = fetch(c, onum);
     } else {
-      synchronized (map) {
-        SoftReference<Glob> r = map.get(key);
-        
-        if (r != null) {
-          g = r.get();
-          
-          if (g == null) {
-            map.remove(key);
-          }
-        }
-      }
+      g = map.get(key);
     }
     
     return g;
@@ -76,10 +59,8 @@ public class Cache {
     } catch (FetchException e) {}
     
     if (g != null) {
-      synchronized (map) {
-        Pair<Core, Long> key = new Pair<Core, Long>(c, onum);
-        map.put(key, new SoftReference<Glob>(g));
-      }
+      Pair<Core, Long> key = new Pair<Core, Long>(c, onum);
+      map.put(key, g);
     }
     
     return g;
@@ -99,40 +80,45 @@ public class Cache {
       Glob old = get(c, onum);
       
       if (old == null || old.isOlderThan(g)) {
-        map.put(key, new SoftReference<Glob>(g));
+        map.put(key, g);
       }
     }
   }
-  
+
   /**
-   * Returns a snapshot of the keys (oids) currently in the cache. This set
-   * is NOT backed by the underlying map. If new keys are inserted or removed
-   * from the cache, they will not be reflected by the set returned. However,
-   * no synchronization is needed for working with the set.
+   * Returns a snapshot of the timestamp for each OID currently in the cache.
+   * This set is NOT backed by the underlying map. If new keys are inserted or
+   * removed from the cache, they will not be reflected by the set returned.
+   * However, no synchronization is needed for working with the set.
    */
-  public Set<Pair<Core, Long>> keys() {
-    synchronized (map) {
-      return new HashSet<Pair<Core, Long>>(map.keySet());
+  public Set<Pair<Pair<Core, Long>, Long>> timestamps() {
+    Set<Pair<Pair<Core, Long>, Long>> result =
+        new HashSet<Pair<Pair<Core, Long>, Long>>();
+    
+    for (Pair<Core, Long> key : map.keys()) {
+      Glob glob = map.get(key);
+      if (glob != null)
+        result.add(new Pair<Pair<Core, Long>, Long>(key, glob.getTimestamp()));
     }
+    
+    return result;
   }
-  
+
   /**
-   * Returns a snapshot set of keys (oids) currently in the cache. The keys are
-   * sorted in descending order by the popularity of the corresponding objects.
-   * Like {@code keys()}, the returned set is not backed by the underlying
-   * table.
+   * Returns a snapshot set of the timestamp for each OID currently in the
+   * cache. The set is sorted in descending order by the popularity of the
+   * corresponding objects. Like {@code timestamps()}, the returned set is not
+   * backed by the underlying table.
    */
-  public List<Pair<Core, Long>> sortedKeys() {
-    List<Pair<Core, Long>> k;
+  public List<Pair<Pair<Core, Long>, Long>> sortedTimestamps() {
+    List<Pair<Pair<Core, Long>, Long>> k =
+        new ArrayList<Pair<Pair<Core, Long>, Long>>(timestamps());
     
-    synchronized (map) {
-      k = new ArrayList<Pair<Core, Long>>(map.keySet());
-    }
-    
-    Collections.sort(k, new Comparator<Pair<Core, Long>>() {
-      public int compare(Pair<Core, Long> o1, Pair<Core, Long> o2) {
-        Glob g1 = map.get(o1).get();
-        Glob g2 = map.get(o2).get();
+    Collections.sort(k, new Comparator<Pair<Pair<Core, Long>, Long>>() {
+      public int compare(Pair<Pair<Core, Long>, Long> o1,
+          Pair<Pair<Core, Long>, Long> o2) {
+        Glob g1 = map.get(o1.first);
+        Glob g2 = map.get(o2.first);
         
         if (g1 == g2) {
           return 0;

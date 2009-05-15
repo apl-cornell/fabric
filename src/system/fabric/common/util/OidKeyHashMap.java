@@ -73,7 +73,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
       nullEntry = val;
       return result;
     }
-    
+
     return put(obj.$getCore(), obj.$getOnum(), val);
   }
 
@@ -94,7 +94,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
       nullEntry = null;
       return result;
     }
-    
+
     return remove(obj.$getCore(), obj.$getOnum());
   }
 
@@ -117,5 +117,14 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
 
   public boolean isEmpty() {
     return !hasNullEntry && map.isEmpty();
+  }
+
+  public int size() {
+    int result = 0;
+    
+    for (LongKeyMap<V> submap : this)
+      result += submap.size();
+
+    return result;
   }
 }
