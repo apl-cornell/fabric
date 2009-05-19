@@ -43,41 +43,41 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     return postExtBlock(e);
   }
   
-  public final Ext extAbort() {
-    Ext e = extAbortImpl();
+  public final Ext extAbortStmt() {
+    Ext e = extAbortStmtImpl();
     if (nextExtFactory() != null && 
         nextExtFactory() instanceof FabricExtFactory) {
       FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
-      Ext e2 = nextFac.extAbort();
+      Ext e2 = nextFac.extAbortStmt();
       e = composeExts(e, e2);
     }
-    return postExtAbort(e);
+    return postExtAbortStmt(e);
   }
   
-  protected Ext extAbortImpl() {
+  protected Ext extAbortStmtImpl() {
     return extStmtImpl();
   }
   
-  protected Ext postExtAbort(Ext e) {
+  protected Ext postExtAbortStmt(Ext e) {
     return postExtStmt(e);
   }
 
-  public final Ext extRetry() {
-    Ext e = extRetryImpl();
+  public final Ext extRetryStmt() {
+    Ext e = extRetryStmtImpl();
     if (nextExtFactory() != null && 
         nextExtFactory() instanceof FabricExtFactory) {
       FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
-      Ext e2 = nextFac.extRetry();
+      Ext e2 = nextFac.extRetryStmt();
       e = composeExts(e, e2);
     }
-    return postExtRetry(e);
+    return postExtRetryStmt(e);
   }
   
-  protected Ext extRetryImpl() {
+  protected Ext extRetryStmtImpl() {
     return extStmtImpl();
   }
   
-  protected Ext postExtRetry(Ext e) {
+  protected Ext postExtRetryStmt(Ext e) {
     return postExtStmt(e);
   }
 
@@ -117,6 +117,26 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
   
   protected Ext postExtNewFabricArray(Ext e) {
     return postExtNewArray(e);
+  }
+  
+  public final Ext extAmbNewFabricArray() {
+    Ext e = extAmbNewFabricArrayImpl();
+    if (nextExtFactory() != null &&
+        nextExtFactory() instanceof FabricExtFactory) {
+      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
+      Ext e2 = nextFac.extAmbNewFabricArray();
+      e = composeExts(e, e2);
+    }
+    
+    return postExtNewFabricArray(e);
+  }
+  
+  protected Ext extAmbNewFabricArrayImpl() {
+    return extAmbNewArrayImpl();
+  }
+  
+  protected Ext postExtAmbNewFabricArrayImpl(Ext e) {
+    return postExtAmbNewArray(e);
   }
   
   public final Ext extRemoteClientGetter() {

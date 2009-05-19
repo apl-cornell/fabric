@@ -14,6 +14,8 @@ import polyglot.util.Position;
 public interface FabricNodeFactory extends JifNodeFactory {
   Atomic Atomic(Position pos, List<Stmt> statements);
   
+  AmbNewFabricArray AmbNewFabricArray(Position pos, TypeNode base, Expr location, Object expr, List dims, int addDims);
+  
   New New(Position pos, TypeNode type, Expr location, List<Expr> args);
   New New(Position pos, TypeNode type, Expr location, List<Expr> args, ClassBody body);
   New New(Position pos, Expr outer, TypeNode objectType, Expr location, List<Expr> args);

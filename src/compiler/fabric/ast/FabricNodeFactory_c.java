@@ -45,17 +45,24 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     result = (Atomic) result.del(fabricDelFactory().delAtomic());
     return result;
   }
+  
+  public AmbNewFabricArray AmbNewFabricArray(Position pos, TypeNode base, Expr loc, Object expr, List dims, int addDims) {
+    AmbNewFabricArray result = new AmbNewFabricArray_c(pos, base, loc, expr, dims, addDims);
+    result = (AmbNewFabricArray) result.ext(fabricExtFactory().extAmbNewFabricArray());
+    result = (AmbNewFabricArray) result.del(fabricDelFactory().delAmbNewFabricArray());
+    return result;
+  }
 
   public RetryStmt RetryStmt(Position pos) {
     RetryStmt s = new RetryStmt_c(pos);
-    s = (RetryStmt)s.ext(fabricExtFactory().extRetry());
+    s = (RetryStmt)s.ext(fabricExtFactory().extRetryStmt());
     s = (RetryStmt)s.del(fabricDelFactory().delStmt());
     return s;
   }
   
   public AbortStmt AbortStmt(Position pos) {
     AbortStmt s = new AbortStmt_c(pos);
-    s = (AbortStmt)s.ext(fabricExtFactory().extAbort());
+    s = (AbortStmt)s.ext(fabricExtFactory().extAbortStmt());
     s = (AbortStmt)s.del(fabricDelFactory().delStmt());
     return s;
   }

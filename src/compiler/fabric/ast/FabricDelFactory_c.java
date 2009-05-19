@@ -14,12 +14,31 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
   // new ast methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
   
-  public JL delAtomic() {
+  public final JL delAbortStmt() {
+    JL e = delAbortStmtImpl();
+    
+    if (nextDelFactory() != null && nextDelFactory() instanceof FabricDelFactory) {
+      JL e2 = ((FabricDelFactory) nextDelFactory()).delAbortStmt();
+      e = composeDels(e,e2);
+    }
+    
+    return postDelAbortStmt(e);
+  }
+  
+  protected JL delAbortStmtImpl() {
+    return delBranchImpl();
+  }
+  
+  protected JL postDelAbortStmt(JL e) {
+    return postDelBranch(e);
+  }
+  
+  public final JL delAtomic() {
     JL e = delAtomicImpl();
 
     if (nextDelFactory() != null && nextDelFactory() instanceof FabricDelFactory) {
-        JL e2 = ((FabricDelFactory)nextDelFactory()).delAtomic();
-        e = composeDels(e, e2);
+      JL e2 = ((FabricDelFactory)nextDelFactory()).delAtomic();
+      e = composeDels(e, e2);
     }
     return postDelAtomic(e);
   }
@@ -31,8 +50,28 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
   protected JL postDelAtomic(JL e) {
     return postDelBlock(e);
   }
+  
+  public final JL delAmbNewFabricArray() {
+    JL e = delAmbNewFabricArrayImpl();
+    
+    if (nextDelFactory() != null && nextDelFactory() instanceof FabricDelFactory) {
+      JL e2 = ((FabricDelFactory)nextDelFactory()).delAmbNewFabricArray();
+      e = composeDels(e,e2);
+    }
+    
+    return postDelAmbNewFabricArray(e);
+  }
 
-  public JL delClient() {
+  
+  protected JL delAmbNewFabricArrayImpl() {
+    return delAmbNewArrayImpl();
+  }
+  
+  protected JL postDelAmbNewFabricArray(JL e) {
+    return postDelAmbNewArray(e);
+  }
+  
+  public final JL delClient() {
     JL e = delClientImpl();
 
     if (nextDelFactory() != null && nextDelFactory() instanceof FabricDelFactory) {
@@ -50,7 +89,7 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
     return postDelExpr(e);
   }
 
-  public JL delFabricArrayInit() {
+  public final JL delFabricArrayInit() {
     JL e = delFabricArrayInitImpl();
 
     if (nextDelFactory() != null && nextDelFactory() instanceof FabricDelFactory) {
@@ -68,7 +107,7 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
     return postDelArrayInit(e);
   }
 
-  public JL delFabricArrayTypeNode() {
+  public final JL delFabricArrayTypeNode() {
     JL e = delFabricArrayTypeNodeImpl();
 
     if (nextDelFactory() != null && nextDelFactory() instanceof FabricDelFactory) {
@@ -86,7 +125,7 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
     return postDelArrayTypeNode(e);
   }
 
-  public JL delNewFabricArray() {
+  public final JL delNewFabricArray() {
     JL e = delNewFabricArrayImpl();
 
     if (nextDelFactory() != null && nextDelFactory() instanceof FabricDelFactory) {
@@ -104,7 +143,7 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
     return postDelNewArray(e);
   }
 
-  public JL delRemoteClientGetter() {
+  public final JL delRemoteClientGetter() {
     JL e = delRemoteClientGetterImpl();
 
     if (nextDelFactory() != null && nextDelFactory() instanceof FabricDelFactory) {
@@ -120,6 +159,25 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
 
   protected JL postDelRemoteClientGetter(JL e) {
     return postDelExpr(e);
+  }
+  
+  public final JL delRetryStmt() {
+    JL e = delRetryStmtImpl();
+    
+    if (nextDelFactory() != null && nextDelFactory() instanceof FabricDelFactory) {
+      JL e2 = ((FabricDelFactory) nextDelFactory()).delRetryStmt();
+      e = composeDels(e, e2);
+    }
+    
+    return postDelRetryStmt(e);
+  }
+  
+  protected JL delRetryStmtImpl() {
+    return delBranchImpl();
+  }
+  
+  protected JL postDelRetryStmt(JL e) {
+    return postDelBranch(e);
   }
 
   //////////////////////////////////////////////////////////////////////////////

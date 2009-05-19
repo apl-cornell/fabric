@@ -83,11 +83,11 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
     return new RemoteClientGetterJifExt_c(new RemoteClientGetterToFabilExt_c());
   }
 
-  public Ext extRetry() {
+  public Ext extRetryStmt() {
     return new RetryJifExt_c(new RetryToFabilExt_c());
   }
   
-  public Ext extAbort() {
+  public Ext extAbortStmt() {
     return new AbortJifExt_c(new AbortToFabilExt_c());
   }
   
@@ -109,5 +109,9 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   
   public Ext extNewFabricArray() {
     return new NewFabricArrayJifExt_c(new NewFabricArrayToFabilExt_c());
+  }
+  
+  public Ext extAmbNewFabricArray() {
+    return extAmbNewArray(); 
   }
 }

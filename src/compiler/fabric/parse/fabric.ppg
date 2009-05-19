@@ -66,14 +66,14 @@ parser Grm extends jif.parse.Grm {:
                                  init);
       }
       else if (expr instanceof AmbNewArray) {
-        //AmbNewArray ambNewArray = (AmbNewArray) ambNewArray;
-        //
-        //return nf.AmbNewFabricArray(ambNewArray.position(),
-        //                            ambNewArray.baseType(),
-        //                            loc,
-        //                            ambNewArray.dims());
-        die(pos);
-        return null;
+        AmbNewArray ambNewArray = (AmbNewArray) expr;
+        
+        return nf.AmbNewFabricArray(ambNewArray.position(),
+                                    ambNewArray.baseType(),
+                                    loc,
+                                    ambNewArray.expr(),
+                                    ambNewArray.dims(),
+                                    ambNewArray.additionalDims());
       }
       else {
         die(pos);
