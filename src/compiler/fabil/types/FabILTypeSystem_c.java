@@ -131,7 +131,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   public FabricArrayType fabricArrayOf(Type type, int dims) {
-    return fabricArrayOf(null, type, dims);
+    return fabricArrayOf(type.position(), type, dims);
   }
 
   public FabricArrayType fabricArrayOf(Position pos, Type type, int dims) {
