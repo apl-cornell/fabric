@@ -36,8 +36,8 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
 
   @Override
   public TypeNode typeToJava(Type t, Position pos) throws SemanticException {
-    FabILNodeFactory fabil_nf = (FabILNodeFactory) java_nf();
-    FabILTypeSystem fabil_ts = (FabILTypeSystem) java_ts();
+    FabILNodeFactory fabil_nf  = (FabILNodeFactory) java_nf();
+    FabILTypeSystem  fabil_ts  = (FabILTypeSystem)  java_ts();
     FabricTypeSystem fabric_ts = (FabricTypeSystem) jif_ts();
 
     if (fabric_ts.typeEquals(t, fabric_ts.Client())) {
@@ -49,8 +49,11 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     }
 
     if (fabric_ts.isPrincipal(t)) {
-      return fabil_nf.AmbTypeNode(pos, fabil_nf.PackageNode(pos, fabil_ts
-          .packageForName("fabric.lang")), fabil_nf.Id(pos, "Principal"));
+      return fabil_nf.TypeNodeFromQualifiedName(pos, "fabric.lang.Principal");
+    }
+    
+    if (fabric_ts.isFabricArray(t)) {
+      return fabil_nf.FabricArrayTypeNode(pos, typeToJava(t.toArray().base(), pos));
     }
 
     return super.typeToJava(t, pos);

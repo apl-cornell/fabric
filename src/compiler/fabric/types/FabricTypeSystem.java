@@ -42,15 +42,13 @@ public interface FabricTypeSystem extends JifTypeSystem {
   /**
    * Checks whether <code>type</code> is a Fabric class, 
    * that is, inherits <code>fabric.lang.Object</code>.
-   * @param type
-   * @return
    */
   boolean isFabricClass(Type type);
   
+  boolean isFabricArray(Type type);
+  
   boolean containsThisLabel(Label label);
 
-  FabricArrayType fabricArrayOf(Type t);
-  FabricArrayType fabricArrayOf(Type t, int dims);
   FabricArrayType fabricArrayOf(Position pos, Type t);
   FabricArrayType fabricArrayOf(Position pos, Type t, int dims);
 }

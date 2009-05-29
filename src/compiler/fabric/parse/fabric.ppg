@@ -20,7 +20,7 @@ parser Grm extends jif.parse.Grm {:
         nf = n;
     }
 
-    public TypeNode fabricArray(TypeNode n, int dims) throws Exception {
+    public TypeNode fabricArray(Position pos, TypeNode n, int dims) throws Exception {
       if (dims <= 0) return n;
 
       if (n instanceof ArrayTypeNode && !(n instanceof FabricArrayTypeNode))
@@ -28,14 +28,14 @@ parser Grm extends jif.parse.Grm {:
 
       if (n instanceof CanonicalTypeNode) {
         Type t = ((CanonicalTypeNode) n).type();
-        return nf.CanonicalTypeNode(pos(n), ts.fabricArrayOf(t, dims));
+        return nf.CanonicalTypeNode(pos(n), ts.fabricArrayOf(pos, t, dims));
       }
 
-      return nf.FabricArrayTypeNode(pos(n), fabricArray(n, dims - 1));
+      return nf.FabricArrayTypeNode(pos(n), fabricArray(pos, n, dims - 1));
     }
 
-    public TypeNode array(TypeNode n, int dims) throws Exception {
-      return fabricArray(n, dims);
+    public TypeNode array(Position pos, TypeNode n, int dims) throws Exception {
+      return fabricArray(pos, n, dims);
     }
 
     public TypeNode javaArray(TypeNode n, int dims) throws Exception {

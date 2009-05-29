@@ -249,6 +249,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return false;
   }
   
+  public boolean isFabricArray(Type t) {
+    return t instanceof FabricArrayType;
+  }
+  
   @Override
   public Flags legalTopLevelClassFlags() {
     Flags f = super.legalTopLevelClassFlags();
@@ -283,16 +287,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return false;
   }
 
-  public FabricArrayType fabricArrayOf(Type t) {
-    return fabricArrayOf(null, t);
-  }
-
-  public FabricArrayType fabricArrayOf(Type t, int dims) {
-    return fabricArrayOf(null, t, dims); 
-  }
-
+  // array type constructors ///////////////////////////////////////////////////
+  
   public FabricArrayType fabricArrayOf(Position pos, Type t) {
-    return new FabricArrayType_c(this, pos, t);
+    return new FabricArrayType_c(this, pos, t,
+                                 /* isConst */ false, /* isNonConst */ true,
+                                 /* isNative */ false);
   }
 
   public FabricArrayType fabricArrayOf(Position pos, Type t, int dims) {
@@ -300,5 +300,16 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
       return fabricArrayOf(pos, t);
     else
       return fabricArrayOf(pos, fabricArrayOf(pos, t, dims - 1));
+  }
+  
+  @Override
+  protected FabricArrayType arrayType(Position pos, Type type) {
+    if (!isLabeled(type)) {
+      type = labeledType(pos, type, defaultSignature().defaultArrayBaseLabel(type));
+    }
+    
+    return new FabricArrayType_c(this, pos, type,
+                                 /*isConst */ false, /*isNonConst*/ true,
+                                 /*isNative*/ false);
   }
 }

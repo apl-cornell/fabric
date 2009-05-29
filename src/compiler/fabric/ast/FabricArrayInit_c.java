@@ -79,7 +79,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
 
   @Override
   protected Type arrayOf(TypeSystem ts, Type baseType) {
-    return ((FabricTypeSystem) ts).fabricArrayOf(baseType);
+    return ((FabricTypeSystem) ts).fabricArrayOf(position(), baseType);
   }
 
   @SuppressWarnings("unchecked")
