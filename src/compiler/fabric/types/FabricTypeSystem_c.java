@@ -250,7 +250,14 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   }
   
   public boolean isFabricArray(Type t) {
-    return t instanceof FabricArrayType;
+    // unwrap label
+    if (t instanceof LabeledType)
+      t = ((LabeledType) t).typePart();
+    
+    if (t instanceof FabricArrayType)
+      return !((FabricArrayType) t).isNative();
+    
+    return false;
   }
   
   @Override
