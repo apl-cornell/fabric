@@ -1,0 +1,77 @@
+#!/usr/bin/perl
+
+if ($ENV{'FABRIC_HOME'} ne '') {
+    chdir($ENV{'FABRIC_HOME'});
+}
+
+if (! -d 'src') {
+    print STDERR 'Run from the top directory of Fabric', "\n";
+    exit 1;
+}
+open (CVSFILES, "bin/cvsfiles src |");
+
+my %pattern, %lines;
+
+$pattern{'compiler'} = '^src/compiler';
+$pattern{'client system'} = '^src/system/fabric/client';
+$pattern{'common system'} = '^src/system/fabric/common';
+$pattern{'language system'} = '^src/system/fabric/lang';
+$pattern{'dissemination'} = '^src/system/fabric/dissemination';
+$pattern{'message protocols'} = '^src/system/fabric/messages';
+$pattern{'core system'} = '^src/system/fabric/core';
+$pattern{'Fabric runtime'} = '^src/runtime/fabric';
+$pattern{'Jif runtime'} = '^src/runtime/jif';
+$pattern{'Fabric signatures'} = '^src/signatures/fabric';
+$pattern{'FabIL signatures'} = '^src/signatures/fabil';
+$pattern{'bootstrap'} = '^src/bootstrap';
+
+my $other = 0;
+
+while (<CVSFILES>) {
+    chomp;
+    if ($_ =~ m/README/ ||
+	$_ =~ m/\.png/ ||
+	$_ =~ m/\.html/ ||
+	$_ =~ m/\.cvsignore/ ||
+	$_ =~ m/\.dia/) {
+# 	ignore
+	next;
+    }
+    if (!($_ =~ m/\.java$/) &&
+        !($_ =~ m/\.jif$/) &&
+        !($_ =~ m/\.fil$/) &&
+        !($_ =~ m/\.flex$/) &&
+        !($_ =~ m/\.ppg$/) &&
+        !($_ =~ m/\.fab$/)) {
+	print STDERR "Warning: unrecognized source file $_\n";
+    }
+
+    my $out = `count-tokens $_`;
+    $out =~ s/^\s*//;
+    $out =~ s/\s*$//;
+    (my $tokens, my $lines, my $chars) = split /\s\s*/, $out;
+    # print "$_: tokens $tokens, lines $lines, chars $chars\n";
+    my $matched = 0;
+    foreach $key (keys %pattern) {
+	my $pat = $pattern{$key};
+	if ($_ =~ m#$pat#) {
+	    # print STDERR 'matched ', $pat, " with ", $lines, "\n";
+	    $lines{$key} += $lines;
+	    $matched = 1;
+	    last;
+	}
+    }
+    if (!$matched) {
+	$other += $lines;
+	push @others, $_;
+    }
+}
+
+foreach $key (keys %pattern) {
+    print $key, "\t", $lines{$key}, "\n";
+}
+print "Other\t$other\n";
+
+foreach $other (@others) {
+    print $other, "\n";
+}
