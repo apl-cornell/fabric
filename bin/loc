@@ -27,6 +27,12 @@ $pattern{'bootstrap'} = '^src/bootstrap';
 
 my $other = 0;
 
+sub pad {
+    (my $str, my $len) = @_;
+    while (length($str) < $len) { $str = $str . ' '; }
+    return $str;
+}
+
 while (<CVSFILES>) {
     chomp;
     if ($_ =~ m/README/ ||
@@ -68,7 +74,7 @@ while (<CVSFILES>) {
 }
 
 foreach $key (keys %pattern) {
-    print $key, "\t", $lines{$key}, "\n";
+    print &pad($key, 24), "\t", $lines{$key}, "\n";
 }
 print "Other\t$other\n";
 
