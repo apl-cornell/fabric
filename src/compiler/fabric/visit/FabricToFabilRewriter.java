@@ -7,6 +7,7 @@ import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
+import fabric.types.FabricArrayType;
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.Call;
 import polyglot.ast.Expr;

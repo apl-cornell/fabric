@@ -260,6 +260,13 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return false;
   }
   
+  public FabricArrayType toFabricArray(Type t) {
+    if (t instanceof LabeledType)
+      t = ((LabeledType) t).typePart();
+    
+    return (FabricArrayType) t;
+  }
+  
   @Override
   public Flags legalTopLevelClassFlags() {
     Flags f = super.legalTopLevelClassFlags();
@@ -317,6 +324,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     
     return new FabricArrayType_c(this, pos, type,
                                  /*isConst */ false, /*isNonConst*/ true,
-                                 /*isNative*/ false);
+                                 /*isNative*/ true);
   }
 }

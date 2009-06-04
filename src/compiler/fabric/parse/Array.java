@@ -1,7 +1,12 @@
 package fabric.parse;
 
+import fabric.ast.FabricArrayTypeNode;
+import fabric.ast.FabricNodeFactory;
+import jif.ast.ConstArrayTypeNode;
+import jif.ast.LabeledTypeNode;
 import jif.parse.Grm;
 import polyglot.ast.TypeNode;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 
 public class Array extends jif.parse.Array {
@@ -23,5 +28,33 @@ public class Array extends jif.parse.Array {
   
   public boolean isNative() {
     return isNative;
+  }
+  
+  @Override
+  public TypeNode toType() {
+    // if the (unlabeled) base type is an array, inherit the constness
+    // and nativity from that.
+    TypeNode base = prefix;
+    if (base instanceof LabeledTypeNode) {
+        base = ((LabeledTypeNode)base).typePart();
+    }
+    
+    //  XXX: this design is rediculous, and I'm not sure if this logic is right
+    
+    boolean isConst  =  isConst()   || (base instanceof ConstArrayTypeNode);
+    boolean isFabric = !isNative();
+    
+    FabricNodeFactory nf = (FabricNodeFactory) parser.nf;
+    
+    if ( isConst &&  isFabric)
+      throw new InternalCompilerError("Const fabric arrays not yet supported");
+    if ( isConst && !isFabric)
+      return nf.ConstArrayTypeNode(pos, prefix);
+    if (!isConst &&  isFabric)
+      return nf.FabricArrayTypeNode(pos, prefix);
+    if (!isConst && !isFabric)
+      return nf.ArrayTypeNode(pos, prefix);
+    
+    throw new InternalCompilerError("This line should be unreachable");
   }
 }
