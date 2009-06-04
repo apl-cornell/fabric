@@ -175,6 +175,17 @@ extend primitive_array_type ::=
             {: RESULT = new Array(parser, parser.pos(a,y), a, 
                                   /* isConst */ true,  /* isNative */ true).toType(); :}
     ;
+    
+extend reftype_or_expr ::=
+					// Amb
+        reftype_or_expr:a NATIVE LBRACK RBRACK:y
+            {: RESULT = new Array(parser, parser.pos(a,y), a.toType(),
+                                  /* isConst */ false, /* isNative */ true); :}
+    |   reftype_or_expr:a NATIVE CONST LBRACK RBRACK:y
+            {: RESULT = new Array(parser, parser.pos(a,y), a.toType(),
+                                  /* isConst */ true, /* isNative */ true); :}
+    ;
+
 
 ////////////////////////////////////////////////////////////////////////
 // Locations for constructors                                         //
