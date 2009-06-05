@@ -7,7 +7,9 @@ To build Fabric:
 3. run ant
 
 To set up your environment for Fabric:
-set $FABRIC_HOME to the project's top-level directory
+
+Set $FABRIC_HOME to the project's top-level directory
+Copy config.properties.in to config.properties and edit as appropriate.
 
 To compile an application:
 use the "fabc" script, or run fabric.Main with java, e.g.:

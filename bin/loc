@@ -26,6 +26,7 @@ $pattern{'FabIL signatures'} = '^src/signatures/fabil';
 $pattern{'bootstrap'} = '^src/bootstrap';
 
 my $other = 0;
+my $total = 0;
 
 sub pad {
     (my $str, my $len) = @_;
@@ -58,6 +59,7 @@ while (<CVSFILES>) {
     (my $lines, my $tokens, my $chars) = split /\s\s*/, $out;
     # print "$_: tokens $tokens, lines $lines, chars $chars\n";
     my $matched = 0;
+    $total += $lines;
     foreach $key (keys %pattern) {
 	my $pat = $pattern{$key};
 	if ($_ =~ m#$pat#) {
@@ -73,10 +75,14 @@ while (<CVSFILES>) {
     }
 }
 
-foreach $key (keys %pattern) {
+@keys = keys %pattern;
+@keys = sort @keys;
+
+foreach $key (@keys) {
     print &pad($key, 24), "\t", $lines{$key}, "\n";
 }
-print "Other\t$other\n";
+print &pad("Other", 24), "\t$other\n";
+print &pad("Total", 24), "\t$total\n";
 
 foreach $other (@others) {
     print $other, "\n";
