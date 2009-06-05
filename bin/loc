@@ -52,10 +52,10 @@ while (<CVSFILES>) {
 	print STDERR "Warning: unrecognized source file $_\n";
     }
 
-    my $out = `count-tokens $_`;
+    my $out = `bin/count-tokens $_`;
     $out =~ s/^\s*//;
     $out =~ s/\s*$//;
-    (my $tokens, my $lines, my $chars) = split /\s\s*/, $out;
+    (my $lines, my $tokens, my $chars) = split /\s\s*/, $out;
     # print "$_: tokens $tokens, lines $lines, chars $chars\n";
     my $matched = 0;
     foreach $key (keys %pattern) {
