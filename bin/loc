@@ -1,10 +1,16 @@
 #!/usr/bin/perl
 
+my $width=40;
+
 if ($ENV{'FABRIC_HOME'} ne '') {
     chdir($ENV{'FABRIC_HOME'});
+} else {
+    my $bindir = `dirname $0`; chomp $bindir;
+    my $fabric = `dirname $bindir`; chomp $fabric;
+    if (chdir($fabric)) {} else {print "error\n";}
 }
 
-if (! -d 'src') {
+if (! -d 'src' || ! -f 'bin/loc') {
     print STDERR 'Run from the top directory of Fabric', "\n";
     exit 1;
 }
@@ -12,18 +18,23 @@ open (CVSFILES, "bin/cvsfiles src |");
 
 my %pattern, %lines;
 
-$pattern{'compiler'} = '^src/compiler';
-$pattern{'client system'} = '^src/system/fabric/client';
-$pattern{'common system'} = '^src/system/fabric/common';
-$pattern{'language system'} = '^src/system/fabric/lang';
-$pattern{'dissemination'} = '^src/system/fabric/dissemination';
-$pattern{'message protocols'} = '^src/system/fabric/messages';
-$pattern{'core system'} = '^src/system/fabric/core';
-$pattern{'Fabric runtime'} = '^src/runtime/fabric';
-$pattern{'Jif runtime'} = '^src/runtime/jif';
-$pattern{'Fabric signatures'} = '^src/signatures/fabric';
-$pattern{'FabIL signatures'} = '^src/signatures/fabil';
-$pattern{'bootstrap'} = '^src/bootstrap';
+$pattern{'FabIL compiler'} = '^src/compiler/fabil';
+$pattern{'Fabric compiler'} = '^src/compiler/fabric';
+$pattern{'Worker'} = '^src/system/fabric/client';
+$pattern{'Common functionality'} = '^src/system/fabric/common';
+$pattern{'Fabric class implementations (Java)'} = '^src/system/fabric/lang';
+$pattern{'Dissemination layer'} = '^src/system/fabric/dissemination';
+$pattern{'Message protocols'} = '^src/system/fabric/messages';
+$pattern{'Store'} = '^src/system/fabric/core';
+$pattern{'FabIL port of Java libraries'} = '^src/runtime/fabric';
+$pattern{'FabIL port of Jif runtime'} = '^src/runtime/jif';
+$pattern{'Fabric signatures for Jif runtime'} = '^src/signatures/fabric/jif';
+$pattern{'Fabric signatures for Java runtime'} = '^src/signatures/fabric/java';
+$pattern{'Fabric signatures for Fabric runtime'} = '^src/signatures/fabric/fabric';
+$pattern{'FabIL signatures for Fabric runtime'} = '^src/signatures/fabil/fabric';
+$pattern{'FabIL signatures for Java runtime'} = '^src/signatures/fabil/java';
+$pattern{'FabIL signatures for Javax runtime'} = '^src/signatures/fabil/javax';
+$pattern{'bootstrap support'} = '^src/bootstrap';
 
 my $other = 0;
 my $total = 0;
@@ -57,7 +68,7 @@ while (<CVSFILES>) {
     $out =~ s/^\s*//;
     $out =~ s/\s*$//;
     (my $lines, my $tokens, my $chars) = split /\s\s*/, $out;
-    # print "$_: tokens $tokens, lines $lines, chars $chars\n";
+    # print "$_: lines $lines, tokens $tokens, chars $chars\n";
     my $matched = 0;
     $total += $lines;
     foreach $key (keys %pattern) {
@@ -75,15 +86,17 @@ while (<CVSFILES>) {
     }
 }
 
-@keys = keys %pattern;
-@keys = sort @keys;
+@keys = sort(keys %pattern);
 
 foreach $key (@keys) {
-    print &pad($key, 24), "\t", $lines{$key}, "\n";
+    print &pad($key, $width), "\t", $lines{$key}, "\n";
 }
-print &pad("Other", 24), "\t$other\n";
-print &pad("Total", 24), "\t$total\n";
+print &pad("Other", $width), "\t$other\n";
+print &pad("Total", $width), "\t$total\n";
 
+my $missed_files;
 foreach $other (@others) {
+    if (!$missed_files) { print "\nFiles classified as Other:\n"; }
+    $missed_files = 1;
     print $other, "\n";
 }
