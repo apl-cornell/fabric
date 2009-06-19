@@ -329,6 +329,10 @@ public final class Client {
         ((RemoteCore) core).destroy();
       }
     }
+    
+    for (RemoteClient client : remoteClients.values()) {
+      client.destroy();
+    }
   }
 
   /**

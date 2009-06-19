@@ -1,31 +1,23 @@
 package fabric.client;
 
-import java.io.*;
+import java.io.ObjectStreamException;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.security.Principal;
 import java.security.PublicKey;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.logging.Logger;
-
-import javax.net.ssl.SSLSocket;
-import javax.security.auth.x500.X500Principal;
 
 import fabric.common.*;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.exceptions.NoSuchNodeError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
+import fabric.lang.NodePrincipal;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
-import fabric.lang.NodePrincipal;
 import fabric.messages.*;
 import fabric.util.Map;
 
@@ -36,15 +28,7 @@ import fabric.util.Map;
  * <code>Client.getCore()</code> interface. For each remote core, there should
  * be at most one <code>RemoteCore</code> object representing that core.
  */
-public class RemoteCore implements Core, RemoteNode {
-  private transient Socket sslConn;
-  private transient Socket unencryptedConn;
-
-  /**
-   * The DNS host name of the host.
-   */
-  public final String name;
-
+public class RemoteCore extends RemoteNode implements Core {
   /**
    * A queue of fresh object identifiers.
    */
@@ -54,14 +38,6 @@ public class RemoteCore implements Core, RemoteNode {
    * The object table: locally resident objects.
    */
   private transient LongKeyMap<FabricSoftRef> objects;
-
-  /**
-   * The connections to the actual Core.
-   */
-  private transient DataInputStream sslIn;
-  private transient DataOutputStream sslOut;
-  private transient DataInputStream unencryptedIn;
-  private transient DataOutputStream unencryptedOut;
 
   /**
    * The core's public SSL key. Used for verifying signatures on object groups.
@@ -90,14 +66,14 @@ public class RemoteCore implements Core, RemoteNode {
       queue = new ReferenceQueue<SerializedObject>();
       destroyed = false;
     }
-    
+
     @Override
     public void run() {
       while (!destroyed) {
         try {
           SerializedObjectSoftRef ref =
               (SerializedObjectSoftRef) queue.remove();
-          
+
           synchronized (serialized) {
             serialized.remove(ref.onum);
           }
@@ -111,7 +87,8 @@ public class RemoteCore implements Core, RemoteNode {
    * Creates a core representing the core at the given host name.
    */
   protected RemoteCore(String name, PublicKey key) {
-    this.name = name;
+    super(name);
+    
     this.objects = new LongKeyHashMap<FabricSoftRef>();
     this.fresh_ids = new LinkedList<Long>();
     this.serialized = new LongKeyHashMap<SerializedObjectSoftRef>();
@@ -121,127 +98,19 @@ public class RemoteCore implements Core, RemoteNode {
     this.collector.start();
   }
 
-  public DataInputStream dataInputStream(boolean ssl) {
-    if (ssl) return sslIn;
-    return unencryptedIn;
-  }
-
-  public DataOutputStream dataOutputStream(boolean ssl) {
-    if (ssl) return sslOut;
-    return unencryptedOut;
-  }
-  
   /**
    * Cleans up the SerializedObject collector thread.
    */
+  @Override
   public void destroy() {
+    super.destroy();
     collector.destroyed = true;
     collector.interrupt();
   }
 
-  /**
-   * <p>
-   * Establishes a connection with a core node at a given host. A helper for
-   * <code>Message.send(Core)</code>.
-   * </p>
-   * <p>
-   * NOTE: If you fix a bug in this method, then you'll probably want to fix a
-   * bug in RemoteClient.connect() as well.
-   * </p>
-   * 
-   * @param withSSL
-   *          Whether to establish an encrypted connection.
-   * @param host
-   *          The host to connect to.
-   * @param corePrincipal
-   *          The principal associated with the core we're connecting to.
-   * @throws IOException
-   *           if there was an error.
-   */
-  public void connect(boolean withSSL, InetSocketAddress host,
-      Principal corePrincipal) throws NoSuchNodeError, IOException {
-    Client client = Client.getClient();
-    Socket socket = new Socket();
-    socket.setTcpNoDelay(true);
-    socket.setKeepAlive(true);
-
-    // Connect to the core node and identify the core we're interested in.
-    socket.connect(host, client.timeout);
-    DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
-    dataOut.writeUTF(name);
-
-    // Specify whether we're encrypting.
-    dataOut.writeBoolean(withSSL);
-    dataOut.flush();
-
-    // Determine whether the core exists at the node.
-    if (socket.getInputStream().read() == 0) throw new NoSuchNodeError();
-
-    if (withSSL && client.useSSL) {
-      // Start encrypting.
-      SSLSocket sslSocket;
-      synchronized (client.sslSocketFactory) {
-        sslSocket =
-            (SSLSocket) client.sslSocketFactory.createSocket(socket, name, host
-                .getPort(), true);
-      }
-      sslSocket.setUseClientMode(true);
-      sslSocket.startHandshake();
-
-      // Make sure we're talking to the right node.
-      X500Principal peer =
-          (X500Principal) sslSocket.getSession().getPeerPrincipal();
-      if (!peer.equals(corePrincipal)) {
-        Logger.getLogger(this.getClass().getName()).info(
-            "Rejecting connection to " + host + ": got principal " + peer
-                + " when we expected " + corePrincipal);
-        sslSocket.close();
-        throw new IOException();
-      }
-
-      sslOut =
-          new DataOutputStream(new BufferedOutputStream(sslSocket
-              .getOutputStream()));
-      sslOut.flush();
-      sslIn =
-          new DataInputStream(new BufferedInputStream(sslSocket
-              .getInputStream()));
-
-      sslConn = sslSocket;
-    } else {
-      DataOutputStream out =
-          new DataOutputStream(new BufferedOutputStream(socket
-              .getOutputStream()));
-      if (withSSL) out.writeUTF(client.javaPrincipal.getName());
-      out.flush();
-      DataInputStream in =
-          new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-
-      if (withSSL) {
-        sslOut = out;
-        sslIn = in;
-        sslConn = socket;
-      } else {
-        unencryptedOut = out;
-        unencryptedIn = in;
-        unencryptedConn = socket;
-      }
-    }
-
-    if (withSSL) {
-      // Send to the core a pointer to our principal object.
-      NodePrincipal principal = client.getPrincipal();
-      sslOut.writeBoolean(principal != null);
-      if (principal != null) {
-        sslOut.writeUTF(principal.$getCore().name());
-        sslOut.writeLong(principal.$getOnum());
-      }
-    }
-  }
-
-  public boolean isConnected(boolean ssl) {
-    if (ssl) return sslConn != null && !sslConn.isClosed();
-    return unencryptedConn != null && !unencryptedConn.isClosed();
+  @Override
+  protected boolean supportsUnencrypted() {
+    return true;
   }
 
   public synchronized long createOnum() throws UnreachableNodeException {
@@ -469,10 +338,11 @@ public class RemoteCore implements Core, RemoteNode {
     return new Map._Proxy(this, ONumConstants.ROOT_MAP);
   }
 
+  @Override
   public final String name() {
     return name;
   }
-  
+
   public NodePrincipal getPrincipal() {
     return new NodePrincipal._Proxy(this, ONumConstants.CORE_PRINCIPAL);
   }

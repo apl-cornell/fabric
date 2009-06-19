@@ -163,6 +163,10 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
    */
   private boolean initializeSession(String clientName, DataInput dataIn)
       throws IOException {
+    // Read in a boolean and throw it away. (We should always be reading "true"
+    // here to indicate that the client is using SSL.)
+    dataIn.readBoolean();
+    
     Client client = Client.getClient();
     if (client.useSSL) {
       // Initiate the SSL handshake and initialize the fields.
@@ -199,11 +203,13 @@ public class Worker extends FabricThread.AbstractImpl implements MessageHandler 
     }
 
     // Read in the pointer to the principal object.
+    if (!in.readBoolean()) return false;
+    
     String principalCoreName = in.readUTF();
     Core principalCore = Client.getClient().getCore(principalCoreName);
     long principalOnum = in.readLong();
     this.remoteClient =
-        new NodePrincipal._Proxy(principalCore, principalOnum);
+      new NodePrincipal._Proxy(principalCore, principalOnum);
 
     // Authenticate the client.
     return Client.runInTransaction(null, new Client.Code<Boolean>() {

@@ -1,25 +1,18 @@
 package fabric.client.remote;
 
-import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.security.Principal;
-import java.util.logging.Logger;
-
-import javax.net.ssl.SSLSocket;
-import javax.security.auth.x500.X500Principal;
-
 import fabric.client.*;
-import fabric.client.remote.messages.*;
+import fabric.client.remote.messages.GetPrincipalMessage;
+import fabric.client.remote.messages.ReadMessage;
+import fabric.client.remote.messages.RemoteCallMessage;
+import fabric.client.remote.messages.TakeOwnershipMessage;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.TransactionManager;
 import fabric.client.transaction.TransactionRegistry;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
-import fabric.common.exceptions.NoSuchNodeError;
+import fabric.lang.NodePrincipal;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
-import fabric.lang.NodePrincipal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.PrepareTransactionMessage;
@@ -31,131 +24,19 @@ import fabric.messages.PrepareTransactionMessage;
  * For each remote client, there should be at most one <code>RemoteClient</code>
  * object representing that client.
  */
-public final class RemoteClient implements RemoteNode {
-  private Socket conn;
-
-  /**
-   * The DNS host name of the client.
-   */
-  public final String name;
-
-  /**
-   * The connection to the actual client.
-   */
-  private DataInputStream in;
-  private DataOutputStream out;
+public final class RemoteClient extends RemoteNode {
 
   /**
    * This should only be called by fabric.client.Client. If you want a
    * RemoteClient, use fabric.client.Client.getClient() instead.
    */
   public RemoteClient(String name) {
-    this.name = name;
+    super(name);
   }
 
-  public DataInputStream dataInputStream() {
-    return in;
-  }
-
-  public DataInputStream dataInputStream(boolean useSSL) {
-    return in;
-  }
-
-  public DataOutputStream dataOutputStream() {
-    return out;
-  }
-
-  public DataOutputStream dataOutputStream(boolean useSSL) {
-    return out;
-  }
-
-  public void connect(boolean useSSL, InetSocketAddress host,
-      Principal remotePrincipal) throws NoSuchNodeError, IOException {
-    connect(host, remotePrincipal);
-  }
-
-  /**
-   * <p>
-   * Establishes a connection with a client node at the given host. A helper for
-   * <code>client.remote.messages.Message.send(RemoteClient)</code>.
-   * </p>
-   * <p>
-   * NOTE: If you fix a bug in this method, then you'll probably want to fix a
-   * bug in RemoteCore.connect() as well.
-   * </p>
-   */
-  public void connect(InetSocketAddress host, Principal remotePrincipal)
-      throws NoSuchNodeError, IOException {
-    Client client = Client.getClient();
-
-    Socket socket = new Socket();
-    socket.setTcpNoDelay(true);
-    socket.setKeepAlive(true);
-
-    // Connect to the client node and identify the client we're interested in.
-    socket.connect(host, client.timeout);
-    DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
-    dataOut.writeUTF(name);
-    dataOut.flush();
-
-    // Determine whether the client exists at the node.
-    if (socket.getInputStream().read() == 0) throw new NoSuchNodeError();
-
-    if (client.useSSL) {
-      // Start encrypting.
-      SSLSocket sslSocket;
-      synchronized (client.sslSocketFactory) {
-        sslSocket =
-            (SSLSocket) client.sslSocketFactory.createSocket(socket, name, host
-                .getPort(), true);
-      }
-      sslSocket.setUseClientMode(true);
-      sslSocket.startHandshake();
-
-      // Make sure we're talking to the right node.
-      X500Principal peer =
-          (X500Principal) sslSocket.getSession().getPeerPrincipal();
-      if (!peer.equals(remotePrincipal)) {
-        Logger.getLogger(this.getClass().getName()).info(
-            "Rejecting connection to " + host + ": got principal " + peer
-                + " when we expected " + remotePrincipal);
-        socket.close();
-        throw new IOException();
-      }
-
-      out =
-          new DataOutputStream(new BufferedOutputStream(sslSocket
-              .getOutputStream()));
-      out.flush();
-      in =
-          new DataInputStream(new BufferedInputStream(sslSocket
-              .getInputStream()));
-      conn = sslSocket;
-    } else {
-      out =
-          new DataOutputStream(new BufferedOutputStream(socket
-              .getOutputStream()));
-      out.writeUTF(client.javaPrincipal.getName());
-      out.flush();
-
-      in =
-          new DataInputStream(
-              new BufferedInputStream(socket.getInputStream()));
-
-      conn = socket;
-    }
-
-    // Send a pointer to our principal object.
-    NodePrincipal principal = client.getPrincipal();
-    InterClientMessage.writeRef((_Proxy) principal, out);
-  }
-
-  public boolean isConnected(boolean useSSL) {
-    return isConnected();
-  }
-
-  public boolean isConnected() {
-    return conn != null && !conn.isClosed();
+  @Override
+  protected boolean supportsUnencrypted() {
+    return false;
   }
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
@@ -251,6 +132,7 @@ public final class RemoteClient implements RemoteNode {
     }
   }
 
+  @Override
   public String name() {
     return name;
   }
