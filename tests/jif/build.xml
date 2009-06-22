@@ -17,6 +17,7 @@
 				<arg value="${fabric.home}/bin/fabc" />
 				<arg value="-d" /> <arg value="classes"/>
 				<arg value="-e" />
+				<arg value="-debugpositions" />
 				<srcfile />
 				<fileset dir="${basedir}" includes="jif/util/Map.fab, jif/lang/ExternalPrincipal.fab, jif/util/List.fab, jif/util/LinkedList.fab, jif/lang/JifString.fab, jif/util/Set.fab" />
 				<fileset dir="${basedir}" includes="fabricated/lang/*.fab, fabricated/util/*.fab" />

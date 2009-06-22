@@ -39,7 +39,7 @@ public class Array extends jif.parse.Array {
         base = ((LabeledTypeNode)base).typePart();
     }
     
-    //  XXX: this design is rediculous, and I'm not sure if this logic is right
+    //  XXX: this design is ridiculous, and I'm not sure if this logic is right
     
     boolean isConst  =  isConst()   || (base instanceof ConstArrayTypeNode);
     boolean isFabric = !isNative();
@@ -47,7 +47,7 @@ public class Array extends jif.parse.Array {
     FabricNodeFactory nf = (FabricNodeFactory) parser.nf;
     
     if ( isConst &&  isFabric)
-      throw new InternalCompilerError("Const fabric arrays not yet supported");
+      throw new InternalCompilerError("Const fabric arrays not yet supported" + base.position());
     if ( isConst && !isFabric)
       return nf.ConstArrayTypeNode(pos, prefix);
     if (!isConst &&  isFabric)
