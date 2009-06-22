@@ -32,7 +32,7 @@ public class CalServDeclassifier authority (CalServEP) {
     }
 
     // DOWNGRADE REASON: transfer user display string from CalServEP to p
-    static String{*lbl} declassUserDisplayString{p:}(label{p:} lbl, principal{p:} p, User[CalServEP]{p:} u) 
+    static String{*lbl} declassUserDisplayString{p:}(label{p:} lbl, principal{p:} p, User[CalServEP, {p:}]{p:} u) 
       where {p!:} <= lbl, lbl <= {p:}, caller (CalServEP,p), endorse({p:;p!:}) {
         String userName = u==null?null:u.displayString();
         String s = null;

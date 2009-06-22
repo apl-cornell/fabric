@@ -45,7 +45,20 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 			User[CalServEP] k = new CalUser("siggi", "password", "Sigmund", "Cherem");
 			User[CalServEP] l = new CalUser("radu", "password", "Radu", "Rugina");
 
-			users = new User[CalServEP]@backend[] { a,b,c,d,e,f,g,h,i,j,k,l };
+//			users = new User[CalServEP]@backend[] { a,b,c,d,e,f,g,h,i,j,k,l };
+            users = new User[CalServEP]@backend[12];
+            users[0] = a;
+            users[1] = b;
+            users[2] = c;
+            users[3] = d;
+            users[4] = e;
+            users[5] = f;
+            users[6] = g;
+            users[7] = h;
+            users[8] = i;
+            users[9] = j;
+            users[10] = k;
+            users[11] = l;
 
 			events = new HashSet[{CalServEP:;CalServEP!:}]@backend();
 		}
