@@ -373,7 +373,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
 
           // get the list of user ids              
           String input = req.getParam(selectUsersAction.inpUsers);
-          String{*bnd}[] names = splitInput(bnd, input);
+          String{*bnd} native[] names = splitInput(bnd, input);
           
           // validate the list of user ids
           if (selectUsersAction.singleMode && (names == null || names.length != 1)) {
@@ -495,7 +495,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
        * Splits input into an array of strings, separating on '\n' or
        * '\r' characters.
        */
-      private String{*lbl}[]{*lbl} splitInput{*lbl}(label{*lbl} lbl, String{*lbl} input) {
+      private String{*lbl} native[]{*lbl} splitInput{*lbl}(label{*lbl} lbl, String{*lbl} input) {
           if (input == null) return null;
           LinkedList[lbl] l = new LinkedList[lbl]();
           String s = "";
@@ -518,9 +518,10 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
               l.add(new JifString[lbl](s));
           }
           int size = l.size();
-          final Core localCore = FabricClient.getClient().getLocalCore();
+          FabricClient fclient = FabricClient.getClient();
+          final Core localCore = fclient!=null?fclient.getLocalCore():null;
           int sz = size<0?0:size;
-          String{*lbl}[] array = new String native[sz];
+          String{*lbl} native[] array = new String native[sz];
           int count = 0;
           for (Iterator[lbl] iter = l.iterator(); iter != null && iter.hasNext(); ) {
               try {

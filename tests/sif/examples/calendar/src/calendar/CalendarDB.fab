@@ -11,13 +11,13 @@ import jif.lang.LabelUtil;
 public class CalendarDB authority(CalServEP, CalRootEP) {
 
 	// TODO: This should be replaced with a map (ConcurrentHashMap?)
-	private User[CalServEP]{CalServEP:;CalServEP!:}@backend[]{CalServEP:;CalServEP!:}@backend users;
+	private User[CalServEP]{CalServEP:;CalServEP!:}[]{CalServEP:;CalServEP!:} users;
 
 	// counter for unique ids for events
-	private int{CalServEP:;CalServEP!:}@backend uidCounter = 0;
+	private int{CalServEP:;CalServEP!:} uidCounter = 0;
 
 	// central repository of events.
-	private Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}@backend events;
+	private Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} events;
 
 	private Core backend;
 	private RemoteClient coreClient;
@@ -25,7 +25,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	public CalendarDB(Core core) {
 		backend = core;
 		Client local = Client.getClient();
-		coreClient = c.getClient(backend.name())
+		coreClient = c.getClient(backend.name());
 		// fabric init stuff here
 	}
 
