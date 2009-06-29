@@ -8,5 +8,6 @@ public class FabricClient {
   public native Core getLocalCore();
   
   public native static FabricClient getClient();
+  public native RemoteClient getClient(String name);  
   
 }
