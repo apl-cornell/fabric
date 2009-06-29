@@ -3,7 +3,8 @@ package calendar;
 import userserv.*;
 import sif.servlet.*;
 import sif.html.*;
-import jif.util.*;
+import jif.util.List;
+import fabricated.util.Date;
 
 public class CalServDeclassifier authority (CalServEP) {
 
@@ -301,8 +302,8 @@ public class CalServDeclassifier authority (CalServEP) {
     	    final User[CalServEP, {Q←}] currentUser1 = User.declassifyUser(CalServEP, P, Q, currentUser_);
     	    final User[CalServEP, {P→;P←}] stateCurrentUser = state.currentUser;
     	    Date[{stateCurrentUser←}] stateDisplayDate = state.displayDate;
-    	    jif.util.Date[{stateCurrentUser←}] displayDate_ = endorse(stateDisplayDate, {P→;P←} to {P→;Q←});
-    	    jif.util.Date[{currentUser1←}] displayDate = declassify(displayDate_, {P→;Q←} to {Q←});
+    	    fabricated.util.Date[{stateCurrentUser←}] displayDate_ = endorse(stateDisplayDate, {P→;P←} to {P→;Q←});
+    	    fabricated.util.Date[{currentUser1←}] displayDate = declassify(displayDate_, {P→;Q←} to {Q←});
     	    final int{Q←} displayKind = declassify(endorse(state.displayKind, {P→;P←} to {P→;Q←}), {P→;Q←} to {Q←});
     	    final User[CalServEP, {P→;Q←}] displayUser1 = User.endorseUser(CalServEP, P, Q, state.displayUser);
     	    final User[CalServEP, {Q←}] displayUser = User.declassifyUser(CalServEP, P, Q, displayUser1);

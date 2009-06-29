@@ -5,11 +5,16 @@ import userserv.*;
 import jif.lang.LabelUtil;
 import fabricated.util.HashSet;
 import fabricated.util.Set;
+import fabricated.util.Date;
+import fabricated.util.Iterator;
+import fabricated.util.NoSuchElementException;
+import jif.util.List;
+import jif.util.LinkedList;
 
 /**
  * A Calendar holds the persistent state of the entire calendar system.
  */
-public class CalendarDB authority(CalServEP, CalRootEP) {
+public class CalendarDB extends java.lang.Object authority(CalServEP, CalRootEP) {
 
 	// TODO: This should be replaced with a map (ConcurrentHashMap?)
 	private User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:}[]{CalServEP:;CalServEP!:} users;
@@ -20,8 +25,8 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	// central repository of events.
 	private Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} events;
 
-	private Core backend;
-	private RemoteClient coreClient;
+	private final Core backend;
+	private final RemoteClient coreClient;
 
 	public CalendarDB(Core core) {
 		backend = core;
@@ -81,11 +86,11 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 
 	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID} 
 	lookupUserIDRemote(String userID) {
-		User[CalServEP]{CalServEP:;CalServEP!:}[] users = this.users;
+		User[CalServEP, {CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}[] users = this.users;
 		if (users == null || userID == null) return null;
 		for (int i = 0; i < users.length; i++) {
 			try {
-				User[CalServEP] u = users[i];
+				User[CalServEP, {CalServEP:;CalServEP!:}] u = users[i];
 				if (u != null && userID.equals(u.getUserID())) {
 					return u;
 				}
@@ -95,15 +100,15 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		return null;
 	}
 	
-	public Event{CalServEP:;CalServEP!:} 
+	public Event[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} 
 	retrieveEvent{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
 	where caller(CalServEP) {
 		retrieveEventRemote@coreClient(eventID);
 	}
 	
 
-	public Event{CalServEP:;CalServEP!:} 
-	retrieveEvent{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
+	public Event[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} 
+	retrieveEventRemote{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
 	where caller(CalServEP) {
 		Set[{CalServEP:;CalServEP!:}] es = this.events;
 		if (es != null) {
@@ -125,7 +130,10 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		return null;
 	}
 
-	public boolean updateEvent{CalServEP:;CalServEP!:}(Event{CalServEP:;CalServEP!:} newEvent) where caller(CalServEP) {
+	public boolean updateEvent{CalServEP:;CalServEP!:}(
+	    Event[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} newEvent)
+	    where caller(CalServEP)
+	{
 		Set[{CalServEP:;CalServEP!:}] es = this.events;
 		if (es != null) {
 			try {
@@ -200,7 +208,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 								// is the event on user's calendar?
 								boolean{CalServEP:;CalServEP!:} readable = false;
 								try {
-									readable = LabelUtil.singleton().isReadableBy(
+									readable = LabelUtil.isReadableBy(
 											event.infoLbl, displayUser);
 								} catch (NullPointerException imposs) {}
 								if (readable) {
@@ -224,7 +232,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	private void 
 	transferEvent{CalServEP:;CalRootEP:}(
 			List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:;CalRootEP:} c, 
-			Event{CalServEP:;CalRootEP:} e) 
+			Event[{CalServEP:;CalRootEP:}]{CalServEP:;CalRootEP:} e_) 
 			where caller(CalServEP,CalRootEP),
 			endorse({CalServEP:;CalRootEP:; CalServEP!: meet CalRootEP!:}) {
 
