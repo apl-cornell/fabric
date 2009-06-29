@@ -16,35 +16,46 @@ public final class Date[covariant label L] implements JifObject[L] {
     private final int{L} day;
     private final int{L} hour;
     private final int{L} minute;
+    
+// TODO XXX Temporary hack for static fields until we support array init in fabric
 
-    public static final String{*!:*}[]{*!:*} monthNames = {
-            "NOT A VALID MONTH",
-            "January", "February", "March", "April",
-            "May", "June", "July", "August",
-            "September", "October", "November", "December",
-        };
+//    public static final String{*!:*}[]{*!:*} monthNames = {
+//            "NOT A VALID MONTH",
+//            "January", "February", "March", "April",
+//            "May", "June", "July", "August",
+//            "September", "October", "November", "December",
+//        };
+    public static final String{*!:*}[]{*!:*} monthNames = null;
 
-    public static final String{*!:*}[]{*!:*} daysOfWeek = {
-            "Sunday",
-            "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
-            "Saturday", "Sunday",
-        };
-    public static final String{*!:*}[]{*!:*} shortDaysOfWeek = {
-            "Sun",
-            "Mon", "Tue", "Wed", "Thu", "Fri",
-            "Sat", "Sun",
-        };
+//    public static final String{*!:*}[]{*!:*} daysOfWeek = {
+//            "Sunday",
+//            "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+//            "Saturday", "Sunday",
+//        };
+    public static final String{*!:*}[]{*!:*} daysOfWeek = null;
+    
+//    public static final String{*!:*}[]{*!:*} shortDaysOfWeek = {
+//            "Sun",
+//            "Mon", "Tue", "Wed", "Thu", "Fri",
+//            "Sat", "Sun",
+//        };
+    public static final String{*!:*}[]{*!:*} shortDaysOfWeek = null;
+    
 
-    public static final String{*!:*}[]{*!:*} shortMonthNames = {
-        "NOT A VALID MONTH",
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    };
-    public static final int{*!:*}[]{*!:*} maxDaysInMonth = {
-        -1,
-        31, 29, 31, 30, 31, 30, 
-        31, 31, 30, 31, 30, 31,
-    };
+//    public static final String{*!:*}[]{*!:*} shortMonthNames = {
+//        "NOT A VALID MONTH",
+//        "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+//        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+//    };
+    public static final String{*!:*}[]{*!:*} shortMonthNames = null;
+    
+//    public static final int{*!:*}[]{*!:*} maxDaysInMonth = {
+//        -1,
+//        31, 29, 31, 30, 31, 30, 
+//        31, 31, 30, 31, 30, 31,
+//    };
+    public static final int{*!:*}[]{*!:*} maxDaysInMonth = null;
+    
 
     /**
      * At the moment, assume that the string is in the format YYYY/MM/DD hh:mm

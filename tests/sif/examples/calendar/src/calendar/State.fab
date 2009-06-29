@@ -14,10 +14,10 @@ class State[covariant label T] {
         this.displayKind = displayKind;
         this.displayUser = displayUser;
     }
-    final User[CalServEP]{T} currentUser;
+    final User[CalServEP, T]{T} currentUser;
     final jif.util.Date[{currentUser←}]{T} displayDate;
     final int{T} displayKind;
-    final User[CalServEP]{T} displayUser;
+    final User[CalServEP, T]{T} displayUser;
     
     State[lbl] changeDisplayUser{*lbl}(label{*lbl} lbl, User[CalServEP]{*lbl} displayUser)
     where T <= lbl {

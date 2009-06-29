@@ -6,7 +6,7 @@ import userserv.User;
  * Represents a calendar app user 
  */
 public class CalUser[covariant label T] extends User[CalServEP, T] {
-    public CalUser{CalServEP:;CalServEP!:}(String{T} name, 
+    public CalUser{CalServEP:;CalServEP!:}(String{this} name, 
             String{T} password, 
             String{CalServEP:;CalServEP!:} firstName, 
             String{CalServEP:;CalServEP!:} lastName) where authority (this), endorse({CalServEP:;CalServEP!: meet this!:}) {

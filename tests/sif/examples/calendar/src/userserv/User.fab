@@ -93,6 +93,32 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
     	final String{P←} npassword = declassify(user.password, {P→;P←} to {P←});
     	final String{P←} nname = declassify(user.name(), {P→;P←} to {P←});
     	return new User[Q,{P←}](nremote1, npassword, nname);
-    	
     }
+    
+    public static User[EP, {P→;Q←}]{P→;Q←} endorseUser{P→;P←}(principal{P→;P←} EP, principal{P→;P←} P, principal{P→;P←} Q, User[EP,{P→;P←}]{P→;P←} user_) 
+    where caller(Q), endorse({P→;Q←}) {
+        User[EP,{P→;P←}]{P→;Q←} user = endorse(user_, {P→;P←;Q←} to {P→;Q←});
+        if(user == null) return null;
+        final User$1[EP] nremote1 = endorse(user.remote1, {P→;P←;Q←} to {P→;Q←});
+        final String npassword = endorse(user.password, {P→;P←;Q←} to {P→;Q←});
+        final String nname = endorse(user.name(), {P→;P←;Q←} to {P→;Q←});
+        User[EP,{P→;Q←}] toReturn = endorse(new User[EP,{P→;Q←}](nremote1, npassword, nname), {P→;P←;Q←} to {P→;Q←});
+        return toReturn;
+    }
+
+    public static User[EP, {Q←}]{Q←} declassifyUser{P→;Q←}(principal{P→;P←} EP, principal{P→;P←} P, principal{P→;P←} Q, User[EP,{P→;Q←}]{P→;Q←} user_) 
+    where Q actsfor P, caller(Q) {
+        declassify({Q←}) {
+            User[EP,{P→;Q←}]{Q←} user = declassify(user_, {P→;Q←} to {Q←});
+            if(user == null) return null;
+            final User$1[EP] nremote1 = declassify(user.remote1, {P→;Q←} to {Q←});
+            final String npassword = declassify(user.password, {P→;Q←} to {Q←});
+            final String nname = declassify(user.name(), {P→;Q←} to {Q←});
+            User[EP,{Q←}] toReturn1 = new User[EP,{Q←}](nremote1, npassword, nname);
+            User[EP,{Q←}] toReturn2 = endorse(toReturn1, {P→;P←;Q←} to {P→;Q←});
+            User[EP,{Q←}] toReturn = declassify(toReturn2, {P→;Q←} to {Q←});
+            return toReturn;
+        }
+    }
+    
 }

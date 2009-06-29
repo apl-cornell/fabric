@@ -2,8 +2,9 @@ package calendar;
 
 import userserv.*;
 
-import jif.util.*;
 import jif.lang.LabelUtil;
+import fabricated.util.HashSet;
+import fabricated.util.Set;
 
 /**
  * A Calendar holds the persistent state of the entire calendar system.
@@ -11,7 +12,7 @@ import jif.lang.LabelUtil;
 public class CalendarDB authority(CalServEP, CalRootEP) {
 
 	// TODO: This should be replaced with a map (ConcurrentHashMap?)
-	private User[CalServEP]{CalServEP:;CalServEP!:}[]{CalServEP:;CalServEP!:} users;
+	private User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:}[]{CalServEP:;CalServEP!:} users;
 
 	// counter for unique ids for events
 	private int{CalServEP:;CalServEP!:} uidCounter = 0;
@@ -24,29 +25,29 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 
 	public CalendarDB(Core core) {
 		backend = core;
-		Client local = Client.getClient();
-		coreClient = c.getClient(backend.name());
+		FabricClient local = FabricClient.getClient();
+		coreClient = local.getClient(backend.name());
 		// fabric init stuff here
 	}
 
 	public void initialize{CalServEP:;CalServEP!:}() {
 		// There's a bug here, I can't put the new statements directly in the array initializer.
 		atomic {
-			User[CalServEP] a = new CalUser("liujed", "password", "Jed", "Liu");
-			User[CalServEP] b = new CalUser("kvikram", "password", "Krishnaprasad", "Vikram");
-			User[CalServEP] c = new CalUser("andru", "password", "Andrew", "Myers");
-			User[CalServEP] d = new CalUser("schong", "password", "Steve", "Chong");
-			User[CalServEP] e = new CalUser("michael", "password", "Michael", "Clarkson");
-			User[CalServEP] f = new CalUser("nate", "password", "Nathaniel", "Nystrom");
-			User[CalServEP] g = new CalUser("xin", "password", "Xin", "Qi");
-			User[CalServEP] h = new CalUser("mdgeorge", "password", "Michael", "George");
-			User[CalServEP] i = new CalUser("lantian", "password", "Lantian", "Zheng");
-			User[CalServEP] j = new CalUser("maksim", "password", "Maksim", "Orlovich");
-			User[CalServEP] k = new CalUser("siggi", "password", "Sigmund", "Cherem");
-			User[CalServEP] l = new CalUser("radu", "password", "Radu", "Rugina");
+			User[CalServEP, {CalServEP→;CalServEP←}] a = new CalUser[{CalServEP→;CalServEP←}]("liujed", "password", "Jed", "Liu");
+			User[CalServEP, {CalServEP→;CalServEP←}] b = new CalUser[{CalServEP→;CalServEP←}]("kvikram", "password", "Krishnaprasad", "Vikram");
+			User[CalServEP, {CalServEP→;CalServEP←}] c = new CalUser[{CalServEP→;CalServEP←}]("andru", "password", "Andrew", "Myers");
+			User[CalServEP, {CalServEP→;CalServEP←}] d = new CalUser[{CalServEP→;CalServEP←}]("schong", "password", "Steve", "Chong");
+			User[CalServEP, {CalServEP→;CalServEP←}] e = new CalUser[{CalServEP→;CalServEP←}]("michael", "password", "Michael", "Clarkson");
+			User[CalServEP, {CalServEP→;CalServEP←}] f = new CalUser[{CalServEP→;CalServEP←}]("nate", "password", "Nathaniel", "Nystrom");
+			User[CalServEP, {CalServEP→;CalServEP←}] g = new CalUser[{CalServEP→;CalServEP←}]("xin", "password", "Xin", "Qi");
+			User[CalServEP, {CalServEP→;CalServEP←}] h = new CalUser[{CalServEP→;CalServEP←}]("mdgeorge", "password", "Michael", "George");
+			User[CalServEP, {CalServEP→;CalServEP←}] i = new CalUser[{CalServEP→;CalServEP←}]("lantian", "password", "Lantian", "Zheng");
+			User[CalServEP, {CalServEP→;CalServEP←}] j = new CalUser[{CalServEP→;CalServEP←}]("maksim", "password", "Maksim", "Orlovich");
+			User[CalServEP, {CalServEP→;CalServEP←}] k = new CalUser[{CalServEP→;CalServEP←}]("siggi", "password", "Sigmund", "Cherem");
+			User[CalServEP, {CalServEP→;CalServEP←}] l = new CalUser[{CalServEP→;CalServEP←}]("radu", "password", "Radu", "Rugina");
 
 //			users = new User[CalServEP]@backend[] { a,b,c,d,e,f,g,h,i,j,k,l };
-            users = new User[CalServEP]@backend[12];
+            users = new User[CalServEP, {CalServEP→;CalServEP←}][12]@backend;
             users[0] = a;
             users[1] = b;
             users[2] = c;
@@ -72,13 +73,13 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		}
 	}
 	
-	public User[CalServEP]{CalServEP:; CalServEP!:; userID} 
+	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID} 
 	lookupUserID(String userID) {
 		lookupUserIDRemote@coreClient(userID);
 	}
 	
 
-	public User[CalServEP]{CalServEP:; CalServEP!:; userID} 
+	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID} 
 	lookupUserIDRemote(String userID) {
 		User[CalServEP]{CalServEP:;CalServEP!:}[] users = this.users;
 		if (users == null || userID == null) return null;
@@ -146,7 +147,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	eventSubset{CalServEP:;CalServEP!:}(
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
-			User[CalServEP]{CalServEP:;CalServEP!:} displayUser)
+			User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:} displayUser)
 			where authority(CalRootEP), authority(CalServEP) {
 		eventSubsetRemote@coreClient(start, end, displayUser);
 	}
@@ -161,7 +162,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	eventSubsetRemote{CalServEP:;CalServEP!:}(
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
-			User[CalServEP]{CalServEP:;CalServEP!:} displayUser)
+			User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:} displayUser)
 			where authority(CalRootEP), authority(CalServEP) {
 
 		Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} es = this.events;

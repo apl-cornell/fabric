@@ -1,7 +1,7 @@
-package fabricated.util;
+package jif.util;
 
-public class HashSet[label L, covariant label T] extends AbstractSet[L] {
-    private final HashMap[L,L]{T} map;
+public class HashSet[label L] extends AbstractSet[L] {
+    private final HashMap[L,L]{this} map;
   
     public HashSet{L}(int{L} initialCapacity, float{L} loadFactor) throws (IllegalArgumentException{L}) {
         map = new HashMap[L,L](initialCapacity, loadFactor);
@@ -73,7 +73,7 @@ public class HashSet[label L, covariant label T] extends AbstractSet[L] {
         return 0;
     }
     
-    public Iterator[L]{T} iterator() {
+    public Iterator[L]{this} iterator() {
         if (map != null) {
             Set[L] ks = map.keySet();
             if (ks != null) return ks.iterator();
