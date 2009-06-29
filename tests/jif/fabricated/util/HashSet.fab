@@ -1,7 +1,7 @@
-package jif.util;
+package fabricated.util;
 
 public class HashSet[label L] extends AbstractSet[L] {
-    private final HashMap[L,L]{this} map;
+    private final HashMap[L,L]{L} map;
   
     public HashSet{L}(int{L} initialCapacity, float{L} loadFactor) throws (IllegalArgumentException{L}) {
         map = new HashMap[L,L](initialCapacity, loadFactor);
@@ -43,10 +43,7 @@ public class HashSet[label L] extends AbstractSet[L] {
     }
 
     public JifObject[L]{L;index} get(int index):{L;index} throws (IndexOutOfBoundsException{L;index}) {
-        if (map != null) {
-            Set[L] ks = map.keySet();
-            if (ks != null) return ks.get(index);
-        }
+        // TODO XXX : Not supported yet
         return null;
     }
     
@@ -73,11 +70,38 @@ public class HashSet[label L] extends AbstractSet[L] {
         return 0;
     }
     
-    public Iterator[L]{this} iterator() {
+    public Iterator[L]{L} iterator() {
         if (map != null) {
-            Set[L] ks = map.keySet();
-            if (ks != null) return ks.iterator();
+            return new HashSetEntryIterator(map);
         }        
         return null;
+    }
+}
+
+class HashSetEntryIterator[label L] extends HashMapEntrySetIterator[L,L] {
+    public HashSetEntryIterator(HashMap[L,L]{this} map) {
+        super(map);
+    }
+    // TODO XXX : Use super.next instead of code copying (might need fixing the compiler)
+    public JifObject[L]{L} next{L}() throws (NoSuchElementException{L}) {
+        if (parent != null) {
+            if (next == null) {
+                // initialization that we couldn't do in the constructor.
+                try {
+                    current = parent.header;
+                    next = current.after;
+                }
+                catch (NullPointerException imposs) { }
+            }
+
+            if (next == parent.header) throw new NoSuchElementException();
+            current = next; // assign current null first, in case next() throws exception
+            try {
+                next = current.after;
+                return current.key;
+            }
+            catch (NullPointerException imposs) { }
+        }
+        return null;        
     }
 }

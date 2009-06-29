@@ -750,9 +750,9 @@ class HashMapEntrySet[label K, label V] extends AbstractSet[K] {
 }
 
 class HashMapEntrySetIterator[label K, label V] implements Iterator[K] {
-    private final HashMap[K,V]{K} parent;
-    private HashMapEntry[K, V]{K} current = null;
-    private HashMapEntry[K, V]{K} next = null;
+    protected final HashMap[K,V]{K} parent;
+    protected HashMapEntry[K, V]{K} current = null;
+    protected HashMapEntry[K, V]{K} next = null;
 
     HashMapEntrySetIterator(HashMap[K,V]{this} parent) {
         this.parent = parent;        

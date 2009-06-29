@@ -1,4 +1,4 @@
-package jif.util;
+package fabricated.util;
 
 import jif.runtime.Runtime;
 
