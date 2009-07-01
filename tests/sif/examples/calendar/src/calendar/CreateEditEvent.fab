@@ -5,7 +5,8 @@ import javax.servlet.ServletException;
 import sif.servlet.*;
 import sif.html.*;
 import userserv.*;
-import jif.util.*;
+import fabricated.util.Date;
+import fabricated.util.List;
 
 /**
  * A reusable Action for either creating, editing, or viewing events.
@@ -23,7 +24,8 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
     /**
      * The event being viewed/edited/created
      */
-    final Event{this} event;
+    final label evLbl;
+    final Event[evLbl]{this} event;
     
     /**
      * The object to hand the event off to after editing/creating successfully
@@ -49,12 +51,14 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
                            principal{this} session,
                            FinishEditEventReceiver{this} finishEditEventReceiver, 
                            UAction[CalServEP]{this} cancelAction,
-                           Event{this} event,
+                           label evLbl,
+                           Event[evLbl]{this} event,
                            boolean{this} isReadOnly,
                            boolean{this} isCreate) 
     {
         this.finishEditEventReceiver = finishEditEventReceiver;
         this.cancelAction = cancelAction;
+        this.evLbl = evLbl;
         this.event = event;
         this.isReadOnly = isReadOnly;
         this.isCreate = isCreate;
@@ -91,7 +95,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
             User[CalServEP,{*lbl;session!:}]{*lbl;session!:} currentUser) 
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
-              session equiv ustate.sessionPrincipal,
+              session equiv ustate.remote.sessionPrincipal,
               session actsfor currentUser,              
               lbl <= {*:req.session},
               caller(session)
@@ -162,7 +166,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
             String{*event.timeLbl;*lbl} startErr,
             String{*event.timeLbl;*lbl} endErr)
         where session equiv req.session, 
-              session equiv state.sessionPrincipal,
+              session equiv state.remote.sessionPrincipal,
               req.session actsfor currentUser,
               {currentUser!:} equiv {*lbl},
               lbl <= this.event.timeLbl, 
@@ -204,8 +208,8 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
         
         String defaultName = defaultValue(lbl, event.infoLbl, req, event.remote1.name, this.inpName);        
         String defaultNote = defaultValue(lbl, event.infoLbl, req, event.remote1.note, this.inpNote);        
-        String defaultStart = defaultValue(lbl, event.timeLbl, req, DateUtil[event.timeLbl].dateToString(event.startTime, false), this.inpStart);      
-        String defaultEnd = defaultValue(lbl, event.timeLbl, req, DateUtil[event.timeLbl].dateToString(event.endTime, false), this.inpEnd);      
+        String defaultStart = defaultValue(lbl, event.timeLbl, req, DateUtil.dateToString(event.timeLbl, event.startTime, false), this.inpStart);      
+        String defaultEnd = defaultValue(lbl, event.timeLbl, req, DateUtil.dateToString(event.timeLbl, event.endTime, false), this.inpEnd);      
                 
         InputNode[CalServEP, event.infoLbl, lbl] inpNameNode = new TextInput[CalServEP, 
                                     {*event.infoLbl;currentUser!:},lbl](inpName, 40, defaultName);
@@ -282,7 +286,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
               CalendarSessionState{*lbl} state,
               User[CalServEP,lbl]{*lbl} currentUser)
         where session equiv req.session, 
-              session equiv state.sessionPrincipal,
+              session equiv state.remote.sessionPrincipal,
               session actsfor currentUser,   
               CalRootEP actsfor currentUser,
               lbl <= {*:req.session},
@@ -307,8 +311,8 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
           
           String defaultName = defaultValue(lbl, event.infoLbl, req, event.remote1.name, this.inpName);        
           String defaultNote = defaultValue(lbl, event.infoLbl, req, event.remote1.note, this.inpNote);        
-          String defaultStart = defaultValue(lbl, event.timeLbl, req, DateUtil[event.timeLbl].dateToString(event.startTime, false), this.inpStart);      
-          String defaultEnd = defaultValue(lbl, event.timeLbl, req, DateUtil[event.timeLbl].dateToString(event.endTime, false), this.inpEnd);      
+          String defaultStart = defaultValue(lbl, event.timeLbl, req, DateUtil.dateToString(event.timeLbl, event.startTime, false), this.inpStart);      
+          String defaultEnd = defaultValue(lbl, event.timeLbl, req, DateUtil.dateToString(event.timeLbl, event.endTime, false), this.inpEnd);      
           
           NodeList[bndR,lbl] entries = NodeList[bndR,lbl].EMPTY();
           entries = entries==null?null:entries.append(infoLblCur, lbl, new TRow[infoLblCur,lbl](new NodeList[infoLblCur,lbl](lbl, lbl, desc(lbl, "Event:"),
@@ -321,7 +325,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
           
           entries = entries==null?null:entries.append(lbl, lbl, new TRow[lbl,lbl](new TCell[lbl,lbl](null, hrule, 2, false)));
           
-          User[CalServEP] eventCreat = event.remote1.creator;
+          User[CalServEP, lbl] eventCreat = event.remote1.creator;
           
           String creatorName = CalServDeclassifier.declassUserDisplayString(event.infoLbl, CalRootEP, eventCreat); 
           entries = entries==null?null:entries.append(infoLblBot, lbl, new TRow[infoLblBot,lbl](new NodeList[infoLblBot,lbl](lbl, lbl, desc(lbl, "Creator:"),
@@ -428,10 +432,10 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
             Request[CalServEP]{*lbl;session!:} req,
             UServlet[CalServEP]{*lbl;session!:} uservlet,
             USessState[CalServEP,{*lbl;session!:}]{*lbl;session!:} ustate,
-            User[CalServEP]{*lbl;session!:} currentUser) 
+            User[CalServEP, {*lbl;session!:}]{*lbl;session!:} currentUser) 
     throws (ServletException{*lbl;req.session!:})
         where session equiv req.session, 
-              session equiv ustate.sessionPrincipal,
+              session equiv ustate.remote.sessionPrincipal,
               session actsfor currentUser,              
               lbl <= {*:req.session},
               caller(session)
@@ -471,9 +475,9 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
             Request[CalServEP]{*lbl} req,
             UServlet[CalServEP]{*lbl} uservlet,
             USessState[CalServEP,lbl]{*lbl} ustate,
-            User[CalServEP]{*lbl} currentUser)
+            User[CalServEP, lbl]{*lbl} currentUser)
      throws (ServletException{*lbl;req.session!:})
-       where req.session equiv ustate.sessionPrincipal,
+       where req.session equiv ustate.remote.sessionPrincipal,
              req.session equiv session,
              req.session equiv createEditEvent.session,
              session actsfor currentUser,
@@ -516,8 +520,8 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
                 nameErr = "Event name must be provided.";
             }
             
-            Date[createEditEvent.event.timeLbl] startDate = DateUtil[createEditEvent.event.timeLbl].stringToDate(createEditEvent.event.timeLbl, start);
-            Date[createEditEvent.event.timeLbl] endDate = DateUtil[createEditEvent.event.timeLbl].stringToDate(createEditEvent.event.timeLbl, end);
+            Date[createEditEvent.event.timeLbl] startDate = DateUtil.stringToDate(createEditEvent.event.timeLbl, createEditEvent.event.timeLbl, start);
+            Date[createEditEvent.event.timeLbl] endDate = DateUtil.stringToDate(createEditEvent.event.timeLbl, createEditEvent.event.timeLbl, end);
 
             String startErr = null;
             String endErr = null;

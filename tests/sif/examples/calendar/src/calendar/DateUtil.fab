@@ -1,9 +1,9 @@
 package calendar;
 
-import jif.util.Date;
+import fabricated.util.Date;
 
-public class DateUtil[label L] {
-    public static String{L;date} dateToString(Date[L] date, boolean{date} replaceSpace) {
+public class DateUtil {
+    public static String{*lbl;date} dateToString(label lbl, Date[lbl] date, boolean{date} replaceSpace) {
         String d = (date == null? "" : date.toShortString());
         return (d==null||!replaceSpace)?d:d.replace(' ', '-');
         
@@ -11,7 +11,7 @@ public class DateUtil[label L] {
 
     public static boolean{*lbl;lbl} isDate{*lbl}(label lbl, String{*lbl} dateStr) {
         try {
-            Date[L].valueOf(lbl, dateStr);
+            Date[lbl].valueOf(lbl, dateStr);
         }
         catch (IllegalArgumentException e) {
             return false;

@@ -767,6 +767,7 @@ class EditEventAction extends USessAction[CalServEP] {
                                         session, 
                                         new FinishEditingEvent(scsa),
                                         scsa,
+                                        new label {currentUser←;currentUser→},
                                         ev, 
                                         !isEditable,
                                         false);

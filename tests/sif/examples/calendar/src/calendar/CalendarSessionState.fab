@@ -4,9 +4,18 @@ import userserv.*;
 import sif.servlet.SessionState;
 import jif.util.*;
 
-public class CalendarSessionState extends USessState[CalServEP] {
-    State{sessionPrincipal!:} state = null;
-    ShowCalendarSessAction{sessionPrincipal!:} scsa = null;
+public class CalendarSessionState[covariant label T] extends USessState[CalServEP, T] {
+    final CSS[T, {remote.sessionPrincipal!:}]{T} css = new CSS();
     public CalendarSessionState() {
+    }
+}
+
+class CSS[covariant label T, label L] {
+    State[T]{L} state;
+    ShowCalendarSessAction{L} scsa;
+    
+    CSS() {
+        state = null;
+        scsa = null;
     }
 }

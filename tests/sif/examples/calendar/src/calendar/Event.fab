@@ -1,7 +1,8 @@
 package calendar;
 
 import userserv.*;
-import jif.util.*;
+import fabricated.util.Date;
+import fabricated.util.List;
 
 /**
  * An Event represents an entry in the calendar system.  A single Event object
@@ -10,7 +11,7 @@ import jif.util.*;
  * Note: this class has a natural ordering that is inconsistent with equals.
  */
 public class Event[covariant label T] /*implements Comparable*/ implements JifObject[{CalServEP:;CalServEP!:;T}] {
-	final int{CalServEP→;CalServEP←;T} uid;
+	final LabeledInt[{CalServEP→;CalServEP←;T}]{T} uid;
 
 	// timeLbl is typically less restrictive than infoLbl
 	// A principal could be allowed to read data marked with timeLbl, indicating
@@ -32,8 +33,8 @@ public class Event[covariant label T] /*implements Comparable*/ implements JifOb
 			String{*infoLbl_} note_,
 			List[{CalServEP:;CalServEP!:}]{*infoLbl_} attendees_,
 			List[{CalServEP:;CalServEP!:}]{*infoLbl_} viewers_,
-			User[CalServEP]{*infoLbl_} creator_) {
-		this.uid = uid_;
+			User[CalServEP, infoLbl_]{*infoLbl_} creator_) {
+		this.uid = new LabeledInt(uid_);
 		this.timeLbl = timeLbl_;
 		this.infoLbl = infoLbl_;
 		this.startTime = startTime_;
@@ -47,7 +48,7 @@ public class Event[covariant label T] /*implements Comparable*/ implements JifOb
 			Date[timeLbl_]{T} startTime_,
 			Date[timeLbl_]{T} endTime_,
 			Event$1[infoLbl_]{T} remote1) {
-		this.uid = uid_;
+		this.uid = new LabeledInt(uid_);
 		this.timeLbl = timeLbl_;
 		this.infoLbl = infoLbl_;
 		this.startTime = startTime_;
@@ -57,11 +58,16 @@ public class Event[covariant label T] /*implements Comparable*/ implements JifOb
 
 
 	public String{CalServEP:;CalServEP!:;T} toString() {
-		return Integer.toString(uid);
+	    if(uid != null) {
+	        return Integer.toString(uid.uid);
+	    } else {
+	        return "<null>";
+	    }
 	}
 
 	public int{CalServEP:;CalServEP!:;T} hashCode() {
-		return uid;
+	    if(uid == null) return -1;
+		return uid.uid;
 	}
 
 	public boolean{o;CalServEP:;CalServEP!:;T} equals(IDComparable[{CalServEP:;CalServEP!:;T}] o) {
@@ -70,10 +76,18 @@ public class Event[covariant label T] /*implements Comparable*/ implements JifOb
 	public boolean{o;CalServEP:;CalServEP!:;lbl;*lbl;T} equals(label lbl, IDComparable[lbl] o) {
 		if (o instanceof Event[lbl]) {
 			Event[lbl] that = (Event[lbl])o;
-			return this.uid == that.uid;
+			if(this.uid == null || that.uid == null) return false;
+			return this.uid.uid == that.uid.uid;
 		}
 		return false;
 	}
 
+}
+
+class LabeledInt[covariant label L] {
+    final int{L} uid;
+    LabeledInt(int{L} uid) {
+        this.uid = uid;
+    }
 }
 

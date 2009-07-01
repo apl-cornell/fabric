@@ -14,7 +14,7 @@ import jif.util.LinkedList;
 /**
  * A Calendar holds the persistent state of the entire calendar system.
  */
-public class CalendarDB extends java.lang.Object authority(CalServEP, CalRootEP) {
+public class CalendarDB authority(CalServEP, CalRootEP) {
 
 	// TODO: This should be replaced with a map (ConcurrentHashMap?)
 	private User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:}[]{CalServEP:;CalServEP!:} users;
@@ -25,13 +25,17 @@ public class CalendarDB extends java.lang.Object authority(CalServEP, CalRootEP)
 	// central repository of events.
 	private Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} events;
 
-	private final Core backend;
-	private final RemoteClient coreClient;
+	private final Core{CalServEP:;CalServEP!:} backend;
+	private final RemoteClient{CalServEP:;CalServEP!:} coreClient;
 
 	public CalendarDB(Core core) {
 		backend = core;
 		FabricClient local = FabricClient.getClient();
-		coreClient = local.getClient(backend.name());
+		if(local != null && backend != null) {
+		    coreClient = local.getClient(backend.name());
+		} else {
+		    coreClient = null;
+		}
 		// fabric init stuff here
 	}
 
@@ -53,20 +57,25 @@ public class CalendarDB extends java.lang.Object authority(CalServEP, CalRootEP)
 
 //			users = new User[CalServEP]@backend[] { a,b,c,d,e,f,g,h,i,j,k,l };
             users = new User[CalServEP, {CalServEP→;CalServEP←}][12]@backend;
-            users[0] = a;
-            users[1] = b;
-            users[2] = c;
-            users[3] = d;
-            users[4] = e;
-            users[5] = f;
-            users[6] = g;
-            users[7] = h;
-            users[8] = i;
-            users[9] = j;
-            users[10] = k;
-            users[11] = l;
+            try {
+                users[0] = a;
+                users[1] = b;
+                users[2] = c;
+                users[3] = d;
+                users[4] = e;
+                users[5] = f;
+                users[6] = g;
+                users[7] = h;
+                users[8] = i;
+                users[9] = j;
+                users[10] = k;
+                users[11] = l;
+            } catch (ArrayIndexOutOfBoundsException imposs) {}
+              catch (NullPointerException imposs) {}
 
-			events = new HashSet[{CalServEP:;CalServEP!:}]@backend();
+              if(backend actsfor CalServEP) {
+                  events = new HashSet[{CalServEP:;CalServEP!:}]@backend();
+              }
 		}
 	}
 
@@ -79,8 +88,10 @@ public class CalendarDB extends java.lang.Object authority(CalServEP, CalRootEP)
 	}
 	
 	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID} 
-	lookupUserID(String userID) {
-		lookupUserIDRemote@coreClient(userID);
+	lookupUserID(String userID)
+	    where {⊤←client$} <= {userID} ⊓ {}
+	{
+		return lookupUserIDRemote@coreClient(userID);
 	}
 	
 
@@ -103,7 +114,7 @@ public class CalendarDB extends java.lang.Object authority(CalServEP, CalRootEP)
 	public Event[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} 
 	retrieveEvent{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
 	where caller(CalServEP) {
-		retrieveEventRemote@coreClient(eventID);
+		return retrieveEventRemote@coreClient(eventID);
 	}
 	
 
@@ -122,8 +133,8 @@ public class CalendarDB extends java.lang.Object authority(CalServEP, CalRootEP)
 				catch (ClassCastException impossible) { }
 				final Event event = e;
 
-				if(event != null) {
-					if(event.uid == eventID) return event;
+				if(event != null && event.uid != null) {
+					if(event.uid.uid == eventID) return event;
 				}
 			}
 		}
@@ -151,13 +162,13 @@ public class CalendarDB extends java.lang.Object authority(CalServEP, CalRootEP)
 		return true;
 	}
 	
-	List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
+	public List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
 	eventSubset{CalServEP:;CalServEP!:}(
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
 			User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:} displayUser)
 			where authority(CalRootEP), authority(CalServEP) {
-		eventSubsetRemote@coreClient(start, end, displayUser);
+		return eventSubsetRemote@coreClient(start, end, displayUser);
 	}
 	
 	
@@ -166,7 +177,7 @@ public class CalendarDB extends java.lang.Object authority(CalServEP, CalRootEP)
 	 * for which user is either an attendee, or created the event. (i.e.,
 	 * if the info label is readable by user).
 	 */
-	List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
+	public List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
 	eventSubsetRemote{CalServEP:;CalServEP!:}(
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
