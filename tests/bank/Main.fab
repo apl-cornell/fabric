@@ -1,0 +1,35 @@
+import fabric.client.Core;
+import merchant.Merchant;
+
+public class Main {
+	public final Core{*bot} kaykLocation;
+	public final Core{*bot} dataLocation;
+	public final principal{*bot} pp;
+	public final label {*bot} lbl;
+	public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
+
+	public static void main{*bot} (String{*bot}[]{*bot} args) {
+		Main m_ = null;
+		atomic {
+			m_ = new Main();		
+		}
+//		m_.begin();
+	}
+
+	public Main() {
+
+		atomic {
+		kaykLocation = client$.getCore("core0");
+		dataLocation = client$.getCore("core1");
+			pp = new jif.lang.ExternalPrincipal@kaykLocation("localhost");
+			lbl = new label {pp→;pp←}@kaykLocation;
+		}
+	}
+
+	public void begin() {
+		atomic {
+			Merchant[lbl] kayak = null;
+//			kayak = new Merchant[lbl]@kaykLocation(dataLocation);
+		}
+	}
+}

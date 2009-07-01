@@ -1,0 +1,25 @@
+package bank;
+
+import fabric.client.Core;
+
+public class BankClient[label L] {
+	private Core{L} dataLocation;
+//	private HashMap[L,L]{L} customers;
+	public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
+
+	public BankClient{L} (Core{L} nodeLocation) {
+		this.dataLocation = nodeLocation;
+	}
+
+	public int{L} getBalance(int uid) {
+		return 500;
+    }
+
+	public boolean{L} debitFunds(int uid, int value) {
+		return true;
+    }
+
+    public boolean{L} sufficientFunds(int uid, int value) {
+    	return true;
+    }
+}

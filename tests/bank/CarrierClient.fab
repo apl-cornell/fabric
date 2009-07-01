@@ -1,0 +1,18 @@
+package carrier;
+
+import fabric.client.Core;
+
+public class CarrierClient[label L] {
+
+    private Core{L} dataLocation;
+    public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
+
+	public CarrierClient{L} (Core{L} nodeLocation) {
+        this.dataLocation = nodeLocation;
+	}
+
+	public int{L} getTicketPrice(int tid) {
+        return 500;
+    }
+
+}
