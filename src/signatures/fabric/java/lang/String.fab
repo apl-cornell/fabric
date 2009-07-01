@@ -51,6 +51,7 @@ public final class String extends java.lang.Object implements java.io.Serializab
 
     public native String{this;str} concat(String str) throws (NullPointerException{str});
     public native String{this} replace(char{this} oldChar, char{this} newChar);
+    public native String{this} replaceAll(String{this} regex, String{this} replacement);    
     public native byte{this}[]{this} getBytes();
     //    public native String{this} toLowerCase(Locale locale);
     public native String{this} toLowerCase();
