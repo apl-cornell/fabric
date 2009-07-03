@@ -92,6 +92,8 @@
     		<arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
         <arg value="-e"/>
     	<!--
+    	  <arg value="-report"/> <arg value="solver=5" />
+    	  <arg value="-report"/> <arg value="labelEnv=5" />
   		<arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>
   		<arg value="-report"/> <arg value="frontend=1"/>
       <arg value="-debugpositions"/>

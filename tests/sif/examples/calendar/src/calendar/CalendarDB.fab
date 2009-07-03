@@ -28,7 +28,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	private final Core{CalServEP:;CalServEP!:} backend;
 	private final RemoteClient{CalServEP:;CalServEP!:} coreClient;
 
-	public CalendarDB(Core core) {
+	public CalendarDB{CalServEP:;CalServEP!:}(Core{CalServEP:;CalServEP!:} core) {
 		backend = core;
 		FabricClient local = FabricClient.getClient();
 		if(local != null && backend != null) {
@@ -79,30 +79,34 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		}
 	}
 
-	public int{CalServEP:;CalServEP!:} 
-	getFreshUid{CalServEP:;CalServEP!:}() 
+	public int{CalServEP:;CalServEP!:}
+	getFreshUid{CalServEP:;CalServEP!:}()
 	where authority(CalServEP) {
 		atomic {
 			return uidCounter++;
 		}
 	}
 	
-	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID} 
-	lookupUserID(String userID)
-	    where {⊤←client$} <= {userID} ⊓ {}
+	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID}
+	    lookupUserID{⊤→client$;⊤←client$}(String{⊤→client$;⊤←client$} userID)
 	{
-		return lookupUserIDRemote@coreClient(userID);
+	    if(coreClient actsfor client$) {
+	        String{⊤→client$;⊤←client$} userID_ = userID;
+	        return lookupUserIDRemote@coreClient(userID_);
+	    }
+	    return null;
 	}
 	
 
-	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID} 
-	lookupUserIDRemote(String userID) {
+	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID_} 
+	    lookupUserIDRemote{⊤→client$;⊤←client$}(String{⊤→client$;⊤←client$} userID_) : {⊤→client$;⊤←client$}
+	{
 		User[CalServEP, {CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}[] users = this.users;
-		if (users == null || userID == null) return null;
+		if (users == null || userID_ == null) return null;
 		for (int i = 0; i < users.length; i++) {
 			try {
 				User[CalServEP, {CalServEP:;CalServEP!:}] u = users[i];
-				if (u != null && userID.equals(u.getUserID())) {
+				if (u != null && userID_.equals(u.getUserID())) {
 					return u;
 				}
 			}
