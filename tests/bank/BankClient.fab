@@ -1,6 +1,8 @@
 package bank;
 
 import fabric.client.Core;
+//import fabricated.lang.JifObject;
+//import fabricated.util.*;
 
 public class BankClient[label L] {
 	private Core{L} dataLocation;
@@ -12,14 +14,37 @@ public class BankClient[label L] {
 	}
 
 	public int{L} getBalance(int uid) {
-		return 500;
-    }
+                return 500;
+	}
 
-	public boolean{L} debitFunds(int uid, int value) {
-		return true;
-    }
+	public void init() {
+			
+	}
 
-    public boolean{L} sufficientFunds(int uid, int value) {
-    	return true;
-    }
+//        public boolean{L} debitFunds(int uid, int value) {
+//                return true;
+//        }
+
+//        public boolean{L} sufficientFunds(int uid, int value) {
+//                return true;
+//        }
+
+
+/**
+	public void insert{L}(int{L} value) {
+
+	}
+
+	private TreeNode[L] insertHelper{L}(TreeNode[L]{L} cur, int{L} value) {
+
+	}
+
+	public void insertIterative{L}(int{L} value) {
+
+	}
+
+	public TreeNode[L]{L} lookup{L}(int{L} value) {
+
+	}
+**/
 }

@@ -1,0 +1,16 @@
+package bank;
+
+public class BankEP extends AbstractPrincipal {
+
+	public BankEP (){
+		super("BankEP");
+	}
+
+    private static BankEP{*!:} P;
+    public static fabric.lang.Principal{*!:} getInstance{*!:}() {
+	if (P == null) {
+	    P = new BankEP();
+	}
+	return P;
+    }
+}

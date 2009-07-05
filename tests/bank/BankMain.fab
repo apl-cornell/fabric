@@ -1,0 +1,24 @@
+package bank;
+
+public class BankMain {
+	private final principal{bp:;bp!:} bp;
+	private BankPrincipal[{bp:;bp!:}]{bp:;bp!:} singleuser;
+
+	public void login(String username, String password) {
+		try {
+			if(singleuser.authenticate(username, password)) {
+				return;
+			}
+		} catch (NullPointerException e) {
+		}
+	}
+	
+	public void createUser{bp:;bp!:} () {
+		singleuser = new BankPrincipal ("user", "f", "l", "pwd");
+	}
+
+	public BankMain{*!:} () {
+		this.bp = BankEP.getInstance();
+	}
+
+}

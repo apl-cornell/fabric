@@ -1,0 +1,23 @@
+package bank;
+
+public class BankAcct [principal P] {
+	private int{P:;P!:} balance = 500;
+
+	public BankAcct () {
+	}
+
+	public int{P:;P!:} getBalance() {
+		return balance;
+	}
+	
+	public boolean{P:;P!:} debit{P:;P!:} (int{P:;P!:} amt) {
+		boolean{P:;P!:} result = false;
+		atomic {
+			if(amt <= balance) {
+				balance -= amt;
+				result = true;
+			}
+		}
+		return result;
+	}
+}

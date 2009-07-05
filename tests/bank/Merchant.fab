@@ -9,7 +9,7 @@ public class Merchant[label L] {
     private CarrierClient[L]{L} carr;
     private BankClient[L]{L} bank;
 
-	Merchant(Core{L} nodeLocation) {
+	Merchant{L} (Core{L} nodeLocation) {
         dataLocation = nodeLocation;
         carr = new CarrierClient[L](nodeLocation);
         bank = new BankClient[L](nodeLocation);

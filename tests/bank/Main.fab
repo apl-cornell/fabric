@@ -1,34 +1,52 @@
 import fabric.client.Core;
+import fabric.util.Map;
 import merchant.Merchant;
+import bank.*;
+
+import jif.runtime.Runtime;
+import java.io.PrintStream;
 
 public class Main {
 	public final Core{*bot} kaykLocation;
+	public final Core{*bot} bankLocation;
 	public final Core{*bot} dataLocation;
-	public final principal{*bot} pp;
-	public final label {*bot} lbl;
 	public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
+//	public final principal{*bot} pp;
+//	public final label {*bot} lbl;
 
 	public static void main{*bot} (String{*bot}[]{*bot} args) {
 		Main m_ = null;
 		atomic {
-			m_ = new Main();		
+			m_ = new Main();
+			m_.init();	
 		}
+
 //		m_.begin();
 	}
 
 	public Main() {
-
 		atomic {
-		kaykLocation = client$.getCore("core0");
-		dataLocation = client$.getCore("core1");
-			pp = new jif.lang.ExternalPrincipal@kaykLocation("localhost");
-			lbl = new label {pp→;pp←}@kaykLocation;
+			kaykLocation = client$.getCore("core0");
+			bankLocation = client$.getCore("core1");
+			dataLocation = client$.getCore("core1");
+//			pp = new jif.lang.ExternalPrincipal@kaykLocation("localhost");
+//			lbl = new label {pp→;pp←}@kaykLocation;
+		}
+	}
+
+	public void init{*bot} () {
+		try {
+			Map root = dataLocation.getRoot();
+			BankMain bank = new BankMain{*bot}@bankLocation();
+			bank.createUser();
+			root.put("theBank",bank);
+		} catch (NullPointerException e) {
 		}
 	}
 
 	public void begin() {
 		atomic {
-			Merchant[lbl] kayak = null;
+//			Merchant[lbl] kayak = null;
 //			kayak = new Merchant[lbl]@kaykLocation(dataLocation);
 		}
 	}

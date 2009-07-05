@@ -1,0 +1,26 @@
+package bank;
+
+public class BankPrincipal[covariant label T] extends AbstractPrincipal {
+	private final BankAcct[this]{T} acct;
+	private final String{T} firstName;
+	private final String{T} lastName;
+	private final String{T} password;
+
+	public BankPrincipal{T} (String{this} username, String{T} firstName, String{T} lastName, String{T} password){
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.password = password;
+		acct = new BankAcct[this]();
+		super(username);
+//		addDelegatesTo(Kayk);
+	}
+
+	public boolean{T;username;password} authenticate (String username, String password) {
+		//declassify({T} to {this}) {
+			
+		return (username == this.firstName && password == this.password);
+		//}
+		//return true;
+	}
+
+}
