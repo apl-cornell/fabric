@@ -3,8 +3,9 @@ package calendar;
 import userserv.*;
 import sif.servlet.*;
 import sif.html.*;
-import jif.util.List;
+import fabricated.util.List;
 import fabricated.util.Date;
+import fabric.lang.Principal;
 
 public class CalServDeclassifier authority (CalServEP) {
 

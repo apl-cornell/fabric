@@ -16,11 +16,11 @@ public interface FinishEditEventReceiver {
             Request[CalServEP]{*lbl} req,
             Main{*lbl} servlet,
             CalendarSessionState{*lbl} state,
-            User[CalServEP]{*lbl} currentUser,
+            User[CalServEP, lbl]{*lbl} currentUser,
             Event{currentUser:;currentUser!:} origEvent, 
             Event{currentUser:;currentUser!:} editedEvent) 
      throws (ServletException{*lbl;req.session!:})
-        where req.session equiv state.sessionPrincipal,
+        where req.session equiv state.remote.sessionPrincipal,
               req.session actsfor currentUser,              
               lbl <= {currentUser:; currentUser!:},
               caller(req.session);

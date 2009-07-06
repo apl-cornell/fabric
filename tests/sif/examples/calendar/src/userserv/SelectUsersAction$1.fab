@@ -1,6 +1,6 @@
 package userserv;
 
-import jif.util.List;
+import fabricated.util.List;
 
 public class SelectUsersAction$1[label L, principal servP] extends java.lang.Object {
 	

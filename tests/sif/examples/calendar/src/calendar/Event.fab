@@ -81,6 +81,13 @@ public class Event[covariant label T] /*implements Comparable*/ implements JifOb
 		}
 		return false;
 	}
+	
+	static Event[{P←}]{P←} declassifyEvent{P←}(principal{P←;P→} P, Event[{P←;P→}]{P←;P→} event)
+	    where caller(P)
+	{
+	    // TODO Implement me!
+	    return null;
+	}
 
 }
 

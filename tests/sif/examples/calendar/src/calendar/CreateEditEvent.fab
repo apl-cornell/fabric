@@ -24,7 +24,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
     /**
      * The event being viewed/edited/created
      */
-    final label evLbl;
+    final label{this} evLbl;
     final Event[evLbl]{this} event;
     
     /**
@@ -84,7 +84,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
 
     }
 
-    public Event{this} getEvent() {
+    public Event[evLbl]{this} getEvent() {
         return event;
     }
     
@@ -96,87 +96,111 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
               session equiv ustate.remote.sessionPrincipal,
-              session actsfor currentUser,              
+              session actsfor currentUser,
+              evLbl <= {*lbl;session!:},
               lbl <= {*:req.session},
               caller(session)
   {
         if (req == null || uservlet == null || ustate == null || 
                 event == null || !(uservlet instanceof Main) || 
-                !(ustate instanceof CalendarSessionState)) 
+                !(ustate instanceof CalendarSessionState[{*lbl;session!:}]))
             throw new ServletException("invalid args");
 
         final Main servlet = (Main)uservlet;
-        final CalendarSessionState state = (CalendarSessionState)ustate;
+        CalendarSessionState state_ = null;
+        try {
+            state_ = (CalendarSessionState)ustate;
+        } catch (ClassCastException imposs) {}
+        final CalendarSessionState state = state_;
+        if(state == null || state.remote == null) {
+            throw new ServletException("invalid args");
+        }
         if (isReadOnly) {
             if (event.infoLbl <= new label {*:req.session} && event.infoLbl <= new label {CalRootEP:} &&
                     new label {CalRootEP!:} <= event.infoLbl && event.timeLbl <= event.infoLbl &&
-                    lbl <= new label {CalRootEP:} && state.sessionPrincipal equiv session && CalRootEP actsfor currentUser) {  
+                    lbl <= new label {CalRootEP:} && state.remote.sessionPrincipal equiv session && CalRootEP actsfor currentUser) {  
                 produceReadOnlyPage(new label {*lbl; currentUser!:}, req, servlet, state, currentUser);
             }
-            else {
-                String lblString = null;
-                try {
-                    lblString = LabelUtil.singleton().toString(lbl);
-                }
-                catch (NullPointerException imposs) { }            
-                throw new ServletException("Cannot view event! CreateEditEvent.invokeSessImpl: lbl too high: " + lblString);
-            }
+//            else {
+//                String lblString = null;
+//                lblString = LabelUtil.toString(lbl);
+//                throw new ServletException("Cannot view event! CreateEditEvent.invokeSessImpl: lbl too high: " + lblString);
+//            }
         }
-        else {
-            if (inpName != null && inpStart != null && inpEnd != null && inpNote != null) {                    
-                if (lbl <= new label {currentUser:;currentUser!:} && event.infoLbl <= new label {currentUser:;currentUser!:} &&
-                        new label {currentUser!:} <= event.timeLbl && event.timeLbl <= event.infoLbl && 
-                        event.infoLbl <= inpName.inputLbl && event.timeLbl <= inpStart.inputLbl && 
-                        event.timeLbl <= inpEnd.inputLbl && event.infoLbl <= inpNote.inputLbl && 
-                        CalRootEP actsfor currentUser && session equiv state.sessionPrincipal) {
+        else if(evLbl <= new label {currentUser:;currentUser!:} && lbl <= new label {currentUser:;currentUser!:}) {
+            declassify ({currentUser:;currentUser!:} to {currentUser!:}) {
+            
+            final Event event_ = Event.declassifyEvent(currentUser, this.event);
+            if(event_ != null) 
+            if (inpName != null && inpStart != null && inpEnd != null && inpNote != null) {
+                if (event_.infoLbl <= new label {currentUser:;currentUser!:} &&
+                        new label {currentUser!:} <= event_.timeLbl && event_.timeLbl <= event_.infoLbl && 
+                        event_.infoLbl <= inpName.inputLbl && event_.timeLbl <= inpStart.inputLbl && 
+                        event_.timeLbl <= inpEnd.inputLbl && event_.infoLbl <= inpNote.inputLbl && 
+                        CalRootEP actsfor currentUser) {
                     // DOWNGRADE REASON: get lbl down from {currentUser:;currentUser!:} to {currentUser!:}.
                     // i.e., currentUser is prepared to declassify the info flow of being able to edit the event
                     // Where is the difference coming from?!?!
                     declassify ({currentUser:;currentUser!:} to {currentUser!:}) {
-                        final principal cu = declassify(currentUser, {currentUser:;currentUser!:} to {currentUser!:});
-                        produceEditPage(new label {cu!:}, 
-                                        declassify(req, {currentUser:;currentUser!:} to {currentUser!:}),     
-                                        declassify(servlet, {currentUser:;currentUser!:} to {currentUser!:}),
-                                        declassify(state, {currentUser:;currentUser!:} to {currentUser!:}),
-                                        declassify(currentUser, {currentUser:;currentUser!:} to {currentUser!:}),
-                                        null,
-                                        null,
-                                        null);
+                        final User[CalServEP, {currentUser:;currentUser!:}] currentUser_ = declassify(currentUser, {currentUser:;currentUser!:} to {currentUser!:});
+                        final User[CalServEP, {currentUser!:}] cu_ = User.declassifyUser(currentUser_, CalServEP, currentUser_);  
+                        final principal cu = cu_;
+                        if(cu equiv currentUser) {
+                            declassify ({currentUser:;currentUser!:} to {currentUser!:}) {
+                            CalendarSessionState state2 = declassify(state, {currentUser:;currentUser!:} to {currentUser!:});
+                            final CalendarSessionState[{cu!:}] state1 = CalendarSessionState.declassifyState(currentUser, state2);
+                            if(state1 != null && state1.remote != null) 
+                            
+                            if(session equiv state1.remote.sessionPrincipal && cu_ equiv currentUser) {
+                                declassify ({currentUser:;currentUser!:} to {currentUser!:}) {
+
+                                    produceEditPage(new label {cu!:}, 
+                                            declassify(req, {currentUser:;currentUser!:} to {currentUser!:}),     
+                                            declassify(servlet, {currentUser:;currentUser!:} to {currentUser!:}),
+                                            state1,
+                                            cu_,
+                                            null,
+                                            null,
+                                            null,
+                                            event_);
+                                }
+                            }
+                            }
+                        }
                         
                     }
                 }
-                else {
-                    String lblString = null;
-                    try {
-                        lblString = LabelUtil.singleton().toString(lbl);
-                    }
-                    catch (NullPointerException imposs) { }            
-                    throw new ServletException("Cannot edit event! CreateEditEvent.invokeSessImpl: lbl too high: " + lblString);
-                }
+//                else {
+//                    String lblString = null;
+//                    lblString = LabelUtil.toString(lbl);
+//                    throw new ServletException("Cannot edit event! CreateEditEvent.invokeSessImpl: lbl too high: " + lblString);
+//                }
+            }
             }
         }
     }
 
-    protected boolean produceEditPage{*lbl}(label{*lbl} lbl, 
+    protected boolean{*lbl; this} produceEditPage{*lbl}(label{*lbl} lbl, 
             Request[CalServEP]{*lbl} req,
             Main{*lbl} servlet,
-            CalendarSessionState{*lbl} state,
+            CalendarSessionState[lbl]{*lbl} state,
             User[CalServEP,lbl]{*lbl} currentUser,
-            String{*event.infoLbl;*lbl} nameErr,
-            String{*event.timeLbl;*lbl} startErr,
-            String{*event.timeLbl;*lbl} endErr)
+            String{*thisEvent.infoLbl;*lbl} nameErr,
+            String{*thisEvent.timeLbl;*lbl} startErr,
+            String{*thisEvent.timeLbl;*lbl} endErr,
+            Event[{*lbl;this}]{*lbl;this} thisEvent)
         where session equiv req.session, 
               session equiv state.remote.sessionPrincipal,
               req.session actsfor currentUser,
               {currentUser!:} equiv {*lbl},
-              lbl <= this.event.timeLbl, 
-              this.event.infoLbl <= {currentUser:;currentUser!:},
-              {currentUser!:} <= this.event.timeLbl, 
-              this.event.timeLbl <= this.event.infoLbl,
-              this.event.infoLbl <= inpName.inputLbl,
-              this.event.timeLbl <= inpStart.inputLbl,
-              this.event.timeLbl <= inpEnd.inputLbl,
-              this.event.infoLbl <= inpNote.inputLbl,  
+              lbl <= thisEvent.timeLbl, 
+              thisEvent.infoLbl <= {currentUser:;currentUser!:},
+              {currentUser!:} <= thisEvent.timeLbl, 
+              thisEvent.timeLbl <= thisEvent.infoLbl,
+              thisEvent.infoLbl <= inpName.inputLbl,
+              thisEvent.timeLbl <= inpStart.inputLbl,
+              thisEvent.timeLbl <= inpEnd.inputLbl,
+              thisEvent.infoLbl <= inpNote.inputLbl,
               CalRootEP actsfor currentUser,
               caller(req.session),
               authority (CalServEP)
@@ -184,77 +208,77 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
         Node[lbl,lbl] hrule = new HRule[lbl,lbl]();
 
         if (req == null || servlet == null || state == null || 
-                event == null || event.remote1 == null || inpName == null || inpStart == null || inpEnd == null || inpNote == null) return false;
+                thisEvent == null || thisEvent.remote1 == null || inpName == null || inpStart == null || inpEnd == null || inpNote == null) return false;
         
         SelectUsersAction[CalServEP] editAttendees = 
             new SelectUsersAction[CalServEP](false, servlet, session,
                                                   currentUser,
                                                   this,
                                                   this, 
-                                                  event.remote1.attendees, 
+                                                  thisEvent.remote1.attendees, 
                                                   "Please enter the user ids of the event attendees.",
-                                                  event.infoLbl);
+                                                  thisEvent.infoLbl);
         
         SelectUsersAction[CalServEP] editViewers = 
             new SelectUsersAction[CalServEP](false, servlet, session,
                                                   currentUser,
                                                   this,
                                                   this, 
-                                                  event.remote1.viewers, 
+                                                  thisEvent.remote1.viewers, 
                                                   "Please enter the user ids of users who can view the event time.",
-                                                  event.infoLbl);
+                                                  thisEvent.infoLbl);
         
         
         
-        String defaultName = defaultValue(lbl, event.infoLbl, req, event.remote1.name, this.inpName);        
-        String defaultNote = defaultValue(lbl, event.infoLbl, req, event.remote1.note, this.inpNote);        
-        String defaultStart = defaultValue(lbl, event.timeLbl, req, DateUtil.dateToString(event.timeLbl, event.startTime, false), this.inpStart);      
-        String defaultEnd = defaultValue(lbl, event.timeLbl, req, DateUtil.dateToString(event.timeLbl, event.endTime, false), this.inpEnd);      
+        String defaultName = defaultValue(lbl, thisEvent.infoLbl, req, thisEvent.remote1.name, this.inpName);        
+        String defaultNote = defaultValue(lbl, thisEvent.infoLbl, req, thisEvent.remote1.note, this.inpNote);        
+        String defaultStart = defaultValue(lbl, thisEvent.timeLbl, req, DateUtil.dateToString(thisEvent.timeLbl, thisEvent.startTime, false), this.inpStart);      
+        String defaultEnd = defaultValue(lbl, thisEvent.timeLbl, req, DateUtil.dateToString(thisEvent.timeLbl, thisEvent.endTime, false), this.inpEnd);      
                 
-        InputNode[CalServEP, event.infoLbl, lbl] inpNameNode = new TextInput[CalServEP, 
-                                    {*event.infoLbl;currentUser!:},lbl](inpName, 40, defaultName);
-        InputNode[CalServEP, event.infoLbl, lbl] inpNoteNode = new TextArea[CalServEP, 
-                                   {*event.infoLbl;currentUser!:},lbl](inpNote, 3, 40, defaultNote);
-        InputNode[CalServEP, event.timeLbl, lbl] inpStartNode = new TextInput[CalServEP, 
-                                     {*event.timeLbl;currentUser!:},lbl](inpStart, 40, defaultStart);
-        InputNode[CalServEP, event.timeLbl, lbl] inpEndNode = new TextInput[CalServEP, 
-                                   {*event.timeLbl;currentUser!:},lbl](inpEnd, 40, defaultEnd);
+        InputNode[CalServEP, thisEvent.infoLbl, lbl] inpNameNode = new TextInput[CalServEP, 
+                                    {*thisEvent.infoLbl;currentUser!:},lbl](inpName, 40, defaultName);
+        InputNode[CalServEP, thisEvent.infoLbl, lbl] inpNoteNode = new TextArea[CalServEP, 
+                                   {*thisEvent.infoLbl;currentUser!:},lbl](inpNote, 3, 40, defaultNote);
+        InputNode[CalServEP, thisEvent.timeLbl, lbl] inpStartNode = new TextInput[CalServEP, 
+                                     {*thisEvent.timeLbl;currentUser!:},lbl](inpStart, 40, defaultStart);
+        InputNode[CalServEP, thisEvent.timeLbl, lbl] inpEndNode = new TextInput[CalServEP, 
+                                   {*thisEvent.timeLbl;currentUser!:},lbl](inpEnd, 40, defaultEnd);
        
-        NodeList[event.infoLbl,lbl]{*lbl} entries = NodeList[event.infoLbl,lbl].EMPTY();
-        entries = new NodeList[event.infoLbl,lbl](event.infoLbl, lbl, new TRow[event.infoLbl,lbl](new NodeList[event.infoLbl,lbl](lbl, lbl, desc(lbl, "Event:"),
-                event.infoLbl, lbl, editData(event.infoLbl, lbl, inpNameNode, nameErr))));
-        entries = entries==null?null:entries.append(event.timeLbl,lbl, new TRow[event.timeLbl,lbl](
-                new NodeList[event.timeLbl,lbl](lbl, lbl, desc(lbl, "Start:"),
-                        event.timeLbl, lbl, editData(event.timeLbl, lbl, inpStartNode, startErr))));
-        entries = entries==null?null:entries.append(event.timeLbl, lbl, new TRow[event.timeLbl,lbl](new NodeList[event.timeLbl,lbl](lbl, lbl, desc(lbl, "End:"),
-                        event.timeLbl, lbl, editData(event.timeLbl, lbl, inpEndNode, endErr))));
+        NodeList[thisEvent.infoLbl,lbl]{*lbl} entries = NodeList[thisEvent.infoLbl,lbl].EMPTY();
+        entries = new NodeList[thisEvent.infoLbl,lbl](thisEvent.infoLbl, lbl, new TRow[thisEvent.infoLbl,lbl](new NodeList[thisEvent.infoLbl,lbl](lbl, lbl, desc(lbl, "thisEvent:"),
+                thisEvent.infoLbl, lbl, editData(thisEvent.infoLbl, lbl, inpNameNode, nameErr))));
+        entries = entries==null?null:entries.append(thisEvent.timeLbl,lbl, new TRow[thisEvent.timeLbl,lbl](
+                new NodeList[thisEvent.timeLbl,lbl](lbl, lbl, desc(lbl, "Start:"),
+                        thisEvent.timeLbl, lbl, editData(thisEvent.timeLbl, lbl, inpStartNode, startErr))));
+        entries = entries==null?null:entries.append(thisEvent.timeLbl, lbl, new TRow[thisEvent.timeLbl,lbl](new NodeList[thisEvent.timeLbl,lbl](lbl, lbl, desc(lbl, "End:"),
+                        thisEvent.timeLbl, lbl, editData(thisEvent.timeLbl, lbl, inpEndNode, endErr))));
         
         // DOWNGRADE REASON (not counted): Hand over from CalServEP to currentUser.
-        String creatorName = CalServDeclassifier.declassUserDisplayString(event.infoLbl, currentUser, event.remote1.creator);
+        String creatorName = CalServDeclassifier.declassUserDisplayString(thisEvent.infoLbl, currentUser, thisEvent.remote1.creator);
         
         entries = entries==null?null:entries.append(lbl, lbl, new TRow[lbl,lbl](new TCell[lbl,lbl](null, hrule, 2, false)));
         
-        entries = entries==null?null:entries.append(new TRow[event.infoLbl,lbl](new NodeList[event.infoLbl,lbl](lbl, lbl, desc(lbl, "Creator:"),
-                event.infoLbl, lbl, desc(event.infoLbl, lbl, creatorName))));
+        entries = entries==null?null:entries.append(new TRow[thisEvent.infoLbl,lbl](new NodeList[thisEvent.infoLbl,lbl](lbl, lbl, desc(lbl, "Creator:"),
+                thisEvent.infoLbl, lbl, desc(thisEvent.infoLbl, lbl, creatorName))));
         
         // output the attendees information
-        entries = entries==null?null:entries.append(new TRow[event.infoLbl,lbl](new NodeList[event.infoLbl,lbl](lbl, lbl, desc(lbl, "Attendees:"),
-                event.infoLbl, lbl, desc(event.infoLbl, lbl, userListToNode(event.infoLbl, lbl, req, event.remote1.attendees)))));
+        entries = entries==null?null:entries.append(new TRow[thisEvent.infoLbl,lbl](new NodeList[thisEvent.infoLbl,lbl](lbl, lbl, desc(lbl, "Attendees:"),
+                thisEvent.infoLbl, lbl, desc(thisEvent.infoLbl, lbl, userListToNode(thisEvent.infoLbl, lbl, req, thisEvent.remote1.attendees)))));
         entries = entries==null?null:entries.append(lbl, lbl, new TRow[lbl,lbl](new NodeList[lbl,lbl](desc(lbl, ""),
                 desc(lbl, new Hyperlink[CalServEP, lbl,lbl](editAttendees, "Edit attendees")))));
         entries = entries==null?null:entries.append(lbl, lbl, new TRow[lbl,lbl](new TCell[lbl,lbl](null, hrule, 2, false)));
         
         // output the viewers information.
-        entries = entries==null?null:entries.append(new TRow[event.infoLbl,lbl](new NodeList[event.infoLbl,lbl](lbl, lbl, desc(lbl, "Viewers:"),
-                event.infoLbl, lbl, desc(event.infoLbl, lbl, userListToNode(event.infoLbl, lbl, req, event.remote1.viewers)))));
+        entries = entries==null?null:entries.append(new TRow[thisEvent.infoLbl,lbl](new NodeList[thisEvent.infoLbl,lbl](lbl, lbl, desc(lbl, "Viewers:"),
+                thisEvent.infoLbl, lbl, desc(thisEvent.infoLbl, lbl, userListToNode(thisEvent.infoLbl, lbl, req, thisEvent.remote1.viewers)))));
         entries = entries==null?null:entries.append(lbl, lbl, new TRow[lbl,lbl](new NodeList[lbl,lbl](desc(lbl, ""),
                 desc(lbl, new Hyperlink[CalServEP, lbl,lbl](editViewers, "Edit viewers")))));
         
         entries = entries==null?null:entries.append(lbl, lbl, new TRow[lbl,lbl](new TCell[lbl,lbl](null, hrule, 2, false)));
         
         // output the note.
-        entries = entries==null?null:entries.append(new TRow[event.infoLbl,lbl](new NodeList[event.infoLbl,lbl](lbl, lbl, desc(lbl, "Note:"),
-                event.infoLbl, lbl, editData(event.infoLbl, lbl, inpNoteNode, null))));
+        entries = entries==null?null:entries.append(new TRow[thisEvent.infoLbl,lbl](new NodeList[thisEvent.infoLbl,lbl](lbl, lbl, desc(lbl, "Note:"),
+                thisEvent.infoLbl, lbl, editData(thisEvent.infoLbl, lbl, inpNoteNode, null))));
         
         entries = entries==null?null:entries.append(lbl, lbl, new TRow[lbl,lbl](new TCell[lbl,lbl](null, hrule, 2, false)));
                         
@@ -262,7 +286,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
         // output the button row
         NodeList[lbl,lbl] buttonRow = NodeList[lbl,lbl].EMPTY();
         buttonRow = buttonRow==null?null:buttonRow.append(new SubmitButton[CalServEP, lbl,lbl](getServlet(), lbl,
-                (isCreate?"Create":"Update")+" event"));
+                (isCreate?"Create":"Update")+" Event"));
         buttonRow = buttonRow==null?null:buttonRow.append(new NBSP[lbl,lbl]());
         buttonRow = buttonRow==null?null:buttonRow.append(new Hyperlink[CalServEP, lbl,lbl](this.cancelAction,
                        "Cancel"));     
@@ -270,20 +294,20 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
         entries =
             entries==null?null:entries.append(lbl, lbl, new TRow[lbl,lbl](new TCell[lbl,lbl](null, buttonRow, 2, false)));
         
-        Node[event.infoLbl,lbl] form = servlet.createForm(event.infoLbl,lbl,
+        Node[thisEvent.infoLbl,lbl] form = servlet.createForm(thisEvent.infoLbl,lbl,
                                      new FinishEditEvent(servlet, session, this, finishEditEventReceiver),
-                                     event.infoLbl, lbl,
-                                     new Table[event.infoLbl,lbl](entries)); 
+                                     thisEvent.infoLbl, lbl,
+                                     new Table[thisEvent.infoLbl,lbl](entries)); 
         
         String title = (isCreate?"Create":"Edit")+" Event";
-        servlet.createPage(req, title, event.infoLbl, lbl, new NodeList[event.infoLbl,lbl](lbl, lbl, createBanner(lbl, title), event.infoLbl, lbl, createBody(event.infoLbl, lbl, form)));
+        servlet.createPage(req, title, thisEvent.infoLbl, lbl, new NodeList[thisEvent.infoLbl,lbl](lbl, lbl, createBanner(lbl, title), thisEvent.infoLbl, lbl, createBody(thisEvent.infoLbl, lbl, form)));
         return true;
     }   
 
       protected boolean produceReadOnlyPage{*lbl}(label{*lbl} lbl,  
               Request[CalServEP]{*lbl} req,
               Main{*lbl} servlet,
-              CalendarSessionState{*lbl} state,
+              CalendarSessionState[lbl]{*lbl} state,
               User[CalServEP,lbl]{*lbl} currentUser)
         where session equiv req.session, 
               session equiv state.remote.sessionPrincipal,
@@ -460,10 +484,7 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
              }
              else {
                  String lblString = null;
-                 try {
-                     lblString = LabelUtil.singleton().toString(lbl);
-                 }
-                 catch (NullPointerException imposs) { }            
+                 lblString = LabelUtil.toString(lbl);
                  throw new ServletException("FinishEditEvent.invokeSessImpl: lbl too high: " + lblString);
              }
          }
@@ -497,16 +518,24 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
           
         if (req == null || uservlet == null || ustate == null || 
                 !(uservlet instanceof Main) ||
-                !(ustate instanceof CalendarSessionState) ||
+                !(ustate instanceof CalendarSessionState[lbl]) ||
                 this.createEditEvent == null || this.eventReceiver == null || 
-                createEditEvent.event == null || createEditEvent.event.remote1 == null) {
+                createEditEvent.event == null || createEditEvent.event.remote1 == null ||
+                createEditEvent.event.uid == null) {
             throw new ServletException("null args");
         }
         final Main servlet = (Main)uservlet;
-        final CalendarSessionState state = (CalendarSessionState)ustate;
+        CalendarSessionState state_ = null;
+        try {
+            state_ = (CalendarSessionState)ustate;
+        } catch (ClassCastException imposs) {}
+        final CalendarSessionState state = state_;
+        if(state == null || state.remote == null) {
+            throw new ServletException("null args");
+        }
         ServletException{*lbl;req.session!:} ex = null;
         
-        if (state.sessionPrincipal equiv session) { // always true
+        if (state.remote.sessionPrincipal equiv session) { // always true
             // extract data from request
             String name = defaultValue(lbl, createEditEvent.event.infoLbl, req, null, createEditEvent.inpName);        
             String note = defaultValue(lbl, createEditEvent.event.infoLbl, req, null, createEditEvent.inpNote);        
@@ -520,8 +549,8 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
                 nameErr = "Event name must be provided.";
             }
             
-            Date[createEditEvent.event.timeLbl] startDate = DateUtil.stringToDate(createEditEvent.event.timeLbl, createEditEvent.event.timeLbl, start);
-            Date[createEditEvent.event.timeLbl] endDate = DateUtil.stringToDate(createEditEvent.event.timeLbl, createEditEvent.event.timeLbl, end);
+            Date[createEditEvent.event.timeLbl] startDate = DateUtil.stringToDate(createEditEvent.event.timeLbl, start);
+            Date[createEditEvent.event.timeLbl] endDate = DateUtil.stringToDate(createEditEvent.event.timeLbl, end);
 
             String startErr = null;
             String endErr = null;
@@ -538,9 +567,10 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
             // send user back to page if data not validated
             boolean pageProduced = false;
             if (nameErr != null || startErr != null || endErr != null) {
-                if (state.sessionPrincipal equiv this.session) { // always true
+                if (state.remote.sessionPrincipal equiv this.session) { // always true
                     // DOWNGRADE REASON: pc tained by infoLbl (nameErr), ok with releasing the error message about the name.
                     declassify({*createEditEvent.event.infoLbl;currentUser!:} to {currentUser!:}) {
+                        Event event = Event.declassifyEvent(currentUser, createEditEvent.event);
                         pageProduced = createEditEvent.produceEditPage(new label {currentUser!:},
                                                                        req, 
                                                                        servlet, 
@@ -548,7 +578,8 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
                                                                        currentUser, 
                                                                        nameErr, 
                                                                        startErr, 
-                                                                       endErr);
+                                                                       endErr,
+                                                                       event);
                     }
                 }
             }
@@ -564,13 +595,13 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
                 label newViewersLbl_ = new label {};
                 label newTimeLbl_ = new label {};
                 try {
-                    newInfoLbl_ = LabelUtil.singleton().toLabel(LabelUtil.singleton().readerPolicy(new label {currentUser:;currentUser!:}, currentUser, infoReaders),
+                    newInfoLbl_ = LabelUtil.toLabel(LabelUtil.readerPolicy(new label {currentUser:;currentUser!:}, currentUser, infoReaders),
                 
-                                                               LabelUtil.singleton().writerPolicy(createEditEvent.event.infoLbl, currentUser, null));
-                    newViewersLbl_ = LabelUtil.singleton().toLabel(LabelUtil.singleton().readerPolicy(new label {currentUser:;currentUser!:}, currentUser, timeReaders),
-                                                                  LabelUtil.singleton().writerPolicy(createEditEvent.event.infoLbl, currentUser, null));
+                                                               LabelUtil.writerPolicy(createEditEvent.event.infoLbl, currentUser, null));
+                    newViewersLbl_ = LabelUtil.toLabel(LabelUtil.readerPolicy(new label {currentUser:;currentUser!:}, currentUser, timeReaders),
+                                                                  LabelUtil.writerPolicy(createEditEvent.event.infoLbl, currentUser, null));
                     // the new time label is the meet of the viewers and the attendees, i.e., all attendees can see the time.
-                    newTimeLbl_ = LabelUtil.singleton().meetLbl(newInfoLbl_, newViewersLbl_);
+                    newTimeLbl_ = LabelUtil.meetLbl(newInfoLbl_, newViewersLbl_);
                 }
                 catch (NullPointerException imposs) { }
                 
@@ -585,7 +616,7 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
                         Date[newTimeLbl] newStartDate = CalServDeclassifier.declassDate(currentUser, newTimeLbl, startDate);
                         Date[newTimeLbl] newEndDate = CalServDeclassifier.declassDate(currentUser, newTimeLbl, endDate);
                         
-                        int{CalServEP:;CalServEP!:;currentUser:; currentUser!:} uid = createEditEvent.event.uid;
+                        int{CalServEP:;CalServEP!:;currentUser:; currentUser!:} uid = createEditEvent.event.uid.uid;
                         Event newEvent = 
                             new Event(uid,
                                       newTimeLbl,

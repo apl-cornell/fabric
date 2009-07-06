@@ -8,6 +8,14 @@ public class CalendarSessionState[covariant label T] extends USessState[CalServE
     final CSS[T, {remote.sessionPrincipal!:}]{T} css = new CSS();
     public CalendarSessionState() {
     }
+    
+    static CalendarSessionState[{P←}]{P←} declassifyState{P←;P→}(principal{P←;P→} P, CalendarSessionState[{P←;P→}]{P←;P→} state)
+        where caller(P)
+    {
+        // TODO Implement me!
+        return null;
+    }
+    
 }
 
 class CSS[covariant label T, label L] {

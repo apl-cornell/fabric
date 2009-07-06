@@ -32,5 +32,6 @@ class State[covariant label T] {
     where T <= lbl {
         return new State[lbl](this.currentUser, displayDate, this.displayKind, this.displayUser);
     }
+    
 }
 

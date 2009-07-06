@@ -1,6 +1,7 @@
 package calendar;
 
-import jif.util.*;
+import fabricated.util.Date;
+import jif.util.List;
 import sif.servlet.*;
 import userserv.*;
 import sif.html.Page;
@@ -38,7 +39,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 
 
 	// DOWNGRADE REASON: transfer User from CalServEP to p &&& access control
-	public User[CalServEP]{p:; p!:} lookupUserID{p:; p!:}(String{p:; p!:} userID, principal{p:; p!:} p) 
+	public User[CalServEP, {p:; p!:}]{p:; p!:} lookupUserID{p:; p!:}(String{p:; p!:} userID, principal{p:; p!:} p) 
 	where authority (CalServEP), caller(p), endorse({p:; p!: meet CalServEP!:}) {
 		User[CalServEP] u = cal==null?null:cal.lookupUserID(userID);
 
@@ -59,7 +60,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 	/**
 	 * Returns a new Event, filled out with default values.
 	 */
-	Event[{currUser!:}]{currUser!:} defaultEvent{currUser!:}(User[CalServEP]{currUser!:} currUser) 
+	Event[{currUser!:}]{currUser!:} defaultEvent{currUser!:}(User[CalServEP, {currUser!:}]{currUser!:} currUser) 
 	where authority(CalServEP),
 	caller(currUser) {
 		Date[{*!:}] now = new Date[{*!:}]();
@@ -184,7 +185,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 	eventSubset{p!:}(principal{p!:} p,
 			Date[{p!:}]{p!:} start, 
 			Date[{p!:}]{p!:} end,
-			User[CalServEP]{p!:} displayUser)
+			User[CalServEP, {p!:}]{p!:} displayUser)
 			where caller(p), authority(CalServEP), endorse({p!: meet CalServEP!:}) {
 		// DOWNGRADE REASON: need to convert a Date[{p!:}] to a Date[{CalServEP:;CalServEP!:}], then transfer ownership of usr, then get the result, and transfer it back to p
 		Date[{CalServEP:;CalServEP!:}] startDate = CalServDeclassifier.declassDate(p, CalServEP, start);

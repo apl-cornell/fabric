@@ -25,16 +25,20 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	// central repository of events.
 	private Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} events;
 
+	// TODO XXX : Establish relations between coreClient, client and CalServEP
 	private final Core{CalServEP:;CalServEP!:} backend;
 	private final RemoteClient{CalServEP:;CalServEP!:} coreClient;
+	final Core{CalServEP:;CalServEP!:} localCore;
 
 	public CalendarDB{CalServEP:;CalServEP!:}(Core{CalServEP:;CalServEP!:} core) {
 		backend = core;
 		FabricClient local = FabricClient.getClient();
 		if(local != null && backend != null) {
 		    coreClient = local.getClient(backend.name());
+		    localCore = local.getLocalCore();
 		} else {
 		    coreClient = null;
+		    localCore = null;
 		}
 		// fabric init stuff here
 	}
@@ -88,18 +92,18 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	}
 	
 	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID}
-	    lookupUserID{⊤→client$;⊤←client$}(String{⊤→client$;⊤←client$} userID)
+	    lookupUserID{client$→;client$←}(String{client$→;client$←} userID)
 	{
-	    if(coreClient actsfor client$) {
-	        String{⊤→client$;⊤←client$} userID_ = userID;
-	        return lookupUserIDRemote@coreClient(userID_);
+        String{client$→;client$←} userID__ = userID;
+	    if (coreClient actsfor client$ && CalServEP equiv client$) {
+	        return lookupUserIDRemote@coreClient(userID__);
 	    }
 	    return null;
 	}
 	
 
 	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID_} 
-	    lookupUserIDRemote{⊤→client$;⊤←client$}(String{⊤→client$;⊤←client$} userID_) : {⊤→client$;⊤←client$}
+	    lookupUserIDRemote{CalServEP:; CalServEP!:;client$→;client$←}(String{client$→;client$←} userID_) : {client$→;client$←}
 	{
 		User[CalServEP, {CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}[] users = this.users;
 		if (users == null || userID_ == null) return null;
@@ -118,13 +122,19 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	public Event[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} 
 	retrieveEvent{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
 	where caller(CalServEP) {
-		return retrieveEventRemote@coreClient(eventID);
+	    if(coreClient actsfor client$ && CalServEP equiv client$) {
+	        return retrieveEventRemote@coreClient(eventID);
+	    } else {
+	        return null;
+	    }
+	    
 	}
 	
 
 	public Event[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} 
-	retrieveEventRemote{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
-	where caller(CalServEP) {
+	retrieveEventRemote{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) : {client$→;client$←}
+	    where caller(CalServEP)
+	{
 		Set[{CalServEP:;CalServEP!:}] es = this.events;
 		if (es != null) {
 			for (Iterator[{CalServEP:;CalServEP!:}] iter = es.iterator();
@@ -166,13 +176,17 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		return true;
 	}
 	
-	public List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
+	public jif.util.List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
 	eventSubset{CalServEP:;CalServEP!:}(
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
 			User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:} displayUser)
 			where authority(CalRootEP), authority(CalServEP) {
-		return eventSubsetRemote@coreClient(start, end, displayUser);
+	    if(coreClient actsfor client$ && CalServEP equiv client$) {
+	        return eventSubsetRemote@coreClient(start, end, displayUser);
+	    } else {
+	        return null;
+	    }
 	}
 	
 	
@@ -181,15 +195,15 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	 * for which user is either an attendee, or created the event. (i.e.,
 	 * if the info label is readable by user).
 	 */
-	public List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
+	public jif.util.List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
 	eventSubsetRemote{CalServEP:;CalServEP!:}(
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
-			User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:} displayUser)
+			User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:} displayUser) : {client$→;client$←}
 			where authority(CalRootEP), authority(CalServEP) {
 
 		Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} es = this.events;
-		final List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} sub = new LinkedList[{CalServEP:;CalServEP!:}]();
+		final jif.util.List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} sub = new jif.util.LinkedList[{CalServEP:;CalServEP!:}]();
 		if (es != null) {
 
 			for (Iterator[{CalServEP:;CalServEP!:}] iter = es.iterator();
