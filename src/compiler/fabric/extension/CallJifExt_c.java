@@ -41,7 +41,9 @@ public class CallJifExt_c extends JifCallExt {
       ConfPolicy entryConfPolicy = ts.confProjection(entryLabel);
       IntegPolicy entryIntegPolicy = ts.integProjection(entryLabel);
       for (Type ft : (List<Type>)mi.formalTypes()) {
-        Label fl = ts.labelOfType(ft);
+        ArgLabel fl_ = (ArgLabel)ts.labelOfType(ft);
+        Label fl = fl_.upperBound();
+        
         ConfPolicy cp = ts.confProjection(fl);
         IntegPolicy ip = ts.integProjection(fl);
         entryConfPolicy = ts.join(entryConfPolicy, cp);
@@ -66,12 +68,16 @@ public class CallJifExt_c extends JifCallExt {
                    new ConstraintMessage() {
         @Override
         public String msg() {
-          return "C(rv) <= {*->client$} and {*<-client$} <= I(m) for obj.m@c(...)";
+          return "Insecure remote method call: Either the return value is not readable" +
+          " by the calling client or the calling client does not have" +
+          " enough integrity to host the method arguments and make the call.";
         }
   
         @Override
         public String detailMsg() {
-          return "C(rv) <= {*->client$} and {*<-client$} <= I(m) for obj.m@c(...)";
+          return "Insecure remote method call: Either the return value is not readable" +
+          " by the calling client or the calling client does not have" +
+          " enough integrity to host the method arguments and make the call.";
         }
         
         @Override
@@ -98,12 +104,16 @@ public class CallJifExt_c extends JifCallExt {
                    new ConstraintMessage() {
         @Override
         public String msg() {
-          return "C(m) <= {*->c} and {*<-c} <= I(rv) for obj.m@c(...)";
+          return "Insecure remote method call: Either the callee client is not allowed to read" +
+          " the method arguments or it does not have enough integrity to " +
+          " return correctly.";
         }
         
         @Override
         public String detailMsg() {
-          return "C(m) <= {*->c} and {*<-c} <= I(rv) for obj.m@c(...)";
+          return "Insecure remote method call: Either the callee client is not allowed to read" +
+          " the method arguments or it does not have enough integrity to " +
+          " return correctly.";
         }
         
         @Override
