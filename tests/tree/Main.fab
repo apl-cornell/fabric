@@ -20,7 +20,8 @@ public class Main {
 			nodeCore = client$.getCore("core1");
 		}
 		atomic {
-			pp = new jif.lang.ExternalPrincipal@treeCore("localhost");
+			final Core{*bot} tc = treeCore;
+			pp = new jif.lang.ExternalPrincipal@tc("localhost");
 			lbl = new label {pp→;pp←}@treeCore;
 		}
 	}

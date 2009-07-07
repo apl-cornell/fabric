@@ -4,7 +4,7 @@ import fabric.client.Core;
 
 public class Tree[label L] {
 	private TreeNode[L]{L} root;
-	private Core{L} nodeLocation;
+	private final Core{L} nodeLocation;
 
 	Tree{L}(Core{L} nodeLocation) {
 		this.root = null;
