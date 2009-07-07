@@ -117,7 +117,6 @@
 		<available classname="javax.servlet.Servlet" classpathref="standard.classpath" property="cp_existence.j2ee" />
 
 		<fail unless="cp_existence.j2ee" message="The J2EE servlet API classes must be on the class path. Try adding servlet-api.jar to the lib directory, or to the class path." />
-		<fail unless="env.JAVA_HOME.defined" message="The envirnoment variable JAVA_HOME must be defined." />
 		<fail unless="fabric.home.defined" message="The Jif installation directory is unknown. Please either edit config.properties, or set the envirnoment variable JIF to the Jif installation directory." />
 		<fail unless="fabc.available" message="The fabc executable was not found at location ${fabric.home}/bin/fabc." />
 		<fail unless="filc.available" message="The filc executable was not found at location ${fabric.home}/bin/filc." />		
