@@ -25,7 +25,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
      * The event being viewed/edited/created
      */
     final label{this} evLbl;
-    final Event[evLbl]{this} event;
+    final Event[this.evLbl]{this} event;
     
     /**
      * The object to hand the event off to after editing/creating successfully
@@ -51,10 +51,11 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
                            principal{this} session,
                            FinishEditEventReceiver{this} finishEditEventReceiver, 
                            UAction[CalServEP]{this} cancelAction,
-                           label evLbl,
+                           label{this} evLbl,
                            Event[evLbl]{this} event,
                            boolean{this} isReadOnly,
                            boolean{this} isCreate) 
+        where evLbl <= {this}
     {
         this.finishEditEventReceiver = finishEditEventReceiver;
         this.cancelAction = cancelAction;
@@ -87,8 +88,25 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
     public Event[evLbl]{this} getEvent() {
         return event;
     }
-    
+
     public void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
+            Request[CalServEP]{*lbl;session!:} req,
+            UServlet[CalServEP]{*lbl;session!:} uservlet,
+            USessState[CalServEP,{*lbl;session!:}]{*lbl;session!:} ustate,
+            User[CalServEP,{*lbl;session!:}]{*lbl;session!:} currentUser) 
+    throws (ServletException{*lbl;session!:})
+        where session equiv req.session, 
+              session equiv ustate.remote.sessionPrincipal,
+              session actsfor currentUser,
+              lbl <= {*:req.session},
+              caller(session)
+    {
+        if(evLbl <= new label {*lbl;session!:}) {
+            invokeSessImplImpl(lbl, req, uservlet, ustate, currentUser);
+        }
+    }
+    
+    public void invokeSessImplImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
             Request[CalServEP]{*lbl;session!:} req,
             UServlet[CalServEP]{*lbl;session!:} uservlet,
             USessState[CalServEP,{*lbl;session!:}]{*lbl;session!:} ustate,
@@ -317,6 +335,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
               event.timeLbl <= event.infoLbl,
               event.infoLbl <= {*:req.session},
               event.infoLbl <= {CalRootEP:},
+              evLbl <= {lbl;req;servlet;state;currentUser},
               lbl <= {CalRootEP:},
               {CalRootEP!:} <= event.infoLbl,
               caller(req.session),
@@ -349,7 +368,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
           
           entries = entries==null?null:entries.append(lbl, lbl, new TRow[lbl,lbl](new TCell[lbl,lbl](null, hrule, 2, false)));
           
-          User[CalServEP, lbl] eventCreat = event.remote1.creator;
+          User eventCreat = event.remote1.creator;
           
           String creatorName = CalServDeclassifier.declassUserDisplayString(event.infoLbl, CalRootEP, eventCreat); 
           entries = entries==null?null:entries.append(infoLblBot, lbl, new TRow[infoLblBot,lbl](new NodeList[infoLblBot,lbl](lbl, lbl, desc(lbl, "Creator:"),
@@ -464,18 +483,36 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
               lbl <= {*:req.session},
               caller(session)
     {
+        if(createEditEvent != null && createEditEvent.evLbl <= lbl) {
+            invokeSessImplImpl(lbl, req, uservlet, ustate, currentUser);
+        }
+    }
+
+    public void invokeSessImplImpl{*lbl1;session!:}(label{*lbl1;session!:} lbl1,
+            Request[CalServEP]{*lbl1;session!:} req,
+            UServlet[CalServEP]{*lbl1;session!:} uservlet,
+            USessState[CalServEP,{*lbl1;session!:}]{*lbl1;session!:} ustate,
+            User[CalServEP, {*lbl1;session!:}]{*lbl1;session!:} currentUser) 
+    throws (ServletException{*lbl1;req.session!:})
+        where session equiv req.session, 
+              session equiv ustate.remote.sessionPrincipal,
+              session actsfor currentUser,
+              createEditEvent.evLbl <= lbl1,
+              lbl1 <= {*:req.session},
+              caller(session)
+    {
          if (createEditEvent != null && req != null && createEditEvent.event != null 
                  && createEditEvent.inpName != null && createEditEvent.inpStart != null && createEditEvent.inpEnd != null
                      && createEditEvent.inpNote != null) {
-             if (createEditEvent.session equiv req.session && lbl equiv new label {currentUser!:} && 
+             if (createEditEvent.session equiv req.session && lbl1 equiv new label {currentUser!:} && 
                      this.createEditEvent.event.infoLbl <= new label {currentUser:;currentUser!:} &&
                      new label {currentUser!:} <= this.createEditEvent.event.timeLbl && CalRootEP actsfor currentUser && req.session actsfor currentUser &&  
-                     this.createEditEvent.event.timeLbl <= createEditEvent.event.infoLbl &&
+                     this.createEditEvent.event.timeLbl <= this.createEditEvent.event.infoLbl &&
                      this.createEditEvent.event.infoLbl <= this.createEditEvent.inpName.inputLbl &&
                      this.createEditEvent.event.timeLbl <= this.createEditEvent.inpStart.inputLbl &&
                      this.createEditEvent.event.timeLbl <= this.createEditEvent.inpEnd.inputLbl &&
                      this.createEditEvent.event.infoLbl <= this.createEditEvent.inpNote.inputLbl) {
-                 finishEdit(lbl, 
+                 finishEdit(lbl1, 
                             createEditEvent.event.timeLbl,
                             req,  
                             uservlet, 
@@ -484,7 +521,7 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
              }
              else {
                  String lblString = null;
-                 lblString = LabelUtil.toString(lbl);
+                 lblString = LabelUtil.toString(lbl1);
                  throw new ServletException("FinishEditEvent.invokeSessImpl: lbl too high: " + lblString);
              }
          }
@@ -503,14 +540,15 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
              req.session equiv createEditEvent.session,
              session actsfor currentUser,
              CalRootEP actsfor currentUser,
-             {*lbl} equiv {currentUser!:},             
+             {*lbl} equiv {currentUser!:},
              this.createEditEvent.event.infoLbl <= {currentUser:; currentUser!:},
              this.createEditEvent.event.timeLbl <= createEditEvent.event.infoLbl,
              {currentUser!:} <= this.createEditEvent.event.timeLbl,
              this.createEditEvent.event.infoLbl <= this.createEditEvent.inpName.inputLbl,
              this.createEditEvent.event.timeLbl <= this.createEditEvent.inpStart.inputLbl,
              this.createEditEvent.event.timeLbl <= this.createEditEvent.inpEnd.inputLbl,
-             this.createEditEvent.event.infoLbl <= this.createEditEvent.inpNote.inputLbl,            
+             this.createEditEvent.event.infoLbl <= this.createEditEvent.inpNote.inputLbl,
+             this.createEditEvent.evLbl <= lbl,
              caller(req.session),
              authority(CalServEP)
    {
@@ -570,16 +608,18 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
                 if (state.remote.sessionPrincipal equiv this.session) { // always true
                     // DOWNGRADE REASON: pc tained by infoLbl (nameErr), ok with releasing the error message about the name.
                     declassify({*createEditEvent.event.infoLbl;currentUser!:} to {currentUser!:}) {
-                        Event event = Event.declassifyEvent(currentUser, createEditEvent.event);
-                        pageProduced = createEditEvent.produceEditPage(new label {currentUser!:},
-                                                                       req, 
-                                                                       servlet, 
-                                                                       state, 
-                                                                       currentUser, 
-                                                                       nameErr, 
-                                                                       startErr, 
-                                                                       endErr,
-                                                                       event);
+                        final Event event = Event.declassifyEvent(currentUser, createEditEvent.event);
+                        if(event !=null && event.infoLbl equiv this.createEditEvent.event.infoLbl && event.timeLbl equiv this.createEditEvent.event.timeLbl) {
+                            pageProduced = createEditEvent.produceEditPage(new label {currentUser!:},
+                                    req, 
+                                    servlet, 
+                                    state, 
+                                    currentUser, 
+                                    nameErr, 
+                                    startErr, 
+                                    endErr,
+                                    event);
+                        }
                     }
                 }
             }
@@ -613,6 +653,8 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
                 if (new label {currentUser!:} <= newTimeLbl && newTimeLbl <= newInfoLbl) {
                     // DOWNGRADE REASON: convert from createEditEvent.event.infoLbl to newInfoLbl, and similarly for timeLbl
                     declassify({currentUser:; currentUser!:} to {currentUser!:}) {
+                        User user__ = declassify(createEditEvent.event.remote1.creator, {currentUser:; currentUser!:} to {currentUser!:});
+                        User user_ = User.declassifyUser(currentUser, CalServEP, user__);
                         Date[newTimeLbl] newStartDate = CalServDeclassifier.declassDate(currentUser, newTimeLbl, startDate);
                         Date[newTimeLbl] newEndDate = CalServDeclassifier.declassDate(currentUser, newTimeLbl, endDate);
                         
@@ -627,7 +669,7 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
                                       declassify(note, {currentUser:; currentUser!:} to {currentUser!:}), 
                                       declassify(createEditEvent.event.remote1.attendees, {currentUser:; currentUser!:} to {currentUser!:}), 
                                       declassify(createEditEvent.event.remote1.viewers, {currentUser:; currentUser!:} to {currentUser!:}), 
-                                      declassify(createEditEvent.event.remote1.creator, {currentUser:; currentUser!:} to {currentUser!:}));                                                    
+                                      user_);                                                    
                         
                         // send user back to return action.
                         try {
