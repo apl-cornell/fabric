@@ -1,6 +1,6 @@
 package merchant;
 
-public class MerchantPrincipal[principal P, covariant label T] extends AbstractPrincipal {
+public class MerchantPrincipal extends AbstractPrincipal {
 	public MerchantPrincipal(String{this} name) {
 		super(name);
 	}

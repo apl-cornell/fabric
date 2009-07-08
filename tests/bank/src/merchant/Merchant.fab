@@ -1,30 +1,30 @@
 package merchant;
 
 import fabric.client.Core;
-import bank.BankClient;
+import bank.*;
 import carrier.CarrierClient;
 
-public class Merchant[label L] {
-	private Core{L} dataLocation;
-    private CarrierClient[L]{L} carr;
-    private BankClient[L]{L} bank;
+public class Merchant[principal mp] authority(mp) {
+//	private Core{L} dataLocation;
+//    private CarrierClient[L]{L} carr;
+//    private BankClient[L]{L} bank;
 
-	Merchant{L} (Core{L} nodeLocation) {
-        dataLocation = nodeLocation;
-        carr = new CarrierClient[L](nodeLocation);
-        bank = new BankClient[L](nodeLocation);
+	Merchant{mp:;mp!:} () where authority(mp) {
+//        dataLocation = nodeLocation;
+//        carr = new CarrierClient[L](nodeLocation);
+        BankClient bankClient = BankMain.requestClient(mp);
 	}
 
-	public boolean{L} confirmTransaction (int uid) {
-		atomic {
-            try {
-    			int cp = carr.getTicketPrice(uid);
-                int bb = bank.getBalance(uid);
-                return (cp <= bb);
-            }
-            catch(Exception e) {
-            }
-		}
+	public boolean confirmTransaction (int uid) {
+//		atomic {
+//            try {
+//    			int cp = carr.getTicketPrice(uid);
+//                int bb = bank.getBalance(uid);
+//                return (cp <= bb);
+//            }
+//            catch(Exception e) {
+//            }
+//		}
         return false;
 	}
 }

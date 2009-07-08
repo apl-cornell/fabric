@@ -1,0 +1,95 @@
+import fabric.client.Core;
+import fabric.util.Map;
+import merchant.Merchant;
+import bank.*;
+
+import jif.runtime.Runtime;
+import java.io.PrintStream;
+
+public class Main {
+	public final Core{*bot} kaykLocation;
+	public final Core{*bot} bankLocation;
+	public final Core{*bot} dataLocation;
+	public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
+
+	//for printing
+	private final principal{*bot} clp;	
+
+//	public final principal{*bot} pp;
+//	public final label {*bot} lbl;
+
+	public static void main{*bot} (String{*bot}[]{*bot} args) {
+		Main m_ = null;
+		atomic {
+			m_ = new Main();
+//			m_.init();
+			
+			m_.begin();
+		}
+
+
+
+		atomic {
+//			m_.begin();
+		}
+	}
+
+	public Main{*bot}() {
+		atomic {
+			kaykLocation = client$.getCore("core0");
+			bankLocation = client$.getCore("core1");
+			dataLocation = client$.getCore("core1");
+		}
+		
+		// For printing
+		atomic {
+			clp = client$.getLocalCore();
+		}
+
+		PrintStream[{clp->}] out = null;
+		try {
+			Runtime[clp] runtime = null;
+			atomic {
+				runtime = Runtime.getRuntime();
+			}
+			if(runtime == null) return;
+			out = runtime.out();
+			out.println("DAMMIT!");
+		} catch(SecurityException e) { } 
+		catch (NullPointerException e) { }
+
+		
+
+	}
+
+	public void init{*bot} () {
+		try {
+			Map root = bankLocation.getRoot();
+
+			if (bankLocation actsfor BankEP) {
+				BankMain bank = new BankMain@bankLocation(bankLocation);
+				bank.createUser();
+
+				root.put("theBank",bank);
+				root.get("theBank");
+			}
+		} catch (NullPointerException e) {
+		}
+	}
+
+	public void begin() {
+		BankMain bank = null;
+
+		try {
+			Map root = bankLocation.getRoot();
+			bank = (BankMain) root.get("theBank");
+		} catch (NullPointerException e) {
+		} catch (ClassCastException e) {
+		}
+
+//		atomic {
+//			Merchant[lbl] kayak = null;
+//			kayak = new Merchant[lbl]@kaykLocation(dataLocation);
+//		}
+	}
+}

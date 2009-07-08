@@ -1,20 +1,15 @@
 package bank;
 
 import fabric.client.Core;
-//import fabricated.lang.JifObject;
-//import fabricated.util.*;
 
-public class BankClient[label L] {
-	private Core{L} dataLocation;
-//	private HashMap[L,L]{L} customers;
+public class BankClient[principal cp] {
 	public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
 
-	public BankClient{L} (Core{L} nodeLocation) {
-		this.dataLocation = nodeLocation;
+	public BankClient () {
 	}
 
-	public int{L} getBalance(int uid) {
-                return 500;
+	public int{cp:} getBalance(int uid) {
+		return 500;
 	}
 
 	public void init() {
@@ -30,21 +25,4 @@ public class BankClient[label L] {
 //        }
 
 
-/**
-	public void insert{L}(int{L} value) {
-
-	}
-
-	private TreeNode[L] insertHelper{L}(TreeNode[L]{L} cur, int{L} value) {
-
-	}
-
-	public void insertIterative{L}(int{L} value) {
-
-	}
-
-	public TreeNode[L]{L} lookup{L}(int{L} value) {
-
-	}
-**/
 }
