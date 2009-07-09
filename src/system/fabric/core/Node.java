@@ -2,21 +2,18 @@ package fabric.core;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.security.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Stack;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.*;
 
 import fabric.client.Client;
+import fabric.client.RemoteCore;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SSLSocketFactoryTable;
@@ -34,7 +31,10 @@ public class Node {
    */
   protected Map<String, Core> cores;
 
+  private final ConnectionHandler connectionHandler;
+
   protected class Core {
+    public final String name;
     public final SSLSocketFactory factory;
     public final TransactionManager tm;
     public final SurrogateManager sm;
@@ -42,9 +42,10 @@ public class Node {
     public final PublicKey publicKey;
     public final PrivateKey privateKey;
 
-    private Core(SSLSocketFactory factory, ObjectStore os,
+    private Core(String name, SSLSocketFactory factory, ObjectStore os,
         TransactionManager tm, SurrogateManager sm, PublicKey publicKey,
         PrivateKey privateKey) {
+      this.name = name;
       this.factory = factory;
       this.os = os;
       this.tm = tm;
@@ -54,21 +55,12 @@ public class Node {
     }
   }
 
-  /**
-   * The number of additional connections the node can handle.
-   */
-  private int availConns;
-
-  /**
-   * The thread pool.
-   */
-  private Stack<Worker> pool;
-
   public ConsoleHandler console;
 
   public Node(Options opts) {
     this.opts = opts;
     this.cores = new HashMap<String, Core>();
+    this.connectionHandler = new ConnectionHandler(this);
     this.console = new ConsoleHandler();
 
     // Instantiate the cores with their object stores and SSL socket factories.
@@ -163,14 +155,13 @@ public class Node {
 
   private void startClient() {
     try {
+      Map<String, RemoteCore> initCoreSet = new HashMap<String, RemoteCore>();
+      for (String s : cores.keySet()) {
+        initCoreSet.put(s, new InProcessCore(s, cores.get(s)));
+      }
+
       Client.initialize(opts.primaryCoreName, "fab://" + opts.primaryCoreName
-          + "/" + ONumConstants.CORE_PRINCIPAL, new Client.PostInitExec() {
-        public void run(Client client) {
-          for (String s : cores.keySet()) {
-            client.setCore(s, new InProcessCore(s, cores.get(s)));
-          }
-        }
-      });
+          + "/" + ONumConstants.CORE_PRINCIPAL, initCoreSet);
     } catch (Exception e) {
       throw new InternalError(e);
     }
@@ -198,7 +189,8 @@ public class Node {
 
     TransactionManager tm = new TransactionManager(os);
     SurrogateManager sm = new SimpleSurrogateManager(tm);
-    Core c = new Core(sslSocketFactory, os, tm, sm, publicKey, privateKey);
+    Core c =
+        new Core(coreName, sslSocketFactory, os, tm, sm, publicKey, privateKey);
     cores.put(coreName, c);
   }
 
@@ -247,62 +239,19 @@ public class Node {
    * The main execution body of a core node.
    */
   public void start() throws IOException {
-    // Set up the thread pool.
-    availConns = opts.maxConnect;
-    pool = new Stack<Worker>();
-    for (int i = 0; i < opts.threadPool; i++) {
-      pool.push(new Worker(this));
-    }
-
     // Start listening.
-    ServerSocket server = new ServerSocket(opts.port);
+    ServerSocketChannel server = ServerSocketChannel.open();
+    server.configureBlocking(true);
+    server.socket().bind(new InetSocketAddress(opts.port));
 
     // The main server loop.
     while (true) {
-      // Accept a connection and give it to a worker thread.
-      Worker worker = getWorker();
-      Socket client = server.accept();
+      // Accept a connection and give it to the connection handler.
+      SocketChannel connection = server.accept();
 
       // XXX not setting timeout
       // client.setSoTimeout(opts.timeout * 1000);
-      worker.handle(client);
+      connectionHandler.handle(connection);
     }
-  }
-
-  /**
-   * Returns an available <code>Worker</code> object.
-   */
-  private synchronized Worker getWorker() {
-    // If we can't handle any more connections, block until an existing
-    // connection is done.
-    while (availConns == 0) {
-      try {
-        this.wait();
-      } catch (InterruptedException e) {
-        continue;
-      }
-    }
-
-    availConns--;
-
-    if (pool.isEmpty()) return new Worker(this);
-    return pool.pop();
-  }
-
-  /**
-   * This is invoked by a <code>Worker</code> to notify this node that it is
-   * finished serving a client.
-   * 
-   * @return true iff the worker should kill itself.
-   */
-  protected synchronized boolean workerDone(Worker worker) {
-    availConns++;
-    this.notify();
-
-    // Clean up the worker and add it to the thread pool if there's room.
-    if (pool.size() == opts.threadPool) return true;
-    worker.cleanup();
-    pool.push(worker);
-    return false;
   }
 }

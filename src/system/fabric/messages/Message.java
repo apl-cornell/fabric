@@ -2,23 +2,16 @@ package fabric.messages;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.net.InetSocketAddress;
-import java.security.Principal;
-import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import fabric.client.Client;
 import fabric.client.RemoteNode;
-import fabric.client.UnreachableNodeException;
 import fabric.client.remote.messages.GetPrincipalMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
 import fabric.client.remote.messages.TakeOwnershipMessage;
-import fabric.common.*;
+import fabric.common.MessageHandler;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FabricRuntimeException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.exceptions.NoSuchNodeError;
 import fabric.common.util.Pair;
 import fabric.core.Worker;
 
@@ -42,124 +35,33 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    * @return The reply from the node.
    * @throws FabricException
    *           if an error occurs at the remote node while handling the message.
-   * @throws UnreachableNodeException
-   *           if unable to connect to the node.
    */
-  protected final R send(N node, boolean useSSL) throws FabricException,
-      UnreachableNodeException {
-    // XXX Won't always send to the same node host. Is this a problem?
-    // XXX This is pretty ugly. Can it be cleaned up?
-    // XXX Is this code in the right place?
+  protected final R send(N node, boolean useSSL) throws FabricException {
+    Pair<DataInputStream, DataOutputStream> dataStreams =
+        node.dataStreams(useSSL);
 
-    // FIXME? do we want to lock entire node?
-    synchronized (node) {
-      boolean needToConnect = !node.isConnected(useSSL);
-      Client client = Client.getClient();
-      final int retries = client.retries;
+    DataInputStream in = dataStreams.first;
+    DataOutputStream out = dataStreams.second;
 
-      int hostIdx = 0;
+    try {
+      // Write this message out.
+      out.writeByte(messageType.ordinal());
+      write(out);
+      out.flush();
 
-      // These will be filled in with real values if needed.
-      List<InetSocketAddress> hosts = null;
-      Principal nodePrincipal = null;
-      int numHosts = 0;
-      int startHostIdx = 0;
-
-      for (int retry = 0; retries < 0 || retry < retries;) {
+      // Read in the reply. Determine if an error occurred.
+      if (in.readBoolean()) {
         try {
-          if (needToConnect) {
-            if (hosts == null) {
-              Pair<List<InetSocketAddress>, Principal> entry =
-                  client.nameService.lookup(node);
-              hosts = entry.first;
-              nodePrincipal = entry.second;
-
-              numHosts = hosts.size();
-              startHostIdx = Client.RAND.nextInt(numHosts);
-            }
-
-            // Attempt to establish a connection.
-            int hostNum = (startHostIdx + hostIdx) % numHosts;
-            node.connect(useSSL, hosts.get(hostNum), nodePrincipal);
-          } else {
-            // Set the flag for the next loop iteration in case we fail.
-            needToConnect = true;
-          }
-
-          // Attempt to send our message and obtain a reply.
-          return send(node, node.dataInputStream(useSSL), node
-              .dataOutputStream(useSSL));
-        } catch (NoSuchNodeError e) {
-          // Connected to a system that doesn't host the node we're interested
-          // in.
-          // Increment loop counter variables.
-          
-          logger.log(Level.WARNING, "Failed to connect", e);
-          
-          hostIdx++;
-          if (hostIdx == numHosts) {
-            hostIdx = 0;
-            if (retries >= 0) retry++;
-          }
-          continue;
-        } catch (IOException e) {
-          // Retry.
-          
-          logger.log(Level.WARNING, "Failed to connect", e);
-          
-          if (hosts == null) {
-            // Attempt to reuse an existing connection failed. Just restart the
-            // loop.
-            continue;
-          }
-
-          // Increment loop counter variables.
-          hostIdx++;
-          if (hostIdx == numHosts) {
-            hostIdx = 0;
-            if (retries >= 0) retry++;
-          }
-          continue;
+          // We have an error.
+          FabricException exc = (FabricException) readObject(in);
+          exc.fillInStackTrace();
+          throw exc;
+        } catch (ClassNotFoundException e) {
+          throw new InternalError("Unexpected response from remote node", e);
         }
       }
-
-      throw new UnreachableNodeException(node);
-    }
-  }
-
-  /**
-   * Sends this message to a remote node. Used only by the client.
-   * 
-   * @param node
-   *          the node to which the object is being sent.
-   * @param in
-   *          the input stream for sending objects to the node.
-   * @param out
-   *          the output stream on which to obtain response objects.
-   * @return the response from the remote node.
-   * @throws FabricException
-   *           if an error occurred at the remote node while handling this
-   *           request.
-   * @throws IOException
-   *           if an I/O error occurs during serialization/deserialization.
-   */
-  private R send(N node, DataInputStream in, DataOutputStream out)
-      throws FabricException, IOException {
-    // Write this message out.
-    out.writeByte(messageType.ordinal());
-    write(out);
-    out.flush();
-
-    // Read in the reply. Determine if an error occurred.
-    if (in.readBoolean()) {
-      try {
-        // We have an error.
-        FabricException exc = (FabricException) readObject(in);
-        exc.fillInStackTrace();
-        throw exc;
-      } catch (ClassNotFoundException e) {
-        throw new InternalError("Unexpected response from remote node", e);
-      }
+    } catch (IOException e) {
+      throw new InternalError(e);
     }
 
     // Read the response.
@@ -239,14 +141,14 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
       out.flush();
     }
   }
-  
+
   private static void writeObject(Object o, DataOutputStream out)
       throws IOException {
     ObjectOutputStream oos = new ObjectOutputStream(out);
     oos.writeObject(o);
     oos.flush();
   }
-  
+
   private static Object readObject(DataInputStream in) throws IOException,
       ClassNotFoundException {
     ObjectInputStream ois = new ObjectInputStream(in);

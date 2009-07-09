@@ -31,12 +31,7 @@ public final class RemoteClient extends RemoteNode {
    * RemoteClient, use fabric.client.Client.getClient() instead.
    */
   public RemoteClient(String name) {
-    super(name);
-  }
-
-  @Override
-  protected boolean supportsUnencrypted() {
-    return false;
+    super(name, false);
   }
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
@@ -130,11 +125,6 @@ public final class RemoteClient extends RemoteNode {
               + "/" + onum + " from " + name + " -- either " + name
               + " doesn't own the object or authorization has failed.");
     }
-  }
-
-  @Override
-  public String name() {
-    return name;
   }
 
   /**

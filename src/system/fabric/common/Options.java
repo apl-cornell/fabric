@@ -6,6 +6,11 @@ import java.util.StringTokenizer;
 import fabric.common.exceptions.UsageError;
 
 public abstract class Options {
+  /**
+   * Whether to turn off SSL encryption for debugging purposes.
+   */
+  public static boolean DEBUG_NO_SSL = false;
+  
   protected Options() {
     setDefaultValues();
   }

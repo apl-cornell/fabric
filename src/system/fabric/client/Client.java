@@ -42,7 +42,7 @@ import fabric.lang.arrays.ObjectArray;
  */
 public final class Client {
   public final String name;
-  
+
   public final int port;
 
   // A map from core hostnames to Core objects
@@ -52,7 +52,7 @@ public final class Client {
   private final Map<String, RemoteClient> remoteClients;
 
   protected final LocalCore localCore;
-  
+
   // A KeyStore holding cores' public key certificates.
   protected final KeyStore trustStore;
 
@@ -62,9 +62,6 @@ public final class Client {
   // The principal on whose behalf this client is running.
   protected final NodePrincipal principal;
   public final java.security.Principal javaPrincipal;
-
-  // Whether SSL encryption is desired.
-  public final boolean useSSL;
 
   // The logger
   public static final Logger log = Logger.getLogger("fabric.client");
@@ -81,7 +78,7 @@ public final class Client {
 
   // The manager to use for fetching objects from cores.
   protected final FetchManager fetchManager;
-  
+
   private final RemoteCallManager remoteCallManager;
 
   public static final Random RAND = new Random();
@@ -92,37 +89,36 @@ public final class Client {
   private static final Timing t = Timing.APP;
 
   /**
-   * Initializes the Fabric <code>Client</code>. When connecting to a core,
-   * the client will retry each core node the specified number of times before
+   * Initializes the Fabric <code>Client</code>. When connecting to a core, the
+   * client will retry each core node the specified number of times before
    * failing. A negative retry-count is interpreted as an infinite retry-count.
    * 
    * @param keyStore
-   *                The client's key store. Should contain the client's X509
-   *                certificate.
+   *          The client's key store. Should contain the client's X509
+   *          certificate.
    * @param passwd
-   *                The password for unlocking the key store.
+   *          The password for unlocking the key store.
    * @param trustStore
-   *                The trust store to use. If this value is null, then the
-   *                default trust store will be used.
+   *          The trust store to use. If this value is null, then the default
+   *          trust store will be used.
    * @param cacheSize
-   *                The object cache size, in number of objects; must be
-   *                positive.
+   *          The object cache size, in number of objects; must be positive.
    * @param maxConnections
-   *                The maximum number of connections to core nodes to maintain;
-   *                must be positive.
+   *          The maximum number of connections to core nodes to maintain; must
+   *          be positive.
    * @param timeout
-   *                The timeout value to be used in seconds; must be positive.
+   *          The timeout value to be used in seconds; must be positive.
    * @param retries
-   *                The number of times to retry before failing to connect.
+   *          The number of times to retry before failing to connect.
    * @param useSSL
-   *                Whether SSL encryption is desired. Used for debugging
-   *                purposes.
+   *          Whether SSL encryption is desired. Used for debugging purposes.
    */
   public static Client initialize(String name, int port, String principalURL,
       KeyStore keyStore, char[] passwd, KeyStore trustStore,
       int maxConnections, int timeout, int retries, boolean useSSL,
-      String fetcher, PostInitExec postInitExec) throws InternalError,
-      UnrecoverableKeyException, IllegalStateException, UsageError {
+      String fetcher, Map<String, RemoteCore> initCoreSet)
+      throws InternalError, UnrecoverableKeyException, IllegalStateException,
+      UsageError {
 
     if (instance != null)
       throw new IllegalStateException(
@@ -135,14 +131,11 @@ public final class Client {
     log.config("use ssl:             " + useSSL);
     instance =
         new Client(name, port, principalURL, keyStore, passwd, trustStore,
-            maxConnections, timeout, retries, useSSL, fetcher);
-    
+            maxConnections, timeout, retries, useSSL, fetcher, initCoreSet);
+
     instance.remoteCallManager.start();
-    
-    if (postInitExec != null) postInitExec.run(instance);
-    
     instance.localCore.initialize();
-    
+
     return instance;
   }
 
@@ -153,7 +146,8 @@ public final class Client {
 
   private Client(String name, int port, String principalURL, KeyStore keyStore,
       char[] passwd, KeyStore trustStore, int maxConnections, int timeout,
-      int retries, boolean useSSL, String fetcher) throws InternalError,
+      int retries, boolean useSSL, String fetcher,
+      Map<String, RemoteCore> initCoreSet) throws InternalError,
       UnrecoverableKeyException, UsageError {
     // Sanitise input.
     if (timeout < 1) timeout = DEFAULT_TIMEOUT;
@@ -162,10 +156,11 @@ public final class Client {
     this.port = port;
     this.timeout = 1000 * timeout;
     this.retries = retries;
-    this.useSSL = useSSL;
+    fabric.common.Options.DEBUG_NO_SSL = !useSSL;
 
     this.nameService = new NameService();
     this.cores = new HashMap<String, RemoteCore>();
+    if (initCoreSet != null) this.cores.putAll(initCoreSet);
     this.remoteClients = new HashMap<String, RemoteClient>();
     this.localCore = new LocalCore();
     this.trustStore = trustStore;
@@ -187,8 +182,8 @@ public final class Client {
       SSLSocketFactoryTable.register(name, sslSocketFactory);
 
       this.javaPrincipal =
-          ((X509KeyManager) kmf.getKeyManagers()[0])
-              .getCertificateChain(name)[0].getSubjectX500Principal();
+          ((X509KeyManager) kmf.getKeyManagers()[0]).getCertificateChain(name)[0]
+              .getSubjectX500Principal();
     } catch (KeyManagementException e) {
       throw new InternalError("Unable to initialise key manager factory.", e);
     } catch (NoSuchAlgorithmException e) {
@@ -196,7 +191,7 @@ public final class Client {
     } catch (KeyStoreException e) {
       throw new InternalError("Unable to initialise key manager factory.", e);
     }
-    
+
     // Initialize the reference to the principal object.
     if (principalURL != null) {
       try {
@@ -210,7 +205,7 @@ public final class Client {
     } else {
       this.principal = null;
     }
-    
+
     this.remoteCallManager = new RemoteCallManager();
 
     // Initialize the fetch manager. This MUST be the last thing done in the
@@ -228,7 +223,7 @@ public final class Client {
    * 
    * @return the Client instance
    * @throws IllegalStateException
-   *                 if the Fabric client is uninitialized
+   *           if the Fabric client is uninitialized
    */
   public static Client getClient() throws IllegalStateException {
     if (instance == null)
@@ -241,12 +236,12 @@ public final class Client {
    * Returns a <code>Core</code> object representing the given core.
    * 
    * @param name
-   *                The core's host name.
+   *          The core's host name.
    * @return The corresponding <code>Core</code> object.
    */
   public RemoteCore getCore(String name) {
     name = NameService.resolveAlias(name);
-    
+
     if (name == null) {
       throw new NullPointerException();
     }
@@ -264,15 +259,15 @@ public final class Client {
     }
     return result;
   }
-  
+
   /**
-   * @return a <code>RemoteClient</code> object 
+   * @return a <code>RemoteClient</code> object
    */
   public RemoteClient getClient(String name) {
     name = NameService.resolveAlias(name);
-    
+
     if (name == null) throw new NullPointerException();
-    
+
     RemoteClient result;
     synchronized (remoteClients) {
       result = remoteClients.get(name);
@@ -287,7 +282,7 @@ public final class Client {
   public LocalCore getLocalCore() {
     return localCore;
   }
-  
+
   /**
    * @return a RemoteClient object representing the local client.
    */
@@ -308,7 +303,7 @@ public final class Client {
   public NodePrincipal getPrincipal() {
     return principal;
   }
-  
+
   /**
    * @return the Java notion of the client principal.
    */
@@ -323,15 +318,15 @@ public final class Client {
     shutdown_();
     remoteCallManager.shutdown();
     fetchManager.destroy();
-    
+
     for (Core core : cores.values()) {
       if (core instanceof RemoteCore) {
-        ((RemoteCore) core).destroy();
+        ((RemoteCore) core).cleanup();
       }
     }
-    
+
     for (RemoteClient client : remoteClients.values()) {
-      client.destroy();
+      client.cleanup();
     }
   }
 
@@ -348,7 +343,7 @@ public final class Client {
       UsageError {
     initialize(null);
   }
-  
+
   public static void initialize(String name) throws UnrecoverableKeyException,
       KeyStoreException, NoSuchAlgorithmException, CertificateException,
       IllegalStateException, IOException, InternalError, UsageError {
@@ -356,10 +351,10 @@ public final class Client {
   }
 
   public static void initialize(String name, String principalURL,
-      PostInitExec postInitExec) throws IOException, KeyStoreException,
-      NoSuchAlgorithmException,
-      CertificateException, UnrecoverableKeyException, IllegalStateException,
-      InternalError, UsageError {
+      Map<String, RemoteCore> initCoreSet) throws IOException,
+      KeyStoreException, NoSuchAlgorithmException, CertificateException,
+      UnrecoverableKeyException, IllegalStateException, InternalError,
+      UsageError {
     // Read in the Fabric properties file and update the System properties
     InputStream in = Resources.readFile("etc", "client.properties");
     Properties p = new Properties(System.getProperties());
@@ -376,7 +371,7 @@ public final class Client {
       } catch (IOException e) {
       }
     }
-    
+
     if (principalURL == null)
       principalURL = p.getProperty("fabric.client.principal");
 
@@ -412,7 +407,7 @@ public final class Client {
 
     initialize(name, port, principalURL, keyStore, passwd.toCharArray(),
         trustStore, maxConnections, timeout, retries, useSSL, fetcher,
-        postInitExec);
+        initCoreSet);
   }
 
   // TODO: throws exception?
@@ -420,7 +415,7 @@ public final class Client {
     log.info("Client node");
     log.config("Fabric version " + new Version());
     log.info("");
-    
+
     // Parse the command-line options.
     Client client = null;
     final Options opts;
@@ -430,7 +425,8 @@ public final class Client {
         initialize(opts.name);
 
         client = getClient();
-        if (client.getPrincipal() == null && opts.core == null && opts.app != null) {
+        if (client.getPrincipal() == null && opts.core == null
+            && opts.app != null) {
           throw new UsageError(
               "No fabric.client.principal specified in the client "
                   + "configuration.  Either\nspecify one or create a principal "
@@ -459,18 +455,19 @@ public final class Client {
         // Create a principal object on the given core.
         final String name = client.getJavaPrincipal().getName();
         final Core core = client.getCore(opts.core);
-        
+
         runInSubTransaction(new Code<Void>() {
           public Void run() {
             NodePrincipal principal = new NodePrincipal._Impl(core, null, name);
             principal.addDelegatesTo(core.getPrincipal());
-            
+
             System.out.println("Client principal created:");
-            System.out.println("fab://" + opts.core + "/" + principal.$getOnum());
+            System.out.println("fab://" + opts.core + "/"
+                + principal.$getOnum());
             return null;
           }
         });
-        
+
         return;
       }
 
@@ -483,7 +480,7 @@ public final class Client {
           }
         }
       }
-      
+
       // Attempt to read the principal object to ensure that it exists.
       final NodePrincipal clientPrincipal = client.getPrincipal();
       runInSubTransaction(new Code<Void>() {
@@ -492,7 +489,7 @@ public final class Client {
           return null;
         }
       });
-      
+
       // Run the requested application.
       Class<?> mainClass = Class.forName(opts.app[0] + "$_Impl");
       Method main =
@@ -542,7 +539,8 @@ public final class Client {
    * starting and finishing transactions.
    * 
    * @param tid
-   *          The parent transaction for the subtransaction that will be created.
+   *          The parent transaction for the subtransaction that will be
+   *          created.
    */
   public static <T> T runInTransaction(TransactionID tid, Code<T> code) {
     TransactionManager tm = TransactionManager.getInstance();
@@ -565,7 +563,7 @@ public final class Client {
    */
   public static <T> T runInSubTransaction(Code<T> code) {
     TransactionManager tm = TransactionManager.getInstance();
-    
+
     boolean success = false;
     int backoff = 1;
     while (!success) {
@@ -578,12 +576,12 @@ public final class Client {
           }
         }
       }
-      
+
       if (backoff < 5000) backoff *= 2;
-      
+
       success = true;
       tm.startTransaction();
-      
+
       try {
         return code.run();
       } catch (RetryException e) {
@@ -604,10 +602,10 @@ public final class Client {
         }
       }
     }
-    
+
     throw new InternalError();
   }
-  
+
   public static interface Code<T> {
     T run();
   }

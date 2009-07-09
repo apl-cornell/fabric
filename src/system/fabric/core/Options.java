@@ -31,9 +31,7 @@ public class Options extends fabric.common.Options {
   public String primaryCoreName;
 
   public int threadPool;
-  public int maxConnect;
   public int timeout;
-  public boolean useSSL;
 
   public static class CoreKeyStores {
     public final KeyStore keyStore;
@@ -59,9 +57,7 @@ public class Options extends fabric.common.Options {
     this.port = 3372;
     this.cores = new TreeMap<String, CoreKeyStores>();
     this.threadPool = 10;
-    this.maxConnect = 25;
     this.timeout = 15;
-    this.useSSL = true;
     this.primaryCoreName = null;
   }
 
@@ -78,10 +74,8 @@ public class Options extends fabric.common.Options {
             + "stores. Can be specified multiple times. The first core "
             + "specified will be the node's \"primary\" core, and the core "
             + "node's client will run under the primary core's principal.");
-    usageForFlag(out, "--pool <number>", "size of worker thread pool",
+    usageForFlag(out, "--pool <number>", "size of worker-thread pool",
         defaults.threadPool);
-    usageForFlag(out, "--conn <number>", "maximum number of simultaneous "
-        + "connections to support", defaults.maxConnect);
     usageForFlag(out, "--timeout <seconds>", "time-out for idle client "
         + "connections", defaults.timeout);
     usageForFlag(out, "--nossl", "disables SSL for debugging purposes");
@@ -167,16 +161,6 @@ public class Options extends fabric.common.Options {
       return i + 1;
     }
 
-    if (args[i].equals("--conn")) {
-      i++;
-      try {
-        this.maxConnect = new Integer(args[i]).intValue();
-      } catch (NumberFormatException e) {
-        throw new UsageError("Invalid argument: " + args[i]);
-      }
-      return i + 1;
-    }
-
     if (args[i].equals("--timeout")) {
       i++;
       try {
@@ -189,7 +173,7 @@ public class Options extends fabric.common.Options {
 
     if (args[i].equals("--nossl")) {
       i++;
-      this.useSSL = false;
+      DEBUG_NO_SSL = true;
         
       return i;
     }

@@ -87,7 +87,7 @@ public class RemoteCore extends RemoteNode implements Core {
    * Creates a core representing the core at the given host name.
    */
   protected RemoteCore(String name, PublicKey key) {
-    super(name);
+    super(name, true);
     
     this.objects = new LongKeyHashMap<FabricSoftRef>();
     this.fresh_ids = new LinkedList<Long>();
@@ -102,15 +102,10 @@ public class RemoteCore extends RemoteNode implements Core {
    * Cleans up the SerializedObject collector thread.
    */
   @Override
-  public void destroy() {
-    super.destroy();
+  public void cleanup() {
+    super.cleanup();
     collector.destroyed = true;
     collector.interrupt();
-  }
-
-  @Override
-  protected boolean supportsUnencrypted() {
-    return true;
   }
 
   public synchronized long createOnum() throws UnreachableNodeException {
@@ -336,11 +331,6 @@ public class RemoteCore extends RemoteNode implements Core {
 
   public Map getRoot() {
     return new Map._Proxy(this, ONumConstants.ROOT_MAP);
-  }
-
-  @Override
-  public final String name() {
-    return name;
   }
 
   public NodePrincipal getPrincipal() {
