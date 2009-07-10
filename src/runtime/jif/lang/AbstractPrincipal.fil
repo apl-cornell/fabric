@@ -24,6 +24,9 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     
     private void jif$init() {
       superiors = new HashMap();
+      
+      // XXX HACK
+      superiors.keySet();
     }
     
     protected AbstractPrincipal jif$lang$AbstractPrincipal$(final String name) {
