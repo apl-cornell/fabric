@@ -61,7 +61,7 @@ class CommManager {
 
       public void connectionClosed() {
         throw new InternalError("Connection to " + node
-            + "unexpectedly closed.");
+            + " unexpectedly closed.");
       }
     };
     try {
