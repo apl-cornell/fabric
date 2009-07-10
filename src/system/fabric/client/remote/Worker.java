@@ -150,7 +150,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
         TransactionRegistry.getInnermostLog(abortTransactionMessage.tid.topTid);
     if (log == null) return;
 
-    TransactionManager tm = getTransactionManager();
+    TransactionManager tm = TransactionManager.getInstance();
     tm.associateAndSyncLog(log, abortTransactionMessage.tid);
     tm.abortTransaction();
     tm.associateLog(null);
@@ -164,7 +164,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
     if (log == null)
       return new PrepareTransactionMessage.Response("No such transaction");
 
-    TransactionManager tm = getTransactionManager();
+    TransactionManager tm = TransactionManager.getInstance();
     tm.associateLog(log);
 
     // Commit up to the top level.
@@ -198,7 +198,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
       return new CommitTransactionMessage.Response(true);
     }
 
-    TransactionManager tm = getTransactionManager();
+    TransactionManager tm = TransactionManager.getInstance();
     tm.associateLog(log);
     try {
       tm.sendCommitMessagesAndCleanUp();
