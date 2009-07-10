@@ -3,17 +3,22 @@ package bank;
 import fabric.client.Core;
 
 public class BankClient[principal cp] {
-	public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
+	public final label{cp->;cp<-} bot = new label {⊥→⊥;⊤←⊤};
+	private final BankPrincipal[{cp->;cp<-}]{cp->;cp<-} bcp;
 
-	public BankClient () {
+	public BankClient (BankPrincipal bcp) {
+		this.bcp = bcp;
 	}
 
-	public int{cp:} getBalance(int uid) {
-		return 500;
+	public int{cp->;cp<-} getBalance() {
+		//XXX Should I really be ignoring exceptions here?
+		try {
+			return (BankPrincipal) cp.getBalance();
+		} catch	(NullPointerException e) { }
+		return 0;
 	}
 
 	public void init() {
-			
 	}
 
 //        public boolean{L} debitFunds(int uid, int value) {

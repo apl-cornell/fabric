@@ -1,12 +1,17 @@
 package bank;
 
+/**
+ * An instance of BankAcct is owned by a BankPrincipal.
+ * A BankAcct has a balance, which represents the money in the account
+ * Methods are provided for the principal 
+ **/
 public class BankAcct [principal P] {
 	private int{P:;P!:} balance = 500;
 
 	public BankAcct () {
 	}
 
-	public int{P:;P!:} getBalance() {
+	public int getBalance() where caller(P) {
 		return balance;
 	}
 	

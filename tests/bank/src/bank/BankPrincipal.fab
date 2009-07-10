@@ -23,4 +23,11 @@ public class BankPrincipal[covariant label T] extends AbstractPrincipal {
 		//return true;
 	}
 
+	public int{T} getBalance() where caller(this){
+		try {
+			return acct.getBalance();
+		} catch (NullPointerException e) { }
+		return 0;	
+	}
+
 }
