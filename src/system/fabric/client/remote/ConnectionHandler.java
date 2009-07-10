@@ -3,6 +3,7 @@ package fabric.client.remote;
 import java.net.SocketAddress;
 import java.util.Collections;
 
+import fabric.client.Client;
 import fabric.common.AbstractConnectionHandler;
 import fabric.lang.NodePrincipal;
 
@@ -26,8 +27,11 @@ public class ConnectionHandler extends
 
   @Override
   protected Object getNodeByName(String name) {
-    // Assume the client exists. Return a dummy object -- any will do.
-    return Collections.EMPTY_LIST;
+    // If client exists, return a dummy object -- any will do.
+    if (Client.getClient().name.equalsIgnoreCase(name))
+      return Collections.EMPTY_LIST;
+    
+    return null;
   }
 
   @Override
