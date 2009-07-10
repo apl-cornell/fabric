@@ -41,13 +41,22 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
    */
   protected Session session;
 
+  /**
+   * Whether this thread should be recycled back in the thread pool.
+   */
   private boolean recycle;
+
+  /**
+   * Whether this thread is ready to be associated with a session.
+   */
+  private boolean readyToAssociate;
 
   protected AbstractWorkerThread(String name, Pool<Worker> pool) {
     super(name + " -- initializing");
     this.threadName = name;
     this.pool = pool;
     this.recycle = false;
+    this.readyToAssociate = false;
   }
 
   /**
@@ -62,10 +71,16 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
     while (!shuttingDown()) {
       Thread.currentThread().setName(threadName + " -- idle");
 
-      // Wait for the node to signal this thread (done via a call to handle()).
+      // Notify that we are ready to be associated with a session.
+      readyToAssociate = true;
+      notifyAll();
+
+      // Wait for the node to signal this thread (done via a call to
+      // associateSession()).
       try {
         wait();
       } catch (InterruptedException e) {
+        recycle = false;
         continue;
       }
 
@@ -81,7 +96,7 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
 
       logStats();
 
-      // Signal that this worker is now available.
+      // Return this worker to the pool.
       if (pool.workerDone((Worker) this)) break;
     }
 
@@ -134,11 +149,20 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
    * to this worker.
    */
   public final synchronized void associateSession(Session session) {
+    while (!readyToAssociate) {
+      try {
+        wait();
+      } catch (InterruptedException e) {
+        continue;
+      }
+    }
+
     this.session = session;
     initPipes();
+    readyToAssociate = false;
 
     // Get the worker thread running.
-    notify();
+    notifyAll();
   }
 
   private void initPipes() {
@@ -209,10 +233,6 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
 
     public Pool(int size, Factory<Worker> threadFactory) {
       this.pool = new Stack<Worker>();
-      for (int i = 0; i < size; i++) {
-        pool.push(threadFactory.createWorker(this));
-      }
-
       this.maxSize = size;
       this.factory = threadFactory;
       this.destroyed = false;

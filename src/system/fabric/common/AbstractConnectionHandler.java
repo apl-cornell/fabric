@@ -241,6 +241,7 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
     public void connectionClosed() {
       for (Worker worker : workers)
         worker.recycle();
+      workers.clear();
     }
 
     public void newStream(ChannelMultiplexerThread muxer, int streamID) {
