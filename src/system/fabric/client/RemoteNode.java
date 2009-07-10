@@ -4,7 +4,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.logging.Logger;
 
-import fabric.client.remote.RemoteClient;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 
@@ -57,7 +56,6 @@ public abstract class RemoteNode {
   public final Pair<DataInputStream, DataOutputStream> dataStreams(
       boolean useSSL) {
     if (useSSL) {
-      if (this instanceof RemoteClient) throw new InternalError();
       if (sslCommManager == null) sslCommManager = new CommManager(this, true);
       return sslCommManager.getStreams();
     }
