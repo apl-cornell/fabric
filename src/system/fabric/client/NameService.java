@@ -24,6 +24,7 @@ public class NameService {
     clientPorts = new HashMap<String, Integer>();
     clientPorts.put("client0", 3374);
     clientPorts.put("client1", 3375);
+    clientPorts.put("dalek.systems.cs.cornell.edu", 3374);
   }
   
   /**
