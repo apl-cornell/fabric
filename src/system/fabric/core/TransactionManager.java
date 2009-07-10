@@ -91,12 +91,6 @@ public class TransactionManager {
    * 
    * @param client
    *          The client requesting the prepare
-   * @param creates
-   *          The set of objects to be created in this transaction
-   * @param updates
-   *          The set of objects to be updated in this transaction
-   * @param reads
-   *          The set of objects that the transaction read
    * @return whether a subtransaction was created for making Statistics objects.
    * @throws TransactionPrepareFailedException
    *           If the transaction would cause a conflict or if the client is
