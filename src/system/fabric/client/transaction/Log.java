@@ -254,7 +254,7 @@ public final class Log {
       for (_Impl obj : localcoreWrites) {
         result.put(obj.$getOnum(), obj);
       }
-      
+
       for (_Impl create : localcoreCreates) {
         result.remove(create.$getOnum());
       }
@@ -277,7 +277,7 @@ public final class Log {
     // This should be a Set of _Impl, but to avoid calling methods on the
     // _Impls, we instead use a map keyed on OID.
     LongKeyMap<_Impl> result = new LongKeyHashMap<_Impl>();
-    
+
     if (core.isLocalCore()) {
       for (_Impl obj : localcoreCreates) {
         result.put(obj.$getOnum(), obj);
@@ -435,7 +435,7 @@ public final class Log {
         if (obj.$numWaiting > 0) obj.notifyAll();
       }
     }
-    
+
     WeakReferenceArrayList<_Impl> parentLocalcoreWrites =
         parent.localcoreWrites;
     for (_Impl obj : localcoreWrites) {
@@ -468,7 +468,7 @@ public final class Log {
         obj.$writeLockHolder = parent;
       }
     }
-    
+
     WeakReferenceArrayList<_Impl> parentLocalcoreCreates =
         parent.localcoreCreates;
     synchronized (parentLocalcoreCreates) {
@@ -668,5 +668,21 @@ public final class Log {
     // sanity check
     if (!readsReadByParent.isEmpty())
       throw new InternalError("something was read by a non-existent parent");
+  }
+
+  /**
+   * Goes through this transaction log and performs an onum renumbering. This is
+   * used by fabric.client.TransactionRegistery.renumberObject. Do not call this
+   * unless if you really know what you are doing.
+   * 
+   * @deprecated
+   */
+  public void renumberObject(Core core, long onum, long newOnum) {
+    ReadMapEntry entry = reads.remove(core, onum);
+    if (entry != null) {
+      reads.put(core, newOnum, entry);
+    }
+    
+    if (child != null) child.renumberObject(core, onum, newOnum);
   }
 }

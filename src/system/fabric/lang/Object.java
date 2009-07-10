@@ -13,6 +13,7 @@ import fabric.client.remote.RemoteClient;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.ReadMapEntry;
 import fabric.client.transaction.TransactionManager;
+import fabric.client.transaction.TransactionRegistry;
 import fabric.common.*;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
@@ -664,7 +665,9 @@ public interface Object {
      * @deprecated
      */
     public final void $forceRenumber(long onum) {
+      long oldOnum = $ref.onum;
       this.$ref.onum = onum;
+      TransactionRegistry.renumberObject($ref.core, oldOnum, onum);
     }
     
 

@@ -1,5 +1,6 @@
 package fabric.client.transaction;
 
+import fabric.client.Core;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -35,7 +36,7 @@ public final class TransactionRegistry {
    */
   public static Log getOrCreateInnermostLog(TransactionID tid) {
     if (tid == null) return null;
-    
+
     Log log;
     synchronized (registry) {
       log = registry.get(tid.topTid);
@@ -72,5 +73,18 @@ public final class TransactionRegistry {
     }
 
     return log;
+  }
+
+  /**
+   * Goes through all transaction logs and performs an onum renumbering. This is
+   * used by fabric.lang.Object.$forceRenumber. Do not call this unless if you
+   * really know what you are doing.
+   * 
+   * @deprecated
+   */
+  public static void renumberObject(Core core, long onum, long newOnum) {
+    for (Log log : registry.values()) {
+      log.renumberObject(core, onum, newOnum);
+    }
   }
 }
