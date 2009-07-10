@@ -32,7 +32,7 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
   private final Set<ChannelMultiplexerThread> activeMuxThreads;
 
   protected AbstractConnectionHandler(int poolSize,
-      Worker.Factory<Worker> workerFactory) {
+      AbstractWorkerThread.Factory<Worker> workerFactory) {
     this.threadPool = new Pool<Worker>(poolSize, workerFactory);
     this.activeMuxThreads = new HashSet<ChannelMultiplexerThread>();
     this.destroyed = false;
