@@ -30,7 +30,12 @@ import fabric.lang.Object._Proxy;
  */
 public class UpdateMap implements FastSerializable {
 
-  private static String ALG_HASH = "MD5";
+  private static final String ALG_HASH = "MD5";
+
+  /**
+   * The transaction ID for the topmost transaction that this map is a part of.
+   */
+  private final long tid;
 
   /**
    * Maps md5(oid) to Label. These are the "create" entries.
@@ -54,12 +59,18 @@ public class UpdateMap implements FastSerializable {
 
   public int version;
 
-  public UpdateMap() {
+  /**
+   * @param tid
+   *          the transaction ID for the topmost transaction that this map is a
+   *          part of.
+   */
+  public UpdateMap(long tid) {
     this.creates = new HashMap<Hash, Label>();
     this.updates = new HashMap<Hash, Pair<byte[], byte[]>>();
     this.readCache = new OidKeyHashMap<RemoteClient>();
     this.writeCache = new OidKeyHashMap<Pair<_Proxy, RemoteClient>>();
     this.version = 0;
+    this.tid = tid;
   }
 
   /**
@@ -72,13 +83,14 @@ public class UpdateMap implements FastSerializable {
     this.writeCache =
         new OidKeyHashMap<Pair<_Proxy, RemoteClient>>(map.writeCache);
     this.version = map.version;
+    this.tid = map.tid;
   }
 
   /**
    * Deserialization constructor.
    */
   public UpdateMap(DataInput in) throws IOException {
-    this();
+    this(in.readLong());
     this.version = -1;
 
     Client client = Client.getClient();
@@ -129,7 +141,7 @@ public class UpdateMap implements FastSerializable {
    */
   public boolean containsCreate(_Proxy proxy) {
     if (creates.isEmpty()) return false;
-    
+
     try {
       return creates.containsKey(hash(proxy));
     } catch (NoSuchAlgorithmException e) {
@@ -139,7 +151,7 @@ public class UpdateMap implements FastSerializable {
 
   public Label getCreate(_Proxy proxy) {
     if (creates.isEmpty()) return null;
-    
+
     try {
       return creates.get(hash(proxy));
     } catch (NoSuchAlgorithmException e) {
@@ -270,11 +282,10 @@ public class UpdateMap implements FastSerializable {
   }
 
   /**
-   * Given a proxy and an encryption key, hashes the object location and the
-   * key.
+   * Given a proxy and an encryption key, hashes the object location with the
+   * transaction ID and the key.
    */
-  private Hash hash(_Proxy proxy, byte[] key)
-      throws NoSuchAlgorithmException {
+  private Hash hash(_Proxy proxy, byte[] key) throws NoSuchAlgorithmException {
     MessageDigest md5 = MessageDigest.getInstance(ALG_HASH);
     Core core = proxy.$getCore();
     long onum = proxy.$getOnum();
@@ -288,6 +299,15 @@ public class UpdateMap implements FastSerializable {
     md5.update((byte) (onum >>> 40));
     md5.update((byte) (onum >>> 48));
     md5.update((byte) (onum >>> 56));
+
+    md5.update((byte) tid);
+    md5.update((byte) (tid >>> 8));
+    md5.update((byte) (tid >>> 16));
+    md5.update((byte) (tid >>> 24));
+    md5.update((byte) (tid >>> 32));
+    md5.update((byte) (tid >>> 40));
+    md5.update((byte) (tid >>> 48));
+    md5.update((byte) (tid >>> 56));
 
     if (key != null) md5.update(key);
 
@@ -315,6 +335,9 @@ public class UpdateMap implements FastSerializable {
 
   public void write(DataOutput out) throws IOException {
     flushWriteCache();
+
+    // Write tid.
+    out.writeLong(tid);
 
     // Write creates.
     out.writeInt(creates.size());
@@ -348,7 +371,7 @@ public class UpdateMap implements FastSerializable {
   }
 
   /**
-   * A byte-array wrapper.  This is here because Java is stupid.
+   * A byte-array wrapper. This is here because Java is stupid.
    */
   private static class Hash {
     private byte[] hash;
@@ -356,13 +379,14 @@ public class UpdateMap implements FastSerializable {
 
     Hash(byte[] hash) {
       this.hash = hash;
-      this.hashCode = (hash[0] << 24) | (hash[1] << 16) | (hash[2] << 8) | hash[3];
+      this.hashCode =
+          (hash[0] << 24) | (hash[1] << 16) | (hash[2] << 8) | hash[3];
     }
 
     @Override
     public boolean equals(Object obj) {
       Hash other = (Hash) obj;
-      
+
       if (hashCode != other.hashCode) return false;
 
       for (int i = 4; i < hash.length; i++)

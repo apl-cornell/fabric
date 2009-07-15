@@ -158,7 +158,7 @@ public final class Log {
         Timing.SUBTX.end();
       }
     } else {
-      this.updateMap = new UpdateMap();
+      this.updateMap = new UpdateMap(this.tid.topTid);
       commitState = new CommitState();
 
       // New top-level frame. Register it in the transaction registry.
@@ -365,7 +365,7 @@ public final class Log {
       if (parent != null) {
         updateMap = new UpdateMap(parent.updateMap);
       } else {
-        updateMap = new UpdateMap();
+        updateMap = new UpdateMap(tid.topTid);
       }
 
       if (abortSignal != null) {
