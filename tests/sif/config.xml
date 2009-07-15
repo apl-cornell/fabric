@@ -6,12 +6,16 @@
 
 
 	<dirname property="sif-config.basedir" file="${ant.file.sif-config}" />
+	<property name="fabric.home" value="${sif-config.basedir}/../.." />
 
 	<!-- ****************************************
         Configuration properties.
         Load them from config.properties, and then use defaults.
        ****************************************  -->
-	<property file="${sif-config.basedir}/config.properties" />
+	<property file="${fabric.home}/config.properties" />
+
+	<!-- override fabric.home for folks who still have it defined in config.properties. -->
+	<property name="fabric.home" value="${sif-config.basedir}/../.." />
 
 	<!-- set the prefix for accessing environment variables -->
 	<property environment="env" />
@@ -41,7 +45,7 @@
 
 	<!-- Fabric installation -->
 	<!-- If it is not defined in the properties file, use the environment variable $FABRIC. -->
-	<condition property="fabric.home" value="${env.FABRIC}">
+	<condition property="fabric.home" value="fabric.home">
 		<and>
 			<isset property="env.FABRIC" />
 			<not>
@@ -75,6 +79,10 @@
 	<!-- the standard classpath -->
 	<path id="standard.classpath">
 		<fileset dir="${sif.lib}">
+			<include name="*.jar" />
+			<exclude name="*sig.jar" />
+		</fileset>
+		<fileset dir="${fabric.home}/lib">
 			<include name="*.jar" />
 			<exclude name="*sig.jar" />
 		</fileset>

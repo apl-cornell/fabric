@@ -14,7 +14,7 @@
 						relative="true"
 						skipemptyfilesets="true"
 						vmlauncher="false">
-				<arg value="${fabric.home}/bin/fabc" />
+				<arg value="${basedir}/../../bin/fabc" />
 				<arg value="-d" /> <arg value="classes"/>
 				<arg value="-e" />
 				<arg value="-debugpositions" />
