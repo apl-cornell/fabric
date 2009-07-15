@@ -1,0 +1,9 @@
+package bank;
+
+public class BankDummy{
+	private int{} balance = 500;
+
+//	public BankDummy () {
+//	}
+
+}

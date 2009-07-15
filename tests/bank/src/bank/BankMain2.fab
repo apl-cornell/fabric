@@ -1,0 +1,75 @@
+package bank;
+import fabricated.util.HashMap;
+
+public class BankMain2 {
+	private final principal bankTop;
+	private final Core bankCore;
+	//private HashMap[{bankTop->;bankTop<-},{bankTop->;bankTop<-}] customers;
+	
+	//trusted merchant's principal
+//	private principal {bankTop:;bankTop←} brokerPcp;
+
+	//bank customers' principals
+	
+
+	//private final Core {bankTop:;bankTop←} nodeLocation;
+
+//	public static void main{*←} (String{*←}[]{*←} args) {
+//		BankMain bank_ = null;
+//		atomic {
+//			bank_ = new BankMain();
+//		}
+
+////		m_.begin();
+//	}
+
+
+	public BankMain2 () {
+		bankCore = client$.getLocalCore();
+		bankTop = bankCore;
+	}
+
+//	public void login(String username, String password) {
+//		try {
+//			if(userPcp.authenticate(username, password)) {
+//				return;
+//			}
+//		} catch (NullPointerException e) {
+//		}
+//	}
+	
+	public void createAcct (principal u){
+
+		BankDummy b = new BankDummy@bankCore();
+//		try {
+//			accounts[0] = b;
+//		} catch (ArrayIndexOutOfBoundsException e) { }
+//		catch (NullPointerException e) { }
+	}
+
+//	public void setBroker {bankTop:;bankTop←} (principal {bankTop:;bankTop←} M) {
+//		brokerPcp = M;		
+//	}
+
+//	public static BankClient[bankTop]{cp:;cp←} requestClient{cp:;cp←} (principal cp)
+//	where authority(bankTop), caller(cp), endorse({cp:;cp←; bankTop←}) {
+//		
+//		return new BankClient[bankTop]();
+//	}
+
+//	public boolean transferFunds{bankTop->;bankTop←} (principal User1, principal User2, int amt) {
+
+//		BankAcct acct1 = accounts.get(User1);
+//		BankAcct acct2 = accounts.get(User2);
+//		
+//		if (acct1.getBalance() <= amt) {
+//			atomic {
+//				acct1 -= amt;
+//				acct2 += amt;
+//			}
+//			return true;	
+//		}
+//		
+//		return false;
+//	}
+}

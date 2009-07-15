@@ -4,10 +4,10 @@ import fabric.client.Core;
 
 public class BankClient[principal cp] {
 	public final label{cp->;cp<-} bot = new label {⊥→⊥;⊤←⊤};
-	private final BankPrincipal[{cp->;cp<-}]{cp->;cp<-} bcp;
+	//private final BankPrincipal[{cp->;cp<-}]{cp->;cp<-} bcp;
 
-	public BankClient (BankPrincipal bcp) {
-		this.bcp = bcp;
+	public BankClient () {
+		//this.bcp = bcp;
 	}
 
 	public int{cp->;cp<-} getBalance() {
