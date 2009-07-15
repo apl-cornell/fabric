@@ -424,7 +424,6 @@ public abstract class ObjectStore {
    */
   protected final void unpin(PendingTransaction tx) {
     for (long onum : tx) {
-      System.out.println("Unpinning onum " + onum);
       Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
       if (locks.first != null && locks.first == tx.tid) locks.first = null;
       
