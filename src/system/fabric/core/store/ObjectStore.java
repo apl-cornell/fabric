@@ -173,19 +173,20 @@ public abstract class ObjectStore {
    * <p>
    * Tracks the read/write locks for each onum. Maps each onum to a pair. The
    * first component of the pair is the tid for the write-lock holder. The
-   * second component is the set of tids for the read-lock holders.
+   * second component is a map from the of tids for the read-lock holders to the
+   * number of clients in the transaction that have read locks on the onum.
    * </p>
    * <p>
    * This should be recomputed from the set of prepared transactions when
    * restoring from stable storage.
    * </p>
    */
-  protected final LongKeyMap<Pair<Long, LongSet>> rwLocks;
+  protected final LongKeyMap<Pair<Long, LongKeyMap<MutableInteger>>> rwLocks;
 
   protected ObjectStore(String name) {
     this.name = name;
     this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
-    this.rwLocks = new LongKeyHashMap<Pair<Long, LongSet>>();
+    this.rwLocks = new LongKeyHashMap<Pair<Long, LongKeyMap<MutableInteger>>>();
     this.globIDByOnum = new LongKeyHashMap<Long>();
     this.globTable = new GroupContainerTable();
     this.nextGlobID = 0;
@@ -238,21 +239,32 @@ public abstract class ObjectStore {
    * Acquires a read lock on the given onum for the given transaction.
    */
   private void addReadLock(long onum, long tid) {
-    Pair<Long, LongSet> locks = rwLocks.get(onum);
+    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
     if (locks == null) {
-      locks = new Pair<Long, LongSet>(null, new LongHashSet());
+      locks =
+          new Pair<Long, LongKeyMap<MutableInteger>>(null,
+              new LongKeyHashMap<MutableInteger>());
       rwLocks.put(onum, locks);
     }
-    locks.second.add(tid);
+
+    MutableInteger pinCount = locks.second.get(tid);
+    if (pinCount == null) {
+      pinCount = new MutableInteger(0);
+      locks.second.put(tid, pinCount);
+    }
+
+    pinCount.value++;
   }
 
   /**
    * Acquires a write lock on the given onum for the given transaction.
    */
   private void addWriteLock(long onum, long tid) {
-    Pair<Long, LongSet> locks = rwLocks.get(onum);
+    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
     if (locks == null) {
-      locks = new Pair<Long, LongSet>(null, new LongHashSet());
+      locks =
+          new Pair<Long, LongKeyMap<MutableInteger>>(null,
+              new LongKeyHashMap<MutableInteger>());
       rwLocks.put(onum, locks);
     }
 
@@ -330,7 +342,7 @@ public abstract class ObjectStore {
   public int getVersion(long onum) throws AccessException {
     SerializedObject obj = read(onum);
     if (obj == null) throw new AccessException(name, onum);
-    
+
     return read(onum).getVersion();
   }
 
@@ -383,15 +395,14 @@ public abstract class ObjectStore {
    *          the object number in question
    */
   public final boolean isPrepared(long onum, long tid) {
-    Pair<Long, LongSet> locks = rwLocks.get(onum);
+    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
     if (locks == null) return false;
 
     if (locks.first != null) return true;
 
-    for (LongIterator it = locks.second.iterator(); it.hasNext();)
-      if (it.next() != tid) return true;
-
-    return false;
+    if (locks.second.isEmpty()) return false;
+    if (locks.second.size() > 1) return true;
+    return !locks.second.containsKey(tid);
   }
 
   /**
@@ -403,19 +414,25 @@ public abstract class ObjectStore {
    *         been committed or rolled back.
    */
   public final boolean isWritten(long onum) {
-    Pair<Long, LongSet> locks = rwLocks.get(onum);
+    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
     return locks != null && locks.first != null;
   }
 
   /**
-   * Adjusts rwCount to account for the fact that the given transaction is about
+   * Adjusts rwLocks to account for the fact that the given transaction is about
    * to be committed or aborted.
    */
   protected final void unpin(PendingTransaction tx) {
     for (long onum : tx) {
-      Pair<Long, LongSet> locks = rwLocks.get(onum);
+      System.out.println("Unpinning onum " + onum);
+      Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
       if (locks.first != null && locks.first == tx.tid) locks.first = null;
-      locks.second.remove(tx.tid);
+      
+      MutableInteger pinCount = locks.second.get(tx.tid);
+      if (pinCount != null) {
+        pinCount.value--;
+        if (pinCount.value == 0) locks.second.remove(tx.tid);
+      }
 
       if (locks.first == null && locks.second.isEmpty()) rwLocks.remove(onum);
     }

@@ -61,7 +61,9 @@ public class TransactionManager {
       } catch (final AccessException e) {
         throw new TransactionCommitFailedException("Insufficient Authorization");
       } catch (final RuntimeException e) {
-        throw new TransactionCommitFailedException("something went wrong", e);
+        throw new TransactionCommitFailedException(
+            "something went wrong; core experienced a runtime exception during "
+                + "commit: " + e.getMessage(), e);
       }
     }
   }
@@ -124,12 +126,12 @@ public class TransactionManager {
 
       // Check writes and update version numbers
       for (SerializedObject o : req.writes) {
-        // Make sure no one else is using the object and fetch the old copy from
-        // the core.
+        // Make sure no one else has written the object and fetch the old copy
+        // from the core.
         long onum = o.getOnum();
         SerializedObject coreCopy;
         synchronized (store) {
-          if (store.isPrepared(onum, tid))
+          if (store.isWritten(onum))
             throw new TransactionPrepareFailedException("Object " + onum
                 + " has been locked by an uncommitted transaction");
 
@@ -173,13 +175,14 @@ public class TransactionManager {
         for (SerializedObject o : req.creates) {
           long onum = o.getOnum();
 
-          // Make sure no one else is using the object.
+          // Make sure no one else has claimed the object number in an
+          // uncommitted transaction.
           if (store.isPrepared(onum, tid))
             throw new TransactionPrepareFailedException(versionConflicts,
                 "Object " + onum + " has been locked by an "
                     + "uncommitted transaction");
 
-          // Make sure the onum isn't already taken.
+          // Make sure the onum doesn't already exist in the store.
           if (store.exists(onum))
             throw new TransactionPrepareFailedException(versionConflicts,
                 "Object " + onum + " already exists");
@@ -208,8 +211,8 @@ public class TransactionManager {
           try {
             curVersion = store.getVersion(onum);
           } catch (AccessException e) {
-            throw new TransactionPrepareFailedException(versionConflicts,
-                e.getMessage());
+            throw new TransactionPrepareFailedException(versionConflicts, e
+                .getMessage());
           }
           if (curVersion != version) {
             versionConflicts.add(onum);
