@@ -9,7 +9,7 @@ public class RemoteCall05 {
     RemoteClient remoteClient = Client.getClient().getClient("core0");
     f_client0_remote@remoteClient(Client.getClient().getPrincipal(), n-1);
     f_client0_remote@remoteClient(Client.getClient().getPrincipal(), n-1);
-    i += n;
+    i = i + n;
   }
 
   public void f_core0_remote(fabric.lang.Principal p, int n) {
@@ -20,7 +20,7 @@ public class RemoteCall05 {
     if (n <= 0) return;
 
     RemoteClient remoteClient = Client.getClient().getClient("client0");
-    i += n;
+    i = i + n;
     f_core0_remote@remoteClient(Client.getClient().getPrincipal(), n-1);
     f_core0_remote@remoteClient(Client.getClient().getPrincipal(), n-1);
   }
