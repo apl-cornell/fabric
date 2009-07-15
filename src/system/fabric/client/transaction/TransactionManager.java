@@ -245,7 +245,7 @@ public final class TransactionManager {
       Timing.COMMIT.end();
     }
   }
-  
+
   public void commitTransactionAt(long commitTime) {
     logger.finest(current + " attempting to commit");
     // Assume only one thread will be executing this.
@@ -289,7 +289,7 @@ public final class TransactionManager {
 
     // Remove and unlock reads that have valid promises on them
     current.removePromisedReads(commitTime);
-    
+
     // Go through the transaction log and figure out the cores we need to
     // contact.
     Set<Core> cores = current.coresToContact();
@@ -316,8 +316,10 @@ public final class TransactionManager {
    * Sends prepare messages to the cohorts. Also sends abort messages if any
    * cohort fails to prepare.
    */
-  public Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(long commitTime) {
-    return sendPrepareMessages(commitTime, current.coresToContact(), current.clientsCalled);
+  public Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
+      long commitTime) {
+    return sendPrepareMessages(commitTime, current.coresToContact(),
+        current.clientsCalled);
   }
 
   /**
@@ -387,7 +389,7 @@ public final class TransactionManager {
             boolean subTransactionCreated =
                 core.prepareTransaction(current.tid.topTid, commitTime,
                     creates, reads, writes);
-            
+
             if (subTransactionCreated) {
               RemoteClient coreClient = client.getClient(core.name());
               synchronized (current.clientsCalled) {
@@ -560,7 +562,7 @@ public final class TransactionManager {
     }
 
     if (!(unreachable.isEmpty() && failed.isEmpty())) {
-      logger.finest(current
+      logger.severe(current
           + " error committing: atomicity violation -- failed:" + failed
           + " unreachable:" + unreachable);
       throw new TransactionAtomicityViolationException(failed, unreachable);
@@ -574,7 +576,7 @@ public final class TransactionManager {
     synchronized (current.commitState) {
       current.commitState.value = COMMITTED;
     }
-    
+
     TransactionRegistry.remove(current.tid.topTid);
 
     current = null;
@@ -612,8 +614,8 @@ public final class TransactionManager {
       obj.$writer = current;
       obj.$writeLockHolder = current;
 
-      // Own the object. The call to ensureOwnership is responsible for adding the
-      // object to the set of created objects.
+      // Own the object. The call to ensureOwnership is responsible for adding
+      // the object to the set of created objects.
       ensureOwnership(obj);
       current.updateMap.put(obj.$getProxy(), obj.get$label());
     } finally {
@@ -703,7 +705,7 @@ public final class TransactionManager {
       }
     }
 
-      return needTransaction;
+    return needTransaction;
 
   }
 
@@ -773,7 +775,7 @@ public final class TransactionManager {
     // write set.
     obj.$history = obj.clone();
     obj.$writeLockHolder = current;
-    
+
     if (obj.$getCore().isLocalCore()) {
       synchronized (current.localcoreWrites) {
         current.localcoreWrites.add(obj);
@@ -805,7 +807,7 @@ public final class TransactionManager {
     // We now own the object.
     obj.$isOwned = true;
     current.updateMap.put(obj.$getProxy(), Client.getClient().getLocalClient());
-    
+
     // If the object is fresh, add it to our set of creates.
     if (obj.$version == 0) {
       if (obj.$getCore().isLocalCore()) {
@@ -827,7 +829,7 @@ public final class TransactionManager {
   private void ensureObjectUpToDate(_Impl obj) {
     // Check the object's update-map version stamp.
     if (obj.$updateMapVersion == current.updateMap.version) return;
-    
+
     // Set the update-map version stamp on the object.
     obj.$updateMapVersion = current.updateMap.version;
 
@@ -859,8 +861,8 @@ public final class TransactionManager {
     try {
       Timing.BEGIN.begin();
       current = new Log(current, tid);
-      logger.finest(current.parent + " started subtx " + current + " in thread "
-          + Thread.currentThread());
+      logger.finest(current.parent + " started subtx " + current
+          + " in thread " + Thread.currentThread());
     } finally {
       Timing.BEGIN.end();
     }
@@ -928,7 +930,7 @@ public final class TransactionManager {
   public void associateLog(Log log) {
     current = log;
   }
-  
+
   public Log getCurrentLog() {
     return current;
   }
@@ -937,7 +939,7 @@ public final class TransactionManager {
     if (current == null) return null;
     return current.tid;
   }
-  
+
   public UpdateMap getUpdateMap() {
     if (current == null) return null;
     return current.updateMap;
@@ -949,7 +951,8 @@ public final class TransactionManager {
    *         created by the current transaction and is owned by that client.
    */
   public RemoteClient getFetchClient(_Proxy proxy) {
-    if (current == null || !current.updateMap.containsCreate(proxy)) return null;
+    if (current == null || !current.updateMap.containsCreate(proxy))
+      return null;
     Label label = current.updateMap.getCreate(proxy);
 
     return current.updateMap.getUpdate(proxy, label);
@@ -961,7 +964,7 @@ public final class TransactionManager {
    */
   public void associateAndSyncLog(Log log, TransactionID tid) {
     associateLog(log);
-    
+
     if (log == null) {
       if (tid != null) startTransaction(tid);
       return;
