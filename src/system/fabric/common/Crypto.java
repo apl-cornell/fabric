@@ -21,7 +21,7 @@ public final class Crypto {
   public static final String ALG_PUBLIC_KEY_GEN = "RSA";
   public static final int SIZE_PUBLIC_KEY = 1024;
 
-  public static final String ALG_HASH = "SHA1";
+  public static final String ALG_HASH = "SHA-256";
 
   private static final KeyGenerator secretKeyGen;
   private static final KeyPairGenerator publicKeyGen;
