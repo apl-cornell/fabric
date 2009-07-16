@@ -1,10 +1,10 @@
 package bank;
-import fabricated.util.HashMap;
+import fabricated.util.LinkedList;
 
 public class BankMain2 {
-	private final principal bankTop;
-	private final Core bankCore;
-	//private HashMap[{bankTop->;bankTop<-},{bankTop->;bankTop<-}] customers;
+	private final principal{bankTop->;bankTop<-} bankTop;
+	private final Core{bankTop->;bankTop<-} bankCore;
+	private LinkedList[{bankTop->;bankTop<-}]{bankTop->;bankTop<-} customers;
 	
 	//trusted merchant's principal
 //	private principal {bankTop:;bankTop←} brokerPcp;
@@ -27,6 +27,7 @@ public class BankMain2 {
 	public BankMain2 () {
 		bankCore = client$.getLocalCore();
 		bankTop = bankCore;
+		customers = new LinkedList();
 	}
 
 //	public void login(String username, String password) {
@@ -38,14 +39,20 @@ public class BankMain2 {
 //		}
 //	}
 	
-	public void createAcct (principal u){
+	public void createAcct{bankTop->;bankTop<-} (principal u) {
+//		BankAcct{bankTop->;bankTop<-} b = null;
+		if(bankTop actsfor BankEP && bankTop actsfor UserEP && bankCore equiv bankTop) {
+			BankAcct b = new BankAcct[{bankTop->;bankTop<-}]@bankCore();
 
-		BankDummy b = new BankDummy@bankCore();
-//		try {
-//			accounts[0] = b;
-//		} catch (ArrayIndexOutOfBoundsException e) { }
-//		catch (NullPointerException e) { }
+//			BankAcct b = new BankAcct@bankCore();
+			try {
+				customers.add(b);
+	//		} catch (ArrayIndexOutOfBoundsException e) { }
+			} catch (NullPointerException e) { }
+
+		}
 	}
+
 
 //	public void setBroker {bankTop:;bankTop←} (principal {bankTop:;bankTop←} M) {
 //		brokerPcp = M;		
@@ -59,8 +66,8 @@ public class BankMain2 {
 
 //	public boolean transferFunds{bankTop->;bankTop←} (principal User1, principal User2, int amt) {
 
-//		BankAcct acct1 = accounts.get(User1);
-//		BankAcct acct2 = accounts.get(User2);
+//		BankAcct acct1 = customers.get(User1);
+//		BankAcct acct2 = customers.get(User2);
 //		
 //		if (acct1.getBalance() <= amt) {
 //			atomic {

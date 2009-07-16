@@ -6,17 +6,18 @@ import fabricated.lang.JifObject;
  * A BankAcct has a balance, which represents the money in the account
  * Methods are provided for the principal 
  **/
-public class BankAcct[principal B, principal U] {
-	private int{U->U,B;B<-B;U<-B} balance = 500;
+public class BankAcct[label L] implements JifObject[L] {
+	private principal{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP} owner;
+	private int{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP} balance = 500;
 
-	public BankAcct () {
+	public BankAcct{L} () {
 	}
 
-	public int{U->U,B;B<-B;U<-B} getBalance() {
+	public int{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP} getBalance() {
 		return balance;
 	}
 	
-	public boolean{U->U,B;B<-B;U<-B} debit{U->U,B;B<-B;U<-B} (int{U->U,B;B<-B;U<-B}  amt) {
+	public boolean{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP} debit{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP} (int{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP}  amt) {
 		boolean result = false;
 		atomic {
 			if(amt <= balance) {
@@ -25,5 +26,29 @@ public class BankAcct[principal B, principal U] {
 			}
 		}
 		return result;
+	}
+
+
+/**
+ * Section with implemented interface methods
+ */
+	public int{L} hashCode() {
+		return 0;
+	}
+
+	public String{L} toString() {
+		return "BankAcct";
+	}
+
+	public boolean equals(IDComparable[{L}] obj) {
+		if (this == obj)
+		return true;
+		return false;
+	}
+
+	public boolean equals(label lbl, IDComparable[{*lbl}] obj){
+		if (this == obj)
+		return true;
+		return false;	
 	}
 }
