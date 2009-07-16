@@ -13,19 +13,25 @@ public class BankAcct[label L] implements JifObject[L] {
 	public BankAcct{L} () {
 	}
 
-	public int{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP} getBalance() {
+	public int{UserEP->BankEP;BankEP<-;UserEP<-BankEP} getBalance() {
 		return balance;
 	}
 	
-	public boolean{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP} debit{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP} (int{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP}  amt) {
+	public boolean{UserEP->BankEP;BankEP<-;UserEP<-BankEP} debit{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP} (int{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP}  amt) {
 		boolean result = false;
 		atomic {
 			if(amt <= balance) {
-				balance -= amt;
+				balance = balance - amt;
 				result = true;
 			}
 		}
 		return result;
+	}
+
+	public void credit{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP} (int{UserEP->UserEP,BankEP;BankEP<-BankEP;UserEP<-BankEP}  amt) {
+		atomic {
+			balance = balance + amt;
+		}
 	}
 
 

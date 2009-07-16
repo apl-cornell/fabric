@@ -64,19 +64,27 @@ public class BankMain2 {
 //		return new BankClient[bankTop]();
 //	}
 
-//	public boolean transferFunds{bankTop->;bankTop←} (principal User1, principal User2, int amt) {
-
-//		BankAcct acct1 = customers.get(User1);
-//		BankAcct acct2 = customers.get(User2);
-//		
-//		if (acct1.getBalance() <= amt) {
-//			atomic {
-//				acct1 -= amt;
-//				acct2 += amt;
-//			}
-//			return true;	
-//		}
-//		
-//		return false;
-//	}
+	public boolean{bankTop->;bankTop←} transferFunds{bankTop->;bankTop←} (int{bankTop->;bankTop←} amt)
+	where bankTop equiv BankEP, bankTop actsfor UserEP {
+		try {
+			BankAcct[{bankTop->;bankTop←}] acct1 = (BankAcct)customers.get(0);
+			BankAcct[{bankTop->;bankTop←}] acct2 = (BankAcct)customers.get(1);
+			
+			
+			//if(bankTop equiv BankEP && bankTop actsfor UserEP) {
+				if (acct1.getBalance() <= amt) {
+					atomic {
+						acct1.debit(amt);
+//						acct2.credit(amt);
+					}
+//					return true;	
+				}
+			//}
+		} catch (ClassCastException e){
+		} catch (IndexOutOfBoundsException e) {
+		} catch (NullPointerException e) {
+		}
+		
+		return false;
+	}
 }
