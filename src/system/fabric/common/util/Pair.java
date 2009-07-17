@@ -1,6 +1,6 @@
 package fabric.common.util;
 
-public class Pair<T1,T2> {
+public class Pair<T1, T2> {
   public T1 first;
   public T2 second;
 
@@ -8,7 +8,7 @@ public class Pair<T1,T2> {
     this.first = first;
     this.second = second;
   }
-  
+
   @Override
   public String toString() {
     return "(" + first + "," + second + ")";
@@ -17,11 +17,11 @@ public class Pair<T1,T2> {
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof Pair)) return false;
-    
-    Pair<?,?> p = (Pair<?,?>) o;
+
+    Pair<?, ?> p = (Pair<?, ?>) o;
     return equals(first, p.first) && equals(second, p.second);
   }
-  
+
   private boolean equals(Object o1, Object o2) {
     if (o1 == o2) return true;
     if (o1 == null || o2 == null) return false;
@@ -30,7 +30,7 @@ public class Pair<T1,T2> {
 
   @Override
   public int hashCode() {
-    return first.hashCode() ^ second.hashCode();
+    return (first == null ? 0 : first.hashCode())
+        ^ (second == null ? 0 : second.hashCode());
   }
 }
-
