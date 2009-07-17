@@ -2,9 +2,18 @@ This is Fabric.
 
 
 To build Fabric:
-1. download and build polyglot
-2. set $POLYGLOT to your polyglot directory
-3. run ant
+1. check out polyglot, jif, and fabric
+2. build polyglot:
+    polyglot$ ant
+    polyglot$ ant jar
+3. build jif:
+	jif$ for i in `pwd`/../polyglot/lib/*.jar; do classpath=$classpath:$i; done; export CLASSPATH=$classpath
+	jif$ export JAVA_HOME=/usr/lib/jvm/java-6-sun
+	jif$ ant
+4. copy config.properties.in to config.properties and edit it appropriately
+5. ant
+
+    
 
 To set up your environment for Fabric:
 
