@@ -1,4 +1,4 @@
-package compiler;
+package fabil;
 
 public class Atomic02 {
   public static atomic void m(String[] args) {

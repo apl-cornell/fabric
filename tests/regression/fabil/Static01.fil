@@ -1,4 +1,4 @@
-package compiler;
+package fabil;
 
 public class Static01 {
   static void m() {

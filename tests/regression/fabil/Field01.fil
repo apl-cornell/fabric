@@ -1,4 +1,4 @@
-package compiler;
+package fabil;
 
 public class Field01 {
   Field01 f;

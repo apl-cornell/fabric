@@ -1,4 +1,4 @@
-package compiler;
+package fabil;
 
 public class Flatten02 {
   void m() {

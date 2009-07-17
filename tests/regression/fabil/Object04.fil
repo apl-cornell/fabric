@@ -2,7 +2,7 @@
  * Ensures signatures are working.  Tests to see that fabric.lang.Object
  * appears as a class.
  */
-package compiler;
+package fabil;
 
 public class Object04 extends fabric.lang.Object {
 }

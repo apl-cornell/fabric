@@ -1,7 +1,7 @@
 /**
  * Test to ensure Fabric objects implicitly inherit from fabric.lang.Object.
  */
-package compiler;
+package fabil;
 
 public class Object05 {
   fabric.lang.Object o;

@@ -1,4 +1,4 @@
-package compiler;
+package fabil;
 
 public class Cast06 implements Cast06_I {
   public Cast06_I m() {

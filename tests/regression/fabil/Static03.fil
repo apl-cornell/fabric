@@ -1,4 +1,4 @@
-package compiler;
+package fabil;
 
 interface Static03 {
   int x = 0;

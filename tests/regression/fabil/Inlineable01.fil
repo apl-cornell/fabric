@@ -2,7 +2,7 @@
  * Checks to make sure we can use String, Integer, and friends as
  * fabric.lang.Objects.
  */
-package compiler;
+package fabil;
 
 public class Inlineable01 {
   String s;

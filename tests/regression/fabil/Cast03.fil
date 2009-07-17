@@ -1,4 +1,4 @@
-package compiler;
+package fabil;
 
 public class Cast03 {
   void m(Object a, Object[] b) {

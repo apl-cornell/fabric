@@ -1,7 +1,7 @@
 /**
  * Checks that we can treate interfaces as fabric.lang.Objects.
  */
-package compiler;
+package fabil;
 
 public interface Interface01 {
   void moo(fabric.lang.Object o);
