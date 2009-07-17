@@ -25,8 +25,10 @@ public class ArrayAccessAssign_c extends polyglot.ast.ArrayAccessAssign_c {
     // fabric arrays of java inlineables expect fabric objects, not java objects
     if (child == right) {
       FabILTypeSystem ts = (FabILTypeSystem) av.typeSystem();
-      Type base = ((ArrayAccess) left).array().type().toArray().ultimateBase();
-      if (ts.isJavaInlineable(base) && ts.isFabricArray(base)) return ts.FObject();
+      Type array = ((ArrayAccess) left).array().type();
+      Type base  = array.toArray().ultimateBase();
+      if (ts.isJavaInlineable(base) && ts.isFabricArray(array))
+        return ts.FObject();
     }
     return super.childExpectedType(child, av);
   }
