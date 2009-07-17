@@ -1,147 +1,18 @@
-CMS Fabric Build README
-FabIL version of CMS is in tests/cms/pojo and tests/cms/web with tag cms_fabric
---------------------------------------------------------------------------------
+Building CMS:
+  1. install java, ant, tomcat5.5
+  2. in fabric dir run ant jars
+  3. in cms dir switch to fabricized version (cvs up -rPd cms_fabric
+  4. in cms dir run ant
 
-Some path aliases are used in this README. Here are their descriptions:
-- {polyglot home}: the path where the Polyglot code source is located
-- {fabric home}: the path where the Fabric code source is located
-- {tomcat root}: the path where the Tomcat5.5 root resides. This is 
-  usually in /var/lib/tomcat5.5
+Configuring Tomcat:
+  5. link fab jars into web dir    (ln -s lib/fabric{,-rt}.jar tests/cms/web/WEB-INF/lib/
+  6. link web into webapps dir     (sudo ln -s tests/cms/web /var/lib/tomcat5.5/webapps
+  7. link 55cms.policy into tomcat (sudo ln -s tests/cms/config/55cms.policy /etc/tomcat5.5/policy.d
+  8. tell tomcat where fabric is   (sudo echo "fabric.prefix=`pwd`" >> /etc/tomcat5.5/catalina.properties 
+  9. if your store is not fabric-cms.systems.cs.cornell.edu edit web/WEB-INF/web.xml accordingly
 
-You may find it useful to find & replace these variables with your actual paths
-before using the README.
-
-1) Set up a Fabric/Jif/Polyglot build environment
-
-2) Disable fabric.common.util.hash
-Edit src/system/fabric/common/Util.java
-add the following lines to the beginning of public static byte[] hash(Class<?> c):
-
-if(true)
-  return new byte[0];
-
-
-3) Tomcat5.5 is required to run CMS. Download and install Tomcat5.5.
-
-4) Update your CLASSPATH to be:
-
-.:{polyglot home}/classes:{polyglot home}/lib/java_cup.jar:{polyglot home}/lib/JFlex.jar:{polyglot home}/lib/ppg.jar:/usr/share/java/servlet-api.jar:{fabric home}/tests/cms/web/WEB-INF/lib/ostermillerutils_1_05_00_for_java_1_4.jar:{fabric home}/tests/cms/web/WEB-INF/lib/mail.jar
-
-5) Build CMS
-
-Run the following command in {fabric home}:
-
-./bin/filc \
--d rt-classes \
--sourcepath src/runtime:tests/cms/pojo \
--addsigcp sig-classes/fabil \
--cp rt-classes:/lib/fabric.jar:rt-classes:lib/fabric-rt.jar \
--sx java \
-tests/cms/pojo/cms/model/SiteNotice.java \
-tests/cms/pojo/cms/model/CategoryContentsFileList.java \
-tests/cms/pojo/cms/model/CategoryContentsFileEntry.java \
-tests/cms/pojo/cms/model/AnswerSet.java \
-tests/cms/pojo/cms/model/TimeSlot.java \
-tests/cms/pojo/cms/model/CategoryRow.java \
-tests/cms/pojo/cms/model/Email.java \
-tests/cms/pojo/cms/model/Comment.java \
-tests/cms/pojo/cms/model/CategoryContentsLink.java \
-tests/cms/pojo/cms/model/GroupAssignedTo.java \
-tests/cms/pojo/cms/model/RegradeRequest.java \
-tests/cms/pojo/cms/model/SolutionFile.java \
-tests/cms/pojo/cms/model/SubmittedFile.java \
-tests/cms/pojo/cms/model/Course.java \
-tests/cms/pojo/cms/model/Student.java \
-tests/cms/pojo/cms/model/GroupMember.java \
-tests/cms/pojo/cms/model/AssignmentFile.java \
-tests/cms/pojo/cms/model/Transactions.java \
-tests/cms/pojo/cms/model/SubProblem.java \
-tests/cms/pojo/cms/model/CategoryColumn.java \
-tests/cms/pojo/cms/model/Log.java \
-tests/cms/pojo/cms/model/FileData.java \
-tests/cms/pojo/cms/model/CategoryContents.java \
-tests/cms/pojo/cms/model/Assignment.java \
-tests/cms/pojo/cms/model/Group.java \
-tests/cms/pojo/cms/model/OldAnnouncement.java \
-tests/cms/pojo/cms/model/CategoryContentsNumber.java \
-tests/cms/pojo/cms/model/AssignmentItem.java \
-tests/cms/pojo/cms/model/CategoryContentsString.java \
-tests/cms/pojo/cms/model/LogSearchParams.java \
-tests/cms/pojo/cms/model/Semester.java \
-tests/cms/pojo/cms/model/GroupGrade.java \
-tests/cms/pojo/cms/model/LogDetail.java \
-tests/cms/pojo/cms/model/CategoryContentsDate.java \
-tests/cms/pojo/cms/model/Answer.java \
-tests/cms/pojo/cms/model/FileEntry.java \
-tests/cms/pojo/cms/model/Choice.java \
-tests/cms/pojo/cms/model/Grade.java \
-tests/cms/pojo/cms/model/Announcement.java \
-tests/cms/pojo/cms/model/CommentFile.java \
-tests/cms/pojo/cms/model/Staff.java \
-tests/cms/pojo/cms/model/Category.java \
-tests/cms/pojo/cms/model/User.java \
-tests/cms/pojo/cms/model/RequiredSubmission.java \
-tests/cms/pojo/cms/model/NotImplementedException.java \
-tests/cms/pojo/cms/model/CMSRoot.java \
-tests/cms/pojo/cms/www/xml/CategoryXMLUtil.java \
-tests/cms/pojo/cms/controller/test/CreateDB.java \
-tests/cms/pojo/cms/www/util/DOMWriter.java
-
-6) Build Fabric jars
-
-run the following command: ant jars
-move lib/fabric{,-rt}.jar to tests/cms/web/WEB-INF/lib
-
-7) Create Tomcat project named "web" in {tomcat root}/webapps with files in 
-tests/cms/web
-
-This can be done either through a symbolic link or you can copy all the files.
-But be sure to recopy the files when you make a change, if you use the latter 
-method.
-
-8) Edit {tomcat root}/conf/catalina.properties to include:
-fabric.prefix={fabric home}
-
-9) Edit {tomcat root}/policy.d/03catalina.policy to include:
-
-grant codeBase "file:{tomcat root}/webapps/web/-" {
-  permission java.security.AllPermission;
-};
-
-grant {
-permission java.lang.RuntimePermission "loadLibrary.jifrt";
-permission java.util.PropertyPermission "*", "read,write";
-permission java.lang.RuntimePermission "getenv.FABRIC_HOME";
-permission java.io.FilePermission "<<ALL FILES>>", "read";
-permission java.net.SocketPermission "127.0.0.1:3372", "connect";
-permission java.net.SocketPermission "localhost:3372", "connect";
-permission java.net.SocketPermission "core0:3372", "connect";
-permission java.net.SocketPermission "core0", "resolve";
-permission java.net.SocketPermission "*", "resolve";
-permission java.net.SocketPermission "*:3372", "connect";
-};
-
-10) Open {fabric home}/etc/client.properties and comment out the line starting 
-with (add a # at the start of the line):
-fabric.client.fetchmanager=
-
-11) Start a core:
-cd {fabric home}
-./bin/fab-core --core core0 etc/keys/core0.keystore etc/keys/trust.keystore password --core core1 etc/keys/core1.keystore etc/keys/trust.keystore password
-
-12) Set up a principal:
-./bin/fab --name client0 --make-principal core0
-
-13) Start Tomcat and load: http://localhost:8180/web/guest
-
-
-Problems?
------------------
-
-If you receive an exception report or the server seems to hang and the error
-messages aren't helping, try checking Tomcat's error logs. They are usually in
-/var/log/tomcat5.5. Make sure to check both localhost-{date} and catalina-{date}.
-
-Please note that when Tomcat handles a Fabric error, it usually tends to hang and so you must manually stop Tomcat by running:
-killall -9 jsvc
-
+Running CMS:
+ 10. restart tomcat                 (sudo service tomcat5.5 restart
+ 11. start the core                 (bin/fab-core --core fabric-cms.systems.cs.cornell.edu etc/keys/fabric-cms.systems.cs.cornell.edu.keystore etc/keys/trust.keystore password
+ 12. create the cmsserver principal (bin/fab --name cmsserver --make-principal fabric-cms.systems.cs.cornell.edu
+ 13. navigate to http://localhost:8180/web
