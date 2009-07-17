@@ -1,4 +1,4 @@
-public class ArrayTest02 extends java.lang.Object {
+public class Array02 extends java.lang.Object {
     void m{*!:*}() throws (Exception{*!:*}) {
         int   {Bob:} native[] y = new int native[10];
         String{Bob:} native[] z = new String native[10];

@@ -1,4 +1,4 @@
-public class ArrayTest03  {
+public class Array03  {
     void m{*!:*}() throws (Exception{*!:*}) {
         int{Bob:} native [] y = new int native[10];
         String{Bob:}[] z = new String[10];

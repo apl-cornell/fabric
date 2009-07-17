@@ -1,4 +1,4 @@
-public class ArrayTest01 {
+public class Array01 {
     void m{*!:*}() throws (Exception{*!:*}) {
         FabricClient cl = FabricClient.getClient();
         if(cl == null) return;
