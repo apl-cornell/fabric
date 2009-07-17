@@ -902,27 +902,28 @@ public class AccessController extends HttpServlet {
     super.init(config);
     
     try {
-      fabric.client.Client.initialize("client0");
+      fabric.client.Client.initialize(config.getInitParameter("fabric.client"));
     }
     catch(Exception ex) { 
       throw new RuntimeException~label@core(ex);
     }
     localCore = Client.getClient().getLocalCore();
-    core = Client.getClient().getCore("core0");
+    core = Client.getClient().getCore(config.getInitParameter("cms.root.core"));
     label = localCore.getEmptyLabel();
     CMSRoot database = null;
 
     Map root = null;
+    String name = config.getInitParameter("cms.root.name");
     atomic {
        root = (Map) core.getRoot();
       
-      database = (CMSRoot)root.get("cms_db");
+      database = (CMSRoot)root.get(name);
       if(database == null) {
         // create and add test data
         database = new CMSRoot~label@core();
         CreateDB driver = new CreateDB~label@core();
         driver.create(database);
-        root.put("cms_db", database);
+        root.put(name, database);
       }
     }
     
