@@ -105,7 +105,8 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
       throw new ProtocolError("Message not supported.");
 
     logger.finer("Handling Abort Message");
-    session.core.tm.abortTransaction(session.client, message.tid.topTid);
+    session.core.tm.abortTransaction(session.clientPrincipal,
+        message.tid.topTid);
     logger.fine("Transaction " + message.tid.topTid + " aborted");
   }
 
@@ -118,7 +119,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
       throw new ProtocolError("Message not supported.");
 
     logger.finer("Handling Allocate Message");
-    long[] onums = session.core.tm.newOnums(session.client, msg.num);
+    long[] onums = session.core.tm.newOnums(session.clientPrincipal, msg.num);
     return new AllocateMessage.Response(onums);
   }
 
@@ -134,7 +135,8 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
     this.numCommits++;
 
     try {
-      session.core.tm.commitTransaction(session.client, message.transactionID);
+      session.core.tm.commitTransaction(session.remoteNode,
+          session.clientPrincipal, message.transactionID);
       logger.fine("Transaction " + message.transactionID + " committed");
 
       // updated object tallies
@@ -167,7 +169,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
 
     try {
       boolean subTransactionCreated =
-          session.core.tm.prepare(session.client, req);
+          session.core.tm.prepare(session.clientPrincipal, req);
 
       logger.fine("Transaction " + req.tid + " prepared");
       // Store the size of the transaction for debugging at the end of the
@@ -195,7 +197,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
     this.numReads++;
 
     ObjectGroup group =
-        session.core.tm.getGroup(session.client, msg.onum, this);
+        session.core.tm.getGroup(session.clientPrincipal, msg.onum, this);
     return new ReadMessage.Response(group);
   }
 
@@ -207,7 +209,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
     logger.finer("Handling DissemRead message");
     this.numReads++;
 
-    Glob glob = session.core.tm.getGlob(msg.onum, session.privateKey, this);
+    Glob glob = session.core.tm.getGlob(msg.onum, session.remoteNode, this);
     if (glob != null) numGlobsSent++;
 
     return new DissemReadMessage.Response(glob);

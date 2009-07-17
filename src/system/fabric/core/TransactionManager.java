@@ -4,11 +4,9 @@ import java.security.PrivateKey;
 import java.util.*;
 
 import jif.lang.Label;
-import fabric.client.Client;
-import fabric.client.Core;
-import fabric.client.TransactionCommitFailedException;
-import fabric.client.TransactionPrepareFailedException;
+import fabric.client.*;
 import fabric.client.Client.Code;
+import fabric.client.remote.RemoteClient;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
@@ -26,18 +24,35 @@ public class TransactionManager {
   private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
   private static final int MAX_GROUP_SIZE = 75;
 
+  private static final Random rand = new Random();
+
   /**
    * The object store of the core for which we're managing transactions.
    */
-  protected final ObjectStore store;
-  protected final LongKeyMap<Statistics> objectStats;
-  // protected final ReadHistory readHistory;
-  protected static final Random rand = new Random();
+  private final ObjectStore store;
 
-  public TransactionManager(ObjectStore store) {
+  /**
+   * The subscription manager associated with the core for which we're managing
+   * transactions.
+   */
+  private final SubscriptionManager sm;
+
+  // protected final ReadHistory readHistory;
+
+  /**
+   * The key to use when signing objects.
+   */
+  private final PrivateKey signingKey;
+
+  private final LongKeyMap<Statistics> objectStats;
+
+  public TransactionManager(ObjectStore store, PrivateKey signingKey) {
     this.store = store;
+    this.signingKey = signingKey;
     this.objectStats = new LongKeyHashMap<Statistics>();
     // this.readHistory = new ReadHistory();
+
+    this.sm = new SubscriptionManager(store.getName(), this);
   }
 
   /**
@@ -53,11 +68,12 @@ public class TransactionManager {
   /**
    * Execute the commit phase of two phase commit.
    */
-  public void commitTransaction(NodePrincipal client, long transactionID)
+  public void commitTransaction(RemoteClient clientNode,
+      NodePrincipal clientPrincipal, long transactionID)
       throws TransactionCommitFailedException {
     synchronized (store) {
       try {
-        store.commit(transactionID, client);
+        store.commit(transactionID, clientNode, clientPrincipal, sm);
       } catch (final AccessException e) {
         throw new TransactionCommitFailedException("Insufficient Authorization");
       } catch (final RuntimeException e) {
@@ -294,16 +310,25 @@ public class TransactionManager {
    * Returns a GroupContainer containing the specified object.
    * 
    * @param worker
-   *          Used to track read statistics.
+   *          Used to track read statistics. Can be null.
+   * @param subscriber
+   *          If non-null, then the given client will be subscribed to the
+   *          object.
    */
-  private GroupContainer getGroupContainer(long onum, Worker worker)
-      throws AccessException {
+  private GroupContainer getGroupContainerAndSubscribe(long onum,
+      RemoteClient subscriber, Worker worker) throws AccessException {
     GroupContainer container;
     synchronized (store) {
       container = store.getCachedGroupContainer(onum);
+      if (container != null) {
+        if (subscriber != null) sm.subscribe(onum, subscriber);
+        return container;
+      }
     }
-    if (container != null) return container;
 
+    // XXX Ideally, the subscription registration should happen atomically with
+    // the read.
+    if (subscriber != null) sm.subscribe(onum, subscriber);
     ObjectGroup group = readGroup(onum, worker);
     if (group == null) throw new AccessException(store.getName(), onum);
 
@@ -315,8 +340,10 @@ public class TransactionManager {
       store.cacheGroupContainer(group.objects().keySet(), container);
     }
 
-    worker.numGlobsCreated++;
-    worker.numGlobbedObjects += group.objects().size();
+    if (worker != null) {
+      worker.numGlobsCreated++;
+      worker.numGlobbedObjects += group.objects().size();
+    }
 
     return container;
   }
@@ -324,14 +351,16 @@ public class TransactionManager {
   /**
    * Returns a Glob containing the specified object.
    * 
-   * @param key
-   *          The private key to use for signing the glob.
+   * @param subscriber
+   *          If non-null, then the given client will be subscribed to the
+   *          object.
    * @param worker
    *          Used to track read statistics.
    */
-  public Glob getGlob(long onum, PrivateKey key, Worker worker)
+  public Glob getGlob(long onum, RemoteClient subscriber, Worker worker)
       throws AccessException {
-    return getGroupContainer(onum, worker).getGlob(key);
+    return getGroupContainerAndSubscribe(onum, subscriber, worker).getGlob(
+        signingKey);
   }
 
   /**
@@ -346,7 +375,8 @@ public class TransactionManager {
    */
   public ObjectGroup getGroup(NodePrincipal principal, long onum, Worker worker)
       throws AccessException {
-    ObjectGroup group = getGroupContainer(onum, worker).getGroup(principal);
+    ObjectGroup group =
+        getGroupContainerAndSubscribe(onum, null, worker).getGroup(principal);
     if (group == null) throw new AccessException(store.getName(), onum);
     return group;
   }
@@ -453,7 +483,7 @@ public class TransactionManager {
                 store.beginTransaction(tid, client);
                 store.registerUpdate(tid, client, newObj);
                 store.finishPrepare(tid, client);
-                store.commit(tid, client);
+                store.commit(tid, null, client, sm);
               } catch (AccessException exc) {
                 // TODO: this should probably use the core principal instead of
                 // the client principal, and AccessExceptions should be

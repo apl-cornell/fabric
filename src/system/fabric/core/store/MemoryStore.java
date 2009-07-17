@@ -5,11 +5,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.logging.Logger;
 
+import fabric.client.remote.RemoteClient;
 import fabric.common.*;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
+import fabric.core.SubscriptionManager;
 import fabric.lang.NodePrincipal;
 
 /**
@@ -88,15 +90,17 @@ public class MemoryStore extends ObjectStore {
   }
 
   @Override
-  public void commit(long tid, NodePrincipal client) throws AccessException {
-    PendingTransaction tx = remove(client, tid);
+  public void commit(long tid, RemoteClient clientNode,
+      NodePrincipal clientPrincipal, SubscriptionManager sm)
+      throws AccessException {
+    PendingTransaction tx = remove(clientPrincipal, tid);
 
     // merge in the objects
     for (SerializedObject o : tx.modData) {
       objectTable.put(o.getOnum(), o);
 
       // Remove any cached globs containing the old version of this object.
-      removeGlobByOnum(o.getOnum());
+      notifyCommittedUpdate(sm, o.getOnum(), clientNode);
     }
   }
 
@@ -157,7 +161,8 @@ public class MemoryStore extends ObjectStore {
     PendingTransaction tx = submap.remove(client);
     if (submap.isEmpty()) pendingByTid.remove(tid);
 
-    if (tx == null) throw new AccessException("Invalid transaction id: " + tid);
+    if (tx == null)
+      throw new AccessException("Invalid transaction id: " + tid);
 
     // XXX Check if the client acts for the owner.
 

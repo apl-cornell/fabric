@@ -44,7 +44,9 @@ public class InProcessCore extends RemoteCore {
   @Override
   public void commitTransaction(long transactionID)
       throws TransactionCommitFailedException {
-    tm.commitTransaction(Client.getClient().getPrincipal(), transactionID);
+    tm
+        .commitTransaction(null, Client.getClient().getPrincipal(),
+            transactionID);
   }
 
   @Override

@@ -15,11 +15,13 @@ import jif.lang.ReaderPolicy;
 import jif.lang.WriterPolicy;
 import fabric.client.Client;
 import fabric.client.Core;
+import fabric.client.remote.RemoteClient;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.*;
+import fabric.core.SubscriptionManager;
 import fabric.lang.NodePrincipal;
 
 /**
@@ -303,12 +305,15 @@ public abstract class ObjectStore {
    * 
    * @param tid
    *          the transaction id
-   * @param client
+   * @param clientNode
+   *          the remote client that is performing the commit
+   * @param clientPrincipal
    *          the principal requesting the commit
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid, NodePrincipal client)
+  public abstract void commit(long tid, RemoteClient clientNode,
+      NodePrincipal clientPrincipal, SubscriptionManager sm)
       throws AccessException;
 
   /**
@@ -376,13 +381,25 @@ public abstract class ObjectStore {
   }
 
   /**
-   * Removes from cache the glob associated with the given onum.
+   * Performs operations in response to a committed object update. Removes from
+   * cache the glob associated with the onum and notifies the subscription
+   * manager of the update.
+   * 
+   * @param onum
+   *          the onum of the object that was updated.
+   * @param client
+   *          the client that performed the update.
    */
-  protected final void removeGlobByOnum(long onum) {
+  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum,
+      RemoteClient client) {
+    // Remove from the glob table the glob associated with the onum.
     Long globID = globIDByOnum.remove(onum);
     if (globID != null) {
       globTable.remove(globID);
     }
+
+    // Notify the subscription manager of the update.
+    sm.notifyUpdate(onum, client);
   }
 
   /**
@@ -426,7 +443,7 @@ public abstract class ObjectStore {
     for (long onum : tx) {
       Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
       if (locks.first != null && locks.first == tx.tid) locks.first = null;
-      
+
       MutableInteger pinCount = locks.second.get(tx.tid);
       if (pinCount != null) {
         pinCount.value--;

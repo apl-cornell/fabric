@@ -7,17 +7,36 @@ public final class SessionAttributes implements
     AbstractWorkerThread.SessionAttributes {
 
   /**
-   * The name of the client that is being served.
+   * Whether this is a connection for dissemination updates.
    */
-  final String clientName;
+  final boolean isDissemConnection;
 
   /**
-   * The client's principal object.
+   * The name of the remote node that is being served.
    */
-  final NodePrincipal client;
+  final String remoteNodeName;
+  
+  /**
+   * The name of the remote node principal.
+   */
+  final String remoteNodePrincipalName;
 
-  SessionAttributes(String clientName, NodePrincipal client) {
-    this.clientName = clientName;
-    this.client = client;
+  /**
+   * The remote node's principal object.
+   */
+  final NodePrincipal remotePrincipal;
+
+  SessionAttributes(String remoteNodeName) {
+    this.isDissemConnection = true;
+    this.remoteNodeName = remoteNodeName;
+    this.remoteNodePrincipalName = null;
+    this.remotePrincipal = null;
+  }
+
+  SessionAttributes(String clientName, String clientPrincipalName, NodePrincipal client) {
+    this.isDissemConnection = false;
+    this.remoteNodeName = clientName;
+    this.remoteNodePrincipalName = clientPrincipalName;
+    this.remotePrincipal = client;
   }
 }

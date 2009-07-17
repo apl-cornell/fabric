@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 import com.sleepycat.je.*;
 
+import fabric.client.remote.RemoteClient;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
@@ -18,6 +19,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.OidKeyHashMap;
+import fabric.core.SubscriptionManager;
 import fabric.core.store.ObjectStore;
 import fabric.lang.NodePrincipal;
 
@@ -129,12 +131,13 @@ public class BdbStore extends ObjectStore {
   }
 
   @Override
-  public void commit(long tid, NodePrincipal client) {
+  public void commit(long tid, RemoteClient clientNode,
+      NodePrincipal clientPrincipal, SubscriptionManager sm) {
     log.finer("Bdb commit begin tid " + tid);
 
     try {
       Transaction txn = env.beginTransaction(null, null);
-      PendingTransaction pending = remove(client, txn, tid);
+      PendingTransaction pending = remove(clientPrincipal, txn, tid);
 
       if (pending != null) {
         for (SerializedObject o : pending.modData) {
@@ -145,7 +148,7 @@ public class BdbStore extends ObjectStore {
           store.put(txn, onumData, objData);
 
           // Remove any cached globs containing the old version of this object.
-          removeGlobByOnum(toLong(onumData.getData()));
+          notifyCommittedUpdate(sm, toLong(onumData.getData()), clientNode);
 
           // Update the version-number cache.
           cachedVersions.put(onum, o.getVersion());

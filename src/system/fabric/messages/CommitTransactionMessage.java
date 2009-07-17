@@ -76,7 +76,7 @@ public class CommitTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(Worker handler) {
+  public Response dispatch(Worker handler) throws ProtocolError {
     return handler.handle(this);
   }
 

@@ -15,6 +15,12 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.core.Worker;
 
+/**
+ * @param <N>
+ *          The class of nodes to which messages of this type may be sent.
+ * @param <R>
+ *          The class of responses.
+ */
 public abstract class Message<N extends RemoteNode, R extends Message.Response> {
 
   /**
@@ -221,7 +227,8 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
         AbortTransactionMessage.class), DISSEM_READ_ONUM(
         DissemReadMessage.class), REMOTE_CALL(RemoteCallMessage.class), INTERCLIENT_READ(
         fabric.client.remote.messages.ReadMessage.class), TAKE_OWNERSHIP(
-        TakeOwnershipMessage.class), GET_PRINCIPAL(GetPrincipalMessage.class);
+        TakeOwnershipMessage.class), GET_PRINCIPAL(GetPrincipalMessage.class),
+        OBJECT_UPDATE(ObjectUpdateMessage.class);
 
     private final Class<? extends Message<?, ?>> messageClass;
 

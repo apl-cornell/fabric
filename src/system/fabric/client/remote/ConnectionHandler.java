@@ -30,13 +30,13 @@ public class ConnectionHandler extends
     // If client exists, return a dummy object -- any will do.
     if (Client.getClient().name.equalsIgnoreCase(name))
       return Collections.EMPTY_LIST;
-    
+
     return null;
   }
 
   @Override
   protected String getThreadName(SocketAddress remote, SessionAttributes session) {
-    return "Connection handler for " + session.clientName
+    return "Connection handler for " + session.remoteNodeName
         + " talking to local client";
   }
 
@@ -47,13 +47,21 @@ public class ConnectionHandler extends
 
   @Override
   protected void logSession(SocketAddress remote, SessionAttributes session) {
-    Worker.logger.info("Client accepted connection from " + session.clientName
-        + " at " + remote);
+    Worker.logger.info("Client accepted connection from "
+        + session.remoteNodeName + " at " + remote);
   }
 
   @Override
   protected SessionAttributes newAuthenticatedSession(Object node,
-      String remoteNodeName, NodePrincipal remoteNodePrincipal) {
-    return new SessionAttributes(remoteNodeName, remoteNodePrincipal);
+      String remoteNodeName, String remoteNodePrincipalName,
+      NodePrincipal remoteNodePrincipal) {
+    return new SessionAttributes(remoteNodeName, remoteNodePrincipalName,
+        remoteNodePrincipal);
+  }
+
+  @Override
+  protected SessionAttributes newUnauthenticatedSession(Object node,
+      String remoteNodeName) {
+    return new SessionAttributes(remoteNodeName);
   }
 }

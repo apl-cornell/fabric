@@ -46,7 +46,7 @@ public class PrepareTransactionMessage extends
     public Response() {
       this(false);
     }
-    
+
     public Response(boolean subTransactionCreated) {
       this.success = true;
       this.subTransactionCreated = subTransactionCreated;
@@ -115,7 +115,7 @@ public class PrepareTransactionMessage extends
   }
 
   public final long tid;
-  
+
   public final long commitTime;
 
   public final LongKeyMap<Integer> reads;
@@ -158,8 +158,9 @@ public class PrepareTransactionMessage extends
   /**
    * Only used by the client.
    */
-  public PrepareTransactionMessage(long tid, long commitTime, Collection<_Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<_Impl> writes) {
+  public PrepareTransactionMessage(long tid, long commitTime,
+      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<_Impl> writes) {
     super(MessageType.PREPARE_TRANSACTION);
 
     this.tid = tid;
@@ -226,7 +227,8 @@ public class PrepareTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.client.remote.Worker handler) {
+  public Response dispatch(fabric.client.remote.Worker handler)
+      throws ProtocolError {
     return handler.handle(this);
   }
 
@@ -256,7 +258,7 @@ public class PrepareTransactionMessage extends
   public void write(DataOutput out) throws IOException {
     // Serialize tid.
     out.writeLong(tid);
-    
+
     // Serialize commitTime
     out.writeLong(commitTime);
 

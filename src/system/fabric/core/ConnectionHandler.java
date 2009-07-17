@@ -32,13 +32,16 @@ class ConnectionHandler extends
 
   @Override
   protected SessionAttributes newAuthenticatedSession(Node.Core core,
-      String clientName, NodePrincipal clientPrincipal) {
-    return new SessionAttributes(core, clientName, clientPrincipal);
+      String clientName, String clientPrincipalName,
+      NodePrincipal clientPrincipal) {
+    return new SessionAttributes(core, clientName, clientPrincipalName,
+        clientPrincipal);
   }
 
   @Override
-  protected SessionAttributes newUnauthenticatedSession(Node.Core core) {
-    return new SessionAttributes(core);
+  protected SessionAttributes newUnauthenticatedSession(Node.Core core,
+      String clientName) {
+    return new SessionAttributes(core, clientName);
   }
 
   @Override
@@ -54,8 +57,8 @@ class ConnectionHandler extends
     if (session.clientIsDissem) {
       LOGGER.info("Client connected as dissemination node");
     } else {
-      LOGGER.info("Client principal is " + session.clientName
-          + (session.client == null ? " (acting as null)" : ""));
+      LOGGER.info("Client principal is " + session.clientPrincipalName
+          + (session.clientPrincipal == null ? " (acting as null)" : ""));
     }
   }
 
@@ -66,7 +69,7 @@ class ConnectionHandler extends
           + " talking to core " + session.core.name;
     }
 
-    return "Connection handler for client " + session.clientName
+    return "Connection handler for client " + session.clientPrincipalName
         + " talking to core " + session.core.name;
 
   }

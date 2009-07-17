@@ -13,6 +13,7 @@ import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Object._Impl;
 import fabric.messages.Message;
 
@@ -69,7 +70,7 @@ public class ReadMessage extends InterClientMessage<ReadMessage.Response> {
   }
 
   @Override
-  public Response dispatch(Worker handler) {
+  public Response dispatch(Worker handler) throws ProtocolError {
     return handler.handle(this);
   }
 

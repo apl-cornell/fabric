@@ -2,6 +2,8 @@ package fabric.core;
 
 import java.security.PrivateKey;
 
+import fabric.client.Client;
+import fabric.client.remote.RemoteClient;
 import fabric.common.AbstractWorkerThread;
 import fabric.lang.NodePrincipal;
 
@@ -17,14 +19,19 @@ final class SessionAttributes implements AbstractWorkerThread.SessionAttributes 
   final Node.Core core;
 
   /**
-   * The name of the client that is being served.
+   * The remote client node.
    */
-  final String clientName;
+  final RemoteClient remoteNode;
+
+  /**
+   * The name the remote principal.
+   */
+  final String clientPrincipalName;
 
   /**
    * The client's principal object.
    */
-  final NodePrincipal client;
+  final NodePrincipal clientPrincipal;
 
   /**
    * The private signing key for the core with which the client is interacting.
@@ -37,22 +44,25 @@ final class SessionAttributes implements AbstractWorkerThread.SessionAttributes 
    * Constructs a SessionAttributes object corresponding to a dissemination
    * node.
    */
-  SessionAttributes(Node.Core core) {
+  SessionAttributes(Node.Core core, String clientName) {
     this.clientIsDissem = true;
     this.core = core;
-    this.clientName = null;
-    this.client = null;
+    this.remoteNode = Client.getClient().getClient(clientName);
+    this.clientPrincipalName = null;
+    this.clientPrincipal = null;
     this.privateKey = core.privateKey;
   }
 
   /**
    * Constructs a SessionAttributes object corresponding to a client node.
    */
-  SessionAttributes(Node.Core core, String clientName, NodePrincipal client) {
+  SessionAttributes(Node.Core core, String clientName,
+      String clientPrincipalName, NodePrincipal client) {
     this.clientIsDissem = false;
     this.core = core;
-    this.clientName = clientName;
-    this.client = client;
+    this.remoteNode = Client.getClient().getClient(clientName);
+    this.clientPrincipalName = clientPrincipalName;
+    this.clientPrincipal = client;
     this.privateKey = core.privateKey;
   }
 }

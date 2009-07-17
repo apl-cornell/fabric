@@ -63,7 +63,8 @@ public class AbortTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.client.remote.Worker handler) {
+  public Response dispatch(fabric.client.remote.Worker handler)
+      throws ProtocolError {
     handler.handle(this);
     return new Response();
   }

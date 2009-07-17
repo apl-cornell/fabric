@@ -20,10 +20,12 @@ import fabric.client.transaction.TransactionRegistry;
 import fabric.common.AbstractWorkerThread;
 import fabric.common.AuthorizationUtil;
 import fabric.common.TransactionID;
+import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
+import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 
 public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
@@ -68,7 +70,11 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
   }
 
   public RemoteCallMessage.Response handle(
-      final RemoteCallMessage remoteCallMessage) throws RemoteCallException {
+      final RemoteCallMessage remoteCallMessage) throws RemoteCallException,
+      ProtocolError {
+    if (session.isDissemConnection)
+      throw new ProtocolError("Message not supported.");
+
     // We assume that this thread's transaction manager is free (i.e., it's not
     // managing any tranaction's log) at the start of the method and ensure that
     // it will be free at the end of the method.
@@ -96,7 +102,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
             fabric.lang.Object receiver =
                 remoteCallMessage.receiver.fetch().$getProxy();
             Object[] args = new Object[remoteCallMessage.args.length + 1];
-            args[0] = session.client;
+            args[0] = session.remotePrincipal;
             for (int i = 0; i < remoteCallMessage.args.length; i++) {
               Object arg = remoteCallMessage.args[i];
               if (arg instanceof fabric.lang.Object) {
@@ -144,7 +150,11 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
    * In each message handler, we maintain the invariant that upon exit, the
    * worker's TransactionManager is associated with a null log.
    */
-  public void handle(AbortTransactionMessage abortTransactionMessage) {
+  public void handle(AbortTransactionMessage abortTransactionMessage)
+      throws ProtocolError {
+    if (session.isDissemConnection)
+      throw new ProtocolError("Message not supported.");
+
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(abortTransactionMessage.tid.topTid);
@@ -157,7 +167,10 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
   }
 
   public PrepareTransactionMessage.Response handle(
-      PrepareTransactionMessage prepareTransactionMessage) {
+      PrepareTransactionMessage prepareTransactionMessage) throws ProtocolError {
+    if (session.isDissemConnection)
+      throw new ProtocolError("Message not supported.");
+
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
@@ -187,7 +200,10 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
    * worker's TransactionManager is associated with a null log.
    */
   public CommitTransactionMessage.Response handle(
-      CommitTransactionMessage commitTransactionMessage) {
+      CommitTransactionMessage commitTransactionMessage) throws ProtocolError {
+    if (session.isDissemConnection)
+      throw new ProtocolError("Message not supported.");
+
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry
@@ -210,7 +226,11 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
     return new CommitTransactionMessage.Response(true);
   }
 
-  public ReadMessage.Response handle(ReadMessage readMessage) {
+  public ReadMessage.Response handle(ReadMessage readMessage)
+      throws ProtocolError {
+    if (session.isDissemConnection)
+      throw new ProtocolError("Message not supported.");
+
     Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
     if (log == null) return new ReadMessage.Response(null);
 
@@ -229,8 +249,8 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
 
     // Ensure that the remote client is allowed to read the object.
     Label label = obj.get$label();
-    if (!AuthorizationUtil.isReadPermitted(session.client, label.$getCore(),
-        label.$getOnum())) {
+    if (!AuthorizationUtil.isReadPermitted(session.remotePrincipal, label
+        .$getCore(), label.$getOnum())) {
       obj = null;
     }
 
@@ -240,7 +260,10 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
   }
 
   public TakeOwnershipMessage.Response handle(
-      TakeOwnershipMessage takeOwnershipMessage) {
+      TakeOwnershipMessage takeOwnershipMessage) throws ProtocolError {
+    if (session.isDissemConnection)
+      throw new ProtocolError("Message not supported.");
+
     Log log =
         TransactionRegistry.getInnermostLog(takeOwnershipMessage.tid.topTid);
     if (log == null) return new TakeOwnershipMessage.Response(false);
@@ -263,8 +286,8 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
     // Ensure that the remote client is allowed to write the object.
     Label label = obj.get$label();
     boolean authorized =
-        AuthorizationUtil.isWritePermitted(session.client, label.$getCore(),
-            label.$getOnum());
+        AuthorizationUtil.isWritePermitted(session.remotePrincipal, label
+            .$getCore(), label.$getOnum());
 
     tm.associateLog(null);
 
@@ -279,5 +302,11 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
 
   public Response handle(GetPrincipalMessage getPrincipalMessage) {
     return new GetPrincipalMessage.Response(Client.getClient().getPrincipal());
+  }
+
+  public ObjectUpdateMessage.Response handle(
+      ObjectUpdateMessage objectUpdateMessage) {
+    // XXX TODO
+    return new ObjectUpdateMessage.Response(true);
   }
 }

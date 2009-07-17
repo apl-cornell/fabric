@@ -201,6 +201,9 @@ class CommManager {
     // Give the name of the node we're interested in.
     DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
     dataOut.writeUTF(node.name);
+    
+    // Give our node name.
+    dataOut.writeUTF(Client.getClient().name);
 
     // Specify whether we're encrypting.
     dataOut.writeBoolean(useSSL);

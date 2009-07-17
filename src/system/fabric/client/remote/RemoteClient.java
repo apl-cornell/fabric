@@ -10,11 +10,13 @@ import fabric.client.transaction.TransactionManager;
 import fabric.client.transaction.TransactionRegistry;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
+import fabric.dissemination.Glob;
 import fabric.lang.NodePrincipal;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
+import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 
 /**
@@ -31,7 +33,7 @@ public final class RemoteClient extends RemoteNode {
    * RemoteClient, use fabric.client.Client.getClient() instead.
    */
   public RemoteClient(String name) {
-    super(name, false);
+    super(name, true);
   }
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
@@ -64,8 +66,8 @@ public final class RemoteClient extends RemoteNode {
     return response.result;
   }
 
-  public void prepareTransaction(long tid, long commitTime) throws UnreachableNodeException,
-      TransactionPrepareFailedException {
+  public void prepareTransaction(long tid, long commitTime)
+      throws UnreachableNodeException, TransactionPrepareFailedException {
     PrepareTransactionMessage.Response response =
         new PrepareTransactionMessage(tid, commitTime).send(this);
     if (!response.success)
@@ -120,10 +122,9 @@ public final class RemoteClient extends RemoteNode {
     TakeOwnershipMessage.Response response =
         new TakeOwnershipMessage(tid, core, onum).send(this);
     if (!response.success) {
-      throw new InternalError(
-          "Unable to take ownership of object fab://" + core.name()
-              + "/" + onum + " from " + name + " -- either " + name
-              + " doesn't own the object or authorization has failed.");
+      throw new InternalError("Unable to take ownership of object fab://"
+          + core.name() + "/" + onum + " from " + name + " -- either " + name
+          + " doesn't own the object or authorization has failed.");
     }
   }
 
@@ -150,5 +151,18 @@ public final class RemoteClient extends RemoteNode {
   @Override
   public String toString() {
     return name;
+  }
+
+  /**
+   * Notifies the client that an object has been updated.
+   * 
+   * @param onum
+   * @param glob
+   * @return whether the client is resubscribing to the object.
+   */
+  public boolean notifyObjectUpdate(String core, long onum, Glob glob) {
+    ObjectUpdateMessage.Response response =
+        new ObjectUpdateMessage(core, onum, glob).send(this);
+    return response.resubscribe;
   }
 }

@@ -187,11 +187,11 @@ public class Node {
       throws DuplicateCoreException {
     if (cores.containsKey(coreName)) throw new DuplicateCoreException();
 
-    TransactionManager tm = new TransactionManager(os);
+    TransactionManager tm = new TransactionManager(os, privateKey);
     SurrogateManager sm = new SimpleSurrogateManager(tm);
-    Core c =
+    Core core =
         new Core(coreName, sslSocketFactory, os, tm, sm, publicKey, privateKey);
-    cores.put(coreName, c);
+    cores.put(coreName, core);
   }
 
   /**

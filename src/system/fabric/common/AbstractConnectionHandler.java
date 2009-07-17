@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import fabric.client.Client;
 import fabric.client.Core;
@@ -50,8 +53,10 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
    *         type of session.
    * @param node
    *          the local node with which the session was established.
+   * @param remoteNodeName
+   *          the name of the remote node.
    */
-  protected Session newUnauthenticatedSession(Node node) {
+  protected Session newUnauthenticatedSession(Node node, String remoteNodeName) {
     return null;
   }
 
@@ -61,11 +66,14 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
    *          the local node with which the session was established.
    * @param remoteNodeName
    *          the name of the remote node.
+   * @param remoteNodePrincipalName
+   *          the String representation of the remote node's principal.
    * @param remoteNodePrincipal
    *          the NodePrincipal corresponding to the remote node.
    */
   protected abstract Session newAuthenticatedSession(Node node,
-      String remoteNodeName, NodePrincipal remoteNodePrincipal);
+      String remoteNodeName, String remoteNodePrincipalName,
+      NodePrincipal remoteNodePrincipal);
 
   /**
    * Logs an authentication failure of the remote host.
@@ -105,7 +113,7 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
     mux.start();
   }
 
-  public synchronized void shutdown() {
+  public synchronized final void shutdown() {
     destroyed = true;
     for (ChannelMultiplexerThread mux : activeMuxThreads) {
       mux.shutdown();
@@ -121,6 +129,7 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
     DataInput dataIn =
         new DataInputStream(connection.socket().getInputStream());
     OutputStream out = connection.socket().getOutputStream();
+
     String nodeName = dataIn.readUTF();
     Node node = getNodeByName(nodeName);
 
@@ -135,18 +144,21 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
     out.write(1);
     out.flush();
 
-    return initializeSession(node, dataIn);
+    // Get the remote node object.
+    String remoteNodeName = dataIn.readUTF();
+
+    return initializeSession(node, remoteNodeName, dataIn);
   }
 
-  private Session initializeSession(Node node, DataInput dataIn)
-      throws IOException {
+  private Session initializeSession(Node node, String remoteNodeName,
+      DataInput dataIn) throws IOException {
     boolean usingSSL = dataIn.readBoolean();
     if (!usingSSL) {
-      return newUnauthenticatedSession(node);
+      return newUnauthenticatedSession(node, remoteNodeName);
     }
 
     // Encrypted connection.
-    String remoteNodeName;
+    String remoteNodePrincipalName;
     if (!Options.DEBUG_NO_SSL) {
       // XXX TODO Start encrypting.
       // // Initiate the SSL handshake and initialize the fields.
@@ -166,9 +178,9 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
       // new DataInputStream(new BufferedInputStream(sslSocket
       // .getInputStream()));
       // this.clientName = sslSocket.getSession().getPeerPrincipal().getName();
-      remoteNodeName = dataIn.readUTF();
+      remoteNodePrincipalName = dataIn.readUTF();
     } else {
-      remoteNodeName = dataIn.readUTF();
+      remoteNodePrincipalName = dataIn.readUTF();
     }
 
     // Read in the pointer to the principal object.
@@ -182,9 +194,10 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
     }
 
     Pair<Boolean, NodePrincipal> authResult =
-        authenticateRemote(remoteNodePrincipal, remoteNodeName);
+        authenticateRemote(remoteNodePrincipal, remoteNodePrincipalName);
     if (authResult.first)
-      return newAuthenticatedSession(node, remoteNodeName, authResult.second);
+      return newAuthenticatedSession(node, remoteNodeName,
+          remoteNodePrincipalName, authResult.second);
 
     return null;
   }
