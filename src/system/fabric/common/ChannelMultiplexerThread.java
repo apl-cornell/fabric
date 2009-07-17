@@ -30,6 +30,11 @@ public final class ChannelMultiplexerThread extends Thread {
      * Signals that the remote host has closed the connection.
      */
     void connectionClosed();
+
+    /**
+     * Signals that the channel multiplexer thread is shutting down.
+     */
+    void shutdown();
   }
 
   /**
@@ -146,6 +151,7 @@ public final class ChannelMultiplexerThread extends Thread {
 
   public void shutdown() {
     this.destroyed = true;
+    this.callback.shutdown();
     interrupt();
   }
 

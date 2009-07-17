@@ -63,6 +63,9 @@ class CommManager {
         throw new InternalError("Connection to " + node
             + " unexpectedly closed.");
       }
+
+      public void shutdown() {
+      }
     };
     try {
       this.muxer =

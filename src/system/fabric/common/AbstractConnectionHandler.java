@@ -268,5 +268,10 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
         throw new InternalError(e);
       }
     }
+
+    public void shutdown() {
+      for (Worker worker : workers)
+        worker.interrupt();
+    }
   }
 }

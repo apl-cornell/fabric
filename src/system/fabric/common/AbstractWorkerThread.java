@@ -90,6 +90,7 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
 
       try {
         run_();
+      } catch (ClosedByInterruptException e) {
       } catch (final IOException e) {
         getLogger().log(Level.WARNING, "Connection closed prematurely", e);
       }
