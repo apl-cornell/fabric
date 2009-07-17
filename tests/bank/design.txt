@@ -1,0 +1,35 @@
+Types and state
+================================================================================
+
+Bank:
+	List<Account> accounts  {Bank<-;Bank->}
+
+Account[user,bank]:
+	int balance             {User->User,Bank;Bank<-Bank;User<-Bank}
+
+User implements Principal:
+	String name             {User<-;User->}
+	password
+	List<accounts>
+
+Carrier:
+	List<User> ticketsSold  {Carrier->;Carrier<-}
+
+Merchant:
+	Map<User,Account> cache {Merchant->;Merchant<-}
+
+
+Principals
+================================================================================
+Bank, User, Merchant, Carrier
+
+
+Operations
+================================================================================
+init Bank
+
+create account
+
+transfer
+
+balance
