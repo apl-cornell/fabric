@@ -5,10 +5,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import jif.lang.Label;
-import fabric.client.Client;
-import fabric.client.RemoteNode;
-import fabric.client.TransactionAtomicityViolationException;
-import fabric.client.TransactionPrepareFailedException;
+import fabric.client.*;
 import fabric.client.remote.messages.GetPrincipalMessage;
 import fabric.client.remote.messages.ReadMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
@@ -34,6 +31,8 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
 
   private final RemoteCallManager rcm;
 
+  private final Client client;
+
   /**
    * A factory for creating Worker instances. This is used by WorkerThread.Pool.
    */
@@ -56,6 +55,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
   public Worker(RemoteCallManager rcm, Pool<Worker> pool) {
     super("RCM worker", pool);
     this.rcm = rcm;
+    this.client = Client.getClient();
     TransactionManager.startThread(this);
   }
 
@@ -301,12 +301,16 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
   }
 
   public Response handle(GetPrincipalMessage getPrincipalMessage) {
-    return new GetPrincipalMessage.Response(Client.getClient().getPrincipal());
+    return new GetPrincipalMessage.Response(client.getPrincipal());
   }
 
   public ObjectUpdateMessage.Response handle(
       ObjectUpdateMessage objectUpdateMessage) {
-    // XXX TODO
-    return new ObjectUpdateMessage.Response(true);
+    RemoteCore core = client.getCore(objectUpdateMessage.core);
+    boolean response =
+        client.updateDissemCaches(core, objectUpdateMessage.onum,
+            objectUpdateMessage.update);
+
+    return new ObjectUpdateMessage.Response(response);
   }
 }

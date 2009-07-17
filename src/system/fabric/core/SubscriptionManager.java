@@ -8,8 +8,7 @@ import java.util.Set;
 import fabric.client.remote.RemoteClient;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongKeyCache;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 
@@ -27,7 +26,7 @@ public class SubscriptionManager extends Thread {
   /**
    * The set of clients subscribed to each onum.
    */
-  private final LongKeyMap<Set<RemoteClient>> subscriptions;
+  private final LongKeyCache<Set<RemoteClient>> subscriptions;
 
   /**
    * The name of the core for which we are managing subscriptions.
@@ -49,7 +48,7 @@ public class SubscriptionManager extends Thread {
     this.core = core;
     this.updatedOnums = new LinkedHashSet<Pair<Long, RemoteClient>>();
     this.tm = tm;
-    this.subscriptions = new LongKeyHashMap<Set<RemoteClient>>();
+    this.subscriptions = new LongKeyCache<Set<RemoteClient>>();
 
     start();
   }

@@ -46,9 +46,9 @@ public class ObjectUpdateMessage extends
     }
   }
 
-  private final String core;
-  private final long onum;
-  private final Glob update;
+  public final String core;
+  public final long onum;
+  public final Glob update;
 
   public ObjectUpdateMessage(String core, long onum, Glob update) {
     super(MessageType.OBJECT_UPDATE);

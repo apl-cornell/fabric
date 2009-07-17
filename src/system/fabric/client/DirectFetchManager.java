@@ -9,10 +9,14 @@ import fabric.dissemination.FetchManager;
  */
 public class DirectFetchManager implements FetchManager {
 
+  public DirectFetchManager(Client client) {
+  }
+
   public ObjectGroup fetch(RemoteCore c, long onum) throws FetchException {
     return c.readObjectFromCore(onum);
   }
-  
-  public void destroy() {}
+
+  public void destroy() {
+  }
 
 }

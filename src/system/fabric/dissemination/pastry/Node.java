@@ -92,9 +92,4 @@ public class Node {
     env.destroy();
   }
 
-  // just for testing
-  public static void main(String[] args) throws IOException {
-    new Node().destroy();
-  }
-
 }

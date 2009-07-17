@@ -3,6 +3,7 @@ package fabric.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,6 +30,8 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
 import fabric.dissemination.FetchManager;
+import fabric.dissemination.Glob;
+import fabric.dissemination.pastry.Cache;
 import fabric.lang.Object;
 import fabric.lang.NodePrincipal;
 import fabric.lang.WrappedJavaInlineable;
@@ -78,6 +81,10 @@ public final class Client {
 
   // The manager to use for fetching objects from cores.
   protected final FetchManager fetchManager;
+
+  // The collection of dissemination caches used by this client's dissemination
+  // node.
+  private final List<Cache> disseminationCaches;
 
   private final RemoteCallManager remoteCallManager;
 
@@ -144,6 +151,7 @@ public final class Client {
    */
   protected static Client instance;
 
+  @SuppressWarnings("unchecked")
   private Client(String name, int port, String principalURL, KeyStore keyStore,
       char[] passwd, KeyStore trustStore, int maxConnections, int timeout,
       int retries, boolean useSSL, String fetcher,
@@ -207,12 +215,16 @@ public final class Client {
     }
 
     this.remoteCallManager = new RemoteCallManager();
+    this.disseminationCaches = new ArrayList<Cache>(1);
 
     // Initialize the fetch manager. This MUST be the last thing done in the
     // constructor, or the fetch manager will not be properly shut down if
     // there's an error while initializing the client.
     try {
-      this.fetchManager = (FetchManager) Class.forName(fetcher).newInstance();
+      Constructor<FetchManager> fetchManagerConstructor =
+          (Constructor<FetchManager>) Class.forName(fetcher).getConstructor(
+              Client.class);
+      this.fetchManager = fetchManagerConstructor.newInstance(this);
     } catch (Exception e) {
       throw new InternalError("Unable to load fetch manager", e);
     }
@@ -295,6 +307,28 @@ public final class Client {
    */
   public FetchManager fetchManager() {
     return fetchManager;
+  }
+  
+  /**
+   * Registers that a client has a new dissemination cache.
+   */
+  public void registerDisseminationCache(Cache cache) {
+    this.disseminationCaches.add(cache);
+  }
+  
+  /**
+   * Updates the dissemination caches with the given object glob.
+   * 
+   * @return true iff there was a cache entry for the given oid.
+   */
+  public boolean updateDissemCaches(RemoteCore core, long onum, Glob update) {
+    boolean result = false;
+    
+    for (Cache cache : disseminationCaches) {
+      result |= cache.updateEntry(core, onum, update);
+    }
+    
+    return result;
   }
 
   /**

@@ -394,12 +394,25 @@ public abstract class ObjectStore {
       RemoteClient client) {
     // Remove from the glob table the glob associated with the onum.
     Long globID = globIDByOnum.remove(onum);
+    GroupContainer group = null;
     if (globID != null) {
-      globTable.remove(globID);
+      group = globTable.remove(globID);
     }
 
-    // Notify the subscription manager of the update.
+    // Notify the subscription manager that the group has been updated.
     sm.notifyUpdate(onum, client);
+    if (group != null) {
+      for (LongIterator onumIt = group.onums.iterator(); onumIt.hasNext();) {
+        long relatedOnum = onumIt.next();
+        if (relatedOnum == onum) continue;
+
+        Long relatedGlobId = globIDByOnum.get(relatedOnum);
+        if (relatedGlobId != null && relatedGlobId == globID) {
+          sm.notifyUpdate(relatedOnum, client);
+        }
+      }
+    }
+
   }
 
   /**

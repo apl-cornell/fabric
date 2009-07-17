@@ -7,6 +7,7 @@ import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongSet;
 import fabric.dissemination.Glob;
 import fabric.lang.NodePrincipal;
 
@@ -19,11 +20,18 @@ public final class GroupContainer {
 
   private ObjectGroup group;
   private Glob glob;
+  
+  /**
+   * The set of onums for the objects contained in this group.
+   */
+  public final LongSet onums;
 
   public GroupContainer(Core core, ObjectGroup group) {
     this.core = core;
     this.group = group;
     this.glob = null;
+    
+    this.onums = group.objects().keySet();
 
     for (SerializedObject obj : group.objects().values()) {
       this.labelOnum = obj.getLabelOnum();
