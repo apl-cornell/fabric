@@ -19,7 +19,7 @@
   <pathelement location="${fabric.home}/lib/servlet-api.jar"  />
   </path>
 
-<target name="cms">
+<target name="cms" description="build cms">
   <apply executable="bash"
       parallel="true"
       failonerror="true"
@@ -29,7 +29,7 @@
       skipemptyfilesets="true"
       vmlauncher="false">
     <arg value="${fabric.home}/bin/filc" />
-    <arg value="-j"     /> <arg value="-Xmx100M" />
+    <arg value="-j"     /> <arg value="-Xmx500M" />
     <arg value="-j"     /> <arg value="-Xss100M" />
     <arg value="-d"     /> <arg file="${cms.home}/web/WEB-INF/classes" />
     <arg value="-cp"    /> <arg pathref="cms.classpath" />
@@ -38,10 +38,14 @@
     <srcfile />
     <fileset dir="${cms.home}/pojo">
       <include name="cms/model/*.java" />
-      <!--<include name="cms/www/AccessController.java" />-->
+      <include name="cms/www/AccessController.java" />
       </fileset>
     <globmapper from="*.java" to="*.class" />
   </apply>
+</target>
+
+<target name="clean" description="remove generated files">
+  <delete dir="${cms.home}/web/WEB-INF/classes"/>
 </target>
 
 </project>
