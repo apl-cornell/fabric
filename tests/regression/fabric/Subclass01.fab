@@ -1,0 +1,26 @@
+import fabricated.util.LinkedList;
+
+public class Subclass01 {
+  private final principal        {p<-; p->} p;
+  private final Core             {p<-; p->} core;
+  private LinkedList[{p->; p<-}] {p->; p<-} foo;
+
+  public Subclass01() {
+    core = client$.getLocalCore();
+    p    = core;
+    foo  = new LinkedList@core();
+  }
+
+  public void f{p->; p<-}() {
+    Subclass02[{p<-; p->}] bar = new Subclass02@core();
+    try {
+      foo.add(bar);
+    } catch(final NullPointerException e) {
+    }
+  }
+
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0
+*/
