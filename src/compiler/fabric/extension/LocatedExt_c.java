@@ -49,7 +49,7 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
   public void labelCheck(LabelChecker lc, Label objectLabel) throws SemanticException {
     Node n = node();
     
-    if (location() != null) {
+    if (location() != null && objectLabel != null) {
       FabricTypeSystem ts = (FabricTypeSystem)lc.typeSystem();
       JifContext A = lc.jifContext();
       A = (JifContext)n.del().enterScope(A);
