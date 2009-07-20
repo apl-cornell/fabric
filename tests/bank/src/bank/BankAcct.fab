@@ -1,5 +1,4 @@
 package bank;
-import fabricated.lang.JifObject;
 
 /**
  * An instance of BankAcct is owned by a BankPrincipal.
