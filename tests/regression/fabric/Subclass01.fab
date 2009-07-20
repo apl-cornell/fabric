@@ -8,11 +8,11 @@ public class Subclass01 {
   public Subclass01() {
     core = client$.getLocalCore();
     p    = core;
-    foo  = new LinkedList@core();
+    foo  = new LinkedList();
   }
 
   public void f{p->; p<-}() {
-    Subclass02[{p<-; p->}] bar = new Subclass02@core();
+    JifObject[{p<-; p->}] bar = new Subclass02[{p<-; p->}]@core();
     try {
       foo.add(bar);
     } catch(final NullPointerException e) {

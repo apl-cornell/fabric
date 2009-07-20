@@ -1,18 +1,18 @@
 /** This class supports Subclass01 */
 public class Subclass02[label L] implements JifObject[L] {
-  boolean{L; obj} equals(IDComparable[L] obj) {
+  public boolean{L; obj} equals(IDComparable[L] obj) {
     return false;
   }
 
-  boolean{L; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
+  public boolean{L; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
     return false;
   }
 
-  int{L} hashCode() {
+  public int{L} hashCode() {
     return 0;
   }
 
-  String{L} toString() {
+  public String{L} toString() {
     return "";
   }
 }
