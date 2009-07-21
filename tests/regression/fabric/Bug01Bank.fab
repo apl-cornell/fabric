@@ -1,0 +1,38 @@
+package bank;
+
+import fabricated.util.List;
+import fabricated.util.LinkedList;
+
+/**
+ * A Bank holds a collection of accounts, and has methods for accessing those accounts.
+ */
+public class Bank[principal owner] {
+	private final label      {*L} L = new label {owner<-; owner->};
+	private final List[{*L}] {*L} accounts;
+	private final Core       {*L} location;
+
+	/**
+	 * create a new bank at the given location
+	 */
+	public Bank{*L} (Core {*L} location) where location actsfor owner {
+		this.location = location;
+		this.accounts = new LinkedList[{*L}]@location();
+	}
+
+	/**
+	 * create and return a new Account, owned by user
+	 */
+	public Account[userActual,owner] createAccount{userActual} (principal{userActual->userActual,owner; userActual<-owner; owner<-owner} userActual) {
+		Account[userActual, owner] result;
+		try {
+			result = new Account[userActual, owner]();
+			AccountWrapper[owner] foo = new AccountWrapper[owner](userActual, result);
+			accounts.add(foo);
+		} catch(ClassCastException exc) {
+		} catch(IllegalArgumentException exc) {
+		} catch(NullPointerException exc) {
+		}
+
+		return result;
+	}
+}

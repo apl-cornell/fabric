@@ -1,0 +1,31 @@
+package bank;
+
+/**
+ * An account represents the balance of a single user at a bank.
+ */
+public class Account[principal User, principal Bank] {
+	private final label {*L} L       = new label {User->User,Bank; User<-Bank; Bank<-Bank};
+	private int         {*L} balance = 500;
+
+	public int{*L} getBalance() {
+		return balance;
+	}
+	
+	public boolean{*L} debit{*L} (int{*L}  amt) {
+		boolean result = false;
+		atomic {
+			if(amt <= balance) {
+				balance = balance - amt;
+				result = true;
+			}
+		}
+		return result;
+	}
+
+	public void credit{*L} (int{*L}  amt) {
+		atomic {
+			balance = balance + amt;
+		}
+	}
+}
+

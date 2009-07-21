@@ -3,29 +3,31 @@ package bank;
 /**
  * An account represents the balance of a single user at a bank.
  */
-public class Account[principal User, principal Bank] {
-	private final label {*L} L       = new label {User->User,Bank; User<-Bank; Bank<-Bank};
-	private int         {*L} balance = 500;
+public class Account[principal user, principal bank] {
+  private int         {user->user,bank; user<-bank; bank<-bank} balance = 500;
 
-	public int{*L} getBalance() {
-		return balance;
-	}
-	
-	public boolean{*L} debit{*L} (int{*L}  amt) {
-		boolean result = false;
-		atomic {
-			if(amt <= balance) {
-				balance = balance - amt;
-				result = true;
-			}
-		}
-		return result;
-	}
+  public int{user->user,bank; user<-bank; bank<-bank} getBalance() {
+    return balance;
+  }
 
-	public void credit{*L} (int{*L}  amt) {
-		atomic {
-			balance = balance + amt;
-		}
-	}
+  public boolean{user->user,bank; user<-bank; bank<-bank} debit  {user->user,bank; user<-bank; bank<-bank} (int{user->user,bank; user<-bank; bank<-bank} amt) {
+    boolean result = false;
+    atomic {
+      if(amt <= balance) {
+        balance = balance - amt;
+        result = true;
+      }
+    }
+    return result;
+  }
+
+  public void credit{amt} (int{user->user,bank; user<-bank; bank<-bank}  amt) {
+    atomic {
+      balance = balance + amt;
+    }
+  }
 }
 
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0
+*/
