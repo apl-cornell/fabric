@@ -22,23 +22,17 @@ public class Bank[principal owner] {
 	/**
 	 * create and return a new Account, owned by user
 	 */
-	public Account[user,owner] {*L} createAccount{*L} (principal user) {
-		Account[user, owner] result;
+	public Account[user__,owner] createAccount{user__} (principal{user__->user__,owner; user__<-owner; owner<-owner} user__) {
+		Account[user__, owner] result;
 		try {
-			result = new Account[user, owner]();
-			accounts.add(result);
+			result = new Account[user__, owner]();
+			AccountWrapper[owner] foo = new AccountWrapper[owner](user__, result);
+			accounts.add(foo);
 		} catch(ClassCastException exc) {
 		} catch(IllegalArgumentException exc) {
 		} catch(NullPointerException exc) {
 		}
 
 		return result;
-	}
-
-	/**
-	 * create a new bank, placing it at the given url
-	 */
-	public static void main(principal p, String[] args) {
-		
 	}
 }

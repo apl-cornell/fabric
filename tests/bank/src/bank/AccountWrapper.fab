@@ -1,0 +1,40 @@
+package bank;
+
+/**
+ * This class allows heterogeneous users to be stored in a homogeneous list.
+ */
+public class AccountWrapper[principal bank] implements JifObject[{bank->;bank<-}] {
+	public  final principal           {user->user,bank; user<-bank; bank<-bank} user;
+	public  final Account[user, bank] {user->user,bank; user<-bank; bank<-bank} account;
+
+	public AccountWrapper(principal{user_->user_,bank; user_<-bank; bank<-bank} user_, Account[user_, bank]{user_->user_,bank; user_<-bank; bank<-bank} account_) {
+		this.user    = user_;
+		this.account = account_;
+	}
+
+	//////////////////////////////////////////////////////////////////////////////
+	// interface methods                                                        //
+	//////////////////////////////////////////////////////////////////////////////
+
+	private final label {user->user,bank; user<-bank; bank<-bank} K = new label {bank->; bank<-};
+
+	public int{*K} hashCode() {
+		return 0;
+	}
+
+	public String{*K} toString() {
+		return "Account";
+	}
+
+	public boolean equals(IDComparable[{*K}] obj) {
+		if (this == obj)
+		return true;
+		return false;
+	}
+
+	public boolean equals(label lbl, IDComparable[{*lbl}] obj){
+		if (this == obj)
+		return true;
+		return false;	
+	}
+}
