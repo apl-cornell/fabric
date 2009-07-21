@@ -1,0 +1,34 @@
+package carrier;
+import java.util.LinkedList;
+
+public class Carrier {
+
+  private final Core core;
+  private LinkedList tickets;
+  private String accountName;
+
+  public Carrier (Core location) {
+    core = location;
+    tickets = new LinkedList@core();
+  }
+
+  public int getTicketPrice() {
+    return 500;
+  }
+
+  public String getAccountName() {
+    return accountName;
+  }
+
+  public void setAccountName(String n) {
+    accountName = n;
+  }
+
+  public boolean purchaseTicket(String customer) {
+    atomic {
+      tickets.add(customer);
+      return true;
+    }
+  }
+}
+

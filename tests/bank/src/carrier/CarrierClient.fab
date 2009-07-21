@@ -1,18 +1,65 @@
 package carrier;
+import fabricated.util.LinkedList;
 
 import fabric.client.Core;
 
-public class CarrierClient[label L] {
+public class CarrierClient {
 
-    private Core{L} dataLocation;
-    public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
+    private final Core{core->;core<-} core;
+	private LinkedList[{core->;core<-}]{core->;core<-} tickets;
 
-	public CarrierClient{L} (Core{L} nodeLocation) {
-        this.dataLocation = nodeLocation;
+	public CarrierClient () {
+        core = client$.getLocalCore();
+		tickets = new LinkedList();
 	}
 
-	public int{L} getTicketPrice(int tid) {
+	public int getTicketPrice() {
         return 500;
     }
 
+	public boolean{core->;core<-} purchaseTicket{core->;core<-}(principal{core->;core<-} p) {
+		try {
+			atomic {
+				Ticket t = new Ticket[{core->;core<-}](p);
+				tickets.add(t);
+				return true;
+			}
+		} catch (NullPointerException e) { }
+		return false;
+	}
+
+}
+
+/**
+ * Wrapper for Principals to implement jifobject
+ * so they can be stuffed into the jif linkedlists
+*/
+class Ticket[label L] implements JifObject[L]{
+	protected final principal{L} p;
+	protected Ticket{L} (principal{L} p) {
+		this.p = p;
+	}
+
+/**
+ * Section with implemented interface methods
+ */
+	public int{L} hashCode() {
+		return 0;
+	}
+
+	public String{L} toString() {
+		return "Ticket";
+	}
+
+	public boolean equals(IDComparable[{L}] obj) {
+		if (this == obj)
+		return true;
+		return false;
+	}
+
+	public boolean equals(label lbl, IDComparable[{*lbl}] obj){
+		if (this == obj)
+		return true;
+		return false;	
+	}
 }

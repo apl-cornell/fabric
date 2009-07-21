@@ -1,0 +1,22 @@
+package merchant;
+
+import bank.*;
+import carrier.*;
+
+public class Merchant {
+  private Bank bank;
+  private Carrier carr;
+
+  public Merchant (Bank b, Carrier c) {
+    this.bank = b;
+    this.carr = c;
+  }
+
+  public boolean confirmTransaction () {
+    atomic {
+      int cp = carr.getTicketPrice();
+        boolean bb = bank.transferFunds(bank.getAccount("user0"), bank.getAccount(carr.getAccountName()), cp);
+        return bb;
+    }
+  }
+}

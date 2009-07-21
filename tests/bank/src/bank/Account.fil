@@ -1,0 +1,39 @@
+package bank;
+
+/**
+ * An account represents the balance of a single user at a bank.
+ */
+public class Account {
+  protected final String name;
+  private int balance = 500;
+
+  public Account(String name_) {
+    this.name = name_;  
+  }
+
+  public int getBalance() {
+    return balance;
+  }
+  
+  public boolean debit (int amt) {
+    boolean result = false;
+    atomic {
+      if(amt <= balance) {
+        balance = balance - amt;
+        result = true;
+      }
+    }
+    return result;
+  }
+
+  public void credit (int  amt) {
+    atomic {
+      balance = balance + amt;
+    }
+  }
+
+  public String toString() {
+    return name;  
+  }
+}
+

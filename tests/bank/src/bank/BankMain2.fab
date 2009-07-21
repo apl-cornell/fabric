@@ -70,7 +70,6 @@ public class BankMain2 {
 			BankAcct[{bankTop->;bankTop←}] acct1 = (BankAcct)customers.get(0);
 			BankAcct[{bankTop->;bankTop←}] acct2 = (BankAcct)customers.get(1);
 			
-			
 			//if(bankTop equiv BankEP && bankTop actsfor UserEP) {
 				if (acct1.getBalance() <= amt) {
 					atomic {
