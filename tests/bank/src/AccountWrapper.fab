@@ -1,5 +1,3 @@
-package bank;
-
 /**
  * This class allows heterogeneous users to be stored in a homogeneous list.
  */

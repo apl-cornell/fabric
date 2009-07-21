@@ -1,4 +1,3 @@
-package carrier;
 import java.util.LinkedList;
 
 public class Carrier {

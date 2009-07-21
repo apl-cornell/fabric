@@ -1,5 +1,3 @@
-package merchant;
-
 import bank.*;
 import carrier.*;
 

@@ -1,5 +1,3 @@
-package bank;
-
 import fabricated.util.List;
 import fabricated.util.LinkedList;
 

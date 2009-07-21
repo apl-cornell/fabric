@@ -1,5 +1,3 @@
-package bank;
-
 /**
  * An account represents the balance of a single user at a bank.
  */
