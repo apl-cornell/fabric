@@ -7,9 +7,11 @@ public class AccountWrapper[principal bank] implements JifObject[{bank->;bank<-}
 	public  final principal           {user->user,bank; user<-bank; bank<-bank} user;
 	public  final Account[user, bank] {user->user,bank; user<-bank; bank<-bank} account;
 
-	public AccountWrapper(principal{user_->user_,bank; user_<-bank; bank<-bank} user_, Account[user_, bank]{user_->user_,bank; user_<-bank; bank<-bank} account_) {
-		this.user    = user_;
-		this.account = account_;
+	public AccountWrapper(
+            principal                {userFormal->userFormal,bank; userFormal<-bank; bank<-bank} userFormal,
+            Account[userFormal, bank]{userFormal->userFormal,bank; userFormal<-bank; bank<-bank} accountFormal) {
+		this.user    = userFormal;
+		this.account = accountFormal;
 	}
 
 	//////////////////////////////////////////////////////////////////////////////

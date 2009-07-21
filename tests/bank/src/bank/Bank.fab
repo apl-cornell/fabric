@@ -22,11 +22,11 @@ public class Bank[principal owner] {
 	/**
 	 * create and return a new Account, owned by user
 	 */
-	public Account[user__,owner] createAccount{user__} (principal{user__->user__,owner; user__<-owner; owner<-owner} user__) {
-		Account[user__, owner] result;
+	public Account[userActual,owner] createAccount{userActual} (principal{userActual->userActual,owner; userActual<-owner; owner<-owner} userActual) {
+		Account[userActual, owner] result;
 		try {
-			result = new Account[user__, owner]();
-			AccountWrapper[owner] foo = new AccountWrapper[owner](user__, result);
+			result = new Account[userActual, owner]();
+			AccountWrapper[owner] foo = new AccountWrapper[owner](userActual, result);
 			accounts.add(foo);
 		} catch(ClassCastException exc) {
 		} catch(IllegalArgumentException exc) {
