@@ -147,29 +147,32 @@ public class Cache {
     List<Pair<Pair<Core, Long>, Long>> k =
         new ArrayList<Pair<Pair<Core, Long>, Long>>(timestamps());
 
-    Collections.sort(k, new Comparator<Pair<Pair<Core, Long>, Long>>() {
-      public int compare(Pair<Pair<Core, Long>, Long> o1,
-          Pair<Pair<Core, Long>, Long> o2) {
-        Glob g1 = map.get(o1.first);
-        Glob g2 = map.get(o2.first);
-
-        if (g1 == g2) {
-          return 0;
-        }
-
-        if (g1 == null) {
-          return 1;
-        }
-
-        if (g2 == null) {
-          return -1;
-        }
-
-        return g2.frequency() - g1.frequency();
-      }
-    });
+    Collections.sort(k, TIMESTAMP_COMPARATOR);
 
     return k;
   }
+
+  private final Comparator<Pair<Pair<Core, Long>, Long>> TIMESTAMP_COMPARATOR =
+      new Comparator<Pair<Pair<Core, Long>, Long>>() {
+        public int compare(Pair<Pair<Core, Long>, Long> o1,
+            Pair<Pair<Core, Long>, Long> o2) {
+          Glob g1 = map.get(o1.first);
+          Glob g2 = map.get(o2.first);
+
+          if (g1 == g2) {
+            return 0;
+          }
+
+          if (g1 == null) {
+            return 1;
+          }
+
+          if (g2 == null) {
+            return -1;
+          }
+
+          return g2.frequency() - g1.frequency();
+        }
+      };
 
 }
