@@ -5,12 +5,19 @@ import sif.servlet.SessionState;
 import jif.util.*;
 
 public class CalendarSessionState[covariant label T] extends USessState[CalServEP, T] {
-    final CSS[T, {remote.sessionPrincipal!:}]{T} css = new CSS();
+    final CSS[T, {sessionPrincipal!:}]{T} css = new CSS();
     public CalendarSessionState() {
     }
     
     static CalendarSessionState[{P←}]{P←} declassifyState{P←;P→}(principal{P←;P→} P, CalendarSessionState[{P←;P→}]{P←;P→} state)
         where caller(P)
+    {
+        // TODO Implement me!
+        return null;
+    }
+    
+    static CalendarSessionState[{Q←}]{Q←} endorseState{P←}(principal{P←} P, principal{P←} Q, CalendarSessionState[{P←}]{P←} state)
+        where caller(Q), Q actsfor P
     {
         // TODO Implement me!
         return null;

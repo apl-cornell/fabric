@@ -30,7 +30,7 @@ public class LoginAction[principal servP] extends USessAction[servP] {
             User[servP, {*lbl;session!:}]{*lbl;session!:} currentUser) 
    throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
-              session equiv state.remote.sessionPrincipal,
+              session equiv state.sessionPrincipal,
               session actsfor currentUser,              
               lbl <= {*:req.session},
               caller(session)
@@ -57,7 +57,7 @@ public class LoginAction[principal servP] extends USessAction[servP] {
                                            String{*lbl} uidError, 
                                            String{*lbl} passwdError) 
              where session equiv req.session, 
-                   session equiv state.remote.sessionPrincipal,
+                   session equiv state.sessionPrincipal,
                    lbl <= {*:req.session},
                    {session!:} <= lbl,
                    {*this.inpUserID.inputLbl} <= {session:;session!:},
@@ -122,7 +122,7 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
             User[servP, {*lbl;session!:}]{*lbl;session!:} currentUser) 
    throws (ServletException{*lbl;req.session!:})
         where session equiv req.session, 
-              session equiv state.remote.sessionPrincipal,
+              session equiv state.sessionPrincipal,
               session actsfor currentUser,              
               lbl <= {*:req.session},
               caller(session)
@@ -147,7 +147,7 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
                                 USessState[servP, {*lbl;session!:}]{*lbl;session!:} state) 
         throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
-              session equiv state.remote.sessionPrincipal,
+              session equiv state.sessionPrincipal,
               session equiv loginAct.session,
               lbl <= {*:req.session},
               caller(session)
@@ -217,7 +217,7 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
                     User[servP, {session!:}] logU = User.declassifyUser(session, servP, logU_);
                     try {
                     	final USessState[servP, {session!:}] uss = (USessState[servP, {session!:}])SessionState[{session!:}].declassifySS(state, session);
-                    	if(uss.remote.sessionPrincipal equiv session) {
+                    	if(uss.sessionPrincipal equiv session) {
                     		uss.currentUser(logU);
                     	}
                     } catch(ClassCastException e) {}

@@ -92,10 +92,10 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	}
 	
 	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID}
-	    lookupUserID{client$→;client$←}(String{client$→;client$←} userID)
+	    lookupUserID{CalServEP→;CalServEP←}(String{CalServEP→;CalServEP←} userID)
 	{
-        String{client$→;client$←} userID__ = userID;
 	    if (coreClient actsfor client$ && CalServEP equiv client$) {
+	        String{client$→;client$←} userID__ = userID;
 	        return lookupUserIDRemote@coreClient(userID__);
 	    }
 	    return null;

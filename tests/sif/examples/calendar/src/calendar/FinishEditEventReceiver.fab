@@ -15,12 +15,12 @@ public interface FinishEditEventReceiver {
     void receiveEvent{*lbl}(label{*lbl} lbl,
             Request[CalServEP]{*lbl} req,
             Main{*lbl} servlet,
-            CalendarSessionState{*lbl} state,
+            CalendarSessionState[lbl]{*lbl} state,
             User[CalServEP, lbl]{*lbl} currentUser,
             Event[{currentUser:;currentUser!:}]{currentUser:;currentUser!:} origEvent, 
             Event[{currentUser:;currentUser!:}]{currentUser:;currentUser!:} editedEvent) 
      throws (ServletException{*lbl;req.session!:})
-        where req.session equiv state.remote.sessionPrincipal,
+        where req.session equiv state.sessionPrincipal,
               req.session actsfor currentUser,              
               lbl <= {currentUser:; currentUser!:},
               caller(req.session);

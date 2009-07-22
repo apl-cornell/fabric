@@ -219,7 +219,8 @@ public class CalServDeclassifier authority (CalServEP) {
 				);
 			final Event e2 = declassify(endorse(e2_, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
 			return e2;
-      }
+      }      
+      
       
       // Typically called with P as the current user and Q as the session principal
       // Not necessary now since ShowCalendarSessAction is a java object

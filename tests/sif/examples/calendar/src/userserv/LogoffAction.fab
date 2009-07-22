@@ -25,7 +25,7 @@ public class LogoffAction[principal servP] extends UAction[servP] {
      throws (ServletException{*lbl})
           where caller(req.session),
           lbl <= {*:req.session},
-          req.session equiv state.remote.sessionPrincipal
+          req.session equiv state.sessionPrincipal
     {
         if (req == null || servlet == null || state == null) 
             throw new ServletException("invalid args");

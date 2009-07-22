@@ -10,9 +10,20 @@ import javax.servlet.ServletException;
 
 public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 	final private CalendarDB{⊥→⊥;⊤←⊤} cal;
+	
+	final static String{CalServEP→;CalServEP←} coreName = "calendar";
 
-	public Main() {
-		this.cal =  new CalendarDB();
+	public Main{CalServEP→;CalServEP←}() {
+	    FabricClient cl = FabricClient.getClient();
+	    CalendarDB local = null;
+	    if(cl != null) {
+	        final Core c = cl.getLocalCore();
+	        final Core remote = cl.getCore(coreName);
+	        if(c equiv CalServEP) {
+	            local =  new CalendarDB@c(remote);
+	        } 
+	    }
+	    cal = local;
 		super();
 	}
 
@@ -25,9 +36,9 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 		addStartAction(new ShowCalendar(this));
 	}
 
-	public SessionState createSessionState() {
-		return new CalendarSessionState();
-	}
+//	public SessionState createSessionState() {
+//		return new CalendarSessionState();
+//	}
 
 	protected String defaultActionName(Request[CalServEP] req) {
 		return "show";
@@ -41,10 +52,15 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 	// DOWNGRADE REASON: transfer User from CalServEP to p &&& access control
 	public User[CalServEP, {p:; p!:}]{p:; p!:} lookupUserID{p:; p!:}(String{p:; p!:} userID, principal{p:; p!:} p) 
 	where authority (CalServEP), caller(p), endorse({p:; p!: meet CalServEP!:}) {
-		User[CalServEP] u = cal==null?null:cal.lookupUserID(userID);
-
-		User[CalServEP] u1 = endorse(u, {CalServEP:;p:;p!: meet CalServEP!:});
-		User[CalServEP] u2 = declassify(u1, {p:;p!: meet CalServEP!:}); 
+	    String{p→;CalServEP← ⊓ p←} userID_ = endorse(userID, {p:; p!:} to {p→;CalServEP← ⊓ p←});
+	    String{CalServEP→;CalServEP←} userID__ = declassify(userID_, {p→;CalServEP← ⊓ p←} to {CalServEP→;CalServEP←});
+		User[CalServEP, {CalServEP→;CalServEP←}] u = null;
+		if(cal!=null) {
+		    declassify({CalServEP→;CalServEP←}) {
+		        u = cal.lookupUserID(userID__);
+		    }
+		}
+		User[CalServEP, {p→;p←}] u2 = User.handOverUser(CalServEP, p, u);
 		return u2;
 	}
 
@@ -73,8 +89,8 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 				now,
 				"",
 				"",
-				new LinkedList[{CalServEP:;CalServEP!:}](),
-				new LinkedList[{CalServEP:;CalServEP!:}](),
+				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}](),
+				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}](),
 				currUser);
 	}
 
@@ -159,14 +175,14 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 	// TODO: Tentative where clause, not sure if it holds at runtime
 	Event[{p→;p←}]{p→;p←} sanitizeEvent{p→;p←}(principal{p→;p←} p, Event[{p→;p←}]{p→;p←} e)
 	where {p→;p←} <= e.infoLbl {
-		if (e == null || cal == null || e.remote1 == null) {
+		if (e == null || cal == null || e.remote1 == null || e.uid == null) {
 			return e;
 		}
 		String name = cal.escapeString(e.remote1.name);
 		String note = cal.escapeString(e.remote1.note);
 
 		// need to construct a new event...
-		return new Event[{p→;p←}](e.uid,
+		return new Event[{p→;p←}](e.uid.uid,
 				e.timeLbl,
 				e.infoLbl,
 				e.startTime,
@@ -191,7 +207,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 		Date[{CalServEP:;CalServEP!:}] startDate = CalServDeclassifier.declassDate(p, CalServEP, start);
 		Date[{CalServEP:;CalServEP!:}] endDate = CalServDeclassifier.declassDate(p, CalServEP, end);
 
-		User{CalServEP!:} us1 = endorse(displayUser, {p!:} to {CalServEP!:}); 
+		User[CalServEP, {CalServEP!:}]{CalServEP!:} us1 = User.handOverUserInteg(CalServEP, p, displayUser); 
 
 		List[{CalServEP:;CalServEP!:}] subset = cal==null?null:cal.eventSubset(startDate, endDate, us1);
 

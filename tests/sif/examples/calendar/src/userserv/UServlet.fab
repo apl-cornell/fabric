@@ -38,8 +38,8 @@ public abstract class UServlet[principal servP] extends Servlet[servP]  {
             final USessState[servP, lbl] css = (USessState[servP, lbl])req.getSessionState(lbl);
             final LoginAction[servP] la = new LoginAction[servP](this, successAction, req.session); 
             
-            if (css != null && css.remote != null && 
-                    css.remote.sessionPrincipal equiv la.session && 
+            if (css != null && 
+                    css.sessionPrincipal equiv la.session && 
                     req.session equiv la.session &&
                     css.currentUser() == null) {
                 // not logged in yet.

@@ -100,12 +100,12 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
             User[servP,{*lbl;session!:}]{*lbl;session!:} currentUser) 
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
-              session equiv state.remote.sessionPrincipal,
+              session equiv state.sessionPrincipal,
               session actsfor currentUser,              
               lbl <= {*:req.session},
               caller(session)
     {
-        if (req == null || servlet == null || state == null || state.remote == null) 
+        if (req == null || servlet == null || state == null) 
             throw new ServletException("invalid args");
 
 
@@ -114,7 +114,7 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
                 this.inpUsers.inputLbl equiv this.inputLbl && 
                 this.inputLbl <= new label {currentUser:;currentUser!:} && 
                 currentUser equiv this.currentUser &&
-                state.remote.sessionPrincipal equiv session) {
+                state.sessionPrincipal equiv session) {
             producePage(new label {*lbl; session!:}, req, servlet, state, null);
         }
         else {
@@ -134,7 +134,7 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
             UServlet[servP]{*bnd} servlet,
             USessState[servP, bnd]{*bnd} state,
             String{*bnd} errMessage) 
-      where req.session equiv state.remote.sessionPrincipal,
+      where req.session equiv state.sessionPrincipal,
             req.session equiv session,
             session actsfor this.currentUser,
             {*bnd} <= {*this.inpUsers.inputLbl},
@@ -310,19 +310,19 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
             User[servP,{*lbl;session!:}]{*lbl;session!:} currentUser) 
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
-              session equiv state.remote.sessionPrincipal,
+              session equiv state.sessionPrincipal,
               session actsfor currentUser,              
               lbl <= {*:req.session},
               caller(session)
     {
-        if (req == null || servlet == null || state == null || state.remote == null) 
+        if (req == null || servlet == null || state == null) 
             throw new ServletException("invalid args");
 
         if (selectUsersAction == null || selectUsersAction.inpUsers == null) 
             throw new ServletException("selectUsersAction is null!");
         
         if (session equiv selectUsersAction.session && currentUser equiv selectUsersAction.currentUser &&
-                session equiv state.remote.sessionPrincipal && selectUsersAction.inpUsers.inputLbl equiv selectUsersAction.inputLbl &&
+                session equiv state.sessionPrincipal && selectUsersAction.inpUsers.inputLbl equiv selectUsersAction.inputLbl &&
                 selectUsersAction.inputLbl <= new label {currentUser:;currentUser!:} &&
                 lbl equiv selectUsersAction.inputLbl) {
             this.submit(lbl, req, servlet, state, currentUser);
@@ -344,7 +344,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
             User[servP,{*lbl;session!:}]{*lbl;session!:} currentUser)
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
-              session equiv state.remote.sessionPrincipal,
+              session equiv state.sessionPrincipal,
               session actsfor currentUser,              
               currentUser equiv selectUsersAction.currentUser,              
               lbl <= {*:req.session},

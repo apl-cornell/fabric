@@ -1,6 +1,7 @@
 package calendar;
 
 import jif.util.*;
+import fabricated.util.Date;
 import userserv.*;
 import sif.servlet.*;
 import sif.html.*;
@@ -42,7 +43,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
 
     public ShowCalendarSessAction(Main{this} servlet, 
                                   principal{this} session,
-                                  User[CalServEP]{this} currentUser) {
+                                  User[CalServEP, {this}]{this} currentUser) {
         this.displayDateInput = new Input(servlet, new label {currentUser!:});
         this.displayKindInput = new Input(servlet, new label {currentUser!:});
         this.eventIDInput = new Input(servlet, new label {currentUser:;currentUser!:}); 
@@ -54,8 +55,8 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
     public void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
             Request[CalServEP]{*lbl;session!:} req,
             UServlet[CalServEP]{*lbl;session!:} uservlet,
-            USessState[CalServEP]{*lbl;session!:} ustate,
-            User[CalServEP]{*lbl;session!:} currentUser) 
+            USessState[CalServEP, {*lbl;session!:}]{*lbl;session!:} ustate,
+            User[CalServEP, {*lbl;session!:}]{*lbl;session!:} currentUser) 
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
               session equiv ustate.sessionPrincipal,
@@ -104,7 +105,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
     protected void produceView{cu!:}(Request[CalServEP]{cu!:} req,
                                       Main{cu!:} servlet,
                                       State{cu!:} state,
-                                      User[CalServEP]{cu!:} cu)  
+                                      User[CalServEP, {cu!:}]{cu!:} cu)  
         where session equiv req.session, 
               cu equiv state.currentUser,
               req.session actsfor cu,              
@@ -238,7 +239,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
     protected Node[{*:cu},{cu!:}]{cu!:} 
          monthView{cu!:}(Request[CalServEP]{cu!:} req,
                    Main{cu!:} servlet,
-                   User[CalServEP]{cu!:} cu,
+                   User[CalServEP, {cu!:}]{cu!:} cu,
                    State{cu!:} state,
                    Node[{cu!:},{cu!:}]{cu!:} prevMonthLink,
                    Node[{cu!:},{cu!:}]{cu!:} nextMonthLink) 
@@ -454,7 +455,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
     protected Node[{*:cu},{cu!:}]{cu!:} 
     weekView{cu!:}(Request[CalServEP]{cu!:} req,
               Main{cu!:} servlet,
-              User[CalServEP]{cu!:} cu,
+              User[CalServEP, {cu!:}]{cu!:} cu,
               State{cu!:} state,
               Node[{cu!:},{cu!:}]{cu!:} prevWeekLink,
               Node[{cu!:},{cu!:}]{cu!:} nextWeekLink) 
@@ -530,7 +531,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
     protected Node[{*:cu},{cu!:}]{cu!:} 
     dayView{cu!:}(Request[CalServEP]{cu!:} req,
               Main{cu!:} servlet,
-              User[CalServEP]{cu!:} cu,
+              User[CalServEP, {cu!:}]{cu!:} cu,
               State{cu!:} state,
               Node[{cu!:},{cu!:}]{cu!:} prevDayLink,
               Node[{cu!:},{cu!:}]{cu!:} nextDayLink) 
@@ -592,8 +593,8 @@ class ChangeDisplayDateAction extends USessAction[CalServEP] {
     public void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
             Request[CalServEP]{*lbl;session!:} req,
             UServlet[CalServEP]{*lbl;session!:} uservlet,
-            USessState[CalServEP]{*lbl;session!:} ustate,
-            User[CalServEP]{*lbl;session!:} currentUser) 
+            USessState[CalServEP, {*lbl;session!:}]{*lbl;session!:} ustate,
+            User[CalServEP, {*lbl;session!:}]{*lbl;session!:} currentUser) 
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
               session equiv ustate.sessionPrincipal,
@@ -681,7 +682,7 @@ class ChangeDisplayDateAction extends USessAction[CalServEP] {
         }
     }
     // DOWNGRADE REASON: Need to get {p!:} down to {session!:} in order to update the display date, &&&ACCESS CONTROL
-    static void updateStateDate{p:;p!:}(CalendarSessionState{p:;p!:} sessState, 
+    static void updateStateDate{p:;p!:}(CalendarSessionState[{p:;p!:}]{p:;p!:} sessState, 
             State{p:;p!:} state, 
             Date[{p:;p!:}]{p:;p!:} displayDate, 
             int{p:;p!:} displayKind, 
@@ -727,8 +728,8 @@ class EditEventAction extends USessAction[CalServEP] {
     public void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
             Request[CalServEP]{*lbl;session!:} req,
             UServlet[CalServEP]{*lbl;session!:} uservlet,
-            USessState[CalServEP]{*lbl;session!:} ustate,
-            User[CalServEP]{*lbl;session!:} currentUser) 
+            USessState[CalServEP, {*lbl;session!:}]{*lbl;session!:} ustate,
+            User[CalServEP, {*lbl;session!:}]{*lbl;session!:} currentUser) 
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
               session equiv ustate.sessionPrincipal,
@@ -823,8 +824,8 @@ class SelectDisplayUser extends USessAction[CalServEP] authority(CalServEP) {
     public void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
             Request[CalServEP]{*lbl;session!:} req,
             UServlet[CalServEP]{*lbl;session!:} uservlet,
-            USessState[CalServEP]{*lbl;session!:} ustate,
-            User[CalServEP]{*lbl;session!:} currentUser) 
+            USessState[CalServEP, {*lbl;session!:}]{*lbl;session!:} ustate,
+            User[CalServEP, {*lbl;session!:}]{*lbl;session!:} currentUser) 
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
               session equiv ustate.sessionPrincipal,
@@ -884,7 +885,7 @@ class SelectDisplayUser extends USessAction[CalServEP] authority(CalServEP) {
     //  also currUser (=p) is ok with making the display user public &&&ACCESS CONTROL
     private void updateStateUser{p!:}(CalendarSessionState{p!:} sessState, 
                                      State{p!:} state, 
-                                     User[CalServEP]{p!:;CalServEP:;CalServEP!:} displayUser, 
+                                     User[CalServEP, {p!:;CalServEP:;CalServEP!:}]{p!:;CalServEP:;CalServEP!:} displayUser, 
                                      principal{p!:} p)
       where session equiv sessState.sessionPrincipal,
             caller(session, CalServEP), session actsfor p, endorse({session!: meet CalServEP!:}) 
@@ -919,8 +920,8 @@ class CreateEvent extends USessAction[CalServEP]
     public void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
             Request[CalServEP]{*lbl;session!:} req,
             UServlet[CalServEP]{*lbl;session!:} uservlet,
-            USessState[CalServEP]{*lbl;session!:} ustate,
-            User[CalServEP]{*lbl;session!:} currentUser) 
+            USessState[CalServEP, {*lbl;session!:}]{*lbl;session!:} ustate,
+            User[CalServEP, {*lbl;session!:}]{*lbl;session!:} currentUser) 
     throws (ServletException{*lbl;session!:})
         where session equiv req.session, 
               session equiv ustate.sessionPrincipal,
@@ -981,7 +982,7 @@ class FinishEditingEvent implements FinishEditEventReceiver {
             Request[CalServEP]{*lbl} req,
             Main{*lbl} servlet,
             CalendarSessionState{*lbl} state,
-            User[CalServEP]{*lbl} currentUser,
+            User[CalServEP, lbl]{*lbl} currentUser,
             Event{currentUser:;currentUser!:} origEvent, 
             Event{currentUser:;currentUser!:} editedEvent) 
      throws (ServletException{*lbl;req.session!:})

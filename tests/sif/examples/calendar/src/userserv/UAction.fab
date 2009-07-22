@@ -45,9 +45,9 @@ abstract public class UAction[principal servP] extends Action[servP] {
         SessionState ss = req.getSessionState(lbl);
         if (!(ss instanceof USessState[servP, lbl])) throw new ServletException("Incorrect session state");
         final USessState[servP, lbl] css = (USessState[servP, lbl])ss;
-        if(css.remote == null) return;
+//        if(css.remote == null) return;
         
-        if (req.session equiv css.remote.sessionPrincipal) {
+        if (req.session equiv css.sessionPrincipal) {
             this.invokeImpl(newLbl, req, m, css);
         }
         else {
@@ -63,7 +63,7 @@ abstract public class UAction[principal servP] extends Action[servP] {
         throws (ServletException{*lbl;req.session!:})
           where caller(req.session),
           lbl <= {*:req.session},
-          req.session equiv state.remote.sessionPrincipal;
+          req.session equiv state.sessionPrincipal;
 
     /**
      * Utility method to create a Table with class "banner" and containing
