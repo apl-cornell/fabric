@@ -4,7 +4,7 @@ package jif.util;
  * Jif Implementation of the Abstractmap class
  */
 
-public abstract class AbstractMap[label K, label V] implements Map[K,V] {
+public abstract class AbstractMap[label K, label V] extends java.lang.Object implements Map[K,V]  {
     
     protected AbstractMap() {
     }
@@ -174,7 +174,7 @@ class AbstractMapKeySet[label K, label V] extends AbstractSet[K] {
     }
 }
 
-class AbstractMapKeySetIterator[label K, label V] implements Iterator[K] {
+class AbstractMapKeySetIterator[label K, label V] extends java.lang.Object implements Iterator[K] {
     private final Iterator[K]{this} i;
     AbstractMapKeySetIterator(AbstractMap[K,V]{this} parent) {
         i = parent==null?null:parent.entrySetIterator();

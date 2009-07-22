@@ -26,7 +26,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
     /**
      * The table, resized as necessary. Length MUST Always be a power of two.
      */
-    HashMapEntry[K,V]{K}[]{K} table;
+    HashMapEntry[K,V]{K} native[]{K} table;
     
     /**
      * Head of the doubly linked list of entries.
@@ -75,9 +75,9 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
         this.loadFactor = loadFactor;
         threshold = (int)(capacity * loadFactor);
         
-        HashMapEntry[K,V]{K}[] ttable = null;
+        HashMapEntry[K,V]{K} native[] ttable = null;
         try {
-            ttable = new HashMapEntry[K,V][capacity];
+            ttable = new HashMapEntry[K,V] native[capacity];
         }
         catch (NegativeArraySizeException imposs) { }
         this.table = ttable;
@@ -98,7 +98,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
     public HashMap{K}() {
         this.loadFactor = DEFAULT_LOAD_FACTOR;
         threshold = (int)(DEFAULT_INITIAL_CAPACITY * DEFAULT_LOAD_FACTOR);
-        table = new HashMapEntry[K,V][DEFAULT_INITIAL_CAPACITY];
+        table = new HashMapEntry[K,V] native[DEFAULT_INITIAL_CAPACITY];
         entrySet = new HashMapEntrySet[K,V](this);
         super();
         init();
@@ -158,7 +158,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
         return h & (length-1);
     }
 
-    static int indexFor(int h, HashMapEntry[K,V]{K}[] table) {
+    static int indexFor(int h, HashMapEntry[K,V]{K} native[] table) {
         int length = table==null?0:table.length;
         return h & (length-1);
     }
@@ -285,7 +285,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
 //    }
 
     void resize{K}(int{K} newCapacity) {
-        HashMapEntry[K,V]{K}[] oldTable = table;
+        HashMapEntry[K,V]{K} native[] oldTable = table;
         int oldCapacity = oldTable==null?0:oldTable.length;
         if (oldCapacity == MAXIMUM_CAPACITY) {
             threshold = Integer.MAX_VALUE;
@@ -293,7 +293,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
         }
 
         try {
-            HashMapEntry[K,V]{K}[] newTable = new HashMapEntry[K,V][newCapacity];
+            HashMapEntry[K,V]{K} native[] newTable = new HashMapEntry[K,V] native[newCapacity];
             transfer(newTable);
             table = newTable;
             threshold = (int)(newCapacity * loadFactor);
@@ -301,8 +301,8 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
         catch (NegativeArraySizeException imposs) { }
     }
 
-    void transfer{K}(HashMapEntry[K,V]{K}[]{K} newTable) {
-        HashMapEntry[K,V]{K}[] src = table;
+    void transfer{K}(HashMapEntry[K,V]{K} native[]{K} newTable) {
+        HashMapEntry[K,V]{K} native[] src = table;
         int newCapacity = newTable==null?0:newTable.length;
         for (int j = 0; j < (src==null?0:src.length); j++) {
             try {
@@ -435,7 +435,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
      * Removes all mappings from this map.
      */
     public void clear{K}() {
-        HashMapEntry[K,V]{K}[] tab = table;
+        HashMapEntry[K,V]{K} native[] tab = table;
         try {
             for (int i = 0; i < tab.length; i++) 
                 tab[i] = null;
@@ -463,7 +463,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
 //        if (value == null) 
 //            return containsNullValue();
 //
-//        Entry tab[] = table;
+//        Entry tab native[] = table;
 //        for (int i = 0; i < tab.length ; i++)
 //            for (Entry e = tab[i] ; e != null ; e = e.next)
 //                if (value.equals(e.value))
@@ -475,7 +475,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
 //     * Special-case code for containsValue with null argument
 //     **/
 //    private boolean containsNullValue() {
-//        Entry tab[] = table;
+//        Entry tab native[] = table;
 //        for (int i = 0; i < tab.length ; i++)
 //            for (Entry e = tab[i] ; e != null ; e = e.next)
 //                if (e.value == null)
@@ -619,7 +619,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
     
 }
 
-class HashMapEntry[label K, label V] implements MapEntry[K,V] {
+class HashMapEntry[label K, label V] extends java.lang.Object implements MapEntry[K,V] {
     final JifObject[K]{this} key;
     JifObject[V]{K} value;
     final int{this} hash;
@@ -745,7 +745,7 @@ class HashMapEntrySet[label K, label V] extends AbstractSet[K] {
     }
 }
 
-class HashMapEntrySetIterator[label K, label V] implements Iterator[K] {
+class HashMapEntrySetIterator[label K, label V] extends java.lang.Object implements Iterator[K] {
     private final HashMap[K,V]{this} parent;
     private HashMapEntry[K, V]{K} current = null;
     private HashMapEntry[K, V]{K} next = null;

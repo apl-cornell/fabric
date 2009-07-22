@@ -1,4 +1,6 @@
 package jif.util;
+
+import jif.lang.JifObject;
 /**
  * An implementatin of List, using an array to store the
  * list elements.
@@ -12,7 +14,7 @@ public class ArrayList[label L]
      * The array buffer into which the elements of the ArrayList are stored.
      * The capacity of the ArrayList is the length of this array buffer.
      */
-    private JifObject[L]{L}[]{L} elementData;
+    private JifObject[L]{L} native[]{L} elementData;
 
     /**
      * The size of the ArrayList (the number of elements it contains).
@@ -37,11 +39,11 @@ public class ArrayList[label L]
      * @param   minCapacity   the desired minimum capacity.
      */
     public void ensureCapacity{L}(int{L} minCapacity) {
-        JifObject[L]{L}[] ed = elementData;
+        JifObject[L]{L} native[] ed = elementData;
         if (ed != null) {
             int oldCapacity = ed.length;
             if (minCapacity > oldCapacity) {
-                JifObject[L]{L}[] oldData = ed;
+                JifObject[L]{L} native[] oldData = ed;
                 int newCapacity = 1 + (int)(oldCapacity * 1.5);
                 if (newCapacity < minCapacity) {
                     newCapacity = minCapacity;
@@ -170,7 +172,7 @@ public class ArrayList[label L]
     public JifObject[L]{L} remove{L}(int{L} index)
         throws (IndexOutOfBoundsException{L}) {
         RangeCheck(index);
-        JifObject[L]{L}[] ed = elementData;
+        JifObject[L]{L}  native[] ed = elementData;
         
         if (ed != null) {
             try {
