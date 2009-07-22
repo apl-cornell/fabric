@@ -1,0 +1,13 @@
+package fabil;
+
+public class Atomic03 {
+  public static void main(String[] args) {
+    Core core0 = Client.getClient().getCore("core0");
+    Core core1 = Client.getClient().getCore("core1");
+    atomic {
+      Foo a = new Foo@core0();
+      Foo b = new Foo@core1();
+    }
+  }
+}
+class Foo { }
