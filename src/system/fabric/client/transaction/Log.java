@@ -302,7 +302,12 @@ public final class Log {
       synchronized (log) {
         if (log.child != null) toFlag.add(log.child);
         log.abortSignal = tid;
-        log.thread.interrupt();
+        // XXX This was here to unblock a thread that may have been waiting on a
+        // XXX lock. Commented out because it was causing a bunch of
+        // XXX InterruptedExceptions and ClosedByInterruptExceptions that
+        // XXX weren't being handled properly.
+
+        // log.thread.interrupt();
       }
     }
   }
@@ -682,7 +687,7 @@ public final class Log {
     if (entry != null) {
       reads.put(core, newOnum, entry);
     }
-    
+
     if (child != null) child.renumberObject(core, onum, newOnum);
   }
 }
