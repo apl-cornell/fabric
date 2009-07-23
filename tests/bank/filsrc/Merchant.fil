@@ -1,6 +1,3 @@
-import bank.*;
-import carrier.*;
-
 public class Merchant {
   private Bank bank;
   private Carrier carr;
