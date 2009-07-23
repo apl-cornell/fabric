@@ -5,5 +5,5 @@ package jif.util;
  *
  * @see jif.util.Collection
  */
-public interface Set[label L] extends Collection[L] {
+nonfabric public interface Set[label L] extends Collection[L] {
 }

@@ -1,5 +1,7 @@
 package jif.util;
 
+import jif.lang.JifObject;
+
 /**
  * Jif Implementation of the Abstractmap class
  */

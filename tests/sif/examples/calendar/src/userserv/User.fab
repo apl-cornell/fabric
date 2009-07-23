@@ -121,6 +121,13 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
         }
     }
     
+    public static User[EP, {P←}]{P←} handOverUserConf{P←}(principal{P←} P, principal{P←} EP, User[EP, {EP→;EP←; P←}]{EP→;EP←; P←} user)
+        where caller(EP,P)
+    {
+        // TODO Implement me
+        return null;
+    }
+    
     public static User[EP, {P→;P←}]{P→;P←} handOverUser{P→;P← ⊓ EP←}(principal{P→;P←} EP, principal{P→;P←} P, User[EP, {EP→;EP←}] user) 
         where caller(EP, P)
     {

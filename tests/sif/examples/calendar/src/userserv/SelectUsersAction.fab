@@ -1,7 +1,7 @@
 package userserv;
 
-import jif.util.*;
-
+import fabricated.util.List;
+import fabricated.util.LinkedList;
 import javax.servlet.ServletException;
 
 import sif.servlet.*;
@@ -48,27 +48,17 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
      */
     final Input[servP]{this} inpUsers;
     
-    public SelectUsersAction{currentUser:;currentUser!:}(boolean{this} singleMode,
-            UServlet[servP]{this} servlet, 
-            principal{this} session,
-            User[servP,{this}]{this} currentUser,
-            UAction[servP]{this} successAction, 
-            UAction[servP]{this} cancelAction, 
-            fabricated.util.List[{servP:;servP!:}]{currentUser:;currentUser!:} selectedUsers, 
-            String{this} message) where caller (servP)
-    {
-        this(singleMode, servlet, session, currentUser, successAction, cancelAction, selectedUsers, message, new label {currentUser:;currentUser!:});
-    }
     public SelectUsersAction{*inpLbl}(boolean{this} singleMode,
                              UServlet[servP]{this} servlet, 
                              principal{this} session,
                              User[servP,{this}]{this} currentUser,
                              UAction[servP]{this} successAction, 
                              UAction[servP]{this} cancelAction, 
-                             fabricated.util.List[{servP:;servP!:}]{*inpLbl} selectedUsers, 
+                             List[{servP:;servP!:}]{*inpLbl} selectedUsers, 
                              String{this} message,
                              label{this} inpLbl)
-    where inpLbl <= {currentUser:;currentUser!:}
+    where inpLbl <= {currentUser:;currentUser!:},
+        caller (servP)
     {
         this.successAction = successAction;
         this.cancelAction = cancelAction;
@@ -91,6 +81,18 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
         this.message = mes;
         this.remote1 = new SelectUsersAction$1[inputLbl, servP](selectedUsers);
         super(servlet, session);
+    }
+
+    public SelectUsersAction{currentUser:;currentUser!:}(boolean{this} singleMode,
+            UServlet[servP]{this} servlet, 
+            principal{this} session,
+            User[servP,{this}]{this} currentUser,
+            UAction[servP]{this} successAction, 
+            UAction[servP]{this} cancelAction, 
+            List[{servP:;servP!:}]{currentUser:;currentUser!:} selectedUsers, 
+            String{this} message) where caller (servP)
+    {
+        this(singleMode, servlet, session, currentUser, successAction, cancelAction, selectedUsers, message, new label {currentUser:;currentUser!:});
     }
     
     public void invokeSessImpl{*lbl;session!:}(label{*lbl;session!:} lbl,
@@ -214,7 +216,7 @@ public class SelectUsersAction[principal servP] extends USessAction[servP] autho
     }
     
     private String{servP:;servP!:;p:;p!:} userListToString{p:;p!:}(principal{users} p, 
-                                                               fabricated.util.List[{servP:;servP!:}]{p:;p!:} users, 
+                                                               List[{servP:;servP!:}]{p:;p!:} users, 
                                                                boolean{users} useDisplayString) {
         String sb = "";
         if (users != null) {
@@ -364,7 +366,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
           final Core localCore = localCore_;
           fabricated.util.List[{servP:;servP!:}] validatedUsers = null;
           if(localCore actsfor servP) {
-              validatedUsers = new fabricated.util.LinkedList[new label {servP:;servP!:}]@localCore();
+              validatedUsers = new LinkedList[new label {servP:;servP!:}]@localCore();
           }
           
           if (selectUsersAction == null) throw new ServletException("selectUsersAction is null!");
@@ -451,7 +453,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
     
       // DOWNGRADE REASON: transfer ownership from currentUser to servP, and hide side effcts &&& access control
       private void addToUserList{currentUser:;currentUser!:}(User[servP,{currentUser:;currentUser!:}]{currentUser:;currentUser!:} currentUser,
-                                 fabricated.util.List[{servP:;servP!:}]{currentUser:;currentUser!:} userList, 
+                                 List[{servP:;servP!:}]{currentUser:;currentUser!:} userList, 
                                  User[servP,{currentUser:;currentUser!:}]{currentUser:;currentUser!:} u) 
                            where caller(currentUser), 
                                  caller(servP),
@@ -460,8 +462,8 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
               User[servP,{currentUser:;currentUser!:}] u1 = endorse(u, {currentUser:;servP:;currentUser!:; servP!:} to {currentUser:;servP:;currentUser!: meet servP!:});
               User[servP,{currentUser:;currentUser!:}] u2 = declassify(u1, {servP:;currentUser:;currentUser!: meet servP!:} to {servP:;currentUser!: meet servP!:});
               
-              fabricated.util.List[{servP:;servP!:}] ul1 = endorse(userList, {currentUser:;currentUser!:;servP:;servP!:} to {currentUser:;servP:;currentUser!: meet servP!:});
-              fabricated.util.List[{servP:;servP!:}] ul2 = declassify(ul1, {servP:;currentUser:;currentUser!: meet servP!:} to {servP:;currentUser!: meet servP!:});
+              List[{servP:;servP!:}] ul1 = endorse(userList, {currentUser:;currentUser!:;servP:;servP!:} to {currentUser:;servP:;currentUser!: meet servP!:});
+              List[{servP:;servP!:}] ul2 = declassify(ul1, {servP:;currentUser:;currentUser!: meet servP!:} to {servP:;currentUser!: meet servP!:});
               
               try {
                   if (ul2 != null) 
@@ -475,17 +477,17 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
 
       // DOWNGRADE REASON: transfer ownership from currentUser to servP, and hide side effcts of copying list      
       private void copyUserList{currentUser:;currentUser!:}(User[servP,{currentUser:;currentUser!:}]{currentUser:;currentUser!:} currentUser,
-              fabricated.util.List[{servP:;servP!:}]{currentUser:;currentUser!:} source, 
-              fabricated.util.List[{servP:;servP!:}]{currentUser:;currentUser!:} target) 
+              List[{servP:;servP!:}]{currentUser:;currentUser!:} source, 
+              List[{servP:;servP!:}]{currentUser:;currentUser!:} target) 
               where caller(currentUser), 
                     caller(servP),
                     endorse({currentUser:;currentUser!: meet servP!:}) {          
           declassify ({currentUser!: meet servP!:}) {
-              fabricated.util.List[{servP:;servP!:}] s1 = endorse(source, {currentUser:;currentUser!:;servP:;servP!:} to {currentUser:;servP:;currentUser!: meet servP!:});
-              fabricated.util.List[{servP:;servP!:}] s2 = declassify(s1, {servP:;currentUser:;currentUser!: meet servP!:} to {servP:;currentUser!: meet servP!:});
+              List[{servP:;servP!:}] s1 = endorse(source, {currentUser:;currentUser!:;servP:;servP!:} to {currentUser:;servP:;currentUser!: meet servP!:});
+              List[{servP:;servP!:}] s2 = declassify(s1, {servP:;currentUser:;currentUser!: meet servP!:} to {servP:;currentUser!: meet servP!:});
               
-              fabricated.util.List[{servP:;servP!:}] t1 = endorse(target, {currentUser:;currentUser!:;servP:;servP!:} to {currentUser:;servP:;currentUser!: meet servP!:});
-              fabricated.util.List[{servP:;servP!:}] t2 = declassify(t1, {servP:;currentUser:;currentUser!: meet servP!:} to {servP:;currentUser!: meet servP!:});
+              List[{servP:;servP!:}] t1 = endorse(target, {currentUser:;currentUser!:;servP:;servP!:} to {currentUser:;servP:;currentUser!: meet servP!:});
+              List[{servP:;servP!:}] t2 = declassify(t1, {servP:;currentUser:;currentUser!: meet servP!:} to {servP:;currentUser!: meet servP!:});
               
               try {
                   if (s2 != null && t2 != null) {
@@ -505,7 +507,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
        */
       private String{*lbl} native[]{*lbl} splitInput{*lbl}(label{*lbl} lbl, String{*lbl} input) {
           if (input == null) return null;
-          LinkedList[lbl] l = new LinkedList[lbl]();
+          jif.util.LinkedList[lbl] l = new jif.util.LinkedList[lbl]();
           String s = "";
           for (int i = 0; i < input.length(); i++) {
               try {
@@ -531,7 +533,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
           int sz = size<0?0:size;
           String{*lbl} native[] array = new String native[sz];
           int count = 0;
-          for (Iterator[lbl] iter = l.iterator(); iter != null && iter.hasNext(); ) {
+          for (jif.util.Iterator[lbl] iter = l.iterator(); iter != null && iter.hasNext(); ) {
               try {
                   JifObject[lbl] jo = iter.next();
                   if (jo instanceof JifString[lbl]) {
@@ -539,7 +541,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
                       array[count++] = js.toString();
                   }
               }
-              catch (NoSuchElementException impossible) { }
+              catch (jif.util.NoSuchElementException impossible) { }
               catch (ArrayIndexOutOfBoundsException impossible) { }
           }
           return array;          

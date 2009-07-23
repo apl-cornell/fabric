@@ -95,13 +95,16 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 	}
 
 	void updateEventInCalendar{p→;p←}(principal{p→;p←} p, Request[CalServEP]{p→;p←} req, Event[{p→;p←}]{p→;p←} ueicEvent) 
-	where {p→;p←} <= ueicEvent.infoLbl,
+	where 
+	{p←} <= ueicEvent.infoLbl,
 	caller(p), authority(CalServEP), endorse({p→;p← meet CalServEP←}) {
 		if (cal != null) {
 
 			// sanitize the event to prevent SQL attacks
-			final Event e = endorse(sanitizeEvent(p, declassify(ueicEvent, {p←})), {p→;p← meet CalServEP←});
-			if(e == null) return;
+		    
+		    // TODO : Check if the following two lines are necessary
+//			final Event e = endorse(sanitizeEvent(p, declassify(ueicEvent, {p←})), {p→;p← meet CalServEP←});
+//			if(e == null) return;
 			// DOWNGRADE REASON: handover ueicEvent from p to CalServEP
 			declassify ({p← meet CalServEP←}) {
 //				final label ntimeLbl = endorse(e.timeLbl, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
@@ -173,8 +176,9 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 	}
 
 	// TODO: Tentative where clause, not sure if it holds at runtime
-	Event[{p→;p←}]{p→;p←} sanitizeEvent{p→;p←}(principal{p→;p←} p, Event[{p→;p←}]{p→;p←} e)
-	where {p→;p←} <= e.infoLbl {
+	Event[{p←}]{p←} sanitizeEvent{p←}(principal{p←} p, Event[{p←}]{p←} e)
+	    where {p←} <= e.infoLbl 
+	{
 		if (e == null || cal == null || e.remote1 == null || e.uid == null) {
 			return e;
 		}
@@ -182,7 +186,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 		String note = cal.escapeString(e.remote1.note);
 
 		// need to construct a new event...
-		return new Event[{p→;p←}](e.uid.uid,
+		return new Event[{p←}](e.uid.uid,
 				e.timeLbl,
 				e.infoLbl,
 				e.startTime,

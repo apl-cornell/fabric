@@ -668,18 +668,18 @@ class FinishEditEvent extends USessAction[CalServEP] authority (CalServEP) {
                         Date[newTimeLbl] newEndDate = CalServDeclassifier.declassDate(currentUser, newTimeLbl, endDate);
                         
                         int{CalServEP:;CalServEP!:;currentUser:; currentUser!:} uid = createEditEvent.event.uid.uid;
-                        Event newEvent = 
-                            new Event(uid,
-                                      newTimeLbl,
-                                      newInfoLbl,
-                                      newStartDate, 
-                                      newEndDate, 
-                                      declassify(name, {currentUser:; currentUser!:} to {currentUser!:}), 
-                                      declassify(note, {currentUser:; currentUser!:} to {currentUser!:}), 
-                                      declassify(createEditEvent.event.remote1.attendees, {currentUser:; currentUser!:} to {currentUser!:}), 
-                                      declassify(createEditEvent.event.remote1.viewers, {currentUser:; currentUser!:} to {currentUser!:}), 
-                                      user_);                                                    
-                        
+                        Event newEvent = null;
+//                            new Event(uid,
+//                                      newTimeLbl,
+//                                      newInfoLbl,
+//                                      newStartDate, 
+//                                      newEndDate, 
+//                                      declassify(name, {currentUser:; currentUser!:} to {currentUser!:}), 
+//                                      declassify(note, {currentUser:; currentUser!:} to {currentUser!:}), 
+//                                      declassify(createEditEvent.event.remote1.attendees, {currentUser:; currentUser!:} to {currentUser!:}), 
+//                                      declassify(createEditEvent.event.remote1.viewers, {currentUser:; currentUser!:} to {currentUser!:}), 
+//                                      user_);                                                    
+// TODO                        
                         // send user back to return action.
                         try {
                             eventReceiver.receiveEvent(lbl, 

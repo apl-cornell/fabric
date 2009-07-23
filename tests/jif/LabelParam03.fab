@@ -1,0 +1,17 @@
+class C[label L] {
+    C() {
+       
+    }
+}
+
+class D {
+    final E{} foo = new E();
+    void n{}() throws (Exception{*->*}) {
+        C[this.foo.lbl]{} x = new C[this.foo.lbl](); // is the label of foo.lbl being replaced correctly?
+    }
+}
+
+class E {
+    final label{*this.lbl2} lbl = new label {};
+    final label{} lbl2 = new label {};
+}

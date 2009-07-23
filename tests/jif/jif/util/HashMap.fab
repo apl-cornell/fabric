@@ -1,5 +1,7 @@
 package jif.util;
 
+import jif.lang.JifObject;
+
 /**
  * This class is operationally similar to the HashMap implementation
  * of Java 1.4.2, on which this code was based.

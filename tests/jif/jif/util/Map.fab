@@ -3,7 +3,7 @@ package jif.util;
  * Jif Signature for the Map interface
  *
  */
-public interface Map[label K, label V] extends JifObject[{K;V}] {
+nonfabric public interface Map[label K, label V] extends JifObject[{K;V}] {
     // Query Operations
 
     int{K} size();

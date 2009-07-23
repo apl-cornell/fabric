@@ -4,7 +4,7 @@ package jif.util;
  * JifObject[K], so has codes, equality, and toString do not depend on the
  * value at all.
  */
-public interface MapEntry[label K, label V] extends JifObject[K] {
+nonfabric public interface MapEntry[label K, label V] extends JifObject[K] {
         JifObject[K]{K} getKey();
         JifObject[V]{K} getValue();
         JifObject[V]{K} setValue{K}(JifObject[V]{K} value);

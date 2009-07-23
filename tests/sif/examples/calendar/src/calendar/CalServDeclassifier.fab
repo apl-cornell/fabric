@@ -172,53 +172,55 @@ public class CalServDeclassifier authority (CalServEP) {
     		  principal{P→;Q→;P←;Q←} Q,
     		  Event[{P→;P←}]{P→;Q→;P←;Q←} event_)
     		  where caller(P,Q,CalServEP) {
-    	  final Event[{P→;P←}]{P← ⊓ Q← ⊓ CalServEP←} event = declassify(endorse(event_,
-    			  {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q← ⊓ CalServEP←}),
-    			  {P→;Q→;P← ⊓ Q← ⊓ CalServEP←} to {P← ⊓ Q← ⊓ CalServEP←});
-    	  if(event == null) return null;
-			final label ntimeLbl = endorse(event.timeLbl, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
-			final label ninfoLbl = endorse(event.infoLbl, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
-			Event$1[event.infoLbl] e1r = event.remote1;
-			Event$1[ninfoLbl] nremote1 = endorse(e1r, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
-			Date[event.timeLbl] e1s = event.startTime;
-			Date[event.timeLbl] e1e = event.endTime;
-			Date[ntimeLbl] nstartTime = endorse(e1s, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
-			Date[ntimeLbl] nendTime = endorse(e1e, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
-
-			final Event e1_ = new Event[{P→;Q→;P← ⊓ Q←}](
-						endorse(event.uid, {P→;Q→;P←;Q←;CalServEP→;CalServEP←} to {P→;Q→;P← ⊓ Q←;CalServEP→;CalServEP←}),
-						ntimeLbl,
-						ninfoLbl,
-						nstartTime,
-						nendTime,
-						nremote1
-				);
-
-			final Event[{P→;Q→;P← ⊓ Q←}] e1 = 
-				endorse(e1_, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
-			
-			int muid_ = endorse(e1.uid, {P→;Q→;CalServEP→;Q←;CalServEP←} to {P→;Q→;CalServEP→;P← ⊓ Q← ⊓ CalServEP←});
-			int muid = declassify(muid_, {P→;Q→;CalServEP→;P← ⊓ Q← ⊓ CalServEP←} to {Q→;Q←;CalServEP→;CalServEP←});
-
-			final label mtimeLbl = declassify(e1.timeLbl, {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
-			final label minfoLbl = declassify(e1.infoLbl, {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
-			Event$1[e1.infoLbl] e2r = e1.remote1;
-			Event$1[minfoLbl] mremote1 = declassify(e2r, {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
-			Date[e1.timeLbl] e2s = e1.startTime;
-			Date[e1.timeLbl] e2e = e1.endTime;
-			Date[mtimeLbl] mstartTime = declassify(e2s, {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
-			Date[mtimeLbl] mendTime = declassify(e2s, {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
-			Event[{Q→;Q←}] e2_ =
-				new Event[{Q→;Q←}](
-						muid,
-						mtimeLbl,
-						minfoLbl,
-						mstartTime,
-						mendTime,
-						mremote1
-				);
-			final Event e2 = declassify(endorse(e2_, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
-			return e2;
+//    	  final Event[{P→;P←}]{P← ⊓ Q← ⊓ CalServEP←} event = declassify(endorse(event_,
+//    			  {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q← ⊓ CalServEP←}),
+//    			  {P→;Q→;P← ⊓ Q← ⊓ CalServEP←} to {P← ⊓ Q← ⊓ CalServEP←});
+//    	  if(event == null || event.uid == null) return null;
+//			final label ntimeLbl = endorse(event.timeLbl, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
+//			final label ninfoLbl = endorse(event.infoLbl, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
+//			Event$1[event.infoLbl] e1r = event.remote1;
+//			Event$1[ninfoLbl] nremote1 = endorse(e1r, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
+//			Date[event.timeLbl] e1s = event.startTime;
+//			Date[event.timeLbl] e1e = event.endTime;
+//			Date[ntimeLbl] nstartTime = endorse(e1s, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
+//			Date[ntimeLbl] nendTime = endorse(e1e, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
+//
+//			final Event e1_ = new Event[{P→;Q→;P← ⊓ Q←}](
+//						endorse(event.uid.uid, {P→;Q→;P←;Q←;CalServEP→;CalServEP←} to {P→;Q→;P← ⊓ Q←;CalServEP→;CalServEP←}),
+//						ntimeLbl,
+//						ninfoLbl,
+//						nstartTime,
+//						nendTime,
+//						nremote1
+//				);
+//
+//			final Event[{P→;Q→;P← ⊓ Q←}] e1 = 
+//				endorse(e1_, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←});
+//			if(e1 == null || e1.uid == null) return null;
+//			int muid_ = endorse(e1.uid.uid, {P→;Q→;CalServEP→;Q←;CalServEP←} to {P→;Q→;CalServEP→;P← ⊓ Q← ⊓ CalServEP←});
+//			int muid = declassify(muid_, {P→;Q→;CalServEP→;P← ⊓ Q← ⊓ CalServEP←} to {Q→;Q←;CalServEP→;CalServEP←});
+//
+//			final label mtimeLbl = declassify(e1.timeLbl, {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
+//			final label minfoLbl = declassify(e1.infoLbl, {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
+//			Event$1[e1.infoLbl] e2r = e1.remote1;
+//			Event$1[minfoLbl] mremote1 = declassify(e2r, {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
+//			Date[e1.timeLbl] e2s = e1.startTime;
+//			Date[e1.timeLbl] e2e = e1.endTime;
+//			Date[mtimeLbl] mstartTime = declassify(e2s, {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
+//			Date[mtimeLbl] mendTime = declassify(e2s, {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
+//			Event[{Q→;Q←}] e2_ =
+//				new Event[{Q→;Q←}](
+//						muid,
+//						mtimeLbl,
+//						minfoLbl,
+//						mstartTime,
+//						mendTime,
+//						mremote1
+//				);
+//			final Event e2 = declassify(endorse(e2_, {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
+//			return e2;
+          return null;
+          // TODO
       }      
       
       
@@ -297,23 +299,40 @@ public class CalServDeclassifier authority (CalServEP) {
       
       // Typically called with Q as session principal and P as the current user 
       public static State[{Q←}]{Q←} declassifyState{Q←}(State[{P→;P←}]{P→;P←} state_, principal{P→;P←} P, principal{P→;P←} Q) where Q actsfor P, caller(Q) {
-    	  final State[{P→;P←}] state__ = endorse(state_, {P→;P←} to {P→;Q←}); 
-    	  final State[{P→;P←}]{Q←} state = declassify(state__, {P→;Q←} to {Q←});
-    	  if(state == null) return null;
-    	    final User[CalServEP, {P→;Q←}] currentUser_ = User.endorseUser(CalServEP, P, Q, state.currentUser);
-    	    final User[CalServEP, {Q←}] currentUser1 = User.declassifyUser(CalServEP, P, Q, currentUser_);
-    	    final User[CalServEP, {P→;P←}] stateCurrentUser = state.currentUser;
-    	    Date[{stateCurrentUser←}] stateDisplayDate = state.displayDate;
-    	    fabricated.util.Date[{stateCurrentUser←}] displayDate_ = endorse(stateDisplayDate, {P→;P←} to {P→;Q←});
-    	    fabricated.util.Date[{currentUser1←}] displayDate = declassify(displayDate_, {P→;Q←} to {Q←});
-    	    final int{Q←} displayKind = declassify(endorse(state.displayKind, {P→;P←} to {P→;Q←}), {P→;Q←} to {Q←});
-    	    final User[CalServEP, {P→;Q←}] displayUser1 = User.endorseUser(CalServEP, P, Q, state.displayUser);
-    	    final User[CalServEP, {Q←}] displayUser = User.declassifyUser(CalServEP, P, Q, displayUser1);
-    	    State[{Q←}] toReturn_ = new State[{Q←}](currentUser1, displayDate, displayKind, displayUser);
-    	    State[{Q←}]{Q←} toReturn = declassify(endorse(toReturn_, {P→;P←} to {P→;Q←}), {P→;Q←} to {Q←});
-    	    return toReturn;
+//    	  final State[{P→;P←}] state__ = endorse(state_, {P→;P←} to {P→;Q←}); 
+//    	  final State[{P→;P←}]{Q←} state = declassify(state__, {P→;Q←} to {Q←});
+//    	  if(state == null) return null;
+//    	    final User[CalServEP, {P→;Q←}] currentUser_ = User.endorseUser(CalServEP, P, Q, state.currentUser);
+//    	    final User[CalServEP, {Q←}] currentUser1 = User.declassifyUser(CalServEP, P, Q, currentUser_);
+//    	    final User[CalServEP, {P→;P←}] stateCurrentUser = state.currentUser;
+//    	    Date[{stateCurrentUser←}] stateDisplayDate = state.displayDate;
+//    	    fabricated.util.Date[{stateCurrentUser←}] displayDate_ = endorse(stateDisplayDate, {P→;P←} to {P→;Q←});
+//    	    fabricated.util.Date[{currentUser1←}] displayDate = declassify(displayDate_, {P→;Q←} to {Q←});
+//    	    final int{Q←} displayKind = declassify(endorse(state.displayKind, {P→;P←} to {P→;Q←}), {P→;Q←} to {Q←});
+//    	    final User[CalServEP, {P→;Q←}] displayUser1 = User.endorseUser(CalServEP, P, Q, state.displayUser);
+//    	    final User[CalServEP, {Q←}] displayUser = User.declassifyUser(CalServEP, P, Q, displayUser1);
+//    	    State[{Q←}] toReturn_ = new State[{Q←}](currentUser1, displayDate, displayKind, displayUser);
+//    	    State[{Q←}]{Q←} toReturn = declassify(endorse(toReturn_, {P→;P←} to {P→;Q←}), {P→;Q←} to {Q←});
+//    	    return toReturn;
+          return null;
+          // TODO
     	  
       }
+      
+      public static State[{P←}]{P←} declassifyState{P←}(principal{P←} P, State[{P→;P←}]{P→;P←} state)
+          where caller(P)
+      {
+          // TODO Implement me
+          return null;
+      }
+      
+      public static State[{Q←}]{Q←} endorseState{P←}(principal{P←} P, principal{P←} Q, State[{P←}]{P←} state)
+          where caller(Q), Q actsfor P
+      {
+          // TODO Implement me
+          return null;
+      }
+      
       
       // Typically called with P as CalRootEP and Q as CalServEP 
       public static Event[{Q→;Q←}]{Q→;Q←} transferEvent{Q→;P←⊓Q←}(
@@ -321,24 +340,26 @@ public class CalServDeclassifier authority (CalServEP) {
     		  principal{P→;Q→;P←⊓Q←} Q,
     		  Event[{P→;Q→}]{P→;Q→} event_)
     		  where caller(P,Q), Q equiv CalServEP {
-    	  final Event[{P→;Q→}]{Q→;P←⊓Q←} event = declassify(endorse(event_, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;P← ⊓ Q←});
-    	  if(event == null) return null;
-			final label ntimeLbl = declassify(endorse(event.timeLbl, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
-			final label ninfoLbl = declassify(endorse(event.infoLbl, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
-			Event$1[event.infoLbl] e1r = event.remote1;
-			Event$1[ninfoLbl] nremote1 = declassify(endorse(e1r, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
-			Date[event.timeLbl] e1s = event.startTime;
-			Date[event.timeLbl] e1e = event.endTime;
-			Date[ntimeLbl] nstartTime = declassify(endorse(e1s, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
-			Date[ntimeLbl] nendTime = declassify(endorse(e1e, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
-			
-			final int nuid_ = endorse(event.uid, {P→;Q→} to {P→;Q→;P← ⊓ Q←}); 
-			final int nuid = declassify(nuid_, {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
-
-			final Event e_ = new Event[{Q→;Q←}](nuid, ntimeLbl, ninfoLbl, nstartTime, nendTime, nremote1);
-
-			final Event[{Q→;Q←}]{Q→;Q←} e = declassify(e_, {P→;Q→;P←⊓Q←} to {Q→;Q←});
-			return e;
+//    	  final Event[{P→;Q→}]{Q→;P←⊓Q←} event = declassify(endorse(event_, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;P← ⊓ Q←});
+//    	  if(event == null || event.uid == null) return null;
+//			final label ntimeLbl = declassify(endorse(event.timeLbl, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
+//			final label ninfoLbl = declassify(endorse(event.infoLbl, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
+//			Event$1[event.infoLbl] e1r = event.remote1;
+//			Event$1[ninfoLbl] nremote1 = declassify(endorse(e1r, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
+//			Date[event.timeLbl] e1s = event.startTime;
+//			Date[event.timeLbl] e1e = event.endTime;
+//			Date[ntimeLbl] nstartTime = declassify(endorse(e1s, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
+//			Date[ntimeLbl] nendTime = declassify(endorse(e1e, {P→;Q→} to {P→;Q→;P← ⊓ Q←}), {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
+//			
+//			final int nuid_ = endorse(event.uid.uid, {P→;Q→} to {P→;Q→;P← ⊓ Q←}); 
+//			final int nuid = declassify(nuid_, {P→;Q→;P← ⊓ Q←} to {Q→;Q←});
+//
+//			final Event e_ = new Event[{Q→;Q←}](nuid, ntimeLbl, ninfoLbl, nstartTime, nendTime, nremote1);
+//
+//			final Event[{Q→;Q←}]{Q→;Q←} e = declassify(e_, {P→;Q→;P←⊓Q←} to {Q→;Q←});
+//			return e;
+          return null;
+          // TODO
       }
       
       public static Event[{P←}]{P←} declassifyEvent{P←}(
@@ -347,24 +368,26 @@ public class CalServDeclassifier authority (CalServEP) {
     		  where caller(P),
     		  authority(CalServEP),
     		  endorse({P←⊓CalServEP←}) {
-    	  final Event[{P→;P←}] event = endorse(declassify(event_, {P→;P←} to {P←}), {P←} to {P←⊓CalServEP←});
-    	  if(event == null) return null;
-			final label ntimeLbl = declassify(event.timeLbl, {P→;P←} to {P←});
-			final label ninfoLbl = declassify(event.infoLbl, {P→;P←} to {P←});
-			Event$1[event.infoLbl] e1r = event.remote1;
-			Event$1[ninfoLbl] nremote1 = declassify(e1r, {P→;P←} to {P←});
-			Date[event.timeLbl] e1s = event.startTime;
-			Date[event.timeLbl] e1e = event.endTime;
-			Date[ntimeLbl] nstartTime = declassify(e1s, {P→;P←} to {P←});
-			Date[ntimeLbl] nendTime = declassify(e1e, {P→;P←} to {P←});
-			
-			final int nuid_ = endorse(event.uid, {P→;P←;CalServEP→;CalServEP←} to {P→;CalServEP→;P←⊓CalServEP←});
-			final int nuid = declassify(nuid_, {P→;CalServEP→;P←⊓CalServEP←} to {P←;CalServEP→;CalServEP←});
-
-			final Event e_ = new Event[{P←}](nuid, ntimeLbl, ninfoLbl, nstartTime, nendTime, nremote1);
-
-			final Event[{P←}]{P←} e = declassify(e_, {P→;P←} to {P←});
-			return e;
+//    	  final Event[{P→;P←}] event = endorse(declassify(event_, {P→;P←} to {P←}), {P←} to {P←⊓CalServEP←});
+//    	  if(event == null || event.uid == null) return null;
+//			final label ntimeLbl = declassify(event.timeLbl, {P→;P←} to {P←});
+//			final label ninfoLbl = declassify(event.infoLbl, {P→;P←} to {P←});
+//			Event$1[event.infoLbl] e1r = event.remote1;
+//			Event$1[ninfoLbl] nremote1 = declassify(e1r, {P→;P←} to {P←});
+//			Date[event.timeLbl] e1s = event.startTime;
+//			Date[event.timeLbl] e1e = event.endTime;
+//			Date[ntimeLbl] nstartTime = declassify(e1s, {P→;P←} to {P←});
+//			Date[ntimeLbl] nendTime = declassify(e1e, {P→;P←} to {P←});
+//			
+//			final int nuid_ = endorse(event.uid.uid, {P→;P←;CalServEP→;CalServEP←} to {P→;CalServEP→;P←⊓CalServEP←});
+//			final int nuid = declassify(nuid_, {P→;CalServEP→;P←⊓CalServEP←} to {P←;CalServEP→;CalServEP←});
+//
+//			final Event e_ = new Event[{P←}](nuid, ntimeLbl, ninfoLbl, nstartTime, nendTime, nremote1);
+//
+//			final Event[{P←}]{P←} e = declassify(e_, {P→;P←} to {P←});
+//			return e;
+          return null;
+          // TODO
       }
               
       

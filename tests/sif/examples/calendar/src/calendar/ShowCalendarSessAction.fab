@@ -66,22 +66,33 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
    {
         if (req == null || uservlet == null || ustate == null || currentUser == null ||
                 !(uservlet instanceof Main) || 
-                !(ustate instanceof CalendarSessionState)) 
+                !(ustate instanceof CalendarSessionState[{*lbl;session!:}])) 
             throw new ServletException("invalid args");
 
         final Main servlet = (Main)uservlet;
-        final CalendarSessionState state = (CalendarSessionState)ustate;
+        final CalendarSessionState[{*lbl;session!:}] state = (CalendarSessionState[{*lbl;session!:}])ustate;
+        if(state == null || state.css == null) throw new ServletException("invalid args");
+        
 
         if (lbl <= new label {currentUser:;currentUser!:}) {
             if (state.sessionPrincipal equiv session)  {// always true
-                final State s = state.state;
+                final State s = state.css.state;
                 if (s != null) {
                     if (currentUser equiv s.currentUser && CalRootEP actsfor currentUser) {
                         declassify ({currentUser:;currentUser!:} to {currentUser!:}) {
+                            final User userArg = User.declassifyUser(
+                                    declassify(currentUser, {currentUser:;currentUser!:} to {currentUser!:}),
+                                    CalServEP,
+                                    declassify(currentUser, {currentUser:;currentUser!:} to {currentUser!:}));
+                            final State sArg = CalServDeclassifier.declassifyState(declassify(currentUser, {currentUser:;currentUser!:} to {currentUser!:}), s); 
+                            if(sArg != null && currentUser equiv userArg && userArg equiv sArg.currentUser) {
+                                declassify ({currentUser:;currentUser!:} to {currentUser!:}) {
                             produceView(declassify(req, {currentUser:;currentUser!:} to {currentUser!:}), 
                                         declassify(servlet, {currentUser:;currentUser!:} to {currentUser!:}), 
-                                        declassify(s, {currentUser:;currentUser!:} to {currentUser!:}),
-                                        declassify(currentUser, {currentUser:;currentUser!:} to {currentUser!:}));
+                                        sArg,
+                                        userArg);
+                            }
+                            }
                         }
                     }
                 }
@@ -89,10 +100,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
         }
         else {
             String lblString = null;
-            try {
-                lblString = LabelUtil.singleton().toString(lbl);
-            }
-            catch (NullPointerException imposs) { }            
+            lblString = LabelUtil.toString(lbl);
             throw new ServletException("ShowCalendarSessAction.invokeSessImpl: lbl is too high: " + lblString);
         }
     }
@@ -104,7 +112,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
      */
     protected void produceView{cu!:}(Request[CalServEP]{cu!:} req,
                                       Main{cu!:} servlet,
-                                      State{cu!:} state,
+                                      State[{cu!:}]{cu!:} state,
                                       User[CalServEP, {cu!:}]{cu!:} cu)  
         where session equiv req.session, 
               cu equiv state.currentUser,
@@ -113,7 +121,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
               caller(session),
               authority(CalServEP)
     {
-        List selectDispUser = new ArrayList();
+        fabricated.util.List[{CalServEP→;CalServEP←}] selectDispUser = new fabricated.util.LinkedList[{CalServEP→;CalServEP←}]();
         SelectUsersAction[CalServEP] changeUser =
             new SelectUsersAction[CalServEP](true, servlet, session, cu, 
                                   new SelectDisplayUser(servlet, session, this, selectDispUser),
@@ -240,7 +248,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
          monthView{cu!:}(Request[CalServEP]{cu!:} req,
                    Main{cu!:} servlet,
                    User[CalServEP, {cu!:}]{cu!:} cu,
-                   State{cu!:} state,
+                   State[{cu!:}]{cu!:} state,
                    Node[{cu!:},{cu!:}]{cu!:} prevMonthLink,
                    Node[{cu!:},{cu!:}]{cu!:} nextMonthLink) 
          where req.session equiv session,
@@ -410,7 +418,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
             catch (ClassCastException impossible) { }
             
             final Event e = ev2;
-            if (e != null && e.remote1 != null && e.timeLbl <= e.infoLbl && e.infoLbl <= calRootLbl) {
+            if (e != null && e.uid != null && e.remote1 != null && e.timeLbl <= e.infoLbl && e.infoLbl <= calRootLbl) {
                 // always true
                 Date eStartTime = e.startTime;
                 if (eStartTime == null) continue;
@@ -420,7 +428,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
                 if (e.infoLbl <= cuLbl) {
                     // editable
                     Map[{*cuLbl; CalServEP:;CalServEP!:}, {*cuLbl; CalServEP:;CalServEP!:}] eventIDmap = new HashMap();
-                    String{*cuLbl} s = Integer.toString(CalServDeclassifier.transfer(CalServEP, cu, e.uid));
+                    String{*cuLbl} s = Integer.toString(CalServDeclassifier.transfer(CalServEP, cu, e.uid.uid));
                     eventIDmap.put(eventIDInput.getName(), new JifString(s));
                     Node m = servlet.createRequest(cuLbl, cuLbl, editEventAction, eventIDmap, cuLbl, cuLbl, new Text(e.remote1.name));
                     n = new NodeList(cuLbl,cuLbl,m);
@@ -429,7 +437,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
                 else if (e.infoLbl <= rdCU) {
                     // viewable
 		    Map[{*rdCU; CalServEP:;CalServEP!:}, {*rdCU; CalServEP:;CalServEP!:}] eventIDmap = new HashMap();
-                    String s = Integer.toString(CalServDeclassifier.transfer(CalServEP, cu, e.uid));
+                    String s = Integer.toString(CalServDeclassifier.transfer(CalServEP, cu, e.uid.uid));
                     eventIDmap.put(eventIDInput.getName(), new JifString(s));
                     n = servlet.createRequest(rdCU, cuLbl, editEventAction, eventIDmap, rdCU, cuLbl, new Text(e.remote1.name));                    
                 }
@@ -456,7 +464,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
     weekView{cu!:}(Request[CalServEP]{cu!:} req,
               Main{cu!:} servlet,
               User[CalServEP, {cu!:}]{cu!:} cu,
-              State{cu!:} state,
+              State[{cu!:}]{cu!:} state,
               Node[{cu!:},{cu!:}]{cu!:} prevWeekLink,
               Node[{cu!:},{cu!:}]{cu!:} nextWeekLink) 
     where req.session equiv session,
@@ -532,7 +540,7 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
     dayView{cu!:}(Request[CalServEP]{cu!:} req,
               Main{cu!:} servlet,
               User[CalServEP, {cu!:}]{cu!:} cu,
-              State{cu!:} state,
+              State[{cu!:}]{cu!:} state,
               Node[{cu!:},{cu!:}]{cu!:} prevDayLink,
               Node[{cu!:},{cu!:}]{cu!:} nextDayLink) 
     where req.session equiv session,
@@ -604,14 +612,15 @@ class ChangeDisplayDateAction extends USessAction[CalServEP] {
           {
         if (req == null || uservlet == null || ustate == null || 
                 !(uservlet instanceof Main) || 
-                !(ustate instanceof CalendarSessionState)) 
+                !(ustate instanceof CalendarSessionState[{*lbl;session!:}])) 
             throw new ServletException("invalid args");
 
         final Main{*lbl} servlet = (Main)uservlet;
-        final CalendarSessionState state = (CalendarSessionState)ustate;
+        final CalendarSessionState[{*lbl;session!:}] state = (CalendarSessionState[{*lbl;session!:}])ustate;
+        if (state == null || state.css == null) throw new ServletException("invalid args");
         final label pubLbl = new label {currentUser!:}; 
         if (lbl equiv pubLbl) {            
-            final ShowCalendarSessAction scsa = state.scsa;
+            final ShowCalendarSessAction scsa = state.css.scsa;
             ServletException{*lbl;session!:} ex = null;
             if (scsa != null && session equiv scsa.session && scsa.displayDateInput != null &&
                     scsa.displayDateInput.inputLbl <= pubLbl && scsa.displayKindInput != null &&
@@ -619,7 +628,7 @@ class ChangeDisplayDateAction extends USessAction[CalServEP] {
                 String displayDate = req.getParam(scsa.displayDateInput);
                 String displayKind = req.getParam(scsa.displayKindInput);
                 
-                final State s = state.state;
+                final State s = state.css.state;
                 if (s != null && s.currentUser equiv currentUser && state.sessionPrincipal equiv session) {
                     int dk = s.displayKind;
                     if (displayKind != null && displayKind.length() > 0) {
@@ -674,16 +683,13 @@ class ChangeDisplayDateAction extends USessAction[CalServEP] {
         }
         else {
             String lblString = null;
-            try {
-                lblString = LabelUtil.singleton().toString(lbl);
-            }
-            catch (NullPointerException imposs) { }            
+            lblString = LabelUtil.toString(lbl);
             throw new ServletException("ChangeDisplayDateAction.invokeSessImpl: lbl too high " + lblString);
         }
     }
     // DOWNGRADE REASON: Need to get {p!:} down to {session!:} in order to update the display date, &&&ACCESS CONTROL
     static void updateStateDate{p:;p!:}(CalendarSessionState[{p:;p!:}]{p:;p!:} sessState, 
-            State{p:;p!:} state, 
+            State[{p:;p!:}]{p:;p!:} state, 
             Date[{p:;p!:}]{p:;p!:} displayDate, 
             int{p:;p!:} displayKind, 
             principal{p:;p!:} p,
@@ -692,12 +698,15 @@ class ChangeDisplayDateAction extends USessAction[CalServEP] {
     caller(session), session actsfor p, endorse({p:;session!:}) 
     {
         declassify ({p:;session!:} to {session!:}) {
-            final CalendarSessionState ss = declassify(endorse(sessState, {p:;session!:}), {session!:});
+            final CalendarSessionState ss1 = CalendarSessionState.declassifyState(p, sessState);
+            final CalendarSessionState ss = CalendarSessionState.endorseState(
+                    declassify(p, {p→;p←} to {p←}), declassify(session, {p→;p←} to {p←}), ss1);
+            if (ss == null || ss.css == null) return;
             final principal sess = declassify (endorse(session, {p:;p!:} to {p:;session!:}), {session!:});
             int displayKindD = declassify (endorse(displayKind, {p:;p!:} to {p:;session!:}), {session!:});
             Date ddate = null;
             try {
-                String dateStr = displayDate==null?null:DateUtil.dateToString(displayDate, false);
+                String dateStr = displayDate==null?null:DateUtil.dateToString(new label {p:;p!:}, displayDate, false);
                 ddate = Date.valueOf(new label {p!:}, declassify(dateStr, {p!:}));
             }
             catch (IllegalArgumentException ignore) { }
@@ -705,12 +714,13 @@ class ChangeDisplayDateAction extends USessAction[CalServEP] {
                 State newS = null;
             
                 if (displayKindD < 0) {
-                    newS = state==null?null:state.changeDisplayDate(ddate);
+                    newS = state==null?null:state.changeDisplayDate(new label {p:;p!:}, ddate);
                 }
                 else {
-                    newS = state==null?null:state.changeDisplayDate(ddate, displayKindD);                    
+                    newS = state==null?null:state.changeDisplayDate(new label {p:;p!:}, ddate, displayKindD);                    
                 }
-                ss.state = declassify(endorse(newS, {p:;p!:} to {p:;session!:}), {session!:}); 
+                ss.css.state = CalServDeclassifier.declassifyState(newS, p, session);
+//                ss.state = declassify(endorse(newS, {p:;p!:} to {p:;session!:}), {session!:}); 
             }
         }
     }    
@@ -739,15 +749,17 @@ class EditEventAction extends USessAction[CalServEP] {
           {
         if (req == null || uservlet == null || ustate == null || 
                 !(uservlet instanceof Main) || 
-                !(ustate instanceof CalendarSessionState)) 
+                !(ustate instanceof CalendarSessionState[{*lbl;session!:}])) 
             throw new ServletException("invalid args");
 
         final Main{*lbl} servlet = (Main)uservlet;
-        final CalendarSessionState state = (CalendarSessionState)ustate;
+        final CalendarSessionState[{*lbl;session!:}] state = (CalendarSessionState[{*lbl;session!:}])ustate;
+        
+        if (state == null || state.css == null) throw new ServletException("invalid args");
         final label pubLbl = new label {currentUser!:}; 
         final label cuLbl = new label {currentUser:;currentUser!:}; 
         if (lbl equiv cuLbl) {            
-            final ShowCalendarSessAction scsa = state.scsa;
+            final ShowCalendarSessAction scsa = state.css.scsa;
             ServletException{*lbl;session!:} ex = null;
             if (scsa != null && session equiv scsa.session && state.sessionPrincipal equiv session && scsa.eventIDInput != null &&
                     scsa.eventIDInput.inputLbl <= cuLbl) {
@@ -788,11 +800,8 @@ class EditEventAction extends USessAction[CalServEP] {
         else {
             String lblString = null;
             String cuLblString = null;
-            try {
-                lblString = LabelUtil.singleton().toString(lbl);
-                cuLblString = LabelUtil.singleton().toString(cuLbl);
-            }
-            catch (NullPointerException imposs) { }            
+            lblString = LabelUtil.toString(lbl);
+            cuLblString = LabelUtil.toString(cuLbl);
             throw new ServletException("EditEventAction.invokeSessImpl: lbl too high " + lblString + " and cuLbl is " + cuLblString);
         }
     }
@@ -807,7 +816,7 @@ class SelectDisplayUser extends USessAction[CalServEP] authority(CalServEP) {
     /**
      * A list of User, that should contain only a single element.
      */
-    private final List[{CalServEP:;CalServEP!:}]{this} selectedUser;
+    private final fabricated.util.List[{CalServEP:;CalServEP!:}]{this} selectedUser;
     
     /**
      * The show calendar session action that invoked this action.
@@ -815,7 +824,7 @@ class SelectDisplayUser extends USessAction[CalServEP] authority(CalServEP) {
     private final ShowCalendarSessAction{this} showCal;
     
     public SelectDisplayUser(Main{this} servlet, principal{this} session,
-            ShowCalendarSessAction{this} showCal, List[{CalServEP:;CalServEP!:}]{this} selectedUser) {
+            ShowCalendarSessAction{this} showCal, fabricated.util.List[{CalServEP:;CalServEP!:}]{this} selectedUser) {
         this.showCal = showCal;
         this.selectedUser = selectedUser;
         super(servlet, session);
@@ -836,15 +845,16 @@ class SelectDisplayUser extends USessAction[CalServEP] authority(CalServEP) {
     {
         if (req == null || uservlet == null || ustate == null || 
                 !(uservlet instanceof Main) || 
-                !(ustate instanceof CalendarSessionState)) 
+                !(ustate instanceof CalendarSessionState[{*lbl;session!:}])) 
             throw new ServletException("invalid args");
 
         final Main servlet = (Main)uservlet;
-        final CalendarSessionState state = (CalendarSessionState)ustate;
+        final CalendarSessionState[{*lbl;session!:}] state = (CalendarSessionState[{*lbl;session!:}])ustate;
+        if (state == null || state.css == null) throw new ServletException("invalid args");
         if (lbl <= new label {currentUser!:} && state.sessionPrincipal equiv session) {
             if (showCal == null) throw new ServletException("null showCal");            
             if (selectedUser != null) {
-                final State s = state.state;
+                final State s = state.css.state;
                 if (s != null && s.currentUser equiv currentUser) {
                     User du = null;
                     try {
@@ -873,31 +883,30 @@ class SelectDisplayUser extends USessAction[CalServEP] authority(CalServEP) {
         }
         else {
             String lblString = null;
-            try {
-                lblString = LabelUtil.singleton().toString(lbl);
-            }
-            catch (NullPointerException imposs) { }            
+            lblString = LabelUtil.toString(lbl);
             throw new ServletException("SelectDisplayUser.invokeSessImpl: lbl too high " + lblString);
         }
     }      
     
     // DOWNGRADE REASON: Need to get down to {session!: meet calcervep!:} in order to update the display user, i.e. hand over from CalServEP, and 
     //  also currUser (=p) is ok with making the display user public &&&ACCESS CONTROL
-    private void updateStateUser{p!:}(CalendarSessionState{p!:} sessState, 
-                                     State{p!:} state, 
+    private void updateStateUser{p!:}(CalendarSessionState[{p!:}]{p!:} sessState, 
+                                     State[{p!:}]{p!:} state, 
                                      User[CalServEP, {p!:;CalServEP:;CalServEP!:}]{p!:;CalServEP:;CalServEP!:} displayUser, 
                                      principal{p!:} p)
       where session equiv sessState.sessionPrincipal,
             caller(session, CalServEP), session actsfor p, endorse({session!: meet CalServEP!:}) 
     {
 
-        final CalendarSessionState ss = endorse(sessState, {session!: meet CalServEP!:});
-        if (ss != null && ss.sessionPrincipal equiv session) {
-            User du1 = endorse(displayUser, {CalServEP:;p!: meet CalServEP!:});
-            User du2 = declassify(du1, {p!: meet CalServEP!:});
+//        final CalendarSessionState ss = endorse(sessState, {session!: meet CalServEP!:});
+        final CalendarSessionState[{session←}]{session←} ss = CalendarSessionState.endorseState(p, session, sessState);
+        if (ss != null && ss.css != null && ss.sessionPrincipal equiv session) {
+//            User du1 = endorse(displayUser, {CalServEP:;p!: meet CalServEP!:});
+//            User du2 = declassify(du1, {p!: meet CalServEP!:});
+            User du2 = User.handOverUserConf(p, CalServEP, displayUser);
 
-            State newS = state==null?null:state.changeDisplayUser(du2); 
-            ss.state = endorse(newS, {p!:} to {session!:}); 
+            State newS = state==null?null:state.changeDisplayUser(new label {p!:}, du2); 
+            ss.css.state = CalServDeclassifier.endorseState(p, session, newS);
         }
     }    
 }
@@ -931,11 +940,11 @@ class CreateEvent extends USessAction[CalServEP]
     {
         if (req == null || uservlet == null || ustate == null || 
                 !(uservlet instanceof Main) || 
-                !(ustate instanceof CalendarSessionState)) 
+                !(ustate instanceof CalendarSessionState[{*lbl;session!:}])) 
             throw new ServletException("invalid args");
 
         final Main servlet = (Main)uservlet;
-        final CalendarSessionState state = (CalendarSessionState)ustate;
+        final CalendarSessionState[{*lbl;session!:}] state = (CalendarSessionState[{*lbl;session!:}])ustate;
         ServletException{*lbl;session!:} ex = null;
         
         if (lbl equiv new label {currentUser!:} && servlet != null && state != null) {
@@ -944,6 +953,7 @@ class CreateEvent extends USessAction[CalServEP]
                                     session, 
                                     new FinishEditingEvent(showCalAction),
                                     showCalAction,
+                                    new label {currentUser←},
                                     servlet.defaultEvent(currentUser),
                                     false,
                                     true);   
@@ -972,7 +982,7 @@ class CreateEvent extends USessAction[CalServEP]
  * has been updated, and then redirecting to the Show Calendar Session Action
  * that invoked the create/edit. 
  */
-class FinishEditingEvent implements FinishEditEventReceiver {
+class FinishEditingEvent extends java.lang.Object implements FinishEditEventReceiver {
     private final ShowCalendarSessAction{this} showCalSessAction;    
     public FinishEditingEvent(ShowCalendarSessAction{this} showCalSessAction) {
         this.showCalSessAction = showCalSessAction;
@@ -981,17 +991,17 @@ class FinishEditingEvent implements FinishEditEventReceiver {
     public void receiveEvent{*lbl}(label{*lbl} lbl,
             Request[CalServEP]{*lbl} req,
             Main{*lbl} servlet,
-            CalendarSessionState{*lbl} state,
+            CalendarSessionState[lbl]{*lbl} state,
             User[CalServEP, lbl]{*lbl} currentUser,
-            Event{currentUser:;currentUser!:} origEvent, 
-            Event{currentUser:;currentUser!:} editedEvent) 
+            Event[{currentUser:;currentUser!:}]{currentUser:;currentUser!:} origEvent, 
+            Event[{currentUser:;currentUser!:}]{currentUser:;currentUser!:} editedEvent) 
      throws (ServletException{*lbl;req.session!:})
         where req.session equiv state.sessionPrincipal,
               req.session actsfor currentUser,              
               lbl <= {currentUser:; currentUser!:},
               caller(req.session) {
          
-         if (req == null || servlet == null || state == null) 
+         if (req == null || servlet == null || state == null || state.css == null) 
              throw new ServletException("invalid args");
 
          // update the event in the calendar database.
@@ -1002,7 +1012,7 @@ class FinishEditingEvent implements FinishEditEventReceiver {
              // the user just edited the event, so we should have
              // editedEvent.timeLbl <= {currentUser:; currentUser!:}
              if (editedEvent.timeLbl <= new label {currentUser:; currentUser!:}) {
-                 final State s = state.state;
+                 final State s = state.css.state;
                  if (s != null && s.currentUser equiv currentUser && state.sessionPrincipal equiv req.session) {
                      ChangeDisplayDateAction.updateStateDate(state, s, editedEvent.startTime, -1, currentUser, state.sessionPrincipal);
                  }
@@ -1013,7 +1023,7 @@ class FinishEditingEvent implements FinishEditEventReceiver {
          ServletException{*lbl;req.session!:} ex = null;
          if (showCalSessAction != null) {
              if (req.session equiv showCalSessAction.session) {
-                 State s = state.state;
+                 State s = state.css.state;
                  if (s != null) {
                      try {
                          showCalSessAction.invokeSessImpl(lbl, req, servlet, state, currentUser);
