@@ -179,19 +179,15 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
         Node{*pubLbl} view = null;
         String title = "";
         
-        switch (displayKind) {
-        case ShowCalendarSessAction$1.DISPLAY_KIND_MONTH:
+        if (displayKind == ShowCalendarSessAction$1.DISPLAY_KIND_MONTH) {
             view = monthView(req, servlet, cu, state, prevDisplayLink, nextDisplayLink);
             title = displayDate.getMonthName() + " " + displayDate.getYear();
-            break;
-        case ShowCalendarSessAction$1.DISPLAY_KIND_WEEK:
+        } else if (displayKind ==  ShowCalendarSessAction$1.DISPLAY_KIND_WEEK) {
             view = weekView(req, servlet, cu, state, prevDisplayLink, nextDisplayLink);
             title = displayDate.getMonthName() + " " + displayDate.getYear();
-            break;
-        case ShowCalendarSessAction$1.DISPLAY_KIND_DAY:
+        } else if (displayKind == ShowCalendarSessAction$1.DISPLAY_KIND_DAY) {
             view = dayView(req, servlet, cu, state, prevDisplayLink, nextDisplayLink);
             title = displayDate.getDay() + " " + displayDate.getMonthName() + " " + displayDate.getYear();
-            break;
         }
         
         view = new Div("calendarView", rdCU, pubLbl, view);
