@@ -1,5 +1,7 @@
 package fabric.extension;
 
+import java.util.List;
+
 import jif.ast.JifUtil;
 import jif.types.JifContext;
 import fabric.ast.FabricUtil;
@@ -8,6 +10,7 @@ import polyglot.ast.Expr;
 import polyglot.ast.JL_c;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
+import polyglot.types.TypeSystem;
 import polyglot.visit.AmbiguityRemover;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
@@ -24,6 +27,19 @@ public class FabricNewDel extends JL_c {
     }
     return n;
   }
+  
+  @Override
+  public List throwTypes(TypeSystem ts) {
+    List toReturn = super.throwTypes(ts);
+    Node n = this.node();
+    NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
+    if(ext.location() != null) {
+      Expr loc = ext.location();
+      toReturn.addAll(loc.del().throwTypes(ts));
+    }
+    return toReturn;
+  }
+  
   
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
