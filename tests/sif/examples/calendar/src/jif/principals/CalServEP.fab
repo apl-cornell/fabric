@@ -1,5 +1,7 @@
 package jif.principals;
 
+import fabric.client.Core;
+
 public class CalServEP extends ExternalPrincipal {
     public CalServEP() {
 	super("calendar.CalServEP");
@@ -12,4 +14,12 @@ public class CalServEP extends ExternalPrincipal {
 	}
 	return P;
     }
+    
+    public static fabric.lang.Principal{*!:} getInstance{*!:}(Core core) {
+        if (P == null) {
+            P = new CalServEP@core();
+        }
+        return P;
+    }
+    
 }

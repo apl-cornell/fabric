@@ -87,10 +87,13 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
                             final State sArg = CalServDeclassifier.declassifyState(declassify(currentUser, {currentUser:;currentUser!:} to {currentUser!:}), s); 
                             if(sArg != null && currentUser equiv userArg && userArg equiv sArg.currentUser) {
                                 declassify ({currentUser:;currentUser!:} to {currentUser!:}) {
+                                    final Main servletArg = declassify(servlet, {currentUser:;currentUser!:} to {currentUser!:});
+                                    if (servletArg.localCore equiv CalServEP) {
                             produceView(declassify(req, {currentUser:;currentUser!:} to {currentUser!:}), 
-                                        declassify(servlet, {currentUser:;currentUser!:} to {currentUser!:}), 
+                                        servletArg, 
                                         sArg,
                                         userArg);
+                                    }
                             }
                             }
                         }
@@ -119,9 +122,13 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
               req.session actsfor cu,              
               CalRootEP actsfor cu,
               caller(session),
-              authority(CalServEP)
+              authority(CalServEP),
+              servlet.localCore equiv CalServEP
     {
-        fabricated.util.List[{CalServEP→;CalServEP←}] selectDispUser = new fabricated.util.LinkedList[{CalServEP→;CalServEP←}]();
+        if (req == null || servlet == null || state == null || servlet.localCore == null) return;
+
+        fabricated.util.List[{CalServEP→;CalServEP←}] selectDispUser = 
+            new fabricated.util.LinkedList[{CalServEP→;CalServEP←}]@servlet.localCore();
         SelectUsersAction[CalServEP] changeUser =
             new SelectUsersAction[CalServEP](true, servlet, session, cu, 
                                   new SelectDisplayUser(servlet, session, this, selectDispUser),
@@ -129,8 +136,6 @@ public class ShowCalendarSessAction extends USessAction[CalServEP] authority(Cal
             "Select user and we will magically display their calendar.",
             new label {cu!:});
 
-        if (req == null || servlet == null || state == null) return;
-        if (state == null) return;
         
         User displayUser = state.displayUser;
         if (displayUser == null || cu == null) return;

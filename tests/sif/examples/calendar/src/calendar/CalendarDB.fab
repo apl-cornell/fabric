@@ -26,19 +26,19 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	private Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} events;
 
 	// TODO XXX : Establish relations between coreClient, client and CalServEP
-	private final Core{CalServEP:;CalServEP!:} backend;
+	final Core{CalServEP:;CalServEP!:} backend;
 	private final RemoteClient{CalServEP:;CalServEP!:} coreClient;
 	final Core{CalServEP:;CalServEP!:} localCore;
 
-	public CalendarDB{CalServEP:;CalServEP!:}(Core{CalServEP:;CalServEP!:} core) {
-		backend = core;
+	public CalendarDB{CalServEP:;CalServEP!:}(Core{CalServEP:;CalServEP!:} localCore,
+	        Core{CalServEP:;CalServEP!:} remoteCore) {
+		backend = remoteCore;
+		this.localCore = localCore;
 		FabricClient local = FabricClient.getClient();
 		if(local != null && backend != null) {
 		    coreClient = local.getClient(backend.name());
-		    localCore = local.getLocalCore();
 		} else {
 		    coreClient = null;
-		    localCore = null;
 		}
 		// fabric init stuff here
 	}
@@ -102,8 +102,10 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	}
 	
 
-	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID_} 
-	    lookupUserIDRemote{CalServEP:; CalServEP!:;client$→;client$←}(String{client$→;client$←} userID_) : {client$→;client$←}
+	public User[CalServEP, {CalServEP→;CalServEP←}]{client$→;client$←} 
+	    lookupUserIDRemote{client$→;client$←}(
+	            String{client$→;client$←} userID_) : {client$→;client$←}
+	    where CalServEP equiv client$
 	{
 		User[CalServEP, {CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}[] users = this.users;
 		if (users == null || userID_ == null) return null;

@@ -9,20 +9,24 @@ import sif.html.Page;
 import javax.servlet.ServletException;
 
 public final class Main extends UServlet[CalServEP] authority (CalServEP) {
-	final private CalendarDB{⊥→⊥;⊤←⊤} cal;
+//	final CalendarDB{⊥→⊥;⊤←⊤} cal;
+    final CalendarDB{this} cal;
+	final Core{this} localCore;
 	
 	final static String{CalServEP→;CalServEP←} coreName = "calendar";
 
 	public Main{CalServEP→;CalServEP←}() {
 	    FabricClient cl = FabricClient.getClient();
 	    CalendarDB local = null;
+	    Core lCore = null;
 	    if(cl != null) {
-	        final Core c = cl.getLocalCore();
+	        lCore = cl.getLocalCore();
 	        final Core remote = cl.getCore(coreName);
-	        if(c equiv CalServEP) {
-	            local =  new CalendarDB@c(remote);
+	        if(localCore equiv CalServEP) {
+	            local =  new CalendarDB@localCore(localCore, remote);
 	        } 
-	    }
+	    } 
+	    localCore = lCore;
 	    cal = local;
 		super();
 	}
@@ -79,19 +83,27 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 	Event[{currUser!:}]{currUser!:} defaultEvent{currUser!:}(User[CalServEP, {currUser!:}]{currUser!:} currUser) 
 	where authority(CalServEP),
 	caller(currUser) {
-		Date[{*!:}] now = new Date[{*!:}]();
+//        try {
+	    
+	    if (localCore == null) return null;
+	    if(localCore actsfor currUser && localCore equiv CalServEP) {
+		Date[{currUser!:}] now = new Date[{currUser!:}]@localCore();
 		int uid = this.getFreshUid(currUser);
 
-		return new Event[{currUser!:}](uid, 
+		return new Event[{currUser!:}]@localCore(uid, 
 				new label {currUser!:}, 
 				new label {currUser:;currUser!:}, // default info label only readable by currUser
 				now,
 				now,
 				"",
 				"",
-				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}](),
-				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}](),
+				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}]@localCore(),
+				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}]@localCore(),
 				currUser);
+	    } else {
+	        return null;
+	    }
+//	    } catch (NullPointerException ex) { return null; }
 	}
 
 	void updateEventInCalendar{p→;p←}(principal{p→;p←} p, Request[CalServEP]{p→;p←} req, Event[{p→;p←}]{p→;p←} ueicEvent) 
@@ -150,6 +162,8 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 //					);
 //				final Event e2 = declassify(e2_, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
 				
+			    // TODO handOverEvent will also take a core as an argument and move the event from
+			    // localCore to this core
 				Event e2 = CalServDeclassifier.handOverEvent(p, CalServEP, ueicEvent);
 				cal.updateEvent(e2);
 			}
@@ -179,14 +193,16 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 	Event[{p←}]{p←} sanitizeEvent{p←}(principal{p←} p, Event[{p←}]{p←} e)
 	    where {p←} <= e.infoLbl 
 	{
-		if (e == null || cal == null || e.remote1 == null || e.uid == null) {
+		if (e == null || cal == null || e.remote1 == null || e.uid == null || localCore == null) {
 			return e;
 		}
 		String name = cal.escapeString(e.remote1.name);
 		String note = cal.escapeString(e.remote1.note);
 
+//		try {
+		if (localCore actsfor p) {
 		// need to construct a new event...
-		return new Event[{p←}](e.uid.uid,
+		return new Event[{p←}]@localCore(e.uid.uid,
 				e.timeLbl,
 				e.infoLbl,
 				e.startTime,
@@ -196,6 +212,10 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 				e.remote1.attendees,
 				e.remote1.viewers,
 				e.remote1.creator);
+		} else {
+		    return null;
+		}
+//		} catch (NullPointerException ex) { return e; }
 	}
 
 	/**
