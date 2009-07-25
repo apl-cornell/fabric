@@ -167,7 +167,7 @@ public final class TransactionManager {
         logger.finest(current + " got abort signal");
         // Abort the transaction.
         // TODO Provide a reason for the abort.
-        throw new AbortException();
+        throw new RetryException();
       }
     }
   }
