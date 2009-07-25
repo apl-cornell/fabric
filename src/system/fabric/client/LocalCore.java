@@ -174,12 +174,14 @@ public final class LocalCore implements Core {
     return 0;
   }
 
-  public void notifyEvict(long onum) {
+  public boolean notifyEvict(long onum) {
     // nothing to do
+    return false;
   }
 
-  public void evict(long onum) {
+  public boolean evict(long onum) {
     // nothing to do
+    return false;
   }
 
   public void cache(_Impl impl) {

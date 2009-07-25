@@ -306,10 +306,16 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
 
   public ObjectUpdateMessage.Response handle(
       ObjectUpdateMessage objectUpdateMessage) {
-    RemoteCore core = client.getCore(objectUpdateMessage.core);
-    boolean response =
-        client.updateDissemCaches(core, objectUpdateMessage.onum,
-            objectUpdateMessage.update);
+    boolean response;
+    if (objectUpdateMessage.group == null) {
+      RemoteCore core = client.getCore(objectUpdateMessage.core);
+      response =
+          client.updateDissemCaches(core, objectUpdateMessage.onum,
+              objectUpdateMessage.glob);
+    } else {
+      RemoteCore core = client.getCore(session.remoteNodeName);
+      response = client.updateCache(core, objectUpdateMessage.group);
+    }
 
     return new ObjectUpdateMessage.Response(response);
   }

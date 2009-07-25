@@ -29,11 +29,12 @@ import fabric.common.*;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
+import fabric.common.util.LongKeyMap;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.Cache;
-import fabric.lang.Object;
 import fabric.lang.NodePrincipal;
+import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
 
@@ -308,14 +309,14 @@ public final class Client {
   public FetchManager fetchManager() {
     return fetchManager;
   }
-  
+
   /**
    * Registers that a client has a new dissemination cache.
    */
   public void registerDisseminationCache(Cache cache) {
     this.disseminationCaches.add(cache);
   }
-  
+
   /**
    * Updates the dissemination caches with the given object glob.
    * 
@@ -323,11 +324,29 @@ public final class Client {
    */
   public boolean updateDissemCaches(RemoteCore core, long onum, Glob update) {
     boolean result = false;
-    
+
     for (Cache cache : disseminationCaches) {
       result |= cache.updateEntry(core, onum, update);
     }
-    
+
+    return result;
+  }
+
+  /**
+   * Updates the client cache with the given object group.
+   * 
+   * @return true iff there was a cache entry for any object in the group.
+   */
+  public boolean updateCache(RemoteCore core, ObjectGroup group) {
+    boolean result = false;
+    for (Iterator<LongKeyMap.Entry<SerializedObject>> it =
+        group.objects().entrySet().iterator(); it.hasNext();) {
+      LongKeyMap.Entry<SerializedObject> entry = it.next();
+      long onum = entry.getKey();
+      SerializedObject update = entry.getValue();
+      result |= core.updateCache(onum, update);
+    }
+
     return result;
   }
 

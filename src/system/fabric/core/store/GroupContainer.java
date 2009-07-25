@@ -12,11 +12,12 @@ import fabric.dissemination.Glob;
 import fabric.lang.NodePrincipal;
 
 /**
- * Abstracts groups and globs.
+ * Abstracts groups and globs.  This class is thread-safe.
  */
 public final class GroupContainer {
   private final Core core;
   private final long labelOnum;
+  private final PrivateKey signingKey;
 
   private ObjectGroup group;
   private Glob glob;
@@ -26,8 +27,9 @@ public final class GroupContainer {
    */
   public final LongSet onums;
 
-  public GroupContainer(Core core, ObjectGroup group) {
+  public GroupContainer(Core core, PrivateKey signingKey, ObjectGroup group) {
     this.core = core;
+    this.signingKey = signingKey;
     this.group = group;
     this.glob = null;
     
@@ -62,11 +64,11 @@ public final class GroupContainer {
     return glob.decrypt(core);
   }
 
-  public Glob getGlob(PrivateKey key) {
+  public Glob getGlob() {
     if (glob != null) return glob;
     synchronized (this) {
       if (glob == null) {
-        glob = new Glob(core, group, key);
+        glob = new Glob(core, group, signingKey);
         group = null;
       }
       return glob;

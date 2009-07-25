@@ -8,6 +8,7 @@ import fabric.client.remote.messages.TakeOwnershipMessage;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.TransactionManager;
 import fabric.client.transaction.TransactionRegistry;
+import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.dissemination.Glob;
@@ -154,15 +155,25 @@ public final class RemoteClient extends RemoteNode {
   }
 
   /**
-   * Notifies the client that an object has been updated.
+   * Notifies the dissemination node at the given client that an object has been
+   * updated.
    * 
-   * @param onum
-   * @param glob
-   * @return whether the client is resubscribing to the object.
+   * @return whether the node is resubscribing to the object.
    */
   public boolean notifyObjectUpdate(String core, long onum, Glob glob) {
     ObjectUpdateMessage.Response response =
         new ObjectUpdateMessage(core, onum, glob).send(this);
     return response.resubscribe;
+  }
+  
+  /**
+   * Notifies the client that an object has been updated.
+   * 
+   * @return whether the node is resubscribing to the object.
+   */
+  public boolean notifyObjectUpdate(long onum, ObjectGroup group) {
+    ObjectUpdateMessage.Response response =
+      new ObjectUpdateMessage(onum, group).send(this);
+  return response.resubscribe;
   }
 }

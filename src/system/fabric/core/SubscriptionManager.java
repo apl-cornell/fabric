@@ -6,17 +6,20 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import fabric.client.remote.RemoteClient;
+import fabric.common.FabricThread;
+import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.Pair;
+import fabric.core.store.GroupContainer;
 import fabric.dissemination.Glob;
 
 /**
  * Keeps track of who's subscribed to what object. Handles subscriptions for a
  * single core.
  */
-public class SubscriptionManager extends Thread {
+public class SubscriptionManager extends FabricThread.AbstractImpl {
   /**
    * A set of onums that have been updated, paired with the client that issued
    * the update.
@@ -24,9 +27,11 @@ public class SubscriptionManager extends Thread {
   private final Set<Pair<Long, RemoteClient>> updatedOnums;
 
   /**
-   * The set of clients subscribed to each onum.
+   * The set of nodes subscribed to each onum. The second component of each pair
+   * indicates whether the node is subscribed as a dissemination node. (true =
+   * dissemination, false = client)
    */
-  private final LongKeyCache<Set<RemoteClient>> subscriptions;
+  private final LongKeyCache<Set<Pair<RemoteClient, Boolean>>> subscriptions;
 
   /**
    * The name of the core for which we are managing subscriptions.
@@ -48,7 +53,7 @@ public class SubscriptionManager extends Thread {
     this.core = core;
     this.updatedOnums = new LinkedHashSet<Pair<Long, RemoteClient>>();
     this.tm = tm;
-    this.subscriptions = new LongKeyCache<Set<RemoteClient>>();
+    this.subscriptions = new LongKeyCache<Set<Pair<RemoteClient, Boolean>>>();
 
     start();
   }
@@ -76,7 +81,7 @@ public class SubscriptionManager extends Thread {
       RemoteClient updater = updateEntry.second;
 
       // Get the list of subscribers.
-      Set<RemoteClient> subscribers;
+      Set<Pair<RemoteClient, Boolean>> subscribers;
       synchronized (subscriptions) {
         subscribers = subscriptions.remove(onum);
       }
@@ -84,21 +89,34 @@ public class SubscriptionManager extends Thread {
       if (subscribers == null) continue;
 
       // Get the update.
+      GroupContainer groupContainer;
       Glob glob;
       try {
-        glob = tm.getGlob(onum, null, null);
+        groupContainer =
+            tm.getGroupContainerAndSubscribe(onum, null, false, null);
+        glob = groupContainer.getGlob();
       } catch (AccessException e) {
         throw new InternalError(e);
       }
 
       // Notify subscribers of updates.
-      Set<RemoteClient> newSubscribers = new HashSet<RemoteClient>();
-      for (RemoteClient subscriber : subscribers) {
+      Set<Pair<RemoteClient, Boolean>> newSubscribers =
+          new HashSet<Pair<RemoteClient, Boolean>>();
+      for (Pair<RemoteClient, Boolean> subscriber : subscribers) {
+        RemoteClient node = subscriber.first;
+        boolean isDissem = subscriber.second;
         // No need to notify the client that issued the updates. Just
         // resubscribe the client.
-        boolean resubscribe =
-            subscriber == updater
-                || subscriber.notifyObjectUpdate(core, onum, glob);
+        boolean resubscribe;
+        if (node == updater && !isDissem)
+          resubscribe = true;
+        else if (isDissem)
+          resubscribe = node.notifyObjectUpdate(core, onum, glob);
+        else {
+          ObjectGroup group = groupContainer.getGroup(node.getPrincipal());
+          resubscribe =
+              group != null && node.notifyObjectUpdate(onum, group);
+        }
 
         if (resubscribe) newSubscribers.add(subscriber);
       }
@@ -110,11 +128,12 @@ public class SubscriptionManager extends Thread {
   /**
    * Subscribes the given set of clients to the given onum.
    */
-  private void subscribe(long onum, Set<RemoteClient> newSubscribers) {
+  private void subscribe(long onum,
+      Set<Pair<RemoteClient, Boolean>> newSubscribers) {
     if (newSubscribers.isEmpty()) return;
 
     synchronized (subscriptions) {
-      Set<RemoteClient> subscribers = subscriptions.get(onum);
+      Set<Pair<RemoteClient, Boolean>> subscribers = subscriptions.get(onum);
       if (subscribers == null) {
         subscriptions.put(onum, newSubscribers);
       } else {
@@ -125,16 +144,20 @@ public class SubscriptionManager extends Thread {
 
   /**
    * Subscribes the given client to the given onum.
+   * 
+   * @param dissemSubscribe
+   *          If true, then the given subscriber will be subscribed as a
+   *          dissemination node; otherwise it will be subscribed as a client.
    */
-  public void subscribe(long onum, RemoteClient client) {
+  public void subscribe(long onum, RemoteClient client, boolean dissemSubscribe) {
     synchronized (subscriptions) {
-      Set<RemoteClient> subscribers = subscriptions.get(onum);
+      Set<Pair<RemoteClient, Boolean>> subscribers = subscriptions.get(onum);
       if (subscribers == null) {
-        subscribers = new HashSet<RemoteClient>();
+        subscribers = new HashSet<Pair<RemoteClient, Boolean>>();
         subscriptions.put(onum, subscribers);
       }
 
-      subscribers.add(client);
+      subscribers.add(new Pair<RemoteClient, Boolean>(client, dissemSubscribe));
     }
   }
 

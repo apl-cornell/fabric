@@ -197,7 +197,8 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
     this.numReads++;
 
     ObjectGroup group =
-        session.core.tm.getGroup(session.clientPrincipal, msg.onum, this);
+        session.core.tm.getGroup(session.clientPrincipal, session.remoteNode,
+            msg.onum, this);
     return new ReadMessage.Response(group);
   }
 

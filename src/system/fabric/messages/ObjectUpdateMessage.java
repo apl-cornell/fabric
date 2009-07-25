@@ -7,6 +7,7 @@ import java.security.PublicKey;
 
 import fabric.client.Client;
 import fabric.client.remote.RemoteClient;
+import fabric.common.ObjectGroup;
 import fabric.common.exceptions.BadSignatureException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
@@ -48,13 +49,29 @@ public class ObjectUpdateMessage extends
 
   public final String core;
   public final long onum;
-  public final Glob update;
+  public final Glob glob;
+  public final ObjectGroup group;
 
-  public ObjectUpdateMessage(String core, long onum, Glob update) {
+  private ObjectUpdateMessage(String core, long onum, Glob glob,
+      ObjectGroup group) {
     super(MessageType.OBJECT_UPDATE);
     this.core = core;
     this.onum = onum;
-    this.update = update;
+    this.glob = glob;
+    this.group = group;
+
+    // Exactly one of glob and group needs to be null.
+    if ((glob == null) == (group == null)) {
+      throw new InternalError();
+    }
+  }
+
+  public ObjectUpdateMessage(String core, long onum, Glob update) {
+    this(core, onum, update, null);
+  }
+
+  public ObjectUpdateMessage(long onum, ObjectGroup update) {
+    this(null, onum, null, update);
   }
 
   /**
@@ -64,11 +81,18 @@ public class ObjectUpdateMessage extends
       BadSignatureException {
     super(MessageType.OBJECT_UPDATE);
 
-    this.core = in.readUTF();
     this.onum = in.readLong();
 
-    PublicKey key = Client.getClient().getCore(core).getPublicKey();
-    this.update = new Glob(key, in);
+    if (in.readBoolean()) {
+      this.core = in.readUTF();
+      PublicKey key = Client.getClient().getCore(core).getPublicKey();
+      this.glob = new Glob(key, in);
+      this.group = null;
+    } else {
+      this.core = null;
+      this.glob = null;
+      this.group = new ObjectGroup(in);
+    }
   }
 
   @Override
@@ -78,7 +102,8 @@ public class ObjectUpdateMessage extends
 
   public Response send(RemoteClient client) {
     try {
-      return send(client, false);
+      boolean encrypt = group != null;
+      return send(client, encrypt);
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from client.", e);
     }
@@ -91,9 +116,16 @@ public class ObjectUpdateMessage extends
 
   @Override
   public void write(DataOutput out) throws IOException {
-    out.writeUTF(core);
     out.writeLong(onum);
-    update.write(out);
+
+    if (group == null) {
+      out.writeBoolean(true);
+      out.writeUTF(core);
+      glob.write(out);
+    } else {
+      out.writeBoolean(false);
+      group.write(out);
+    }
   }
 
 }

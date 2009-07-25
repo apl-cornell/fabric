@@ -13,12 +13,12 @@ public interface Core {
    * Returns this core's host name.
    */
   public String name();
-  
+
   /**
    * Returns the NodePrincipal associated with this core.
    */
   public NodePrincipal getPrincipal();
-  
+
   /**
    * Determines whether this is the local core.
    */
@@ -96,20 +96,23 @@ public interface Core {
    * Returns the root map of the Core
    */
   public fabric.util.Map getRoot();
-  
+
   /**
    * Notifies this Core object that an _Impl has been evicted, so that it can
    * perform the necessary cache maintenance.
    * 
    * @param onum
    *          Onum of the object that was evicted.
+   * @return true iff the onum was found in cache.
    */
-  public void notifyEvict(long onum);
+  public boolean notifyEvict(long onum);
 
   /**
    * Evicts the object with the given onum from cache.
+   * 
+   * @return true iff the onum was found in cache.
    */
-  public void evict(long onum);
+  public boolean evict(long onum);
 
   /**
    * Adds the given object to the cache.

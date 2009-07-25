@@ -88,7 +88,7 @@ public class RemoteCore extends RemoteNode implements Core {
    */
   protected RemoteCore(String name, PublicKey key) {
     super(name, true);
-    
+
     this.objects = new LongKeyHashMap<FabricSoftRef>();
     this.fresh_ids = new LinkedList<Long>();
     this.serialized = new LongKeyHashMap<SerializedObjectSoftRef>();
@@ -349,20 +349,46 @@ public class RemoteCore extends RemoteNode implements Core {
   /**
    * Notifies that an object has been evicted from cache.
    */
-  public void notifyEvict(long onum) {
+  public boolean notifyEvict(long onum) {
     synchronized (objects) {
       FabricSoftRef r = objects.get(onum);
 
       if (r != null && r.get() == null) {
         objects.remove(onum);
+        return true;
       }
+
+      return false;
     }
   }
 
-  public void evict(long onum) {
+  public boolean evict(long onum) {
     synchronized (objects) {
       FabricSoftRef r = objects.get(onum);
-      r.evict();
+      if (r == null) return false;
+      return r.evict();
+    }
+  }
+
+  /**
+   * Updates the client's cache of objects that originate from this core. If an
+   * object with the given onum exists in cache, it is evicted and the given
+   * update is placed in the cache of serialized objects. Otherwise, the cache
+   * of serialized objects will only be updated if a pre-existing serialized
+   * object exits for the given onum.
+   * 
+   * @return true iff an _Impl with the given onum was evicted from cache.
+   */
+  boolean updateCache(long onum, SerializedObject update) {
+    synchronized (objects) {
+      synchronized (serialized) {
+        boolean evicted = evict(onum);
+        
+        if (evicted || serialized.containsKey(onum))
+          serialized.put(onum, new SerializedObjectSoftRef(this, update));
+        
+        return evicted;
+      }
     }
   }
 
