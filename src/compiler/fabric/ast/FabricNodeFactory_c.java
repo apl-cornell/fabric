@@ -9,6 +9,7 @@ import fabric.extension.LocatedExt_c;
 import jif.ast.*;
 import polyglot.ast.*;
 import polyglot.types.Flags;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 
 /**
@@ -108,27 +109,40 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
   //////////////////////////////////////////////////////////////////////////////  
 
   public New New(Position pos, TypeNode type, Expr location, List<Expr> args) {
-    New result = super.New(pos, type, args);
+    New result = New(pos, type, args);
     result = (New) setLocation(result, location);
     return result;
   }
 
   public New New(Position pos, TypeNode type, Expr location, List<Expr> args, polyglot.ast.ClassBody body) {
-    New result = super.New(pos, type, args, body);
+    New result = New(pos, type, args, body);
     result = (New) setLocation(result, location);
     return result;
   }
 
   public New New(Position pos, Expr outer, TypeNode objectType, Expr location, List<Expr> args) {
-    New result = super.New(pos, outer, objectType, args);
+    New result = New(pos, outer, objectType, args, null);
     result = (New) setLocation(result, location);
     return result;
   }
+  
+  @Override
+  public New New(Position pos, Expr outer, TypeNode objectType, List args, ClassBody body) {
+    if (body != null) 
+      throw new InternalCompilerError("Fabric does not support inner classes.");
+    if (outer != null)
+      throw new InternalCompilerError("Fabric does not support inner classes.");
+    New n = new FabricNew_c(pos, objectType, args, body);
+    n = (New)n.ext(extFactory().extNew());
+    n = (New)n.del(delFactory().delNew());
+    return n;
+}
+  
 
   public New New(Position pos, Expr outer, TypeNode objectType, Expr location, List<Expr> args, polyglot.ast.ClassBody body) {
-    New result = super.New(pos, outer, objectType, args, body);
-    result = (New) setLocation(result, location);
-    return result;
+    New n = New(pos, outer, objectType, args, body);
+    n = (New) setLocation(n, location);
+    return n;
   }
 
   public FabricArrayInit FabricArrayInit(Position position, List<Expr> elements) {
