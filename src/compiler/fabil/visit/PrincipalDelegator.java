@@ -1,11 +1,9 @@
 package fabil.visit;
 
 import java.util.Collections;
+import java.util.List;
 
-import polyglot.ast.Call;
-import polyglot.ast.Cast;
-import polyglot.ast.Node;
-import polyglot.ast.Receiver;
+import polyglot.ast.*;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
@@ -36,6 +34,7 @@ public class PrincipalDelegator extends NodeVisitor {
     this.delegatingPrincipal = ts.DelegatingPrincipal();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     if (n instanceof New) {
@@ -76,19 +75,19 @@ public class PrincipalDelegator extends NodeVisitor {
               .jifConstructorTranslatedName((ClassType) newCall.objectType()
                   .type());
       if (!call.name().equals(initName)) return super.leave(old, n, v);
-      System.out.println(call.name());
-      System.out.println(initName);
-      System.out.println(newCall);
-      System.out.println(newCall.objectType());
-      System.out.println(old);
-      System.out.println(n);
-      System.out.println("============");
 
-      // Wrap around the Jif initializer call instead.
+      // Wrap around the Jif initializer call instead. We do this by mangling
+      // the rewritten node to preserve any rewriting that may have occurred in
+      // its subtree.
       Call initCall = (Call) n;
-      Call wrapped = (Call) initCall.target();
-      New constCall = (New) wrapped.target();
-      return wrapped.target(initCall.target(constCall));
+      Cast cast = (Cast) initCall.target();
+      Call wrapped = (Call) cast.expr();
+      List<Expr> wrappedArgs = wrapped.arguments();
+      New constructorCall = (New) wrappedArgs.get(0);
+
+      Call newInitCall = initCall.target(constructorCall);
+      List<Expr> newArgs = Collections.singletonList((Expr) newInitCall);
+      return cast.expr((Expr) wrapped.arguments(newArgs));
     }
 
     return super.leave(old, n, v);
