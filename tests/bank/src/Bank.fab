@@ -21,7 +21,7 @@ public class Bank[principal owner] {
    * create and return a new Account, owned by user
    */
   public Account[userActual,owner] createAccount{userActual} (principal{owner<-} userActual) {
-    Account[userActual, owner] result;
+    Account[userActual, owner] result = null;
     try {
       result = new Account[userActual, owner]();
       AccountWrapper[owner] foo = new AccountWrapper[owner](userActual, result);
