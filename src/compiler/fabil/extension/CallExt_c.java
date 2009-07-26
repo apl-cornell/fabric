@@ -80,10 +80,11 @@ public class CallExt_c extends ExprExt_c {
     QQ qq = pr.qq();
 
     // Only rewrite calls to static or private methods of pure Fabric objects.
-    boolean isPureFabric = pr.typeSystem().isPureFabricType(targetType);
     Flags flags = mi.flags();
-    boolean isStaticPureFabric = isPureFabric && flags.isStatic();
-    boolean isPrivatePureFabric = isPureFabric && flags.isPrivate();
+    boolean isStaticPureFabric =
+        flags.isStatic() && pr.typeSystem().isPureFabricType(targetType);
+    boolean isPrivatePureFabric =
+        flags.isPrivate() && pr.typeSystem().isPureFabricType(targetType);
 
     if (isStaticPureFabric) {
       Receiver newTarget;
