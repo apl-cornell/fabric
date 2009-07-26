@@ -244,7 +244,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         if (formalTypes.contains(types)) continue;
         formalTypes.add(types);
 
-        result.add(makeProxyMethod(pr, mi));
+        // Don't generate proxies for private methods.
+        if (!mi.flags().isPrivate()) result.add(makeProxyMethod(pr, mi));
       }
 
       toVisit.addAll(type.interfaces());

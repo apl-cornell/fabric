@@ -14,32 +14,35 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
 
   /*
    * (non-Javadoc)
-   * 
    * @see fabil.extension.ClassMemberExt#implMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
+   * polyglot.ast.ClassDecl)
    */
   @Override
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
-    // Since the Impl will implement an interface, the method has to be public.
+    // Leave private methods as is. Otherwise, since the Impl will implement an
+    // interface, the method has to be public.
     MethodDecl result = node();
-    Flags flags = ProxyRewriter.toPublic(result.flags());
-    result = result.flags(flags);
+    if (!result.flags().isPrivate()) {
+      Flags flags = ProxyRewriter.toPublic(result.flags());
+      result = result.flags(flags);
+    }
+    
     return Collections.singletonList((ClassMember) result);
   }
 
   /*
    * (non-Javadoc)
-   * 
-   * @see fabil.extension.ClassMemberExt#interfaceMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
+   * @see
+   * fabil.extension.ClassMemberExt#interfaceMember(fabil.visit.ProxyRewriter,
+   * polyglot.ast.ClassDecl)
    */
   @Override
   public List<ClassMember> interfaceMember(ProxyRewriter pr, ClassDecl parent) {
     MethodDecl methodDecl = node();
     Flags flags = methodDecl.flags();
 
-    // Don't include static methods in interfaces.
-    if (flags.isStatic()) return Collections.emptyList();
+    // Don't include static or private methods in interfaces.
+    if (flags.isStatic() || flags.isPrivate()) return Collections.emptyList();
 
     // Interface methods must be public and cannot be final nor synchronized.
     flags = ProxyRewriter.toPublic(flags).clearFinal().clearSynchronized();
@@ -51,9 +54,8 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
 
   /*
    * (non-Javadoc)
-   * 
    * @see fabil.extension.ClassMemberExt#proxyMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
+   * polyglot.ast.ClassDecl)
    */
   @Override
   public List<ClassMember> proxyMember(ProxyRewriter pr, ClassDecl parent) {
@@ -83,7 +85,6 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
 
   /*
    * (non-Javadoc)
-   * 
    * @see polyglot.ast.Ext_c#node()
    */
   @Override
