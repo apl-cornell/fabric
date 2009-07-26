@@ -915,16 +915,20 @@ public class AccessController extends HttpServlet {
     Map root = null;
     String name = config.getInitParameter("cms.root.name");
     atomic {
-       root = (Map) core.getRoot();
+      config.getServletContext().log("Fetching CMSRoot");
+      root = (Map) core.getRoot();
       
       database = (CMSRoot)root.get(name);
       if(database == null) {
         // create and add test data
+        config.getServletContext().log("No CMSRoot found, creating");
         database = new CMSRoot~label@core();
         CreateDB driver = new CreateDB~label@core();
         driver.create(database);
         root.put(name, database);
       }
+      
+      config.getServletContext().log("CMSRoot inited");
     }
     
     
