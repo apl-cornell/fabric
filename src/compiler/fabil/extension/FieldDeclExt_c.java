@@ -195,7 +195,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     String name = fieldDecl.name();
     boolean finalField = flags.isFinal();
 
-    flags = flags.clearTransient().clearFinal().clearStatic();
+    flags = flags.clearTransient().clearFinal().clearStatic().clearPrivate();
     List<ClassMember> members = new ArrayList<ClassMember>(4);
     String regRead =
         finalField ? ""
