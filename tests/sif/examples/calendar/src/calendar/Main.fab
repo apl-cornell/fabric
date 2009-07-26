@@ -13,7 +13,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
     final CalendarDB{this} cal;
 	final Core{this} localCore;
 	
-	final static String{CalServEP→;CalServEP←} coreName = "calendar";
+	final static String{CalServEP→;CalServEP←} coreName = "gaia.systems.cs.cornell.edu";
 
 	public Main{CalServEP→;CalServEP←}() {
 	    FabricClient cl = FabricClient.getClient();

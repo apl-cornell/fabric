@@ -4,22 +4,26 @@ import fabric.client.Core;
 
 public class CalServEP extends ExternalPrincipal {
     public CalServEP() {
-	super("calendar.CalServEP");
+        super("calendar.CalServEP");
     }
 
     private static CalServEP{*!:} P;
     public static fabric.lang.Principal{*!:} getInstance{*!:}() {
-	if (P == null) {
-	    P = new CalServEP();
-	}
-	return P;
-    }
-    
-    public static fabric.lang.Principal{*!:} getInstance{*!:}(Core core) {
-        if (P == null) {
-            P = new CalServEP@core();
+        atomic {
+            if (P == null) {
+                P = new CalServEP();
+            }
         }
         return P;
     }
-    
+
+    public static fabric.lang.Principal{*!:} getInstance{*!:}(Core core) {
+        atomic {
+            if (P == null) {
+                P = new CalServEP@core();
+            }
+        }
+        return P;
+    }
+
 }
