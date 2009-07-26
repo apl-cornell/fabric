@@ -29,7 +29,6 @@ import fabric.common.*;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
-import fabric.common.util.LongKeyMap;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.Cache;
@@ -339,12 +338,8 @@ public final class Client {
    */
   public boolean updateCache(RemoteCore core, ObjectGroup group) {
     boolean result = false;
-    for (Iterator<LongKeyMap.Entry<SerializedObject>> it =
-        group.objects().entrySet().iterator(); it.hasNext();) {
-      LongKeyMap.Entry<SerializedObject> entry = it.next();
-      long onum = entry.getKey();
-      SerializedObject update = entry.getValue();
-      result |= core.updateCache(onum, update);
+    for (SerializedObject obj : group.objects().values()) {
+      result |= core.updateCache(obj);
     }
 
     return result;

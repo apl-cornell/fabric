@@ -11,6 +11,7 @@ import fabric.client.debug.Timing;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.UpdateMap;
 import fabric.common.FabricThread;
+import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
@@ -438,11 +439,12 @@ public final class TransactionManager {
           .entrySet()) {
         if (entry.getKey() instanceof RemoteCore) {
           // Remove old objects from our cache.
-          Core core = (Core) entry.getKey();
-          Set<Long> versionConflicts = entry.getValue().versionConflicts;
+          RemoteCore core = (RemoteCore) entry.getKey();
+          LongKeyMap<SerializedObject> versionConflicts =
+              entry.getValue().versionConflicts;
           if (versionConflicts != null) {
-            for (long onum : versionConflicts)
-              core.evict(onum);
+            for (SerializedObject obj : versionConflicts.values())
+              core.updateCache(obj);
           }
         }
 

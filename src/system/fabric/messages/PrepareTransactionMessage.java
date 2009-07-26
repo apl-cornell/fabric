@@ -36,9 +36,9 @@ public class PrepareTransactionMessage extends
     public final boolean subTransactionCreated;
 
     /**
-     * A set of oids involved in the transaction that were out of date.
+     * A set of objects involved in the transaction that were out of date.
      */
-    public final Set<Long> versionConflicts;
+    public final LongKeyMap<SerializedObject> versionConflicts;
 
     /**
      * Creates a Response indicating a successful prepare.
@@ -64,7 +64,8 @@ public class PrepareTransactionMessage extends
     /**
      * Creates a Response indicating a failed prepare.
      */
-    public Response(String message, Set<Long> versionConflicts) {
+    public Response(String message,
+        LongKeyMap<SerializedObject> versionConflicts) {
       this.success = false;
       this.subTransactionCreated = false;
       this.message = message;
@@ -87,9 +88,11 @@ public class PrepareTransactionMessage extends
       else this.message = null;
 
       int size = in.readInt();
-      this.versionConflicts = new HashSet<Long>(size);
-      for (int i = 0; i < size; i++)
-        versionConflicts.add(in.readLong());
+      this.versionConflicts = new LongKeyHashMap<SerializedObject>(size);
+      for (int i = 0; i < size; i++) {
+        SerializedObject obj = new SerializedObject(in);
+        versionConflicts.put(obj.getOnum(), obj);
+      }
     }
 
     /*
@@ -108,8 +111,9 @@ public class PrepareTransactionMessage extends
         out.writeInt(0);
       else {
         out.writeInt(versionConflicts.size());
-        for (long onum : versionConflicts)
-          out.writeLong(onum);
+        for (SerializedObject obj : versionConflicts.values()) {
+          obj.write(out);
+        }
       }
     }
   }

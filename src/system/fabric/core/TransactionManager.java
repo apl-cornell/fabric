@@ -138,7 +138,8 @@ public class TransactionManager {
 
     try {
       // This will store the set of onums of objects that were out of date.
-      Set<Long> versionConflicts = new HashSet<Long>();
+      LongKeyMap<SerializedObject> versionConflicts =
+          new LongKeyHashMap<SerializedObject>();
 
       // Check writes and update version numbers
       for (SerializedObject o : req.writes) {
@@ -167,7 +168,7 @@ public class TransactionManager {
         int coreVersion = coreCopy.getVersion();
         int clientVersion = o.getVersion();
         if (coreVersion != clientVersion) {
-          versionConflicts.add(onum);
+          versionConflicts.put(onum, coreCopy);
           continue;
         }
 
@@ -231,7 +232,7 @@ public class TransactionManager {
                 .getMessage());
           }
           if (curVersion != version) {
-            versionConflicts.add(onum);
+            versionConflicts.put(onum, store.read(onum));
             continue;
           }
 

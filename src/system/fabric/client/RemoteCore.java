@@ -379,7 +379,9 @@ public class RemoteCore extends RemoteNode implements Core {
    * 
    * @return true iff an _Impl with the given onum was evicted from cache.
    */
-  boolean updateCache(long onum, SerializedObject update) {
+  public boolean updateCache(SerializedObject update) {
+    long onum = update.getOnum();
+
     synchronized (objects) {
       synchronized (serialized) {
         boolean evicted = evict(onum);

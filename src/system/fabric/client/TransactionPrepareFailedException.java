@@ -2,17 +2,21 @@ package fabric.client;
 
 import java.util.*;
 
+import fabric.common.SerializedObject;
 import fabric.common.exceptions.FabricException;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 
 public class TransactionPrepareFailedException extends FabricException {
   /**
-   * A list of onums of objects used by the transaction and were out of date.
+   * A set of objects used by the transaction and were out of date.
    */
-  public final Set<Long> versionConflicts;
+  public final LongKeyMap<SerializedObject> versionConflicts;
 
   public final List<String> messages;
 
-  public TransactionPrepareFailedException(Set<Long> versionConflicts) {
+  public TransactionPrepareFailedException(
+      LongKeyMap<SerializedObject> versionConflicts) {
     this.versionConflicts = versionConflicts;
     this.messages = null;
   }
@@ -35,19 +39,19 @@ public class TransactionPrepareFailedException extends FabricException {
 
   public TransactionPrepareFailedException(
       List<TransactionPrepareFailedException> causes) {
-    this.versionConflicts = new HashSet<Long>();
+    this.versionConflicts = new LongKeyHashMap<SerializedObject>();
 
     messages = new ArrayList<String>();
     for (TransactionPrepareFailedException exc : causes) {
       if (exc.versionConflicts != null)
-        versionConflicts.addAll(exc.versionConflicts);
+        versionConflicts.putAll(exc.versionConflicts);
 
       if (exc.messages != null) messages.addAll(exc.messages);
     }
   }
 
-  public TransactionPrepareFailedException(Set<Long> versionConflicts,
-      String message) {
+  public TransactionPrepareFailedException(
+      LongKeyMap<SerializedObject> versionConflicts, String message) {
     this.versionConflicts = versionConflicts;
     messages = java.util.Collections.singletonList(message);
   }
