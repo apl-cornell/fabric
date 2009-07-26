@@ -19,7 +19,7 @@ import jif.translate.ClassDeclToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
 
 public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
-  protected static final String jifConstructorTranslatedName(ClassType ct) {
+  public static final String jifConstructorTranslatedName(ClassType ct) {
     return ClassDeclToJavaExt_c.constructorTranslatedName(ct);
   }
   
