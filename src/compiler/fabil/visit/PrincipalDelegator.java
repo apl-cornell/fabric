@@ -61,9 +61,7 @@ public class PrincipalDelegator extends NodeVisitor {
         cast = (Cast) cast.type(newCall.objectType().type());
         return cast;
       }
-    }
-
-    if (old instanceof Call) {
+    } else if (old instanceof Call) {
       // Detect calls to Jif initializers. This is an ugly hack.
       Call call = (Call) old;
       Receiver target = call.target();
@@ -71,14 +69,21 @@ public class PrincipalDelegator extends NodeVisitor {
 
       New newCall = (New) target;
       if (!newCall.objectType().type().isSubtype(delegatingPrincipal))
-        return super.leave(old, newCall, v);
+        return super.leave(old, n, v);
 
       String initName =
           ClassDeclToFabilExt_c
               .jifConstructorTranslatedName((ClassType) newCall.objectType()
                   .type());
       if (!call.name().equals(initName)) return super.leave(old, n, v);
-      
+      System.out.println(call.name());
+      System.out.println(initName);
+      System.out.println(newCall);
+      System.out.println(newCall.objectType());
+      System.out.println(old);
+      System.out.println(n);
+      System.out.println("============");
+
       // Wrap around the Jif initializer call instead.
       Call initCall = (Call) n;
       Call wrapped = (Call) initCall.target();
