@@ -16,6 +16,7 @@ import fabil.ExtensionInfo;
 import fabil.ast.FabILNodeFactory;
 import fabil.ast.New;
 import fabil.types.FabILTypeSystem;
+import fabric.translate.ClassDeclToFabilExt_c;
 
 /**
  * Rewrites Principal constructor calls to add default delegations.
@@ -25,18 +26,22 @@ public class PrincipalDelegator extends NodeVisitor {
   protected FabILNodeFactory nf;
   protected QQ qq;
 
+  protected final ClassType delegatingPrincipal;
+
   public PrincipalDelegator(ExtensionInfo extInfo) {
     this.ts = extInfo.typeSystem();
     this.nf = extInfo.nodeFactory();
     this.qq = new QQ(extInfo);
+
+    this.delegatingPrincipal = ts.DelegatingPrincipal();
   }
 
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     if (n instanceof New) {
       New newCall = (New) n;
-      ClassType delegatingPrincipal = ts.DelegatingPrincipal();
       if (newCall.objectType().type().isSubtype(delegatingPrincipal)) {
+        // Wrap the constructor call with a call to $addDefaultDelegates.
         Position pos = Position.compilerGenerated();
         Receiver target = nf.CanonicalTypeNode(pos, ts.DelegatingPrincipal());
 
@@ -52,11 +57,33 @@ public class PrincipalDelegator extends NodeVisitor {
                     .emptyList());
         call = call.methodInstance(mi);
 
-        Cast cast =
-            nf.Cast(pos, newCall.objectType(), call);
+        Cast cast = nf.Cast(pos, newCall.objectType(), call);
         cast = (Cast) cast.type(newCall.objectType().type());
         return cast;
       }
+    }
+
+    if (old instanceof Call) {
+      // Detect calls to Jif initializers. This is an ugly hack.
+      Call call = (Call) old;
+      Receiver target = call.target();
+      if (!(target instanceof New)) return super.leave(old, n, v);
+
+      New newCall = (New) target;
+      if (!newCall.objectType().type().isSubtype(delegatingPrincipal))
+        return super.leave(old, newCall, v);
+
+      String initName =
+          ClassDeclToFabilExt_c
+              .jifConstructorTranslatedName((ClassType) newCall.objectType()
+                  .type());
+      if (!call.name().equals(initName)) return super.leave(old, n, v);
+      
+      // Wrap around the Jif initializer call instead.
+      Call initCall = (Call) n;
+      Call wrapped = (Call) initCall.target();
+      New constCall = (New) wrapped.target();
+      return wrapped.target(initCall.target(constCall));
     }
 
     return super.leave(old, n, v);
