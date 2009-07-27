@@ -12,6 +12,8 @@ permission java.lang.RuntimePermission "getenv.FABRIC_HOME";
 permission java.io.FilePermission "<<ALL FILES>>", "read";
 permission java.net.SocketPermission "*", "resolve";
 permission java.net.SocketPermission "*", "connect";
+permission java.net.SocketPermission "*", "listen";
+permission java.net.SocketPermission "*", "accept";
 };
 
 
