@@ -1,5 +1,7 @@
 package fabric.client.remote;
 
+import java.net.UnknownHostException;
+
 import fabric.client.*;
 import fabric.client.remote.messages.GetPrincipalMessage;
 import fabric.client.remote.messages.ReadMessage;
@@ -136,11 +138,20 @@ public final class RemoteClient extends RemoteNode {
     GetPrincipalMessage.Response response =
         new GetPrincipalMessage().send(this);
     final NodePrincipal principal = response.principal;
+    final String expectedPrincipalName;
+    try {
+      expectedPrincipalName =
+          Client.getClient().nameService.lookup(this).second.getName();
+    } catch (UnknownHostException e) {
+      return null;
+    } catch (IllegalStateException e) {
+      throw new InternalError(e);
+    }
 
     boolean authenticated =
         Client.runInTransaction(null, new Client.Code<Boolean>() {
           public Boolean run() {
-            return principal.name().equals(name);
+            return principal.name().equals(expectedPrincipalName);
           }
         });
 
