@@ -65,7 +65,8 @@ public class Node {
 
       if (node.joinFailed()) {
         throw new IOException("Network error: "
-            + "Could not join Pastry network.");
+            + "Could not join Pastry network. (" + node.joinFailedReason()
+            + ")");
       }
     }
   }
