@@ -29,7 +29,7 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
 //      Eval npecall = (Eval) tryStmt.tryBlock().statements().get(0);
 //      If ifStmt = (If)tryStmt.tryBlock().statements().get(1);
       If ifStmt = (If)md.body().statements().get(0);
-      ifStmt = ifStmt.alternative(rw.qq().parseStmt("throw new java.lang.InternalError();"));
+      ifStmt = ifStmt.alternative(rw.qq().parseStmt("throw new fabric.common.exceptions.InternalError();"));
 //      ifStmt = ifStmt.alternative(nf.Throw(Position.compilerGenerated(), nf.New(Position.compilerGenerated(), nf.CanonicalTypeNode(Position.compilerGenerated(), ts.InternalError()), Collections.EMPTY_LIST)));
 //      tryStmt = tryStmt.tryBlock(nf.Block(Position.compilerGenerated(), npecall, ifStmt));
       return md.body(nf.Block(Position.compilerGenerated(), ifStmt));
