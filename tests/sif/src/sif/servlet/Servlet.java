@@ -500,7 +500,7 @@ abstract public class Servlet extends HttpServlet {
                     w.write(HTMLWriter.escape_URI(val));
                 }
             }
-        return w.toString();	
+        return w.toString();
     }
 
     /** The set of (non-nonce generated) input names used so far. Each 

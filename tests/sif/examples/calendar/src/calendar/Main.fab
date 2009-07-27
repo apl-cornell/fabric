@@ -22,10 +22,13 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 	    if(cl != null) {
 	        lCore = cl.getLocalCore();
 	        final Core remote = cl.getCore(coreName);
-	        if(localCore equiv CalServEP) {
-	            local =  new CalendarDB@localCore(localCore, remote);
+	        final Core lCoreFinal = lCore;
+	        atomic {
+	            if(lCoreFinal != null && lCoreFinal equiv CalServEP) {
+	                local =  new CalendarDB@lCoreFinal(lCoreFinal, remote);
+	            } 
 	        } 
-	    } 
+        }
 	    localCore = lCore;
 	    cal = local;
 		super();
@@ -40,9 +43,17 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 		addStartAction(new ShowCalendar(this));
 	}
 
-//	public SessionState createSessionState() {
-//		return new CalendarSessionState();
-//	}
+    protected SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id) {
+        SessionState[lbl] toReturn = null;
+        if (localCore != null && 
+                lbl <= new label {⊤→localCore} && 
+                new label {⊤←localCore} <= lbl) {
+            atomic {
+                toReturn = new CalendarSessionState[lbl]@localCore(id);
+            }
+        }
+        return toReturn;
+    }
 
 	protected String defaultActionName(Request[CalServEP] req) {
 		return "show";

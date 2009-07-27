@@ -110,6 +110,6 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
 
     public native final String{*!:*} generateNonce();       
 //    protected native SessionState[{servletP:;servletP!:}]{servletP:;servletP!:} createSessionState(String id);
-    protected native SessionState[lbl]{*lbl} createSessionState(label{*lbl} lbl, String{*lbl} id);
+    protected native SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id);
     
 }

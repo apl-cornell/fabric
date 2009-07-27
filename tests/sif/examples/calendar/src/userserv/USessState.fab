@@ -7,7 +7,7 @@ import jif.util.*;
 public class USessState[principal servP, covariant label T] extends SessionState[T] {
     final UserWrapper[servP,{sessionPrincipal!:}, T]{T} uwrapper;
     
-    public USessState() {
+    public USessState(String{T} id) {
     	UserWrapper[servP,{sessionPrincipal!:}, T]{T} uwrapper_;
 //    	if(remote != null) {
     		uwrapper_ = new UserWrapper[servP,{sessionPrincipal!:},T]();
@@ -15,7 +15,7 @@ public class USessState[principal servP, covariant label T] extends SessionState
     		uwrapper_ = null;
 //    	}
     	uwrapper = uwrapper_;
-    	super();
+    	super(id);
     }
     
     public USessState(Principal{T} sp, String{T} si, UserWrapper[servP, {sessionPrincipal!:}, T]{T} uwrap) {

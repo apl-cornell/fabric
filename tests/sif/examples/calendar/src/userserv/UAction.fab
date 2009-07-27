@@ -41,17 +41,18 @@ abstract public class UAction[principal servP] extends Action[servP] {
             if (!m.ensureLoggedIn(lbl, req, a)) return;
         }
 
-        final label newLbl = new label {*lbl; req.session!:};
-        SessionState ss = req.getSessionState(lbl);
-        if (!(ss instanceof USessState[servP, lbl])) throw new ServletException("Incorrect session state");
-        final USessState[servP, lbl] css = (USessState[servP, lbl])ss;
-//        if(css.remote == null) return;
-        
-        if (req.session equiv css.sessionPrincipal) {
-            this.invokeImpl(newLbl, req, m, css);
-        }
-        else {
-            throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
+        atomic {
+            final label newLbl = new label {*lbl; req.session!:};
+            SessionState ss = req.getSessionState(lbl);
+            if (!(ss instanceof USessState[servP, lbl])) throw new ServletException("Incorrect session state");
+            final USessState[servP, lbl] css = (USessState[servP, lbl])ss;
+
+            if (req.session equiv css.sessionPrincipal) {
+                this.invokeImpl(newLbl, req, m, css);
+            }
+            else {
+                throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
+            }
         }
     }
 

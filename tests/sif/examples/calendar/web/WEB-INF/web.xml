@@ -20,7 +20,7 @@
 -->
       <init-param>
 	    <param-name>color_coding</param-name>
-	    <param-value>true</param-value>
+	    <param-value>false</param-value>
       </init-param>      
     </servlet>
     <servlet-mapping>

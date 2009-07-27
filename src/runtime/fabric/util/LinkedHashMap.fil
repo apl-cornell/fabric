@@ -443,18 +443,20 @@ public class LinkedHashMap extends HashMap
   private final class LinkedHashIterator implements Iterator
   {
     /** The current Entry. */
-    LinkedHashEntry current = root;
+    LinkedHashEntry current;
 
     /** The previous Entry returned by next(). */
     LinkedHashEntry last;
 
     /** The number of known modifications to the backing Map. */
-    int knownMod = modCount;
+    int knownMod;
     
     final int type;
     
     LinkedHashIterator(int type) {
       this.type = type;
+      this.current = root;
+      this.knownMod = modCount;
     }
 
     /**

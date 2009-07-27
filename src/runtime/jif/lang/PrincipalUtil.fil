@@ -332,13 +332,16 @@ public class PrincipalUtil {
   }
 
   public static boolean equivalentTo(Principal p, Principal q) {
-    try {
-      LabelUtil.enterTiming();
-      return actsFor(p, q) && actsFor(q, p);
-    } finally {
-      LabelUtil.exitTiming();
-    }
-
+//    try {
+//      LabelUtil.enterTiming();
+      boolean eq = false;
+      atomic {
+          eq = actsFor(p, q) && actsFor(q, p);
+      }
+      return eq;
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
   }
 
   public static boolean equals(Principal p, Principal q) {

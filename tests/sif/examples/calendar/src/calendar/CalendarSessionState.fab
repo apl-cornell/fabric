@@ -6,7 +6,8 @@ import jif.util.*;
 
 public class CalendarSessionState[covariant label T] extends USessState[CalServEP, T] {
     final CSS[T, {sessionPrincipal!:}]{T} css = new CSS();
-    public CalendarSessionState() {
+    public CalendarSessionState(String{T} id) {
+        super(id);
     }
     
     static CalendarSessionState[{P←}]{P←} declassifyState{P←;P→}(principal{P←;P→} P, CalendarSessionState[{P←;P→}]{P←;P→} state)
