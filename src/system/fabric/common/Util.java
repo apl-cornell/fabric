@@ -2,6 +2,7 @@ package fabric.common;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.util.*;
 
@@ -55,6 +56,23 @@ public final class Util {
     byte[] result = classHashCache.get(className);
     if (result != null) return result;
     return hash(Class.forName(className));
+  }
+  
+  public static URL locateClass(String className) throws ClassNotFoundException {
+    // TODO: copied from hash(className)
+    Class<?> c = Class.forName(className); 
+    
+    ClassLoader classLoader = c.getClassLoader();
+    if (classLoader == null) {
+      classLoader = ClassLoader.getSystemClassLoader();
+    }
+
+    URL result =
+        classLoader.getResource(className.replace('.', '/') + ".class");
+    
+    return result;
+
+
   }
 
   /**
@@ -121,4 +139,5 @@ public final class Util {
       }
     };
   }
+
 }

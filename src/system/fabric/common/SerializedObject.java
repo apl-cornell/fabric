@@ -2,6 +2,7 @@ package fabric.common;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
+import java.net.URL;
 import java.util.*;
 
 import fabric.client.Core;
@@ -742,11 +743,13 @@ public final class SerializedObject implements FastSerializable {
 
       // Check the class hash before deserializing.
       if (!checkClassHash(Util.hashClass(className))) {
+        URL path = Util.locateClass(className);
         throw new InvalidClassException(
             className,
             "A class of the same name was found, but its hash did not match "
                 + "the hash in the object fab://" + core.name() + "/"
-                + getOnum());
+                + getOnum() + "\n"
+                + "hash from: " + path);
       }
 
       Constructor<?> constructor = constructorTable.get(className);
