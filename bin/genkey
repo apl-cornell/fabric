@@ -19,7 +19,7 @@ for i in "$@" ; do
   keytool -genkey -alias "$i" -keyalg rsa -keysize 1024 -dname "CN="$i", OU=Fabric, O=Cornell University, L=Ithaca, ST=NY, C=US" -keypass 'password' -keystore "$(fixfilename ${DIR}/"$i".keystore)" -storepass 'password'
   keytool -export -alias "$i" -keystore "$(fixfilename ${DIR}/"$i".keystore)" -keypass 'password' -file "$(fixfilename ${DIR}/"$i".cert)" -storepass 'password'
 
-  keytool -import -alias "$i" -keystore "$(fixfilename ${DIR}/trust.keystore)" -file "$(fixfilename ${DIR}/"$i".cert)" -storepass 'password'
+  keytool -import -noprompt -alias "$i" -keystore "$(fixfilename ${DIR}/trust.keystore)" -file "$(fixfilename ${DIR}/"$i".cert)" -storepass 'password'
   rm "${DIR}/$i".cert
 done
 
