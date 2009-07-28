@@ -35,13 +35,13 @@ abstract public class UAction[principal servP] extends Action[servP] {
         if (req == null) throw new ServletException("No request available"); 
         UServlet[servP] m = (UServlet[servP])s;
 
+        atomic {
         if (this.ensureLoggedIn()) {
             UAction[servP] a = this.directAfterLogin(req, m);
             if (a == null) a = this;
             if (!m.ensureLoggedIn(lbl, req, a)) return;
         }
 
-        atomic {
             final label newLbl = new label {*lbl; req.session!:};
             SessionState ss = req.getSessionState(lbl);
             if (!(ss instanceof USessState[servP, lbl])) throw new ServletException("Incorrect session state");

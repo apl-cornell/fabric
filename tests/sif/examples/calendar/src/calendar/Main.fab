@@ -45,10 +45,10 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 
     protected SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id) {
         SessionState[lbl] toReturn = null;
-        if (localCore != null && localCore equiv client$ &&
-                lbl <= new label {⊤→client$} && 
-                new label {⊤←client$} <= lbl) {
-            atomic {
+        atomic {
+            if (localCore != null && localCore equiv client$ &&
+                    lbl <= new label {⊤→client$} && 
+                    new label {⊤←client$} <= lbl) {
                 toReturn = new CalendarSessionState[lbl]@localCore(id);
             }
         }
