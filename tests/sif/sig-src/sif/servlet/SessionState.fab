@@ -7,58 +7,25 @@ import fabric.lang.Principal;
 
 public class SessionState[covariant label T] {
 
-    protected SessionState(String{T} sessionId_) {
-//    	this.remote = new SSW[T](new SessionPrincipal[T](this), sessionId);
-        this.sessionPrincipal = new SessionPrincipal[T](this);
-        this.sessionId = sessionId_;
-    }
+    protected SessionState(String{T} sessionId_, SessionPrincipal{T} session) {    }
     
-    protected SessionState() {
-//    	this.remote = new SSW[T](new SessionPrincipal[T](this), "<uninitialized>");
-        this.sessionPrincipal = new SessionPrincipal[T](this);
-        this.sessionId = "<uninitialized>";
-    }
+    protected SessionState(SessionPrincipal{T} session) {    }
     
-//    public SessionState(SSW[T]{T} remote) {
-//    	this.remote = remote;
-//    }
-    public SessionState(Principal{T} sp, String{T} si) {
-        this.sessionPrincipal = sp;
-        this.sessionId = si;
-    }
+    public SessionState(Principal{T} sp, String{T} si) {    }
 
     public final Principal{T} sessionPrincipal;
     public final String{T}    sessionId;
-//    
-//    public final SSW[T]{T} remote;
-//
 
-    public final String{T;this} getSessionId() {
-        return sessionId;
-    }
+    public native final String{T;this} getSessionId();
 
-    public final Principal{T;this} sessionPrincipal() {
-        return sessionPrincipal;
-    }
-//    
-//    public final String{T;this} getSessionId() {
-//    	try {
-//    		return remote.sessionId;
-//    	} catch(NullPointerException e) {return null;} 
-//    }
-//
-//    public final Principal{T;this} sessionPrincipal() {
-//    	try {
-//    		return remote.sessionPrincipal;
-//    	} catch(NullPointerException e) {return null;}
-//    }
-//    
+    public native final Principal{T;this} sessionPrincipal(); 
+
     /** convenience method for non-fabric code */
-    public static SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id) {
-    	atomic {
-    		return new SessionState[lbl](id);
-    	}
-    }
+//    public static SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id) {
+//    	atomic {
+//    		return new SessionState[lbl](id);
+//    	}
+//    }
     
     public static SessionState[{P←}]{P←} declassifySS{P←}(SessionState[{P→;P←}]{P→;P←} ss_, principal{P←} P)
     where caller(P) {

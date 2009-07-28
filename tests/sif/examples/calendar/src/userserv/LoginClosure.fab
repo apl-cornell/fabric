@@ -6,9 +6,9 @@ import sif.servlet.SessionPrincipal;
  * P is the User[L] principal that will have the session principal added to its superiors.
  */
 public class LoginClosure[principal servP, principal P] implements Closure[P, {P→}]  {
-    private final SessionPrincipal[{P→}]{P→} sessionPrincipal;
+    private final SessionPrincipal{P→} sessionPrincipal;
     
-    public LoginClosure(SessionPrincipal[{P→}]{P→} sessionPrincipal) {
+    public LoginClosure(SessionPrincipal{P→} sessionPrincipal) {
         this.sessionPrincipal = sessionPrincipal;
     }
 

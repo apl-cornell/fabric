@@ -113,11 +113,11 @@
             <arg value="-filsigcp"/>
             <arg value="${fabric.home}/sig-classes/fabil"/>
         		<arg value="-e" />
+        		<arg value="-debugpositions"/>
         	<!--        	
 	      		<arg value="-report"/> <arg value="solver=5"/>
         		<arg value="-print"/> <arg value="RemoteCallWrapperAdder"/>
 	      		<arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>
-        		<arg value="-debugpositions"/>
         		<arg value="-report"/> <arg value="frontend=1"/>
         	-->        		
             <srcfile />
@@ -165,8 +165,8 @@
             <fileset dir="examples" includes="user/build.xml"/>
         </subant-->
         <subant target="compile">
-          <fileset dir="examples" includes="hello/build.xml"/>
-          <!--fileset dir="examples" includes="calendar/build.xml"/-->
+          <!--fileset dir="examples" includes="hello/build.xml"/-->
+          <fileset dir="examples" includes="calendar/build.xml"/>
         </subant>
     </target>
 

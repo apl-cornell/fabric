@@ -7,15 +7,15 @@ import fabric.lang.Principal;
 
 public class SessionState[covariant label T] {
 
-    protected SessionState(String{T} sessionId_) {
+    protected SessionState(String{T} sessionId_, SessionPrincipal{T} session) {
 //    	this.remote = new SSW[T](new SessionPrincipal[T](this), sessionId);
-        this.sessionPrincipal = new SessionPrincipal[T](this);
+        this.sessionPrincipal = session;
         this.sessionId = sessionId_;
     }
     
-    protected SessionState() {
+    protected SessionState(SessionPrincipal{T} session) {
 //    	this.remote = new SSW[T](new SessionPrincipal[T](this), "<uninitialized>");
-        this.sessionPrincipal = new SessionPrincipal[T](this);
+        this.sessionPrincipal = session;
         this.sessionId = "<uninitialized>";
     }
     
@@ -54,11 +54,11 @@ public class SessionState[covariant label T] {
 //    }
 //    
     /** convenience method for non-fabric code */
-    public static SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id) {
-    	atomic {
-    		return new SessionState[lbl](id);
-    	}
-    }
+//    public static SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id) {
+//    	atomic {
+//    		return new SessionState[lbl](id);
+//    	}
+//    }
     
     public static SessionState[{P←}]{P←} declassifySS{P←}(SessionState[{P→;P←}]{P→;P←} ss_, principal{P←} P)
     where caller(P) {

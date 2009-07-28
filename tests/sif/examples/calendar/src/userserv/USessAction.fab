@@ -26,7 +26,7 @@ abstract public class USessAction[principal servP] extends UAction[servP] {
                 req.session equiv state.sessionPrincipal
     {
         if (req == null || servlet == null || 
-                state == null || !(session instanceof SessionPrincipal[lbl])) 
+                state == null || !(session instanceof SessionPrincipal)) 
             throw new ServletException("invalid args");
 
         if (req.session equiv this.session) {

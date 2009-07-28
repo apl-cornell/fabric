@@ -11,8 +11,7 @@ public abstract class UServlet[principal servP] extends Servlet[servP]  {
     public void initialize{servP:; servP!:}() throws ServletException {
         addStartAction(new LogoffAction[servP](this));
     }
-
-
+    
     /**
      * Ensure that there is a logged in user. This method should be called first
      * in the invoke() method of any action that requires the user to be logged in.

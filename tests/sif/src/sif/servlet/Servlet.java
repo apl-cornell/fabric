@@ -37,7 +37,7 @@ abstract public class Servlet extends HttpServlet {
     
     static {
       try {
-        Client.initialize("client0");
+        Client.initialize("calendarapp");
       } catch(IllegalStateException e) {
         // TODO: need to fix this up
         // do nothing, client already initialized.
@@ -296,7 +296,7 @@ abstract public class Servlet extends HttpServlet {
 
         // TODO KV: Replace the null label with something more sensible
         if (!req.returnPageSet()) {
-            reportError(sessionPrincipalLabel(req.getSessionState(null)), req,  
+            reportError(sessionPrincipalLabel(req.session), req,  
                 "Error handling request", "Error Handling Request",
                 "The servlet did not generate any output for your request. " +
             "This probably means that your request was ill-formed.");
@@ -320,10 +320,10 @@ abstract public class Servlet extends HttpServlet {
     protected void invalidActionRequested(Request req, String action_name) throws ServletException {
         if (action_name == null) {
           // TODO KV: the null param is a hack
-            reportError(sessionPrincipalLabel(req.getSessionState(null)), req, "Access violation", "Improper request",
+            reportError(sessionPrincipalLabel(req.session), req, "Access violation", "Improper request",
             "The request includes no action identifier.");
         }
-        reportError(sessionPrincipalLabel(req.getSessionState()), req, "Access violation", "Invalid Action",
+        reportError(sessionPrincipalLabel(req.session), req, "Access violation", "Invalid Action",
             "The action identifier in the request is invalid: <" + action_name + ">");    
     }
 
@@ -519,18 +519,21 @@ abstract public class Servlet extends HttpServlet {
     }
 
 
-    private Label sessionPrincipalLabel(final SessionState ss) {
+    private Label sessionPrincipalLabel(final SessionPrincipal pp) {
       return Client.runInSubTransaction(new fabric.client.Client.Code<Label>() {
         public Label run() {
           Core local = Client.getClient().getLocalCore();
-          return LabelUtil._Impl.readerPolicyLabel(local, ss.sessionPrincipal(), ss.sessionPrincipal());
+          return LabelUtil._Impl.readerPolicyLabel(local, pp, pp);
         }
       });
     }
 
-// TODO: Is the first argument to createSessionState necessary?
-    protected SessionState createSessionState(Label lbl, String id) {
-        return SessionState._Impl.createSessionState(lbl, lbl, id);
+    protected SessionState createSessionState(jif.lang.Label lbl, String id, sif.servlet.SessionPrincipal prin) {
+      throw new Error("Only applications can create a session state");
+    }
+    
+    protected SessionPrincipal createSessionPrincipal(String id) {
+      throw new Error("Only applications can create a session principal");      
     }
 
     /**

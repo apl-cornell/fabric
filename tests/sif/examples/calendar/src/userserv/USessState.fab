@@ -1,21 +1,15 @@
 package userserv;
 
 import sif.servlet.SessionState;
-import sif.servlet.SSW;
+import sif.servlet.SessionPrincipal;
 import jif.util.*;
 
 public class USessState[principal servP, covariant label T] extends SessionState[T] {
     final UserWrapper[servP,{sessionPrincipal!:}, T]{T} uwrapper;
     
-    public USessState(String{T} id) {
-    	UserWrapper[servP,{sessionPrincipal!:}, T]{T} uwrapper_;
-//    	if(remote != null) {
-    		uwrapper_ = new UserWrapper[servP,{sessionPrincipal!:},T]();
-//    	} else {
-    		uwrapper_ = null;
-//    	}
-    	uwrapper = uwrapper_;
-    	super(id);
+    public USessState(String{T} id, SessionPrincipal{T} session) {
+        uwrapper = new UserWrapper[servP,{sessionPrincipal!:},T]();
+    	super(id, session);
     }
     
     public USessState(Principal{T} sp, String{T} si, UserWrapper[servP, {sessionPrincipal!:}, T]{T} uwrap) {

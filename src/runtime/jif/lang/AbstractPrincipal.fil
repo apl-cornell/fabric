@@ -22,6 +22,12 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
       this.jif$init();
     }
     
+//    public AbstractPrincipal(fabric.lang.Principal p) {
+//        // TODO : Should we just ignore p?
+//        super();
+//        this.jif$init();
+//      }    
+    
     private void jif$init() {
       superiors = new HashMap();
       
@@ -33,6 +39,12 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
         { this.name = name; }
         return this;
     }
+    
+    protected AbstractPrincipal jif$lang$AbstractPrincipal$(final String name, final fabric.lang.Principal p) {
+        { this.name = name; }
+        return this;
+    }
+    
 
     protected AbstractPrincipal(String name) {
         this();

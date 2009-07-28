@@ -2,7 +2,7 @@ package fabric.lang;
 
 public abstract class Principal {
     static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
-
+    
     public abstract String{this} name();
     
     public abstract boolean{this; p; this←} delegatesTo(principal p);

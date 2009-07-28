@@ -153,7 +153,7 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
               caller(session)
     {
  
-        if (req == null || servlet == null || state == null || !(session instanceof SessionPrincipal[lbl])) 
+        if (req == null || servlet == null || state == null || !(session instanceof SessionPrincipal)) 
             return;
 
         if (loginAct == null || loginAct.successAction == null || 
@@ -240,7 +240,7 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
     }        
     
     private String{session:;session!:} runClosure{session:;session!:}(User[servP, {session:;session!:}]{session:;session!:} loginUser, 
-                                                  SessionPrincipal[{session:;session!:}]{session:;session!:} sp, 
+                                                  SessionPrincipal{session:;session!:} sp, 
                                                   String{session:;session!:} password) 
      where caller(session) {
         // DOWNGRADE REASON: Has effects at level {loginUser:}, which we need to hide away, since
@@ -252,7 +252,7 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
             if(client == null) return null;
             
             final Core{session!:} localCore = client.getLocalCore();
-            SessionPrincipal[{session!:}] spdeclass = SessionPrincipal[{session!:}].declassifySP(sp, session); 
+            SessionPrincipal spdeclass = SessionPrincipal.declassifySP(sp, session); 
             LoginClosure[servP, logUser] lc = new LoginClosure[servP, logUser]{session!:}@localCore(spdeclass);
             Capability[logUser, {logUser:}] cap = 
                 PrincipalUtil.authorize(logUser, 

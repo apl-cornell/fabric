@@ -43,18 +43,32 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP) {
 		addStartAction(new ShowCalendar(this));
 	}
 
-    protected SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id) {
+    // This method will only be called by the runtime
+    protected SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+            String{*lbl} id, SessionPrincipal{*lbl} session) {
         SessionState[lbl] toReturn = null;
         atomic {
             if (localCore != null && localCore equiv client$ &&
                     lbl <= new label {⊤→client$} && 
                     new label {⊤←client$} <= lbl) {
-                toReturn = new CalendarSessionState[lbl]@localCore(id);
+                toReturn = new CalendarSessionState[lbl]@localCore(id, session);
             }
         }
         return toReturn;
     }
-
+    
+    // This method will only be called by the runtime
+    protected SessionPrincipal createSessionPrincipal(String{client$→;client$←} id) {
+        SessionPrincipal toReturn = null;
+        atomic {
+            if (localCore != null && localCore equiv client$) {
+                toReturn = new SessionPrincipal@localCore(id);
+            }
+        }
+        return toReturn;
+    }
+        
+    
 	protected String defaultActionName(Request[CalServEP] req) {
 		return "show";
 	}

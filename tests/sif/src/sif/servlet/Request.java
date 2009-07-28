@@ -27,7 +27,7 @@ import sif.html.*;
  */
 public final class Request {
     public final Servlet servlet;
-    public final Principal session;
+    public final SessionPrincipal session;
     public final Label bnd; // upper bound on the output channel
     final HttpServletRequest request;
     private boolean returnPageSet = false;
@@ -46,7 +46,8 @@ public final class Request {
     Request(Servlet srv, HttpServletRequest req) {
         servlet = srv;
         request = req;
-        session = this.getSessionState().sessionPrincipal(); 
+//        session = this.getSessionState().sessionPrincipal();
+        session = srv.createSessionPrincipal(req.getSession().getId());
         bnd = Servlet.getOutputChannelBound(this);
         
         this.isMultipart = ServletFileUpload.isMultipartContent(req);
@@ -148,16 +149,16 @@ public final class Request {
 	  (SessionState)request.getSession(true).getAttribute("session_state");
 
 	if (result == null) {
-	    result = servlet.createSessionState(lbl, request.getSession().getId());
+	    result = servlet.createSessionState(lbl, request.getSession().getId(), session);
 	    request.getSession(true).setAttribute("session_state", result);
 	}
 
 	return result;
     }
     
-    public SessionState getSessionState() {
-      return getSessionState(LabelUtil._Impl.noComponents());
-    }
+//    public SessionState getSessionState() {
+//      return getSessionState(LabelUtil._Impl.noComponents());
+//    }
     
     public void invalidateSession() {
         request.getSession().invalidate();
