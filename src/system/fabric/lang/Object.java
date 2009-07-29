@@ -39,6 +39,9 @@ public interface Object {
 
   /** Whether this object is "equal" to another object. */
   boolean equals(Object o);
+  
+  /** Whether this object has the same identity as another object. */
+  boolean idEquals(Object o);
 
   /** Unwraps a wrapped Java inlineable. */
   java.lang.Object $unwrap();
@@ -158,6 +161,10 @@ public interface Object {
     public final long $getOnum() {
       return ref.onum;
     }
+    
+    public final boolean idEquals(Object other) {
+      return this.$getCore() == other.$getCore() && this.$getOnum() == other.$getOnum();
+    }
 
     public final Label get$label() {
       return fetch().get$label();
@@ -174,6 +181,15 @@ public interface Object {
     public static final java.lang.Object $getProxy(java.lang.Object o) {
       if (o instanceof Object) return ((Object) o).$getProxy();
       return o;
+    }
+    
+    /**
+     * return true if o1 and o2 are objects with the same identity.
+     */
+    public static final boolean idEquals(java.lang.Object o1, java.lang.Object o2) {
+      if (o1 instanceof Object && o2 instanceof Object)
+        return ((Object) o1).idEquals((Object) o2);
+      return o1 == o2;
     }
 
     /**
@@ -440,6 +456,11 @@ public interface Object {
       return $proxy;
     }
 
+    public final boolean idEquals(Object other) {
+      return $getCore() == other.$getCore()
+          && $getOnum() == other.$getOnum();
+    }
+    
     public final _Impl fetch() {
       return this;
     }

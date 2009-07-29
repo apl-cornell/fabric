@@ -85,6 +85,10 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   public Label set$label(Label label) {
     throw new InternalError("WrappedJavaInlineables don't have labels.");
   }
+  
+  public boolean idEquals(fabric.lang.Object other) {
+    return obj == other;
+  }
 
   /*
    * (non-Javadoc)

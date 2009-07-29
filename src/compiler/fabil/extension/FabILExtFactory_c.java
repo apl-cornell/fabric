@@ -118,6 +118,11 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
+  protected Ext extBinaryImpl() {
+    return new BinaryExt_c();
+  }
+  
+  @Override
   protected Ext extCallImpl() {
     return new CallExt_c();
   }
