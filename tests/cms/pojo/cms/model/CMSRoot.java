@@ -164,7 +164,7 @@ public class CMSRoot {
     throw new NotImplementedException();
   }
   public Collection/*Semester*/ getAllSemesters() {
-    SortedSet result = new TreeSet();
+    Set result = new HashSet();
     result.addAll(semesters.values());
     return result;
   }

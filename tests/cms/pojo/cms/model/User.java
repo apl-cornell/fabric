@@ -199,7 +199,7 @@ public class User implements Principal {
   }
   
   public Collection/*Semester*/ findSemesters() {
-    SortedSet result = new TreeSet();
+    Set result = new HashSet();
 
     for (Iterator it = studentIndex.values().iterator(); it.hasNext();) {
       Student student = (Student) it.next();
