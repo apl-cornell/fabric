@@ -182,7 +182,7 @@
 
   <!-- Compiles Fabric -->
   <target name="all"
-    depends="fabric-compiler,fabil-compiler,fabric-system,client-debug,tests,fabric-signatures"
+    depends="fabric-compiler,fabil-compiler,fabric-system,client-debug"
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
