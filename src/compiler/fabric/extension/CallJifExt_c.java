@@ -31,7 +31,7 @@ public class CallJifExt_c extends JifCallExt {
 
       JifMethodInstance mi = (JifMethodInstance)c.methodInstance();
       Label entryLabel = mi.pcBound();
-      Label returnLabel = mi.returnLabel();
+      Label returnLabel = mi.returnValueLabel();
       
       Principal localPrincipal = ts.clientPrincipal(Position.compilerGenerated());
       Principal remotePrincipal = c.remoteClientPrincipal();
