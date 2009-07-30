@@ -50,41 +50,42 @@ public class CallJifExt_c extends JifCallExt {
         entryIntegPolicy = ts.meet(entryIntegPolicy, ip);
       }
       
-      lc.constrain(new NamedLabel("{C(rv), *<-client$}", 
-                                  ts.pairLabel(Position.compilerGenerated(), 
-                                               ts.confProjection(returnLabel), 
-                                               ts.writerPolicy(Position.compilerGenerated(), 
-                                                               ts.topPrincipal(Position.compilerGenerated()), 
-                                                               localPrincipal))), 
-                   LabelConstraint.LEQ,
-                   new NamedLabel("{*->client$, I(m)}",
-                                  ts.pairLabel(Position.compilerGenerated(), 
-                                               ts.readerPolicy(Position.compilerGenerated(), 
-                                                               ts.topPrincipal(Position.compilerGenerated()), 
-                                                               localPrincipal), 
-                                               entryIntegPolicy)), 
-                   A.labelEnv(), 
-                   c.position(), 
-                   new ConstraintMessage() {
-        @Override
-        public String msg() {
-          return "Insecure remote method call: Either the return value is not readable" +
-          " by the calling client or the calling client does not have" +
-          " enough integrity to host the method arguments and make the call.";
-        }
-  
-        @Override
-        public String detailMsg() {
-          return "Insecure remote method call: Either the return value is not readable" +
-          " by the calling client or the calling client does not have" +
-          " enough integrity to host the method arguments and make the call.";
-        }
-        
-        @Override
-        public String technicalMsg() {
-          return "C(rv) <= {*->client$} and {*<-client$} <= I(m) for obj.m@c(...)";
-        }        
-      });
+      // These checks happen at runtime
+//      lc.constrain(new NamedLabel("{C(rv), *<-client$}", 
+//                                  ts.pairLabel(Position.compilerGenerated(), 
+//                                               ts.confProjection(returnLabel), 
+//                                               ts.writerPolicy(Position.compilerGenerated(), 
+//                                                               ts.topPrincipal(Position.compilerGenerated()), 
+//                                                               localPrincipal))), 
+//                   LabelConstraint.LEQ,
+//                   new NamedLabel("{*->client$, I(m)}",
+//                                  ts.pairLabel(Position.compilerGenerated(), 
+//                                               ts.readerPolicy(Position.compilerGenerated(), 
+//                                                               ts.topPrincipal(Position.compilerGenerated()), 
+//                                                               localPrincipal), 
+//                                               entryIntegPolicy)), 
+//                   A.labelEnv(), 
+//                   c.position(), 
+//                   new ConstraintMessage() {
+//        @Override
+//        public String msg() {
+//          return "Insecure remote method call: Either the return value is not readable" +
+//          " by the calling client or the calling client does not have" +
+//          " enough integrity to host the method arguments and make the call.";
+//        }
+//  
+//        @Override
+//        public String detailMsg() {
+//          return "Insecure remote method call: Either the return value is not readable" +
+//          " by the calling client or the calling client does not have" +
+//          " enough integrity to host the method arguments and make the call.";
+//        }
+//        
+//        @Override
+//        public String technicalMsg() {
+//          return "C(rv) <= {*->client$} and {*<-client$} <= I(m) for obj.m@c(...)";
+//        }        
+//      });
       
       lc.constrain(new NamedLabel("{C(m), *<-c}", 
                                   ts.pairLabel(Position.compilerGenerated(), 
