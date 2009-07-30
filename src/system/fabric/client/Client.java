@@ -360,6 +360,16 @@ public final class Client {
   }
 
   /**
+   * Clears out the client cache (but leaves dissemination cache intact). To be
+   * used for (performance) testing only.
+   */
+  public void clearCache() {
+    for (RemoteCore core : cores.values()) {
+      core.clearCache();
+    }
+  }
+
+  /**
    * Called to shut down and clean up client.
    */
   public void shutdown() {

@@ -12,6 +12,7 @@ import fabric.common.*;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
@@ -385,10 +386,10 @@ public class RemoteCore extends RemoteNode implements Core {
     synchronized (objects) {
       synchronized (serialized) {
         boolean evicted = evict(onum);
-        
+
         if (evicted || serialized.containsKey(onum))
           serialized.put(onum, new SerializedObjectSoftRef(this, update));
-        
+
         return evicted;
       }
     }
@@ -412,6 +413,24 @@ public class RemoteCore extends RemoteNode implements Core {
    */
   public PublicKey getPublicKey() {
     return publicKey;
+  }
+
+  /**
+   * Clears the client's cache for this core. To be used for (performance)
+   * testing only.
+   * 
+   * @see fabric.client.Client#clearCache()
+   */
+  public void clearCache() {
+    synchronized (objects) {
+      synchronized (serialized) {
+        for (LongIterator it = objects.keySet().iterator(); it.hasNext();) {
+          evict(it.next());
+        }
+        
+        serialized.clear();
+      }
+    }
   }
 
 }
