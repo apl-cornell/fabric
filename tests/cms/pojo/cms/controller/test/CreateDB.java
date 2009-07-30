@@ -114,4 +114,33 @@ public class CreateDB {
       }
     }
   }
+
+  public static void main(String[] args) {
+    atomic {
+      LocalCore  localCore = Client.getClient().getLocalCore();
+      Core       core      = Client.getClient().getCore(args[0]);
+      Label      label     = localCore.getEmptyLabel();
+
+      CMSRoot database = null;
+
+      Map root = null;
+      String name = args[1];
+      atomic {
+        System.err.println("Fetching CMSRoot");
+        root = (Map) core.getRoot();
+        
+        database = (CMSRoot)root.get(name);
+        if(database == null) {
+          // create and add test data
+          System.err.println("No CMSRoot found, creating");
+          database = new CMSRoot~label@core();
+          CreateDB driver = new CreateDB~label@core();
+          driver.create(database);
+          root.put(name, database);
+        }
+        
+        System.err.println("CMSRoot inited");
+      }
+    }
+  }
 }
