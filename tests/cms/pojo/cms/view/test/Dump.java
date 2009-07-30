@@ -88,7 +88,7 @@ public class Dump {
 
   public void dump(Course c) {
     output("<course id       = \"" + c.toString()    + "\"");
-    output("        semester = \"" + c.getSemester() + "\"");
+    output("        semester = \"" + c.getSemester().toString() + "\"");
     output("        name     = \"" + c.getName()     + "\">");
     indent();
 
