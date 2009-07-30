@@ -8,7 +8,7 @@ class RemoteCall[principal alice, principal bob] {
         FabricClient local = FabricClient.getClient();
         if (local == null) return;
         final RemoteClient w = local.getClient("bob");
-        if (w actsfor bob && client$ actsfor alice) {
+        if (w actsfor bob) {
             int{alice→} y = m1@w(1);
         }
     }    
