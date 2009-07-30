@@ -8,10 +8,16 @@ public class CalServEP extends ExternalPrincipal {
     }
 
     private static CalServEP{*!:} P;
+    final static String{*!:} coreName = "gaia.systems.cs.cornell.edu";
+
     public static fabric.lang.Principal{*!:} getInstance{*!:}() {
         atomic {
             if (P == null) {
-                P = new CalServEP();
+                FabricClient cl = FabricClient.getClient();
+                if (cl != null) {
+                    final Core remote = cl.getCore(coreName);
+                    P = new CalServEP@remote();
+                }
             }
         }
         return P;

@@ -8,24 +8,45 @@ import sif.html.Page;
 
 import javax.servlet.ServletException;
 
-public final class Main extends UServlet[CalServEP] authority (CalServEP) {
-//	final CalendarDB{⊥→⊥;⊤←⊤} cal;
+public final class Main extends UServlet[CalServEP] authority (CalServEP, client$) {
+
     final CalendarDB{this} cal;
 	final Core{this} localCore;
 	
-	final static String{CalServEP→;CalServEP←} coreName = "gaia.systems.cs.cornell.edu";
+	final String{this} coreName = "gaia.systems.cs.cornell.edu";
 
-	public Main{CalServEP→;CalServEP←}() {
-	    FabricClient cl = FabricClient.getClient();
-	    CalendarDB local = null;
-	    Core lCore = null;
-	    if(cl != null) {
-	        lCore = cl.getLocalCore();
-	        final Core remote = cl.getCore(coreName);
-	        final Core lCoreFinal = lCore;
+	public Main{CalServEP,client$→;CalServEP&client$←}()
+	    where authority(client$, CalServEP)
+	{
+	    // create the necessary trust bonds
+        FabricClient cl = FabricClient.getClient();
+        CalendarDB local = null;
+        Core lCore = null;
+        if(cl != null) {
+            lCore = cl.getLocalCore();
+            final Core remote = cl.getCore(coreName);
+            final Core lCoreFinal = lCore;
+            try {
+                final DelegatingPrincipal client = (DelegatingPrincipal)cl.getPrincipal();
+                final DelegatingPrincipal servp = (DelegatingPrincipal)CalServEP;
+                final DelegatingPrincipal remotep = (DelegatingPrincipal)remote.getPrincipal();
+                atomic {
+                    if (client equiv client$ && servp equiv CalServEP) {
+                        client.addDelegatesTo(servp);
+                        servp.addDelegatesTo(client);
+                        
+                        // Making remote actfor CalServEP
+                        // TODO Revisit this relationship
+                        servp.addDelegatesTo(remotep);
+                    }
+                }
+            } catch (NullPointerException unlikely) {}
+              catch (ClassCastException unlikely) {}
+              
 	        atomic {
-	            if(lCoreFinal != null && lCoreFinal equiv CalServEP) {
-	                local =  new CalendarDB@lCoreFinal(lCoreFinal, remote);
+	            if(remote != null && remote actsfor CalServEP) {
+	                // would be nice if the instance of CalendarDB were on local core
+	                local =  new CalendarDB@remote(lCoreFinal, remote);
 	            } 
 	        } 
         }

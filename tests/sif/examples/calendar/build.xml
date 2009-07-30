@@ -58,8 +58,12 @@
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
     		<arg value="-filsigcp"/>
     		<arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
-    		<arg value="-e"/>
+      <arg value="-debugpositions"/>
+            <arg value="-dump"/> <arg value="FabricToFabilRewriter"/>
+            <arg value="-dump"/> <arg value="PrincipalCastAdder"/>
+        
     	<!--
+    		<arg value="-e"/>
 	  		<arg value="-report"/> <arg value="frontend=1"/>
 	  	-->
     	
@@ -92,10 +96,12 @@
     		<arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
         <arg value="-e"/>
       <arg value="-debugpositions"/>
+            <arg value="-dump"/> <arg value="FabricToFabilRewriter"/>
+            <arg value="-dump"/> <arg value="PrincipalCastAdder"/>
     	<!--
+  		<arg value="-report"/> <arg value="frontend=1"/>
     	  <arg value="-report"/> <arg value="solver=5" />
   		<arg value="-report"/> <arg value="visit=2"/>
-  		<arg value="-report"/> <arg value="frontend=1"/>
     	  <arg value="-report"/> <arg value="labelEnv=5" />
   		<arg value="-print"/> <arg value="RemoteCallWrapperUpdater"/>
   		<arg value="-print" /> <arg value="FieldLabelResolver"/>

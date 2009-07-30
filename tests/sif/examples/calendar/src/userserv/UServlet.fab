@@ -35,7 +35,7 @@ public abstract class UServlet[principal servP] extends Servlet[servP]  {
         boolean{*lbl;req.session!:} ret = true;
         try {
             final USessState[servP, lbl] css = (USessState[servP, lbl])req.getSessionState(lbl);
-            final LoginAction[servP] la = new LoginAction[servP](this, successAction, req.session); 
+            final LoginAction[servP] la = new LoginAction[servP](this, successAction, req.session);
             
             if (css != null && 
                     css.sessionPrincipal equiv la.session && 

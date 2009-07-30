@@ -195,6 +195,13 @@
     <delete dir="${signatures.fabil.classes}"/>
     <delete dir="${signatures.fabric.classes}"/>
     <delete dir="${signatures.classes}"/>
+    <delete>
+      <fileset dir="${lib}" includes="${name}*sig.jar"/>
+    </delete>    
+  	<subant target="clean">
+  		<fileset file="tests/sif/build.xml"/>
+  		<fileset file="tests/jif/build.xml"/>
+  	</subant>    
   </target>
 
   <target name="clean" depends="dust"

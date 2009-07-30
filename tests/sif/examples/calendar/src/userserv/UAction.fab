@@ -36,11 +36,11 @@ abstract public class UAction[principal servP] extends Action[servP] {
         UServlet[servP] m = (UServlet[servP])s;
 
         atomic {
-        if (this.ensureLoggedIn()) {
-            UAction[servP] a = this.directAfterLogin(req, m);
-            if (a == null) a = this;
-            if (!m.ensureLoggedIn(lbl, req, a)) return;
-        }
+            if (this.ensureLoggedIn()) {
+                UAction[servP] a = this.directAfterLogin(req, m);
+                if (a == null) a = this;
+                if (!m.ensureLoggedIn(lbl, req, a)) return;
+            }
 
             final label newLbl = new label {*lbl; req.session!:};
             SessionState ss = req.getSessionState(lbl);

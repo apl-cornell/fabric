@@ -44,43 +44,43 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	}
 
 	public void initialize{CalServEP:;CalServEP!:}() {
-		// There's a bug here, I can't put the new statements directly in the array initializer.
-		atomic {
-			User[CalServEP, {CalServEP→;CalServEP←}] a = new CalUser[{CalServEP→;CalServEP←}]("liujed", "password", "Jed", "Liu");
-			User[CalServEP, {CalServEP→;CalServEP←}] b = new CalUser[{CalServEP→;CalServEP←}]("kvikram", "password", "Krishnaprasad", "Vikram");
-			User[CalServEP, {CalServEP→;CalServEP←}] c = new CalUser[{CalServEP→;CalServEP←}]("andru", "password", "Andrew", "Myers");
-			User[CalServEP, {CalServEP→;CalServEP←}] d = new CalUser[{CalServEP→;CalServEP←}]("schong", "password", "Steve", "Chong");
-			User[CalServEP, {CalServEP→;CalServEP←}] e = new CalUser[{CalServEP→;CalServEP←}]("michael", "password", "Michael", "Clarkson");
-			User[CalServEP, {CalServEP→;CalServEP←}] f = new CalUser[{CalServEP→;CalServEP←}]("nate", "password", "Nathaniel", "Nystrom");
-			User[CalServEP, {CalServEP→;CalServEP←}] g = new CalUser[{CalServEP→;CalServEP←}]("xin", "password", "Xin", "Qi");
-			User[CalServEP, {CalServEP→;CalServEP←}] h = new CalUser[{CalServEP→;CalServEP←}]("mdgeorge", "password", "Michael", "George");
-			User[CalServEP, {CalServEP→;CalServEP←}] i = new CalUser[{CalServEP→;CalServEP←}]("lantian", "password", "Lantian", "Zheng");
-			User[CalServEP, {CalServEP→;CalServEP←}] j = new CalUser[{CalServEP→;CalServEP←}]("maksim", "password", "Maksim", "Orlovich");
-			User[CalServEP, {CalServEP→;CalServEP←}] k = new CalUser[{CalServEP→;CalServEP←}]("siggi", "password", "Sigmund", "Cherem");
-			User[CalServEP, {CalServEP→;CalServEP←}] l = new CalUser[{CalServEP→;CalServEP←}]("radu", "password", "Radu", "Rugina");
+	    // There's a bug here, I can't put the new statements directly in the array initializer.
+	    atomic {
+	        if(backend actsfor CalServEP) {
+	            User[CalServEP, {CalServEP→;CalServEP←}] a = new CalUser[{CalServEP→;CalServEP←}]@backend("liujed", "password", "Jed", "Liu");
+	            User[CalServEP, {CalServEP→;CalServEP←}] b = new CalUser[{CalServEP→;CalServEP←}]@backend("kvikram", "password", "Krishnaprasad", "Vikram");
+	            User[CalServEP, {CalServEP→;CalServEP←}] c = new CalUser[{CalServEP→;CalServEP←}]@backend("andru", "password", "Andrew", "Myers");
+	            User[CalServEP, {CalServEP→;CalServEP←}] d = new CalUser[{CalServEP→;CalServEP←}]@backend("schong", "password", "Steve", "Chong");
+	            User[CalServEP, {CalServEP→;CalServEP←}] e = new CalUser[{CalServEP→;CalServEP←}]@backend("michael", "password", "Michael", "Clarkson");
+	            User[CalServEP, {CalServEP→;CalServEP←}] f = new CalUser[{CalServEP→;CalServEP←}]@backend("nate", "password", "Nathaniel", "Nystrom");
+	            User[CalServEP, {CalServEP→;CalServEP←}] g = new CalUser[{CalServEP→;CalServEP←}]@backend("xin", "password", "Xin", "Qi");
+	            User[CalServEP, {CalServEP→;CalServEP←}] h = new CalUser[{CalServEP→;CalServEP←}]@backend("mdgeorge", "password", "Michael", "George");
+	            User[CalServEP, {CalServEP→;CalServEP←}] i = new CalUser[{CalServEP→;CalServEP←}]@backend("lantian", "password", "Lantian", "Zheng");
+	            User[CalServEP, {CalServEP→;CalServEP←}] j = new CalUser[{CalServEP→;CalServEP←}]@backend("maksim", "password", "Maksim", "Orlovich");
+	            User[CalServEP, {CalServEP→;CalServEP←}] k = new CalUser[{CalServEP→;CalServEP←}]@backend("siggi", "password", "Sigmund", "Cherem");
+	            User[CalServEP, {CalServEP→;CalServEP←}] l = new CalUser[{CalServEP→;CalServEP←}]@backend("radu", "password", "Radu", "Rugina");
 
-//			users = new User[CalServEP]@backend[] { a,b,c,d,e,f,g,h,i,j,k,l };
-            users = new User[CalServEP, {CalServEP→;CalServEP←}][12]@backend;
-            try {
-                users[0] = a;
-                users[1] = b;
-                users[2] = c;
-                users[3] = d;
-                users[4] = e;
-                users[5] = f;
-                users[6] = g;
-                users[7] = h;
-                users[8] = i;
-                users[9] = j;
-                users[10] = k;
-                users[11] = l;
-            } catch (ArrayIndexOutOfBoundsException imposs) {}
-              catch (NullPointerException imposs) {}
+	            // users = new User[CalServEP]@backend[] { a,b,c,d,e,f,g,h,i,j,k,l };
+	            users = new User[CalServEP, {CalServEP→;CalServEP←}][12]@backend;
+	            try {
+	                users[0] = a;
+	                users[1] = b;
+	                users[2] = c;
+	                users[3] = d;
+	                users[4] = e;
+	                users[5] = f;
+	                users[6] = g;
+	                users[7] = h;
+	                users[8] = i;
+	                users[9] = j;
+	                users[10] = k;
+	                users[11] = l;
+	            } catch (ArrayIndexOutOfBoundsException imposs) {}
+	            catch (NullPointerException imposs) {}
+	            events = new HashSet[{CalServEP:;CalServEP!:}]@backend();
+	        }
 
-              if(backend actsfor CalServEP) {
-                  events = new HashSet[{CalServEP:;CalServEP!:}]@backend();
-              }
-		}
+	    }
 	}
 
 	public int{CalServEP:;CalServEP!:}
