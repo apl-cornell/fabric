@@ -8,8 +8,9 @@ import fabricated.util.Set;
 import fabricated.util.Date;
 import fabricated.util.Iterator;
 import fabricated.util.NoSuchElementException;
-import jif.util.List;
-import jif.util.LinkedList;
+import fabricated.util.List;
+import fabricated.util.LinkedList;
+
 
 /**
  * A Calendar holds the persistent state of the entire calendar system.
@@ -178,7 +179,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		return true;
 	}
 	
-	public jif.util.List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
+	public List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
 	eventSubset{CalServEP:;CalServEP!:}(
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
@@ -197,7 +198,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	 * for which user is either an attendee, or created the event. (i.e.,
 	 * if the info label is readable by user).
 	 */
-	public jif.util.List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
+	public List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}
 	eventSubsetRemote{CalServEP:;CalServEP!:}(
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} start, 
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
@@ -205,7 +206,7 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 			where authority(CalRootEP), authority(CalServEP) {
 
 		Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} es = this.events;
-		final jif.util.List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} sub = new jif.util.LinkedList[{CalServEP:;CalServEP!:}]();
+		final List[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} sub = new LinkedList[{CalServEP:;CalServEP!:}]();
 		if (es != null) {
 
 			for (Iterator[{CalServEP:;CalServEP!:}] iter = es.iterator();

@@ -2,7 +2,10 @@ package fabricated.util;
 
 import jif.runtime.Runtime;
 import fabricated.lang.JifObject;
+import fabricated.lang.JifString;
+import fabricated.lang.Hashable;
 import fabricated.lang.IDComparable;
+import fabricated.lang.ToStringable;
 
 /**
  * This class is a simple utility class for representing and comparing dates. 

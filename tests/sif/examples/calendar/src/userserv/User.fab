@@ -1,9 +1,15 @@
 package userserv;
 
+import fabricated.lang.JifObject;
+import fabricated.lang.JifString;
+import fabricated.lang.Hashable;
+import fabricated.lang.IDComparable;
+import fabricated.lang.ToStringable;
+
 /**
  * Represents a user, as would be found in a database. 
  */
-public class User[principal servP, covariant label T] extends AbstractPrincipal implements jif.lang.JifObject[{servP:;servP!:}] {
+public class User[principal servP, covariant label T] extends AbstractPrincipal implements JifObject[{servP:;servP!:}] {
     public User(String{this} name, 
                 String{T} password, 
                 String{servP:;servP!:} firstName, 
@@ -73,10 +79,10 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
         return s==null?0:s.hashCode();
     }
 
-    public boolean{servP:;servP!:;o} equals(jif.lang.IDComparable[{servP:;servP!:}] o) {
+    public boolean{servP:;servP!:;o} equals(IDComparable[{servP:;servP!:}] o) {
         return equals(new label {servP:;servP!:}, o);
     }
-    public boolean{servP:;servP!:;o;lbl;*lbl} equals(label lbl, jif.lang.IDComparable[lbl] o) {
+    public boolean{servP:;servP!:;o;lbl;*lbl} equals(label lbl, IDComparable[lbl] o) {
     	if(o instanceof fabric.lang.Object) {
     		fabric.lang.Object obj = (fabric.lang.Object)o;
 //    		if(this instanceof fabric.lang.Object) {

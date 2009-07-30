@@ -1,7 +1,7 @@
 package calendar;
 
 import fabricated.util.Date;
-import jif.util.List;
+import fabricated.util.List;
 import sif.servlet.*;
 import userserv.*;
 import sif.html.Page;

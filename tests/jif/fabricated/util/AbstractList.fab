@@ -1,4 +1,10 @@
 package fabricated.util;
+import fabricated.lang.JifObject;
+import fabricated.lang.JifString;
+import fabricated.lang.Hashable;
+import fabricated.lang.IDComparable;
+import fabricated.lang.ToStringable;
+
 
 /**
  * Base implementation for List.

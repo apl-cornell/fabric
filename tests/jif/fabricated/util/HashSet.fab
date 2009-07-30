@@ -1,4 +1,10 @@
 package fabricated.util;
+import fabricated.lang.JifObject;
+import fabricated.lang.JifString;
+import fabricated.lang.Hashable;
+import fabricated.lang.IDComparable;
+import fabricated.lang.ToStringable;
+
 
 public class HashSet[label L] extends AbstractSet[L] {
     private final HashMap[L,L]{L} map;

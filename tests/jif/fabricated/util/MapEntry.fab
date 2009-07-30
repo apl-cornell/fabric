@@ -1,4 +1,11 @@
 package fabricated.util;
+import fabricated.lang.JifObject;
+import fabricated.lang.JifString;
+import fabricated.lang.Hashable;
+import fabricated.lang.IDComparable;
+import fabricated.lang.ToStringable;
+
+
 /**
  * MapEntry is used to represent entries in a map. Note that it extends
  * JifObject[K], so has codes, equality, and toString do not depend on the
