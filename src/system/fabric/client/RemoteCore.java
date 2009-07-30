@@ -12,9 +12,7 @@ import fabric.common.*;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
+import fabric.common.util.*;
 import fabric.dissemination.Glob;
 import fabric.lang.NodePrincipal;
 import fabric.lang.Object;
@@ -424,7 +422,8 @@ public class RemoteCore extends RemoteNode implements Core {
   public void clearCache() {
     synchronized (objects) {
       synchronized (serialized) {
-        for (LongIterator it = objects.keySet().iterator(); it.hasNext();) {
+        LongSet onums = new LongHashSet(objects.keySet());
+        for (LongIterator it = onums.iterator(); it.hasNext();) {
           evict(it.next());
         }
         
