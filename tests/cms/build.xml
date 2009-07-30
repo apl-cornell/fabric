@@ -39,6 +39,8 @@
     <fileset dir="${cms.home}/pojo">
       <include name="cms/model/*.java" />
       <include name="cms/www/AccessController.java" />
+      <include name="cms/www/util/DOMWriter.java" />
+      <include name="cms/view/test/Dump.java" />
       </fileset>
     <globmapper from="*.java" to="*.class" />
   </apply>
