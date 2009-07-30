@@ -568,15 +568,6 @@ public final class Client {
     }
   }
 
-  /**
-   * This is a closure for executing code after standard client initialization
-   * is complete. It is used by, e.g., core.Node to establish a direct link
-   * between the client and the core.
-   */
-  public static interface PostInitExec {
-    void run(Client client);
-  }
-
   public void setCore(String name, RemoteCore core) {
     cores.put(name, core);
   }
