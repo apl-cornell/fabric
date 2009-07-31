@@ -10,20 +10,6 @@ public class RemoteCall {
             final principal bob = w.getPrincipal();
             RemoteCallImpl[alice, bob] call = new RemoteCallImpl[alice, bob]@gaia();
             call.m2();
-        }        
-    }
-}
-
-class RemoteCallImpl[principal alice, principal bob] {
-    public int{alice→bob} m1{alice←} (int{alice→bob} x) {
-        return x+1;
-    }
-    void m2{alice←} () { 
-        FabricClient local = FabricClient.getClient();
-        if (local == null) return;
-        final RemoteClient w = local.getClient("bob");
-        if (w actsfor bob) {
-            int{alice→} y = m1@w(1);
         }
     }
 }

@@ -1,0 +1,95 @@
+public class RemoteCallImpl extends fabric.lang.Object {
+    final static fabric.client.Client client$ =
+      fabric.client.Client.getClient();
+    
+    public int m1(final int x) { return x + 1; }
+    
+    public int m1_remote(final fabric.lang.Principal client$principal,
+                         final int x) {
+        if (jif.lang.LabelUtil.relabelsTo(
+              jif.lang.LabelUtil.toLabel(
+                jif.lang.LabelUtil.bottomConf(),
+                jif.lang.LabelUtil.writerPolicy(
+                  jif.lang.PrincipalUtil.topPrincipal(), client$principal)),
+              jif.lang.LabelUtil.toLabel(
+                jif.lang.LabelUtil.readerPolicy(
+                  jif.lang.PrincipalUtil.topPrincipal(), client$principal),
+                jif.lang.LabelUtil.writerPolicy(
+                  this.jif$RemoteCallImpl_alice,
+                  jif.lang.PrincipalUtil.topPrincipal()))))
+            return this.m1(x);
+        else throw new fabric.common.exceptions.InternalError();
+    }
+    
+    public void m2() {
+        fabric.client.Client local = fabric.client.Client.getClient();
+        if (local == null) return;
+        final fabric.client.remote.RemoteClient w = local.getClient("bob");
+        if (jif.lang.PrincipalUtil.actsFor(w.getPrincipal(),
+                                           this.jif$RemoteCallImpl_bob)) {
+            int y = this.m1_remote@w(client$.getPrincipal(), 1);
+        }
+    }
+    
+    public void m2_remote(final fabric.lang.Principal client$principal) {
+        if (jif.lang.LabelUtil.relabelsTo(
+              jif.lang.LabelUtil.toLabel(
+                jif.lang.LabelUtil.bottomConf(),
+                jif.lang.LabelUtil.writerPolicy(
+                  jif.lang.PrincipalUtil.topPrincipal(), client$principal)),
+              jif.lang.LabelUtil.toLabel(
+                jif.lang.LabelUtil.readerPolicy(
+                  jif.lang.PrincipalUtil.topPrincipal(), client$principal),
+                jif.lang.LabelUtil.writerPolicy(
+                  this.jif$RemoteCallImpl_alice,
+                  jif.lang.PrincipalUtil.topPrincipal()))))
+            this.m2();
+        else throw new fabric.common.exceptions.InternalError();
+    }
+    
+    public RemoteCallImpl RemoteCallImpl$() {
+        this.jif$init();
+        {  }
+        return this;
+    }
+        
+    public RemoteCallImpl(final fabric.lang.Principal jif$alice,
+                          final fabric.lang.Principal jif$bob) {
+        super();
+        this.jif$RemoteCallImpl_alice = jif$alice;
+        this.jif$RemoteCallImpl_bob = jif$bob;
+    }
+    
+    public void jif$invokeDefConstructor() { this.RemoteCallImpl$(); }
+    
+    private void jif$init() {  }
+    
+    public static boolean jif$Instanceof(final fabric.lang.Principal jif$alice,
+                                         final fabric.lang.Principal jif$bob,
+                                         final java.lang.Object o) {
+        if (o instanceof RemoteCallImpl) {
+            RemoteCallImpl c = (RemoteCallImpl) o;
+            boolean ok = true;
+            ok =
+              ok &&
+                jif.lang.PrincipalUtil.equivalentTo(c.jif$RemoteCallImpl_alice,
+                                                    jif$alice);
+            ok = ok &&
+                   jif.lang.PrincipalUtil.equivalentTo(c.jif$RemoteCallImpl_bob,
+                                                       jif$bob);
+            return ok;
+        }
+        return false;
+    }
+    
+    public static RemoteCallImpl jif$cast$RemoteCallImpl(
+      final fabric.lang.Principal jif$alice,
+      final fabric.lang.Principal jif$bob, final java.lang.Object o) {
+        if (o == null) return null;
+        if (jif$Instanceof(jif$alice, jif$bob, o)) return (RemoteCallImpl) o;
+        throw new ClassCastException();
+    }
+    
+    final private fabric.lang.Principal jif$RemoteCallImpl_alice;
+    final private fabric.lang.Principal jif$RemoteCallImpl_bob;
+}
