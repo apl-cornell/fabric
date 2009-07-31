@@ -10,7 +10,7 @@ boolean cmsAdminOverview= (URL.equals(AccessController.CMSADMIN_URL)||URL.equals
 </head>
 <body>
 <%
-if(debug && false) {%>
+if(debug) {%>
 	<%-- for debug purposes --%>
 	<jsp:include page="print-xml-tree.jsp" /> <%
 }%>
