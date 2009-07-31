@@ -27,11 +27,6 @@
         <servlet-class>cms.www.AccessController</servlet-class>
 
         <init-param>
-            <param-name>fabric.client</param-name>
-            <param-value>cmsserver</param-value>
-        </init-param>
-
-        <init-param>
             <param-name>cms.root.name</param-name>
             <param-value>cms_db</param-value>
         </init-param>

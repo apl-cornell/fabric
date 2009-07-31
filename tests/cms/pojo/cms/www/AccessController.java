@@ -8,6 +8,8 @@ import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import java.net.InetAddress;
+
 import fabric.util.*;
 import java.util.Date;
 import java.util.Iterator;
@@ -902,6 +904,9 @@ public class AccessController extends HttpServlet {
     super.init(config);
     
     try {
+      String name = config.getInitParameter("fabric.client");
+      if (name == null)
+        name = InetAddress.getLocalHost().getHostName();
       fabric.client.Client.initialize(config.getInitParameter("fabric.client"));
     }
     catch(Exception ex) { 
