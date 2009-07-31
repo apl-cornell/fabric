@@ -59,12 +59,12 @@
     		<arg value="-filsigcp"/>
     		<arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
             
-    	<!--
-            <arg value="-debugpositions"/>
+            <arg value="-dump"/> <arg value="ParserPass"/>
             <arg value="-dump"/> <arg value="FabricToFabilRewriter"/>
             <arg value="-dump"/> <arg value="PrincipalCastAdder"/>
+    	<!--
+            <arg value="-debugpositions"/>
     		<arg value="-e"/>
-	  		<arg value="-report"/> <arg value="frontend=1"/>
 	  	-->
     	
         <srcfile />
