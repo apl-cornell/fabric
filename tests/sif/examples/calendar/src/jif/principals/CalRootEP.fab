@@ -2,14 +2,21 @@ package jif.principals;
 
 public class CalRootEP extends ExternalPrincipal {
     public CalRootEP() {
-	super("calendar.CalRootEP");
+        super("calendar.CalRootEP");
     }
 
     private static CalRootEP{*!:} P;
+    final static String{*!:} coreName = "gaia.systems.cs.cornell.edu";    
     public static fabric.lang.Principal{*!:} getInstance{*!:}() {
-	if (P == null) {
-	    P = new CalRootEP();
-	}
-	return P;
+        atomic {
+            if (P == null) {
+                FabricClient cl = FabricClient.getClient();
+                if (cl != null) {
+                    final Core remote = cl.getCore(coreName);	    
+                    P = new CalRootEP@remote();
+                }
+            }
+        }
+        return P;
     }
 }

@@ -40,7 +40,8 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
     if (ts.isFabricClass(ct)) {
       // For non-fabric classes, there cannot be location or field label.
       NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
-      labelloc = ext.location();
+      loc = ext.location();
+      labelloc = loc;
       
       Label fieldLabel = ct.defaultFieldLabel();
       if (fieldLabel != null && !sigMode) {

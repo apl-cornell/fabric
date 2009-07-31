@@ -11,6 +11,7 @@ import jif.visit.LabelChecker;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
+import polyglot.util.CodeWriter;
 import polyglot.util.Position;
 
 /**
@@ -40,6 +41,19 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
     result.corePrincipal = p;
     return result;
   }
+  
+  @Override
+  public void dump(CodeWriter w) {
+    super.dump(w);
+    w.write("(location ");
+    if (location == null) {
+      w.write("null");
+    } else {
+      location.dump(w);
+    }
+    w.write(")");
+  }
+  
 
   /**
    * Checks that the location is compatible with the <code>objectLabel</code>.
