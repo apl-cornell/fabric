@@ -49,9 +49,12 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
     Expr labelExpr = null;
     if (baseLabel != null) {
       labelExpr = rw.labelToJava(baseLabel);
-      if (ext.location() != null) {
+      
+      Expr loc = ext.location();
+      if (loc == null) loc = nf.CoreGetter(n.position());
+      if (loc != null) {
         FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
-        labelExpr = ffrw.updateLabelLocation(labelExpr, ext.location());
+        labelExpr = ffrw.updateLabelLocation(labelExpr, loc);
       }
     }
 

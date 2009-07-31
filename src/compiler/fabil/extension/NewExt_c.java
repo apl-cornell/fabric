@@ -7,6 +7,8 @@ import polyglot.ast.Expr;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
 import polyglot.types.ClassType;
+import polyglot.util.CodeWriter;
+import fabil.ast.Annotated;
 import fabil.ast.New;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
@@ -44,6 +46,5 @@ public class NewExt_c extends AnnotatedExt_c {
   public New node() {
     return (New) super.node();
   }
-  
   
 }

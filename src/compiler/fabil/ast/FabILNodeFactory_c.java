@@ -201,4 +201,11 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     n = (Call) n.del(delFactory().delCall());
     return n;
   }
+  
+  public CoreGetter CoreGetter(Position pos) {
+    CoreGetter n = new CoreGetter_c(pos);
+    n = (CoreGetter) n.ext(extFactory().extExpr());
+    n = (CoreGetter) n.del(delFactory().delExpr());
+    return n;
+  }
 }

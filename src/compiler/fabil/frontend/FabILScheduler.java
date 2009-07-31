@@ -289,10 +289,24 @@ public class FabILScheduler extends JLScheduler {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
-        l.add(LocationsAssigned(job));
+//        l.add(LocationsAssigned(job));
+        l.add(RewriteCoreGetters(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
       }
+    });
+    return g;
+  }
+  
+  public Goal RewriteCoreGetters(final Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new CoreGetterRewriter()) {
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<Goal>();
+        l.add(LocationsAssigned(job));
+        l.add(LabelsAssigned(job));
+//        l.addAll(super.prerequisiteGoals(scheduler));
+        return l;
+      }      
     });
     return g;
   }
@@ -304,8 +318,9 @@ public class FabILScheduler extends JLScheduler {
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
         l.add(WrapInlineables(job));
-        l.add(LocationsAssigned(job));
-        l.add(LabelsAssigned(job));
+        l.add(RewriteCoreGetters(job));
+//        l.add(LocationsAssigned(job));
+//        l.add(LabelsAssigned(job));        
         l.add(PrincipalsDelegated(job));
 
         if (extInfo.getFabILOptions().optLevel() > 0) {

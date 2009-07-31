@@ -87,6 +87,10 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     if (labelExpr instanceof Call && locExpr != null) {
       Call c = (Call)labelExpr;
       
+      if(!c.target().toString().contains("LabelUtil") && !c.target().toString().contains("PrincipalUtil")) {
+        System.out.println("Big problem in the compiler. Calling " + c.name());
+        return labelExpr;
+      }
       // XXX Hack
       // Several special cases, for which no change should be made.
       if (c.name().equals("getPrincipal") && c.arguments().size() == 0) {

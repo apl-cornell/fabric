@@ -3,9 +3,11 @@ package fabil.extension;
 import java.util.Collections;
 
 import polyglot.ast.Call;
+import polyglot.ast.Expr;
 import polyglot.ast.Receiver;
 import polyglot.qq.QQ;
 import polyglot.types.*;
+import polyglot.util.CodeWriter;
 import polyglot.util.Position;
 import fabil.ast.Annotated;
 import fabil.ast.FabILNodeFactory;
@@ -109,4 +111,24 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
   public Annotated node() {
     return (Annotated) super.node();
   }
+  
+  public void dump(CodeWriter w) {
+    super.dump(w);
+    Annotated expr = node();
+    Expr label = expr.label();
+    Expr location = expr.location();
+
+    // print location
+    w.allowBreak(4, " ");
+    w.begin(0);
+    w.write("(location ");
+    if (location != null) {
+      location.dump(w);
+    } else {
+      w.write("null");
+    }
+    w.write(")");
+    w.end();
+  }
+  
 }

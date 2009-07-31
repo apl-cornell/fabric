@@ -1,5 +1,6 @@
 package fabric.translate;
 
+import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricUtil;
 import fabric.extension.NewLabelExt_c;
 import fabric.visit.FabricToFabilRewriter;
@@ -23,6 +24,8 @@ public class NewLabelToFabilExt_c extends NewLabelToJavaExt_c {
 //      this.loc = loc;
       Call c = (Call)n;
 //      return addLoc(c);
+
+      if (loc == null) loc = ((FabILNodeFactory)rw.nodeFactory()).CoreGetter(node().position());
       if (loc != null) {
         FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
         return ffrw.updateLabelLocation(c, loc);
