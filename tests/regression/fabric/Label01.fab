@@ -1,0 +1,7 @@
+class Label01[principal u, principal b] {
+ public void f() {
+  int {b<-} x = 0;
+  int {u->b; u<-b; b<-} y = x;
+ }
+}
+
