@@ -6,12 +6,10 @@ import java.util.logging.Logger;
 
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
-import fabric.common.ObjectGroup;
 import fabric.common.AbstractWorkerThread;
+import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.messages.*;
 
@@ -31,17 +29,19 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
   private static final Logger logger = Logger.getLogger("fabric.core.worker");
 
   /** Associates debugging log messages with pending transactions */
-  private final LongKeyMap<LogRecord> pendingLogs;
-
-  private class LogRecord {
-    public LogRecord(int creates, int writes) {
-      this.creates = creates;
-      this.writes = writes;
-    }
-
-    public int creates;
-    public int writes;
-  }
+  // XXX Disabled -- with new messaging architecture, prepares and commits are
+  // no longer guaranteed to be handled by the same worker thread. This
+  // functionality should be moved elsewhere. -MJL
+  // private final LongKeyMap<OidKeyHashMap<LogRecord>> pendingLogs;
+  // private class LogRecord {
+  // public LogRecord(int creates, int writes) {
+  // this.creates = creates;
+  // this.writes = writes;
+  // }
+  //
+  // public int creates;
+  // public int writes;
+  // }
 
   /**
    * A factory for creating Worker instances. This is used by WorkerThread.Pool.
@@ -57,7 +57,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
    */
   private Worker(Pool<Worker> pool) {
     super("Core worker", pool);
-    this.pendingLogs = new LongKeyHashMap<LogRecord>();
+//    this.pendingLogs = new LongKeyHashMap<OidKeyHashMap<LogRecord>>();
 
     fabric.client.transaction.TransactionManager.startThread(this);
   }
@@ -96,7 +96,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
                     numGlobbedObjects =
                         numPrepares = numCommits = numCreates = numWrites = 0;
     numSendsByType = new TreeMap<String, Integer>();
-    pendingLogs.clear();
+//    pendingLogs.clear();
   }
 
   public void handle(AbortTransactionMessage message) throws AccessException,
@@ -131,7 +131,8 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
     if (session.clientIsDissem)
       throw new ProtocolError("Message not supported.");
 
-    logger.finer("Handling Commit Message");
+    logger.finer("Handling Commit Message, client="
+        + session.clientPrincipalName + ", tid=" + message.transactionID);
     this.numCommits++;
 
     try {
@@ -140,9 +141,10 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
       logger.fine("Transaction " + message.transactionID + " committed");
 
       // updated object tallies
-      LogRecord lr = pendingLogs.remove(message.transactionID);
-      this.numCreates += lr.creates;
-      this.numWrites += lr.writes;
+//      LogRecord lr =
+//          removePendingLog(message.transactionID, session.clientPrincipal);
+//      this.numCreates += lr.creates;
+//      this.numWrites += lr.writes;
 
       return new CommitTransactionMessage.Response(true);
     } catch (TransactionCommitFailedException e) {
@@ -158,7 +160,8 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
     if (session.clientIsDissem)
       throw new ProtocolError("Message not supported.");
 
-    logger.finer("Handling Prepare Message");
+    logger.finer("Handling Prepare Message, client="
+        + session.clientPrincipalName + ", tid=" + msg.tid);
     this.numPrepares++;
 
     PrepareRequest req =
@@ -175,8 +178,8 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
       // Store the size of the transaction for debugging at the end of the
       // session
       // Note: this number does not include surrogates
-      pendingLogs.put(req.tid, new LogRecord(msg.serializedCreates.size(),
-          msg.serializedWrites.size()));
+//      addPendingLog(req.tid, session.clientPrincipal, new LogRecord(
+//          msg.serializedCreates.size(), msg.serializedWrites.size()));
 
       return new PrepareTransactionMessage.Response(subTransactionCreated);
     } catch (TransactionPrepareFailedException e) {
@@ -215,5 +218,4 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
 
     return new DissemReadMessage.Response(glob);
   }
-
 }
