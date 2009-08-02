@@ -32,12 +32,21 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	final Core{CalServEP:;CalServEP!:} localCore;
 
 	public CalendarDB{CalServEP:;CalServEP!:}(Core{CalServEP:;CalServEP!:} localCore,
-	        Core{CalServEP:;CalServEP!:} remoteCore) {
+	        Core{CalServEP:;CalServEP!:} remoteCore)
+	   where authority (CalServEP)
+	{
 		backend = remoteCore;
 		this.localCore = localCore;
 		FabricClient local = FabricClient.getClient();
 		if(local != null && backend != null) {
 		    coreClient = local.getClient(backend.name());
+		    
+		    // make calendarapp actsfor CalServEP
+		    final principal calendarapp = local.getPrincipal();
+		    final Principal servp = CalServEP;
+		    if (servp instanceof DelegatingPrincipal && servp equiv CalServEP) {
+		        ((DelegatingPrincipal)servp).addDelegatesTo(calendarapp);
+		    }
 		} else {
 		    coreClient = null;
 		}
@@ -92,27 +101,26 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 		}
 	}
 	
-	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:; CalServEP!:; userID}
+	public User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP→;CalServEP←}
 	    lookupUserID{CalServEP→;CalServEP←}(String{CalServEP→;CalServEP←} userID)
 	{
-	    if (coreClient actsfor client$ && CalServEP equiv client$) {
-	        String{client$→;client$←} userID__ = userID;
-	        return lookupUserIDRemote@coreClient(userID__);
+        final principal servp = CalServEP;
+	    if (coreClient actsfor servp && servp equiv CalServEP) {
+	        return lookupUserIDRemote@coreClient(userID, servp);
 	    }
 	    return null;
 	}
-	
 
-	public User[CalServEP, {CalServEP→;CalServEP←}]{client$→;client$←} 
-	    lookupUserIDRemote{client$→;client$←}(
-	            String{client$→;client$←} userID_) : {client$→;client$←}
-	    where CalServEP equiv client$
+	public User[calservp, {calservp→;calservp←}]{calservp→;calservp←} 
+	    lookupUserIDRemote{calservp→;calservp←}(String{calservp→;calservp←} userID_,
+	            principal{calservp→;calservp←} calservp)
+	    where calservp equiv CalServEP
 	{
-		User[CalServEP, {CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:}[] users = this.users;
+		User[calservp, {calservp→;calservp←}]{calservp→;calservp←}[] users = this.users;
 		if (users == null || userID_ == null) return null;
 		for (int i = 0; i < users.length; i++) {
 			try {
-				User[CalServEP, {CalServEP:;CalServEP!:}] u = users[i];
+				User[calservp, {calservp→;calservp←}] u = users[i];
 				if (u != null && userID_.equals(u.getUserID())) {
 					return u;
 				}
