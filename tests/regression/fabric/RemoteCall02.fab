@@ -1,0 +1,77 @@
+package system;
+
+import jif.runtime.Runtime;
+import java.io.PrintStream;
+
+public class RemoteCall02 {
+  final Core{_->_; client$<-*} core;
+
+  final RemoteClient{_->_; client$<-*} remoteClient;
+
+  final RemoteCall02Data[{client$->; client$<-}]{_->_; client$<-*} data;
+
+  RemoteCall02() {
+    core = client$.getCore("core0");
+
+    remoteClient = client$("core0");
+	if (core actsfor client$) {
+      data = new RemoteCall02Data[{client$->; client$<-}]@core();
+	}
+	else {
+      data = null;
+	}
+  }
+
+  public void moo{client$->;client$<-}(int arg) : {client$->;client$<-} {
+    if (data == null) return;
+    data.i+=arg;
+  }
+
+  void run{client$->;client$<-}() {
+    try {
+      atomic {
+        if (remoteClient actsfor client$)
+          moo@remoteClient(42);
+      }
+
+      int{client$->; client$<-} curI = 0;
+      atomic {
+        if (data == null) return;
+        curI = data.i;
+      }
+
+      Runtime[client$] runtime = null;
+      atomic {
+        runtime = Runtime.getRuntime();
+      }
+      if (runtime == null) return;
+
+      PrintStream out = null;
+      out = runtime.out();
+      if (out == null) return;
+      out.println();
+
+      if (curI == 1) out.println("TEST PASSED.");
+      else out.println("TEST FAILED: expected t.i == 1 but got " + curI);
+    } catch (SecurityException e) {
+    }
+  }
+  
+  public static void main{_->_; *<-*}(String[] args) {
+    final Core core = client$.getCore("core0");
+    
+    RemoteCall02 obj = null;
+    atomic {
+      if (core actsfor client$) {
+        obj = new RemoteCall02@core();
+      }
+    }
+
+    if (obj != null) obj.run();
+  }
+}
+
+class RemoteCall02Data[label L] {
+  int{L} i;
+}
+

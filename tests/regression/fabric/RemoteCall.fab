@@ -1,0 +1,15 @@
+public class RemoteCall {
+    public static void main{⊤←}(String[] args) {
+        atomic {
+            FabricClient local = FabricClient.getClient();
+            if (local == null) return;
+            final RemoteClient w = local.getClient("bob");
+            if (w == null) return;
+            final Core gaia = local.getCore("gaia.systems.cs.cornell.edu");
+            final principal alice = local.getPrincipal();
+            final principal bob = w.getPrincipal();
+            RemoteCallImpl[alice, bob] call = new RemoteCallImpl[alice, bob]@gaia();
+            call.m2();
+        }
+    }
+}

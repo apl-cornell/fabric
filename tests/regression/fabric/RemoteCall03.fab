@@ -1,0 +1,17 @@
+package system;
+
+public class RemoteCall03 {
+  final int{this} data = 0;
+
+  public int{*<-client$} m1{} () {
+    return data + 1;
+  }
+  
+  public void m2{} () {
+    final RemoteClient w = client$.getClient("core0");
+    if (w actsfor client$) {
+      int x = m1@w();
+    }
+  }
+}
+
