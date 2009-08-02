@@ -80,7 +80,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         }
 
         Label startLabel = mi.pcBound();        
-        Label returnLabel = mi.returnValueLabel();
+        Label returnLabel = ts.join(mi.returnValueLabel(), mi.returnLabel());
 
         if (ts.containsThisLabel(startLabel) || ts.containsThisLabel(returnLabel)) {
           // If the "this" label is used in the signature, then we does not allow remote calls.
