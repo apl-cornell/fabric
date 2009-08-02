@@ -16,6 +16,7 @@ import jif.types.VarMap;
  */
 public class SilenceableSolverGLB extends SolverGLB {
   private static boolean muted;
+  private static boolean JUST_PROCEED = false;
   
   public SilenceableSolverGLB(JifTypeSystem ts, polyglot.frontend.Compiler compiler, String solverName) {
       super(ts, compiler, solverName);
@@ -45,15 +46,22 @@ public class SilenceableSolverGLB extends SolverGLB {
         if (shouldReport(1)) {
             report(1, "   " + staticFailedConstraints.size() + " statically failed constraint");
         }
-        setStatus(STATUS_NO_SOLUTION);
-
-        for (Iterator iter = staticFailedConstraints.iterator(); iter.hasNext();) {
-          Constraint cons = (Constraint)iter.next();
-          System.err.println("Runtime check does not type-check, due to\n" + cons.technicalMsg() + 
-                             "\nin the constraint\n" + cons + "\nat " + cons.position());
-        }
         
-        staticFailedConstraints.clear();
+        if (JUST_PROCEED) {
+          // XXX Temporarily ignore information leaks caused by runtime checks.
+          staticFailedConstraints.clear();
+        }
+        else {        
+          setStatus(STATUS_NO_SOLUTION);
+  
+          for (Iterator iter = staticFailedConstraints.iterator(); iter.hasNext();) {
+            Constraint cons = (Constraint)iter.next();
+            System.err.println("Runtime check does not type-check, due to\n" + cons.technicalMsg() + 
+                               "\nin the constraint\n" + cons + "\nat " + cons.position());
+          }
+          
+          staticFailedConstraints.clear();
+        }
       }
     }
 
