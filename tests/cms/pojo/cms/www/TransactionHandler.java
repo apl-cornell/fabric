@@ -2719,7 +2719,7 @@ public class TransactionHandler {
         FileItemStream item = items.next();
         if (item.isFormField())
           fieldParams.put(item.getFieldName(), Streams.asString(item.openStream()));
-        else if (!item.getName().isEmpty())
+        else if (item.getName().length() > 0)
           files.put(item.getFieldName(), downloadFile(item));
       }
 
@@ -3477,7 +3477,7 @@ public class TransactionHandler {
             String types = "";
             for (Iterator tit = rs.getRequiredFileTypes().iterator(); tit.hasNext();) {
               String fileType = (String) tit.next();
-              types += (types.isEmpty() ? "" : ", ") + fileType;
+              types += (types.length() > 0 ? ", " : "") + fileType;
             }
             
             new LogDetail(log, "Added required submission '"

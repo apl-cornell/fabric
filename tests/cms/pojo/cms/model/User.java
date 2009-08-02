@@ -116,7 +116,7 @@ public class User implements Principal {
   //////////////////////////////////////////////////////////////////////////////
   
   public boolean missingCUID() {
-    return CUID == null || CUID.isEmpty() || CUID.equals("0");
+    return CUID == null || CUID.length() == 0 || CUID.equals("0");
   }
 
   public Collection/*Course*/ findStaffCourses() {

@@ -159,7 +159,7 @@ public class FileData {
       try {
         digest = MessageDigest.getInstance("MD5");
       } catch (NoSuchAlgorithmException e) {
-        throw new IOException("Could not create MD5 Computation", e);
+        throw new IOException("Could not create MD5 Computation");
       }
       data   = new ByteArrayOutputStream();
       stream = new BufferedOutputStream(new DigestOutputStream(data, digest));

@@ -313,7 +313,7 @@ public class CMSRoot {
     List result = new ArrayList();
     for (Iterator it = users.values().iterator(); it.hasNext();) {
       User user = (User) it.next();
-      if (user.getFirstName().isEmpty() || user.getLastName().isEmpty())
+      if (user.getFirstName().length() == 0 || user.getLastName().length() == 0)
         result.add(user);
     }
     
