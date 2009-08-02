@@ -907,7 +907,7 @@ public class AccessController extends HttpServlet {
       String name = config.getInitParameter("fabric.client");
       if (name == null)
         name = InetAddress.getLocalHost().getHostName();
-      fabric.client.Client.initialize(config.getInitParameter("fabric.client"));
+      fabric.client.Client.initialize(name);
     }
     catch(Exception ex) { 
       throw new RuntimeException~label@core(ex);
