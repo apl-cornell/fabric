@@ -16,7 +16,8 @@ import jif.types.VarMap;
  */
 public class SilenceableSolverGLB extends SolverGLB {
   private static boolean muted;
-  private static boolean JUST_PROCEED = false;
+  // XXX Temporarily set to true
+  private static boolean JUST_PROCEED = true;
   
   public SilenceableSolverGLB(JifTypeSystem ts, polyglot.frontend.Compiler compiler, String solverName) {
       super(ts, compiler, solverName);
