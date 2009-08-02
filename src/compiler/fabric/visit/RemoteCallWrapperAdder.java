@@ -67,7 +67,7 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 //          Type formalType = typeNode.typePart().type(); 
 //          if(formalType == null || !formalType.equals(ts.Label())) continue;
 
-          Principal clientPrincipal = ts.clientPrincipal(Position.compilerGenerated());
+          Principal clientPrincipal = ts.clientPrincipal(Position.compilerGenerated(md.position().toString()));
 
           // Send the pc label as a runtime method parameter
 
@@ -100,24 +100,24 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 //                                                clientPrincipal));
 //          writers.add(nf.AmbPrincipalNode(Position.compilerGenerated(), 
 //                                          nf.Id(Position.compilerGenerated(), "client$principal")));
-          writers.add(nf.CanonicalPrincipalNode(Position.compilerGenerated(), 
-                      ts.topPrincipal(Position.compilerGenerated())));
+          writers.add(nf.CanonicalPrincipalNode(Position.compilerGenerated(md.position().toString()), 
+                      ts.topPrincipal(Position.compilerGenerated(md.position().toString()))));
           PolicyNode writer = 
-            nf.WriterPolicyNode(Position.compilerGenerated(),
-                                nf.CanonicalPrincipalNode(Position.compilerGenerated(), 
-                                                          ts.topPrincipal(Position.compilerGenerated())),
+            nf.WriterPolicyNode(Position.compilerGenerated(md.position().toString()),
+                                nf.CanonicalPrincipalNode(Position.compilerGenerated(md.position().toString()), 
+                                                          ts.topPrincipal(Position.compilerGenerated(md.position().toString()))),
                                 writers);
 //          components.add(reader);
           components.add(writer);
 
           TypeNode formalType = 
-            nf.LabeledTypeNode(Position.compilerGenerated(), 
-                               nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Principal()),
-                               nf.JoinLabelNode(Position.compilerGenerated(), components));
-          Formal f = nf.Formal(Position.compilerGenerated(), 
+            nf.LabeledTypeNode(Position.compilerGenerated(md.position().toString()), 
+                               nf.CanonicalTypeNode(Position.compilerGenerated(md.position().toString()), ts.Principal()),
+                               nf.JoinLabelNode(Position.compilerGenerated(md.position().toString()), components));
+          Formal f = nf.Formal(Position.compilerGenerated(md.position().toString()), 
                                Flags.FINAL,
                                formalType, 
-                               nf.Id(Position.compilerGenerated(), "client$principal"));
+                               nf.Id(Position.compilerGenerated(md.position().toString()), "client$principal"));
                     
 //          LabelNode pclbl = nf.AmbDynamicLabelNode(Position.compilerGenerated(),
 //              nf.Local(Position.compilerGenerated(), nf.Id(Position.compilerGenerated(), firstFormal.name())));
@@ -231,16 +231,16 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 //          }
           
           JifMethodDecl wrapper = 
-            nf.JifMethodDecl(Position.compilerGenerated(), 
+            nf.JifMethodDecl(Position.compilerGenerated(md.position().toString()), 
                              md.flags(), 
                              md.returnType(), 
-                             nf.Id(Position.compilerGenerated(), md.name() + "_remote"), 
+                             nf.Id(Position.compilerGenerated(md.position().toString()), md.name() + "_remote"), 
                              md.startLabel(), 
                              formals, 
                              md.returnLabel(), 
                              throwTypes, 
                              md.constraints(), 
-                             nf.Block(Position.compilerGenerated(), s1, s2));
+                             nf.Block(Position.compilerGenerated(md.position().toString()), s1, s2));
 
           members.add(wrapper);
         }
