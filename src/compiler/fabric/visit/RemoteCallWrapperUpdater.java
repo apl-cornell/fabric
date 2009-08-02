@@ -126,7 +126,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
         
         // {C(rv), *<-client$} <= {*->client$, I(m)}
         // XXX Note, it is better NOT to blindly insert the projection translation, if not needed.
-        Label left = ts.pairLabel(Position.compilerGenerated(md.name()), 
+        Label left = ts.pairLabel(Position.compilerGenerated(md.position().toString()), 
                                   ts.representableConfProjection(returnLabel), 
                                   ts.writerPolicy(Position.compilerGenerated(), 
                                                   ts.topPrincipal(Position.compilerGenerated()), 

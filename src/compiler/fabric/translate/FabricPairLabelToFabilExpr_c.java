@@ -31,7 +31,7 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
       return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".meet(%E, %E)", cexp, iexp);
     }
     
-    return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)", cexp, iexp); 
+    return (Expr) rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)", cexp, iexp).position(Position.compilerGenerated(label.position().toString())); 
   }
   
   @Override
