@@ -168,6 +168,7 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
 
   private void initPipes() {
     try {
+      diaginit();
       Pipe inbound = Pipe.open();
       this.sink = inbound.sink();
 
@@ -210,6 +211,7 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
    * pool.
    */
   private void cleanup() {
+    diagcleanup();
     session = null;
 
     try {
