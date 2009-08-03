@@ -282,10 +282,10 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
      * @return true iff the worker thread should kill itself.
      */
     public synchronized boolean workerDone(Worker worker) {
-      // Clean up the worker and add it to the thread pool if there is room.
-      if (pool.size() == maxSize) return true;
-
       worker.cleanup();
+
+      // Add to the thread pool if there is room.
+      if (pool.size() == maxSize) return true;
 
       if (!destroyed) pool.push(worker);
       return destroyed;

@@ -152,6 +152,17 @@ public final class ChannelMultiplexerThread extends Thread {
   public void shutdown() {
     this.destroyed = true;
     this.callback.shutdown();
+    
+    try {
+      socketChannel.close();
+    } catch (IOException e) {
+    }
+    
+    try {
+      selector.close();
+    } catch (IOException e) {
+    }
+    
     interrupt();
   }
 
