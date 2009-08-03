@@ -168,6 +168,13 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
 
   private void initPipes() {
     try {
+      if (this instanceof fabric.core.Worker) {
+        synchronized (Util.numAWTCorePipeCreates) {
+          Util.numAWTCorePipeCreates.value++;
+        }
+      } else synchronized (Util.numAWTClientPipeCreates) {
+        Util.numAWTClientPipeCreates.value++;
+      }
       Pipe inbound = Pipe.open();
       this.sink = inbound.sink();
 
@@ -186,6 +193,11 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
           new DataOutputStream(new BufferedOutputStream(Channels
               .newOutputStream(outboundSink)));
     } catch (IOException e) {
+      System.out.println("Comm man locals: " + Util.numCommManThreadLocals.value);
+      System.out.println("AWT client creates: " + Util.numAWTClientPipeCreates.value);
+      System.out.println("AWT client cleans:  " + Util.numAWTClientPipeCleanups.value);
+      System.out.println("AWT core   creates: " + Util.numAWTCorePipeCreates.value);
+      System.out.println("AWT core   cleans:  " + Util.numAWTCorePipeCleanups.value);
       throw new InternalError(e);
     }
   }
@@ -205,6 +217,14 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
    */
   private void cleanup() {
     session = null;
+    
+    if (this instanceof fabric.core.Worker) {
+      synchronized (Util.numAWTCorePipeCleanups) {
+        Util.numAWTCorePipeCleanups.value++;
+      }
+    } else synchronized (Util.numAWTClientPipeCleanups) {
+      Util.numAWTClientPipeCleanups.value++;
+    }
 
     try {
       in.close();

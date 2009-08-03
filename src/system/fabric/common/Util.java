@@ -6,7 +6,14 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.util.*;
 
+import fabric.common.util.MutableInteger;
+
 public final class Util {
+  public static final MutableInteger numCommManThreadLocals = new MutableInteger();
+  public static final MutableInteger numAWTClientPipeCreates = new MutableInteger();
+  public static final MutableInteger numAWTCorePipeCreates = new MutableInteger();
+  public static final MutableInteger numAWTClientPipeCleanups = new MutableInteger();
+  public static final MutableInteger numAWTCorePipeCleanups = new MutableInteger();
 
   private static final Map<String, byte[]> classHashCache =
       Collections.synchronizedMap(new HashMap<String, byte[]>());

@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 import fabric.common.ChannelMultiplexerThread;
 import fabric.common.Options;
+import fabric.common.Util;
 import fabric.common.ChannelMultiplexerThread.CallbackHandler;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NoSuchNodeError;
@@ -83,6 +84,7 @@ class CommManager {
           // APP <--[inbound ]-- CommManager
           Pipe inbound = Pipe.open();
           Pipe outbound = Pipe.open();
+          synchronized (Util.numCommManThreadLocals) {Util.numCommManThreadLocals.value++;}
           muxer.registerChannels(outbound.source(), inbound.sink());
 
           inbound.source().configureBlocking(true);
