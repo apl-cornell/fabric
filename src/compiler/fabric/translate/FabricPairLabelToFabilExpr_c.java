@@ -1,5 +1,7 @@
 package fabric.translate;
 
+import java.util.Collection;
+
 import fabric.types.FabricTypeSystem;
 import polyglot.ast.Expr;
 import polyglot.types.SemanticException;
@@ -20,18 +22,36 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
     Expr cexp = policyToJava(pl.confPolicy(), rw);
     Expr iexp = policyToJava(pl.integPolicy(), rw);
     
-    if (pl.confPolicy() instanceof ConfProjectionPolicy_c  
-     || pl.integPolicy() instanceof IntegProjectionPolicy_c) {
-      if (!(pl.confPolicy() instanceof ConfProjectionPolicy_c)) {
+    if (containsProjection(pl.confPolicy()) || containsProjection(pl.integPolicy())) {
+      if (!containsProjection(pl.confPolicy())) {
         cexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E)", cexp);
       }
-      if (!(pl.integPolicy() instanceof IntegProjectionPolicy_c)) {
+      if (!containsProjection(pl.integPolicy())) {
         iexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E)", iexp);
       }
-      return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".meet(%E, %E)", cexp, iexp);
+      // XXX should it be join or meet?
+      return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".join(%E, %E)", cexp, iexp);
     }
-    
+        
     return (Expr) rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)", cexp, iexp).position(Position.compilerGenerated(label.position().toString())); 
+  }
+  
+  protected boolean containsProjection(Policy p) {
+    if (p instanceof ConfProjectionPolicy_c) return true;
+    else if (p instanceof IntegProjectionPolicy_c) return true;
+    else if (p instanceof JoinPolicy_c) {
+      JoinPolicy_c jp = (JoinPolicy_c)p;
+      for (Policy tp : (Collection<Policy>)jp.joinComponents()) {
+        if (containsProjection(tp)) return true;
+      }
+    }
+    else if (p instanceof MeetPolicy_c) {
+      MeetPolicy_c mp = (MeetPolicy_c)p;
+      for (Policy tp : (Collection<Policy>)mp.meetComponents()) {
+        if (containsProjection(tp)) return true;
+      }
+    }
+    return false;
   }
   
   @Override
@@ -55,6 +75,44 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
                              ts.topConfPolicy(Position.compilerGenerated()), 
                              ts.bottomIntegPolicy(Position.compilerGenerated())));
       return l.toJava(rw);
+    }
+    else if (p instanceof JoinPolicy_c) {
+      if (containsProjection(p)) {
+        JoinPolicy_c jp = (JoinPolicy_c)p;
+        Expr result = null;
+        for (Policy tp : (Collection<Policy>)jp.joinComponents()) {
+          Expr ep = policyToJava(tp, rw);
+          if (!containsProjection(tp)) {
+            ep = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E)", ep);
+          }
+          if (result == null) {
+            result = ep;
+          }
+          else {
+            result = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".join(%E, %E)", result, ep);
+          }
+        }
+        return result;
+      }
+    }
+    else if (p instanceof MeetPolicy_c) {
+      if (containsProjection(p)) {
+        MeetPolicy_c mp = (MeetPolicy_c)p;
+        Expr result = null;
+        for (Policy tp : (Collection<Policy>)mp.meetComponents()) {
+          Expr ep = policyToJava(tp, rw);
+          if (!containsProjection(tp)) {
+            ep = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E)", ep);
+          }
+          if (result == null) {
+            result = ep;
+          }
+          else {
+            result = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".meet(%E, %E)", result, ep);
+          }
+        }
+        return result;
+      }      
     }
 
     return super.policyToJava(p, rw);
