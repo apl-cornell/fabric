@@ -138,6 +138,10 @@ public final class LabelUtil {
     return localCore.getBottomConfidPolicy();
   }
   
+  public static IntegPolicy bottomInteg() {
+      return localCore.getBottomIntegPolicy();
+  }
+  
   public static ConfPolicy topConf() {
     return localCore.getTopConfidPolicy();
   }
@@ -158,6 +162,9 @@ public final class LabelUtil {
 	  return localCore.getTopIntegPolicy();
   }
   
+  public static IntegPolicy bottomInteg(Core core) {
+      return localCore.getBottomIntegPolicy();
+  }
 
   public static ConfPolicy readerPolicy(Core core, Principal owner,
       Principal reader) {
@@ -435,7 +442,19 @@ public final class LabelUtil {
   public static Label toLabel(IntegPolicy policy) {
     return toLabel(localCore, policy);
   }
-
+  
+  // lift takes a policy and creates a pair label with the other
+  // component being bottom
+  public static Label liftToLabel(ConfPolicy policy) {
+      return liftToLabel(localCore, policy);
+  }
+  private static Label liftToLabel(Core core, ConfPolicy policy) {
+      return new PairLabel@core(policy, bottomInteg());
+  }
+  public static Label liftToLabel(IntegPolicy policy) {
+      return toLabel(localCore, policy);
+  }
+  
   public static Label join(Core core, Label l1, Label l2) {
     try {
       enterTiming();

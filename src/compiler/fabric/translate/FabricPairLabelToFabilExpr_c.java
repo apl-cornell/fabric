@@ -24,16 +24,15 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
     
     if (containsProjection(pl.confPolicy()) || containsProjection(pl.integPolicy())) {
       if (!containsProjection(pl.confPolicy())) {
-        cexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E)", cexp);
+        cexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".liftToLabel(%E)", cexp);
       }
       if (!containsProjection(pl.integPolicy())) {
-        iexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E)", iexp);
+        iexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".liftToLabel(%E)", iexp);
       }
       // XXX should it be join or meet?
       return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".join(%E, %E)", cexp, iexp);
     }
         
-//    return (Expr) rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)", cexp, iexp).position(Position.compilerGenerated(label.position().toString())); 
     return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)", cexp, iexp); 
   }
   
