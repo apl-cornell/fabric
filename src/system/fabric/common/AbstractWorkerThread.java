@@ -164,17 +164,10 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
 
     // Get the worker thread running.
     notifyAll();
-  }
+  }protected abstract void diaginit();
 
   private void initPipes() {
     try {
-      if (this instanceof fabric.core.Worker) {
-        synchronized (Util.numAWTCorePipeCreates) {
-          Util.numAWTCorePipeCreates.value++;
-        }
-      } else synchronized (Util.numAWTClientPipeCreates) {
-        Util.numAWTClientPipeCreates.value++;
-      }
       Pipe inbound = Pipe.open();
       this.sink = inbound.sink();
 
@@ -209,6 +202,7 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
     recycle = true;
     interrupt();
   }
+  protected abstract void diagcleanup();
 
   /**
    * Cleans up all connection-specific state to ready this worker for another
@@ -217,14 +211,6 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
    */
   private void cleanup() {
     session = null;
-    
-    if (this instanceof fabric.core.Worker) {
-      synchronized (Util.numAWTCorePipeCleanups) {
-        Util.numAWTCorePipeCleanups.value++;
-      }
-    } else synchronized (Util.numAWTClientPipeCleanups) {
-      Util.numAWTClientPipeCleanups.value++;
-    }
 
     try {
       in.close();

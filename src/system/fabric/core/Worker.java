@@ -8,12 +8,28 @@ import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.AbstractWorkerThread;
 import fabric.common.ObjectGroup;
+import fabric.common.Util;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.dissemination.Glob;
 import fabric.messages.*;
 
 public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
+
+  @Override
+  protected void diaginit() {
+      synchronized (Util.numAWTCorePipeCreates) {
+        Util.numAWTCorePipeCreates.value++;
+      }
+  }
+
+  @Override
+  protected void diagcleanup() {
+    
+      synchronized (Util.numAWTCorePipeCleanups) {
+        Util.numAWTCorePipeCleanups.value++;
+      }
+  }
 
   // Bookkeeping information for debugging/monitoring purposes:
   private int numReads;
