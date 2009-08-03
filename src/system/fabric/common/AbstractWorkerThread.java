@@ -205,9 +205,29 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
    */
   private void cleanup() {
     session = null;
+
+    try {
+      in.close();
+    } catch (IOException e) {
+    }
     in = null;
+
+    try {
+      out.close();
+    } catch (IOException e) {
+    }
     out = null;
+
+    try {
+      source.close();
+    } catch (IOException e) {
+    }
     source = null;
+
+    try {
+      sink.close();
+    } catch (IOException e) {
+    }
     sink = null;
   }
 
