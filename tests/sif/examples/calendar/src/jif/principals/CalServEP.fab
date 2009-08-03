@@ -18,16 +18,20 @@ public class CalServEP extends ExternalPrincipal {
                 FabricClient cl = FabricClient.getClient();
                 if (cl != null) {
                     final Core remote = cl.getCore(coreName);
-                    Map rootMap = remote.getRoot();
-                    Object obj = rootMap.get("jif.principals.CalServEP.P");
-                    CalServEP csep;
-                    if (obj instanceof CalServEP) {
-                        csep = (CalServEP)obj;
-                    } else {
-                        csep = new CalServEP@remote();
-                        rootMap.put("jif.principals.CalServEP.P", csep);
+                    if (remote != null) {
+                        Map rootMap = remote.getRoot();
+                        if (rootMap != null) {
+                            Object obj = rootMap.get("jif.principals.CalServEP.P");
+                            CalServEP csep = null;
+                            if (obj instanceof CalServEP) {
+                                csep = (CalServEP)obj;
+                            } else {
+                                csep = new CalServEP@remote();
+                                rootMap.put("jif.principals.CalServEP.P", csep);
+                            }
+                            return csep;
+                        }
                     }
-                    return csep;
                 }
         }
         return null;
