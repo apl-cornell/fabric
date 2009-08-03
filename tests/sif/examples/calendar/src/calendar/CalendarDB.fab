@@ -116,17 +116,19 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	            principal{calservp→;calservp←} calservp)
 	    where calservp equiv CalServEP
 	{
-		User[calservp, {calservp→;calservp←}]{calservp→;calservp←}[] users = this.users;
-		if (users == null || userID_ == null) return null;
-		for (int i = 0; i < users.length; i++) {
-			try {
-				User[calservp, {calservp→;calservp←}] u = users[i];
-				if (u != null && userID_.equals(u.getUserID())) {
-					return u;
-				}
-			}
-			catch (ArrayIndexOutOfBoundsException imposs) { }
-		}
+	        atomic {
+	            User[calservp, {calservp→;calservp←}]{calservp→;calservp←}[] users = this.users;
+	            if (users == null || userID_ == null) return null;
+	            for (int i = 0; i < users.length; i++) {
+	                try {
+	                    User[calservp, {calservp→;calservp←}] u = users[i];
+	                    if (u != null && userID_.equals(u.getUserID())) {
+	                        return u;
+	                    }
+	                }
+	                catch (ArrayIndexOutOfBoundsException imposs) { }
+	            }
+	        }
 		return null;
 	}
 	
