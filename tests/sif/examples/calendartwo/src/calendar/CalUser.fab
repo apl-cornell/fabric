@@ -1,0 +1,28 @@
+package calendar;
+
+import userserv.User;
+import fabric.lang.Principal;
+
+/**
+ * Represents a calendar app user 
+ */
+public class CalUser[covariant label T] extends User[CalServEP, T] {
+    public CalUser{CalServEP:;CalServEP!:}(
+            Principal{this} owner,
+            String{this} name, 
+            String{T} password, 
+            String{CalServEP:;CalServEP!:} firstName, 
+            String{CalServEP:;CalServEP!:} lastName)
+        where authority (this), endorse({CalServEP:;CalServEP!: meet this!:})
+    {
+        super(name, password, firstName, lastName);
+        
+        // the calendar root principal can act for all users.
+        // DOWNGRADE REASON: Hide the effect of delegating CalRootEP.
+        declassify({this:;this!:}) {
+            // XXX Maybe CalRootEP can be removed
+            addDelegatesTo(CalRootEP);
+            addDelegatesTo(owner);
+        }
+    }
+}

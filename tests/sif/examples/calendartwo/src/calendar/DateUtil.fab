@@ -1,0 +1,30 @@
+package calendar;
+
+import fabricated.util.Date;
+
+public class DateUtil {
+    public static String{*lbl;date} dateToString(label lbl, Date[lbl] date, boolean{date} replaceSpace) {
+        String d = (date == null? "" : date.toShortString());
+        return (d==null||!replaceSpace)?d:d.replace(' ', '-');
+        
+    }
+
+    public static boolean{*lbl;lbl} isDate{*lbl}(label lbl, String{*lbl} dateStr) {
+        try {
+            Date[lbl].valueOf(lbl, dateStr);
+        }
+        catch (IllegalArgumentException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public static Date[lbl]{*lbl;lbl} stringToDate{*lbl}(label lbl, String{*lbl} dateStr) {
+        try {
+            return Date[lbl].valueOf(lbl, dateStr);
+        }
+        catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+}

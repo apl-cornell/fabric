@@ -1,0 +1,160 @@
+package userserv;
+
+import fabricated.lang.JifObject;
+import fabricated.lang.JifString;
+import fabricated.lang.Hashable;
+import fabricated.lang.IDComparable;
+import fabricated.lang.ToStringable;
+
+/**
+ * Represents a user, as would be found in a database. 
+ */
+public class User[principal servP, covariant label T] extends AbstractPrincipal implements JifObject[{servP:;servP!:}] {
+    public User(String{this} name, 
+                String{T} password, 
+                String{servP:;servP!:} firstName, 
+                String{servP:;servP!:} lastName) where authority (this) {
+        this.password = password;
+        this.remote1 = new User$1[servP](firstName, lastName);
+        super(name);        
+    }
+
+    private final User$1[servP]{T} remote1;
+    private final String{T} password; // XXX should be a secure hash of it 
+    
+    User(User$1[servP]{T} remote1, String{T} password, String{this} name) {
+    	this.remote1 = remote1;
+    	this.password = password;
+    	super(name);
+    }
+
+    public String{T} getPassword() {
+        return this.password;
+    }
+    public String{servP:;servP!:;T} getFirstName() {
+    	if(remote1 == null) return null;
+        return remote1.firstName;
+    }
+
+    public String{servP:;servP!:;T} getLastName() {
+    	if(remote1 == null) return null;
+        return remote1.lastName;
+    }
+
+    public String{servP:;servP!: ; T} getRepresentation() {
+        return this.displayString() + " <" + this.name() + ">";
+    }
+
+    public boolean{authPrf; closure; lb; executeNow; *lb; T} isAuthorized(Object authPrf, 
+                                                            Closure[this, lb] closure,
+                                                            label lb,
+                                                            boolean executeNow) where authority (this) {
+        if (closure instanceof LoginClosure[servP, this] && authPrf instanceof String) {
+            String passwd = (String)authPrf;
+            String myPass = this.password;
+            
+            if (myPass == passwd || (myPass != null && myPass.equals(passwd))) {
+                // password supplied agrees with this password!
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public String getUserID() {
+        return this.name();
+    }
+
+    public String{servP:;servP!:} toString() {
+        return this.name();
+    }
+
+    public String{servP:;servP!:;T} displayString() {
+        return this.getFirstName()+" "+this.getLastName();
+    }
+
+    public int{servP:;servP!:} hashCode() {
+        String s = this.name();
+        return s==null?0:s.hashCode();
+    }
+
+    public boolean{servP:;servP!:;o} equals(IDComparable[{servP:;servP!:}] o) {
+        return equals(new label {servP:;servP!:}, o);
+    }
+    public boolean{servP:;servP!:;o;lbl;*lbl} equals(label lbl, IDComparable[lbl] o) {
+    	if(o instanceof fabric.lang.Object) {
+    		fabric.lang.Object obj = (fabric.lang.Object)o;
+//    		if(this instanceof fabric.lang.Object) {
+    			return equals(obj);
+//    		}
+    	} 
+    	return false;
+    }
+    
+    public static User[Q,{P←}]{P←} declassifyUser{P←}(principal{P←} P, principal{P←} Q, User[Q,{P→;P←}]{P←} user) 
+    where caller(P) {
+    	if(user == null) return null;
+    	final User$1[Q]{P←} nremote1 = declassify(user.remote1, {P→;P←} to {P←});
+    	final String{P←} npassword = declassify(user.password, {P→;P←} to {P←});
+    	final String{P←} nname = declassify(user.name(), {P→;P←} to {P←});
+    	return new User[Q,{P←}](nremote1, npassword, nname);
+    }
+    
+    public static User[EP, {P→;Q←}]{P→;Q←} endorseUser{P→;P←}(principal{P→;P←} EP, principal{P→;P←} P, principal{P→;P←} Q, User[EP,{P→;P←}]{P→;P←} user_) 
+    where caller(Q), endorse({P→;Q←}) {
+        User[EP,{P→;P←}]{P→;Q←} user = endorse(user_, {P→;P←;Q←} to {P→;Q←});
+        if(user == null) return null;
+        final User$1[EP] nremote1 = endorse(user.remote1, {P→;P←;Q←} to {P→;Q←});
+        final String npassword = endorse(user.password, {P→;P←;Q←} to {P→;Q←});
+        final String nname = endorse(user.name(), {P→;P←;Q←} to {P→;Q←});
+        User[EP,{P→;Q←}] toReturn = endorse(new User[EP,{P→;Q←}](nremote1, npassword, nname), {P→;P←;Q←} to {P→;Q←});
+        return toReturn;
+    }
+
+    public static User[EP, {Q←}]{Q←} declassifyUser{P→;Q←}(principal{P→;P←} EP, principal{P→;P←} P, principal{P→;P←} Q, User[EP,{P→;Q←}]{P→;Q←} user_) 
+    where Q actsfor P, caller(Q) {
+        declassify({Q←}) {
+            User[EP,{P→;Q←}]{Q←} user = declassify(user_, {P→;Q←} to {Q←});
+            if(user == null) return null;
+            final User$1[EP] nremote1 = declassify(user.remote1, {P→;Q←} to {Q←});
+            final String npassword = declassify(user.password, {P→;Q←} to {Q←});
+            final String nname = declassify(user.name(), {P→;Q←} to {Q←});
+            User[EP,{Q←}] toReturn1 = new User[EP,{Q←}](nremote1, npassword, nname);
+            User[EP,{Q←}] toReturn2 = endorse(toReturn1, {P→;P←;Q←} to {P→;Q←});
+            User[EP,{Q←}] toReturn = declassify(toReturn2, {P→;Q←} to {Q←});
+            return toReturn;
+        }
+    }
+    
+    public static User[EP, {P←}]{P←} handOverUserConf{P←}(principal{P←} P, principal{P←} EP, User[EP, {EP→;EP←; P←}]{EP→;EP←; P←} user)
+        where caller(EP,P), endorse ({EP→;EP← ⊓ P←})
+    {
+        User[EP, {EP→;EP←; P←}] user_ = declassify(endorse(user, {EP→;EP←; P←} to {EP→;EP← ⊓ P←}), {EP→;EP← ⊓ P←} to {EP← ⊓ P←});
+        if (user_ == null) return null;
+        final User$1[EP] nremote1 = declassify(endorse(user_.remote1, {EP→;EP←; P←} to {EP→;EP← ⊓ P←}), {EP→;EP← ⊓ P←} to {EP← ⊓ P←});
+        final String npassword = declassify(endorse(user_.password, {EP→;EP←; P←} to {EP→;EP← ⊓ P←}), {EP→;EP← ⊓ P←} to {EP← ⊓ P←});
+        final String nname = declassify(endorse(user_.name(), {EP→;EP←; P←} to {EP→;EP← ⊓ P←}), {EP→;EP← ⊓ P←} to {EP← ⊓ P←});
+        User[EP, {P←}] toReturn = new User[EP, {P←}](nremote1, npassword, nname); 
+        return toReturn;
+    }
+    
+    public static User[EP, {P→;P←}]{P→;P←} handOverUser{P→;P← ⊓ EP←}(principal{P→;P←} EP, principal{P→;P←} P, User[EP, {EP→;EP←}]{P→; EP→;EP←} user) 
+        where caller(EP, P)
+    {
+        User[EP, {EP→;EP←}]{P→;P← ⊓ EP←} user_ = declassify(endorse(user, {EP→;EP←;P→} to {EP→;P→;P← ⊓ EP←}), {EP→;P→;P← ⊓ EP←} to {P→;P← ⊓ EP←});
+        if (user_ == null) return null;
+        final User$1[EP] nremote1 = declassify(endorse(user_.remote1, {EP→;P→;EP←} to {EP→;P→;P← ⊓ EP←}), {EP→;P→;P← ⊓ EP←} to {P→;P← ⊓ EP←});
+        final String npassword = declassify(endorse(user_.password, {EP→;P→;EP←} to {EP→;P→;P← ⊓ EP←}), {EP→;P→;P← ⊓ EP←} to {P→;P← ⊓ EP←});
+        final String nname = declassify(endorse(user_.name(), {EP→;P→;EP←} to {EP→;P→;P← ⊓ EP←}), {EP→;P→;P← ⊓ EP←} to {P→;P← ⊓ EP←});
+        User[EP, {P→;P←}] toReturn = new User[EP, {P→;P←}](nremote1, npassword, nname); 
+        return toReturn;
+    }
+    
+    public static User[EP, {EP←}]{EP←} handOverUserInteg{P←}(principal{P←} EP, principal{P←} P, User[EP, {P←}]{P←} user)
+        where caller(EP,P)
+    {
+        // TODO Implement me!
+        return null;
+    }
+}

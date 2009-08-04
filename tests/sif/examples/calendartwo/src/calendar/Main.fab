@@ -1,0 +1,418 @@
+package calendar;
+
+import fabricated.util.Date;
+import fabricated.util.List;
+import sif.servlet.*;
+import userserv.*;
+import sif.html.Page;
+
+import javax.servlet.ServletException;
+
+public final class Main extends UServlet[CalServEP] authority (CalServEP, client$) {
+
+    // cal1 stores some of the user principals
+    // cal1 also stores some of the events
+    // think of it as the google calendar
+    final CalendarDB{this} cal1;
+    // cal1 will reside on coreName1
+    final String{this} coreName1 = "gaia.systems.cs.cornell.edu";
+    final DelegatingPrincipal{this} google;
+    final Core{this} googlec;
+    
+    // cal2 stores other user principals
+    // cal2 also stores other events
+    // think of it as the yahoo calendar
+    final CalendarDB{this} cal2;
+    final String{this} coreName2 = "trantor.systems.cs.cornell.edu";
+    final DelegatingPrincipal{this} yahoo;
+    final Core{this} yahooc;
+    
+	final Core{this} localCore;
+
+	public Main{CalServEP,client$→;CalServEP&client$←}()
+	    where authority(client$, CalServEP)
+	{
+        FabricClient cl = FabricClient.getClient();
+        CalendarDB local1 = null;
+        CalendarDB local2 = null;
+        Core lCore = null;
+        DelegatingPrincipal googlelocal = null;
+        DelegatingPrincipal yahoolocal = null;
+        Core glocal = null;
+        Core ylocal = null;
+        if(cl != null) {
+            lCore = cl.getLocalCore();
+            glocal = cl.getCore(coreName1);
+            ylocal = cl.getCore(coreName2);
+            try {
+                final DelegatingPrincipal calendarapp = (DelegatingPrincipal)cl.getPrincipal();
+                final DelegatingPrincipal servp = (DelegatingPrincipal)CalServEP;
+                googlelocal = (DelegatingPrincipal)glocal.getPrincipal();
+                yahoolocal = (DelegatingPrincipal)ylocal.getPrincipal();
+                
+                atomic {
+                    // create the necessary trust bonds
+                    if (calendarapp equiv client$ && servp equiv CalServEP) {
+                        // the server host is equivalent to CalServEP
+                        // XXX do we need this? (Ans: we probably don't)
+                        // Two other principals operate on the server: session and CalRootEP. What about them?
+                        calendarapp.addDelegatesTo(servp);
+                        servp.addDelegatesTo(calendarapp);
+                        
+                        // Making google and yahoo actfor CalServEP
+                        // These actsfor relationships are just a convenience mechanism
+                        // for the server to send data to the stores without relabeling them
+                        // This is not security critical because session and CalRootEP principals 
+                        // of the server handle user data
+                        // XXX Revisit this relationship
+                        servp.addDelegatesTo(googlelocal);
+                        servp.addDelegatesTo(yahoolocal);
+                    }
+                }
+            } catch (NullPointerException unlikely) {}
+              catch (ClassCastException unlikely) {}
+              
+        }
+        google = googlelocal;
+        yahoo = yahoolocal;
+        googlec = glocal;
+        yahooc = ylocal;
+        atomic {
+            if(googlec != null && googlec actsfor CalServEP) {
+                local1 =  new CalendarDB@googlec(googlec);
+            }
+            if(yahooc != null && yahooc actsfor CalServEP) {
+                local2 =  new CalendarDB@yahooc(yahooc);
+            }               
+        } 
+	    localCore = lCore;
+	    cal1 = local1;
+        cal2 = local2;
+		super();
+	}
+
+	public void initialize{CalServEP:;CalServEP!:}() throws ServletException {
+		//!@! ADD THIS BACK IN, AND REMOVE FOLLOWING LINE super.initialize();
+		addStartAction(new LogoffAction[CalServEP](this));
+
+		if (cal1 != null && cal2 != null) {
+		    cal1.initialize();
+            cal2.initialize();		    
+		}
+		addStartAction(new ShowCalendar(this));
+	}
+
+    // This method will only be called by the runtime
+    protected SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+            String{*lbl} id, SessionPrincipal{*lbl} session) {
+        SessionState[lbl] toReturn = null;
+        atomic {
+            if (localCore != null && localCore equiv client$ &&
+                    lbl <= new label {⊤→client$} && 
+                    new label {⊤←client$} <= lbl) {
+                toReturn = new CalendarSessionState[lbl]@localCore(id, session);
+            }
+        }
+        return toReturn;
+    }
+    
+    // This method will only be called by the runtime
+    protected SessionPrincipal createSessionPrincipal(String{client$→;client$←} id) {
+        SessionPrincipal toReturn = null;
+        atomic {
+            if (localCore != null && localCore equiv client$) {
+                toReturn = new SessionPrincipal@localCore(id);
+            }
+        }
+        return toReturn;
+    }
+        
+	protected String defaultActionName(Request[CalServEP] req) {
+		return "show";
+	}
+
+	public String getPrivateHostID() throws ServletException {
+		return "";
+	}
+
+	// lookup user based on whether it trusts google or yahoo
+	// DOWNGRADE REASON: transfer User from CalServEP to p &&& access control
+	public User[CalServEP, {p:; p!:}]{p:; p!:} lookupUserID{p:; p!:}(String{p:; p!:} userID, principal{p:; p!:} p) 
+	where authority (CalServEP), caller(p), endorse({p:; p!: meet CalServEP!:}) {
+	    final principal{p:; p!: meet CalServEP!:} pp = endorse(p, {p→; p←} to {p:; p!: meet CalServEP!:});
+	    String{p→;CalServEP← ⊓ p←} userID_ = endorse(userID, {p:; p!:} to {p→;CalServEP← ⊓ p←});
+	    String{CalServEP→;CalServEP←} userID__ = declassify(userID_, {p→;CalServEP← ⊓ p←} to {CalServEP→;CalServEP←});
+		User[CalServEP, {CalServEP→;CalServEP←}] u = null;
+		if(cal1!=null && cal2!=null) {
+		        if (google actsfor pp) {
+		            declassify({CalServEP→;CalServEP←}) {
+		                u = cal1.lookupUserID(userID__);
+		            }
+		            
+		        } else {
+		            declassify({CalServEP→;CalServEP←}) {
+		                u = cal2.lookupUserID(userID__);
+		            }
+		        }
+		}
+		User[CalServEP, {p→;p←}] u2 = User.handOverUser(CalServEP, p, u);
+		return u2;
+	}
+
+	// DOWNGRADE REASON: Hide the side effect at level CalServEP!:, and endorse the PC
+	// (i.e., the CalServEP has no trouble handing out fresh user ids to whoever asks)
+	// &&& access control
+	private int{CalServEP:;CalServEP!:} getFreshUid{p:;p!:}(principal{p:;p!:} p) 
+	where authority (CalServEP), caller(p), endorse({p:;p!: meet CalServEP!:}) {
+        final principal{p:; p!: meet CalServEP!:} pp = endorse(p, {p→; p←} to {p:; p!: meet CalServEP!:});	    
+			if (cal1 != null && cal2!=null) {
+			    if (google actsfor pp) {
+			        declassify ({CalServEP:;p!: meet CalServEP!:}) {
+			            return cal1.getFreshUid();
+			        }
+			    } else {
+			        declassify ({CalServEP:;p!: meet CalServEP!:}) {
+			            return cal2.getFreshUid();
+			        }
+			    }
+			}
+			return -1;
+	}
+	/**
+	 * Returns a new Event, filled out with default values.
+	 */
+	Event[{currUser!:}]{currUser!:} defaultEvent{currUser!:}(User[CalServEP, {currUser!:}]{currUser!:} currUser) 
+	where authority(CalServEP),
+	caller(currUser) {
+//        try {
+	    
+	    if (localCore == null) return null;
+	    if(localCore actsfor currUser && localCore equiv CalServEP) {
+		Date[{currUser!:}] now = new Date[{currUser!:}]@localCore();
+		int uid = this.getFreshUid(currUser);
+
+		return new Event[{currUser!:}]@localCore(uid, 
+				new label {currUser!:}, 
+				new label {currUser:;currUser!:}, // default info label only readable by currUser
+				now,
+				now,
+				"",
+				"",
+				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}]@localCore(),
+				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}]@localCore(),
+				currUser);
+	    } else {
+	        return null;
+	    }
+//	    } catch (NullPointerException ex) { return null; }
+	}
+
+	void updateEventInCalendar{p→;p←}(principal{p→;p←} p, Request[CalServEP]{p→;p←} req, Event[{p→;p←}]{p→;p←} ueicEvent) 
+	    where {p←} <= ueicEvent.infoLbl,
+	    caller(p), authority(CalServEP), endorse({p→;p← meet CalServEP←})
+	{
+	    final principal{p:; p!: meet CalServEP!:} pp = endorse(p, {p→; p←} to {p:; p!: meet CalServEP!:});      
+	        
+		if (cal1 != null && cal2 != null) {
+
+			// sanitize the event to prevent SQL attacks
+		    
+		    // TODO : Check if the following two lines are necessary
+//			final Event e = endorse(sanitizeEvent(p, declassify(ueicEvent, {p←})), {p→;p← meet CalServEP←});
+//			if(e == null) return;
+			// DOWNGRADE REASON: handover ueicEvent from p to CalServEP
+			declassify ({p← meet CalServEP←}) {
+//				final label ntimeLbl = endorse(e.timeLbl, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
+//				final label ninfoLbl = endorse(e.infoLbl, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
+//				Event$1[e.infoLbl] e1r = e.remote1;
+//				Event$1[ninfoLbl] nremote1 = endorse(e1r, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
+//				Date[e.timeLbl] e1s = e.startTime;
+//				Date[e.timeLbl] e1e = e.endTime;
+//				Date[ntimeLbl] nstartTime = endorse(e1s, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
+//				Date[ntimeLbl] nendTime = endorse(e1e, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
+//
+//				final Event e1_ = new Event[{p→;CalServEP→;p← meet CalServEP←}](
+//							endorse(e.uid, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←}),
+//							ntimeLbl,
+//							ninfoLbl,
+//							nstartTime,
+//							nendTime,
+//							nremote1
+//					);
+//
+//				final Event[{p→;CalServEP→;p← meet CalServEP←}] e1 = 
+//					endorse(e1_, {p→;CalServEP→;CalServEP←; p←} to {p→;CalServEP→;p← meet CalServEP←});
+//				
+//				int muid_ = endorse(e1.uid, {p→;CalServEP→;CalServEP←} to {p→;CalServEP→;p← meet CalServEP←});
+//				int muid = declassify(muid_, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
+//
+//				final label mtimeLbl = declassify(e1.timeLbl, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
+//				final label minfoLbl = declassify(e1.infoLbl, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
+//				Event$1[e1.infoLbl] e2r = e1.remote1;
+//				Event$1[minfoLbl] mremote1 = declassify(e2r, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
+//				Date[e1.timeLbl] e2s = e1.startTime;
+//				Date[e1.timeLbl] e2e = e1.endTime;
+//				Date[mtimeLbl] mstartTime = declassify(e2s, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
+//				Date[mtimeLbl] mendTime = declassify(e2s, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
+//				Event[{CalServEP→; CalServEP←}] e2_ =
+//					new Event[{CalServEP→; CalServEP←}](
+//							muid,
+//							mtimeLbl,
+//							minfoLbl,
+//							mstartTime,
+//							mendTime,
+//							mremote1
+//					);
+//				final Event e2 = declassify(e2_, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
+				
+				Event e2;
+				// the following also moves events from the local core to the right core
+				if (google actsfor pp) {
+				    declassify ({p← meet CalServEP←}) {
+				        e2 = CalServDeclassifier.handOverEvent(p, CalServEP, ueicEvent, googlec);	
+				        cal1.updateEvent(e2);
+				    }
+				} else {
+				    declassify ({p← meet CalServEP←}) {
+				        e2 = CalServDeclassifier.handOverEvent(p, CalServEP, ueicEvent, yahooc);   
+				        cal2.updateEvent(e2);
+				    }
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Get the event identified by the id
+	 */
+	Event[{p→;p←}]{p:;p!:}
+	retrieveEvent{p:;p!:}(principal{p!:;p:} p, int{p!:;p:} eventID)
+	where caller(p), authority(CalServEP), endorse({p:;p!: meet CalServEP!:}) {
+        final principal{p:; p!: meet CalServEP!:} pp = endorse(p, {p→; p←} to {p:; p!: meet CalServEP!:});      
+	    
+		declassify ({p!: meet CalServEP!:}) {
+			int{CalServEP:; p!:} eid1 = declassify(eventID, {p:; p!:} to {CalServEP:; p!:});
+			int{CalServEP:; CalServEP!:} eid2 = endorse(eid1, {CalServEP:; p!:} to {CalServEP:; CalServEP!:});
+
+			Event eg = null;
+            Event ey = null;
+			
+			if (google actsfor pp) {
+			    declassify ({p!: meet CalServEP!:}) {
+			        eg = cal1==null?null:cal1.retrieveEvent(eid2);
+			    }
+			}
+			if (yahoo actsfor pp) {
+			    declassify ({p!: meet CalServEP!:}) {
+			        ey = cal2==null?null:cal2.retrieveEvent(eid2);
+			    }
+			}
+			Event e;
+			if (eg == null) {
+			    e = ey;
+			} else {
+			    e = eg;
+			}
+
+//			Event e1 = endorse(e, {CalServEP:;CalServEP!:;eventID; p} to {p:;CalServEP:;CalServEP!: meet p!:});
+//			Event e2 = declassify(e1,{CalServEP:;p:;CalServEP!: meet p!:} to {p:;CalServEP!: meet p!:});
+			// XXX This will probably move it from the remote core to the local core?
+			Event e2 = CalServDeclassifier.handOverEvent(CalServEP, p, e, localCore);
+			return e2;
+		}
+	}
+	
+    String escapeString(String s) {
+        if (s == null) return null;
+        return s.replaceAll("'", "''");
+    }
+	
+
+	// TODO: Tentative where clause, not sure if it holds at runtime
+	Event[{p←}]{p←} sanitizeEvent{p←}(principal{p←} p, Event[{p←}]{p←} e)
+	    where {p←} <= e.infoLbl 
+	{
+		if (e == null || cal1 == null || e.remote1 == null || e.uid == null || localCore == null || cal2 == null) {
+			return e;
+		}
+		String name = escapeString(e.remote1.name);
+		String note = escapeString(e.remote1.note);
+
+//		try {
+		if (localCore actsfor p) {
+		// need to construct a new event...
+		return new Event[{p←}]@localCore(e.uid.uid,
+				e.timeLbl,
+				e.infoLbl,
+				e.startTime,
+				e.endTime,
+				name,
+				note,
+				e.remote1.attendees,
+				e.remote1.viewers,
+				e.remote1.creator);
+		} else {
+		    return null;
+		}
+//		} catch (NullPointerException ex) { return e; }
+	}
+
+	/**
+	 * Get the subset of events that start on or after dt, and before end.
+	 */
+	List[{CalServEP:;CalServEP!:}]{p!:} 
+	eventSubset{p!:}(principal{p!:} p,
+			Date[{p!:}]{p!:} start, 
+			Date[{p!:}]{p!:} end,
+			User[CalServEP, {p!:}]{p!:} displayUser)
+			where caller(p), authority(CalServEP), endorse({p!: meet CalServEP!:}) {
+		// DOWNGRADE REASON: need to convert a Date[{p!:}] to a Date[{CalServEP:;CalServEP!:}], then transfer ownership of usr, then get the result, and transfer it back to p
+		Date[{CalServEP:;CalServEP!:}] startDate = CalServDeclassifier.declassDate(p, CalServEP, start);
+		Date[{CalServEP:;CalServEP!:}] endDate = CalServDeclassifier.declassDate(p, CalServEP, end);
+
+		User[CalServEP, {CalServEP!:}]{CalServEP!:} us1 = User.handOverUserInteg(CalServEP, p, displayUser); 
+
+		List[{CalServEP:;CalServEP!:}] subsetg = cal1==null?null:cal1.eventSubset(startDate, endDate, us1);
+        List[{CalServEP:;CalServEP!:}] subsety = cal2==null?null:cal2.eventSubset(startDate, endDate, us1);
+        List[{CalServEP:;CalServEP!:}] subset = null;
+        if (subsetg == null && subsety == null) {
+            subset = null;
+        } else {
+            if (subsetg != null) {
+                try {
+                    subsetg.addAll(subsety);
+                } catch (ClassCastException unlikely) {}
+                  catch (IllegalArgumentException unlikely) {}
+                  catch (NullPointerException imposs) {}
+                subset = subsetg;
+            } else {
+                try {
+                    subsety.addAll(subsety);
+                } catch (ClassCastException unlikely) {}
+                  catch (IllegalArgumentException unlikely) {}
+                  catch (NullPointerException imposs) {}
+                subset = subsety;
+            }
+        }
+
+		List[{CalServEP:;CalServEP!:}] subset1 = endorse(subset, {CalServEP:;CalServEP!:;p!:} to {CalServEP:;CalServEP!: meet p!:});
+		List[{CalServEP:;CalServEP!:}] subset2 = declassify(subset1,{CalServEP:;CalServEP!: meet p!:} to {CalServEP!: meet p!:});
+		return subset2;
+	}
+
+    boolean{p:; p!:} compareDates{p:; p!:}(
+            principal{p:; p!:} p,
+            Date[{CalRootEP:; p!:}]{p:; p!:} c,
+            Date[{CalRootEP:; p!:}]{p:; p!:} d) 
+            where caller(p),
+            CalRootEP actsfor p
+    {
+        if (google actsfor p) {
+            return cal1 != null && cal1.compareDates(p, c, d); 
+        } else {
+            return cal2 != null && cal2.compareDates(p, c, d); 
+        }
+    }
+
+}
+

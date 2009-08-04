@@ -1,0 +1,45 @@
+package jif.principals;
+
+import fabric.client.Core;
+import fabric.util.Map;
+import fabric.lang.Object;
+
+public class CalServEP extends ExternalPrincipal {
+    public CalServEP() {
+        super("calendar.CalServEP");
+    }
+
+//  Use the root map to emulate a static field    
+//    private static CalServEP{*!:} P;
+    private static String{*!:} P = "jif.principals.CalServEP.P";
+    final static String{*!:} coreName = "gaia.systems.cs.cornell.edu";
+
+    public static fabric.lang.Principal{*!:} getInstance{*!:}() {
+        atomic {
+                FabricClient cl = FabricClient.getClient();
+                if (cl != null) {
+                    final Core remote = cl.getCore(coreName);
+                    if (remote != null) {
+                        Map rootMap = remote.getRoot();
+                        if (rootMap != null) {
+                            Object obj = rootMap.get(P);
+                            CalServEP csep = null;
+                            if (obj instanceof CalServEP) {
+                                csep = (CalServEP)obj;
+                            } else {
+                                csep = new CalServEP@remote();
+                                rootMap.put(P, csep);
+                            }
+                            return csep;
+                        }
+                    }
+                }
+        }
+        return null;
+    }
+
+    public static fabric.lang.Principal{*!:} getInstance{*!:}(Core core) {
+        return getInstance();
+    }
+
+}
