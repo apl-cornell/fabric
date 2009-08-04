@@ -44,13 +44,15 @@ class Airline {
     final principal{airline<-} user;
     final principal{airline<-} airline;
 
-    Tickets[bank, airline, user]{bank<-} tickets;
+    final Tickets[bank, airline, user]{airline<-} tickets;
 
-    Airline{bank<-}(principal{airline<-} bank_, principal{airline<-} user_, principal{airline<-} airline_) {
+    Airline{airline_<-}(principal{airline_<-} bank_,
+		       principal{airline_<-} user_,
+		       principal{airline_<-} airline_) {
+	airline = airline_;
 	user = user_;
 	bank = bank_;
-	airline = airline_;
-	tickets = new Tickets();
+	tickets = new Tickets[bank, airline, user]();
     }
 }
 
@@ -64,13 +66,14 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal {
         where this actsfor bank
     {
       try {
-        final principal c = customerAcct.user;
-        final principal c2 = customer;
+        final principal cust1 = customerAcct.user;
+        final principal cust2 = customer;
         final principal airline_ = airlineAcct.user;
-        if (this actsfor c & this actsfor c2 & this actsfor airline_) {
-            customerAcct.debit(1000); // @ wA (@wB?)
-            airlineAcct.credit(1000); // @ wB
-            custTickets.num_tickets++;  // @wA
+        if (this actsfor cust1 & this actsfor cust2 & this actsfor airline &
+	    this actsfor airline_) {
+            customerAcct.debit(1000);   // @wBank
+            airlineAcct.credit(1000);   // @wBank
+            custTickets.num_tickets++;  // @wAirline
         }
       } catch (NullPointerException e) {}
 
