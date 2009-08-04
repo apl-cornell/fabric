@@ -300,6 +300,7 @@ public class FabILScheduler extends JLScheduler {
   
   public Goal RewriteCoreGetters(final Job job) {
     Goal g = internGoal(new VisitorGoal(job, new CoreGetterRewriter()) {
+      @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
         l.add(LocationsAssigned(job));

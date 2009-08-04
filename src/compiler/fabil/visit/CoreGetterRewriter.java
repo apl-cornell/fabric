@@ -2,12 +2,11 @@ package fabil.visit;
 
 import java.util.Stack;
 
-import fabil.ast.Annotated;
-import fabil.ast.CoreGetter;
-import polyglot.ast.Call;
+import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.visit.NodeVisitor;
-import polyglot.ast.Expr;
+import fabil.ast.Annotated;
+import fabil.ast.CoreGetter;
 
 public class CoreGetterRewriter extends NodeVisitor {
   

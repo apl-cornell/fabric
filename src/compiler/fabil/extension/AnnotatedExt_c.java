@@ -112,10 +112,10 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     return (Annotated) super.node();
   }
   
+  @Override
   public void dump(CodeWriter w) {
     super.dump(w);
     Annotated expr = node();
-    Expr label = expr.label();
     Expr location = expr.location();
 
     // print location

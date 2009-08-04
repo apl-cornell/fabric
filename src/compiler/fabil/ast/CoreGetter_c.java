@@ -1,17 +1,14 @@
 package fabil.ast;
 
-import java.util.Collections;
 import java.util.List;
-
-import fabil.types.FabILTypeSystem;
 
 import polyglot.ast.Expr_c;
 import polyglot.ast.Node;
 import polyglot.ast.Term;
-import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.TypeChecker;
+import fabil.types.FabILTypeSystem;
 
 public class CoreGetter_c extends Expr_c implements CoreGetter {
 
@@ -19,6 +16,7 @@ public class CoreGetter_c extends Expr_c implements CoreGetter {
     super(pos);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     return succs;
@@ -30,7 +28,7 @@ public class CoreGetter_c extends Expr_c implements CoreGetter {
   
   /** Type check the expression. */
   @Override
-  public Node typeCheck(TypeChecker tc) throws SemanticException {
+  public Node typeCheck(TypeChecker tc) {
     FabILTypeSystem fts = (FabILTypeSystem) tc.typeSystem();
     return type(fts.Core());
   }  
