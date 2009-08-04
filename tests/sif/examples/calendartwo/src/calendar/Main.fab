@@ -23,7 +23,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, client
     // cal2 also stores other events
     // think of it as the yahoo calendar
     final CalendarDB{this} cal2;
-    final String{this} coreName2 = "trantor.systems.cs.cornell.edu";
+    final String{this} coreName2 = "trantor.u.cs.cornell.edu";
     final DelegatingPrincipal{this} yahoo;
     final Core{this} yahooc;
     

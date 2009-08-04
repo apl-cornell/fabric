@@ -28,7 +28,8 @@ public class NameService {
     clientPorts.put("gaia.systems.cs.cornell.edu", 3386);
     clientPorts.put("bob", 3387);    
     clientPorts.put("alice", 3388);    
-    clientPorts.put("calendarapp", 3389);    
+    clientPorts.put("calendarapp", 3389);
+    clientPorts.put("trantor.u.cs.cornell.edu", 3390);    
   }
   
   /**
