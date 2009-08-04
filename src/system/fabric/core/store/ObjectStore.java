@@ -453,15 +453,22 @@ public abstract class ObjectStore {
    * to be committed or aborted.
    */
   protected final void unpin(PendingTransaction tx) {
-    for (long onum : tx) {
-      Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-      if (locks.first != null && locks.first == tx.tid) locks.first = null;
+    for (long readOnum : tx.reads) {
+      Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(readOnum);
 
       MutableInteger pinCount = locks.second.get(tx.tid);
       if (pinCount != null) {
         pinCount.value--;
         if (pinCount.value == 0) locks.second.remove(tx.tid);
       }
+
+      if (locks.first == null && locks.second.isEmpty()) rwLocks.remove(readOnum);
+    }
+    
+    for (SerializedObject update : tx.modData) {
+      long onum = update.getOnum();
+      Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
+      if (locks.first != null && locks.first == tx.tid) locks.first = null;
 
       if (locks.first == null && locks.second.isEmpty()) rwLocks.remove(onum);
     }
