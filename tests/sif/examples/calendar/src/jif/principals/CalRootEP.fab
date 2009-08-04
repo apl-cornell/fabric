@@ -11,8 +11,8 @@ public class CalRootEP extends ExternalPrincipal {
 
 // Use the root map to emulate this static field    
 //    private static CalRootEP{*!:} P;
-    private static String{*!:} P = "jif.principals.CalRootEP";
-    final static String{*!:} coreName = "gaia.systems.cs.cornell.edu";
+    static final String{*!:} P = "jif.principals.CalRootEP.P";
+    static final String{*!:} coreName = "gaia.systems.cs.cornell.edu";
     
     public static fabric.lang.Principal{*!:} getInstance{*!:}() {
         atomic {
