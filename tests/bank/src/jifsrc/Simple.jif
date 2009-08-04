@@ -32,20 +32,31 @@ class Account[principal bank] {
 
 }
 
-class Tickets[principal bank] {
+class Tickets[principal bank, principal airline] {
+    int{bank<-airline} num_tickets;
     final principal{bank<-} user;
-    int{bank<-} num_tickets;
-
-    Tickets{user_<-}(principal{bank<-} user_) {
+    Tickets{bank<-}(principal{bank<-} user_) {
         user = user_;
         num_tickets = 0;
+    }
+}
+
+class Airline[principal bank] {
+    final principal{bank<-} user;
+    final principal{bank<-} airline;
+    Tickets[bank, airline]{bank<-} tickets;
+    Airline{bank<-}(principal{bank<-} user_, principal{bank<-} airline_) {
+	user = user_;
+	airline = airline_;
+	tickets = new Tickets[bank, airline](user_);
     }
 }
 
 class Broker[principal bank] extends AbstractPrincipal {
     final Account[bank]{this←} accountA;
     final Account[bank]{this←} accountB;
-    final Tickets[bank]{this←} ticketsA;
+    final principal airline;
+    final Tickets[bank, airline]{this←} ticketsA;
 
     void doit{this<-}()
         where this actsfor bank
@@ -63,10 +74,11 @@ class Broker[principal bank] extends AbstractPrincipal {
 
     }
 
-    Broker{this<-}(Account[bank]{this←} aa, Account[bank]{this←} ab, Tickets[bank]{this←} ta) {
+    Broker{this<-}(Account[bank]{this←} aa, Account[bank]{this←} ab, Tickets[bank, airline_]{this←} ta, principal{bank<-} airline_) {
         accountA = aa;
         accountB = ab;
         ticketsA = ta;
+	airline = airline_;
         super("broker");
     }
 }
@@ -76,13 +88,14 @@ class Main {
     public void main{*<-}() {
         final principal a=null, b=null;
         final principal bank=null;
+	final principal airline = null;
         Account accountA = new Account(a); // @ storeA (storeB?)
         accountA.credit(10000);
 
         Account accountB = new Account(b); // @ storeB
         Tickets ticketsA = new Tickets(a); // @ storeA
 
-        final Broker broker = new Broker(accountA, accountB, ticketsA);
+        final Broker broker = new Broker(accountA, accountB, ticketsA, airline);
 
         if (broker actsfor bank) {
             broker.doit();
