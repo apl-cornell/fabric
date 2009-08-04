@@ -129,10 +129,19 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
   }
 
   /**
+   * XXX This is a hack to allow us to free up worker threads on the core.
+   * Clients will only send one request per streamID, so this will let us kill
+   * the core's worker thread once the request is served.
+   */
+  protected boolean keepRunning() {
+    return true;
+  }
+
+  /**
    * The execution body of the worker thread.
    */
   private final void run_() throws IOException {
-    while (true) {
+    while (keepRunning()) {
       try {
         Message.receive(in, out, this);
       } catch (ClosedByInterruptException e) {
@@ -164,7 +173,9 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
 
     // Get the worker thread running.
     notifyAll();
-  }protected abstract void diaginit();
+  }
+
+  protected abstract void diaginit();
 
   private void initPipes() {
     try {
@@ -187,11 +198,16 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
           new DataOutputStream(new BufferedOutputStream(Channels
               .newOutputStream(outboundSink)));
     } catch (IOException e) {
-      System.out.println("Comm man locals: " + Util.numCommManThreadLocals.value);
-      System.out.println("AWT client creates: " + Util.numAWTClientPipeCreates.value);
-      System.out.println("AWT client cleans:  " + Util.numAWTClientPipeCleanups.value);
-      System.out.println("AWT core   creates: " + Util.numAWTCorePipeCreates.value);
-      System.out.println("AWT core   cleans:  " + Util.numAWTCorePipeCleanups.value);
+      System.out.println("Comm man locals: "
+          + Util.numCommManThreadLocals.value);
+      System.out.println("AWT client creates: "
+          + Util.numAWTClientPipeCreates.value);
+      System.out.println("AWT client cleans:  "
+          + Util.numAWTClientPipeCleanups.value);
+      System.out.println("AWT core   creates: "
+          + Util.numAWTCorePipeCreates.value);
+      System.out.println("AWT core   cleans:  "
+          + Util.numAWTCorePipeCleanups.value);
       throw new InternalError(e);
     }
   }
@@ -203,6 +219,7 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
     recycle = true;
     interrupt();
   }
+
   protected abstract void diagcleanup();
 
   /**
