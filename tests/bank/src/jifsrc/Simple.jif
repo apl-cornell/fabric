@@ -1,4 +1,4 @@
-class Balance[principal bank, principal user] {
+class Balance[principal bank, principal user] { // on Bank store
     int{bank<-; bank->user} value = 0;
 
     int{bank<-; bank->user} debit{bank<-}(int{bank<-; bank->user} amt) {
@@ -15,7 +15,7 @@ class Balance[principal bank, principal user] {
     }
 }
 
-class Account[principal bank] {
+class Account[principal bank] { // on Bank store
     final principal{bank<-} user;
     final Balance[bank,user] {bank<-} balance;
 
@@ -32,52 +32,54 @@ class Account[principal bank] {
 
 }
 
-class Tickets[principal bank, principal airline] {
-    int{bank<-airline} num_tickets;
-    final principal{bank<-} user;
-    Tickets{bank<-}(principal{bank<-} user_) {
-        user = user_;
+class Tickets[principal bank, principal airline, principal user] { // on Airline store
+    int {airline<-bank; airline->user} num_tickets;
+    Tickets{airline<-}() {
         num_tickets = 0;
     }
 }
 
-class Airline[principal bank] {
-    final principal{bank<-} user;
-    final principal{bank<-} airline;
-    Tickets[bank, airline]{bank<-} tickets;
-    Airline{bank<-}(principal{bank<-} user_, principal{bank<-} airline_) {
+class Airline {
+    final principal{airline<-} bank;
+    final principal{airline<-} user;
+    final principal{airline<-} airline;
+
+    Tickets[bank, airline, user]{bank<-} tickets;
+
+    Airline{bank<-}(principal{airline<-} bank_, principal{airline<-} user_, principal{airline<-} airline_) {
 	user = user_;
+	bank = bank_;
 	airline = airline_;
-	tickets = new Tickets[bank, airline](user_);
+	tickets = new Tickets();
     }
 }
 
-class Broker[principal bank] extends AbstractPrincipal {
-    final Account[bank]{this←} accountA;
-    final Account[bank]{this←} accountB;
+class Broker[principal bank, principal customer] extends AbstractPrincipal {
+    final Account[bank]{this←} customerAcct;
+    final Account[bank]{this←} airlineAcct;
     final principal airline;
-    final Tickets[bank, airline]{this←} ticketsA;
+    final Tickets[bank, airline, customer]{this←} custTickets;
 
     void doit{this<-}()
         where this actsfor bank
     {
       try {
-        final principal A = accountA.user;
-        final principal A2 = ticketsA.user;
-        final principal B = accountB.user;
-        if (this actsfor A & this actsfor B & this actsfor A2) {
-            accountA.debit(1000); // @ wA (@wB?)
-            accountB.credit(1000); // @ wB
-            ticketsA.num_tickets++;  // @wA
+        final principal c = customerAcct.user;
+        final principal c2 = customer;
+        final principal airline_ = airlineAcct.user;
+        if (this actsfor c & this actsfor c2 & this actsfor airline_) {
+            customerAcct.debit(1000); // @ wA (@wB?)
+            airlineAcct.credit(1000); // @ wB
+            custTickets.num_tickets++;  // @wA
         }
       } catch (NullPointerException e) {}
 
     }
 
-    Broker{this<-}(Account[bank]{this←} aa, Account[bank]{this←} ab, Tickets[bank, airline_]{this←} ta, principal{bank<-} airline_) {
-        accountA = aa;
-        accountB = ab;
-        ticketsA = ta;
+    Broker{this<-}(Account[bank]{this←} aa, Account[bank]{this←} ab, Tickets[bank, airline_, customer]{this←} ta, principal{bank<-} airline_) {
+        customerAcct = aa;
+        airlineAcct = ab;
+        custTickets = ta;
 	airline = airline_;
         super("broker");
     }
@@ -93,9 +95,9 @@ class Main {
         accountA.credit(10000);
 
         Account accountB = new Account(b); // @ storeB
-        Tickets ticketsA = new Tickets(a); // @ storeA
+        Tickets custTickets = new Tickets(); // @ storeA
 
-        final Broker broker = new Broker(accountA, accountB, ticketsA, airline);
+        final Broker broker = new Broker(accountA, accountB, custTickets, airline);
 
         if (broker actsfor bank) {
             broker.doit();
