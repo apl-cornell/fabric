@@ -55,7 +55,7 @@ class Broker[principal bank] extends AbstractPrincipal {
 	final principal A2 = ticketsA.user;
 	final principal B = accountB.user;
 	if (this actsfor A & this actsfor B & this actsfor A2) {
-	    accountA.debit(1000); // @ wA
+	    accountA.debit(1000); // @ wA (@wB?)
 	    accountB.credit(1000); // @ wB
 	    ticketsA.num_tickets++;  // @wA
 	}
@@ -76,7 +76,7 @@ class Main {
     public void main{*<-}() {
 	final principal a=null, b=null;
 	final principal bank=null;
-	Account accountA = new Account(a); // @ storeA
+	Account accountA = new Account(a); // @ storeA (storeB?)
 	accountA.credit(10000);
 
 	Account accountB = new Account(b); // @ storeB
