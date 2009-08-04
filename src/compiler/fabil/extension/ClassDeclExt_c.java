@@ -736,10 +736,18 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
           ret = rr.qq().parseStmt(" return (" + pt.wrapperTypeString(ts) + ")%E;", call);
         }
         else {
+          Expr castExpr = call;
+          TypeNode returnType = md.returnType();
+          if (ts.isFabricReference(returnType)) {
+            // Do a little dance to get the exact proxy.
+            QQ qq = rr.qq();
+            castExpr = qq.parseExpr("fabric.lang.Object._Proxy.$getProxy(%E)", castExpr);
+          }
+          
           ret = nf.Return(Position.compilerGenerated(), 
                           nf.Cast(Position.compilerGenerated(), 
                                   md.returnType(), 
-                                  call));
+                                  castExpr));
         }
         
         List<Stmt> catchStmts = new ArrayList<Stmt>();
