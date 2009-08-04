@@ -114,7 +114,8 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, client
 		return u2;
 	}
 
-	// DOWNGRADE REASON: Hide the side effect at level CalServEP!:, and endorse the PC (i.e., the CalServEP has no trouble handing out fresh user ids to whoever asks)
+	// DOWNGRADE REASON: Hide the side effect at level CalServEP!:, and endorse the PC
+	// (i.e., the CalServEP has no trouble handing out fresh user ids to whoever asks)
 	// &&& access control
 	private int{CalServEP:;CalServEP!:} getFreshUid{p:;p!:}(principal p) 
 	where authority (CalServEP), caller(p), endorse({p:;p!: meet CalServEP!:}) {

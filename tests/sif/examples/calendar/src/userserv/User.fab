@@ -139,11 +139,16 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
         return toReturn;
     }
     
-    public static User[EP, {P→;P←}]{P→;P←} handOverUser{P→;P← ⊓ EP←}(principal{P→;P←} EP, principal{P→;P←} P, User[EP, {EP→;EP←}] user) 
+    public static User[EP, {P→;P←}]{P→;P←} handOverUser{P→;P← ⊓ EP←}(principal{P→;P←} EP, principal{P→;P←} P, User[EP, {EP→;EP←}]{P→; EP→;EP←} user) 
         where caller(EP, P)
     {
-        // TODO Implement me!
-        return null;
+        User[EP, {EP→;EP←}]{P→;P← ⊓ EP←} user_ = declassify(endorse(user, {EP→;EP←;P→} to {EP→;P→;P← ⊓ EP←}), {EP→;P→;P← ⊓ EP←} to {P→;P← ⊓ EP←});
+        if (user_ == null) return null;
+        final User$1[EP] nremote1 = declassify(endorse(user_.remote1, {EP→;P→;EP←} to {EP→;P→;P← ⊓ EP←}), {EP→;P→;P← ⊓ EP←} to {P→;P← ⊓ EP←});
+        final String npassword = declassify(endorse(user_.password, {EP→;P→;EP←} to {EP→;P→;P← ⊓ EP←}), {EP→;P→;P← ⊓ EP←} to {P→;P← ⊓ EP←});
+        final String nname = declassify(endorse(user_.name(), {EP→;P→;EP←} to {EP→;P→;P← ⊓ EP←}), {EP→;P→;P← ⊓ EP←} to {P→;P← ⊓ EP←});
+        User[EP, {P→;P←}] toReturn = new User[EP, {P→;P←}](nremote1, npassword, nname); 
+        return toReturn;
     }
     
     public static User[EP, {EP←}]{EP←} handOverUserInteg{P←}(principal{P←} EP, principal{P←} P, User[EP, {P←}]{P←} user)
