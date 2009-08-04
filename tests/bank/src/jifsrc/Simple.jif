@@ -2,16 +2,16 @@ class Balance[principal bank, principal user] {
     int{bank<-; bank->user} value = 0;
 
     int{bank<-; bank->user} debit{bank<-}(int{bank<-; bank->user} amt) {
-	if (amt <= value & value > 0 & amt > 0) {
-	    value -= amt;
-	}
-	return value;
+        if (amt <= value & value > 0 & amt > 0) {
+            value -= amt;
+        }
+        return value;
     }
     int{bank<-; bank->user} credit{bank<-}(int{bank<-; bank->user} amt) {
-	if (amt > 0) {
-	    value += amt;
-	}
-	return value;
+        if (amt > 0) {
+            value += amt;
+        }
+        return value;
     }
 }
 
@@ -20,14 +20,14 @@ class Account[principal bank] {
     final Balance[bank,user] {bank<-} balance;
 
     Account(principal{bank<-} user_) {
-	user = user_;
-	balance = new Balance();
+        user = user_;
+        balance = new Balance();
     }
     int{bank<-; bank->user} debit{bank<-}(int{bank<-; bank->user} amt) {
-	try { balance.debit(amt); return balance.value; } catch (NullPointerException e) { return 0; }
+        try { balance.debit(amt); return balance.value; } catch (NullPointerException e) { return 0; }
     }
     int{bank<-; bank->user} credit{bank<-}(int{bank<-; bank->user} amt) {
-	try { balance.credit(amt); return balance.value; } catch (NullPointerException e) { return 0; }
+        try { balance.credit(amt); return balance.value; } catch (NullPointerException e) { return 0; }
     }
 
 }
@@ -37,8 +37,8 @@ class Tickets[principal bank] {
     int{bank<-} num_tickets;
 
     Tickets{user_<-}(principal{bank<-} user_) {
-	user = user_;
-	num_tickets = 0;
+        user = user_;
+        num_tickets = 0;
     }
 }
 
@@ -48,44 +48,44 @@ class Broker[principal bank] extends AbstractPrincipal {
     final Tickets[bank]{this←} ticketsA;
 
     void doit{this<-}()
-	where this actsfor bank
+        where this actsfor bank
     {
       try {
-	final principal A = accountA.user;
-	final principal A2 = ticketsA.user;
-	final principal B = accountB.user;
-	if (this actsfor A & this actsfor B & this actsfor A2) {
-	    accountA.debit(1000); // @ wA (@wB?)
-	    accountB.credit(1000); // @ wB
-	    ticketsA.num_tickets++;  // @wA
-	}
+        final principal A = accountA.user;
+        final principal A2 = ticketsA.user;
+        final principal B = accountB.user;
+        if (this actsfor A & this actsfor B & this actsfor A2) {
+            accountA.debit(1000); // @ wA (@wB?)
+            accountB.credit(1000); // @ wB
+            ticketsA.num_tickets++;  // @wA
+        }
       } catch (NullPointerException e) {}
 
     }
 
     Broker{this<-}(Account[bank]{this←} aa, Account[bank]{this←} ab, Tickets[bank]{this←} ta) {
-	accountA = aa;
-	accountB = ab;
-	ticketsA = ta;
-	super("broker");
+        accountA = aa;
+        accountB = ab;
+        ticketsA = ta;
+        super("broker");
     }
 }
 
 class Main {
 
     public void main{*<-}() {
-	final principal a=null, b=null;
-	final principal bank=null;
-	Account accountA = new Account(a); // @ storeA (storeB?)
-	accountA.credit(10000);
+        final principal a=null, b=null;
+        final principal bank=null;
+        Account accountA = new Account(a); // @ storeA (storeB?)
+        accountA.credit(10000);
 
-	Account accountB = new Account(b); // @ storeB
-	Tickets ticketsA = new Tickets(a); // @ storeA
+        Account accountB = new Account(b); // @ storeB
+        Tickets ticketsA = new Tickets(a); // @ storeA
 
-	final Broker broker = new Broker(accountA, accountB, ticketsA);
+        final Broker broker = new Broker(accountA, accountB, ticketsA);
 
-	if (broker actsfor bank) {
-	    broker.doit();
-	}
+        if (broker actsfor bank) {
+            broker.doit();
+        }
     }
 }
