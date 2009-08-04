@@ -11,8 +11,8 @@ public class CalServEP extends ExternalPrincipal {
 
 //  Use the root map to emulate a static field    
 //    private static CalServEP{*!:} P;
-    private static String{*!:} P = "jif.principals.CalServEP.P";
-    final static String{*!:} coreName = "gaia.systems.cs.cornell.edu";
+    static final String{*!:} P = "jif.principals.CalServEP.P";
+    static final String{*!:} coreName = "gaia.systems.cs.cornell.edu";
 
     public static fabric.lang.Principal{*!:} getInstance{*!:}() {
         atomic {
