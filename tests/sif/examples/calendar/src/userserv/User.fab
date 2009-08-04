@@ -45,10 +45,12 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
         return this.displayString() + " <" + this.name() + ">";
     }
 
-    public boolean{authPrf; closure; lb; executeNow; *lb; T} isAuthorized(Object authPrf, 
-                                                            Closure[this, lb] closure,
-                                                            label lb,
-                                                            boolean executeNow) where authority (this) {
+    public boolean{authPrf; closure; lb; executeNow; *lb; T; this; this←} 
+        isAuthorized(java.lang.Object authPrf, 
+                jif.lang.Closure[this, lb] closure,
+                label lb,
+                boolean executeNow) where authority (this) 
+    {
         if (closure instanceof LoginClosure[servP, this] && authPrf instanceof String) {
             String passwd = (String)authPrf;
             String myPass = this.password;

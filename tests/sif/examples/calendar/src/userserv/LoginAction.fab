@@ -252,7 +252,8 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
             if(client == null) return null;
             
             final Core{session!:} localCore = client.getLocalCore();
-            SessionPrincipal spdeclass = SessionPrincipal.declassifySP(sp, session); 
+//            SessionPrincipal spdeclass = SessionPrincipal.declassifySP(sp, session);
+            SessionPrincipal spdeclass = declassify(sp, {session:;session!:} to {session!:});
             LoginClosure[servP, logUser] lc = new LoginClosure[servP, logUser]{session!:}@localCore(spdeclass);
             Capability[logUser, {logUser:}] cap = 
                 PrincipalUtil.authorize(logUser, 

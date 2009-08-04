@@ -11,7 +11,8 @@ public final class SessionPrincipal extends AbstractPrincipal {
         super("session");
     }
     
-    public static SessionPrincipal{P←} declassifySP{P←}(SessionPrincipal{P→;P←} sp_, principal{P←} P)
+    public static SessionPrincipal{P←} declassifySP{P←}(SessionPrincipal{P→;P←} sp_, 
+            principal{P←} P)
     where caller(P) {
 //    	final SessionPrincipal[{P→;P←}]{P←} sp = declassify(sp_, {P→;P←} to {P←});
 //    	if(sp == null) return null;
