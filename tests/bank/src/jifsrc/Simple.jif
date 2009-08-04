@@ -54,10 +54,10 @@ class Broker[principal bank] extends AbstractPrincipal {
 	final principal A = accountA.user;
 	final principal A2 = ticketsA.user;
 	final principal B = accountB.user;
-	if (this actsfor A & this actsfor B & this actsfor A2 & A equiv A2) {
-	    accountA.debit(1000);
-	    accountB.credit(1000);
-	    //ticketsA.num_tickets++;
+	if (this actsfor A & this actsfor B & this actsfor A2) {
+	    accountA.debit(1000); // @ wA
+	    accountB.credit(1000); // @ wB
+	    ticketsA.num_tickets++;  // @wA
 	}
       } catch (NullPointerException e) {}
 
@@ -76,13 +76,13 @@ class Main {
     public void main{*<-}() {
 	final principal a=null, b=null;
 	final principal bank=null;
-	Account accountA = new Account[bank](a);
+	Account accountA = new Account(a); // @ storeA
 	accountA.credit(10000);
 
-	Account accountB = new Account[bank](b);
-	Tickets ticketsA = new Tickets(a);
+	Account accountB = new Account(b); // @ storeB
+	Tickets ticketsA = new Tickets(a); // @ storeA
 
-	final Broker broker = new Broker[bank](accountA, accountB, ticketsA);
+	final Broker broker = new Broker(accountA, accountB, ticketsA);
 
 	if (broker actsfor bank) {
 	    broker.doit();
