@@ -64,22 +64,23 @@ class Airline {
 class Broker[principal bank, principal customer] extends AbstractPrincipal {
     final Account[bank]{this←} customerAcct;
     final Account[bank]{this←} airlineAcct;
-    final principal{bank←} airline;
+    final principal{this←} airline;
     final Tickets[bank, airline, customer]{this←} custTickets;
 
     void coordinatePurchase{}()
 	where authority(this), endorse({this←})
     {
       try {
-        final principal cust1 = customerAcct.user;
+        final principal cust1 = customerAcct.user; // bank←
         final principal cust2 = customer;
         final principal airline_ = airlineAcct.user;
-        if (this actsfor bank &
-	    this actsfor cust1 &
-	    this actsfor cust2 &
-	    this actsfor airline &
-	    bank actsfor airline & // HUH?
-	    this actsfor airline_)
+        if (this actsfor bank
+	       & this actsfor airline
+	    // & this actsfor cust1
+	    // & this actsfor cust2
+	    // & this actsfor airline_
+	    // & bank actsfor airline // this is not acceptable. For debugging.
+	    )
 	{
             customerAcct.debit(1000);   // @wBank
             airlineAcct.credit(1000);   // @wBank
@@ -92,7 +93,7 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal {
     Broker{this←}(Account[bank]{this←} aa,
 		  Account[bank]{this←} ab,
 		  Tickets[bank, airline_, customer]{this←} ta,
-		  principal{bank←} airline_) {
+		  principal{this←} airline_) {
         customerAcct = aa;
         airlineAcct = ab;
         custTickets = ta;
