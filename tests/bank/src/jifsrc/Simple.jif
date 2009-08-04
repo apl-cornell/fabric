@@ -78,6 +78,7 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal {
 	    this actsfor cust1 &
 	    this actsfor cust2 &
 	    this actsfor airline &
+	    bank actsfor airline & // HUH?
 	    this actsfor airline_)
 	{
             customerAcct.debit(1000);   // @wBank
