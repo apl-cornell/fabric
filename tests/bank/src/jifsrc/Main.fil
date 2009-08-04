@@ -111,8 +111,8 @@ class SimplePrincipal extends AbstractPrincipal {
 class Main
 { // this should be fabIL code that runs somewhere trusted.
 
-    final principal{*←} customer = new SimplePrincipal("customer"); // @ root store
-    final principal{*←} bank     = new SimplePrincipal("bank");         // @ root store
+    final principal{*←} customer = new SimplePrincipal("customer");  // @ root store
+    final principal{*←} bank     = new SimplePrincipal("bank");      // @ root store
     final principal{*←} airline  = new SimplePrincipal("airline");   // @ root store
 
     Broker[bank, customer]{*←} broker;
@@ -121,8 +121,8 @@ class Main
         Account customerAcct = new Account(customer); // @ bank store
         customerAcct.credit(10000);
 
-        Account airlineAcct = new Account(airline); // @ bank store
-        Tickets custTickets = new Tickets(); // @ airline store
+        Account airlineAcct = new Account(airline);   // @ bank store
+        Tickets custTickets = new Tickets();          // @ airline store
 
         broker = new Broker(customerAcct, airlineAcct, custTickets, airline); // @ root store
     }
