@@ -1,0 +1,99 @@
+public class Create {
+
+    /**
+     * create the setup for the OO7 test:
+     *
+     * brokerCore (args[0])
+     * ==========
+     * broker: Broker[bank,customer] {broker<-}
+     *  bank         -> bank
+     *  customer     -> customer
+     *  customerAcct -> customerAccount
+     *  airlineAcct  -> airlineAccount
+     *  airline      -> airline
+     *  custTickets  -> tickets
+     *
+     * bank: DelegatingPrincipal     {broker<-}
+     *  delegatesTo -> broker
+     *
+     * customer: DelegatingPrincipal {broker<-}
+     *  delegatesTo -> broker
+     *
+     * airline: DelegatingPrincipal  {broker<-}
+     *  delegatesTo -> broker
+     *
+     * bankCore (args[1])
+     * ========
+     * airlineBalance: Balance[bank,airline] {bank<-; bank->airline}
+     *  bank    -> bank
+     *  user    -> airline
+     *  value   -> 0
+     *
+     * airlineAccount: Account[bank]         {bank<-}
+     *  bank    -> bank
+     *  balance -> airlineBalance
+     *
+     * userAccount: Balance[bank,customer]   {bank<-; bank->customer}
+     *  bank    -> bank
+     *  user    -> customer
+     *  value   -> 0
+     *
+     * customerAccount: Account[bank]        {bank<-}
+     *  bank    -> bank
+     *  user    -> customer
+     *  balance -> userAccount
+     *
+     * airlineCore (args[2])
+     * ===========
+     * tickets: Tickets[bank,airline,user]   {bank<-airline}
+     *  bank    -> bank
+     *  airline -> airline
+     *  user    -> user
+     *  airline -> airline
+     *  count   -> 0
+     *
+     */
+    public static void main(String[] args) {
+        atomic {
+            Core  brokerCore = Client.getClient().getCore(args[0]);
+            Core    bankCore = Client.getClient().getCore(args[1]);
+            Core airlineCore = Client.getClient().getCore(args[2]);
+
+            Principal bank     = new AbstractPrincipal@brokerCore().jif$lang$AbstractPrincipal$("bank");
+            Principal customer = new AbstractPrincipal@brokerCore().jif$lang$AbstractPrincipal$("customer");
+            Principal airline  = new AbstractPrincipal@brokerCore().jif$lang$AbstractPrincipal$("airline");
+
+            Label L1 = LabelUtil.writerPolicy(brokerCore, broker, broker);
+
+            Account  airlineAccount = new Balance@bankCore(bank, airline).Balance$();
+            Account customerAccount = new Balance@bankCore(bank,customer).Balance$();
+
+            Tickets tickets = new Tickets(bank,airline,customer).Tickets$();
+
+            Broker    broker   = new Broker@brokerCore(bank,customer).Broker$(customerAccount,airlineAccount,tickets,airline);
+
+            // make broker top
+            airline.addDelegatesTo(broker);
+               bank.addDelegatesTo(broker);
+
+            // add core delegations
+            airline.addDelegatesTo(airlineCore);
+             broker.addDelegatesTo(brokerCore);
+               bank.addDelegatesTo(bankCore);
+
+            // add client delegations
+            Client  brokerClient = Client.getClient(args[0]);
+            Client    bankClient = Client.getClient(args[1]);
+            Client airlineClient = Client.getClient(args[2]);
+
+            airline.addDelegatesTo(airlineClient);
+             broker.addDelegatesTo(brokerClient);
+               bank.addDelegatesTo(bankClient);
+        }
+    }
+
+}
+
+/*
+** vim: ts=4 sw=4 et cindent cino=\:0
+*/
