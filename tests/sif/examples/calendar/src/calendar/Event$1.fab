@@ -17,7 +17,9 @@ public class Event$1[label L] {
 	}
     final String{L} name;
     final String{L} note;
-    final List[{CalServEP:;CalServEP!:}]{L} attendees; // Set of User[CalServEP] who are attending the event
-    final List[{CalServEP:;CalServEP!:}]{L} viewers; // Set of User[CalServEP] who can view the time of the event
+ // Set of User[CalServEP] who are attending the event
+    final List[{CalServEP:;CalServEP!:}]{L} attendees;
+ // Set of User[CalServEP] who can view the time of the event    
+    final List[{CalServEP:;CalServEP!:}]{L} viewers; 
     final User[CalServEP, L]{L} creator;
 }

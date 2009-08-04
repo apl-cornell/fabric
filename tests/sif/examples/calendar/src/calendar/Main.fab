@@ -154,9 +154,9 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, client
 	}
 
 	void updateEventInCalendar{p→;p←}(principal{p→;p←} p, Request[CalServEP]{p→;p←} req, Event[{p→;p←}]{p→;p←} ueicEvent) 
-	where 
-	{p←} <= ueicEvent.infoLbl,
-	caller(p), authority(CalServEP), endorse({p→;p← meet CalServEP←}) {
+	    where {p←} <= ueicEvent.infoLbl,
+	    caller(p), authority(CalServEP), endorse({p→;p← meet CalServEP←})
+	{
 		if (cal != null) {
 
 			// sanitize the event to prevent SQL attacks
