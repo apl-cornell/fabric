@@ -129,19 +129,10 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
   }
 
   /**
-   * XXX This is a hack to allow us to free up worker threads on the core.
-   * Clients will only send one request per streamID, so this will let us kill
-   * the core's worker thread once the request is served.
-   */
-  protected boolean keepRunning() {
-    return true;
-  }
-
-  /**
    * The execution body of the worker thread.
    */
   private final void run_() throws IOException {
-    while (keepRunning()) {
+    while (true) {
       try {
         Message.receive(in, out, this);
       } catch (ClosedByInterruptException e) {

@@ -82,15 +82,6 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
   protected Logger getLogger() {
     return logger;
   }
-  
-  private boolean keepRunning = true;
-
-  @Override
-  protected boolean keepRunning() {
-    boolean result = keepRunning;
-    keepRunning = false;
-    return result;
-  }
 
   @Override
   protected void logStats() {
