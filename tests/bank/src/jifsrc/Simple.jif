@@ -92,13 +92,13 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
 
     }
 
-    Broker{this←}(Account[bank]{this←} aa,
-		  Account[bank]{this←} ab,
-		  Tickets[bank, airline_, customer]{this←} ta,
+    Broker{this←}(Account[bank]{this←} ca,
+		  Account[bank]{this←} aa,
+		  Tickets[bank, airline_, customer]{this←} tick,
 		  principal{this←} airline_) {
-        customerAcct = aa;
-        airlineAcct = ab;
-        custTickets = ta;
+        customerAcct = ca;
+        airlineAcct = aa;
+        custTickets = tick;
 	airline = airline_;
         super("broker");
     }
