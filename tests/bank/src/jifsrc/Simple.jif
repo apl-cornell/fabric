@@ -1,13 +1,14 @@
-class Balance[principal bank, principal user] { // on Bank store
-    int{bank<-; bank->user} value = 0;
+class Balance[principal bank, principal user]
+{ // on Bank store
+    int{bank←; bank→user} value = 0;
 
-    int{bank<-; bank->user} debit{bank<-}(int{bank<-; bank->user} amt) {
+    int{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
         if (amt <= value & value > 0 & amt > 0) {
             value -= amt;
         }
         return value;
     }
-    int{bank<-; bank->user} credit{bank<-}(int{bank<-; bank->user} amt) {
+    int{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
         if (amt > 0) {
             value += amt;
         }
@@ -15,40 +16,44 @@ class Balance[principal bank, principal user] { // on Bank store
     }
 }
 
-class Account[principal bank] { // on Bank store
-    final principal{bank<-} user;
-    final Balance[bank,user] {bank<-} balance;
+class Account[principal bank]
+{ // on Bank store
+    final principal{bank←} user;
+    final Balance[bank,user] {bank←} balance;
 
-    Account(principal{bank<-} user_) {
+    Account(principal{bank←} user_) {
         user = user_;
         balance = new Balance();
     }
-    int{bank<-; bank->user} debit{bank<-}(int{bank<-; bank->user} amt) {
-        try { balance.debit(amt); return balance.value; } catch (NullPointerException e) { return 0; }
+    int{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
+        try { balance.debit(amt); return balance.value; }
+	catch (NullPointerException e) { return 0; }
     }
-    int{bank<-; bank->user} credit{bank<-}(int{bank<-; bank->user} amt) {
-        try { balance.credit(amt); return balance.value; } catch (NullPointerException e) { return 0; }
+    int{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
+        try { balance.credit(amt); return balance.value; }
+	catch (NullPointerException e) { return 0; }
     }
 
 }
 
-class Tickets[principal bank, principal airline, principal user] { // on Airline store
-    int {airline<-bank; airline->user} num_tickets;
-    Tickets{airline<-}() {
+class Tickets[principal bank, principal airline, principal user]
+{ // on Airline store
+    int {airline←bank; airline→user} num_tickets;
+    Tickets{airline←}() {
         num_tickets = 0;
     }
 }
 
 class Airline {
-    final principal{airline<-} bank;
-    final principal{airline<-} user;
-    final principal{airline<-} airline;
+    final principal{airline←} bank;
+    final principal{airline←} user;
+    final principal{airline←} airline;
 
-    final Tickets[bank, airline, user]{airline<-} tickets;
+    final Tickets[bank, airline, user]{airline←} tickets;
 
-    Airline{airline_<-}(principal{airline_<-} bank_,
-		       principal{airline_<-} user_,
-		       principal{airline_<-} airline_) {
+    Airline{airline_←}(principal{airline_←} bank_,
+		       principal{airline_←} user_,
+		       principal{airline_←} airline_) {
 	airline = airline_;
 	user = user_;
 	bank = bank_;
@@ -59,18 +64,22 @@ class Airline {
 class Broker[principal bank, principal customer] extends AbstractPrincipal {
     final Account[bank]{this←} customerAcct;
     final Account[bank]{this←} airlineAcct;
-    final principal airline;
+    final principal{bank←} airline;
     final Tickets[bank, airline, customer]{this←} custTickets;
 
-    void doit{this<-}()
-        where this actsfor bank
+    void coordinatePurchase{}()
+	where authority(this), endorse({this←})
     {
       try {
         final principal cust1 = customerAcct.user;
         final principal cust2 = customer;
         final principal airline_ = airlineAcct.user;
-        if (this actsfor cust1 & this actsfor cust2 & this actsfor airline &
-	    this actsfor airline_) {
+        if (this actsfor bank &
+	    this actsfor cust1 &
+	    this actsfor cust2 &
+	    this actsfor airline &
+	    this actsfor airline_)
+	{
             customerAcct.debit(1000);   // @wBank
             airlineAcct.credit(1000);   // @wBank
             custTickets.num_tickets++;  // @wAirline
@@ -79,7 +88,10 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal {
 
     }
 
-    Broker{this<-}(Account[bank]{this←} aa, Account[bank]{this←} ab, Tickets[bank, airline_, customer]{this←} ta, principal{bank<-} airline_) {
+    Broker{this←}(Account[bank]{this←} aa,
+		  Account[bank]{this←} ab,
+		  Tickets[bank, airline_, customer]{this←} ta,
+		  principal{bank←} airline_) {
         customerAcct = aa;
         airlineAcct = ab;
         custTickets = ta;
@@ -90,20 +102,26 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal {
 
 class Main {
 
-    public void main{*<-}() {
-        final principal a=null, b=null;
-        final principal bank=null;
-	final principal airline = null;
-        Account accountA = new Account(a); // @ storeA (storeB?)
-        accountA.credit(10000);
+    final principal{*←} customer=null;
+    final principal{*←} bank=null;
+    final principal{*←} airline = null;
 
-        Account accountB = new Account(b); // @ storeB
+    Broker[bank, customer]{*←} broker;
+
+// this should be fabIL code
+    public void setup{*←}() {
+        Account customerAcct = new Account(customer); // @ storeA (storeB?)
+        customerAcct.credit(10000);
+
+        Account airlineAcct = new Account(airline); // @ storeB
         Tickets custTickets = new Tickets(); // @ storeA
 
-        final Broker broker = new Broker(accountA, accountB, custTickets, airline);
+        broker = new Broker(customerAcct, airlineAcct, custTickets, airline);
+    }
 
-        if (broker actsfor bank) {
-            broker.doit();
-        }
+    public void runit{}() {
+	final Broker broker = this.broker;
+	if (broker != null)
+	    broker.coordinatePurchase();
     }
 }
