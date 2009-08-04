@@ -1,5 +1,5 @@
 class Balance[principal bank, principal user]
-{ // on Bank store
+{ // on bank store and worker
     int{bank←; bank→user} value = 0;
 
     int{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
@@ -17,13 +17,13 @@ class Balance[principal bank, principal user]
 }
 
 class Account[principal bank]
-{ // on Bank store
+{ // on bank store and worker
     final principal{bank←} user;
     final Balance[bank,user] {bank←} balance;
 
     Account(principal{bank←} user_) {
         user = user_;
-        balance = new Balance();
+        balance = new Balance(); // @ bank store
     }
     int{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
         try { balance.debit(amt); return balance.value; }
@@ -37,14 +37,15 @@ class Account[principal bank]
 }
 
 class Tickets[principal bank, principal airline, principal user]
-{ // on Airline store
+{ // on airline store and worker
     int {airline←bank; airline→user} num_tickets;
     Tickets{airline←}() {
         num_tickets = 0;
     }
 }
 
-class Airline {
+class Airline
+{ // on airline store and worker
     final principal{airline←} bank;
     final principal{airline←} user;
     final principal{airline←} airline;
@@ -57,11 +58,12 @@ class Airline {
 	airline = airline_;
 	user = user_;
 	bank = bank_;
-	tickets = new Tickets[bank, airline, user]();
+	tickets = new Tickets[bank, airline, user](); // @ airline store
     }
 }
 
-class Broker[principal bank, principal customer] extends AbstractPrincipal {
+class Broker[principal bank, principal customer] extends AbstractPrincipal
+{ // on broker worker (and store)
     final Account[bank]{this←} customerAcct;
     final Account[bank]{this←} airlineAcct;
     final principal{this←} airline;
@@ -102,23 +104,27 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal {
     }
 }
 
-class Main {
+class SimplePrincipal extends AbstractPrincipal {
+    SimplePrincipal(String{*<-} name) { super(name); }
+}
 
-    final principal{*←} customer=null;
-    final principal{*←} bank=null;
-    final principal{*←} airline = null;
+class Main
+{ // this should be fabIL code that runs somewhere trusted.
+
+    final principal{*←} customer = new SimplePrincipal("customer"); // @ root store
+    final principal{*←} bank = new SimplePrincipal("bank");         // @ root store
+    final principal{*←} airline = new SimplePrincipal("airline");   // @ root store
 
     Broker[bank, customer]{*←} broker;
 
-// this should be fabIL code
     public void setup{*←}() {
-        Account customerAcct = new Account(customer); // @ storeA (storeB?)
+        Account customerAcct = new Account(customer); // @ bank store
         customerAcct.credit(10000);
 
-        Account airlineAcct = new Account(airline); // @ storeB
-        Tickets custTickets = new Tickets(); // @ storeA
+        Account airlineAcct = new Account(airline); // @ bank store
+        Tickets custTickets = new Tickets(); // @ airline store
 
-        broker = new Broker(customerAcct, airlineAcct, custTickets, airline);
+        broker = new Broker(customerAcct, airlineAcct, custTickets, airline); // @ root store
     }
 
     public void runit{}() {
