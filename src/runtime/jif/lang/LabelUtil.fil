@@ -133,6 +133,10 @@ public final class LabelUtil {
   public static Label noComponents() {
     return localCore.getEmptyLabel();
   }
+  
+  public static Label noComponents(Core core) {
+      return noComponents();
+    }  
 
   public static ConfPolicy bottomConf() {
     return localCore.getBottomConfidPolicy();

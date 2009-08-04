@@ -45,22 +45,24 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
         return this.displayString() + " <" + this.name() + ">";
     }
 
-    public boolean{authPrf; closure; lb; executeNow; *lb; T; this; this←} 
+    public boolean{authPrf; closure; lb; executeNow; *lb; this; this←} 
         isAuthorized(java.lang.Object authPrf, 
                 jif.lang.Closure[this, lb] closure,
                 label lb,
                 boolean executeNow) where authority (this) 
     {
-        if (closure instanceof LoginClosure[servP, this] && authPrf instanceof String) {
-            String passwd = (String)authPrf;
-            String myPass = this.password;
-            
-            if (myPass == passwd || (myPass != null && myPass.equals(passwd))) {
-                // password supplied agrees with this password!
-                return true;
-            }
-        }
-        return false;
+//        if (closure instanceof LoginClosure[servP, this] && authPrf instanceof String) {
+//            String passwd = (String)authPrf;
+//            String myPass = this.password;
+//            
+//            if (myPass == passwd || (myPass != null && myPass.equals(passwd))) {
+//                // password supplied agrees with this password!
+//                return true;
+//            }
+//        }
+            // TODO XXX Hack till all principals are parameterized
+        return true;
+//        return false;
     }
 
 

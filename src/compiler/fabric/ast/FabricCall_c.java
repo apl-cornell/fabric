@@ -12,12 +12,14 @@ import polyglot.ast.Receiver;
 import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import jif.ast.JifCall_c;
 import jif.ast.JifUtil;
 import jif.types.JifContext;
+import jif.types.LabeledType;
 import jif.types.principal.Principal;
 
 public class FabricCall_c extends JifCall_c implements FabricCall {
@@ -80,7 +82,16 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
       JifContext context = (JifContext)tc.context();
 
       // The type must have a remote version.
-      ReferenceType rcvrType = (ReferenceType)c.target().type();
+      ReferenceType rcvrType;
+      Type rcType = c.target().type();
+      if (rcType instanceof LabeledType) {
+        LabeledType lType = (LabeledType) rcType;
+        rcvrType = lType.toReference();
+      } else if (rcType instanceof ReferenceType) {
+        rcvrType = (ReferenceType) rcType;
+      } else {
+        throw new InternalCompilerError("Stupid compiler");
+      }
       List<Type> argTypes = new ArrayList<Type>(c.methodInstance().formalTypes().size() + 1);
       argTypes.add(ts.Principal());
       argTypes.addAll(c.methodInstance().formalTypes());

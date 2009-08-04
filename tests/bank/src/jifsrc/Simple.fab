@@ -25,11 +25,11 @@ class Account[principal bank]
         user = user_;
         balance = new Balance(); // @ bank store
     }
-    int{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
+    public int{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
         try { balance.debit(amt); return balance.value; }
 	catch (NullPointerException e) { return 0; }
     }
-    int{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
+    public int{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
         try { balance.credit(amt); return balance.value; }
 	catch (NullPointerException e) { return 0; }
     }
@@ -68,6 +68,9 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
     final Account[bank]{this←} airlineAcct;
     final principal{this←} airline;
     final Tickets[bank, airline, customer]{this←} custTickets;
+    
+    final static String{⊤←} bankCore = "blobbyworld.systems.cs.cornell.edu";
+    final static String{⊤←} airlineCore = "gaia.systems.cs.cornell.edu";
 
     void coordinatePurchase{}()
 	where authority(this), endorse({this←})
@@ -83,13 +86,21 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
 	    // & this actsfor airline_
 	    // & bank actsfor airline // this is not acceptable. For debugging.
 	    )
-	{
-            customerAcct.debit(1000);   // @wBank
-            airlineAcct.credit(1000);   // @wBank
-            custTickets.num_tickets++;  // @wAirline
+        {
+            FabricClient cl = FabricClient.getClient();
+            final RemoteClient bank = cl.getClient(bankCore);
+            final RemoteClient airline = cl.getClient(airlineCore);
+            customerAcct.debit@bank(1000);   // @wBank
+            airlineAcct.credit@bank(1000);   // @wBank
+            incTickets@airline();  // @wAirline
         }
       } catch (NullPointerException e) {}
 
+    }
+    
+    public void incTickets{this←}() {
+        if (custTickets != null) 
+            custTickets.num_tickets++;
     }
 
     Broker{this←}(Account[bank]{this←} ca,
