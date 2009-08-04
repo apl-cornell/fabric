@@ -1,3 +1,7 @@
+import fabricated.lang.JifObject;
+import fabricated.lang.IDComparable;
+
+
 /**
  * This class allows heterogeneous users to be stored in a homogeneous list.
  */
