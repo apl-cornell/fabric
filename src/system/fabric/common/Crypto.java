@@ -12,7 +12,7 @@ import fabric.common.exceptions.InternalError;
  * This is the clearinghouse for all things crypto.
  */
 public final class Crypto {
-  public static final String ALG_SIGNATURE = "SHA1withRSA";
+  public static final String ALG_SIGNATURE = "SHA256withRSA";
 
   public static final String ALG_SECRET_KEY_GEN = "AES";
   public static final int SIZE_SECRET_KEY = 128;
