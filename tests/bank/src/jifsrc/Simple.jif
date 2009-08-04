@@ -1,0 +1,59 @@
+class Account {
+    final principal{p<-; p->} p;
+    int{p<-; p->} balance;
+
+    Account(principal{p_<-; p_->} p_) {
+	p = p_;
+	balance = 0;
+    }
+
+    int{p<-; p->} debit{p<-}(int{p<-; p->} amt) {
+	if (amt <= balance & balance > 0) {
+	    balance -= amt;
+	}
+	return balance;
+    }
+}
+
+class Tickets {
+    final principal{p<-; p->} p;
+    int{p<-; p->} num_tickets;
+
+    Tickets{p_<-}(principal{p_<-; p_->} p_) {
+	p = p_;
+	num_tickets = 0;
+    }
+}
+
+class Broker {
+    Account accountA;
+    Account accountB;
+    Tickets ticketsA;
+
+    void doit() {
+      try {
+	final principal p1 = accountA.p;
+	int {p1->} dummy = accountA.debit(1000);
+      } catch (NullPointerException e) {}
+    }
+    Broker{*<-}(Account{*←} accountA, Account{*←} accountB, Tickets{*←} ticketsA) {
+    }
+}
+
+class Main {
+
+    public void main{*<-}() {
+	final principal a=null, b=null;
+	Account accountA = new Account(a);
+	accountA.debit(-10000);
+
+	Account accountB = new Account(b);
+	Tickets ticketsA = new Tickets(a);
+
+
+	Broker broker = new Broker(accountA, accountB, ticketsA);
+
+
+	broker.doit();
+    }
+}
