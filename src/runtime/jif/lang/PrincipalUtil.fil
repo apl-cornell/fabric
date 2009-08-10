@@ -424,6 +424,10 @@ public class PrincipalUtil {
     }
 
   }
+  
+  public static Principal bottomPrincipal(Core c) {
+    return bottomPrincipal();
+  }
 
   public static Principal bottomPrincipal(Core c) {
     return bottomPrincipal();
