@@ -6,72 +6,72 @@ public class Create {
      * brokerCore (args[0])
      * ==========
      * broker: Broker[bank,customer]
-     *  label        -> brokerLabel
-     *  bank         -> bank
-     *  customer     -> customer
-     *  customerAcct -> customerAccount
-     *  airlineAcct  -> airlineAccount
-     *  airline      -> airline
-     *  custTickets  -> tickets
+     *  f label        -> brokerLabel
+     *  f bank         -> bank
+     *  f customer     -> customer
+     *    customerAcct -> customerAccount
+     *    airlineAcct  -> airlineAccount
+     *    airline      -> airline
+     *    custTickets  -> tickets
      *
      * bank: DelegatingPrincipal
-     *  label       -> brokerLabel
-     *  delegatesTo -> broker
+     *  f label       -> brokerLabel
+     *    delegatesTo -> broker
      *
      * customer: DelegatingPrincipal
-     *  label       -> brokerLabel
-     *  delegatesTo -> broker
+     *  f label       -> brokerLabel
+     *    delegatesTo -> broker
      *
      * airline: DelegatingPrincipal
-     *  label       -> brokerLabel
-     *  delegatesTo -> broker
+     *  f label       -> brokerLabel
+     *    delegatesTo -> broker
      *  
      * brokerLabel: Label
-     *  {broker<-}
+     *  f {broker<-}
      *
      * bankCore (args[1])
      * ========
      * airlineBalance: Balance[bank,airline]
-     *  label   -> airlineLabel
-     *  bank    -> bank
-     *  user    -> airline
-     *  value   -> 0
+     *  f label   -> airlineLabel
+     *  f bank    -> bank
+     *  f user    -> airline
+     *    value   -> 0
      *
      * airlineAccount: Account[bank]
-     *  label   -> {bank<-}
-     *  bank    -> bank
-     *  balance -> airlineBalance
+     *  f label   -> {bank<-}
+     *  f bank    -> bank
+     *  f user    -> airline
+     *    balance -> airlineBalance
      * 
      * airlineLabel: Label
-     *  {bank<-; bank->airline}
+     *  f {bank<-; bank->airline}
      *
      * customerBalance: Balance[bank,customer]
-     *  label   -> customerLabel
-     *  bank    -> bank
-     *  user    -> customer
-     *  value   -> 0
+     *  f label   -> customerLabel
+     *  f bank    -> bank
+     *  f user    -> customer
+     *    value   -> 0
      *
      * customerAccount: Account[bank]
-     *  label   -> {bank<-}
-     *  bank    -> bank
-     *  user    -> customer
-     *  balance -> customerBalance
+     *  f label   -> {bank<-}
+     *  f bank    -> bank
+     *  f user    -> customer
+     *    balance -> customerBalance
      *
      * customerLabel: Label
-     *  {bank<-; bank->customer}
+     *  f {bank<-; bank->customer}
      *  
      * airlineCore (args[2])
      * ===========
      * tickets: Tickets[bank,airline,user]
-     *  label   -> ticketsLabel
-     *  bank    -> bank
-     *  airline -> airline
-     *  user    -> user
-     *  airline -> airline
-     *  count   -> 0
+     *  f label   -> ticketsLabel
+     *  f bank    -> bank
+     *  f airline -> airline
+     *  f user    -> customer
+     *    count   -> 0
      *
      * ticketsLabel: Label
-     *  {bank<-airline}
+     *  f {bank<-airline}
      */
     public static void main(String[] args) {
         atomic {
