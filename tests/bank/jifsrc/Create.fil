@@ -85,10 +85,10 @@ public class Create {
             ConfPolciy airlineSecret  = LabelUtil.readerPolicy(bankCore,    bank,   airline);  // {bank->airline}
             ConfPolicy customerSecret = LabelUtil.readerPolicy(bankCore,    bank,   customer); // {bank->customer}
             
-            final Label brokerLabel   = LabelUtil.toLabel(brokerCore,  brokerTrusted);
-            final Label airlineLabel  = LabelUtil.toLabel(bankCore,    bankTrusted, airlineSecret);
-            final Label customerLabel = LabelUtil.toLabel(bankCore,    bankTrusted, customerSecret);
-            final Label ticketsLabel  = LabelUtil.toLabel(airlineCore, airlineTrusted);
+            Label brokerLabel   = LabelUtil.toLabel(brokerCore,  brokerTrusted);
+            Label airlineLabel  = LabelUtil.toLabel(bankCore,    bankTrusted, airlineSecret);
+            Label customerLabel = LabelUtil.toLabel(bankCore,    bankTrusted, customerSecret);
+            Label ticketsLabel  = LabelUtil.toLabel(airlineCore, airlineTrusted);
 
             Principal bank     = new AbstractPrincipal@brokerCore~brokerLabel().jif$lang$AbstractPrincipal$("bank");
             Principal customer = new AbstractPrincipal@brokerCore~brokerLabel().jif$lang$AbstractPrincipal$("customer");
