@@ -5,7 +5,8 @@ public class Create {
      *
      * brokerCore (args[0])
      * ==========
-     * broker: Broker[bank,customer] {broker<-}
+     * broker: Broker[bank,customer]
+     *  label        -> brokerLabel
      *  bank         -> bank
      *  customer     -> customer
      *  customerAcct -> customerAccount
@@ -13,45 +14,64 @@ public class Create {
      *  airline      -> airline
      *  custTickets  -> tickets
      *
-     * bank: DelegatingPrincipal     {broker<-}
+     * bank: DelegatingPrincipal
+     *  label       -> brokerLabel
      *  delegatesTo -> broker
      *
-     * customer: DelegatingPrincipal {broker<-}
+     * customer: DelegatingPrincipal
+     *  label       -> brokerLabel
      *  delegatesTo -> broker
      *
-     * airline: DelegatingPrincipal  {broker<-}
+     * airline: DelegatingPrincipal
+     *  label       -> brokerLabel
      *  delegatesTo -> broker
+     *  
+     * brokerLabel: Label
+     *  {broker<-}
      *
      * bankCore (args[1])
      * ========
-     * airlineBalance: Balance[bank,airline] {bank<-; bank->airline}
+     * airlineBalance: Balance[bank,airline]
+     *  label   -> airlineLabel
      *  bank    -> bank
      *  user    -> airline
      *  value   -> 0
      *
-     * airlineAccount: Account[bank]         {bank<-}
+     * airlineAccount: Account[bank]
+     *  label   -> {bank<-}
      *  bank    -> bank
      *  balance -> airlineBalance
+     * 
+     * airlineLabel: Label
+     *  {bank<-; bank->airline}
      *
-     * userAccount: Balance[bank,customer]   {bank<-; bank->customer}
+     * customerBalance: Balance[bank,customer]
+     *  label   -> customerLabel
      *  bank    -> bank
      *  user    -> customer
      *  value   -> 0
      *
-     * customerAccount: Account[bank]        {bank<-}
+     * customerAccount: Account[bank]
+     *  label   -> {bank<-}
      *  bank    -> bank
      *  user    -> customer
-     *  balance -> userAccount
+     *  balance -> customerBalance
      *
+     * customerLabel: Label
+     *  {bank<-; bank->customer}
+     *  
      * airlineCore (args[2])
      * ===========
-     * tickets: Tickets[bank,airline,user]   {bank<-airline}
+     * tickets: Tickets[bank,airline,user]
+     *  label   -> ticketsLabel
      *  bank    -> bank
      *  airline -> airline
      *  user    -> user
      *  airline -> airline
      *  count   -> 0
      *
+     * ticketsLabel: Label
+     *  {bank<-airline}
      */
     public static void main(String[] args) {
         atomic {
@@ -59,18 +79,27 @@ public class Create {
             Core    bankCore = Client.getClient().getCore(args[1]);
             Core airlineCore = Client.getClient().getCore(args[2]);
 
-            Principal bank     = new AbstractPrincipal@brokerCore().jif$lang$AbstractPrincipal$("bank");
-            Principal customer = new AbstractPrincipal@brokerCore().jif$lang$AbstractPrincipal$("customer");
-            Principal airline  = new AbstractPrincipal@brokerCore().jif$lang$AbstractPrincipal$("airline");
+            IntPolicy  brokerTrusted  = LabelUtil.writerPolicy(brokerCore,  broker, broker);   // {broker<-}
+            IntPolicy  bankTrusted    = LabelUtil.writerPolicy(brokerCore,  bank,   bank);     // {bank<-}
+            IntPolicy  airlineTrusted = LabelUtil.writerPolicy(airlineCore, bank,   airline);  // {bank<-airline} 
+            ConfPolciy airlineSecret  = LabelUtil.readerPolicy(bankCore,    bank,   airline);  // {bank->airline}
+            ConfPolicy customerSecret = LabelUtil.readerPolicy(bankCore,    bank,   customer); // {bank->customer}
+            
+            final Label brokerLabel   = LabelUtil.toLabel(brokerCore,  brokerTrusted);
+            final Label airlineLabel  = LabelUtil.toLabel(bankCore,    bankTrusted, airlineSecret);
+            final Label customerLabel = LabelUtil.toLabel(bankCore,    bankTrusted, customerSecret);
+            final Label ticketsLabel  = LabelUtil.toLabel(airlineCore, airlineTrusted);
 
-            Label L1 = LabelUtil.writerPolicy(brokerCore, broker, broker);
+            Principal bank     = new AbstractPrincipal@brokerCore~brokerLabel().jif$lang$AbstractPrincipal$("bank");
+            Principal customer = new AbstractPrincipal@brokerCore~brokerLabel().jif$lang$AbstractPrincipal$("customer");
+            Principal airline  = new AbstractPrincipal@brokerCore~brokerLabel().jif$lang$AbstractPrincipal$("airline");
 
-            Account  airlineAccount = new Balance@bankCore(bank, airline).Balance$();
-            Account customerAccount = new Balance@bankCore(bank,customer).Balance$();
+            Account  airlineAccount = new Balance@bankCore~airlineLabel (bank, airline).Balance$();
+            Account customerAccount = new Balance@bankCore~customerLabel(bank,customer).Balance$();
 
-            Tickets tickets = new Tickets(bank,airline,customer).Tickets$();
+            Tickets tickets = new Tickets@airlineCore~ticketsLabel(bank,airline,customer).Tickets$();
 
-            Broker    broker   = new Broker@brokerCore(bank,customer).Broker$(customerAccount,airlineAccount,tickets,airline);
+            Broker    broker   = new Broker@brokerCore~brokerLabel(bank,customer).Broker$(customerAccount,airlineAccount,tickets,airline);
 
             // make broker top
             airline.addDelegatesTo(broker);
