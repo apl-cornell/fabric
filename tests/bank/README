@@ -1,0 +1,16 @@
+This directory contains many broken implementations of the Bank Airline Example.
+
+old:
+  TP's original partial Fabric implementation
+
+filsrc:
+  TP's fabil implementation
+  
+jifsrc:
+  Andrew's jif implementation, partially ported to fabric+fabil
+
+src:
+  Mike's partial fabric implementation.
+  
+classes:
+  a good place to dump compiled files.
