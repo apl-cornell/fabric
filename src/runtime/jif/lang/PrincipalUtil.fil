@@ -429,10 +429,6 @@ public class PrincipalUtil {
     return bottomPrincipal();
   }
 
-  public static Principal bottomPrincipal(Core c) {
-    return bottomPrincipal();
-  }
-
   public static Principal topPrincipal() {
     final LocalCore localCore = Client.getClient().getLocalCore();
     return localCore.getTopPrincipal();
