@@ -55,7 +55,8 @@ public class CallJifExt_c extends JifCallExt {
   
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    FabricCall c = (FabricCall)node();
+    Node n = super.labelCheck(lc);
+    FabricCall c = (FabricCall)n;
     
     if (c.remoteClient() != null) {
       FabricTypeSystem ts = (FabricTypeSystem)lc.typeSystem();
@@ -88,9 +89,9 @@ public class CallJifExt_c extends JifCallExt {
       Label entryLabel = mi.pcBound();
       Label returnLabel = mi.returnValueLabel();
       
-      entryLabel = JifInstantiator.instantiate(entryLabel, A, target, (ReferenceType)target.type(), targetLabel, 
+      entryLabel = JifInstantiator.instantiate(entryLabel, A, target, target.type().toReference(), targetLabel, 
           formalLabels, formalTypes, actualLabels, c.arguments(), Collections.EMPTY_LIST);
-      returnLabel = JifInstantiator.instantiate(returnLabel, A, target, (ReferenceType)target.type(), targetLabel, 
+      returnLabel = JifInstantiator.instantiate(returnLabel, A, target, target.type().toReference(), targetLabel, 
           formalLabels, formalTypes, actualLabels, c.arguments(), Collections.EMPTY_LIST);
       
       Principal localPrincipal = ts.clientPrincipal(Position.compilerGenerated());
@@ -104,7 +105,7 @@ public class CallJifExt_c extends JifCallExt {
       for (Type ft : (List<Type>)mi.formalTypes()) {
         ArgLabel fl_ = (ArgLabel)ts.labelOfType(ft);
         Label fl = fl_.upperBound();
-        fl = JifInstantiator.instantiate(fl, A, target, (ReferenceType)target.type(), targetLabel, 
+        fl = JifInstantiator.instantiate(fl, A, target, target.type().toReference(), targetLabel, 
             formalLabels, formalTypes, actualLabels, c.arguments(), Collections.EMPTY_LIST);
         
         ConfPolicy cp = ts.confProjection(fl);
@@ -216,6 +217,6 @@ public class CallJifExt_c extends JifCallExt {
       }
     }
     
-    return super.labelCheck(lc);
+    return c;
   }
 }
