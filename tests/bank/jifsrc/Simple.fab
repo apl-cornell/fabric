@@ -70,18 +70,22 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
             )
         {
             FabricClient cl = FabricClient.getClient();
-            final RemoteClient bank = cl.getClient(bankCore);
-            final RemoteClient airline = cl.getClient(airlineCore);
-            customerAcct.debit@bank(1000);   // @wBank
-            airlineAcct.credit@bank(1000);   // @wBank
-            incTickets@airline();  // @wAirline
+            final RemoteClient bankClient = cl.getClient(bankCore);
+            final RemoteClient airlineClient = cl.getClient(airlineCore);
+            if (bank equiv bankClient) {
+                customerAcct.debit@bankClient(1000);   // @wBank
+                airlineAcct.credit@bankClient(1000);   // @wBank
+            }
+            if (airline equiv airlineClient) {
+                incTickets@airlineClient();  // @wAirline
+            }
         }
       } catch (NullPointerException e) {}
 
     }
     
-    public void incTickets{this←}() {
-        if (custTickets != null) 
+    public void incTickets{this←}() :{airline←} {
+        if (custTickets != null && this actsfor airline) 
             custTickets.num_tickets++;
     }
 

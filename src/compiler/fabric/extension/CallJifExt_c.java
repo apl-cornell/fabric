@@ -87,7 +87,7 @@ public class CallJifExt_c extends JifCallExt {
       labelCheckArgs(lc, c, actualLabels);
       
       Label entryLabel = mi.pcBound();
-      Label returnLabel = mi.returnValueLabel();
+      Label returnLabel = ts.join(mi.returnValueLabel(), mi.returnLabel());
       
       entryLabel = JifInstantiator.instantiate(entryLabel, A, target, target.type().toReference(), targetLabel, 
           formalLabels, formalTypes, actualLabels, c.arguments(), Collections.EMPTY_LIST);
