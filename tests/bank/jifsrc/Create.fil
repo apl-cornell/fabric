@@ -1,3 +1,5 @@
+import jif.lang.*;
+
 public class Create {
 
     /**
@@ -77,23 +79,23 @@ public class Create {
             Core    bankCore = Client.getClient().getCore(args[1]);
             Core airlineCore = Client.getClient().getCore(args[2]);
 
-            Principal bank     = new AbstractPrincipal@brokerCore().jif$lang$AbstractPrincipal$("bank");
-            Principal customer = new AbstractPrincipal@brokerCore().jif$lang$AbstractPrincipal$("customer");
-            Principal airline  = new AbstractPrincipal@brokerCore().jif$lang$AbstractPrincipal$("airline");
-            Broker    broker   = new Broker@brokerCore(bank,customer);
+            AbstractPrincipal bank     = new SimplePrincipal@brokerCore().SimplePrincipal$("bank");
+            AbstractPrincipal customer = new SimplePrincipal@brokerCore().SimplePrincipal$("customer");
+            AbstractPrincipal airline  = new SimplePrincipal@brokerCore().SimplePrincipal$("airline");
+            Broker            broker   = new Broker@brokerCore(bank,customer);
 
-            IntPolicy  brokerTrusted  = LabelUtil.writerPolicy(brokerCore,  broker, broker);   // {broker<-}
-            IntPolicy  bankTrusted    = LabelUtil.writerPolicy(brokerCore,  bank,   bank);     // {bank<-}
-            IntPolicy  airlineTrusted = LabelUtil.writerPolicy(airlineCore, bank,   airline);  // {bank<-airline} 
-            ConfPolciy airlineSecret  = LabelUtil.readerPolicy(bankCore,    bank,   airline);  // {bank->airline}
-            ConfPolicy customerSecret = LabelUtil.readerPolicy(bankCore,    bank,   customer); // {bank->customer}
+            IntegPolicy brokerTrusted  = LabelUtil.writerPolicy(brokerCore,  broker, broker);   // {broker<-}
+            IntegPolicy bankTrusted    = LabelUtil.writerPolicy(brokerCore,  bank,   bank);     // {bank<-}
+            IntegPolicy airlineTrusted = LabelUtil.writerPolicy(airlineCore, bank,   airline);  // {bank<-airline} 
+            ConfPolicy  airlineSecret  = LabelUtil.readerPolicy(bankCore,    bank,   airline);  // {bank->airline}
+            ConfPolicy  customerSecret = LabelUtil.readerPolicy(bankCore,    bank,   customer); // {bank->customer}
 
-            Label airlineLabel  = LabelUtil.toLabel(bankCore,    bankTrusted, airlineSecret);
-            Label customerLabel = LabelUtil.toLabel(bankCore,    bankTrusted, customerSecret);
+            Label airlineLabel  = LabelUtil.toLabel(bankCore, airlineSecret,  bankTrusted);
+            Label customerLabel = LabelUtil.toLabel(bankCore, customerSecret, bankTrusted);
             Label ticketsLabel  = LabelUtil.toLabel(airlineCore, airlineTrusted);
 
-            Account  airlineAccount = new Balance~airlineLabel@bankCore (bank, airline).Balance$();
-            Account customerAccount = new Balance~customerLabel@bankCore(bank,customer).Balance$();
+            Account  airlineAccount = new Account~airlineLabel@bankCore (bank).Account$(airline);
+            Account customerAccount = new Account~customerLabel@bankCore(bank).Account$(customer);
 
             Tickets tickets = new Tickets~ticketsLabel@airlineCore(bank,airline,customer).Tickets$();
 
@@ -105,14 +107,14 @@ public class Create {
                bank.addDelegatesTo(broker);
 
             // add core delegations
-            airline.addDelegatesTo(airlineCore);
-             broker.addDelegatesTo(brokerCore);
-               bank.addDelegatesTo(bankCore);
+            airline.addDelegatesTo(airlineCore.getPrincipal());
+             broker.addDelegatesTo(brokerCore.getPrincipal());
+               bank.addDelegatesTo(bankCore.getPrincipal());
 
             // add client delegations
-            Client  brokerClient = Client.getClient(args[0]);
-            Client    bankClient = Client.getClient(args[1]);
-            Client airlineClient = Client.getClient(args[2]);
+            Principal  brokerClient = Client.getClient().getClient(args[0]).getPrincipal();
+            Principal    bankClient = Client.getClient().getClient(args[1]).getPrincipal();
+            Principal airlineClient = Client.getClient().getClient(args[2]).getPrincipal();
 
             airline.addDelegatesTo(airlineClient);
              broker.addDelegatesTo(brokerClient);
