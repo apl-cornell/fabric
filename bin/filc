@@ -23,6 +23,7 @@ classpath="$classpath:$POLYGLOT/classes"
 classpath="$classpath:$POLYGLOT/lib/polyglot.jar"
 classpath="$classpath:$POLYGLOT/lib/java_cup.jar"
 classpath="$classpath:$POLYGLOT/lib/JFlex.jar"
+classpath="$classpath:$JIF/classes"
 
 sigcp="$TOP/sig-classes/fabil:$TOP/lib/fabric-il-sig.jar"
 
