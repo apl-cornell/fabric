@@ -86,16 +86,13 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
 
       Thread.currentThread().setName(threadName + " -- active");
 
-      resetStats();
-
       try {
         run_();
       } catch (ClosedByInterruptException e) {
+      } catch (EOFException e) {
       } catch (final IOException e) {
         getLogger().log(Level.WARNING, "Connection closed prematurely", e);
       }
-
-      logStats();
 
       // Return this worker to the pool.
       if (pool.workerDone((Worker) this)) break;
@@ -117,18 +114,6 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
   protected abstract Logger getLogger();
 
   /**
-   * Resets any bookkeeping information for debugging/monitoring purposes.
-   */
-  protected void resetStats() {
-  }
-
-  /**
-   * Commits any statistics that may have been logged.
-   */
-  protected void logStats() {
-  }
-
-  /**
    * The execution body of the worker thread.
    */
   private final void run_() throws IOException {
@@ -141,6 +126,10 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
         break;
       }
     }
+  }
+
+  public final Session getSession() {
+    return session;
   }
 
   /**
@@ -166,11 +155,8 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
     notifyAll();
   }
 
-  protected abstract void diaginit();
-
   private void initPipes() {
     try {
-      diaginit();
       Pipe inbound = Pipe.open();
       this.sink = inbound.sink();
 
@@ -189,16 +175,6 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
           new DataOutputStream(new BufferedOutputStream(Channels
               .newOutputStream(outboundSink)));
     } catch (IOException e) {
-      System.out.println("Comm man locals: "
-          + Util.numCommManThreadLocals.value);
-      System.out.println("AWT client creates: "
-          + Util.numAWTClientPipeCreates.value);
-      System.out.println("AWT client cleans:  "
-          + Util.numAWTClientPipeCleanups.value);
-      System.out.println("AWT core   creates: "
-          + Util.numAWTCorePipeCreates.value);
-      System.out.println("AWT core   cleans:  "
-          + Util.numAWTCorePipeCleanups.value);
       throw new InternalError(e);
     }
   }
@@ -211,15 +187,12 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
     interrupt();
   }
 
-  protected abstract void diagcleanup();
-
   /**
    * Cleans up all connection-specific state to ready this worker for another
    * connection. This is invoked prior to returning this worker to a thread
    * pool.
    */
   private void cleanup() {
-    diagcleanup();
     session = null;
 
     try {
@@ -234,14 +207,18 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
     }
     out = null;
 
-    try {
-      source.close();
-    } catch (IOException e) {
-    }
+    // try {
+    // synchronized (source) {
+    // source.close();
+    // }
+    // } catch (IOException e) {
+    // }
     source = null;
 
     try {
-      sink.close();
+      synchronized (sink) {
+        sink.close();
+      }
     } catch (IOException e) {
     }
     sink = null;
@@ -255,7 +232,9 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
     return sink;
   }
 
-  public static interface SessionAttributes {
+  public static abstract class SessionAttributes {
+    public void endSession() {
+    }
   }
 
   protected static interface Factory<Worker extends AbstractWorkerThread<?, Worker>> {

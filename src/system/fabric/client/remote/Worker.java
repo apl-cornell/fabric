@@ -17,7 +17,6 @@ import fabric.client.transaction.TransactionRegistry;
 import fabric.common.AbstractWorkerThread;
 import fabric.common.AuthorizationUtil;
 import fabric.common.TransactionID;
-import fabric.common.Util;
 import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
@@ -27,20 +26,6 @@ import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 
 public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
-
-  @Override
-  protected void diaginit() {
-synchronized (Util.numAWTClientPipeCreates) {
-      Util.numAWTClientPipeCreates.value++;
-    }
-  }
-
-  @Override
-  protected void diagcleanup() {
-  synchronized (Util.numAWTClientPipeCleanups) {
-      Util.numAWTClientPipeCleanups.value++;
-    }
-  }
 
   static final Logger logger = Logger.getLogger("fabric.client.remote.Worker");
 

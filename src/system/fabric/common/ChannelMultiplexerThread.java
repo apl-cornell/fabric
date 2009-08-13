@@ -97,6 +97,7 @@ public final class ChannelMultiplexerThread extends Thread {
   private final Selector selector;
 
   private final List<SourceChannel> newSourceChannels;
+  private final List<Integer> streamsToClose;
 
   /**
    * Creates a new thread that will multiplex/demultiplex multiple streams over
@@ -147,22 +148,24 @@ public final class ChannelMultiplexerThread extends Thread {
 
     this.newSourceChannels =
         Collections.synchronizedList(new ArrayList<SourceChannel>());
+    this.streamsToClose =
+        Collections.synchronizedList(new ArrayList<Integer>());
   }
 
   public void shutdown() {
     this.destroyed = true;
     this.callback.shutdown();
-    
+
     try {
       socketChannel.close();
     } catch (IOException e) {
     }
-    
+
     try {
       selector.close();
     } catch (IOException e) {
     }
-    
+
     interrupt();
   }
 
@@ -174,8 +177,8 @@ public final class ChannelMultiplexerThread extends Thread {
      * <li>Each CommManager-facing source channel (i.e., pipe inbound from the
      * app) is either in the readQueue or is registered with the selector for
      * reading.</li>
-     * <li>Either the outputBuffer is empty or the network channel is registered
-     * with the selector for writing.</li>
+     * <li>Either the outputBuffer and streamsToClose are both empty or the
+     * network channel is registered with the selector for writing.</li>
      * <li>If the outputBuffer is empty, then there are no channels in the
      * readQueue.</li>
      * <li>The network channel is always registered with the selector for
@@ -204,6 +207,11 @@ public final class ChannelMultiplexerThread extends Thread {
           }
 
           newSourceChannels.clear();
+        }
+
+        if (!streamsToClose.isEmpty()) {
+          socketChannel.keyFor(selector).interestOps(
+              SelectionKey.OP_READ | SelectionKey.OP_WRITE);
         }
 
         // Wait for I/O.
@@ -258,7 +266,9 @@ public final class ChannelMultiplexerThread extends Thread {
 
     bufferPool.recycle(bufferQueue.remove());
     if (bufferQueue.isEmpty()) {
-      sink.keyFor(selector).interestOps(0);
+      synchronized (sink) {
+        if (sink.isOpen()) sink.keyFor(selector).interestOps(0);
+      }
     }
   }
 
@@ -272,17 +282,34 @@ public final class ChannelMultiplexerThread extends Thread {
       return;
     }
 
-    // Buffer is empty. Read from the next pipe in the readQueue. And
-    // re-register the pipe for reading.
+    // Buffer is empty. Check whether we have streams to close.
+    synchronized (streamsToClose) {
+      if (!streamsToClose.isEmpty()) {
+        networkOutputBuffer.clear();
+        for (Iterator<Integer> it = streamsToClose.iterator(); it.hasNext();) {
+          if (networkOutputBuffer.remaining() < 8) break;
+          networkOutputBuffer.putInt(it.next());
+          networkOutputBuffer.putInt(-1);
+          it.remove();
+        }
+
+        networkOutputBuffer.flip();
+        return;
+      }
+    }
+
+    // Read from the next pipe in the readQueue and re-register the pipe for
+    // reading.
     if (!readQueue.isEmpty()) {
       SourceChannel source = readQueue.remove();
       readFromPipe(source);
-      source.keyFor(selector).interestOps(SelectionKey.OP_READ);
+      if (source.isOpen())
+        source.keyFor(selector).interestOps(SelectionKey.OP_READ);
       return;
     }
 
-    // The readQueue is empty. Disable write-selection for the network socket
-    // channel.
+    // No streams to close and the readQueue is empty. Disable write-selection
+    // for the network socket channel.
     socketChannel.keyFor(selector).interestOps(SelectionKey.OP_READ);
   }
 
@@ -321,6 +348,8 @@ public final class ChannelMultiplexerThread extends Thread {
       SelectionKey key = source.keyFor(selector);
       if (key != null) key.cancel();
 
+      streamIDBySourceChannel.remove(source);
+
       // Flush the buffer.
       networkOutputBuffer.clear().flip();
       return;
@@ -349,6 +378,12 @@ public final class ChannelMultiplexerThread extends Thread {
         int streamID = networkInputBuffer.getInt();
         currentStream = getStream(streamID);
         bytesRemaining = networkInputBuffer.getInt();
+
+        // Check whether the remote host is closing the stream.
+        if (bytesRemaining == -1) {
+          cleanupStream(streamID);
+          bytesRemaining = 0;
+        }
         continue;
       }
 
@@ -438,7 +473,7 @@ public final class ChannelMultiplexerThread extends Thread {
    * assigning them a fresh streamID, and registers the source channel with the
    * selector.
    */
-  public void registerChannels(SourceChannel source, SinkChannel sink)
+  public int registerChannels(SourceChannel source, SinkChannel sink)
       throws IOException {
     int streamID;
     synchronized (nextStreamID) {
@@ -446,6 +481,24 @@ public final class ChannelMultiplexerThread extends Thread {
     }
 
     registerChannels(streamID, source, sink);
+
+    return streamID;
+  }
+
+  void closeStream(int streamID) throws IOException {
+    streamsToClose.add(streamID);
+    selector.wakeup();
+
+    cleanupStream(streamID);
+  }
+
+  private synchronized void cleanupStream(int streamID) throws IOException {
+    // No need to remove from streamIDBySourceChannel -- this will be taken care
+    // of in readFromPipe() when the app closes the DataOutputStream.
+    // (See Stream.close().)
+    SinkChannel sink = sinkChannelByStreamID.remove(streamID).first;
+    bufferQueueBySinkChannel.remove(sink);
+    sink.close();
   }
 
   private static class BufferPool {

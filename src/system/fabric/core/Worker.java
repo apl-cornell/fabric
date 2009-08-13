@@ -1,14 +1,11 @@
 package fabric.core;
 
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
 import fabric.common.AbstractWorkerThread;
 import fabric.common.ObjectGroup;
-import fabric.common.Util;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.dissemination.Glob;
@@ -16,48 +13,7 @@ import fabric.messages.*;
 
 public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
 
-  @Override
-  protected void diaginit() {
-      synchronized (Util.numAWTCorePipeCreates) {
-        Util.numAWTCorePipeCreates.value++;
-      }
-  }
-
-  @Override
-  protected void diagcleanup() {
-    
-      synchronized (Util.numAWTCorePipeCleanups) {
-        Util.numAWTCorePipeCleanups.value++;
-      }
-  }
-
-  // Bookkeeping information for debugging/monitoring purposes:
-  private int numReads;
-  int numObjectsSent;
-  private int numGlobsSent;
-  int numGlobbedObjects;
-  int numGlobsCreated;
-  private int numPrepares;
-  private int numCommits;
-  private int numCreates;
-  private int numWrites;
-  Map<String, Integer> numSendsByType;
   private static final Logger logger = Logger.getLogger("fabric.core.worker");
-
-  /** Associates debugging log messages with pending transactions */
-  // XXX Disabled -- with new messaging architecture, prepares and commits are
-  // no longer guaranteed to be handled by the same worker thread. This
-  // functionality should be moved elsewhere. -MJL
-  // private final LongKeyMap<OidKeyHashMap<LogRecord>> pendingLogs;
-  // private class LogRecord {
-  // public LogRecord(int creates, int writes) {
-  // this.creates = creates;
-  // this.writes = writes;
-  // }
-  //
-  // public int creates;
-  // public int writes;
-  // }
 
   /**
    * A factory for creating Worker instances. This is used by WorkerThread.Pool.
@@ -73,7 +29,6 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
    */
   private Worker(Pool<Worker> pool) {
     super("Core worker", pool);
-//    this.pendingLogs = new LongKeyHashMap<OidKeyHashMap<LogRecord>>();
 
     fabric.client.transaction.TransactionManager.startThread(this);
   }
@@ -81,38 +36,6 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
   @Override
   protected Logger getLogger() {
     return logger;
-  }
-
-  @Override
-  protected void logStats() {
-    logger.info(numReads + " read requests");
-    logger.info(numObjectsSent + " objects sent");
-    logger.info(numGlobsSent + " encrypted globs sent");
-    logger.info(numGlobsCreated + " encrypted globs created");
-    if (numGlobsCreated != 0)
-      logger.info("  " + (numGlobbedObjects / numGlobsCreated)
-          + " objects per glob");
-    logger.info(numPrepares + " prepare requests");
-    logger.info(numCommits + " commit requests");
-    logger.info(numCreates + " objects created");
-    logger.info(numWrites + " objects updated");
-
-    for (Map.Entry<String, Integer> entry : numSendsByType.entrySet()) {
-      logger.info("\t" + entry.getValue() + " " + entry.getKey() + " sent");
-    }
-  }
-
-  @Override
-  protected void resetStats() {
-    // Reset the statistics counters.
-    numReads =
-        numObjectsSent =
-            numGlobsSent =
-                numGlobsCreated =
-                    numGlobbedObjects =
-                        numPrepares = numCommits = numCreates = numWrites = 0;
-    numSendsByType = new TreeMap<String, Integer>();
-//    pendingLogs.clear();
   }
 
   public void handle(AbortTransactionMessage message) throws AccessException,
@@ -149,18 +72,14 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
 
     logger.finer("Handling Commit Message, client="
         + session.clientPrincipalName + ", tid=" + message.transactionID);
-    this.numCommits++;
+    session.recordCommitAttempt();
 
     try {
       session.core.tm.commitTransaction(session.remoteNode,
           session.clientPrincipal, message.transactionID);
       logger.fine("Transaction " + message.transactionID + " committed");
 
-      // updated object tallies
-//      LogRecord lr =
-//          removePendingLog(message.transactionID, session.clientPrincipal);
-//      this.numCreates += lr.creates;
-//      this.numWrites += lr.writes;
+      session.recordCommitSuccess(message.transactionID);
 
       return new CommitTransactionMessage.Response(true);
     } catch (TransactionCommitFailedException e) {
@@ -178,7 +97,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
 
     logger.finer("Handling Prepare Message, client="
         + session.clientPrincipalName + ", tid=" + msg.tid);
-    this.numPrepares++;
+    session.recordPrepare();
 
     PrepareRequest req =
         new PrepareRequest(msg.tid, msg.commitTime, msg.serializedCreates,
@@ -194,8 +113,8 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
       // Store the size of the transaction for debugging at the end of the
       // session
       // Note: this number does not include surrogates
-//      addPendingLog(req.tid, session.clientPrincipal, new LogRecord(
-//          msg.serializedCreates.size(), msg.serializedWrites.size()));
+      session.addPendingLog(req.tid, msg.serializedCreates.size(),
+          msg.serializedWrites.size());
 
       return new PrepareTransactionMessage.Response(subTransactionCreated);
     } catch (TransactionPrepareFailedException e) {
@@ -213,7 +132,7 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
       throw new ProtocolError("Message not supported.");
 
     logger.finer("Handling Read Message");
-    this.numReads++;
+    session.recordRead();
 
     ObjectGroup group =
         session.core.tm.getGroup(session.clientPrincipal, session.remoteNode,
@@ -227,10 +146,10 @@ public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
   public DissemReadMessage.Response handle(DissemReadMessage msg)
       throws AccessException {
     logger.finer("Handling DissemRead message");
-    this.numReads++;
+    session.recordRead();
 
     Glob glob = session.core.tm.getGlob(msg.onum, session.remoteNode, this);
-    if (glob != null) numGlobsSent++;
+    if (glob != null) session.recordGlobSent();
 
     return new DissemReadMessage.Response(glob);
   }

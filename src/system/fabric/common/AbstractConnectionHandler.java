@@ -272,6 +272,8 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
     public void shutdown() {
       for (Worker worker : workers)
         worker.interrupt();
+      
+      session.endSession();
     }
   }
 }

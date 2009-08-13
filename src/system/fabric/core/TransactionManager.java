@@ -347,8 +347,7 @@ public class TransactionManager {
     }
 
     if (worker != null) {
-      worker.numGlobsCreated++;
-      worker.numGlobbedObjects += group.objects().size();
+      worker.getSession().recordGlobCreated(group.objects().size());
     }
 
     return container;
@@ -418,12 +417,7 @@ public class TransactionManager {
       group.put(curObj.getOnum(), curObj);
 
       if (worker != null) {
-        int count = 0;
-        worker.numObjectsSent++;
-        if (worker.numSendsByType.containsKey(curObj.getClassName()))
-          count = worker.numSendsByType.get(curObj.getClassName());
-        count++;
-        worker.numSendsByType.put(curObj.getClassName(), count);
+        worker.getSession().recordObjectSent(curObj.getClassName());
       }
 
       if (group.size() == MAX_GROUP_SIZE) break;

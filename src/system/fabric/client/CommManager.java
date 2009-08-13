@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 
 import fabric.common.ChannelMultiplexerThread;
 import fabric.common.Options;
-import fabric.common.Util;
+import fabric.common.Stream;
 import fabric.common.ChannelMultiplexerThread.CallbackHandler;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NoSuchNodeError;
@@ -34,13 +34,6 @@ class CommManager {
   private final RemoteNode node;
   private final ChannelMultiplexerThread muxer;
   private final boolean useSSL;
-
-  /**
-   * A thread-local pair of streams for the app to communicate with the remote
-   * node. XXX TODO Ought to be able to maintain this information by attaching
-   * the appropriate objects to the appropriate selection keys.
-   */
-  private final ThreadLocal<Pair<DataInputStream, DataOutputStream>> streams;
 
   /**
    * @param useSSL
@@ -76,33 +69,6 @@ class CommManager {
     } catch (IOException e) {
       throw new InternalError(e);
     }
-    this.streams = new ThreadLocal<Pair<DataInputStream, DataOutputStream>>() {
-      @Override
-      public Pair<DataInputStream, DataOutputStream> initialValue() {
-        try {
-          // APP --[outbound]--> CommManager
-          // APP <--[inbound ]-- CommManager
-          Pipe inbound = Pipe.open();
-          Pipe outbound = Pipe.open();
-          synchronized (Util.numCommManThreadLocals) {Util.numCommManThreadLocals.value++;}
-          muxer.registerChannels(outbound.source(), inbound.sink());
-
-          inbound.source().configureBlocking(true);
-          outbound.sink().configureBlocking(true);
-
-          DataInputStream in =
-              new DataInputStream(new BufferedInputStream(Channels
-                  .newInputStream(inbound.source())));
-          DataOutputStream out =
-              new DataOutputStream(new BufferedOutputStream(Channels
-                  .newOutputStream(outbound.sink())));
-
-          return new Pair<DataInputStream, DataOutputStream>(in, out);
-        } catch (IOException e) {
-          throw new InternalError(e);
-        }
-      }
-    };
 
     muxer.start();
   }
@@ -266,13 +232,33 @@ class CommManager {
 
     return connection;
   }
-
+  
   /**
-   * @return the DataInputStream/DataOutputStream pair for the substream that is
-   *         associated with the currently running thread.
+   * @return a DataInputStream/DataOutputStream pair for a new substream
    */
-  public Pair<DataInputStream, DataOutputStream> getStreams() {
-    return streams.get();
+  public Stream openStream() {
+    try {
+      // APP --[outbound]--> CommManager
+      // APP <--[inbound ]-- CommManager
+      Pipe inbound = Pipe.open();
+      Pipe outbound = Pipe.open();
+
+      int streamID = muxer.registerChannels(outbound.source(), inbound.sink());
+
+      inbound.source().configureBlocking(true);
+      outbound.sink().configureBlocking(true);
+
+      DataInputStream in =
+          new DataInputStream(new BufferedInputStream(Channels
+              .newInputStream(inbound.source())));
+      DataOutputStream out =
+          new DataOutputStream(new BufferedOutputStream(Channels
+              .newOutputStream(outbound.sink())));
+
+      return new Stream(muxer, streamID, in, out);
+    } catch (IOException e) {
+      throw new InternalError(e);
+    }
   }
 
   public void shutdown() {

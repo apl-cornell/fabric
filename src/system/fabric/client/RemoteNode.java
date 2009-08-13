@@ -1,11 +1,9 @@
 package fabric.client;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.util.logging.Logger;
 
+import fabric.common.Stream;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.Pair;
 
 /**
  * Abstracts remote cores and remote clients.
@@ -53,11 +51,11 @@ public abstract class RemoteNode {
    *          doesn't support non-SSL connections.
    * @return the data I/O stream pair to use for communicating with the node.
    */
-  public final Pair<DataInputStream, DataOutputStream> dataStreams(
+  public final Stream openStream(
       boolean useSSL) {
     if (useSSL) {
       if (sslCommManager == null) sslCommManager = new CommManager(this, true);
-      return sslCommManager.getStreams();
+      return sslCommManager.openStream();
     }
 
     if (!supportsUnencrypted)
@@ -67,7 +65,7 @@ public abstract class RemoteNode {
 
     if (unencryptedCommManager == null)
       unencryptedCommManager = new CommManager(this, false);
-    return unencryptedCommManager.getStreams();
+    return unencryptedCommManager.openStream();
   }
 
   public void cleanup() {

@@ -9,10 +9,10 @@ import fabric.client.remote.messages.GetPrincipalMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
 import fabric.client.remote.messages.TakeOwnershipMessage;
 import fabric.common.MessageHandler;
+import fabric.common.Stream;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FabricRuntimeException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.Pair;
 import fabric.core.Worker;
 
 /**
@@ -43,11 +43,10 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    *           if an error occurs at the remote node while handling the message.
    */
   protected final R send(N node, boolean useSSL) throws FabricException {
-    Pair<DataInputStream, DataOutputStream> dataStreams =
-        node.dataStreams(useSSL);
+    Stream stream = node.openStream(useSSL);
 
-    DataInputStream in = dataStreams.first;
-    DataOutputStream out = dataStreams.second;
+    DataInputStream in = stream.in;
+    DataOutputStream out = stream.out;
 
     try {
       // Write this message out.
@@ -77,6 +76,12 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
       throw e;
     } catch (Exception e) {
       throw new InternalError(e);
+    } finally {
+      try {
+        stream.close();
+      } catch (IOException e) {
+        throw new InternalError(e);
+      }
     }
   }
 
@@ -227,8 +232,8 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
         AbortTransactionMessage.class), DISSEM_READ_ONUM(
         DissemReadMessage.class), REMOTE_CALL(RemoteCallMessage.class), INTERCLIENT_READ(
         fabric.client.remote.messages.ReadMessage.class), TAKE_OWNERSHIP(
-        TakeOwnershipMessage.class), GET_PRINCIPAL(GetPrincipalMessage.class),
-        OBJECT_UPDATE(ObjectUpdateMessage.class);
+        TakeOwnershipMessage.class), GET_PRINCIPAL(GetPrincipalMessage.class), OBJECT_UPDATE(
+        ObjectUpdateMessage.class);
 
     private final Class<? extends Message<?, ?>> messageClass;
 

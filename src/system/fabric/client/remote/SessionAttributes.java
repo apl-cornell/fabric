@@ -3,7 +3,7 @@ package fabric.client.remote;
 import fabric.common.AbstractWorkerThread;
 import fabric.lang.NodePrincipal;
 
-public final class SessionAttributes implements
+public final class SessionAttributes extends
     AbstractWorkerThread.SessionAttributes {
 
   /**
