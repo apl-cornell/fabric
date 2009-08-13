@@ -101,3 +101,7 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
     }
 }
 
+
+class SimplePrincipal extends AbstractPrincipal {
+    SimplePrincipal(String{*<-} name) { super(name); }
+}
