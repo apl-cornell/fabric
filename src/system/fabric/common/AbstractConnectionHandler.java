@@ -91,26 +91,39 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
    */
   protected abstract String getThreadName(SocketAddress remote, Session session);
 
-  public synchronized final void handle(SocketChannel connection)
-      throws IOException {
-    if (destroyed) return;
+  public final void handle(final SocketChannel connection) {
+    // XXX Dirty hack: start a new thread for initializing the connection.
+    // Should really be using the muxer thread for this.
 
-    Session session = initializeConnection(connection);
-    if (session == null) {
-      // Connection setup failed.
-      logAuthenticationFailure();
-      connection.close();
-      return;
-    }
+    new Thread("Connection initializer") {
+      @Override
+      public void run() {
+        try {
+          Session session = initializeConnection(connection);
+          if (session == null) {
+            // Connection setup failed.
+            logAuthenticationFailure();
+            connection.close();
+            return;
+          }
 
-    SocketAddress remote = connection.socket().getRemoteSocketAddress();
-    logSession(remote, session);
+          SocketAddress remote = connection.socket().getRemoteSocketAddress();
+          logSession(remote, session);
 
-    ChannelMultiplexerThread mux =
-        new ChannelMultiplexerThread(new CallbackHandler(session),
-            getThreadName(remote, session), connection);
-    activeMuxThreads.add(mux);
-    mux.start();
+          synchronized (AbstractConnectionHandler.this) {
+            if (destroyed) return;
+            
+            ChannelMultiplexerThread mux =
+                new ChannelMultiplexerThread(new CallbackHandler(session),
+                    getThreadName(remote, session), connection);
+            activeMuxThreads.add(mux);
+            mux.start();
+          }
+        } catch (IOException e) {
+          throw new InternalError(e);
+        }
+      }
+    }.start();
   }
 
   public synchronized final void shutdown() {
@@ -272,7 +285,7 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
     public void shutdown() {
       for (Worker worker : workers)
         worker.interrupt();
-      
+
       session.endSession();
     }
   }
