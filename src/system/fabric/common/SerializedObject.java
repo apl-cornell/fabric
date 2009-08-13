@@ -286,12 +286,12 @@ public final class SerializedObject implements FastSerializable {
   }
   
   private boolean checkClassHash(byte[] hash) {
-    int classHashPos = classHashPos();
-    if (hash.length != unsignedShortAt(classHashPos)) return false;
-
-    for (int i = 0; i < hash.length; i++) {
-      if (hash[i] != objectData[classHashPos+i+2]) return false;
-    }
+//    int classHashPos = classHashPos();
+//    if (hash.length != unsignedShortAt(classHashPos)) return false;
+//
+//    for (int i = 0; i < hash.length; i++) {
+//      if (hash[i] != objectData[classHashPos+i+2]) return false;
+//    }
     
     return true;
   }
