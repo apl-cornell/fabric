@@ -48,7 +48,7 @@ public final class Util {
     result = digest.digest();
     classHashCache.put(className, result);
 
-    return result;
+    return new byte[] {0};
   }
 
   public static byte[] hashClass(String className) throws IOException,
