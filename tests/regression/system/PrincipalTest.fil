@@ -6,6 +6,7 @@ public class PrincipalTest {
 
    Principal p = new P@broker();
    IntegPolicy airlineTrusted = LabelUtil.writerPolicy(airline, p, p);  // {bank<-airline} 
+   System.out.println("zarro boogs");
   }
  }
 }
