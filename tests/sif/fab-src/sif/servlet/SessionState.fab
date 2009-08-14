@@ -19,25 +19,14 @@ public class SessionState[covariant label T] {
         this.sessionId = "<uninitialized>";
     }
     
-//    public SessionState(SSW[T]{T} remote) {
-//    	this.remote = remote;
-//    }
-    public SessionState(Principal{T} sp, String{T} si) {
-        this.sessionPrincipal = sp;
-        this.sessionId = si;
-    }
-
-    public final Principal{T} sessionPrincipal;
+    public final SessionPrincipal{T} sessionPrincipal;
     public final String{T}    sessionId;
-//    
-//    public final SSW[T]{T} remote;
-//
 
     public final String{T;this} getSessionId() {
         return sessionId;
     }
 
-    public final Principal{T;this} sessionPrincipal() {
+    public final SessionPrincipal{T;this} sessionPrincipal() {
         return sessionPrincipal;
     }
 //    

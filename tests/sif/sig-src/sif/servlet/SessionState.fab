@@ -13,12 +13,12 @@ public class SessionState[covariant label T] {
     
     public SessionState(Principal{T} sp, String{T} si) {    }
 
-    public final Principal{T} sessionPrincipal;
+    public final SessionPrincipal{T} sessionPrincipal;
     public final String{T}    sessionId;
 
     public native final String{T;this} getSessionId();
 
-    public native final Principal{T;this} sessionPrincipal(); 
+    public native final SessionPrincipal{T;this} sessionPrincipal(); 
 
     /** convenience method for non-fabric code */
 //    public static SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id) {

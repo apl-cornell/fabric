@@ -5,21 +5,21 @@ import sif.servlet.SessionPrincipal;
 import jif.util.*;
 
 public class USessState[principal servP, covariant label T] extends SessionState[T] {
-    final UserWrapper[servP,{sessionPrincipal!:}, T]{T} uwrapper;
+    public final UserWrapper[servP,{sessionPrincipal!:}]{T} uwrapper;
     
     public USessState(String{T} id, SessionPrincipal{T} session) {
-        uwrapper = new UserWrapper[servP,{sessionPrincipal!:},T]();
+        uwrapper = new UserWrapper[servP,{sessionPrincipal!:}]();
     	super(id, session);
     }
     
-    public USessState(Principal{T} sp, String{T} si, UserWrapper[servP, {sessionPrincipal!:}, T]{T} uwrap) {
+    public USessState(SessionPrincipal{T} sp, String{T} si, UserWrapper[servP, {sessionPrincipal!:}]{T} uwrap) {
     	UserWrapper local = null;
     	if(sp equiv sessionPrincipal) {
     		local = uwrap;
     	}
     	this.uwrapper = local;
     	// TODO Call super correctly
-    	super(sp, si);
+    	super(si, sp);
     }
     
     public User[servP,{sessionPrincipal!:}]{sessionPrincipal!:;T} currentUser() {
@@ -34,8 +34,6 @@ public class USessState[principal servP, covariant label T] extends SessionState
     		uwrapper.currentUser(cu);
     	} catch (NullPointerException e) {}
     }
-    
-    
     
     public static USessState[Q, {P←}]{P←} declassifySS{P←}(USessState[Q, {P→;P←}]{P→;P←} ss_, principal{P←} P, principal{P←} Q)
     where caller(P) {
@@ -62,15 +60,4 @@ public class USessState[principal servP, covariant label T] extends SessionState
     	
     }
     
-}
-
-class UserWrapper[principal servP, label L, covariant label T] {
-	
-	public UserWrapper() {}
-
-	User[servP,{L}]{L} currentUser = null;
-    void currentUser{L}(User[servP,{L}]{L} cu) { 
-        currentUser = cu; 
-    }
-	
 }

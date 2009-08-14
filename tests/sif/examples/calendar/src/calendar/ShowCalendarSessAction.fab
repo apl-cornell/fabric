@@ -700,7 +700,7 @@ class ChangeDisplayDateAction extends USessAction[CalServEP] {
     caller(session), session actsfor p, endorse({p:;session!:}) 
     {
         declassify ({p:;session!:} to {session!:}) {
-            final CalendarSessionState ss1 = CalendarSessionState.declassifyState(p, sessState);
+            final CalendarSessionState ss1 = CalendarSessionState.declassifyState(declassify(p, {p→;p←} to {p←}), sessState);
             final CalendarSessionState ss = CalendarSessionState.endorseState(
                     declassify(p, {p→;p←} to {p←}), declassify(session, {p→;p←} to {p←}), ss1);
             if (ss == null || ss.css == null) return;

@@ -33,5 +33,18 @@ class State[covariant label T] {
         return new State[lbl](this.currentUser, displayDate, this.displayKind, this.displayUser);
     }
     
+    static State[{P←;S←}]{P←;S←} declassifyState{P←}(principal{P←} P, principal{P←} S, State[{P←;P→;S←}]{P←;P→;S←} state) {
+        State[{P←;P→;S←}]{P←;S←} state_ = declassify(state, {P←;P→;S←} to {P←;S←});
+        if (state_ == null) return null;
+        User nuser1 = declassify(state_.currentUser, {P←;P→} to {P←});
+        User nuser2 = User.declassifyUser(P, CalServEP, nuser1);
+        Date ndate = declassify(state_.displayDate, {P←;P→} to {P←});
+        int nkind = declassify(state_.displayKind, {P←;P→} to {P←});
+        User ndisp1 = declassify(state_.displayUser, {P←;P→} to {P←});
+        User ndisp2 = User.declassifyUser(P, CalServEP, ndisp1);
+        
+        State[{P←}] toReturn = new State[{P←}](nuser2, ndate, nkind, ndisp2);
+        return toReturn;
+    }
 }
 

@@ -166,7 +166,7 @@ public class CreateEditEvent extends USessAction[CalServEP] authority (CalServEP
                         if(cu equiv currentUser) {
                             declassify ({currentUser:;currentUser!:} to {currentUser!:}) {
                             CalendarSessionState state2 = declassify(state, {currentUser:;currentUser!:} to {currentUser!:});
-                            final CalendarSessionState[{cu!:}] state1 = CalendarSessionState.declassifyState(currentUser, state2);
+                            final CalendarSessionState[{cu!:}] state1 = CalendarSessionState.declassifyState(cu, state2);
                             if(state1 != null) 
                             
                             if(session equiv state1.sessionPrincipal && cu_ equiv currentUser) {
