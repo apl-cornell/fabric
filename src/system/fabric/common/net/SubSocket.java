@@ -111,13 +111,13 @@ public final class SubSocket {
     
     @Override
     public String toString() {
-      return "is connected to " + conn.getChannel().getRemoteAddress();
+      return "is connected (" + conn.toString() + ")";
     }
     
     @Override
     public void close() throws IOException {
       try {
-        conn.destroy();
+        conn.close();
         state = new Closed();
       } catch (final Exception exc) {
         IOException wrapped = new IOException("failed to close connection", exc);

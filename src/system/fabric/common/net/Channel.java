@@ -1,5 +1,6 @@
 package fabric.common.net;
 
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -18,6 +20,12 @@ import java.util.Map;
  * @author mdgeorge
  */
 abstract class Channel {
+  private final DataOutputStream out;
+  private final DataInputStream  in;
+  protected final Socket           sock;
+  
+  private final Map<Integer, Connection> connections;
+  
   // channel protocol:
   //
   // a message is one of the following:
@@ -33,60 +41,91 @@ abstract class Channel {
   //
   // a newly connected client needs to send before recieving to avoid deadlock
   
-  protected Channel(Socket s) {
-    throw new NotImplementedException();
+  protected Channel(Socket s) throws IOException {
+    this.sock = s;
+    this.out  = new DataOutputStream(s.getOutputStream());
+    this.in   = new DataInputStream(s.getInputStream());
+    this.connections = new HashMap<Integer, Connection>();
+    new Demuxer().start();
   }
 
-  public SocketAddress getRemoteAddress() {
+  public synchronized void sendClose() throws IOException {
+    out.writeInt(0);
+  }
+  
+  public synchronized void sendClose(int sequence) throws IOException {
+    out.writeInt(sequence);
+    out.writeInt(0);
+  }
+  
+  public synchronized void sendData(int sequence, byte[] data, int offset, int len) throws IOException {
+    out.writeInt(sequence);
+    out.writeInt(data.length);
+    out.write(data, offset, len);
+  }
+  
+  public synchronized void recvClose() throws IOException {
     throw new NotImplementedException();
   }
   
-  protected abstract void handleUnknownSequence(int sequenceNumber);
+  public synchronized void recvClose(int sequence) throws IOException {
+    Connection listener = getReceiver(sequence);
+    listener.close();
+  }
+  
+  public synchronized void recvData(int sequence, byte[] data) throws IOException {
+    Connection listener = getReceiver(sequence);
+    listener.receiveData(data);
+  }
+  
+  public abstract Connection accept(int sequence) throws IOException;
 
-  private final Map<Integer, OutputStream> readers;
-  private final DataOutputStream           out;
+  private Connection getReceiver(int sequence) throws IOException {
+    Connection result = connections.get(sequence);
+    if (result == null) {
+      result = accept(sequence);
+    }
+    return result;
+  }
   
   /**
    * a thread that reads data off of the input stream and dispatches it to the
    * appropriate reader.
    */
-  private class Demuxer implements Runnable {
+  private class Demuxer extends Thread {
+    @Override
     public void run() {
-      DataInputStream in = null;
-
       try {
         while(true) {
           int sequenceNumber = in.readInt();
           if (sequenceNumber == 0) {
-            // close
-            throw new NotImplementedException();
+            recvClose();
+            continue;
           }
 
-          synchronized(Channel.this) {
-            OutputStream reader = readers.get(sequenceNumber);
-            if (reader == null) {
-              // see if there's a listener, and if so, set up the pipes, else error
-              throw new NotImplementedException();
-            }
-
-            int len = in.readInt();
-            if (len == 0) {
+          int len = in.readInt();
+          if (len == 0) {
               // error - deliver to reader
-              throw new NotImplementedException();
-            }
-
-            for (int i = 0; i < len; i++)
-              reader.write(in.readByte());
-
-            reader.flush();
+              recvClose(sequenceNumber);
+              continue;
           }
+
+          byte[] buf = new byte[len];
+          in.read(buf);
+          recvData(sequenceNumber, buf);
         }
       } catch (final IOException exc) {
         // TODO cleanup
         throw new NotImplementedException();
       }
     }
+    
+    public Demuxer() {
+      super("demultiplexer for " + Channel.this.toString());
+    }
   }
+  
+  @Override public abstract String toString();
   
   /**
    * this contains all of the state for an open connection.
@@ -96,20 +135,42 @@ abstract class Channel {
     final public InputStream  in;
     final public OutputStream out;
     
+    final public OutputStream sink;
+    
     public Connection(int sequenceNum) throws IOException {
       this.sequenceNum = sequenceNum;
-      this.out         = new MuxedOutputStream();
+      this.out         = new BufferedOutputStream(new MuxedOutputStream());
       
-      PipedInputStream  in  = new PipedInputStream();
-      PipedOutputStream out = new PipedOutputStream(in);
-      readers.put(this.sequenceNum, out);
-      this.in = in;
+      PipedInputStream in = new PipedInputStream();
+      this.sink           = new PipedOutputStream(in);
+      this.in             = in;
+      connections.put(this.sequenceNum, this);
+    }
+    
+    @Override
+    public String toString() {
+      return "stream " + sequenceNum + " on " + Channel.this.toString();
     }
 
-    public void destroy() throws IOException {
-      readers.remove(this.sequenceNum);
+    /**
+     * this method is called by SubSocket.close().
+     */
+    public void close() throws IOException {
       in.close();
       out.close();
+      sendClose(sequenceNum);
+    }
+    
+    /**
+     * this method called by recvClose in response to a close message
+     */
+    public void receiveClose() throws IOException {
+      connections.remove(this);
+      sink.close();
+    }
+    
+    public void receiveData(byte[] b) throws IOException {
+      sink.write(b);
     }
 
     public Channel getChannel() {
@@ -127,24 +188,12 @@ abstract class Channel {
     
     @Override
     public void write(int arg0) throws IOException {
-      throw new NotImplementedException();
+      throw new IOException("MuxedOutputStreams do not support writing unbuffered data");
     }
 
     @Override
-    public void flush() throws IOException {
-      synchronized(out) {
-        out.flush();
-      }
-    }
-
-    @Override
-    public void write(byte[] b, int offset, int len) throws IOException {
-      synchronized(Channel.this)  {
-        out.writeInt(sequenceNumber);
-        out.writeInt(len);
-        out.write(b, offset, len);
-        out.flush();
-      }
+    public void write(byte[] buf, int offset, int len) throws IOException {
+      sendData(sequenceNumber, buf, offset, len);
     }
 
     @Override
@@ -152,5 +201,4 @@ abstract class Channel {
       write (b, 0, b.length);
     }
   }
-
 }

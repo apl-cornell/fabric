@@ -6,17 +6,22 @@ import java.net.Socket;
 class ClientChannel extends Channel {
   private int nextSequenceNumber;
   
-  public ClientChannel(Socket s) {
+  public ClientChannel(Socket s) throws IOException {
     super(s);
-    throw new NotImplementedException();
+    nextSequenceNumber = 0;
   }
 
   public Connection connect() throws IOException {
-    return new Connection(nextSequenceNumber++);
+    return new Connection(nextSequenceNumber++); 
   }
   
   @Override
-  protected void handleUnknownSequence(int sequenceNumber) {
-    throw new NotImplementedException();
+  public Connection accept(int sequence) throws IOException {
+    throw new IOException("unexpected accept request on client channel");
+  }
+
+  @Override
+  public String toString() {
+    return "channel to " + sock.getRemoteSocketAddress();
   }
 }

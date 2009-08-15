@@ -1,17 +1,26 @@
 package fabric.common.net;
 
+import java.io.IOException;
 import java.net.Socket;
 
 public class ServerChannel extends Channel {
-
-  public ServerChannel(Socket sock, Acceptor acc) {
+  private final Acceptor acc;
+  
+  public ServerChannel(Socket sock, Acceptor acc) throws IOException {
     super(sock);
-    throw new NotImplementedException();
+    this.acc = acc;
   }
   
   @Override
-  protected void handleUnknownSequence(int sequenceNumber) {
-    throw new NotImplementedException();
+  public Connection accept(int sequence) throws IOException {
+    Connection conn = new Connection(sequence);
+    acc.connected(new SubSocket(conn));
+    return conn;
+  }
+
+  @Override
+  public String toString() {
+    return "channel from " + sock.getRemoteSocketAddress() + " to " + acc.getAddress();
   }
 
 }
