@@ -13,7 +13,10 @@ import java.util.concurrent.BlockingQueue;
 import javax.net.ServerSocketFactory;
 
 /**
- * A channel encapsulates a single 
+ * A channel encapsulates a single java.net.ServerSocket.  It functions as a
+ * producer-consumer of SubSockets (via the connected(s) and s accept() methods)
+ * and runs a thread in the background which awaits incoming connections and
+ * spawns new ServerChannels to handle them.  
  * 
  * @author mdgeorge
  */
@@ -27,15 +30,18 @@ class Acceptor {
     new Listener().start();
   }
   
+  /** return the local socket address of this acceptor */
   public SocketAddress getAddress() {
     return socket.getLocalSocketAddress();
   }
   
+  /** Called by a ServerChannel when a new substream is connected */
   public void connected(SubSocket s) throws IOException {
     if (!connections.offer(s))
       throw new IOException("too many waiting connections");
   }
 
+  /** block until a new substream connects, and then return it. */
   public SubSocket accept() throws IOException {
     try {
       return connections.take();
@@ -44,6 +50,7 @@ class Acceptor {
     }
   }
   
+  /** release the resouces associated with this Acceptor. */
   public void close() throws IOException {
     // note that this will kill off the Listener thread as well.
     socket.close();
@@ -54,6 +61,9 @@ class Acceptor {
     }
   }
 
+  /** A thread that listens for incoming TCP connections and spawns new
+   * ServerChannels to deal with them.
+   */
   private class Listener extends Thread {
     @Override
     public void run() {

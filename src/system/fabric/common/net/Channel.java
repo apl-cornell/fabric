@@ -29,17 +29,12 @@ abstract class Channel {
   // channel protocol:
   //
   // a message is one of the following:
-  //  channel   close: 0  0
-  //  subsocket close: SN 0
-  //  subsocket send:  SN length data[len]
+  //  channel   close (sendClose()   method): 0  0
+  //  subsocket close (sendClose(SN) method): SN 0
+  //  subsocket send  (sendData      method): SN length data[len]
   //
-  // if a server channel recieves a message with an unknown sequence number, it
-  // should create a new subsocket and return it to the next call to accept.
-  //
-  // if a client channel recieves a message with an unknown sequence number, it
-  // should respond with a subsocket close message (this should not happen)
-  //
-  // a newly connected client needs to send before recieving to avoid deadlock
+  // any unrecognized or previously closed SN should create a new stream (thus
+  // the subsocket close message should be the last sent by a subsocket).
   
   protected Channel(Socket s) throws IOException {
     this.sock = s;
@@ -49,17 +44,25 @@ abstract class Channel {
     new Demuxer().start();
   }
 
+  @Override public abstract String toString();
+
+  /** called to create a Connection to an unknown sequence number */
+  public abstract Connection accept(int sequence) throws IOException;
+
+  /** send channel close message */
   public synchronized void sendClose() throws IOException {
     out.writeInt(0);
     out.flush();
   }
   
+  /** send subsocket close message */
   public synchronized void sendClose(int sequence) throws IOException {
     out.writeInt(sequence);
     out.writeInt(0);
     out.flush();
   }
   
+  /** send data */
   public synchronized void sendData(int sequence, byte[] data, int offset, int len) throws IOException {
     out.writeInt(sequence);
     out.writeInt(data.length);
@@ -67,22 +70,27 @@ abstract class Channel {
     out.flush();
   }
   
+  /** called on receipt of a channel close message */ 
   public synchronized void recvClose() {
     throw new NotImplementedException();
   }
   
+  /** called on receipt of subsocket close message */
   public synchronized void recvClose(int sequence) throws IOException {
     Connection listener = getReceiver(sequence);
     listener.close();
   }
   
+  /** called on receipt of data message */
   public synchronized void recvData(int sequence, byte[] data) throws IOException {
     Connection listener = getReceiver(sequence);
     listener.receiveData(data);
   }
   
-  public abstract Connection accept(int sequence) throws IOException;
-
+  /**
+   * returns the Connection associated with a given sequence number, creating
+   * it if necessary
+   * */
   private Connection getReceiver(int sequence) throws IOException {
     Connection result = connections.get(sequence);
     if (result == null) {
@@ -128,8 +136,6 @@ abstract class Channel {
     }
   }
   
-  @Override public abstract String toString();
-  
   /**
    * this contains all of the state for an open connection.
    */
@@ -155,29 +161,22 @@ abstract class Channel {
       return "stream " + sequenceNum + " on " + Channel.this.toString();
     }
 
-    /**
-     * this method is called by SubSocket.close().
-     */
+    /** this method is called by SubSocket.close(). */
     public void close() throws IOException {
       in.close();
       out.close();
       sendClose(sequenceNum);
     }
     
-    /**
-     * this method called by recvClose in response to a close message
-     */
+    /** this method called by recvClose in response to a close message */
     public void receiveClose() throws IOException {
       connections.remove(this);
       sink.close();
     }
     
+    /** forward data to the reading thread */
     public void receiveData(byte[] b) throws IOException {
       sink.write(b);
-    }
-
-    public Channel getChannel() {
-      return Channel.this;
     }
   }
   

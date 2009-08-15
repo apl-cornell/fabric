@@ -10,6 +10,7 @@ import javax.net.ServerSocketFactory;
  * Server-side multiplexed socket implementation. The API mirrors that of
  * java.net.ServerSocket.
  * 
+ * @see java.net.ServerSocket
  * @author mdgeorge
  */
 public final class SubServerSocket {
@@ -17,30 +18,37 @@ public final class SubServerSocket {
   // public API                                                               //
   //////////////////////////////////////////////////////////////////////////////
   
+  /** @see SubServerSocketFactory */
   SubServerSocket(ServerSocketFactory factory) {
     this.state   = new Unbound(factory);
   }
   
+  /** @see java.net.ServerSocket#accept() */
   public SubSocket accept() throws IOException {
     return state.accept();
   }
   
+  /** @see java.net.ServerSocket#bind(java.net.SocketAddress) */
   public void bind(int port) throws IOException {
     bind(port, 50);
   }
   
+  /** @see java.net.ServerSocket#bind(java.net.SocketAddress, int) */
   public void bind(int port, int backlog) throws IOException {
     bind(new InetSocketAddress(port), backlog);
   }
   
+  /** @see java.net.ServerSocket#bind(java.net.SocketAddress) */
   public void bind(InetSocketAddress addr) throws IOException {
     bind(addr, 50);
   }
   
+  /** @see java.net.ServerSocket#bind(java.net.SocketAddress, int) */
   public void bind(InetSocketAddress addr, int backlog) throws IOException {
     state.bind(addr, backlog);
   }
   
+  /** @see java.net.ServerSocket#close() */
   public void close() throws IOException {
     state.close();
   }
@@ -64,21 +72,24 @@ public final class SubServerSocket {
   private abstract class State {
     protected Exception cause = null;
     
+    /** @see SubServerSocket#accept() */
     public SubSocket accept() throws IOException {
       throw new IOException("Cannot accept a connection because server socket " + this, cause);
     }
     
+    /** @see SubServerSocket#bind(InetSocketAddress, int) */
     public void bind(InetSocketAddress address, int backlog) throws IOException {
       throw new IOException("Cannot bind to local address " + address + " because server socket " + this, cause);
     }
     
+    /** @see SubServerSocket#close() */
     public void close() throws IOException {
       throw new IOException("Cannot close server socket because it " + this, cause);
     }
   }
   
   /**
-   * implementation of methods in the unbound state.
+   * implementation of state methods in the unbound state.
    */
   private final class Unbound extends State {
     @Override public String toString() { return "is unbound"; }
@@ -103,7 +114,7 @@ public final class SubServerSocket {
   }
 
   /**
-   * implementation of methods in the bound(channel) state.
+   * implementation of state methods in the bound(channel) state.
    */
   private final class Bound extends State {
     final Acceptor acceptor;
@@ -135,14 +146,14 @@ public final class SubServerSocket {
   }
   
   /**
-   * implementation of methods in the closed state.
+   * implementation of state methods in the closed state.
    */
   private final class Closed extends State {
     @Override public String toString() { return "is closed"; }
   }
   
   /**
-   * implementation of methods in an error state
+   * implementation of state methods in an error state
    */
   private final class ErrorState extends State {
     @Override public String toString() { return "has recieved an exception"; }

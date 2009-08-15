@@ -19,27 +19,39 @@ public class SubSocketFactory {
   private final javax.net.SocketFactory     factory;
   private final Map<InetSocketAddress, ClientChannel> channels;
   
+  /**
+   * Create a new SubSocket factory that decorates the given SocketFactory.
+   * Note that SubSockets created from different SubSocketFactories will not
+   * attempt to share channels (as these channels may have different underlying
+   * socket implementations).
+   */ 
   public SubSocketFactory(SocketFactory factory) {
     this.factory  = factory;
     this.channels = new HashMap<InetSocketAddress, ClientChannel>();
   }
   
+  /** @see javax.net.SocketFactory#createSocket() */
   public SubSocket createSocket() {
     return new SubSocket(this);
   }
   
+  /** @see javax.net.SocketFactory#createSocket(String, int) */
   public SubSocket createSocket(String host, int port) throws IOException {
     SubSocket result = new SubSocket(this);
     result.connect(new InetSocketAddress(host, port));
     return result;
   }
 
+  /** @see javax.net.SocketFactory#createSocket(InetAddress, int) */
   public SubSocket createSocket(InetAddress host, int port) throws IOException {
     SubSocket result = new SubSocket(this);
     result.connect(new InetSocketAddress(host, port));
     return result;
   }
 
+  /**
+   * return a channel associated with the given address, creating it if necessary.
+   */
   public synchronized ClientChannel getChannel(InetSocketAddress addr) throws IOException {
     ClientChannel result = channels.get(addr);
     if (null == result) {

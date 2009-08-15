@@ -11,6 +11,7 @@ import java.net.SocketAddress;
  * java.net.Socket. This class manages connection state, and provides a
  * front-end API.
  * 
+ * @see java.net.Socket
  * @author mdgeorge
  */
 public final class SubSocket {
@@ -18,26 +19,35 @@ public final class SubSocket {
   // public API                                                               //
   //////////////////////////////////////////////////////////////////////////////
   
+  /** @see SubSocketFactory */
   SubSocket(SubSocketFactory factory) {
     this.state = new Unconnected(factory); 
   }
   
+  /**
+   * Create a connected SubSocket.  This is used internally by ServerChannels
+   * for accepting incoming streams.
+   */ 
   SubSocket(Channel.Connection conn) {
     this.state = new Connected(conn);
   }
 
+  /** @see java.net.Socket#close() */
   public void close() throws IOException {
     state.close();
   }
 
+  /** @see java.net.Socket#connect(SocketAddress) */
   public void connect(InetSocketAddress addr) throws IOException {
     state.connect(addr);
   }
 
+  /** @see java.net.Socket#getOutputStream() */
   public OutputStream getOutputStream() throws IOException {
     return state.getOutputStream();
   }
   
+  /** @see java.net.Socket#getInputStream() */
   public InputStream getInputStream() throws IOException {
     return state.getInputStream();
   }
