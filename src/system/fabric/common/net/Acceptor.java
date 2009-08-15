@@ -13,7 +13,7 @@ import java.util.concurrent.BlockingQueue;
 import javax.net.ServerSocketFactory;
 
 /**
- * Listens for incoming connections and creates Channels corresponding to them.
+ * A channel encapsulates a single 
  * 
  * @author mdgeorge
  */
@@ -62,6 +62,10 @@ class Acceptor {
       } catch (IOException exc) {
         throw new NotImplementedException();
       }
+    }
+    
+    public Listener() {
+      super("connection acceptor for " + getAddress());
     }
   }
 }
