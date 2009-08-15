@@ -51,20 +51,23 @@ abstract class Channel {
 
   public synchronized void sendClose() throws IOException {
     out.writeInt(0);
+    out.flush();
   }
   
   public synchronized void sendClose(int sequence) throws IOException {
     out.writeInt(sequence);
     out.writeInt(0);
+    out.flush();
   }
   
   public synchronized void sendData(int sequence, byte[] data, int offset, int len) throws IOException {
     out.writeInt(sequence);
     out.writeInt(data.length);
     out.write(data, offset, len);
+    out.flush();
   }
   
-  public synchronized void recvClose() throws IOException {
+  public synchronized void recvClose() {
     throw new NotImplementedException();
   }
   
