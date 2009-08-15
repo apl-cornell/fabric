@@ -5,8 +5,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.Map;
 
 /**
@@ -15,27 +17,31 @@ import java.util.Map;
  * 
  * @author mdgeorge
  */
-class Channel {
+abstract class Channel {
+  // channel protocol:
+  //
+  // a message is one of the following:
+  //  channel   close: 0  0
+  //  subsocket close: SN 0
+  //  subsocket send:  SN length data[len]
+  //
+  // if a server channel recieves a message with an unknown sequence number, it
+  // should create a new subsocket and return it to the next call to accept.
+  //
+  // if a client channel recieves a message with an unknown sequence number, it
+  // should respond with a subsocket close message (this should not happen)
+  //
+  // a newly connected client needs to send before recieving to avoid deadlock
+  
+  protected Channel(Socket s) {
+    throw new NotImplementedException();
+  }
 
-  public Channel(Socket s) {
+  public SocketAddress getRemoteAddress() {
     throw new NotImplementedException();
   }
   
-  public Channel(Socket s, Acceptor a) {
-    throw new NotImplementedException();
-  }
-  
-  public InetSocketAddress getLocalSocketAddress() {
-    throw new NotImplementedException();
-  }
-  
-  public InetSocketAddress getRemoteSocketAddress() {
-    throw new NotImplementedException();
-  }
-  
-  public Connection connect() {
-    throw new NotImplementedException();
-  }
+  protected abstract void handleUnknownSequence(int sequenceNumber);
 
   private final Map<Integer, OutputStream> readers;
   private final DataOutputStream           out;
@@ -83,6 +89,35 @@ class Channel {
   }
   
   /**
+   * this contains all of the state for an open connection.
+   */
+  class Connection {
+    final public int sequenceNum;
+    final public InputStream  in;
+    final public OutputStream out;
+    
+    public Connection(int sequenceNum) throws IOException {
+      this.sequenceNum = sequenceNum;
+      this.out         = new MuxedOutputStream();
+      
+      PipedInputStream  in  = new PipedInputStream();
+      PipedOutputStream out = new PipedOutputStream(in);
+      readers.put(this.sequenceNum, out);
+      this.in = in;
+    }
+
+    public void destroy() throws IOException {
+      readers.remove(this.sequenceNum);
+      in.close();
+      out.close();
+    }
+
+    public Channel getChannel() {
+      return Channel.this;
+    }
+  }
+  
+  /**
    * an OutputStream that expands written data to include the sequence number,
    * and writes to the channel's output stream. These should be wrapped in
    * BufferedOutputStreams before being returned.
@@ -117,21 +152,5 @@ class Channel {
       write (b, 0, b.length);
     }
   }
-  
-  /**
-   * this contains all of the state for an open connection.
-   */
-  class Connection {
-    int sequenceNum;
-    InputStream  in;
-    OutputStream out;
 
-    public void destroy() {
-      throw new NotImplementedException();
-    }
-
-    public Channel getChannel() {
-      return Channel.this;
-    }
-  }
 }

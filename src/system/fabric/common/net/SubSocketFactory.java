@@ -17,11 +17,11 @@ import javax.net.SocketFactory;
  */
 public class SubSocketFactory {
   private final javax.net.SocketFactory     factory;
-  private final Map<InetSocketAddress, Channel> channels;
+  private final Map<InetSocketAddress, ClientChannel> channels;
   
   public SubSocketFactory(SocketFactory factory) {
     this.factory  = factory;
-    this.channels = new HashMap<InetSocketAddress, Channel>();
+    this.channels = new HashMap<InetSocketAddress, ClientChannel>();
   }
   
   public SubSocket createSocket() {
@@ -40,11 +40,11 @@ public class SubSocketFactory {
     return result;
   }
 
-  public synchronized Channel getChannel(InetSocketAddress addr) throws IOException {
-    Channel result = channels.get(addr);
+  public synchronized ClientChannel getChannel(InetSocketAddress addr) throws IOException {
+    ClientChannel result = channels.get(addr);
     if (null == result) {
       Socket sock = factory.createSocket(addr.getAddress(), addr.getPort());
-      result = new Channel(sock);
+      result = new ClientChannel(sock);
       channels.put(addr, result);
     }
     

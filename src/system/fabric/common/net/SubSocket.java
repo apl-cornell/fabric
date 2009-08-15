@@ -19,9 +19,13 @@ public final class SubSocket {
   //////////////////////////////////////////////////////////////////////////////
   
   SubSocket(SubSocketFactory factory) {
-    this.state   = new Unconnected(factory); 
+    this.state = new Unconnected(factory); 
   }
   
+  SubSocket(Channel.Connection conn) {
+    this.state = new Connected(conn);
+  }
+
   public void close() throws IOException {
     state.close();
   }
@@ -107,7 +111,7 @@ public final class SubSocket {
     
     @Override
     public String toString() {
-      return "is connected to " + conn.getChannel().getRemoteSocketAddress();
+      return "is connected to " + conn.getChannel().getRemoteAddress();
     }
     
     @Override

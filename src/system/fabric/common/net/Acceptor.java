@@ -6,7 +6,6 @@ package fabric.common.net;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -21,13 +20,11 @@ import javax.net.ServerSocketFactory;
 class Acceptor {
   private ServerSocket             socket;
   private BlockingQueue<SubSocket> connections;
-  private Listener                 thread;
   
   public Acceptor(ServerSocketFactory factory, InetSocketAddress addr, int backlog) throws IOException {
     this.socket = factory.createServerSocket(addr.getPort(), backlog, addr.getAddress());
     this.connections = new ArrayBlockingQueue<SubSocket>(backlog);
-    this.thread = new Listener();
-    this.thread.start();
+    new Listener().start();
   }
   
   public SocketAddress getAddress() {
@@ -47,19 +44,21 @@ class Acceptor {
     }
   }
   
-  public void close() {
-    throw new NotImplementedException();
+  public void close() throws IOException {
+    // note that this will kill off the Listener thread as well.
+    socket.close();
+    
+    // these are connections that have been initiated but not handed accepted
+    for (SubSocket s : connections) {
+      s.close();
+    }
   }
 
   private class Listener extends Thread {
     @Override
     public void run() {
       try {
-        while (true) {
-          Socket s = socket.accept();
-          // create a channel for s, referring to this
-          throw new NotImplementedException();
-        }
+        while (true) { new ServerChannel(socket.accept(), Acceptor.this); }
       } catch (IOException exc) {
         throw new NotImplementedException();
       }
