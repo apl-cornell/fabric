@@ -4,32 +4,30 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 
 /**
  * Client-side multiplexed socket implementation. The API mirrors that of
- * java.net.Socket
+ * java.net.Socket. This class manages connection state, and provides a
+ * front-end API.
  * 
  * @author mdgeorge
  */
-public class SubSocket {
+public final class SubSocket {
   //////////////////////////////////////////////////////////////////////////////
   // public API                                                               //
   //////////////////////////////////////////////////////////////////////////////
   
-  public SubSocket() {
-    this.state = new Unbound();
+  SubSocket(SubSocketFactory factory) {
+    this.state   = new Unconnected(factory); 
   }
   
   public void close() throws IOException {
     state.close();
   }
 
-  public void connect(InetSocketAddress addr, int timeout) throws IOException {
-    state.connect(addr, timeout);
-  }
-
   public void connect(InetSocketAddress addr) throws IOException {
-    this.connect(addr, 0);
+    state.connect(addr);
   }
 
   public OutputStream getOutputStream() throws IOException {
@@ -39,62 +37,122 @@ public class SubSocket {
   public InputStream getInputStream() throws IOException {
     return state.getInputStream();
   }
-
+  
   //////////////////////////////////////////////////////////////////////////////
   // State design pattern implementation                                      //
+  //                                                                          //
+  //                connect                close                              //
+  //  unconnected  --------->  connected  ------->  closed                    //
+  //       |                       |                  |                       //
+  //       +-----------------------+------------------+---------------> error //
+  //                                                       exception          //
   //////////////////////////////////////////////////////////////////////////////
   
-  private State state;
+  private State            state;
   
   /**
    * default implementations of state methods - throws errors or returns default
    * values as appropriate.
    */
   private abstract class State {
-    void close() throws IOException {
-      throw new IOException("Cannot close socket: socket is " + this);
-    }
-
-    void connect(InetSocketAddress addr, int timeout) throws IOException {
-      throw new IOException("Cannot connect: socket is " + this);
-    }
-
-    InputStream getInputStream() throws IOException {
-      throw new IOException("Cannot get an input stream: socket is " + this);
+    protected Exception cause = null;
+    
+    public void close() throws IOException {
+      throw new IOException("Cannot close socket: socket " + this, cause);
     }
     
-    OutputStream getOutputStream() throws IOException {
-      throw new IOException("Cannot get an output stream: socket is " + this);
+    public void connect(InetSocketAddress addr) throws IOException {
+      throw new IOException("Cannot connect: socket " + this, cause);
+    }
+
+    public InputStream getInputStream() throws IOException {
+      throw new IOException("Cannot get an input stream: socket " + this, cause);
+    }
+    
+    public OutputStream getOutputStream() throws IOException {
+      throw new IOException("Cannot get an output stream: socket " + this, cause);
     }
   }
 
   /**
-   * implementation of methods in the Connected(address) state
+   * implementation of methods in the Unconnected state
+   */
+  private final class Unconnected extends State {
+    private final SubSocketFactory factory;
+    
+    @Override public String toString() { return "is unconnected"; }
+    
+    @Override
+    public void connect(InetSocketAddress addr) throws IOException {
+      try {
+        Channel.Connection conn = factory.getChannel(addr).connect(); 
+        state = new Connected(conn);
+      } catch (final Exception exc) {
+        IOException wrapped = new IOException("failed to connect to " + addr, exc);
+        state = new ErrorState(wrapped);
+        throw wrapped;
+      }
+    }
+    
+    public Unconnected(SubSocketFactory factory) {
+      this.factory = factory;
+    }
+  }
+
+  /**
+   * implementation of methods in the Connected(channel) state
    */
   private final class Connected extends State {
-    @Override
-    void close() {
-      state = new Closed();
-      throw new NotImplementedException();
-    }
+    final Channel.Connection   conn;
     
     @Override
     public String toString() {
-      return "connected to ";
+      return "is connected to " + conn.getChannel().getRemoteSocketAddress();
+    }
+    
+    @Override
+    public void close() throws IOException {
+      try {
+        conn.destroy();
+        state = new Closed();
+      } catch (final Exception exc) {
+        IOException wrapped = new IOException("failed to close connection", exc);
+        state = new ErrorState(wrapped);
+        throw wrapped;
+      }
+    }
+    
+    @Override
+    public InputStream getInputStream() {
+      return conn.in;
+    }
+
+    @Override
+    public OutputStream getOutputStream() {
+      return conn.out;
+    }
+
+    public Connected(Channel.Connection conn) {
+      this.conn = conn;
     }
   }
 
+  /**
+   * implementation of methods in the Closed state
+   */
   private final class Closed extends State {
-    @Override public String toString() { return "closed"; } 
+    @Override public String toString() { return "is closed"; }
   }
-
-  private final class Unbound extends State {
-    @Override public String toString() { return "unbound"; }
+  
+  /**
+   * implementations of methods in the Error state
+   */
+  private final class ErrorState extends State {
+    @Override public String toString() { return "has recieved an exception"; }
     
-    @Override
-    void connect(InetSocketAddress addr, int timeout) {
-      state = new Connected();
-      throw new NotImplementedException();
+    public ErrorState(Exception exc) {
+      super();
+      cause = exc;
     }
   }
 }

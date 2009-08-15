@@ -3,9 +3,11 @@ package fabric.common.net;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Map;
-import java.util.Queue;
 
 /**
  * A channel manages a single socket, allowing it to be multiplexed across
@@ -14,10 +16,29 @@ import java.util.Queue;
  * @author mdgeorge
  */
 class Channel {
+
+  public Channel(Socket s) {
+    throw new NotImplementedException();
+  }
   
-  private Map<Integer, OutputStream> readers;
-  private DataOutputStream           out;
-  private Queue<OutputStream>        listeners;
+  public Channel(Socket s, Acceptor a) {
+    throw new NotImplementedException();
+  }
+  
+  public InetSocketAddress getLocalSocketAddress() {
+    throw new NotImplementedException();
+  }
+  
+  public InetSocketAddress getRemoteSocketAddress() {
+    throw new NotImplementedException();
+  }
+  
+  public Connection connect() {
+    throw new NotImplementedException();
+  }
+
+  private final Map<Integer, OutputStream> readers;
+  private final DataOutputStream           out;
   
   /**
    * a thread that reads data off of the input stream and dispatches it to the
@@ -39,15 +60,7 @@ class Channel {
             OutputStream reader = readers.get(sequenceNumber);
             if (reader == null) {
               // see if there's a listener, and if so, set up the pipes, else error
-              reader = listeners.poll();
-              if (reader == null) {
-                // no listener, send error back to sender
-                out.writeInt(sequenceNumber);
-                out.writeInt(0);
-                continue;
-              }
-
-              readers.put(sequenceNumber, reader);
+              throw new NotImplementedException();
             }
 
             int len = in.readInt();
@@ -104,5 +117,21 @@ class Channel {
       write (b, 0, b.length);
     }
   }
+  
+  /**
+   * this contains all of the state for an open connection.
+   */
+  class Connection {
+    int sequenceNum;
+    InputStream  in;
+    OutputStream out;
 
+    public void destroy() {
+      throw new NotImplementedException();
+    }
+
+    public Channel getChannel() {
+      return Channel.this;
+    }
+  }
 }
