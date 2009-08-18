@@ -50,7 +50,7 @@ class Acceptor {
     }
   }
   
-  /** release the resouces associated with this Acceptor. */
+  /** release the resources associated with this Acceptor. */
   public void close() throws IOException {
     // note that this will kill off the Listener thread as well.
     socket.close();
