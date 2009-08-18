@@ -112,7 +112,7 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
 
           synchronized (AbstractConnectionHandler.this) {
             if (destroyed) return;
-            
+
             ChannelMultiplexerThread mux =
                 new ChannelMultiplexerThread(new CallbackHandler(session),
                     getThreadName(remote, session), connection);
@@ -228,8 +228,8 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
     // This is safe because everyone acts for null anyway.
     if (principal == null) return new Pair<Boolean, NodePrincipal>(true, null);
 
-    return Client.runInTransaction(null,
-        new Client.Code<Pair<Boolean, NodePrincipal>>() {
+    return Client
+        .runInTransactionUnauthenticated(new Client.Code<Pair<Boolean, NodePrincipal>>() {
           public Pair<Boolean, NodePrincipal> run() {
             boolean success = false;
             NodePrincipal authenticatedPrincipal = null;

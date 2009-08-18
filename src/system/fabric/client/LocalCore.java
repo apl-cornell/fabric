@@ -34,25 +34,27 @@ public final class LocalCore implements Core {
   private IntegPolicy bottomIntegPolicy;
   private Label emptyLabel;
   private Label publicReadonlyLabel;
-  
-  private Set<Pair<Principal,Principal>> localDelegates;
+
+  private Set<Pair<Principal, Principal>> localDelegates;
 
   private static final Logger log = Logger.getLogger("fabric.client.LocalCore");
 
-  public synchronized boolean prepareTransaction(long tid, long commitTime,
-      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<Object._Impl> writes) {
+  public synchronized boolean prepareTransaction(boolean useAuthentication,
+      long tid, long commitTime, Collection<Object._Impl> toCreate,
+      LongKeyMap<Integer> reads, Collection<Object._Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     log.fine("Local transaction preparing");
     return false;
   }
 
-  public synchronized void abortTransaction(TransactionID tid) {
+  public synchronized void abortTransaction(boolean useAuthentication,
+      TransactionID tid) {
     log.fine("Local transaction aborting");
   }
 
-  public synchronized void commitTransaction(long transactionID) {
+  public synchronized void commitTransaction(boolean useAuthentication,
+      long transactionID) {
     log.fine("Local transaction committing");
   }
 
@@ -63,7 +65,7 @@ public final class LocalCore implements Core {
   public synchronized Object._Impl readObject(long onum) {
     return readObjectNoDissem(onum);
   }
-  
+
   public synchronized Object._Impl readObjectNoDissem(long onum) {
     if (!ONumConstants.isGlobalConstant(onum))
       throw new InternalError("Not supported.");
@@ -116,19 +118,19 @@ public final class LocalCore implements Core {
   public Map getRoot() {
     return rootMap;
   }
-  
+
   public void addLocalDelegation(Principal p, Principal q) {
-    localDelegates.add(new Pair<Principal,Principal> (p,q));
+    localDelegates.add(new Pair<Principal, Principal>(p, q));
   }
-  
+
   public void removeLocalDelegation(Principal p, Principal q) {
-    localDelegates.remove(new Pair<Principal,Principal> (p,q));
+    localDelegates.remove(new Pair<Principal, Principal>(p, q));
   }
-  
+
   public boolean localDelegatesTo(Principal p, Principal q) {
-    return localDelegates.contains(new Pair<Principal, Principal> (p,q));
+    return localDelegates.contains(new Pair<Principal, Principal>(p, q));
   }
-  
+
   public Principal getTopPrincipal() {
     return topPrincipal;
   }
@@ -160,11 +162,11 @@ public final class LocalCore implements Core {
   public String name() {
     return "local";
   }
-  
+
   public NodePrincipal getPrincipal() {
     return Client.getClient().getPrincipal();
   }
-  
+
   public boolean isLocalCore() {
     return true;
   }
@@ -252,9 +254,11 @@ public final class LocalCore implements Core {
         // should not be leaking to remote cores.
         Principal clientPrincipal = Client.getClient().getPrincipal();
         ConfPolicy conf =
-            LabelUtil._Impl.readerPolicy(LocalCore.this, clientPrincipal, (Principal) null);
+            LabelUtil._Impl.readerPolicy(LocalCore.this, clientPrincipal,
+                (Principal) null);
         IntegPolicy integ =
-            LabelUtil._Impl.writerPolicy(LocalCore.this, clientPrincipal, (Principal) null);
+            LabelUtil._Impl.writerPolicy(LocalCore.this, clientPrincipal,
+                (Principal) null);
         Label label = LabelUtil._Impl.toLabel(LocalCore.this, conf, integ);
 
         rootMap = (Map) new HashMap._Impl(LocalCore.this, label).$getProxy();

@@ -119,13 +119,13 @@ public class TransactionManager {
     final long tid = req.tid;
     boolean result = false;
 
-    // First, check write permissions. We do this before we attempt to do the
-    // actual prepare because we want to run the permissions check in a
+    // First, check read and write permissions. We do this before we attempt to
+    // do the actual prepare because we want to run the permissions check in a
     // transaction outside of the client's transaction.
     Core core = Client.getClient().getCore(store.getName());
     if (client == null || client.$getCore() != core
         || client.$getOnum() != ONumConstants.CORE_PRINCIPAL) {
-      checkWritePerms(client, req.writes);
+      checkPerms(client, req.reads.keySet(), req.writes);
     }
 
     synchronized (store) {
@@ -269,10 +269,10 @@ public class TransactionManager {
   }
 
   /**
-   * Checks that the client principal has permissions to write the given
+   * Checks that the client principal has permissions to read/write the given
    * objects. If it doesn't, a TransactionPrepareFailedException is thrown.
    */
-  private void checkWritePerms(final NodePrincipal client,
+  private void checkPerms(final NodePrincipal client, final LongSet reads,
       final Collection<SerializedObject> writes)
       throws TransactionPrepareFailedException {
     // The code that does the actual checking.
@@ -280,6 +280,22 @@ public class TransactionManager {
         new Code<TransactionPrepareFailedException>() {
           public TransactionPrepareFailedException run() {
             Core core = Client.getClient().getCore(store.getName());
+
+            for (LongIterator it = reads.iterator(); it.hasNext();) {
+              long onum = it.next();
+
+              fabric.lang.Object coreCopy =
+                  new fabric.lang.Object._Proxy(core, onum);
+
+              Label label = coreCopy.get$label();
+
+              // Check read permissions.
+              if (!AuthorizationUtil.isReadPermitted(client, label.$getCore(),
+                  label.$getOnum())) {
+                return new TransactionPrepareFailedException("Insufficient "
+                    + "privileges to read object " + onum);
+              }
+            }
 
             for (SerializedObject o : writes) {
               long onum = o.getOnum();

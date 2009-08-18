@@ -239,15 +239,32 @@ public final class TransactionManager {
    */
   public void commitTransaction() throws AbortException,
       TransactionAtomicityViolationException {
+    commitTransaction(true);
+  }
+
+  /**
+   * @param useAuthentication
+   *          whether to use an authenticated channel to talk to the core
+   */
+  public void commitTransaction(boolean useAuthentication)
+      throws AbortException, TransactionAtomicityViolationException {
     Timing.COMMIT.begin();
     try {
-      commitTransactionAt(System.currentTimeMillis());
+      commitTransactionAt(System.currentTimeMillis(), useAuthentication);
     } finally {
       Timing.COMMIT.end();
     }
   }
 
   public void commitTransactionAt(long commitTime) {
+    commitTransactionAt(commitTime, true);
+  }
+
+  /**
+   * @param useAuthentication
+   *          whether to use an authenticated channel to talk to the core
+   */
+  private void commitTransactionAt(long commitTime, boolean useAuthentication) {
     logger.finest(current + " attempting to commit");
     // Assume only one thread will be executing this.
 
@@ -298,7 +315,7 @@ public final class TransactionManager {
 
     // Send prepare messages to our cohorts.
     Map<RemoteNode, TransactionPrepareFailedException> failures =
-        sendPrepareMessages(commitTime, cores, clients);
+        sendPrepareMessages(useAuthentication, commitTime, cores, clients);
 
     if (!failures.isEmpty()) {
       failures.remove(null);
@@ -310,7 +327,7 @@ public final class TransactionManager {
     }
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(cores, clients);
+    sendCommitMessagesAndCleanUp(useAuthentication, cores, clients);
   }
 
   /**
@@ -319,7 +336,7 @@ public final class TransactionManager {
    */
   public Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
       long commitTime) {
-    return sendPrepareMessages(commitTime, current.coresToContact(),
+    return sendPrepareMessages(true, commitTime, current.coresToContact(),
         current.clientsCalled);
   }
 
@@ -328,7 +345,8 @@ public final class TransactionManager {
    * abort messages if any of them fails to prepare.
    */
   private Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
-      final long commitTime, Set<Core> cores, List<RemoteClient> clients) {
+      final boolean useAuthentication, final long commitTime, Set<Core> cores,
+      List<RemoteClient> clients) {
     final Map<RemoteNode, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
@@ -388,8 +406,8 @@ public final class TransactionManager {
             LongKeyMap<Integer> reads = current.getReadsForCore(core);
             Collection<_Impl> writes = current.getWritesForCore(core);
             boolean subTransactionCreated =
-                core.prepareTransaction(current.tid.topTid, commitTime,
-                    creates, reads, writes);
+                core.prepareTransaction(useAuthentication, current.tid.topTid,
+                    commitTime, creates, reads, writes);
 
             if (subTransactionCreated) {
               RemoteClient coreClient = client.getClient(core.name());
@@ -453,7 +471,7 @@ public final class TransactionManager {
       }
       logger.fine(logMessage);
 
-      sendAbortMessages(cores, clients, failures.keySet());
+      sendAbortMessages(useAuthentication, cores, clients, failures.keySet());
     }
 
     synchronized (current.commitState) {
@@ -470,15 +488,16 @@ public final class TransactionManager {
    */
   public void sendCommitMessagesAndCleanUp()
       throws TransactionAtomicityViolationException {
-    sendCommitMessagesAndCleanUp(current.coresToContact(),
+    sendCommitMessagesAndCleanUp(true, current.coresToContact(),
         current.clientsCalled);
   }
 
   /**
    * Sends commit messages to the given set of cores and clients.
    */
-  private void sendCommitMessagesAndCleanUp(Set<Core> cores,
-      List<RemoteClient> clients) throws TransactionAtomicityViolationException {
+  private void sendCommitMessagesAndCleanUp(final boolean useAuthentication,
+      Set<Core> cores, List<RemoteClient> clients)
+      throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
@@ -530,7 +549,7 @@ public final class TransactionManager {
       Runnable runnable = new Runnable() {
         public void run() {
           try {
-            core.commitTransaction(current.tid.topTid);
+            core.commitTransaction(useAuthentication, current.tid.topTid);
           } catch (TransactionCommitFailedException e) {
             failed.add((RemoteCore) core);
           } catch (UnreachableNodeException e) {
@@ -587,6 +606,8 @@ public final class TransactionManager {
   /**
    * Sends abort messages to those nodes that haven't reported failures.
    * 
+   * @param useAuthentication
+   *          whether to authenticate to the cores.
    * @param cores
    *          the set of cores involved in the transaction.
    * @param clients
@@ -594,10 +615,11 @@ public final class TransactionManager {
    * @param fails
    *          the set of nodes that have reported failure.
    */
-  private void sendAbortMessages(Set<Core> cores, List<RemoteClient> clients,
-      Set<RemoteNode> fails) {
+  private void sendAbortMessages(boolean useAuthentication, Set<Core> cores,
+      List<RemoteClient> clients, Set<RemoteNode> fails) {
     for (Core core : cores)
-      if (!fails.contains(core)) core.abortTransaction(current.tid);
+      if (!fails.contains(core))
+        core.abortTransaction(useAuthentication, current.tid);
 
     for (RemoteClient client : clients)
       if (!fails.contains(client)) client.abortTransaction(current.tid);

@@ -233,7 +233,10 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
         DissemReadMessage.class), REMOTE_CALL(RemoteCallMessage.class), INTERCLIENT_READ(
         fabric.client.remote.messages.ReadMessage.class), TAKE_OWNERSHIP(
         TakeOwnershipMessage.class), GET_PRINCIPAL(GetPrincipalMessage.class), OBJECT_UPDATE(
-        ObjectUpdateMessage.class);
+        ObjectUpdateMessage.class), UNAUTHENTICATED_PREPARE_TRANSACTION(
+        UnauthenticatedPrepareTransactionMessage.class), UNAUTHENTICATED_COMMIT_TRANSACTION(
+        UnauthenticatedCommitTransactionMessage.class), UNAUTHENTICATED_ABORT_TRANSACTION(
+        UnauthenticatedAbortTransactionMessage.class);
 
     private final Class<? extends Message<?, ?>> messageClass;
 

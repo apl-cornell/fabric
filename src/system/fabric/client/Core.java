@@ -30,8 +30,8 @@ public interface Core {
    * @return whether a subtransaction was created on the core as a result of the
    *         prepare.
    */
-  boolean prepareTransaction(long tid, long commitTime,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+  boolean prepareTransaction(boolean useAuthentication, long tid,
+      long commitTime, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws UnreachableNodeException,
       TransactionPrepareFailedException;
 
@@ -68,11 +68,12 @@ public interface Core {
   /**
    * Notifies the core that the transaction is being Aborted.
    * 
+   * @param useAuthentication
    * @param transactionID
    *          the ID of the aborting transaction. This is assumed to specify a
    *          top-level transaction.
    */
-  void abortTransaction(TransactionID tid);
+  void abortTransaction(boolean useAuthentication, TransactionID tid);
 
   /**
    * Notifies the Core that the transaction should be committed.
@@ -82,8 +83,8 @@ public interface Core {
    * @throws UnreachableNodeException
    * @throws TransactionCommitFailedException
    */
-  void commitTransaction(long transactionID) throws UnreachableNodeException,
-      TransactionCommitFailedException;
+  void commitTransaction(boolean useAuthentication, long transactionID)
+      throws UnreachableNodeException, TransactionCommitFailedException;
 
   /**
    * Obtains a new, unused object number from the Core.

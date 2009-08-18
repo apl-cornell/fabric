@@ -115,19 +115,31 @@ public class RemoteCore extends RemoteNode implements Core {
   /**
    * Sends a PREPARE message to the core.
    */
-  public boolean prepareTransaction(long tid, long commitTime,
-      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<Object._Impl> writes)
+  public boolean prepareTransaction(boolean useAuthentication, long tid,
+      long commitTime, Collection<Object._Impl> toCreate,
+      LongKeyMap<Integer> reads, Collection<Object._Impl> writes)
       throws TransactionPrepareFailedException, UnreachableNodeException {
-    PrepareTransactionMessage.Response response =
-        new PrepareTransactionMessage(tid, commitTime, toCreate, reads, writes)
-            .send(this);
+    if (useAuthentication) {
+      PrepareTransactionMessage.Response response =
+          new PrepareTransactionMessage(tid, commitTime, toCreate, reads,
+              writes).send(this);
 
-    if (!response.success)
-      throw new TransactionPrepareFailedException(response.versionConflicts,
-          response.message);
+      if (!response.success)
+        throw new TransactionPrepareFailedException(response.versionConflicts,
+            response.message);
 
-    return response.subTransactionCreated;
+      return response.subTransactionCreated;
+    } else {
+      UnauthenticatedPrepareTransactionMessage.Response response =
+          new UnauthenticatedPrepareTransactionMessage(tid, commitTime,
+              toCreate, reads, writes).send(this);
+
+      if (!response.success)
+        throw new TransactionPrepareFailedException(response.versionConflicts,
+            response.message);
+
+      return response.subTransactionCreated;
+    }
   }
 
   /**
@@ -307,20 +319,29 @@ public class RemoteCore extends RemoteNode implements Core {
    * (non-Javadoc)
    * @see fabric.client.Core#abortTransaction(long)
    */
-  public void abortTransaction(TransactionID tid) {
-    new AbortTransactionMessage(tid).send(this);
+  public void abortTransaction(boolean useAuthentication, TransactionID tid) {
+    if (useAuthentication)
+      new AbortTransactionMessage(tid).send(this);
+    else new UnauthenticatedAbortTransactionMessage(tid).send(this);
   }
 
   /*
    * (non-Javadoc)
    * @see fabric.client.Core#commitTransaction(int)
    */
-  public void commitTransaction(long transactionID)
+  public void commitTransaction(boolean useAuthentication, long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
-    CommitTransactionMessage.Response response =
-        new CommitTransactionMessage(transactionID).send(this);
-    if (!response.success)
-      throw new TransactionCommitFailedException(response.message);
+    if (useAuthentication) {
+      CommitTransactionMessage.Response response =
+          new CommitTransactionMessage(transactionID).send(this);
+      if (!response.success)
+        throw new TransactionCommitFailedException(response.message);
+    } else {
+      UnauthenticatedCommitTransactionMessage.Response response =
+          new UnauthenticatedCommitTransactionMessage(transactionID).send(this);
+      if (!response.success)
+        throw new TransactionCommitFailedException(response.message);
+    }
   }
 
   @Override
@@ -426,7 +447,7 @@ public class RemoteCore extends RemoteNode implements Core {
         for (LongIterator it = onums.iterator(); it.hasNext();) {
           evict(it.next());
         }
-        
+
         serialized.clear();
       }
     }

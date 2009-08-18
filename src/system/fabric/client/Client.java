@@ -606,11 +606,42 @@ public final class Client {
   }
 
   /**
+   * Executes the given code from within a top-level Fabric transaction. The
+   * transaction is committed to the core without authentication. Should not be
+   * called by generated code. This is here to abstract away the details of
+   * starting and finishing transactions.
+   * 
+   * @param tid
+   *          The parent transaction for the subtransaction that will be
+   *          created.
+   */
+  public static <T> T runInTransactionUnauthenticated(Code<T> code) {
+    TransactionManager tm = TransactionManager.getInstance();
+    Log oldLog = tm.getCurrentLog();
+
+    tm.associateAndSyncLog(null, null);
+
+    try {
+      return runInSubTransaction(false, code);
+    } finally {
+      tm.associateLog(oldLog);
+    }
+  }
+
+  /**
    * Executes the given code from within a Fabric subtransaction of the current
    * transaction. Should not be called by generated code. This is here to
    * abstract away the details of starting and finishing transactions.
    */
   public static <T> T runInSubTransaction(Code<T> code) {
+    return runInSubTransaction(true, code);
+  }
+  
+  /**
+   * @param useAuthentication
+   *          whether to use an authenticated channel to talk to the core
+   */
+  private static <T> T runInSubTransaction(boolean useAuthentication, Code<T> code) {
     TransactionManager tm = TransactionManager.getInstance();
 
     boolean success = false;
@@ -642,7 +673,7 @@ public final class Client {
       } finally {
         if (success) {
           try {
-            tm.commitTransaction();
+            tm.commitTransaction(useAuthentication);
           } catch (AbortException e) {
             success = false;
           }

@@ -33,7 +33,7 @@ public class InProcessCore extends RemoteCore {
   }
 
   @Override
-  public void abortTransaction(TransactionID tid) {
+  public void abortTransaction(boolean useAuthentication, TransactionID tid) {
     try {
       tm.abortTransaction(Client.getClient().getPrincipal(), tid.topTid);
     } catch (AccessException e) {
@@ -42,7 +42,7 @@ public class InProcessCore extends RemoteCore {
   }
 
   @Override
-  public void commitTransaction(long transactionID)
+  public void commitTransaction(boolean useAuthentication, long transactionID)
       throws TransactionCommitFailedException {
     tm
         .commitTransaction(null, Client.getClient().getPrincipal(),
@@ -60,8 +60,8 @@ public class InProcessCore extends RemoteCore {
 
   @Override
   @SuppressWarnings("deprecation")
-  public boolean prepareTransaction(long tid, long commitTime,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+  public boolean prepareTransaction(boolean useAuthentication, long tid,
+      long commitTime, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<SerializedObject>(toCreate.size());
