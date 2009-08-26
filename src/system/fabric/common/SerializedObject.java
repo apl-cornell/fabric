@@ -116,6 +116,9 @@ public final class SerializedObject implements FastSerializable {
       byte[] className = Surrogate.class.getName().getBytes("UTF-8");
       out.writeShort(className.length);
       out.write(className);
+      
+      // XXX Class hash.
+      out.writeShort(0);
 
       // Number of ref types and intracore refs.
       out.writeInt(0);
