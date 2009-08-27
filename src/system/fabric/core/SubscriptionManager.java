@@ -50,6 +50,7 @@ public class SubscriptionManager extends FabricThread.AbstractImpl {
    *          subscriptions are to be managed.
    */
   public SubscriptionManager(String core, TransactionManager tm) {
+    super("subscription manager for core " + core);
     this.core = core;
     this.updatedOnums = new LinkedHashSet<Pair<Long, RemoteClient>>();
     this.tm = tm;
