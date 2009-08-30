@@ -31,12 +31,18 @@ public class RemoteCore extends RemoteNode implements Core {
   /**
    * A queue of fresh object identifiers.
    */
-  private transient Queue<Long> fresh_ids;
+  private transient final Queue<Long> fresh_ids;
 
   /**
    * The object table: locally resident objects.
    */
-  private transient LongKeyMap<FabricSoftRef> objects;
+  private transient final LongKeyMap<FabricSoftRef> objects;
+
+  /**
+   * The set of fetch locks. Used to prevent threads from concurrently
+   * attempting to fetch the same object.
+   */
+  private transient final LongKeyMap<FetchLock> fetchLocks;
 
   /**
    * The core's public SSL key. Used for verifying signatures on object groups.
@@ -47,7 +53,7 @@ public class RemoteCore extends RemoteNode implements Core {
   /**
    * Cache of serialized objects that the core has sent us.
    */
-  private transient LongKeyMap<SerializedObjectSoftRef> serialized;
+  private transient final LongKeyMap<SerializedObjectSoftRef> serialized;
   final transient ReferenceQueue<SerializedObject> serializedRefQueue;
 
   /**
@@ -82,6 +88,10 @@ public class RemoteCore extends RemoteNode implements Core {
     }
   }
 
+  private class FetchLock {
+    private _Impl object;
+  }
+
   /**
    * Creates a core representing the core at the given host name.
    */
@@ -89,6 +99,7 @@ public class RemoteCore extends RemoteNode implements Core {
     super(name, true);
 
     this.objects = new LongKeyHashMap<FabricSoftRef>();
+    this.fetchLocks = new LongKeyHashMap<FetchLock>();
     this.fresh_ids = new LinkedList<Long>();
     this.serialized = new LongKeyHashMap<SerializedObjectSoftRef>();
     this.publicKey = key;
@@ -169,15 +180,48 @@ public class RemoteCore extends RemoteNode implements Core {
     if (ONumConstants.isGlobalConstant(onum))
       return Client.instance.localCore.readObject(onum);
 
-    // Check object table. Lock it to avoid a race condition when the object is
-    // not in the cache and another thread attempts to read the same object.
-
-    // XXX Deadlock if we simultaneously fetch surrogates from two cores that
-    // refer to each other.
-    synchronized (objects) {
+    // check object table. Use fetchlocks as a mutex for atomically checking the
+    // cache and creating a mutex for the object fetch in the event of a cache
+    // miss.
+    FetchLock fetchLock;
+    boolean needToFetch = false;
+    synchronized (fetchLocks) {
       Object._Impl result = readObjectFromCache(onum);
       if (result != null) return result;
-      return fetchObject(useDissem, onum);
+
+      // Object not found in cache. Get/create a mutex for fetching the object.
+      fetchLock = fetchLocks.get(onum);
+      if (fetchLock == null) {
+        needToFetch = true;
+        fetchLock = new FetchLock();
+        fetchLocks.put(onum, fetchLock);
+      }
+    }
+    
+    // Fetch the object if we are responsible for doing so.
+    if (needToFetch) fetchLock.object = fetchObject(useDissem, onum);
+
+    synchronized (fetchLock) {
+      if (needToFetch) {
+        // Object should now be cached. Remove our mutex from fetchLocks.
+        synchronized (fetchLocks) {
+          fetchLocks.remove(onum);
+        }
+
+        // Signal any other threads that might be waiting for our fetch.
+        fetchLock.notifyAll();
+      } else {
+        // Wait for another thread to fetch the object for us.
+        while (fetchLock.object == null) {
+          try {
+            fetchLock.wait();
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }
+      }
+
+      return fetchLock.object;
     }
   }
 
