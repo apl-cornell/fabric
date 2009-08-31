@@ -123,6 +123,8 @@ public class Create {
 
             Map root = (Map) brokerCore.getRoot();
             root.put("theBroker", broker);
+            root.put("bankPrincipal", bank);
+            root.put("customerPrincipal", customer);
         }
     }
 }

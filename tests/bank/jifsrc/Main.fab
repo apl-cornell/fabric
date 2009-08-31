@@ -19,7 +19,10 @@ public class Main {
         if (root == null) return;
 
 	try {
-	    final Broker broker = (Broker) root.get("theBroker");
+	    final Principal bank = (Principal) root.get("bankPrincipal");
+	    final Principal customer = (Principal) root.get("customerPrincipal");
+	    final Broker[bank,customer] broker =
+	        (Broker[bank,customer]) root.get("theBroker");
 	    if (broker != null)
 		broker.coordinatePurchase();
 	} catch (ClassCastException e) {
