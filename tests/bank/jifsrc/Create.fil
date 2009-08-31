@@ -1,4 +1,5 @@
 import jif.lang.*;
+import fabric.util.Map;
 
 public class Create {
 
@@ -119,6 +120,9 @@ public class Create {
             airline.addDelegatesTo(airlineClient);
              broker.addDelegatesTo(brokerClient);
                bank.addDelegatesTo(bankClient);
+
+            Map root = (Map) brokerCore.getRoot();
+            root.put("theBroker", broker);
         }
     }
 }

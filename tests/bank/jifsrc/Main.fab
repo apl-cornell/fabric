@@ -1,25 +1,28 @@
-public class Main
-{ // this should be fabIL code that runs somewhere trusted.
+import fabric.util.Map;
 
-    final principal{*←} customer = new SimplePrincipal("customer");  // @ root store
-    final principal{*←} bank     = new SimplePrincipal("bank");      // @ root store
-    final principal{*←} airline  = new SimplePrincipal("airline");   // @ root store
+public class Main {
+    public static void main{}(String[]{} args) {
+        Core core = null;
 
-    Broker[bank, customer]{*←} broker;
+	if (args == null) return;
 
-    public void setup{*←}() {
-        Account customerAcct = new Account(customer); // @ bank store
-        customerAcct.credit(10000);
+	try {
+	    core = client$.getCore(args[0]);
+        } catch (ArrayIndexOutOfBoundsException e) {
+	}
 
-        Account airlineAcct = new Account(airline);   // @ bank store
-        Tickets custTickets = new Tickets();          // @ airline store
+	Map root = null;
+	if (core != null) {
+	    root = (Map) core.getRoot();
+	}
 
-        broker = new Broker(customerAcct, airlineAcct, custTickets, airline); // @ root store
-    }
+        if (root == null) return;
 
-    void runit{}() {
-	final Broker broker = this.broker;
-	if (broker != null)
-	    broker.coordinatePurchase();
+	try {
+	    final Broker broker = (Broker) root.get("theBroker");
+	    if (broker != null)
+		broker.coordinatePurchase();
+	} catch (ClassCastException e) {
+	}
     }
 }
