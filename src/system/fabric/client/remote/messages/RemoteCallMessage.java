@@ -21,7 +21,7 @@ public class RemoteCallMessage extends
 
   public final TransactionID tid;
   public final UpdateMap updateMap;
-  public final Class<?> receiverType;
+  public final Class<? extends _Proxy> receiverType;
   public final _Proxy receiver;
   public final String methodName;
   public final Class<?>[] parameterTypes;
@@ -99,6 +99,7 @@ public class RemoteCallMessage extends
    * @param args
    *          The arguments to the method.
    */
+  @SuppressWarnings("unchecked")
   public RemoteCallMessage(TransactionID tid, UpdateMap updateMap,
       Class<?> receiverType, _Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args) {
@@ -110,7 +111,18 @@ public class RemoteCallMessage extends
 
     this.tid = tid;
     this.updateMap = updateMap;
-    this.receiverType = receiverType;
+    
+    // Get the _Proxy class declared in the receiver type.
+    Class<? extends _Proxy> receiverProxyType = null;
+    for (Class<?> c : receiverType.getClasses()) {
+      if (c.getSimpleName().equals("_Proxy")) {
+        receiverProxyType = (Class<? extends _Proxy>) c;
+        break;
+      }
+    }
+    if (receiverProxyType == null) throw new InternalError("Receiver is not a Fabric object: " + receiverType);
+    
+    this.receiverType = receiverProxyType;
     this.receiver = receiver;
     this.methodName = methodName;
     this.parameterTypes = parameterTypes;
@@ -120,6 +132,7 @@ public class RemoteCallMessage extends
   /**
    * Deserialization constructor.
    */
+  @SuppressWarnings("unchecked")
   public RemoteCallMessage(DataInput in) throws IOException,
       ClassNotFoundException {
     super(MessageType.REMOTE_CALL);
@@ -138,7 +151,7 @@ public class RemoteCallMessage extends
     ObjectInputStream ois =
         new ObjectInputStream(new ByteArrayInputStream(buf));
 
-    this.receiverType = (Class<?>) ois.readObject();
+    this.receiverType = (Class<? extends _Proxy>) ois.readObject();
     this.receiver = readRef(receiverType, ois);
 
     this.methodName = ois.readUTF();
