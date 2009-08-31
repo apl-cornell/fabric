@@ -24,7 +24,9 @@ public class Main {
 	    final Broker[bank,customer] broker =
 	        (Broker[bank,customer]) root.get("theBroker");
 	    if (broker != null)
-		broker.coordinatePurchase();
+		atomic {
+		    broker.coordinatePurchase();
+		}
 	} catch (ClassCastException e) {
 	}
     }
