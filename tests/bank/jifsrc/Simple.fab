@@ -51,8 +51,9 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
     final principal{this←} airline;
     final Tickets[bank, airline, customer]{this←} custTickets;
     
-    final static String{⊤←} bankCore = "blobbyworld.systems.cs.cornell.edu";
-    final static String{⊤←} airlineCore = "gaia.systems.cs.cornell.edu";
+    // XXX These should not be hard-coded!
+    final static String{⊤←} bankCore = "compute-0-2.local";
+    final static String{⊤←} airlineCore = "compute-0-3.local";
 
     void coordinatePurchase{}()
         where authority(this), endorse({this←})
