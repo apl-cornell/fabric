@@ -13,6 +13,10 @@ while true; do
             vmargs="$vmargs '$1'"
             shift
             ;;
+    --debug)
+            shift
+            vmargs="$vmargs -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3371"
+            ;;
     *) args="$args '$1'"; shift;;
   esac
 done
