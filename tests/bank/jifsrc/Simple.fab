@@ -73,11 +73,9 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
             FabricClient cl = FabricClient.getClient();
             final RemoteClient bankClient = cl.getClient(bankCore);
             final RemoteClient airlineClient = cl.getClient(airlineCore);
-            if (bank equiv bankClient) {
+            if (bankClient actsfor bank && airlineClient actsfor airline) {
                 customerAcct.debit@bankClient(1000);   // @wBank
                 airlineAcct.credit@bankClient(1000);   // @wBank
-            }
-            if (airline equiv airlineClient) {
                 incTickets@airlineClient();  // @wAirline
             }
         }
