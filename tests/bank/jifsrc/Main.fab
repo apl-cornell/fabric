@@ -1,7 +1,7 @@
 import fabric.util.Map;
 
 public class Main {
-    public static void main{}(String[]{} args) {
+    public static void main{}(String[]{} args) : {*->*;_<-_} throws PurchasingError {
         Core core = null;
 
 	if (args == null) return;
@@ -24,9 +24,9 @@ public class Main {
 	    final Broker[bank,customer] broker =
 	        (Broker[bank,customer]) root.get("theBroker");
 	    if (broker != null)
-		atomic {
-		    broker.coordinatePurchase();
-		}
+	        atomic {
+	            broker.coordinatePurchase();
+	        }
 	} catch (ClassCastException e) {
 	}
     }

@@ -2,17 +2,19 @@ class Balance[principal bank, principal user]
 { // on bank store and worker
     int{bank←; bank→user} value = 100000;
 
-    int{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
+    boolean{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
         if (amt <= value & value > 0 & amt > 0) {
             value = value - amt;
+            return true;
         }
-        return value;
+        return false;
     }
-    int{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
+    boolean{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
         if (amt > 0) {
             value = value + amt;
+            return true;
         }
-        return value;
+        return false;
     }
 }
 
@@ -25,13 +27,13 @@ class Account[principal bank]
         user = user_;
         balance = new Balance(); // @ bank store
     }
-    public int{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
-        try { balance.debit(amt); return balance.value; }
-        catch (NullPointerException e) { return 0; }
+    public boolean{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
+        try { return balance.debit(amt); }
+        catch (NullPointerException e) { return false; }
     }
-    public int{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
-        try { balance.credit(amt); return balance.value; }
-        catch (NullPointerException e) { return 0; }
+    public boolean{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
+        try { return balance.credit(amt); }
+        catch (NullPointerException e) { return false; }
     }
 
 }
@@ -55,37 +57,43 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
     final static String{⊤←} bankCore = "compute-0-2.local";
     final static String{⊤←} airlineCore = "compute-0-3.local";
 
-    void coordinatePurchase{}()
-        where authority(this), endorse({this←})
-    {
+    void coordinatePurchase{}() : {bank->airlineAcct.user; bank->customerAcct.user; this←; bank<-; airline<-} throws PurchasingError
+        where authority(this), endorse({this←}) {
       try {
         final principal cust1 = customerAcct.user; // bank←
         final principal cust2 = customer;
         final principal airline_ = airlineAcct.user;
         if (this actsfor bank
-               & this actsfor airline
+            & this actsfor airline
             // & this actsfor cust1
             // & this actsfor cust2
             // & this actsfor airline_
             // & bank actsfor airline // this is not acceptable. For debugging.
-            )
-        {
-            FabricClient cl = FabricClient.getClient();
-            final RemoteClient bankClient = cl.getClient(bankCore);
-            final RemoteClient airlineClient = cl.getClient(airlineCore);
-            if (bankClient actsfor bank && airlineClient actsfor airline) {
-                customerAcct.debit@bankClient(100);   // @wBank
-                airlineAcct.credit@bankClient(100);   // @wBank
-                incTickets@airlineClient();  // @wAirline
-            }
+        ) {
+          FabricClient cl = FabricClient.getClient();
+          final RemoteClient bankClient = cl.getClient(bankCore);
+          final RemoteClient airlineClient = cl.getClient(airlineCore);
+          boolean success = false;
+          if (bankClient actsfor bank && airlineClient actsfor airline) {
+            success = true;
+            success = customerAcct.debit@bankClient(100) && success;   // @wBank
+            success = airlineAcct.credit@bankClient(100) && success;   // @wBank
+            success = incTickets@airlineClient() && success;  // @wAirline
+          }
+          
+          if (!success) throw new PurchasingError();
         }
-      } catch (NullPointerException e) {}
-
+      } catch (NullPointerException e) {
+        throw new PurchasingError();
+      }
     }
     
-    public void incTickets{this←}() :{airline←} {
-        if (custTickets != null && this actsfor airline) 
+    public boolean{this←} incTickets{this←}() :{airline←} {
+        if (custTickets != null && this actsfor airline) {
             custTickets.num_tickets++;
+            return true;
+        }
+        return false;
     }
 
     Broker{this←}(Account[bank]{this←} ca,
@@ -103,4 +111,7 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
 
 class SimplePrincipal extends AbstractPrincipal {
     SimplePrincipal(String{*<-} name) { super(name); }
+}
+
+class PurchasingError extends Exception {
 }
