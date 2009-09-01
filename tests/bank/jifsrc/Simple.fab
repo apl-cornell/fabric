@@ -1,6 +1,6 @@
 class Balance[principal bank, principal user]
 { // on bank store and worker
-    int{bank←; bank→user} value = 0;
+    int{bank←; bank→user} value = 100000;
 
     int{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
         if (amt <= value & value > 0 & amt > 0) {
@@ -74,8 +74,8 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
             final RemoteClient bankClient = cl.getClient(bankCore);
             final RemoteClient airlineClient = cl.getClient(airlineCore);
             if (bankClient actsfor bank && airlineClient actsfor airline) {
-                customerAcct.debit@bankClient(1000);   // @wBank
-                airlineAcct.credit@bankClient(1000);   // @wBank
+                customerAcct.debit@bankClient(100);   // @wBank
+                airlineAcct.credit@bankClient(100);   // @wBank
                 incTickets@airlineClient();  // @wAirline
             }
         }
