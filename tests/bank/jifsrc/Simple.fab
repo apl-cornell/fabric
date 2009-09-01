@@ -4,13 +4,13 @@ class Balance[principal bank, principal user]
 
     int{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
         if (amt <= value & value > 0 & amt > 0) {
-            value -= amt;
+            value = value - amt;
         }
         return value;
     }
     int{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
         if (amt > 0) {
-            value += amt;
+            value = value + amt;
         }
         return value;
     }
