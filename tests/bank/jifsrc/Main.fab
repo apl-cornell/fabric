@@ -1,7 +1,9 @@
+import java.io.PrintStream;
 import fabric.util.Map;
+import jif.runtime.Runtime;
 
 public class Main {
-    public static void main{}(String[]{} args) : {*->*;_<-_} throws PurchasingError {
+    public static void main{}(String[]{} args) throws (SecurityException) {
         Core core = null;
 
 	if (args == null) return;
@@ -23,11 +25,22 @@ public class Main {
 	    final Principal customer = (Principal) root.get("customerPrincipal");
 	    final Broker[bank,customer] broker =
 	        (Broker[bank,customer]) root.get("theBroker");
-	    if (broker != null)
+
+	    if (broker != null) {
 	        atomic {
 	            broker.coordinatePurchase();
+
+//		    Runtime[broker] runtime = Runtime[broker].getRuntime();
+//		    try {
+//			PrintStream[{broker->}] out = runtime.out();
+//			out.println("Purchase succeeded.");
+//		    } catch (NullPointerException e) {
+//		    }
 	        }
+	    }
+	    if (false) throw new PurchasingError();
 	} catch (ClassCastException e) {
+	} catch (PurchasingError e) {
 	}
     }
 }
