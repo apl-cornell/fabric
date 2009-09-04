@@ -58,31 +58,24 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
     final static String{⊤←} airlineCore = "compute-0-3.local";
 
     void coordinatePurchase{}() : {bank->airlineAcct.user; bank->customerAcct.user; this←; bank<-; airline<-} throws PurchasingError
-        where authority(this), endorse({this←}) {
+        where authority(this), endorse({this←}), this actsfor bank, this actsfor airline {
       try {
         final principal cust1 = customerAcct.user; // bank←
         final principal cust2 = customer;
         final principal airline_ = airlineAcct.user;
-        if (this actsfor bank
-            & this actsfor airline
-            // & this actsfor cust1
-            // & this actsfor cust2
-            // & this actsfor airline_
-            // & bank actsfor airline // this is not acceptable. For debugging.
-        ) {
-          FabricClient cl = FabricClient.getClient();
-          final RemoteClient bankClient = cl.getClient(bankCore);
-          final RemoteClient airlineClient = cl.getClient(airlineCore);
-          boolean success = false;
-          if (bankClient actsfor bank && airlineClient actsfor airline) {
-            success = true;
-            success = customerAcct.debit@bankClient(100) && success;   // @wBank
-            success = airlineAcct.credit@bankClient(100) && success;   // @wBank
-            success = incTickets@airlineClient() && success;  // @wAirline
-          }
-          
-          if (!success) throw new PurchasingError();
-        }
+
+	FabricClient cl = FabricClient.getClient();
+	final RemoteClient bankClient = cl.getClient(bankCore);
+	final RemoteClient airlineClient = cl.getClient(airlineCore);
+	boolean success = false;
+	if (bankClient actsfor bank && airlineClient actsfor airline) {
+	  success = true;
+	  success = customerAcct.debit@bankClient(100) && success;   // @wBank
+	  success = airlineAcct.credit@bankClient(100) && success;   // @wBank
+	  success = incTickets@airlineClient() && success;  // @wAirline
+	}
+	
+	if (!success) throw new PurchasingError();
       } catch (NullPointerException e) {
         throw new PurchasingError();
       }

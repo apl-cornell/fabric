@@ -3,7 +3,7 @@ import fabric.util.Map;
 import jif.runtime.Runtime;
 
 public class Main {
-    public static void main{}(String[]{} args) throws (SecurityException) {
+    public static void main{}(String[]{} args) {
         Core core = null;
 
 	if (args == null) return;
@@ -27,20 +27,23 @@ public class Main {
 	        (Broker[bank,customer]) root.get("theBroker");
 
 	    if (broker != null) {
-	        atomic {
-	            broker.coordinatePurchase();
+		atomic {
+		    if (broker actsfor bank && broker actsfor broker.airline) {
+			broker.coordinatePurchase();
 
-//		    Runtime[broker] runtime = Runtime[broker].getRuntime();
-//		    try {
-//			PrintStream[{broker->}] out = runtime.out();
-//			out.println("Purchase succeeded.");
-//		    } catch (NullPointerException e) {
-//		    }
-	        }
+			Runtime[broker] runtime = Runtime[broker].getRuntime();
+			try {
+			    PrintStream[{broker->}] out = runtime.out();
+			    out.println("Purchase succeeded.");
+			} catch (NullPointerException e) {
+			}
+		    }
+		}
 	    }
 	    if (false) throw new PurchasingError();
 	} catch (ClassCastException e) {
 	} catch (PurchasingError e) {
+	} catch (SecurityException e) {
 	}
     }
 }
