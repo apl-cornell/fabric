@@ -7,7 +7,7 @@ import fabric.lang.Principal;
 
 public class SessionState[covariant label T] {
 
-    protected SessionState(String{T} sessionId_, SessionPrincipal{T} session) {    }
+    public SessionState(String{T} sessionId_, SessionPrincipal{T} session) {    }
     
     protected SessionState(SessionPrincipal{T} session) {    }
     

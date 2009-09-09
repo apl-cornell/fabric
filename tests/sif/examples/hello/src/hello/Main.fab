@@ -3,6 +3,8 @@ package hello;
 import java.util.*;
 import sif.servlet.Servlet;
 import sif.servlet.Request;
+import sif.servlet.SessionState;
+import sif.servlet.SessionPrincipal;
 
 import javax.servlet.ServletException;
 
@@ -10,9 +12,11 @@ public final class Main extends Servlet[HelloServEP] {
     final Core{this} localCore;
     public Main() throws ServletException {
         FabricClient cl = FabricClient.getClient();
+        Core lCore = null;        
         if(cl != null) {
             lCore = cl.getLocalCore();
         }
+        localCore = lCore;
     }
     
     public void initialize{HelloServEP:;HelloServEP!:}() throws ServletException {
