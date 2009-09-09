@@ -7,7 +7,12 @@ import sif.servlet.Request;
 import javax.servlet.ServletException;
 
 public final class Main extends Servlet[HelloServEP] {
+    final Core{this} localCore;
     public Main() throws ServletException {
+        FabricClient cl = FabricClient.getClient();
+        if(cl != null) {
+            lCore = cl.getLocalCore();
+        }
     }
     
     public void initialize{HelloServEP:;HelloServEP!:}() throws ServletException {
@@ -25,6 +30,32 @@ public final class Main extends Servlet[HelloServEP] {
     protected String defaultActionName(Request[HelloServEP] req) {
         return "greet";
     }
+    
+    // This method will only be called by the runtime
+    protected SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+            String{*lbl} id, SessionPrincipal{*lbl} session) {
+        SessionState[lbl] toReturn = null;
+        atomic {
+            if (localCore != null && localCore equiv client$ &&
+                    lbl <= new label {⊤→client$} && 
+                    new label {⊤←client$} <= lbl) {
+                toReturn = new SessionState[lbl]@localCore(id, session);
+            }
+        }
+        return toReturn;
+    }
+    
+    // This method will only be called by the runtime
+    protected SessionPrincipal createSessionPrincipal(String{client$→;client$←} id) {
+        SessionPrincipal toReturn = null;
+        atomic {
+            if (localCore != null && localCore equiv client$) {
+                toReturn = new SessionPrincipal@localCore(id);
+            }
+        }
+        return toReturn;
+    }
+    
     
 }
 

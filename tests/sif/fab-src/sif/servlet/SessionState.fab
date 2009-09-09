@@ -7,7 +7,8 @@ import fabric.lang.Principal;
 
 public class SessionState[covariant label T] {
 
-    protected SessionState(String{T} sessionId_, SessionPrincipal{T} session) {
+    // XXX Is it ok for this to be public?
+    public SessionState(String{T} sessionId_, SessionPrincipal{T} session) {
 //    	this.remote = new SSW[T](new SessionPrincipal[T](this), sessionId);
         this.sessionPrincipal = session;
         this.sessionId = sessionId_;
@@ -43,9 +44,13 @@ public class SessionState[covariant label T] {
 //    }
 //    
     /** convenience method for non-fabric code */
-//    public static SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id) {
+//    public static SessionState[lbl]{*lbl} createSessionState{*lbl}(
+//            label{*lbl} lbl, 
+//            String{*lbl} id,
+//            SessionPrincipal{*lbl} sp,
+//            Core core) {
 //    	atomic {
-//    		return new SessionState[lbl](id);
+//    		return new SessionState[lbl]@core(id, sp);
 //    	}
 //    }
     
