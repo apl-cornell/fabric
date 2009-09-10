@@ -1,0 +1,189 @@
+import fabric.util.Map;
+import fabric.util.HashMap;
+import java.net.URI;
+
+/**
+ * Simple implementation of the file directory example.  There is a single root
+ * directory File object and a home directory File object for each user.  Every
+ * File has a collection of subdirectories and some data.
+ *
+ * Three operations are provided:
+ *  - create the root directory
+ *  - create the home directory associated with the current principal
+ *  - lookup and modify the home directory associated with the current principal
+ */
+public class File {
+  private final Map/*String,File*/ children;
+  private       String             name;
+  private       File               parent;
+  private       String             data;
+
+  public File(String name, String data, File parent) throws Exception {
+    this(name, data);
+    this.reparent(parent);
+  }
+
+  public File(String name, String data) {
+    this.children = new HashMap();
+    this.name     = name;
+    this.parent   = null;
+    this.data     = data;
+  }
+
+  public File(String name, File parent) throws Exception {
+    this(name, null, parent);
+  }
+
+  public File(String name) {
+    this(name, (String) null);
+  }
+
+  public void reparent(File parent) throws Exception {
+    atomic {
+      if (this.parent != null)
+        this.parent.children.remove(this.name);
+
+      if (parent != null && parent.children.containsKey(this.name))
+        throw new Exception("file already exists");
+
+      this.parent = parent;
+
+      if (this.parent != null)
+        this.parent.children.put(this.name, this);
+    }
+  }
+
+  public void rename(String name) throws Exception {
+    atomic {
+      if (this.parent != null)
+        this.parent.children.remove(this.name);
+
+      if (this.parent != null && this.parent.children.containsKey(name))
+        throw new Exception("file already exists");
+
+      this.name = name;
+
+      if (this.parent != null)
+        this.parent.children.put(this.name, this);
+    }
+  }
+
+  public String getData() {
+    return data;
+  }
+
+  public void setData(String data) {
+    this.data = data;
+  }
+
+  public void addChild(File child) throws Exception {
+    child.reparent(this);
+  }
+
+  public File getChild(String name) throws Exception {
+    if (!children.containsKey(name))
+      throw new Exception("File does not exist");
+
+    return (File) children.get(name);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // main methods                                                             //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public static URI rootAddr;
+
+  /** create root directory and store it */
+  public static void createRoot() throws Exception {
+    atomic {
+      Core core = Client.getClient().getCore(rootAddr.getHost());
+      Map  root = (Map) core.getRoot();
+
+      if (root.containsKey(rootAddr.getPath()))
+        throw new Exception("root directory already exists");
+
+      File file = new File(rootAddr.getPath());
+      root.put(rootAddr.getPath(), file);
+    }
+  }
+
+  /** create a file owned by the current client on the same core as the client's principal object */
+  public static void createHome() throws Exception {
+    atomic {
+      String name = Client.getClient().getPrincipal().name();
+
+      File root = getRoot();
+      File home = new File(name, root);
+    }
+  }
+
+  /** look up user's file and modify it's data */
+  public static void modifyHome() throws Exception {
+    atomic {
+      String name = Client.getClient().getPrincipal().name();
+
+      File root = getRoot();
+      File home = root.getChild(name);
+
+      // Simulate computation
+      int data = Integer.parseInt(home.getData());
+      home.setData(Integer.toString(data + 1));
+    }
+  }
+
+  /** print usage message */
+  public static void usage() {
+    System.out.println("usage:                                                                          ");
+    System.out.println("  File --create <addr>                                                          ");
+    System.out.println("      initialize a root directory with address <addr>                           ");
+    System.out.println("                                                                                ");
+    System.out.println("  File --modify <addr>                                                          ");
+    System.out.println("      lookup and modify the home directory of the current principal within the  ");
+    System.out.println("      root dirctory specified by <addr>                                         ");
+    System.out.println("                                                                                ");
+    System.out.println("  File --mkhome <addr>:                                                         ");
+    System.out.println("      create a home directory for the current principal within the root         ");
+    System.out.println("      directory specified by <addr>                                             ");
+    System.out.println("                                                                                ");
+    System.out.println("  in all cases, <addr> should be of the form fab://host:port/name               ");
+    System.out.println("                                                                                ");
+  }
+
+  public static void main(String[] args) {
+    try {
+
+      rootAddr = new URI(args[1]);
+
+      if (args.length != 2)
+        usage();
+      else if (args[0].equals("--create") || args[0].equals("-c"))
+        createRoot();
+      else if (args[0].equals("--modify") || args[0].equals("-m"))
+        modifyHome();
+      else if (args[0].equals("--mkhome") || args[0].equals("-h"))
+        createHome();
+      else
+        usage();
+
+    } catch (Exception e) {
+      System.err.println(e.getMessage());
+      usage();
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // private helper methods                                                   //
+  //////////////////////////////////////////////////////////////////////////////
+
+  private static File getRoot() {
+    Core c = Client.getClient().getCore(rootAddr.getHost());
+    Map  m = (Map) c.getRoot();
+
+    return (File) m.get(rootAddr.getPath());
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et syntax=java cindent
+*/
