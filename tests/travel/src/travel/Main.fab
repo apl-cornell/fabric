@@ -1,3 +1,5 @@
+package travel;
+
 import java.io.PrintStream;
 import fabric.util.Map;
 import jif.runtime.Runtime;

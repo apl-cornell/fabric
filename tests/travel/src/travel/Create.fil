@@ -1,3 +1,5 @@
+package travel;
+
 import jif.lang.*;
 import fabric.util.Map;
 

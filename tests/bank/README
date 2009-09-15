@@ -1,7 +1,0 @@
-This directory contains an implementation of the bank/airline example.
-
-jifsrc:
-  Andrew's jif implementation, ported to fabric+fabil
-  
-classes:
-  a good place to dump compiled files.

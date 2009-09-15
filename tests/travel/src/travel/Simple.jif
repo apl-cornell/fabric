@@ -1,3 +1,5 @@
+package travel;
+
 class Balance[principal bank, principal user]
 { // on bank store and worker
     int{bank←; bank→user} value = 0;
