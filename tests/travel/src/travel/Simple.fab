@@ -1,5 +1,7 @@
 package travel;
 
+import fabric.util.Map;
+
 class Balance[principal bank, principal user]
 { // on bank store and worker
     int{bank←; bank→user} value = 100000;
@@ -54,10 +56,6 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
     final Account[bank]{this←} airlineAcct;
     final principal{this←} airline;
     final Tickets[bank, airline, customer]{this←} custTickets;
-    
-    // XXX These should not be hard-coded!
-    final static String{⊤←} bankCore = "compute-0-2.local";
-    final static String{⊤←} airlineCore = "compute-0-3.local";
 
     void coordinatePurchase{}() : {bank->airlineAcct.user; bank->customerAcct.user; this←; bank<-; airline<-} throws PurchasingError
         where authority(this), endorse({this←}), this actsfor bank, this actsfor airline {
@@ -67,8 +65,8 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
         final principal airline_ = airlineAcct.user;
 
 	FabricClient cl = FabricClient.getClient();
-	final RemoteClient bankClient = cl.getClient(bankCore);
-	final RemoteClient airlineClient = cl.getClient(airlineCore);
+	final RemoteClient bankClient = cl.getClient(Config.bankCoreName);
+	final RemoteClient airlineClient = cl.getClient(Config.airlineCoreName);
 	boolean success = false;
 	if (bankClient actsfor bank && airlineClient actsfor airline) {
 	  success = true;
@@ -102,7 +100,6 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
         super("broker");
     }
 }
-
 
 class SimplePrincipal extends AbstractPrincipal {
     SimplePrincipal(String{*<-} name) { super(name); }

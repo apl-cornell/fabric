@@ -7,7 +7,7 @@
 <web-app>
     <servlet>
       <servlet-name>airline</servlet-name>
-      <servlet-class>travel.servlet.Airline</servlet-class>
+      <servlet-class>travel.servlet.AirlineMain</servlet-class>
     </servlet>
     <servlet-mapping>
       <servlet-name>airline</servlet-name>

@@ -6,16 +6,8 @@ import jif.runtime.Runtime;
 
 public class Main {
     public static void main{}(String[]{} args) {
-        Core core = null;
-
-	if (args == null) return;
-
-	try {
-	    core = client$.getCore(args[0]);
-        } catch (ArrayIndexOutOfBoundsException e) {
-	}
-
-	Map root = null;
+        Core core = client$.getCore(Config.brokerCoreName);
+        Map root = null;
 	if (core != null) {
 	    root = (Map) core.getRoot();
 	}
@@ -23,10 +15,10 @@ public class Main {
         if (root == null) return;
 
 	try {
-	    final Principal bank = (Principal) root.get("bankPrincipal");
-	    final Principal customer = (Principal) root.get("customerPrincipal");
+	    final Principal bank = (Principal) root.get(Config.bankPrincipalMapKey);
+	    final Principal customer = (Principal) root.get(Config.customerPrincipalMapKey);
 	    final Broker[bank,customer] broker =
-	        (Broker[bank,customer]) root.get("theBroker");
+	        (Broker[bank,customer]) root.get(Config.brokerMapKey);
 
 	    if (broker != null) {
 		atomic {

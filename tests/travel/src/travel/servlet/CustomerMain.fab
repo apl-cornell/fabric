@@ -1,0 +1,64 @@
+package travel.servlet;
+
+import travel.Config;
+import fabric.util.Map;
+import sif.servlet.Servlet;
+import sif.servlet.Request;
+import sif.servlet.SessionState;
+import sif.servlet.SessionPrincipal;
+
+import javax.servlet.ServletException;
+
+public final class CustomerMain extends Servlet[CustomerPrincipal] {
+  final Core{this} localCore;
+  
+  public CustomerMain() throws ServletException {
+    FabricClient cl = FabricClient.getClient();
+    Core lCore = null;
+    AbstractPrincipal customerPrincipal = null;
+    if (cl != null) {
+      lCore = cl.getLocalCore();
+    }
+    localCore = lCore;
+  }
+    
+  public void initialize{CustomerPrincipal:;CustomerPrincipal!:}()
+      throws ServletException {
+//    addStartAction(new StartAction(this));
+  }
+
+  public String getPrivateHostID() throws ServletException {
+    return "";
+  }
+
+  protected String defaultActionName(Request[CustomerPrincipal] req) {
+    return "greet";
+  }
+  
+  // This method will only be called by the runtime
+  protected SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+      String{*lbl} id, SessionPrincipal{*lbl} session) {
+    SessionState[lbl] toReturn = null;
+    atomic {
+      if (localCore != null && localCore equiv client$ &&
+	  lbl <= new label {⊤→client$} && new label {⊤←client$} <= lbl) {
+	toReturn = new SessionState[lbl]@localCore(id, session);
+      }
+    }
+    return toReturn;
+  }
+  
+  // This method will only be called by the runtime
+  protected SessionPrincipal createSessionPrincipal(String{client$→;client$←} id) {
+    SessionPrincipal toReturn = null;
+    atomic {
+      if (localCore != null && localCore equiv client$) {
+	toReturn = new SessionPrincipal@localCore(id);
+      }
+    }
+    return toReturn;
+  }
+  
+  
+}
+

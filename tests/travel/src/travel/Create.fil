@@ -6,9 +6,9 @@ import fabric.util.Map;
 public class Create {
 
     /**
-     * create the setup for the OO7 test:
+     * create the setup for the travel example:
      *
-     * brokerCore (args[0])
+     * brokerCore
      * ==========
      * broker: Broker[bank,customer]
      *  f label        -> brokerLabel
@@ -32,7 +32,7 @@ public class Create {
      *    delegatesTo -> broker
      *  
      *
-     * bankCore (args[1])
+     * bankCore
      * ========
      * airlineBalance: Balance[bank,airline]
      *  f label   -> airlineLabel
@@ -64,7 +64,7 @@ public class Create {
      * customerLabel: Label
      *  f {bank<-; bank->customer}
      *  
-     * airlineCore (args[2])
+     * airlineCore
      * ===========
      * tickets: Tickets[bank,airline,user]
      *  f label   -> ticketsLabel
@@ -78,13 +78,13 @@ public class Create {
      */
     public static void main(String[] args) {
         atomic {
-            Core  brokerCore = Client.getClient().getCore(args[0]);
-            Core    bankCore = Client.getClient().getCore(args[1]);
-            Core airlineCore = Client.getClient().getCore(args[2]);
+            Core  brokerCore = Client.getClient().getCore(Config.brokerCoreName);
+            Core    bankCore = Client.getClient().getCore(Config.bankCoreName);
+            Core airlineCore = Client.getClient().getCore(Config.airlineCoreName);
 
-            AbstractPrincipal bank     = new SimplePrincipal@brokerCore().SimplePrincipal$("bank");
-            AbstractPrincipal customer = new SimplePrincipal@brokerCore().SimplePrincipal$("customer");
-            AbstractPrincipal airline  = new SimplePrincipal@brokerCore().SimplePrincipal$("airline");
+            AbstractPrincipal bank     = new SimplePrincipal@brokerCore().travel$SimplePrincipal$("bank");
+            AbstractPrincipal customer = CustomerPrincipal.getInstance();
+            AbstractPrincipal airline  = new SimplePrincipal@brokerCore().travel$SimplePrincipal$("airline");
             Broker            broker   = new Broker@brokerCore(bank,customer);
 
             IntegPolicy brokerTrusted  = LabelUtil.writerPolicy(brokerCore,  broker, broker);   // {broker<-}
@@ -97,13 +97,13 @@ public class Create {
             Label customerLabel = LabelUtil.toLabel(bankCore, customerSecret, bankTrusted);
             Label ticketsLabel  = LabelUtil.toLabel(airlineCore, airlineTrusted);
 
-            Account  airlineAccount = new Account~airlineLabel@bankCore (bank).Account$(airline);
-            Account customerAccount = new Account~customerLabel@bankCore(bank).Account$(customer);
+            Account  airlineAccount = new Account~airlineLabel@bankCore (bank).travel$Account$(airline);
+            Account customerAccount = new Account~customerLabel@bankCore(bank).travel$Account$(customer);
 
-            Tickets tickets = new Tickets~ticketsLabel@airlineCore(bank,airline,customer).Tickets$();
+            Tickets tickets = new Tickets~ticketsLabel@airlineCore(bank,airline,customer).travel$Tickets$();
 
             // call broker constructor
-            broker = broker.Broker$(customerAccount,airlineAccount,tickets,airline);
+            broker = broker.travel$Broker$(customerAccount,airlineAccount,tickets,airline);
             
             // make broker top
             airline.addDelegatesTo(broker);
@@ -124,9 +124,9 @@ public class Create {
                bank.addDelegatesTo(bankClient);
 
             Map root = (Map) brokerCore.getRoot();
-            root.put("theBroker", broker);
-            root.put("bankPrincipal", bank);
-            root.put("customerPrincipal", customer);
+            root.put(Config.brokerMapKey, broker);
+            root.put(Config.bankPrincipalMapKey, bank);
+            root.put(Config.customerPrincipalMapKey, customer);
         }
     }
 }

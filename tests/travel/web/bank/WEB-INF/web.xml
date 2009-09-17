@@ -7,7 +7,7 @@
 <web-app>
     <servlet>
       <servlet-name>bank</servlet-name>
-      <servlet-class>travel.servlet.Bank</servlet-class>
+      <servlet-class>travel.servlet.BankMain</servlet-class>
     </servlet>
     <servlet-mapping>
       <servlet-name>bank</servlet-name>
