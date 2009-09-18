@@ -1,6 +1,7 @@
 package travel;
 
 import jif.lang.*;
+import jif.principals.CustomerPrincipal;
 import fabric.util.Map;
 
 public class Create {
