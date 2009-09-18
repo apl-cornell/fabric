@@ -90,6 +90,7 @@ public class RemoteCore extends RemoteNode implements Core {
 
   private class FetchLock {
     private _Impl object;
+    private FetchException error;
   }
 
   /**
@@ -197,11 +198,15 @@ public class RemoteCore extends RemoteNode implements Core {
         fetchLocks.put(onum, fetchLock);
       }
     }
-    
+
     synchronized (fetchLock) {
       if (needToFetch) {
         // We are responsible for fetching the object.
-        fetchLock.object = fetchObject(useDissem, onum);
+        try {
+          fetchLock.object = fetchObject(useDissem, onum);
+        } catch (FetchException e) {
+          fetchLock.error = e;
+        }
 
         // Object now cached. Remove our mutex from fetchLocks.
         synchronized (fetchLocks) {
@@ -212,7 +217,7 @@ public class RemoteCore extends RemoteNode implements Core {
         fetchLock.notifyAll();
       } else {
         // Wait for another thread to fetch the object for us.
-        while (fetchLock.object == null) {
+        while (fetchLock.object == null && fetchLock.error == null) {
           try {
             fetchLock.wait();
           } catch (InterruptedException e) {
@@ -221,6 +226,7 @@ public class RemoteCore extends RemoteNode implements Core {
         }
       }
 
+      if (fetchLock.error != null) throw fetchLock.error;
       return fetchLock.object;
     }
   }
