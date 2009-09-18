@@ -198,12 +198,12 @@ public class RemoteCore extends RemoteNode implements Core {
       }
     }
     
-    // Fetch the object if we are responsible for doing so.
-    if (needToFetch) fetchLock.object = fetchObject(useDissem, onum);
-
     synchronized (fetchLock) {
       if (needToFetch) {
-        // Object should now be cached. Remove our mutex from fetchLocks.
+        // We are responsible for fetching the object.
+        fetchLock.object = fetchObject(useDissem, onum);
+
+        // Object now cached. Remove our mutex from fetchLocks.
         synchronized (fetchLocks) {
           fetchLocks.remove(onum);
         }
