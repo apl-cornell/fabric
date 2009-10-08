@@ -280,7 +280,7 @@ public class Assignment implements Comparable {
    * in the course and active in the respective group.
    */
   public Set/*GroupMember*/ findActiveGroupMembers() {
-    SortedSet result = new TreeSet();
+    Set result = new HashSet();
     for (Iterator git = groups.iterator(); git.hasNext();) {
       Group group = (Group) git.next();
       for (Iterator mit = group.members.values().iterator(); mit.hasNext();) {

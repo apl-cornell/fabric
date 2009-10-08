@@ -279,7 +279,7 @@ public class AssignmentGroupsXMLBuilder {
     for(Iterator i = assign.getGrades().iterator(); i.hasNext();) {
       Grade g = (Grade)i.next();
       if(g.getSubProblem() == null) {
-        lastGradeMap.put(g.getUser().getNetID() + "_null", g.getGrade());
+        lastGradeMap.put(g.getUser().getNetID() + "_0", g.getGrade());
       } else {
         lastGradeMap.put(g.getUser().getNetID() + "_" + g.getSubProblem().toString(), g.getGrade());
       }
@@ -318,7 +318,7 @@ public class AssignmentGroupsXMLBuilder {
           Object key;
           if(sid == nullKey) {
             key = nullKey;
-            lastGradeKey += "null";
+            lastGradeKey += "0";
           } else {
             key = sid;
             lastGradeKey += sid.toString();

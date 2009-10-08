@@ -1152,11 +1152,13 @@ public class AccessController extends HttpServlet {
       }
       request.getSession().getServletContext().log("Commit Time for "
           + action + ": " + (System.currentTimeMillis() - start));
+/** Compiler bug - removed so that the translated Fabric code can catch RetryException 
     } catch (Exception e) {
       System.out.println("Error in AccessController.processRequest(): " + e);
       e.printStackTrace();
       throw new ServletException~label@localCore(e);
-    }
+    } */
+    } finally { }
   }
 
   private void redirectTo(String url, HttpServletRequest request,
