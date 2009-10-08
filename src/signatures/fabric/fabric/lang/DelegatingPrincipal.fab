@@ -2,7 +2,7 @@ package fabric.lang;
 
 public abstract class DelegatingPrincipal extends Principal {
   
-  public native void addDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);    
-  public native void removeDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);
+  public abstract void addDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);    
+  public abstract void removeDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);
   
 }

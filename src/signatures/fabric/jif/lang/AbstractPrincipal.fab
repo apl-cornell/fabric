@@ -16,6 +16,10 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     
     public native boolean{this;p;this!:} delegatesTo(principal p);
 
+    public native void addDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);    
+
+    public native void removeDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);
+
     protected native boolean{this;p;this!:} superiorsContains(Principal p) where authority (this);
     
     public native boolean{authPrf; closure; lb; *lb; executeNow; this; this!:}
