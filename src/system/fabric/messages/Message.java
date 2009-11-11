@@ -225,18 +225,20 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
   }
 
   protected static enum MessageType {
-    ALLOCATE_ONUMS(AllocateMessage.class), READ_ONUM(
-        fabric.messages.ReadMessage.class), PREPARE_TRANSACTION(
-        PrepareTransactionMessage.class), COMMIT_TRANSACTION(
-        CommitTransactionMessage.class), ABORT_TRANSACTION(
-        AbortTransactionMessage.class), DISSEM_READ_ONUM(
-        DissemReadMessage.class), REMOTE_CALL(RemoteCallMessage.class), INTERCLIENT_READ(
-        fabric.client.remote.messages.ReadMessage.class), TAKE_OWNERSHIP(
-        TakeOwnershipMessage.class), GET_PRINCIPAL(GetPrincipalMessage.class), OBJECT_UPDATE(
-        ObjectUpdateMessage.class), UNAUTHENTICATED_PREPARE_TRANSACTION(
-        UnauthenticatedPrepareTransactionMessage.class), UNAUTHENTICATED_COMMIT_TRANSACTION(
-        UnauthenticatedCommitTransactionMessage.class), UNAUTHENTICATED_ABORT_TRANSACTION(
-        UnauthenticatedAbortTransactionMessage.class);
+    ALLOCATE_ONUMS(AllocateMessage.class),
+    READ_ONUM(fabric.messages.ReadMessage.class),
+    PREPARE_TRANSACTION(PrepareTransactionMessage.class),
+    COMMIT_TRANSACTION(CommitTransactionMessage.class),
+    ABORT_TRANSACTION(AbortTransactionMessage.class),
+    DISSEM_READ_ONUM(DissemReadMessage.class),
+    REMOTE_CALL(RemoteCallMessage.class),
+    INTERCLIENT_READ(fabric.client.remote.messages.ReadMessage.class),
+    TAKE_OWNERSHIP(TakeOwnershipMessage.class),
+    GET_PRINCIPAL(GetPrincipalMessage.class),
+    OBJECT_UPDATE(ObjectUpdateMessage.class),
+    UNAUTHENTICATED_PREPARE_TRANSACTION(UnauthenticatedPrepareTransactionMessage.class),
+    UNAUTHENTICATED_COMMIT_TRANSACTION(UnauthenticatedCommitTransactionMessage.class),
+    UNAUTHENTICATED_ABORT_TRANSACTION(UnauthenticatedAbortTransactionMessage.class);
 
     private final Class<? extends Message<?, ?>> messageClass;
 
