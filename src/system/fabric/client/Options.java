@@ -25,7 +25,7 @@ public class Options extends fabric.common.Options {
   }
 
   public Options(String[] args) throws UsageError {
-    parseCommandLine(args);
+    super(args);
   }
 
   @Override
@@ -37,6 +37,12 @@ public class Options extends fabric.common.Options {
     this.maxConnect = 25;
   }
 
+  @Override
+  public void validateOptions() throws UsageError {
+    if (null == this.name)
+      throw new UsageError("No client name specified");
+  }
+  
   public static void usage(PrintStream out) {
     Options defaults = new Options();
 
@@ -45,7 +51,7 @@ public class Options extends fabric.common.Options {
     out.println("  [app] is the name of Fabric application's main class");
     out.println("  [param...] are the parameters to the Fabric application");
     out.println("and [options] includes:");
-    usageForFlag(out, "--name <name>", "this client's name", defaults.name);
+    usageForFlag(out, "--name <name>", "this client's name", "$HOSTNAME");
     usageForFlag(out, "--pool <number>", "size of worker thread pool for "
         + "serving remote requests", defaults.threadPool);
     usageForFlag(out, "--time <category>", "enable timing of category");

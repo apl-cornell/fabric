@@ -14,8 +14,15 @@ public abstract class Options {
   protected Options() {
     setDefaultValues();
   }
+  
+  protected Options(String[] args) throws UsageError {
+    setDefaultValues();
+    parseCommandLine(args);
+    validateOptions();
+  }
 
   protected abstract void setDefaultValues();
+  protected abstract void validateOptions() throws UsageError;
 
   /**
    * Parses a command.

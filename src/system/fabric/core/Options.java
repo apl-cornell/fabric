@@ -49,7 +49,7 @@ public class Options extends fabric.common.Options {
   }
 
   public Options(String[] args) throws UsageError {
-    parseCommandLine(args);
+    super(args);
   }
 
   @Override
@@ -59,6 +59,14 @@ public class Options extends fabric.common.Options {
     this.threadPool = 10;
     this.timeout = 15;
     this.primaryCoreName = null;
+  }
+  
+  @Override
+  public void validateOptions() throws UsageError {
+
+    if (null == primaryCoreName)
+      throw new UsageError("No cores specified");
+
   }
 
   public static void usage(PrintStream out) {
