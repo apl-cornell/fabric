@@ -73,5 +73,9 @@ TOP=$(unixfilename "@TOP@")
 POLYGLOT=$(unixfilename "@POLYGLOT@")
 JIF=$(unixfilename "@JIF@")
 
+if [ "$FABRIC_HOME" == "" ]; then
+	export FABRIC_HOME="$TOP"
+fi
+
 classpath=$(unixpath ${CLASSPATH})
 
