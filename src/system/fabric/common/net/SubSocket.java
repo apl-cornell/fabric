@@ -14,13 +14,13 @@ import java.net.SocketAddress;
  * @see java.net.Socket
  * @author mdgeorge
  */
-public final class SubSocket {
+public class SubSocket {
   //////////////////////////////////////////////////////////////////////////////
   // public API                                                               //
   //////////////////////////////////////////////////////////////////////////////
   
   /** @see SubSocketFactory */
-  SubSocket(SubSocketFactory factory) {
+  protected SubSocket(SubSocketFactory factory) {
     this.state = new Unconnected(factory); 
   }
   
@@ -33,22 +33,22 @@ public final class SubSocket {
   }
 
   /** @see java.net.Socket#close() */
-  public void close() throws IOException {
+  public final void close() throws IOException {
     state.close();
   }
 
   /** @see java.net.Socket#connect(SocketAddress) */
-  public void connect(InetSocketAddress addr) throws IOException {
+  public final void connect(InetSocketAddress addr) throws IOException {
     state.connect(addr);
   }
 
   /** @see java.net.Socket#getOutputStream() */
-  public OutputStream getOutputStream() throws IOException {
+  public final OutputStream getOutputStream() throws IOException {
     return state.getOutputStream();
   }
   
   /** @see java.net.Socket#getInputStream() */
-  public InputStream getInputStream() throws IOException {
+  public final InputStream getInputStream() throws IOException {
     return state.getInputStream();
   }
   
@@ -62,13 +62,13 @@ public final class SubSocket {
   //                                                       exception          //
   //////////////////////////////////////////////////////////////////////////////
   
-  private State            state;
+  private State state;
   
   /**
    * default implementations of state methods - throws errors or returns default
    * values as appropriate.
    */
-  private abstract class State {
+  protected abstract class State {
     protected Exception cause = null;
     
     public void close() throws IOException {
@@ -91,7 +91,7 @@ public final class SubSocket {
   /**
    * implementation of methods in the Unconnected state
    */
-  private final class Unconnected extends State {
+  protected final class Unconnected extends State {
     private final SubSocketFactory factory;
     
     @Override public String toString() { return "is unconnected"; }
@@ -116,7 +116,7 @@ public final class SubSocket {
   /**
    * implementation of methods in the Connected(channel) state
    */
-  private final class Connected extends State {
+  protected final class Connected extends State {
     final Channel.Connection   conn;
     
     @Override
@@ -154,14 +154,14 @@ public final class SubSocket {
   /**
    * implementation of methods in the Closed state
    */
-  private final class Closed extends State {
+  protected final class Closed extends State {
     @Override public String toString() { return "is closed"; }
   }
   
   /**
    * implementations of methods in the Error state
    */
-  private final class ErrorState extends State {
+  protected final class ErrorState extends State {
     @Override public String toString() { return "has recieved an exception"; }
     
     public ErrorState(Exception exc) {
