@@ -76,8 +76,12 @@ public class File {
     this.data = data;
   }
 
-  public void addChild(File child) throws Exception {
-    child.reparent(this);
+  public File addChild(String name, String data) throws Exception {
+    return new File(name, data, this);
+  }
+  
+  public File addChild(String name) throws Exception {
+    return addChild(name, null);
   }
 
   public File getChild(String name) throws Exception {
@@ -102,7 +106,7 @@ public class File {
       if (root.containsKey(rootAddr.getPath()))
         throw new Exception("root directory already exists");
 
-      File file = new File(rootAddr.getPath());
+      File file = new File@core(rootAddr.getPath());
       root.put(rootAddr.getPath(), file);
     }
   }
@@ -111,9 +115,7 @@ public class File {
   public static void createHome() throws Exception {
     atomic {
       String name = Client.getClient().getPrincipal().name();
-
-      File root = getRoot();
-      File home = new File(name, root);
+      getRoot().addChild(name, "0");
     }
   }
 
@@ -127,6 +129,7 @@ public class File {
 
       // Simulate computation
       int data = Integer.parseInt(home.getData());
+      System.out.println("updating " + name + " from " + data + " to " + (data + 1));
       home.setData(Integer.toString(data + 1));
     }
   }
@@ -149,26 +152,19 @@ public class File {
     System.out.println("                                                                                ");
   }
 
-  public static void main(String[] args) {
-    try {
+  public static void main(String[] args) throws Exception {
+    rootAddr = new URI(args[1]);
 
-      rootAddr = new URI(args[1]);
-
-      if (args.length != 2)
-        usage();
-      else if (args[0].equals("--create") || args[0].equals("-c"))
-        createRoot();
-      else if (args[0].equals("--modify") || args[0].equals("-m"))
-        modifyHome();
-      else if (args[0].equals("--mkhome") || args[0].equals("-h"))
-        createHome();
-      else
-        usage();
-
-    } catch (Exception e) {
-      System.err.println(e.getMessage());
+    if (args.length != 2)
       usage();
-    }
+    else if (args[0].equals("--create") || args[0].equals("-c"))
+      createRoot();
+    else if (args[0].equals("--modify") || args[0].equals("-m"))
+      modifyHome();
+    else if (args[0].equals("--mkhome") || args[0].equals("-h"))
+      createHome();
+    else
+      usage();
   }
 
   //////////////////////////////////////////////////////////////////////////////
