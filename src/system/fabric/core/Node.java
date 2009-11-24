@@ -55,13 +55,10 @@ public class Node {
     }
   }
 
-  public ConsoleHandler console;
-
   public Node(Options opts) {
     this.opts = opts;
     this.cores = new HashMap<String, Core>();
     this.connectionHandler = new ConnectionHandler(this);
-    this.console = new ConsoleHandler();
 
     // Instantiate the cores with their object stores and SSL socket factories.
     for (Map.Entry<String, CoreKeyStores> coreEntry : opts.cores.entrySet()) {
@@ -116,7 +113,7 @@ public class Node {
       core.os.ensureInit();
     }
 
-    console.println("Core started");
+    System.out.println("Core started");
   }
 
   private ObjectStore loadCore(String coreName) {
