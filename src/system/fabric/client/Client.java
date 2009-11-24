@@ -67,7 +67,12 @@ public final class Client {
   public final java.security.Principal javaPrincipal;
 
   // The logger
-  public static final Logger log = Logger.getLogger("fabric.client");
+  public static final Logger log;
+  
+  static {
+    System.setProperty("java.util.logging.config.file", Resources.relpathRewrite("etc", "logging.properties"));
+    log = Logger.getLogger("fabric.client");
+  }
 
   // The timeout (in milliseconds) to use whilst attempting to connect to a core
   // node.
