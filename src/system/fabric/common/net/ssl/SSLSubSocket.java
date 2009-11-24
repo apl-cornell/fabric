@@ -6,13 +6,12 @@ import fabric.common.net.*;
 
 public class SSLSubSocket extends SubSocket {
 
-  SSLSubSocket(SubSocketFactory factory) {
+  public SSLSubSocket(SSLSubSocketFactory factory) {
     super(factory);
-    // TODO Auto-generated constructor stub
+    throw new NotImplementedException();
   }
 
   public SSLSession getSession() {
-    // TODO
-    return null;
+    throw new NotImplementedException();
   }
 }

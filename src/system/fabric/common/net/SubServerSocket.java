@@ -13,13 +13,13 @@ import javax.net.ServerSocketFactory;
  * @see java.net.ServerSocket
  * @author mdgeorge
  */
-public final class SubServerSocket {
+public class SubServerSocket {
   //////////////////////////////////////////////////////////////////////////////
   // public API                                                               //
   //////////////////////////////////////////////////////////////////////////////
   
   /** @see SubServerSocketFactory */
-  SubServerSocket(ServerSocketFactory factory) {
+  protected SubServerSocket(SubServerSocketFactory factory) {
     this.state   = new Unbound(factory);
   }
   
@@ -94,7 +94,7 @@ public final class SubServerSocket {
   private final class Unbound extends State {
     @Override public String toString() { return "is unbound"; }
 
-    private final ServerSocketFactory factory;
+    private final SubServerSocketFactory factory;
     
     @Override
     public void bind(InetSocketAddress address, int backlog) throws IOException {
@@ -108,7 +108,7 @@ public final class SubServerSocket {
       }
     }
     
-    public Unbound(ServerSocketFactory factory) {
+    public Unbound(SubServerSocketFactory factory) {
       this.factory = factory;
     }
   }

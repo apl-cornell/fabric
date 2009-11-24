@@ -37,14 +37,14 @@ public class SubSocketFactory {
   
   /** @see javax.net.SocketFactory#createSocket(String, int) */
   public SubSocket createSocket(String host, int port) throws IOException {
-    SubSocket result = new SubSocket(this);
+    SubSocket result = createSocket();
     result.connect(new InetSocketAddress(host, port));
     return result;
   }
 
   /** @see javax.net.SocketFactory#createSocket(InetAddress, int) */
   public SubSocket createSocket(InetAddress host, int port) throws IOException {
-    SubSocket result = new SubSocket(this);
+    SubSocket result = createSocket();
     result.connect(new InetSocketAddress(host, port));
     return result;
   }
@@ -52,7 +52,7 @@ public class SubSocketFactory {
   /**
    * return a channel associated with the given address, creating it if necessary.
    */
-  public synchronized ClientChannel getChannel(InetSocketAddress addr) throws IOException {
+  synchronized ClientChannel getChannel(InetSocketAddress addr) throws IOException {
     ClientChannel result = channels.get(addr);
     if (null == result) {
       Socket sock = factory.createSocket(addr.getAddress(), addr.getPort());

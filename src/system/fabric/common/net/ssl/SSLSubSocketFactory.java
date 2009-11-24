@@ -1,14 +1,30 @@
 package fabric.common.net.ssl;
 
-import javax.net.SocketFactory;
+import java.io.IOException;
+import java.net.InetAddress;
 
-import fabric.common.net.*;;
+import javax.net.ssl.SSLSocketFactory;
+
+import fabric.common.net.*;
 
 public class SSLSubSocketFactory extends SubSocketFactory {
 
-  public SSLSubSocketFactory(SocketFactory factory) {
+  public SSLSubSocketFactory(SSLSocketFactory factory) {
     super(factory);
-    // TODO Auto-generated constructor stub
   }
 
+  @Override
+  public SSLSubSocket createSocket() {
+    return new SSLSubSocket(this);
+  }
+
+  @Override
+  public SSLSubSocket createSocket(InetAddress host, int port) throws IOException {
+    return (SSLSubSocket) super.createSocket(host, port);
+  }
+
+  @Override
+  public SSLSubSocket createSocket(String host, int port) throws IOException {
+    return (SSLSubSocket) super.createSocket(host, port);
+  }
 }

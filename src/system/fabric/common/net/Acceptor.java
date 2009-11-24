@@ -24,8 +24,8 @@ class Acceptor {
   private ServerSocket             socket;
   private BlockingQueue<SubSocket> connections;
   
-  public Acceptor(ServerSocketFactory factory, InetSocketAddress addr, int backlog) throws IOException {
-    this.socket = factory.createServerSocket(addr.getPort(), backlog, addr.getAddress());
+  public Acceptor(SubServerSocketFactory factory, InetSocketAddress addr, int backlog) throws IOException {
+    this.socket = factory.createSocketImpl(addr.getPort(), backlog, addr.getAddress());
     this.connections = new ArrayBlockingQueue<SubSocket>(backlog);
     new Listener().start();
   }
