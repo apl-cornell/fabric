@@ -171,25 +171,29 @@ public final class ChannelMultiplexerThread extends Thread {
 
   @Override
   public void run() {
-    /**
-     * The following invariants are established before each select operation.
-     * <ul>
-     * <li>Each CommManager-facing source channel (i.e., pipe inbound from the
-     * app) is either in the readQueue or is registered with the selector for
-     * reading.</li>
-     * <li>Either the outputBuffer and streamsToClose are both empty or the
-     * network channel is registered with the selector for writing.</li>
-     * <li>If the outputBuffer is empty, then there are no channels in the
-     * readQueue.</li>
-     * <li>The network channel is always registered with the selector for
-     * reading.</li>
-     * <li>For each CommManager-facing sink channel (i.e., pipe outbound to the
-     * app), all buffers in the corresponding buffer queue are non-empty.</li>
-     * <li>For each CommManager-facing sink channel (i.e, pipe outbound to the
-     * app), either the corresponding buffer queue is empty or the channel is
-     * registered with the selector for writing.</li>
-     * </ul>
-     */
+    //
+    // The following invariants are established before each select operation:
+    //
+    //  - Each CommManager-facing source channel (i.e., pipe inbound from the
+    //    app) is either in the readQueue or is registered with the selector
+    //    for reading.
+    //
+    //  - Either the outputBuffer and streamsToClose are both empty or the
+    //    network channel is registered with the selector for writing.
+    //
+    //  - If the outputBuffer is empty, then there are no channels in the
+    //    readQueue.
+    //
+    //  - The network channel is always registered with the selector for
+    //    reading.
+    //
+    //  - For each CommManager-facing sink channel (i.e., pipe outbound to the
+    //    app), all buffers in the corresponding buffer queue are non-empty.
+    //
+    //  - For each CommManager-facing sink channel (i.e, pipe outbound to the
+    //    app), either the corresponding buffer queue is empty or the channel is
+    //    registered with the selector for writing.
+    //
 
     // Establish invariants.
     try {
