@@ -88,8 +88,9 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
         
         Type ft = fd.type().type();
         Label fl = ts.labelOfType(ft);
-        // TODO: Enable this for fabric signatures for fabil classes 
-        if (!ts.equals(defaultFieldLabel, fl) && !sigMode) {
+        // TODO: Enable this for fabric signatures for fabil classes
+        // Disable for non fabric classes
+        if (ts.isFabricClass(ft) && !ts.equals(defaultFieldLabel, fl) && !sigMode) {
           throw new SemanticException("The field " + fd.fieldInstance() + " has a different label than " +
           		              "the default field label " + defaultFieldLabel + 
           		              "of the class " + pct + ".",
