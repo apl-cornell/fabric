@@ -61,5 +61,9 @@ public interface DelegatingPrincipal extends Principal {
       
       return p;
     }
+    
+    public abstract void addDelegatesTo(Principal p);
+    
+    public abstract void removeDelegatesTo(Principal p);
   }
 }
