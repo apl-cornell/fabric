@@ -5,8 +5,8 @@ import java.net.InetAddress;
 
 import javax.net.ssl.SSLServerSocketFactory;
 
-import fabric.common.net.NotImplementedException;
-import fabric.common.net.SubServerSocketFactory;
+import fabric.common.net.multiplexed.NotImplementedException;
+import fabric.common.net.multiplexed.SubServerSocketFactory;
 
 public class SSLSubServerSocketFactory extends SubServerSocketFactory {
 

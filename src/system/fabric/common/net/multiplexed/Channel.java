@@ -1,4 +1,4 @@
-package fabric.common.net;
+package fabric.common.net.multiplexed;
 
 import java.io.*;
 import java.net.Socket;

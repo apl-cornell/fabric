@@ -1,4 +1,4 @@
-package fabric.common.net;
+package fabric.common.net.multiplexed;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -15,7 +15,7 @@ import javax.net.SocketFactory;
  * 
  * @author mdgeorge
  */
-public class SubSocketFactory {
+public class SubSocketFactory implements fabric.common.net.SocketFactory<SubServerSocket, SubServerSocketFactory, SubSocket, SubSocketFactory>{
   private final javax.net.SocketFactory     factory;
   private final Map<InetSocketAddress, ClientChannel> channels;
   

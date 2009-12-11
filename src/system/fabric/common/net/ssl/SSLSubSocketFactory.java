@@ -5,7 +5,7 @@ import java.net.InetAddress;
 
 import javax.net.ssl.SSLSocketFactory;
 
-import fabric.common.net.*;
+import fabric.common.net.multiplexed.*;
 
 public class SSLSubSocketFactory extends SubSocketFactory {
 

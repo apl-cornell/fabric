@@ -1,4 +1,4 @@
-package fabric.common.net;
+package fabric.common.net.multiplexed;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +14,7 @@ import java.net.SocketAddress;
  * @see java.net.Socket
  * @author mdgeorge
  */
-public class SubSocket {
+public class SubSocket implements fabric.common.net.Socket<SubServerSocket, SubServerSocketFactory, SubSocket, SubSocketFactory>{
   //////////////////////////////////////////////////////////////////////////////
   // public API                                                               //
   //////////////////////////////////////////////////////////////////////////////

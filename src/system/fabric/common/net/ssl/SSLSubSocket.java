@@ -2,7 +2,7 @@ package fabric.common.net.ssl;
 
 import javax.net.ssl.SSLSession;
 
-import fabric.common.net.*;
+import fabric.common.net.multiplexed.*;
 
 public class SSLSubSocket extends SubSocket {
 

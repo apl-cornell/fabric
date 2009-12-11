@@ -2,8 +2,8 @@ package fabric.common.net.ssl;
 
 import java.io.IOException;
 
-import fabric.common.net.NotImplementedException;
-import fabric.common.net.SubServerSocket;
+import fabric.common.net.multiplexed.NotImplementedException;
+import fabric.common.net.multiplexed.SubServerSocket;
 
 public class SSLSubServerSocket extends SubServerSocket {
   protected SSLSubServerSocket(SSLSubServerSocketFactory factory) {
