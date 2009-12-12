@@ -11,15 +11,15 @@ public class _TCPServerSocketFactory<
   TCPSocketFactory       extends _TCPSocketFactory       <TCPServerSocket, TCPServerSocketFactory, TCPSocket, TCPSocketFactory>
 > implements _ServerSocketFactory<InetSocketAddress, Integer, TCPServerSocket, TCPServerSocketFactory, TCPSocket, TCPSocketFactory> {
 
-  public TCPServerSocket createServerSocket() {
+  public final TCPServerSocket createServerSocket() {
     throw new NotImplementedException();
   }
 
-  public TCPServerSocket createServerSocket(Integer port) {
+  public final TCPServerSocket createServerSocket(Integer port) {
     throw new NotImplementedException();
   }
 
-  public TCPServerSocket createServerSocket(Integer port, int backlog) {
+  public final TCPServerSocket createServerSocket(Integer port, int backlog) {
     throw new NotImplementedException();
   }
 }

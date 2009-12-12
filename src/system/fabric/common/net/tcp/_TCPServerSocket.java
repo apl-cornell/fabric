@@ -12,19 +12,19 @@ public class _TCPServerSocket<
   TCPSocketFactory       extends _TCPSocketFactory       <TCPServerSocket, TCPServerSocketFactory, TCPSocket, TCPSocketFactory>
 > implements _ServerSocket<InetSocketAddress, Integer, TCPServerSocket, TCPServerSocketFactory, TCPSocket, TCPSocketFactory> {
 
-  public TCPSocket accept() {
+  public final TCPSocket accept() {
     throw new NotImplementedException();
   }
 
-  public void bind(Integer port) {
+  public final void bind(Integer port) {
     throw new NotImplementedException();
   }
 
-  public void bind(Integer port, int backlog) {
+  public final void bind(Integer port, int backlog) {
     throw new NotImplementedException();
   }
 
-  public void close() {
+  public final void close() {
     throw new NotImplementedException();
   }
 }

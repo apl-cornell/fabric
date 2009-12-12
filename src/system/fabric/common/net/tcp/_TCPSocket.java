@@ -16,19 +16,19 @@ public class _TCPSocket<
   TCPSocketFactory       extends _TCPSocketFactory       <TCPServerSocket, TCPServerSocketFactory, TCPSocket, TCPSocketFactory>
 > implements _Socket<InetSocketAddress, Integer, TCPServerSocket, TCPServerSocketFactory, TCPSocket, TCPSocketFactory> {
 
-  public void close() throws IOException {
+  public final void close() throws IOException {
     throw new NotImplementedException();
   }
 
-  public void connect(InetSocketAddress addr) throws IOException {
+  public final void connect(InetSocketAddress addr) throws IOException {
     throw new NotImplementedException();
   }
 
-  public OutputStream getOutputStream() throws IOException {
+  public final OutputStream getOutputStream() throws IOException {
     throw new NotImplementedException();
   }
 
-  public InputStream getInputStream() throws IOException {
+  public final InputStream getInputStream() throws IOException {
     throw new NotImplementedException();
   }
 }

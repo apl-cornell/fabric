@@ -12,12 +12,11 @@ public class _TCPSocketFactory<
   TCPSocketFactory       extends _TCPSocketFactory       <TCPServerSocket, TCPServerSocketFactory, TCPSocket, TCPSocketFactory>
 > implements _SocketFactory<InetSocketAddress, Integer, TCPServerSocket, TCPServerSocketFactory, TCPSocket, TCPSocketFactory> {
 
-  public TCPSocket createSocket() {
+  public final TCPSocket createSocket() {
     throw new NotImplementedException();
   }
 
-  public TCPSocket createSocket(InetSocketAddress address) {
+  public final TCPSocket createSocket(InetSocketAddress address) {
     throw new NotImplementedException();
   }
-
 }
