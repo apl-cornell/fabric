@@ -3,8 +3,6 @@ package fabric.common.net.multiplexed;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import javax.net.ServerSocketFactory;
-
 import fabric.common.net._ServerSocket;
 
 

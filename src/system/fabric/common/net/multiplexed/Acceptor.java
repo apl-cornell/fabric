@@ -10,8 +10,6 @@ import java.net.SocketAddress;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import javax.net.ServerSocketFactory;
-
 /**
  * A channel encapsulates a single java.net.ServerSocket.  It functions as a
  * producer-consumer of SubSockets (via the connected(s) and s accept() methods)
