@@ -5,6 +5,8 @@ import java.net.InetSocketAddress;
 
 import javax.net.ServerSocketFactory;
 
+import fabric.common.net._ServerSocket;
+
 
 /**
  * Server-side multiplexed socket implementation. The API mirrors that of
@@ -13,7 +15,7 @@ import javax.net.ServerSocketFactory;
  * @see java.net.ServerSocket
  * @author mdgeorge
  */
-public class SubServerSocket implements fabric.common.net.ServerSocket<SubServerSocket, SubServerSocketFactory, SubSocket, SubSocketFactory>{
+public class SubServerSocket implements _ServerSocket<InetSocketAddress, Integer, SubServerSocket, SubServerSocketFactory, SubSocket, SubSocketFactory>{
   //////////////////////////////////////////////////////////////////////////////
   // public API                                                               //
   //////////////////////////////////////////////////////////////////////////////
@@ -29,12 +31,12 @@ public class SubServerSocket implements fabric.common.net.ServerSocket<SubServer
   }
   
   /** @see java.net.ServerSocket#bind(java.net.SocketAddress) */
-  public void bind(int port) throws IOException {
+  public void bind(Integer port) throws IOException {
     bind(port, 50);
   }
   
   /** @see java.net.ServerSocket#bind(java.net.SocketAddress, int) */
-  public void bind(int port, int backlog) throws IOException {
+  public void bind(Integer port, int backlog) throws IOException {
     bind(new InetSocketAddress(port), backlog);
   }
   

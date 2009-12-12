@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
+import fabric.common.net._Socket;
+
 /**
  * Client-side multiplexed socket implementation. The API mirrors that of
  * java.net.Socket. This class manages connection state, and provides a
@@ -14,7 +16,7 @@ import java.net.SocketAddress;
  * @see java.net.Socket
  * @author mdgeorge
  */
-public class SubSocket implements fabric.common.net.Socket<SubServerSocket, SubServerSocketFactory, SubSocket, SubSocketFactory>{
+public class SubSocket implements _Socket<InetSocketAddress, Integer, SubServerSocket, SubServerSocketFactory, SubSocket, SubSocketFactory>{
   //////////////////////////////////////////////////////////////////////////////
   // public API                                                               //
   //////////////////////////////////////////////////////////////////////////////

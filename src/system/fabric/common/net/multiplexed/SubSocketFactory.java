@@ -9,13 +9,15 @@ import java.util.Map;
 
 import javax.net.SocketFactory;
 
+import fabric.common.net._SocketFactory;
+
 /**
  * A factory for creating SubSockets. The factory decorates a
  * javax.net.SocketFactory, which is used for creating the underlying channels.
  * 
  * @author mdgeorge
  */
-public class SubSocketFactory implements fabric.common.net.SocketFactory<SubServerSocket, SubServerSocketFactory, SubSocket, SubSocketFactory>{
+public class SubSocketFactory implements _SocketFactory<InetSocketAddress, Integer, SubServerSocket, SubServerSocketFactory, SubSocket, SubSocketFactory>{
   private final javax.net.SocketFactory     factory;
   private final Map<InetSocketAddress, ClientChannel> channels;
   
@@ -37,15 +39,17 @@ public class SubSocketFactory implements fabric.common.net.SocketFactory<SubServ
   
   /** @see javax.net.SocketFactory#createSocket(String, int) */
   public SubSocket createSocket(String host, int port) throws IOException {
-    SubSocket result = createSocket();
-    result.connect(new InetSocketAddress(host, port));
-    return result;
+    return createSocket(new InetSocketAddress(host, port));
   }
 
   /** @see javax.net.SocketFactory#createSocket(InetAddress, int) */
   public SubSocket createSocket(InetAddress host, int port) throws IOException {
+    return createSocket(new InetSocketAddress(host, port));
+  }
+  
+  public SubSocket createSocket(InetSocketAddress addr) throws IOException {
     SubSocket result = createSocket();
-    result.connect(new InetSocketAddress(host, port));
+    result.connect(addr);
     return result;
   }
 

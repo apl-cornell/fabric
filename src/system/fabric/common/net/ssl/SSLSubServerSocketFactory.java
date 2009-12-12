@@ -21,17 +21,17 @@ public class SSLSubServerSocketFactory extends SubServerSocketFactory {
   }
 
   @Override
-  public SSLSubServerSocket createServerSocket(int port, int backlog, InetAddress ifAddress) throws IOException {
+  public SSLSubServerSocket createServerSocket(Integer port, int backlog, InetAddress ifAddress) throws IOException {
     throw new NotImplementedException();
   }
 
   @Override
-  public SSLSubServerSocket createServerSocket(int port, int backlog) throws IOException {
+  public SSLSubServerSocket createServerSocket(Integer port, int backlog) throws IOException {
     throw new NotImplementedException();
   }
 
   @Override
-  public SSLSubServerSocket createServerSocket(int port) throws IOException {
+  public SSLSubServerSocket createServerSocket(Integer port) throws IOException {
     throw new NotImplementedException();
   }
 }
