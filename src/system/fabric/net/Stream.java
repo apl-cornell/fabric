@@ -1,8 +1,9 @@
-package fabric.common;
+package fabric.net;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+
 
 /**
  * A pair of data I/O streams for the application to communicate with a remote

@@ -5,12 +5,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.client.RemoteCore;
-import fabric.client.RemoteNode;
 import fabric.client.debug.Timing;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
+import fabric.net.RemoteNode;
 
 public class UnauthenticatedAbortTransactionMessage extends
     Message<RemoteCore, UnauthenticatedAbortTransactionMessage.Response> {

@@ -1,7 +1,7 @@
 package jif.lang;
 
 import fabric.client.Core;
-import fabric.client.UnreachableNodeException;
+import fabric.net.UnreachableNodeException;
 import fabric.lang.SecretKeyObject;
 
 public interface PairLabel extends Label {

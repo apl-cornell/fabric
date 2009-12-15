@@ -5,8 +5,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.*;
 
-import fabric.client.RemoteNode;
-import fabric.client.UnreachableNodeException;
 import fabric.client.debug.Timing;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.FabricException;
@@ -15,6 +13,8 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object._Impl;
+import fabric.net.RemoteNode;
+import fabric.net.UnreachableNodeException;
 
 /**
  * A <code>PrepareTransactionMessage</code> represents a transaction request to

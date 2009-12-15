@@ -12,9 +12,9 @@ import java.util.Set;
 
 import jif.lang.*;
 import fabric.client.Core;
-import fabric.client.UnreachableNodeException;
 import fabric.common.Crypto;
 import fabric.common.exceptions.InternalError;
+import fabric.net.UnreachableNodeException;
 import fabric.util.Iterator;
 
 /**

@@ -4,16 +4,16 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Logger;
 
-import fabric.client.RemoteNode;
 import fabric.client.remote.messages.GetPrincipalMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
 import fabric.client.remote.messages.TakeOwnershipMessage;
 import fabric.common.MessageHandler;
-import fabric.common.Stream;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FabricRuntimeException;
 import fabric.common.exceptions.InternalError;
 import fabric.core.Worker;
+import fabric.net.RemoteNode;
+import fabric.net.Stream;
 
 /**
  * @param <N>

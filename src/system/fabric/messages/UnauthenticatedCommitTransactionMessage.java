@@ -5,11 +5,11 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.client.RemoteCore;
-import fabric.client.RemoteNode;
-import fabric.client.UnreachableNodeException;
 import fabric.client.debug.Timing;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
+import fabric.net.RemoteNode;
+import fabric.net.UnreachableNodeException;
 
 public class UnauthenticatedCommitTransactionMessage extends
     Message<RemoteCore, UnauthenticatedCommitTransactionMessage.Response> {

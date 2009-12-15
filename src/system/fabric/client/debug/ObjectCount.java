@@ -7,10 +7,10 @@ import java.util.*;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.client.UnreachableNodeException;
 import fabric.common.SerializedObject;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
+import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
 
 /**

@@ -18,12 +18,13 @@ import fabric.common.AbstractWorkerThread.SessionAttributes;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.lang.NodePrincipal;
+import fabric.net.ChannelMultiplexerThread;
 
 /**
  * Abstraction for initializing incoming network connections and handing them
  * off to a ChannelMultiplexerThread.
  * 
- * @see fabric.client.CommManager#connect()
+ * @see fabric.net.CommManager#connect()
  * @param <Node>
  *          a class for representing the nodes that can be connected to.
  * @param <Session>

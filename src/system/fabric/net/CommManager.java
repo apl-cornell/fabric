@@ -1,4 +1,4 @@
-package fabric.client;
+package fabric.net;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -11,14 +11,13 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import fabric.common.ChannelMultiplexerThread;
+import fabric.client.Client;
 import fabric.common.Options;
-import fabric.common.Stream;
-import fabric.common.ChannelMultiplexerThread.CallbackHandler;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NoSuchNodeError;
 import fabric.common.util.Pair;
 import fabric.lang.NodePrincipal;
+import fabric.net.ChannelMultiplexerThread.CallbackHandler;
 
 /**
  * <p>

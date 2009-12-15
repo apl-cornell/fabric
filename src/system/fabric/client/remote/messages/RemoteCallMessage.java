@@ -3,7 +3,6 @@ package fabric.client.remote.messages;
 import java.io.*;
 import java.lang.reflect.Method;
 
-import fabric.client.UnreachableNodeException;
 import fabric.client.remote.RemoteCallException;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.UpdateMap;
@@ -15,6 +14,7 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Principal;
 import fabric.lang.Object._Proxy;
 import fabric.messages.Message;
+import fabric.net.UnreachableNodeException;
 
 public class RemoteCallMessage extends
     InterClientMessage<RemoteCallMessage.Response> {

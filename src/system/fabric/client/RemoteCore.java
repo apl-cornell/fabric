@@ -18,6 +18,8 @@ import fabric.lang.NodePrincipal;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.messages.*;
+import fabric.net.RemoteNode;
+import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
 
 /**

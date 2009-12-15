@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import fabric.common.exceptions.InternalError;
+import fabric.net.RemoteNode;
 
 public class TransactionAtomicityViolationException extends InternalError {
   public final List<RemoteNode> failed;

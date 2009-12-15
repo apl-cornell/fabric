@@ -19,6 +19,8 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.core.InProcessCore;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
+import fabric.net.RemoteNode;
+import fabric.net.UnreachableNodeException;
 
 /**
  * Holds transaction management information for a single thread. Each thread has

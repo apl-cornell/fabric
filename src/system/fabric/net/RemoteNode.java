@@ -1,8 +1,7 @@
-package fabric.client;
+package fabric.net;
 
 import java.util.logging.Logger;
 
-import fabric.common.Stream;
 import fabric.common.exceptions.InternalError;
 
 /**

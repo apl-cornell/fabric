@@ -1,4 +1,4 @@
-package fabric.client;
+package fabric.net;
 
 import fabric.common.exceptions.FabricRuntimeException;
 

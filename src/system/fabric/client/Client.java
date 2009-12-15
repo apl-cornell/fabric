@@ -36,6 +36,7 @@ import fabric.lang.NodePrincipal;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
+import fabric.net.NameService;
 
 /**
  * This is the main interface to the Fabric API. Applications wishing to use

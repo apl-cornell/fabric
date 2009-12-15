@@ -1,7 +1,7 @@
 package jif.lang;
 
 import fabric.client.Core;
-import fabric.client.UnreachableNodeException;
+import fabric.net.UnreachableNodeException;
 import fabric.lang.Object;
 
 public interface AbstractPolicy extends Policy {

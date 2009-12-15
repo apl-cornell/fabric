@@ -6,6 +6,7 @@ import fabric.common.SerializedObject;
 import fabric.common.exceptions.FabricException;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.net.RemoteNode;
 
 public class TransactionPrepareFailedException extends FabricException {
   /**

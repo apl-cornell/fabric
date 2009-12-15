@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import fabric.client.Client;
 import fabric.client.Core;
-import fabric.client.UnreachableNodeException;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.Worker;
 import fabric.common.TransactionID;
@@ -14,6 +13,7 @@ import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
 import fabric.messages.Message;
+import fabric.net.UnreachableNodeException;
 
 /**
  * Represents a request from a client to take ownership of an object from

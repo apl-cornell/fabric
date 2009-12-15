@@ -21,6 +21,9 @@ import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
+import fabric.net.RemoteNode;
+import fabric.net.UnreachableNodeException;
+import fabric.net.NameService;
 
 /**
  * Encapsulates a remote client. This class maintains the connection to the

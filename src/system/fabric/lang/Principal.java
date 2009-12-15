@@ -11,11 +11,11 @@ import java.util.List;
 import jif.lang.*;
 import fabric.client.Client;
 import fabric.client.Core;
-import fabric.client.UnreachableNodeException;
 import fabric.client.transaction.TransactionManager;
 import fabric.common.Crypto;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
+import fabric.net.UnreachableNodeException;
 
 /**
  * This is implemented in Java so that the constructor can provide default

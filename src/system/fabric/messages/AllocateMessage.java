@@ -4,13 +4,13 @@ import java.io.*;
 
 import fabric.client.Core;
 import fabric.client.RemoteCore;
-import fabric.client.UnreachableNodeException;
 import fabric.client.debug.Timing;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
 import fabric.core.Worker;
+import fabric.net.UnreachableNodeException;
 
 /**
  * An <code>AllocateMessage</code> represents a request to allocate a number

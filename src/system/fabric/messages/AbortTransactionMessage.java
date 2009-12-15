@@ -4,13 +4,13 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.client.RemoteNode;
 import fabric.client.debug.Timing;
 import fabric.common.*;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
+import fabric.net.RemoteNode;
 
 public class AbortTransactionMessage extends
     Message<RemoteNode, AbortTransactionMessage.Response> {

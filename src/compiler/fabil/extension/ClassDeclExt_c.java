@@ -428,7 +428,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     ClassMember implConstructorDecl =
         qq.parseMember("public _Impl(fabric.client.Core core, "
             + "jif.lang.Label label) "
-            + "throws fabric.client.UnreachableNodeException {"
+            + "throws fabric.net.UnreachableNodeException {"
             + "super(core, label); }");
     implMembers.add(implConstructorDecl);
 

@@ -4,13 +4,13 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.client.RemoteNode;
-import fabric.client.UnreachableNodeException;
 import fabric.client.debug.Timing;
 import fabric.client.remote.Worker;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
+import fabric.net.RemoteNode;
+import fabric.net.UnreachableNodeException;
 
 public class CommitTransactionMessage extends
     Message<RemoteNode, CommitTransactionMessage.Response> {

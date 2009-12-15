@@ -1,4 +1,4 @@
-package fabric.common;
+package fabric.net;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

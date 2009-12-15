@@ -6,13 +6,13 @@ import java.io.IOException;
 
 import fabric.client.Client;
 import fabric.client.Core;
-import fabric.client.UnreachableNodeException;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.Worker;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.lang.NodePrincipal;
 import fabric.messages.Message;
+import fabric.net.UnreachableNodeException;
 
 public class GetPrincipalMessage extends
     InterClientMessage<GetPrincipalMessage.Response> {

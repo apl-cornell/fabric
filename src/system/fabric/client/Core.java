@@ -7,6 +7,7 @@ import fabric.common.exceptions.FetchException;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.NodePrincipal;
 import fabric.lang.Object._Impl;
+import fabric.net.UnreachableNodeException;
 
 public interface Core {
   /**

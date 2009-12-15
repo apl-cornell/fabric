@@ -1,5 +1,6 @@
-package fabric.client;
+package fabric.net;
 
+import fabric.client.RemoteCore;
 import fabric.client.remote.RemoteClient;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
@@ -35,7 +36,7 @@ public class NameService {
   /**
    * This saves our fingers during testing.
    */
-  static String resolveAlias(String name) {
+  static public String resolveAlias(String name) {
     String result = aliases.get(name);
     return result == null ? name : result;
   }

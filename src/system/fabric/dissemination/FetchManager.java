@@ -1,10 +1,10 @@
 package fabric.dissemination;
 
 import fabric.client.RemoteCore;
-import fabric.client.UnreachableNodeException;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FetchException;
+import fabric.net.UnreachableNodeException;
 
 /**
  * A FetchManager is responsible for retrieving objects from Cores. Clients

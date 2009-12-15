@@ -19,6 +19,7 @@ import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.core.InProcessCore;
+import fabric.net.UnreachableNodeException;
 
 /**
  * All Fabric objects implement this interface.

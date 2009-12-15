@@ -24,6 +24,7 @@ import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
+import fabric.net.RemoteNode;
 
 public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
 
