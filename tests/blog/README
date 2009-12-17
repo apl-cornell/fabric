@@ -1,0 +1,29 @@
+								
+Summary
+----------
+
+The FabIL Blog webapp is meant to be an example of a FabIL webapp. It is a 
+simple webapp that also has benchmarking tools. It is standalone so it can be
+started without any extra programs. It has two components: the FabIL blog webapp
+and another webapp called the worker written in Java which can stress test the 
+blog server.
+
+Installing
+------------
+
+Run ant
+
+Using
+------------
+
+By default, the blog server stores objects on core0 with client name client0.
+	1) Start core0
+	2) Make a principal for client0 (fab --name client0 --make-principal core0)
+	3) Run ant run-blog
+	
+This will start a blog server on port 8080 (http://localhost:8080/web)
+
+To start a worker, just run ant run-worker. You can also run it from the 
+command-line so that you can run multiple workers at different ports. The
+default port is 9000 (http://localhost:9000/web).
+
