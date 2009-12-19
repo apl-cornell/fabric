@@ -1,0 +1,74 @@
+package customer;
+
+import javax.servlet.ServletException;
+
+public class FrontPage extends Action[CustomerPrincipal] {
+    public FrontPage(CustomerMain{this} m) throws ServletException {
+        super();
+        initFields("frontpage", m);
+    }
+    
+    public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
+    throws (ServletException{*lbl;⊤→req.session;req.session←})
+        where caller(req.session),
+        lbl <= {⊤→req.session} {
+
+        Servlet[servP] s = getServlet();
+        if (s == null || !(s instanceof CustomerMain)) throw new ServletException("No servlet available"); 
+        if (req == null) throw new ServletException("No request available"); 
+        CustomerMain m = (CustomerMain)s;
+
+        atomic {
+            // TODO Add Login in 3rd stage. Use the userserv library  
+            // For now, automatically make req.session actsfor CustomerPrincipal
+            final DelegatingPrincipal p = CustomerPrincipal;
+            p.addDelegatesTo(req.session);
+
+            final label amtLbl = new label {CustomerPrincipal→BankPrincipal, AirlinePrincipal};
+            InputNode amountInput = new TextInput[CustomerPrincipal, lbl, lbl]
+                                                  (m, amtLbl, 20, "");
+            Text msg = new Text[lbl,lbl]("Enter Payment Amount for Ticket");
+            SubmitButton submit = new SubmitButton[CustomerPrincipal, lbl, lbl](m, lbl, "Buy Ticket");
+            NodeList[lbl, lbl] entries = NodeList.EMPTY();
+            entries = entries.append(new TRow[lbl, lbl](
+                    new NodeList[lbl,lbl](msg, amountInput)));
+            entries = entries.append(new TRow[lbl, lbl](
+                    new NodeList[lbl,lbl](submit)));
+            Node[lbl, lbl] form = servlet.createForm(lbl, lbl, 
+                    new StartTransaction(m, amountInput.input),
+                    lbl, lbl,
+                    new Table[lbl, lbl](entries);
+            servlet.createPage(req, "Customer Home Page", lbl, lbl,
+                    new NodeList[lbl,lbl](lbl, lbl, createBanner(lbl, "Welcome to the Acme Flight Booking System"),
+                            lbl, lbl, createBody(lbl, lbl, form)));
+        }
+    }
+    
+    // 2 methods copied from UAction.fab
+    /** 
+     * Utility method to create a Table with class "banner" and containing
+     * the specified text.
+     */    
+    public static Node[lbl, lbl]{lbl} createBanner{*lbl}(label{*lbl} lbl, String{*lbl} text) {
+        return new Table[lbl, lbl]("banner", 
+                lbl, lbl, lbl, lbl,
+                new TRow[lbl, lbl](lbl, lbl, 
+                        new TCell[lbl, lbl](
+                                lbl, lbl, new Header[lbl, lbl](1, lbl, lbl, new Text[lbl, lbl](text)))),
+                                null);
+    }
+    
+    /**
+     * Utility method to create a Table with class "sifbody" and containing
+     * the node
+     */
+    public static Node[cL, cE]{*cE} createBody{*cE}(label{*cE} cL, label{*cE} cE, Node[cL, cE]{*cE} body) where {*cE} <= {*cL} {
+       return new Table[cL, cE]("sifbody", 
+               cL, cE, cL, cE,
+               new TRow[cL, cE](cL, cE, 
+                       new TCell[cL, cE](cL, cE, body)),
+                       null);
+    }
+    
+    
+}

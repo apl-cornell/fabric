@@ -1,0 +1,36 @@
+package jif.principals;
+
+import fabric.util.Map;
+import travel.Config;
+
+public class BankPrincipal extends ExternalPrincipal {
+  public BankPrincipal() {
+    super("customer");
+  }
+  
+  public static BankPrincipal{*!:} getInstance{*!:}() {
+    atomic {
+      FabricClient cl = FabricClient.getClient();
+      if (cl != null) {
+        final Core brokerCore = cl.getCore(Config.brokerCoreName);
+        if (brokerCore != null) {
+          Map rootMap = brokerCore.getRoot();
+          if (rootMap != null) {
+            Object obj = rootMap.get(Config.bankPrincipalMapKey);
+            BankPrincipal bankPrincipal = null;
+            if (obj instanceof BankPrincipal) {
+              bankPrincipal = (BankPrincipal) obj;
+            } else {
+              bankPrincipal = new BankPrincipal@brokerCore();
+              rootMap.put(Config.bankPrincipalMapKey, bankPrincipal);
+            }
+            
+            return bankPrincipal;
+          }
+        }
+      }
+      
+      return null;
+    }
+  }
+}

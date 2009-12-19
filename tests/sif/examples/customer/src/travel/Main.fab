@@ -1,0 +1,37 @@
+package travel;
+
+import java.io.PrintStream;
+import fabric.util.Map;
+import jif.runtime.Runtime;
+
+public class Main {
+    public static boolean{CustomerPrincipal←} startTx{CustomerPrincipal←}(
+            float{CustomerPrincipal→BankPrincipal, AirlinePrincipal} amount) {
+        Core core = client$.getCore(Config.brokerCoreName);
+        Map root = null;
+        if (core != null) {
+            root = (Map) core.getRoot();
+        }
+
+        if (root == null) return false;
+
+        try {
+            final Principal bank = (Principal) root.get(Config.bankPrincipalMapKey);
+            final Principal customer = (Principal) root.get(Config.customerPrincipalMapKey);
+            final Broker[bank,customer] broker =
+                (Broker[bank,customer]) root.get(Config.brokerMapKey);
+
+            if (broker != null) {
+                atomic {
+                    if (broker actsfor bank && broker actsfor broker.airline) {
+                        broker.coordinatePurchase(amount);
+                        return true;
+                    }
+                }
+            }
+        } catch (ClassCastException e) {}
+          catch (PurchasingError e) {}
+          
+        return false;
+    }
+}

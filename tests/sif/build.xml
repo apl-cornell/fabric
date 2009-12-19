@@ -1,4 +1,4 @@
-<project name="sif" default="all" basedir=".">
+<project name="sif" default="sif" basedir=".">
     <description>
     SIF build file
   </description>

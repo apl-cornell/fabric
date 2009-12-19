@@ -1,9 +1,9 @@
-<project name="calendar-fabric-example" default="compile" basedir=".">
+<project name="customer-travel-example" default="compile" basedir=".">
   <description>
     Build file for the Calendar SIF application.
   </description>
 
-  <property name="app.name" value="calendar" />
+  <property name="app.name" value="customer" />
 
   <import file="${basedir}/../../config.xml" />
 
@@ -11,13 +11,33 @@
     <path id="example.classpath">
       <path refid="standard.classpath" />
         <pathelement location="${basedir}/${destdir}" />
-        <pathelement location="${examples-common.basedir}/userSplitNoThis/classes" />
     </path>
 	
-	<target name="dummy">
+	<target name="principals" description="Compiles the principals necessary for this app" depends="travel-config">
+    <apply executable="bash"
+                    parallel="true"
+                    failonerror="true"
+                    dest="${basedir}"
+                    relative="true"
+                    skipemptyfilesets="true"
+                    vmlauncher="false">
+        <arg value="${fabric.home}/bin/fabc"/>
+        <arg value="-d"/>
+        <arg value="${basedir}/web/WEB-INF/classes"/>
+  			<arg value="-cp" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/web/WEB-INF/classes" />
+        <arg value="-sigcp"/>
+        <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
+        <srcfile />
+        <fileset dir="${basedir}" includes="src/jif/principals/*.fab" />
+        <mapper type="regexp"
+                from="^src(.*)\.fab"
+                to="classes\1\.class" />
+    </apply>
+		
 	</target>
-	
-	<target name="principals" description="Compiles the principals necessary for this app">
+
+	<target name="travel-config" description="Compiles Config.fab">
     <apply executable="bash"
                     parallel="true"
                     failonerror="true"
@@ -33,15 +53,59 @@
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
         <srcfile />
-        <fileset dir="${basedir}" includes="src/jif/principals/*.fab" />
+        <fileset dir="${basedir}" includes="src/travel/Config.fab" />
         <mapper type="regexp"
                 from="^src(.*)\.fab"
                 to="classes\1\.class" />
     </apply>
-		
+    </target>
+    
+
+	<target name="travel" description="Compiles the common travel programs necessary for this app" depends="principals">
+    <apply executable="bash"
+                    parallel="true"
+                    failonerror="true"
+                    dest="${basedir}"
+                    relative="true"
+                    skipemptyfilesets="true"
+                    vmlauncher="false">
+        <arg value="${fabric.home}/bin/fabc"/>
+        <arg value="-d"/>
+        <arg value="${basedir}/web/WEB-INF/classes"/>
+  			<arg value="-cp" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/web/WEB-INF/classes" />
+        <arg value="-sigcp"/>
+        <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
+        <srcfile />
+        <fileset dir="${basedir}" includes="src/travel/*.fab" />
+        <mapper type="regexp"
+                from="^src(.*)\.fab"
+                to="classes\1\.class" />
+    </apply>
+    <apply executable="bash"
+                    parallel="true"
+                    failonerror="true"
+                    dest="${basedir}"
+                    relative="true"
+                    skipemptyfilesets="true"
+                    vmlauncher="false">
+        <arg value="${fabric.home}/bin/filc"/>
+        <arg value="-d"/>
+        <arg value="${basedir}/web/WEB-INF/classes"/>
+  			<arg value="-cp" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes" />
+        <arg value="-sigcp"/>
+        <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
+        <srcfile />
+        <fileset dir="${basedir}" includes="src/travel/*.fil" />
+        <mapper type="regexp"
+                from="^src(.*)\.fil"
+                to="classes\1\.class" />
+    </apply>
 	</target>
+    
 	
-	<target name="user" description="Compiles the user library for this app">
+	<!--target name="user" description="Compiles the user library for this app">
     <apply executable="bash"
                     parallel="true"
                     failonerror="true"
@@ -60,7 +124,7 @@
     		<arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
     		<arg value="-e"/>
             
-    	<!--
+    	<!- -
   		    <arg value="-report"/> <arg value="visit=2"/>
   		    <arg value="-report"/> <arg value="frontend=4"/>
             <arg value="-dump"/> <arg value="ParserPass"/>
@@ -68,7 +132,7 @@
             <arg value="-dump"/> <arg value="PrincipalCastAdder"/>
   		    <arg value="-report"/> <arg value="dump-dep-graph=1"/>
             <arg value="-debugpositions"/>
-	  	-->
+	  	- ->
     	
         <srcfile />
         <fileset dir="${basedir}" includes="src/userserv/*.fab" />
@@ -77,10 +141,10 @@
                 to="classes\1\.class" />
     </apply>
 		
-	</target>
+	</target-->
 	
-	<target name="compile" depends="user,principals"
-		description="Compiles the calendar application code">
+	<target name="compile" depends="travel,principals"
+		description="Compiles the customer application code">
     <apply executable="bash"
                     parallel="true"
                     failonerror="true"
@@ -114,7 +178,7 @@
     	  <arg value="-report"/> <arg value="debug=5" />
     	-->
         <srcfile />
-        <fileset dir="${basedir}" includes="src/calendar/*.fab" />
+        <fileset dir="${basedir}" includes="src/customer/*.fab,src/travel/*.fab" />
         <mapper type="regexp"
                 from="^src(.*)\.fab"
                 to="classes\1\.class" />            

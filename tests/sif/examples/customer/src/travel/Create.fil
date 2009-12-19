@@ -1,0 +1,137 @@
+package travel;
+
+import jif.lang.*;
+import jif.principals.CustomerPrincipal;
+import fabric.util.Map;
+
+public class Create {
+
+    /**
+     * create the setup for the travel example:
+     *
+     * brokerCore
+     * ==========
+     * broker: Broker[bank,customer]
+     *  f label        -> brokerLabel
+     *  f bank         -> bank
+     *  f customer     -> customer
+     *    customerAcct -> customerAccount
+     *    airlineAcct  -> airlineAccount
+     *    airline      -> airline
+     *    custTickets  -> tickets
+     *
+     * bank: DelegatingPrincipal
+     *  f label       -> null (gets rewritten to {bank<-; bank->_}
+     *    delegatesTo -> broker
+     *
+     * customer: DelegatingPrincipal
+     *  f label       -> null (gets rewritten to {customer<-; customer->_}
+     *    delegatesTo -> broker
+     *
+     * airline: DelegatingPrincipal
+     *  f label       -> null
+     *    delegatesTo -> broker
+     *  
+     *
+     * bankCore
+     * ========
+     * airlineBalance: Balance[bank,airline]
+     *  f label   -> airlineLabel
+     *  f bank    -> bank
+     *  f user    -> airline
+     *    value   -> 0
+     *
+     * airlineAccount: Account[bank]
+     *  f label   -> {bank<-}
+     *  f bank    -> bank
+     *  f user    -> airline
+     *    balance -> airlineBalance
+     * 
+     * airlineLabel: Label
+     *  f {bank<-; bank->airline}
+     *
+     * customerBalance: Balance[bank,customer]
+     *  f label   -> customerLabel
+     *  f bank    -> bank
+     *  f user    -> customer
+     *    value   -> 0
+     *
+     * customerAccount: Account[bank]
+     *  f label   -> {bank<-}
+     *  f bank    -> bank
+     *  f user    -> customer
+     *    balance -> customerBalance
+     *
+     * customerLabel: Label
+     *  f {bank<-; bank->customer}
+     *  
+     * airlineCore
+     * ===========
+     * tickets: Tickets[bank,airline,user]
+     *  f label   -> ticketsLabel
+     *  f bank    -> bank
+     *  f airline -> airline
+     *  f user    -> customer
+     *    count   -> 0
+     *
+     * ticketsLabel: Label
+     *  f {bank<-airline}
+     */
+    public static void main(String[] args) {
+        atomic {
+            Core  brokerCore = Client.getClient().getCore(Config.brokerCoreName);
+            Core    bankCore = Client.getClient().getCore(Config.bankCoreName);
+            Core airlineCore = Client.getClient().getCore(Config.airlineCoreName);
+
+            AbstractPrincipal bank     = new SimplePrincipal@brokerCore().travel$SimplePrincipal$("bank");
+            AbstractPrincipal customer = CustomerPrincipal.getInstance();
+            AbstractPrincipal airline  = new SimplePrincipal@brokerCore().travel$SimplePrincipal$("airline");
+            Broker            broker   = new Broker@brokerCore(bank,customer);
+
+            IntegPolicy brokerTrusted  = LabelUtil.writerPolicy(brokerCore,  broker, broker);   // {broker<-}
+            IntegPolicy bankTrusted    = LabelUtil.writerPolicy(brokerCore,  bank,   bank);     // {bank<-}
+            IntegPolicy airlineTrusted = LabelUtil.writerPolicy(airlineCore, bank,   airline);  // {bank<-airline} 
+            ConfPolicy  airlineSecret  = LabelUtil.readerPolicy(bankCore,    bank,   airline);  // {bank->airline}
+            ConfPolicy  customerSecret = LabelUtil.readerPolicy(bankCore,    bank,   customer); // {bank->customer}
+
+            Label airlineLabel  = LabelUtil.toLabel(bankCore, airlineSecret,  bankTrusted);
+            Label customerLabel = LabelUtil.toLabel(bankCore, customerSecret, bankTrusted);
+            Label ticketsLabel  = LabelUtil.toLabel(airlineCore, airlineTrusted);
+
+            Account  airlineAccount = new Account~airlineLabel@bankCore (bank).travel$Account$(airline);
+            Account customerAccount = new Account~customerLabel@bankCore(bank).travel$Account$(customer);
+
+            Tickets tickets = new Tickets~ticketsLabel@airlineCore(bank,airline,customer).travel$Tickets$();
+
+            // call broker constructor
+            broker = broker.travel$Broker$(customerAccount,airlineAccount,tickets,airline);
+            
+            // make broker top
+            airline.addDelegatesTo(broker);
+               bank.addDelegatesTo(broker);
+
+            // add core delegations
+            airline.addDelegatesTo(airlineCore.getPrincipal());
+             broker.addDelegatesTo(brokerCore.getPrincipal());
+               bank.addDelegatesTo(bankCore.getPrincipal());
+
+            // add client delegations
+            Principal  brokerClient = Client.getClient().getClient(args[0]).getPrincipal();
+            Principal    bankClient = Client.getClient().getClient(args[1]).getPrincipal();
+            Principal airlineClient = Client.getClient().getClient(args[2]).getPrincipal();
+
+            airline.addDelegatesTo(airlineClient);
+             broker.addDelegatesTo(brokerClient);
+               bank.addDelegatesTo(bankClient);
+
+            Map root = (Map) brokerCore.getRoot();
+            root.put(Config.brokerMapKey, broker);
+            root.put(Config.bankPrincipalMapKey, bank);
+            root.put(Config.customerPrincipalMapKey, customer);
+        }
+    }
+}
+
+/*
+** vim: ts=4 sw=4 et cindent cino=\:0
+*/

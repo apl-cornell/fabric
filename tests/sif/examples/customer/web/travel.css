@@ -1,0 +1,57 @@
+/* 
+ * Style sheet for the SIF Calendar example
+ */
+a            { text-decoration: none }
+a:link       { color: #339966; background-color: transparent; font-weight: bold }
+a:visited    { color: #009999; background-color: transparent; font-weight: bold }
+a:hover      { color: #0000FF; background-color: transparent }
+body, table, p, ul, li, td  { font-family: Arial, helvetica, sans-serif;
+			      font-size: "100%";  color: "black" }
+th              { font-family: Arial, helvetica, sans-serif;
+                  color: white;
+		  background-color: #000080;
+		  border-color: #000080;
+		  font-weight: bold }
+
+body { background-color: #d0e8ff }
+// table { background-color: #e0f0ff }
+td { vertical-align: top }
+
+p, ul, li {background-color: transparent}
+
+h1, h2, h3   { font-family: Trebuchet MS, Arial, helvetica, sans-serif; color: #225588; background-color: transparent; font-weight: bold }
+
+table.banner a:link { color: white }
+table.banner a:visited { color: white }
+table.banner a:hover { color: yellow }
+
+table.banner { background-color: #000080 }
+table.banner { width: 62em }
+table.banner { white-space: nowrap }
+table.banner h1 { color: white; margin-left: 1em }
+table.banner h2 { color: white; margin-left: 1em }
+
+table.sifbody { margin-left: 1em; width: 62em }
+
+.error { color: red }
+
+h1  { font-size: 180%; }
+h2  { font-size: 140%; }
+h3  { font-size: 120%; }
+form, input, textarea { font-size: 100%; }
+
+
+table.viewOptions td { text-align: center; font-size: 80%}
+table.viewOptions tr { padding-top: 0pt; padding-bottom: 0pt; margin-top: 0pt; margin-bottom: 0pt}
+
+.calendarView { margin-left: 2em; text-align: center }
+.calendarView table { width: 56em }
+.calendarView a { font-size: 80% }
+
+td.inactiveMonth { border: 1px solid; }
+td.activeMonth { background-color: #E0F2FF; border: 1px solid; height: 5em }
+td.activeDay { background-color: #E0F2FF; border: 1px solid; height: 5em }
+td.weekdayHeader {  }
+td.dayName { font-weight: bold; text-align: center; width: 7em }
+.icon  { width: 3em; border: 0px solid }
+.icon-bigspace  { height: 3em; border: 0px solid; width: 53em}

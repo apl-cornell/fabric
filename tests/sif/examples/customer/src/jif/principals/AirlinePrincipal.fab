@@ -1,0 +1,36 @@
+package jif.principals;
+
+import fabric.util.Map;
+import travel.Config;
+
+public class AirlinePrincipal extends ExternalPrincipal {
+  public AirlinePrincipal() {
+    super("customer");
+  }
+  
+  public static AirlinePrincipal{*!:} getInstance{*!:}() {
+    atomic {
+      FabricClient cl = FabricClient.getClient();
+      if (cl != null) {
+        final Core brokerCore = cl.getCore(Config.brokerCoreName);
+        if (brokerCore != null) {
+          Map rootMap = brokerCore.getRoot();
+          if (rootMap != null) {
+            Object obj = rootMap.get(Config.airlinePrincipalMapKey);
+            AirlinePrincipal airlinePrincipal = null;
+            if (obj instanceof AirlinePrincipal) {
+              airlinePrincipal = (AirlinePrincipal) obj;
+            } else {
+              airlinePrincipal = new AirlinePrincipal@brokerCore();
+              rootMap.put(Config.airlinePrincipalMapKey, airlinePrincipal);
+            }
+            
+            return airlinePrincipal;
+          }
+        }
+      }
+      
+      return null;
+    }
+  }
+}

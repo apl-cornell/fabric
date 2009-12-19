@@ -1,0 +1,54 @@
+package customer;
+
+import javax.servlet.ServletException;
+import travel.*;
+
+public class StartTransaction extends Action[CustomerPrincipal] {
+
+    Input[CustomerPrincipal] inp;
+    
+    public StartTransaction(CustomerMain{this} m, Input[CustomerPrincipal] inp) throws ServletException {
+        super();
+        initFields("starttx", m);
+        this.inp = inp;
+    }
+    
+    public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
+    throws (ServletException{*lbl;⊤→req.session;req.session←})
+    where caller(req.session),
+    lbl <= {⊤→req.session} {
+
+        Core bcore = client$.getCore(Config.brokerCoreName);
+
+        String amountStr = req.getParam(inp);
+        boolean failure = false;
+        float amount = 0;
+        try {
+            if (lbl <= new label {CustomerPrincipal←} &&
+                    inp.inputLbl <= new label {CustomerPrincipal→BankPrincipal, AirlinePrincipal}) {
+                amount = Float.parseFloat(amountStr);
+                failure = !Main.startTx@bcore(amount);
+            }
+        } catch (NumberFormatException e) {
+            failure = true;
+        }
+
+        String message1 = failure?"Sorry, your purchase could not be performed":"Your purchase was successful";
+        String message2 = failure?"Unsuccessful Purchase":"Successful Purchase";
+
+        // print a page saying that purchase was successful
+        Text msg = new Text[lbl, lbl](message1);
+        SubmitButton submit = new SubmitButton[CustomerPrincipal, lbl, lbl](m, lbl, "Back");
+        NodeList[lbl, lbl] entries = NodeList.EMPTY();
+        entries = entries.append(new TRow[lbl, lbl](
+                new NodeList[lbl, lbl](msg)));
+        entries = entries.append(new TRow[lbl, lbl](
+                new NodeList[lbl, lbl](submit)));
+        Node[lbl, lbl] form = servlet.createForm(lbl, lbl, 
+                m.findStartAction("frontpage"),
+                lbl, lbl,
+                new Table[lbl, lbl](entries);
+        servlet.createPage(req, message2, lbl, lbl,
+                new NodeList[lbl,lbl](lbl, lbl, createBody(lbl, lbl, form)));
+    }
+}
