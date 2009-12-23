@@ -2,10 +2,21 @@ package travel;
 
 import fabric.util.Map;
 
-class Balance[principal bank, principal user]
-              { // on bank store and worker
+// XXX Why do we need broker actsfor bank? Adding a transfer function helps.
+
+// Balance stands for an account managed by a particular "bank" for a particular "user"
+class Balance[principal bank, principal user] { // on bank store and worker
+
+    // the account balance
+    // Since the user trusts the bank to manage its account it does not specify any policy on this
+    // The bank does not allow anyone else to modify. It allows only its user to read.
     int{bank←; bank→user} value = 100000;
 
+    // Debits a specified amount from this account
+    // The begin label allows only the bank to influence the decision to debit.
+    // Since the success of the operation leaks information about the balance, the
+    // return value is readable only by the user. It is trusted enough to have not been
+    // influenced by any principal other than bank
     boolean{bank←; bank→user} debit{bank←}(int{bank←; bank→user} amt) {
         if (amt <= value & value > 0 & amt > 0) {
             value = value - amt;
@@ -13,6 +24,9 @@ class Balance[principal bank, principal user]
         }
         return false;
     }
+    
+    // Credits a specified amount to this account
+    // Explanation of labels: same as above
     boolean{bank←; bank→user} credit{bank←}(int{bank←; bank→user} amt) {
         if (amt > 0) {
             value = value + amt;
@@ -20,10 +34,10 @@ class Balance[principal bank, principal user]
         }
         return false;
     }
-              }
+}
 
-class Account[principal bank]
-              { // on bank store and worker
+// XXX Why do we have an Account class when Balance is good enough?
+class Account[principal bank]  { // on bank store and worker
     final principal{bank←} user;
     final Balance[bank,user] {bank←} balance;
 
@@ -40,25 +54,25 @@ class Account[principal bank]
         catch (NullPointerException e) { return false; }
     }
 
-              }
+}
 
-class Tickets[principal bank, principal airline, principal user]
-              { // on airline store and worker
+class Tickets[principal bank, principal airline, principal user]  { // on airline store and worker
+    // XXX should be airline←
     int {airline←bank; airline→user} num_tickets;
     Tickets{airline←}() {
         num_tickets = 0;
     }
-              }
+}
 
-class Broker[principal bank, principal customer] extends AbstractPrincipal
-{ // on broker worker (and store)
+class Broker[principal bank, principal customer] extends AbstractPrincipal { // on broker worker (and store)
     final Account[bank]{this←} customerAcct;
     final Account[bank]{this←} airlineAcct;
     final principal{this←} airline;
     final Tickets[bank, airline, customer]{this←} custTickets;
 
-    void coordinatePurchase{}(float amount) : {bank->airlineAcct.user; bank->customerAcct.user; this←; bank<-; airline<-} throws PurchasingError
-    where authority(this), endorse({this←}), this actsfor bank, this actsfor airline {
+    void coordinatePurchase{}(float amount) : {bank->airlineAcct.user; bank->customerAcct.user; this←; bank<-; airline<-} 
+        throws PurchasingError
+        where authority(this), endorse({this←}), this actsfor bank, this actsfor airline {
         try {
             final principal cust1 = customerAcct.user; // bank←
             final principal cust2 = customer;
@@ -70,9 +84,11 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
             boolean success = false;
             if (bankClient actsfor bank && airlineClient actsfor airline) {
                 success = true;
-                success = customerAcct.debit@bankClient(amount) && success;   // @wBank
-                success = airlineAcct.credit@bankClient(amount) && success;   // @wBank
-                success = incTickets@airlineClient() && success;  // @wAirline
+                atomic {
+                    success = customerAcct.debit@bankClient(amount) && success;   // @wBank
+                    success = airlineAcct.credit@bankClient(amount) && success;   // @wBank
+                    success = incTickets@airlineClient() && success;  // @wAirline
+                }
             }
 
             if (!success) throw new PurchasingError();
@@ -81,6 +97,7 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
         }
     }
 
+        // XXX why airline←
     public boolean{this←} incTickets{this←}() :{airline←} {
         if (custTickets != null && this actsfor airline) {
             custTickets.num_tickets++;
