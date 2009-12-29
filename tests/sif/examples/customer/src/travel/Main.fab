@@ -5,7 +5,7 @@ import fabric.util.Map;
 import jif.runtime.Runtime;
 
 public class Main {
-    public static boolean{CustomerPrincipal←} startTx{CustomerPrincipal←}(
+    public static boolean{BankPrincipal→AirlinePrincipal,CustomerPrincipal;CustomerPrincipal←} startTx{CustomerPrincipal←}(
             float{CustomerPrincipal→BankPrincipal, AirlinePrincipal} amount) {
         Core core = client$.getCore(Config.brokerCoreName);
         Map root = null;
@@ -16,8 +16,10 @@ public class Main {
         if (root == null) return false;
 
         try {
-            final Principal bank = (Principal) root.get(Config.bankPrincipalMapKey);
-            final Principal customer = (Principal) root.get(Config.customerPrincipalMapKey);
+//            final Principal bank = (Principal) root.get(Config.bankPrincipalMapKey);
+//            final Principal customer = (Principal) root.get(Config.customerPrincipalMapKey);
+            final Principal bank = BankPrincipal;
+            final Principal customer = CustomerPrincipal;
             final Broker[bank,customer] broker =
                 (Broker[bank,customer]) root.get(Config.brokerMapKey);
 

@@ -31,6 +31,9 @@ public class Create {
      * airline: DelegatingPrincipal
      *  f label       -> null
      *    delegatesTo -> broker
+     *    
+     * brokerLabel: Label
+     *  f {broker←}
      *  
      *
      * bankCore
