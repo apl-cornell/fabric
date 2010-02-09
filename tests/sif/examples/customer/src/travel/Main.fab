@@ -5,8 +5,16 @@ import fabric.util.Map;
 import jif.runtime.Runtime;
 
 public class Main {
-    public static boolean{BankPrincipal→AirlinePrincipal,CustomerPrincipal;CustomerPrincipal←} startTx{CustomerPrincipal←}(
-            float{CustomerPrincipal→BankPrincipal, AirlinePrincipal} amount) {
+    public static boolean{BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
+      startTxImpl{CustomerPrincipal←}(
+            float{CustomerPrincipal→BankPrincipal, AirlinePrincipal} amount,
+            Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←} broker)
+    where   broker actsfor BankPrincipal,
+            broker actsfor broker.airline,
+            broker.airlineAcct.user equiv AirlinePrincipal,
+            broker.customerAcct.user equiv CustomerPrincipal,
+            broker.airline equiv AirlinePrincipal
+    {
         Core core = client$.getCore(Config.brokerCoreName);
         Map root = null;
         if (core != null) {
@@ -18,22 +26,31 @@ public class Main {
         try {
 //            final Principal bank = (Principal) root.get(Config.bankPrincipalMapKey);
 //            final Principal customer = (Principal) root.get(Config.customerPrincipalMapKey);
-            final Principal bank = BankPrincipal;
-            final Principal customer = CustomerPrincipal;
-            final Broker[bank,customer] broker =
-                (Broker[bank,customer]) root.get(Config.brokerMapKey);
 
             if (broker != null) {
                 atomic {
-                    if (broker actsfor bank && broker actsfor broker.airline) {
                         broker.coordinatePurchase(amount);
                         return true;
-                    }
                 }
             }
-        } catch (ClassCastException e) {}
-          catch (PurchasingError e) {}
+        } catch (PurchasingError e) {}
           
         return false;
     }
+      
+      public static boolean{BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
+      startTx{CustomerPrincipal←}(
+            float{CustomerPrincipal→BankPrincipal, AirlinePrincipal} amount,
+            Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←} broker)  {
+          if (broker actsfor BankPrincipal && broker actsfor broker.airline
+                  && broker.airlineAcct != null
+                  && broker.airlineAcct.user equiv AirlinePrincipal
+                  && broker.customerAcct != null
+                  && broker.customerAcct.user equiv CustomerPrincipal
+                  && broker.airline equiv AirlinePrincipal) {
+              return startTxImpl(amount, broker);
+          }
+          return false;
+      }
+    
 }

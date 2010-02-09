@@ -1,7 +1,7 @@
 package travel;
 
 import jif.lang.*;
-import jif.principals.CustomerPrincipal;
+import jif.principals.*;
 import fabric.util.Map;
 
 public class Create {
@@ -80,15 +80,15 @@ public class Create {
      * ticketsLabel: Label
      *  f {bank<-airline}
      */
-    public static void main(String[] args) {
+    public static void main(String native[] args) {
         atomic {
             Core  brokerCore = Client.getClient().getCore(Config.brokerCoreName);
             Core    bankCore = Client.getClient().getCore(Config.bankCoreName);
             Core airlineCore = Client.getClient().getCore(Config.airlineCoreName);
 
-            AbstractPrincipal bank     = new SimplePrincipal@brokerCore().travel$SimplePrincipal$("bank");
+            AbstractPrincipal bank     = BankPrincipal.getInstance();
             AbstractPrincipal customer = CustomerPrincipal.getInstance();
-            AbstractPrincipal airline  = new SimplePrincipal@brokerCore().travel$SimplePrincipal$("airline");
+            AbstractPrincipal airline  = AirlinePrincipal.getInstance();
             Broker            broker   = new Broker@brokerCore(bank,customer);
 
             IntegPolicy brokerTrusted  = LabelUtil.writerPolicy(brokerCore,  broker, broker);   // {broker<-}

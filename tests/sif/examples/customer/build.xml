@@ -77,12 +77,16 @@
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
         <arg value="-e" />
+        <!--
+        <arg value="-report" />     <arg value="solver=5" />
+        <arg value="-report" />     <arg value="labelEnv=1" />
+        -->
         <srcfile />
         <fileset dir="${basedir}" includes="src/travel/*.fab" />
         <mapper type="regexp"
                 from="^src(.*)\.fab"
                 to="classes\1\.class" />
-    </apply>
+    </apply>    
     <apply executable="bash"
                     parallel="true"
                     failonerror="true"
@@ -94,7 +98,7 @@
         <arg value="-d"/>
         <arg value="${basedir}/web/WEB-INF/classes"/>
   			<arg value="-cp" />
-  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/web/WEB-INF/classes" />
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
         <srcfile />
@@ -102,7 +106,7 @@
         <mapper type="regexp"
                 from="^src(.*)\.fil"
                 to="classes\1\.class" />
-    </apply>
+    </apply>    
 	</target>
     
 	
