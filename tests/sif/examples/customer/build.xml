@@ -98,9 +98,9 @@
         <arg value="-d"/>
         <arg value="${basedir}/web/WEB-INF/classes"/>
   			<arg value="-cp" />
-  			<arg value="${fabric.home}/rt-classes:${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/web/WEB-INF/classes" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/web/WEB-INF/classes" />
         <arg value="-sigcp"/>
-        <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
+        <arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
         <srcfile />
         <fileset dir="${basedir}" includes="src/travel/*.fil" />
         <mapper type="regexp"
