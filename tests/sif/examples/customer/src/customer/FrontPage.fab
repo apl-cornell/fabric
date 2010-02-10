@@ -24,7 +24,7 @@ public class FrontPage extends Action[CustomerPrincipal] {
             final DelegatingPrincipal p = CustomerPrincipal;
             p.addDelegatesTo(req.session);
 
-            final label amtLbl = new label {CustomerPrincipal→BankPrincipal, AirlinePrincipal};
+            final label amtLbl = new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←};
             InputNode amountInput = new TextInput[CustomerPrincipal, lbl, lbl]
                                                   (m, amtLbl, 20, "");
             Text msg = new Text[lbl,lbl]("Enter Payment Amount for Ticket");

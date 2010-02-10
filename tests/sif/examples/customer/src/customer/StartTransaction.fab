@@ -25,7 +25,7 @@ public class StartTransaction extends Action[CustomerPrincipal] {
         float amount = 0;
         try {
             if (lbl <= new label {CustomerPrincipal←} &&
-                    inp.inputLbl <= new label {CustomerPrincipal→BankPrincipal, AirlinePrincipal}) {
+                    inp.inputLbl <= new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←}) {
                 amount = Float.parseFloat(amountStr);
                 failure = !Main.startTx@bcore(amount);
             }

@@ -35,6 +35,7 @@ public class Create {
      * brokerLabel: Label
      *  f {broker←}
      *  
+     *  Note: All principals stored on the brokerCore delegate to broker
      *
      * bankCore
      * ========

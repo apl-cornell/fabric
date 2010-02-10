@@ -70,9 +70,18 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal { // 
     final principal{this←} airline;
     final Tickets[bank, airline, customer]{this←} custTickets;
 
-    void coordinatePurchase{}(float amount) : {bank->airlineAcct.user; bank->customerAcct.user; this←; bank<-; airline<-} 
+    void coordinatePurchase{}(
+      float{BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amountArg) 
+          : {bank->airlineAcct.user; bank->customerAcct.user; this←; bank<-; airline<-}
         throws PurchasingError
-        where authority(this), endorse({this←}), this actsfor bank, this actsfor airline {
+        where authority(this), endorse({this←}), this actsfor bank, this actsfor airline, 
+        customerAcct.user equiv CustomerPrincipal,
+        airlineAcct.user equiv AirlinePrincipal,        
+        bank equiv BankPrincipal {
+        float amount = endorse(amountArg,
+                {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←} to
+                {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; this←});
+        
         try {
             final principal cust1 = customerAcct.user; // bank←
             final principal cust2 = customer;
