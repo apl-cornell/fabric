@@ -15,30 +15,48 @@ public class Main {
             broker.customerAcct.user equiv CustomerPrincipal,
             broker.airline equiv AirlinePrincipal
     {
+        boolean returnBool = false;
         Core core = client$.getCore(Config.brokerCoreName);
         Map root = null;
         if (core != null) {
             root = (Map) core.getRoot();
         }
 
-        if (root == null) return false;
+        if (root == null) returnBool = false;
 
         atomic {
             try {
                 if (broker != null) {
                     broker.coordinatePurchase(amount);
-                    return true;
+                    returnBool = true;
                 }
-            } catch (PurchasingError e) {}
+            } catch (PurchasingError e) {returnBool = false;}
         }
           
-        return false;
+        return returnBool;
     }
       
-      public static boolean{BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
+      public static LabeledBoolean
       startTx{CustomerPrincipal←}(
-            float{BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; CustomerPrincipal←} amount,
-            Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←} broker)  {
+            float{BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; CustomerPrincipal←} amount)  {
+          Core core = client$.getCore(Config.brokerCoreName);
+          Map root = null;
+          if (core != null) {
+              root = (Map) core.getRoot();
+          }
+
+          if (root == null) return null;
+          Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
+          Object obj = root.get(Config.brokerMapKey);
+          if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+              brokerInit =
+                  (Broker[BankPrincipal, CustomerPrincipal])obj;
+          }
+          final Broker[BankPrincipal, CustomerPrincipal] broker = brokerInit;
+          final label ll = new label 
+                  {BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}; 
+          boolean returnBool = false;
+          
           if (broker != null 
                   && broker actsfor BankPrincipal 
                   && broker actsfor broker.airline
@@ -48,9 +66,11 @@ public class Main {
                   && broker.customerAcct.user equiv CustomerPrincipal
                   && broker.airline equiv AirlinePrincipal
                   && broker actsfor CustomerPrincipal) {
-              return startTxImpl(amount, broker);
+              returnBool = startTxImpl(amount, broker);
+          } else {
+              returnBool = false;
           }
-          return false;
+          return new LabeledBoolean(ll, returnBool);
       }
     
 }

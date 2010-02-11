@@ -2,10 +2,18 @@ package customer;
 
 import javax.servlet.ServletException;
 import travel.*;
+import fabric.util.Map;
+import travel.Broker;
 
-public class StartTransaction extends Action[CustomerPrincipal] {
+import sif.html.*;
+import sif.servlet.Action;
+import sif.servlet.Request;
+import sif.servlet.Servlet;
 
-    Input[CustomerPrincipal] inp;
+
+public class StartTransaction extends CustomerAction {
+
+    final Input[CustomerPrincipal] inp;
     
     public StartTransaction(CustomerMain{this} m, Input[CustomerPrincipal] inp) throws ServletException {
         super();
@@ -13,23 +21,33 @@ public class StartTransaction extends Action[CustomerPrincipal] {
         this.inp = inp;
     }
     
-    public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
+    public final void invoke{*lbl}(label{*lbl} lbl, Request[CustomerPrincipal]{*lbl} req) 
     throws (ServletException{*lbl;⊤→req.session;req.session←})
     where caller(req.session),
     lbl <= {⊤→req.session} {
 
+        Servlet[CustomerPrincipal] servlet = getServlet();
+        if (servlet == null || !(servlet instanceof CustomerMain)) throw new ServletException("No servlet available"); 
+        if (req == null) throw new ServletException("No request available"); 
+        CustomerMain m = (CustomerMain)servlet;
+        
         Core bcore = client$.getCore(Config.brokerCoreName);
-
+        
         String amountStr = req.getParam(inp);
         boolean failure = false;
+        LabeledBoolean bool = null;
         float amount = 0;
         try {
             if (lbl <= new label {CustomerPrincipal←} &&
-                    inp.inputLbl <= new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←}) {
+                    inp.inputLbl <= new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←}) {
+                
                 amount = Float.parseFloat(amountStr);
-                failure = !Main.startTx@bcore(amount);
+                bool = Main.startTx@bcore(amount).value; 
+                failure = !bool.value;
             }
         } catch (NumberFormatException e) {
+            failure = true;
+        } catch (NullPointerException unlikely) {
             failure = true;
         }
 
@@ -47,7 +65,7 @@ public class StartTransaction extends Action[CustomerPrincipal] {
         Node[lbl, lbl] form = servlet.createForm(lbl, lbl, 
                 m.findStartAction("frontpage"),
                 lbl, lbl,
-                new Table[lbl, lbl](entries);
+                new Table[lbl, lbl](entries));
         servlet.createPage(req, message2, lbl, lbl,
                 new NodeList[lbl,lbl](lbl, lbl, createBody(lbl, lbl, form)));
     }
