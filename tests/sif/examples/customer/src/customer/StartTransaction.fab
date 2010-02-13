@@ -16,9 +16,9 @@ public class StartTransaction extends CustomerAction {
     final Input[CustomerPrincipal] inp;
     
     public StartTransaction(CustomerMain{this} m, Input[CustomerPrincipal] inp) throws ServletException {
+        this.inp = inp;
         super();
         initFields("starttx", m);
-        this.inp = inp;
     }
     
     public final void invoke{*lbl}(label{*lbl} lbl, Request[CustomerPrincipal]{*lbl} req) 
@@ -31,19 +31,35 @@ public class StartTransaction extends CustomerAction {
         if (req == null) throw new ServletException("No request available"); 
         CustomerMain m = (CustomerMain)servlet;
         
-        Core bcore = client$.getCore(Config.brokerCoreName);
+        final Core bcore = client$.getCore(Config.brokerCoreName);
+        Map root = null;
+        if (bcore != null) {
+            root = (Map) bcore.getRoot();
+        }
+        if (root == null) return;
+        Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
+        Object obj = root.get(Config.brokerMapKey);
+        if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+            brokerInit =
+                (Broker[BankPrincipal, CustomerPrincipal])obj;
+        }
+        final Broker[BankPrincipal, CustomerPrincipal] broker = brokerInit;
+        final label ll = new label 
+                {BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}; 
         
         String amountStr = req.getParam(inp);
+        final label labl = new label {⊤←};
+        Main main = new Main{*labl}@bcore();
         boolean failure = false;
-        LabeledBoolean bool = null;
         float amount = 0;
         try {
             if (lbl <= new label {CustomerPrincipal←} &&
-                    inp.inputLbl <= new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←}) {
+                    inp.inputLbl <= new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←} &&
+                    bcore actsfor BankPrincipal &&
+                    bcore actsfor broker) {
                 
                 amount = Float.parseFloat(amountStr);
-                bool = Main.startTx@bcore(amount).value; 
-                failure = !bool.value;
+                failure = !main.startTx@bcore(amount, broker);
             }
         } catch (NumberFormatException e) {
             failure = true;
@@ -58,9 +74,9 @@ public class StartTransaction extends CustomerAction {
         Text msg = new Text[lbl, lbl](message1);
         SubmitButton submit = new SubmitButton[CustomerPrincipal, lbl, lbl](m, lbl, "Back");
         NodeList[lbl, lbl] entries = NodeList.EMPTY();
-        entries = entries.append(new TRow[lbl, lbl](
+        entries = entries==null?null:entries.append(new TRow[lbl, lbl](
                 new NodeList[lbl, lbl](msg)));
-        entries = entries.append(new TRow[lbl, lbl](
+        entries = entries==null?null:entries.append(new TRow[lbl, lbl](
                 new NodeList[lbl, lbl](submit)));
         Node[lbl, lbl] form = servlet.createForm(lbl, lbl, 
                 m.findStartAction("frontpage"),

@@ -96,8 +96,10 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
       argTypes.add(ts.Principal());
       argTypes.addAll(c.methodInstance().formalTypes());
       if (rcvrType.methods(c.name() + "_remote", argTypes).isEmpty()) {
+        // See RemoteCallWrapperAdder.java#leave for conditions for remotely callable methods
         throw new SemanticException("Illegal remote call \"" + c + "\", " +
-        		            "because the dynamic label check might leak information.",
+        		            "because the dynamic label check might leak information." +
+                "\nAlso, make sure the method you are trying to call is public and not static or abstract.",
         		            c.position());
       }
       

@@ -64,68 +64,6 @@ class Tickets[principal bank, principal airline, principal user]  { // on airlin
     }
 }
 
-class Broker[principal bank, principal customer] extends AbstractPrincipal { // on broker worker (and store)
-    final Account[bank]{this←} customerAcct;
-    final Account[bank]{this←} airlineAcct;
-    final principal{this←} airline;
-    final Tickets[bank, airline, customer]{this←} custTickets;
-
-    void coordinatePurchase{}(
-      float{BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amountArg) 
-          : {bank->airlineAcct.user; bank->customerAcct.user; this←; bank<-; airline<-}
-        throws PurchasingError
-        where authority(this), endorse({this←}), this actsfor bank, this actsfor airline, 
-        customerAcct.user equiv CustomerPrincipal,
-        airlineAcct.user equiv AirlinePrincipal,        
-        bank equiv BankPrincipal {
-        float amount = endorse(amountArg,
-                {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←} to
-                {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; this←});
-        
-        try {
-            final principal cust1 = customerAcct.user; // bank←
-            final principal cust2 = customer;
-            final principal airline_ = airlineAcct.user;
-
-            FabricClient cl = FabricClient.getClient();
-            final RemoteClient bankClient = cl.getClient(Config.bankCoreName);
-            final RemoteClient airlineClient = cl.getClient(Config.airlineCoreName);
-            boolean success = false;
-            if (bankClient actsfor bank && airlineClient actsfor airline) {
-                success = true;
-                atomic {
-                    success = customerAcct.debit@bankClient(amount) && success;   // @wBank
-                    success = airlineAcct.credit@bankClient(amount) && success;   // @wBank
-                    success = incTickets@airlineClient() && success;  // @wAirline
-                }
-            }
-
-            if (!success) throw new PurchasingError();
-        } catch (NullPointerException e) {
-            throw new PurchasingError();
-        }
-    }
-
-        // XXX why airline←
-    public boolean{this←} incTickets{this←}() :{airline←} {
-        if (custTickets != null && this actsfor airline) {
-            custTickets.num_tickets++;
-            return true;
-        }
-        return false;
-    }
-
-    Broker{this←}(Account[bank]{this←} ca,
-            Account[bank]{this←} aa,
-            Tickets[bank, airline_, customer]{this←} tick,
-            principal{this←} airline_) {
-        customerAcct = ca;
-        airlineAcct = aa;
-        custTickets = tick;
-        airline = airline_;
-        super("broker");
-    }
-}
 
 class SimplePrincipal extends AbstractPrincipal {
     SimplePrincipal(String{*<-} name) { super(name); }

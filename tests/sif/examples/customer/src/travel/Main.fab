@@ -5,7 +5,10 @@ import fabric.util.Map;
 import jif.runtime.Runtime;
 
 public class Main {
-    public static boolean{BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
+    public Main() {
+        
+    }
+    public boolean{BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
       startTxImpl{CustomerPrincipal←; BankPrincipal←}(
             float{BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amount,
             Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←; BankPrincipal←} broker)
@@ -16,13 +19,6 @@ public class Main {
             broker.airline equiv AirlinePrincipal
     {
         boolean returnBool = false;
-        Core core = client$.getCore(Config.brokerCoreName);
-        Map root = null;
-        if (core != null) {
-            root = (Map) core.getRoot();
-        }
-
-        if (root == null) returnBool = false;
 
         atomic {
             try {
@@ -36,27 +32,12 @@ public class Main {
         return returnBool;
     }
       
-      public static LabeledBoolean
+      public boolean{BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
       startTx{CustomerPrincipal←}(
-            float{BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; CustomerPrincipal←} amount)  {
-          Core core = client$.getCore(Config.brokerCoreName);
-          Map root = null;
-          if (core != null) {
-              root = (Map) core.getRoot();
-          }
+            float{BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; CustomerPrincipal←} amount,
+            Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←; BankPrincipal←} broker)  {
 
-          if (root == null) return null;
-          Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
-          Object obj = root.get(Config.brokerMapKey);
-          if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
-              brokerInit =
-                  (Broker[BankPrincipal, CustomerPrincipal])obj;
-          }
-          final Broker[BankPrincipal, CustomerPrincipal] broker = brokerInit;
-          final label ll = new label 
-                  {BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}; 
           boolean returnBool = false;
-          
           if (broker != null 
                   && broker actsfor BankPrincipal 
                   && broker actsfor broker.airline
@@ -70,7 +51,7 @@ public class Main {
           } else {
               returnBool = false;
           }
-          return new LabeledBoolean(ll, returnBool);
+          return returnBool;
       }
     
 }
