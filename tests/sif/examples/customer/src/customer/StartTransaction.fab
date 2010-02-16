@@ -13,9 +13,9 @@ import sif.servlet.Servlet;
 
 public class StartTransaction extends CustomerAction {
 
-    final Input[CustomerPrincipal] inp;
+    final Input[CustomerPrincipal]{CustomerPrincipal←} inp;
     
-    public StartTransaction(CustomerMain{this} m, Input[CustomerPrincipal] inp) throws ServletException {
+    public StartTransaction(CustomerMain{this} m, Input[CustomerPrincipal]{CustomerPrincipal←} inp) throws ServletException {
         this.inp = inp;
         super();
         initFields("starttx", m);
@@ -55,6 +55,7 @@ public class StartTransaction extends CustomerAction {
         try {
             if (lbl <= new label {CustomerPrincipal←} &&
                     inp.inputLbl <= new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←} &&
+                    req.session actsfor CustomerPrincipal &&
                     bcore actsfor BankPrincipal &&
                     bcore actsfor broker) {
                 

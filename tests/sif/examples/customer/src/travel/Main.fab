@@ -34,7 +34,7 @@ public class Main {
       
       public boolean{BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
       startTx{CustomerPrincipal←}(
-            float{BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; CustomerPrincipal←} amount,
+            float{BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amount,
             Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←; BankPrincipal←} broker)  {
 
           boolean returnBool = false;
