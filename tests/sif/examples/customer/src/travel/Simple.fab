@@ -27,7 +27,7 @@ class Balance[principal bank, principal user] { // on bank store and worker
     
     // Credits a specified amount to this account
     // Explanation of labels: same as above
-    boolean{bank←; bank→user} credit{bank←}(float{bank←; bank→user} amt) {
+    boolean{amt} credit{bank←}(float{bank←; bank→user} amt) {
         if (amt > 0) {
             value = value + amt;
             return true;
@@ -49,7 +49,7 @@ class Account[principal bank]  { // on bank store and worker
         try { return balance.debit(amt); }
         catch (NullPointerException e) { return false; }
     }
-    public boolean{bank←; bank→user} credit{bank←}(float{bank←; bank→user} amt) {
+    public boolean{amt; bank←} credit{bank←}(float{bank←; bank→user} amt) {
         try { return balance.credit(amt); }
         catch (NullPointerException e) { return false; }
     }

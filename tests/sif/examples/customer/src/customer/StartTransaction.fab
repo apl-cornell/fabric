@@ -44,8 +44,6 @@ public class StartTransaction extends CustomerAction {
                 (Broker[BankPrincipal, CustomerPrincipal])obj;
         }
         final Broker[BankPrincipal, CustomerPrincipal] broker = brokerInit;
-        final label ll = new label 
-                {BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}; 
         
         String amountStr = req.getParam(inp);
         final label labl = new label {⊤←};
@@ -54,36 +52,42 @@ public class StartTransaction extends CustomerAction {
         float amount = 0;
         try {
             if (lbl <= new label {CustomerPrincipal←} &&
-                    inp.inputLbl <= new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←} &&
+                    inp.inputLbl <= new label {BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←} &&
                     req.session actsfor CustomerPrincipal &&
                     bcore actsfor BankPrincipal &&
                     bcore actsfor broker) {
                 
-                amount = Float.parseFloat(amountStr);
+                try {
+                    amount = Float.parseFloat(amountStr);
+                } catch (NumberFormatException e) {
+                    amount = 0;
+                }
                 failure = !main.startTx@bcore(amount, broker);
             }
-        } catch (NumberFormatException e) {
-            failure = true;
         } catch (NullPointerException unlikely) {
             failure = true;
         }
-
+        
+        final label ll = new label 
+        {BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←; *lbl}; 
         String message1 = failure?"Sorry, your purchase could not be performed":"Your purchase was successful";
         String message2 = failure?"Unsuccessful Purchase":"Successful Purchase";
 
         // print a page saying that purchase was successful
-        Text msg = new Text[lbl, lbl](message1);
-        SubmitButton submit = new SubmitButton[CustomerPrincipal, lbl, lbl](m, lbl, "Back");
-        NodeList[lbl, lbl] entries = NodeList.EMPTY();
-        entries = entries==null?null:entries.append(new TRow[lbl, lbl](
-                new NodeList[lbl, lbl](msg)));
-        entries = entries==null?null:entries.append(new TRow[lbl, lbl](
-                new NodeList[lbl, lbl](submit)));
-        Node[lbl, lbl] form = servlet.createForm(lbl, lbl, 
-                m.findStartAction("frontpage"),
-                lbl, lbl,
-                new Table[lbl, lbl](entries));
-        servlet.createPage(req, message2, lbl, lbl,
-                new NodeList[lbl,lbl](lbl, lbl, createBody(lbl, lbl, form)));
+        if (lbl <= new label {CustomerPrincipal←} && req.session actsfor CustomerPrincipal) {
+            Text msg = new Text[ll, lbl](message1);
+            SubmitButton submit = new SubmitButton[CustomerPrincipal, ll, lbl](m, ll, "Back");
+            NodeList[ll, lbl] entries = NodeList.EMPTY();
+            entries = entries==null?null:entries.append(new TRow[ll, lbl](
+                    new NodeList[ll, lbl](msg)));
+            entries = entries==null?null:entries.append(new TRow[ll, lbl](
+                    new NodeList[ll, lbl](submit)));
+            Node[ll, lbl] form = servlet.createForm(ll, lbl, 
+                    m.findStartAction("frontpage"),
+                    ll, lbl,
+                    new Table[ll, lbl](entries));
+            servlet.createPage(req, message2, ll, lbl,
+                    new NodeList[ll,lbl](ll, lbl, createBody(ll, lbl, form)));
+        }
     }
 }

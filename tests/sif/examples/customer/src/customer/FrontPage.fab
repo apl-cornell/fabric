@@ -29,7 +29,7 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
             loginCustomer(lbl, req);
 
             final label amtLbl = new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←};
-            if (lbl <= amtLbl) {
+            if (lbl <= new label {CustomerPrincipal←}) {
                 InputNode amountInput = new TextInput[CustomerPrincipal, lbl, lbl]
                                                       (m, amtLbl, 20, "");
                 Text msg = new Text[lbl,lbl]("Enter Payment Amount for Ticket");

@@ -8,9 +8,9 @@ public class Main {
     public Main() {
         
     }
-    public boolean{BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
+    public boolean{BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
       startTxImpl{CustomerPrincipal←; BankPrincipal←}(
-            float{BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amount,
+            float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amount,
             Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←; BankPrincipal←} broker)
     where   broker actsfor BankPrincipal,
             broker actsfor broker.airline,
@@ -32,10 +32,10 @@ public class Main {
         return returnBool;
     }
       
-      public boolean{BankPrincipal→AirlinePrincipal; BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
+      public boolean{BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
       startTx{CustomerPrincipal←}(
-            float{BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amount,
-            Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←; BankPrincipal←} broker)  {
+            float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←} amount,
+            Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←} broker) {
 
           boolean returnBool = false;
           if (broker != null 
