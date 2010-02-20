@@ -32,6 +32,13 @@ public class StartTransaction extends CustomerAction {
         CustomerMain m = (CustomerMain)servlet;
         
         final Core bcore = client$.getCore(Config.brokerCoreName);
+        FabricClient local = FabricClient.getClient();
+        RemoteClient bclientprime = null;
+        if(local != null) {
+            bclientprime = local.getClient(Config.brokerCoreName);
+        }
+        final RemoteClient bclient = bclientprime;
+        
         Map root = null;
         if (bcore != null) {
             root = (Map) bcore.getRoot();
@@ -46,48 +53,46 @@ public class StartTransaction extends CustomerAction {
         final Broker[BankPrincipal, CustomerPrincipal] broker = brokerInit;
         
         String amountStr = req.getParam(inp);
-        final label labl = new label {⊤←};
-        Main main = new Main{*labl}@bcore();
         boolean failure = false;
         float amount = 0;
         try {
             if (lbl <= new label {CustomerPrincipal←} &&
                     inp.inputLbl <= new label {BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←} &&
-                    req.session actsfor CustomerPrincipal &&
-                    bcore actsfor BankPrincipal &&
-                    bcore actsfor broker) {
+                    req.session actsfor CustomerPrincipal) {
                 
                 try {
                     amount = Float.parseFloat(amountStr);
                 } catch (NumberFormatException e) {
                     amount = 0;
                 }
-                failure = !main.startTx@bcore(amount, broker);
+                failure = !Main.startTx(amount, broker, bclient);
             }
         } catch (NullPointerException unlikely) {
             failure = true;
         }
         
         final label ll = new label 
-        {BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←; *lbl}; 
+        {CustomerPrincipal→;BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←; *lbl};
+        final label llprime = new label {CustomerPrincipal→;CustomerPrincipal←};
         String message1 = failure?"Sorry, your purchase could not be performed":"Your purchase was successful";
         String message2 = failure?"Unsuccessful Purchase":"Successful Purchase";
 
         // print a page saying that purchase was successful
-        if (lbl <= new label {CustomerPrincipal←} && req.session actsfor CustomerPrincipal) {
-            Text msg = new Text[ll, lbl](message1);
-            SubmitButton submit = new SubmitButton[CustomerPrincipal, ll, lbl](m, ll, "Back");
-            NodeList[ll, lbl] entries = NodeList.EMPTY();
-            entries = entries==null?null:entries.append(new TRow[ll, lbl](
-                    new NodeList[ll, lbl](msg)));
-            entries = entries==null?null:entries.append(new TRow[ll, lbl](
-                    new NodeList[ll, lbl](submit)));
-            Node[ll, lbl] form = servlet.createForm(ll, lbl, 
+        if (lbl <= llprime && req.session actsfor CustomerPrincipal) {
+            Text msg = new Text[ll, llprime](message1);
+            SubmitButton submit = new SubmitButton[CustomerPrincipal, ll, llprime](m, ll, "Back");
+            NodeList[ll, llprime] entries = NodeList.EMPTY();
+            entries = entries==null?null:entries.append(new TRow[ll, llprime](
+                    new NodeList[ll, llprime](msg)));
+            entries = entries==null?null:entries.append(new TRow[ll, llprime](
+                    new NodeList[ll, llprime](submit)));
+            Node[ll, llprime] form = servlet.createForm(ll, llprime, 
                     m.findStartAction("frontpage"),
-                    ll, lbl,
-                    new Table[ll, lbl](entries));
-            servlet.createPage(req, message2, ll, lbl,
-                    new NodeList[ll,lbl](ll, lbl, createBody(ll, lbl, form)));
+                    ll, llprime,
+                    new Table[ll, llprime](entries));
+            servlet.createPage(req, message2, ll, llprime,
+                    new NodeList[ll,llprime](ll, llprime, createBody(ll, llprime, form)));
         }
     }
+    
 }

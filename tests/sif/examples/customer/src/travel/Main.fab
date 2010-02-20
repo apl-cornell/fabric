@@ -8,50 +8,52 @@ public class Main {
     public Main() {
         
     }
-    public boolean{BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
-      startTxImpl{CustomerPrincipal←; BankPrincipal←}(
-            float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amount,
-            Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←; BankPrincipal←} broker)
-    where   broker actsfor BankPrincipal,
-            broker actsfor broker.airline,
-            broker.airlineAcct.user equiv AirlinePrincipal,
-            broker.customerAcct.user equiv CustomerPrincipal,
-            broker.airline equiv AirlinePrincipal
+    public static boolean{BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
+    startTxImpl{CustomerPrincipal←; BankPrincipal←}(
+          float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amount,
+          Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←; BankPrincipal←} broker,
+          RemoteClient{CustomerPrincipal←; BankPrincipal←} bclient)
+    where broker actsfor BankPrincipal,
+          broker actsfor broker.airline,
+          broker.airlineAcct.user equiv AirlinePrincipal,
+          broker.customerAcct.user equiv CustomerPrincipal,
+          broker.airline equiv AirlinePrincipal
     {
-        boolean returnBool = false;
+      boolean returnBool = false;
 
-        atomic {
-            try {
-                if (broker != null) {
-                    broker.coordinatePurchase(amount);
-                    returnBool = true;
-                }
-            } catch (PurchasingError e) {returnBool = false;}
+      atomic {
+          try {
+              if (broker != null && bclient actsfor BankPrincipal && bclient actsfor broker) {
+                  broker.coordinatePurchase@bclient(amount);
+                  returnBool = true;
+              }
+          } catch (PurchasingError e) {returnBool = false;}
+      }
+        
+      return returnBool;
+    }
+    
+    public static boolean{BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
+    startTx{CustomerPrincipal←}(
+          float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←} amount,
+          Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←} broker,
+          RemoteClient{CustomerPrincipal←} bclient) {
+
+        boolean returnBool = false;
+        if (broker != null 
+                && broker actsfor BankPrincipal 
+                && broker actsfor broker.airline
+                && broker.airlineAcct != null
+                && broker.airlineAcct.user equiv AirlinePrincipal
+                && broker.customerAcct != null
+                && broker.customerAcct.user equiv CustomerPrincipal
+                && broker.airline equiv AirlinePrincipal
+                && broker actsfor CustomerPrincipal) {
+            returnBool = startTxImpl(amount, broker, bclient);
+        } else {
+            returnBool = false;
         }
-          
         return returnBool;
     }
-      
-      public boolean{BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
-      startTx{CustomerPrincipal←}(
-            float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←} amount,
-            Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←} broker) {
-
-          boolean returnBool = false;
-          if (broker != null 
-                  && broker actsfor BankPrincipal 
-                  && broker actsfor broker.airline
-                  && broker.airlineAcct != null
-                  && broker.airlineAcct.user equiv AirlinePrincipal
-                  && broker.customerAcct != null
-                  && broker.customerAcct.user equiv CustomerPrincipal
-                  && broker.airline equiv AirlinePrincipal
-                  && broker actsfor CustomerPrincipal) {
-              returnBool = startTxImpl(amount, broker);
-          } else {
-              returnBool = false;
-          }
-          return returnBool;
-      }
     
 }
