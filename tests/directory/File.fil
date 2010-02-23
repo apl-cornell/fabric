@@ -76,8 +76,13 @@ public class File {
     this.data = data;
   }
 
+  public File addChild(Core core, String name, String data) throws Exception {
+    return new File@core(name, data, this);
+  }
+
+
   public File addChild(String name, String data) throws Exception {
-    return new File(name, data, this);
+    return addChild($getCore(), name, data);
   }
   
   public File addChild(String name) throws Exception {
@@ -115,22 +120,25 @@ public class File {
   public static void createHome() throws Exception {
     atomic {
       String name = Client.getClient().getPrincipal().name();
-      getRoot().addChild(name, "0");
+      Core   home = Client.getClient().getPrincipal().$getCore();
+      getRoot().addChild(home, name, "0");
     }
   }
 
   /** look up user's file and modify it's data */
   public static void modifyHome() throws Exception {
-    atomic {
-      String name = Client.getClient().getPrincipal().name();
+    while (true) {
+      atomic {
+        String name = Client.getClient().getPrincipal().name();
 
-      File root = getRoot();
-      File home = root.getChild(name);
+        File root = getRoot();
+        File home = root.getChild(name);
 
-      // Simulate computation
-      int data = Integer.parseInt(home.getData());
-      System.out.println("updating " + name + " from " + data + " to " + (data + 1));
-      home.setData(Integer.toString(data + 1));
+        // Simulate computation
+        int data = Integer.parseInt(home.getData());
+        System.out.println("updating " + name + " from " + data + " to " + (data + 1));
+        home.setData(Integer.toString(data + 1));
+      }
     }
   }
 
