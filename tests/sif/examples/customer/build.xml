@@ -1,6 +1,6 @@
 <project name="customer-travel-example" default="compile" basedir=".">
   <description>
-    Build file for the Calendar SIF application.
+    Build file for the Customer SIF application.
   </description>
 
   <property name="app.name" value="customer" />
@@ -201,8 +201,8 @@
   <target name="install" depends="configure-install, compile" description="Copies the classes to the tomcat directory">
     <fail unless="catalina.home.defined"
           message="The Tomcat installation directory is unknown. Please either edit config.properties, or set the envirnoment variable CATALINA_HOME to the Tomcat installation directory." />
-    <delete dir="${catalina.home}/webapps/calendar" />
-    <copy todir="${catalina.home}/webapps/calendar" includeEmptyDirs="no">
+    <delete dir="${catalina.home}/webapps/customer" />
+    <copy todir="${catalina.home}/webapps/customer" includeEmptyDirs="no">
 		<fileset dir="${basedir}/web" defaultexcludes="yes"/>
 	</copy>
   </target>
