@@ -3,6 +3,7 @@ package fabric.lang;
 public class Object extends java.lang.Object {
   public native boolean equals(Object o);
   public native Statistics createStatistics();
+  public native Core $getCore();
   public static native void _npe(jif.lang.Label lbl) throws NullPointerException;
 }
 
