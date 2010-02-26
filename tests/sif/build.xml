@@ -188,6 +188,7 @@
             <fileset dir="${fabric.home}/rt-classes" defaultexcludes="yes">
             </fileset>            
         </copy>
+        <!--
         <copy todir="${catalina.home}/shared/lib">
             <fileset dir="${basedir}/lib" includes="common*.jar,sif.jar,jif.jar,jiflib.jar,jifrt.jar"    defaultexcludes="yes"/>
         </copy>
@@ -197,6 +198,7 @@
         <copy todir="${catalina.home}/webapps/ROOT">
             <fileset dir="${basedir}/src" includes="preamble.js" defaultexcludes="yes"/>
         </copy>
+        -->
 
     </target>
 

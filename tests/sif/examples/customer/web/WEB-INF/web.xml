@@ -6,8 +6,8 @@
 
 <web-app>
     <servlet>
-      <servlet-name>airline</servlet-name>
-      <servlet-class>airline.Main</servlet-class>
+      <servlet-name>customer</servlet-name>
+      <servlet-class>customer.CustomerMain</servlet-class>
       <init-param>
 	    <param-name>style_sheet_url</param-name>
 	    <param-value>travel.css</param-value>
@@ -24,16 +24,16 @@
       </init-param>      
     </servlet>
     <servlet-mapping>
-      <servlet-name>airline</servlet-name>
+      <servlet-name>customer</servlet-name>
       <url-pattern>/sif/*</url-pattern>
     </servlet-mapping>
 
     <!-- General description of your web application -->
 
-    <display-name>Airline Web Interface Application</display-name>
+    <display-name>Customer Web Interface Application</display-name>
 
     <description>
-       Web Interface for an Airline.
+       Web Interface for an Customer.
     </description>
 
     <!-- Define the default session timeout for your application,
