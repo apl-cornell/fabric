@@ -26,7 +26,9 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
 
         atomic {
             
-            loginCustomer(lbl, req);
+            if (lbl <= new label {req.session←}) {
+                loginCustomer(req.session, req);
+            }
 
             final label amtLbl = new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←};
             if (lbl <= new label {CustomerPrincipal←}) {
@@ -52,12 +54,15 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
     
     // TODO Add Login in 3rd stage. Use the userserv library  
     // For now, automatically make req.session actsfor CustomerPrincipal
-    private final void loginCustomer{*lbl}(label{*lbl} lbl, Request[CustomerPrincipal]{*lbl} req) 
-    where authority(CustomerPrincipal) {
+    private final void loginCustomer{session←}(principal{session←} session, Request[CustomerPrincipal]{session←} reqParam) 
+    where authority(CustomerPrincipal), endorse({CustomerPrincipal←})
+    {
+        final Request[CustomerPrincipal] req = endorse(reqParam, {session←} to {CustomerPrincipal←});
         final DelegatingPrincipal p = (DelegatingPrincipal)CustomerPrincipal;
-        if (p == null || req == null) return;
-        if (p equiv CustomerPrincipal && lbl <= new label {p→;p←}) {
-            p.addDelegatesTo(req.session);
+        if (p == null) return;
+        final principal sessionLow = endorse(session, {session←} to {CustomerPrincipal←});
+        if (p equiv CustomerPrincipal) {
+            p.addDelegatesTo(sessionLow);
         }
         
     }

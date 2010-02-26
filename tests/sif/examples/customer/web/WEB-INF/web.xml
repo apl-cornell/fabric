@@ -19,6 +19,11 @@
       </init-param>
 -->
       <init-param>
+	    <param-name>worker</param-name>
+	    <param-value>calendarapp</param-value>
+      </init-param>      
+    
+      <init-param>
 	    <param-name>color_coding</param-name>
 	    <param-value>false</param-value>
       </init-param>      
