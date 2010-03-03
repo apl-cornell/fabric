@@ -12,6 +12,8 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+import fabric.common.net.handshake.ShakenSocket;
+
 
 /**
  * A channel manages a single socket, allowing it to be multiplexed across
@@ -36,10 +38,10 @@ abstract class Channel {
   // any unrecognized or previously closed SN should create a new stream (thus
   // the subsocket close message should be the last sent by a subsocket).
 
-  protected Channel(Socket s) throws IOException {
-    this.sock = s;
-    this.out  = new DataOutputStream(s.getOutputStream());
-    this.in   = new DataInputStream(s.getInputStream());
+  protected Channel(ShakenSocket s) throws IOException {
+    this.sock = s.sock;
+    this.out  = new DataOutputStream(this.sock.getOutputStream());
+    this.in   = new DataInputStream(this.sock.getInputStream());
     this.connections = new HashMap<Integer, Connection>();
     new Demuxer().start();
   }
@@ -91,7 +93,7 @@ abstract class Channel {
    * returns the Connection associated with a given sequence number, creating
    * it if necessary
    * */
-  private Connection getReceiver(int sequence) throws IOException {
+  private synchronized Connection getReceiver(int sequence) throws IOException {
     Connection result = connections.get(sequence);
     if (result == null) {
       result = accept(sequence);

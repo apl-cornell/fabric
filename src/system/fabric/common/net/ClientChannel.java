@@ -3,6 +3,8 @@ package fabric.common.net;
 import java.io.IOException;
 import java.net.Socket;
 
+import fabric.common.net.handshake.ShakenSocket;
+
 
 /**
  * Client channels are capable of making outgoing requests, but not of receiving
@@ -14,7 +16,7 @@ import java.net.Socket;
 class ClientChannel extends Channel {
   private int nextSequenceNumber;
 
-  public ClientChannel(Socket s) throws IOException {
+  public ClientChannel(ShakenSocket s) throws IOException {
     super(s);
     nextSequenceNumber = 0;
   }

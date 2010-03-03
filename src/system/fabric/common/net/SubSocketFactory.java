@@ -1,13 +1,15 @@
 package fabric.common.net;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.SocketFactory;
+
+import fabric.common.net.handshake.HandshakeProtocol;
+import fabric.common.net.naming.NameService;
+import fabric.common.net.naming.SocketAddress;
 
 
 /**
@@ -17,8 +19,9 @@ import javax.net.SocketFactory;
  * @author mdgeorge
  */
 public final class SubSocketFactory {
-  private final javax.net.SocketFactory     factory;
-  private final Map<InetSocketAddress, ClientChannel> channels;
+  private final HandshakeProtocol protocol;
+  private final NameService       nameService;
+  private final Map<SocketAddress, ClientChannel> channels;
 
   /**
    * Create a new SubSocket factory that decorates the given SocketFactory.
@@ -26,27 +29,31 @@ public final class SubSocketFactory {
    * attempt to share channels (as these channels may have different underlying
    * socket implementations).
    */ 
-  public SubSocketFactory(SocketFactory factory) {
-    this.factory  = factory;
-    this.channels = new HashMap<InetSocketAddress, ClientChannel>();
+  public SubSocketFactory(HandshakeProtocol protocol, NameService nameService) {
+    this.protocol    = protocol;
+    this.nameService = nameService;
+    this.channels    = new HashMap<SocketAddress, ClientChannel>();
   }
 
-  /** @see javax.net.SocketFactory#createSocket() */
+  /**
+   * Create an unconnected socket.
+   */
   public SubSocket createSocket() {
     return new SubSocket(this);
   }
 
-  /** @see javax.net.SocketFactory#createSocket(String, int) */
-  public SubSocket createSocket(String host, int port) throws IOException {
-    return createSocket(new InetSocketAddress(host, port));
+  /**
+   * Convenience method.  Resolves the name using the NameService and calls
+   * createSocket.
+   */
+  public SubSocket createSocket(String name) throws IOException {
+    return createSocket(nameService.resolve(name));
   }
 
-  /** @see javax.net.SocketFactory#createSocket(InetAddress, int) */
-  public SubSocket createSocket(InetAddress host, int port) throws IOException {
-    return createSocket(new InetSocketAddress(host, port));
-  }
-
-  public SubSocket createSocket(InetSocketAddress addr) throws IOException {
+  /**
+   * Convenience method.  Creates a socket and connects it to the given address.
+   */
+  public SubSocket createSocket(SocketAddress addr) throws IOException {
     SubSocket result = createSocket();
     result.connect(addr);
     return result;
@@ -55,11 +62,10 @@ public final class SubSocketFactory {
   /**
    * return a channel associated with the given address, creating it if necessary.
    */
-  synchronized ClientChannel getChannel(InetSocketAddress addr) throws IOException {
+  synchronized ClientChannel getChannel(SocketAddress addr) throws IOException {
     ClientChannel result = channels.get(addr);
     if (null == result) {
-      Socket sock = factory.createSocket(addr.getAddress(), addr.getPort());
-      result = new ClientChannel(sock);
+      result = new ClientChannel(protocol.initiate(addr));
       channels.put(addr, result);
     }
 

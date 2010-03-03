@@ -1,14 +1,16 @@
 package fabric.common.net;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.net.SocketAddress;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import fabric.common.net.naming.SocketAddress;
+
 /**
- * A channel encapsulates a single java.net.ServerSocket.  It functions as a
+ * An acceptor encapsulates a single java.net.ServerSocket.  It functions as a
  * producer-consumer of SubSockets (via the connected(s) and s accept() methods)
  * and runs a thread in the background which awaits incoming connections and
  * spawns new ServerChannels to handle them.  
@@ -16,61 +18,76 @@ import java.util.concurrent.BlockingQueue;
  * @author mdgeorge
  */
 class Acceptor {
-  private ServerSocket             socket;
-  private BlockingQueue<SubSocket> connections;
+  //
+  // The implementation of Acceptor mirrors that of Channel: while a channel
+  // wraps a Socket and dispatches bytes to multiple SubSockets, an Acceptor
+  // wraps a ServerSocket and dispatches connections to multiple
+  // SubServerSockets.
+  //
+  // The implementation correspondence is as follows:
+  // Acceptor               is similar to      Channel
+  // A.ConnectionQueue      is similar to      C.Connection
+  // A.Dispatcher           is similar to      C.Demuxer
+  //
+  // Acceptors are still a bit simpler since Channels need to both send and
+  // receive, while Acceptors only receive.
 
-  public Acceptor(SubServerSocketFactory factory, InetSocketAddress addr, int backlog) throws IOException {
-    this.socket = factory.createSocketImpl(addr.getPort(), backlog, addr.getAddress());
-    this.connections = new ArrayBlockingQueue<SubSocket>(backlog);
-    new Listener().start();
+  private final ServerSocket                 socket;
+  private final SubServerSocketFactory       factory;
+  private final Map<String, ConnectionQueue> queues;
+
+  public Acceptor(SubServerSocketFactory factory, SocketAddress addr) throws IOException {
+    this.socket  = new ServerSocket(addr.getPort(), 0, addr.getAddress());
+    this.factory = factory;
+    this.queues  = new HashMap<String, ConnectionQueue> ();
+    new Dispatcher().start();
   }
-
-  /** return the local socket address of this acceptor */
-  public SocketAddress getAddress() {
-    return socket.getLocalSocketAddress();
-  }
-
-  /** Called by a ServerChannel when a new substream is connected */
-  public void connected(SubSocket s) throws IOException {
-    if (!connections.offer(s))
-      throw new IOException("too many waiting connections");
-  }
-
-  /** block until a new substream connects, and then return it. */
-  public SubSocket accept() throws IOException {
-    try {
-      return connections.take();
-    } catch(InterruptedException e) {
-      throw new IOException("Interrupted while waiting for a connection", e);
+  
+  private synchronized ConnectionQueue getReceiver(String name) {
+    ConnectionQueue result = queues.get(name);
+    if (result == null) {
+      result = new ConnectionQueue(name);
+      queues.put(name, result);
     }
+    return result;
   }
+  
 
-  /** release the resources associated with this Acceptor. */
-  public void close() throws IOException {
-    // note that this will kill off the Listener thread as well.
-    socket.close();
-
-    // these are connections that have been initiated but not handed accepted
-    for (SubSocket s : connections) {
-      s.close();
+  /**
+   * Contains all of the state for a listening SubSocket.
+   */
+  public class ConnectionQueue {
+    final public String name;
+    final public BlockingQueue<SubSocket> connections;
+    
+    public ConnectionQueue(String name) {
+      this.name = name;
+      this.connections = new ArrayBlockingQueue<SubSocket>(50);
+    }
+    
+    public void close() {
+      throw new NotImplementedException();
     }
   }
 
   /** A thread that listens for incoming TCP connections and spawns new
    * ServerChannels to deal with them.
    */
-  private class Listener extends Thread {
+  private class Dispatcher extends Thread {
     @Override
     public void run() {
+      throw new NotImplementedException();
+      /*
       try {
-        while (true) { new ServerChannel(socket.accept(), Acceptor.this); }
+        while (true) { new ServerChannel(factory.receive(socket.accept()), Acceptor.this); }
       } catch (IOException exc) {
         throw new NotImplementedException();
       }
+      */
     }
 
-    public Listener() {
-      super("connection acceptor for " + getAddress());
+    public Dispatcher() {
+      super("connection dispatcher for " + socket.getLocalSocketAddress());
     }
   }
 }

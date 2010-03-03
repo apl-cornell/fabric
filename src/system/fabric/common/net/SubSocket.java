@@ -3,7 +3,8 @@ package fabric.common.net;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
+
+import fabric.common.net.naming.SocketAddress;
 
 
 /**
@@ -38,7 +39,7 @@ public class SubSocket {
   }
 
   /** @see java.net.Socket#connect(SocketAddress) */
-  public final void connect(InetSocketAddress addr) throws IOException {
+  public final void connect(SocketAddress addr) throws IOException {
     state.connect(addr);
   }
 
@@ -75,7 +76,7 @@ public class SubSocket {
       throw new IOException("Cannot close socket: socket " + this, cause);
     }
 
-    public void connect(InetSocketAddress addr) throws IOException {
+    public void connect(SocketAddress addr) throws IOException {
       throw new IOException("Cannot connect: socket " + this, cause);
     }
 
@@ -97,7 +98,7 @@ public class SubSocket {
     @Override public String toString() { return "is unconnected"; }
 
     @Override
-    public void connect(InetSocketAddress addr) throws IOException {
+    public void connect(SocketAddress addr) throws IOException {
       try {
         Channel.Connection conn = factory.getChannel(addr).connect(); 
         state = new Connected(conn);

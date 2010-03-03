@@ -1,7 +1,8 @@
 package fabric.common.net;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
+
+import fabric.common.net.naming.SocketAddress;
 
 
 /**
@@ -27,22 +28,12 @@ public class SubServerSocket {
   }
 
   /** @see java.net.ServerSocket#bind(java.net.SocketAddress) */
-  public void bind(Integer port) throws IOException {
-    bind(port, 50);
-  }
-
-  /** @see java.net.ServerSocket#bind(java.net.SocketAddress, int) */
-  public void bind(Integer port, int backlog) throws IOException {
-    bind(new InetSocketAddress(port), backlog);
-  }
-
-  /** @see java.net.ServerSocket#bind(java.net.SocketAddress) */
-  public void bind(InetSocketAddress addr) throws IOException {
+  public void bind(SocketAddress addr) throws IOException {
     bind(addr, 50);
   }
 
   /** @see java.net.ServerSocket#bind(java.net.SocketAddress, int) */
-  public void bind(InetSocketAddress addr, int backlog) throws IOException {
+  public void bind(SocketAddress addr, int backlog) throws IOException {
     state.bind(addr, backlog);
   }
 
@@ -76,7 +67,7 @@ public class SubServerSocket {
     }
 
     /** @see SubServerSocket#bind(InetSocketAddress, int) */
-    public void bind(InetSocketAddress address, int backlog) throws IOException {
+    public void bind(SocketAddress address, int backlog) throws IOException {
       throw new IOException("Cannot bind to local address " + address + " because server socket " + this, cause);
     }
 
@@ -95,9 +86,9 @@ public class SubServerSocket {
     private final SubServerSocketFactory factory;
 
     @Override
-    public void bind(InetSocketAddress address, int backlog) throws IOException {
+    public void bind(SocketAddress address, int backlog) throws IOException {
       try {
-	Acceptor acceptor = new Acceptor(factory, address, backlog);
+	Acceptor acceptor = factory.getAcceptor(address);
 	state = new Bound(acceptor);
       } catch (final Exception exc) {
 	IOException wrapped = new IOException("failed to bind to local address " + address, exc);
@@ -118,16 +109,20 @@ public class SubServerSocket {
     final Acceptor acceptor;
 
     @Override public String toString() {
-      return "is bound to " + acceptor.getAddress();
+      throw new NotImplementedException();
+      // return "is bound to " + acceptor.getAddress();
     }
 
     @Override
     public SubSocket accept() throws IOException {
-      return acceptor.accept();
+      throw new NotImplementedException();
+      // return acceptor.accept();
     }
 
     @Override
     public void close() throws IOException {
+      throw new NotImplementedException();
+      /*
       try {
 	acceptor.close();
 	state = new Closed();
@@ -136,6 +131,7 @@ public class SubServerSocket {
 	state = new ErrorState(wrapped);
 	throw wrapped;
       }
+      */
     }
 
     public Bound(Acceptor acceptor) {
