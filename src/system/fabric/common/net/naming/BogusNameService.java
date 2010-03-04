@@ -11,12 +11,11 @@ public class BogusNameService implements NameService {
     this.port = port;
   }
   
-  public SocketAddress localResolve(String name) throws UnknownHostException {
-    return new SocketAddress(name, InetAddress.getLocalHost(), this.port);
+  public SocketAddress localResolve(String name) {
+    return new SocketAddress(null, this.port);
   }
 
   public SocketAddress resolve(String name) throws UnknownHostException {
-    return new SocketAddress(name, InetAddress.getLocalHost(), this.port);
+    return new SocketAddress(InetAddress.getLocalHost(), this.port);
   }
-
 }

@@ -13,7 +13,7 @@ public final class SocketAddress {
   private final InetAddress addr;
   private final int         port;
 
-  public SocketAddress(String name, InetAddress addr, int port) {
+  public SocketAddress(InetAddress addr, int port) {
     this.addr = addr;
     this.port = port;
   }
@@ -28,7 +28,7 @@ public final class SocketAddress {
   
   @Override
   public String toString() {
-    String result = this.addr.isLoopbackAddress() ? "" : this.addr.toString();
+    String result = (this.addr == null) ? "" : this.addr.toString();
     return result + ":" + this.port;
   }
   
