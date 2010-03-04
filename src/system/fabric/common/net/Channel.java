@@ -21,7 +21,7 @@ import fabric.common.net.handshake.ShakenSocket;
  * 
  * @author mdgeorge
  */
-abstract class Channel {
+abstract class Channel extends Thread {
   private final DataOutputStream out;
   private final DataInputStream  in;
   protected final Socket           sock;
@@ -39,11 +39,14 @@ abstract class Channel {
   // the subsocket close message should be the last sent by a subsocket).
 
   protected Channel(ShakenSocket s) throws IOException {
+    super();
     this.sock = s.sock;
     this.out  = new DataOutputStream(this.sock.getOutputStream());
     this.in   = new DataInputStream(this.sock.getInputStream());
     this.connections = new HashMap<Integer, Connection>();
-    new Demuxer().start();
+
+    setName("demultiplexer for " + toString());
+    start();
   }
 
   @Override public abstract String toString();
@@ -102,39 +105,33 @@ abstract class Channel {
   }
 
   /**
-   * a thread that reads data off of the input stream and dispatches it to the
+   * Reads data off of the input stream and dispatches it to the
    * appropriate reader.
    */
-  private class Demuxer extends Thread {
-    @Override
-    public void run() {
-      try {
-        while(true) {
-          int sequenceNumber = in.readInt();
-          if (sequenceNumber == 0) {
-            recvClose();
-            continue;
-          }
-
-          int len = in.readInt();
-          if (len == 0) {
-              // error - deliver to reader
-              recvClose(sequenceNumber);
-              continue;
-          }
-
-          byte[] buf = new byte[len];
-          in.read(buf);
-          recvData(sequenceNumber, buf);
+  @Override
+  public void run() {
+    try {
+      while(true) {
+        int sequenceNumber = in.readInt();
+        if (sequenceNumber == 0) {
+          recvClose();
+          continue;
         }
-      } catch (final IOException exc) {
-        // TODO cleanup
-        throw new NotImplementedException();
-      }
-    }
 
-    public Demuxer() {
-      super("demultiplexer for " + Channel.this.toString());
+        int len = in.readInt();
+        if (len == 0) {
+          // error - deliver to reader
+          recvClose(sequenceNumber);
+          continue;
+        }
+
+        byte[] buf = new byte[len];
+        in.read(buf);
+        recvData(sequenceNumber, buf);
+      }
+    } catch (final IOException exc) {
+      // TODO cleanup
+      throw new NotImplementedException();
     }
   }
 

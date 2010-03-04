@@ -17,7 +17,7 @@ import fabric.common.net.naming.SocketAddress;
  * 
  * @author mdgeorge
  */
-class Acceptor {
+class Acceptor extends Thread {
   //
   // The implementation of Acceptor mirrors that of Channel: while a channel
   // wraps a Socket and dispatches bytes to multiple SubSockets, an Acceptor
@@ -27,7 +27,6 @@ class Acceptor {
   // The implementation correspondence is as follows:
   // Acceptor               is similar to      Channel
   // A.ConnectionQueue      is similar to      C.Connection
-  // A.Dispatcher           is similar to      C.Demuxer
   //
   // Acceptors are still a bit simpler since Channels need to both send and
   // receive, while Acceptors only receive.
@@ -37,10 +36,12 @@ class Acceptor {
   private final Map<String, ConnectionQueue> queues;
 
   public Acceptor(SubServerSocketFactory factory, SocketAddress addr) throws IOException {
+    super("connection dispatcher for " + addr);
+    
     this.socket  = new ServerSocket(addr.getPort(), 0, addr.getAddress());
     this.factory = factory;
     this.queues  = new HashMap<String, ConnectionQueue> ();
-    new Dispatcher().start();
+    start();
   }
   
   private synchronized ConnectionQueue getReceiver(String name) {
@@ -70,25 +71,20 @@ class Acceptor {
     }
   }
 
-  /** A thread that listens for incoming TCP connections and spawns new
-   * ServerChannels to deal with them.
+  /**
+   * Listens for incoming TCP connections and spawns new ServerChannels to deal
+   * with them.
    */
-  private class Dispatcher extends Thread {
-    @Override
-    public void run() {
-      throw new NotImplementedException();
-      /*
+  @Override
+  public void run() {
+    throw new NotImplementedException();
+    /*
       try {
         while (true) { new ServerChannel(factory.receive(socket.accept()), Acceptor.this); }
       } catch (IOException exc) {
         throw new NotImplementedException();
       }
-      */
-    }
-
-    public Dispatcher() {
-      super("connection dispatcher for " + socket.getLocalSocketAddress());
-    }
+     */
   }
 }
 
