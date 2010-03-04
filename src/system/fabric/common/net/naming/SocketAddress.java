@@ -10,18 +10,12 @@ import java.net.InetAddress;
  * @author mdgeorge
  */
 public final class SocketAddress {
-  private final String      name;
   private final InetAddress addr;
   private final int         port;
 
   public SocketAddress(String name, InetAddress addr, int port) {
-    this.name = name.toLowerCase();
     this.addr = addr;
     this.port = port;
-  }
-
-  public String getHostName() {
-    return this.name;
   }
 
   public int getPort() {
@@ -33,15 +27,20 @@ public final class SocketAddress {
   }
   
   @Override
+  public String toString() {
+    return this.addr + ":" + this.port;
+  }
+  
+  @Override
   public boolean equals(Object other) {
     if (!(other instanceof SocketAddress)) return false;
 
     SocketAddress a = (SocketAddress) other;
-    return this.name.equals(a.name) && this.port == a.port;
+    return this.addr.equals(a.addr) && this.port == a.port;
   }
 
   @Override
   public int hashCode() {
-    return this.name.hashCode() ^ this.port;
+    return this.addr.hashCode() ^ this.port;
   }
 }

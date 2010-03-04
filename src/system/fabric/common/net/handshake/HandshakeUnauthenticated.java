@@ -13,13 +13,13 @@ public class HandshakeUnauthenticated implements HandshakeProtocol {
   // client -> server : len, name
   //
   
-  public ShakenSocket initiate(SocketAddress addr) throws IOException {
+  public ShakenSocket initiate(String name, SocketAddress addr) throws IOException {
     Socket s = new Socket(addr.getAddress(), addr.getPort());
     OutputStream out = s.getOutputStream();
-    out.write(addr.getHostName().length());
-    out.write(addr.getHostName().getBytes());
+    out.write(name.length());
+    out.write(name.getBytes());
     out.flush();
-    return new ShakenSocket(addr.getHostName(), null, s);
+    return new ShakenSocket(name, null, s);
   }
 
   public ShakenSocket receive(Socket s) throws IOException {

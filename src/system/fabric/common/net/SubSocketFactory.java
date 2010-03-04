@@ -21,7 +21,7 @@ import fabric.common.net.naming.SocketAddress;
 public final class SubSocketFactory {
   private final HandshakeProtocol protocol;
   private final NameService       nameService;
-  private final Map<SocketAddress, ClientChannel> channels;
+  private final Map<String, ClientChannel> channels;
 
   /**
    * Create a new SubSocket factory that decorates the given SocketFactory.
@@ -32,7 +32,7 @@ public final class SubSocketFactory {
   public SubSocketFactory(HandshakeProtocol protocol, NameService nameService) {
     this.protocol    = protocol;
     this.nameService = nameService;
-    this.channels    = new HashMap<SocketAddress, ClientChannel>();
+    this.channels    = new HashMap<String, ClientChannel>();
   }
 
   /**
@@ -47,26 +47,20 @@ public final class SubSocketFactory {
    * createSocket.
    */
   public SubSocket createSocket(String name) throws IOException {
-    return createSocket(nameService.resolve(name));
-  }
-
-  /**
-   * Convenience method.  Creates a socket and connects it to the given address.
-   */
-  public SubSocket createSocket(SocketAddress addr) throws IOException {
     SubSocket result = createSocket();
-    result.connect(addr);
+    result.connect(name);
     return result;
   }
 
   /**
    * return a channel associated with the given address, creating it if necessary.
    */
-  synchronized ClientChannel getChannel(SocketAddress addr) throws IOException {
-    ClientChannel result = channels.get(addr);
+  synchronized ClientChannel getChannel(String name) throws IOException {
+    ClientChannel result = channels.get(name);
     if (null == result) {
-      result = new ClientChannel(protocol.initiate(addr));
-      channels.put(addr, result);
+      SocketAddress addr = nameService.resolve(name);
+      result = new ClientChannel(protocol.initiate(name, addr));
+      channels.put(name, result);
     }
 
     return result;

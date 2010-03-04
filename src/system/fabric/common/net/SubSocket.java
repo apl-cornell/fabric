@@ -39,8 +39,8 @@ public class SubSocket {
   }
 
   /** @see java.net.Socket#connect(SocketAddress) */
-  public final void connect(SocketAddress addr) throws IOException {
-    state.connect(addr);
+  public final void connect(String name) throws IOException {
+    state.connect(name);
   }
 
   /** @see java.net.Socket#getOutputStream() */
@@ -76,7 +76,7 @@ public class SubSocket {
       throw new IOException("Cannot close socket: socket " + this, cause);
     }
 
-    public void connect(SocketAddress addr) throws IOException {
+    public void connect(String name) throws IOException {
       throw new IOException("Cannot connect: socket " + this, cause);
     }
 
@@ -98,12 +98,12 @@ public class SubSocket {
     @Override public String toString() { return "is unconnected"; }
 
     @Override
-    public void connect(SocketAddress addr) throws IOException {
+    public void connect(String name) throws IOException {
       try {
-        Channel.Connection conn = factory.getChannel(addr).connect(); 
+        Channel.Connection conn = factory.getChannel(name).connect(); 
         state = new Connected(conn);
       } catch (final Exception exc) {
-        IOException wrapped = new IOException("failed to connect to " + addr, exc);
+        IOException wrapped = new IOException("failed to connect to " + name, exc);
         state = new ErrorState(wrapped);
         throw wrapped;
       }

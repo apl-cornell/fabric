@@ -6,6 +6,6 @@ import java.net.Socket;
 import fabric.common.net.naming.SocketAddress;
 
 public interface HandshakeProtocol {
-  ShakenSocket initiate(SocketAddress addr) throws IOException;
-  ShakenSocket receive(Socket s)            throws IOException;
+  ShakenSocket initiate(String name, SocketAddress addr) throws IOException;
+  ShakenSocket receive(Socket s)                         throws IOException;
 }

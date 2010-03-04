@@ -7,7 +7,7 @@ import fabric.common.net.naming.SocketAddress;
 
 public class HandshakeAuthenticated implements HandshakeProtocol {
 
-  public ShakenSocket initiate(SocketAddress addr) {
+  public ShakenSocket initiate(String name, SocketAddress addr) {
     // TODO Auto-generated method stub
     throw new NotImplementedException();
   }
