@@ -1,6 +1,7 @@
 package customer;
 
 import travel.Config;
+import travel.Broker;
 import fabric.util.Map;
 import sif.servlet.Servlet;
 import sif.servlet.Request;
@@ -11,6 +12,8 @@ import javax.servlet.ServletException;
 
 public final class CustomerMain extends Servlet[CustomerPrincipal] {
   final Core{this} localCore;
+  final Core{this} brokercore;
+  final principal{this} broker;
   
   public CustomerMain() throws ServletException {
     FabricClient cl = FabricClient.getClient();
@@ -20,6 +23,24 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
       lCore = cl.getLocalCore();
     }
     localCore = lCore;
+    brokercore = client$.getCore(Config.brokerCoreName);
+
+    Map root = null;
+    if (brokercore != null) {
+        root = (Map) brokercore.getRoot();
+    }
+    if (root != null) {
+        Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
+        Object obj = root.get(Config.brokerMapKey);
+        if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+            brokerInit =
+                (Broker[BankPrincipal, CustomerPrincipal])obj;
+    }
+    broker = brokerInit;
+    } else {
+        broker = null;
+    }
+    
   }
     
   public void initialize{CustomerPrincipal:;CustomerPrincipal!:}()
@@ -50,11 +71,11 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
   }
   
   // This method will only be called by the runtime
-  protected SessionPrincipal createSessionPrincipal(String{client$→;client$←} id) {
+  protected SessionPrincipal createSessionPrincipal(String{broker→;broker←} id) {
     SessionPrincipal toReturn = null;
     atomic {
-      if (localCore != null && localCore equiv client$) {
-	toReturn = new SessionPrincipal@localCore(id);
+      if (brokercore != null && brokercore equiv broker) {
+	toReturn = new SessionPrincipal@brokercore(id);
       }
     }
     return toReturn;
