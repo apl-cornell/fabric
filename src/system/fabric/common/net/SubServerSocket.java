@@ -2,7 +2,6 @@ package fabric.common.net;
 
 import java.io.IOException;
 
-import fabric.common.net.naming.SocketAddress;
 import fabric.common.net.SubServerSocketFactory.Acceptor;
 
 
@@ -110,19 +109,24 @@ public class SubServerSocket {
     final Acceptor.ConnectionQueue queue;
 
     @Override public String toString() {
-      throw new NotImplementedException();
-      // return "is bound to " + acceptor.getAddress();
+      return "is bound to " + queue;
     }
 
     @Override
     public SubSocket accept() throws IOException {
-      throw new NotImplementedException();
-      // return acceptor.accept();
+      try {
+        return queue.accept();
+      } catch (IOException e) {
+        IOException wrapped = new IOException("failed to accept (socket " + this +")", e);
+        state = new ErrorState(wrapped);
+        throw wrapped;
+      }
     }
 
     @Override
-    public void close() throws IOException {
-      throw new NotImplementedException();
+    public void close() {
+      queue.close();
+      state = new Closed();
     }
 
     public Bound(Acceptor.ConnectionQueue queue) {

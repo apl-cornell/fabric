@@ -28,7 +28,8 @@ public final class SocketAddress {
   
   @Override
   public String toString() {
-    return this.addr + ":" + this.port;
+    String result = this.addr.isLoopbackAddress() ? "" : this.addr.toString();
+    return result + ":" + this.port;
   }
   
   @Override

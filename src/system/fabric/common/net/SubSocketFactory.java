@@ -93,6 +93,11 @@ public final class SubSocketFactory {
     public Connection accept(int sequence) throws IOException {
       throw new IOException("unexpected accept request on client channel");
     }
+    
+    @Override
+    public void cleanup() {
+      throw new NotImplementedException();
+    }
 
     @Override
     public String toString() {

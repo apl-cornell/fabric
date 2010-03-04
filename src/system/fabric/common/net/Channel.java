@@ -53,6 +53,9 @@ abstract class Channel extends Thread {
 
   /** called to create a Connection to an unknown sequence number */
   public abstract Connection accept(int sequence) throws IOException;
+  
+  /** called to notify the container that there are no remaining open sockets */
+  public abstract void cleanup();
 
   /** send channel close message */
   public synchronized void sendClose() throws IOException {
@@ -162,15 +165,17 @@ abstract class Channel extends Thread {
 
     /** this method is called by SubSocket.close(). */
     public void close() throws IOException {
-      in.close();
-      out.close();
-      sendClose(sequenceNum);
+      throw new NotImplementedException();
+      //in.close();
+      //out.close();
+      //sendClose(sequenceNum);
     }
 
     /** this method called by recvClose in response to a close message */
     public void receiveClose() throws IOException {
-      connections.remove(this);
-      sink.close();
+      throw new NotImplementedException();
+      //connections.remove(this);
+      //sink.close();
     }
 
     /** forward data to the reading thread */
