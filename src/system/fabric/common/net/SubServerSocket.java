@@ -28,13 +28,13 @@ public class SubServerSocket {
   }
 
   /** @see java.net.ServerSocket#bind(java.net.SocketAddress) */
-  public void bind(SocketAddress addr) throws IOException {
-    bind(addr, 50);
+  public void bind(String name) throws IOException {
+    bind(name, 50);
   }
 
   /** @see java.net.ServerSocket#bind(java.net.SocketAddress, int) */
-  public void bind(SocketAddress addr, int backlog) throws IOException {
-    state.bind(addr, backlog);
+  public void bind(String name, int backlog) throws IOException {
+    state.bind(name, backlog);
   }
 
   /** @see java.net.ServerSocket#close() */
@@ -67,8 +67,8 @@ public class SubServerSocket {
     }
 
     /** @see SubServerSocket#bind(InetSocketAddress, int) */
-    public void bind(SocketAddress address, int backlog) throws IOException {
-      throw new IOException("Cannot bind to local address " + address + " because server socket " + this, cause);
+    public void bind(String name, int backlog) throws IOException {
+      throw new IOException("Cannot bind to local address " + name + " because server socket " + this, cause);
     }
 
     /** @see SubServerSocket#close() */
@@ -86,12 +86,12 @@ public class SubServerSocket {
     private final SubServerSocketFactory factory;
 
     @Override
-    public void bind(SocketAddress address, int backlog) throws IOException {
+    public void bind(String name, int backlog) throws IOException {
       try {
-	Acceptor acceptor = factory.getAcceptor(address);
-	state = new Bound(acceptor);
+	Acceptor.ConnectionQueue queue = factory.bind(name, backlog);
+	state = new Bound(queue);
       } catch (final Exception exc) {
-	IOException wrapped = new IOException("failed to bind to local address " + address, exc);
+	IOException wrapped = new IOException("failed to bind to local address " + name, exc);
 	state = new ErrorState(wrapped);
 	throw wrapped;
       }
@@ -106,7 +106,7 @@ public class SubServerSocket {
    * implementation of state methods in the bound(channel) state.
    */
   private final class Bound extends State {
-    final Acceptor acceptor;
+    final Acceptor.ConnectionQueue queue;
 
     @Override public String toString() {
       throw new NotImplementedException();
@@ -122,20 +122,10 @@ public class SubServerSocket {
     @Override
     public void close() throws IOException {
       throw new NotImplementedException();
-      /*
-      try {
-	acceptor.close();
-	state = new Closed();
-      } catch(final Exception exc) {
-	IOException wrapped = new IOException("failed to close server socket", exc);
-	state = new ErrorState(wrapped);
-	throw wrapped;
-      }
-      */
     }
 
-    public Bound(Acceptor acceptor) {
-      this.acceptor = acceptor;
+    public Bound(Acceptor.ConnectionQueue queue) {
+      this.queue = queue;
     }
   }
 

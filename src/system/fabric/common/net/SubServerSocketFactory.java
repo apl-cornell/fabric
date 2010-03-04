@@ -19,8 +19,8 @@ import fabric.common.net.naming.SocketAddress;
  * @author mdgeorge
  */
 public class SubServerSocketFactory {
-  private final HandshakeProtocol handshake;
-  private final NameService       nameService;
+  private final HandshakeProtocol            handshake;
+  private final NameService                  nameService;
   private final Map<SocketAddress, Acceptor> acceptors;
 
   /** Creates a new SubServerSocketFactory decorating the given
@@ -32,6 +32,7 @@ public class SubServerSocketFactory {
   public SubServerSocketFactory(HandshakeProtocol handshake, NameService nameService) {
     this.handshake   = handshake;
     this.nameService = nameService;
+    
     this.acceptors   = new HashMap<SocketAddress, Acceptor> ();
   }
 
@@ -42,41 +43,36 @@ public class SubServerSocketFactory {
 
   /** convenience method */
   public SubServerSocket createServerSocket(String host) throws IOException {
-    return createServerSocket(nameService.localResolve(host));
+    return createServerSocket(host, 50);
   }
 
-  /** convenience method */
-  public SubServerSocket createServerSocket(String host, int backlog) throws IOException {
-    return createServerSocket(nameService.localResolve(host), backlog);
-  }
-
-  /** convenience method */
-  public SubServerSocket createServerSocket(SocketAddress local) throws IOException {
-    return createServerSocket(local, 50);
-  }
-  
   /** create a server socket to await connections to the given local host name
    * and port number.
    *
-   * @param local   the (virtual) local address
+   * @param name    the local name
    * @param backlog the number of waiting connections to allow on this socket
    * @see javax.net.ServerSocketFactory#createServerSocket(int, int, InetAddress)
    */
-  public SubServerSocket createServerSocket(SocketAddress local, int backlog) throws IOException {
+  public SubServerSocket createServerSocket(String name, int backlog) throws IOException {
     SubServerSocket result = new SubServerSocket(this);
-    result.bind(local, backlog);
+    result.bind(name, backlog);
     return result;
   }
 
+  Acceptor.ConnectionQueue bind (String name, int backlog) throws IOException {
+    throw new NotImplementedException();
+  }
+  
   /**
    * return an acceptor associated with the given (local) address, creating it
    * if necessary.
    */
-  synchronized Acceptor getAcceptor(SocketAddress addr) throws IOException {
-    Acceptor result = acceptors.get(addr);
+  /*
+  synchronized Acceptor getAcceptor(String name) throws IOException {
+    Acceptor result = acceptors.get(name);
     if (null == result) {
-      result = new Acceptor(this, addr);
-      acceptors.put(addr, result);
+      result = new Acceptor(this, name);
+      acceptors.put(name, result);
     }
     return result;
   }
@@ -84,5 +80,6 @@ public class SubServerSocketFactory {
   ShakenSocket receive(Socket s) throws IOException {
     return handshake.receive(s);
   }
+  */
 }
 
