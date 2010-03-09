@@ -52,10 +52,10 @@ abstract class Channel extends Thread {
   @Override public abstract String toString();
 
   /** called to create a Connection to an unknown sequence number */
-  public abstract Connection accept(int sequence) throws IOException;
+  protected abstract Connection accept(int sequence) throws IOException;
   
   /** called to notify the container that there are no remaining open sockets */
-  public abstract void cleanup();
+  protected abstract void cleanup();
 
   /** send channel close message */
   public synchronized void sendClose() throws IOException {
@@ -134,7 +134,7 @@ abstract class Channel extends Thread {
       }
     } catch (final IOException exc) {
       // TODO cleanup
-      throw new NotImplementedException();
+      throw new NotImplementedException(exc);
     }
   }
 

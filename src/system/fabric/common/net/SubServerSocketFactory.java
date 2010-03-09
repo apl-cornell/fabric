@@ -11,6 +11,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import fabric.common.net.Channel.Connection;
+import fabric.common.net.SubServerSocketFactory.Acceptor.ConnectionQueue.ServerChannel;
 import fabric.common.net.handshake.HandshakeProtocol;
 import fabric.common.net.handshake.ShakenSocket;
 import fabric.common.net.naming.NameService;
@@ -73,11 +74,31 @@ public class SubServerSocketFactory {
   private final NameService                  nameService;
   private final Map<SocketAddress, Acceptor> acceptors;
   
-  Acceptor.ConnectionQueue bind (String name, int backlog) throws IOException {
-    throw new NotImplementedException();
+  /**
+   * creates a new ConnectionQueue for the local name.  Uses the name service to
+   * resolve the name to an address.
+   *  
+   * @param  backlog      the size of the queue
+   * @throws IOException  if a queue with the given name already exists
+   */
+  synchronized Acceptor.ConnectionQueue bind (String name, int backlog) throws IOException {
+    SocketAddress addr = nameService.localResolve(name);
+    
+    Acceptor a = acceptors.get(addr);
+    if (null == a) {
+      a = new Acceptor(addr);
+      acceptors.put(addr, a);
+    }
+    
+    // note that an exception is only thrown if the acceptor previously existed,
+    // so no cleanup is necessary
+    return a.makeQueue(name, backlog);
   }
   
-  
+  synchronized void closeAcceptor (Acceptor a) {
+    // TODO
+    throw new NotImplementedException();
+  }
   
   //////////////////////////////////////////////////////////////////////////////
   // Acceptor  (corresponds single to java.net.ServerSocket)                  //
@@ -93,26 +114,64 @@ public class SubServerSocketFactory {
    */
   class Acceptor extends Thread {
     /* key for SubServerSocketFactory.this.acceptors */
-    public final SocketAddress address;
+    private final SocketAddress address;
 
     /* children keyed by name */
     private final Map<String, ConnectionQueue> queues;
-    
-    /* the exception that caused this Acceptor to fail, or null if this is running. */
-    private IOException error;
     
     Acceptor(SocketAddress addr) {
       super("connection dispatcher for " + addr);
 
       this.address = addr;
-      this.error   = null;
       this.queues  = new HashMap<String, ConnectionQueue> ();
       
       start();
     }
 
-    ConnectionQueue makeQueue(String name) throws IOException {
+    /**
+     * Creates a ConnectionQueue for the given name on this acceptor.
+     * 
+     * @param  size         the size of the queue 
+     * @throws IOException  if the queue already exists
+     */
+    ConnectionQueue makeQueue(String name, int size) throws IOException {
+      if (queues.containsKey(name))
+        throw new IOException("attempted to bind multiple SubServerSockets to " + name + " @ " + address);
+      
+      ConnectionQueue queue = new ConnectionQueue(name, size);
+      queues.put(name, queue);
+      return queue;
+    }
+    
+    /** handle an incoming connection */
+    private void recvConnection(Socket s) {
+      try {
+        ShakenSocket    conn  = handshake.receive(s);
+        ConnectionQueue queue = queues.get(conn.name);
+        if (null == queue) {
+          // TODO: close the connection.
+          throw new NotImplementedException();
+        }
+        queue.open(conn);
+        
+        throw new NotImplementedException();
+      } catch (IOException e) {
+        // TODO: failed to initiate, close s.
+        throw new NotImplementedException(e);
+      }
+
+    }
+    
+    /** release the resources associated with a child */
+    private void closeQueue(ConnectionQueue child) {
+      // TODO
       throw new NotImplementedException();
+    }
+    
+    /** handle a failure of the underlying socket */
+    private void recvException(IOException e) {
+      // TODO
+      throw new NotImplementedException(e);
     }
     
     /**
@@ -121,7 +180,21 @@ public class SubServerSocketFactory {
      */
     @Override
     public void run() {
-      throw new NotImplementedException();
+      try {
+        ServerSocket sock = new ServerSocket(address.getPort(), 0, address.getAddress());
+        while (true) {
+          try {
+            recvConnection(sock.accept());
+          } catch (IOException e) {
+            recvException(e);
+          }
+        }
+      } catch(IOException exc) {
+        // TODO
+        throw new NotImplementedException(exc);
+      } finally {
+        // TODO sock.close()
+      }
     }
     
     ////////////////////////////////////////////////////////////////////////////
@@ -133,7 +206,7 @@ public class SubServerSocketFactory {
      */
     class ConnectionQueue {
       /* key for Acceptor.this.queues */
-      public final String                   name;
+      private final String                   name;
       
       /* children */
       private final Set<ServerChannel>       channels;
@@ -141,22 +214,28 @@ public class SubServerSocketFactory {
       /* queue of connections that are ready to be accepted by a SubServerSocket */
       private final BlockingQueue<SubSocket> connections;
       
-      public ConnectionQueue(String name) {
+      ConnectionQueue(String name, int size) {
         this.name = name;
         
         this.channels    = new HashSet<ServerChannel> ();
-        this.connections = new ArrayBlockingQueue<SubSocket>(50);
+        this.connections = new ArrayBlockingQueue<SubSocket>(size);
       }
       
-      public void close() {
+      void close() {
         throw new NotImplementedException();
       }
       
-      public SubSocket accept() throws IOException {
+      SubSocket accept() throws IOException {
         throw new NotImplementedException();
       }
       
-      public void receive(SubSocket s) throws IOException {
+      /** create a new ServerChannel (in response to a new incoming connection) */
+      void open(ShakenSocket s) throws IOException {
+        throw new NotImplementedException();
+      }
+      
+      /** receive an incoming connection */ 
+      private void receive(SubSocket s) {
         throw new NotImplementedException();
       }
       
@@ -176,20 +255,20 @@ public class SubServerSocketFactory {
        *  
        * @author mdgeorge
        */
-      public class ServerChannel extends Channel {
-        public ServerChannel(ShakenSocket sock) throws IOException {
+      class ServerChannel extends Channel {
+        ServerChannel(ShakenSocket sock) throws IOException {
           super(sock);
         }
 
         /** create a new subsocket for an incoming connection and notify the acceptor */
         @Override
-        public Connection accept(int sequence) throws IOException {
+        protected Connection accept(int sequence) throws IOException {
           throw new NotImplementedException();
         }
         
         /** remove self from the connectionqueue */
         @Override
-        public void cleanup() {
+        protected void cleanup() {
           throw new NotImplementedException();
         }
 
