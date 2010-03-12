@@ -55,6 +55,7 @@ public class StartTransaction extends CustomerAction {
         String amountStr = req.getParam(inp);
         boolean failure = false;
         float amount = 0;
+        atomic {
         try {
             if (lbl <= new label {CustomerPrincipal←} &&
                     inp.inputLbl <= new label {BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←} &&
@@ -92,6 +93,7 @@ public class StartTransaction extends CustomerAction {
                     new Table[ll, llprime](entries));
             servlet.createPage(req, message2, ll, llprime,
                     new NodeList[ll,llprime](ll, llprime, createBody(ll, llprime, form)));
+        }
         }
     }
     
