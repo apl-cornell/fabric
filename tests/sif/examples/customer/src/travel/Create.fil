@@ -81,7 +81,7 @@ public class Create {
      * ticketsLabel: Label
      *  f {bank<-airline}
      */
-    public static void main(String native[] args) {
+    public static void main(String[] args) {
         atomic {
             Core  brokerCore = Client.getClient().getCore(Config.brokerCoreName);
             Core    bankCore = Client.getClient().getCore(Config.bankCoreName);
