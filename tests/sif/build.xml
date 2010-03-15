@@ -61,6 +61,18 @@
     <target name="sif" depends="sif-base,sif-sig" 
                         description="Builds the SIF framework, including signature files"/>
 
+   <target name="jar" depends="sif">
+    <jar jarfile="sif.jar" basedir="${sif.classes}" excludes="**/*.java" />
+   </target>
+
+   <target name="jar-examples" depends="jar">
+    <subant target="jar" failonerror="false">
+    <fileset dir="examples" includes="customer/build.xml"/>
+    </subant>
+    <move file="examples/customer/customer.jar" todir="."/>
+   </target>
+   
+
     <target name="sif-base"
             depends="init,configure,sif-fab"
             description="Build the base SIF framework using the Java compiler, not including the signature files">
@@ -176,11 +188,13 @@
             depends="configure-install">
         <fail unless="catalina.home.defined"
               message="The Tomcat installation directory is unknown. Please either edit config.properties, or set the envirnoment variable CATALINA_HOME to the Tomcat installation directory." />
+<!--
         <delete dir="${catalina.home}/shared/classes/sif" />
         <copy todir="${catalina.home}/shared/classes" includeEmptyDirs="no">
             <fileset dir="${sif.classes}" defaultexcludes="yes">
             </fileset>
         </copy>
+-->
         <delete dir="${catalina.home}/shared/classes/fabric" />
         <copy todir="${catalina.home}/shared/classes" includeEmptyDirs="no">
             <fileset dir="${fabric.home}/classes" defaultexcludes="yes">
@@ -216,7 +230,7 @@
         </subant-->
         <subant target="install">
             <!--fileset dir="examples" includes="hello/build.xml"/-->
-          	<fileset dir="examples" includes="calendar/build.xml"/>
+          	<fileset dir="examples" includes="customer/build.xml"/>
           	<!--fileset dir="examples" includes="calendartwo/build.xml"/-->
         </subant>
     </target>

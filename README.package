@@ -1,0 +1,56 @@
+This is Fabric.
+
+This is a binary distribution of Fabric and was built using the JDK 1.6 compiler. It has been tested to run Fabric workers and stores on any Linux based x86 machine that has Java installed. Since it is purely a java based system, it can conceivably be used with any machine configuration that supports Java, although this has not been tested.
+
+==Directory Structure==
+
+There are three subdirectories included: bin, lib and etc. 
+
+ -The bin directory contains bash scripts to run Fabric worker and stores and to compile Fabric applications.
+ -The lib directory contains the compiled bytecode as separate jar files. A total of 14 jar files include bytecode from Fabric and various projects Fabric is built on: Polyglot, Jif, Pastry, BDB.
+ -The etc directory contains configuration data such as keys for various worker and client principals, port numbers for various services, etc.
+
+In addition, a var directory is created by a Fabric store process to store persistent data.
+
+==Configuring Fabric==
+
+The bin directory contains a file called "defs". This defines configuration parameters pertinent to the machine this distribution will be used on. In particular the following parameters need to be defined:
+
+ -Set TOP to the base directory of this distribution. For instance if you untar this distribution in the /home/john/ directory, TOP will be /home/john/fabric.
+ -Set JAVA to the jvm binary on your machine. For instance, if Java is installed in the /opt/java directory, then JAVA will be /opt/java/bin/java
+ -Set HOSTNAME to the network hostname of the machine
+
+Adding the bin directory to your path will make it convenient to run scripts. The scripts set the CLASSPATH themselves, so that won't need manual configuration.
+
+The etc directory contains worker and client configuration files and cryptographic keys representing principals.
+
+ -The bin/genkey script is used to create keys for new principals in the keys subdirectory.
+ -For each worker X that is run, a file called X.properties should exist in the client subdirectory.
+ -For each store Y that is run, a file called Y.properties should exist in the core subdirectory.
+
+The file logging.properties specify logging related parameters. One important parameter is java.util.logging.FileHandler.pattern that defines the output file for logging. Make sure this file has the right permissions for it to be accessible.
+
+==Using Fabric==
+
+=To compile a Fabric application=
+
+Use the "fabc" script, or run fabric.Main with java, e.g.:
+java fabric.Main tests/OO7/*.fab -d rt-classes -sourcepath src/runtime:tests -sigcp sig-classes
+
+=To start a worker=
+
+Use the "fab-core" script, or run fabric.core.Main with java, e.g.:
+java fabric.core.Main --core core0 etc/keys/core0.keystore etc/keys/trust.keystore password
+
+Debug Mode: You can alternatively use the higher level startcore script that automatically sets the classpath and command line parameters for the fab-core script and starts the worker in debug mode.
+
+=To start a client (coming soon)=
+
+Use the "fab-client" script
+
+=To run an application=
+
+Use the "fab" script, or run fabric.client.Client with java, e.g.:
+java fabric.client.Client OO7.Benchmark fab://core0/OO7 tiny 3
+java fabric.client.Client OO7.traversals.T1 fab://core0/OO7 --hot
+  (Make sure you have $FABRIC_HOME set properly!)

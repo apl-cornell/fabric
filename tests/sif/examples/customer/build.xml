@@ -197,6 +197,11 @@
   <target name="clean" description="clean up">
       <delete dir="${basedir}/web/WEB-INF/classes" />
   </target>
+
+   <target name="jar" depends="compile">
+    <jar jarfile="customer.jar" basedir="${basedir}/web/WEB-INF/classes" excludes="**/*.java" />
+   </target>
+    
 	
   <target name="install" depends="configure-install, compile" description="Copies the classes to the tomcat directory">
     <fail unless="catalina.home.defined"

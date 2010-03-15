@@ -180,6 +180,82 @@
     <mkdir dir="${signatures.fabric.classes}"/>
   </target>
 
+<target name="package" depends="all,jars,fablib">
+  <!-- Delete any old version of the packaged directory -->
+  <delete dir="${name}"/>
+  <!-- Create the package directory and subdirectories -->
+  <mkdir dir="${name}"/>
+  <mkdir dir="${name}/lib"/>
+  <mkdir dir="${name}/bin"/>
+  <mkdir dir="${name}/etc"/>
+  <!-- Make sure polyglot and jif jars are built -->
+  <subant target="jar" failonerror="false">
+  		<fileset file="${polyglot.home}/build.xml"/>
+  		<fileset file="${jif.home}/build.xml"/>
+  </subant>
+  <!-- Package the collections -->
+  <subant target="jar" failonerror="false">
+  		<fileset file="${basedir}/tests/jif/build.xml"/>
+  </subant>
+  <!-- Package SIF -->
+  <subant target="jar" failonerror="false">
+  		<fileset file="${basedir}/tests/sif/build.xml"/>
+  </subant>
+  <!-- Package SIF examples -->
+  <subant target="jar-examples" failonerror="false">
+  		<fileset file="${basedir}/tests/sif/build.xml"/>
+  </subant>
+
+  <!-- Move these jars into lib -->
+  <move todir="${name}/lib">
+    <fileset dir="${basedir}/tests/jif" includes="fabcoll.jar"/>
+    <fileset dir="${basedir}/tests/sif" includes="*.jar"/>
+  </move>
+  
+  <!-- Now copy other jar files into lib -->
+  <copy todir="${name}/lib">
+    <fileset dir="${basedir}/lib" includes="fabric.jar,fabric-rt.jar"/>
+    <fileset dir="${basedir}/lib" includes="FreePastry-2.1.jar,je-3.3.75.jar"/>
+    <fileset dir="${polyglot.home}/lib" includes="polyglot.jar,JFlex.jar,java_cup.jar"/>
+    <fileset dir="${jif.home}/lib" includes="jif.jar,jiflib.jar,jifrt.jar"/>
+    <fileset dir="${java.home}/lib" includes="rt.jar"/>
+  </copy>
+
+  <!-- Copy necessary scripts into bin -->
+  <copy todir="${name}/bin">
+    <fileset dir="${basedir}/bin" includes="fabc,fab,fab-core,genkey,startcore"/>
+  </copy>
+
+  <!-- Make sure these scripts are executable -->
+  <chmod perm="755" dir="${name}/bin" includes="*" verbose="true"/>
+
+  <copy file="${basedir}/bin/defs.package"  tofile="${name}/bin/defs" />
+  <copy file="${basedir}/README.package"  tofile="${name}/README" />
+
+
+  <!-- Copy etc -->
+  <copy todir="${name}/etc">
+    <fileset dir="${basedir}/etc" />
+  </copy>
+
+  <!-- Now package the directory as a tar.gz file -->
+  <exec executable="tar"
+           dir="${basedir}"
+           failonerror="true"
+           vmlauncher="false" >
+      <arg value="-c" />
+      <arg value="-z" />
+      <arg value="-f" />
+      <arg value="${name}.tar.gz" />
+      <arg value="${name}/" />
+  </exec>
+  
+  <!-- Now delete the directory -->
+  <delete dir="${basedir}/${name}" />
+
+</target>
+
+
   <!-- Compiles Fabric -->
   <target name="all"
     depends="fabric-compiler,fabil-compiler,fabric-system,client-debug,fabric-signatures"
@@ -312,6 +388,7 @@
       </classpath>
     </javac>
   </target>
+
 
   <!-- Compiles the Fabric dissemination node -->
   <target name="dissemination" depends="client">

@@ -5,6 +5,11 @@
     </target>
 
     <import file="../sif/config.xml"/>
+
+   <target name="jar" depends="tests-jif">
+    <jar jarfile="fabcoll.jar" basedir="${basedir}/classes" excludes="**/*.java" />
+   </target>
+
     <target name="tests-jif"
 				description="Compile some Jif code that has been ported to Fabric.">
 			<apply executable="bash"
