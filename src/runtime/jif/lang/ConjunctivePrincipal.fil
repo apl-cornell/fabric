@@ -68,7 +68,7 @@ public final class ConjunctivePrincipal extends Principal {
   }
 
   public ActsForProof findProofUpto(Core core, Principal p, java.lang.Object searchState) {
-    Map proofs = new HashMap();
+    Map proofs = new HashMap@core();
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
       Principal q = (Principal) iter.next();
       ActsForProof prf = PrincipalUtil.findActsForProof(core, p, q, searchState);
@@ -89,8 +89,8 @@ public final class ConjunctivePrincipal extends Principal {
           PrincipalUtil.findActsForProof(core, witness, q, searchState);
       if (prf != null) {
         // have found a proof from witness to q
-        DelegatesProof step = new DelegatesProof(this, witness);
-        return new TransitiveProof(step, witness, prf);
+        DelegatesProof step = new DelegatesProof@core(this, witness);
+        return new TransitiveProof@core(step, witness, prf);
       }
     }
     return null;

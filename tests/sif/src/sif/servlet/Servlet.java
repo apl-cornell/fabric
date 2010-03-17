@@ -37,7 +37,7 @@ abstract public class Servlet extends HttpServlet {
     
     static {
       try {
-        Client.initialize("calendarapp");
+        Client.initialize("gaia.systems.cs.cornell.edu");
       } catch(IllegalStateException e) {
         // TODO: need to fix this up
         // do nothing, client already initialized.

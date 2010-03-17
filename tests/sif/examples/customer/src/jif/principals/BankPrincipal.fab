@@ -2,6 +2,7 @@ package jif.principals;
 
 import fabric.util.Map;
 import travel.Config;
+import fabric.client.Core;
 
 public class BankPrincipal extends ExternalPrincipal {
   public BankPrincipal() {
@@ -32,5 +33,10 @@ public class BankPrincipal extends ExternalPrincipal {
       
       return null;
     }
+  }
+  
+  // Don't much care what core is, we're going to create it where we want
+  public static BankPrincipal{*!:} getInstance{*!:}(Core core) {
+      return getInstance();
   }
 }

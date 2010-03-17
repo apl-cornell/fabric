@@ -33,4 +33,10 @@ public class AirlinePrincipal extends ExternalPrincipal {
       return null;
     }
   }
+
+  // Don't much care what core is, we're going to create it where we want
+  public static AirlinePrincipal{*!:} getInstance{*!:}(Core core) {
+      return getInstance();
+  }
+  
 }

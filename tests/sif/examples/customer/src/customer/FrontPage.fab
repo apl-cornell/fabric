@@ -7,6 +7,9 @@ import sif.servlet.Action;
 import sif.servlet.Request;
 import sif.servlet.Servlet;
 
+import travel.Broker;
+import travel.Config;
+
 
 public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
     public FrontPage(CustomerMain{this} m) throws ServletException {
@@ -20,8 +23,10 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
         lbl <= {⊤→req.session} {
 
         Servlet[CustomerPrincipal] s = getServlet();
+        final Core bcore = client$.getCore(Config.brokerCoreName);
         if (s == null || !(s instanceof CustomerMain)) throw new ServletException("No servlet available"); 
         if (req == null) throw new ServletException("No request available"); 
+        if (bcore == null) throw new ServletException("Broker core is down"); 
         CustomerMain m = (CustomerMain)s;
 
         atomic {
@@ -30,7 +35,8 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
                 loginCustomer(req.session, req);
             }
 
-            final label amtLbl = new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←};
+
+            final label amtLbl = new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←}@bcore;
             if (lbl <= new label {CustomerPrincipal←}) {
                 InputNode amountInput = new TextInput[CustomerPrincipal, lbl, lbl]
                                                       (m, amtLbl, 20, "");

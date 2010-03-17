@@ -33,4 +33,10 @@ public class CustomerPrincipal extends ExternalPrincipal {
       return null;
     }
   }
+  
+  // Don't much care what core is, we're going to create it where we want
+  public static CustomerPrincipal{*!:} getInstance{*!:}(Core core) {
+      return getInstance();
+  }
+  
 }

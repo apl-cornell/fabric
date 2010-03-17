@@ -16,6 +16,8 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     private String name;
 
     private Map superiors; // treat this like a set
+    
+    public static LocalCore localCore = Client.getClient().getLocalCore();
 
     public AbstractPrincipal() {
       super();
@@ -98,7 +100,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
             ActsForProof prf = PrincipalUtil.findActsForProof(c, p, s, searchState);            
             if (prf != null) {
                 if (PrincipalUtil.actsFor(s, this)) {
-                    return new TransitiveProof(prf, s, new DelegatesProof(s, this));
+                    return new TransitiveProof@localCore(prf, s, new DelegatesProof@localCore(s, this));
                 }
             }
         }
