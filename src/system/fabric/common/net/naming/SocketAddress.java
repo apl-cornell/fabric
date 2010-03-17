@@ -42,6 +42,11 @@ public final class SocketAddress {
 
   @Override
   public int hashCode() {
+    // TODO: perhaps this could be better
+    
+    if (null == this.addr)
+      return this.port;
+    
     return this.addr.hashCode() ^ this.port;
   }
 }
