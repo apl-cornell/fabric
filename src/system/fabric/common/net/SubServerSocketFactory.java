@@ -143,6 +143,12 @@ public class SubServerSocketFactory {
       return queue;
     }
     
+    /** release the resources associated with a child */
+    private void closeQueue(ConnectionQueue child) {
+      // TODO
+      throw new NotImplementedException();
+    }
+    
     /** handle an incoming connection */
     private void recvConnection(Socket s) {
       try {
@@ -153,19 +159,10 @@ public class SubServerSocketFactory {
           throw new NotImplementedException();
         }
         queue.open(conn);
-        
-        throw new NotImplementedException();
       } catch (IOException e) {
         // TODO: failed to initiate, close s.
         throw new NotImplementedException(e);
       }
-
-    }
-    
-    /** release the resources associated with a child */
-    private void closeQueue(ConnectionQueue child) {
-      // TODO
-      throw new NotImplementedException();
     }
     
     /** handle a failure of the underlying socket */
@@ -221,22 +218,33 @@ public class SubServerSocketFactory {
         this.connections = new ArrayBlockingQueue<SubSocket>(size);
       }
       
+      /** cleanup when associated SubServerSocket is closed. */
       void close() {
         throw new NotImplementedException();
       }
       
+      /** wait for an incoming SubSocket connection */
       SubSocket accept() throws IOException {
-        throw new NotImplementedException();
+        try {
+          return connections.take();
+        } catch (InterruptedException e) {
+          throw new NotImplementedException(e);
+        }
       }
       
-      /** create a new ServerChannel (in response to a new incoming connection) */
+      /** create a new ServerChannel (in response to a new incoming socket connection) */
       void open(ShakenSocket s) throws IOException {
-        throw new NotImplementedException();
+        channels.add(new ServerChannel(s));
       }
       
-      /** receive an incoming connection */ 
+      /** receive an incoming subsocket connection */ 
       private void receive(SubSocket s) {
-        throw new NotImplementedException();
+        try {
+          connections.add(s);
+        } catch(IllegalStateException e) {
+          // TODO: queue is full, close s
+          throw new NotImplementedException(e);
+        }
       }
       
       @Override
@@ -245,7 +253,7 @@ public class SubServerSocketFactory {
       }
       
       //////////////////////////////////////////////////////////////////////////
-      // ServerChannel (corresponds to java.net.Socket                        //
+      // ServerChannel (corresponds to java.net.Socket)                       //
       //////////////////////////////////////////////////////////////////////////
 
       /**
@@ -258,12 +266,17 @@ public class SubServerSocketFactory {
       class ServerChannel extends Channel {
         ServerChannel(ShakenSocket sock) throws IOException {
           super(sock);
+          
+          setName("demultiplexer for " + toString());
         }
 
         /** create a new subsocket for an incoming connection and notify the acceptor */
         @Override
         protected Connection accept(int sequence) throws IOException {
-          throw new NotImplementedException();
+          Connection result = new Connection(sequence);
+          SubSocket  socket = new SubSocket(result);
+          receive(socket);
+          return result;
         }
         
         /** remove self from the connectionqueue */
@@ -274,8 +287,7 @@ public class SubServerSocketFactory {
 
         @Override
         public String toString() {
-          throw new NotImplementedException();
-          // return "channel from " + sock.getInetAddress() + " to " + queue.getAddress();
+          return "channel from " + sock.getInetAddress() + " to " + ConnectionQueue.this.toString();
         }
       }
     }

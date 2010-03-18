@@ -60,8 +60,7 @@ public final class SubSocketFactory {
   synchronized ClientChannel getChannel(String name) throws IOException {
     ClientChannel result = channels.get(name);
     if (null == result) {
-      SocketAddress addr = nameService.resolve(name);
-      result = new ClientChannel(protocol.initiate(name, addr));
+      result = new ClientChannel(name, nameService.resolve(name));
       channels.put(name, result);
     }
 
@@ -77,11 +76,23 @@ public final class SubSocketFactory {
    * @author mdgeorge
    */
   class ClientChannel extends Channel {
-    private int nextSequenceNumber;
+    /* key for SubSocketFactory.this.channels */
+    private final String name;
 
-    public ClientChannel(ShakenSocket s) throws IOException {
-      super(s);
-      nextSequenceNumber = 0;
+    /* the remote address */
+    private final SocketAddress addr;
+    
+    /* the next sequence number to be created */
+    private int nextSequenceNumber;
+    
+    public ClientChannel(String name, SocketAddress addr) throws IOException {
+      super(protocol.initiate(name, addr));
+      
+      this.addr          = addr;
+      this.name          = name;
+      nextSequenceNumber = 1;
+      
+      setName("demultiplexer for " + toString());
     }
 
     /** initiate a new substream */
@@ -101,7 +112,7 @@ public final class SubSocketFactory {
 
     @Override
     public String toString() {
-      return "channel to " + sock.getRemoteSocketAddress();
+      return "channel to " + name + " [" + addr.toString() + "]";
     }
   }
 }

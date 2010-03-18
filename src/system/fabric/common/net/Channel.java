@@ -45,12 +45,11 @@ abstract class Channel extends Thread {
     this.in   = new DataInputStream(this.sock.getInputStream());
     this.connections = new HashMap<Integer, Connection>();
 
-    setName("demultiplexer for " + toString());
     start();
   }
 
   @Override public abstract String toString();
-
+  
   /** called to create a Connection to an unknown sequence number */
   protected abstract Connection accept(int sequence) throws IOException;
   
@@ -73,7 +72,7 @@ abstract class Channel extends Thread {
   /** send data */
   public synchronized void sendData(int sequence, byte[] data, int offset, int len) throws IOException {
     out.writeInt(sequence);
-    out.writeInt(data.length);
+    out.writeInt(len);
     out.write(data, offset, len);
     out.flush();
   }
@@ -150,7 +149,7 @@ abstract class Channel extends Thread {
 
     public Connection(int sequenceNum) throws IOException {
       this.sequenceNum = sequenceNum;
-      this.out         = new BufferedOutputStream(new MuxedOutputStream());
+      this.out         = new BufferedOutputStream(new MuxedOutputStream(sequenceNum));
 
       PipedInputStream in = new PipedInputStream();
       this.sink           = new PipedOutputStream(in);
@@ -190,8 +189,12 @@ abstract class Channel extends Thread {
    * BufferedOutputStreams before being returned.
    */
   private class MuxedOutputStream extends OutputStream {
-    private int sequenceNumber;
+    private final int sequenceNumber;
 
+    public MuxedOutputStream(int sequenceNumber) {
+      this.sequenceNumber = sequenceNumber;
+    }
+    
     @Override
     public void write(int arg0) throws IOException {
       throw new IOException("MuxedOutputStreams do not support writing unbuffered data");
