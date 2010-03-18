@@ -1,8 +1,8 @@
 package fabric.common.net.handshake;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 
 import fabric.common.net.naming.SocketAddress;
@@ -10,23 +10,21 @@ import fabric.common.net.naming.SocketAddress;
 public class HandshakeUnauthenticated implements HandshakeProtocol {
   //
   // an incredibly simple handshake:
-  // client -> server : len, name
+  // client -> server : name
   //
   
   public ShakenSocket initiate(String name, SocketAddress addr) throws IOException {
     Socket s = new Socket(addr.getAddress(), addr.getPort());
-    OutputStream out = s.getOutputStream();
-    out.write(name.length());
-    out.write(name.getBytes());
+    DataOutputStream out = new DataOutputStream(s.getOutputStream());
+    out.writeUTF(name);
     out.flush();
     return new ShakenSocket(name, null, s);
   }
 
   public ShakenSocket receive(Socket s) throws IOException {
-    InputStream in = s.getInputStream();
-    int    len  = in.read();
-    byte[] name = new byte[len];
-    in.read(name, 0, len);
-    return new ShakenSocket(new String(name), null, s);
+    DataInputStream in = new DataInputStream(s.getInputStream());
+    String name = in.readUTF();
+    System.out.println(name + " [" + name.length() + "]");
+    return new ShakenSocket(name, null, s);
   }
 }
