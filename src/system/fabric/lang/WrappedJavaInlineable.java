@@ -118,7 +118,7 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * @see fabric.lang.Object#equals(fabric.lang.Object)
    */
   public boolean equals(Object o) {
-    if (!(o instanceof WrappedJavaInlineable)) return false;
+    if (!(o instanceof WrappedJavaInlineable<?>)) return false;
     java.lang.Object obj = ((WrappedJavaInlineable<?>) o).obj;
     if (obj == null) return this.obj == null;
     return obj.equals(this.obj);
@@ -131,7 +131,7 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    */
   @Override
   public boolean equals(java.lang.Object obj) {
-    if (obj instanceof WrappedJavaInlineable)
+    if (obj instanceof WrappedJavaInlineable<?>)
       return equals((WrappedJavaInlineable<?>) obj);
     if (obj == null) return this.obj == null;
     return obj.equals(this.obj);

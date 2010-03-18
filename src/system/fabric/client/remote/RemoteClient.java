@@ -2,7 +2,10 @@ package fabric.client.remote;
 
 import java.net.UnknownHostException;
 
-import fabric.client.*;
+import fabric.client.Client;
+import fabric.client.Core;
+import fabric.client.TransactionCommitFailedException;
+import fabric.client.TransactionPrepareFailedException;
 import fabric.client.remote.messages.GetPrincipalMessage;
 import fabric.client.remote.messages.ReadMessage;
 import fabric.client.remote.messages.RemoteCallMessage;
@@ -23,7 +26,6 @@ import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
-import fabric.net.NameService;
 
 /**
  * Encapsulates a remote client. This class maintains the connection to the
