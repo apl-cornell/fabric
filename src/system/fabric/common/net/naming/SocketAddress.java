@@ -33,11 +33,22 @@ public final class SocketAddress {
   }
   
   @Override
-  public boolean equals(Object other) {
-    if (!(other instanceof SocketAddress)) return false;
+  public boolean equals(Object o) {
+    if (!(o instanceof SocketAddress))
+      return false;
 
-    SocketAddress a = (SocketAddress) other;
-    return this.addr.equals(a.addr) && this.port == a.port;
+    SocketAddress other = (SocketAddress) o;
+    
+    if (this.port != other.port)
+      return false;
+    
+    if (null == this.addr && null == other.addr)
+      return true;
+    
+    if (null == this.addr || null == other.addr)
+      return false;
+    
+    return this.addr.equals(other.addr);
   }
 
   @Override
