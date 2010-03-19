@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
 import fabric.client.remote.RemoteCallException;
 import fabric.client.remote.RemoteClient;
 import fabric.client.remote.UpdateMap;
-import fabric.client.remote.Worker;
+import fabric.client.remote.MessageHandlerThread;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
@@ -155,7 +155,7 @@ public class RemoteCallMessage extends
   }
 
   @Override
-  public Response dispatch(Worker handler) throws RemoteCallException,
+  public Response dispatch(MessageHandlerThread handler) throws RemoteCallException,
       ProtocolError {
     return handler.handle(this);
   }

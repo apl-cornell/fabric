@@ -70,7 +70,7 @@ public class UnauthenticatedCommitTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.core.Worker w) {
+  public Response dispatch(fabric.core.MessageHandlerThread w) {
     return w.handle(this);
   }
 

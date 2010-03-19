@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 
 import fabric.client.TransactionCommitFailedException;
 import fabric.client.TransactionPrepareFailedException;
-import fabric.common.AbstractWorkerThread;
+import fabric.common.AbstractMessageHandlerThread;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
@@ -15,24 +15,29 @@ import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.messages.*;
 
-public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
+public class MessageHandlerThread extends
+    AbstractMessageHandlerThread<SessionAttributes, MessageHandlerThread> {
 
-  private static final Logger logger = Logger.getLogger("fabric.core.worker");
+  private static final Logger logger =
+      Logger.getLogger("fabric.core.MessageHandler");
 
   /**
-   * A factory for creating Worker instances. This is used by WorkerThread.Pool.
+   * A factory for creating MessageHandlerThread instances. This is used by
+   * AbstractMessageHandlerThread.Pool.
    */
-  static class Factory implements AbstractWorkerThread.Factory<Worker> {
-    public Worker createWorker(Pool<Worker> pool) {
-      return new Worker(pool);
+  static class Factory implements
+      AbstractMessageHandlerThread.Factory<MessageHandlerThread> {
+    public MessageHandlerThread createMessageHandler(
+        Pool<MessageHandlerThread> pool) {
+      return new MessageHandlerThread(pool);
     }
   }
 
   /**
-   * Instantiates a new worker thread and starts it running.
+   * Instantiates a new message-handler thread and starts it running.
    */
-  private Worker(Pool<Worker> pool) {
-    super("Core worker", pool);
+  private MessageHandlerThread(Pool<MessageHandlerThread> pool) {
+    super("Core message handler", pool);
 
     fabric.client.transaction.TransactionManager.startThread(this);
   }

@@ -82,8 +82,8 @@ public class Options extends fabric.common.Options {
             + "stores. Can be specified multiple times. The first core "
             + "specified will be the node's \"primary\" core, and the core "
             + "node's client will run under the primary core's principal.");
-    usageForFlag(out, "--pool <number>", "size of worker-thread pool",
-        defaults.threadPool);
+    usageForFlag(out, "--pool <number>", "size of pool of message-handler "
+        + "threads", defaults.threadPool);
     usageForFlag(out, "--timeout <seconds>", "time-out for idle client "
         + "connections", defaults.timeout);
     usageForFlag(out, "--nossl", "disables SSL for debugging purposes");

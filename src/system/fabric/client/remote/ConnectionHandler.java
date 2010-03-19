@@ -17,12 +17,12 @@ import fabric.lang.NodePrincipal;
  * </p>
  */
 public class ConnectionHandler extends
-    AbstractConnectionHandler<Object, SessionAttributes, Worker> {
+    AbstractConnectionHandler<Object, SessionAttributes, MessageHandlerThread> {
 
   private static final int POOL_SIZE = 10;
 
   public ConnectionHandler(RemoteCallManager rcm) {
-    super(POOL_SIZE, new Worker.Factory(rcm));
+    super(POOL_SIZE, new MessageHandlerThread.Factory(rcm));
   }
 
   @Override
@@ -42,12 +42,12 @@ public class ConnectionHandler extends
 
   @Override
   protected void logAuthenticationFailure() {
-    Worker.logger.info("Client rejected connection: authentication failed.");
+    MessageHandlerThread.logger.info("Client rejected connection: authentication failed.");
   }
 
   @Override
   protected void logSession(SocketAddress remote, SessionAttributes session) {
-    Worker.logger.info("Client accepted connection from "
+    MessageHandlerThread.logger.info("Client accepted connection from "
         + session.remoteNodeName + " at " + remote);
   }
 

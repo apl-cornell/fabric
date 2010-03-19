@@ -9,7 +9,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
-import fabric.core.Worker;
+import fabric.core.MessageHandlerThread;
 import fabric.net.UnreachableNodeException;
 
 /**
@@ -72,10 +72,10 @@ public final class AllocateMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#dispatch(fabric.core.Worker)
+   * @see fabric.messages.Message#dispatch(fabric.core.MessageHandlerThread)
    */
   @Override
-  public Response dispatch(Worker w) throws AccessException, ProtocolError {
+  public Response dispatch(MessageHandlerThread w) throws AccessException, ProtocolError {
     return w.handle(this);
   }
 

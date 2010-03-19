@@ -11,7 +11,7 @@ import fabric.common.MessageHandler;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FabricRuntimeException;
 import fabric.common.exceptions.InternalError;
-import fabric.core.Worker;
+import fabric.core.MessageHandlerThread;
 import fabric.net.RemoteNode;
 import fabric.net.Stream;
 
@@ -87,15 +87,15 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
 
   /**
    * This reads a <code>Message</code> from the provided input stream,
-   * dispatches it to the given <code>Worker</code>, and writes the response to
-   * the provided OutputStream. Used only by the core.
+   * dispatches it to the given <code>MessageHandler</code>, and writes the
+   * response to the provided OutputStream. Used only by the core.
    * 
    * @param in
    *          The input stream to read the incoming message from.
    * @param out
    *          The output stream to write the result to.
    * @param handler
-   *          The worker that will handle the message and generate the response
+   *          The handler that will handle the message and generate the response
    * @throws IOException
    *           If a malformed message is sent, or in the case of a failure in
    *           the i/o streams provided.
@@ -167,33 +167,33 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
   }
 
   private final R dispatch(MessageHandler handler) throws FabricException {
-    if (handler instanceof fabric.client.remote.Worker) {
-      return dispatch((fabric.client.remote.Worker) handler);
+    if (handler instanceof fabric.client.remote.MessageHandlerThread) {
+      return dispatch((fabric.client.remote.MessageHandlerThread) handler);
     }
 
-    return dispatch((Worker) handler);
+    return dispatch((MessageHandlerThread) handler);
   }
 
   /**
-   * Calls the appropriate <code>handle(...)</code> method on the worker.
+   * Calls the appropriate <code>handle(...)</code> method on the handler.
    * 
    * @param handler
    * @return the result computed by the handler
    * @throws FabricException
    */
-  public R dispatch(Worker handler) throws FabricException {
+  public R dispatch(MessageHandlerThread handler) throws FabricException {
     throw new InternalError(
         "Invalid, unsupported, or unimplemented core message: " + getClass());
   }
 
   /**
-   * Calls the appropriate <code>handle(...)</code> method on the worker.
+   * Calls the appropriate <code>handle(...)</code> method on the handler.
    * 
    * @param handler
    * @return the result computed by the handler
    * @throws FabricException
    */
-  public R dispatch(fabric.client.remote.Worker handler) throws FabricException {
+  public R dispatch(fabric.client.remote.MessageHandlerThread handler) throws FabricException {
     throw new InternalError(
         "Invalid, unsupported, or unimplemented client message: " + getClass());
   }

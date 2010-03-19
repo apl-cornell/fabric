@@ -223,15 +223,15 @@ public class PrepareTransactionMessage extends
 
   /*
    * (non-Javadoc)
-   * @see fabric.messages.Message#dispatch(fabric.core.Worker)
+   * @see fabric.messages.Message#dispatch(fabric.core.MessageHandlerThread)
    */
   @Override
-  public Response dispatch(fabric.core.Worker w) throws ProtocolError {
+  public Response dispatch(fabric.core.MessageHandlerThread w) throws ProtocolError {
     return w.handle(this);
   }
 
   @Override
-  public Response dispatch(fabric.client.remote.Worker handler)
+  public Response dispatch(fabric.client.remote.MessageHandlerThread handler)
       throws ProtocolError {
     return handler.handle(this);
   }

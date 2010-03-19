@@ -13,8 +13,8 @@ import java.util.Set;
 
 import fabric.client.Client;
 import fabric.client.Core;
-import fabric.common.AbstractWorkerThread.Pool;
-import fabric.common.AbstractWorkerThread.SessionAttributes;
+import fabric.common.AbstractMessageHandlerThread.Pool;
+import fabric.common.AbstractMessageHandlerThread.SessionAttributes;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.lang.NodePrincipal;
@@ -30,14 +30,14 @@ import fabric.net.ChannelMultiplexerThread;
  * @param <Session>
  *          a class of session objects.
  */
-public abstract class AbstractConnectionHandler<Node, Session extends SessionAttributes, Worker extends AbstractWorkerThread<Session, Worker>> {
+public abstract class AbstractConnectionHandler<Node, Session extends SessionAttributes, MessageHandlerThread extends AbstractMessageHandlerThread<Session, MessageHandlerThread>> {
   private boolean destroyed;
-  private final AbstractWorkerThread.Pool<Worker> threadPool;
+  private final AbstractMessageHandlerThread.Pool<MessageHandlerThread> threadPool;
   private final Set<ChannelMultiplexerThread> activeMuxThreads;
 
   protected AbstractConnectionHandler(int poolSize,
-      AbstractWorkerThread.Factory<Worker> workerFactory) {
-    this.threadPool = new Pool<Worker>(poolSize, workerFactory);
+      AbstractMessageHandlerThread.Factory<MessageHandlerThread> handlerFactory) {
+    this.threadPool = new Pool<MessageHandlerThread>(poolSize, handlerFactory);
     this.activeMuxThreads = new HashSet<ChannelMultiplexerThread>();
     this.destroyed = false;
   }
@@ -87,8 +87,8 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
   protected abstract void logSession(SocketAddress remote, Session session);
 
   /**
-   * Returns the name for the worker thread that will be handling the given
-   * connection.
+   * Returns the name for the message-handler thread that will be handling the
+   * given connection.
    */
   protected abstract String getThreadName(SocketAddress remote, Session session);
 
@@ -258,34 +258,34 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
       ChannelMultiplexerThread.CallbackHandler {
 
     private final Session session;
-    private final List<Worker> workers;
+    private final List<MessageHandlerThread> handlers;
 
     public CallbackHandler(Session session) {
       this.session = session;
-      this.workers = new ArrayList<Worker>();
+      this.handlers = new ArrayList<MessageHandlerThread>();
     }
 
     public void connectionClosed() {
-      for (Worker worker : workers)
-        worker.recycle();
-      workers.clear();
+      for (MessageHandlerThread handler : handlers)
+        handler.recycle();
+      handlers.clear();
     }
 
     public void newStream(ChannelMultiplexerThread muxer, int streamID) {
-      // Get a new worker thread and assign it to the new sub-stream.
-      Worker worker = threadPool.get();
-      worker.associateSession(session);
-      workers.add(worker);
+      // Get a new message-handler thread and assign it to the new sub-stream.
+      MessageHandlerThread handler = threadPool.get();
+      handler.associateSession(session);
+      handlers.add(handler);
       try {
-        muxer.registerChannels(streamID, worker.source(), worker.sink());
+        muxer.registerChannels(streamID, handler.source(), handler.sink());
       } catch (IOException e) {
         throw new InternalError(e);
       }
     }
 
     public void shutdown() {
-      for (Worker worker : workers)
-        worker.interrupt();
+      for (MessageHandlerThread handler : handlers)
+        handler.interrupt();
 
       session.endSession();
     }

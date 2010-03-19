@@ -14,7 +14,7 @@ import fabric.client.remote.messages.GetPrincipalMessage.Response;
 import fabric.client.transaction.Log;
 import fabric.client.transaction.TransactionManager;
 import fabric.client.transaction.TransactionRegistry;
-import fabric.common.AbstractWorkerThread;
+import fabric.common.AbstractMessageHandlerThread;
 import fabric.common.AuthorizationUtil;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
@@ -26,35 +26,40 @@ import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.net.RemoteNode;
 
-public class Worker extends AbstractWorkerThread<SessionAttributes, Worker> {
+public class MessageHandlerThread extends
+    AbstractMessageHandlerThread<SessionAttributes, MessageHandlerThread> {
 
-  static final Logger logger = Logger.getLogger("fabric.client.remote.Worker");
+  static final Logger logger =
+      Logger.getLogger("fabric.client.remote.MessageHandler");
 
   private final RemoteCallManager rcm;
 
   private final Client client;
 
   /**
-   * A factory for creating Worker instances. This is used by WorkerThread.Pool.
+   * A factory for creating MessageHandlerThread instances. This is used by
+   * AbstractMessageHandlerThread.Pool.
    */
-  static class Factory implements AbstractWorkerThread.Factory<Worker> {
+  static class Factory implements
+      AbstractMessageHandlerThread.Factory<MessageHandlerThread> {
     private final RemoteCallManager rcm;
 
     Factory(RemoteCallManager rcm) {
       this.rcm = rcm;
     }
 
-    public Worker createWorker(
-        fabric.common.AbstractWorkerThread.Pool<Worker> pool) {
-      return new Worker(rcm, pool);
+    public MessageHandlerThread createMessageHandler(
+        fabric.common.AbstractMessageHandlerThread.Pool<MessageHandlerThread> pool) {
+      return new MessageHandlerThread(rcm, pool);
     }
   }
 
   /**
-   * Instantiates a new worker thread and starts it running.
+   * Instantiates a new message-handler thread and starts it running.
    */
-  public Worker(RemoteCallManager rcm, Pool<Worker> pool) {
-    super("RCM worker", pool);
+  public MessageHandlerThread(RemoteCallManager rcm,
+      Pool<MessageHandlerThread> pool) {
+    super("RCM message handler", pool);
     this.rcm = rcm;
     this.client = Client.getClient();
     TransactionManager.startThread(this);

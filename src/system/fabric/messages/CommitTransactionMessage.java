@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.client.debug.Timing;
-import fabric.client.remote.Worker;
+import fabric.client.remote.MessageHandlerThread;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
@@ -71,12 +71,12 @@ public class CommitTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.core.Worker w) throws ProtocolError {
+  public Response dispatch(fabric.core.MessageHandlerThread w) throws ProtocolError {
     return w.handle(this);
   }
 
   @Override
-  public Response dispatch(Worker handler) throws ProtocolError {
+  public Response dispatch(MessageHandlerThread handler) throws ProtocolError {
     return handler.handle(this);
   }
 

@@ -56,14 +56,14 @@ public class AbortTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.core.Worker w) throws AccessException,
+  public Response dispatch(fabric.core.MessageHandlerThread w) throws AccessException,
       ProtocolError {
     w.handle(this);
     return new Response();
   }
 
   @Override
-  public Response dispatch(fabric.client.remote.Worker handler)
+  public Response dispatch(fabric.client.remote.MessageHandlerThread handler)
       throws ProtocolError {
     handler.handle(this);
     return new Response();

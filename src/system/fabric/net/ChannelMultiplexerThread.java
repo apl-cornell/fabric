@@ -448,9 +448,9 @@ public final class ChannelMultiplexerThread extends Thread {
   }
 
   /**
-   * Registers a pair of channels for communicating with a worker thread,
-   * assigning them a designated streamID, and registers the source channel with
-   * the selector.
+   * Registers a pair of channels for communicating with a message-handler
+   * thread, assigning them a designated streamID, and registers the source
+   * channel with the selector.
    */
   public synchronized void registerChannels(int streamID, SourceChannel source,
       SinkChannel sink) throws IOException {
@@ -473,9 +473,9 @@ public final class ChannelMultiplexerThread extends Thread {
   }
 
   /**
-   * Registers a pair of channels for communicating with a worker thread,
-   * assigning them a fresh streamID, and registers the source channel with the
-   * selector.
+   * Registers a pair of channels for communicating with a message-handler
+   * thread, assigning them a fresh streamID, and registers the source channel
+   * with the selector.
    */
   public int registerChannels(SourceChannel source, SinkChannel sink)
       throws IOException {

@@ -225,10 +225,10 @@ public class UnauthenticatedPrepareTransactionMessage extends
 
   /*
    * (non-Javadoc)
-   * @see fabric.messages.Message#dispatch(fabric.core.Worker)
+   * @see fabric.messages.Message#dispatch(fabric.core.MessageHandlerThread)
    */
   @Override
-  public Response dispatch(fabric.core.Worker w) {
+  public Response dispatch(fabric.core.MessageHandlerThread w) {
     return w.handle(this);
   }
 

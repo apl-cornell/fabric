@@ -326,7 +326,7 @@ public class TransactionManager {
   /**
    * Returns a GroupContainer containing the specified object.
    * 
-   * @param worker
+   * @param handler
    *          Used to track read statistics. Can be null.
    * @param subscriber
    *          If non-null, then the given client will be subscribed to the
@@ -336,7 +336,7 @@ public class TransactionManager {
    *          client.
    */
   GroupContainer getGroupContainerAndSubscribe(long onum,
-      RemoteClient subscriber, boolean dissemSubscribe, Worker worker)
+      RemoteClient subscriber, boolean dissemSubscribe, MessageHandlerThread handler)
       throws AccessException {
     GroupContainer container;
     synchronized (store) {
@@ -351,7 +351,7 @@ public class TransactionManager {
     // XXX Ideally, the subscription registration should happen atomically with
     // the read.
     if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
-    ObjectGroup group = readGroup(onum, worker);
+    ObjectGroup group = readGroup(onum, handler);
     if (group == null) throw new AccessException(store.getName(), onum);
 
     Core core = Client.getClient().getCore(store.getName());
@@ -362,8 +362,8 @@ public class TransactionManager {
       store.cacheGroupContainer(group.objects().keySet(), container);
     }
 
-    if (worker != null) {
-      worker.getSession().recordGlobCreated(group.objects().size());
+    if (handler != null) {
+      handler.getSession().recordGlobCreated(group.objects().size());
     }
 
     return container;
@@ -375,12 +375,12 @@ public class TransactionManager {
    * @param subscriber
    *          If non-null, then the given client will be subscribed to the
    *          object as a dissemination node.
-   * @param worker
+   * @param handler
    *          Used to track read statistics.
    */
-  public Glob getGlob(long onum, RemoteClient subscriber, Worker worker)
+  public Glob getGlob(long onum, RemoteClient subscriber, MessageHandlerThread handler)
       throws AccessException {
-    return getGroupContainerAndSubscribe(onum, subscriber, true, worker)
+    return getGroupContainerAndSubscribe(onum, subscriber, true, handler)
         .getGlob();
   }
 
@@ -394,13 +394,13 @@ public class TransactionManager {
    *          object as a client.
    * @param onum
    *          The onum for an object that should be in the group.
-   * @param worker
+   * @param handler
    *          Used to track read statistics.
    */
   public ObjectGroup getGroup(NodePrincipal principal, RemoteClient subscriber,
-      long onum, Worker worker) throws AccessException {
+      long onum, MessageHandlerThread handler) throws AccessException {
     ObjectGroup group =
-        getGroupContainerAndSubscribe(onum, subscriber, false, worker)
+        getGroupContainerAndSubscribe(onum, subscriber, false, handler)
             .getGroup(principal);
     if (group == null) throw new AccessException(store.getName(), onum);
     return group;
@@ -411,10 +411,10 @@ public class TransactionManager {
    * 
    * @param onum
    *          The group's head object.
-   * @param worker
+   * @param handler
    *          Used to track read statistics.
    */
-  private ObjectGroup readGroup(long onum, Worker worker) {
+  private ObjectGroup readGroup(long onum, MessageHandlerThread handler) {
     SerializedObject obj = read(onum);
     if (obj == null) return null;
 
@@ -432,8 +432,8 @@ public class TransactionManager {
       SerializedObject curObj = toVisit.remove();
       group.put(curObj.getOnum(), curObj);
 
-      if (worker != null) {
-        worker.getSession().recordObjectSent(curObj.getClassName());
+      if (handler != null) {
+        handler.getSession().recordObjectSent(curObj.getClassName());
       }
 
       if (group.size() == MAX_GROUP_SIZE) break;

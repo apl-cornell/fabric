@@ -1,10 +1,10 @@
 package fabric.client.remote;
 
-import fabric.common.AbstractWorkerThread;
+import fabric.common.AbstractMessageHandlerThread;
 import fabric.lang.NodePrincipal;
 
 public final class SessionAttributes extends
-    AbstractWorkerThread.SessionAttributes {
+    AbstractMessageHandlerThread.SessionAttributes {
 
   /**
    * Whether this is a connection for dissemination updates.

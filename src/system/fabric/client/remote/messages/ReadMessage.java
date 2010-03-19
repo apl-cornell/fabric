@@ -7,7 +7,7 @@ import java.io.IOException;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.remote.RemoteClient;
-import fabric.client.remote.Worker;
+import fabric.client.remote.MessageHandlerThread;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
@@ -70,7 +70,7 @@ public class ReadMessage extends InterClientMessage<ReadMessage.Response> {
   }
 
   @Override
-  public Response dispatch(Worker handler) throws ProtocolError {
+  public Response dispatch(MessageHandlerThread handler) throws ProtocolError {
     return handler.handle(this);
   }
 

@@ -8,7 +8,7 @@ import fabric.client.RemoteCore;
 import fabric.common.*;
 import fabric.common.exceptions.*;
 import fabric.common.exceptions.InternalError;
-import fabric.core.Worker;
+import fabric.core.MessageHandlerThread;
 
 /**
  * A <code>ReadMessage</code> represents a request from a client to read an
@@ -75,10 +75,10 @@ public final class ReadMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#dispatch(fabric.core.Worker)
+   * @see fabric.messages.Message#dispatch(fabric.core.MessageHandlerThread)
    */
   @Override
-  public Response dispatch(Worker w) throws AccessException, ProtocolError {
+  public Response dispatch(MessageHandlerThread w) throws AccessException, ProtocolError {
     return w.handle(this);
   }
 

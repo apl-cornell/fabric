@@ -16,12 +16,12 @@ import fabric.lang.NodePrincipal;
  * </p>
  */
 class ConnectionHandler extends
-    AbstractConnectionHandler<Node.Core, SessionAttributes, Worker> {
+    AbstractConnectionHandler<Node.Core, SessionAttributes, MessageHandlerThread> {
   private final Node node;
   private static final Logger LOGGER = Logger.getLogger("fabric.core.worker");
 
   public ConnectionHandler(Node node) {
-    super(node.opts.threadPool, new Worker.Factory());
+    super(node.opts.threadPool, new MessageHandlerThread.Factory());
     this.node = node;
   }
 

@@ -7,12 +7,12 @@ import java.util.logging.Logger;
 
 import fabric.client.Client;
 import fabric.client.remote.RemoteClient;
-import fabric.common.AbstractWorkerThread;
+import fabric.common.AbstractMessageHandlerThread;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.NodePrincipal;
 
-final class SessionAttributes extends AbstractWorkerThread.SessionAttributes {
+final class SessionAttributes extends AbstractMessageHandlerThread.SessionAttributes {
   /**
    * Whether the client is a dissemination node.
    */
@@ -56,7 +56,7 @@ final class SessionAttributes extends AbstractWorkerThread.SessionAttributes {
   private int numCreates;
   private int numWrites;
   Map<String, Integer> numSendsByType;
-  private static final Logger logger = Logger.getLogger("fabric.core.worker");
+  private static final Logger logger = Logger.getLogger("fabric.core.MessageHandler");
 
   /** Associates debugging log messages with pending transactions */
   private final LongKeyMap<LogRecord> pendingLogs;

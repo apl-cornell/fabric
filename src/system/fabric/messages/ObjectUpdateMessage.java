@@ -96,7 +96,7 @@ public class ObjectUpdateMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.client.remote.Worker w) {
+  public Response dispatch(fabric.client.remote.MessageHandlerThread w) {
     return w.handle(this);
   }
 

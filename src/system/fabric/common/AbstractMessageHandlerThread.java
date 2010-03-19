@@ -15,11 +15,11 @@ import fabric.common.exceptions.InternalError;
 import fabric.messages.Message;
 
 /**
- * Abstracts a worker thread for processing messages. This implements
+ * Abstracts a message-handler thread for processing messages. This implements
  * FabricThread for performance reasons. It will be calling into the in-process
  * client to perform access control.
  */
-public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.SessionAttributes, Worker extends AbstractWorkerThread<Session, Worker>>
+public abstract class AbstractMessageHandlerThread<Session extends AbstractMessageHandlerThread.SessionAttributes, MessageHandlerThread extends AbstractMessageHandlerThread<Session, MessageHandlerThread>>
     extends FabricThread.AbstractImpl implements MessageHandler {
   private final String threadName;
 
@@ -34,7 +34,7 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
   /**
    * The pool that we are a part of.
    */
-  protected final Pool<Worker> pool;
+  protected final Pool<MessageHandlerThread> pool;
 
   /**
    * The session for which requests are being handled.
@@ -51,7 +51,8 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
    */
   private boolean readyToAssociate;
 
-  protected AbstractWorkerThread(String name, Pool<Worker> pool) {
+  protected AbstractMessageHandlerThread(String name,
+      Pool<MessageHandlerThread> pool) {
     super(name + " -- initializing");
     this.threadName = name;
     this.pool = pool;
@@ -60,9 +61,9 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
   }
 
   /**
-   * The main execution body of the worker thread. This is a wrapper for
-   * <code>run_</code> to ensure that all exceptions are properly handled and
-   * that the <code>Node</code> is properly notified when this worker is
+   * The main execution body of the message-handler thread. This is a wrapper
+   * for <code>run_</code> to ensure that all exceptions are properly handled
+   * and that the <code>Node</code> is properly notified when this handler is
    * finished with a client.
    */
   @SuppressWarnings("unchecked")
@@ -94,8 +95,8 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
         getLogger().log(Level.WARNING, "Connection closed prematurely", e);
       }
 
-      // Return this worker to the pool.
-      if (pool.workerDone((Worker) this)) break;
+      // Return this handler to the pool.
+      if (pool.handlerDone((MessageHandlerThread) this)) break;
     }
 
     TransactionManager.getInstance().deregisterThread(this);
@@ -114,7 +115,7 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
   protected abstract Logger getLogger();
 
   /**
-   * The execution body of the worker thread.
+   * The execution body of the message-handler thread.
    */
   private final void run_() throws IOException {
     while (true) {
@@ -133,10 +134,10 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
   }
 
   /**
-   * Initialises this worker to handle the given session and signals this thread
-   * to start processing the client's requests. This is invoked by a
+   * Initialises this message handler to handle the given session and signals
+   * this thread to start processing the client's requests. This is invoked by a
    * <code>ConnectionHandler.CallbackHandler</code> to hand off a client request
-   * to this worker.
+   * to this handler.
    */
   public final synchronized void associateSession(Session session) {
     while (!readyToAssociate) {
@@ -151,7 +152,7 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
     initPipes();
     readyToAssociate = false;
 
-    // Get the worker thread running.
+    // Get the message-handler thread running.
     notifyAll();
   }
 
@@ -188,9 +189,9 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
   }
 
   /**
-   * Cleans up all connection-specific state to ready this worker for another
-   * connection. This is invoked prior to returning this worker to a thread
-   * pool.
+   * Cleans up all connection-specific state to ready this message handler for
+   * another connection. This is invoked prior to returning this handler to a
+   * thread pool.
    */
   private void cleanup() {
     session = null;
@@ -237,44 +238,44 @@ public abstract class AbstractWorkerThread<Session extends AbstractWorkerThread.
     }
   }
 
-  protected static interface Factory<Worker extends AbstractWorkerThread<?, Worker>> {
-    Worker createWorker(Pool<Worker> pool);
+  protected static interface Factory<MessageHandlerThread extends AbstractMessageHandlerThread<?, MessageHandlerThread>> {
+    MessageHandlerThread createMessageHandler(Pool<MessageHandlerThread> pool);
   }
 
-  public static final class Pool<Worker extends AbstractWorkerThread<?, Worker>> {
-    private final Stack<Worker> pool;
+  public static final class Pool<MessageHandlerThread extends AbstractMessageHandlerThread<?, MessageHandlerThread>> {
+    private final Stack<MessageHandlerThread> pool;
     private final int maxSize;
-    private final Factory<Worker> factory;
+    private final Factory<MessageHandlerThread> factory;
     private boolean destroyed;
 
-    public Pool(int size, Factory<Worker> threadFactory) {
-      this.pool = new Stack<Worker>();
+    public Pool(int size, Factory<MessageHandlerThread> threadFactory) {
+      this.pool = new Stack<MessageHandlerThread>();
       this.maxSize = size;
       this.factory = threadFactory;
       this.destroyed = false;
     }
 
     /**
-     * @return an available <code>Worker</code> object.
+     * @return an available <code>MessageHandlerThread</code> object.
      */
-    public synchronized Worker get() {
-      if (pool.isEmpty()) return factory.createWorker(this);
+    public synchronized MessageHandlerThread get() {
+      if (pool.isEmpty()) return factory.createMessageHandler(this);
       return pool.pop();
     }
 
     /**
-     * Invoked by a <code>WorkerThread</code> object to notify the pool that it
-     * is done processing a message.
+     * Invoked by a <code>MessageHandlerThread</code> object to notify the pool
+     * that it is done processing a message.
      * 
-     * @return true iff the worker thread should kill itself.
+     * @return true iff the handler thread should kill itself.
      */
-    public synchronized boolean workerDone(Worker worker) {
-      worker.cleanup();
+    public synchronized boolean handlerDone(MessageHandlerThread handler) {
+      handler.cleanup();
 
       // Add to the thread pool if there is room.
       if (pool.size() == maxSize) return true;
 
-      if (!destroyed) pool.push(worker);
+      if (!destroyed) pool.push(handler);
       return destroyed;
     }
 

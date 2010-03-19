@@ -57,7 +57,7 @@ public class UnauthenticatedAbortTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.core.Worker w) throws AccessException {
+  public Response dispatch(fabric.core.MessageHandlerThread w) throws AccessException {
     w.handle(this);
     return new Response();
   }

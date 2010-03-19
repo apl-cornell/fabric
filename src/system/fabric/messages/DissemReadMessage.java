@@ -7,7 +7,7 @@ import java.io.IOException;
 import fabric.client.RemoteCore;
 import fabric.common.exceptions.*;
 import fabric.common.exceptions.InternalError;
-import fabric.core.Worker;
+import fabric.core.MessageHandlerThread;
 import fabric.dissemination.Glob;
 
 /**
@@ -80,10 +80,10 @@ public final class DissemReadMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#dispatch(fabric.core.Worker)
+   * @see fabric.messages.Message#dispatch(fabric.core.MessageHandlerThread)
    */
   @Override
-  public Response dispatch(Worker w) throws AccessException {
+  public Response dispatch(MessageHandlerThread w) throws AccessException {
     return w.handle(this);
   }
 

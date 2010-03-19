@@ -7,7 +7,7 @@ import java.io.IOException;
 import fabric.client.Client;
 import fabric.client.Core;
 import fabric.client.remote.RemoteClient;
-import fabric.client.remote.Worker;
+import fabric.client.remote.MessageHandlerThread;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.lang.NodePrincipal;
@@ -44,7 +44,7 @@ public class GetPrincipalMessage extends
   }
 
   @Override
-  public Response dispatch(Worker handler) {
+  public Response dispatch(MessageHandlerThread handler) {
     return handler.handle(this);
   }
 

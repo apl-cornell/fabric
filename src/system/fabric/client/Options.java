@@ -52,7 +52,7 @@ public class Options extends fabric.common.Options {
     out.println("  [param...] are the parameters to the Fabric application");
     out.println("and [options] includes:");
     usageForFlag(out, "--name <name>", "this client's name", "$HOSTNAME");
-    usageForFlag(out, "--pool <number>", "size of worker thread pool for "
+    usageForFlag(out, "--pool <number>", "size of pool of threads for "
         + "serving remote requests", defaults.threadPool);
     usageForFlag(out, "--time <category>", "enable timing of category");
     usageForFlag(out, "--conn <number>", "maximum number of simultaneous "
