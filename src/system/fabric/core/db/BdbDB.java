@@ -1,4 +1,4 @@
-package fabric.core.db.bdb;
+package fabric.core.db;
 
 import static com.sleepycat.je.OperationStatus.SUCCESS;
 
@@ -20,7 +20,6 @@ import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.OidKeyHashMap;
 import fabric.core.SubscriptionManager;
-import fabric.core.db.ObjectDB;
 import fabric.lang.NodePrincipal;
 
 /**
@@ -40,7 +39,7 @@ public class BdbDB extends ObjectDB {
   private final DatabaseEntry initializationStatus;
   private final DatabaseEntry onumCounter;
 
-  private Logger log = Logger.getLogger("fabric.core.db.bdb");
+  private Logger log = Logger.getLogger("fabric.core.db.BdbDB");
 
   private long nextOnum;
 
