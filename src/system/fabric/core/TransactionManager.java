@@ -13,8 +13,8 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.*;
-import fabric.core.store.GroupContainer;
-import fabric.core.store.ObjectStore;
+import fabric.core.db.GroupContainer;
+import fabric.core.db.ObjectDB;
 import fabric.dissemination.Glob;
 import fabric.lang.NodePrincipal;
 import fabric.lang.Statistics;
@@ -27,9 +27,9 @@ public class TransactionManager {
   private static final Random rand = new Random();
 
   /**
-   * The object store of the core for which we're managing transactions.
+   * The object databse of the core for which we're managing transactions.
    */
-  private final ObjectStore store;
+  private final ObjectDB database;
 
   /**
    * The subscription manager associated with the core for which we're managing
@@ -46,13 +46,13 @@ public class TransactionManager {
 
   private final LongKeyMap<Statistics> objectStats;
 
-  public TransactionManager(ObjectStore store, PrivateKey signingKey) {
-    this.store = store;
+  public TransactionManager(ObjectDB database, PrivateKey signingKey) {
+    this.database = database;
     this.signingKey = signingKey;
     this.objectStats = new LongKeyHashMap<Statistics>();
     // this.readHistory = new ReadHistory();
 
-    this.sm = new SubscriptionManager(store.getName(), this);
+    this.sm = new SubscriptionManager(database.getName(), this);
   }
 
   /**
@@ -60,8 +60,8 @@ public class TransactionManager {
    */
   public void abortTransaction(NodePrincipal client, long transactionID)
       throws AccessException {
-    synchronized (store) {
-      store.rollback(transactionID, client);
+    synchronized (database) {
+      database.rollback(transactionID, client);
     }
   }
 
@@ -71,9 +71,9 @@ public class TransactionManager {
   public void commitTransaction(RemoteClient clientNode,
       NodePrincipal clientPrincipal, long transactionID)
       throws TransactionCommitFailedException {
-    synchronized (store) {
+    synchronized (database) {
       try {
-        store.commit(transactionID, clientNode, clientPrincipal, sm);
+        database.commit(transactionID, clientNode, clientPrincipal, sm);
       } catch (final AccessException e) {
         throw new TransactionCommitFailedException("Insufficient Authorization");
       } catch (final RuntimeException e) {
@@ -122,15 +122,15 @@ public class TransactionManager {
     // First, check read and write permissions. We do this before we attempt to
     // do the actual prepare because we want to run the permissions check in a
     // transaction outside of the client's transaction.
-    Core core = Client.getClient().getCore(store.getName());
+    Core core = Client.getClient().getCore(database.getName());
     if (client == null || client.$getCore() != core
         || client.$getOnum() != ONumConstants.CORE_PRINCIPAL) {
       checkPerms(client, req.reads.keySet(), req.writes);
     }
 
-    synchronized (store) {
+    synchronized (database) {
       try {
-        store.beginTransaction(tid, client);
+        database.beginTransaction(tid, client);
       } catch (final AccessException e) {
         throw new TransactionPrepareFailedException("Insufficient privileges");
       }
@@ -147,15 +147,15 @@ public class TransactionManager {
         // from the core.
         long onum = o.getOnum();
         SerializedObject coreCopy;
-        synchronized (store) {
-          if (store.isWritten(onum))
+        synchronized (database) {
+          if (database.isWritten(onum))
             throw new TransactionPrepareFailedException("Object " + onum
                 + " has been locked by an uncommitted transaction");
 
-          coreCopy = store.read(onum);
+          coreCopy = database.read(onum);
 
-          // Register the update with the store.
-          store.registerUpdate(tid, client, o);
+          // Register the update with the database.
+          database.registerUpdate(tid, client, o);
         }
 
         // check promises
@@ -188,26 +188,26 @@ public class TransactionManager {
       }
 
       // Check creates.
-      synchronized (store) {
+      synchronized (database) {
         for (SerializedObject o : req.creates) {
           long onum = o.getOnum();
 
           // Make sure no one else has claimed the object number in an
           // uncommitted transaction.
-          if (store.isPrepared(onum, tid))
+          if (database.isPrepared(onum, tid))
             throw new TransactionPrepareFailedException(versionConflicts,
                 "Object " + onum + " has been locked by an "
                     + "uncommitted transaction");
 
-          // Make sure the onum doesn't already exist in the store.
-          if (store.exists(onum))
+          // Make sure the onum doesn't already exist in the database.
+          if (database.exists(onum))
             throw new TransactionPrepareFailedException(versionConflicts,
                 "Object " + onum + " already exists");
 
           // Set the initial version number and register the update with the
-          // store.
+          // database.
           o.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
-          store.registerUpdate(tid, client, o);
+          database.registerUpdate(tid, client, o);
         }
       }
 
@@ -216,9 +216,9 @@ public class TransactionManager {
         long onum = entry.getKey();
         int version = entry.getValue().intValue();
 
-        synchronized (store) {
+        synchronized (database) {
           // Make sure no one else is using the object.
-          if (store.isWritten(onum))
+          if (database.isWritten(onum))
             throw new TransactionPrepareFailedException(versionConflicts,
                 "Object " + onum + " has been locked by an uncommitted "
                     + "transaction");
@@ -226,13 +226,13 @@ public class TransactionManager {
           // Check version numbers.
           int curVersion;
           try {
-            curVersion = store.getVersion(onum);
+            curVersion = database.getVersion(onum);
           } catch (AccessException e) {
             throw new TransactionPrepareFailedException(versionConflicts, e
                 .getMessage());
           }
           if (curVersion != version) {
-            versionConflicts.put(onum, store.read(onum));
+            versionConflicts.put(onum, database.read(onum));
             continue;
           }
 
@@ -241,8 +241,8 @@ public class TransactionManager {
           pair.first.commitRead();
           result |= pair.second;
 
-          // Register the read with the store.
-          store.registerRead(tid, client, onum);
+          // Register the read with the database.
+          database.registerRead(tid, client, onum);
         }
       }
 
@@ -251,18 +251,18 @@ public class TransactionManager {
       }
 
       // readHistory.record(req);
-      store.finishPrepare(tid, client);
+      database.finishPrepare(tid, client);
 
       return result;
     } catch (TransactionPrepareFailedException e) {
-      synchronized (store) {
-        store.abortPrepare(tid, client);
+      synchronized (database) {
+        database.abortPrepare(tid, client);
         throw e;
       }
     } catch (RuntimeException e) {
-      synchronized (store) {
+      synchronized (database) {
         e.printStackTrace();
-        store.abortPrepare(tid, client);
+        database.abortPrepare(tid, client);
         throw e;
       }
     }
@@ -279,7 +279,7 @@ public class TransactionManager {
     Code<TransactionPrepareFailedException> checker =
         new Code<TransactionPrepareFailedException>() {
           public TransactionPrepareFailedException run() {
-            Core core = Client.getClient().getCore(store.getName());
+            Core core = Client.getClient().getCore(database.getName());
 
             for (LongIterator it = reads.iterator(); it.hasNext();) {
               long onum = it.next();
@@ -339,8 +339,8 @@ public class TransactionManager {
       RemoteClient subscriber, boolean dissemSubscribe, MessageHandlerThread handler)
       throws AccessException {
     GroupContainer container;
-    synchronized (store) {
-      container = store.getCachedGroupContainer(onum);
+    synchronized (database) {
+      container = database.getCachedGroupContainer(onum);
       if (container != null) {
         if (subscriber != null)
           sm.subscribe(onum, subscriber, dissemSubscribe);
@@ -352,14 +352,14 @@ public class TransactionManager {
     // the read.
     if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
     ObjectGroup group = readGroup(onum, handler);
-    if (group == null) throw new AccessException(store.getName(), onum);
+    if (group == null) throw new AccessException(database.getName(), onum);
 
-    Core core = Client.getClient().getCore(store.getName());
+    Core core = Client.getClient().getCore(database.getName());
     container = new GroupContainer(core, signingKey, group);
 
     // Cache the container.
-    synchronized (store) {
-      store.cacheGroupContainer(group.objects().keySet(), container);
+    synchronized (database) {
+      database.cacheGroupContainer(group.objects().keySet(), container);
     }
 
     if (handler != null) {
@@ -402,12 +402,12 @@ public class TransactionManager {
     ObjectGroup group =
         getGroupContainerAndSubscribe(onum, subscriber, false, handler)
             .getGroup(principal);
-    if (group == null) throw new AccessException(store.getName(), onum);
+    if (group == null) throw new AccessException(database.getName(), onum);
     return group;
   }
 
   /**
-   * Reads a group of objects from the object store.
+   * Reads a group of objects from the object database.
    * 
    * @param onum
    *          The group's head object.
@@ -444,8 +444,8 @@ public class TransactionManager {
         seen.add(relatedOnum);
 
         // Ensure that the related object hasn't been globbed already.
-        synchronized (store) {
-          if (store.getCachedGroupContainer(relatedOnum) != null) continue;
+        synchronized (database) {
+          if (database.getCachedGroupContainer(relatedOnum) != null) continue;
         }
 
         SerializedObject related = read(relatedOnum);
@@ -465,13 +465,13 @@ public class TransactionManager {
   }
 
   /**
-   * Reads an object from the object store. No authorization checks are done
+   * Reads an object from the object database. No authorization checks are done
    * here.
    */
   SerializedObject read(long onum) {
     SerializedObject obj;
-    synchronized (store) {
-      obj = store.read(onum);
+    synchronized (database) {
+      obj = database.read(onum);
     }
 
     if (obj == null) return null;
@@ -484,15 +484,15 @@ public class TransactionManager {
         int promise = history.generatePromise();
         if (promise > 0) {
           NodePrincipal client = Client.getClient().getPrincipal();
-          synchronized (store) {
+          synchronized (database) {
             // create a promise
 
-            if (store.isWritten(onum))
+            if (database.isWritten(onum))
             // object has been written - no promise for you!
               return obj;
 
             // check to see if someone else has created a promise
-            SerializedObject newObj = store.read(onum);
+            SerializedObject newObj = database.read(onum);
             long time = newObj.getExpiry();
 
             if (time < now + promise) {
@@ -500,10 +500,10 @@ public class TransactionManager {
                 // update the promise
                 newObj.setExpiry(now + promise);
                 long tid = rand.nextLong();
-                store.beginTransaction(tid, client);
-                store.registerUpdate(tid, client, newObj);
-                store.finishPrepare(tid, client);
-                store.commit(tid, null, client, sm);
+                database.beginTransaction(tid, client);
+                database.registerUpdate(tid, client, newObj);
+                database.finishPrepare(tid, client);
+                database.commit(tid, null, client, sm);
               } catch (AccessException exc) {
                 // TODO: this should probably use the core principal instead of
                 // the client principal, and AccessExceptions should be
@@ -545,7 +545,7 @@ public class TransactionManager {
     // if (fresh) {
     // // set up to run as a sub-transaction of the current transaction.
     // TransactionID tid = new TransactionID(tnum);
-    // Core local = Client.getClient().getCore(store.getName());
+    // Core local = Client.getClient().getCore(database.getName());
     // final fabric.lang.Object._Proxy object =
     // new fabric.lang.Object._Proxy(local, onum);
     // stats = Client.runInTransaction(tid, new Client.Code<Statistics>() {
@@ -564,8 +564,8 @@ public class TransactionManager {
    *           if the principal is not allowed to create objects on this core.
    */
   public long[] newOnums(NodePrincipal client, int num) throws AccessException {
-    synchronized (store) {
-      return store.newOnums(num);
+    synchronized (database) {
+      return database.newOnums(num);
     }
   }
 
@@ -574,8 +574,8 @@ public class TransactionManager {
    * core.
    */
   long[] newOnums(int num) {
-    synchronized (store) {
-      return store.newOnums(num);
+    synchronized (database) {
+      return database.newOnums(num);
     }
   }
 

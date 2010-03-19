@@ -18,8 +18,8 @@ import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SSLSocketFactoryTable;
 import fabric.common.exceptions.InternalError;
-import fabric.core.Options.CoreKeyStores;
-import fabric.core.store.ObjectStore;
+import fabric.core.Options.CoreKeyRepositories;
+import fabric.core.db.ObjectDB;
 
 public class Node {
 
@@ -38,11 +38,11 @@ public class Node {
     public final SSLSocketFactory factory;
     public final TransactionManager tm;
     public final SurrogateManager sm;
-    public final ObjectStore os;
+    public final ObjectDB os;
     public final PublicKey publicKey;
     public final PrivateKey privateKey;
 
-    private Core(String name, SSLSocketFactory factory, ObjectStore os,
+    private Core(String name, SSLSocketFactory factory, ObjectDB os,
         TransactionManager tm, SurrogateManager sm, PublicKey publicKey,
         PrivateKey privateKey) {
       this.name = name;
@@ -60,35 +60,37 @@ public class Node {
     this.cores = new HashMap<String, Core>();
     this.connectionHandler = new ConnectionHandler(this);
 
-    // Instantiate the cores with their object stores and SSL socket factories.
-    for (Map.Entry<String, CoreKeyStores> coreEntry : opts.cores.entrySet()) {
+    // Instantiate the cores with their object databases and SSL socket
+    // factories.
+    for (Map.Entry<String, CoreKeyRepositories> coreEntry : opts.cores
+        .entrySet()) {
       String coreName = coreEntry.getKey();
-      CoreKeyStores keyStores = coreEntry.getValue();
+      CoreKeyRepositories keyRepositories = coreEntry.getValue();
 
-      ObjectStore store = loadCore(coreName);
+      ObjectDB objectDB = loadCore(coreName);
       SSLSocketFactory sslSocketFactory;
 
       // Create the SSL socket factory.
       try {
         SSLContext sslContext = SSLContext.getInstance("TLS");
         KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-        kmf.init(keyStores.keyStore, keyStores.password);
+        kmf.init(keyRepositories.keyStore, keyRepositories.password);
         TrustManager[] tm = null;
-        if (keyStores.trustStore != null) {
+        if (keyRepositories.trustStore != null) {
           TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
-          tmf.init(keyStores.trustStore);
+          tmf.init(keyRepositories.trustStore);
           tm = tmf.getTrustManagers();
         }
         sslContext.init(kmf.getKeyManagers(), tm, null);
         sslSocketFactory = sslContext.getSocketFactory();
 
         PublicKey publicKey =
-            (PublicKey) keyStores.trustStore.getKey(coreName,
-                keyStores.password);
+            (PublicKey) keyRepositories.trustStore.getKey(coreName,
+                keyRepositories.password);
         PrivateKey privateKey =
-            (PrivateKey) keyStores.keyStore
-                .getKey(coreName, keyStores.password);
-        addCore(coreName, sslSocketFactory, store, publicKey, privateKey);
+            (PrivateKey) keyRepositories.keyStore.getKey(coreName,
+                keyRepositories.password);
+        addCore(coreName, sslSocketFactory, objectDB, publicKey, privateKey);
         SSLSocketFactoryTable.register(coreName, sslSocketFactory);
       } catch (KeyManagementException e) {
         throw new InternalError("Unable to initialise key manager factory.", e);
@@ -104,11 +106,11 @@ public class Node {
     }
 
     // Start the client before instantiating the cores in case their object
-    // stores need initialization. (The initialization code will be run on the
-    // client.)
+    // databases need initialization. (The initialization code will be run on
+    // the client.)
     startClient();
 
-    // Ensure each core's object store has been properly initialized.
+    // Ensure each core's object database has been properly initialized.
     for (Core core : cores.values()) {
       core.os.ensureInit();
     }
@@ -116,7 +118,7 @@ public class Node {
     System.out.println("Core started");
   }
 
-  private ObjectStore loadCore(String coreName) {
+  private ObjectDB loadCore(String coreName) {
     Properties p = new Properties(System.getProperties());
 
     try {
@@ -128,12 +130,12 @@ public class Node {
     }
 
     try {
-      String store = p.getProperty("fabric.core.store");
-      final ObjectStore os =
-          (ObjectStore) Class.forName(store).getConstructor(String.class)
+      String database = p.getProperty("fabric.core.db");
+      final ObjectDB os =
+          (ObjectDB) Class.forName(database).getConstructor(String.class)
               .newInstance(coreName);
 
-      // register a hook to close the object store gracefully.
+      // register a hook to close the object database gracefully.
       Runtime.getRuntime().addShutdownHook(new Thread() {
         @Override
         public void run() {
@@ -180,7 +182,7 @@ public class Node {
    *          The core's private key, used for signing disseminated objects.
    */
   private void addCore(String coreName, SSLSocketFactory sslSocketFactory,
-      ObjectStore os, PublicKey publicKey, PrivateKey privateKey)
+      ObjectDB os, PublicKey publicKey, PrivateKey privateKey)
       throws DuplicateCoreException {
     if (cores.containsKey(coreName)) throw new DuplicateCoreException();
 

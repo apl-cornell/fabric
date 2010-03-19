@@ -1,4 +1,4 @@
-package fabric.core.store;
+package fabric.core.db;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -26,29 +26,28 @@ import fabric.lang.NodePrincipal;
 
 /**
  * <p>
- * An Object Store encapsulates the persistent state of the Core. It is
- * responsible for storing and retrieving objects, and also for checking
- * permissions.
+ * An ObjectDB encapsulates the persistent state of the Core. It is responsible
+ * for storing and retrieving objects, and also for checking permissions.
  * </p>
  * <p>
- * The Object Store interface is designed to support a two-phase commit
- * protocol. Consequently to insert or modify an object, users must first call
- * the prepare() method, passing in the set of objects to update. These objects
- * will be stored, but will remain unavailable until the commit() method is
- * called with the returned transaction identifier.
+ * The ObjectDB interface is designed to support a two-phase commit protocol.
+ * Consequently to insert or modify an object, users must first call the
+ * prepare() method, passing in the set of objects to update. These objects will
+ * be stored, but will remain unavailable until the commit() method is called
+ * with the returned transaction identifier.
  * </p>
  * <p>
- * In general, implementations of ObjectStore are not thread-safe. Only
- * TransactionManager should be interacting directly with ObjectStore
- * implementations; it is responsible for ensuring safe use of ObjectStore.
+ * In general, implementations of ObjectDB are not thread-safe. Only
+ * TransactionManager should be interacting directly with ObjectDB
+ * implementations; it is responsible for ensuring safe use of ObjectDB.
  * </p>
  * <p>
- * All ObjectStore implementations should provide a constructor which takes the
- * name of the core and opens the appropriate backend store if it exists, or
+ * All ObjectDB implementations should provide a constructor which takes the
+ * name of the core and opens the appropriate back-end database if it exists, or
  * creates it if it doesn't exist.
  * </p>
  */
-public abstract class ObjectStore {
+public abstract class ObjectDB {
 
   protected final String name;
   private NodePrincipal corePrincipal;
@@ -185,7 +184,7 @@ public abstract class ObjectStore {
    */
   protected final LongKeyMap<Pair<Long, LongKeyMap<MutableInteger>>> rwLocks;
 
-  protected ObjectStore(String name) {
+  protected ObjectDB(String name) {
     this.name = name;
     this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
     this.rwLocks = new LongKeyHashMap<Pair<Long, LongKeyMap<MutableInteger>>>();
@@ -285,14 +284,14 @@ public abstract class ObjectStore {
 
   /**
    * <p>
-   * Notifies the store that the given transaction is finished preparing. The
+   * Notifies the database that the given transaction is finished preparing. The
    * transaction is not considered to be prepared until this is called. After
    * calling this method, there should not be any further calls to
    * registerRead() or registerUpdate() for the given transaction. This method
    * MUST be called before calling commit().
    * </p>
    * <p>
-   * Upon receiving this call, the object store should save the prepared
+   * Upon receiving this call, the object database should save the prepared
    * transaction to stable storage so that it can be recovered in case of
    * failure.
    * </p>
@@ -462,9 +461,10 @@ public abstract class ObjectStore {
         if (pinCount.value == 0) locks.second.remove(tx.tid);
       }
 
-      if (locks.first == null && locks.second.isEmpty()) rwLocks.remove(readOnum);
+      if (locks.first == null && locks.second.isEmpty())
+        rwLocks.remove(readOnum);
     }
-    
+
     for (SerializedObject update : tx.modData) {
       long onum = update.getOnum();
       Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
@@ -476,14 +476,14 @@ public abstract class ObjectStore {
 
   /**
    * <p>
-   * Return a set of onums that aren't currently occupied. The ObjectStore may
+   * Return a set of onums that aren't currently occupied. The ObjectDB may
    * return the same onum more than once from this method, althogh doing so
    * would encourage collisions. There is no assumption of unpredictability or
    * randomness about the returned ids.
    * </p>
    * <p>
    * The returned onums should be packed in the lower 48 bits. We assume that
-   * the object store is never full, and can always provide new onums
+   * the object database is never full, and can always provide new onums
    * </p>
    * 
    * @param num
@@ -510,26 +510,26 @@ public abstract class ObjectStore {
   }
 
   /**
-   * Gracefully shutdown the object store.
+   * Gracefully shutdown the object database.
    * 
    * @throws IOException
    */
   public abstract void close() throws IOException;
 
   /**
-   * Determines whether the object store has been initialized.
+   * Determines whether the object database has been initialized.
    */
   protected abstract boolean isInitialized();
 
   /**
-   * Sets a flag to indicate that the object store has been initialized.
+   * Sets a flag to indicate that the object database has been initialized.
    */
   protected abstract void setInitialized();
 
   /**
-   * Ensures that the object store has been properly initialized. This creates,
-   * for example, the name-service map and the core's principal, if they do not
-   * already exist in the store.
+   * Ensures that the object database has been properly initialized. This
+   * creates, for example, the name-service map and the core's principal, if
+   * they do not already exist in the database.
    */
   @SuppressWarnings("deprecation")
   public final void ensureInit() {

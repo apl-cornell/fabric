@@ -12,7 +12,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.Pair;
-import fabric.core.store.GroupContainer;
+import fabric.core.db.GroupContainer;
 import fabric.dissemination.Glob;
 
 /**

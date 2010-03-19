@@ -1,4 +1,4 @@
-package fabric.core.store.bdb;
+package fabric.core.db.bdb;
 
 import static com.sleepycat.je.OperationStatus.SUCCESS;
 
@@ -20,23 +20,27 @@ import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.OidKeyHashMap;
 import fabric.core.SubscriptionManager;
-import fabric.core.store.ObjectStore;
+import fabric.core.db.ObjectDB;
 import fabric.lang.NodePrincipal;
 
 /**
- * An ObjectStore backed by a Berkeley Database.
+ * An ObjectDB backed by a Berkeley Database.
  */
-public class BdbStore extends ObjectStore {
+public class BdbDB extends ObjectDB {
 
   private Environment env;
   private Database meta;
-  private Database store;
+  
+  /**
+   * Database containing the actual serialized Fabric objects.
+   */
+  private Database db;
   private Database prepared;
 
   private final DatabaseEntry initializationStatus;
   private final DatabaseEntry onumCounter;
 
-  private Logger log = Logger.getLogger("fabric.core.store.bdb");
+  private Logger log = Logger.getLogger("fabric.core.db.bdb");
 
   private long nextOnum;
 
@@ -65,7 +69,7 @@ public class BdbStore extends ObjectStore {
    * @param name
    *          name of core to create store for.
    */
-  public BdbStore(String name) {
+  public BdbDB(String name) {
     super(name);
 
     String path = Resources.relpathRewrite("var", "bdb", name);
@@ -82,7 +86,7 @@ public class BdbStore extends ObjectStore {
       DatabaseConfig dbconf = new DatabaseConfig();
       dbconf.setAllowCreate(true);
       dbconf.setTransactional(true);
-      store = env.openDatabase(null, "store", dbconf);
+      db = env.openDatabase(null, "store", dbconf);
       prepared = env.openDatabase(null, "prepared", dbconf);
       meta = env.openDatabase(null, "meta", dbconf);
 
@@ -145,7 +149,7 @@ public class BdbStore extends ObjectStore {
           log.finest("Bdb committing onum " + onum);
           DatabaseEntry onumData = new DatabaseEntry(toBytes(onum));
           DatabaseEntry objData = new DatabaseEntry(toBytes(o));
-          store.put(txn, onumData, objData);
+          db.put(txn, onumData, objData);
 
           // Remove any cached globs containing the old version of this object.
           notifyCommittedUpdate(sm, toLong(onumData.getData()), clientNode);
@@ -192,7 +196,7 @@ public class BdbStore extends ObjectStore {
     DatabaseEntry data = new DatabaseEntry();
 
     try {
-      if (store.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
+      if (db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
         SerializedObject result = toSerializedObject(data.getData());
         if (result != null) {
           cachedVersions.put(onum, result.getVersion());
@@ -223,7 +227,7 @@ public class BdbStore extends ObjectStore {
 
     try {
       if (rwLocks.get(onum) != null
-          || store.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
+          || db.get(null, key, data, LockMode.DEFAULT) == SUCCESS) {
         return true;
       }
     } catch (DatabaseException e) {
@@ -278,7 +282,7 @@ public class BdbStore extends ObjectStore {
   @Override
   public void close() {
     try {
-      if (store != null) store.close();
+      if (db != null) db.close();
       if (prepared != null) prepared.close();
       if (env != null) env.close();
     } catch (DatabaseException e) {

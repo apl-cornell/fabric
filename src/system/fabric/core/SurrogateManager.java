@@ -15,7 +15,7 @@ public interface SurrogateManager {
    * 
    * <p> TODO: <ul>
    *   <li>Add any required fields for authorization and surrogate policies</li>
-   *   <li>Need access to an object store to allocate new surrogate onums</li>
+   *   <li>Need access to an object database to allocate new surrogate onums</li>
    * </ul> </p>
    * 
    * @param req

@@ -1,4 +1,4 @@
-package fabric.core.store;
+package fabric.core.db;
 
 import java.security.PrivateKey;
 

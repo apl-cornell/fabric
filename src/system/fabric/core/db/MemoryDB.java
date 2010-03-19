@@ -1,4 +1,4 @@
-package fabric.core.store;
+package fabric.core.db;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -16,10 +16,10 @@ import fabric.lang.NodePrincipal;
 
 /**
  * <p>
- * An in-memory implementation of the ObjectStore implementation. This class
- * assumes there will be no failures and hopefully will provide very high
- * performance at the cost of no fault tolerance whatsoever. This class does
- * have a simple facility for loading and saving the store to a file.
+ * An in-memory implementation of the ObjectDB. This class assumes there will be
+ * no failures and hopefully will provide very high performance at the cost of
+ * no fault tolerance whatsoever. This class does have a simple facility for
+ * loading and saving the database to a file.
  * </p>
  * <p>
  * This class is not thread-safe. Only the <code>TransactionManager</code>
@@ -27,10 +27,10 @@ import fabric.lang.NodePrincipal;
  * 's thread safety ensures safe usage of this class.
  * </p>
  */
-public class MemoryStore extends ObjectStore {
+public class MemoryDB extends ObjectDB {
 
   /**
-   * Whether the store has been initialized.
+   * Whether the database has been initialized.
    */
   private boolean isInitialized;
 
@@ -49,16 +49,16 @@ public class MemoryStore extends ObjectStore {
    */
   private long nextGlobID;
 
-  private Logger log = Logger.getLogger("fabric.core.store.mem");
+  private Logger log = Logger.getLogger("fabric.core.db.mem");
 
   /**
    * Opens the core contained in file "var/coreName" if it exists, or an empty
    * core otherwise.
    * 
    * @param name
-   *          name of core to create store for.
+   *          name of core to create database for.
    */
-  public MemoryStore(String name) {
+  public MemoryDB(String name) {
     super(name);
     this.isInitialized = false;
 
@@ -82,7 +82,7 @@ public class MemoryStore extends ObjectStore {
       this.objectTable = new LongKeyHashMap<SerializedObject>();
     }
 
-    log.info("Mem store loaded");
+    log.info("MemDB loaded");
   }
 
   @Override

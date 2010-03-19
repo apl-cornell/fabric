@@ -1,4 +1,4 @@
-package fabric.core.store;
+package fabric.core.db;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
@@ -55,10 +55,6 @@ final class GroupContainerTable {
   private static class SoftRef extends SoftReference<GroupContainer> {
     final long globId;
 
-    /**
-     * @param store
-     *          The object store that is storing the objects in the given group.
-     */
     public SoftRef(long globID, GroupContainer group,
         ReferenceQueue<GroupContainer> queue) {
       super(group, queue);

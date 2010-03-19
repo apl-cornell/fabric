@@ -57,8 +57,8 @@ public interface Object {
    * system in an inconsistent state.
    * </p>
    * <p>
-   * This method is used to initialize object stores with objects at well-known
-   * onums (e.g., naming map and core principal).
+   * This method is used to initialize object databases with objects at
+   * well-known onums (e.g., naming map and core principal).
    * </p>
    * 
    * @deprecated
@@ -231,7 +231,7 @@ public interface Object {
      * system in an inconsistent state.
      * </p>
      * <p>
-     * This method is used to initialize object stores with objects at
+     * This method is used to initialize object databases with objects at
      * well-known onums (e.g., naming map and core principal).
      * </p>
      * 
@@ -680,7 +680,7 @@ public interface Object {
      * system in an inconsistent state.
      * </p>
      * <p>
-     * This method is used to initialize object stores with objects at
+     * This method is used to initialize object databases with objects at
      * well-known onums (e.g., naming map and core principal).
      * </p>
      * 

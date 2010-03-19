@@ -23,7 +23,7 @@ public class Options extends fabric.common.Options {
   /**
    * Maps core names to their associated key and trust stores.
    */
-  public Map<String, CoreKeyStores> cores;
+  public Map<String, CoreKeyRepositories> cores;
 
   /**
    * The name of the primary core.
@@ -33,12 +33,13 @@ public class Options extends fabric.common.Options {
   public int threadPool;
   public int timeout;
 
-  public static class CoreKeyStores {
+  public static class CoreKeyRepositories {
     public final KeyStore keyStore;
     public final KeyStore trustStore;
     public final char[] password;
 
-    public CoreKeyStores(KeyStore keyStore, KeyStore trustStore, char[] password) {
+    public CoreKeyRepositories(KeyStore keyStore, KeyStore trustStore,
+        char[] password) {
       this.keyStore = keyStore;
       this.trustStore = trustStore;
       this.password = password;
@@ -55,17 +56,16 @@ public class Options extends fabric.common.Options {
   @Override
   public void setDefaultValues() {
     this.port = 3372;
-    this.cores = new TreeMap<String, CoreKeyStores>();
+    this.cores = new TreeMap<String, CoreKeyRepositories>();
     this.threadPool = 10;
     this.timeout = 15;
     this.primaryCoreName = null;
   }
-  
+
   @Override
   public void validateOptions() throws UsageError {
 
-    if (null == primaryCoreName)
-      throw new UsageError("No cores specified");
+    if (null == primaryCoreName) throw new UsageError("No cores specified");
 
   }
 
@@ -151,9 +151,9 @@ public class Options extends fabric.common.Options {
         throw new InternalError("Unable to open key or trust store.", e);
       }
 
-      this.cores.put(coreName, new CoreKeyStores(keyStore,
-          trustStore, passwd));
-      
+      this.cores.put(coreName, new CoreKeyRepositories(keyStore, trustStore,
+          passwd));
+
       if (this.primaryCoreName == null) this.primaryCoreName = coreName;
 
       return i + 4;
@@ -182,7 +182,7 @@ public class Options extends fabric.common.Options {
     if (args[i].equals("--nossl")) {
       i++;
       DEBUG_NO_SSL = true;
-        
+
       return i;
     }
 
