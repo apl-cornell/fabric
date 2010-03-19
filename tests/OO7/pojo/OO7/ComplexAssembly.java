@@ -6,7 +6,6 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: ComplexAssembly.java,v 1.5 2009-03-09 13:47:53 jed Exp $
 
 package OO7;
 

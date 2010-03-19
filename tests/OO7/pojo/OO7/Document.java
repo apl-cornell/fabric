@@ -6,7 +6,6 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Document.java,v 1.2 2008-03-07 19:46:24 jed Exp $
 
 package OO7;
 

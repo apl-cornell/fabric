@@ -6,7 +6,6 @@
 // Code portions created by SMB are
 // Copyright (C) 1997-@year@ by SMB GmbH. All rights reserved.
 //
-// $Id: Benchmark.java,v 1.4 2009-03-08 22:27:25 qixin Exp $
 
 package OO7;
 
