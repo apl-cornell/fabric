@@ -58,7 +58,7 @@ public class CallJifExt_c extends JifCallExt {
     Node n = super.labelCheck(lc);
     FabricCall c = (FabricCall)n;
     
-    if (c.remoteClient() != null) {
+    if (c.remoteWorker() != null) {
       FabricTypeSystem ts = (FabricTypeSystem)lc.typeSystem();
       JifContext A = lc.jifContext(); 
       A = (JifContext)c.del().enterScope(A);
@@ -94,8 +94,8 @@ public class CallJifExt_c extends JifCallExt {
       returnLabel = JifInstantiator.instantiate(returnLabel, A, target, target.type().toReference(), targetLabel, 
           formalLabels, formalTypes, actualLabels, c.arguments(), Collections.EMPTY_LIST);
       
-      Principal localPrincipal = ts.clientPrincipal(Position.compilerGenerated());
-      Principal remotePrincipal = c.remoteClientPrincipal();
+      Principal localPrincipal = ts.workerPrincipal(Position.compilerGenerated());
+      Principal remotePrincipal = c.remoteWorkerPrincipal();
       
       // Fold in the policies of all the parameters.
       // Note that we are calling the original method, rather than the _remote version
@@ -115,14 +115,14 @@ public class CallJifExt_c extends JifCallExt {
       }
       
       // These checks happen at runtime
-//      lc.constrain(new NamedLabel("{C(rv), *<-client$}", 
+//      lc.constrain(new NamedLabel("{C(rv), *<-worker$}", 
 //                                  ts.pairLabel(Position.compilerGenerated(), 
 //                                               ts.confProjection(returnLabel), 
 //                                               ts.writerPolicy(Position.compilerGenerated(), 
 //                                                               ts.topPrincipal(Position.compilerGenerated()), 
 //                                                               localPrincipal))), 
 //                   LabelConstraint.LEQ,
-//                   new NamedLabel("{*->client$, I(m)}",
+//                   new NamedLabel("{*->worker$, I(m)}",
 //                                  ts.pairLabel(Position.compilerGenerated(), 
 //                                               ts.readerPolicy(Position.compilerGenerated(), 
 //                                                               ts.topPrincipal(Position.compilerGenerated()), 
@@ -134,20 +134,20 @@ public class CallJifExt_c extends JifCallExt {
 //        @Override
 //        public String msg() {
 //          return "Insecure remote method call: Either the return value is not readable" +
-//          " by the calling client or the calling client does not have" +
+//          " by the calling worker or the calling worker does not have" +
 //          " enough integrity to host the method arguments and make the call.";
 //        }
 //  
 //        @Override
 //        public String detailMsg() {
 //          return "Insecure remote method call: Either the return value is not readable" +
-//          " by the calling client or the calling client does not have" +
+//          " by the calling worker or the calling worker does not have" +
 //          " enough integrity to host the method arguments and make the call.";
 //        }
 //        
 //        @Override
 //        public String technicalMsg() {
-//          return "C(rv) <= {*->client$} and {*<-client$} <= I(m) for obj.m@c(...)";
+//          return "C(rv) <= {*->worker$} and {*<-worker$} <= I(m) for obj.m@c(...)";
 //        }        
 //      });
       
@@ -169,14 +169,14 @@ public class CallJifExt_c extends JifCallExt {
                    new ConstraintMessage() {
         @Override
         public String msg() {
-          return "Insecure remote method call: Either the callee client is not allowed to read" +
+          return "Insecure remote method call: Either the callee worker is not allowed to read" +
           " the method arguments or it does not have enough integrity to " +
           " return correctly.";
         }
         
         @Override
         public String detailMsg() {
-          return "Insecure remote method call: Either the callee client is not allowed to read" +
+          return "Insecure remote method call: Either the callee worker is not allowed to read" +
           " the method arguments or it does not have enough integrity to " +
           " return correctly.";
         }
@@ -199,12 +199,12 @@ public class CallJifExt_c extends JifCallExt {
                          new ConstraintMessage() {
               @Override
               public String msg() {
-                return "The principal of the remote client must act for every principal in the caller constraint.";
+                return "The principal of the remote worker must act for every principal in the caller constraint.";
               }
               
               @Override
               public String detailMsg() {
-                return "The principal of the remote client must act for every principal in the caller constraint.";
+                return "The principal of the remote worker must act for every principal in the caller constraint.";
               }
               
               @Override

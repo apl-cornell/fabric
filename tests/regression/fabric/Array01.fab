@@ -1,6 +1,6 @@
 public class Array01 {
     void m{*!:*}() throws (Exception{*!:*}) {
-        FabricClient cl = FabricClient.getClient();
+        FabricWorker cl = FabricWorker.getWorker();
         if(cl == null) return;
         Core localCore = cl.getLocalCore();
         int{Bob:}[] y = new int[10];

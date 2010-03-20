@@ -14,10 +14,10 @@ import sys
 import re
 
 def main():
-	global categories, core, client, size, overhead
+	global categories, core, worker, size, overhead
 
 	core   = sys.argv[1]
-	client = "client0"
+	worker = "worker0"
 	size   = "tiny"
 
 	print "===== Finding categories ======"
@@ -32,12 +32,12 @@ def main():
 	print overhead, " ms"
 
 	print "===== Creating principal ====="
-	result = sh( "bin/fab --name %s --make-principal %s" % (client, core) )
+	result = sh( "bin/fab --name %s --make-principal %s" % (worker, core) )
 	print result
 
 	for size,hot in (("small", True), ("medium", False)):
 		print "===== Creating database  ====="
-		result = sh( "bin/fab -j -Dfabric.client.fetchmanager=fabric.client.DirectFetchManager --name %s --time all OO7.Benchmark     fab://%s/OO7 %s 3" % (client, core, size) )
+		result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=fabric.worker.DirectFetchManager --name %s --time all OO7.Benchmark     fab://%s/OO7 %s 3" % (worker, core, size) )
 
 		for traversal in ("T1", "T6"):
 			print "===== Executing %3s ===========" % traversal
@@ -107,7 +107,7 @@ def runTraversal(traversal, dissem, hot, repeat):
 		dissemCls = "fabric.dissemination.pastry.PastryFetchManager"
 	else:
 		dissemStr = "no dissem"
-		dissemCls = "fabric.client.DirectFetchManager"
+		dissemCls = "fabric.worker.DirectFetchManager"
 
 	if hot:
 		hotStr = "--hot 1"
@@ -129,7 +129,7 @@ def runTraversal(traversal, dissem, hot, repeat):
 	if repeat:
 		# run 3 times with timing on.
 		for i in range(3):
-			result = sh( "bin/fab -j -Dfabric.client.fetchmanager=%s --name %s --time all OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, client, traversal, core, hotStr) )
+			result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=%s --name %s --time all OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, worker, traversal, core, hotStr) )
 			lines  = result.split("\n")
 
 			timed[coldname].append(TimedRun(lines[2:10]))
@@ -140,7 +140,7 @@ def runTraversal(traversal, dissem, hot, repeat):
 
 		# run 3 times with timing off, collect total time
 		for i in range(3):
-			result = sh( "bin/fab -j -Dfabric.client.fetchmanager=%s --name %s            OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, client, traversal, core, hotStr) )
+			result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=%s --name %s            OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, worker, traversal, core, hotStr) )
 			lines  = result.split("\n")
 
 			match  = totExpr.match(lines[2])
@@ -151,7 +151,7 @@ def runTraversal(traversal, dissem, hot, repeat):
 				untimed[hotname ].append(int(match.group("time")))
 	else:
 		# run T2* only once
-		result = sh( "bin/fab -j -Dfabric.client.fetchmanager=%s --name %s --time all OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, client, traversal, core, hotStr) )
+		result = sh( "bin/fab -j -Dfabric.worker.fetchmanager=%s --name %s --time all OO7.traversals.%s fab://%s/OO7 %s" % (dissemCls, worker, traversal, core, hotStr) )
 		lines  = result.split("\n")
 
 		timed[coldname].append(TimedRun(lines[2:10]))

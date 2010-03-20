@@ -1,6 +1,6 @@
 package jif.lang;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.lang.SecretKeyObject;
 import fabric.lang.Object;
 import fabric.util.Set;

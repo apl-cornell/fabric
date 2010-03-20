@@ -6,8 +6,8 @@ import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.List;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
@@ -36,7 +36,7 @@ public final class Surrogate extends _Impl {
       Iterator<Long> intracoreRefs) throws IOException, ClassNotFoundException {
     super(core, onum, version, expiry, label, serializedInput, refTypes, intracoreRefs);
     this.coreName = serializedInput.readUTF();
-    this.core = Client.getClient().getCore(coreName);
+    this.core = Worker.getWorker().getCore(coreName);
     this.onum = serializedInput.readLong();
   }
 
@@ -60,7 +60,7 @@ public final class Surrogate extends _Impl {
   public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
       List<Long> intracoreRefs, List<Pair<String, Long>> intercoreRefs) {
     // This should never be called. Surrogates are created in serialized form on
-    // the core and should never be transmitted by the client.
+    // the core and should never be transmitted by the worker.
     throw new InternalError("Attempted to serialize a surrogate.");
   }
 }

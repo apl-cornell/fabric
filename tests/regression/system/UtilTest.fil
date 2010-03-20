@@ -5,11 +5,11 @@
 package system;
 
 import fabric.util.*;
-import fabric.client.*;
+import fabric.worker.*;
 
 public class UtilTest {
   public static void main(String[] args) {
-    Core core = Client.getClient().getCore("core0");
+    Core core = Worker.getWorker().getCore("core0");
     Map map;
     List list;
     atomic {
@@ -43,7 +43,7 @@ public class UtilTest {
       list.add("6");
     }
 
-    Core local = Client.getClient().getLocalCore();
+    Core local = Worker.getWorker().getLocalCore();
     int i = 0;
     atomic {
       for (Iterator it = list.iterator(local); it.hasNext(); ) {

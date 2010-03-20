@@ -2,8 +2,8 @@ package fabric.common;
 
 import jif.lang.Label;
 import jif.lang.LabelUtil;
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.NodePrincipal;
 
@@ -65,16 +65,16 @@ public class AuthorizationUtil {
    */
   public static boolean isReadPermitted(final NodePrincipal principal,
       Core core, long labelOnum) {
-    // Allow the core's client principal to do anything. We use pointer equality
-    // here to avoid having to call into the client.
-    if (principal == Client.getClient().getPrincipal()) return true;
+    // Allow the core's worker principal to do anything. We use pointer equality
+    // here to avoid having to call into the worker.
+    if (principal == Worker.getWorker().getPrincipal()) return true;
 
     if (checkAuthorizationCache(cachedReadAuthorizations, principal, core,
         labelOnum)) return true;
 
     // Call into the Jif label framework to perform the label check.
     final Label label = new Label._Proxy(core, labelOnum);
-    boolean result = Client.runInSubTransaction(new Client.Code<Boolean>() {
+    boolean result = Worker.runInSubTransaction(new Worker.Code<Boolean>() {
       public Boolean run() {
         return LabelUtil._Impl.isReadableBy(label, principal);
       }
@@ -94,16 +94,16 @@ public class AuthorizationUtil {
    */
   public static boolean isWritePermitted(final NodePrincipal principal,
       Core core, long labelOnum) {
-    // Allow the core's client principal to do anything. We use pointer equality
-    // here to avoid having to call into the client.
-    if (principal == Client.getClient().getPrincipal()) return true;
+    // Allow the core's worker principal to do anything. We use pointer equality
+    // here to avoid having to call into the worker.
+    if (principal == Worker.getWorker().getPrincipal()) return true;
 
     if (checkAuthorizationCache(cachedWriteAuthorizations, principal, core,
         labelOnum)) return true;
 
     // Call into the Jif label framework to perform the label check.
     final Label label = new Label._Proxy(core, labelOnum);
-    boolean result = Client.runInSubTransaction(new Client.Code<Boolean>() {
+    boolean result = Worker.runInSubTransaction(new Worker.Code<Boolean>() {
       public Boolean run() {
         return LabelUtil._Impl.isWritableBy(label, principal);
       }

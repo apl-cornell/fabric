@@ -16,7 +16,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   private CachingResolver runtimeClassResolver;
 
   public ClassType TransactionManager() {
-    return load("fabric.client.transaction.TransactionManager");
+    return load("fabric.worker.transaction.TransactionManager");
   }
 
   public ClassType FObject() {
@@ -32,7 +32,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   public ClassType AbortException() {
-    return load("fabric.client.AbortException");
+    return load("fabric.worker.AbortException");
   }
 
   public ClassType FabricThread() {
@@ -43,16 +43,16 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return load("java.lang.Thread");
   }
 
-  public ClassType RemoteClient() {
-    return load("fabric.client.remote.RemoteClient");
+  public ClassType RemoteWorker() {
+    return load("fabric.worker.remote.RemoteWorker");
   }
 
   public ClassType RemoteCallException() {
-    return load("fabric.client.remote.RemoteCallException");
+    return load("fabric.worker.remote.RemoteCallException");
   }
 
-  public ClassType Client() {
-    return load("fabric.client.Client");
+  public ClassType Worker() {
+    return load("fabric.worker.Worker");
   }
 
   public ClassType Principal() {
@@ -64,7 +64,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   public Type Core() {
-    return load("fabric.client.Core");
+    return load("fabric.worker.Core");
   }
 
   public Type Label() {
@@ -94,8 +94,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     List<String> result = super.defaultPackageImports();
     result.add("fabric.lang");
     result.add("jif.lang");
-    result.add("fabric.client");
-    result.add("fabric.client.remote");
+    result.add("fabric.worker");
+    result.add("fabric.worker.remote");
     return result;
   }
 

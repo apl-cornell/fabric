@@ -53,7 +53,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
     Position pos = Position.compilerGenerated();
     List<Formal> formals = new LinkedList<Formal>(decl.formals());
     formals.add(0, nf.Formal(pos, Flags.NONE, nf.TypeNodeFromQualifiedName(pos,
-        "fabric.client.Core"), nf.Id(pos, "$location")));
+        "fabric.worker.Core"), nf.Id(pos, "$location")));
     formals.add(1, nf.Formal(pos, Flags.NONE, nf.TypeNodeFromQualifiedName(pos,
         "jif.lang.Label"), nf.Id(pos, "$label")));
     return decl.formals(formals);

@@ -10,7 +10,7 @@ import polyglot.types.ClassType;
 import polyglot.visit.NodeVisitor;
 
 /**
- * Rewrites threads, hooking them into the client transaction manager.
+ * Rewrites threads, hooking them into the worker transaction manager.
  */
 public class ThreadRewriter extends NodeVisitor {
   private QQ qq;
@@ -46,7 +46,7 @@ public class ThreadRewriter extends NodeVisitor {
 
   /**
    * Determines whether the given ClassType should be rewritten with hooks into
-   * the client transaction manager.
+   * the worker transaction manager.
    */
   public boolean shouldRewrite(ClassType type) {
     // Should only rewrite Threads.

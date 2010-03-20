@@ -1,7 +1,7 @@
 package jif.lang;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 
 /**
  * This code is mostly copied from Jif.
@@ -10,7 +10,7 @@ public final class Capability {
   private final Principal jif$jif_lang_Capability_P;
   private final Label jif$jif_lang_Capability_L;
   private final Closure closure;
-  public static final Core localCore = Client.getClient().getLocalCore();
+  public static final Core localCore = Worker.getWorker().getLocalCore();
 
   public Closure getClosure() {
     return closure;

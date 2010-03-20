@@ -73,8 +73,8 @@ import java.io.Serializable;
 public class Collections
 {
 	
-  protected static final fabric.client.Core LOCAL_CORE = 
-    fabric.client.Client.getClient().getLocalCore();
+  protected static final fabric.worker.Core LOCAL_CORE = 
+    fabric.worker.Worker.getWorker().getLocalCore();
 
   /**
    * Constant used to decide cutoff for when a non-RandomAccess list should
@@ -147,7 +147,7 @@ public class Collections
      * @return A non-iterating iterator.
      */
     // This is really cheating! I think it's perfectly valid, though.
-    public Iterator iterator(fabric.client.Core core)
+    public Iterator iterator(fabric.worker.Core core)
     {
       return EMPTY_LIST.iterator(core);
     }
@@ -1426,7 +1426,7 @@ public class Collections
     /**
      * Returns an iterator over the lone element.
      */
-    public Iterator iterator(fabric.client.Core core)
+    public Iterator iterator(fabric.worker.Core core)
     {
       return new Iterator@core()
       {
@@ -2183,7 +2183,7 @@ public class Collections
 //     * @return An iterator over the elements in the underlying collection,
 //     *         which returns each element in any order.
 //     */
-//    public Iterator iterator(fabric.client.Core core)
+//    public Iterator iterator(fabric.worker.Core core)
 //    {
 //      synchronized (mutex)
 //        {
@@ -2662,7 +2662,7 @@ public class Collections
 //     *         to be performed, in addition to those supplied by the
 //     *         standard iterator.
 //     */
-//    public ListIterator listIterator(fabric.client.Core core)
+//    public ListIterator listIterator(fabric.worker.Core core)
 //    {
 //      synchronized (mutex)
 //        {
@@ -2687,7 +2687,7 @@ public class Collections
 //     *         standard iterator.
 //     * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
 //     */
-//    public ListIterator listIterator(fabric.client.Core core, int index)
+//    public ListIterator listIterator(fabric.worker.Core core, int index)
 //    {
 //      synchronized (mutex)
 //        {
@@ -3258,7 +3258,7 @@ public class Collections
 //	       *
 //	       * @return A synchronized set iterator.
 //	       */
-//	      public Iterator iterator(fabric.client.Core core)
+//	      public Iterator iterator(fabric.worker.Core core)
 //              {
 //                synchronized (super.mutex)
 //                  {
@@ -4156,7 +4156,7 @@ public class Collections
      * @return an UnmodifiableIterator over the elements of the underlying
      *         collection, in any order.
      */
-    public Iterator iterator(fabric.client.Core core)
+    public Iterator iterator(fabric.worker.Core core)
     {
       return new UnmodifiableIterator@core(c.iterator(core));
     }
@@ -4494,7 +4494,7 @@ public class Collections
    * @return a <code>UnmodifiableListIterator</code> over the elements of the
    *         underlying list, in order, starting at the beginning.
    */
-    public ListIterator listIterator(fabric.client.Core core)
+    public ListIterator listIterator(fabric.worker.Core core)
     {
       return new UnmodifiableListIterator@core(list.listIterator(core));
     }
@@ -4513,7 +4513,7 @@ public class Collections
    *         underlying list, in order, starting at the specified index.
    * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
    */
-    public ListIterator listIterator(fabric.client.Core core, int index)
+    public ListIterator listIterator(fabric.worker.Core core, int index)
     {
       return new UnmodifiableListIterator@core(list.listIterator(core, index));
     }
@@ -4933,7 +4933,7 @@ public class Collections
       }
 
       // The iterator must return unmodifiable map entries.
-      public Iterator iterator(fabric.client.Core core)
+      public Iterator iterator(fabric.worker.Core core)
       {
         return new UnmodifiableIterator@core(c.iterator(core))
 	{

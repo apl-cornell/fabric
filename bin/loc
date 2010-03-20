@@ -20,7 +20,7 @@ my %pattern, %lines;
 
 $pattern{'FabIL compiler'} = '^src/compiler/fabil';
 $pattern{'Fabric compiler'} = '^src/compiler/fabric';
-$pattern{'Worker'} = '^src/system/fabric/client';
+$pattern{'Worker'} = '^src/system/fabric/worker';
 $pattern{'Common functionality'} = '^src/system/fabric/common';
 $pattern{'Fabric runtime support (Java)'} = '^src/system/fabric/lang';
 $pattern{'Dissemination layer'} = '^src/system/fabric/dissemination';

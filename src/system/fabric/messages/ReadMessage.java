@@ -4,14 +4,14 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.client.RemoteCore;
+import fabric.worker.RemoteCore;
 import fabric.common.*;
 import fabric.common.exceptions.*;
 import fabric.common.exceptions.InternalError;
 import fabric.core.MessageHandlerThread;
 
 /**
- * A <code>ReadMessage</code> represents a request from a client to read an
+ * A <code>ReadMessage</code> represents a request from a worker to read an
  * object at a core.
  */
 public final class ReadMessage extends
@@ -28,7 +28,7 @@ public final class ReadMessage extends
     }
 
     /**
-     * Deserialization constructor, used by the client.
+     * Deserialization constructor, used by the worker.
      * 
      * @param in
      *                the input stream from which to read the response.
@@ -58,7 +58,7 @@ public final class ReadMessage extends
   public final long onum;
 
   /**
-   * Creates a read request for a client.
+   * Creates a read request for a worker.
    */
   public ReadMessage(long onum) {
     super(MessageType.READ_ONUM);
@@ -85,7 +85,7 @@ public final class ReadMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#send(fabric.client.Core, boolean)
+   * @see fabric.messages.Message#send(fabric.worker.Core, boolean)
    */
   public Response send(RemoteCore core) throws FetchException {
     try {

@@ -69,11 +69,11 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
 //        Formal lbf = (Formal)md.formals().get(1);
         LocalInstance li = f.localInstance();
 
-        Principal clientPrincipal;
+        Principal workerPrincipal;
 
         try {
           AccessPath ap = JifUtil.varInstanceToAccessPath(li, li.position());
-          clientPrincipal = ts.dynamicPrincipal(ap.position(), ap);
+          workerPrincipal = ts.dynamicPrincipal(ap.position(), ap);
         }
         catch (SemanticException e) {
           throw new InternalCompilerError(e);
@@ -88,7 +88,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
           return null;
         }
         
-//        // (rv meet {conf.top;integ.bot}) join ({client$<-}) <= ({client$->}) join (m meet {conf.bot;integ.top})
+//        // (rv meet {conf.top;integ.bot}) join ({worker$<-}) <= ({worker$->}) join (m meet {conf.bot;integ.top})
 //        Label left = ts.join(
 //            ts.meet(
 //                returnLabel,
@@ -97,7 +97,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
 //                    ts.bottomIntegPolicy(Position.compilerGenerated()))),
 //                    ts.pairLabel(Position.compilerGenerated(),
 //                        ts.bottomConfPolicy(Position.compilerGenerated()),
-//                        ts.writerPolicy(Position.compilerGenerated(), clientPrincipal, clientPrincipal)));
+//                        ts.writerPolicy(Position.compilerGenerated(), workerPrincipal, workerPrincipal)));
 //
 //        Label right = ts.join(
 //            ts.meet(
@@ -106,7 +106,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
 //                    ts.bottomConfPolicy(Position.compilerGenerated()), 
 //                    ts.topIntegPolicy(Position.compilerGenerated()))),
 //                    ts.pairLabel(Position.compilerGenerated(),
-//                        ts.readerPolicy(Position.compilerGenerated(), clientPrincipal, clientPrincipal),
+//                        ts.readerPolicy(Position.compilerGenerated(), workerPrincipal, workerPrincipal),
 //                        ts.bottomIntegPolicy(Position.compilerGenerated())));
 
         // Fold in all integrity policies of method parameters.
@@ -124,17 +124,17 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
           startIntegPolicy = ts.meet(startIntegPolicy, ip);
         }
         
-        // {C(rv), *<-client$} <= {*->client$, I(m)}
+        // {C(rv), *<-worker$} <= {*->worker$, I(m)}
         // XXX Note, it is better NOT to blindly insert the projection translation, if not needed.
         Label left = ts.pairLabel(Position.compilerGenerated(md.position().toString()), 
                                   ts.representableConfProjection(returnLabel), 
                                   ts.writerPolicy(Position.compilerGenerated(), 
                                                   ts.topPrincipal(Position.compilerGenerated()), 
-                                                  clientPrincipal));
+                                                  workerPrincipal));
         Label right = ts.pairLabel(Position.compilerGenerated(md.name()), 
                                    ts.readerPolicy(Position.compilerGenerated(), 
                                                    ts.topPrincipal(Position.compilerGenerated()), 
-                                                   clientPrincipal), 
+                                                   workerPrincipal), 
                                    startIntegPolicy);
 
         LabelExpr leftExpr = nf.LabelExpr(left.position(), left);
@@ -155,7 +155,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
             for (Principal p : (List<Principal>)cc.principals()) {
               Expr check = 
                 nf.Binary(as.position(), 
-                          nf.CanonicalPrincipalNode(clientPrincipal.position(), clientPrincipal), 
+                          nf.CanonicalPrincipalNode(workerPrincipal.position(), workerPrincipal), 
                           JifBinaryDel.ACTSFOR, 
                           nf.CanonicalPrincipalNode(p.position(), p));
               labelComp = nf.Binary(Position.compilerGenerated(), labelComp, Binary.COND_AND, check);

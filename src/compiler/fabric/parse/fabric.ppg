@@ -86,14 +86,14 @@ terminal Token AT;
 terminal Token ATOMIC;
 terminal Token ABORT;
 terminal Token RETRY;
-terminal Token CLIENT;
+terminal Token WORKER;
 terminal Token NONFABRIC;
 
 non terminal Atomic atomic_statement;
 non terminal Expr   location_expr_opt, location_expr;
 non terminal Stmt   abort_stmt, retry_stmt;
-non terminal Client local_client;
-non terminal RemoteClientGetter remote_client;
+non terminal Worker local_worker;
+non terminal RemoteWorkerGetter remote_worker;
 non terminal FabricArrayInit fabric_array_initializer;
 
 start with goal;
@@ -135,30 +135,30 @@ extend modifier ::=
     ;
 
 ////////////////////////////////////////////////////////////////////////
-// Local and remote clients                                           //
+// Local and remote workers                                           //
 ////////////////////////////////////////////////////////////////////////
 
-local_client ::=
-                    // Client
-        CLIENT:a
-            {: RESULT = parser.nf.Client(parser.pos(a)); :}
+local_worker ::=
+                    // Worker
+        WORKER:a
+            {: RESULT = parser.nf.Worker(parser.pos(a)); :}
     ;
 
-remote_client ::=
-                    // RemoteClientGetter
-        CLIENT:a LPAREN expression:b RPAREN:c
-            {: RESULT = parser.nf.RemoteClientGetter(parser.pos(a, c), b); :}
+remote_worker ::=
+                    // RemoteWorkerGetter
+        WORKER:a LPAREN expression:b RPAREN:c
+            {: RESULT = parser.nf.RemoteWorkerGetter(parser.pos(a, c), b); :}
     ;
 
 extend primary_no_new_array ::=
-        local_client:a
+        local_worker:a
             {: RESULT = a; :}
-    |   remote_client:a
+    |   remote_worker:a
             {: RESULT = a; :}
     ;
 
 extend principal_base ::=
-        local_client:a
+        local_worker:a
             {: RESULT = parser.nf.AmbPrincipalNode(parser.pos(a), a); :}
     ;
 

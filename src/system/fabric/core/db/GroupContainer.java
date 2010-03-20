@@ -2,7 +2,7 @@ package fabric.core.db;
 
 import java.security.PrivateKey;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;

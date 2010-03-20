@@ -34,11 +34,11 @@ public interface FabricNodeFactory extends JifNodeFactory {
   AbortStmt AbortStmt(Position pos);
   
   @SuppressWarnings("unchecked")
-  Call Call(Position pos, Receiver target, Id name, Expr remoteClient, List args);
+  Call Call(Position pos, Receiver target, Id name, Expr remoteWorker, List args);
   
-  Client Client(Position pos);
+  Worker Worker(Position pos);
   
-  RemoteClientGetter RemoteClientGetter(Position pos, Expr remoteName);
+  RemoteWorkerGetter RemoteWorkerGetter(Position pos, Expr remoteName);
   
   NewLabel NewLabel(Position pos, LabelNode label, Expr location);
 }

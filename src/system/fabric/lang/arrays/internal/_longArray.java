@@ -6,8 +6,8 @@ import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.List;
 
-import fabric.client.Core;
-import fabric.client.transaction.TransactionManager;
+import fabric.worker.Core;
+import fabric.worker.transaction.TransactionManager;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
 import fabric.lang.Object;

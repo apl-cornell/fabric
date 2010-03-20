@@ -2,8 +2,8 @@ package jif.lang;
 
 import jif.lang.IntegPolicy;
 import jif.lang.WriterPolicy;
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 import fabric.util.ArrayList;
 import fabric.util.Collection;
 import fabric.util.Map;
@@ -48,7 +48,7 @@ public class PrincipalUtil {
    * Returns true if and only if the principal p acts for the principal q.
    */
   public static boolean actsFor(Principal p, Principal q) {
-    final Core localCore = Client.getClient().getLocalCore();
+    final Core localCore = Worker.getWorker().getLocalCore();
     return actsForProof(localCore, p, q) != null;
   }
 
@@ -57,7 +57,7 @@ public class PrincipalUtil {
    * principal q.
    */
   public static ActsForProof actsForProof(Core core, Principal p, Principal q) {
-    final Core localCore = Client.getClient().getLocalCore();
+    final Core localCore = Worker.getWorker().getLocalCore();
     try {
       LabelUtil.enterTiming();
       // try cache
@@ -132,7 +132,7 @@ public class PrincipalUtil {
    */
   public static void notifyRevokeDelegation(Principal granter,
       Principal superior) {
-    final Core localCore = Client.getClient().getLocalCore();
+    final Core localCore = Worker.getWorker().getLocalCore();
 //    if (LabelUtil.USE_CACHING) {
 //      DelegationPair del = new DelegationPair@localCore(superior, granter);
 //      Set deps = (Set) cacheActsForDependencies.remove(del);
@@ -159,7 +159,7 @@ public class PrincipalUtil {
    */
   public static ActsForProof findActsForProof(Core core, Principal p, Principal q,
       java.lang.Object searchState) {
-    final Core localCore = Client.getClient().getLocalCore();
+    final Core localCore = Worker.getWorker().getLocalCore();
     try {
       LabelUtil.enterTiming();
       // try the dumb things first.
@@ -358,7 +358,7 @@ public class PrincipalUtil {
    * Execute the given closure, if the principal agrees.
    */
   public static java.lang.Object execute(Principal p, java.lang.Object authPrf, Closure c, Label lb) {
-    final Core localCore = Client.getClient().getLocalCore();
+    final Core localCore = Worker.getWorker().getLocalCore();
     Capability cap = authorize(localCore, p, authPrf, c, lb, true);
     if (cap != null) {
       return cap.invoke();
@@ -376,7 +376,7 @@ public class PrincipalUtil {
 
   public static Capability authorize(Principal p, java.lang.Object authPrf,
       Closure c, Label lb) {
-    final Core localCore = Client.getClient().getLocalCore();
+    final Core localCore = Worker.getWorker().getLocalCore();
     return authorize(localCore, p, authPrf, c, lb, false);
   }
 
@@ -430,12 +430,12 @@ public class PrincipalUtil {
   }
 
   public static Principal topPrincipal() {
-    final LocalCore localCore = Client.getClient().getLocalCore();
+    final LocalCore localCore = Worker.getWorker().getLocalCore();
     return localCore.getTopPrincipal();
   }
 
   public static Principal topPrincipal(Core core) {
-    final LocalCore localCore = Client.getClient().getLocalCore();
+    final LocalCore localCore = Worker.getWorker().getLocalCore();
     return localCore.getTopPrincipal();
   }
 
@@ -444,7 +444,7 @@ public class PrincipalUtil {
   }
 
         public static ConfPolicy readableByPrinPolicy(Principal p) {
-          final LocalCore localCore = Client.getClient().getLocalCore();
+          final LocalCore localCore = Worker.getWorker().getLocalCore();
           return readableByPrinPolicy(localCore, p);
         }
 
@@ -459,7 +459,7 @@ public class PrincipalUtil {
   }
 
         public static IntegPolicy writableByPrinPolicy(Principal p) {
-          final LocalCore localCore = Client.getClient().getLocalCore();
+          final LocalCore localCore = Worker.getWorker().getLocalCore();
           return writableByPrinPolicy(localCore, p);
         }
 
@@ -473,7 +473,7 @@ public class PrincipalUtil {
   }
 
   public static Principal disjunction(Principal left, Principal right) {
-    final LocalCore core = Client.getClient().getLocalCore();
+    final LocalCore core = Worker.getWorker().getLocalCore();
           return disjunction(core, left, right);
         }
 
@@ -494,7 +494,7 @@ public class PrincipalUtil {
   }
 
         public static Principal conjunction(Principal left, Principal right) {
-          final LocalCore core = Client.getClient().getLocalCore();
+          final LocalCore core = Worker.getWorker().getLocalCore();
           return conjunction(core, left, right);
         }
 
@@ -516,7 +516,7 @@ public class PrincipalUtil {
   }
 
         public static Principal disjunction(Collection/*Principal*/ principals) {
-          final Core core = Client.getClient().getLocalCore();
+          final Core core = Worker.getWorker().getLocalCore();
           return disjunction(core, principals);
         }
 
@@ -526,7 +526,7 @@ public class PrincipalUtil {
       if (principals == null || principals.isEmpty()) {
         return topPrincipal();
       }
-      final Core localCore = Client.getClient().getLocalCore();
+      final Core localCore = Worker.getWorker().getLocalCore();
       if (principals.size() == 1) {
         Object o = principals.iterator(localCore).next();
         if (o == null || o instanceof Principal) return (Principal) o;
@@ -556,7 +556,7 @@ public class PrincipalUtil {
   }
 
         public static Principal conjunction(Collection/*Principal*/ principals) {
-          final Core core = Client.getClient().getLocalCore();
+          final Core core = Worker.getWorker().getLocalCore();
           return conjunction(core, principals); 
         }
 
@@ -566,7 +566,7 @@ public class PrincipalUtil {
       if (principals == null || principals.isEmpty()) {
         return bottomPrincipal();
       }
-      final Core localCore = Client.getClient().getLocalCore();
+      final Core localCore = Worker.getWorker().getLocalCore();
       if (principals.size() == 1) {
         Object o = principals.iterator(localCore).next();
         if (o == null || o instanceof Principal) return (Principal) o;

@@ -13,9 +13,9 @@ import jif.lang.Label;
 import jif.lang.PairLabel;
 import jif.lang.ReaderPolicy;
 import jif.lang.WriterPolicy;
-import fabric.client.Client;
-import fabric.client.Core;
-import fabric.client.remote.RemoteClient;
+import fabric.worker.Worker;
+import fabric.worker.Core;
+import fabric.worker.remote.RemoteWorker;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
@@ -96,7 +96,7 @@ public abstract class ObjectDB {
       this.tid = in.readLong();
 
       if (in.readBoolean()) {
-        Core core = Client.getClient().getCore(in.readUTF());
+        Core core = Worker.getWorker().getCore(in.readUTF());
         this.owner = new NodePrincipal._Proxy(core, in.readLong());
       } else {
         this.owner = null;
@@ -175,7 +175,7 @@ public abstract class ObjectDB {
    * Tracks the read/write locks for each onum. Maps each onum to a pair. The
    * first component of the pair is the tid for the write-lock holder. The
    * second component is a map from the of tids for the read-lock holders to the
-   * number of clients in the transaction that have read locks on the onum.
+   * number of workers in the transaction that have read locks on the onum.
    * </p>
    * <p>
    * This should be recomputed from the set of prepared transactions when
@@ -196,12 +196,12 @@ public abstract class ObjectDB {
   /**
    * Opens a new transaction.
    * 
-   * @param client
-   *          the client under whose authority the transaction is running.
+   * @param worker
+   *          the worker under whose authority the transaction is running.
    * @throws AccessException
-   *           if the client has insufficient privileges.
+   *           if the worker has insufficient privileges.
    */
-  public final void beginTransaction(long tid, NodePrincipal client)
+  public final void beginTransaction(long tid, NodePrincipal worker)
       throws AccessException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
@@ -209,15 +209,15 @@ public abstract class ObjectDB {
       pendingByTid.put(tid, submap);
     }
 
-    submap.put(client, new PendingTransaction(tid, client));
+    submap.put(worker, new PendingTransaction(tid, worker));
   }
 
   /**
    * Registers that a transaction has read an object.
    */
-  public final void registerRead(long tid, NodePrincipal client, long onum) {
+  public final void registerRead(long tid, NodePrincipal worker, long onum) {
     addReadLock(onum, tid);
-    pendingByTid.get(tid).get(client).reads.add(onum);
+    pendingByTid.get(tid).get(worker).reads.add(onum);
   }
 
   /**
@@ -230,10 +230,10 @@ public abstract class ObjectDB {
    * @param obj
    *          the updated object.
    */
-  public final void registerUpdate(long tid, NodePrincipal client,
+  public final void registerUpdate(long tid, NodePrincipal worker,
       SerializedObject obj) {
     addWriteLock(obj.getOnum(), tid);
-    pendingByTid.get(tid).get(client).modData.add(obj);
+    pendingByTid.get(tid).get(worker).modData.add(obj);
   }
 
   /**
@@ -276,9 +276,9 @@ public abstract class ObjectDB {
    * Rolls back a partially prepared transaction. (i.e., one for which
    * finishPrepare() has yet to be called.)
    */
-  public final void abortPrepare(long tid, NodePrincipal client) {
+  public final void abortPrepare(long tid, NodePrincipal worker) {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    unpin(submap.remove(client));
+    unpin(submap.remove(worker));
     if (submap.isEmpty()) pendingByTid.remove(tid);
   }
 
@@ -296,7 +296,7 @@ public abstract class ObjectDB {
    * failure.
    * </p>
    */
-  public abstract void finishPrepare(long tid, NodePrincipal client);
+  public abstract void finishPrepare(long tid, NodePrincipal worker);
 
   /**
    * Cause the objects prepared in transaction [tid] to be committed. The
@@ -304,15 +304,15 @@ public abstract class ObjectDB {
    * 
    * @param tid
    *          the transaction id
-   * @param clientNode
-   *          the remote client that is performing the commit
-   * @param clientPrincipal
+   * @param workerNode
+   *          the remote worker that is performing the commit
+   * @param workerPrincipal
    *          the principal requesting the commit
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid, RemoteClient clientNode,
-      NodePrincipal clientPrincipal, SubscriptionManager sm)
+  public abstract void commit(long tid, RemoteWorker workerNode,
+      NodePrincipal workerPrincipal, SubscriptionManager sm)
       throws AccessException;
 
   /**
@@ -320,12 +320,12 @@ public abstract class ObjectDB {
    * 
    * @param tid
    *          the transaction id
-   * @param client
+   * @param worker
    *          the principal requesting the rollback
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void rollback(long tid, NodePrincipal client)
+  public abstract void rollback(long tid, NodePrincipal worker)
       throws AccessException;
 
   /**
@@ -386,11 +386,11 @@ public abstract class ObjectDB {
    * 
    * @param onum
    *          the onum of the object that was updated.
-   * @param client
-   *          the client that performed the update.
+   * @param worker
+   *          the worker that performed the update.
    */
   protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum,
-      RemoteClient client) {
+      RemoteWorker worker) {
     // Remove from the glob table the glob associated with the onum.
     Long globID = globIDByOnum.remove(onum);
     GroupContainer group = null;
@@ -399,7 +399,7 @@ public abstract class ObjectDB {
     }
 
     // Notify the subscription manager that the group has been updated.
-    sm.notifyUpdate(onum, client);
+    sm.notifyUpdate(onum, worker);
     if (group != null) {
       for (LongIterator onumIt = group.onums.iterator(); onumIt.hasNext();) {
         long relatedOnum = onumIt.next();
@@ -407,7 +407,7 @@ public abstract class ObjectDB {
 
         Long relatedGlobId = globIDByOnum.get(relatedOnum);
         if (relatedGlobId != null && relatedGlobId == globID) {
-          sm.notifyUpdate(relatedOnum, client);
+          sm.notifyUpdate(relatedOnum, worker);
         }
       }
     }
@@ -535,12 +535,12 @@ public abstract class ObjectDB {
   public final void ensureInit() {
     if (isInitialized()) return;
 
-    final Core core = Client.getClient().getCore(name);
+    final Core core = Worker.getWorker().getCore(name);
 
-    Client.runInSubTransaction(new Client.Code<Void>() {
+    Worker.runInSubTransaction(new Worker.Code<Void>() {
       public Void run() {
         // No need to initialize global constants here, as those objects will be
-        // supplied by the clients' local core.
+        // supplied by the workers' local core.
         String principalName =
             new X500Principal("CN=" + name
                 + ",OU=Fabric,O=Cornell University,L=Ithaca,ST=NY,C=US")
@@ -572,7 +572,7 @@ public abstract class ObjectDB {
 
   private final NodePrincipal corePrincipal() {
     if (corePrincipal == null) {
-      Core core = Client.getClient().getCore(name);
+      Core core = Worker.getWorker().getCore(name);
       corePrincipal =
           new NodePrincipal._Proxy(core, ONumConstants.CORE_PRINCIPAL);
     }
@@ -582,7 +582,7 @@ public abstract class ObjectDB {
 
   private final Label publicReadonlyLabel() {
     if (publicReadonlyLabel == null) {
-      Core core = Client.getClient().getCore(name);
+      Core core = Worker.getWorker().getCore(name);
       publicReadonlyLabel =
           new Label._Proxy(core, ONumConstants.PUBLIC_READONLY_LABEL);
     }

@@ -4,7 +4,7 @@ import java.security.PrivateKey;
 
 import jif.lang.Label;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.net.UnreachableNodeException;
 
 public interface PrivateKeyObject extends Object {

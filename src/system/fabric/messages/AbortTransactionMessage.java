@@ -4,7 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.client.debug.Timing;
+import fabric.worker.debug.Timing;
 import fabric.common.*;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
@@ -20,7 +20,7 @@ public class AbortTransactionMessage extends
     }
 
     /**
-     * Deserialization constructor, used by the client.
+     * Deserialization constructor, used by the worker.
      * 
      * @param node
      *          The node from which the response is being read.
@@ -63,7 +63,7 @@ public class AbortTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.client.remote.MessageHandlerThread handler)
+  public Response dispatch(fabric.worker.remote.MessageHandlerThread handler)
       throws ProtocolError {
     handler.handle(this);
     return new Response();

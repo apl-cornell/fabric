@@ -78,7 +78,7 @@ public class Shell {
 
   public void pwd(String[] args) {
     String result = root.toString();
-    Core local = Client.getClient().getLocalCore();
+    Core local = Worker.getWorker().getLocalCore();
     Iterator i = path.iterator(local);
     while(i.hasNext())
       result += " -> " + ((NamedObject) i.next()).name;
@@ -104,7 +104,7 @@ public class Shell {
         methods.add(all[i].getName());
     }
 
-    Core local = Client.getClient().getLocalCore();
+    Core local = Worker.getWorker().getLocalCore();
     Iterator i = getters.iterator(local);
     while(i.hasNext())
       System.out.println(i.next());

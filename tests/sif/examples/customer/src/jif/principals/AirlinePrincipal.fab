@@ -10,7 +10,7 @@ public class AirlinePrincipal extends ExternalPrincipal {
   
   public static AirlinePrincipal{*!:} getInstance{*!:}() {
     atomic {
-      FabricClient cl = FabricClient.getClient();
+      FabricWorker cl = FabricWorker.getWorker();
       if (cl != null) {
         final Core brokerCore = cl.getCore(Config.brokerCoreName);
         if (brokerCore != null) {

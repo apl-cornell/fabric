@@ -81,10 +81,10 @@ public class Options extends fabric.common.Options {
         "participate in the given core with the associated key and trust "
             + "stores. Can be specified multiple times. The first core "
             + "specified will be the node's \"primary\" core, and the core "
-            + "node's client will run under the primary core's principal.");
+            + "node's worker will run under the primary core's principal.");
     usageForFlag(out, "--pool <number>", "size of pool of message-handler "
         + "threads", defaults.threadPool);
-    usageForFlag(out, "--timeout <seconds>", "time-out for idle client "
+    usageForFlag(out, "--timeout <seconds>", "time-out for idle worker "
         + "connections", defaults.timeout);
     usageForFlag(out, "--nossl", "disables SSL for debugging purposes");
     usageForFlag(out, "--version", "print version info");

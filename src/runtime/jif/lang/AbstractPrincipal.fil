@@ -17,7 +17,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
 
     private Map superiors; // treat this like a set
     
-    public static LocalCore localCore = Client.getClient().getLocalCore();
+    public static LocalCore localCore = Worker.getWorker().getLocalCore();
 
     public AbstractPrincipal() {
       super();

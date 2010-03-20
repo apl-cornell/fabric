@@ -10,7 +10,7 @@ import polyglot.visit.AmbiguityRemover;
 import jif.ast.AmbPrincipalNode_c;
 
 /**
- * In Fabric, objects of <code>Client</code> and <code>RemoteClient</code> are 
+ * In Fabric, objects of <code>Worker</code> and <code>RemoteWorker</code> are 
  * treated as principals automatically.
  * 
  * @author qixin
@@ -26,12 +26,12 @@ public class FabricAmbPrincipalNode_c extends AmbPrincipalNode_c {
   
   @Override
   public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
-    if (expr != null && expr instanceof Client) {
-      // Local client principal.
+    if (expr != null && expr instanceof Worker) {
+      // Local worker principal.
       FabricTypeSystem ts = (FabricTypeSystem)ar.typeSystem();
       FabricNodeFactory nf = (FabricNodeFactory)ar.nodeFactory();
 
-      return nf.CanonicalPrincipalNode(position(), ts.clientPrincipal(position()));
+      return nf.CanonicalPrincipalNode(position(), ts.workerPrincipal(position()));
     }
     
     return super.disambiguate(ar);

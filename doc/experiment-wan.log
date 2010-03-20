@@ -1,4 +1,4 @@
-Client: dalek
+Worker: dalek
 Core: cluster
 
 >>  bin/calibrate

@@ -2,10 +2,10 @@ package OO7.traversals;
 import OO7.*;
 
 import java.net.URI;
-import fabric.client.Core;
-import fabric.client.Client;
+import fabric.worker.Core;
+import fabric.worker.Worker;
 import fabric.util.Map;
-import fabric.client.debug.Timing;
+import fabric.worker.debug.Timing;
 
 /*
  * Visitor interface for DesignObjects
@@ -29,7 +29,7 @@ public abstract class Traversal {
       }
       
       URI    addr = new URI(args[0]);
-      Core   core = Client.getClient().getCore(addr.getHost());
+      Core   core = Worker.getWorker().getCore(addr.getHost());
       Benchmark b = (Benchmark) ((Map) core.getRoot()).get(addr.getPath());
      
       System.out.println();

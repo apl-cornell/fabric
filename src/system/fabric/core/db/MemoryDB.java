@@ -5,7 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.logging.Logger;
 
-import fabric.client.remote.RemoteClient;
+import fabric.worker.remote.RemoteWorker;
 import fabric.common.*;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyHashMap;
@@ -86,27 +86,27 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  public void finishPrepare(long tid, NodePrincipal client) {
+  public void finishPrepare(long tid, NodePrincipal worker) {
   }
 
   @Override
-  public void commit(long tid, RemoteClient clientNode,
-      NodePrincipal clientPrincipal, SubscriptionManager sm)
+  public void commit(long tid, RemoteWorker workerNode,
+      NodePrincipal workerPrincipal, SubscriptionManager sm)
       throws AccessException {
-    PendingTransaction tx = remove(clientPrincipal, tid);
+    PendingTransaction tx = remove(workerPrincipal, tid);
 
     // merge in the objects
     for (SerializedObject o : tx.modData) {
       objectTable.put(o.getOnum(), o);
 
       // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum(), clientNode);
+      notifyCommittedUpdate(sm, o.getOnum(), workerNode);
     }
   }
 
   @Override
-  public void rollback(long tid, NodePrincipal client) throws AccessException {
-    remove(client, tid);
+  public void rollback(long tid, NodePrincipal worker) throws AccessException {
+    remove(worker, tid);
   }
 
   @Override
@@ -155,16 +155,16 @@ public class MemoryDB extends ObjectDB {
    * Helper method to check permissions and update the pending object table for
    * a commit or roll-back.
    */
-  private PendingTransaction remove(NodePrincipal client, long tid)
+  private PendingTransaction remove(NodePrincipal worker, long tid)
       throws AccessException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    PendingTransaction tx = submap.remove(client);
+    PendingTransaction tx = submap.remove(worker);
     if (submap.isEmpty()) pendingByTid.remove(tid);
 
     if (tx == null)
       throw new AccessException("Invalid transaction id: " + tid);
 
-    // XXX Check if the client acts for the owner.
+    // XXX Check if the worker acts for the owner.
 
     unpin(tx);
     return tx;

@@ -84,25 +84,25 @@ public class AtomicExt_c extends FabILExt_c {
     		   "    try {\n" +
     		   "      %LS\n" +
     		   "    }\n" +
-    		   "    catch (final fabric.client.RetryException " + e + ") {\n" +
+    		   "    catch (final fabric.worker.RetryException " + e + ") {\n" +
                    "      " + flag + " = false;" +
     		   "      continue " + label + ";\n" +
     		   "    }\n" +
     		   (atomic.mayAbort() ?
-                   "    catch (final fabric.client.UserAbortException " + e + ") {\n" +
+                   "    catch (final fabric.worker.UserAbortException " + e + ") {\n" +
                    "      " + flag + " = false;" +
                    "      break " + label + ";\n" +
                    "    }\n" : "") +
     		   "    catch (final Throwable " + e + ") {\n" +
     		   "      " + flag + " = false;\n" +
-    		   "      throw new fabric.client.AbortException(" + e + ");\n" +
+    		   "      throw new fabric.worker.AbortException(" + e + ");\n" +
     		   "    }\n" +
     		   "    finally {\n" +
     		   "      if (" + flag + ") {\n" +
     		   "        try {\n" +
     		   "          %S\n" +
     		   "        }\n" +
-    		   "        catch (final fabric.client.AbortException " + e + ") {\n" +
+    		   "        catch (final fabric.worker.AbortException " + e + ") {\n" +
     		   "          " + flag + " = false;\n" +
     		   "        }\n" +
     		   "      }\n" +
@@ -119,7 +119,7 @@ public class AtomicExt_c extends FabILExt_c {
 //    String block = "{ boolean "+flag+" = true;\n" +
 //                   "  %S\n" +
 //                   "  try { %LS }\n" +
-//                   "  catch (final Throwable $_) { "+flag+" = false; throw new fabric.client.AbortException($_); }\n" +
+//                   "  catch (final Throwable $_) { "+flag+" = false; throw new fabric.worker.AbortException($_); }\n" +
 //                   "  finally { if ("+flag+") {%S} else {%S} } }\n";
     return ar.qq().parseStmt(block, lds, begin, atomic.statements(), commit, abort, restores);
   }

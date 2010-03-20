@@ -263,7 +263,7 @@ public class TreeSet extends AbstractSet
    *
    * @return an iterator
    */
-  public Iterator iterator(fabric.client.Core core)
+  public Iterator iterator(fabric.worker.Core core)
   {
     return map.keySet().iterator(core);
   }

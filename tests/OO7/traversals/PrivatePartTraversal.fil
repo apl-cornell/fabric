@@ -1,8 +1,8 @@
 package OO7.traversals;
 import OO7.*;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 import fabric.util.Iterator;
 
 /** Common base class for various traversals.  This class represents a visitor

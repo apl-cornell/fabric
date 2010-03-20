@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import fabric.client.Client;
+import fabric.worker.Worker;
 import fabric.common.Options;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NoSuchNodeError;
@@ -79,7 +79,7 @@ class CommManager {
    * @return a connected SocketChannel configured in blocking mode.
    */
   private SocketChannel connect() {
-    Client client = Client.getClient();
+    Worker worker = Worker.getWorker();
     int hostIdx = 0;
 
     // These will be filled in with real values if needed.
@@ -88,16 +88,16 @@ class CommManager {
     int numHosts = 0;
     int startHostIdx = 0;
 
-    for (int retry = 0; client.retries < 0 || retry < client.retries;) {
+    for (int retry = 0; worker.retries < 0 || retry < worker.retries;) {
       try {
         if (hosts == null) {
           Pair<List<InetSocketAddress>, Principal> entry =
-              client.nameService.lookup(node);
+              worker.nameService.lookup(node);
           hosts = entry.first;
           nodePrincipal = entry.second;
 
           numHosts = hosts.size();
-          startHostIdx = Client.RAND.nextInt(numHosts);
+          startHostIdx = Worker.RAND.nextInt(numHosts);
         }
 
         // Attempt to establish a connection.
@@ -113,7 +113,7 @@ class CommManager {
         hostIdx++;
         if (hostIdx == numHosts) {
           hostIdx = 0;
-          if (client.retries >= 0) retry++;
+          if (worker.retries >= 0) retry++;
         }
         continue;
       } catch (IOException e) {
@@ -130,7 +130,7 @@ class CommManager {
         hostIdx++;
         if (hostIdx == numHosts) {
           hostIdx = 0;
-          if (client.retries >= 0) retry++;
+          if (worker.retries >= 0) retry++;
         }
         continue;
       }
@@ -157,7 +157,7 @@ class CommManager {
    */
   private SocketChannel connect(InetSocketAddress addr,
       Principal remotePrincipal) throws NoSuchNodeError, IOException {
-    Client client = Client.getClient();
+    Worker worker = Worker.getWorker();
     SocketChannel socketChannel = SocketChannel.open();
     socketChannel.configureBlocking(true);
 
@@ -166,14 +166,14 @@ class CommManager {
     socket.setKeepAlive(true);
 
     // Attempt to connect to the remote host.
-    socketChannel.socket().connect(addr, client.timeout);
+    socketChannel.socket().connect(addr, worker.timeout);
 
     // Give the name of the node we're interested in.
     DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
     dataOut.writeUTF(node.name);
     
     // Give our node name.
-    dataOut.writeUTF(Client.getClient().name);
+    dataOut.writeUTF(Worker.getWorker().name);
 
     // Specify whether we're encrypting.
     dataOut.writeBoolean(useSSL);
@@ -187,7 +187,7 @@ class CommManager {
 
   private SocketChannel initializeSession(SocketChannel connection,
       DataOutputStream out) throws IOException {
-    Client client = Client.getClient();
+    Worker worker = Worker.getWorker();
 
     // Nothing to do if we're connecting as a dissemination node.
     if (!useSSL) return connection;
@@ -195,9 +195,9 @@ class CommManager {
     if (!Options.DEBUG_NO_SSL) {
       // XXX TODO Start encrypting.
       // SSLSocket sslSocket;
-      // synchronized (client.sslSocketFactory) {
+      // synchronized (worker.sslSocketFactory) {
       // sslSocket =
-      // (SSLSocket) client.sslSocketFactory.createSocket(socket, node.name,
+      // (SSLSocket) worker.sslSocketFactory.createSocket(socket, node.name,
       // addr.getPort(), true);
       // }
       // sslSocket.setUseClientMode(true);
@@ -213,15 +213,15 @@ class CommManager {
       // sslSocket.close();
       // throw new IOException();
       // }
-      out.writeUTF(client.javaPrincipal.getName());
+      out.writeUTF(worker.javaPrincipal.getName());
       out.flush();
     } else {
-      out.writeUTF(client.javaPrincipal.getName());
+      out.writeUTF(worker.javaPrincipal.getName());
       out.flush();
     }
 
     // Send to the core a pointer to our principal object.
-    NodePrincipal principal = client.getPrincipal();
+    NodePrincipal principal = worker.getPrincipal();
     out.write(principal != null ? 1 : 0);
     if (principal != null) {
       out.writeUTF(principal.$getCore().name());

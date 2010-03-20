@@ -19,7 +19,7 @@ package fabnfs;
 // 							March 1997
 //
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabnfs.util.FileSystemFactory;
 
 class ntnfs extends nfs implements NFSConsts, MountdConsts, RPCConsts {

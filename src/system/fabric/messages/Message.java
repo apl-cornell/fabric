@@ -4,9 +4,9 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Logger;
 
-import fabric.client.remote.messages.GetPrincipalMessage;
-import fabric.client.remote.messages.RemoteCallMessage;
-import fabric.client.remote.messages.TakeOwnershipMessage;
+import fabric.worker.remote.messages.GetPrincipalMessage;
+import fabric.worker.remote.messages.RemoteCallMessage;
+import fabric.worker.remote.messages.TakeOwnershipMessage;
 import fabric.common.MessageHandler;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FabricRuntimeException;
@@ -132,7 +132,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
       r.write(out);
       out.flush();
     } catch (final FabricException e) {
-      // Clear out the stack trace before sending the exception to the client.
+      // Clear out the stack trace before sending the exception to the worker.
       e.setStackTrace(new StackTraceElement[0]);
 
       // Signal that an error occurred and write out the exception.
@@ -143,7 +143,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
       // TODO: this is copied and pasted from above. We need to figure out what
       // exceptions _not_ to catch and then catch all the others.
 
-      // Clear out the stack trace before sending the exception to the client.
+      // Clear out the stack trace before sending the exception to the worker.
       e.setStackTrace(new StackTraceElement[0]);
 
       // Signal that an error occurred and write out the exception.
@@ -167,8 +167,8 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
   }
 
   private final R dispatch(MessageHandler handler) throws FabricException {
-    if (handler instanceof fabric.client.remote.MessageHandlerThread) {
-      return dispatch((fabric.client.remote.MessageHandlerThread) handler);
+    if (handler instanceof fabric.worker.remote.MessageHandlerThread) {
+      return dispatch((fabric.worker.remote.MessageHandlerThread) handler);
     }
 
     return dispatch((MessageHandlerThread) handler);
@@ -193,9 +193,9 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    * @return the result computed by the handler
    * @throws FabricException
    */
-  public R dispatch(fabric.client.remote.MessageHandlerThread handler) throws FabricException {
+  public R dispatch(fabric.worker.remote.MessageHandlerThread handler) throws FabricException {
     throw new InternalError(
-        "Invalid, unsupported, or unimplemented client message: " + getClass());
+        "Invalid, unsupported, or unimplemented worker message: " + getClass());
   }
 
   /**
@@ -213,7 +213,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
 
   /**
    * Writes this message out on the given output stream. Only used by the
-   * client.
+   * worker.
    * 
    * @throws IOException
    *           if the output stream throws an IOException.
@@ -232,7 +232,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
     ABORT_TRANSACTION(AbortTransactionMessage.class),
     DISSEM_READ_ONUM(DissemReadMessage.class),
     REMOTE_CALL(RemoteCallMessage.class),
-    INTERCLIENT_READ(fabric.client.remote.messages.ReadMessage.class),
+    INTERWORKER_READ(fabric.worker.remote.messages.ReadMessage.class),
     TAKE_OWNERSHIP(TakeOwnershipMessage.class),
     GET_PRINCIPAL(GetPrincipalMessage.class),
     OBJECT_UPDATE(ObjectUpdateMessage.class),

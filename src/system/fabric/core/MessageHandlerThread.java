@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.logging.Logger;
 
-import fabric.client.TransactionCommitFailedException;
-import fabric.client.TransactionPrepareFailedException;
+import fabric.worker.TransactionCommitFailedException;
+import fabric.worker.TransactionPrepareFailedException;
 import fabric.common.AbstractMessageHandlerThread;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -39,7 +39,7 @@ public class MessageHandlerThread extends
   private MessageHandlerThread(Pool<MessageHandlerThread> pool) {
     super("Core message handler", pool);
 
-    fabric.client.transaction.TransactionManager.startThread(this);
+    fabric.worker.transaction.TransactionManager.startThread(this);
   }
 
   @Override
@@ -49,11 +49,11 @@ public class MessageHandlerThread extends
 
   public void handle(AbortTransactionMessage message) throws AccessException,
       ProtocolError {
-    if (session.clientIsDissem)
+    if (session.workerIsDissem)
       throw new ProtocolError("Message not supported.");
 
     logger.finer("Handling Abort Message");
-    session.core.tm.abortTransaction(session.clientPrincipal,
+    session.core.tm.abortTransaction(session.workerPrincipal,
         message.tid.topTid);
     logger.fine("Transaction " + message.tid.topTid + " aborted");
   }
@@ -63,11 +63,11 @@ public class MessageHandlerThread extends
    */
   public AllocateMessage.Response handle(AllocateMessage msg)
       throws AccessException, ProtocolError {
-    if (session.clientIsDissem)
+    if (session.workerIsDissem)
       throw new ProtocolError("Message not supported.");
 
     logger.finer("Handling Allocate Message");
-    long[] onums = session.core.tm.newOnums(session.clientPrincipal, msg.num);
+    long[] onums = session.core.tm.newOnums(session.workerPrincipal, msg.num);
     return new AllocateMessage.Response(onums);
   }
 
@@ -76,7 +76,7 @@ public class MessageHandlerThread extends
    */
   public CommitTransactionMessage.Response handle(
       CommitTransactionMessage message) throws ProtocolError {
-    if (session.clientIsDissem)
+    if (session.workerIsDissem)
       throw new ProtocolError("Message not supported.");
 
     try {
@@ -92,11 +92,11 @@ public class MessageHandlerThread extends
    */
   public PrepareTransactionMessage.Response handle(PrepareTransactionMessage msg)
       throws ProtocolError {
-    if (session.clientIsDissem)
+    if (session.workerIsDissem)
       throw new ProtocolError("Message not supported.");
 
-    logger.finer("Handling Prepare Message, client="
-        + session.clientPrincipalName + ", tid=" + msg.tid);
+    logger.finer("Handling Prepare Message, worker="
+        + session.workerPrincipalName + ", tid=" + msg.tid);
 
     try {
       boolean subTransactionCreated =
@@ -114,14 +114,14 @@ public class MessageHandlerThread extends
    */
   public ReadMessage.Response handle(ReadMessage msg) throws AccessException,
       ProtocolError {
-    if (session.clientIsDissem)
+    if (session.workerIsDissem)
       throw new ProtocolError("Message not supported.");
 
     logger.finer("Handling Read Message");
     session.recordRead();
 
     ObjectGroup group =
-        session.core.tm.getGroup(session.clientPrincipal, session.remoteNode,
+        session.core.tm.getGroup(session.workerPrincipal, session.remoteNode,
             msg.onum, this);
     return new ReadMessage.Response(group);
   }
@@ -145,7 +145,7 @@ public class MessageHandlerThread extends
    */
   public UnauthenticatedPrepareTransactionMessage.Response handle(
       UnauthenticatedPrepareTransactionMessage msg) {
-    logger.finer("Handling Unauthenticated Prepare Message, client="
+    logger.finer("Handling Unauthenticated Prepare Message, worker="
         + session.remoteNode.name + ", tid=" + msg.tid);
 
     try {
@@ -179,7 +179,7 @@ public class MessageHandlerThread extends
     session.core.sm.createSurrogates(req);
 
     boolean subTransactionCreated =
-        session.core.tm.prepare(session.clientPrincipal, req);
+        session.core.tm.prepare(session.workerPrincipal, req);
 
     logger.fine("Transaction " + req.tid + " prepared");
     // Store the size of the transaction for debugging at the end of the
@@ -196,7 +196,7 @@ public class MessageHandlerThread extends
    */
   public UnauthenticatedCommitTransactionMessage.Response handle(
       UnauthenticatedCommitTransactionMessage message) {
-    logger.finer("Handling Unauthenticated Commit Message, client="
+    logger.finer("Handling Unauthenticated Commit Message, worker="
         + session.remoteNode.name + ", tid=" + message.transactionID);
 
     try {
@@ -213,7 +213,7 @@ public class MessageHandlerThread extends
     session.recordCommitAttempt();
 
     session.core.tm.commitTransaction(session.remoteNode,
-        session.clientPrincipal, transactionID);
+        session.workerPrincipal, transactionID);
     logger.fine("Transaction " + transactionID + " committed");
 
     session.recordCommitSuccess(transactionID);
@@ -225,7 +225,7 @@ public class MessageHandlerThread extends
   public void handle(UnauthenticatedAbortTransactionMessage message)
       throws AccessException {
     logger.finer("Handling Abort Message");
-    session.core.tm.abortTransaction(session.clientPrincipal,
+    session.core.tm.abortTransaction(session.workerPrincipal,
         message.tid.topTid);
     logger.fine("Transaction " + message.tid.topTid + " aborted");
   }

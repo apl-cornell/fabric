@@ -1,7 +1,7 @@
 package fabnfs;
 
 import fabnfs.util.File;
-import fabric.client.Core;
+import fabric.worker.Core;
 import java.io.FileNotFoundException;
 
 /* replacing java.io.File by fabnfs.util.File , etc. */

@@ -1,7 +1,7 @@
 package fabric.net;
 
-import fabric.client.RemoteCore;
-import fabric.client.remote.RemoteClient;
+import fabric.worker.RemoteCore;
+import fabric.worker.remote.RemoteWorker;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 
@@ -16,21 +16,21 @@ import javax.security.auth.x500.X500Principal;
  */
 public class NameService {
   private static final Map<String, String> aliases;
-  private static final Map<String, Integer> clientPorts;
+  private static final Map<String, Integer> workerPorts;
   
   static {
     aliases = new HashMap<String, String>();
     aliases.put("core00", "core00.systems.cs.cornell.edu");
     
-    clientPorts = new HashMap<String, Integer>();
-    clientPorts.put("client0", 3374);
-    clientPorts.put("client1", 3375);
-    clientPorts.put("dalek.systems.cs.cornell.edu", 3374);
-    clientPorts.put("gaia.systems.cs.cornell.edu", 3386);
-    clientPorts.put("bob", 3387);    
-    clientPorts.put("alice", 3388);    
-    clientPorts.put("calendarapp", 3389);
-    clientPorts.put("trantor.u.cs.cornell.edu", 3390);    
+    workerPorts = new HashMap<String, Integer>();
+    workerPorts.put("worker0", 3374);
+    workerPorts.put("worker1", 3375);
+    workerPorts.put("dalek.systems.cs.cornell.edu", 3374);
+    workerPorts.put("gaia.systems.cs.cornell.edu", 3386);
+    workerPorts.put("bob", 3387);    
+    workerPorts.put("alice", 3388);    
+    workerPorts.put("calendarapp", 3389);
+    workerPorts.put("trantor.u.cs.cornell.edu", 3390);    
   }
   
   /**
@@ -42,11 +42,11 @@ public class NameService {
   }
   
   /**
-   * Maps from client names to their port numbers.
+   * Maps from worker names to their port numbers.
    */
-  static int resolveClientPort(String name) {
-    if (!clientPorts.containsKey(name)) return 3373;
-    return clientPorts.get(name);
+  static int resolveWorkerPort(String name) {
+    if (!workerPorts.containsKey(name)) return 3373;
+    return workerPorts.get(name);
   }
   
   /**
@@ -55,16 +55,16 @@ public class NameService {
   public Pair<List<InetSocketAddress>, Principal> lookup(
       RemoteNode host) throws UnknownHostException {
     if (host instanceof RemoteCore) return lookup((RemoteCore) host);
-    if (host instanceof RemoteClient) return lookup((RemoteClient) host);
+    if (host instanceof RemoteWorker) return lookup((RemoteWorker) host);
     throw new InternalError();
   }
   
   /**
-   * Returns a list of client node addresses for the given client.
+   * Returns a list of worker node addresses for the given worker.
    */
   public Pair<List<InetSocketAddress>, Principal> lookup(
-      RemoteClient client) throws UnknownHostException {
-    return lookup(client, resolveClientPort(client.name()));
+      RemoteWorker worker) throws UnknownHostException {
+    return lookup(worker, resolveWorkerPort(worker.name()));
   }
   
   /**

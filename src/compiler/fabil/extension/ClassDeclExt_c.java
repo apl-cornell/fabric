@@ -166,7 +166,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     }
 
     ClassMember oidConstr =
-        qq.parseMember("public _Proxy(fabric.client.Core core, long onum) {"
+        qq.parseMember("public _Proxy(fabric.worker.Core core, long onum) {"
             + "super(core, onum); }");
     members.add(oidConstr);
 
@@ -392,7 +392,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             + "._Static._Impl impl) { super(impl); }");
     proxyMembers.add(proxyConstructorDecl);
     proxyConstructorDecl =
-        qq.parseMember("public _Proxy(fabric.client.Core core, long onum) {"
+        qq.parseMember("public _Proxy(fabric.worker.Core core, long onum) {"
             + "super(core, onum); }");
     proxyMembers.add(proxyConstructorDecl);
     
@@ -426,7 +426,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the impl constructor declarations and add them to the list of
     // static impl members.
     ClassMember implConstructorDecl =
-        qq.parseMember("public _Impl(fabric.client.Core core, "
+        qq.parseMember("public _Impl(fabric.worker.Core core, "
             + "jif.lang.Label label) "
             + "throws fabric.net.UnreachableNodeException {"
             + "super(core, label); }");
@@ -536,7 +536,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     ClassMember deserialize =
         qq
             .parseMember(
-                "public _Impl(fabric.client.Core core, long onum, int version, "
+                "public _Impl(fabric.worker.Core core, long onum, int version, "
                     + "long expiry, long label, java.io.ObjectInput in, "
                     + "java.util.Iterator refTypes, java.util.Iterator intracoreRefs) "
                     + "throws java.io.IOException, java.lang.ClassNotFoundException {"
@@ -607,24 +607,24 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     body =
         body
             .addMember(qq
-                .parseMember("private fabric.client.transaction.TransactionManager $tm;"));
+                .parseMember("private fabric.worker.transaction.TransactionManager $tm;"));
     body =
         body
             .addMember(qq
-                .parseMember("public final fabric.client.transaction.TransactionManager "
+                .parseMember("public final fabric.worker.transaction.TransactionManager "
                     + "getTransactionManager() { return $tm; }"));
     body =
         body
             .addMember(qq
                 .parseMember("public final void "
-                    + "setTransactionManager(fabric.client.transaction.TransactionManager tm) "
+                    + "setTransactionManager(fabric.worker.transaction.TransactionManager tm) "
                     + "{$tm = tm;}"));
 
     // Add the start() method if one doesn't yet exist.
     if (type.methods("start", Collections.emptyList()).isEmpty()) {
       body =
           body.addMember(qq.parseMember("public void start() {"
-              + "fabric.client.transaction.TransactionManager.getInstance()"
+              + "fabric.worker.transaction.TransactionManager.getInstance()"
               + ".registerThread(this); super.start();}"));
     }
     result = result.body(body);
@@ -712,11 +712,11 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
                             fieldName)));
         arguments.add(args);
         
-        Id rcId = nf.Id(Position.compilerGenerated(), "$remoteClient");
-        Formal remoteClient = nf.Formal(Position.compilerGenerated(), 
+        Id rcId = nf.Id(Position.compilerGenerated(), "$remoteWorker");
+        Formal remoteWorker = nf.Formal(Position.compilerGenerated(), 
                                         Flags.FINAL, 
                                         nf.CanonicalTypeNode(Position.compilerGenerated(), 
-                                                             ts.RemoteClient()), 
+                                                             ts.RemoteWorker()), 
                                         rcId);
         
         Call call = nf.Call(Position.compilerGenerated(), 
@@ -768,7 +768,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             ret, ts.RemoteCallException(), catchStmts);
         
         List<Formal> newFormals = new ArrayList<Formal>(md.formals().size() + 1);
-        newFormals.add(remoteClient);
+        newFormals.add(remoteWorker);
         newFormals.addAll(md.formals());
         MethodDecl wrapper = nf.MethodDecl(Position.compilerGenerated(),
                                            Flags.PUBLIC, 

@@ -1,7 +1,7 @@
 package system;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 
 /**
  * Tests two top-level transactions with conflicting accesses.
@@ -10,7 +10,7 @@ public class ThreadTest01 {
   int i = 0;
 
   public static void main(String[] args) {
-    Core core = Client.getClient().getCore("core0");
+    Core core = Worker.getWorker().getCore("core0");
     ThreadTest01 state;
 
     atomic {

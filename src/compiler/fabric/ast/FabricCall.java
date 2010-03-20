@@ -5,8 +5,8 @@ import polyglot.ast.Call;
 import polyglot.ast.Expr;
 
 public interface FabricCall extends Call {
-  Expr remoteClient();
-  FabricCall remoteClient(Expr remoteClient);
-  Principal remoteClientPrincipal();
-  FabricCall remoteClientPrincipal(Principal p);
+  Expr remoteWorker();
+  FabricCall remoteWorker(Expr remoteWorker);
+  Principal remoteWorkerPrincipal();
+  FabricCall remoteWorkerPrincipal(Principal p);
 }

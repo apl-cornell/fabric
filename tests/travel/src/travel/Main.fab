@@ -6,7 +6,7 @@ import jif.runtime.Runtime;
 
 public class Main {
     public static void main{}(String[]{} args) {
-        Core core = client$.getCore(Config.brokerCoreName);
+        Core core = worker$.getCore(Config.brokerCoreName);
         Map root = null;
 	if (core != null) {
 	    root = (Map) core.getRoot();

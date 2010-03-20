@@ -1,6 +1,6 @@
 package fabric.lang.arrays.internal;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.lang.arrays.*;
 import jif.lang.Label;
 import fabric.lang.Object;

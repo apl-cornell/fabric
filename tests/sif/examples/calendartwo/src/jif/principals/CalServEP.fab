@@ -1,6 +1,6 @@
 package jif.principals;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.util.Map;
 import fabric.lang.Object;
 
@@ -16,7 +16,7 @@ public class CalServEP extends ExternalPrincipal {
 
     public static fabric.lang.Principal{*!:} getInstance{*!:}() {
         atomic {
-                FabricClient cl = FabricClient.getClient();
+                FabricWorker cl = FabricWorker.getWorker();
                 if (cl != null) {
                     final Core remote = cl.getCore(coreName);
                     if (remote != null) {

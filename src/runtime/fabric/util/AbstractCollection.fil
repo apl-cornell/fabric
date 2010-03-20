@@ -71,8 +71,8 @@ import java.lang.reflect.Array;
 public abstract class AbstractCollection implements Collection
 {
 
-  protected static final fabric.client.Core LOCAL_CORE =
-    fabric.client.Client.getClient().getLocalCore();
+  protected static final fabric.worker.Core LOCAL_CORE =
+    fabric.worker.Worker.getWorker().getLocalCore();
 
   /**
    * The main constructor, for use by subclasses.
@@ -88,10 +88,10 @@ public abstract class AbstractCollection implements Collection
    *
    * @return an iterator
    */
-  public abstract Iterator iterator(fabric.client.Core core);
+  public abstract Iterator iterator(fabric.worker.Core core);
 
   public Iterator iterator() {
-    Core local = Client.getClient().getLocalCore();
+    Core local = Worker.getWorker().getLocalCore();
     return iterator(local);
   }
 

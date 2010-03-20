@@ -9,10 +9,10 @@ public interface FabricExtFactory extends JifExtFactory {
   Ext extAbortStmt();
   Ext extAtomic();
   Ext extAmbNewFabricArray();
-  Ext extClient();
+  Ext extWorker();
   Ext extFabricArrayInit();
   Ext extFabricArrayTypeNode();
   Ext extNewFabricArray();
-  Ext extRemoteClientGetter();
+  Ext extRemoteWorkerGetter();
   Ext extRetryStmt();
 }

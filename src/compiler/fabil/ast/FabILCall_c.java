@@ -12,7 +12,7 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 
 public class FabILCall_c extends Call_c implements FabILCall {
-  protected Expr remoteClient;
+  protected Expr remoteWorker;
   
   @SuppressWarnings("unchecked")
   public FabILCall_c(Position pos, Receiver target, Id name, List arguments) {
@@ -20,34 +20,34 @@ public class FabILCall_c extends Call_c implements FabILCall {
   }
   
   @SuppressWarnings("unchecked")
-  public FabILCall_c(Position pos, Receiver target, Id name, Expr remoteClient, List arguments) {
+  public FabILCall_c(Position pos, Receiver target, Id name, Expr remoteWorker, List arguments) {
     super(pos, target, name, arguments);
-    this.remoteClient = remoteClient;
+    this.remoteWorker = remoteWorker;
   }
   
   @SuppressWarnings("unchecked")
-  protected FabILCall_c reconstruct(Receiver target, Id name, Expr remoteClient, List arguments) {
+  protected FabILCall_c reconstruct(Receiver target, Id name, Expr remoteWorker, List arguments) {
     FabILCall_c n = (FabILCall_c)super.reconstruct(target, name, arguments);
     
-    if (remoteClient != this.remoteClient) {
+    if (remoteWorker != this.remoteWorker) {
       n = (FabILCall_c)n.copy();
-      n.remoteClient = remoteClient;
+      n.remoteWorker = remoteWorker;
     }
     
     return n;
   }
   
-  public Expr remoteClient() {
-    return remoteClient;
+  public Expr remoteWorker() {
+    return remoteWorker;
   }
   
-  public FabILCall remoteClient(Expr remoteClient) {
-    if (remoteClient == this.remoteClient) {
+  public FabILCall remoteWorker(Expr remoteWorker) {
+    if (remoteWorker == this.remoteWorker) {
       return this;
     }
     
     FabILCall_c n = (FabILCall_c)this.copy();
-    n.remoteClient = remoteClient;
+    n.remoteWorker = remoteWorker;
     return n;
   }
   
@@ -56,17 +56,17 @@ public class FabILCall_c extends Call_c implements FabILCall {
   public Node visitChildren(NodeVisitor v) {
     Receiver target = (Receiver) visitChild(this.target, v);
     Id name = (Id) visitChild(this.name, v);
-    Expr remoteClient = (Expr) visitChild(this.remoteClient, v);
+    Expr remoteWorker = (Expr) visitChild(this.remoteWorker, v);
     List arguments = visitList(this.arguments, v);
-    return reconstruct(target, name, remoteClient, arguments);
+    return reconstruct(target, name, remoteWorker, arguments);
   }
   
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
     FabILCall c = (FabILCall)super.typeCheck(tc);
     
-    if (c.remoteClient() != null) {
-      if (!c.remoteClient().type().isCanonical()) {
+    if (c.remoteWorker() != null) {
+      if (!c.remoteWorker().type().isCanonical()) {
         return c;
       }
 
@@ -79,10 +79,10 @@ public class FabILCall_c extends Call_c implements FabILCall {
       }
       
       FabILTypeSystem ts = (FabILTypeSystem)tc.typeSystem();
-      if (!ts.isSubtype(c.remoteClient().type(), ts.RemoteClient())) {
-        // The expression after @ has to be a RemoteClient
-        throw new SemanticException("Remote method invocations expect remote clients.", 
-                                    c.remoteClient().position());
+      if (!ts.isSubtype(c.remoteWorker().type(), ts.RemoteWorker())) {
+        // The expression after @ has to be a RemoteWorker
+        throw new SemanticException("Remote method invocations expect remote workers.", 
+                                    c.remoteWorker().position());
       }
     }
 
@@ -92,7 +92,7 @@ public class FabILCall_c extends Call_c implements FabILCall {
   @SuppressWarnings("unchecked")
   @Override
   public String toString() {
-    if (remoteClient == null) {
+    if (remoteWorker == null) {
       return super.toString();
     }
     
@@ -100,7 +100,7 @@ public class FabILCall_c extends Call_c implements FabILCall {
     sb.append(targetImplicit ? "" : target.toString() + ".");
     sb.append(name);
     sb.append("@");
-    sb.append(remoteClient);
+    sb.append(remoteWorker);
     sb.append("(");
 
     int count = 0;

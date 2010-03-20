@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import fabric.client.remote.RemoteClient;
+import fabric.worker.remote.RemoteWorker;
 import fabric.common.FabricThread;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
@@ -21,17 +21,17 @@ import fabric.dissemination.Glob;
  */
 public class SubscriptionManager extends FabricThread.AbstractImpl {
   /**
-   * A set of onums that have been updated, paired with the client that issued
+   * A set of onums that have been updated, paired with the worker that issued
    * the update.
    */
-  private final Set<Pair<Long, RemoteClient>> updatedOnums;
+  private final Set<Pair<Long, RemoteWorker>> updatedOnums;
 
   /**
    * The set of nodes subscribed to each onum. The second component of each pair
    * indicates whether the node is subscribed as a dissemination node. (true =
-   * dissemination, false = client)
+   * dissemination, false = worker)
    */
-  private final LongKeyCache<Set<Pair<RemoteClient, Boolean>>> subscriptions;
+  private final LongKeyCache<Set<Pair<RemoteWorker, Boolean>>> subscriptions;
 
   /**
    * The name of the core for which we are managing subscriptions.
@@ -52,9 +52,9 @@ public class SubscriptionManager extends FabricThread.AbstractImpl {
   public SubscriptionManager(String core, TransactionManager tm) {
     super("subscription manager for core " + core);
     this.core = core;
-    this.updatedOnums = new LinkedHashSet<Pair<Long, RemoteClient>>();
+    this.updatedOnums = new LinkedHashSet<Pair<Long, RemoteWorker>>();
     this.tm = tm;
-    this.subscriptions = new LongKeyCache<Set<Pair<RemoteClient, Boolean>>>();
+    this.subscriptions = new LongKeyCache<Set<Pair<RemoteWorker, Boolean>>>();
 
     start();
   }
@@ -63,7 +63,7 @@ public class SubscriptionManager extends FabricThread.AbstractImpl {
   public void run() {
     while (true) {
       // Obtain an entry from the list of updated onums.
-      Pair<Long, RemoteClient> updateEntry;
+      Pair<Long, RemoteWorker> updateEntry;
       synchronized (updatedOnums) {
         if (updatedOnums.isEmpty()) {
           try {
@@ -73,16 +73,16 @@ public class SubscriptionManager extends FabricThread.AbstractImpl {
           continue;
         }
 
-        Iterator<Pair<Long, RemoteClient>> updates = updatedOnums.iterator();
+        Iterator<Pair<Long, RemoteWorker>> updates = updatedOnums.iterator();
         updateEntry = updates.next();
         updates.remove();
       }
 
       long onum = updateEntry.first;
-      RemoteClient updater = updateEntry.second;
+      RemoteWorker updater = updateEntry.second;
 
       // Get the list of subscribers.
-      Set<Pair<RemoteClient, Boolean>> subscribers;
+      Set<Pair<RemoteWorker, Boolean>> subscribers;
       synchronized (subscriptions) {
         subscribers = subscriptions.remove(onum);
       }
@@ -101,13 +101,13 @@ public class SubscriptionManager extends FabricThread.AbstractImpl {
       }
 
       // Notify subscribers of updates.
-      Set<Pair<RemoteClient, Boolean>> newSubscribers =
-          new HashSet<Pair<RemoteClient, Boolean>>();
-      for (Pair<RemoteClient, Boolean> subscriber : subscribers) {
-        RemoteClient node = subscriber.first;
+      Set<Pair<RemoteWorker, Boolean>> newSubscribers =
+          new HashSet<Pair<RemoteWorker, Boolean>>();
+      for (Pair<RemoteWorker, Boolean> subscriber : subscribers) {
+        RemoteWorker node = subscriber.first;
         boolean isDissem = subscriber.second;
-        // No need to notify the client that issued the updates. Just
-        // resubscribe the client.
+        // No need to notify the worker that issued the updates. Just
+        // resubscribe the worker.
         boolean resubscribe;
         if (node == updater && !isDissem)
           resubscribe = true;
@@ -127,14 +127,14 @@ public class SubscriptionManager extends FabricThread.AbstractImpl {
   }
 
   /**
-   * Subscribes the given set of clients to the given onum.
+   * Subscribes the given set of workers to the given onum.
    */
   private void subscribe(long onum,
-      Set<Pair<RemoteClient, Boolean>> newSubscribers) {
+      Set<Pair<RemoteWorker, Boolean>> newSubscribers) {
     if (newSubscribers.isEmpty()) return;
 
     synchronized (subscriptions) {
-      Set<Pair<RemoteClient, Boolean>> subscribers = subscriptions.get(onum);
+      Set<Pair<RemoteWorker, Boolean>> subscribers = subscriptions.get(onum);
       if (subscribers == null) {
         subscriptions.put(onum, newSubscribers);
       } else {
@@ -144,31 +144,31 @@ public class SubscriptionManager extends FabricThread.AbstractImpl {
   }
 
   /**
-   * Subscribes the given client to the given onum.
+   * Subscribes the given worker to the given onum.
    * 
    * @param dissemSubscribe
    *          If true, then the given subscriber will be subscribed as a
-   *          dissemination node; otherwise it will be subscribed as a client.
+   *          dissemination node; otherwise it will be subscribed as a worker.
    */
-  public void subscribe(long onum, RemoteClient client, boolean dissemSubscribe) {
+  public void subscribe(long onum, RemoteWorker worker, boolean dissemSubscribe) {
     synchronized (subscriptions) {
-      Set<Pair<RemoteClient, Boolean>> subscribers = subscriptions.get(onum);
+      Set<Pair<RemoteWorker, Boolean>> subscribers = subscriptions.get(onum);
       if (subscribers == null) {
-        subscribers = new HashSet<Pair<RemoteClient, Boolean>>();
+        subscribers = new HashSet<Pair<RemoteWorker, Boolean>>();
         subscriptions.put(onum, subscribers);
       }
 
-      subscribers.add(new Pair<RemoteClient, Boolean>(client, dissemSubscribe));
+      subscribers.add(new Pair<RemoteWorker, Boolean>(worker, dissemSubscribe));
     }
   }
 
   /**
    * Notifies the subscription manager that an object has been updated by a
-   * particular client.
+   * particular worker.
    */
-  public void notifyUpdate(long onum, RemoteClient client) {
+  public void notifyUpdate(long onum, RemoteWorker worker) {
     synchronized (updatedOnums) {
-      updatedOnums.add(new Pair<Long, RemoteClient>(onum, client));
+      updatedOnums.add(new Pair<Long, RemoteWorker>(onum, worker));
       updatedOnums.notify();
     }
   }

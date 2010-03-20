@@ -81,22 +81,22 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     return postExtStmt(e);
   }
 
-  public final Ext extClient() {
-    Ext e = extClientImpl();
+  public final Ext extWorker() {
+    Ext e = extWorkerImpl();
     if (nextExtFactory() != null && 
         nextExtFactory() instanceof FabricExtFactory) {
       FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
-      Ext e2 = nextFac.extClient();
+      Ext e2 = nextFac.extWorker();
       e = composeExts(e, e2);
     }
-    return postExtClient(e);
+    return postExtWorker(e);
   }
   
-  protected Ext extClientImpl() {
+  protected Ext extWorkerImpl() {
     return extExprImpl();
   }
   
-  protected Ext postExtClient(Ext e) {
+  protected Ext postExtWorker(Ext e) {
     return postExtExpr(e);
   }
 
@@ -139,22 +139,22 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c
     return postExtAmbNewArray(e);
   }
   
-  public final Ext extRemoteClientGetter() {
-    Ext e = extRemoteClientGetterImpl();
+  public final Ext extRemoteWorkerGetter() {
+    Ext e = extRemoteWorkerGetterImpl();
     if (nextExtFactory() != null && 
         nextExtFactory() instanceof FabricExtFactory) {
       FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory(); 
-      Ext e2 = nextFac.extRemoteClientGetter();
+      Ext e2 = nextFac.extRemoteWorkerGetter();
       e = composeExts(e, e2);
     }
-    return postExtRemoteClientGetter(e);
+    return postExtRemoteWorkerGetter(e);
   }
   
-  protected Ext extRemoteClientGetterImpl() {
+  protected Ext extRemoteWorkerGetterImpl() {
     return extExprImpl();
   }
   
-  protected Ext postExtRemoteClientGetter(Ext e) {
+  protected Ext postExtRemoteWorkerGetter(Ext e) {
     return postExtExpr(e);
   }
 

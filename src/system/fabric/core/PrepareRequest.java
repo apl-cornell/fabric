@@ -23,7 +23,7 @@ public final class PrepareRequest {
   /** The object numbers and version numbers of the read objects */
   public final LongKeyMap<Integer> reads;
 
-  /** The commit time of the transaction, as proposed by the client */
+  /** The commit time of the transaction, as proposed by the worker */
   public final long commitTime;
 
   /** Create a PrepareRequest with the provided fields */

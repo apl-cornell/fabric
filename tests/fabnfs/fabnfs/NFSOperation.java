@@ -19,19 +19,19 @@ class NFSOperation extends java.lang.Object implements Runnable, NFSConsts,
 
       // wrapping this up in a transaction of its own
       boolean commit = true;
-      fabric.client.transaction.TransactionManager.getInstance()
+      fabric.worker.transaction.TransactionManager.getInstance()
           .startTransaction();
       try {
         handler.Run(next.port, next.xid, next.procedure, next.packet);
       } catch (final Throwable t) {
         commit = false;
-        throw new fabric.client.AbortException(t);
+        throw new fabric.worker.AbortException(t);
       } finally {
         if (commit) {
-          fabric.client.transaction.TransactionManager.getInstance()
+          fabric.worker.transaction.TransactionManager.getInstance()
               .commitTransaction();
         } else {
-          fabric.client.transaction.TransactionManager.getInstance()
+          fabric.worker.transaction.TransactionManager.getInstance()
               .abortTransaction();
         }
       }

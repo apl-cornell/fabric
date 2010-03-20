@@ -1,8 +1,8 @@
 public class PrincipalTest {
  public static void main(String[] args) {
   atomic {
-   Core broker  = Client.getClient().getCore(args[0]);
-   Core airline = Client.getClient().getCore(args[1]);
+   Core broker  = Worker.getWorker().getCore(args[0]);
+   Core airline = Worker.getWorker().getCore(args[1]);
 
    Principal p = new P@broker();
    IntegPolicy airlineTrusted = LabelUtil.writerPolicy(airline, p, p);  // {bank<-airline} 

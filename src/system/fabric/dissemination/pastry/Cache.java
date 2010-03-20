@@ -2,8 +2,8 @@ package fabric.dissemination.pastry;
 
 import java.util.*;
 
-import fabric.client.Core;
-import fabric.client.RemoteCore;
+import fabric.worker.Core;
+import fabric.worker.RemoteCore;
 import fabric.common.exceptions.FetchException;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;

@@ -68,18 +68,18 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
     return s;
   }
   
-  public Client Client(Position pos) {
-    Client n = new Client_c(pos, this);
-    n = (Client)n.ext(fabricExtFactory().extClient());
-    n = (Client)n.del(fabricDelFactory().delClient());
+  public Worker Worker(Position pos) {
+    Worker n = new Worker_c(pos, this);
+    n = (Worker)n.ext(fabricExtFactory().extWorker());
+    n = (Worker)n.del(fabricDelFactory().delWorker());
     return n;
   }
   
-  public RemoteClientGetter RemoteClientGetter(Position pos, Expr remoteName) {
-    RemoteClientGetter n = new RemoteClientGetter_c(pos, remoteName);
-    // TODO add the real extension and delegation for RemoteClientGetter.
-    n = (RemoteClientGetter)n.ext(fabricExtFactory().extRemoteClientGetter());
-    n = (RemoteClientGetter)n.del(fabricDelFactory().delRemoteClientGetter());
+  public RemoteWorkerGetter RemoteWorkerGetter(Position pos, Expr remoteName) {
+    RemoteWorkerGetter n = new RemoteWorkerGetter_c(pos, remoteName);
+    // TODO add the real extension and delegation for RemoteWorkerGetter.
+    n = (RemoteWorkerGetter)n.ext(fabricExtFactory().extRemoteWorkerGetter());
+    n = (RemoteWorkerGetter)n.del(fabricDelFactory().delRemoteWorkerGetter());
     return n;
   }
   
@@ -203,8 +203,8 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
   }
   
   @SuppressWarnings("unchecked")
-  public Call Call(Position pos, Receiver target, Id name, Expr remoteClient, List args) {
-    Call n = new FabricCall_c(pos, target, name, remoteClient, args);
+  public Call Call(Position pos, Receiver target, Id name, Expr remoteWorker, List args) {
+    Call n = new FabricCall_c(pos, target, name, remoteWorker, args);
     n = (Call)n.ext(extFactory().extCall());
     n = (Call)n.del(delFactory().delCall());
     return n;

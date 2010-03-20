@@ -32,11 +32,11 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
   public Node leave(Node old, Node n, NodeVisitor v) {
 //    if (n instanceof FabricCall) {
 //      FabricCall c = (FabricCall)n;
-//      if (c.remoteClient() != null) {
+//      if (c.remoteWorker() != null) {
 //        c = (FabricCall)c.name(c.name() + "_remote");
 //
 //        List<Expr> args = new ArrayList<Expr>();
-//        args.add(nf.Client(Position.compilerGenerated()));
+//        args.add(nf.Worker(Position.compilerGenerated()));
 //        args.addAll(c.arguments());
 //        c = (FabricCall)c.arguments(args);
 //      }
@@ -67,7 +67,7 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 //          Type formalType = typeNode.typePart().type(); 
 //          if(formalType == null || !formalType.equals(ts.Label())) continue;
 
-          Principal clientPrincipal = ts.clientPrincipal(Position.compilerGenerated(md.position().toString()));
+          Principal workerPrincipal = ts.workerPrincipal(Position.compilerGenerated(md.position().toString()));
 
           // Send the pc label as a runtime method parameter
 
@@ -88,18 +88,18 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 //          PolicyNode reader = 
 //            nf.ReaderPolicyNode(Position.compilerGenerated(), 
 //                                nf.AmbPrincipalNode(Position.compilerGenerated(), 
-//                                    nf.Id(Position.compilerGenerated(), "client$principal")), 
+//                                    nf.Id(Position.compilerGenerated(), "worker$principal")), 
 //                                Collections.singletonList(nf.CanonicalPrincipalNode(Position.compilerGenerated(), 
 //                                    ts.bottomPrincipal(Position.compilerGenerated()))));
 //          PolicyNode writer = 
 //            nf.WriterPolicyNode(Position.compilerGenerated(),
-//                                nf.CanonicalPrincipalNode(clientPrincipal.position(), clientPrincipal),
+//                                nf.CanonicalPrincipalNode(workerPrincipal.position(), workerPrincipal),
 //                                Collections.EMPTY_LIST);
           List<PrincipalNode> writers = new ArrayList<PrincipalNode>();
-//          writers.add(nf.CanonicalPrincipalNode(clientPrincipal.position(), 
-//                                                clientPrincipal));
+//          writers.add(nf.CanonicalPrincipalNode(workerPrincipal.position(), 
+//                                                workerPrincipal));
 //          writers.add(nf.AmbPrincipalNode(Position.compilerGenerated(), 
-//                                          nf.Id(Position.compilerGenerated(), "client$principal")));
+//                                          nf.Id(Position.compilerGenerated(), "worker$principal")));
           writers.add(nf.CanonicalPrincipalNode(Position.compilerGenerated(md.position().toString()), 
                       ts.topPrincipal(Position.compilerGenerated(md.position().toString()))));
           PolicyNode writer = 
@@ -117,7 +117,7 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
           Formal f = nf.Formal(Position.compilerGenerated(md.position().toString()), 
                                Flags.FINAL,
                                formalType, 
-                               nf.Id(Position.compilerGenerated(md.position().toString()), "client$principal"));
+                               nf.Id(Position.compilerGenerated(md.position().toString()), "worker$principal"));
                     
 //          LabelNode pclbl = nf.AmbDynamicLabelNode(Position.compilerGenerated(),
 //              nf.Local(Position.compilerGenerated(), nf.Id(Position.compilerGenerated(), firstFormal.name())));
@@ -127,10 +127,10 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 //          Formal prf = nf.Formal(Position.compilerGenerated(), 
 //              Flags.NONE,
 //              prfType, 
-//              nf.Id(Position.compilerGenerated(), "client$principal"));
+//              nf.Id(Position.compilerGenerated(), "worker$principal"));
 
           //          Label defaultBound = ts.defaultSignature().defaultArgBound(f);
-          //          JifLocalInstance li = (JifLocalInstance)ts.localInstance(f.position(), Flags.FINAL, ts.Principal(), "client$principal");
+          //          JifLocalInstance li = (JifLocalInstance)ts.localInstance(f.position(), Flags.FINAL, ts.Principal(), "worker$principal");
           //          ArgLabel al = ts.argLabel(f.position(), li, null);
           //          al.setUpperBound(defaultBound);
           //          li.setLabel(al);
@@ -141,24 +141,24 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
           //          Label startLabel = mi.pcBound();
           //          Label returnLabel = mi.returnLabel();
 
-          //          Principal clientPrincipal;
+          //          Principal workerPrincipal;
           //          
           //          try {
           //            AccessPath ap = JifUtil.varInstanceToAccessPath(li, li.position());
-          //            clientPrincipal = ts.dynamicPrincipal(ap.position(), ap);
+          //            workerPrincipal = ts.dynamicPrincipal(ap.position(), ap);
           //          }
           //          catch (SemanticException e) {
           //            throw new InternalCompilerError(e);
           //          }
           //          
-          //          Label clientLabel = 
+          //          Label workerLabel = 
           //            ts.pairLabel(li.position(), 
           //                         ts.readerPolicy(li.position(), 
-          //                                         clientPrincipal, ts.bottomPrincipal(li.position())), 
+          //                                         workerPrincipal, ts.bottomPrincipal(li.position())), 
           //                         ts.writerPolicy(li.position(), 
-          //                                         clientPrincipal, clientPrincipal));
-          //          li.setLabel(clientLabel);
-          //          Type labeled = ts.labeledType(Position.compilerGenerated(), ts.Principal(), clientLabel);
+          //                                         workerPrincipal, workerPrincipal));
+          //          li.setLabel(workerLabel);
+          //          Type labeled = ts.labeledType(Position.compilerGenerated(), ts.Principal(), workerLabel);
           //          f = f.type(f.type().type(labeled));
 
           List<Formal> formals = new ArrayList<Formal>(md.formals().size() + 1);
@@ -167,14 +167,14 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
           formals.add(f);
           formals.addAll(md.formals());
 
-          // {C(rv), client$<-} <= {client$->, I(m)}
+          // {C(rv), worker$<-} <= {worker$->, I(m)}
           //          Label left = ts.pairLabel(Position.compilerGenerated(), 
           //                                    ts.confProjection(returnLabel), 
           //                                    ts.writerPolicy(Position.compilerGenerated(), 
-          //                                                    clientPrincipal, clientPrincipal));
+          //                                                    workerPrincipal, workerPrincipal));
           //          Label right = ts.pairLabel(Position.compilerGenerated(), 
           //                                     ts.readerPolicy(Position.compilerGenerated(), 
-          //                                                     clientPrincipal, clientPrincipal), 
+          //                                                     workerPrincipal, workerPrincipal), 
           //                                     ts.integProjection(startLabel));
           //          LabelExpr leftExpr = nf.LabelExpr(left.position(), left);
           //          LabelExpr rightExpr = nf.LabelExpr(Position.compilerGenerated(), right);

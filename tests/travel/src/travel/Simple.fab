@@ -64,15 +64,15 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
         final principal cust2 = customer;
         final principal airline_ = airlineAcct.user;
 
-	FabricClient cl = FabricClient.getClient();
-	final RemoteClient bankClient = cl.getClient(Config.bankCoreName);
-	final RemoteClient airlineClient = cl.getClient(Config.airlineCoreName);
+	FabricWorker cl = FabricWorker.getWorker();
+	final RemoteWorker bankWorker = cl.getWorker(Config.bankCoreName);
+	final RemoteWorker airlineWorker = cl.getWorker(Config.airlineCoreName);
 	boolean success = false;
-	if (bankClient actsfor bank && airlineClient actsfor airline) {
+	if (bankWorker actsfor bank && airlineWorker actsfor airline) {
 	  success = true;
-	  success = customerAcct.debit@bankClient(100) && success;   // @wBank
-	  success = airlineAcct.credit@bankClient(100) && success;   // @wBank
-	  success = incTickets@airlineClient() && success;  // @wAirline
+	  success = customerAcct.debit@bankWorker(100) && success;   // @wBank
+	  success = airlineAcct.credit@bankWorker(100) && success;   // @wBank
+	  success = incTickets@airlineWorker() && success;  // @wAirline
 	}
 	
 	if (!success) throw new PurchasingError();

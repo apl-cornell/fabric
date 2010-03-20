@@ -28,8 +28,8 @@ public class Diagnostics {
   }
   
   public static void initializeFabric() {
-    localCore = Client.getClient().getLocalCore();
-    core = Client.getClient().getCore(System.getProperty("blog.core", "core0"));
+    localCore = Worker.getWorker().getLocalCore();
+    core = Worker.getWorker().getCore(System.getProperty("blog.core", "core0"));
     currentLabel = localCore.getEmptyLabel();
   }
   

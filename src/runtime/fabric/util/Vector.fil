@@ -281,7 +281,7 @@ public class Vector extends AbstractList
    * visits the elements in increasing index order, but is NOT thread-safe.
    *
    * @return an Enumeration
-   * @see #iterator(fabric.client.Core)
+   * @see #iterator(fabric.worker.Core)
    */
   // No need to synchronize as the Enumeration is not thread-safe!
   public Enumeration elements()

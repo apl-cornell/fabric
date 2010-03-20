@@ -2,7 +2,7 @@ package fabnfs.util;
 
 import java.io.IOException;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 
 public interface FileSystemFactory {
 

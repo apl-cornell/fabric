@@ -5,8 +5,8 @@ import java.io.ObjectInput;
 import java.util.Iterator;
 
 import jif.lang.Label;
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 import fabric.common.RefTypeEnum;
 
 public interface DelegatingPrincipal extends Principal {
@@ -56,8 +56,8 @@ public interface DelegatingPrincipal extends Principal {
       NodePrincipal core = p.$getCore().getPrincipal();
       p.addDelegatesTo(core);
       
-      NodePrincipal client = Client.getClient().getPrincipal();
-      p.addDelegatesTo(client);
+      NodePrincipal worker = Worker.getWorker().getPrincipal();
+      p.addDelegatesTo(worker);
       
       return p;
     }

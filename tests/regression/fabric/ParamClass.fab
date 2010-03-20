@@ -3,7 +3,7 @@ public class ParamClass {
 	public static void main{}(String[]{} args) {
 		Core{} core = null;
 		try {
-			core = client$.getCore("core0");
+			core = worker$.getCore("core0");
 		} catch (NullPointerException unlikely) {}
 		
 		final principal{} p = new DynPrincipal("dynamic");

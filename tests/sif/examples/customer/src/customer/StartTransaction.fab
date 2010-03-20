@@ -31,13 +31,13 @@ public class StartTransaction extends CustomerAction {
         if (req == null) throw new ServletException("No request available"); 
         CustomerMain m = (CustomerMain)servlet;
         
-        final Core bcore = client$.getCore(Config.brokerCoreName);
-        FabricClient local = FabricClient.getClient();
-        RemoteClient bclientprime = null;
+        final Core bcore = worker$.getCore(Config.brokerCoreName);
+        FabricWorker local = FabricWorker.getWorker();
+        RemoteWorker bworkerprime = null;
         if(local != null) {
-            bclientprime = local.getClient(Config.brokerCoreName);
+            bworkerprime = local.getWorker(Config.brokerCoreName);
         }
-        final RemoteClient bclient = bclientprime;
+        final RemoteWorker bworker = bworkerprime;
         
         Map root = null;
         if (bcore != null) {
@@ -66,7 +66,7 @@ public class StartTransaction extends CustomerAction {
                 } catch (NumberFormatException e) {
                     amount = 0;
                 }
-                failure = !Main.startTx(amount, broker, bclient);
+                failure = !Main.startTx(amount, broker, bworker);
             }
         } catch (NullPointerException unlikely) {
             failure = true;

@@ -77,7 +77,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     Block body = method.body();
     body =
         body.prepend(qq
-            .parseStmt("fabric.client.transaction.TransactionManager"
+            .parseStmt("fabric.worker.transaction.TransactionManager"
                 + ".getInstance().registerThread(this);"));
 
     return method.body(body);

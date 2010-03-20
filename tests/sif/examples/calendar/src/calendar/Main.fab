@@ -8,18 +8,18 @@ import sif.html.Page;
 
 import javax.servlet.ServletException;
 
-public final class Main extends UServlet[CalServEP] authority (CalServEP, client$) {
+public final class Main extends UServlet[CalServEP] authority (CalServEP, worker$) {
 
     final CalendarDB{this} cal;
 	final Core{this} localCore;
 	
 	final String{this} coreName = "gaia.systems.cs.cornell.edu";
 
-	public Main{CalServEP,client$→;CalServEP&client$←}()
-	    where authority(client$, CalServEP)
+	public Main{CalServEP,worker$→;CalServEP&worker$←}()
+	    where authority(worker$, CalServEP)
 	{
 	    // create the necessary trust bonds
-        FabricClient cl = FabricClient.getClient();
+        FabricWorker cl = FabricWorker.getWorker();
         CalendarDB local = null;
         Core lCore = null;
         if(cl != null) {
@@ -27,13 +27,13 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, client
             final Core remote = cl.getCore(coreName);
             final Core lCoreFinal = lCore;
             try {
-                final DelegatingPrincipal client = (DelegatingPrincipal)cl.getPrincipal();
+                final DelegatingPrincipal worker = (DelegatingPrincipal)cl.getPrincipal();
                 final DelegatingPrincipal servp = (DelegatingPrincipal)CalServEP;
                 final DelegatingPrincipal remotep = (DelegatingPrincipal)remote.getPrincipal();
                 atomic {
-                    if (client equiv client$ && servp equiv CalServEP) {
-                        client.addDelegatesTo(servp);
-                        servp.addDelegatesTo(client);
+                    if (worker equiv worker$ && servp equiv CalServEP) {
+                        worker.addDelegatesTo(servp);
+                        servp.addDelegatesTo(worker);
                         
                         // Making remote actfor CalServEP
                         // TODO Revisit this relationship
@@ -69,9 +69,9 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, client
             String{*lbl} id, SessionPrincipal{*lbl} session) {
         SessionState[lbl] toReturn = null;
         atomic {
-            if (localCore != null && localCore equiv client$ &&
-                    lbl <= new label {⊤→client$} && 
-                    new label {⊤←client$} <= lbl) {
+            if (localCore != null && localCore equiv worker$ &&
+                    lbl <= new label {⊤→worker$} && 
+                    new label {⊤←worker$} <= lbl) {
                 toReturn = new CalendarSessionState[lbl]@localCore(id, session);
             }
         }
@@ -79,10 +79,10 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, client
     }
     
     // This method will only be called by the runtime
-    protected SessionPrincipal createSessionPrincipal(String{client$→;client$←} id) {
+    protected SessionPrincipal createSessionPrincipal(String{worker$→;worker$←} id) {
         SessionPrincipal toReturn = null;
         atomic {
-            if (localCore != null && localCore equiv client$) {
+            if (localCore != null && localCore equiv worker$) {
                 toReturn = new SessionPrincipal@localCore(id);
             }
         }

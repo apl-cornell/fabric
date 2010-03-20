@@ -1,9 +1,9 @@
 public class RemoteCall {
     public static void main{⊤←}(String[] args) {
         atomic {
-            FabricClient local = FabricClient.getClient();
+            FabricWorker local = FabricWorker.getWorker();
             if (local == null) return;
-            final RemoteClient w = local.getClient("bob");
+            final RemoteWorker w = local.getWorker("bob");
             if (w == null) return;
             final Core gaia = local.getCore("gaia.systems.cs.cornell.edu");
             final principal alice = local.getPrincipal();

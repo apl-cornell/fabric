@@ -6,9 +6,9 @@ public class RemoteCall05 {
   public void f_core0(int n) {
     if (n <= 0) return;
 
-    RemoteClient remoteClient = Client.getClient().getClient("core0");
-    f_client0_remote@remoteClient(Client.getClient().getPrincipal(), n-1);
-    f_client0_remote@remoteClient(Client.getClient().getPrincipal(), n-1);
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker("core0");
+    f_worker0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
+    f_worker0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
     i = i + n;
   }
 
@@ -16,21 +16,21 @@ public class RemoteCall05 {
     f_core0(n);
   }
 
-  public void f_client0(int n) {
+  public void f_worker0(int n) {
     if (n <= 0) return;
 
-    RemoteClient remoteClient = Client.getClient().getClient("client0");
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker("worker0");
     i = i + n;
-    f_core0_remote@remoteClient(Client.getClient().getPrincipal(), n-1);
-    f_core0_remote@remoteClient(Client.getClient().getPrincipal(), n-1);
+    f_core0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
+    f_core0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
   }
 
-  public void f_client0_remote(fabric.lang.Principal p, int n) {
-    f_client0(n);
+  public void f_worker0_remote(fabric.lang.Principal p, int n) {
+    f_worker0(n);
   }
 
   public static void main(String[] args) {
-    Core core = Client.getClient().getCore("core0");
+    Core core = Worker.getWorker().getCore("core0");
     RemoteCall05 t = null;
     int result1 = 0;
     atomic {

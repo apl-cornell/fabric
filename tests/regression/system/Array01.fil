@@ -1,11 +1,11 @@
 package system;
 
-import fabric.client.*;
+import fabric.worker.*;
 
 public class Array01 {
   public static void main(String[] args) {
     atomic {
-      Core core = Client.getClient().getCore("core0");
+      Core core = Worker.getWorker().getCore("core0");
       Object[] foo = new Object[]@core {};
       Object[] bar = new Object[][]@core {foo, foo};
       Object[][] baz = (Object[][]) bar;

@@ -9,9 +9,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import jif.lang.*;
-import fabric.client.Client;
-import fabric.client.Core;
-import fabric.client.transaction.TransactionManager;
+import fabric.worker.Worker;
+import fabric.worker.Core;
+import fabric.worker.transaction.TransactionManager;
 import fabric.common.Crypto;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
@@ -48,7 +48,7 @@ public interface Principal extends Object {
       super(impl);
     }
 
-    public _Proxy(fabric.client.Core core, long onum) {
+    public _Proxy(fabric.worker.Core core, long onum) {
       super(core, onum);
     }
 
@@ -97,7 +97,7 @@ public interface Principal extends Object {
     public _Impl(Core core, Label label) {
       // If the given label is null, temporarily create the object with an
       // overly restrictive label.
-      super(core, label == null ? Client.getClient().getLocalCore()
+      super(core, label == null ? Worker.getWorker().getLocalCore()
           .getPublicReadonlyLabel() : label);
       
       Principal._Proxy thisProxy = (Principal._Proxy) this.$getProxy();
@@ -107,7 +107,7 @@ public interface Principal extends Object {
       if (label == null) {
         // Replace the temporary label with {this <- this}.
         ConfPolicy bottomConf =
-            Client.getClient().getLocalCore().getBottomConfidPolicy();
+            Worker.getWorker().getLocalCore().getBottomConfidPolicy();
         this.$label = LabelUtil._Impl.toLabel(core, bottomConf, integ);
       }
 

@@ -11,7 +11,7 @@ import javax.servlet.ServletException;
 public final class Main extends Servlet[HelloServEP] {
     final Core{this} localCore;
     public Main() throws ServletException {
-        FabricClient cl = FabricClient.getClient();
+        FabricWorker cl = FabricWorker.getWorker();
         Core lCore = null;        
         if(cl != null) {
             lCore = cl.getLocalCore();
@@ -40,9 +40,9 @@ public final class Main extends Servlet[HelloServEP] {
             String{*lbl} id, SessionPrincipal{*lbl} session) {
         SessionState[lbl] toReturn = null;
         atomic {
-            if (localCore != null && localCore equiv client$ &&
-                    lbl <= new label {⊤→client$} && 
-                    new label {⊤←client$} <= lbl) {
+            if (localCore != null && localCore equiv worker$ &&
+                    lbl <= new label {⊤→worker$} && 
+                    new label {⊤←worker$} <= lbl) {
                 toReturn = new SessionState[lbl]@localCore(id, session);
             }
         }
@@ -50,10 +50,10 @@ public final class Main extends Servlet[HelloServEP] {
     }
     
     // This method will only be called by the runtime
-    protected SessionPrincipal createSessionPrincipal(String{client$→;client$←} id) {
+    protected SessionPrincipal createSessionPrincipal(String{worker$→;worker$←} id) {
         SessionPrincipal toReturn = null;
         atomic {
-            if (localCore != null && localCore equiv client$) {
+            if (localCore != null && localCore equiv worker$) {
                 toReturn = new SessionPrincipal@localCore(id);
             }
         }

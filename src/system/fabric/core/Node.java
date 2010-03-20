@@ -12,8 +12,8 @@ import java.util.Properties;
 
 import javax.net.ssl.*;
 
-import fabric.client.Client;
-import fabric.client.RemoteCore;
+import fabric.worker.Worker;
+import fabric.worker.RemoteCore;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SSLSocketFactoryTable;
@@ -105,10 +105,10 @@ public class Node {
       }
     }
 
-    // Start the client before instantiating the cores in case their object
+    // Start the worker before instantiating the cores in case their object
     // databases need initialization. (The initialization code will be run on
-    // the client.)
-    startClient();
+    // the worker.)
+    startWorker();
 
     // Ensure each core's object database has been properly initialized.
     for (Core core : cores.values()) {
@@ -152,14 +152,14 @@ public class Node {
     }
   }
 
-  private void startClient() {
+  private void startWorker() {
     try {
       Map<String, RemoteCore> initCoreSet = new HashMap<String, RemoteCore>();
       for (String s : cores.keySet()) {
         initCoreSet.put(s, new InProcessCore(s, cores.get(s)));
       }
 
-      Client.initialize(opts.primaryCoreName, "fab://" + opts.primaryCoreName
+      Worker.initialize(opts.primaryCoreName, "fab://" + opts.primaryCoreName
           + "/" + ONumConstants.CORE_PRINCIPAL, initCoreSet);
     } catch (Exception e) {
       throw new InternalError(e);
@@ -249,7 +249,7 @@ public class Node {
       SocketChannel connection = server.accept();
 
       // XXX not setting timeout
-      // client.setSoTimeout(opts.timeout * 1000);
+      // worker.setSoTimeout(opts.timeout * 1000);
       connectionHandler.handle(connection);
     }
   }

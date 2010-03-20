@@ -7,13 +7,13 @@ import java.lang.reflect.Constructor;
 import java.util.*;
 
 import jif.lang.Label;
-import fabric.client.*;
-import fabric.client.debug.Timing;
-import fabric.client.remote.RemoteClient;
-import fabric.client.transaction.Log;
-import fabric.client.transaction.ReadMapEntry;
-import fabric.client.transaction.TransactionManager;
-import fabric.client.transaction.TransactionRegistry;
+import fabric.worker.*;
+import fabric.worker.debug.Timing;
+import fabric.worker.remote.RemoteWorker;
+import fabric.worker.transaction.Log;
+import fabric.worker.transaction.ReadMapEntry;
+import fabric.worker.transaction.TransactionManager;
+import fabric.worker.transaction.TransactionRegistry;
 import fabric.common.*;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
@@ -111,7 +111,7 @@ public interface Object {
       if (result == null) {
         // Object has been evicted.
         try {
-          // First, check the client's cache.
+          // First, check the worker's cache.
           result = ref.core.readObjectFromCache(ref.onum);
           
           if (result == null) {
@@ -119,16 +119,16 @@ public interface Object {
             try {
               Timing.FETCH.begin();
               TransactionManager tm = TransactionManager.getInstance();
-              RemoteClient client = tm.getFetchClient(this);
-              if (client != null) {
+              RemoteWorker worker = tm.getFetchWorker(this);
+              if (worker != null) {
                 // Sanity check.
-                RemoteClient localClient = Client.getClient().getLocalClient();
-                if (client == localClient) {
+                RemoteWorker localWorker = Worker.getWorker().getLocalWorker();
+                if (worker == localWorker) {
                   throw new InternalError();
                 }
 
-                // Fetch from the client.
-                result = client.readObject(tm.getCurrentTid(), ref.core, ref.onum);
+                // Fetch from the worker.
+                result = worker.readObject(tm.getCurrentTid(), ref.core, ref.onum);
                 ref.core.cache(result);
               } else if (this instanceof SecretKeyObject
                   || ref.core instanceof InProcessCore) {
@@ -276,7 +276,7 @@ public interface Object {
 
     // *********************************************************
     // The following fields are used for transaction management.
-    // They should stay on the client and should not be sent to
+    // They should stay on the worker and should not be sent to
     // the core.
     // *********************************************************
 
@@ -307,7 +307,7 @@ public interface Object {
     /**
      * A reference to the global read list for this object.
      * 
-     * @see fabric.client.transaction.TransactionManager#readMap
+     * @see fabric.worker.transaction.TransactionManager#readMap
      */
     public ReadMapEntry $readMapEntry;
 
@@ -317,7 +317,7 @@ public interface Object {
     public int $numWaiting;
 
     /**
-     * Whether this client owns the most up-to-date copy of the object.
+     * Whether this worker owns the most up-to-date copy of the object.
      */
     public boolean $isOwned;
 
@@ -344,7 +344,7 @@ public interface Object {
 
       // By default, labels are public read-only.
       if (label == null && this instanceof Label)
-        label = Client.getClient().getLocalCore().getPublicReadonlyLabel();
+        label = Worker.getWorker().getLocalCore().getPublicReadonlyLabel();
 
       if (label == null) throw new InternalError("Null label!");
 
@@ -723,9 +723,9 @@ public interface Object {
       public static final Object $makeStaticInstance(
           final Class<? extends Object._Impl> c) {
         // XXX Need a real core and a real label. (Should be given as args.)
-        final LocalCore core = Client.getClient().getLocalCore();
+        final LocalCore core = Worker.getWorker().getLocalCore();
 
-        return Client.runInSubTransaction(new Client.Code<Object>() {
+        return Worker.runInSubTransaction(new Worker.Code<Object>() {
           public Object run() {
             try {
               Constructor<? extends Object._Impl> constr =

@@ -30,18 +30,18 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
     FabILTypeSystem ts = (FabILTypeSystem)rw.java_ts();
 
-    TypeNode client = nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Client());
+    TypeNode worker = nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Worker());
     
     List<ClassMember> members = new ArrayList<ClassMember>(cd.body().members().size() + 1);
     members.add(nf.FieldDecl(Position.compilerGenerated(), 
         Flags.FINAL.Static(), 
-        client, 
+        worker, 
         nf.Id(Position.compilerGenerated(), 
-              "client$"),
+              "worker$"),
         nf.Call(Position.compilerGenerated(), 
-                client, 
+                worker, 
                 nf.Id(Position.compilerGenerated(), 
-                      "getClient"))));
+                      "getWorker"))));
     members.addAll(cd.body().members());
     
     return cd.body(cd.body().members(members));
@@ -56,16 +56,16 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
       
       List newInits = new ArrayList(inits.size() + 1);
       
-      TypeNode client = nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Client());
+      TypeNode worker = nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Worker());
 //      newInits.add(nf.LocalDecl(Position.compilerGenerated(), 
 //                                Flags.FINAL, 
-//                                client, 
+//                                worker, 
 //                                nf.Id(Position.compilerGenerated(), 
-//                                      "client$"),
+//                                      "worker$"),
 //                                nf.Call(Position.compilerGenerated(), 
-//                                        client, 
+//                                        worker, 
 //                                        nf.Id(Position.compilerGenerated(), 
-//                                              "getClient"))));
+//                                              "getWorker"))));
       newInits.addAll(inits);
       inits = newInits;
     }

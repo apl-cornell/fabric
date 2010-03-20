@@ -1,7 +1,7 @@
 package fabnfs;
 
-import fabric.client.Core;
-import fabric.client.Client;
+import fabric.worker.Core;
+import fabric.worker.Worker;
 import fabric.util.HashMap;
 import fabnfs.util.FabDirectory;
 
@@ -13,7 +13,7 @@ public class InitializeFS {
 	return;
       }
 
-      Core core = Client.getClient().getCore(args[0]);
+      Core core = Worker.getWorker().getCore(args[0]);
       FabDirectory rootDir = new FabDirectory@core();
 
       HashMap map = (HashMap) core.getRoot();

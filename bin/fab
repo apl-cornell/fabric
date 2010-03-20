@@ -29,7 +29,7 @@ classpath="$TOP/lib/fabric-rt.jar:$classpath"
 classpath="$TOP/lib/FreePastry-2.1.jar:$classpath"
 classpath="$EXTRACP:$classpath"
 
-command="\"$JAVA_HOME\"/bin/java $vmargs -classpath \"$(fixpath $classpath)\" fabric.client.Client $args"
+command="\"$JAVA_HOME\"/bin/java $vmargs -classpath \"$(fixpath $classpath)\" fabric.worker.Worker $args"
 
 if [ -n "$verbose" ]
 then

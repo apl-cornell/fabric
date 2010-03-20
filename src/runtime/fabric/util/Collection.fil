@@ -200,7 +200,7 @@ public interface Collection extends Iterable
    *
    * @return an Iterator over the elements of this collection, in any order.
    */
-  Iterator iterator(fabric.client.Core core);
+  Iterator iterator(fabric.worker.Core core);
 
   /**
    * Remove a single occurrence of an object from this collection. That is,

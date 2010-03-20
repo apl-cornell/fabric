@@ -1,8 +1,8 @@
 package tree;
 
 //import java.util.Random;
-import fabric.client.AbortException;
-import fabric.client.Core;
+import fabric.worker.AbortException;
+import fabric.worker.Core;
 import fabric.util.Map;
 import jif.runtime.Runtime;
 import java.io.PrintStream;
@@ -15,9 +15,9 @@ public class Main {
 	public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
 
 	public Main() {
-		if(client$ != null) {
-			treeCore = client$.getCore("core0");
-			nodeCore = client$.getCore("core1");
+		if(worker$ != null) {
+			treeCore = worker$.getCore("core0");
+			nodeCore = worker$.getCore("core1");
 		}
 		atomic {
 			final Core{*bot} tc = treeCore;
@@ -79,7 +79,7 @@ public class Main {
 
 		if(out == null || arg == null) return;
 		try {
-			Map root = (Map) client$.getCore("core1").getRoot();
+			Map root = (Map) worker$.getCore("core1").getRoot();
 			//    Random random = new Random();
 			if (arg.equals("create")) {
 				atomic {

@@ -23,8 +23,8 @@ import jif.types.LabeledType;
 import jif.types.principal.Principal;
 
 public class FabricCall_c extends JifCall_c implements FabricCall {
-  protected Expr remoteClient;
-  protected Principal remoteClientPrincipal;
+  protected Expr remoteWorker;
+  protected Principal remoteWorkerPrincipal;
   
   @SuppressWarnings("unchecked")
   public FabricCall_c(Position pos, Receiver target, Id name, List args) {
@@ -32,34 +32,34 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
   }
 
   @SuppressWarnings("unchecked")
-  public FabricCall_c(Position pos, Receiver target, Id name, Expr remoteClient, List args) {
+  public FabricCall_c(Position pos, Receiver target, Id name, Expr remoteWorker, List args) {
     super(pos, target, name, args);
-    this.remoteClient = remoteClient;
+    this.remoteWorker = remoteWorker;
   }
   
   @SuppressWarnings("unchecked")
-  protected FabricCall_c reconstruct(Receiver target, Id name, Expr remoteClient, List arguments) {
+  protected FabricCall_c reconstruct(Receiver target, Id name, Expr remoteWorker, List arguments) {
     FabricCall_c n = (FabricCall_c)super.reconstruct(target, name, arguments);
     
-    if (remoteClient != this.remoteClient) {
+    if (remoteWorker != this.remoteWorker) {
       n = (FabricCall_c)n.copy();
-      n.remoteClient = remoteClient;
+      n.remoteWorker = remoteWorker;
     }
     
     return n;
   }
 
-  public Expr remoteClient() {
-    return remoteClient;
+  public Expr remoteWorker() {
+    return remoteWorker;
   }
   
-  public FabricCall remoteClient(Expr remoteClient) {
-    if (remoteClient == this.remoteClient) {
+  public FabricCall remoteWorker(Expr remoteWorker) {
+    if (remoteWorker == this.remoteWorker) {
       return this;
     }
     
     FabricCall_c n = (FabricCall_c)this.copy();
-    n.remoteClient = remoteClient;
+    n.remoteWorker = remoteWorker;
     return n;
   }
   
@@ -68,16 +68,16 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
   public Node visitChildren(NodeVisitor v) {
     Receiver target = (Receiver) visitChild(this.target, v);
     Id name = (Id) visitChild(this.name, v);
-    Expr remoteClient = (Expr) visitChild(this.remoteClient, v);
+    Expr remoteWorker = (Expr) visitChild(this.remoteWorker, v);
     List arguments = visitList(this.arguments, v);
-    return reconstruct(target, name, remoteClient, arguments);
+    return reconstruct(target, name, remoteWorker, arguments);
   }
   
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
     FabricCall c = (FabricCall)super.typeCheck(tc);
 
-    if (c.remoteClient() != null) {
+    if (c.remoteWorker() != null) {
       FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
       JifContext context = (JifContext)tc.context();
 
@@ -103,20 +103,20 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
         		            c.position());
       }
       
-      return c.remoteClientPrincipal(JifUtil.exprToPrincipal(ts, c.remoteClient(), context));
+      return c.remoteWorkerPrincipal(JifUtil.exprToPrincipal(ts, c.remoteWorker(), context));
     }
     
     return c;
   }
   
-  public Principal remoteClientPrincipal() {
-    return remoteClientPrincipal;
+  public Principal remoteWorkerPrincipal() {
+    return remoteWorkerPrincipal;
   }
   
-  public FabricCall remoteClientPrincipal(Principal p) {
-    if (p == remoteClientPrincipal) return this;
+  public FabricCall remoteWorkerPrincipal(Principal p) {
+    if (p == remoteWorkerPrincipal) return this;
     FabricCall_c n = (FabricCall_c)copy();
-    n.remoteClientPrincipal = p;
+    n.remoteWorkerPrincipal = p;
     return n;
   }
 }

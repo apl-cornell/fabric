@@ -9,7 +9,7 @@ public class HashMap01 {
   public static class Init {
     public static void main(String[] args) {
       atomic {
-        Core c = Client.getClient().getCore("core0");
+        Core c = Worker.getWorker().getCore("core0");
         Map root = (Map) c.getRoot();
   
         Map m = new HashMap@c();
@@ -28,11 +28,11 @@ public class HashMap01 {
     public static void main(String[] args) {
       int i = 0;
       atomic {
-        Core c = Client.getClient().getCore("core0");
+        Core c = Worker.getWorker().getCore("core0");
         Map root = (Map) c.getRoot();
   
         Map m = (Map) root.get(key);
-        Iterator it = m.values().iterator(Client.getClient().getLocalCore());
+        Iterator it = m.values().iterator(Worker.getWorker().getLocalCore());
   
         while (it.hasNext()) {
           it.next();

@@ -4,8 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.client.debug.Timing;
-import fabric.client.remote.MessageHandlerThread;
+import fabric.worker.debug.Timing;
+import fabric.worker.remote.MessageHandlerThread;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
@@ -29,7 +29,7 @@ public class CommitTransactionMessage extends
     }
 
     /**
-     * Deserialization constructor, used by the client.
+     * Deserialization constructor, used by the worker.
      * 
      * @param node
      *          The node from which the response is being read.

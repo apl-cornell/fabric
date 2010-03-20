@@ -1,7 +1,7 @@
 package jif.lang;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 import fabric.util.HashSet;
 import fabric.util.Iterator;
 import fabric.util.Set;
@@ -29,7 +29,7 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
   public boolean relabelsTo(Policy p, Set s) {
     if (this == p || this.equals(p)) return true;
 
-    final Core localCore = Client.getClient().getLocalCore();
+    final Core localCore = Worker.getWorker().getLocalCore();
     if (p instanceof JoinConfPolicy) {
       JoinPolicy jp = (JoinPolicy) p;
       // this <= p1 join ... join p2 if there exists a pi such that

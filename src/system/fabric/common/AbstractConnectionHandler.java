@@ -11,8 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 import fabric.common.AbstractMessageHandlerThread.Pool;
 import fabric.common.AbstractMessageHandlerThread.SessionAttributes;
 import fabric.common.exceptions.InternalError;
@@ -191,7 +191,7 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
       // this.in =
       // new DataInputStream(new BufferedInputStream(sslSocket
       // .getInputStream()));
-      // this.clientName = sslSocket.getSession().getPeerPrincipal().getName();
+      // this.WorkerName = sslSocket.getSession().getPeerPrincipal().getName();
       remoteNodePrincipalName = dataIn.readUTF();
     } else {
       remoteNodePrincipalName = dataIn.readUTF();
@@ -201,7 +201,7 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
     NodePrincipal remoteNodePrincipal = null;
     if (dataIn.readBoolean()) {
       String principalCoreName = dataIn.readUTF();
-      Core principalCore = Client.getClient().getCore(principalCoreName);
+      Core principalCore = Worker.getWorker().getCore(principalCoreName);
       long principalOnum = dataIn.readLong();
       remoteNodePrincipal =
           new NodePrincipal._Proxy(principalCore, principalOnum);
@@ -224,13 +224,13 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
    */
   private Pair<Boolean, NodePrincipal> authenticateRemote(
       final NodePrincipal principal, final String name) {
-    // Bypass authentication if we have a null client.
-    // This is to allow bootstrapping the client principal.
+    // Bypass authentication if we have a null worker.
+    // This is to allow bootstrapping the worker principal.
     // This is safe because everyone acts for null anyway.
     if (principal == null) return new Pair<Boolean, NodePrincipal>(true, null);
 
-    return Client
-        .runInTransactionUnauthenticated(new Client.Code<Pair<Boolean, NodePrincipal>>() {
+    return Worker
+        .runInTransactionUnauthenticated(new Worker.Code<Pair<Boolean, NodePrincipal>>() {
           public Pair<Boolean, NodePrincipal> run() {
             boolean success = false;
             NodePrincipal authenticatedPrincipal = null;
@@ -241,10 +241,10 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
               }
             } catch (ClassCastException e) {
             } catch (InternalError e) {
-              // XXX If the client principal doesn't exist, authenticate as the
+              // XXX If the worker principal doesn't exist, authenticate as the
               // XXX bottom principal. This is for ease of debugging so we don't
-              // XXX need to keep editing client property files every time we
-              // XXX re-create the client principal on the core.
+              // XXX need to keep editing worker property files every time we
+              // XXX re-create the worker principal on the core.
               success = true;
             }
 

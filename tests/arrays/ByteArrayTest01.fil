@@ -1,6 +1,6 @@
 package arrays;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.lang.arrays.byteArray;
 import fabric.util.HashMap;
 
@@ -14,7 +14,7 @@ import java.io.FileNotFoundException;
 
 public class ByteArrayTest01 {
     public static void main(String[] args) {
-        Core core = fabric.client.Client.getClient().getCore("core0");
+        Core core = fabric.worker.Worker.getWorker().getCore("core0");
 
         if(args.length != 2) {
             System.out.println("I need an input filename and output filename as arguments");

@@ -23,7 +23,7 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
         lbl <= {⊤→req.session} {
 
         Servlet[CustomerPrincipal] s = getServlet();
-        final Core bcore = client$.getCore(Config.brokerCoreName);
+        final Core bcore = worker$.getCore(Config.brokerCoreName);
         if (s == null || !(s instanceof CustomerMain)) throw new ServletException("No servlet available"); 
         if (req == null) throw new ServletException("No request available"); 
         if (bcore == null) throw new ServletException("Broker core is down"); 

@@ -1,6 +1,6 @@
 package fabric.common.exceptions;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 
 /**
  * An <code>AccessError</code> represents an authorisation error.

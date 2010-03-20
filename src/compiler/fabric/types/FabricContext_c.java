@@ -13,8 +13,8 @@ public class FabricContext_c extends JifContext_c {
   
   @Override
   public LocalInstance findLocal(String name) throws SemanticException {
-    if (name.equals("client$") || name.equals("client$'")) {
-      return ((FabricTypeSystem)typeSystem()).clientLocalInstance();
+    if (name.equals("worker$") || name.equals("worker$'")) {
+      return ((FabricTypeSystem)typeSystem()).workerLocalInstance();
     }
     else if (name.endsWith("'")) {
       // XXX HACK!

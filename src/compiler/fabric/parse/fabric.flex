@@ -122,7 +122,7 @@ import java.math.BigInteger;
 
         /* Fabric-specific keywords */
         keywords.put("atomic",        new Integer(sym.ATOMIC));
-        keywords.put("client$",       new Integer(sym.CLIENT));
+        keywords.put("worker$",       new Integer(sym.WORKER));
         keywords.put("nonfabric",     new Integer(sym.NONFABRIC));
     }
 

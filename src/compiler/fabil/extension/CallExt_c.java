@@ -121,7 +121,7 @@ public class CallExt_c extends ExprExt_c {
   @Override
   public Node rewriteThreads(ThreadRewriter tr) {
     // Replace calls to Thread.start() with
-    // fabric.client.transaction.TransactionManager.startThread(Thread).
+    // fabric.worker.transaction.TransactionManager.startThread(Thread).
     Call call = node();
     if (!call.name().equals("start")) return super.rewriteThreads(tr);
 
@@ -131,20 +131,20 @@ public class CallExt_c extends ExprExt_c {
     if (!ts.isThread(targetType)) return super.rewriteThreads(tr);
 
     return tr.qq().parseExpr(
-        "fabric.client.transaction.TransactionManager.startThread(%E)", target);
+        "fabric.worker.transaction.TransactionManager.startThread(%E)", target);
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public Node rewriteRemoteCalls(RemoteCallRewriter rr) {
     FabILCall c = (FabILCall) node();
-    if (c.remoteClient() == null) return c;
+    if (c.remoteWorker() == null) return c;
 
     NodeFactory nf = rr.nodeFactory();
 
     List<Expr> args = new ArrayList<Expr>(c.arguments().size());
-    // The first argument is changed from the local client to the remote client.
-    args.add(c.remoteClient());
+    // The first argument is changed from the local worker to the remote worker.
+    args.add(c.remoteWorker());
     args.addAll(c.arguments());
 
     Expr target = (Expr) c.target();

@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
-import fabric.client.Client;
-import fabric.client.remote.RemoteClient;
+import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 import fabric.common.AbstractMessageHandlerThread;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -14,32 +14,32 @@ import fabric.lang.NodePrincipal;
 
 final class SessionAttributes extends AbstractMessageHandlerThread.SessionAttributes {
   /**
-   * Whether the client is a dissemination node.
+   * Whether the worker is a dissemination node.
    */
-  final boolean clientIsDissem;
+  final boolean workerIsDissem;
 
   /**
-   * The core with which the client is interacting.
+   * The core with which the worker is interacting.
    */
   final Node.Core core;
 
   /**
-   * The remote client node.
+   * The remote worker node.
    */
-  final RemoteClient remoteNode;
+  final RemoteWorker remoteNode;
 
   /**
    * The name the remote principal.
    */
-  final String clientPrincipalName;
+  final String workerPrincipalName;
 
   /**
-   * The client's principal object.
+   * The worker's principal object.
    */
-  final NodePrincipal clientPrincipal;
+  final NodePrincipal workerPrincipal;
 
   /**
-   * The private signing key for the core with which the client is interacting.
+   * The private signing key for the core with which the worker is interacting.
    * XXX This is currently the SSL private key. Should use the core's
    * NodePrincipal's key instead.
    */
@@ -75,12 +75,12 @@ final class SessionAttributes extends AbstractMessageHandlerThread.SessionAttrib
    * Constructs a SessionAttributes object corresponding to a dissemination
    * node.
    */
-  SessionAttributes(Node.Core core, String clientName) {
-    this.clientIsDissem = true;
+  SessionAttributes(Node.Core core, String workerName) {
+    this.workerIsDissem = true;
     this.core = core;
-    this.remoteNode = Client.getClient().getClient(clientName);
-    this.clientPrincipalName = null;
-    this.clientPrincipal = null;
+    this.remoteNode = Worker.getWorker().getWorker(workerName);
+    this.workerPrincipalName = null;
+    this.workerPrincipal = null;
     this.privateKey = core.privateKey;
 
     this.pendingLogs = new LongKeyHashMap<LogRecord>();
@@ -88,15 +88,15 @@ final class SessionAttributes extends AbstractMessageHandlerThread.SessionAttrib
   }
 
   /**
-   * Constructs a SessionAttributes object corresponding to a client node.
+   * Constructs a SessionAttributes object corresponding to a worker node.
    */
-  SessionAttributes(Node.Core core, String clientName,
-      String clientPrincipalName, NodePrincipal client) {
-    this.clientIsDissem = false;
+  SessionAttributes(Node.Core core, String workerName,
+      String workerPrincipalName, NodePrincipal worker) {
+    this.workerIsDissem = false;
     this.core = core;
-    this.remoteNode = Client.getClient().getClient(clientName);
-    this.clientPrincipalName = clientPrincipalName;
-    this.clientPrincipal = client;
+    this.remoteNode = Worker.getWorker().getWorker(workerName);
+    this.workerPrincipalName = workerPrincipalName;
+    this.workerPrincipal = worker;
     this.privateKey = core.privateKey;
 
     this.pendingLogs = new LongKeyHashMap<LogRecord>();

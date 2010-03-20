@@ -1,7 +1,7 @@
 package fabnfs;
 
-import fabric.client.Core;
-import fabric.client.Client;
+import fabric.worker.Core;
+import fabric.worker.Worker;
 import fabnfs.util.FileSystemFactory;
 import fabnfs.util.FileSystemFactoryImpl;
 
@@ -11,8 +11,8 @@ public class NFSServer {
             System.out.println("Usage: fab fabnfs.NFSServer <corename>");
             return;
         }
-        Core localCore = Client.getClient().getLocalCore();
-        Core remoteCore = Client.getClient().getCore(args[0]);
+        Core localCore = Worker.getWorker().getLocalCore();
+        Core remoteCore = Worker.getWorker().getCore(args[0]);
         FileSystemFactory factory = null;
 	atomic {
 	  factory = new FileSystemFactoryImpl@localCore();

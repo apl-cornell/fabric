@@ -616,7 +616,7 @@ public class Hashtable extends Dictionary
             return size;
           }
 
-          public Iterator iterator(fabric.client.Core core)
+          public Iterator iterator(fabric.worker.Core core)
           {
             return new KeyIterator@core();
           }
@@ -674,7 +674,7 @@ public class Hashtable extends Dictionary
             return size;
           }
 
-          public Iterator iterator(fabric.client.Core core)
+          public Iterator iterator(fabric.worker.Core core)
           {
             return new ValueIterator@core();
           }
@@ -726,7 +726,7 @@ public class Hashtable extends Dictionary
             return size;
           }
 
-          public Iterator iterator(fabric.client.Core core)
+          public Iterator iterator(fabric.worker.Core core)
           {
             return new EntryIterator@core();
           }

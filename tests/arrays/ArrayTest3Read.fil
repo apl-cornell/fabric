@@ -1,6 +1,6 @@
 package arrays;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.lang.arrays.ObjectArray;
 import fabric.util.HashMap;
 
@@ -10,7 +10,7 @@ import fabric.util.HashMap;
 
 public class ArrayTest3Read {
     public static void main(String[] args) {
-        Core core = fabric.client.Client.getClient().getCore("core0");
+        Core core = fabric.worker.Worker.getWorker().getCore("core0");
         HashMap map = (HashMap)core.getRoot();
         System.out.println("Map obtained is " + map.toString());
         

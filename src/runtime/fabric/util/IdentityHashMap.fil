@@ -282,7 +282,7 @@ public class IdentityHashMap extends AbstractMap
           return size;
         }
 
-        public Iterator iterator(fabric.client.Core core)
+        public Iterator iterator(fabric.worker.Core core)
         {
           return new IdentityIterator@core(ENTRIES);
         }
@@ -425,7 +425,7 @@ public class IdentityHashMap extends AbstractMap
           return size;
         }
 
-        public Iterator iterator(fabric.client.Core core)
+        public Iterator iterator(fabric.worker.Core core)
         {
           return new IdentityIterator@core(KEYS);
         }
@@ -647,7 +647,7 @@ public class IdentityHashMap extends AbstractMap
           return size;
         }
 
-        public Iterator iterator(fabric.client.Core core)
+        public Iterator iterator(fabric.worker.Core core)
         {
           return new IdentityIterator@core(VALUES);
         }

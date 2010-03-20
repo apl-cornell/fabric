@@ -361,7 +361,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
               throw new ServletException("invalid args");
           Core localCore_ = null;
           try {
-              localCore_ = FabricClient.getClient().getLocalCore();
+              localCore_ = FabricWorker.getWorker().getLocalCore();
           } catch (NullPointerException imposs) {}
           final Core localCore = localCore_;
           fabricated.util.List[{servP:;servP!:}] validatedUsers = null;
@@ -528,8 +528,8 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
               l.add(new JifString[lbl](s));
           }
           int size = l.size();
-          FabricClient fclient = FabricClient.getClient();
-          final Core localCore = fclient!=null?fclient.getLocalCore():null;
+          FabricWorker fworker = FabricWorker.getWorker();
+          final Core localCore = fworker!=null?fworker.getLocalCore():null;
           int sz = size<0?0:size;
           String{*lbl} native[] array = new String native[sz];
           int count = 0;

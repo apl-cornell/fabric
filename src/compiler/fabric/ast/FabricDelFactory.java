@@ -8,10 +8,10 @@ public interface FabricDelFactory extends JifDelFactory {
   JL delAbortStmt();
   JL delAtomic();
   JL delAmbNewFabricArray();
-  JL delClient();
+  JL delWorker();
   JL delFabricArrayInit();
   JL delFabricArrayTypeNode();
   JL delNewFabricArray();
-  JL delRemoteClientGetter();
+  JL delRemoteWorkerGetter();
   JL delRetryStmt();
 }

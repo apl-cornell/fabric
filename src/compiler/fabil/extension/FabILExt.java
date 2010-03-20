@@ -48,7 +48,7 @@ public interface FabILExt extends Ext {
   public Node rewriteAtomic(AtomicRewriter ar);
 
   /**
-   * Used by <code>ThreadRewriter</code> to hook Threads into the client's
+   * Used by <code>ThreadRewriter</code> to hook Threads into the worker's
    * transaction manager.
    */
   public Node rewriteThreads(ThreadRewriter tr);

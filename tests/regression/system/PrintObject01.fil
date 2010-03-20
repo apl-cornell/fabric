@@ -1,6 +1,6 @@
 package system;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 
 public class PrintObject01 {
   int id;
@@ -10,7 +10,7 @@ public class PrintObject01 {
   }
   public static void main(String[] arg) {
     atomic {
-      Core core = fabric.client.Client.getClient().getLocalCore();
+      Core core = fabric.worker.Worker.getWorker().getLocalCore();
       PrintObject01 integer = new PrintObject01@core(99);
       String s = "Number is " + integer.toString();
       

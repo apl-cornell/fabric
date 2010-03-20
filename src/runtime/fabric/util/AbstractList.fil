@@ -71,8 +71,8 @@ package fabric.util;
 public abstract class AbstractList extends AbstractCollection implements List
 {
 
-  protected static final fabric.client.Core LOCAL_CORE =
-    fabric.client.Client.getClient().getLocalCore();
+  protected static final fabric.worker.Core LOCAL_CORE =
+    fabric.worker.Worker.getWorker().getLocalCore();
 
   /**
    * A count of the number of structural modifications that have been made to
@@ -301,7 +301,7 @@ while (i.hasNext())
    * @return an Iterator over the elements of this list, in order
    * @see #modCount
    */
-  public Iterator iterator(fabric.client.Core core)
+  public Iterator iterator(fabric.worker.Core core)
   {
     // Bah, Sun's implementation forbids using listIterator(0).
     return new AnonymousIterator@core();
@@ -411,7 +411,7 @@ while (i.hasNext())
    * @return a ListIterator over the elements of this list, in order, starting
    *         at the beginning
    */
-  public ListIterator listIterator(fabric.client.Core core)
+  public ListIterator listIterator(fabric.worker.Core core)
   {
     return listIterator(core, 0);
   }
@@ -434,7 +434,7 @@ while (i.hasNext())
    * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
    * @see #modCount
    */
-  public ListIterator listIterator(fabric.client.Core core, final int index)
+  public ListIterator listIterator(fabric.worker.Core core, final int index)
   {
     if (index < 0 || index > size())
       throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
@@ -1179,7 +1179,7 @@ while (i.hasNext())
      *
      * @return an iterator over the sublist
      */
-    public Iterator iterator(fabric.client.Core core)
+    public Iterator iterator(fabric.worker.Core core)
     {
       return listIterator(core);
     }
@@ -1194,7 +1194,7 @@ while (i.hasNext())
      *         modified externally to this sublist
      * @throws IndexOutOfBoundsException if the value is out of range
      */
-    public ListIterator listIterator(fabric.client.Core core, final int index)
+    public ListIterator listIterator(fabric.worker.Core core, final int index)
     {
       checkMod();
       checkBoundsInclusive(index);

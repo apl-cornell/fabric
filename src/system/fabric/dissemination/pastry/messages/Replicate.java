@@ -9,9 +9,9 @@ import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
-import fabric.client.Client;
-import fabric.client.Core;
-import fabric.client.RemoteCore;
+import fabric.worker.Worker;
+import fabric.worker.Core;
+import fabric.worker.RemoteCore;
 import fabric.common.exceptions.BadSignatureException;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
@@ -90,14 +90,14 @@ public class Replicate implements RawMessage {
    * Deserialization constructor.
    */
   public Replicate(InputBuffer buf, NodeHandle sender) throws IOException {
-    Client client = Client.getClient();
+    Worker worker = Worker.getWorker();
     this.sender = sender;
     level = buf.readInt();
     int numCores = buf.readInt();
     skip = new OidKeyHashMap<Long>();
 
     for (int i = 0; i < numCores; i++) {
-      Core core = client.getCore(buf.readUTF());
+      Core core = worker.getCore(buf.readUTF());
       int numEntries = buf.readInt();
       
       for (int j = 0; j < numEntries; j++) {
@@ -158,12 +158,12 @@ public class Replicate implements RawMessage {
      */
     public Reply(InputBuffer buf) throws IOException {
       DataInputBuffer in = new DataInputBuffer(buf);
-      Client client = Client.getClient();
+      Worker worker = Worker.getWorker();
       int n = in.readInt();
       globs = new HashMap<Pair<Core, Long>, Glob>(n);
 
       for (int i = 0; i < n; i++) {
-        RemoteCore core = client.getCore(in.readUTF());
+        RemoteCore core = worker.getCore(in.readUTF());
         long onum = in.readLong();
         try {
           Glob g = new Glob(core.getPublicKey(), in);

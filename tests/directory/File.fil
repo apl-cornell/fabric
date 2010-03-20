@@ -105,7 +105,7 @@ public class File {
   /** create root directory and store it */
   public static void createRoot() throws Exception {
     atomic {
-      Core core = Client.getClient().getCore(rootAddr.getHost());
+      Core core = Worker.getWorker().getCore(rootAddr.getHost());
       Map  root = (Map) core.getRoot();
 
       if (root.containsKey(rootAddr.getPath()))
@@ -116,11 +116,11 @@ public class File {
     }
   }
 
-  /** create a file owned by the current client on the same core as the client's principal object */
+  /** create a file owned by the current worker on the same core as the worker's principal object */
   public static void createHome() throws Exception {
     atomic {
-      String name = Client.getClient().getPrincipal().name();
-      Core   home = Client.getClient().getPrincipal().$getCore();
+      String name = Worker.getWorker().getPrincipal().name();
+      Core   home = Worker.getWorker().getPrincipal().$getCore();
       getRoot().addChild(home, name, "0");
     }
   }
@@ -129,7 +129,7 @@ public class File {
   public static void modifyHome() throws Exception {
     while (true) {
       atomic {
-        String name = Client.getClient().getPrincipal().name();
+        String name = Worker.getWorker().getPrincipal().name();
 
         File root = getRoot();
         File home = root.getChild(name);
@@ -180,7 +180,7 @@ public class File {
   //////////////////////////////////////////////////////////////////////////////
 
   private static File getRoot() {
-    Core c = Client.getClient().getCore(rootAddr.getHost());
+    Core c = Worker.getWorker().getCore(rootAddr.getHost());
     Map  m = (Map) c.getRoot();
 
     return (File) m.get(rootAddr.getPath());

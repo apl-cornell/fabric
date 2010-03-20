@@ -3,7 +3,7 @@ package travel;
 public class ShowState {
   public static void main(String[] args) {
     atomic {
-      Core core = Client.getClient().getCore(Config.brokerCoreName);
+      Core core = Worker.getWorker().getCore(Config.brokerCoreName);
 
       Broker broker = (Broker) core.getRoot().get(Config.brokerMapKey);
       System.out.println("customer account balance: "

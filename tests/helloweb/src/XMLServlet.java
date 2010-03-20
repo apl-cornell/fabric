@@ -10,8 +10,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.w3c.dom.Document;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 
 /**
  * This test uses the same basic design as the current CMS implementation.
@@ -58,13 +58,13 @@ public class XMLServlet extends HttpServlet {
     try {
       System.setProperty("fabric.prefix", context.getInitParameter("fabric-prefix"));
       try {
-        Client.initialize();
+        Worker.initialize();
       } catch(IllegalStateException e) {
         // TODO: need to fix this up
-        // do nothing, client already initialized.
+        // do nothing, worker already initialized.
       }
-      Client client = Client.getClient();
-      Core   local  = client.getLocalCore();
+      Worker worker = Worker.getWorker();
+      Core   local  = worker.getLocalCore();
 
       this.helper = XMLServletHelper.$Impl.create(local, context.getInitParameter("uri"));
     } catch (final Exception e) {

@@ -79,8 +79,8 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
   // new Fabric AST nodes                                                     //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Ext extRemoteClientGetter() {
-    return new RemoteClientGetterJifExt_c(new RemoteClientGetterToFabilExt_c());
+  public Ext extRemoteWorkerGetter() {
+    return new RemoteWorkerGetterJifExt_c(new RemoteWorkerGetterToFabilExt_c());
   }
 
   public Ext extRetryStmt() {
@@ -95,8 +95,8 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements FabricExtF
     return new AtomicJifExt_c(new AtomicToFabilExt_c());
   }
   
-  public Ext extClient() {
-    return new ClientJifExt_c(new ClientToFabilExt_c());
+  public Ext extWorker() {
+    return new WorkerJifExt_c(new WorkerToFabilExt_c());
   }
   
   public Ext extFabricArrayInit() {

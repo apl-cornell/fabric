@@ -1,9 +1,9 @@
 package jif.lang;
 
 import jif.lang.ConfPolicy;
-import fabric.client.Client;
-import fabric.client.Core;
-import fabric.client.LocalCore;
+import fabric.worker.Worker;
+import fabric.worker.Core;
+import fabric.worker.LocalCore;
 import fabric.common.ONumConstants;
 import fabric.util.HashSet;
 import fabric.util.Set;
@@ -22,7 +22,7 @@ public final class PairLabel implements Label {
     this.confPol = confPol;
     this.integPol = integPol;
     
-    final LocalCore localCore = Client.getClient().getLocalCore();
+    final LocalCore localCore = Worker.getWorker().getLocalCore();
     if (confPol == null || integPol == null) {
       throw new NullPointerException@localCore();
     }
@@ -40,7 +40,7 @@ public final class PairLabel implements Label {
       PairLabel that = (PairLabel) l;
       if (this == that || this.equals(that)) return true;
       
-      final Core localCore = Client.getClient().getLocalCore();
+      final Core localCore = Worker.getWorker().getLocalCore();
       Set temp = new HashSet@localCore();
       if (LabelUtil.relabelsTo(this.confPol, that.confPol, temp)
           && LabelUtil.relabelsTo(this.integPol, that.integPol, temp)) {

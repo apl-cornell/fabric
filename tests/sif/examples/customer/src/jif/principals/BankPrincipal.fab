@@ -2,7 +2,7 @@ package jif.principals;
 
 import fabric.util.Map;
 import travel.Config;
-import fabric.client.Core;
+import fabric.worker.Core;
 
 public class BankPrincipal extends ExternalPrincipal {
   public BankPrincipal() {
@@ -11,7 +11,7 @@ public class BankPrincipal extends ExternalPrincipal {
   
   public static BankPrincipal{*!:} getInstance{*!:}() {
     atomic {
-      FabricClient cl = FabricClient.getClient();
+      FabricWorker cl = FabricWorker.getWorker();
       if (cl != null) {
         final Core brokerCore = cl.getCore(Config.brokerCoreName);
         if (brokerCore != null) {

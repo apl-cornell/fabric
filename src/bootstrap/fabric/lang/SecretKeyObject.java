@@ -2,7 +2,7 @@ package fabric.lang;
 
 import javax.crypto.SecretKey;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 
 public interface SecretKeyObject extends Object {
   SecretKey getKey();

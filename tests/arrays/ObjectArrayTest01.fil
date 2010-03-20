@@ -3,8 +3,8 @@ package arrays;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import fabric.client.Core;
-import fabric.client.Client;
+import fabric.worker.Core;
+import fabric.worker.Worker;
 import fabric.lang.arrays.internal._ObjectArray;
 
 public class ObjectArrayTest01 {
@@ -39,7 +39,7 @@ public class ObjectArrayTest01 {
         isBatchOutput = args[4].equals("true")?true:false;
 
 
-        Core core = fabric.client.Client.getClient().getCore("core0");        
+        Core core = fabric.worker.Worker.getWorker().getCore("core0");        
         long startTime, startInitialize, startReadIteration, startWriteIteration, startResize, endTime;
         float creation=0, initialization=0, reading=0, replacing=0, resizing=0;
 

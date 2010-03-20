@@ -14,10 +14,10 @@ import java.util.Random;
 import java.net.URI;
 import fabric.util.HashMap;
 
-import fabric.client.Core;
-import fabric.client.Client;
+import fabric.worker.Core;
+import fabric.worker.Worker;
 
-import fabric.client.debug.Timing;
+import fabric.worker.debug.Timing;
 
 public class Benchmark {
   // database parameters
@@ -26,7 +26,7 @@ public class Benchmark {
   private final static int SMALL  = 1;
   private final static int TINY   = 0;
 
-  private final static Core local = Client.getClient().getLocalCore();
+  private final static Core local = Worker.getWorker().getLocalCore();
 
   // TODO: these shouldn't be @local, they should be @static (whatever that
   // means) but our implementation of static stuff makes it not matter yet
@@ -149,7 +149,7 @@ public class Benchmark {
   }
 
   protected Module createModule() throws Exception {
-    Core local = Client.getClient().getLocalCore();
+    Core local = Worker.getWorker().getLocalCore();
     CompositePart[] compositeParts = null;
     atomic { compositeParts = new CompositePart[numCompPerModule[scale]]@local; }
     for (int i = 0; i < numCompPerModule[scale]; ++i)
@@ -173,7 +173,7 @@ public class Benchmark {
   }
 
   protected CompositePart createCompositePart() throws Exception {
-    Core local = Client.getClient().getLocalCore();
+    Core local = Worker.getWorker().getLocalCore();
     CompositePart compositePart = new CompositePart@partCore(this);
     compositePart.setDocumentation(new Document@documentCore(this, documentSize[scale]));
 
@@ -243,7 +243,7 @@ public class Benchmark {
       Timing.reset();
       
       URI  path = new URI(args[0]);
-      Core core = fabric.client.Client.getClient().getCore(path.getHost());
+      Core core = fabric.worker.Worker.getWorker().getCore(path.getHost());
       Map  root = (Map) core.getRoot();
 
       int scale = -1;
@@ -270,13 +270,13 @@ public class Benchmark {
 
       for (int i = 3; i < args.length; i++) {
         if (args[i].equals("--assemblies"))
-          assemblyCore = Client.getClient().getCore(args[++i]);
+          assemblyCore = Worker.getWorker().getCore(args[++i]);
         else if (args[i].equals("--modules"))
-          moduleCore = Client.getClient().getCore(args[++i]);
+          moduleCore = Worker.getWorker().getCore(args[++i]);
         else if (args[i].equals("--parts"))
-          partCore = Client.getClient().getCore(args[++i]);
+          partCore = Worker.getWorker().getCore(args[++i]);
         else if (args[i].equals("--documents"))
-          documentCore = Client.getClient().getCore(args[++i]);
+          documentCore = Worker.getWorker().getCore(args[++i]);
         else {
           printUsage();
           System.out.println("invalid argument[" + i + "]: " + args[i]);

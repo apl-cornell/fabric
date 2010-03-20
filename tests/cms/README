@@ -121,16 +121,16 @@ permission java.net.SocketPermission "*", "resolve";
 permission java.net.SocketPermission "*:3372", "connect";
 };
 
-10) Open {fabric home}/etc/client.properties and comment out the line starting 
+10) Open {fabric home}/etc/worker.properties and comment out the line starting 
 with (add a # at the start of the line):
-fabric.client.fetchmanager=
+fabric.worker.fetchmanager=
 
 11) Start a core:
 cd {fabric home}
 ./bin/fab-core --core core0 etc/keys/core0.keystore etc/keys/trust.keystore password --core core1 etc/keys/core1.keystore etc/keys/trust.keystore password
 
 12) Set up a principal:
-./bin/fab --name client0 --make-principal core0
+./bin/fab --name worker0 --make-principal core0
 
 13) Start Tomcat and load: http://localhost:8180/web/guest
 

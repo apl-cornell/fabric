@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.lang.Object;
 
 /**

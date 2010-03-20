@@ -1,7 +1,7 @@
 package jif.lang;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 import fabric.util.*;
 
 /**
@@ -11,7 +11,7 @@ import fabric.util.*;
 public final class ConjunctivePrincipal extends Principal {
   final Set conjuncts;
   private Integer hashCode;
-  public static final Core localCore = Client.getClient().getLocalCore();
+  public static final Core localCore = Worker.getWorker().getLocalCore();
 
   ConjunctivePrincipal(Set conjuncts) {
     this.conjuncts = conjuncts;

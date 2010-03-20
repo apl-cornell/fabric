@@ -1,6 +1,6 @@
 package arrays;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.lang.arrays.ObjectArray;
 import fabric.util.HashMap;
 
@@ -11,7 +11,7 @@ public class ArrayTest3 {
         this.id = id;
     }
     public static void main(String[] args) {
-        Core core = fabric.client.Client.getClient().getCore("core0");
+        Core core = fabric.worker.Worker.getWorker().getCore("core0");
         atomic {
             ArrayTest3 another1 = new ArrayTest3@core(1);
             ArrayTest3 another2 = new ArrayTest3@core(2);

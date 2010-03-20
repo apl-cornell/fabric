@@ -1,6 +1,6 @@
 package fabric.lang.arrays;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.lang.arrays.internal._booleanArray;
 import fabric.lang.arrays.internal._ObjectArray;
 

@@ -71,21 +71,21 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
     return postDelAmbNewArray(e);
   }
   
-  public final JL delClient() {
-    JL e = delClientImpl();
+  public final JL delWorker() {
+    JL e = delWorkerImpl();
 
     if (nextDelFactory() != null && nextDelFactory() instanceof FabricDelFactory) {
-        JL e2 = ((FabricDelFactory)nextDelFactory()).delClient();
+        JL e2 = ((FabricDelFactory)nextDelFactory()).delWorker();
         e = composeDels(e, e2);
     }
-    return postDelClient(e);
+    return postDelWorker(e);
   }
 
-  protected JL delClientImpl() {
+  protected JL delWorkerImpl() {
     return delExprImpl();
   }
 
-  protected JL postDelClient(JL e) {
+  protected JL postDelWorker(JL e) {
     return postDelExpr(e);
   }
 
@@ -143,21 +143,21 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
     return postDelNewArray(e);
   }
 
-  public final JL delRemoteClientGetter() {
-    JL e = delRemoteClientGetterImpl();
+  public final JL delRemoteWorkerGetter() {
+    JL e = delRemoteWorkerGetterImpl();
 
     if (nextDelFactory() != null && nextDelFactory() instanceof FabricDelFactory) {
-        JL e2 = ((FabricDelFactory)nextDelFactory()).delRemoteClientGetter();
+        JL e2 = ((FabricDelFactory)nextDelFactory()).delRemoteWorkerGetter();
         e = composeDels(e, e2);
     }
-    return postDelRemoteClientGetter(e);
+    return postDelRemoteWorkerGetter(e);
   }
   
-  protected JL delRemoteClientGetterImpl() {
+  protected JL delRemoteWorkerGetterImpl() {
     return delExprImpl();
   }
 
-  protected JL postDelRemoteClientGetter(JL e) {
+  protected JL postDelRemoteWorkerGetter(JL e) {
     return postDelExpr(e);
   }
   

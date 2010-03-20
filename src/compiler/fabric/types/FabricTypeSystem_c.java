@@ -37,10 +37,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   @SuppressWarnings("unchecked")
   @Override
   public List defaultPackageImports() {
-    // Include fabric.lang and fabric.client as default imports.
+    // Include fabric.lang and fabric.worker as default imports.
     List<String> result = super.defaultPackageImports();
     result.add("fabric.lang");
-    result.add("fabric.client");
+    result.add("fabric.worker");
     return result;
   }
   
@@ -64,35 +64,35 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return new FabricParsedClassType_c(this, init, fromSource);
   }
 
-  public ClassType RemoteClient() {
-    return load("fabric.client.RemoteClient");
+  public ClassType RemoteWorker() {
+    return load("fabric.worker.RemoteWorker");
   }
   
-  public ClassType Client() {
-    return load("fabric.client.FabricClient");
+  public ClassType Worker() {
+    return load("fabric.worker.FabricWorker");
   }
   
   public ClassType Core() {
-    return load("fabric.client.Core");
+    return load("fabric.worker.Core");
   }
 
-  private JifLocalInstance clientLocalInstance = null;
+  private JifLocalInstance workerLocalInstance = null;
   
-  public JifLocalInstance clientLocalInstance() {
-    if (clientLocalInstance == null) {
+  public JifLocalInstance workerLocalInstance() {
+    if (workerLocalInstance == null) {
       // Always use the same local instance, because jif now use pointer identity to compare local instances
       // for the purpose of label checking.
-      clientLocalInstance = (JifLocalInstance)localInstance(Position.compilerGenerated(), 
-                                                            Flags.FINAL, Client(), "client$");
-//      clientLocalInstance.setLabel(freshLabelVariable(clientLocalInstance.position(), "client$", "client$"));
+      workerLocalInstance = (JifLocalInstance)localInstance(Position.compilerGenerated(), 
+                                                            Flags.FINAL, Worker(), "worker$");
+//      workerLocalInstance.setLabel(freshLabelVariable(workerLocalInstance.position(), "worker$", "worker$"));
     }
-    return clientLocalInstance;
+    return workerLocalInstance;
   }
   
-  public Principal clientPrincipal(Position pos) {
-//    return dynamicPrincipal(pos, new AccessPathClient(pos, this));
+  public Principal workerPrincipal(Position pos) {
+//    return dynamicPrincipal(pos, new AccessPathWorker(pos, this));
     try {
-      JifLocalInstance li = clientLocalInstance();
+      JifLocalInstance li = workerLocalInstance();
       Principal p = dynamicPrincipal(pos, JifUtil.varInstanceToAccessPath(li, pos));
       li.setLabel(pairLabel(li.position(), 
                   readerPolicy(li.position(), p, bottomPrincipal(li.position())), 
@@ -110,7 +110,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     Type strpFromType = strip(fromType);
     Type strpToType = strip(toType);
 
-    if ((equals(strpFromType, Client()) || equals(strpFromType, RemoteClient()) || equals(strpFromType, Core())) 
+    if ((equals(strpFromType, Worker()) || equals(strpFromType, RemoteWorker()) || equals(strpFromType, Core())) 
         && equals(strpToType, Principal())) {
       return true;
     }
@@ -123,7 +123,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     Type strpFromType = strip(fromType);
     Type strpToType = strip(toType);
 
-    if ((equals(strpFromType, Client()) || equals(strpFromType, RemoteClient()) || equals(strpFromType, Core())) 
+    if ((equals(strpFromType, Worker()) || equals(strpFromType, RemoteWorker()) || equals(strpFromType, Core())) 
         && equals(strpToType, Principal())) {
       return true;
     }
@@ -179,8 +179,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return t;
   }
   
-  public boolean isLocalClientAccessPath(AccessPath ap) {
-    return ap instanceof AccessPathLocal && ((AccessPathLocal)ap).localInstance() == clientLocalInstance();
+  public boolean isLocalWorkerAccessPath(AccessPath ap) {
+    return ap instanceof AccessPathLocal && ((AccessPathLocal)ap).localInstance() == workerLocalInstance();
   }
   
   @Override

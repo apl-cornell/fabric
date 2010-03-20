@@ -1,6 +1,6 @@
 package fabric.common;
 
-import fabric.client.transaction.TransactionManager;
+import fabric.worker.transaction.TransactionManager;
 
 public interface FabricThread {
   TransactionManager getTransactionManager();

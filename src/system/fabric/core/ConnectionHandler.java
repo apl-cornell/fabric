@@ -32,21 +32,21 @@ class ConnectionHandler extends
 
   @Override
   protected SessionAttributes newAuthenticatedSession(Node.Core core,
-      String clientName, String clientPrincipalName,
-      NodePrincipal clientPrincipal) {
-    return new SessionAttributes(core, clientName, clientPrincipalName,
-        clientPrincipal);
+      String workerName, String workerPrincipalName,
+      NodePrincipal workerPrincipal) {
+    return new SessionAttributes(core, workerName, workerPrincipalName,
+        workerPrincipal);
   }
 
   @Override
   protected SessionAttributes newUnauthenticatedSession(Node.Core core,
-      String clientName) {
-    return new SessionAttributes(core, clientName);
+      String workerName) {
+    return new SessionAttributes(core, workerName);
   }
 
   @Override
   protected void logAuthenticationFailure() {
-    LOGGER.info("Core rejected connection: client failed authentication.");
+    LOGGER.info("Core rejected connection: worker failed authentication.");
   }
 
   @Override
@@ -54,22 +54,22 @@ class ConnectionHandler extends
     LOGGER.info("Core " + session.core.name + " accepted connection from "
         + remote);
 
-    if (session.clientIsDissem) {
-      LOGGER.info("Client connected as dissemination node");
+    if (session.workerIsDissem) {
+      LOGGER.info("Worker connected as dissemination node");
     } else {
-      LOGGER.info("Client principal is " + session.clientPrincipalName
-          + (session.clientPrincipal == null ? " (acting as null)" : ""));
+      LOGGER.info("Worker principal is " + session.workerPrincipalName
+          + (session.workerPrincipal == null ? " (acting as null)" : ""));
     }
   }
 
   @Override
   protected String getThreadName(SocketAddress remote, SessionAttributes session) {
-    if (session.clientIsDissem) {
+    if (session.workerIsDissem) {
       return "Connection handler for dissemination node at " + remote
           + " talking to core " + session.core.name;
     }
 
-    return "Connection handler for client " + session.clientPrincipalName
+    return "Connection handler for worker " + session.workerPrincipalName
         + " talking to core " + session.core.name;
 
   }

@@ -1,6 +1,6 @@
 package fabric.lang;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 
 /**
  * A marker interface for Java objects that are inlineable.

@@ -1,11 +1,11 @@
 package system;
 
-import fabric.client.*;
+import fabric.worker.*;
 import fabric.util.*;
 
 public class Transaction01 {
   public static void main(String[] args) {
-    Core core = Client.getClient().getCore("core0");
+    Core core = Worker.getWorker().getCore("core0");
     
     atomic {
       HashMap m = new HashMap@core();

@@ -14,27 +14,27 @@ import jif.types.principal.*;
 public interface FabricTypeSystem extends JifTypeSystem {
   ClassType FObject();
   
-  ClassType RemoteClient();
+  ClassType RemoteWorker();
   
-  ClassType Client();
+  ClassType Worker();
   
   ClassType Core();
 
   /**
-   * Constructs a principal for the local client. 
+   * Constructs a principal for the local worker. 
    * 
-   * Remote clients directly use <code>DynamicPrincipal</code>.
+   * Remote workers directly use <code>DynamicPrincipal</code>.
    * 
    * @param pos
    * @return
    */
-  Principal clientPrincipal(Position pos);
+  Principal workerPrincipal(Position pos);
   
-  LocalInstance clientLocalInstance();
+  LocalInstance workerLocalInstance();
   
   Type strip(Type type);
   
-  boolean isLocalClientAccessPath(AccessPath ap);
+  boolean isLocalWorkerAccessPath(AccessPath ap);
   
   ConfPolicy representableConfProjection(Label L);
   IntegPolicy representableIntegProjection(Label L);

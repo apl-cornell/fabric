@@ -83,9 +83,9 @@ public class Create {
      */
     public static void main(String[] args) {
         atomic {
-            Core  brokerCore = Client.getClient().getCore(Config.brokerCoreName);
-            Core    bankCore = Client.getClient().getCore(Config.bankCoreName);
-            Core airlineCore = Client.getClient().getCore(Config.airlineCoreName);
+            Core  brokerCore = Worker.getWorker().getCore(Config.brokerCoreName);
+            Core    bankCore = Worker.getWorker().getCore(Config.bankCoreName);
+            Core airlineCore = Worker.getWorker().getCore(Config.airlineCoreName);
 
             AbstractPrincipal bank     = BankPrincipal.getInstance();
             AbstractPrincipal customer = CustomerPrincipal.getInstance();
@@ -119,14 +119,14 @@ public class Create {
              broker.addDelegatesTo(brokerCore.getPrincipal());
                bank.addDelegatesTo(bankCore.getPrincipal());
 
-            // add client delegations
-            Principal  brokerClient = Client.getClient().getClient(args[0]).getPrincipal();
-            Principal    bankClient = Client.getClient().getClient(args[1]).getPrincipal();
-            Principal airlineClient = Client.getClient().getClient(args[2]).getPrincipal();
+            // add worker delegations
+            Principal  brokerWorker = Worker.getWorker().getWorker(args[0]).getPrincipal();
+            Principal    bankWorker = Worker.getWorker().getWorker(args[1]).getPrincipal();
+            Principal airlineWorker = Worker.getWorker().getWorker(args[2]).getPrincipal();
 
-            airline.addDelegatesTo(airlineClient);
-             broker.addDelegatesTo(brokerClient);
-               bank.addDelegatesTo(bankClient);
+            airline.addDelegatesTo(airlineWorker);
+             broker.addDelegatesTo(brokerWorker);
+               bank.addDelegatesTo(bankWorker);
 
             Map root = (Map) brokerCore.getRoot();
             root.put(Config.brokerMapKey, broker);

@@ -1,6 +1,6 @@
 package fabnfs.util;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.util.HashMap;
 import java.util.StringTokenizer;
 

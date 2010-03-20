@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import jif.lang.*;
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.common.Crypto;
 import fabric.common.exceptions.InternalError;
 import fabric.net.UnreachableNodeException;

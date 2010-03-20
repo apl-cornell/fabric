@@ -4,8 +4,8 @@ import org.w3c.dom.Element;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 import fabric.util.Iterator;
 import fabric.util.Map;
 
@@ -102,10 +102,10 @@ public class XMLServletHelper {
   }
 
   public XMLServletHelper(String dbUri) throws Exception {
-    local = Client.getClient().getLocalCore();
+    local = Worker.getWorker().getLocalCore();
 
     URI    addr = new URI(dbUri);
-    Core   core = Client.getClient().getCore(addr.getHost());
+    Core   core = Worker.getWorker().getCore(addr.getHost());
 
     db      = (Benchmark) ((Map) core.getRoot()).get(addr.getPath());
     builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();

@@ -1,6 +1,6 @@
 package tree;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 
 public class Tree[label L] {
 	private TreeNode[L]{L} root;

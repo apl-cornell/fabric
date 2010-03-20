@@ -16,9 +16,9 @@ import rice.pastry.commonapi.PastryIdFactory;
 import rice.pastry.leafset.LeafSet;
 import rice.pastry.routing.RouteSet;
 import rice.pastry.routing.RoutingTable;
-import fabric.client.Client;
-import fabric.client.Core;
-import fabric.client.RemoteCore;
+import fabric.worker.Worker;
+import fabric.worker.Core;
+import fabric.worker.RemoteCore;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
@@ -207,7 +207,7 @@ public class Disseminator implements Application {
 
   /**
    * Process a Fetch.Reply message. Saves the glob from the reply, and returns
-   * it to the client if it is waiting for this object.
+   * it to the worker if it is waiting for this object.
    */
   protected void fetch(final Fetch.Reply msg) {
     log.fine("Pastry dissem fetch reply");
@@ -240,8 +240,8 @@ public class Disseminator implements Application {
   protected void fetch(final Fetch msg) {
     process(new Executable<Void, RuntimeException>() {
       public Void execute() {
-        Client client = Client.getClient();
-        RemoteCore c = client.getCore(msg.core());
+        Worker worker = Worker.getWorker();
+        RemoteCore c = worker.getCore(msg.core());
         long onum = msg.onum();
         Glob g = cache.get(c, onum);
 
@@ -487,8 +487,8 @@ public class Disseminator implements Application {
    */
   protected boolean forward(Fetch msg) {
     if (!msg.refresh()) {
-      Client client = Client.getClient();
-      RemoteCore c = client.getCore(msg.core());
+      Worker worker = Worker.getWorker();
+      RemoteCore c = worker.getCore(msg.core());
       long onum = msg.onum();
       Glob g = cache.get(c, onum);
 
@@ -509,8 +509,8 @@ public class Disseminator implements Application {
    * @return always true, indicating message should be further routed
    */
   protected boolean forward(Fetch.Reply msg) {
-    Client client = Client.getClient();
-    RemoteCore c = client.getCore(msg.core());
+    Worker worker = Worker.getWorker();
+    RemoteCore c = worker.getCore(msg.core());
     long onum = msg.onum();
     Glob g = msg.glob();
 

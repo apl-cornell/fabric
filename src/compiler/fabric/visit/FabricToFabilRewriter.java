@@ -41,12 +41,12 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     FabILTypeSystem  fabil_ts  = (FabILTypeSystem)  java_ts();
     FabricTypeSystem fabric_ts = (FabricTypeSystem) jif_ts();
 
-    if (fabric_ts.typeEquals(t, fabric_ts.Client())) {
-      return canonical(fabil_nf, fabil_ts.Client(), pos);
+    if (fabric_ts.typeEquals(t, fabric_ts.Worker())) {
+      return canonical(fabil_nf, fabil_ts.Worker(), pos);
     }
 
-    if (fabric_ts.typeEquals(t, fabric_ts.RemoteClient())) {
-      return canonical(fabil_nf, fabil_ts.RemoteClient(), pos);
+    if (fabric_ts.typeEquals(t, fabric_ts.RemoteWorker())) {
+      return canonical(fabil_nf, fabil_ts.RemoteWorker(), pos);
     }
 
     if (fabric_ts.isPrincipal(t)) {

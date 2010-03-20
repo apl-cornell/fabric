@@ -5,7 +5,7 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.*;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.ComparablePair;
 import fabric.common.util.Pair;
@@ -53,7 +53,7 @@ public final class SerializedObject implements FastSerializable {
 
   /**
    * Creates a serialized representation of the given object. This should only
-   * be used by fabric.core.InProcessCore and for debugging (client.debug.*).
+   * be used by fabric.core.InProcessCore and for debugging (worker.debug.*).
    * 
    * @param obj
    *          The object to serialize.
@@ -732,7 +732,7 @@ public final class SerializedObject implements FastSerializable {
       Collections.synchronizedMap(new HashMap<String, Constructor<?>>());
 
   /**
-   * Used by the client to deserialize this object.
+   * Used by the worker to deserialize this object.
    * 
    * @param core
    *          The core on which this object lives.

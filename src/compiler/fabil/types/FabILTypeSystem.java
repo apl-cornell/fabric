@@ -6,10 +6,10 @@ import polyglot.util.Position;
 
 public interface FabILTypeSystem extends TypeSystem {
 
-  // TODO: fabric.client or fabric.lang?
+  // TODO: fabric.worker or fabric.lang?
   /**
    * return the ClassType corresponding to
-   * fabric.client.transaction.TransactionManager
+   * fabric.worker.transaction.TransactionManager
    */
   ClassType TransactionManager();
 
@@ -30,18 +30,18 @@ public interface FabILTypeSystem extends TypeSystem {
 
   ClassType AbortException();
 
-  /** The ClassType of fabric.client.remote.RemoteClient. */
-  ClassType RemoteClient();
+  /** The ClassType of fabric.worker.remote.RemoteWorker. */
+  ClassType RemoteWorker();
 
   ClassType RemoteCallException();
 
-  ClassType Client();
+  ClassType Worker();
 
   ClassType Principal();
 
   ClassType DelegatingPrincipal();
 
-  /** The ClassType of fabric.client.Core. */
+  /** The ClassType of fabric.worker.Core. */
   Type Core();
 
   /** The ClassType of jif.lang.Label. */

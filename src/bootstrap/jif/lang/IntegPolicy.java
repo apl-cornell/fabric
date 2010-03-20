@@ -1,6 +1,6 @@
 package jif.lang;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 
 public interface IntegPolicy extends Policy {
   public static class _Proxy extends Policy._Proxy implements IntegPolicy {

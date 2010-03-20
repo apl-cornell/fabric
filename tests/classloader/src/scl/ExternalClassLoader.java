@@ -73,7 +73,7 @@ public class ExternalClassLoader extends ClassLoader {
 
     f = new File("/home/athereso/Documents/Simple Class Loader/bin/" + filename.replace('.', '/')+ ".class");
 
-    //use Client.getClient.fetchManager()
+    //use Worker.getWorker.fetchManager()
 
     int size = (int) f.length();
     byte buff[] = new byte[size];

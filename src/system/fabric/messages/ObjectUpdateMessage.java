@@ -5,8 +5,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.security.PublicKey;
 
-import fabric.client.Client;
-import fabric.client.remote.RemoteClient;
+import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.BadSignatureException;
 import fabric.common.exceptions.FabricException;
@@ -17,7 +17,7 @@ import fabric.dissemination.Glob;
  * Represents push notification that an object has been updated.
  */
 public class ObjectUpdateMessage extends
-    Message<RemoteClient, ObjectUpdateMessage.Response> {
+    Message<RemoteWorker, ObjectUpdateMessage.Response> {
 
   public static class Response implements Message.Response {
     public final boolean resubscribe;
@@ -34,7 +34,7 @@ public class ObjectUpdateMessage extends
      * @param in
      *          the input stream from which to read the response.
      */
-    Response(RemoteClient node, DataInput in) throws IOException {
+    Response(RemoteWorker node, DataInput in) throws IOException {
       this.resubscribe = in.readBoolean();
     }
 
@@ -85,7 +85,7 @@ public class ObjectUpdateMessage extends
 
     if (in.readBoolean()) {
       this.core = in.readUTF();
-      PublicKey key = Client.getClient().getCore(core).getPublicKey();
+      PublicKey key = Worker.getWorker().getCore(core).getPublicKey();
       this.glob = new Glob(key, in);
       this.group = null;
     } else {
@@ -96,21 +96,21 @@ public class ObjectUpdateMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.client.remote.MessageHandlerThread w) {
+  public Response dispatch(fabric.worker.remote.MessageHandlerThread w) {
     return w.handle(this);
   }
 
-  public Response send(RemoteClient client) {
+  public Response send(RemoteWorker worker) {
     try {
       boolean encrypt = group != null;
-      return send(client, encrypt);
+      return send(worker, encrypt);
     } catch (FabricException e) {
-      throw new InternalError("Unexpected response from client.", e);
+      throw new InternalError("Unexpected response from worker.", e);
     }
   }
 
   @Override
-  public Response response(RemoteClient node, DataInput in) throws IOException {
+  public Response response(RemoteWorker node, DataInput in) throws IOException {
     return new Response(node, in);
   }
 

@@ -2,8 +2,8 @@ package fabric.dissemination.pastry;
 
 import java.io.IOException;
 
-import fabric.client.Client;
-import fabric.client.RemoteCore;
+import fabric.worker.Worker;
+import fabric.worker.RemoteCore;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
@@ -22,10 +22,10 @@ public class PastryFetchManager implements FetchManager {
   
   private Node node;
   
-  public PastryFetchManager(Client client) {
+  public PastryFetchManager(Worker worker) {
     try {
       node = new Node();  // start a new pastry node
-      client.registerDisseminationCache(node.disseminator.cache);
+      worker.registerDisseminationCache(node.disseminator.cache);
     } catch (IOException e) {
       throw new InternalError(e);
     }

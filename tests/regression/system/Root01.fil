@@ -1,7 +1,7 @@
 package system;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 
 import fabric.util.HashMap;
 
@@ -12,7 +12,7 @@ public class Root01 {
   public static class Init {
     public static void main(String[] args) {
       atomic {
-        Core c = Client.getClient().getCore("core0");
+        Core c = Worker.getWorker().getCore("core0");
         ((HashMap) c.getRoot()).put(key, value);
       }
       
@@ -25,7 +25,7 @@ public class Root01 {
       Object o = null;
       
       atomic {
-        Core c = Client.getClient().getCore("core0");
+        Core c = Worker.getWorker().getCore("core0");
         HashMap root = (HashMap) c.getRoot();
 
         o = root.get(key);

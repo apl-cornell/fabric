@@ -3,10 +3,10 @@ package fabric.core;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import fabric.client.Client;
-import fabric.client.RemoteCore;
-import fabric.client.TransactionCommitFailedException;
-import fabric.client.TransactionPrepareFailedException;
+import fabric.worker.Worker;
+import fabric.worker.RemoteCore;
+import fabric.worker.TransactionCommitFailedException;
+import fabric.worker.TransactionPrepareFailedException;
 import fabric.common.*;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FetchException;
@@ -17,7 +17,7 @@ import fabric.core.Node.Core;
 import fabric.lang.Object._Impl;
 
 /**
- * In-process implementation of the Core interface for use when a client is
+ * In-process implementation of the Core interface for use when a worker is
  * running in-process with a Core. The operations work directly on the Core's
  * TransactionManager object.
  * 
@@ -35,7 +35,7 @@ public class InProcessCore extends RemoteCore {
   @Override
   public void abortTransaction(boolean useAuthentication, TransactionID tid) {
     try {
-      tm.abortTransaction(Client.getClient().getPrincipal(), tid.topTid);
+      tm.abortTransaction(Worker.getWorker().getPrincipal(), tid.topTid);
     } catch (AccessException e) {
       throw new InternalError(e);
     }
@@ -45,14 +45,14 @@ public class InProcessCore extends RemoteCore {
   public void commitTransaction(boolean useAuthentication, long transactionID)
       throws TransactionCommitFailedException {
     tm
-        .commitTransaction(null, Client.getClient().getPrincipal(),
+        .commitTransaction(null, Worker.getWorker().getPrincipal(),
             transactionID);
   }
 
   @Override
   public long createOnum() {
     try {
-      return tm.newOnums(Client.getClient().getPrincipal(), 1)[0];
+      return tm.newOnums(Worker.getWorker().getPrincipal(), 1)[0];
     } catch (AccessException e) {
       throw new InternalError(e);
     }
@@ -78,7 +78,7 @@ public class InProcessCore extends RemoteCore {
         new PrepareRequest(tid, commitTime, serializedCreates,
             serializedWrites, reads);
 
-    return tm.prepare(Client.getClient().getPrincipal(), req);
+    return tm.prepare(Worker.getWorker().getPrincipal(), req);
   }
 
   @Override

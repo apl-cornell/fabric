@@ -16,14 +16,14 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
   final principal{this} broker;
   
   public CustomerMain() throws ServletException {
-    FabricClient cl = FabricClient.getClient();
+    FabricWorker cl = FabricWorker.getWorker();
     Core lCore = null;
     AbstractPrincipal customerPrincipal = null;
     if (cl != null) {
       lCore = cl.getLocalCore();
     }
     localCore = lCore;
-    brokercore = client$.getCore(Config.brokerCoreName);
+    brokercore = worker$.getCore(Config.brokerCoreName);
 
     Map root = null;
     if (brokercore != null) {
@@ -62,8 +62,8 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
       String{*lbl} id, SessionPrincipal{*lbl} session) {
     SessionState[lbl] toReturn = null;
     atomic {
-      if (localCore != null && localCore equiv client$ &&
-	  lbl <= new label {⊤→client$} && new label {⊤←client$} <= lbl) {
+      if (localCore != null && localCore equiv worker$ &&
+	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
 	toReturn = new SessionState[lbl]@localCore(id, session);
       }
     }

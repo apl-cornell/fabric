@@ -258,11 +258,11 @@
 
   <!-- Compiles Fabric -->
   <target name="all"
-    depends="fabric-compiler,fabil-compiler,fabric-system,client-debug,fabric-signatures"
+    depends="fabric-compiler,fabil-compiler,fabric-system,worker-debug,fabric-signatures"
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
-  <target name="fabric-system" depends="core,client,dissemination"
+  <target name="fabric-system" depends="core,worker,dissemination"
       description="Builds Fabric"/>
 
   <target name="dust"
@@ -375,13 +375,13 @@
     </javac>
   </target>
 
-  <!-- Compiles the Fabric client API -->
-  <target name="client" depends="init,native,fabil-runtime">
+  <!-- Compiles the Fabric worker API -->
+  <target name="worker" depends="init,native,fabil-runtime">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
-      <include name="fabric/client/**" />
+      <include name="fabric/worker/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
-      <exclude name="fabric/client/debug/**" />
+      <exclude name="fabric/worker/debug/**" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
         <path refid="standard.classpath"/>
@@ -391,7 +391,7 @@
 
 
   <!-- Compiles the Fabric dissemination node -->
-  <target name="dissemination" depends="client">
+  <target name="dissemination" depends="worker">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
       <include name="fabric/dissemination/**" />
       <classpath>
@@ -401,7 +401,7 @@
     </javac>
   </target>
 
-  <target name="nfsserver" depends="client,fabil-runtime">
+  <target name="nfsserver" depends="worker,fabil-runtime">
     <javac target="1.5" srcdir="${tests.fabnfs}" destdir="${tests.classes}"
         debug="on">
       <include name="fabnfs/**" />
@@ -429,7 +429,7 @@
     </apply>
   </target>
 
-  <target name="fablib" depends="client,fabric-runtime,fabric-signatures">
+  <target name="fablib" depends="worker,fabric-runtime,fabric-signatures">
   	<subant target="" failonerror="false">
   		<fileset file="tests/jif/build.xml"/>
   		<fileset file="tests/sif/build.xml"/>
@@ -438,9 +438,9 @@
   
 
   <!-- Compiles the Fabric system-debugging tools -->
-  <target name="client-debug" depends="client,fabil-runtime">
+  <target name="worker-debug" depends="worker,fabil-runtime">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
-      <include name="fabric/client/debug/**" />
+      <include name="fabric/worker/debug/**" />
       <classpath>
         <pathelement location="${runtime.classes}" />
         <path refid="standard.classpath" />
@@ -544,8 +544,8 @@
     </condition>
 
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
-      <include name="fabric/client/RetryException.java" />
-      <include name="fabric/client/UserAbortException.java" />
+      <include name="fabric/worker/RetryException.java" />
+      <include name="fabric/worker/UserAbortException.java" />
     </javac>
 
     <apply executable="bash"

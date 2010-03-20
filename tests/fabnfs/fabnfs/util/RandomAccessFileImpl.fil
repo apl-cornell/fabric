@@ -1,7 +1,7 @@
 package fabnfs.util;
 
 import fabnfs.util.ResizableFileByteArray;
-import fabric.client.Core;
+import fabric.worker.Core;
 import java.io.IOException;
 
 public class RandomAccessFileImpl implements RandomAccessFile {

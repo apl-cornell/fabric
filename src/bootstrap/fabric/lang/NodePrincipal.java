@@ -4,7 +4,7 @@ import jif.lang.AbstractPrincipal;
 import jif.lang.ActsForProof;
 import jif.lang.Closure;
 import jif.lang.Label;
-import fabric.client.Core;
+import fabric.worker.Core;
 
 public interface NodePrincipal extends AbstractPrincipal, Object {
   public static class _Proxy extends AbstractPrincipal._Proxy implements
@@ -38,7 +38,7 @@ public interface NodePrincipal extends AbstractPrincipal, Object {
 
   public static final class _Impl extends AbstractPrincipal._Impl implements
       NodePrincipal {
-    public _Impl(fabric.client.Core $location, jif.lang.Label $label,
+    public _Impl(fabric.worker.Core $location, jif.lang.Label $label,
         java.lang.String name) {
       super($location, $label, name);
     }

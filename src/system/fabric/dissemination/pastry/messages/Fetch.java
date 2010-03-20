@@ -8,7 +8,7 @@ import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
-import fabric.client.Client;
+import fabric.worker.Worker;
 import fabric.common.exceptions.BadSignatureException;
 import fabric.dissemination.Glob;
 
@@ -174,7 +174,7 @@ public class Fetch implements RawMessage {
       
       Glob glob;
       try {
-        glob = new Glob(Client.getClient().getCore(core).getPublicKey(), in);
+        glob = new Glob(Worker.getWorker().getCore(core).getPublicKey(), in);
       } catch (BadSignatureException e) {
         glob = null;
       }

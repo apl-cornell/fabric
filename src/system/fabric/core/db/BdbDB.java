@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 
 import com.sleepycat.je.*;
 
-import fabric.client.remote.RemoteClient;
+import fabric.worker.remote.RemoteWorker;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
@@ -112,15 +112,15 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void finishPrepare(long tid, NodePrincipal client) {
+  public void finishPrepare(long tid, NodePrincipal worker) {
     // Copy the transaction data into BDB.
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    PendingTransaction pending = submap.remove(client);
+    PendingTransaction pending = submap.remove(worker);
     if (submap.isEmpty()) pendingByTid.remove(tid);
 
     try {
       Transaction txn = env.beginTransaction(null, null);
-      byte[] key = toBytes(tid, client);
+      byte[] key = toBytes(tid, worker);
       DatabaseEntry data = new DatabaseEntry(toBytes(pending));
       prepared.put(txn, new DatabaseEntry(key), data);
       txn.commit();
@@ -134,13 +134,13 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void commit(long tid, RemoteClient clientNode,
-      NodePrincipal clientPrincipal, SubscriptionManager sm) {
+  public void commit(long tid, RemoteWorker workerNode,
+      NodePrincipal workerPrincipal, SubscriptionManager sm) {
     log.finer("Bdb commit begin tid " + tid);
 
     try {
       Transaction txn = env.beginTransaction(null, null);
-      PendingTransaction pending = remove(clientPrincipal, txn, tid);
+      PendingTransaction pending = remove(workerPrincipal, txn, tid);
 
       if (pending != null) {
         for (SerializedObject o : pending.modData) {
@@ -151,7 +151,7 @@ public class BdbDB extends ObjectDB {
           db.put(txn, onumData, objData);
 
           // Remove any cached globs containing the old version of this object.
-          notifyCommittedUpdate(sm, toLong(onumData.getData()), clientNode);
+          notifyCommittedUpdate(sm, toLong(onumData.getData()), workerNode);
 
           // Update the version-number cache.
           cachedVersions.put(onum, o.getVersion());
@@ -174,12 +174,12 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void rollback(long tid, NodePrincipal client) {
+  public void rollback(long tid, NodePrincipal worker) {
     log.finer("Bdb rollback begin tid " + tid);
 
     try {
       Transaction txn = env.beginTransaction(null, null);
-      remove(client, txn, tid);
+      remove(worker, txn, tid);
       txn.commit();
       log.finer("Bdb rollback success tid " + tid);
     } catch (DatabaseException e) {
@@ -333,7 +333,7 @@ public class BdbDB extends ObjectDB {
    * Removes a PendingTransaction from the prepare log and returns it. If no
    * transaction with the given transaction id is found, null is returned.
    * 
-   * @param client
+   * @param worker
    *          the principal under which this action is being executed.
    * @param txn
    *          the BDB Transaction instance that should be used to perform the
@@ -344,9 +344,9 @@ public class BdbDB extends ObjectDB {
    * @throws DatabaseException
    *           if a database error occurs
    */
-  private PendingTransaction remove(NodePrincipal client, Transaction txn,
+  private PendingTransaction remove(NodePrincipal worker, Transaction txn,
       long tid) throws DatabaseException {
-    byte[] key = toBytes(tid, client);
+    byte[] key = toBytes(tid, worker);
     DatabaseEntry bdbKey = new DatabaseEntry(key);
     DatabaseEntry data = new DatabaseEntry();
 
@@ -384,14 +384,14 @@ public class BdbDB extends ObjectDB {
     return data;
   }
 
-  private byte[] toBytes(long tid, NodePrincipal client) {
+  private byte[] toBytes(long tid, NodePrincipal worker) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       DataOutputStream dos = new DataOutputStream(bos);
       dos.writeLong(tid);
-      if (client != null) {
-        dos.writeUTF(client.$getCore().name());
-        dos.writeLong(client.$getOnum());
+      if (worker != null) {
+        dos.writeUTF(worker.$getCore().name());
+        dos.writeLong(worker.$getOnum());
       }
       dos.flush();
       return bos.toByteArray();

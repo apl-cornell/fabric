@@ -72,8 +72,8 @@ public abstract class AbstractMap implements Map
                    VALUES = 1,
                    ENTRIES = 2;
 
-  protected static final fabric.client.Core LOCAL_CORE =
-    fabric.client.Client.getClient().getLocalCore();
+  protected static final fabric.worker.Core LOCAL_CORE =
+    fabric.worker.Worker.getWorker().getLocalCore();
 
   /**
    * The cache for {@link #keySet()}.
@@ -271,7 +271,7 @@ public abstract class AbstractMap implements Map
    * there is a slight possibility of creating two sets.
    *
    * @return a Set view of the keys
-   * @see Set#iterator(fabric.client.Core)
+   * @see Set#iterator(fabric.worker.Core)
    * @see #size()
    * @see #containsKey(Object)
    * @see #values()
@@ -305,7 +305,7 @@ public abstract class AbstractMap implements Map
 
 	class KeysIterator implements Iterator
 	{
-	  KeysIterator(fabric.client.Core core) {
+	  KeysIterator(fabric.worker.Core core) {
 	    map_iterator = entrySet().iterator(core);
 	  }
 
@@ -358,7 +358,7 @@ public abstract class AbstractMap implements Map
 	 *
 	 * @return An iterator over the keys.
 	 */
-        public Iterator iterator(final fabric.client.Core core)
+        public Iterator iterator(final fabric.worker.Core core)
         {
           return new KeysIterator@core(core);
         }
@@ -508,7 +508,7 @@ public abstract class AbstractMap implements Map
    * occurs, there is a slight possibility of creating two collections.
    *
    * @return a Collection view of the values
-   * @see Collection#iterator(fabric.client.Core)
+   * @see Collection#iterator(fabric.worker.Core)
    * @see #size()
    * @see #containsValue(Object)
    * @see #keySet()
@@ -543,7 +543,7 @@ public abstract class AbstractMap implements Map
 
 	class ValuesIterator implements Iterator
 	{
-	  ValuesIterator(fabric.client.Core core) {
+	  ValuesIterator(fabric.worker.Core core) {
 	    map_iterator = entrySet().iterator(core);
 	  }
 
@@ -596,7 +596,7 @@ public abstract class AbstractMap implements Map
 	 *
 	 * @return An iterator over the values.
 	 */
-        public Iterator iterator(final fabric.client.Core core)
+        public Iterator iterator(final fabric.worker.Core core)
         {
           return new ValuesIterator@core(core);
         }

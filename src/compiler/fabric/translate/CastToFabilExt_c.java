@@ -29,8 +29,8 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
     FabILNodeFactory nf = (FabILNodeFactory)rw.java_nf();
     
     if (ts.isPrincipal(castType) 
-     && (ts.typeEquals(ts.Client(), exprType) 
-      || ts.typeEquals(ts.RemoteClient(), exprType))
+     && (ts.typeEquals(ts.Worker(), exprType) 
+      || ts.typeEquals(ts.RemoteWorker(), exprType))
       || ts.typeEquals(ts.Core(), exprType)) {
       return nf.Call(c.position(), c.expr(), nf.Id(Position.compilerGenerated(), "getPrincipal"));
     }

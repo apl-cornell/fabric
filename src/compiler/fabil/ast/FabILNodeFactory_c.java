@@ -194,9 +194,9 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   }
 
   @SuppressWarnings("unchecked")
-  public Call Call(Position pos, Receiver target, Id name, Expr remoteClient,
+  public Call Call(Position pos, Receiver target, Id name, Expr remoteWorker,
       List args) {
-    Call n = new FabILCall_c(pos, target, name, remoteClient, args);
+    Call n = new FabILCall_c(pos, target, name, remoteWorker, args);
     n = (Call) n.ext(extFactory().extCall());
     n = (Call) n.del(delFactory().delCall());
     return n;

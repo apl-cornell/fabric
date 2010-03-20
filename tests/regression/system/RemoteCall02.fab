@@ -4,43 +4,43 @@ import jif.runtime.Runtime;
 import java.io.PrintStream;
 
 public class RemoteCall02 {
-  final Core{_->_; client$<-*} core;
+  final Core{_->_; worker$<-*} core;
 
-  final RemoteClient{_->_; client$<-*} remoteClient;
+  final RemoteWorker{_->_; worker$<-*} remoteWorker;
 
-  final RemoteCall02Data[{client$->; client$<-}]{_->_; client$<-*} data;
+  final RemoteCall02Data[{worker$->; worker$<-}]{_->_; worker$<-*} data;
 
   RemoteCall02() {
-    core = client$.getCore("core0");
+    core = worker$.getCore("core0");
 
-    remoteClient = client$("core0");
-	if (core actsfor client$) {
-      data = new RemoteCall02Data[{client$->; client$<-}]@core();
+    remoteWorker = worker$("core0");
+	if (core actsfor worker$) {
+      data = new RemoteCall02Data[{worker$->; worker$<-}]@core();
 	}
 	else {
       data = null;
 	}
   }
 
-  public void moo{client$->;client$<-}(int arg) : {client$->;client$<-} {
+  public void moo{worker$->;worker$<-}(int arg) : {worker$->;worker$<-} {
     if (data == null) return;
     data.i+=arg;
   }
 
-  void run{client$->;client$<-}() {
+  void run{worker$->;worker$<-}() {
     try {
       atomic {
-        if (remoteClient actsfor client$)
-          moo@remoteClient(42);
+        if (remoteWorker actsfor worker$)
+          moo@remoteWorker(42);
       }
 
-      int{client$->; client$<-} curI = 0;
+      int{worker$->; worker$<-} curI = 0;
       atomic {
         if (data == null) return;
         curI = data.i;
       }
 
-      Runtime[client$] runtime = null;
+      Runtime[worker$] runtime = null;
       atomic {
         runtime = Runtime.getRuntime();
       }
@@ -58,11 +58,11 @@ public class RemoteCall02 {
   }
   
   public static void main{_->_; *<-*}(String[] args) {
-    final Core core = client$.getCore("core0");
+    final Core core = worker$.getCore("core0");
     
     RemoteCall02 obj = null;
     atomic {
-      if (core actsfor client$) {
+      if (core actsfor worker$) {
         obj = new RemoteCall02@core();
       }
     }

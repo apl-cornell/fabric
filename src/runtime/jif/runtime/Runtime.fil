@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import fabric.util.LinkedList;
-import fabric.client.Core;
+import fabric.worker.Core;
 
 import jif.lang.*;
 
@@ -20,7 +20,7 @@ public class Runtime {
 
     private Runtime(Principal p) {
         this.dynp = p;
-        this.local = Client.getClient().getLocalCore();
+        this.local = Worker.getWorker().getLocalCore();
     }
 
     /**

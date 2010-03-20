@@ -634,7 +634,7 @@ public class LinkedList extends AbstractSequentialList
    *        next(), or size() to be initially positioned at the end of the list
    * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
    */
-  public ListIterator listIterator(fabric.client.Core core, int index)
+  public ListIterator listIterator(fabric.worker.Core core, int index)
   {
     checkBoundsInclusive(index);
     return new LinkedListItr@core(index);

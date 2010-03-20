@@ -1,7 +1,7 @@
 package fabric.util;
 
 import jif.lang.Label;
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.lang.Object;
 
 public interface AbstractMap extends Map, Object {

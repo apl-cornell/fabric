@@ -5,7 +5,7 @@ import java.util.logging.Logger;
 import fabric.common.exceptions.InternalError;
 
 /**
- * Abstracts remote cores and remote clients.
+ * Abstracts remote cores and remote workers.
  */
 public abstract class RemoteNode {
   final static Logger logger = Logger.getLogger("fabric.messages");

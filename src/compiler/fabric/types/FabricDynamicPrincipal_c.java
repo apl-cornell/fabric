@@ -28,7 +28,7 @@ public class FabricDynamicPrincipal_c extends DynamicPrincipal_c {
     DynamicPrincipal that = (DynamicPrincipal) o;
     
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
-    if (ts.isLocalClientAccessPath(this.path()) && ts.isLocalClientAccessPath(that.path())) {
+    if (ts.isLocalWorkerAccessPath(this.path()) && ts.isLocalWorkerAccessPath(that.path())) {
       return true;
     }
     
@@ -37,7 +37,7 @@ public class FabricDynamicPrincipal_c extends DynamicPrincipal_c {
   
   public PathMap labelCheck(JifContext A, LabelChecker lc) {
     FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
-    if (ts.isLocalClientAccessPath(this.path())) {
+    if (ts.isLocalWorkerAccessPath(this.path())) {
       Label l = ts.thisLabel(this.position(), (JifClassType)A.currentClass());
       return ts.pathMap().N(l).NV(l);
     }

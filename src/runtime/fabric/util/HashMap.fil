@@ -511,7 +511,7 @@ public class HashMap extends AbstractMap
 	  return size;
 	}
 
-	public Iterator iterator(fabric.client.Core core)
+	public Iterator iterator(fabric.worker.Core core)
 	{
 	  // Cannot create the iterator directly, because of LinkedHashMap.
 	  return HashMap.this.iterator(core, KEYS);
@@ -562,7 +562,7 @@ public class HashMap extends AbstractMap
 	  return size;
 	}
 
-	public Iterator iterator(fabric.client.Core core)
+	public Iterator iterator(fabric.worker.Core core)
 	{
 	  // Cannot create the iterator directly, because of LinkedHashMap.
 	  return HashMap.this.iterator(core, VALUES);
@@ -601,7 +601,7 @@ public class HashMap extends AbstractMap
 	  return size;
 	}
 
-	public Iterator iterator(fabric.client.Core core)
+	public Iterator iterator(fabric.worker.Core core)
 	{
 	  // Cannot create the iterator directly, because of LinkedHashMap.
 	  return HashMap.this.iterator(core, ENTRIES);
@@ -693,7 +693,7 @@ public class HashMap extends AbstractMap
    * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
    * @return the appropriate iterator
    */
-  Iterator iterator(fabric.client.Core core, int type)
+  Iterator iterator(fabric.worker.Core core, int type)
   {
     return new HashIterator@core(type);
   }

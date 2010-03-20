@@ -4,8 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.client.RemoteCore;
-import fabric.client.debug.Timing;
+import fabric.worker.RemoteCore;
+import fabric.worker.debug.Timing;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
@@ -20,7 +20,7 @@ public class UnauthenticatedAbortTransactionMessage extends
     }
 
     /**
-     * Deserialization constructor, used by the client.
+     * Deserialization constructor, used by the worker.
      * 
      * @param node
      *          The node from which the response is being read.

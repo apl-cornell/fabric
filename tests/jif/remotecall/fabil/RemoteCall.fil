@@ -1,14 +1,14 @@
 public class RemoteCall extends fabric.lang.Object {
-    final static fabric.client.Client client$ =
-      fabric.client.Client.getClient();
+    final static fabric.worker.Worker worker$ =
+      fabric.worker.Worker.getWorker();
     
     public static void main(final java.lang.String[] args) {
         atomic {
-            fabric.client.Client local = fabric.client.Client.getClient();
+            fabric.worker.Worker local = fabric.worker.Worker.getWorker();
             if (local == null) return;
-            final fabric.client.remote.RemoteClient w = local.getClient("bob");
+            final fabric.worker.remote.RemoteWorker w = local.getWorker("bob");
             if (w == null) return;
-            final fabric.client.Core gaia =
+            final fabric.worker.Core gaia =
               local.getCore("gaia.systems.cs.cornell.edu");
             final fabric.lang.Principal alice = local.getPrincipal();
             final fabric.lang.Principal bob = w.getPrincipal();

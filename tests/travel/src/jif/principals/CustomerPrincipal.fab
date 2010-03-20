@@ -10,7 +10,7 @@ public class CustomerPrincipal extends ExternalPrincipal {
   
   public static CustomerPrincipal{*!:} getInstance{*!:}() {
     atomic {
-      FabricClient cl = FabricClient.getClient();
+      FabricWorker cl = FabricWorker.getWorker();
       if (cl != null) {
         final Core brokerCore = cl.getCore(Config.brokerCoreName);
         if (brokerCore != null) {

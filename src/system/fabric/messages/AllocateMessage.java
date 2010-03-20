@@ -2,9 +2,9 @@ package fabric.messages;
 
 import java.io.*;
 
-import fabric.client.Core;
-import fabric.client.RemoteCore;
-import fabric.client.debug.Timing;
+import fabric.worker.Core;
+import fabric.worker.RemoteCore;
+import fabric.worker.debug.Timing;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
@@ -27,7 +27,7 @@ public final class AllocateMessage extends
     }
 
     /**
-     * Deserialization constructor, used by the client.
+     * Deserialization constructor, used by the worker.
      * 
      * @param core
      *                The core from which the response is being read.
@@ -82,7 +82,7 @@ public final class AllocateMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#send(fabric.client.Core, boolean)
+   * @see fabric.messages.Message#send(fabric.worker.Core, boolean)
    */
   public Response send(RemoteCore core) throws UnreachableNodeException {
     try {

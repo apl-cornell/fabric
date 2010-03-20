@@ -6,7 +6,7 @@ public class Atomic01 {
       atomic {
 	throw new MyException();
       }
-    } catch (fabric.client.AbortException e) {
+    } catch (fabric.worker.AbortException e) {
       if (e.getCause() instanceof MyException) {
         System.out.println("TEST PASSED.");
         return;

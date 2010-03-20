@@ -23,16 +23,16 @@ public class ConstructorDeclToFabilExt_c extends ConstructorDeclToJavaExt_c {
 
         List<Stmt> stmts = new ArrayList<Stmt>(md.body().statements().size() + 1);
         
-//        TypeNode client = nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Client());
+//        TypeNode worker = nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Worker());
 //        stmts.add(nf.LocalDecl(Position.compilerGenerated(), 
 //                               Flags.FINAL, 
-//                               client, 
+//                               worker, 
 //                               nf.Id(Position.compilerGenerated(), 
-//                                     "client$"),
+//                                     "worker$"),
 //                               nf.Call(Position.compilerGenerated(), 
-//                                       client, 
+//                                       worker, 
 //                                       nf.Id(Position.compilerGenerated(), 
-//                                             "getClient"))));
+//                                             "getWorker"))));
         stmts.addAll(md.body().statements());
         
         return md.body(nf.Block(md.body().position(), stmts));

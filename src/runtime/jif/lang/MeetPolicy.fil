@@ -1,7 +1,7 @@
 package jif.lang;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 import fabric.util.*;
 
 /**
@@ -11,7 +11,7 @@ import fabric.util.*;
  */
 public abstract class MeetPolicy extends AbstractPolicy implements Policy {
   private Set components; // Set of Policies
-  public final Core localCore = Client.getClient().getLocalCore();
+  public final Core localCore = Worker.getWorker().getLocalCore();
 
   MeetPolicy(Set policies) {
     // Copy the contents into a linked hash set so we can sign these policies.

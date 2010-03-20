@@ -173,7 +173,7 @@ public interface Set extends Collection
    *
    * @return a set iterator
    */
-  Iterator iterator(fabric.client.Core core);
+  Iterator iterator(fabric.worker.Core core);
 
   /**
    * Returns a local iterator over the set. The iterator has no specific order,

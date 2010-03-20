@@ -27,14 +27,14 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
 //      List formalTypes = result.methodInstance().formalTypes();
 //      if(formalTypes.size() <= 0 || !formalTypes.get(0).equals(((FabricTypeSystem)rw.typeSystem()).Label())) 
 //        throw new SemanticException("Method " + result.id() + " cannot be called remotely since its first argument is not of label type");
-      if (c.remoteClient() != null) {
+      if (c.remoteWorker() != null) {
         result = (FabILCall)result.name(result.name() + "_remote");
-        result = result.remoteClient(c.remoteClient());
+        result = result.remoteWorker(c.remoteWorker());
         List<Expr> args = new ArrayList<Expr>(result.arguments().size());
         // The first argument is actually a principal.
         args.add(nf.Call(Position.compilerGenerated(),
-                         rw.qq().parseExpr("client$"),
-//                         nf.Local(Position.compilerGenerated(), nf.Id(Position.compilerGenerated(), "client$")), 
+                         rw.qq().parseExpr("worker$"),
+//                         nf.Local(Position.compilerGenerated(), nf.Id(Position.compilerGenerated(), "worker$")), 
                          nf.Id(Position.compilerGenerated(), "getPrincipal")));
 //        args.addAll(result.arguments().subList(1, result.arguments().size()));
         args.addAll(result.arguments());

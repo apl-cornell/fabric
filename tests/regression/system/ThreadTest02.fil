@@ -1,7 +1,7 @@
 package system;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 
 /**
  * Tests two top-level transactions with conflicting accesses.
@@ -10,7 +10,7 @@ public class ThreadTest02 {
   int i = 0;
 
   public static void main(String[] args) {
-    Core core = Client.getClient().getCore("core0");
+    Core core = Worker.getWorker().getCore("core0");
     ThreadTest02 state;
     T thread;
 
@@ -19,7 +19,7 @@ public class ThreadTest02 {
       thread = new T@core(state);
     }
 
-    fabric.client.transaction.TransactionManager.getInstance().startThread(thread);
+    fabric.worker.transaction.TransactionManager.getInstance().startThread(thread);
 
     atomic {
       System.out.println("Thread 1: writing shared state.");

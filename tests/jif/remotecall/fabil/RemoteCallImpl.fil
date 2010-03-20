@@ -1,19 +1,19 @@
 public class RemoteCallImpl extends fabric.lang.Object {
-    final static fabric.client.Client client$ =
-      fabric.client.Client.getClient();
+    final static fabric.worker.Worker worker$ =
+      fabric.worker.Worker.getWorker();
     
     public int m1(final int x) { return x + 1; }
     
-    public int m1_remote(final fabric.lang.Principal client$principal,
+    public int m1_remote(final fabric.lang.Principal worker$principal,
                          final int x) {
         if (jif.lang.LabelUtil.relabelsTo(
               jif.lang.LabelUtil.toLabel(
                 jif.lang.LabelUtil.bottomConf(),
                 jif.lang.LabelUtil.writerPolicy(
-                  jif.lang.PrincipalUtil.topPrincipal(), client$principal)),
+                  jif.lang.PrincipalUtil.topPrincipal(), worker$principal)),
               jif.lang.LabelUtil.toLabel(
                 jif.lang.LabelUtil.readerPolicy(
-                  jif.lang.PrincipalUtil.topPrincipal(), client$principal),
+                  jif.lang.PrincipalUtil.topPrincipal(), worker$principal),
                 jif.lang.LabelUtil.writerPolicy(
                   this.jif$RemoteCallImpl_alice,
                   jif.lang.PrincipalUtil.topPrincipal()))))
@@ -22,24 +22,24 @@ public class RemoteCallImpl extends fabric.lang.Object {
     }
     
     public void m2() {
-        fabric.client.Client local = fabric.client.Client.getClient();
+        fabric.worker.Worker local = fabric.worker.Worker.getWorker();
         if (local == null) return;
-        final fabric.client.remote.RemoteClient w = local.getClient("bob");
+        final fabric.worker.remote.RemoteWorker w = local.getWorker("bob");
         if (jif.lang.PrincipalUtil.actsFor(w.getPrincipal(),
                                            this.jif$RemoteCallImpl_bob)) {
-            int y = this.m1_remote@w(client$.getPrincipal(), 1);
+            int y = this.m1_remote@w(worker$.getPrincipal(), 1);
         }
     }
     
-    public void m2_remote(final fabric.lang.Principal client$principal) {
+    public void m2_remote(final fabric.lang.Principal worker$principal) {
         if (jif.lang.LabelUtil.relabelsTo(
               jif.lang.LabelUtil.toLabel(
                 jif.lang.LabelUtil.bottomConf(),
                 jif.lang.LabelUtil.writerPolicy(
-                  jif.lang.PrincipalUtil.topPrincipal(), client$principal)),
+                  jif.lang.PrincipalUtil.topPrincipal(), worker$principal)),
               jif.lang.LabelUtil.toLabel(
                 jif.lang.LabelUtil.readerPolicy(
-                  jif.lang.PrincipalUtil.topPrincipal(), client$principal),
+                  jif.lang.PrincipalUtil.topPrincipal(), worker$principal),
                 jif.lang.LabelUtil.writerPolicy(
                   this.jif$RemoteCallImpl_alice,
                   jif.lang.PrincipalUtil.topPrincipal()))))

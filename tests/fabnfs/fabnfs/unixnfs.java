@@ -1,6 +1,6 @@
 package fabnfs;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabnfs.util.FileSystemFactory;
 
 //

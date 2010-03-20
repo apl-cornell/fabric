@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import fabric.client.RemoteCore;
-import fabric.client.debug.Timing;
+import fabric.worker.RemoteCore;
+import fabric.worker.debug.Timing;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
@@ -30,8 +30,8 @@ public class UnauthenticatedPrepareTransactionMessage extends
     public final String message;
 
     /**
-     * If the remote node is a core, this will indicate whether the client
-     * should send a commit/abort message to the core's client to commit/abort a
+     * If the remote node is a core, this will indicate whether the worker
+     * should send a commit/abort message to the core's worker to commit/abort a
      * sub-transaction. (This happens when Statistics objects are created during
      * transaction prepare.)
      */
@@ -75,7 +75,7 @@ public class UnauthenticatedPrepareTransactionMessage extends
     }
 
     /**
-     * Deserialization constructor, used by the client.
+     * Deserialization constructor, used by the worker.
      * 
      * @param node
      *          The node from which the response is being read.
@@ -128,41 +128,41 @@ public class UnauthenticatedPrepareTransactionMessage extends
 
   /**
    * The objects created during the transaction, unserialized. This will only be
-   * non-null on the client. The core should use the
+   * non-null on the worker. The core should use the
    * <code>serializedCreates</code> field instead.
    */
   public final Collection<_Impl> creates;
 
   /**
    * The objects created during the transaction, serialized. This will only be
-   * non-null on the core. The client should use the <code>creates</code> field
+   * non-null on the core. The worker should use the <code>creates</code> field
    * instead.
    */
   public final Collection<SerializedObject> serializedCreates;
 
   /**
    * The objects modified during the transaction, unserialized. This will only
-   * be non-null on the client. The core should use the
+   * be non-null on the worker. The core should use the
    * <code>serializedWrites</code> field instead.
    */
   public final Collection<_Impl> writes;
 
   /**
    * The objects modified during the transaction, serialized. This will only be
-   * non-null on the core. The client should use the <code>writes</code> field
+   * non-null on the core. The worker should use the <code>writes</code> field
    * instead.
    */
   public final Collection<SerializedObject> serializedWrites;
 
   /**
-   * Used to prepare transactions at remote clients.
+   * Used to prepare transactions at remote workers.
    */
   public UnauthenticatedPrepareTransactionMessage(long tid, long commitTime) {
     this(tid, commitTime, null, null, null);
   }
 
   /**
-   * Only used by the client.
+   * Only used by the worker.
    */
   public UnauthenticatedPrepareTransactionMessage(long tid, long commitTime,
       Collection<_Impl> toCreate, LongKeyMap<Integer> reads,

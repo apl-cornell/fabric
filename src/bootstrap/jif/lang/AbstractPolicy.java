@@ -1,6 +1,6 @@
 package jif.lang;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.net.UnreachableNodeException;
 import fabric.lang.Object;
 

@@ -10,20 +10,20 @@ import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import fabric.client.transaction.TransactionManager;
+import fabric.worker.transaction.TransactionManager;
 import fabric.common.exceptions.InternalError;
 import fabric.messages.Message;
 
 /**
  * Abstracts a message-handler thread for processing messages. This implements
  * FabricThread for performance reasons. It will be calling into the in-process
- * client to perform access control.
+ * worker to perform access control.
  */
 public abstract class AbstractMessageHandlerThread<Session extends AbstractMessageHandlerThread.SessionAttributes, MessageHandlerThread extends AbstractMessageHandlerThread<Session, MessageHandlerThread>>
     extends FabricThread.AbstractImpl implements MessageHandler {
   private final String threadName;
 
-  // The I/O streams for communicating with the client.
+  // The I/O streams for communicating with the worker.
   private DataInputStream in;
   private DataOutputStream out;
 
@@ -64,7 +64,7 @@ public abstract class AbstractMessageHandlerThread<Session extends AbstractMessa
    * The main execution body of the message-handler thread. This is a wrapper
    * for <code>run_</code> to ensure that all exceptions are properly handled
    * and that the <code>Node</code> is properly notified when this handler is
-   * finished with a client.
+   * finished with a worker.
    */
   @SuppressWarnings("unchecked")
   @Override
@@ -135,8 +135,8 @@ public abstract class AbstractMessageHandlerThread<Session extends AbstractMessa
 
   /**
    * Initialises this message handler to handle the given session and signals
-   * this thread to start processing the client's requests. This is invoked by a
-   * <code>ConnectionHandler.CallbackHandler</code> to hand off a client request
+   * this thread to start processing the worker's requests. This is invoked by a
+   * <code>ConnectionHandler.CallbackHandler</code> to hand off a worker request
    * to this handler.
    */
   public final synchronized void associateSession(Session session) {

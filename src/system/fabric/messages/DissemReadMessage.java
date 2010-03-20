@@ -4,7 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.client.RemoteCore;
+import fabric.worker.RemoteCore;
 import fabric.common.exceptions.*;
 import fabric.common.exceptions.InternalError;
 import fabric.core.MessageHandlerThread;
@@ -12,7 +12,7 @@ import fabric.dissemination.Glob;
 
 /**
  * A <code>DissemReadMessage</code> represents a request from a dissemination
- * node to read an object at a core. This implicitly subscribes the client to
+ * node to read an object at a core. This implicitly subscribes the worker to
  * receive the next update to the object.
  */
 public final class DissemReadMessage extends
@@ -29,7 +29,7 @@ public final class DissemReadMessage extends
     }
 
     /**
-     * Deserialization constructor, used by the client.
+     * Deserialization constructor, used by the worker.
      * 
      * @param core
      *                The core from which the response is being read.
@@ -63,7 +63,7 @@ public final class DissemReadMessage extends
   public final long onum;
 
   /**
-   * Creates a read request for a client.
+   * Creates a read request for a worker.
    */
   public DissemReadMessage(long onum) {
     super(MessageType.DISSEM_READ_ONUM);
@@ -90,7 +90,7 @@ public final class DissemReadMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#send(fabric.client.Core, boolean)
+   * @see fabric.messages.Message#send(fabric.worker.Core, boolean)
    */
   public Response send(RemoteCore core) throws FetchException {
     try {

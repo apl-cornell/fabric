@@ -2,8 +2,8 @@ package jif.lang;
 
 import jif.lang.Label;
 import jif.lang.PrincipalUtil;
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 import fabric.util.*;
 
 /**
@@ -31,7 +31,7 @@ public final class LabelUtil {
 //
 //  private static ThreadLocal statsPerThread = new ThreadLocal() {
 //    protected Object initialValue() {
-//      Core core = Client.getClient().getLocalCore();
+//      Core core = Worker.getWorker().getLocalCore();
 //      return new Stats@core();
 //    }
 //  };
@@ -39,7 +39,7 @@ public final class LabelUtil {
 
   public static final boolean USE_CACHING = false;
   
-  public static final LocalCore localCore = Client.getClient().getLocalCore();
+  public static final LocalCore localCore = Worker.getWorker().getLocalCore();
 
   // caches
   private static Set/* <Pair> */cacheTrueLabelRelabels = new HashSet/* <Pair> */();

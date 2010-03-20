@@ -233,7 +233,7 @@ public interface Date
         }
         
         public _Proxy(fabric.
-                        client.
+                        worker.
                         Core core,
                       long onum) {
             super(core,
@@ -252,7 +252,7 @@ public interface Date
         public int
           get$year(
           ) {
-            fabric.client.transaction.TransactionManager.
+            fabric.worker.transaction.TransactionManager.
               getInstance().
               registerRead(
               this);
@@ -264,10 +264,10 @@ public interface Date
           set$year(
           int val) {
             fabric.
-              client.
+              worker.
               transaction.
               TransactionManager tm =
-              fabric.client.transaction.TransactionManager.
+              fabric.worker.transaction.TransactionManager.
                 getInstance();
             boolean transactionCreated =
               tm.
@@ -349,7 +349,7 @@ public interface Date
         }
         
         public _Impl(fabric.
-                       client.
+                       worker.
                        Core $location,
                      jif.
                        lang.
@@ -475,7 +475,7 @@ public interface Date
         }
         
         public _Impl(fabric.
-                       client.
+                       worker.
                        Core core,
                      long onum,
                      int version,
@@ -564,8 +564,8 @@ public interface Date
               Cloneable
     {
         
-        public fabric.client.Client
-          get$client$(
+        public fabric.worker.Worker
+          get$worker$(
           );
         
         final class _Proxy
@@ -579,8 +579,8 @@ public interface Date
                        _Static
         {
             
-            public fabric.client.Client
-              get$client$(
+            public fabric.worker.Worker
+              get$worker$(
               ) {
                 return ((fabricated.
                           util.
@@ -588,7 +588,7 @@ public interface Date
                           _Static.
                           _Impl)
                           fetch()).
-                         get$client$();
+                         get$worker$();
             }
             
             public java.lang.String
@@ -636,7 +636,7 @@ public interface Date
             }
             
             public _Proxy(fabric.
-                            client.
+                            worker.
                             Core core,
                           long onum) {
                 super(core,
@@ -690,15 +690,15 @@ public interface Date
                        _Static
         {
             
-            public fabric.client.Client
-              get$client$(
+            public fabric.worker.Worker
+              get$worker$(
               ) {
                 return this.
-                         client$;
+                         worker$;
             }
             
-            fabric.client.Client
-              client$;
+            fabric.worker.Worker
+              worker$;
             
             public java.lang.String
               get$jlc$CompilerVersion$fabric(
@@ -731,13 +731,13 @@ public interface Date
               jlc$ClassType$fabric;
             
             public _Impl(fabric.
-                           client.
+                           worker.
                            Core core,
                          jif.
                            lang.
                            Label label)
                   throws fabric.
-              client.
+              worker.
               UnreachableNodeException {
                 super(core,
                       label);
@@ -768,17 +768,17 @@ public interface Date
                                       ) {
                             $commit1 =
                               true;
-                            fabric.client.transaction.TransactionManager.
+                            fabric.worker.transaction.TransactionManager.
                               getInstance().
                               startTransaction();
                             try {
                                 this.
-                                  client$ =
-                                  fabric.client.Client.
-                                    getClient();
+                                  worker$ =
+                                  fabric.worker.Worker.
+                                    getWorker();
                             }
                             catch (final fabric.
-                                     client.
+                                     worker.
                                      RetryException $e2) {
                                 $commit1 =
                                   false;
@@ -788,25 +788,25 @@ public interface Date
                                 $commit1 =
                                   false;
                                 throw new fabric.
-                                  client.
+                                  worker.
                                   AbortException(
                                   $e2);
                             }
                             finally {
                                 if ($commit1) {
                                     try {
-                                        fabric.client.transaction.TransactionManager.
+                                        fabric.worker.transaction.TransactionManager.
                                           getInstance().
                                           commitTransaction();
                                     }
                                     catch (final fabric.
-                                             client.
+                                             worker.
                                              AbortException $e2) {
                                         $commit1 =
                                           false;
                                     }
                                 } else {
-                                    fabric.client.transaction.TransactionManager.
+                                    fabric.worker.transaction.TransactionManager.
                                       getInstance().
                                       abortTransaction();
                                 }

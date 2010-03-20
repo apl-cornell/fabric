@@ -12,7 +12,7 @@ public class Main {
     startTxImpl{CustomerPrincipal←; BankPrincipal←}(
           float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amount,
           Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←; BankPrincipal←} broker,
-          RemoteClient{CustomerPrincipal←; BankPrincipal←} bclient)
+          RemoteWorker{CustomerPrincipal←; BankPrincipal←} bworker)
     where broker actsfor BankPrincipal,
           broker actsfor broker.airline,
           broker.airlineAcct.user equiv AirlinePrincipal,
@@ -23,8 +23,8 @@ public class Main {
 
       atomic {
           try {
-              if (broker != null && bclient actsfor BankPrincipal && bclient actsfor broker) {
-                  broker.coordinatePurchase@bclient(amount);
+              if (broker != null && bworker actsfor BankPrincipal && bworker actsfor broker) {
+                  broker.coordinatePurchase@bworker(amount);
                   returnBool = true;
               }
           } catch (PurchasingError e) {returnBool = false;}
@@ -37,7 +37,7 @@ public class Main {
     startTx{CustomerPrincipal←}(
           float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←} amount,
           Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←} broker,
-          RemoteClient{CustomerPrincipal←} bclient) {
+          RemoteWorker{CustomerPrincipal←} bworker) {
 
         boolean returnBool = false;
         if (broker != null 
@@ -49,7 +49,7 @@ public class Main {
                 && broker.customerAcct.user equiv CustomerPrincipal
                 && broker.airline equiv AirlinePrincipal
                 && broker actsfor CustomerPrincipal) {
-            returnBool = startTxImpl(amount, broker, bclient);
+            returnBool = startTxImpl(amount, broker, bworker);
         } else {
             returnBool = false;
         }

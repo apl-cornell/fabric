@@ -4,9 +4,9 @@ import java.security.PrivateKey;
 import java.util.*;
 
 import jif.lang.Label;
-import fabric.client.*;
-import fabric.client.Client.Code;
-import fabric.client.remote.RemoteClient;
+import fabric.worker.*;
+import fabric.worker.Worker.Code;
+import fabric.worker.remote.RemoteWorker;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
@@ -58,22 +58,22 @@ public class TransactionManager {
   /**
    * Instruct the transaction manager that the given transaction is aborting
    */
-  public void abortTransaction(NodePrincipal client, long transactionID)
+  public void abortTransaction(NodePrincipal worker, long transactionID)
       throws AccessException {
     synchronized (database) {
-      database.rollback(transactionID, client);
+      database.rollback(transactionID, worker);
     }
   }
 
   /**
    * Execute the commit phase of two phase commit.
    */
-  public void commitTransaction(RemoteClient clientNode,
-      NodePrincipal clientPrincipal, long transactionID)
+  public void commitTransaction(RemoteWorker workerNode,
+      NodePrincipal workerPrincipal, long transactionID)
       throws TransactionCommitFailedException {
     synchronized (database) {
       try {
-        database.commit(transactionID, clientNode, clientPrincipal, sm);
+        database.commit(transactionID, workerNode, workerPrincipal, sm);
       } catch (final AccessException e) {
         throw new TransactionCommitFailedException("Insufficient Authorization");
       } catch (final RuntimeException e) {
@@ -97,7 +97,7 @@ public class TransactionManager {
    * <li>Neither creates, updates, nor reads can have pending commits, i.e. none
    * of them can contain objects for which other transactions have been prepared
    * but not committed or aborted.</li>
-   * <li>The client has appropriate permissions to read/write/create</li>
+   * <li>The worker has appropriate permissions to read/write/create</li>
    * <li>Created objects don't already exist</li>
    * <li>Updated objects cannot have been read since the proposed commit time.</li>
    * <li>Updated objects do not have valid outstanding promises</li>
@@ -107,30 +107,30 @@ public class TransactionManager {
    * </ul>
    * </p>
    * 
-   * @param client
-   *          The client requesting the prepare
+   * @param worker
+   *          The worker requesting the prepare
    * @return whether a subtransaction was created for making Statistics objects.
    * @throws TransactionPrepareFailedException
-   *           If the transaction would cause a conflict or if the client is
+   *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public boolean prepare(NodePrincipal client, PrepareRequest req)
+  public boolean prepare(NodePrincipal worker, PrepareRequest req)
       throws TransactionPrepareFailedException {
     final long tid = req.tid;
     boolean result = false;
 
     // First, check read and write permissions. We do this before we attempt to
     // do the actual prepare because we want to run the permissions check in a
-    // transaction outside of the client's transaction.
-    Core core = Client.getClient().getCore(database.getName());
-    if (client == null || client.$getCore() != core
-        || client.$getOnum() != ONumConstants.CORE_PRINCIPAL) {
-      checkPerms(client, req.reads.keySet(), req.writes);
+    // transaction outside of the worker's transaction.
+    Core core = Worker.getWorker().getCore(database.getName());
+    if (worker == null || worker.$getCore() != core
+        || worker.$getOnum() != ONumConstants.CORE_PRINCIPAL) {
+      checkPerms(worker, req.reads.keySet(), req.writes);
     }
 
     synchronized (database) {
       try {
-        database.beginTransaction(tid, client);
+        database.beginTransaction(tid, worker);
       } catch (final AccessException e) {
         throw new TransactionPrepareFailedException("Insufficient privileges");
       }
@@ -155,7 +155,7 @@ public class TransactionManager {
           coreCopy = database.read(onum);
 
           // Register the update with the database.
-          database.registerUpdate(tid, client, o);
+          database.registerUpdate(tid, worker, o);
         }
 
         // check promises
@@ -166,8 +166,8 @@ public class TransactionManager {
 
         // Check version numbers.
         int coreVersion = coreCopy.getVersion();
-        int clientVersion = o.getVersion();
-        if (coreVersion != clientVersion) {
+        int workerVersion = o.getVersion();
+        if (coreVersion != workerVersion) {
           versionConflicts.put(onum, coreCopy);
           continue;
         }
@@ -207,7 +207,7 @@ public class TransactionManager {
           // Set the initial version number and register the update with the
           // database.
           o.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
-          database.registerUpdate(tid, client, o);
+          database.registerUpdate(tid, worker, o);
         }
       }
 
@@ -242,7 +242,7 @@ public class TransactionManager {
           result |= pair.second;
 
           // Register the read with the database.
-          database.registerRead(tid, client, onum);
+          database.registerRead(tid, worker, onum);
         }
       }
 
@@ -251,35 +251,35 @@ public class TransactionManager {
       }
 
       // readHistory.record(req);
-      database.finishPrepare(tid, client);
+      database.finishPrepare(tid, worker);
 
       return result;
     } catch (TransactionPrepareFailedException e) {
       synchronized (database) {
-        database.abortPrepare(tid, client);
+        database.abortPrepare(tid, worker);
         throw e;
       }
     } catch (RuntimeException e) {
       synchronized (database) {
         e.printStackTrace();
-        database.abortPrepare(tid, client);
+        database.abortPrepare(tid, worker);
         throw e;
       }
     }
   }
 
   /**
-   * Checks that the client principal has permissions to read/write the given
+   * Checks that the worker principal has permissions to read/write the given
    * objects. If it doesn't, a TransactionPrepareFailedException is thrown.
    */
-  private void checkPerms(final NodePrincipal client, final LongSet reads,
+  private void checkPerms(final NodePrincipal worker, final LongSet reads,
       final Collection<SerializedObject> writes)
       throws TransactionPrepareFailedException {
     // The code that does the actual checking.
     Code<TransactionPrepareFailedException> checker =
         new Code<TransactionPrepareFailedException>() {
           public TransactionPrepareFailedException run() {
-            Core core = Client.getClient().getCore(database.getName());
+            Core core = Worker.getWorker().getCore(database.getName());
 
             for (LongIterator it = reads.iterator(); it.hasNext();) {
               long onum = it.next();
@@ -290,7 +290,7 @@ public class TransactionManager {
               Label label = coreCopy.get$label();
 
               // Check read permissions.
-              if (!AuthorizationUtil.isReadPermitted(client, label.$getCore(),
+              if (!AuthorizationUtil.isReadPermitted(worker, label.$getCore(),
                   label.$getOnum())) {
                 return new TransactionPrepareFailedException("Insufficient "
                     + "privileges to read object " + onum);
@@ -306,7 +306,7 @@ public class TransactionManager {
               Label label = coreCopy.get$label();
 
               // Check write permissions.
-              if (!AuthorizationUtil.isWritePermitted(client, label.$getCore(),
+              if (!AuthorizationUtil.isWritePermitted(worker, label.$getCore(),
                   label.$getOnum())) {
                 return new TransactionPrepareFailedException("Insufficient "
                     + "privileges to write object " + onum);
@@ -318,7 +318,7 @@ public class TransactionManager {
         };
 
     TransactionPrepareFailedException failure =
-        Client.runInTransaction(null, checker);
+        Worker.runInTransaction(null, checker);
 
     if (failure != null) throw failure;
   }
@@ -329,14 +329,14 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics. Can be null.
    * @param subscriber
-   *          If non-null, then the given client will be subscribed to the
+   *          If non-null, then the given worker will be subscribed to the
    *          object.
    * @param dissemSubscribe
    *          True if the subscriber is a dissemination node; false if it's a
-   *          client.
+   *          worker.
    */
   GroupContainer getGroupContainerAndSubscribe(long onum,
-      RemoteClient subscriber, boolean dissemSubscribe, MessageHandlerThread handler)
+      RemoteWorker subscriber, boolean dissemSubscribe, MessageHandlerThread handler)
       throws AccessException {
     GroupContainer container;
     synchronized (database) {
@@ -354,7 +354,7 @@ public class TransactionManager {
     ObjectGroup group = readGroup(onum, handler);
     if (group == null) throw new AccessException(database.getName(), onum);
 
-    Core core = Client.getClient().getCore(database.getName());
+    Core core = Worker.getWorker().getCore(database.getName());
     container = new GroupContainer(core, signingKey, group);
 
     // Cache the container.
@@ -373,12 +373,12 @@ public class TransactionManager {
    * Returns a Glob containing the specified object.
    * 
    * @param subscriber
-   *          If non-null, then the given client will be subscribed to the
+   *          If non-null, then the given worker will be subscribed to the
    *          object as a dissemination node.
    * @param handler
    *          Used to track read statistics.
    */
-  public Glob getGlob(long onum, RemoteClient subscriber, MessageHandlerThread handler)
+  public Glob getGlob(long onum, RemoteWorker subscriber, MessageHandlerThread handler)
       throws AccessException {
     return getGroupContainerAndSubscribe(onum, subscriber, true, handler)
         .getGlob();
@@ -390,14 +390,14 @@ public class TransactionManager {
    * @param principal
    *          The principal performing the read.
    * @param subscriber
-   *          If non-null, then the given client will be subscribed to the
-   *          object as a client.
+   *          If non-null, then the given worker will be subscribed to the
+   *          object as a worker.
    * @param onum
    *          The onum for an object that should be in the group.
    * @param handler
    *          Used to track read statistics.
    */
-  public ObjectGroup getGroup(NodePrincipal principal, RemoteClient subscriber,
+  public ObjectGroup getGroup(NodePrincipal principal, RemoteWorker subscriber,
       long onum, MessageHandlerThread handler) throws AccessException {
     ObjectGroup group =
         getGroupContainerAndSubscribe(onum, subscriber, false, handler)
@@ -453,7 +453,7 @@ public class TransactionManager {
 
         // Ensure that the related object's label is the same as the head
         // object's label. We could be smarter here, but to avoid calling into
-        // the client, let's hope pointer-equality is sufficient.
+        // the worker, let's hope pointer-equality is sufficient.
         long relatedLabelOnum = related.getLabelOnum();
         if (headLabelOnum != relatedLabelOnum) continue;
 
@@ -483,7 +483,7 @@ public class TransactionManager {
       if (history != null) {
         int promise = history.generatePromise();
         if (promise > 0) {
-          NodePrincipal client = Client.getClient().getPrincipal();
+          NodePrincipal worker = Worker.getWorker().getPrincipal();
           synchronized (database) {
             // create a promise
 
@@ -500,13 +500,13 @@ public class TransactionManager {
                 // update the promise
                 newObj.setExpiry(now + promise);
                 long tid = rand.nextLong();
-                database.beginTransaction(tid, client);
-                database.registerUpdate(tid, client, newObj);
-                database.finishPrepare(tid, client);
-                database.commit(tid, null, client, sm);
+                database.beginTransaction(tid, worker);
+                database.registerUpdate(tid, worker, newObj);
+                database.finishPrepare(tid, worker);
+                database.commit(tid, null, worker, sm);
               } catch (AccessException exc) {
                 // TODO: this should probably use the core principal instead of
-                // the client principal, and AccessExceptions should be
+                // the worker principal, and AccessExceptions should be
                 // impossible
                 return obj;
               }
@@ -545,10 +545,10 @@ public class TransactionManager {
     // if (fresh) {
     // // set up to run as a sub-transaction of the current transaction.
     // TransactionID tid = new TransactionID(tnum);
-    // Core local = Client.getClient().getCore(database.getName());
+    // Core local = Worker.getWorker().getCore(database.getName());
     // final fabric.lang.Object._Proxy object =
     // new fabric.lang.Object._Proxy(local, onum);
-    // stats = Client.runInTransaction(tid, new Client.Code<Statistics>() {
+    // stats = Worker.runInTransaction(tid, new Worker.Code<Statistics>() {
     // public Statistics run() {
     // return object.createStatistics();
     // }
@@ -563,7 +563,7 @@ public class TransactionManager {
    * @throws AccessException
    *           if the principal is not allowed to create objects on this core.
    */
-  public long[] newOnums(NodePrincipal client, int num) throws AccessException {
+  public long[] newOnums(NodePrincipal worker, int num) throws AccessException {
     synchronized (database) {
       return database.newOnums(num);
     }

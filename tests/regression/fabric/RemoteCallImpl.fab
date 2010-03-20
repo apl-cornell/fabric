@@ -3,9 +3,9 @@ public class RemoteCallImpl[principal alice, principal bob] {
         return x+1;
     }
     public void m2{alice←} () { 
-        FabricClient local = FabricClient.getClient();
+        FabricWorker local = FabricWorker.getWorker();
         if (local == null) return;
-        final RemoteClient w = local.getClient("bob");
+        final RemoteWorker w = local.getWorker("bob");
         if (w actsfor bob) {
             int{alice→} y = m1@w(1);
         }

@@ -6,9 +6,9 @@ import java.security.*;
 import javax.crypto.*;
 
 import jif.lang.Label;
-import fabric.client.Client;
-import fabric.client.Core;
-import fabric.client.Client.Code;
+import fabric.worker.Worker;
+import fabric.worker.Core;
+import fabric.worker.Worker.Code;
 import fabric.common.*;
 import fabric.common.exceptions.BadSignatureException;
 import fabric.common.exceptions.InternalError;
@@ -144,7 +144,7 @@ public class Glob implements FastSerializable {
       throws GeneralSecurityException {
     byte[] key = null;
     if (keyObject != null) {
-      key = Client.runInSubTransaction(new Code<SecretKey>() {
+      key = Worker.runInSubTransaction(new Code<SecretKey>() {
         public SecretKey run() {
           return keyObject.getKey();
         }
@@ -252,7 +252,7 @@ public class Glob implements FastSerializable {
       BadSignatureException {
     this.timestamp = in.readLong();
     if (in.readBoolean()) {
-      Core core = Client.getClient().getCore(in.readUTF());
+      Core core = Worker.getWorker().getCore(in.readUTF());
       this.keyObject = new SecretKeyObject._Proxy(core, in.readLong());
     } else this.keyObject = null;
 

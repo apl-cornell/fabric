@@ -10,8 +10,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import fabric.client.Client;
-import fabric.client.Core;
+import fabric.worker.Worker;
+import fabric.worker.Core;
 
 import sif.html.*;
 
@@ -37,12 +37,12 @@ abstract public class Servlet extends HttpServlet {
     
     static {
       try {
-        Client.initialize("gaia.systems.cs.cornell.edu");
+        Worker.initialize("gaia.systems.cs.cornell.edu");
       } catch(IllegalStateException e) {
         // TODO: need to fix this up
-        // do nothing, client already initialized.
+        // do nothing, worker already initialized.
       } catch (final Exception e) {
-        System.out.println("Fabric: Client unable to initialize");
+        System.out.println("Fabric: Worker unable to initialize");
       }      
     }
 
@@ -306,9 +306,9 @@ abstract public class Servlet extends HttpServlet {
 
 
     Label trustedBySessionLabel(final Request req) {
-      return Client.runInSubTransaction(new fabric.client.Client.Code<Label>() {
+      return Worker.runInSubTransaction(new fabric.worker.Worker.Code<Label>() {
         public Label run() {
-          Core local = Client.getClient().getLocalCore();
+          Core local = Worker.getWorker().getLocalCore();
           return LabelUtil._Impl.writerPolicyLabel(local, req.session, req.session);        
         }
       });
@@ -520,9 +520,9 @@ abstract public class Servlet extends HttpServlet {
 
 
     private Label sessionPrincipalLabel(final SessionPrincipal pp) {
-      return Client.runInSubTransaction(new fabric.client.Client.Code<Label>() {
+      return Worker.runInSubTransaction(new fabric.worker.Worker.Code<Label>() {
         public Label run() {
-          Core local = Client.getClient().getLocalCore();
+          Core local = Worker.getWorker().getLocalCore();
           return LabelUtil._Impl.readerPolicyLabel(local, pp, pp);
         }
       });
@@ -544,9 +544,9 @@ abstract public class Servlet extends HttpServlet {
         return getOutputChannelBound(request.session);
     }
     public static Label getOutputChannelBound(final Principal session) {
-      return Client.runInSubTransaction(new fabric.client.Client.Code<Label>() {
+      return Worker.runInSubTransaction(new fabric.worker.Worker.Code<Label>() {
         public Label run() {
-          Core local = Client.getClient().getLocalCore();
+          Core local = Worker.getWorker().getLocalCore();
           return LabelUtil._Impl.toLabel(local, PrincipalUtil._Impl.readableByPrinPolicy(local,session));
         }
       });

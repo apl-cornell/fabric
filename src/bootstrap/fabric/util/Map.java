@@ -1,6 +1,6 @@
 package fabric.util;
 
-import fabric.client.Core;
+import fabric.worker.Core;
 import fabric.lang.Object;
 
 public interface Map extends Object {
