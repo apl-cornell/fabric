@@ -1,11 +1,11 @@
 package jif.lang;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 public interface ConfPolicy extends Policy {
   public static class _Proxy extends Policy._Proxy implements ConfPolicy {
-    public _Proxy(Core core, long onum) {
-      super(core, onum);
+    public _Proxy(Store store, long onum) {
+      super(store, onum);
     }
   }
 }

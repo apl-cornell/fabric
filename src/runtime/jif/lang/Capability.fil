@@ -1,7 +1,7 @@
 package jif.lang;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 /**
  * This code is mostly copied from Jif.
@@ -10,7 +10,7 @@ public final class Capability {
   private final Principal jif$jif_lang_Capability_P;
   private final Label jif$jif_lang_Capability_L;
   private final Closure closure;
-  public static final Core localCore = Worker.getWorker().getLocalCore();
+  public static final Store localStore = Worker.getWorker().getLocalStore();
 
   public Closure getClosure() {
     return closure;
@@ -46,6 +46,6 @@ public final class Capability {
       final Label jif$L, final Object o) {
     if (o == null) return null;
     if (jif$Instanceof(jif$P, jif$L, o)) return (Capability) o;
-    throw new ClassCastException@localCore();
+    throw new ClassCastException@localStore();
   }
 }

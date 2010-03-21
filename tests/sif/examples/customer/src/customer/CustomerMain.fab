@@ -11,23 +11,23 @@ import sif.servlet.SessionPrincipal;
 import javax.servlet.ServletException;
 
 public final class CustomerMain extends Servlet[CustomerPrincipal] {
-  final Core{this} localCore;
-  final Core{this} brokercore;
+  final Store{this} localStore;
+  final Store{this} brokerstore;
   final principal{this} broker;
   
   public CustomerMain() throws ServletException {
     FabricWorker cl = FabricWorker.getWorker();
-    Core lCore = null;
+    Store lStore = null;
     AbstractPrincipal customerPrincipal = null;
     if (cl != null) {
-      lCore = cl.getLocalCore();
+      lStore = cl.getLocalStore();
     }
-    localCore = lCore;
-    brokercore = worker$.getCore(Config.brokerCoreName);
+    localStore = lStore;
+    brokerstore = worker$.getStore(Config.brokerStoreName);
 
     Map root = null;
-    if (brokercore != null) {
-        root = (Map) brokercore.getRoot();
+    if (brokerstore != null) {
+        root = (Map) brokerstore.getRoot();
     }
     if (root != null) {
         Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
@@ -62,9 +62,9 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
       String{*lbl} id, SessionPrincipal{*lbl} session) {
     SessionState[lbl] toReturn = null;
     atomic {
-      if (localCore != null && localCore equiv worker$ &&
+      if (localStore != null && localStore equiv worker$ &&
 	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
-	toReturn = new SessionState[lbl]@localCore(id, session);
+	toReturn = new SessionState[lbl]@localStore(id, session);
       }
     }
     return toReturn;
@@ -74,8 +74,8 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
   protected SessionPrincipal createSessionPrincipal(String{broker→;broker←} id) {
     SessionPrincipal toReturn = null;
     atomic {
-      if (brokercore != null && brokercore equiv broker) {
-	toReturn = new SessionPrincipal@brokercore(id);
+      if (brokerstore != null && brokerstore equiv broker) {
+	toReturn = new SessionPrincipal@brokerstore(id);
       }
     }
     return toReturn;

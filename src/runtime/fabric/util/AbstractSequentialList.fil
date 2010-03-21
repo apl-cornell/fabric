@@ -74,8 +74,8 @@ package fabric.util;
 public abstract class AbstractSequentialList extends AbstractList
 {
 
-  protected static final fabric.worker.Core LOCAL_CORE =
-    fabric.worker.Worker.getWorker().getLocalCore();
+  protected static final fabric.worker.Store LOCAL_STORE =
+    fabric.worker.Worker.getWorker().getLocalStore();
 
   /**
    * The main constructor, for use by subclasses.
@@ -92,7 +92,7 @@ public abstract class AbstractSequentialList extends AbstractList
    * @return the list iterator
    * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
    */
-  public abstract ListIterator listIterator(fabric.worker.Core core, int index);
+  public abstract ListIterator listIterator(fabric.worker.Store store, int index);
 
   /**
    * Insert an element into the list at a given position (optional operation).
@@ -115,7 +115,7 @@ public abstract class AbstractSequentialList extends AbstractList
    */
   public void add(int index, Object o)
   {
-    listIterator(LOCAL_CORE, index).add(o);
+    listIterator(LOCAL_STORE, index).add(o);
   }
 
   /**
@@ -149,9 +149,9 @@ public abstract class AbstractSequentialList extends AbstractList
    */
   public boolean addAll(int index, Collection c)
   {
-    Iterator ci = c.iterator(LOCAL_CORE);
+    Iterator ci = c.iterator(LOCAL_STORE);
     int size = c.size();
-    ListIterator i = listIterator(LOCAL_CORE, index);
+    ListIterator i = listIterator(LOCAL_STORE, index);
     for (int pos = size; pos > 0; pos--)
       i.add(ci.next());
     return size > 0;
@@ -171,18 +171,18 @@ public abstract class AbstractSequentialList extends AbstractList
     if (index == size())
       throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
                                           + size());
-    return listIterator(LOCAL_CORE, index).next();
+    return listIterator(LOCAL_STORE, index).next();
   }
 
   /**
    * Obtain an Iterator over this list, whose sequence is the list order. This
-   * implementation returns listIterator(core).
+   * implementation returns listIterator(store).
    *
    * @return an Iterator over the elements of this list, in order
    */
-  public Iterator iterator(fabric.worker.Core core)
+  public Iterator iterator(fabric.worker.Store store)
   {
-    return listIterator(core);
+    return listIterator(store);
   }
 
   /**
@@ -202,7 +202,7 @@ public abstract class AbstractSequentialList extends AbstractList
     if (index == size())
       throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
                                           + size());
-    ListIterator i = listIterator(LOCAL_CORE, index);
+    ListIterator i = listIterator(LOCAL_STORE, index);
     Object removed = i.next();
     i.remove();
     return removed;
@@ -231,7 +231,7 @@ public abstract class AbstractSequentialList extends AbstractList
     if (index == size())
       throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
                                           + size());
-    ListIterator i = listIterator(LOCAL_CORE, index);
+    ListIterator i = listIterator(LOCAL_STORE, index);
     Object old = i.next();
     i.set(o);
     return old;

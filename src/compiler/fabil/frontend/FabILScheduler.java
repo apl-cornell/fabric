@@ -290,7 +290,7 @@ public class FabILScheduler extends JLScheduler {
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
 //        l.add(LocationsAssigned(job));
-        l.add(RewriteCoreGetters(job));
+        l.add(RewriteStoreGetters(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
       }
@@ -298,8 +298,8 @@ public class FabILScheduler extends JLScheduler {
     return g;
   }
   
-  public Goal RewriteCoreGetters(final Job job) {
-    Goal g = internGoal(new VisitorGoal(job, new CoreGetterRewriter()) {
+  public Goal RewriteStoreGetters(final Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new StoreGetterRewriter()) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
@@ -319,7 +319,7 @@ public class FabILScheduler extends JLScheduler {
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
         l.add(WrapInlineables(job));
-        l.add(RewriteCoreGetters(job));
+        l.add(RewriteStoreGetters(job));
 //        l.add(LocationsAssigned(job));
 //        l.add(LabelsAssigned(job));        
         l.add(PrincipalsDelegated(job));

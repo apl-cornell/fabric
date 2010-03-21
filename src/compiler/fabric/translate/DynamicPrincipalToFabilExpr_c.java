@@ -36,8 +36,8 @@ public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c 
                        nf.Local(li.position(), nf.Id(li.position(), li.name())), 
                        nf.Id(Position.compilerGenerated(), "getPrincipal"));
       }
-      else if (ts.equals(li.type(), ts.Core())) {
-        // Core
+      else if (ts.equals(li.type(), ts.Store())) {
+        // Store
         return nf.Call(li.position(), 
                        nf.Local(li.position(), nf.Id(li.position(), li.name())), 
                        nf.Id(Position.compilerGenerated(), "getPrincipal"));

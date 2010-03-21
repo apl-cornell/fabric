@@ -1,7 +1,7 @@
 package fabnfs.util;
 
 import fabnfs.util.ResizableFileByteArray;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import java.io.IOException;
 
 public class RandomAccessFileImpl implements RandomAccessFile {
@@ -10,8 +10,8 @@ public class RandomAccessFileImpl implements RandomAccessFile {
     FileSystemObject fabFile;
     int currentPos;
 
-    public RandomAccessFileImpl(Core remoteCore, String path) throws IOException {
-        this.file = new FileImpl(remoteCore, path);
+    public RandomAccessFileImpl(Store remoteStore, String path) throws IOException {
+        this.file = new FileImpl(remoteStore, path);
 
         if (!file.exists()) {
 //            System.err.println("File " + path + " does not exist. Creating it...");

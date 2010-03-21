@@ -4,7 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.RemoteCore;
+import fabric.worker.RemoteStore;
 import fabric.worker.debug.Timing;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
@@ -12,7 +12,7 @@ import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 
 public class UnauthenticatedCommitTransactionMessage extends
-    Message<RemoteCore, UnauthenticatedCommitTransactionMessage.Response> {
+    Message<RemoteStore, UnauthenticatedCommitTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
     public final boolean success;
@@ -70,26 +70,26 @@ public class UnauthenticatedCommitTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.core.MessageHandlerThread w) {
+  public Response dispatch(fabric.store.MessageHandlerThread w) {
     return w.handle(this);
   }
 
-  public Response send(RemoteCore core) throws UnreachableNodeException {
+  public Response send(RemoteStore store) throws UnreachableNodeException {
     try {
-      Timing.CORE.begin();
-      return super.send(core, false);
+      Timing.STORE.begin();
+      return super.send(store, false);
     } catch (UnreachableNodeException e) {
       throw e;
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from node.", e);
     } finally {
-      Timing.CORE.end();
+      Timing.STORE.end();
     }
   }
 
   @Override
-  public Response response(RemoteCore core, DataInput in) throws IOException {
-    return new Response(core, in);
+  public Response response(RemoteStore store, DataInput in) throws IOException {
+    return new Response(store, in);
   }
 
   /*

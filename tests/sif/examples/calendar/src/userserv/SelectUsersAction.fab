@@ -359,14 +359,14 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
           
           if (req == null || servlet == null || state == null) 
               throw new ServletException("invalid args");
-          Core localCore_ = null;
+          Store localStore_ = null;
           try {
-              localCore_ = FabricWorker.getWorker().getLocalCore();
+              localStore_ = FabricWorker.getWorker().getLocalStore();
           } catch (NullPointerException imposs) {}
-          final Core localCore = localCore_;
+          final Store localStore = localStore_;
           fabricated.util.List[{servP:;servP!:}] validatedUsers = null;
-          if(localCore actsfor servP) {
-              validatedUsers = new LinkedList[new label {servP:;servP!:}]@localCore();
+          if(localStore actsfor servP) {
+              validatedUsers = new LinkedList[new label {servP:;servP!:}]@localStore();
           }
           
           if (selectUsersAction == null) throw new ServletException("selectUsersAction is null!");
@@ -529,7 +529,7 @@ class FinishSelectUsers[principal servP] extends USessAction[servP] authority(se
           }
           int size = l.size();
           FabricWorker fworker = FabricWorker.getWorker();
-          final Core localCore = fworker!=null?fworker.getLocalCore():null;
+          final Store localStore = fworker!=null?fworker.getLocalStore():null;
           int sz = size<0?0:size;
           String{*lbl} native[] array = new String native[sz];
           int count = 0;

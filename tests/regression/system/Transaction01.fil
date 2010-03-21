@@ -5,10 +5,10 @@ import fabric.util.*;
 
 public class Transaction01 {
   public static void main(String[] args) {
-    Core core = Worker.getWorker().getCore("core0");
+    Store store = Worker.getWorker().getStore("store0");
     
     atomic {
-      HashMap m = new HashMap@core();
+      HashMap m = new HashMap@store();
     }
     
     System.out.println("TEST PASSED.");

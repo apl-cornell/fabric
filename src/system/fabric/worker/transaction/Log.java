@@ -3,7 +3,7 @@ package fabric.worker.transaction;
 import java.util.*;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.debug.Timing;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.UpdateMap;
@@ -63,7 +63,7 @@ public final class Log {
    */
   // Proxy objects aren't used for keys here because doing so would result in
   // calls to hashcode() and equals() on such objects, resulting in fetching the
-  // corresponding Impls from the core.
+  // corresponding Impls from the store.
   protected final OidKeyHashMap<ReadMapEntry> reads;
 
   /**
@@ -74,29 +74,29 @@ public final class Log {
   /**
    * A collection of all objects created in this transaction or completed
    * sub-transactions. Objects created in running or aborted sub-transactions
-   * don't count here. To keep them from being pinned, objects on local core are
-   * not tracked here.
+   * don't count here. To keep them from being pinned, objects on local store
+   * are not tracked here.
    */
   protected final List<_Impl> creates;
 
   /**
-   * Tracks objects created on local core. See <code>creates</code>.
+   * Tracks objects created on local store. See <code>creates</code>.
    */
-  protected final WeakReferenceArrayList<_Impl> localcoreCreates;
+  protected final WeakReferenceArrayList<_Impl> localStoreCreates;
 
   /**
    * A collection of all objects modified in this transaction or completed
    * sub-transactions. Objects modified in running or aborted sub-transactions
-   * don't count here. To keep them from being pinned, objects on local core are
-   * not tracked here.
+   * don't count here. To keep them from being pinned, objects on local store
+   * are not tracked here.
    */
   protected final List<_Impl> writes;
 
   /**
-   * Tracks objects on local core that have been modified. See
+   * Tracks objects on local store that have been modified. See
    * <code>writes</code>.
    */
-  protected final WeakReferenceArrayList<_Impl> localcoreWrites;
+  protected final WeakReferenceArrayList<_Impl> localStoreWrites;
 
   /**
    * The set of workers called by this transaction and completed
@@ -140,9 +140,9 @@ public final class Log {
     this.reads = new OidKeyHashMap<ReadMapEntry>();
     this.readsReadByParent = new ArrayList<ReadMapEntry>();
     this.creates = new ArrayList<_Impl>();
-    this.localcoreCreates = new WeakReferenceArrayList<_Impl>();
+    this.localStoreCreates = new WeakReferenceArrayList<_Impl>();
     this.writes = new ArrayList<_Impl>();
-    this.localcoreWrites = new WeakReferenceArrayList<_Impl>();
+    this.localStoreWrites = new WeakReferenceArrayList<_Impl>();
     this.workersCalled = new ArrayList<RemoteWorker>();
 
     if (parent != null) {
@@ -194,23 +194,23 @@ public final class Log {
   }
 
   /**
-   * Returns a set of cores affected by this transaction.
+   * Returns a set of stores affected by this transaction.
    */
-  Set<Core> coresToContact() {
-    Set<Core> result = new HashSet<Core>();
+  Set<Store> storesToContact() {
+    Set<Store> result = new HashSet<Store>();
 
-    result.addAll(reads.coreSet());
+    result.addAll(reads.storeSet());
 
     for (_Impl obj : writes) {
-      if (obj.$isOwned) result.add(obj.$getCore());
+      if (obj.$isOwned) result.add(obj.$getStore());
     }
 
     for (_Impl obj : creates) {
-      if (obj.$isOwned) result.add(obj.$getCore());
+      if (obj.$isOwned) result.add(obj.$getStore());
     }
 
-    if (!localcoreWrites.isEmpty() || !localcoreCreates.isEmpty()) {
-      result.add(Worker.getWorker().getLocalCore());
+    if (!localStoreWrites.isEmpty() || !localStoreCreates.isEmpty()) {
+      result.add(Worker.getWorker().getLocalStore());
     }
 
     return result;
@@ -218,73 +218,73 @@ public final class Log {
 
   /**
    * Returns a map from onums to version numbers of objects read at the given
-   * core. Reads on created and modified objects are not included.
+   * store. Reads on created and modified objects are not included.
    */
   @SuppressWarnings("unchecked")
-  LongKeyMap<Integer> getReadsForCore(Core core) {
+  LongKeyMap<Integer> getReadsForStore(Store store) {
     LongKeyMap<Integer> result = new LongKeyHashMap<Integer>();
-    LongKeyMap<ReadMapEntry> submap = reads.get(core);
+    LongKeyMap<ReadMapEntry> submap = reads.get(store);
     if (submap == null) return result;
 
     for (LongKeyMap.Entry<ReadMapEntry> entry : submap.entrySet()) {
       result.put(entry.getKey(), entry.getValue().versionNumber);
     }
 
-    if (core.isLocalCore()) {
-      for (_Impl write : Util.chain(localcoreWrites, localcoreCreates))
+    if (store.isLocalStore()) {
+      for (_Impl write : Util.chain(localStoreWrites, localStoreCreates))
         result.remove(write.$getOnum());
     } else {
       for (_Impl write : Util.chain(writes, creates))
-        if (write.$getCore() == core) result.remove(write.$getOnum());
+        if (write.$getStore() == store) result.remove(write.$getOnum());
     }
 
     return result;
   }
 
   /**
-   * Returns a collection of objects modified at the given core. Writes on
+   * Returns a collection of objects modified at the given store. Writes on
    * created objects are not included.
    */
-  Collection<_Impl> getWritesForCore(Core core) {
+  Collection<_Impl> getWritesForStore(Store store) {
     // This should be a Set of _Impl, but we have a map indexed by OID to
     // avoid calling hashCode and equals on the _Impls.
     LongKeyMap<_Impl> result = new LongKeyHashMap<_Impl>();
 
-    if (core.isLocalCore()) {
-      for (_Impl obj : localcoreWrites) {
+    if (store.isLocalStore()) {
+      for (_Impl obj : localStoreWrites) {
         result.put(obj.$getOnum(), obj);
       }
 
-      for (_Impl create : localcoreCreates) {
+      for (_Impl create : localStoreCreates) {
         result.remove(create.$getOnum());
       }
     } else {
       for (_Impl obj : writes)
-        if (obj.$getCore() == core && obj.$isOwned)
+        if (obj.$getStore() == store && obj.$isOwned)
           result.put(obj.$getOnum(), obj);
 
       for (_Impl create : creates)
-        if (create.$getCore() == core) result.remove(create.$getOnum());
+        if (create.$getStore() == store) result.remove(create.$getOnum());
     }
 
     return result.values();
   }
 
   /**
-   * Returns a collection of objects created at the given core.
+   * Returns a collection of objects created at the given store.
    */
-  Collection<_Impl> getCreatesForCore(Core core) {
+  Collection<_Impl> getCreatesForStore(Store store) {
     // This should be a Set of _Impl, but to avoid calling methods on the
     // _Impls, we instead use a map keyed on OID.
     LongKeyMap<_Impl> result = new LongKeyHashMap<_Impl>();
 
-    if (core.isLocalCore()) {
-      for (_Impl obj : localcoreCreates) {
+    if (store.isLocalStore()) {
+      for (_Impl obj : localStoreCreates) {
         result.put(obj.$getOnum(), obj);
       }
     } else {
       for (_Impl obj : creates)
-        if (obj.$getCore() == core && obj.$isOwned)
+        if (obj.$getStore() == store && obj.$isOwned)
           result.put(obj.$getOnum(), obj);
     }
 
@@ -342,7 +342,7 @@ public final class Log {
       entry.releaseLock(this);
 
     // Roll back writes and release write locks.
-    for (_Impl write : Util.chain(writes, localcoreWrites)) {
+    for (_Impl write : Util.chain(writes, localStoreWrites)) {
       synchronized (write) {
         write.$copyStateFrom(write.$history);
 
@@ -362,9 +362,9 @@ public final class Log {
       reads.clear();
       readsReadByParent.clear();
       creates.clear();
-      localcoreCreates.clear();
+      localStoreCreates.clear();
       writes.clear();
-      localcoreWrites.clear();
+      localStoreWrites.clear();
       workersCalled.clear();
 
       if (parent != null) {
@@ -441,9 +441,9 @@ public final class Log {
       }
     }
 
-    WeakReferenceArrayList<_Impl> parentLocalcoreWrites =
-        parent.localcoreWrites;
-    for (_Impl obj : localcoreWrites) {
+    WeakReferenceArrayList<_Impl> parentLocalStoreWrites =
+        parent.localStoreWrites;
+    for (_Impl obj : localStoreWrites) {
       synchronized (obj) {
         if (obj.$history.$writeLockHolder == parent) {
           // The parent transaction already wrote to the object. Discard one
@@ -453,8 +453,8 @@ public final class Log {
         } else {
           // The parent transaction didn't write to the object. Add write to
           // parent and transfer our write lock.
-          synchronized (parentLocalcoreWrites) {
-            parentLocalcoreWrites.add(obj);
+          synchronized (parentLocalStoreWrites) {
+            parentLocalStoreWrites.add(obj);
           }
         }
         obj.$writer = null;
@@ -474,11 +474,11 @@ public final class Log {
       }
     }
 
-    WeakReferenceArrayList<_Impl> parentLocalcoreCreates =
-        parent.localcoreCreates;
-    synchronized (parentLocalcoreCreates) {
-      for (_Impl obj : localcoreCreates) {
-        parentLocalcoreCreates.add(obj);
+    WeakReferenceArrayList<_Impl> parentLocalStoreCreates =
+        parent.localStoreCreates;
+    synchronized (parentLocalStoreCreates) {
+      for (_Impl obj : localStoreCreates) {
+        parentLocalStoreCreates.add(obj);
         obj.$writeLockHolder = parent;
       }
     }
@@ -520,7 +520,7 @@ public final class Log {
       throw new InternalError("something was read by a non-existent parent");
 
     // Release write locks and ownerships; update version numbers.
-    for (_Impl obj : Util.chain(writes, localcoreWrites)) {
+    for (_Impl obj : Util.chain(writes, localStoreWrites)) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
@@ -543,7 +543,7 @@ public final class Log {
     }
 
     // Release write locks on created objects and set version numbers.
-    for (_Impl obj : Util.chain(creates, localcoreCreates)) {
+    for (_Impl obj : Util.chain(creates, localStoreCreates)) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
@@ -586,7 +586,7 @@ public final class Log {
     // read this object.
     if (!lockedByAncestor) {
       synchronized (reads) {
-        reads.put(readMapEntry.obj.core, readMapEntry.obj.onum, readMapEntry);
+        reads.put(readMapEntry.obj.store, readMapEntry.obj.onum, readMapEntry);
       }
     } else {
       readsReadByParent.add(readMapEntry);
@@ -629,7 +629,7 @@ public final class Log {
     // read this object.
     if (!lockedByAncestor) {
       synchronized (reads) {
-        reads.put(obj.$ref.core, obj.$ref.onum, readMapEntry);
+        reads.put(obj.$ref.store, obj.$ref.onum, readMapEntry);
       }
     } else {
       readsReadByParent.add(readMapEntry);
@@ -682,12 +682,12 @@ public final class Log {
    * 
    * @deprecated
    */
-  public void renumberObject(Core core, long onum, long newOnum) {
-    ReadMapEntry entry = reads.remove(core, onum);
+  public void renumberObject(Store store, long onum, long newOnum) {
+    ReadMapEntry entry = reads.remove(store, onum);
     if (entry != null) {
-      reads.put(core, newOnum, entry);
+      reads.put(store, newOnum, entry);
     }
 
-    if (child != null) child.renumberObject(core, onum, newOnum);
+    if (child != null) child.renumberObject(store, onum, newOnum);
   }
 }

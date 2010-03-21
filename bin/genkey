@@ -3,13 +3,13 @@
 source "$(dirname $0)/defs"
 
 if [[ $# -eq 0 || "$1" == "-h" || "$1" == "--help" ]] ; then
-  echo "Generates SSL keys and certificates for a core or worker"
+  echo "Generates SSL keys and certificates for a store or worker"
   echo "and adds them to the common trust store. Note you can"
   echo "mention more than one host at a time."
   echo 
-  echo "Usage: $(basename $0) <core hostname | worker name> ..."
+  echo "Usage: $(basename $0) <store hostname | worker name> ..."
   echo
-  echo "  e.g. $(basename $0) core0 worker1 core2 core3 worker4"
+  echo "  e.g. $(basename $0) store0 worker1 store2 store3 worker4"
   exit 1
 fi
 

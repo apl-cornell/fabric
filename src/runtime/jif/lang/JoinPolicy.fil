@@ -1,7 +1,7 @@
 package jif.lang;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.util.*;
 
 /**
@@ -11,7 +11,7 @@ import fabric.util.*;
  */
 public abstract class JoinPolicy extends AbstractPolicy implements Policy {
   private Set components; // Set of Policies
-  public final Core localCore = Worker.getWorker().getLocalCore();
+  public final Store localStore = Worker.getWorker().getLocalStore();
 
   JoinPolicy(Set policies) {
     // Copy the contents into a linked hash set so we can sign these policies.
@@ -25,7 +25,7 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
   public boolean relabelsTo(Policy pol, Set s) {
     if (this == pol || this.equals(pol)) return true;
 
-    Set temp = new HashSet@localCore();
+    Set temp = new HashSet@localStore();
     // this == c1 join ... join cn
     // this <= pol if for all Ci, Ci <= pol
     boolean sat = true;

@@ -1,7 +1,7 @@
 package jif.lang;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.util.*;
 
 /**
@@ -11,7 +11,7 @@ import fabric.util.*;
  */
 public abstract class MeetPolicy extends AbstractPolicy implements Policy {
   private Set components; // Set of Policies
-  public final Core localCore = Worker.getWorker().getLocalCore();
+  public final Store localStore = Worker.getWorker().getLocalStore();
 
   MeetPolicy(Set policies) {
     // Copy the contents into a linked hash set so we can sign these policies.
@@ -40,7 +40,7 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
       // we have this <= di
       MeetPolicy mp = (MeetPolicy) pol;
       boolean sat = true;
-      Set temp = new HashSet@localCore();
+      Set temp = new HashSet@localStore();
       for (Iterator i = mp.meetComponents().iterator(); i.hasNext();) {
         Policy Di = (Policy) i.next();
         if (!LabelUtil.relabelsTo(this, Di, temp)) {

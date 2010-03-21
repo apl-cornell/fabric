@@ -92,8 +92,8 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     New_c result = (New_c) super.typeCheck(tc);
 
     if (location != null) {
-      if (!ts.isImplicitCastValid(location.type(), ts.Core())) {
-        throw new SemanticException("Array location must be a core.", location
+      if (!ts.isImplicitCastValid(location.type(), ts.Store())) {
+        throw new SemanticException("Array location must be a store.", location
             .position());
       }
     }

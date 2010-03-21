@@ -1,6 +1,6 @@
 package jif.lang;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.lang.DelegatingPrincipal;
 import fabric.lang.Principal;
 
@@ -13,8 +13,8 @@ public interface AbstractPrincipal extends DelegatingPrincipal,
       super(impl);
     }
 
-    public _Proxy(Core core, long onum) {
-      super(core, onum);
+    public _Proxy(Store store, long onum) {
+      super(store, onum);
     }
 
     @Override
@@ -27,8 +27,8 @@ public interface AbstractPrincipal extends DelegatingPrincipal,
   public abstract static class _Impl extends DelegatingPrincipal._Impl
       implements AbstractPrincipal {
 
-    public _Impl(Core core, Label label, String name) {
-      super(core, label);
+    public _Impl(Store store, Label label, String name) {
+      super(store, label);
     }
 
     public native void addDelegatesTo(Principal p);

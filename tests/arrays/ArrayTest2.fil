@@ -1,13 +1,13 @@
 package arrays;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 public class ArrayTest2 {
     public static String[] names;
     
     public ArrayTest2() {
-        Core core = fabric.worker.Worker.getWorker().getCore("core0");        
-        names = new String[10000]@core;
+        Store store = fabric.worker.Worker.getWorker().getStore("store0");        
+        names = new String[10000]@store;
     }
     
     public static void main(String args[]) {

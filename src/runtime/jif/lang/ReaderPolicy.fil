@@ -1,7 +1,7 @@
 package jif.lang;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.util.HashSet;
 import fabric.util.Iterator;
 import fabric.util.Set;
@@ -29,7 +29,7 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
   public boolean relabelsTo(Policy p, Set s) {
     if (this == p || this.equals(p)) return true;
 
-    final Core localCore = Worker.getWorker().getLocalCore();
+    final Store localStore = Worker.getWorker().getLocalStore();
     if (p instanceof JoinConfPolicy) {
       JoinPolicy jp = (JoinPolicy) p;
       // this <= p1 join ... join p2 if there exists a pi such that
@@ -43,7 +43,7 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
       MeetPolicy mp = (MeetPolicy) p;
       // this <= p1 meet ... meet p2 if for all pi
       // this <= pi
-      Set temp = new HashSet@localCore();
+      Set temp = new HashSet@localStore();
       for (Iterator iter = mp.meetComponents().iterator(); iter.hasNext();) {
         Policy pi = (Policy) iter.next();
         if (!LabelUtil.relabelsTo(this, pi, temp)) return false;
@@ -60,19 +60,19 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
     // o' >= o?
 
     ActsForProof ownersProof =
-      PrincipalUtil.actsForProof(localCore, pp.owner, owner);
+      PrincipalUtil.actsForProof(localStore, pp.owner, owner);
     if (ownersProof == null) {
       return false;
     }
     ActsForProof readerReaderProof =
-        PrincipalUtil.actsForProof(localCore, pp.reader, this.reader);
+        PrincipalUtil.actsForProof(localStore, pp.reader, this.reader);
     if (readerReaderProof != null) {
       ownersProof.gatherDelegationDependencies(s);
       readerReaderProof.gatherDelegationDependencies(s);
       return true;
     }
     ActsForProof readerOwnerProof =
-        PrincipalUtil.actsForProof(localCore, pp.reader, this.owner);
+        PrincipalUtil.actsForProof(localStore, pp.reader, this.owner);
     if (readerOwnerProof != null) {
       ownersProof.gatherDelegationDependencies(s);
       readerOwnerProof.gatherDelegationDependencies(s);
@@ -112,32 +112,32 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
     return str;
   }
 
-  public ConfPolicy join(Core core, ConfPolicy p, Set s) {
-    return LabelUtil.join(core, this, p, s);
+  public ConfPolicy join(Store store, ConfPolicy p, Set s) {
+    return LabelUtil.join(store, this, p, s);
   }
 
   public ConfPolicy join(ConfPolicy p, Set s) {
     return LabelUtil.join(this, p, s);
   }
 
-  public ConfPolicy join(Core core, ConfPolicy p) {
-    return LabelUtil.join(core, this, p);
+  public ConfPolicy join(Store store, ConfPolicy p) {
+    return LabelUtil.join(store, this, p);
   }
 
   public ConfPolicy join(ConfPolicy p) {
     return LabelUtil.join(this, p);
   }
 
-  public ConfPolicy meet(Core core, ConfPolicy p, Set s) {
-    return LabelUtil.meet(core, this, p, s);
+  public ConfPolicy meet(Store store, ConfPolicy p, Set s) {
+    return LabelUtil.meet(store, this, p, s);
   }
 
   public ConfPolicy meet(ConfPolicy p, Set s) {
     return LabelUtil.meet(this, p, s);
   }
 
-  public ConfPolicy meet(Core core, ConfPolicy p) {
-    return LabelUtil.meetPol(core, this, p);
+  public ConfPolicy meet(Store store, ConfPolicy p) {
+    return LabelUtil.meetPol(store, this, p);
   }
 
   public ConfPolicy meet(ConfPolicy p) {

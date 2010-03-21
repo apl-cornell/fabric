@@ -20,7 +20,7 @@ import polyglot.util.Position;
  */
 public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
   protected Expr location;
-  protected Principal corePrincipal;
+  protected Principal storePrincipal;
 
   public Expr location() {
     return location;
@@ -32,13 +32,13 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
     return result;
   }
 
-  public Principal corePrincipal() {
-    return corePrincipal;
+  public Principal storePrincipal() {
+    return storePrincipal;
   }
 
-  public LocatedExt_c corePrincipal(Principal p) {
+  public LocatedExt_c storePrincipal(Principal p) {
     LocatedExt_c result = (LocatedExt_c)this.copy();
-    result.corePrincipal = p;
+    result.storePrincipal = p;
     return result;
   }
   
@@ -70,37 +70,37 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
 
       lc.constrain(new NamedLabel("L", objectLabel),
           LabelConstraint.LEQ,
-          new NamedLabel("{*->core}", 
+          new NamedLabel("{*->store}", 
               ts.pairLabel(Position.compilerGenerated(), 
                   ts.readerPolicy(Position.compilerGenerated(),
                       ts.topPrincipal(Position.compilerGenerated()),
-                      corePrincipal()),
+                      storePrincipal()),
                   ts.topIntegPolicy(Position.compilerGenerated()))),
           A.labelEnv(), 
           n.position(),
           new ConstraintMessage () {
         @Override
         public String msg() {
-          return "L <= {*->core} for new C@core() where the field label of C is L.";
+          return "L <= {*->store} for new C@store() where the field label of C is L.";
         }
 
         @Override
         public String detailMsg() {
-          return "The object being created on the core " + corePrincipal().toString() + " should be readable by the core's principal";
+          return "The object being created on the store " + storePrincipal().toString() + " should be readable by the store's principal";
         }
 
         @Override
         public String technicalMsg() {
-          return "The label " + objectLabel.toString() + " should not be more restrictive than the confidentiality label of the core's principal joined with the top integrity label";
+          return "The label " + objectLabel.toString() + " should not be more restrictive than the confidentiality label of the store's principal joined with the top integrity label";
         }
       });
 
-      lc.constrain(new NamedLabel("{*<-core}", 
+      lc.constrain(new NamedLabel("{*<-store}", 
           ts.pairLabel(Position.compilerGenerated(),
               ts.bottomConfPolicy(Position.compilerGenerated()), 
               ts.writerPolicy(Position.compilerGenerated(),
                   ts.topPrincipal(Position.compilerGenerated()), 
-                  corePrincipal()))),
+                  storePrincipal()))),
           LabelConstraint.LEQ,
           new NamedLabel("L", objectLabel),
           A.labelEnv(),         
@@ -108,49 +108,49 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
           new ConstraintMessage() {
         @Override
         public String msg() {
-          return "{*<-core} <= L for new C@core() where the field label of C is L.";
+          return "{*<-store} <= L for new C@store() where the field label of C is L.";
         }
 
         @Override
         public String detailMsg() {
-          return "The object being created on the core " + corePrincipal().toString() + " should be writeable by the core's principal";
+          return "The object being created on the store " + storePrincipal().toString() + " should be writeable by the store's principal";
         }
 
         @Override
         public String technicalMsg() {
-          return "The integrity label of the core's principal joined with the bottom confidentiality label should not be more restrictive than the label " + objectLabel.toString();
+          return "The integrity label of the store's principal joined with the bottom confidentiality label should not be more restrictive than the label " + objectLabel.toString();
         }        
       });
 
-      //      lc.constrain(new NamedLabel("{C(L);*<-core}", 
+      //      lc.constrain(new NamedLabel("{C(L);*<-store}", 
       //                                  ts.pairLabel(Position.compilerGenerated(), 
       //                                               ts.confProjection(objectLabel), 
       //                                               ts.writerPolicy(Position.compilerGenerated(), 
       //                                                               ts.topPrincipal(Position.compilerGenerated()), 
-      //                                                               corePrincipal()))), 
+      //                                                               storePrincipal()))), 
       //                   LabelConstraint.LEQ, 
-      //                   new NamedLabel("{*->core;I(L)}",
+      //                   new NamedLabel("{*->store;I(L)}",
       //                                  ts.pairLabel(Position.compilerGenerated(), 
       //                                               ts.readerPolicy(Position.compilerGenerated(), 
       //                                                               ts.topPrincipal(Position.compilerGenerated()), 
-      //                                                               corePrincipal()), 
+      //                                                               storePrincipal()), 
       //                                               ts.integProjection(objectLabel))),
       //                   A.labelEnv(), 
       //                   n.position(),
       //                   new ConstraintMessage() {
       //        @Override
       //        public String msg() {
-      //          return "C(L) <= {*->core} and {*<-core} <= I(L) for new C@core() where the field label of C is L.";
+      //          return "C(L) <= {*->store} and {*<-store} <= I(L) for new C@store() where the field label of C is L.";
       //        }
       //        
       //        @Override
       //        public String detailMsg() {
-      //          return "C(L) <= {*->core} and {*<-core} <= I(L) for new C@core() where the field label of C is L.";
+      //          return "C(L) <= {*->store} and {*<-store} <= I(L) for new C@store() where the field label of C is L.";
       //        }
       //        
       //        @Override
       //        public String technicalMsg() {
-      //          return "C(L) <= {*->core} and {*<-core} <= I(L) for new C@core() where the field label of C is L.";
+      //          return "C(L) <= {*->store} and {*<-store} <= I(L) for new C@store() where the field label of C is L.";
       //        }
       //      });
     }

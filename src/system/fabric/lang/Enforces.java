@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import jif.lang.*;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.common.Crypto;
 import fabric.common.exceptions.InternalError;
 import fabric.net.UnreachableNodeException;
@@ -35,8 +35,8 @@ public interface Enforces extends Object {
       super(impl);
     }
 
-    public _Proxy(Core core, long onum) {
-      super(core, onum);
+    public _Proxy(Store store, long onum) {
+      super(store, onum);
     }
 
     public Principal signer() {
@@ -63,9 +63,9 @@ public interface Enforces extends Object {
     private final Label label;
     private final byte[] signature;
 
-    public _Impl(Core core, Label label_, Principal signer, Principal subject,
+    public _Impl(Store store, Label label_, Principal signer, Principal subject,
         Label label) throws UnreachableNodeException, SignatureException {
-      super(core, label_);
+      super(store, label_);
 
       this.signer = signer;
       this.subject = subject;
@@ -141,7 +141,7 @@ public interface Enforces extends Object {
 
     private void serialize(DataOutput out, Principal principal)
         throws IOException {
-      out.writeUTF(principal.$getCore().name());
+      out.writeUTF(principal.$getStore().name());
       out.writeLong(principal.$getOnum());
     }
 

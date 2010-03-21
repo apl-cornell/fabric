@@ -194,9 +194,9 @@ public class WeakHashMap extends AbstractMap implements Map
      *
      * @return an Entry iterator
      */
-    public Iterator iterator(fabric.worker.Core core)
+    public Iterator iterator(fabric.worker.Store store)
     {
-      return new Iterator@core()
+      return new Iterator@store()
       {
         /**
          * The entry that was returned by the last

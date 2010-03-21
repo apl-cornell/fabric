@@ -1,6 +1,6 @@
 package arrays;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 public class ArrayTest {
   public int[]       ints;
@@ -24,12 +24,12 @@ public class ArrayTest {
     ArrayTest a1 = null;
     ArrayTest a2 = null;
     atomic {
-      Core core = fabric.worker.Worker.getWorker().getCore("core0");
-      a1      = new ArrayTest@core();
-      a2      = new ArrayTest@core();
-      a2.ints = new int[]@core {5,4,3,2,1};
+      Store store = fabric.worker.Worker.getWorker().getStore("store0");
+      a1      = new ArrayTest@store();
+      a2      = new ArrayTest@store();
+      a2.ints = new int[]@store {5,4,3,2,1};
 
-      int[][] x = new int[][]@core {{1,2}, {3}};
+      int[][] x = new int[][]@store {{1,2}, {3}};
     }
 
     atomic {

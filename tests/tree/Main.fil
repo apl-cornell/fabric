@@ -2,7 +2,7 @@ package tree;
 
 import java.util.Random;
 import fabric.worker.AbortException;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.util.Map;
 
@@ -14,14 +14,14 @@ public class Main {
     }
     
     Worker worker = fabric.worker.Worker.getWorker();
-    Map root = (Map) worker.getCore("core1").getRoot();
+    Map root = (Map) worker.getStore("store1").getRoot();
     Random random = new Random();
     Tree theTree = null;
     if (args[0].equals("create")) {
       atomic {
-        Core treeCore = worker.getCore("core0");
-        Core nodeCore = worker.getCore("core1");
-        theTree = new Tree@treeCore(nodeCore);
+        Store treeStore = worker.getStore("store0");
+        Store nodeStore = worker.getStore("store1");
+        theTree = new Tree@treeStore(nodeStore);
         root.put("theTree", theTree);
         for (int i = 0; i < 500; i++) {
           atomic {

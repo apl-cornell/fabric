@@ -56,7 +56,7 @@ public class AbortTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.core.MessageHandlerThread w) throws AccessException,
+  public Response dispatch(fabric.store.MessageHandlerThread w) throws AccessException,
       ProtocolError {
     w.handle(this);
     return new Response();
@@ -71,12 +71,12 @@ public class AbortTransactionMessage extends
 
   public Response send(RemoteNode node) {
     try {
-      Timing.CORE.begin();
+      Timing.STORE.begin();
       return send(node, true);
     } catch (FabricException e) {
       throw new InternalError(e);
     } finally {
-      Timing.CORE.end();
+      Timing.STORE.end();
     }
   }
 

@@ -10,19 +10,19 @@ public interface ConfPolicy extends Policy {
    * Returns the join of this policy and p. The set s contains all delegations
    * (i.e., DelegationPairs) that this join result depends upon.
    */
-  ConfPolicy join(Core core, ConfPolicy p, Set/* <DelegationPair> */dependencies);
+  ConfPolicy join(Store store, ConfPolicy p, Set/* <DelegationPair> */dependencies);
 
   ConfPolicy join(ConfPolicy p, Set/* <DelegationPair> */dependencies);
 
-  ConfPolicy meet(Core core, ConfPolicy p, Set/* <DelegationPair> */dependencies);
+  ConfPolicy meet(Store store, ConfPolicy p, Set/* <DelegationPair> */dependencies);
 
   ConfPolicy meet(ConfPolicy p, Set/* <DelegationPair> */dependencies);
 
-  ConfPolicy join(Core core, ConfPolicy p);
+  ConfPolicy join(Store store, ConfPolicy p);
 
   ConfPolicy join(ConfPolicy p);
 
-  ConfPolicy meet(Core core, ConfPolicy p);
+  ConfPolicy meet(Store store, ConfPolicy p);
 
   ConfPolicy meet(ConfPolicy p);
 }

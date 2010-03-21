@@ -1,6 +1,6 @@
 package fabric.lang.arrays;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.lang.Object;
 import jif.lang.Label;
 
@@ -10,8 +10,8 @@ public interface ObjectArray extends Object {
   Object set(int i, Object value);
 
   public static class _Impl extends Object._Impl implements ObjectArray {
-    public _Impl(Core core, Label label, Class<?> proxyClass, int length) {
-      super(core, label);
+    public _Impl(Store store, Label label, Class<?> proxyClass, int length) {
+      super(store, label);
     }
 
     public native Object get(int i);

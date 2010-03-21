@@ -63,8 +63,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return load("fabric.lang.DelegatingPrincipal");
   }
 
-  public Type Core() {
-    return load("fabric.worker.Core");
+  public Type Store() {
+    return load("fabric.worker.Store");
   }
 
   public Type Label() {

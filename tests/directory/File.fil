@@ -76,13 +76,13 @@ public class File {
     this.data = data;
   }
 
-  public File addChild(Core core, String name, String data) throws Exception {
-    return new File@core(name, data, this);
+  public File addChild(Store store, String name, String data) throws Exception {
+    return new File@store(name, data, this);
   }
 
 
   public File addChild(String name, String data) throws Exception {
-    return addChild($getCore(), name, data);
+    return addChild($getStore(), name, data);
   }
   
   public File addChild(String name) throws Exception {
@@ -105,22 +105,22 @@ public class File {
   /** create root directory and store it */
   public static void createRoot() throws Exception {
     atomic {
-      Core core = Worker.getWorker().getCore(rootAddr.getHost());
-      Map  root = (Map) core.getRoot();
+      Store store = Worker.getWorker().getStore(rootAddr.getHost());
+      Map  root = (Map) store.getRoot();
 
       if (root.containsKey(rootAddr.getPath()))
         throw new Exception("root directory already exists");
 
-      File file = new File@core(rootAddr.getPath());
+      File file = new File@store(rootAddr.getPath());
       root.put(rootAddr.getPath(), file);
     }
   }
 
-  /** create a file owned by the current worker on the same core as the worker's principal object */
+  /** create a file owned by the current worker on the same store as the worker's principal object */
   public static void createHome() throws Exception {
     atomic {
       String name = Worker.getWorker().getPrincipal().name();
-      Core   home = Worker.getWorker().getPrincipal().$getCore();
+      Store   home = Worker.getWorker().getPrincipal().$getStore();
       getRoot().addChild(home, name, "0");
     }
   }
@@ -180,7 +180,7 @@ public class File {
   //////////////////////////////////////////////////////////////////////////////
 
   private static File getRoot() {
-    Core c = Worker.getWorker().getCore(rootAddr.getHost());
+    Store c = Worker.getWorker().getStore(rootAddr.getHost());
     Map  m = (Map) c.getRoot();
 
     return (File) m.get(rootAddr.getPath());

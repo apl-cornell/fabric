@@ -380,7 +380,7 @@ public class HashMap extends AbstractMap
    */
   public void putAll(Map m)
   {
-  Iterator itr = m.entrySet().iterator(LOCAL_CORE);
+  Iterator itr = m.entrySet().iterator(LOCAL_STORE);
     while (itr.hasNext())
       {
         Map.Entry e = (Map.Entry) itr.next();
@@ -511,10 +511,10 @@ public class HashMap extends AbstractMap
 	  return size;
 	}
 
-	public Iterator iterator(fabric.worker.Core core)
+	public Iterator iterator(fabric.worker.Store store)
 	{
 	  // Cannot create the iterator directly, because of LinkedHashMap.
-	  return HashMap.this.iterator(core, KEYS);
+	  return HashMap.this.iterator(store, KEYS);
 	}
 
 	public void clear()
@@ -562,10 +562,10 @@ public class HashMap extends AbstractMap
 	  return size;
 	}
 
-	public Iterator iterator(fabric.worker.Core core)
+	public Iterator iterator(fabric.worker.Store store)
 	{
 	  // Cannot create the iterator directly, because of LinkedHashMap.
-	  return HashMap.this.iterator(core, VALUES);
+	  return HashMap.this.iterator(store, VALUES);
 	}
 
 	public void clear()
@@ -601,10 +601,10 @@ public class HashMap extends AbstractMap
 	  return size;
 	}
 
-	public Iterator iterator(fabric.worker.Core core)
+	public Iterator iterator(fabric.worker.Store store)
 	{
 	  // Cannot create the iterator directly, because of LinkedHashMap.
-	  return HashMap.this.iterator(core, ENTRIES);
+	  return HashMap.this.iterator(store, ENTRIES);
 	}
 
 	public void clear()
@@ -693,9 +693,9 @@ public class HashMap extends AbstractMap
    * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
    * @return the appropriate iterator
    */
-  Iterator iterator(fabric.worker.Core core, int type)
+  Iterator iterator(fabric.worker.Store store, int type)
   {
-    return new HashIterator@core(type);
+    return new HashIterator@store(type);
   }
 
   /**
@@ -707,7 +707,7 @@ public class HashMap extends AbstractMap
    */
   void putAllInternal(Map m)
   {
-    Iterator itr = m.entrySet().iterator(LOCAL_CORE);
+    Iterator itr = m.entrySet().iterator(LOCAL_STORE);
     size = 0;
     while (itr.hasNext())
       {

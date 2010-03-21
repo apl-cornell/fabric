@@ -2,8 +2,8 @@ package jif.lang;
 
 import jif.lang.ConfPolicy;
 import fabric.worker.Worker;
-import fabric.worker.Core;
-import fabric.worker.LocalCore;
+import fabric.worker.Store;
+import fabric.worker.LocalStore;
 import fabric.common.ONumConstants;
 import fabric.util.HashSet;
 import fabric.util.Set;
@@ -22,13 +22,13 @@ public final class PairLabel implements Label {
     this.confPol = confPol;
     this.integPol = integPol;
     
-    final LocalCore localCore = Worker.getWorker().getLocalCore();
+    final LocalStore localStore = Worker.getWorker().getLocalStore();
     if (confPol == null || integPol == null) {
-      throw new NullPointerException@localCore();
+      throw new NullPointerException@localStore();
     }
 
     // HACK: If we have bottom confidentiality, use the null key object.
-    if (confPol == localCore.getBottomConfidPolicy()) {
+    if (confPol == localStore.getBottomConfidPolicy()) {
       this.keyObject = null;
     } else {
       this.keyObject = new SecretKeyObject~this();
@@ -40,8 +40,8 @@ public final class PairLabel implements Label {
       PairLabel that = (PairLabel) l;
       if (this == that || this.equals(that)) return true;
       
-      final Core localCore = Worker.getWorker().getLocalCore();
-      Set temp = new HashSet@localCore();
+      final Store localStore = Worker.getWorker().getLocalStore();
+      Set temp = new HashSet@localStore();
       if (LabelUtil.relabelsTo(this.confPol, that.confPol, temp)
           && LabelUtil.relabelsTo(this.integPol, that.integPol, temp)) {
         s.addAll(temp);
@@ -77,16 +77,16 @@ public final class PairLabel implements Label {
     return "{" + c + i + "}";
   }
 
-  public final Label join(Core core, Label l) {
-    return LabelUtil.join(core, this, l);
+  public final Label join(Store store, Label l) {
+    return LabelUtil.join(store, this, l);
   }
 
   public final Label join(Label l) {
     return LabelUtil.join(this, l);
   }
 
-  public Label meet(Core core, Label l) {
-    return LabelUtil.meet(core, this, l);
+  public Label meet(Store store, Label l) {
+    return LabelUtil.meet(store, this, l);
   }
 
   public Label meet(Label l) {

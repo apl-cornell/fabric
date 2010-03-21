@@ -11,16 +11,16 @@ public class Diagnostics {
   public static final int NUM_INITIAL_BLOGS = 50;
   public static final int NUM_INITLAL_COMMENTS = 5;
 
-  private static LocalCore localCore;
-  private static Core core;
+  private static LocalStore localStore;
+  private static Store store;
   private static Label currentLabel;
   
-  public static LocalCore getLocalCore() {
-    return localCore;
+  public static LocalStore getLocalStore() {
+    return localStore;
   }
   
-  public static Core getCore() {
-    return core;
+  public static Store getStore() {
+    return store;
   }
   
   public static Label getCurrentLabel() {
@@ -28,19 +28,19 @@ public class Diagnostics {
   }
   
   public static void initializeFabric() {
-    localCore = Worker.getWorker().getLocalCore();
-    core = Worker.getWorker().getCore(System.getProperty("blog.core", "core0"));
-    currentLabel = localCore.getEmptyLabel();
+    localStore = Worker.getWorker().getLocalStore();
+    store = Worker.getWorker().getStore(System.getProperty("blog.store", "store0"));
+    currentLabel = localStore.getEmptyLabel();
   }
   
   public static void createDatabase() throws TransactionFailure {
     long start = 0;
     atomic {
-      Map root = (Map) core.getRoot();
+      Map root = (Map) store.getRoot();
       Blog instance = (Blog)root.get("blog");
       if(instance == null) {
         atomic {
-          Blog.createNewInstance(core, currentLabel);
+          Blog.createNewInstance(store, currentLabel);
           //TODO: bug?
           //root.put("blog", Blog.getInstance());
           Blog.getInstance().emptyDatabase();
@@ -66,14 +66,14 @@ public class Diagnostics {
   public static void addBlogs(int n) throws TransactionFailure {
     for (int i = 0; i < n; i++) {
       Transactions.addBlogPost("Title", duplicateString(
-          "This is a blog post. ", 50), core, currentLabel);
+          "This is a blog post. ", 50), store, currentLabel);
     }
   }
 
   public static void addComments(BlogPost p, int m) throws TransactionFailure {
     for (int i = 0; i < m; i++) {
       Transactions.addComment("username", duplicateString(
-          "This is a comment. ", 10), p, core, currentLabel);
+          "This is a comment. ", 10), p, store, currentLabel);
     }
   }
 
@@ -83,10 +83,10 @@ public class Diagnostics {
       long start = 0;
       atomic {
         BlogPost p = Transactions.addBlogPost("Title", duplicateString(
-            "This is a blog post. ", 50), core, currentLabel);
+            "This is a blog post. ", 50), store, currentLabel);
         for (int j = 0; j < m; j++) {
           Transactions.addComment("username", duplicateString(
-              "This is a comment. ", 10), p, core, currentLabel);
+              "This is a comment. ", 10), p, store, currentLabel);
         }
 
         start = System.currentTimeMillis();

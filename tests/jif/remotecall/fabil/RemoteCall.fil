@@ -8,8 +8,8 @@ public class RemoteCall extends fabric.lang.Object {
             if (local == null) return;
             final fabric.worker.remote.RemoteWorker w = local.getWorker("bob");
             if (w == null) return;
-            final fabric.worker.Core gaia =
-              local.getCore("gaia.systems.cs.cornell.edu");
+            final fabric.worker.Store gaia =
+              local.getStore("gaia.systems.cs.cornell.edu");
             final fabric.lang.Principal alice = local.getPrincipal();
             final fabric.lang.Principal bob = w.getPrincipal();
             RemoteCallImpl call =

@@ -24,17 +24,17 @@ To compile an application:
 use the "fabc" script, or run fabric.Main with java, e.g.:
 java fabric.Main tests/OO7/*.fab -d rt-classes -sourcepath src/runtime:tests -sigcp sig-classes
 
-To start a core:
-use the "fab-core" script, or run fabric.core.Main with java, e.g.:
-java fabric.core.Main --core core0 etc/keys/core0.keystore etc/keys/trust.keystore password
+To start a store:
+use the "fab-store" script, or run fabric.store.Main with java, e.g.:
+java fabric.store.Main --store store0 etc/keys/store0.keystore etc/keys/trust.keystore password
 
 To start a worker (coming soon):
 use the "fab-worker" script
 
 To run an application:
 use the "fab" script, or run fabric.worker.Worker with java, e.g.:
-java fabric.worker.Worker OO7.Benchmark fab://core0/OO7 tiny 3
-java fabric.worker.Worker OO7.traversals.T1 fab://core0/OO7 --hot
+java fabric.worker.Worker OO7.Benchmark fab://store0/OO7 tiny 3
+java fabric.worker.Worker OO7.traversals.T1 fab://store0/OO7 --hot
   (Make sure you have $FABRIC_HOME set properly!)
 
 

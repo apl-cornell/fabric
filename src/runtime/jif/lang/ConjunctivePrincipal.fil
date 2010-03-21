@@ -1,7 +1,7 @@
 package jif.lang;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.util.*;
 
 /**
@@ -11,14 +11,14 @@ import fabric.util.*;
 public final class ConjunctivePrincipal extends Principal {
   final Set conjuncts;
   private Integer hashCode;
-  public static final Core localCore = Worker.getWorker().getLocalCore();
+  public static final Store localStore = Worker.getWorker().getLocalStore();
 
   ConjunctivePrincipal(Set conjuncts) {
     this.conjuncts = conjuncts;
   }
 
   public String name() {
-    StringBuffer sb = new StringBuffer@localCore();
+    StringBuffer sb = new StringBuffer@localStore();
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
       sb.append(PrincipalUtil.toString(p));
@@ -67,11 +67,11 @@ public final class ConjunctivePrincipal extends Principal {
     return true;
   }
 
-  public ActsForProof findProofUpto(Core core, Principal p, java.lang.Object searchState) {
-    Map proofs = new HashMap@core();
+  public ActsForProof findProofUpto(Store store, Principal p, java.lang.Object searchState) {
+    Map proofs = new HashMap@store();
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
       Principal q = (Principal) iter.next();
-      ActsForProof prf = PrincipalUtil.findActsForProof(core, p, q, searchState);
+      ActsForProof prf = PrincipalUtil.findActsForProof(store, p, q, searchState);
       if (prf == null) return null;
       proofs.put(q, prf);
     }
@@ -82,15 +82,15 @@ public final class ConjunctivePrincipal extends Principal {
 
   }
 
-  public ActsForProof findProofDownto(Core core, Principal q, java.lang.Object searchState) {
+  public ActsForProof findProofDownto(Store store, Principal q, java.lang.Object searchState) {
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
       Principal witness = (Principal) iter.next();
       ActsForProof prf =
-          PrincipalUtil.findActsForProof(core, witness, q, searchState);
+          PrincipalUtil.findActsForProof(store, witness, q, searchState);
       if (prf != null) {
         // have found a proof from witness to q
-        DelegatesProof step = new DelegatesProof@core(this, witness);
-        return new TransitiveProof@core(step, witness, prf);
+        DelegatesProof step = new DelegatesProof@store(this, witness);
+        return new TransitiveProof@store(step, witness, prf);
       }
     }
     return null;

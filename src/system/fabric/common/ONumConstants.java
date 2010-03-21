@@ -2,7 +2,7 @@ package fabric.common;
 
 public final class ONumConstants {
   public static final long ROOT_MAP = 0;
-  public static final long CORE_PRINCIPAL = 1;
+  public static final long STORE_PRINCIPAL = 1;
 
   // This is the first available onum.
   public static final long FIRST_UNRESERVED = 2;

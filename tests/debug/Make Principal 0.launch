@@ -8,6 +8,6 @@
 </listAttribute>
 <booleanAttribute key="org.eclipse.debug.core.appendEnvironmentVariables" value="true"/>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="fabric.worker.Worker"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--make-principal core0 --name worker0"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="--make-principal store0 --name worker0"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="fabric"/>
 </launchConfiguration>

@@ -35,15 +35,15 @@ public class Statistics {
   }
 
   private Statistics() {
-    newPage(Diagnostics.getLocalCore(), Diagnostics.getCurrentLabel());
+    newPage(Diagnostics.getLocalStore(), Diagnostics.getCurrentLabel());
   }
 
-  public void newPage(Core c, Label l) {
+  public void newPage(Store s, Label l) {
     atomic {
       startTime = System.currentTimeMillis();
-      updates = new HashSet~l@c/*Object*/();
-      reads = new HashSet~l@c/*Object*/();
-      currentPage = new PageStats~l@c();
+      updates = new HashSet~l@s/*Object*/();
+      reads = new HashSet~l@s/*Object*/();
+      currentPage = new PageStats~l@s();
     }
   }
 

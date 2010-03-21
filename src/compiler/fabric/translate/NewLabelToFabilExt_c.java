@@ -25,7 +25,7 @@ public class NewLabelToFabilExt_c extends NewLabelToJavaExt_c {
       Call c = (Call)n;
 //      return addLoc(c);
 
-      if (loc == null) loc = ((FabILNodeFactory)rw.nodeFactory()).CoreGetter(node().position());
+      if (loc == null) loc = ((FabILNodeFactory)rw.nodeFactory()).StoreGetter(node().position());
       if (loc != null) {
         FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
         return ffrw.updateLabelLocation(c, loc);

@@ -5,9 +5,9 @@ import fabric.worker.*;
 public class Array01 {
   public static void main(String[] args) {
     atomic {
-      Core core = Worker.getWorker().getCore("core0");
-      Object[] foo = new Object[]@core {};
-      Object[] bar = new Object[][]@core {foo, foo};
+      Store store = Worker.getWorker().getStore("store0");
+      Object[] foo = new Object[]@store {};
+      Object[] bar = new Object[][]@store {foo, foo};
       Object[][] baz = (Object[][]) bar;
       foo = baz[0];
     }

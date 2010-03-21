@@ -71,8 +71,8 @@ package fabric.util;
 public abstract class AbstractList extends AbstractCollection implements List
 {
 
-  protected static final fabric.worker.Core LOCAL_CORE =
-    fabric.worker.Worker.getWorker().getLocalCore();
+  protected static final fabric.worker.Store LOCAL_STORE =
+    fabric.worker.Worker.getWorker().getLocalStore();
 
   /**
    * A count of the number of structural modifications that have been made to
@@ -179,7 +179,7 @@ public abstract class AbstractList extends AbstractCollection implements List
    */
   public boolean addAll(int index, Collection c)
   {
-    Iterator itr = c.iterator(LOCAL_CORE);
+    Iterator itr = c.iterator(LOCAL_STORE);
     int size = c.size();
     for (int pos = size; pos > 0; pos--)
       add(index++, itr.next());
@@ -213,7 +213,7 @@ public abstract class AbstractList extends AbstractCollection implements List
    *
    * This implementation returns true if the object is this, or false if the
    * object is not a List.  Otherwise, it iterates over both lists (with
-   * iterator(Core)), returning false if two elements compare false or one list
+   * iterator(Store)), returning false if two elements compare false or one list
    * is shorter, and true if the iteration completes successfully.
    *
    * @param o the object to test for equality with this list
@@ -231,8 +231,8 @@ public abstract class AbstractList extends AbstractCollection implements List
     if (size != ((List) o).size())
       return false;
 
-    Iterator itr1 = iterator(LOCAL_CORE);
-    Iterator itr2 = ((List) o).iterator(LOCAL_CORE);
+    Iterator itr1 = iterator(LOCAL_STORE);
+    Iterator itr2 = ((List) o).iterator(LOCAL_STORE);
 
     while (--size >= 0)
       if (! equals(itr1.next(), itr2.next()))
@@ -246,7 +246,7 @@ public abstract class AbstractList extends AbstractCollection implements List
    * calculated as follows:
    * 
 <pre>hashCode = 1;
-Iterator i = list.iterator(LOCAL_CORE);
+Iterator i = list.iterator(LOCAL_STORE);
 while (i.hasNext())
 {
   Object obj = i.next();
@@ -263,7 +263,7 @@ while (i.hasNext())
   public int hashCode()
   {
     int hashCode = 1;
-    Iterator itr = iterator(LOCAL_CORE);
+    Iterator itr = iterator(LOCAL_STORE);
     int pos = size();
     while (--pos >= 0)
       hashCode = 31 * hashCode + hashCode(itr.next());
@@ -272,7 +272,7 @@ while (i.hasNext())
 
   /**
    * Obtain the first index at which a given object is to be found in this
-   * list. This implementation follows a listIterator(core) until a match is found,
+   * list. This implementation follows a listIterator(store) until a match is found,
    * or returns -1 if the list end is reached.
    *
    * @param o the object to search for
@@ -281,7 +281,7 @@ while (i.hasNext())
    */
   public int indexOf(Object o)
   {
-    ListIterator itr = listIterator(LOCAL_CORE);
+    ListIterator itr = listIterator(LOCAL_STORE);
     int size = size();
     for (int pos = 0; pos < size; pos++)
       if (equals(o, itr.next()))
@@ -301,10 +301,10 @@ while (i.hasNext())
    * @return an Iterator over the elements of this list, in order
    * @see #modCount
    */
-  public Iterator iterator(fabric.worker.Core core)
+  public Iterator iterator(fabric.worker.Store store)
   {
     // Bah, Sun's implementation forbids using listIterator(0).
-    return new AnonymousIterator@core();
+    return new AnonymousIterator@store();
   }
   
   private class AnonymousIterator implements Iterator {
@@ -397,7 +397,7 @@ while (i.hasNext())
   public int lastIndexOf(Object o)
   {
     int pos = size();
-    ListIterator itr = listIterator(LOCAL_CORE, pos);
+    ListIterator itr = listIterator(LOCAL_STORE, pos);
     while (--pos >= 0)
       if (equals(o, itr.previous()))
         return pos;
@@ -411,9 +411,9 @@ while (i.hasNext())
    * @return a ListIterator over the elements of this list, in order, starting
    *         at the beginning
    */
-  public ListIterator listIterator(fabric.worker.Core core)
+  public ListIterator listIterator(fabric.worker.Store store)
   {
-    return listIterator(core, 0);
+    return listIterator(store, 0);
   }
 
   /**
@@ -434,13 +434,13 @@ while (i.hasNext())
    * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
    * @see #modCount
    */
-  public ListIterator listIterator(fabric.worker.Core core, final int index)
+  public ListIterator listIterator(fabric.worker.Store store, final int index)
   {
     if (index < 0 || index > size())
       throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
                                           + size());
 
-    return new AbstractListIterator@core(index);
+    return new AbstractListIterator@store(index);
   }
 
   /**
@@ -483,7 +483,7 @@ while (i.hasNext())
    */
   protected void removeRange(int fromIndex, int toIndex)
   {
-    ListIterator itr = listIterator(LOCAL_CORE, fromIndex);
+    ListIterator itr = listIterator(LOCAL_STORE, fromIndex);
     for (int index = fromIndex; index < toIndex; index++)
       {
         itr.next();
@@ -534,10 +534,10 @@ while (i.hasNext())
    * corresponding methods on the backing abstract list, after
    * bounds-checking the index and adjusting for the offset. The
    * <code>addAll(Collection c)</code> method merely returns addAll(size, c).
-   * The <code>listIterator(Core, int)</code> method returns a "wrapper object"
+   * The <code>listIterator(Store, int)</code> method returns a "wrapper object"
    * over a list iterator on the backing list, which is created with the
-   * corresponding method on the backing list. The <code>iterator(Core)</code>
-   * method merely returns listIterator(core), and the <code>size()</code> method
+   * corresponding method on the backing list. The <code>iterator(Store)</code>
+   * method merely returns listIterator(store), and the <code>size()</code> method
    * merely returns the subclass's size field.
    * <p>
    *
@@ -793,7 +793,7 @@ while (i.hasNext())
        */
       private SubListIterator(int index) {
         this.index = index;
-        i = backingList.listIterator(LOCAL_CORE, index + offset);
+        i = backingList.listIterator(LOCAL_STORE, index + offset);
         position = index;
       }
 
@@ -1175,13 +1175,13 @@ while (i.hasNext())
     }
 
     /**
-     * Specified by AbstractList.subList to return listIterator(Core).
+     * Specified by AbstractList.subList to return listIterator(Store).
      *
      * @return an iterator over the sublist
      */
-    public Iterator iterator(fabric.worker.Core core)
+    public Iterator iterator(fabric.worker.Store store)
     {
-      return listIterator(core);
+      return listIterator(store);
     }
 
     /**
@@ -1194,12 +1194,12 @@ while (i.hasNext())
      *         modified externally to this sublist
      * @throws IndexOutOfBoundsException if the value is out of range
      */
-    public ListIterator listIterator(fabric.worker.Core core, final int index)
+    public ListIterator listIterator(fabric.worker.Store store, final int index)
     {
       checkMod();
       checkBoundsInclusive(index);
 
-      return new SubListIterator@core(index);
+      return new SubListIterator@store(index);
     }
   } // class SubList
 

@@ -1,9 +1,9 @@
 package travel;
 
 public final class Config {
-  public static final String{*!:} brokerCoreName = "core00.systems.cs.cornell.edu";
-  public static final String{*!:} bankCoreName = "core01.systems.cs.cornell.edu";
-  public static final String{*!:} airlineCoreName = "core02.systems.cs.cornell.edu";
+  public static final String{*!:} brokerStoreName = "core00.systems.cs.cornell.edu";
+  public static final String{*!:} bankStoreName = "core01.systems.cs.cornell.edu";
+  public static final String{*!:} airlineStoreName = "core02.systems.cs.cornell.edu";
   
   /**
    * The key in the root map for finding the broker object.

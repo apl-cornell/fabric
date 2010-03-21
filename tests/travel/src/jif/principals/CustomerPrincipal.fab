@@ -12,16 +12,16 @@ public class CustomerPrincipal extends ExternalPrincipal {
     atomic {
       FabricWorker cl = FabricWorker.getWorker();
       if (cl != null) {
-        final Core brokerCore = cl.getCore(Config.brokerCoreName);
-        if (brokerCore != null) {
-          Map rootMap = brokerCore.getRoot();
+        final Store brokerStore = cl.getStore(Config.brokerStoreName);
+        if (brokerStore != null) {
+          Map rootMap = brokerStore.getRoot();
           if (rootMap != null) {
             Object obj = rootMap.get(Config.customerPrincipalMapKey);
             CustomerPrincipal customerPrincipal = null;
             if (obj instanceof CustomerPrincipal) {
               customerPrincipal = (CustomerPrincipal) obj;
             } else {
-              customerPrincipal = new CustomerPrincipal@brokerCore();
+              customerPrincipal = new CustomerPrincipal@brokerStore();
               rootMap.put(Config.customerPrincipalMapKey, customerPrincipal);
             }
             

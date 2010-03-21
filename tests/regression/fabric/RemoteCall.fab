@@ -5,7 +5,7 @@ public class RemoteCall {
             if (local == null) return;
             final RemoteWorker w = local.getWorker("bob");
             if (w == null) return;
-            final Core gaia = local.getCore("gaia.systems.cs.cornell.edu");
+            final Store gaia = local.getStore("gaia.systems.cs.cornell.edu");
             final principal alice = local.getPrincipal();
             final principal bob = w.getPrincipal();
             RemoteCallImpl[alice, bob] call = new RemoteCallImpl[alice, bob]@gaia();

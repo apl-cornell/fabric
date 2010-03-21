@@ -3,9 +3,9 @@ package travel;
 public class ShowState {
   public static void main(String[] args) {
     atomic {
-      Core core = Worker.getWorker().getCore(Config.brokerCoreName);
+      Store store = Worker.getWorker().getStore(Config.brokerStoreName);
 
-      Broker broker = (Broker) core.getRoot().get(Config.brokerMapKey);
+      Broker broker = (Broker) store.getRoot().get(Config.brokerMapKey);
       System.out.println("customer account balance: "
 	  + broker.customerAcct.balance.value);
       System.out.println(" airline account balance: "

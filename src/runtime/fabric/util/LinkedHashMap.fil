@@ -435,9 +435,9 @@ public class LinkedHashMap extends HashMap
    * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
    * @return the appropriate iterator
    */
-  Iterator iterator(fabric.worker.Core core, final int type)
+  Iterator iterator(fabric.worker.Store store, final int type)
   {
-    return new LinkedHashIterator@core(type);
+    return new LinkedHashIterator@store(type);
   }
   
   private final class LinkedHashIterator implements Iterator

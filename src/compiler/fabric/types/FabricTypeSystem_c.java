@@ -72,8 +72,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return load("fabric.worker.FabricWorker");
   }
   
-  public ClassType Core() {
-    return load("fabric.worker.Core");
+  public ClassType Store() {
+    return load("fabric.worker.Store");
   }
 
   private JifLocalInstance workerLocalInstance = null;
@@ -110,7 +110,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     Type strpFromType = strip(fromType);
     Type strpToType = strip(toType);
 
-    if ((equals(strpFromType, Worker()) || equals(strpFromType, RemoteWorker()) || equals(strpFromType, Core())) 
+    if ((equals(strpFromType, Worker()) || equals(strpFromType, RemoteWorker()) || equals(strpFromType, Store())) 
         && equals(strpToType, Principal())) {
       return true;
     }
@@ -123,7 +123,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     Type strpFromType = strip(fromType);
     Type strpToType = strip(toType);
 
-    if ((equals(strpFromType, Worker()) || equals(strpFromType, RemoteWorker()) || equals(strpFromType, Core())) 
+    if ((equals(strpFromType, Worker()) || equals(strpFromType, RemoteWorker()) || equals(strpFromType, Store())) 
         && equals(strpToType, Principal())) {
       return true;
     }

@@ -1,6 +1,6 @@
 package fabnfs.util;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.util.HashMap;
 import java.util.StringTokenizer;
 
@@ -22,19 +22,19 @@ public class FileImpl implements File {
     FileSystemObject element = null;
     String lastName = null;
 
-    Core remoteCore;
+    Store remoteStore;
 
     // attributes
-    public FileImpl(Core remoteCore, String name) {
+    public FileImpl(Store remoteStore, String name) {
         this.name = name;
-        this.remoteCore = remoteCore;
+        this.remoteStore = remoteStore;
     }
 
     // all the methods in java.io.File
     private void searchFile() {
         atomic {
             if (parentDir != null || element != null || lastName != null) return;
-            HashMap root = (HashMap)remoteCore.getRoot();
+            HashMap root = (HashMap)remoteStore.getRoot();
             FabDirectory rootDir = (FabDirectory)root.get("fileSystem");
             FabDirectory dir = rootDir;
 

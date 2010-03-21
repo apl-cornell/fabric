@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.common.AbstractMessageHandlerThread.Pool;
 import fabric.common.AbstractMessageHandlerThread.SessionAttributes;
 import fabric.common.exceptions.InternalError;
@@ -176,7 +176,7 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
     if (!Options.DEBUG_NO_SSL) {
       // XXX TODO Start encrypting.
       // // Initiate the SSL handshake and initialize the fields.
-      // SSLSocketFactory sslSocketFactory = node.getSSLSocketFactory(coreName);
+      // SSLSocketFactory sslSocketFactory = node.getSSLSocketFactory(storeName);
       // synchronized (sslSocketFactory) {
       // sslSocket =
       // (SSLSocket) sslSocketFactory.createSocket(socket, null, 0, true);
@@ -200,11 +200,11 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
     // Read in the pointer to the principal object.
     NodePrincipal remoteNodePrincipal = null;
     if (dataIn.readBoolean()) {
-      String principalCoreName = dataIn.readUTF();
-      Core principalCore = Worker.getWorker().getCore(principalCoreName);
+      String principalStoreName = dataIn.readUTF();
+      Store principalStore = Worker.getWorker().getStore(principalStoreName);
       long principalOnum = dataIn.readLong();
       remoteNodePrincipal =
-          new NodePrincipal._Proxy(principalCore, principalOnum);
+          new NodePrincipal._Proxy(principalStore, principalOnum);
     }
 
     Pair<Boolean, NodePrincipal> authResult =
@@ -244,7 +244,7 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
               // XXX If the worker principal doesn't exist, authenticate as the
               // XXX bottom principal. This is for ease of debugging so we don't
               // XXX need to keep editing worker property files every time we
-              // XXX re-create the worker principal on the core.
+              // XXX re-create the worker principal on the store.
               success = true;
             }
 

@@ -1,9 +1,9 @@
 package fabil;
-import fabric.worker.Core;
+import fabric.worker.Store;
 class Array07 {
 	public void f () throws Exception {
 		Class k = Array07.class;
-		k.getConstructor(new Class native[] {Core.class});
+		k.getConstructor(new Class native[] {Store.class});
 	}
 
 }

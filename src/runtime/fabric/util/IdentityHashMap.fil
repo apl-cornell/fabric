@@ -282,9 +282,9 @@ public class IdentityHashMap extends AbstractMap
           return size;
         }
 
-        public Iterator iterator(fabric.worker.Core core)
+        public Iterator iterator(fabric.worker.Store store)
         {
-          return new IdentityIterator@core(ENTRIES);
+          return new IdentityIterator@store(ENTRIES);
         }
 
         public void clear()
@@ -425,9 +425,9 @@ public class IdentityHashMap extends AbstractMap
           return size;
         }
 
-        public Iterator iterator(fabric.worker.Core core)
+        public Iterator iterator(fabric.worker.Store store)
         {
-          return new IdentityIterator@core(KEYS);
+          return new IdentityIterator@store(KEYS);
         }
 
         public void clear()
@@ -647,9 +647,9 @@ public class IdentityHashMap extends AbstractMap
           return size;
         }
 
-        public Iterator iterator(fabric.worker.Core core)
+        public Iterator iterator(fabric.worker.Store store)
         {
-          return new IdentityIterator@core(VALUES);
+          return new IdentityIterator@store(VALUES);
         }
 
         public void clear()

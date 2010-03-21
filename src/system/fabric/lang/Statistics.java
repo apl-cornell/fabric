@@ -3,7 +3,7 @@ package fabric.lang;
 /**
  * <p>
  * A Statistics encapsulates the history of read and write requests for an
- * object. It is maintained at the Core and is used to generate promise
+ * object. It is maintained at the Store and is used to generate promise
  * durations for the object.
  * </p>
  * <p>
@@ -21,8 +21,8 @@ public interface Statistics {
 
   /**
    * Determine the duration of a promise to issue.  While a promise is
-   * outstanding, the core will not permit updates to the object to commit.
-   * This allows read-only transactions to proceed without contacting the core.
+   * outstanding, the store will not permit updates to the object to commit.
+   * This allows read-only transactions to proceed without contacting the store.
    * @return the duration, in milliseconds, of the promise.
    */
   int generatePromise();

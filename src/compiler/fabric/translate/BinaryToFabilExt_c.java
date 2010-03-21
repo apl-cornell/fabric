@@ -37,8 +37,8 @@ public class BinaryToFabilExt_c extends BinaryToJavaExt_c {
   }
   
   protected Expr wrapExpr(FabricTypeSystem ts, FabILNodeFactory nf, Type t, Expr e) {
-    if (ts.typeEquals(t, ts.Worker()) || ts.typeEquals(t, ts.RemoteWorker()) || ts.typeEquals(t, ts.Core())) {
-      // Local/remote worker or core
+    if (ts.typeEquals(t, ts.Worker()) || ts.typeEquals(t, ts.RemoteWorker()) || ts.typeEquals(t, ts.Store())) {
+      // Local/remote worker or store
       return nf.Call(Position.compilerGenerated(), e, nf.Id(Position.compilerGenerated(), "getPrincipal"));
     }
     return e;

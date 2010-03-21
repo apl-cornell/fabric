@@ -5,7 +5,7 @@ public class RemoteCall04[principal alice] {
     public void m2{alice←;alice→} () { 
         FabricWorker local = FabricWorker.getWorker();
         if (local == null) return;
-        final RemoteWorker w = local.getWorker("core");
+        final RemoteWorker w = local.getWorker("store");
         final principal pq = alice;
         if (w actsfor pq && pq equiv alice) {
             int y = m1@w(1, pq);

@@ -16,7 +16,7 @@ public class FabricSoftRef extends SoftReference<_Impl> {
     collector.start();
   }
   
-  public Core core;
+  public Store store;
   public long onum;
   public ReadMapEntry readMapEntry;
   
@@ -28,9 +28,9 @@ public class FabricSoftRef extends SoftReference<_Impl> {
     collector.destroy();
   }
 
-  public FabricSoftRef(Core core, long onum, _Impl impl) {
+  public FabricSoftRef(Store store, long onum, _Impl impl) {
     super(impl, queue);
-    this.core = core;
+    this.store = store;
     this.onum = onum;
   }
   
@@ -40,12 +40,12 @@ public class FabricSoftRef extends SoftReference<_Impl> {
    * @return true if the impl was found in cache.
    */
   public boolean evict() {
-    if (core instanceof LocalCore) {
-      throw new InternalError("evicting local core object");
+    if (store instanceof LocalStore) {
+      throw new InternalError("evicting local store object");
     }
     
     clear();
-    boolean result = core.notifyEvict(onum);
+    boolean result = store.notifyEvict(onum);
     if (readMapEntry != null && readMapEntry.depin()) readMapEntry = null;
     return result;
   }
@@ -72,7 +72,7 @@ public class FabricSoftRef extends SoftReference<_Impl> {
       while (!destroyed) {
         try {
           FabricSoftRef ref = (FabricSoftRef) queue.remove();
-          ref.core.notifyEvict(ref.onum);
+          ref.store.notifyEvict(ref.onum);
           if (ref.readMapEntry.depin()) ref.readMapEntry = null;
         } catch (InterruptedException e) {}
       }

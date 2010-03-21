@@ -7,7 +7,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.remote.RemoteWorker;
 import fabric.common.exceptions.InternalError;
 import fabric.lang.Object._Proxy;
@@ -25,7 +25,7 @@ public abstract class InterWorkerMessage<R extends Response> extends
    * Used for passing object references between workers.
    */
   public static void writeRef(_Proxy ref, DataOutput out) throws IOException {
-    out.writeUTF(ref.$getCore().name());
+    out.writeUTF(ref.$getStore().name());
     out.writeLong(ref.$getOnum());
   }
 
@@ -39,7 +39,7 @@ public abstract class InterWorkerMessage<R extends Response> extends
    */
   @SuppressWarnings("unchecked")
   public static _Proxy readRef(Class<?> type, DataInput in) throws IOException {
-    Core core = Worker.getWorker().getCore(in.readUTF());
+    Store store = Worker.getWorker().getStore(in.readUTF());
     Class<? extends _Proxy> proxyType = null;
     for (Class<?> c : type.getClasses()) {
       if (c.getSimpleName().equals("_Proxy")) {
@@ -53,9 +53,9 @@ public abstract class InterWorkerMessage<R extends Response> extends
 
     try {
       Constructor<? extends _Proxy> constructor =
-          proxyType.getConstructor(Core.class, long.class);
+          proxyType.getConstructor(Store.class, long.class);
 
-      return constructor.newInstance(core, in.readLong());
+      return constructor.newInstance(store, in.readLong());
     } catch (SecurityException e) {
       throw new InternalError(e);
     } catch (NoSuchMethodException e) {

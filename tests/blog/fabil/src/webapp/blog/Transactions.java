@@ -2,7 +2,7 @@ package webapp.blog;
 
 public class Transactions {
 
-  public static BlogPost addBlogPost(String title, String content, Core c, Label l)
+  public static BlogPost addBlogPost(String title, String content, Store s, Label l)
       throws TransactionFailure {
     if (content == null)
       throw new TransactionFailure("content is null");
@@ -10,7 +10,7 @@ public class Transactions {
       BlogPost post = null;
       long start = 0;
       atomic {
-        post = new BlogPost~l@c(title, content);
+        post = new BlogPost~l@s(title, content);
         Blog.getInstance().addBlogPost(post);
         start = System.currentTimeMillis();
       }
@@ -22,14 +22,14 @@ public class Transactions {
   }
 
   public static Comment addComment(String username, String content,
-      BlogPost post, Core core, Label l) throws TransactionFailure {
+      BlogPost post, Store store, Label l) throws TransactionFailure {
     if (username == null || content == null)
       throw new TransactionFailure("username or content is null");
     try {
       Comment c = null;
       long start = 0;
       atomic {
-        c = new Comment~l@core(username, content, post);
+        c = new Comment~l@store(username, content, post);
         post.addComment(c);
         Blog.getInstance().indexComment(c);
         start = System.currentTimeMillis();

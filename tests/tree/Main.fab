@@ -2,27 +2,27 @@ package tree;
 
 //import java.util.Random;
 import fabric.worker.AbortException;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.util.Map;
 import jif.runtime.Runtime;
 import java.io.PrintStream;
 
 public class Main {
-	public Core{*bot} treeCore;
-	public Core{*bot} nodeCore;
+	public Store{*bot} treeStore;
+	public Store{*bot} nodeStore;
 	public final principal{*bot} pp;
 	public final label{*bot} lbl;
 	public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
 
 	public Main() {
 		if(worker$ != null) {
-			treeCore = worker$.getCore("core0");
-			nodeCore = worker$.getCore("core1");
+			treeStore = worker$.getStore("store0");
+			nodeStore = worker$.getStore("store1");
 		}
 		atomic {
-			final Core{*bot} tc = treeCore;
+			final Store{*bot} tc = treeStore;
 			pp = new jif.lang.ExternalPrincipal@tc("localhost");
-			lbl = new label {pp→;pp←}@treeCore;
+			lbl = new label {pp→;pp←}@treeStore;
 		}
 	}
 
@@ -79,13 +79,13 @@ public class Main {
 
 		if(out == null || arg == null) return;
 		try {
-			Map root = (Map) worker$.getCore("core1").getRoot();
+			Map root = (Map) worker$.getStore("store1").getRoot();
 			//    Random random = new Random();
 			if (arg.equals("create")) {
 				atomic {
-					//					final label plbl = new label {*lbl}@treeCore;
+					//					final label plbl = new label {*lbl}@treeStore;
 					Tree[lbl] treeVar = null;
-					treeVar = new Tree[lbl]@treeCore(nodeCore);
+					treeVar = new Tree[lbl]@treeStore(nodeStore);
 					root.put("theTree", treeVar);
 					for (int i = 0; i < 10; i++) {
 						atomic {

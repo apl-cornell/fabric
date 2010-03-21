@@ -2,15 +2,15 @@ package fabric.dissemination.pastry;
 
 import java.util.*;
 
-import fabric.worker.Core;
-import fabric.worker.RemoteCore;
+import fabric.worker.Store;
+import fabric.worker.RemoteStore;
 import fabric.common.exceptions.FetchException;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 
 /**
  * The cache object used by the disseminator to store globs. Essentially a
- * hashtable specialized for globs; it also fetches globs directly from cores
+ * hashtable specialized for globs; it also fetches globs directly from stores
  * when needed.
  */
 public class Cache {
@@ -18,40 +18,40 @@ public class Cache {
   /**
    * Cache of globs, indexed by the oid of the glob's head object.
    */
-  private fabric.common.util.Cache<Pair<Core, Long>, Glob> map =
-      new fabric.common.util.Cache<Pair<Core, Long>, Glob>();
+  private fabric.common.util.Cache<Pair<Store, Long>, Glob> map =
+      new fabric.common.util.Cache<Pair<Store, Long>, Glob>();
 
   /**
-   * Retrieves a glob from the cache, without trying to fetch it from the core.
+   * Retrieves a glob from the cache, without trying to fetch it from the store.
    * 
-   * @param c
-   *          the core of the object to retrieve.
+   * @param store
+   *          the store of the object to retrieve.
    * @param onum
    *          the onum of the object.
    * @return the glob, if it is in the cache; null otherwise.
    */
-  public Glob get(RemoteCore c, long onum) {
-    return get(c, onum, false);
+  public Glob get(RemoteStore store, long onum) {
+    return get(store, onum, false);
   }
 
   /**
-   * Retrieves a glob from the cache, or fetches it from the core.
+   * Retrieves a glob from the cache, or fetches it from the store.
    * 
-   * @param c
-   *          the core of the object to retrieve.
+   * @param store
+   *          the store of the object to retrieve.
    * @param onum
    *          the onum of the object.
    * @param fetch
-   *          true if we should fetch from core.
+   *          true if we should fetch from store.
    * @return the glob, or null if fetch is false and glob does not exists in
    *         cache.
    */
-  public Glob get(RemoteCore c, long onum, boolean fetch) {
-    Pair<Core, Long> key = new Pair<Core, Long>(c, onum);
+  public Glob get(RemoteStore store, long onum, boolean fetch) {
+    Pair<Store, Long> key = new Pair<Store, Long>(store, onum);
     Glob g = null;
 
     if (fetch) {
-      g = fetch(c, onum);
+      g = fetch(store, onum);
     } else {
       g = map.get(key);
     }
@@ -59,16 +59,16 @@ public class Cache {
     return g;
   }
 
-  private Glob fetch(RemoteCore c, long onum) {
+  private Glob fetch(RemoteStore c, long onum) {
     Glob g = null;
 
     try {
-      g = c.readEncryptedObjectFromCore(onum);
+      g = c.readEncryptedObjectFromStore(onum);
     } catch (FetchException e) {
     }
 
     if (g != null) {
-      Pair<Core, Long> key = new Pair<Core, Long>(c, onum);
+      Pair<Store, Long> key = new Pair<Store, Long>(c, onum);
       map.put(key, g);
     }
 
@@ -78,18 +78,18 @@ public class Cache {
   /**
    * Put given glob into the cache.
    * 
-   * @param c
-   *          the core of the object.
+   * @param store
+   *          the store of the object.
    * @param onum
    *          the onum of the object.
    * @param g
    *          the glob.
    */
-  public void put(RemoteCore c, long onum, Glob g) {
-    Pair<Core, Long> key = new Pair<Core, Long>(c, onum);
+  public void put(RemoteStore store, long onum, Glob g) {
+    Pair<Store, Long> key = new Pair<Store, Long>(store, onum);
 
     synchronized (map) {
-      Glob old = get(c, onum);
+      Glob old = get(store, onum);
 
       if (old == null || old.isOlderThan(g)) {
         map.put(key, g);
@@ -103,11 +103,11 @@ public class Cache {
    * 
    * @return true iff there was a cache entry for the given oid.
    */
-  public boolean updateEntry(RemoteCore core, long onum, Glob g) {
-    Pair<Core, Long> key = new Pair<Core, Long>(core, onum);
+  public boolean updateEntry(RemoteStore store, long onum, Glob g) {
+    Pair<Store, Long> key = new Pair<Store, Long>(store, onum);
 
     synchronized (map) {
-      Glob old = get(core, onum);
+      Glob old = get(store, onum);
       if (old == null) return false;
 
       if (old.isOlderThan(g)) {
@@ -124,14 +124,14 @@ public class Cache {
    * removed from the cache, they will not be reflected by the set returned.
    * However, no synchronization is needed for working with the set.
    */
-  public Set<Pair<Pair<Core, Long>, Long>> timestamps() {
-    Set<Pair<Pair<Core, Long>, Long>> result =
-        new HashSet<Pair<Pair<Core, Long>, Long>>();
+  public Set<Pair<Pair<Store, Long>, Long>> timestamps() {
+    Set<Pair<Pair<Store, Long>, Long>> result =
+        new HashSet<Pair<Pair<Store, Long>, Long>>();
 
-    for (Pair<Core, Long> key : map.keys()) {
+    for (Pair<Store, Long> key : map.keys()) {
       Glob glob = map.get(key);
       if (glob != null)
-        result.add(new Pair<Pair<Core, Long>, Long>(key, glob.getTimestamp()));
+        result.add(new Pair<Pair<Store, Long>, Long>(key, glob.getTimestamp()));
     }
 
     return result;
@@ -143,19 +143,19 @@ public class Cache {
    * corresponding objects. Like {@code timestamps()}, the returned set is not
    * backed by the underlying table.
    */
-  public List<Pair<Pair<Core, Long>, Long>> sortedTimestamps() {
-    List<Pair<Pair<Core, Long>, Long>> k =
-        new ArrayList<Pair<Pair<Core, Long>, Long>>(timestamps());
+  public List<Pair<Pair<Store, Long>, Long>> sortedTimestamps() {
+    List<Pair<Pair<Store, Long>, Long>> k =
+        new ArrayList<Pair<Pair<Store, Long>, Long>>(timestamps());
 
     Collections.sort(k, TIMESTAMP_COMPARATOR);
 
     return k;
   }
 
-  private final Comparator<Pair<Pair<Core, Long>, Long>> TIMESTAMP_COMPARATOR =
-      new Comparator<Pair<Pair<Core, Long>, Long>>() {
-        public int compare(Pair<Pair<Core, Long>, Long> o1,
-            Pair<Pair<Core, Long>, Long> o2) {
+  private final Comparator<Pair<Pair<Store, Long>, Long>> TIMESTAMP_COMPARATOR =
+      new Comparator<Pair<Pair<Store, Long>, Long>>() {
+        public int compare(Pair<Pair<Store, Long>, Long> o1,
+            Pair<Pair<Store, Long>, Long> o2) {
           Glob g1 = map.get(o1.first);
           Glob g2 = map.get(o2.first);
 

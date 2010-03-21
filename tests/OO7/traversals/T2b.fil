@@ -1,7 +1,7 @@
 package OO7.traversals;
 import OO7.*;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.util.Iterator;
 import fabric.util.HashMap;
@@ -17,7 +17,7 @@ public class T2b extends PrivatePartTraversal {
   HashMap visited = null;
 
   public static void main(String[] args) {
-    Core local = Worker.getWorker().getLocalCore();
+    Store local = Worker.getWorker().getLocalStore();
     T2b t2 = null;
     atomic {
       t2 = new T2b@local();
@@ -42,7 +42,7 @@ public class T2b extends PrivatePartTraversal {
   }
 
   public void visitCompositePart (CompositePart p) {
-    Core local = Worker.getWorker().getLocalCore();
+    Store local = Worker.getWorker().getLocalStore();
     visited = new HashMap@local();
     p.rootPart().accept(this);
     visited = null;

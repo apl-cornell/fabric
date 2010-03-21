@@ -1,7 +1,7 @@
 package OO7.traversals;
 import OO7.*;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.Worker;
 
 /** Traversal T6: Sparse traversal speed. Traverse the assembly hierarchy. As
@@ -16,7 +16,7 @@ public class T6 extends PrivatePartTraversal {
   private int result = 0;
 
   public static void main(String[] args) {
-    Core local = Worker.getWorker().getLocalCore();
+    Store local = Worker.getWorker().getLocalStore();
     T6 t6 = null;
     atomic {
       t6 = new T6@local();

@@ -18,7 +18,7 @@ public interface FabricTypeSystem extends JifTypeSystem {
   
   ClassType Worker();
   
-  ClassType Core();
+  ClassType Store();
 
   /**
    * Constructs a principal for the local worker. 

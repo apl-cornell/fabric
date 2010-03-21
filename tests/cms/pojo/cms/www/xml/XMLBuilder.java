@@ -1176,7 +1176,7 @@ public class XMLBuilder {
       Element xCourse = null;
       /*
        * We create course nodes, and then append the announcements to the proper
-       * course, so we have to find the coreresponding course element if it has
+       * course, so we have to find the corresponding course element if it has
        * already been created
        */
       NodeList currentNodes = xAnnouncements.getChildNodes();

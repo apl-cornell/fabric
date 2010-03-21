@@ -10,7 +10,7 @@ import java.util.List;
 
 import jif.lang.*;
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 import fabric.common.Crypto;
 import fabric.common.RefTypeEnum;
@@ -32,10 +32,10 @@ public interface Principal extends Object {
   boolean isAuthorized(final java.lang.Object authPrf, final Closure closure,
       final Label lb, final boolean executeNow);
 
-  ActsForProof findProofUpto(final Core core, final Principal p,
+  ActsForProof findProofUpto(final Store store, final Principal p,
       final java.lang.Object searchState);
 
-  ActsForProof findProofDownto(final Core core, final Principal q,
+  ActsForProof findProofDownto(final Store store, final Principal q,
       final java.lang.Object searchState);
 
   PublicKey getPublicKey();
@@ -48,8 +48,8 @@ public interface Principal extends Object {
       super(impl);
     }
 
-    public _Proxy(fabric.worker.Core core, long onum) {
-      super(core, onum);
+    public _Proxy(fabric.worker.Store store, long onum) {
+      super(store, onum);
     }
 
     public String name() {
@@ -70,14 +70,14 @@ public interface Principal extends Object {
           executeNow);
     }
 
-    public ActsForProof findProofUpto(Core core, Principal p,
+    public ActsForProof findProofUpto(Store store, Principal p,
         java.lang.Object searchState) {
-      return ((Principal) fetch()).findProofUpto(core, p, searchState);
+      return ((Principal) fetch()).findProofUpto(store, p, searchState);
     }
 
-    public ActsForProof findProofDownto(Core core, Principal q,
+    public ActsForProof findProofDownto(Store store, Principal q,
         java.lang.Object searchState) {
-      return ((Principal) fetch()).findProofDownto(core, q, searchState);
+      return ((Principal) fetch()).findProofDownto(store, q, searchState);
     }
 
     public PublicKey getPublicKey() {
@@ -94,21 +94,21 @@ public interface Principal extends Object {
     private PublicKey publicKey;
     private PrivateKeyObject privateKeyObject;
 
-    public _Impl(Core core, Label label) {
+    public _Impl(Store store, Label label) {
       // If the given label is null, temporarily create the object with an
       // overly restrictive label.
-      super(core, label == null ? Worker.getWorker().getLocalCore()
+      super(store, label == null ? Worker.getWorker().getLocalStore()
           .getPublicReadonlyLabel() : label);
       
       Principal._Proxy thisProxy = (Principal._Proxy) this.$getProxy();
       IntegPolicy integ =
-        LabelUtil._Impl.writerPolicy(core, thisProxy, thisProxy);
+        LabelUtil._Impl.writerPolicy(store, thisProxy, thisProxy);
 
       if (label == null) {
         // Replace the temporary label with {this <- this}.
         ConfPolicy bottomConf =
-            Worker.getWorker().getLocalCore().getBottomConfidPolicy();
-        this.$label = LabelUtil._Impl.toLabel(core, bottomConf, integ);
+            Worker.getWorker().getLocalStore().getBottomConfidPolicy();
+        this.$label = LabelUtil._Impl.toLabel(store, bottomConf, integ);
       }
 
       // Generate a new key pair for this principal.
@@ -117,10 +117,10 @@ public interface Principal extends Object {
       
       // Create the label {this->this; this<-this} for the private key object.
       ConfPolicy conf =
-          LabelUtil._Impl.readerPolicy(core, thisProxy, thisProxy);
-      Label privateLabel = LabelUtil._Impl.toLabel(core, conf, integ);
+          LabelUtil._Impl.readerPolicy(store, thisProxy, thisProxy);
+      Label privateLabel = LabelUtil._Impl.toLabel(store, conf, integ);
       this.privateKeyObject =
-          new PrivateKeyObject._Impl(core, privateLabel, keyPair.getPrivate());
+          new PrivateKeyObject._Impl(store, privateLabel, keyPair.getPrivate());
     }
 
     abstract public String name();
@@ -132,10 +132,10 @@ public interface Principal extends Object {
     abstract public boolean isAuthorized(final java.lang.Object authPrf,
         final Closure closure, final Label lb, final boolean executeNow);
 
-    abstract public ActsForProof findProofUpto(final Core core,
+    abstract public ActsForProof findProofUpto(final Store store,
         final Principal p, final java.lang.Object searchState);
 
-    abstract public ActsForProof findProofDownto(final Core core,
+    abstract public ActsForProof findProofDownto(final Store store,
         final Principal q, final java.lang.Object searchState);
 
     @Override
@@ -145,16 +145,16 @@ public interface Principal extends Object {
 
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
-        List<Long> intracoreRefs, List<Pair<String, Long>> intercoreRefs)
+        List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
         throws IOException {
-      super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
+      super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
     }
 
-    public _Impl(Core core, long onum, int version, long expiry, long label,
+    public _Impl(Store store, long onum, int version, long expiry, long label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intracoreRefs) throws java.io.IOException,
+        Iterator<Long> intraStoreRefs) throws java.io.IOException,
         ClassNotFoundException {
-      super(core, onum, version, expiry, label, in, refTypes, intracoreRefs);
+      super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
     }
 
     public final PublicKey getPublicKey() {
@@ -175,8 +175,8 @@ public interface Principal extends Object {
         super(impl);
       }
 
-      public _Proxy(Core core, long onum) {
-        super(core, onum);
+      public _Proxy(Store store, long onum) {
+        super(store, onum);
       }
 
       final public static Principal._Static $instance;
@@ -192,8 +192,8 @@ public interface Principal extends Object {
 
     class _Impl extends Object._Impl implements fabric.lang.Principal._Static {
 
-      public _Impl(Core core, Label label) throws UnreachableNodeException {
-        super(core, label);
+      public _Impl(Store store, Label label) throws UnreachableNodeException {
+        super(store, label);
       }
 
       @Override

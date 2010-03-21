@@ -18,7 +18,7 @@ import fabric.common.*;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
-import fabric.core.InProcessCore;
+import fabric.store.InProcessStore;
 import fabric.net.UnreachableNodeException;
 
 /**
@@ -26,8 +26,8 @@ import fabric.net.UnreachableNodeException;
  */
 public interface Object {
 
-  /** The core where the object resides. */
-  Core $getCore();
+  /** The store where the object resides. */
+  Store $getStore();
 
   /** The object's onum. */
   long $getOnum();
@@ -58,7 +58,7 @@ public interface Object {
    * </p>
    * <p>
    * This method is used to initialize object databases with objects at
-   * well-known onums (e.g., naming map and core principal).
+   * well-known onums (e.g., naming map and store principal).
    * </p>
    * 
    * @deprecated
@@ -80,25 +80,25 @@ public interface Object {
 
     /**
      * This is used only to pin the _Impl in the case where it's a object on the
-     * local core.
+     * local store.
      */
     private transient final _Impl anchor;
 
-    public _Proxy(Core core, long onum) {
-      if (core.isLocalCore() && onum != ONumConstants.EMPTY_LABEL
+    public _Proxy(Store store, long onum) {
+      if (store.isLocalStore() && onum != ONumConstants.EMPTY_LABEL
           && onum != ONumConstants.PUBLIC_READONLY_LABEL)
         throw new InternalError(
             "Attempted to create unresolved reference to a local object (onum="
                 + onum + ").");
 
-      this.ref = new FabricSoftRef(core, onum, null);
+      this.ref = new FabricSoftRef(store, onum, null);
       this.anchor = null;
     }
 
     public _Proxy(_Impl impl) {
       this.ref = impl.$ref;
-      Core core = impl.$getCore();
-      if (core instanceof LocalCore)
+      Store store = impl.$getStore();
+      if (store instanceof LocalStore)
         this.anchor = impl;
       else this.anchor = null;
     }
@@ -112,7 +112,7 @@ public interface Object {
         // Object has been evicted.
         try {
           // First, check the worker's cache.
-          result = ref.core.readObjectFromCache(ref.onum);
+          result = ref.store.readObjectFromCache(ref.onum);
           
           if (result == null) {
             // Next, check the current transaction's create map.
@@ -128,16 +128,16 @@ public interface Object {
                 }
 
                 // Fetch from the worker.
-                result = worker.readObject(tm.getCurrentTid(), ref.core, ref.onum);
-                ref.core.cache(result);
+                result = worker.readObject(tm.getCurrentTid(), ref.store, ref.onum);
+                ref.store.cache(result);
               } else if (this instanceof SecretKeyObject
-                  || ref.core instanceof InProcessCore) {
-                // Fetch from the core. Bypass dissemination when reading key
-                // objects and when reading from an in-process core.
-                result = ref.core.readObjectNoDissem(ref.onum);
+                  || ref.store instanceof InProcessStore) {
+                // Fetch from the store. Bypass dissemination when reading key
+                // objects and when reading from an in-process store.
+                result = ref.store.readObjectNoDissem(ref.onum);
               } else {
-                // Fetch from the core.
-                result = ref.core.readObject(ref.onum);
+                // Fetch from the store.
+                result = ref.store.readObject(ref.onum);
               }
             } finally {
               Timing.FETCH.end();
@@ -155,8 +155,8 @@ public interface Object {
       return result;
     }
 
-    public final Core $getCore() {
-      return ref.core;
+    public final Store $getStore() {
+      return ref.store;
     }
 
     public final long $getOnum() {
@@ -164,7 +164,7 @@ public interface Object {
     }
     
     public final boolean idEquals(Object other) {
-      return this.$getCore() == other.$getCore() && this.$getOnum() == other.$getOnum();
+      return this.$getStore() == other.$getStore() && this.$getOnum() == other.$getOnum();
     }
 
     public final Label get$label() {
@@ -232,7 +232,7 @@ public interface Object {
      * </p>
      * <p>
      * This method is used to initialize object databases with objects at
-     * well-known onums (e.g., naming map and core principal).
+     * well-known onums (e.g., naming map and store principal).
      * </p>
      * 
      * @deprecated
@@ -277,7 +277,7 @@ public interface Object {
     // *********************************************************
     // The following fields are used for transaction management.
     // They should stay on the worker and should not be sent to
-    // the core.
+    // the store.
     // *********************************************************
 
     /**
@@ -329,14 +329,14 @@ public interface Object {
     /**
      * A private constructor for initializing transaction-management state.
      */
-    private _Impl(Core core, long onum, int version, long expiry, Label label) {
+    private _Impl(Store store, long onum, int version, long expiry, Label label) {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
       this.$reader = Log.NO_READER;
       this.$history = null;
       this.$numWaiting = 0;
-      this.$ref = new FabricSoftRef(core, onum, this);
+      this.$ref = new FabricSoftRef(store, onum, this);
       this.$readMapEntry = TransactionManager.getReadMapEntry(this, expiry);
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
@@ -344,7 +344,7 @@ public interface Object {
 
       // By default, labels are public read-only.
       if (label == null && this instanceof Label)
-        label = Worker.getWorker().getLocalCore().getPublicReadonlyLabel();
+        label = Worker.getWorker().getLocalStore().getPublicReadonlyLabel();
 
       if (label == null) throw new InternalError("Null label!");
 
@@ -352,16 +352,16 @@ public interface Object {
     }
 
     /**
-     * Creates a new Fabric object that will reside on the given Core.
+     * Creates a new Fabric object that will reside on the given Store.
      * 
-     * @param core
+     * @param store
      *          the location for the object
      * @param label
      *          the security label for the object
      */
-    public _Impl(Core core, Label label) throws UnreachableNodeException {
-      this(core, core.createOnum(), 0, 0, label);
-      core.cache(this);
+    public _Impl(Store store, Label label) throws UnreachableNodeException {
+      this(store, store.createOnum(), 0, 0, label);
+      store.cache(this);
 
       // Register the new object with the transaction manager.
       TransactionManager.getInstance().registerCreate(this);
@@ -389,7 +389,7 @@ public interface Object {
      * Default equals implementation uses pointer equality.
      */
     public boolean equals(Object o) {
-      return o.$getCore().equals($getCore()) && o.$getOnum() == $getOnum();
+      return o.$getStore().equals($getStore()) && o.$getOnum() == $getOnum();
     }
 
     /**
@@ -406,7 +406,7 @@ public interface Object {
      */
     @Override
     public String toString() {
-      return getClass().getName() + "@fab://" + $getCore().name() + "/"
+      return getClass().getName() + "@fab://" + $getStore().name() + "/"
           + $getOnum();
     }
 
@@ -432,8 +432,8 @@ public interface Object {
     public void $copyAppStateFrom(_Impl other) {
     }
 
-    public final Core $getCore() {
-      return $ref.core;
+    public final Store $getStore() {
+      return $ref.store;
     }
 
     public final long $getOnum() {
@@ -458,7 +458,7 @@ public interface Object {
     }
 
     public final boolean idEquals(Object other) {
-      return $getCore() == other.$getCore()
+      return $getStore() == other.$getStore()
           && $getOnum() == other.$getOnum();
     }
     
@@ -483,18 +483,18 @@ public interface Object {
      * @param refTypes
      *          A list to which <code>RefTypeEnum</code>s will be written to
      *          indicate the type of reference being serialized (e.g., null,
-     *          inlined, intracore, intercore).
-     * @param intracoreRefs
-     *          A list to which onums denoting intracore references will be
+     *          inlined, intraStore, interStore).
+     * @param intraStoreRefs
+     *          A list to which onums denoting intra-store references will be
      *          written.
-     * @param intercoreRefs
+     * @param interStoreRefs
      *          A list to which global object names (hostname/onum pairs),
-     *          denoting intercore references, will be written.
+     *          denoting inter-store references, will be written.
      */
     @SuppressWarnings("unused")
     public void $serialize(ObjectOutput serializedOutput,
-        List<RefTypeEnum> refTypes, List<Long> intracoreRefs,
-        List<Pair<String, Long>> intercoreRefs) throws IOException {
+        List<RefTypeEnum> refTypes, List<Long> intraStoreRefs,
+        List<Pair<String, Long>> interStoreRefs) throws IOException {
       // Nothing to output here. SerializedObject.write(_Impl, DataOutput) takes
       // care of writing the onum, version, label onum, and type information.
       return;
@@ -507,8 +507,8 @@ public interface Object {
      * non-transient field declared in this subclass. The order in which fields
      * are presented is the same as the order used by $serialize.
      * 
-     * @param core
-     *          The core on which the object lives.
+     * @param store
+     *          The store on which the object lives.
      * @param onum
      *          The object's onum.
      * @param version
@@ -520,17 +520,17 @@ public interface Object {
      * @param refTypes
      *          An iterator of <code>RefTypeEnum</code>s indicating the type of
      *          each reference being deserialized (e.g., null, inlined,
-     *          intracore).
-     * @param intracoreRefs
-     *          An iterator of intracore references, each represented by an
+     *          intraStore).
+     * @param intraStoreRefs
+     *          An iterator of intra-store references, each represented by an
      *          onum.
      */
     @SuppressWarnings("unused")
-    public _Impl(Core core, long onum, int version, long expiry, long label, 
+    public _Impl(Store store, long onum, int version, long expiry, long label, 
         ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intracoreRefs) throws IOException,
+        Iterator<Long> intraStoreRefs) throws IOException,
         ClassNotFoundException {
-      this(core, onum, version, expiry, new Label._Proxy(core, label));
+      this(store, onum, version, expiry, new Label._Proxy(store, label));
     }
     
     /**
@@ -549,10 +549,10 @@ public interface Object {
      *          The type of reference being read.
      * @param in
      *          The stream from which to read any inlined objects.
-     * @param core
-     *          The core to use when constructing any intracore references.
-     * @param intracoreRefs
-     *          An iterator of intracore references, each represented by an
+     * @param store
+     *          The store to use when constructing any intra-store references.
+     * @param intraStoreRefs
+     *          An iterator of intra-store references, each represented by an
      *          onum.
      * @throws ClassNotFoundException
      *           Thrown when the class for a wrapped object is unavailable.
@@ -562,7 +562,7 @@ public interface Object {
      */
     protected static final Object $readRef(
         Class<? extends Object._Proxy> proxyClass, RefTypeEnum refType,
-        ObjectInput in, Core core, Iterator<Long> intracoreRefs)
+        ObjectInput in, Store store, Iterator<Long> intraStoreRefs)
         throws IOException, ClassNotFoundException {
       switch (refType) {
       case NULL:
@@ -576,18 +576,18 @@ public interface Object {
           Constructor<? extends Object._Proxy> constructor =
               constructorTable.get(proxyClass);
           if (constructor == null) {
-            constructor = proxyClass.getConstructor(Core.class, long.class);
+            constructor = proxyClass.getConstructor(Store.class, long.class);
             constructorTable.put(proxyClass, constructor);
           }
           
           return constructor.newInstance(
-              core, intracoreRefs.next());
+              store, intraStoreRefs.next());
         } catch (Exception e) {
           throw new InternalError(e);
         }
 
       case REMOTE:
-        // These should have been swizzled by the core.
+        // These should have been swizzled by the store.
         throw new InternalError(
             "Unexpected remote object reference encountered during deserialization.");
       }
@@ -611,25 +611,25 @@ public interface Object {
     /**
      * A helper method for serializing a reference during object serialization.
      * 
-     * @param core
-     *          The referring object's core.
+     * @param store
+     *          The referring object's store.
      * @param obj
      *          The reference to be serialized.
      * @param refType
      *          A list to which a <code>RefTypeEnum</code> will be written to
      *          indicate the type of reference being serialized (e.g., null,
-     *          inlined, intracore, intercore).
+     *          inlined, intraStore, interStore).
      * @param out
      *          An output stream for writing inlined objects.
-     * @param intracoreRefs
-     *          A list for writing intracore references, represented by onums.
-     * @param intercoreRefs
-     *          A list for writing denoting intercore references, represented by
-     *          global object names (hostname/onum pairs).
+     * @param intraStoreRefs
+     *          A list for writing intra-store references, represented by onums.
+     * @param interStoreRefs
+     *          A list for writing denoting inter-store references, represented
+     *          by global object names (hostname/onum pairs).
      */
-    protected static final void $writeRef(Core core, Object obj,
-        List<RefTypeEnum> refType, ObjectOutput out, List<Long> intracoreRefs,
-        List<Pair<String, Long>> intercoreRefs) throws IOException {
+    protected static final void $writeRef(Store store, Object obj,
+        List<RefTypeEnum> refType, ObjectOutput out, List<Long> intraStoreRefs,
+        List<Pair<String, Long>> interStoreRefs) throws IOException {
       if (obj == null) {
         refType.add(RefTypeEnum.NULL);
         return;
@@ -642,24 +642,24 @@ public interface Object {
       }
 
       _Proxy p = (_Proxy) obj;
-      if (ONumConstants.isGlobalConstant(p.ref.onum) || p.ref.core.equals(core)) {
-        // Intracore reference.
+      if (ONumConstants.isGlobalConstant(p.ref.onum) || p.ref.store.equals(store)) {
+        // Intra-store reference.
         refType.add(RefTypeEnum.ONUM);
-        intracoreRefs.add(p.ref.onum);
+        intraStoreRefs.add(p.ref.onum);
         return;
       }
 
       // Remote reference.
-      if (p.ref.core instanceof LocalCore) {
+      if (p.ref.store instanceof LocalStore) {
         Class<?> objClass = obj.getClass();
         String objStr = obj.toString();
         throw new InternalError(
-            "Creating remote ref to local core.  Object on local core has class "
-                + objClass + ".  Its string representation is \"" + objStr
-                + "\".");
+            "Creating remote ref to local store.  Object on local store has "
+                + "class " + objClass + ".  Its string representation is \""
+                + objStr + "\".");
       }
       refType.add(RefTypeEnum.REMOTE);
-      intercoreRefs.add(new Pair<String, Long>(p.ref.core.name(), p.ref.onum));
+      interStoreRefs.add(new Pair<String, Long>(p.ref.store.name(), p.ref.onum));
     }
 
     /**
@@ -681,7 +681,7 @@ public interface Object {
      * </p>
      * <p>
      * This method is used to initialize object databases with objects at
-     * well-known onums (e.g., naming map and core principal).
+     * well-known onums (e.g., naming map and store principal).
      * </p>
      * 
      * @deprecated
@@ -689,7 +689,7 @@ public interface Object {
     public final void $forceRenumber(long onum) {
       long oldOnum = $ref.onum;
       this.$ref.onum = onum;
-      TransactionRegistry.renumberObject($ref.core, oldOnum, onum);
+      TransactionRegistry.renumberObject($ref.store, oldOnum, onum);
     }
     
 
@@ -710,8 +710,8 @@ public interface Object {
         super(impl);
       }
 
-      public _Proxy(Core core, long onum) {
-        super(core, onum);
+      public _Proxy(Store store, long onum) {
+        super(store, onum);
       }
 
       /**
@@ -722,16 +722,16 @@ public interface Object {
        */
       public static final Object $makeStaticInstance(
           final Class<? extends Object._Impl> c) {
-        // XXX Need a real core and a real label. (Should be given as args.)
-        final LocalCore core = Worker.getWorker().getLocalCore();
+        // XXX Need a real store and a real label. (Should be given as args.)
+        final LocalStore store = Worker.getWorker().getLocalStore();
 
         return Worker.runInSubTransaction(new Worker.Code<Object>() {
           public Object run() {
             try {
               Constructor<? extends Object._Impl> constr =
-                  c.getConstructor(Core.class, Label.class);
-              Label emptyLabel = core.getEmptyLabel();
-              return constr.newInstance(core, emptyLabel);
+                  c.getConstructor(Store.class, Label.class);
+              Label emptyLabel = store.getEmptyLabel();
+              return constr.newInstance(store, emptyLabel);
             } catch (Exception e) {
               throw new AbortException(e);
             }
@@ -741,8 +741,8 @@ public interface Object {
     }
 
     public static class _Impl extends Object._Impl implements _Static {
-      public _Impl(Core core, Label label) throws UnreachableNodeException {
-        super(core, label);
+      public _Impl(Store store, Label label) throws UnreachableNodeException {
+        super(store, label);
       }
 
       @Override

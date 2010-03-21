@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import fabric.worker.RemoteCore;
+import fabric.worker.RemoteStore;
 import fabric.worker.debug.Timing;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.FabricException;
@@ -20,20 +20,20 @@ import fabric.net.UnreachableNodeException;
 
 /**
  * A <code>PrepareTransactionMessage</code> represents a transaction request to
- * a core.
+ * a store.
  */
 public class UnauthenticatedPrepareTransactionMessage extends
-    Message<RemoteCore, UnauthenticatedPrepareTransactionMessage.Response> {
+    Message<RemoteStore, UnauthenticatedPrepareTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
     public final boolean success;
     public final String message;
 
     /**
-     * If the remote node is a core, this will indicate whether the worker
-     * should send a commit/abort message to the core's worker to commit/abort a
-     * sub-transaction. (This happens when Statistics objects are created during
-     * transaction prepare.)
+     * If the remote node is a store, this will indicate whether the worker
+     * should send a commit/abort message to the store's worker to commit/abort
+     * a sub-transaction. (This happens when Statistics objects are created
+     * during transaction prepare.)
      */
     public final boolean subTransactionCreated;
 
@@ -128,28 +128,28 @@ public class UnauthenticatedPrepareTransactionMessage extends
 
   /**
    * The objects created during the transaction, unserialized. This will only be
-   * non-null on the worker. The core should use the
+   * non-null on the worker. The store should use the
    * <code>serializedCreates</code> field instead.
    */
   public final Collection<_Impl> creates;
 
   /**
    * The objects created during the transaction, serialized. This will only be
-   * non-null on the core. The worker should use the <code>creates</code> field
+   * non-null on the store. The worker should use the <code>creates</code> field
    * instead.
    */
   public final Collection<SerializedObject> serializedCreates;
 
   /**
    * The objects modified during the transaction, unserialized. This will only
-   * be non-null on the worker. The core should use the
+   * be non-null on the worker. The store should use the
    * <code>serializedWrites</code> field instead.
    */
   public final Collection<_Impl> writes;
 
   /**
    * The objects modified during the transaction, serialized. This will only be
-   * non-null on the core. The worker should use the <code>writes</code> field
+   * non-null on the store. The worker should use the <code>writes</code> field
    * instead.
    */
   public final Collection<SerializedObject> serializedWrites;
@@ -179,7 +179,7 @@ public class UnauthenticatedPrepareTransactionMessage extends
   }
 
   /**
-   * Deserialization constructor. Used only by the core.
+   * Deserialization constructor. Used only by the store.
    * 
    * @throws IOException
    */
@@ -225,28 +225,28 @@ public class UnauthenticatedPrepareTransactionMessage extends
 
   /*
    * (non-Javadoc)
-   * @see fabric.messages.Message#dispatch(fabric.core.MessageHandlerThread)
+   * @see fabric.messages.Message#dispatch(fabric.store.MessageHandlerThread)
    */
   @Override
-  public Response dispatch(fabric.core.MessageHandlerThread w) {
+  public Response dispatch(fabric.store.MessageHandlerThread w) {
     return w.handle(this);
   }
 
-  public Response send(RemoteCore core) throws UnreachableNodeException {
+  public Response send(RemoteStore store) throws UnreachableNodeException {
     try {
-      Timing.CORE.begin();
-      return super.send(core, false);
+      Timing.STORE.begin();
+      return super.send(store, false);
     } catch (UnreachableNodeException e) {
       throw e;
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from node.", e);
     } finally {
-      Timing.CORE.end();
+      Timing.STORE.end();
     }
   }
 
   @Override
-  public Response response(RemoteCore node, DataInput in) throws IOException {
+  public Response response(RemoteStore node, DataInput in) throws IOException {
     return new Response(node, in);
   }
 

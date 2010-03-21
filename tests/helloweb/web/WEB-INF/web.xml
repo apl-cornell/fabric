@@ -16,7 +16,7 @@
 		<servlet-class>XMLServlet</servlet-class>
 		<init-param>
 		  <param-name>uri</param-name>
-		  <param-value>fab://core0/OO7</param-value> </init-param>
+		  <param-value>fab://store0/OO7</param-value> </init-param>
 		<init-param>
 		  <param-name>fabric-prefix</param-name>
 		  <param-value>/home/mdgeorge/src/fabric/</param-value> </init-param> </servlet>

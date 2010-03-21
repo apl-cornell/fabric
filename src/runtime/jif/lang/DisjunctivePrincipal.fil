@@ -1,7 +1,7 @@
 package jif.lang;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.util.*;
 
 /**
@@ -11,14 +11,14 @@ import fabric.util.*;
 public final class DisjunctivePrincipal extends Principal {
   final Set disjuncts;
   private Integer hashCode = null;
-  public static final Core localCore = Worker.getWorker().getLocalCore();
+  public static final Store localStore = Worker.getWorker().getLocalStore();
 
   DisjunctivePrincipal(Set disjuncts) {
     this.disjuncts = disjuncts;
   }
 
   public String name() {
-    StringBuffer sb = new StringBuffer@localCore();
+    StringBuffer sb = new StringBuffer@localStore();
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
       sb.append(PrincipalUtil.toString(p));
@@ -65,34 +65,34 @@ public final class DisjunctivePrincipal extends Principal {
     return false;
   }
 
-  public ActsForProof findProofUpto(Core core, Principal p, java.lang.Object searchState) {
+  public ActsForProof findProofUpto(Store store, Principal p, java.lang.Object searchState) {
     if (delegatesTo(p)) {
-      return new DelegatesProof@core(p, this);
+      return new DelegatesProof@store(p, this);
     }
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal witness = (Principal) iter.next();
       ActsForProof prf =
-          PrincipalUtil.findActsForProof(core, p, witness, searchState);
+          PrincipalUtil.findActsForProof(store, p, witness, searchState);
       if (prf != null) {
         // have found a proof from p to witness.
-        DelegatesProof step = new DelegatesProof@core(witness, this);
-        return new TransitiveProof@core(prf, witness, step);
+        DelegatesProof step = new DelegatesProof@store(witness, this);
+        return new TransitiveProof@store(prf, witness, step);
       }
     }
     return null;
   }
 
-  public ActsForProof findProofDownto(Core core, Principal q, java.lang.Object searchState) {
-    Map proofs = new HashMap@core();
+  public ActsForProof findProofDownto(Store store, Principal q, java.lang.Object searchState) {
+    Map proofs = new HashMap@store();
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
-      ActsForProof prf = PrincipalUtil.findActsForProof(core, p, q, searchState);
+      ActsForProof prf = PrincipalUtil.findActsForProof(store, p, q, searchState);
       if (prf == null) return null;
       proofs.put(p, prf);
     }
 
     // proofs contains a proof for every disjunct,
     // which is sufficent for a proof for the disjunctive principal
-    return new FromDisjunctProof@core(this, q, proofs);
+    return new FromDisjunctProof@store(this, q, proofs);
   }
 }

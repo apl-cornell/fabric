@@ -87,8 +87,8 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
     FabricArrayInit_c result = (FabricArrayInit_c) super.typeCheck(tc);
 
     if (location != null) {
-      if (!ts.isImplicitCastValid(location.type(), ts.Core())) {
-        throw new SemanticException("Array location must be a core.", location
+      if (!ts.isImplicitCastValid(location.type(), ts.Store())) {
+        throw new SemanticException("Array location must be a store.", location
             .position());
       }
     }
@@ -111,7 +111,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   public Type childExpectedType(Expr child, AscriptionVisitor av) {
     FabILTypeSystem ts = (FabILTypeSystem) av.typeSystem();
     
-    if (child == location) return ts.Core();
+    if (child == location) return ts.Store();
     if (child == label) return ts.Label();
 
     Type t = av.toType();

@@ -1,5 +1,5 @@
 Worker: dalek
-Core: cluster
+Store: cluster
 
 >>  bin/calibrate
 0.001799 ms
@@ -13,7 +13,7 @@ commit:     412 ms
  txlog:    1749 ms
  subtx:       0 ms
  fetch:      39 ms
-  core:   32405 ms
+ store:   32405 ms
  Total:   36404 ms (750766   measurements)
 
  Total:   35335 ms (2        measurements)
@@ -27,7 +27,7 @@ commit:     494 ms
  txlog:    1024 ms
  subtx:       0 ms
  fetch:   30759 ms
-  core:     260 ms
+ store:     260 ms
  Total:   34748 ms (949872   measurements)
 
  Total:   33352 ms (2        measurements)
@@ -41,7 +41,7 @@ commit:     564 ms
  txlog:     991 ms
  subtx:       0 ms
  fetch:   28455 ms
-  core:     223 ms
+ store:     223 ms
  Total:   32191 ms (946600   measurements)
 
  Total:   30223 ms (2        measurements)
@@ -55,7 +55,7 @@ commit:    2310 ms
  txlog:    2373 ms
  subtx:       0 ms
  fetch:       0 ms
-  core:     726 ms
+ store:     726 ms
  Total:    8602 ms (2332610  measurements)
 
 
@@ -71,7 +71,7 @@ commit:    2143 ms
  txlog:   21114 ms
  subtx:      15 ms
  fetch:      45 ms
-  core:  102244 ms
+ store:  102244 ms
  Total:  139139 ms (6497110  measurements)
 
  Total:  129384 ms (2        measurements)
@@ -84,7 +84,7 @@ commit:   16903 ms
  txlog:   32386 ms
  subtx:       0 ms
  fetch:  947000 ms
-  core:    5455 ms
+ store:    5455 ms
  Total: 1047459 ms (11551408 measurements)
 
  Total: 1079971 ms (2        measurements)
@@ -97,7 +97,7 @@ commit:   19505 ms
  txlog:   28894 ms
  subtx:       0 ms
  fetch:  1012052 ms
-  core:    1706 ms
+ store:    1706 ms
  Total: 1096488 ms (11680512 measurements)
 
  Total: 1106262 ms (2        measurements)

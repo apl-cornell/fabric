@@ -3,17 +3,17 @@ package system;
 public class RemoteCall05 {
   int i = 0;
 
-  public void f_core0(int n) {
+  public void f_store0(int n) {
     if (n <= 0) return;
 
-    RemoteWorker remoteWorker = Worker.getWorker().getWorker("core0");
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker("store0");
     f_worker0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
     f_worker0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
     i = i + n;
   }
 
-  public void f_core0_remote(fabric.lang.Principal p, int n) {
-    f_core0(n);
+  public void f_store0_remote(fabric.lang.Principal p, int n) {
+    f_store0(n);
   }
 
   public void f_worker0(int n) {
@@ -21,8 +21,8 @@ public class RemoteCall05 {
 
     RemoteWorker remoteWorker = Worker.getWorker().getWorker("worker0");
     i = i + n;
-    f_core0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
-    f_core0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
+    f_store0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
+    f_store0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
   }
 
   public void f_worker0_remote(fabric.lang.Principal p, int n) {
@@ -30,12 +30,12 @@ public class RemoteCall05 {
   }
 
   public static void main(String[] args) {
-    Core core = Worker.getWorker().getCore("core0");
+    Store store = Worker.getWorker().getStore("store0");
     RemoteCall05 t = null;
     int result1 = 0;
     atomic {
-      t = new RemoteCall05@core();
-      t.f_core0(5);
+      t = new RemoteCall05@store();
+      t.f_store0(5);
       result1 = t.i;
     }
 

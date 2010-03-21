@@ -9,14 +9,14 @@ import sif.servlet.SessionPrincipal;
 import javax.servlet.ServletException;
 
 public final class Main extends Servlet[HelloServEP] {
-    final Core{this} localCore;
+    final Store{this} localStore;
     public Main() throws ServletException {
         FabricWorker cl = FabricWorker.getWorker();
-        Core lCore = null;        
+        Store lStore = null;        
         if(cl != null) {
-            lCore = cl.getLocalCore();
+            lStore = cl.getLocalStore();
         }
-        localCore = lCore;
+        localStore = lStore;
     }
     
     public void initialize{HelloServEP:;HelloServEP!:}() throws ServletException {
@@ -40,10 +40,10 @@ public final class Main extends Servlet[HelloServEP] {
             String{*lbl} id, SessionPrincipal{*lbl} session) {
         SessionState[lbl] toReturn = null;
         atomic {
-            if (localCore != null && localCore equiv worker$ &&
+            if (localStore != null && localStore equiv worker$ &&
                     lbl <= new label {⊤→worker$} && 
                     new label {⊤←worker$} <= lbl) {
-                toReturn = new SessionState[lbl]@localCore(id, session);
+                toReturn = new SessionState[lbl]@localStore(id, session);
             }
         }
         return toReturn;
@@ -53,8 +53,8 @@ public final class Main extends Servlet[HelloServEP] {
     protected SessionPrincipal createSessionPrincipal(String{worker$→;worker$←} id) {
         SessionPrincipal toReturn = null;
         atomic {
-            if (localCore != null && localCore equiv worker$) {
-                toReturn = new SessionPrincipal@localCore(id);
+            if (localStore != null && localStore equiv worker$) {
+                toReturn = new SessionPrincipal@localStore(id);
             }
         }
         return toReturn;

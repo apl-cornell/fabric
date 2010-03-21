@@ -5,8 +5,8 @@ import java.net.URISyntaxException;
 import java.util.*;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
-import fabric.worker.RemoteCore;
+import fabric.worker.Store;
+import fabric.worker.RemoteStore;
 import fabric.common.SerializedObject;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
@@ -38,12 +38,12 @@ public class ObjectCount {
     }
 
     Worker worker = Worker.getWorker();
-    RemoteCore core = worker.getCore(path.getHost());
+    RemoteStore store = worker.getStore(path.getHost());
     Map rootMap;
     try {
-      rootMap = (Map) core.getRoot().$getProxy();
+      rootMap = (Map) store.getRoot().$getProxy();
     } catch (UnreachableNodeException e) {
-      System.err.println("Unreachable core: " + uri);
+      System.err.println("Unreachable store: " + uri);
       return;
     }
 
@@ -67,7 +67,7 @@ public class ObjectCount {
   private static void showUsage() {
     System.err.println("Usage: ObjectCount [uri] ...");
     System.err.println("e.g.");
-    System.err.println("  ObjectCount fab://core0/ fab://core1/OO7");
+    System.err.println("  ObjectCount fab://store0/ fab://store1/OO7");
     System.exit(1);
   }
 
@@ -79,7 +79,7 @@ public class ObjectCount {
     toVisit.add(obj.$getOnum());
     java.util.Map<String, Integer> byType = new TreeMap<String, Integer>();
 
-    Core core = obj.$getCore();
+    Store store = obj.$getStore();
 
     while (!toVisit.isEmpty()) {
       long onum = toVisit.pop();
@@ -87,12 +87,12 @@ public class ObjectCount {
 
       Object._Impl impl = null;
       try {
-        impl = core.readObject(onum);
+        impl = store.readObject(onum);
       } catch (Exception e) {
         e.printStackTrace();
       }
       SerializedObject so = new SerializedObject(impl);
-      for (Iterator<Long> it = so.getIntracoreRefIterator(); it.hasNext();) {
+      for (Iterator<Long> it = so.getIntraStoreRefIterator(); it.hasNext();) {
         long ref = it.next();
         if (!visited.contains(ref) && !toVisit.contains(ref))
           toVisit.push(ref);

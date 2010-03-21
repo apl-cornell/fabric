@@ -6,7 +6,7 @@ import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.List;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
@@ -24,39 +24,39 @@ public interface _floatArray extends Object {
     private float[] value;
 
     /**
-     * Creates a new float array at the given Core with the given length.
+     * Creates a new float array at the given Store with the given length.
      * 
-     * @param core
-     *                The core on which to allocate the array.
+     * @param store
+     *                The store on which to allocate the array.
      * @param length
      *                The length of the array.
      */
-    public _Impl(Core core, Label label, int length) {
-      this(core, label, new float[length]);
+    public _Impl(Store store, Label label, int length) {
+      this(store, label, new float[length]);
     }
 
     /**
-     * Creates a new float array at the given Core using the given backing
+     * Creates a new float array at the given Store using the given backing
      * array.
      * 
-     * @param core
-     *                The core on which to allocate the array.
+     * @param store
+     *                The store on which to allocate the array.
      * @param value
      *                The backing array to use.
      */
-    public _Impl(Core core, Label label, float[] value) {
-      super(core, label);
+    public _Impl(Store store, Label label, float[] value) {
+      super(store, label);
       this.value = value;
     }
 
     /**
      * Used for deserializing.
      */
-    public _Impl(Core core, long onum, int version, long expiry, long label,
+    public _Impl(Store store, long onum, int version, long expiry, long label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intracoreRefs) throws IOException,
+        Iterator<Long> intraStoreRefs) throws IOException,
         ClassNotFoundException {
-      super(core, onum, version, expiry, label, in, refTypes, intracoreRefs);
+      super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
       value = new float[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readFloat();
@@ -125,9 +125,9 @@ public interface _floatArray extends Object {
      */
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
-        List<Long> intracoreRefs, List<Pair<String, Long>> intercoreRefs)
+        List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
         throws IOException {
-      super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
+      super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
       for (int i = 0; i < value.length; i++)
         out.writeFloat(value[i]);
@@ -136,8 +136,8 @@ public interface _floatArray extends Object {
 
   public static class _Proxy extends Object._Proxy implements _floatArray {
 
-    public _Proxy(Core core, long onum) {
-      super(core, onum);
+    public _Proxy(Store store, long onum) {
+      super(store, onum);
     }
 
     public _Proxy(_floatArray._Impl impl) {

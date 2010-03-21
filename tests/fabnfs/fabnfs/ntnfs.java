@@ -19,7 +19,7 @@ package fabnfs;
 // 							March 1997
 //
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabnfs.util.FileSystemFactory;
 
 class ntnfs extends nfs implements NFSConsts, MountdConsts, RPCConsts {
@@ -31,10 +31,10 @@ class ntnfs extends nfs implements NFSConsts, MountdConsts, RPCConsts {
 //	new ntnfs(pm, tm, fsi, args);
 //    };
 
-    public static void startServer(Core localCore, Core core, FileSystemFactory factory, String[] args) {
+    public static void startServer(Store localStore, Store store, FileSystemFactory factory, String[] args) {
         PathMapper pm = new NTPathMapper();
         TimeMapper tm = new Java3TimeMapper(); // new NTTimeMapper();
-        FileSystemInfo fsi = new FileSystemInfo(core, localCore, factory, "/");
+        FileSystemInfo fsi = new FileSystemInfo(store, localStore, factory, "/");
         new ntnfs(pm, tm, fsi, args);
     }
 

@@ -223,7 +223,7 @@
 
   <!-- Copy necessary scripts into bin -->
   <copy todir="${name}/bin">
-    <fileset dir="${basedir}/bin" includes="fabc,fab,fab-core,genkey,startcore"/>
+    <fileset dir="${basedir}/bin" includes="fabc,fab,fab-store,genkey,startstore"/>
   </copy>
 
   <!-- Make sure these scripts are executable -->
@@ -262,7 +262,7 @@
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
-  <target name="fabric-system" depends="core,worker,dissemination"
+  <target name="fabric-system" depends="store,worker,dissemination"
       description="Builds Fabric"/>
 
   <target name="dust"
@@ -362,12 +362,12 @@
     </javac>
   </target>
 
-  <!-- Compiles the Fabric core -->
-  <target name="core" depends="init,native,fabil-runtime">
+  <!-- Compiles the Fabric store -->
+  <target name="store" depends="init,native,fabil-runtime">
     <javac target="1.5" srcdir="${system.src}" destdir="${classes}" debug="on">
-      <include name="fabric/core/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
+      <include name="fabric/store/**" />
       <classpath>
         <pathelement location="${runtime.classes}" />
         <path refid="standard.classpath"/>

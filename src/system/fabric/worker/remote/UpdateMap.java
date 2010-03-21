@@ -14,8 +14,8 @@ import jif.lang.Label;
 
 import fabric.worker.AbortException;
 import fabric.worker.Worker;
-import fabric.worker.Core;
-import fabric.worker.LocalCore;
+import fabric.worker.Store;
+import fabric.worker.LocalStore;
 import fabric.common.*;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
@@ -105,15 +105,15 @@ public class UpdateMap implements FastSerializable {
 
       Label._Proxy val = null;
       if (in.readBoolean()) {
-        String coreName = in.readUTF();
+        String storeName = in.readUTF();
         long onum = in.readLong();
 
-        Core core = worker.getLocalCore();
+        Store store = worker.getLocalStore();
         if (!ONumConstants.isGlobalConstant(onum)) {
-          core = worker.getCore(coreName);
+          store = worker.getStore(storeName);
         }
 
-        val = new Label._Proxy(core, onum);
+        val = new Label._Proxy(store, onum);
       }
 
       creates.put(key, val);
@@ -213,9 +213,9 @@ public class UpdateMap implements FastSerializable {
   }
 
   public void put(_Proxy proxy, Label keyObject) {
-    // Don't put in entries for global constants or objects on local core.
+    // Don't put in entries for global constants or objects on local store.
     if (ONumConstants.isGlobalConstant(proxy.$getOnum())
-        || proxy.$getCore() instanceof LocalCore) return;
+        || proxy.$getStore() instanceof LocalStore) return;
 
     try {
       creates.put(hash(proxy), keyObject);
@@ -225,9 +225,9 @@ public class UpdateMap implements FastSerializable {
   }
 
   public void put(_Proxy proxy, RemoteWorker worker) {
-    // Don't put in entries for global constants or objects on local core.
+    // Don't put in entries for global constants or objects on local store.
     if (ONumConstants.isGlobalConstant(proxy.$getOnum())
-        || proxy.$getCore() instanceof LocalCore) return;
+        || proxy.$getStore() instanceof LocalStore) return;
 
     writeCache.put(proxy, new Pair<_Proxy, RemoteWorker>(proxy, worker));
     readCache.put(proxy, worker);
@@ -287,10 +287,10 @@ public class UpdateMap implements FastSerializable {
    */
   private Hash hash(_Proxy proxy, byte[] key) throws NoSuchAlgorithmException {
     MessageDigest md5 = MessageDigest.getInstance(ALG_HASH);
-    Core core = proxy.$getCore();
+    Store store = proxy.$getStore();
     long onum = proxy.$getOnum();
 
-    md5.update(core.name().getBytes());
+    md5.update(store.name().getBytes());
     md5.update((byte) onum);
     md5.update((byte) (onum >>> 8));
     md5.update((byte) (onum >>> 16));
@@ -350,7 +350,7 @@ public class UpdateMap implements FastSerializable {
 
       if (value != null) {
         out.writeBoolean(true);
-        out.writeUTF(value.$getCore().name());
+        out.writeUTF(value.$getStore().name());
         out.writeLong(value.$getOnum());
       } else out.writeBoolean(false);
     }

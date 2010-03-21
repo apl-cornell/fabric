@@ -73,8 +73,8 @@ import java.io.Serializable;
 public class Collections
 {
 	
-  protected static final fabric.worker.Core LOCAL_CORE = 
-    fabric.worker.Worker.getWorker().getLocalCore();
+  protected static final fabric.worker.Store LOCAL_STORE = 
+    fabric.worker.Worker.getWorker().getLocalStore();
 
   /**
    * Constant used to decide cutoff for when a non-RandomAccess list should
@@ -147,9 +147,9 @@ public class Collections
      * @return A non-iterating iterator.
      */
     // This is really cheating! I think it's perfectly valid, though.
-    public Iterator iterator(fabric.worker.Core core)
+    public Iterator iterator(fabric.worker.Store store)
     {
-      return EMPTY_LIST.iterator(core);
+      return EMPTY_LIST.iterator(store);
     }
 
     // The remaining methods are optional, but provide a performance
@@ -653,7 +653,7 @@ public class Collections
     // if the list is sequential-access.
     if (isSequential(l))
       {
-	ListIterator itr = l.listIterator(LOCAL_CORE);
+	ListIterator itr = l.listIterator(LOCAL_STORE);
         int i = 0;
 	Object o = itr.next(); // Assumes list is not empty (see isSequential)
 	boolean forward = true;
@@ -713,7 +713,7 @@ public class Collections
    * @param source the source list
    * @throws IndexOutOfBoundsException if the destination list is shorter
    *         than the source list (the destination will be unmodified)
-   * @throws UnsupportedOperationException if dest.listIterator(core) does not
+   * @throws UnsupportedOperationException if dest.listIterator(store) does not
    *         support the set operation
    */
   public static void copy(List dest, List source)
@@ -722,8 +722,8 @@ public class Collections
     if (dest.size() < pos)
       throw new IndexOutOfBoundsException("Source does not fit in dest");
 
-    Iterator i1 = source.iterator(LOCAL_CORE);
-    ListIterator i2 = dest.listIterator(LOCAL_CORE);
+    Iterator i1 = source.iterator(LOCAL_STORE);
+    ListIterator i2 = dest.listIterator(LOCAL_STORE);
 
     while (--pos >= 0)
       {
@@ -741,7 +741,7 @@ public class Collections
 //   */
 //  public static Enumeration enumeration(Collection c)
 //  {
-//    final Iterator i = c.iterator(LOCAL_CORE);
+//    final Iterator i = c.iterator(LOCAL_STORE);
 //    return new Enumeration()
 //    {
 //      /**
@@ -775,12 +775,12 @@ public class Collections
    *
    * @param l the list to fill.
    * @param val the object to vill the list with.
-   * @throws UnsupportedOperationException if l.listIterator(core) does not
+   * @throws UnsupportedOperationException if l.listIterator(store) does not
    *         support the set operation.
    */
   public static void fill(List l, Object val)
   {
-    ListIterator itr = l.listIterator(LOCAL_CORE);
+    ListIterator itr = l.listIterator(LOCAL_STORE);
     for (int i = l.size() - 1; i >= 0; --i)
       {
 	itr.next();
@@ -882,7 +882,7 @@ public class Collections
    */
   public static Object max(Collection c, Comparator order)
   {
-    Iterator itr = c.iterator(LOCAL_CORE);
+    Iterator itr = c.iterator(LOCAL_STORE);
     Object max = itr.next(); // throws NoSuchElementException
     int csize = c.size();
     for (int i = 1; i < csize; i++)
@@ -926,7 +926,7 @@ public class Collections
    */
   public static Object min(Collection c, Comparator order)
   {
-    Iterator itr = c.iterator(LOCAL_CORE);
+    Iterator itr = c.iterator(LOCAL_STORE);
     Object min = itr.next();	// throws NoSuchElementExcception
     int csize = c.size();
     for (int i = 1; i < csize; i++)
@@ -1114,7 +1114,7 @@ public class Collections
    */
   public static boolean replaceAll(List list, Object oldval, Object newval)
   {
-    ListIterator itr = list.listIterator(LOCAL_CORE);
+    ListIterator itr = list.listIterator(LOCAL_STORE);
     boolean replace_occured = false;
     for (int i = list.size(); --i >= 0; )
       if (AbstractCollection.equals(oldval, itr.next()))
@@ -1129,15 +1129,15 @@ public class Collections
    * Reverse a given list. This method works in linear time.
    *
    * @param l the list to reverse
-   * @throws UnsupportedOperationException if l.listIterator(Core) does not
+   * @throws UnsupportedOperationException if l.listIterator(Store) does not
    *         support the set operation
    */
   public static void reverse(List l)
   {
-    ListIterator i1 = l.listIterator(LOCAL_CORE);
+    ListIterator i1 = l.listIterator(LOCAL_STORE);
     int pos1 = 1;
     int pos2 = l.size();
-    ListIterator i2 = l.listIterator(LOCAL_CORE, pos2);
+    ListIterator i2 = l.listIterator(LOCAL_STORE, pos2);
     while (pos1 < pos2)
       {
 	Object o = i1.next();
@@ -1294,7 +1294,7 @@ public class Collections
    * this speed, since it would be quadratic access otherwise.
    *
    * @param l the list to shuffle
-   * @throws UnsupportedOperationException if l.listIterator(Core) does not
+   * @throws UnsupportedOperationException if l.listIterator(Store) does not
    *         support the set operation
    */
   public static void shuffle(List l)
@@ -1337,13 +1337,13 @@ public class Collections
    *
    * @param l the list to shuffle
    * @param r the source of randomness to use for the shuffle
-   * @throws UnsupportedOperationException if l.listIterator(Core) does not
+   * @throws UnsupportedOperationException if l.listIterator(Store) does not
    *         support the set operation
    */
   public static void shuffle(List l, Random r)
   {
     int lsize = l.size();
-    ListIterator i = l.listIterator(LOCAL_CORE, lsize);
+    ListIterator i = l.listIterator(LOCAL_STORE, lsize);
     boolean sequential = isSequential(l);
     Object[] a = null; // stores a copy of the list for the sequential case
 
@@ -1426,9 +1426,9 @@ public class Collections
     /**
      * Returns an iterator over the lone element.
      */
-    public Iterator iterator(fabric.worker.Core core)
+    public Iterator iterator(fabric.worker.Store store)
     {
-      return new Iterator@core()
+      return new Iterator@store()
       {
 	/**
 	 * Flag to indicate whether or not the element has
@@ -1503,7 +1503,7 @@ public class Collections
      */
     public boolean containsAll(Collection c)
     {
-      Iterator i = c.iterator(LOCAL_CORE);
+      Iterator i = c.iterator(LOCAL_STORE);
       int pos = c.size();
       while (--pos >= 0)
         if (! equals(i.next(), element))
@@ -1634,7 +1634,7 @@ public class Collections
      */
     public boolean containsAll(Collection c)
     {
-      Iterator i = c.iterator(LOCAL_CORE);
+      Iterator i = c.iterator(LOCAL_STORE);
       int pos = c.size();
       while (--pos >= 0)
         if (! equals(i.next(), element))
@@ -1942,7 +1942,7 @@ public class Collections
   {
     Object[] a = l.toArray();
     Arrays.sort(a, c);
-    ListIterator i = l.listIterator(LOCAL_CORE);
+    ListIterator i = l.listIterator(LOCAL_STORE);
     for (int pos = 0, alen = a.length;  pos < alen;  pos++)
       {
         i.next();
@@ -1978,7 +1978,7 @@ public class Collections
 //   * ...
 //   * synchronized (c)
 //   *   {
-//   *     Iterator i = c.iterator(core);
+//   *     Iterator i = c.iterator(store);
 //   *     while (i.hasNext())
 //   *       foo(i.next());
 //   *   }
@@ -2183,11 +2183,11 @@ public class Collections
 //     * @return An iterator over the elements in the underlying collection,
 //     *         which returns each element in any order.
 //     */
-//    public Iterator iterator(fabric.worker.Core core)
+//    public Iterator iterator(fabric.worker.Store store)
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedIterator@core(mutex, c.iterator(core));
+//          return new SynchronizedIterator@store(mutex, c.iterator(store));
 //        }
 //    }
 //
@@ -2195,7 +2195,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedIterator@core(mutex, c.iterator(LOCAL_CORE));
+//          return new SynchronizedIterator@store(mutex, c.iterator(LOCAL_STORE));
 //        }
 //    }
 //
@@ -2437,7 +2437,7 @@ public class Collections
 //   * ...
 //   * synchronized (l)
 //   *   {
-//   *     Iterator i = l.iterator(core);
+//   *     Iterator i = l.iterator(store);
 //   *     while (i.hasNext())
 //   *       foo(i.next());
 //   *   }
@@ -2662,11 +2662,11 @@ public class Collections
 //     *         to be performed, in addition to those supplied by the
 //     *         standard iterator.
 //     */
-//    public ListIterator listIterator(fabric.worker.Core core)
+//    public ListIterator listIterator(fabric.worker.Store store)
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedListIterator@core(mutex, list.listIterator(core));
+//          return new SynchronizedListIterator@store(mutex, list.listIterator(store));
 //        }
 //    }
 //
@@ -2687,11 +2687,11 @@ public class Collections
 //     *         standard iterator.
 //     * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
 //     */
-//    public ListIterator listIterator(fabric.worker.Core core, int index)
+//    public ListIterator listIterator(fabric.worker.Store store, int index)
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedListIterator@core(mutex, list.listIterator(core, index));
+//          return new SynchronizedListIterator@store(mutex, list.listIterator(store, index));
 //        }
 //    }
 //
@@ -2834,7 +2834,7 @@ public class Collections
 //  } // class SynchronizedRandomAccessList
 //
 //  /**
-//   * The implementation of {@link SynchronizedList#listIterator(Core)}. This
+//   * The implementation of {@link SynchronizedList#listIterator(Store)}. This
 //   * iterator must "sync" on the same object as the list it iterates over.
 //   *
 //   * @author Eric Blake (ebb9@email.byu.edu)
@@ -2990,7 +2990,7 @@ public class Collections
 //   * Set s = m.keySet(); // safe outside a synchronized block
 //   * synchronized (m) // synch on m, not s
 //   *   {
-//   *     Iterator i = s.iterator(core);
+//   *     Iterator i = s.iterator(store);
 //   *     while (i.hasNext())
 //   *       foo(i.next());
 //   *   }
@@ -3130,7 +3130,7 @@ public class Collections
 //    }
 //
 //    // This is one of the ickiest cases of nesting I've ever seen. It just
-//    // means "return a SynchronizedSet, except that the iterator(Core) method
+//    // means "return a SynchronizedSet, except that the iterator(Store) method
 //    // returns an SynchronizedIterator whose next() method returns a
 //    // synchronized wrapper around its normal return value".
 //    public Set entrySet()
@@ -3258,11 +3258,11 @@ public class Collections
 //	       *
 //	       * @return A synchronized set iterator.
 //	       */
-//	      public Iterator iterator(fabric.worker.Core core)
+//	      public Iterator iterator(fabric.worker.Store store)
 //              {
 //                synchronized (super.mutex)
 //                  {
-//                    return new SynchronizedIterator@core(super.mutex, c.iterator(core))
+//                    return new SynchronizedIterator@store(super.mutex, c.iterator(store))
 //                    {
 //		      /**
 //		       * Retrieves the next map entry from the iterator.
@@ -3518,7 +3518,7 @@ public class Collections
 //   * ...
 //   * synchronized (s)
 //   *   {
-//   *     Iterator i = s.iterator(core);
+//   *     Iterator i = s.iterator(store);
 //   *     while (i.hasNext())
 //   *       foo(i.next());
 //   *   }
@@ -3621,10 +3621,10 @@ public class Collections
 //   * Set s2 = m2.keySet(); // safe outside a synchronized block
 //   * synchronized (m) // synch on m, not m2, s or s2
 //   *   {
-//   *     Iterator i = s.iterator(core);
+//   *     Iterator i = s.iterator(store);
 //   *     while (i.hasNext())
 //   *       foo(i.next());
-//   *     i = s2.iterator(core);
+//   *     i = s2.iterator(store);
 //   *     while (i.hasNext())
 //   *       bar(i.next());
 //   *   }
@@ -3820,7 +3820,7 @@ public class Collections
 //   * SortedSet s2 = s.headSet(foo); // safe outside a synchronized block
 //   * synchronized (s) // synch on s, not s2
 //   *   {
-//   *     Iterator i = s2.iterator(core);
+//   *     Iterator i = s2.iterator(store);
 //   *     while (i.hasNext())
 //   *       foo(i.next());
 //   *   }
@@ -4156,15 +4156,15 @@ public class Collections
      * @return an UnmodifiableIterator over the elements of the underlying
      *         collection, in any order.
      */
-    public Iterator iterator(fabric.worker.Core core)
+    public Iterator iterator(fabric.worker.Store store)
     {
-      return new UnmodifiableIterator@core(c.iterator(core));
+      return new UnmodifiableIterator@store(c.iterator(store));
     }
 
     public Iterator iterator()
     {
-      Core core = LOCAL_CORE;
-      return iterator(core);
+      Store store = LOCAL_STORE;
+      return iterator(store);
     }
 
     /**
@@ -4494,9 +4494,9 @@ public class Collections
    * @return a <code>UnmodifiableListIterator</code> over the elements of the
    *         underlying list, in order, starting at the beginning.
    */
-    public ListIterator listIterator(fabric.worker.Core core)
+    public ListIterator listIterator(fabric.worker.Store store)
     {
-      return new UnmodifiableListIterator@core(list.listIterator(core));
+      return new UnmodifiableListIterator@store(list.listIterator(store));
     }
 
   /**
@@ -4513,9 +4513,9 @@ public class Collections
    *         underlying list, in order, starting at the specified index.
    * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
    */
-    public ListIterator listIterator(fabric.worker.Core core, int index)
+    public ListIterator listIterator(fabric.worker.Store store, int index)
     {
-      return new UnmodifiableListIterator@core(list.listIterator(core, index));
+      return new UnmodifiableListIterator@store(list.listIterator(store, index));
     }
 
     /**
@@ -4597,7 +4597,7 @@ public class Collections
   } // class UnmodifiableRandomAccessList
 
   /**
-   * The implementation of {@link UnmodifiableList#listIterator(Core)}.
+   * The implementation of {@link UnmodifiableList#listIterator(Store)}.
    *
    * @author Eric Blake (ebb9@email.byu.edu)
    */
@@ -4933,9 +4933,9 @@ public class Collections
       }
 
       // The iterator must return unmodifiable map entries.
-      public Iterator iterator(fabric.worker.Core core)
+      public Iterator iterator(fabric.worker.Store store)
       {
-        return new UnmodifiableIterator@core(c.iterator(core))
+        return new UnmodifiableIterator@store(c.iterator(store))
 	{
 	  /**
 	   * Obtains the next element from the underlying set of

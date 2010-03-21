@@ -14,20 +14,20 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
     // cal1 also stores some of the events
     // think of it as the google calendar
     final CalendarDB{this} cal1;
-    // cal1 will reside on coreName1
-    final String{this} coreName1 = "gaia.systems.cs.cornell.edu";
+    // cal1 will reside on storeName1
+    final String{this} storeName1 = "gaia.systems.cs.cornell.edu";
     final DelegatingPrincipal{this} google;
-    final Core{this} googlec;
+    final Store{this} googlec;
     
     // cal2 stores other user principals
     // cal2 also stores other events
     // think of it as the yahoo calendar
     final CalendarDB{this} cal2;
-    final String{this} coreName2 = "trantor.u.cs.cornell.edu";
+    final String{this} storeName2 = "trantor.u.cs.cornell.edu";
     final DelegatingPrincipal{this} yahoo;
-    final Core{this} yahooc;
+    final Store{this} yahooc;
     
-	final Core{this} localCore;
+	final Store{this} localStore;
 
 	public Main{CalServEP,worker$→;CalServEP&worker$←}()
 	    where authority(worker$, CalServEP)
@@ -35,15 +35,15 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
         FabricWorker cl = FabricWorker.getWorker();
         CalendarDB local1 = null;
         CalendarDB local2 = null;
-        Core lCore = null;
+        Store lStore = null;
         DelegatingPrincipal googlelocal = null;
         DelegatingPrincipal yahoolocal = null;
-        Core glocal = null;
-        Core ylocal = null;
+        Store glocal = null;
+        Store ylocal = null;
         if(cl != null) {
-            lCore = cl.getLocalCore();
-            glocal = cl.getCore(coreName1);
-            ylocal = cl.getCore(coreName2);
+            lStore = cl.getLocalStore();
+            glocal = cl.getStore(storeName1);
+            ylocal = cl.getStore(storeName2);
             try {
                 final DelegatingPrincipal calendarapp = (DelegatingPrincipal)cl.getPrincipal();
                 final DelegatingPrincipal servp = (DelegatingPrincipal)CalServEP;
@@ -85,7 +85,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
                 local2 =  new CalendarDB@yahooc(yahooc);
             }               
         } 
-	    localCore = lCore;
+	    localStore = lStore;
 	    cal1 = local1;
         cal2 = local2;
 		super();
@@ -107,10 +107,10 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
             String{*lbl} id, SessionPrincipal{*lbl} session) {
         SessionState[lbl] toReturn = null;
         atomic {
-            if (localCore != null && localCore equiv worker$ &&
+            if (localStore != null && localStore equiv worker$ &&
                     lbl <= new label {⊤→worker$} && 
                     new label {⊤←worker$} <= lbl) {
-                toReturn = new CalendarSessionState[lbl]@localCore(id, session);
+                toReturn = new CalendarSessionState[lbl]@localStore(id, session);
             }
         }
         return toReturn;
@@ -120,8 +120,8 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
     protected SessionPrincipal createSessionPrincipal(String{worker$→;worker$←} id) {
         SessionPrincipal toReturn = null;
         atomic {
-            if (localCore != null && localCore equiv worker$) {
-                toReturn = new SessionPrincipal@localCore(id);
+            if (localStore != null && localStore equiv worker$) {
+                toReturn = new SessionPrincipal@localStore(id);
             }
         }
         return toReturn;
@@ -186,20 +186,20 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
 	caller(currUser) {
 //        try {
 	    
-	    if (localCore == null) return null;
-	    if(localCore actsfor currUser && localCore equiv CalServEP) {
-		Date[{currUser!:}] now = new Date[{currUser!:}]@localCore();
+	    if (localStore == null) return null;
+	    if(localStore actsfor currUser && localStore equiv CalServEP) {
+		Date[{currUser!:}] now = new Date[{currUser!:}]@localStore();
 		int uid = this.getFreshUid(currUser);
 
-		return new Event[{currUser!:}]@localCore(uid, 
+		return new Event[{currUser!:}]@localStore(uid, 
 				new label {currUser!:}, 
 				new label {currUser:;currUser!:}, // default info label only readable by currUser
 				now,
 				now,
 				"",
 				"",
-				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}]@localCore(),
-				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}]@localCore(),
+				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}]@localStore(),
+				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}]@localStore(),
 				currUser);
 	    } else {
 	        return null;
@@ -266,7 +266,7 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
 //				final Event e2 = declassify(e2_, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
 				
 				Event e2;
-				// the following also moves events from the local core to the right core
+				// the following also moves events from the local store to the right store
 				if (google actsfor pp) {
 				    declassify ({p← meet CalServEP←}) {
 				        e2 = CalServDeclassifier.handOverEvent(p, CalServEP, ueicEvent, googlec);	
@@ -316,8 +316,8 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
 
 //			Event e1 = endorse(e, {CalServEP:;CalServEP!:;eventID; p} to {p:;CalServEP:;CalServEP!: meet p!:});
 //			Event e2 = declassify(e1,{CalServEP:;p:;CalServEP!: meet p!:} to {p:;CalServEP!: meet p!:});
-			// XXX This will probably move it from the remote core to the local core?
-			Event e2 = CalServDeclassifier.handOverEvent(CalServEP, p, e, localCore);
+			// XXX This will probably move it from the remote store to the local store?
+			Event e2 = CalServDeclassifier.handOverEvent(CalServEP, p, e, localStore);
 			return e2;
 		}
 	}
@@ -332,16 +332,16 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
 	Event[{p←}]{p←} sanitizeEvent{p←}(principal{p←} p, Event[{p←}]{p←} e)
 	    where {p←} <= e.infoLbl 
 	{
-		if (e == null || cal1 == null || e.remote1 == null || e.uid == null || localCore == null || cal2 == null) {
+		if (e == null || cal1 == null || e.remote1 == null || e.uid == null || localStore == null || cal2 == null) {
 			return e;
 		}
 		String name = escapeString(e.remote1.name);
 		String note = escapeString(e.remote1.note);
 
 //		try {
-		if (localCore actsfor p) {
+		if (localStore actsfor p) {
 		// need to construct a new event...
-		return new Event[{p←}]@localCore(e.uid.uid,
+		return new Event[{p←}]@localStore(e.uid.uid,
 				e.timeLbl,
 				e.infoLbl,
 				e.startTime,

@@ -107,8 +107,8 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     }
 
     if (location != null) {
-      if (!ts.isImplicitCastValid(location.type(), ts.Core())) {
-        throw new SemanticException("Array location must be a core.", location
+      if (!ts.isImplicitCastValid(location.type(), ts.Store())) {
+        throw new SemanticException("Array location must be a store.", location
             .position());
       }
     }

@@ -47,15 +47,15 @@ public class ObjectUpdateMessage extends
     }
   }
 
-  public final String core;
+  public final String store;
   public final long onum;
   public final Glob glob;
   public final ObjectGroup group;
 
-  private ObjectUpdateMessage(String core, long onum, Glob glob,
+  private ObjectUpdateMessage(String store, long onum, Glob glob,
       ObjectGroup group) {
     super(MessageType.OBJECT_UPDATE);
-    this.core = core;
+    this.store = store;
     this.onum = onum;
     this.glob = glob;
     this.group = group;
@@ -66,8 +66,8 @@ public class ObjectUpdateMessage extends
     }
   }
 
-  public ObjectUpdateMessage(String core, long onum, Glob update) {
-    this(core, onum, update, null);
+  public ObjectUpdateMessage(String store, long onum, Glob update) {
+    this(store, onum, update, null);
   }
 
   public ObjectUpdateMessage(long onum, ObjectGroup update) {
@@ -84,12 +84,12 @@ public class ObjectUpdateMessage extends
     this.onum = in.readLong();
 
     if (in.readBoolean()) {
-      this.core = in.readUTF();
-      PublicKey key = Worker.getWorker().getCore(core).getPublicKey();
+      this.store = in.readUTF();
+      PublicKey key = Worker.getWorker().getStore(store).getPublicKey();
       this.glob = new Glob(key, in);
       this.group = null;
     } else {
-      this.core = null;
+      this.store = null;
       this.glob = null;
       this.group = new ObjectGroup(in);
     }
@@ -120,7 +120,7 @@ public class ObjectUpdateMessage extends
 
     if (group == null) {
       out.writeBoolean(true);
-      out.writeUTF(core);
+      out.writeUTF(store);
       glob.write(out);
     } else {
       out.writeBoolean(false);

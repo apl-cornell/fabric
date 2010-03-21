@@ -5,20 +5,20 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.lang.Object;
 
 /**
  * A map keyed on OIDs.
  */
 public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
-  Map<Core, LongKeyMap<V>> map;
+  Map<Store, LongKeyMap<V>> map;
 
   boolean hasNullEntry;
   V nullEntry;
 
   public OidKeyHashMap() {
-    map = new HashMap<Core, LongKeyMap<V>>();
+    map = new HashMap<Store, LongKeyMap<V>>();
     hasNullEntry = false;
     nullEntry = null;
   }
@@ -29,7 +29,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   public OidKeyHashMap(OidKeyHashMap<V> other) {
     this();
 
-    for (Map.Entry<Core, LongKeyMap<V>> entry : other.map.entrySet()) {
+    for (Map.Entry<Store, LongKeyMap<V>> entry : other.map.entrySet()) {
       this.map.put(entry.getKey(), new LongKeyHashMap<V>(entry.getValue()));
     }
 
@@ -37,8 +37,8 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     this.nullEntry = other.nullEntry;
   }
 
-  public LongKeyMap<V> get(Core core) {
-    return map.get(core);
+  public LongKeyMap<V> get(Store store) {
+    return map.get(store);
   }
 
   public void clear() {
@@ -48,21 +48,21 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   }
 
   public boolean containsKey(Object obj) {
-    return obj == null ? hasNullEntry : containsKey(obj.$getCore(), obj
+    return obj == null ? hasNullEntry : containsKey(obj.$getStore(), obj
         .$getOnum());
   }
 
-  public boolean containsKey(Core core, long onum) {
-    LongKeyMap<V> submap = map.get(core);
+  public boolean containsKey(Store store, long onum) {
+    LongKeyMap<V> submap = map.get(store);
     return submap != null && submap.containsKey(onum);
   }
 
   public V get(Object obj) {
-    return obj == null ? nullEntry : get(obj.$getCore(), obj.$getOnum());
+    return obj == null ? nullEntry : get(obj.$getStore(), obj.$getOnum());
   }
 
-  public V get(Core core, long onum) {
-    LongKeyMap<V> submap = map.get(core);
+  public V get(Store store, long onum) {
+    LongKeyMap<V> submap = map.get(store);
     return submap == null ? null : submap.get(onum);
   }
 
@@ -74,14 +74,14 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
       return result;
     }
 
-    return put(obj.$getCore(), obj.$getOnum(), val);
+    return put(obj.$getStore(), obj.$getOnum(), val);
   }
 
-  public V put(Core core, long onum, V val) {
-    LongKeyMap<V> submap = map.get(core);
+  public V put(Store store, long onum, V val) {
+    LongKeyMap<V> submap = map.get(store);
     if (submap == null) {
       submap = new LongKeyHashMap<V>();
-      map.put(core, submap);
+      map.put(store, submap);
     }
 
     return submap.put(onum, val);
@@ -95,19 +95,19 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
       return result;
     }
 
-    return remove(obj.$getCore(), obj.$getOnum());
+    return remove(obj.$getStore(), obj.$getOnum());
   }
 
-  public V remove(Core core, long onum) {
-    LongKeyMap<V> submap = map.get(core);
+  public V remove(Store store, long onum) {
+    LongKeyMap<V> submap = map.get(store);
     if (submap == null) return null;
 
     V result = submap.remove(onum);
-    if (submap.isEmpty()) map.remove(core);
+    if (submap.isEmpty()) map.remove(store);
     return result;
   }
 
-  public Set<Core> coreSet() {
+  public Set<Store> storeSet() {
     return map.keySet();
   }
 

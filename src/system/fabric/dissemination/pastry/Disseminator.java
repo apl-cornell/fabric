@@ -17,8 +17,8 @@ import rice.pastry.leafset.LeafSet;
 import rice.pastry.routing.RouteSet;
 import rice.pastry.routing.RoutingTable;
 import fabric.worker.Worker;
-import fabric.worker.Core;
-import fabric.worker.RemoteCore;
+import fabric.worker.Store;
+import fabric.worker.RemoteStore;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
@@ -168,7 +168,7 @@ public class Disseminator implements Application {
    * @throws DisseminationTimeoutException
    *           if the dissemination network takes too long.
    */
-  public Glob fetch(RemoteCore c, long onum)
+  public Glob fetch(RemoteStore c, long onum)
       throws DisseminationTimeoutException {
     log.fine("Pastry dissem fetch request " + c + " " + onum);
 
@@ -190,7 +190,7 @@ public class Disseminator implements Application {
     synchronized (f) {
       if (f.reply() == null) {
         // XXX hack: wait at most 1 second for dissemination network. after
-        // that, we will revert to direct core fetch
+        // that, we will revert to direct store fetch
         try {
           f.wait(1000);
         } catch (InterruptedException e) {
@@ -241,7 +241,7 @@ public class Disseminator implements Application {
     process(new Executable<Void, RuntimeException>() {
       public Void execute() {
         Worker worker = Worker.getWorker();
-        RemoteCore c = worker.getCore(msg.core());
+        RemoteStore c = worker.getStore(msg.store());
         long onum = msg.onum();
         Glob g = cache.get(c, onum);
 
@@ -347,7 +347,7 @@ public class Disseminator implements Application {
     rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
     OidKeyHashMap<Long> skip = new OidKeyHashMap<Long>();
 
-    for (Pair<Pair<Core, Long>, Long> k : cache.timestamps()) {
+    for (Pair<Pair<Store, Long>, Long> k : cache.timestamps()) {
       rice.pastry.Id id =
           (rice.pastry.Id) idf.buildId(k.first + "/" + k.second);
       boolean send = shouldReplicate(deciderId, me, id, level);
@@ -374,10 +374,10 @@ public class Disseminator implements Application {
 
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
 
-        Map<Pair<Core, Long>, Glob> globs =
-            new HashMap<Pair<Core, Long>, Glob>();
+        Map<Pair<Store, Long>, Glob> globs =
+            new HashMap<Pair<Store, Long>, Glob>();
 
-        for (Pair<Pair<Core, Long>, Long> k : cache.sortedTimestamps()) {
+        for (Pair<Pair<Store, Long>, Long> k : cache.sortedTimestamps()) {
           Long skipTimestamp = skip.get(k.first.first, k.first.second);
           if (skipTimestamp != null && skipTimestamp >= k.second) {
             continue;
@@ -388,7 +388,7 @@ public class Disseminator implements Application {
           boolean send = shouldReplicate(me, senderId, id, level);
 
           if (send) {
-            RemoteCore c = (RemoteCore) k.first.first;
+            RemoteStore c = (RemoteStore) k.first.first;
             Long onum = k.first.second;
             Glob g = cache.get(c, onum);
             if (g.level() > level) continue;
@@ -444,8 +444,8 @@ public class Disseminator implements Application {
   protected void replicate(final Replicate.Reply msg) {
     process(new Executable<Void, RuntimeException>() {
       public Void execute() {
-        for (Map.Entry<Pair<Core, Long>, Glob> e : msg.globs().entrySet()) {
-          RemoteCore c = (RemoteCore) e.getKey().first;
+        for (Map.Entry<Pair<Store, Long>, Glob> e : msg.globs().entrySet()) {
+          RemoteStore c = (RemoteStore) e.getKey().first;
           long onum = e.getKey().second;
           Glob g = e.getValue();
           cache.put(c, onum, g);
@@ -488,7 +488,7 @@ public class Disseminator implements Application {
   protected boolean forward(Fetch msg) {
     if (!msg.refresh()) {
       Worker worker = Worker.getWorker();
-      RemoteCore c = worker.getCore(msg.core());
+      RemoteStore c = worker.getStore(msg.store());
       long onum = msg.onum();
       Glob g = cache.get(c, onum);
 
@@ -510,7 +510,7 @@ public class Disseminator implements Application {
    */
   protected boolean forward(Fetch.Reply msg) {
     Worker worker = Worker.getWorker();
-    RemoteCore c = worker.getCore(msg.core());
+    RemoteStore c = worker.getStore(msg.store());
     long onum = msg.onum();
     Glob g = msg.glob();
 

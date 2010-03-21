@@ -39,9 +39,9 @@ public class ShowCalendar extends UAction[CalServEP] {
                 if (lbl <= new label {req.session!:}) {
                     final User currentUser = state.currentUser();
                     if (req.session actsfor currentUser) {
-                        if (servlet != null && servlet.localCore != null && servlet.localCore actsfor req.session) {
-                        State[{req.session←}] s = new State[{req.session←}]@servlet.localCore(currentUser, 
-                                            new fabricated.util.Date[{currentUser!:}]@servlet.localCore(), 
+                        if (servlet != null && servlet.localStore != null && servlet.localStore actsfor req.session) {
+                        State[{req.session←}] s = new State[{req.session←}]@servlet.localStore(currentUser, 
+                                            new fabricated.util.Date[{currentUser!:}]@servlet.localStore(), 
                                             ShowCalendarSessAction$1.DISPLAY_KIND_MONTH, 
                                             currentUser);
                         state.css.state = s;

@@ -29,7 +29,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
       fattr fa = new fattr(fsinfo, handles, tm);
       String file = GetNameFromHandle(f.Handle(), xid);
       // make sure the file exists
-      File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, file);
+      File fd = fsinfo.factory.makeFile(fsinfo.localStore, fsinfo.store, file);
       if (fd.exists() == false)
         throw new NFSException(xid, NFSERR_NOENT);
       // System.out.print("getattr on " + file + "\n");
@@ -65,7 +65,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
       //   be set to 0 to truncate the file
       if (size == 0) {
         // truncate by deleting and recreating the file
-        File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, fileName);
+        File fd = fsinfo.factory.makeFile(fsinfo.localStore, fsinfo.store, fileName);
         fd.reset();
       }
 
@@ -96,7 +96,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
       String fileName = pm.MakePath(dirName, entry);
 
 //      System.err.println("NFSHandler: Looking up file " + fileName);
-      File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, fileName); // open it to make sure it exists
+      File fd = fsinfo.factory.makeFile(fsinfo.localStore, fsinfo.store, fileName); // open it to make sure it exists
       if (fd.exists() != true) {
 //        System.out.println("File does not exist!");
         throw new NFSException(xid, NFSERR_NOENT);
@@ -139,7 +139,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 //    System.out.print("Reading dir " + dirName + " cookie=" + cookie
 //        + " count=" + count + "\n");
     if (cookie == 0 || (dirName.equals(cachedDirName) == false)) {
-      File dirfd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, dirName);
+      File dirfd = fsinfo.factory.makeFile(fsinfo.localStore, fsinfo.store, dirName);
       if (dirfd == null)
         throw new NFSException(xid, NFSERR_NOENT);
 
@@ -218,12 +218,12 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
       String path = pm.MakePath(dirName, entry);
 
       // make the file
-      File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, path);
+      File fd = fsinfo.factory.makeFile(fsinfo.localStore, fsinfo.store, path);
       if (fd.exists())
         throw new NFSException(xid, NFSERR_EXIST);
 
       // TODO attributes not supported yet
-      RandomAccessFile ra = fsinfo.factory.makeRAFile(fsinfo.localCore, fsinfo.core, path);
+      RandomAccessFile ra = fsinfo.factory.makeRAFile(fsinfo.localStore, fsinfo.store, path);
       ra.close();
 
       // make a new handle for this file
@@ -258,7 +258,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 
     // open and delete the file
     String dirName = GetNameFromHandle(dirFH.Handle(), xid);
-    File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, dirName + fsinfo.separatorChar + entry);
+    File fd = fsinfo.factory.makeFile(fsinfo.localStore, fsinfo.store, dirName + fsinfo.separatorChar + entry);
 //    System.out.println("Trying to delete the file " + dirName + fsinfo.separatorChar + entry);
     if (fd.exists() == false)
       throw new NFSException(xid, NFSERR_NOENT);
@@ -280,7 +280,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
 
       String dirName = GetNameFromHandle(dirFH.Handle(), xid);
       String newdir = pm.MakePath(dirName, entry);
-      File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, newdir);
+      File fd = fsinfo.factory.makeFile(fsinfo.localStore, fsinfo.store, newdir);
 
       if (fd.exists() == true)
         throw new NFSException(xid, NFSERR_EXIST);
@@ -312,7 +312,7 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     String name = packet.GetString();
 
     String dirname = GetNameFromHandle(dirFH.Handle(), xid);
-    File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, dirname + fsinfo.separatorChar + name);
+    File fd = fsinfo.factory.makeFile(fsinfo.localStore, fsinfo.store, dirname + fsinfo.separatorChar + name);
     // do some correctness checking
 //    System.out.println("Trying to delete the directory " + dirname + fsinfo.separatorChar + name);
     if (fd.exists() == false)
@@ -358,10 +358,10 @@ class NFSDir extends java.lang.Object  implements NFSConsts {
     //  compute the path names specified
     String srcdir = GetNameFromHandle(srcFH.Handle(), xid);
     String destdir = GetNameFromHandle(destFH.Handle(), xid);
-    File src = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, srcdir + fsinfo.separatorChar + srcentry);
+    File src = fsinfo.factory.makeFile(fsinfo.localStore, fsinfo.store, srcdir + fsinfo.separatorChar + srcentry);
     if (src.exists() == false)
       throw new NFSException(xid, NFSERR_NOENT);
-    File dest = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, destdir + fsinfo.separatorChar + destentry);
+    File dest = fsinfo.factory.makeFile(fsinfo.localStore, fsinfo.store, destdir + fsinfo.separatorChar + destentry);
 
 
 // XXX Disabling this feature. e.g. "$mv src dest" should work even if dest exists

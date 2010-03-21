@@ -1,6 +1,6 @@
 package jif.lang;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.net.UnreachableNodeException;
 import fabric.lang.Principal;
 
@@ -11,9 +11,9 @@ public interface WriterPolicy extends AbstractPolicy, IntegPolicy {
 
   public static class _Impl extends AbstractPolicy._Impl implements
       WriterPolicy {
-    public _Impl(Core core, Label label, Principal owner, Principal writer)
+    public _Impl(Store store, Label label, Principal owner, Principal writer)
         throws UnreachableNodeException {
-      super(core, label);
+      super(store, label);
     }
 
     public native Principal owner();

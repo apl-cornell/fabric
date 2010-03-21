@@ -1,7 +1,7 @@
 package system;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 /**
  * Tests two top-level transactions with conflicting accesses.
@@ -10,11 +10,11 @@ public class ThreadTest01 {
   int i = 0;
 
   public static void main(String[] args) {
-    Core core = Worker.getWorker().getCore("core0");
+    Store store = Worker.getWorker().getStore("store0");
     ThreadTest01 state;
 
     atomic {
-      state = new ThreadTest01@core();
+      state = new ThreadTest01@store();
     }
 
     new T(state).start();

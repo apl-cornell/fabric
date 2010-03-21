@@ -2,22 +2,22 @@ package fabric.messages;
 
 import java.io.*;
 
-import fabric.worker.Core;
-import fabric.worker.RemoteCore;
+import fabric.worker.Store;
+import fabric.worker.RemoteStore;
 import fabric.worker.debug.Timing;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
-import fabric.core.MessageHandlerThread;
+import fabric.store.MessageHandlerThread;
 import fabric.net.UnreachableNodeException;
 
 /**
  * An <code>AllocateMessage</code> represents a request to allocate a number
- * of object IDs at a core.
+ * of object IDs at a store.
  */
 public final class AllocateMessage extends
-    Message<RemoteCore, AllocateMessage.Response> {
+    Message<RemoteStore, AllocateMessage.Response> {
 
   public static class Response implements Message.Response {
     public long[] oids;
@@ -29,12 +29,12 @@ public final class AllocateMessage extends
     /**
      * Deserialization constructor, used by the worker.
      * 
-     * @param core
-     *                The core from which the response is being read.
+     * @param store
+     *                The store from which the response is being read.
      * @param in
      *                the input stream from which to read the response.
      */
-    Response(Core core, DataInput in) throws IOException {
+    Response(Store store, DataInput in) throws IOException {
       oids = new long[in.readInt()];
       for (int i = 0; i < oids.length; i++)
         oids[i] = in.readLong();
@@ -72,7 +72,7 @@ public final class AllocateMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#dispatch(fabric.core.MessageHandlerThread)
+   * @see fabric.messages.Message#dispatch(fabric.store.MessageHandlerThread)
    */
   @Override
   public Response dispatch(MessageHandlerThread w) throws AccessException, ProtocolError {
@@ -82,23 +82,23 @@ public final class AllocateMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#send(fabric.worker.Core, boolean)
+   * @see fabric.messages.Message#send(fabric.worker.Store, boolean)
    */
-  public Response send(RemoteCore core) throws UnreachableNodeException {
+  public Response send(RemoteStore store) throws UnreachableNodeException {
     try {
-      Timing.CORE.begin();
-      return send(core, true);
+      Timing.STORE.begin();
+      return send(store, true);
     } catch (UnreachableNodeException e) {
       throw e;
     } catch (FabricException e) {
-      throw new InternalError("Unexpected response from core.", e);
+      throw new InternalError("Unexpected response from store.", e);
     } finally {
-      Timing.CORE.end();
+      Timing.STORE.end();
     }
   }
 
   @Override
-  public Response response(RemoteCore c, DataInput in) throws IOException {
+  public Response response(RemoteStore c, DataInput in) throws IOException {
     return new Response(c, in);
   }
   

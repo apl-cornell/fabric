@@ -2,7 +2,7 @@ package OO7.traversals;
 import OO7.*;
 
 import java.net.URI;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.util.Map;
 import fabric.worker.debug.Timing;
@@ -29,8 +29,8 @@ public abstract class Traversal {
       }
       
       URI    addr = new URI(args[0]);
-      Core   core = Worker.getWorker().getCore(addr.getHost());
-      Benchmark b = (Benchmark) ((Map) core.getRoot()).get(addr.getPath());
+      Store store = Worker.getWorker().getStore(addr.getHost());
+      Benchmark b = (Benchmark) ((Map) store.getRoot()).get(addr.getPath());
      
       System.out.println();
       System.out.println("Cold stats:");
@@ -71,7 +71,7 @@ public abstract class Traversal {
   }
 
   public void printUsage() {
-    System.out.println("usage: tailor " + getClass().getName() + " fab://core/benchmark [--hot]");
+    System.out.println("usage: fab " + getClass().getName() + " fab://store/benchmark [--hot]");
   }
 }
 

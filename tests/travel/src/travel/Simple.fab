@@ -65,8 +65,8 @@ class Broker[principal bank, principal customer] extends AbstractPrincipal
         final principal airline_ = airlineAcct.user;
 
 	FabricWorker cl = FabricWorker.getWorker();
-	final RemoteWorker bankWorker = cl.getWorker(Config.bankCoreName);
-	final RemoteWorker airlineWorker = cl.getWorker(Config.airlineCoreName);
+	final RemoteWorker bankWorker = cl.getWorker(Config.bankStoreName);
+	final RemoteWorker airlineWorker = cl.getWorker(Config.airlineStoreName);
 	boolean success = false;
 	if (bankWorker actsfor bank && airlineWorker actsfor airline) {
 	  success = true;

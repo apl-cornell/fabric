@@ -8,8 +8,8 @@ public class SerializedObjectSoftRef extends SoftReference<SerializedObject> {
   
   final long onum;
 
-  public SerializedObjectSoftRef(RemoteCore core, SerializedObject obj) {
-    super(obj, core.serializedRefQueue);
+  public SerializedObjectSoftRef(RemoteStore store, SerializedObject obj) {
+    super(obj, store.serializedRefQueue);
     this.onum = obj.getOnum();
   }
 

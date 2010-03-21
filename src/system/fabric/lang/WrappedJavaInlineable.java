@@ -3,7 +3,7 @@ package fabric.lang;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.common.exceptions.InternalError;
 import fabric.lang.arrays.ObjectArray;
 import jif.lang.Label;
@@ -52,8 +52,9 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * array should be instances of fabric.lang.Object from the Fabric type
    * system's point of view.
    */
-  public static ObjectArray $wrap(Core core, Label label, java.lang.Object[] array) {
-    ObjectArray result = new ObjectArray._Impl(core, label, Object._Proxy.class,
+  public static ObjectArray $wrap(Store store, Label label,
+      java.lang.Object[] array) {
+    ObjectArray result = new ObjectArray._Impl(store, label, Object._Proxy.class,
         array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, $wrap(array[i]));
@@ -63,10 +64,10 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.lang.Object#$getCore()
+   * @see fabric.lang.Object#$getStore()
    */
-  public Core $getCore() {
-    throw new InternalError("WrappedJavaInlineables don't have cores.");
+  public Store $getStore() {
+    throw new InternalError("WrappedJavaInlineables don't have stores.");
   }
 
   /*

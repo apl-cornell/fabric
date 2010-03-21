@@ -4,7 +4,7 @@ public class Q1 {
   /* TODO: extract into a separate traversal
   public void matchQuery() throws Exception {
     // generate a random list of objects to fetch
-    Core local = Worker.getWorker().getLocalCore();
+    Store local = Worker.getWorker().getLocalStore();
     int[] oids = new int[1000]@local;
     Map atomicParts = atomicPartsById();
 

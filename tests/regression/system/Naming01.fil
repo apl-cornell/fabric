@@ -4,7 +4,7 @@ import fabric.worker.*;
 
 public class Naming01 {
   public static void main(String[] args) {
-    Worker.getWorker().getCore("cornell.edu");
+    Worker.getWorker().getStore("cornell.edu");
     System.out.println("TEST PASSED.");
   }
 }

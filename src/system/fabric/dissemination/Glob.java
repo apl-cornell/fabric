@@ -7,7 +7,7 @@ import javax.crypto.*;
 
 import jif.lang.Label;
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.Worker.Code;
 import fabric.common.*;
 import fabric.common.exceptions.BadSignatureException;
@@ -52,19 +52,19 @@ public class Glob implements FastSerializable {
   private transient boolean home;
 
   /**
-   * Used by the core to encrypt and sign an object group.
+   * Used by the store to encrypt and sign an object group.
    * 
-   * @param core
-   *          The core at which the group resides.
+   * @param store
+   *          The store at which the group resides.
    * @param group
    *          The group to encapsulate.
    * @param key
-   *          The core's private key. Used to sign the glob.
+   *          The store's private key. Used to sign the glob.
    */
-  public Glob(Core core, ObjectGroup group, PrivateKey key) {
+  public Glob(Store store, ObjectGroup group, PrivateKey key) {
     this.timestamp = System.currentTimeMillis();
 
-    this.keyObject = getLabel(core, group).keyObject();
+    this.keyObject = getLabel(store, group).keyObject();
     if (keyObject == null) {
       this.iv = null;
     } else {
@@ -117,7 +117,7 @@ public class Glob implements FastSerializable {
     // Update with keyObject pointer, if non-null.
     if (keyObject != null) {
       try {
-        sig.update(keyObject.$getCore().name().getBytes("UTF8"));
+        sig.update(keyObject.$getStore().name().getBytes("UTF8"));
       } catch (UnsupportedEncodingException e) {
         throw new InternalError(e);
       }
@@ -154,10 +154,10 @@ public class Glob implements FastSerializable {
     return Crypto.cipherInstance(opmode, key, iv);
   }
 
-  private Label getLabel(Core core, ObjectGroup group) {
+  private Label getLabel(Store store, ObjectGroup group) {
     SerializedObject obj =
         group.objects().entrySet().iterator().next().getValue();
-    return new Label._Proxy(core, obj.getLabelOnum());
+    return new Label._Proxy(store, obj.getLabelOnum());
   }
 
   /** The dissemination level of the glob. 0 is replicated to all nodes. */
@@ -223,7 +223,7 @@ public class Glob implements FastSerializable {
       out.writeBoolean(false);
     } else {
       out.writeBoolean(true);
-      out.writeUTF(keyObject.$getCore().name());
+      out.writeUTF(keyObject.$getStore().name());
       out.writeLong(keyObject.$getOnum());
     }
 
@@ -252,8 +252,8 @@ public class Glob implements FastSerializable {
       BadSignatureException {
     this.timestamp = in.readLong();
     if (in.readBoolean()) {
-      Core core = Worker.getWorker().getCore(in.readUTF());
-      this.keyObject = new SecretKeyObject._Proxy(core, in.readLong());
+      Store store = Worker.getWorker().getStore(in.readUTF());
+      this.keyObject = new SecretKeyObject._Proxy(store, in.readLong());
     } else this.keyObject = null;
 
     int ivLength = in.readInt();
@@ -279,10 +279,10 @@ public class Glob implements FastSerializable {
   }
 
   /**
-   * @param core
-   *          The core that this glob came from.
+   * @param store
+   *          The store that this glob came from.
    */
-  public ObjectGroup decrypt(Core core) {
+  public ObjectGroup decrypt(Store store) {
     try {
       Cipher cipher = makeCipher(keyObject, Cipher.DECRYPT_MODE, iv);
       ByteArrayInputStream bis = new ByteArrayInputStream(data);

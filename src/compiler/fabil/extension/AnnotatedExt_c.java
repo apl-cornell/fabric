@@ -94,15 +94,15 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     }
 
     Position pos = Position.compilerGenerated();
-    Call defaultLocation = nf.Call(pos, receiver, nf.Id(pos, "$getCore"));
+    Call defaultLocation = nf.Call(pos, receiver, nf.Id(pos, "$getStore"));
 
     Flags flags = Flags.NONE;
     if (context.inStaticContext()) flags = Flags.STATIC;
 
     MethodInstance mi =
-        ts.methodInstance(pos, currentClass, flags, ts.Core(), "$getCore",
+        ts.methodInstance(pos, currentClass, flags, ts.Store(), "$getStore",
             Collections.emptyList(), Collections.emptyList());
-    defaultLocation = (Call) defaultLocation.type(ts.Core());
+    defaultLocation = (Call) defaultLocation.type(ts.Store());
     defaultLocation = defaultLocation.methodInstance(mi);
     return expr.location(defaultLocation);
   }

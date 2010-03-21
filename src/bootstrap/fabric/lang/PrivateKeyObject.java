@@ -4,24 +4,24 @@ import java.security.PrivateKey;
 
 import jif.lang.Label;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.net.UnreachableNodeException;
 
 public interface PrivateKeyObject extends Object {
   PrivateKey getKey();
   
   public static class _Proxy extends Object._Proxy implements PrivateKeyObject {
-    public _Proxy(Core core, long onum) {
-      super(core, onum);
+    public _Proxy(Store store, long onum) {
+      super(store, onum);
     }
 
     public native PrivateKey getKey();
   }
   
   public static class _Impl extends Object._Impl implements PrivateKeyObject {
-    public _Impl(Core core, Label label, PrivateKey key)
+    public _Impl(Store store, Label label, PrivateKey key)
         throws UnreachableNodeException {
-      super(core, label);
+      super(store, label);
     }
     
     public native PrivateKey getKey();

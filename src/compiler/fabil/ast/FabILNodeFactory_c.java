@@ -202,10 +202,10 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     return n;
   }
   
-  public CoreGetter CoreGetter(Position pos) {
-    CoreGetter n = new CoreGetter_c(pos);
-    n = (CoreGetter) n.ext(extFactory().extExpr());
-    n = (CoreGetter) n.del(delFactory().delExpr());
+  public StoreGetter StoreGetter(Position pos) {
+    StoreGetter n = new StoreGetter_c(pos);
+    n = (StoreGetter) n.ext(extFactory().extExpr());
+    n = (StoreGetter) n.del(delFactory().delExpr());
     return n;
   }
 }

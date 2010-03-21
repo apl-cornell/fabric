@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.MessageHandlerThread;
 import fabric.common.SerializedObject;
@@ -23,7 +23,7 @@ import fabric.net.UnreachableNodeException;
 public class ReadMessage extends InterWorkerMessage<ReadMessage.Response> {
 
   public final TransactionID tid;
-  public final Core core;
+  public final Store store;
   public final long onum;
 
   public static class Response implements Message.Response {
@@ -40,15 +40,15 @@ public class ReadMessage extends InterWorkerMessage<ReadMessage.Response> {
         return;
       }
 
-      Core core = Worker.getWorker().getCore(in.readUTF());
+      Store store = Worker.getWorker().getStore(in.readUTF());
       SerializedObject serialized = new SerializedObject(in);
-      this.obj = serialized.deserialize(core);
+      this.obj = serialized.deserialize(store);
     }
 
     public void write(DataOutput out) throws IOException {
       if (obj != null) {
         out.writeBoolean(true);
-        out.writeUTF(obj.$getCore().name());
+        out.writeUTF(obj.$getStore().name());
         SerializedObject.write(obj, out);
       } else {
         out.writeBoolean(false);
@@ -56,16 +56,16 @@ public class ReadMessage extends InterWorkerMessage<ReadMessage.Response> {
     }
   }
 
-  public ReadMessage(TransactionID tid, Core core, long onum) {
+  public ReadMessage(TransactionID tid, Store store, long onum) {
     super(MessageType.INTERWORKER_READ);
 
     this.tid = tid;
-    this.core = core;
+    this.store = store;
     this.onum = onum;
   }
 
   public ReadMessage(DataInput in) throws IOException {
-    this(new TransactionID(in), Worker.getWorker().getCore(in.readUTF()), in
+    this(new TransactionID(in), Worker.getWorker().getStore(in.readUTF()), in
         .readLong());
   }
 
@@ -94,7 +94,7 @@ public class ReadMessage extends InterWorkerMessage<ReadMessage.Response> {
   @Override
   public void write(DataOutput out) throws IOException {
     tid.write(out);
-    out.writeUTF(core.name());
+    out.writeUTF(store.name());
     out.writeLong(onum);
   }
 }

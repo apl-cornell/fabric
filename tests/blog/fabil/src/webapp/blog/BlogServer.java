@@ -12,13 +12,13 @@ public class BlogServer {
     Diagnostics.initializeFabric();
     String jetty_home = System.getProperty("jetty.home", "./bin/fabil");
 
-    LocalCore core = Diagnostics.getLocalCore();
+    LocalStore store = Diagnostics.getLocalStore();
     
     Server server = null;
     
     atomic {
-      server = new Server@core(8080);
-      WebAppContext webapp = new WebAppContext@core();
+      server = new Server@store(8080);
+      WebAppContext webapp = new WebAppContext@store();
       webapp.setContextPath("/");
       webapp.setWar(jetty_home + "/web");
       webapp.addServlet(BlogServlet.class, "/web");

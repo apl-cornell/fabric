@@ -244,7 +244,7 @@
         </dia:composite>
         <dia:composite type="umlattribute">
           <dia:attribute name="name">
-            <dia:string>#cores#</dia:string>
+            <dia:string>#stores#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
             <dia:string>##</dia:string>
@@ -377,7 +377,7 @@
         </dia:composite>
         <dia:composite type="umloperation">
           <dia:attribute name="name">
-            <dia:string>#getCore#</dia:string>
+            <dia:string>#getStore#</dia:string>
           </dia:attribute>
           <dia:attribute name="stereotype">
             <dia:string>##</dia:string>
@@ -425,7 +425,7 @@
         </dia:composite>
         <dia:composite type="umloperation">
           <dia:attribute name="name">
-            <dia:string>#getLocalCore#</dia:string>
+            <dia:string>#getLocalStore#</dia:string>
           </dia:attribute>
           <dia:attribute name="stereotype">
             <dia:string>##</dia:string>
@@ -554,13 +554,13 @@
         <dia:real val="8.5999999999999996"/>
       </dia:attribute>
       <dia:attribute name="name">
-        <dia:string>#Core#</dia:string>
+        <dia:string>#Store#</dia:string>
       </dia:attribute>
       <dia:attribute name="stereotype">
         <dia:string>##</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
-        <dia:string>#Represents a core.  Core objects are in one-to-one correspondence with fabric cores.#</dia:string>
+        <dia:string>#Represents a store.  Store objects are in one-to-one correspondence with fabric stores.#</dia:string>
       </dia:attribute>
       <dia:attribute name="abstract">
         <dia:boolean val="true"/>
@@ -1034,13 +1034,13 @@
         <dia:real val="5.2999999999999998"/>
       </dia:attribute>
       <dia:attribute name="name">
-        <dia:string>#LocalCore#</dia:string>
+        <dia:string>#LocalStore#</dia:string>
       </dia:attribute>
       <dia:attribute name="stereotype">
         <dia:string>##</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
-        <dia:string>#Core implemented without any persistence, objects are stored locally in a table#</dia:string>
+        <dia:string>#Store implemented without any persistence, objects are stored locally in a table#</dia:string>
       </dia:attribute>
       <dia:attribute name="abstract">
         <dia:boolean val="false"/>
@@ -1188,13 +1188,13 @@
         <dia:real val="8.5999999999999996"/>
       </dia:attribute>
       <dia:attribute name="name">
-        <dia:string>#RemoteCore#</dia:string>
+        <dia:string>#RemoteStore#</dia:string>
       </dia:attribute>
       <dia:attribute name="stereotype">
         <dia:string>##</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
-        <dia:string>#Implements Core operations by communicating through dissemination layer with Core.  Manages cache of unencrypted, serialized objects#</dia:string>
+        <dia:string>#Implements Store operations by communicating through dissemination layer with Store.  Manages cache of unencrypted, serialized objects#</dia:string>
       </dia:attribute>
       <dia:attribute name="abstract">
         <dia:boolean val="false"/>
@@ -1345,7 +1345,7 @@
       <dia:attribute name="operations">
         <dia:composite type="umloperation">
           <dia:attribute name="name">
-            <dia:string>#readObjectFromCore#</dia:string>
+            <dia:string>#readObjectFromStore#</dia:string>
           </dia:attribute>
           <dia:attribute name="stereotype">
             <dia:string>##</dia:string>
@@ -1500,13 +1500,13 @@
         <dia:real val="4.5"/>
       </dia:attribute>
       <dia:attribute name="name">
-        <dia:string>#InProcessCore#</dia:string>
+        <dia:string>#InProcessStore#</dia:string>
       </dia:attribute>
       <dia:attribute name="stereotype">
         <dia:string>##</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
-        <dia:string>#Implements Core operations by interacting directly with a core's transaction manager.#</dia:string>
+        <dia:string>#Implements Store operations by interacting directly with a store's transaction manager.#</dia:string>
       </dia:attribute>
       <dia:attribute name="abstract">
         <dia:boolean val="false"/>
@@ -1589,7 +1589,7 @@
             <dia:string>#tm#</dia:string>
           </dia:attribute>
           <dia:attribute name="type">
-            <dia:string>#core.TransactionManager#</dia:string>
+            <dia:string>#store.TransactionManager#</dia:string>
           </dia:attribute>
           <dia:attribute name="value">
             <dia:string>##</dia:string>
@@ -1856,7 +1856,7 @@
                 <dia:string>##</dia:string>
               </dia:attribute>
               <dia:attribute name="type">
-                <dia:string>#RemoteCore#</dia:string>
+                <dia:string>#RemoteStore#</dia:string>
               </dia:attribute>
               <dia:attribute name="value">
                 <dia:string>##</dia:string>
@@ -2165,7 +2165,7 @@
                 <dia:string>##</dia:string>
               </dia:attribute>
               <dia:attribute name="type">
-                <dia:string>#RemoteCore#</dia:string>
+                <dia:string>#RemoteStore#</dia:string>
               </dia:attribute>
               <dia:attribute name="value">
                 <dia:string>##</dia:string>
@@ -2400,7 +2400,7 @@
                 <dia:string>##</dia:string>
               </dia:attribute>
               <dia:attribute name="type">
-                <dia:string>#RemoteCore#</dia:string>
+                <dia:string>#RemoteStore#</dia:string>
               </dia:attribute>
               <dia:attribute name="value">
                 <dia:string>##</dia:string>

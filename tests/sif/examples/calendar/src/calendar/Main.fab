@@ -11,9 +11,9 @@ import javax.servlet.ServletException;
 public final class Main extends UServlet[CalServEP] authority (CalServEP, worker$) {
 
     final CalendarDB{this} cal;
-	final Core{this} localCore;
+	final Store{this} localStore;
 	
-	final String{this} coreName = "gaia.systems.cs.cornell.edu";
+	final String{this} storeName = "gaia.systems.cs.cornell.edu";
 
 	public Main{CalServEP,worker$→;CalServEP&worker$←}()
 	    where authority(worker$, CalServEP)
@@ -21,11 +21,11 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
 	    // create the necessary trust bonds
         FabricWorker cl = FabricWorker.getWorker();
         CalendarDB local = null;
-        Core lCore = null;
+        Store lStore = null;
         if(cl != null) {
-            lCore = cl.getLocalCore();
-            final Core remote = cl.getCore(coreName);
-            final Core lCoreFinal = lCore;
+            lStore = cl.getLocalStore();
+            final Store remote = cl.getStore(storeName);
+            final Store lStoreFinal = lStore;
             try {
                 final DelegatingPrincipal worker = (DelegatingPrincipal)cl.getPrincipal();
                 final DelegatingPrincipal servp = (DelegatingPrincipal)CalServEP;
@@ -45,12 +45,12 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
               
 	        atomic {
 	            if(remote != null && remote actsfor CalServEP) {
-	                // would be nice if the instance of CalendarDB were on local core
-	                local =  new CalendarDB@remote(lCoreFinal, remote);
+	                // would be nice if the instance of CalendarDB were on local store
+	                local =  new CalendarDB@remote(lStoreFinal, remote);
 	            } 
 	        } 
         }
-	    localCore = lCore;
+	    localStore = lStore;
 	    cal = local;
 		super();
 	}
@@ -69,10 +69,10 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
             String{*lbl} id, SessionPrincipal{*lbl} session) {
         SessionState[lbl] toReturn = null;
         atomic {
-            if (localCore != null && localCore equiv worker$ &&
+            if (localStore != null && localStore equiv worker$ &&
                     lbl <= new label {⊤→worker$} && 
                     new label {⊤←worker$} <= lbl) {
-                toReturn = new CalendarSessionState[lbl]@localCore(id, session);
+                toReturn = new CalendarSessionState[lbl]@localStore(id, session);
             }
         }
         return toReturn;
@@ -82,8 +82,8 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
     protected SessionPrincipal createSessionPrincipal(String{worker$→;worker$←} id) {
         SessionPrincipal toReturn = null;
         atomic {
-            if (localCore != null && localCore equiv worker$) {
-                toReturn = new SessionPrincipal@localCore(id);
+            if (localStore != null && localStore equiv worker$) {
+                toReturn = new SessionPrincipal@localStore(id);
             }
         }
         return toReturn;
@@ -132,20 +132,20 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
 	caller(currUser) {
 //        try {
 	    
-	    if (localCore == null) return null;
-	    if(localCore actsfor currUser && localCore equiv CalServEP) {
-		Date[{currUser!:}] now = new Date[{currUser!:}]@localCore();
+	    if (localStore == null) return null;
+	    if(localStore actsfor currUser && localStore equiv CalServEP) {
+		Date[{currUser!:}] now = new Date[{currUser!:}]@localStore();
 		int uid = this.getFreshUid(currUser);
 
-		return new Event[{currUser!:}]@localCore(uid, 
+		return new Event[{currUser!:}]@localStore(uid, 
 				new label {currUser!:}, 
 				new label {currUser:;currUser!:}, // default info label only readable by currUser
 				now,
 				now,
 				"",
 				"",
-				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}]@localCore(),
-				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}]@localCore(),
+				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}]@localStore(),
+				new fabricated.util.LinkedList[{CalServEP:;CalServEP!:}]@localStore(),
 				currUser);
 	    } else {
 	        return null;
@@ -209,8 +209,8 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
 //					);
 //				final Event e2 = declassify(e2_, {p→;CalServEP→;p← meet CalServEP←} to {CalServEP→; CalServEP←});
 				
-			    // TODO handOverEvent will also take a core as an argument and move the event from
-			    // localCore to this core
+			    // TODO handOverEvent will also take a store as an argument and move the event from
+			    // localStore to this store
 				Event e2 = CalServDeclassifier.handOverEvent(p, CalServEP, ueicEvent);
 				cal.updateEvent(e2);
 			}
@@ -240,16 +240,16 @@ public final class Main extends UServlet[CalServEP] authority (CalServEP, worker
 	Event[{p←}]{p←} sanitizeEvent{p←}(principal{p←} p, Event[{p←}]{p←} e)
 	    where {p←} <= e.infoLbl 
 	{
-		if (e == null || cal == null || e.remote1 == null || e.uid == null || localCore == null) {
+		if (e == null || cal == null || e.remote1 == null || e.uid == null || localStore == null) {
 			return e;
 		}
 		String name = cal.escapeString(e.remote1.name);
 		String note = cal.escapeString(e.remote1.note);
 
 //		try {
-		if (localCore actsfor p) {
+		if (localStore actsfor p) {
 		// need to construct a new event...
-		return new Event[{p←}]@localCore(e.uid.uid,
+		return new Event[{p←}]@localStore(e.uid.uid,
 				e.timeLbl,
 				e.infoLbl,
 				e.startTime,

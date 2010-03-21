@@ -9,11 +9,11 @@ import fabric.worker.*;
 
 public class UtilTest {
   public static void main(String[] args) {
-    Core core = Worker.getWorker().getCore("core0");
+    Store store = Worker.getWorker().getStore("store0");
     Map map;
     List list;
     atomic {
-      map = new HashMap@core();
+      map = new HashMap@store();
       map.put("1", "6");
       map.put("8", "7");
       map.put("8", "1");
@@ -30,7 +30,7 @@ public class UtilTest {
     }
 
     atomic {
-      list = new LinkedList@core();
+      list = new LinkedList@store();
       list.add("3");
       list.add("8");
       list.add("9");
@@ -43,7 +43,7 @@ public class UtilTest {
       list.add("6");
     }
 
-    Core local = Worker.getWorker().getLocalCore();
+    Store local = Worker.getWorker().getLocalStore();
     int i = 0;
     atomic {
       for (Iterator it = list.iterator(local); it.hasNext(); ) {

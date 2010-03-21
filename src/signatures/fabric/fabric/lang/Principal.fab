@@ -16,8 +16,8 @@ public abstract class Principal {
 			    boolean executeNow) where authority (this);
     
     public abstract ActsForProof{this; p; this←; p←}
-	findProofUpto{this←}(Core c, Principal p, java.lang.Object searchState);
+	findProofUpto{this←}(Store c, Principal p, java.lang.Object searchState);
     
     public abstract ActsForProof{this; q; q←; this←}
-	findProofDownto{this←}(Core c, Principal q, java.lang.Object searchState);    
+	findProofDownto{this←}(Store c, Principal q, java.lang.Object searchState);    
 }

@@ -11,7 +11,7 @@ import fabric.common.MessageHandler;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FabricRuntimeException;
 import fabric.common.exceptions.InternalError;
-import fabric.core.MessageHandlerThread;
+import fabric.store.MessageHandlerThread;
 import fabric.net.RemoteNode;
 import fabric.net.Stream;
 
@@ -88,7 +88,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
   /**
    * This reads a <code>Message</code> from the provided input stream,
    * dispatches it to the given <code>MessageHandler</code>, and writes the
-   * response to the provided OutputStream. Used only by the core.
+   * response to the provided OutputStream. Used only by the store.
    * 
    * @param in
    *          The input stream to read the incoming message from.
@@ -183,7 +183,7 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    */
   public R dispatch(MessageHandlerThread handler) throws FabricException {
     throw new InternalError(
-        "Invalid, unsupported, or unimplemented core message: " + getClass());
+        "Invalid, unsupported, or unimplemented store message: " + getClass());
   }
 
   /**

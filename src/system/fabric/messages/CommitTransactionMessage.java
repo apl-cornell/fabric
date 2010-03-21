@@ -71,7 +71,7 @@ public class CommitTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.core.MessageHandlerThread w) throws ProtocolError {
+  public Response dispatch(fabric.store.MessageHandlerThread w) throws ProtocolError {
     return w.handle(this);
   }
 
@@ -82,14 +82,14 @@ public class CommitTransactionMessage extends
 
   public Response send(RemoteNode node) throws UnreachableNodeException {
     try {
-      Timing.CORE.begin();
+      Timing.STORE.begin();
       return super.send(node, true);
     } catch (UnreachableNodeException e) {
       throw e;
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from node.", e);
     } finally {
-      Timing.CORE.end();
+      Timing.STORE.end();
     }
   }
 

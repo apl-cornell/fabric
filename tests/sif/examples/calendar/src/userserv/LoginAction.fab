@@ -251,10 +251,10 @@ class SubmitLoginAction[principal servP] extends USessAction[servP] {
             FabricWorker worker = FabricWorker.getWorker();
             if(worker == null) return null;
             
-            final Core{session!:} localCore = worker.getLocalCore();
+            final Store{session!:} localStore = worker.getLocalStore();
 //            SessionPrincipal spdeclass = SessionPrincipal.declassifySP(sp, session);
             SessionPrincipal spdeclass = declassify(sp, {session:;session!:} to {session!:});
-            LoginClosure[servP, logUser] lc = new LoginClosure[servP, logUser]{session!:}@localCore(spdeclass);
+            LoginClosure[servP, logUser] lc = new LoginClosure[servP, logUser]{session!:}@localStore(spdeclass);
             Capability[logUser, {logUser:}] cap = 
                 PrincipalUtil.authorize(logUser, 
                                         declassify(password, {session!:}),

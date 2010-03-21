@@ -1,6 +1,6 @@
 package fabric.worker.transaction;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -82,9 +82,9 @@ public final class TransactionRegistry {
    * 
    * @deprecated
    */
-  public static void renumberObject(Core core, long onum, long newOnum) {
+  public static void renumberObject(Store store, long onum, long newOnum) {
     for (Log log : registry.values()) {
-      log.renumberObject(core, onum, newOnum);
+      log.renumberObject(store, onum, newOnum);
     }
   }
 }

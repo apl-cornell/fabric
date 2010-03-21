@@ -95,7 +95,7 @@ public abstract class AbstractSet extends AbstractCollection implements Set
    */
   public int hashCode()
   {
-    Iterator itr = iterator(LOCAL_CORE);
+    Iterator itr = iterator(LOCAL_STORE);
     int hash = 0;
     int pos = size();
     while (--pos >= 0)
@@ -127,18 +127,18 @@ public abstract class AbstractSet extends AbstractCollection implements Set
     Iterator i;
     if (oldsize < count)
       {
-	for (i = iterator(LOCAL_CORE), count = oldsize; count > 0; count--)
+	for (i = iterator(LOCAL_STORE), count = oldsize; count > 0; count--)
           if (c.contains(i.next()))
             i.remove();
       }
     else
-      for (i = c.iterator(LOCAL_CORE); count > 0; count--)
+      for (i = c.iterator(LOCAL_STORE); count > 0; count--)
         remove(i.next());
     return oldsize != size();
   }
   
   public Iterator iterator() {
-	  return iterator(LOCAL_CORE);
+	  return iterator(LOCAL_STORE);
   }
 
 }

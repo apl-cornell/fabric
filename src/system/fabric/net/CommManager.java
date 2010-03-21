@@ -179,7 +179,7 @@ class CommManager {
     dataOut.writeBoolean(useSSL);
     dataOut.flush();
 
-    // Determine whether the core exists at the node.
+    // Determine whether the store exists at the node.
     if (socket.getInputStream().read() == 0) throw new NoSuchNodeError();
 
     return initializeSession(socketChannel, dataOut);
@@ -220,11 +220,11 @@ class CommManager {
       out.flush();
     }
 
-    // Send to the core a pointer to our principal object.
+    // Send to the store a pointer to our principal object.
     NodePrincipal principal = worker.getPrincipal();
     out.write(principal != null ? 1 : 0);
     if (principal != null) {
-      out.writeUTF(principal.$getCore().name());
+      out.writeUTF(principal.$getStore().name());
       out.writeLong(principal.$getOnum());
     }
     out.flush();

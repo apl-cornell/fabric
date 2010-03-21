@@ -1,6 +1,6 @@
 package fabric.net;
 
-import fabric.worker.RemoteCore;
+import fabric.worker.RemoteStore;
 import fabric.worker.remote.RemoteWorker;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
@@ -11,7 +11,7 @@ import java.security.Principal;
 import javax.security.auth.x500.X500Principal;
 
 /**
- * This class represents a name service that maps core hostnames to socket
+ * This class represents a name service that maps store hostnames to socket
  * addresses and X500 principals.
  */
 public class NameService {
@@ -20,7 +20,7 @@ public class NameService {
   
   static {
     aliases = new HashMap<String, String>();
-    aliases.put("core00", "core00.systems.cs.cornell.edu");
+    aliases.put("store00", "store00.systems.cs.cornell.edu");
     
     workerPorts = new HashMap<String, Integer>();
     workerPorts.put("worker0", 3374);
@@ -54,7 +54,7 @@ public class NameService {
    */
   public Pair<List<InetSocketAddress>, Principal> lookup(
       RemoteNode host) throws UnknownHostException {
-    if (host instanceof RemoteCore) return lookup((RemoteCore) host);
+    if (host instanceof RemoteStore) return lookup((RemoteStore) host);
     if (host instanceof RemoteWorker) return lookup((RemoteWorker) host);
     throw new InternalError();
   }
@@ -68,11 +68,11 @@ public class NameService {
   }
   
   /**
-   * Returns a list of core node addresses for the given core.
+   * Returns a list of store node addresses for the given store.
    */
-  public Pair<List<InetSocketAddress>, Principal> lookup(RemoteCore core)
+  public Pair<List<InetSocketAddress>, Principal> lookup(RemoteStore store)
       throws UnknownHostException {
-    return lookup(core, 3372);
+    return lookup(store, 3372);
   }
   
   /**

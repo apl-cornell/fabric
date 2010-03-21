@@ -1,6 +1,6 @@
 package system;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.util.Map;
 
 public class Instanceof01 {
@@ -10,7 +10,7 @@ public class Instanceof01 {
     public static void main(String[] args) {
       Object o = null;
       atomic {
-        Core c = Worker.getWorker().getCore("core0");
+        Store c = Worker.getWorker().getStore("store0");
         Map root = (Map) c.getRoot();
         root.put(key, o = new Instanceof01@c());
       }
@@ -27,7 +27,7 @@ public class Instanceof01 {
     public static void main(String[] args) {
       Object o = null;
       atomic {
-        Core c = Worker.getWorker().getCore("core0");
+        Store c = Worker.getWorker().getStore("store0");
         Map root = (Map) c.getRoot();
         o = root.get(key);
       }

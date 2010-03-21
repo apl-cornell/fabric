@@ -12,7 +12,7 @@ public enum Timing {
   TXLOG,  // logging reads, writes, creates, etc
   SUBTX,  // merging of logs and other subtx management
   FETCH,  // fetching objects
-  CORE;   // other communication with the core
+  STORE;  // other communication with the store
   
   /** The time attributed to this category so far */
   private long time;

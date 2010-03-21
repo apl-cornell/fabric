@@ -1,6 +1,6 @@
 package jif.principals;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.util.Map;
 import fabric.lang.Object;
 
@@ -12,13 +12,13 @@ public class CalRootEP extends ExternalPrincipal {
 // Use the root map to emulate this static field    
 //    private static CalRootEP{*!:} P;
     static final String{*!:} P = "jif.principals.CalRootEP.P";
-    static final String{*!:} coreName = "gaia.systems.cs.cornell.edu";
+    static final String{*!:} storeName = "gaia.systems.cs.cornell.edu";
     
     public static fabric.lang.Principal{*!:} getInstance{*!:}() {
         atomic {
                 FabricWorker cl = FabricWorker.getWorker();
                 if (cl != null) {
-                    final Core remote = cl.getCore(coreName);
+                    final Store remote = cl.getStore(storeName);
                     if (remote != null) {
                         Map rootMap = remote.getRoot();
                         if (rootMap != null) {
@@ -38,7 +38,7 @@ public class CalRootEP extends ExternalPrincipal {
         return null;
     }
 
-    public static fabric.lang.Principal{*!:} getInstance{*!:}(Core core) {
+    public static fabric.lang.Principal{*!:} getInstance{*!:}(Store store) {
         return getInstance();
     }
 

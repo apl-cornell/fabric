@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 import sif.html.*;
 
@@ -308,7 +308,7 @@ abstract public class Servlet extends HttpServlet {
     Label trustedBySessionLabel(final Request req) {
       return Worker.runInSubTransaction(new fabric.worker.Worker.Code<Label>() {
         public Label run() {
-          Core local = Worker.getWorker().getLocalCore();
+          Store local = Worker.getWorker().getLocalStore();
           return LabelUtil._Impl.writerPolicyLabel(local, req.session, req.session);        
         }
       });
@@ -522,7 +522,7 @@ abstract public class Servlet extends HttpServlet {
     private Label sessionPrincipalLabel(final SessionPrincipal pp) {
       return Worker.runInSubTransaction(new fabric.worker.Worker.Code<Label>() {
         public Label run() {
-          Core local = Worker.getWorker().getLocalCore();
+          Store local = Worker.getWorker().getLocalStore();
           return LabelUtil._Impl.readerPolicyLabel(local, pp, pp);
         }
       });
@@ -546,7 +546,7 @@ abstract public class Servlet extends HttpServlet {
     public static Label getOutputChannelBound(final Principal session) {
       return Worker.runInSubTransaction(new fabric.worker.Worker.Code<Label>() {
         public Label run() {
-          Core local = Worker.getWorker().getLocalCore();
+          Store local = Worker.getWorker().getLocalStore();
           return LabelUtil._Impl.toLabel(local, PrincipalUtil._Impl.readableByPrinPolicy(local,session));
         }
       });

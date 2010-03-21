@@ -1,7 +1,7 @@
 package fabnfs.util;
 
 import fabnfs.util.ResizableFileByteArray;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import java.io.IOException;
 
 public class FileInputStreamImpl implements FileInputStream {
@@ -10,8 +10,8 @@ public class FileInputStreamImpl implements FileInputStream {
 
     int currentPos = 0;
 
-    public FileInputStreamImpl(Core remoteCore, String fileName) throws IOException {
-        file = new FileImpl(remoteCore, fileName);
+    public FileInputStreamImpl(Store remoteStore, String fileName) throws IOException {
+        file = new FileImpl(remoteStore, fileName);
         if (!file.exists()) {
             throw new IOException("File " + fileName + " does not exist");
         }

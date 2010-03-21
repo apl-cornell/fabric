@@ -6,10 +6,10 @@ import jif.runtime.Runtime;
 
 public class Main {
     public static void main{}(String[]{} args) {
-        Core core = worker$.getCore(Config.brokerCoreName);
+        Store store = worker$.getStore(Config.brokerStoreName);
         Map root = null;
-	if (core != null) {
-	    root = (Map) core.getRoot();
+	if (store != null) {
+	    root = (Map) store.getRoot();
 	}
 
         if (root == null) return;

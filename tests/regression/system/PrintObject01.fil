@@ -1,6 +1,6 @@
 package system;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 public class PrintObject01 {
   int id;
@@ -10,8 +10,8 @@ public class PrintObject01 {
   }
   public static void main(String[] arg) {
     atomic {
-      Core core = fabric.worker.Worker.getWorker().getLocalCore();
-      PrintObject01 integer = new PrintObject01@core(99);
+      Store store = fabric.worker.Worker.getWorker().getLocalStore();
+      PrintObject01 integer = new PrintObject01@store(99);
       String s = "Number is " + integer.toString();
       
       // this should call toString instead of trying to cast into a String

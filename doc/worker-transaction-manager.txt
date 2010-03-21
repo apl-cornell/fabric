@@ -136,7 +136,7 @@ above invariants:
     - remove self from parents children and update current pointer
     - if top level (i.e. current is null)
        - remove creates from read set and write set
-       - commit to core
+       - commit to store
        - reset
 
  - abort tx

@@ -14,7 +14,7 @@ import java.util.Random;
 import java.net.URI;
 import fabric.util.HashMap;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.Worker;
 
 import fabric.worker.debug.Timing;
@@ -26,7 +26,7 @@ public class Benchmark {
   private final static int SMALL  = 1;
   private final static int TINY   = 0;
 
-  private final static Core local = Worker.getWorker().getLocalCore();
+  private final static Store local = Worker.getWorker().getLocalStore();
 
   // TODO: these shouldn't be @local, they should be @static (whatever that
   // means) but our implementation of static stuff makes it not matter yet
@@ -47,10 +47,10 @@ public class Benchmark {
   int scale = 0;
   int maxId = 10;
   
-  protected Core moduleCore;
-  protected Core assemblyCore;
-  protected Core partCore;
-  protected Core documentCore;
+  protected Store moduleStore;
+  protected Store assemblyStore;
+  protected Store partStore;
+  protected Store documentStore;
   
   //////////////////////////////////////////////////////////////////////////////
   // Extents                                                                  //
@@ -126,30 +126,30 @@ public class Benchmark {
     */
   
   public Benchmark(int scale,       int numConnPerAtomic,
-                   Core moduleCore, Core assemblyCore,
-                   Core partCore,   Core documentCore)
+                   Store moduleStore, Store assemblyStore,
+                   Store partStore,   Store documentStore)
          throws Exception {
-    this.moduleCore    = moduleCore;
-    this.assemblyCore  = assemblyCore;
-    this.partCore      = partCore;
-    this.documentCore = documentCore;
+    this.moduleStore    = moduleStore;
+    this.assemblyStore  = assemblyStore;
+    this.partStore      = partStore;
+    this.documentStore = documentStore;
 
     this.scale = scale;
     this.numConnPerAtomic = numConnPerAtomic;
     
     // Initialize extents
-    this.atomicPartsById        = new HashMap@partCore();
-    //this.atomicPartsByBuildDate = new HashMap@partCore();
-    this.compositePartsById     = new HashMap@partCore();
-    //this.documentsByTitle       = new HashMap@documentCore();
-    this.documentsById          = new HashMap@documentCore();
-    this.baseAssembliesById     = new HashMap@assemblyCore();
-    this.complexAssembliesById  = new HashMap@assemblyCore();
-    this.modulesById            = new HashMap@moduleCore();
+    this.atomicPartsById        = new HashMap@partStore();
+    //this.atomicPartsByBuildDate = new HashMap@partStore();
+    this.compositePartsById     = new HashMap@partStore();
+    //this.documentsByTitle       = new HashMap@documentStore();
+    this.documentsById          = new HashMap@documentStore();
+    this.baseAssembliesById     = new HashMap@assemblyStore();
+    this.complexAssembliesById  = new HashMap@assemblyStore();
+    this.modulesById            = new HashMap@moduleStore();
   }
 
   protected Module createModule() throws Exception {
-    Core local = Worker.getWorker().getLocalCore();
+    Store local = Worker.getWorker().getLocalStore();
     CompositePart[] compositeParts = null;
     atomic { compositeParts = new CompositePart[numCompPerModule[scale]]@local; }
     for (int i = 0; i < numCompPerModule[scale]; ++i)
@@ -160,22 +160,22 @@ public class Benchmark {
       }
 
     atomic {
-      Module module = new Module@moduleCore(this);
+      Module module = new Module@moduleStore(this);
       ComplexAssembly designRoot =
         (ComplexAssembly) createAssembly(module, numAssmLevels[scale],
             compositeParts);
 
       module.setDesignRoot(designRoot);
-      module.setManual(new Manual@documentCore((int) manualSize[scale]));
+      module.setManual(new Manual@documentStore((int) manualSize[scale]));
 
       return module;
     }
   }
 
   protected CompositePart createCompositePart() throws Exception {
-    Core local = Worker.getWorker().getLocalCore();
-    CompositePart compositePart = new CompositePart@partCore(this);
-    compositePart.setDocumentation(new Document@documentCore(this, documentSize[scale]));
+    Store local = Worker.getWorker().getLocalStore();
+    CompositePart compositePart = new CompositePart@partStore(this);
+    compositePart.setDocumentation(new Document@documentStore(this, documentSize[scale]));
 
     AtomicPart[] parts = new AtomicPart[numAtomicPerComp[scale]]@local;
     for (int i = 0; i < parts.length; ++i) {
@@ -187,11 +187,11 @@ public class Benchmark {
     for (int i = 0; i < parts.length; ++i) {
       // Add a connection to i's neighbor
       Connection c =
-          new Connection@partCore(parts[i], parts[(i + 1) % parts.length]);
+          new Connection@partStore(parts[i], parts[(i + 1) % parts.length]);
 
       // add random connections
       for (int j = 0; j < (numConnPerAtomic - 1); ++j) {
-        c = new Connection@partCore(parts[i], parts[rand.nextInt(parts.length)]);
+        c = new Connection@partStore(parts[i], parts[rand.nextInt(parts.length)]);
       }
     }
 
@@ -199,7 +199,7 @@ public class Benchmark {
   }
 
   protected AtomicPart createAtomicPart(CompositePart parent) throws Exception {
-    AtomicPart result = new AtomicPart@partCore(this);
+    AtomicPart result = new AtomicPart@partStore(this);
     result.setPartOf(parent);
 
     return result;
@@ -209,7 +209,7 @@ public class Benchmark {
       CompositePart[] available) throws Exception {
     if (level == 1) {
       // create base assembly
-      BaseAssembly result = new BaseAssembly@assemblyCore(this);
+      BaseAssembly result = new BaseAssembly@assemblyStore(this);
       parent.addAssembly(result);
 
       for (int j = 0; j < numCompPerAssm[scale]; ++j) {
@@ -220,7 +220,7 @@ public class Benchmark {
       return result;
     } else {
       // create complex assembly
-      ComplexAssembly result = new ComplexAssembly@assemblyCore(this);
+      ComplexAssembly result = new ComplexAssembly@assemblyStore(this);
       parent.addAssembly(result);
 
       for (int i = 0; i < numAssmPerAssm[scale]; ++i)
@@ -243,8 +243,8 @@ public class Benchmark {
       Timing.reset();
       
       URI  path = new URI(args[0]);
-      Core core = fabric.worker.Worker.getWorker().getCore(path.getHost());
-      Map  root = (Map) core.getRoot();
+      Store store = fabric.worker.Worker.getWorker().getStore(path.getHost());
+      Map  root = (Map) store.getRoot();
 
       int scale = -1;
       if (args[1].equalsIgnoreCase("TINY")) {
@@ -263,20 +263,20 @@ public class Benchmark {
 
       int fanout = Integer.parseInt(args[2]);
 
-      Core moduleCore    = core;
-      Core assemblyCore  = core;
-      Core partCore      = core;
-      Core documentCore = core;
+      Store moduleStore    = store;
+      Store assemblyStore  = store;
+      Store partStore      = store;
+      Store documentStore = store;
 
       for (int i = 3; i < args.length; i++) {
         if (args[i].equals("--assemblies"))
-          assemblyCore = Worker.getWorker().getCore(args[++i]);
+          assemblyStore = Worker.getWorker().getStore(args[++i]);
         else if (args[i].equals("--modules"))
-          moduleCore = Worker.getWorker().getCore(args[++i]);
+          moduleStore = Worker.getWorker().getStore(args[++i]);
         else if (args[i].equals("--parts"))
-          partCore = Worker.getWorker().getCore(args[++i]);
+          partStore = Worker.getWorker().getStore(args[++i]);
         else if (args[i].equals("--documents"))
-          documentCore = Worker.getWorker().getCore(args[++i]);
+          documentStore = Worker.getWorker().getStore(args[++i]);
         else {
           printUsage();
           System.out.println("invalid argument[" + i + "]: " + args[i]);
@@ -286,7 +286,7 @@ public class Benchmark {
 
 
       Benchmark b = null;
-      atomic { b = new Benchmark@core(scale, fanout, moduleCore, assemblyCore, partCore, documentCore); }
+      atomic { b = new Benchmark@store(scale, fanout, moduleStore, assemblyStore, partStore, documentStore); }
       
       // Create content
       for (int i = 0; i < numModules[scale]; i++)
@@ -319,10 +319,10 @@ public class Benchmark {
     System.out.println("  <size>    should be one of \"tiny\", \"small\", \"medium\", or \"large\"");
     System.out.println("  <fanout>  can be any number, but the standard values are 3, 6 and 9");
     System.out.println(" [options] may include any of the following:");
-    System.out.println("  --assemblies <host>   place the assemblies at the given core.");
-    System.out.println("  --modules    <host>   place the modules at the given core.");
-    System.out.println("  --parts      <host>   place the parts at the given core.");
-    System.out.println("  --documents  <host>   place the documents at the given core.");
+    System.out.println("  --assemblies <host>   place the assemblies at the given store.");
+    System.out.println("  --modules    <host>   place the modules at the given store.");
+    System.out.println("  --parts      <host>   place the parts at the given store.");
+    System.out.println("  --documents  <host>   place the documents at the given store.");
   }
 
 }

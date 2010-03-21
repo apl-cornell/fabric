@@ -61,5 +61,5 @@ public interface FabILNodeFactory extends NodeFactory {
   @SuppressWarnings("unchecked")
   Call Call(Position pos, Receiver target, Id name, Expr remoteWorker, List args);
   
-  CoreGetter CoreGetter(Position pos);
+  StoreGetter StoreGetter(Position pos);
 }

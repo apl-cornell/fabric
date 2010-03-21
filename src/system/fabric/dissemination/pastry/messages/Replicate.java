@@ -10,8 +10,8 @@ import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
 import rice.p2p.commonapi.rawserialization.RawMessage;
 import fabric.worker.Worker;
-import fabric.worker.Core;
-import fabric.worker.RemoteCore;
+import fabric.worker.Store;
+import fabric.worker.RemoteStore;
 import fabric.common.exceptions.BadSignatureException;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
@@ -59,9 +59,9 @@ public class Replicate implements RawMessage {
   public String toString() {
     String s = "Replicate " + level + " [";
 
-    for (Core core : skip.coreSet()) {
-      for (LongKeyMap.Entry<Long> entry : skip.get(core).entrySet()) {
-        s += "(" + core + ", " + entry.getKey() + ", " + entry.getValue() + ")";
+    for (Store store : skip.storeSet()) {
+      for (LongKeyMap.Entry<Long> entry : skip.get(store).entrySet()) {
+        s += "(" + store + ", " + entry.getKey() + ", " + entry.getValue() + ")";
       }
     }
 
@@ -71,12 +71,12 @@ public class Replicate implements RawMessage {
   public void serialize(OutputBuffer buf) throws IOException {
     buf.writeInt(level);
     
-    Set<Core> coreSet = skip.coreSet();
-    buf.writeInt(coreSet.size());
+    Set<Store> storeSet = skip.storeSet();
+    buf.writeInt(storeSet.size());
 
-    for (Core core : coreSet) {
-      LongKeyMap<Long> submap = skip.get(core);
-      buf.writeUTF(core.name());
+    for (Store store : storeSet) {
+      LongKeyMap<Long> submap = skip.get(store);
+      buf.writeUTF(store.name());
       buf.writeInt(submap.size());
       
       for (LongKeyMap.Entry<Long> entry : submap.entrySet()) {
@@ -93,15 +93,15 @@ public class Replicate implements RawMessage {
     Worker worker = Worker.getWorker();
     this.sender = sender;
     level = buf.readInt();
-    int numCores = buf.readInt();
+    int numStores = buf.readInt();
     skip = new OidKeyHashMap<Long>();
 
-    for (int i = 0; i < numCores; i++) {
-      Core core = worker.getCore(buf.readUTF());
+    for (int i = 0; i < numStores; i++) {
+      Store store = worker.getStore(buf.readUTF());
       int numEntries = buf.readInt();
       
       for (int j = 0; j < numEntries; j++) {
-        skip.put(core, buf.readLong(), buf.readLong());
+        skip.put(store, buf.readLong(), buf.readLong());
       }
     }
   }
@@ -113,13 +113,13 @@ public class Replicate implements RawMessage {
    */
   public static class Reply implements RawMessage {
 
-    private final Map<Pair<Core, Long>, Glob> globs;
+    private final Map<Pair<Store, Long>, Glob> globs;
 
-    public Reply(Map<Pair<Core, Long>, Glob> globs) {
+    public Reply(Map<Pair<Store, Long>, Glob> globs) {
       this.globs = globs;
     }
 
-    public Map<Pair<Core, Long>, Glob> globs() {
+    public Map<Pair<Store, Long>, Glob> globs() {
       return globs;
     }
 
@@ -135,7 +135,7 @@ public class Replicate implements RawMessage {
     public String toString() {
       String s = "Replicate.Reply [";
 
-      for (Pair<Core, Long> p : globs.keySet()) {
+      for (Pair<Store, Long> p : globs.keySet()) {
         s = s + p;
       }
 
@@ -146,7 +146,7 @@ public class Replicate implements RawMessage {
       DataOutputBuffer out = new DataOutputBuffer(buf);
       out.writeInt(globs.size());
 
-      for (Map.Entry<Pair<Core, Long>, Glob> e : globs.entrySet()) {
+      for (Map.Entry<Pair<Store, Long>, Glob> e : globs.entrySet()) {
         out.writeUTF(e.getKey().first.name());
         out.writeLong(e.getKey().second);
         e.getValue().write(out);
@@ -160,14 +160,14 @@ public class Replicate implements RawMessage {
       DataInputBuffer in = new DataInputBuffer(buf);
       Worker worker = Worker.getWorker();
       int n = in.readInt();
-      globs = new HashMap<Pair<Core, Long>, Glob>(n);
+      globs = new HashMap<Pair<Store, Long>, Glob>(n);
 
       for (int i = 0; i < n; i++) {
-        RemoteCore core = worker.getCore(in.readUTF());
+        RemoteStore store = worker.getStore(in.readUTF());
         long onum = in.readLong();
         try {
-          Glob g = new Glob(core.getPublicKey(), in);
-          globs.put(new Pair<Core, Long>(core, onum), g);
+          Glob g = new Glob(store.getPublicKey(), in);
+          globs.put(new Pair<Store, Long>(store, onum), g);
         } catch (BadSignatureException e) {
         }
       }

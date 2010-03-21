@@ -31,17 +31,17 @@ public class StartTransaction extends CustomerAction {
         if (req == null) throw new ServletException("No request available"); 
         CustomerMain m = (CustomerMain)servlet;
         
-        final Core bcore = worker$.getCore(Config.brokerCoreName);
+        final Store bstore = worker$.getStore(Config.brokerStoreName);
         FabricWorker local = FabricWorker.getWorker();
         RemoteWorker bworkerprime = null;
         if(local != null) {
-            bworkerprime = local.getWorker(Config.brokerCoreName);
+            bworkerprime = local.getWorker(Config.brokerStoreName);
         }
         final RemoteWorker bworker = bworkerprime;
         
         Map root = null;
-        if (bcore != null) {
-            root = (Map) bcore.getRoot();
+        if (bstore != null) {
+            root = (Map) bstore.getRoot();
         }
         if (root == null) return;
         Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;

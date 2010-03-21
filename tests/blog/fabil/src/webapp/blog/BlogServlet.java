@@ -24,17 +24,17 @@ public class BlogServlet extends HttpServlet {
   private static final String PAGE_VIEWPOST = "/jsp/viewpost.jsp";
   private static final String PAGE_CREATEPOST = "/jsp/newpost.jsp";
   
-  private LocalCore localCore;
-  private Core core;
+  private LocalStore localStore;
+  private Store store;
   private Label currentLabel;
   
   public BlogServlet() {
-    localCore = Diagnostics.getLocalCore();
-    core = Diagnostics.getCore();
+    localStore = Diagnostics.getLocalStore();
+    store = Diagnostics.getStore();
     currentLabel = Diagnostics.getCurrentLabel();
 
     atomic {
-      Statistics.getInstance().newPage(localCore, currentLabel);
+      Statistics.getInstance().newPage(localStore, currentLabel);
     }
     
     try {
@@ -58,7 +58,7 @@ public class BlogServlet extends HttpServlet {
     String jsp = PAGE_POSTS;
 
     atomic {
-      Statistics.getInstance().newPage(localCore, currentLabel);
+      Statistics.getInstance().newPage(localStore, currentLabel);
       if (request.getParameter("workeraction") != null) {
         handleWorkerAction(request, response);
         return;
@@ -127,7 +127,7 @@ public class BlogServlet extends HttpServlet {
   private void handleWorkerAction(HttpServletRequest request,
       HttpServletResponse response) throws IOException {
     atomic {
-      request.setAttribute("debug", new Boolean~currentLabel@localCore(true));
+      request.setAttribute("debug", new Boolean~currentLabel@localStore(true));
     }
     String workerAction = request.getParameter("workeraction");
     if (workerAction.equals("connect")) {
@@ -152,7 +152,7 @@ public class BlogServlet extends HttpServlet {
   private void handleDebugAction(HttpServletRequest request) {
     String debugAction = request.getParameter("debugaction");
     atomic {
-      request.setAttribute("debug", new Boolean~currentLabel@localCore(true));
+      request.setAttribute("debug", new Boolean~currentLabel@localStore(true));
     }
     if (debugAction.equals("recreate")) {
       try {
@@ -171,7 +171,7 @@ public class BlogServlet extends HttpServlet {
         String action = request.getParameter("action");
         int requests = Integer.parseInt(request.getParameter("size"));
         atomic {
-          String[] workers = new String[Statistics.getWorkers().size()]~currentLabel@localCore;
+          String[] workers = new String[Statistics.getWorkers().size()]~currentLabel@localStore;
           workers = (String[])Statistics.getWorkers().toArray(workers);
           for (int i = 0; i < numWorkers; i++) {
             Statistics.setBusyWorker(workers[i]);
@@ -198,7 +198,7 @@ public class BlogServlet extends HttpServlet {
         Integer.parseInt(request.getParameter("id")));
     try {
       Transactions.addComment(request.getParameter("name"),
-          request.getParameter("comment"), post, core, currentLabel);
+          request.getParameter("comment"), post, store, currentLabel);
       request.setAttribute("passmsg", "Comment posted");
     } catch (TransactionFailure ex) {
       request.setAttribute("errormsg", "Could not post comment");
@@ -234,7 +234,7 @@ public class BlogServlet extends HttpServlet {
     }
     request.setAttribute("workerslist", list);
     atomic {
-      request.setAttribute("workerError", new Boolean~currentLabel@localCore(
+      request.setAttribute("workerError", new Boolean~currentLabel@localStore(
           Statistics.getWorkerError()));
     }
     request.setAttribute("statistics", Statistics.getInstance());
@@ -249,7 +249,7 @@ public class BlogServlet extends HttpServlet {
       String title = request.getParameter("title");
       String content = request.getParameter("content");
       try {
-        Transactions.addBlogPost(title, content, core, currentLabel);
+        Transactions.addBlogPost(title, content, store, currentLabel);
         return true;
       } catch (TransactionFailure ex) {
         ex.printStackTrace();
@@ -295,7 +295,7 @@ public class BlogServlet extends HttpServlet {
     }
     request.setAttribute("posts", posts);
     atomic {
-      request.setAttribute("numPosts", new Integer~currentLabel@localCore(size));
+      request.setAttribute("numPosts", new Integer~currentLabel@localStore(size));
     }
     return PAGE_POSTS;
   }

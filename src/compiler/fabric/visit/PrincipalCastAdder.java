@@ -22,7 +22,7 @@ public class PrincipalCastAdder extends AscriptionVisitor {
     if (ts.isPrincipal(toType) 
      && (ts.typeEquals(ts.Worker(), e.type()) 
       || ts.typeEquals(ts.RemoteWorker(), e.type())
-      || ts.typeEquals(ts.Core(), e.type()))) {
+      || ts.typeEquals(ts.Store(), e.type()))) {
       Cast result = nf.Cast(e.position(), 
                             nf.CanonicalTypeNode(Position.compilerGenerated(), toType), 
                             e);

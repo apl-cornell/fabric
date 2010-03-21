@@ -48,9 +48,9 @@ public class SessionState[covariant label T] {
 //            label{*lbl} lbl, 
 //            String{*lbl} id,
 //            SessionPrincipal{*lbl} sp,
-//            Core core) {
+//            Store store) {
 //    	atomic {
-//    		return new SessionState[lbl]@core(id, sp);
+//    		return new SessionState[lbl]@store(id, sp);
 //    	}
 //    }
     

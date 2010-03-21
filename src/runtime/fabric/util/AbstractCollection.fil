@@ -44,11 +44,11 @@ import java.lang.reflect.Array;
  * A basic implementation of most of the methods in the Collection interface to
  * make it easier to create a collection. To create an unmodifiable Collection,
  * just subclass AbstractCollection and provide implementations of the
- * iterator(core) and size() methods. The Iterator returned by iterator(core) need only
+ * iterator(store) and size() methods. The Iterator returned by iterator(store) need only
  * provide implementations of hasNext() and next() (that is, it may throw an
  * UnsupportedOperationException if remove() is called). To create a modifiable
  * Collection, you must in addition provide an implementation of the
- * add(Object) method and the Iterator returned by iterator(core) must provide an
+ * add(Object) method and the Iterator returned by iterator(store) must provide an
  * implementation of remove(). Other methods should be overridden if the
  * backing data structure allows for a more efficient implementation. The
  * precise implementation used by AbstractCollection is documented, so that
@@ -71,8 +71,8 @@ import java.lang.reflect.Array;
 public abstract class AbstractCollection implements Collection
 {
 
-  protected static final fabric.worker.Core LOCAL_CORE =
-    fabric.worker.Worker.getWorker().getLocalCore();
+  protected static final fabric.worker.Store LOCAL_STORE =
+    fabric.worker.Worker.getWorker().getLocalStore();
 
   /**
    * The main constructor, for use by subclasses.
@@ -88,10 +88,10 @@ public abstract class AbstractCollection implements Collection
    *
    * @return an iterator
    */
-  public abstract Iterator iterator(fabric.worker.Core core);
+  public abstract Iterator iterator(fabric.worker.Store store);
 
   public Iterator iterator() {
-    Core local = Worker.getWorker().getLocalCore();
+    Store local = Worker.getWorker().getLocalStore();
     return iterator(local);
   }
 
@@ -149,7 +149,7 @@ public abstract class AbstractCollection implements Collection
    */
   public boolean addAll(Collection c)
   {
-    Iterator itr = c.iterator(LOCAL_CORE);
+    Iterator itr = c.iterator(LOCAL_STORE);
     boolean modified = false;
     int pos = c.size();
     while (--pos >= 0)
@@ -171,7 +171,7 @@ public abstract class AbstractCollection implements Collection
    */
   public void clear()
   {
-    Iterator itr = iterator(LOCAL_CORE);
+    Iterator itr = iterator(LOCAL_STORE);
     int pos = size();
     while (--pos >= 0)
       {
@@ -193,7 +193,7 @@ public abstract class AbstractCollection implements Collection
    */
   public boolean contains(Object o)
   {
-    Iterator itr = iterator(LOCAL_CORE);
+    Iterator itr = iterator(LOCAL_STORE);
     int pos = size();
     while (--pos >= 0)
       if (equals(o, itr.next()))
@@ -215,7 +215,7 @@ public abstract class AbstractCollection implements Collection
    */
   public boolean containsAll(Collection c)
   {
-    Iterator itr = c.iterator(LOCAL_CORE);
+    Iterator itr = c.iterator(LOCAL_STORE);
     int pos = c.size();
     while (--pos >= 0)
       if (!contains(itr.next()))
@@ -256,7 +256,7 @@ public abstract class AbstractCollection implements Collection
    */
   public boolean remove(Object o)
   {
-    Iterator itr = iterator(LOCAL_CORE);
+    Iterator itr = iterator(LOCAL_STORE);
     int pos = size();
     while (--pos >= 0)
       if (equals(o, itr.next()))
@@ -306,7 +306,7 @@ public abstract class AbstractCollection implements Collection
   // Package visible for use throughout java.util.
   boolean removeAllInternal(Collection c)
   {
-    Iterator itr = iterator(LOCAL_CORE);
+    Iterator itr = iterator(LOCAL_STORE);
     boolean modified = false;
     int pos = size();
     while (--pos >= 0)
@@ -358,7 +358,7 @@ public abstract class AbstractCollection implements Collection
   // Package visible for use throughout java.util.
   boolean retainAllInternal(Collection c)
   {
-    Iterator itr = iterator(LOCAL_CORE);
+    Iterator itr = iterator(LOCAL_STORE);
     boolean modified = false;
     int pos = size();
     while (--pos >= 0)
@@ -381,7 +381,7 @@ public abstract class AbstractCollection implements Collection
    */
   public Object[] toArray()
   {
-    Iterator itr = iterator(LOCAL_CORE);
+    Iterator itr = iterator(LOCAL_STORE);
     int size = size();
     Object[] a = new Object[size];
     for (int pos = 0; pos < size; pos++)
@@ -418,7 +418,7 @@ public abstract class AbstractCollection implements Collection
     else if (a.length > size)
       a[size] = null;
 
-    Iterator itr = iterator(LOCAL_CORE);
+    Iterator itr = iterator(LOCAL_STORE);
     for (int pos = 0; pos < size; pos++)
       a[pos] = itr.next();
 
@@ -438,7 +438,7 @@ public abstract class AbstractCollection implements Collection
    */
   public String toString()
   {
-    Iterator itr = iterator(LOCAL_CORE);
+    Iterator itr = iterator(LOCAL_STORE);
     StringBuffer r = new StringBuffer("[");
     boolean hasNext = itr.hasNext();
     while (hasNext)

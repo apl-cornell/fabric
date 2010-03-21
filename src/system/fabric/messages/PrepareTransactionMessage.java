@@ -18,7 +18,7 @@ import fabric.net.UnreachableNodeException;
 
 /**
  * A <code>PrepareTransactionMessage</code> represents a transaction request to
- * a core.
+ * a store.
  */
 public class PrepareTransactionMessage extends
     Message<RemoteNode, PrepareTransactionMessage.Response> {
@@ -28,10 +28,10 @@ public class PrepareTransactionMessage extends
     public final String message;
 
     /**
-     * If the remote node is a core, this will indicate whether the worker
-     * should send a commit/abort message to the core's worker to commit/abort a
-     * sub-transaction. (This happens when Statistics objects are created during
-     * transaction prepare.)
+     * If the remote node is a store, this will indicate whether the worker
+     * should send a commit/abort message to the store's worker to commit/abort
+     * a sub-transaction. (This happens when Statistics objects are created
+     * during transaction prepare.)
      */
     public final boolean subTransactionCreated;
 
@@ -126,28 +126,28 @@ public class PrepareTransactionMessage extends
 
   /**
    * The objects created during the transaction, unserialized. This will only be
-   * non-null on the worker. The core should use the
+   * non-null on the worker. The store should use the
    * <code>serializedCreates</code> field instead.
    */
   public final Collection<_Impl> creates;
 
   /**
    * The objects created during the transaction, serialized. This will only be
-   * non-null on the core. The worker should use the <code>creates</code> field
+   * non-null on the store. The worker should use the <code>creates</code> field
    * instead.
    */
   public final Collection<SerializedObject> serializedCreates;
 
   /**
    * The objects modified during the transaction, unserialized. This will only
-   * be non-null on the worker. The core should use the
+   * be non-null on the worker. The store should use the
    * <code>serializedWrites</code> field instead.
    */
   public final Collection<_Impl> writes;
 
   /**
    * The objects modified during the transaction, serialized. This will only be
-   * non-null on the core. The worker should use the <code>writes</code> field
+   * non-null on the store. The worker should use the <code>writes</code> field
    * instead.
    */
   public final Collection<SerializedObject> serializedWrites;
@@ -177,7 +177,7 @@ public class PrepareTransactionMessage extends
   }
 
   /**
-   * Deserialization constructor. Used only by the core.
+   * Deserialization constructor. Used only by the store.
    * 
    * @throws IOException
    */
@@ -223,10 +223,10 @@ public class PrepareTransactionMessage extends
 
   /*
    * (non-Javadoc)
-   * @see fabric.messages.Message#dispatch(fabric.core.MessageHandlerThread)
+   * @see fabric.messages.Message#dispatch(fabric.store.MessageHandlerThread)
    */
   @Override
-  public Response dispatch(fabric.core.MessageHandlerThread w) throws ProtocolError {
+  public Response dispatch(fabric.store.MessageHandlerThread w) throws ProtocolError {
     return w.handle(this);
   }
 
@@ -238,14 +238,14 @@ public class PrepareTransactionMessage extends
 
   public Response send(RemoteNode node) throws UnreachableNodeException {
     try {
-      Timing.CORE.begin();
+      Timing.STORE.begin();
       return super.send(node, true);
     } catch (UnreachableNodeException e) {
       throw e;
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from node.", e);
     } finally {
-      Timing.CORE.end();
+      Timing.STORE.end();
     }
   }
 

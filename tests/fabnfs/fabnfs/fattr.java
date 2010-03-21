@@ -1,7 +1,7 @@
 package fabnfs;
 
 import fabnfs.util.File;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import java.io.FileNotFoundException;
 
 /* replacing java.io.File by fabnfs.util.File , etc. */
@@ -32,8 +32,8 @@ class fattr implements NFSConsts, UnixPermissions {
     static TimeMapper tm;
     Handle fileHandles;
 
-    Core core;
-    Core localCore;
+    Store store;
+    Store localStore;
     FileSystemInfo fsinfo;
 
     fattr(FileSystemInfo finfo, Handle h, TimeMapper t) {
@@ -92,7 +92,7 @@ class fattr implements NFSConsts, UnixPermissions {
     };
 
     long Load(String file) throws FileNotFoundException {
-	File fd = fsinfo.factory.makeFile(fsinfo.localCore, fsinfo.core, file);
+	File fd = fsinfo.factory.makeFile(fsinfo.localStore, fsinfo.store, file);
 	if (fd.exists() != true) {
 	    if (debug) {
 		System.out.print("fattr: file " + file + " doesn't exist.\n");

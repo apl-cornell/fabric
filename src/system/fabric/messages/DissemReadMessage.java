@@ -4,25 +4,25 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.RemoteCore;
+import fabric.worker.RemoteStore;
 import fabric.common.exceptions.*;
 import fabric.common.exceptions.InternalError;
-import fabric.core.MessageHandlerThread;
+import fabric.store.MessageHandlerThread;
 import fabric.dissemination.Glob;
 
 /**
  * A <code>DissemReadMessage</code> represents a request from a dissemination
- * node to read an object at a core. This implicitly subscribes the worker to
+ * node to read an object at a store. This implicitly subscribes the worker to
  * receive the next update to the object.
  */
 public final class DissemReadMessage extends
-    Message<RemoteCore, DissemReadMessage.Response> {
+    Message<RemoteStore, DissemReadMessage.Response> {
   public static class Response implements Message.Response {
 
     public final Glob glob;
 
     /**
-     * Used by the core to create a read-message response.
+     * Used by the store to create a read-message response.
      */
     public Response(Glob glob) {
       this.glob = glob;
@@ -31,15 +31,15 @@ public final class DissemReadMessage extends
     /**
      * Deserialization constructor, used by the worker.
      * 
-     * @param core
-     *                The core from which the response is being read.
+     * @param store
+     *                The store from which the response is being read.
      * @param in
      *                the input stream from which to read the response.
      */
-    Response(RemoteCore core, DataInput in) throws IOException {
+    Response(RemoteStore store, DataInput in) throws IOException {
       Glob glob;
       try {
-        glob = new Glob(core.getPublicKey(), in);
+        glob = new Glob(store.getPublicKey(), in);
       } catch (BadSignatureException e) {
         glob = null;
       }
@@ -80,7 +80,7 @@ public final class DissemReadMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#dispatch(fabric.core.MessageHandlerThread)
+   * @see fabric.messages.Message#dispatch(fabric.store.MessageHandlerThread)
    */
   @Override
   public Response dispatch(MessageHandlerThread w) throws AccessException {
@@ -90,20 +90,20 @@ public final class DissemReadMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#send(fabric.worker.Core, boolean)
+   * @see fabric.messages.Message#send(fabric.worker.Store, boolean)
    */
-  public Response send(RemoteCore core) throws FetchException {
+  public Response send(RemoteStore store) throws FetchException {
     try {
-      return send(core, false);
+      return send(store, false);
     } catch (FetchException e) {
       throw e;
     } catch (FabricException e) {
-      throw new InternalError("Unexpected response from core.", e);
+      throw new InternalError("Unexpected response from store.", e);
     }
   }
 
   @Override
-  public Response response(RemoteCore c, DataInput in) throws IOException {
+  public Response response(RemoteStore c, DataInput in) throws IOException {
     return new Response(c, in);
   }
   

@@ -1,15 +1,15 @@
 package fabric.util;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 public interface Iterable {
   /**
-   * Creates an iterator on the given core.
+   * Creates an iterator on the given store.
    */
-  Iterator iterator(Core core);
+  Iterator iterator(Store store);
 
   /**
-   * Creates an iterator on the local core.
+   * Creates an iterator on the local store.
    */
   Iterator iterator();
 }

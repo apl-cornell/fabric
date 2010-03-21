@@ -11,32 +11,32 @@ public final class JoinIntegPolicy extends JoinPolicy implements IntegPolicy {
     super(policies);
   }
 
-  public IntegPolicy join(Core core, IntegPolicy p, Set s) {
-    return LabelUtil.join(core, this, p, s);
+  public IntegPolicy join(Store store, IntegPolicy p, Set s) {
+    return LabelUtil.join(store, this, p, s);
   }
 
   public IntegPolicy join(IntegPolicy p, Set s) {
     return LabelUtil.join(this, p, s);
   }
 
-  public IntegPolicy join(Core core, IntegPolicy p) {
-    return LabelUtil.join(core, this, p);
+  public IntegPolicy join(Store store, IntegPolicy p) {
+    return LabelUtil.join(store, this, p);
   }
 
   public IntegPolicy join(IntegPolicy p) {
     return LabelUtil.join(this, p);
   }
 
-  public IntegPolicy meet(Core core, IntegPolicy p, Set s) {
-    return LabelUtil.meet(core, this, p, s);
+  public IntegPolicy meet(Store store, IntegPolicy p, Set s) {
+    return LabelUtil.meet(store, this, p, s);
   }
 
   public IntegPolicy meet(IntegPolicy p, Set s) {
     return LabelUtil.meet(this, p, s);
   }
 
-  public IntegPolicy meet(Core core, IntegPolicy p) {
-    return LabelUtil.meetPol(core, this, p);
+  public IntegPolicy meet(Store store, IntegPolicy p) {
+    return LabelUtil.meetPol(store, this, p);
   }
 
   public IntegPolicy meet(IntegPolicy p) {

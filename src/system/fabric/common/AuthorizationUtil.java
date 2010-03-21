@@ -3,7 +3,7 @@ package fabric.common;
 import jif.lang.Label;
 import jif.lang.LabelUtil;
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.NodePrincipal;
 
@@ -29,10 +29,10 @@ public class AuthorizationUtil {
 
   private static boolean checkAuthorizationCache(
       OidKeyHashMap<OidKeyHashMap<Void>> cache,
-      NodePrincipal principal, Core core, long labelOnum) {
+      NodePrincipal principal, Store store, long labelOnum) {
     OidKeyHashMap<Void> submap;
     synchronized (cache) {
-      submap = cache.get(core, labelOnum);
+      submap = cache.get(store, labelOnum);
       if (submap == null) return false;
     }
 
@@ -43,13 +43,13 @@ public class AuthorizationUtil {
 
   private static void cacheAuthorization(
       OidKeyHashMap<OidKeyHashMap<Void>> cache, NodePrincipal principal,
-      Core core, long labelOnum) {
+      Store store, long labelOnum) {
     OidKeyHashMap<Void> submap;
     synchronized (cache) {
-      submap = cache.get(core, labelOnum);
+      submap = cache.get(store, labelOnum);
       if (submap == null) {
         submap = new OidKeyHashMap<Void>();
-        cache.put(core, labelOnum, submap);
+        cache.put(store, labelOnum, submap);
       }
     }
 
@@ -64,16 +64,16 @@ public class AuthorizationUtil {
    * transaction.
    */
   public static boolean isReadPermitted(final NodePrincipal principal,
-      Core core, long labelOnum) {
-    // Allow the core's worker principal to do anything. We use pointer equality
-    // here to avoid having to call into the worker.
+      Store store, long labelOnum) {
+    // Allow the store's worker principal to do anything. We use pointer
+    // equality here to avoid having to call into the worker.
     if (principal == Worker.getWorker().getPrincipal()) return true;
 
-    if (checkAuthorizationCache(cachedReadAuthorizations, principal, core,
+    if (checkAuthorizationCache(cachedReadAuthorizations, principal, store,
         labelOnum)) return true;
 
     // Call into the Jif label framework to perform the label check.
-    final Label label = new Label._Proxy(core, labelOnum);
+    final Label label = new Label._Proxy(store, labelOnum);
     boolean result = Worker.runInSubTransaction(new Worker.Code<Boolean>() {
       public Boolean run() {
         return LabelUtil._Impl.isReadableBy(label, principal);
@@ -81,7 +81,7 @@ public class AuthorizationUtil {
     });
 
     if (result) {
-      cacheAuthorization(cachedReadAuthorizations, principal, core, labelOnum);
+      cacheAuthorization(cachedReadAuthorizations, principal, store, labelOnum);
     }
 
     return result;
@@ -93,16 +93,16 @@ public class AuthorizationUtil {
    * transaction.
    */
   public static boolean isWritePermitted(final NodePrincipal principal,
-      Core core, long labelOnum) {
-    // Allow the core's worker principal to do anything. We use pointer equality
-    // here to avoid having to call into the worker.
+      Store store, long labelOnum) {
+    // Allow the store's worker principal to do anything. We use pointer
+    // equality here to avoid having to call into the worker.
     if (principal == Worker.getWorker().getPrincipal()) return true;
 
-    if (checkAuthorizationCache(cachedWriteAuthorizations, principal, core,
+    if (checkAuthorizationCache(cachedWriteAuthorizations, principal, store,
         labelOnum)) return true;
 
     // Call into the Jif label framework to perform the label check.
-    final Label label = new Label._Proxy(core, labelOnum);
+    final Label label = new Label._Proxy(store, labelOnum);
     boolean result = Worker.runInSubTransaction(new Worker.Code<Boolean>() {
       public Boolean run() {
         return LabelUtil._Impl.isWritableBy(label, principal);
@@ -110,7 +110,7 @@ public class AuthorizationUtil {
     });
 
     if (result) {
-      cacheAuthorization(cachedWriteAuthorizations, principal, core, labelOnum);
+      cacheAuthorization(cachedWriteAuthorizations, principal, store, labelOnum);
     }
     return result;
   }

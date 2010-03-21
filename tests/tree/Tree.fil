@@ -1,12 +1,12 @@
 package tree;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 public class Tree {
   private TreeNode root;
-  private Core nodeLocation;
+  private Store nodeLocation;
 
-  Tree(Core nodeLocation) {
+  Tree(Store nodeLocation) {
     this.root = null;
     this.nodeLocation = nodeLocation;
   }

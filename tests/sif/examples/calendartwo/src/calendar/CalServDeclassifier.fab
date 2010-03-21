@@ -171,7 +171,7 @@ public class CalServDeclassifier authority (CalServEP) {
     		  principal{P→;Q→;P←;Q←} P,
     		  principal{P→;Q→;P←;Q←} Q,
     		  Event[{P→;P←}]{P→;Q→;P←;Q←} event_,
-    		  Core core)
+    		  Store store)
     		  where caller(P,Q,CalServEP) {
 //    	  final Event[{P→;P←}]{P← ⊓ Q← ⊓ CalServEP←} event = declassify(endorse(event_,
 //    			  {P→;Q→;P←;Q←} to {P→;Q→;P← ⊓ Q← ⊓ CalServEP←}),

@@ -3,7 +3,7 @@ package fabric.worker.remote;
 import java.net.UnknownHostException;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.remote.messages.GetPrincipalMessage;
@@ -108,15 +108,15 @@ public final class RemoteWorker extends RemoteNode {
    *          the tid for the current transaction.
    */
   public void readObject(TransactionID tid, _Impl obj) {
-    _Impl remoteObj = readObject(tid, obj.$getCore(), obj.$getOnum());
+    _Impl remoteObj = readObject(tid, obj.$getStore(), obj.$getOnum());
 
     if (remoteObj == null)
       throw new InternalError("Inter-worker object read failed.");
     obj.$copyAppStateFrom(remoteObj);
   }
 
-  public _Impl readObject(TransactionID tid, Core core, long onum) {
-    ReadMessage.Response response = new ReadMessage(tid, core, onum).send(this);
+  public _Impl readObject(TransactionID tid, Store store, long onum) {
+    ReadMessage.Response response = new ReadMessage(tid, store, onum).send(this);
     return response.obj;
   }
 
@@ -126,12 +126,12 @@ public final class RemoteWorker extends RemoteNode {
    * @param tid
    *          the tid for the current transaction.
    */
-  public void takeOwnership(TransactionID tid, Core core, long onum) {
+  public void takeOwnership(TransactionID tid, Store store, long onum) {
     TakeOwnershipMessage.Response response =
-        new TakeOwnershipMessage(tid, core, onum).send(this);
+        new TakeOwnershipMessage(tid, store, onum).send(this);
     if (!response.success) {
       throw new InternalError("Unable to take ownership of object fab://"
-          + core.name() + "/" + onum + " from " + name + " -- either " + name
+          + store.name() + "/" + onum + " from " + name + " -- either " + name
           + " doesn't own the object or authorization has failed.");
     }
   }
@@ -176,9 +176,9 @@ public final class RemoteWorker extends RemoteNode {
    * 
    * @return whether the node is resubscribing to the object.
    */
-  public boolean notifyObjectUpdate(String core, long onum, Glob glob) {
+  public boolean notifyObjectUpdate(String store, long onum, Glob glob) {
     ObjectUpdateMessage.Response response =
-        new ObjectUpdateMessage(core, onum, glob).send(this);
+        new ObjectUpdateMessage(store, onum, glob).send(this);
     return response.resubscribe;
   }
   

@@ -115,8 +115,8 @@ permission java.lang.RuntimePermission "getenv.FABRIC_HOME";
 permission java.io.FilePermission "<<ALL FILES>>", "read";
 permission java.net.SocketPermission "127.0.0.1:3372", "connect";
 permission java.net.SocketPermission "localhost:3372", "connect";
-permission java.net.SocketPermission "core0:3372", "connect";
-permission java.net.SocketPermission "core0", "resolve";
+permission java.net.SocketPermission "store0:3372", "connect";
+permission java.net.SocketPermission "store0", "resolve";
 permission java.net.SocketPermission "*", "resolve";
 permission java.net.SocketPermission "*:3372", "connect";
 };
@@ -125,12 +125,12 @@ permission java.net.SocketPermission "*:3372", "connect";
 with (add a # at the start of the line):
 fabric.worker.fetchmanager=
 
-11) Start a core:
+11) Start a store:
 cd {fabric home}
-./bin/fab-core --core core0 etc/keys/core0.keystore etc/keys/trust.keystore password --core core1 etc/keys/core1.keystore etc/keys/trust.keystore password
+./bin/fab-store --store store0 etc/keys/store0.keystore etc/keys/trust.keystore password --store store1 etc/keys/store1.keystore etc/keys/trust.keystore password
 
 12) Set up a principal:
-./bin/fab --name worker0 --make-principal core0
+./bin/fab --name worker0 --make-principal store0
 
 13) Start Tomcat and load: http://localhost:8180/web/guest
 

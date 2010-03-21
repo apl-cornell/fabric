@@ -26,7 +26,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
    */
   @Override
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
-    // TODO add Core parameters?
+    // TODO add Store parameters?
     ConstructorDecl node = (ConstructorDecl) node();
     node = node.name("_Impl");
     return Collections.singletonList((ClassMember) node);
@@ -53,7 +53,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
     Position pos = Position.compilerGenerated();
     List<Formal> formals = new LinkedList<Formal>(decl.formals());
     formals.add(0, nf.Formal(pos, Flags.NONE, nf.TypeNodeFromQualifiedName(pos,
-        "fabric.worker.Core"), nf.Id(pos, "$location")));
+        "fabric.worker.Store"), nf.Id(pos, "$location")));
     formals.add(1, nf.Formal(pos, Flags.NONE, nf.TypeNodeFromQualifiedName(pos,
         "jif.lang.Label"), nf.Id(pos, "$label")));
     return decl.formals(formals);

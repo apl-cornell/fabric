@@ -13,10 +13,10 @@ public class RemoteCall01 {
 
   public static void main(String[] args) {
     RemoteCall01 t = null;
-    Core core = Worker.getWorker().getCore("core0");
-    RemoteWorker remoteWorker = Worker.getWorker().getWorker("core0");
+    Store store = Worker.getWorker().getStore("store0");
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker("store0");
     atomic {
-      t = new RemoteCall01@core();
+      t = new RemoteCall01@store();
     }
 
     atomic {

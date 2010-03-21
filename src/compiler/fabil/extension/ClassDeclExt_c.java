@@ -166,8 +166,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     }
 
     ClassMember oidConstr =
-        qq.parseMember("public _Proxy(fabric.worker.Core core, long onum) {"
-            + "super(core, onum); }");
+        qq.parseMember("public _Proxy(fabric.worker.Store store, long onum) {"
+            + "super(store, onum); }");
     members.add(oidConstr);
 
     // Create the class declaration.
@@ -392,8 +392,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             + "._Static._Impl impl) { super(impl); }");
     proxyMembers.add(proxyConstructorDecl);
     proxyConstructorDecl =
-        qq.parseMember("public _Proxy(fabric.worker.Core core, long onum) {"
-            + "super(core, onum); }");
+        qq.parseMember("public _Proxy(fabric.worker.Store store, long onum) {"
+            + "super(store, onum); }");
     proxyMembers.add(proxyConstructorDecl);
     
     // Create the $instance declaration and add it to the list of static proxy
@@ -426,10 +426,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the impl constructor declarations and add them to the list of
     // static impl members.
     ClassMember implConstructorDecl =
-        qq.parseMember("public _Impl(fabric.worker.Core core, "
+        qq.parseMember("public _Impl(fabric.worker.Store store, "
             + "jif.lang.Label label) "
             + "throws fabric.net.UnreachableNodeException {"
-            + "super(core, label); }");
+            + "super(store, label); }");
     implMembers.add(implConstructorDecl);
 
     // Create the $makeProxy method declaration and add it to the list of static
@@ -517,30 +517,30 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         in.append("this." + f.name() + " = (%T) in.readObject();");
         inSubst.add(t);
       } else {
-        out.append("$writeRef($getCore(), this." + f.name() + ", refTypes, "
-            + "out, intracoreRefs, intercoreRefs);");
+        out.append("$writeRef($getStore(), this." + f.name() + ", refTypes, "
+            + "out, intraStoreRefs, interStoreRefs);");
         in.append("this." + f.name() + " = (" + f.declType() + ") $readRef("
             + f.declType() + "._Proxy.class, " + "(fabric.common.RefTypeEnum) "
-            + "refTypes.next(), in, core, intracoreRefs);");
+            + "refTypes.next(), in, store, intraStoreRefs);");
       }
     }
 
     ClassMember serialize =
         qq.parseMember("public void $serialize(java.io.ObjectOutput out, "
-            + "java.util.List refTypes, java.util.List intracoreRefs, "
-            + "java.util.List intercoreRefs) throws java.io.IOException {"
-            + "super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);"
+            + "java.util.List refTypes, java.util.List intraStoreRefs, "
+            + "java.util.List interStoreRefs) throws java.io.IOException {"
+            + "super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);"
             + out + " }");
     result.add(serialize);
 
     ClassMember deserialize =
         qq
             .parseMember(
-                "public _Impl(fabric.worker.Core core, long onum, int version, "
+                "public _Impl(fabric.worker.Store store, long onum, int version, "
                     + "long expiry, long label, java.io.ObjectInput in, "
-                    + "java.util.Iterator refTypes, java.util.Iterator intracoreRefs) "
+                    + "java.util.Iterator refTypes, java.util.Iterator intraStoreRefs) "
                     + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-                    + "super(core, onum, version, expiry, label, in, refTypes, intracoreRefs);"
+                    + "super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);"
                     + in + " }", inSubst);
     result.add(deserialize);
 

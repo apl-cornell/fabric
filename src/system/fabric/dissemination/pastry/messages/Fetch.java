@@ -19,16 +19,16 @@ public class Fetch implements RawMessage {
   
   private transient final NodeHandle sender;
   private final Id id;
-  private final String core;
+  private final String store;
   private final long onum;
   private boolean refresh;
   
   private transient Reply reply;
   
-  public Fetch(NodeHandle sender, Id id, String core, long onum) {
+  public Fetch(NodeHandle sender, Id id, String store, long onum) {
     this.sender = sender;
     this.id = id;
-    this.core = core;
+    this.store = store;
     this.onum = onum;
   }
   
@@ -42,9 +42,9 @@ public class Fetch implements RawMessage {
     return id;
   }
 
-  /** The core where the requested object resides. */
-  public String core() {
-    return core;
+  /** The store where the requested object resides. */
+  public String store() {
+    return store;
   }
   
   /** The object number of the requested object. */
@@ -54,7 +54,7 @@ public class Fetch implements RawMessage {
 
   /** 
    * A hint as to whether we want to explicitly fetch the latest version from 
-   * the core.
+   * the store.
    */
   public boolean refresh() {
     return refresh;
@@ -81,7 +81,7 @@ public class Fetch implements RawMessage {
   
   @Override
   public String toString() {
-    return core + "/" + onum;
+    return store + "/" + onum;
   }
 
   public short getType() {
@@ -91,7 +91,7 @@ public class Fetch implements RawMessage {
   public void serialize(OutputBuffer buf) throws IOException {
     buf.writeShort(id.getType());
     id.serialize(buf);
-    buf.writeUTF(core);
+    buf.writeUTF(store);
     buf.writeLong(onum);
     buf.writeBoolean(refresh);
   }
@@ -103,7 +103,7 @@ public class Fetch implements RawMessage {
       throws IOException {
     this.sender = sender;
     id = endpoint.readId(buf, buf.readShort());
-    core = buf.readUTF();
+    store = buf.readUTF();
     onum = buf.readLong();
     refresh = buf.readBoolean();
   }
@@ -115,13 +115,13 @@ public class Fetch implements RawMessage {
   public static class Reply implements RawMessage {
     
     private final Id id;
-    private final String core;
+    private final String store;
     private final long onum;
     private final Glob glob;
     
     public Reply(Fetch parent, Glob glob) {
       id = parent.id();
-      core = parent.core();
+      store = parent.store();
       onum = parent.onum();
       this.glob = glob;
     }
@@ -136,9 +136,9 @@ public class Fetch implements RawMessage {
       return id;
     }
 
-    /** The core where the requested object resides. */
-    public String core() {
-      return core;
+    /** The store where the requested object resides. */
+    public String store() {
+      return store;
     }
     
     /** The object number of the requested object. */
@@ -158,7 +158,7 @@ public class Fetch implements RawMessage {
       DataOutputBuffer out = new DataOutputBuffer(buf);
       out.writeShort(id.getType());
       id.serialize(out);
-      out.writeUTF(core);
+      out.writeUTF(store);
       out.writeLong(onum);
       glob.write(out);
     }
@@ -169,12 +169,12 @@ public class Fetch implements RawMessage {
     public Reply(InputBuffer buf, Endpoint endpoint) throws IOException {
       DataInputBuffer in = new DataInputBuffer(buf);
       id = endpoint.readId(in, in.readShort());
-      core = in.readUTF();
+      store = in.readUTF();
       onum = in.readLong();
       
       Glob glob;
       try {
-        glob = new Glob(Worker.getWorker().getCore(core).getPublicKey(), in);
+        glob = new Glob(Worker.getWorker().getStore(store).getPublicKey(), in);
       } catch (BadSignatureException e) {
         glob = null;
       }

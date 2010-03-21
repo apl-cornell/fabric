@@ -42,7 +42,7 @@ public final class ReadMapEntry {
       // There are no read locks and no references to this entry. Garbage
       // collect.
       synchronized (TransactionManager.readMap) {
-        TransactionManager.readMap.remove(obj.core, obj.onum);
+        TransactionManager.readMap.remove(obj.store, obj.onum);
         return true;
       }
     }
@@ -69,10 +69,10 @@ public final class ReadMapEntry {
     if (obj == null) {
       // Object evicted from cache.
       
-      // If object was a local-core object, it doesn't exist anymore.
-      if (this.obj.core.isLocalCore()) return;
+      // If object was a local-store object, it doesn't exist anymore.
+      if (this.obj.store.isLocalStore()) return;
       
-      obj = this.obj.core.readObjectFromCache(this.obj.onum);
+      obj = this.obj.store.readObjectFromCache(this.obj.onum);
       if (obj == null) return;
 
       synchronized (this) {

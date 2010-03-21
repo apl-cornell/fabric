@@ -29,19 +29,19 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	// central repository of events.
 	private Set[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} events;
 
-	// TODO XXX : Establish relations between coreWorker, worker and CalServEP
-	final Core{CalServEP:;CalServEP!:} backend;
-	private final RemoteWorker{CalServEP:;CalServEP!:} coreWorker;
+	// TODO XXX : Establish relations between storeWorker, worker and CalServEP
+	final Store{CalServEP:;CalServEP!:} backend;
+	private final RemoteWorker{CalServEP:;CalServEP!:} storeWorker;
 
-	public CalendarDB{CalServEP:;CalServEP!:}(Core{CalServEP:;CalServEP!:} remoteCore)
+	public CalendarDB{CalServEP:;CalServEP!:}(Store{CalServEP:;CalServEP!:} remoteStore)
 	   where authority (CalServEP)
 	{
-		backend = remoteCore;
+		backend = remoteStore;
 		FabricWorker local = FabricWorker.getWorker();
 		if(local != null && backend != null) {
-		    coreWorker = local.getWorker(backend.name());
+		    storeWorker = local.getWorker(backend.name());
 		} else {
-		    coreWorker = null;
+		    storeWorker = null;
 		}
 	}
 
@@ -109,8 +109,8 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	    lookupUserID{CalServEP→;CalServEP←}(String{CalServEP→;CalServEP←} userID)
 	{
         final principal servp = CalServEP;
-	    if (coreWorker actsfor servp && servp equiv CalServEP) {
-	        return lookupUserIDRemote@coreWorker(userID, servp);
+	    if (storeWorker actsfor servp && servp equiv CalServEP) {
+	        return lookupUserIDRemote@storeWorker(userID, servp);
 	    }
 	    return null;
 	}
@@ -139,8 +139,8 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 	public Event[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} 
 	retrieveEvent{CalServEP:;CalServEP!:}(int{CalServEP:;CalServEP!:} eventID) 
 	where caller(CalServEP) {
-	    if(coreWorker actsfor worker$ && CalServEP equiv worker$) {
-	        return retrieveEventRemote@coreWorker(eventID);
+	    if(storeWorker actsfor worker$ && CalServEP equiv worker$) {
+	        return retrieveEventRemote@storeWorker(eventID);
 	    } else {
 	        return null;
 	    }
@@ -199,8 +199,8 @@ public class CalendarDB authority(CalServEP, CalRootEP) {
 			Date[{CalServEP:;CalServEP!:}]{CalServEP:;CalServEP!:} end,
 			User[CalServEP, {CalServEP→;CalServEP←}]{CalServEP:;CalServEP!:} displayUser)
 			where authority(CalRootEP), authority(CalServEP) {
-	    if(coreWorker actsfor worker$ && CalServEP equiv worker$) {
-	        return eventSubsetRemote@coreWorker(start, end, displayUser);
+	    if(storeWorker actsfor worker$ && CalServEP equiv worker$) {
+	        return eventSubsetRemote@storeWorker(start, end, displayUser);
 	    } else {
 	        return null;
 	    }

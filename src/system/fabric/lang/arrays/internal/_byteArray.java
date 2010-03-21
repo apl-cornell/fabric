@@ -6,7 +6,7 @@ import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.List;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
@@ -24,39 +24,39 @@ public interface _byteArray extends Object {
     private byte[] value;
 
     /**
-     * Creates a new byte array at the given Core with the given length.
+     * Creates a new byte array at the given Store with the given length.
      * 
-     * @param core
-     *                The core on which to allocate the array.
+     * @param store
+     *                The store on which to allocate the array.
      * @param length
      *                The length of the array.
      */
-    public _Impl(Core core, Label label, int length) {
-      this(core, label, new byte[length]);
+    public _Impl(Store store, Label label, int length) {
+      this(store, label, new byte[length]);
     }
 
     /**
-     * Creates a new byte array at the given Core using the given backing
+     * Creates a new byte array at the given Store using the given backing
      * array.
      * 
-     * @param core
-     *                The core on which to allocate the array.
+     * @param store
+     *                The store on which to allocate the array.
      * @param value
      *                The backing array to use.
      */
-    public _Impl(Core core, Label label, byte[] value) {
-      super(core, label);
+    public _Impl(Store store, Label label, byte[] value) {
+      super(store, label);
       this.value = value;
     }
 
     /**
      * Used for deserializing.
      */
-    public _Impl(Core core, long onum, int version, long expiry, long label,
+    public _Impl(Store store, long onum, int version, long expiry, long label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intracoreRefs) throws IOException,
+        Iterator<Long> intraStoreRefs) throws IOException,
         ClassNotFoundException {
-      super(core, onum, version, expiry, label, in, refTypes, intracoreRefs);
+      super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
       value = new byte[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readByte();
@@ -125,9 +125,9 @@ public interface _byteArray extends Object {
      */
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
-        List<Long> intracoreRefs, List<Pair<String, Long>> intercoreRefs)
+        List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
         throws IOException {
-      super.$serialize(out, refTypes, intracoreRefs, intercoreRefs);
+      super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
       for (int i = 0; i < value.length; i++)
         out.writeByte(value[i]);
@@ -136,8 +136,8 @@ public interface _byteArray extends Object {
 
   public static class _Proxy extends Object._Proxy implements _byteArray {
 
-    public _Proxy(Core core, long onum) {
-      super(core, onum);
+    public _Proxy(Store store, long onum) {
+      super(store, onum);
     }
 
     public _Proxy(_byteArray._Impl impl) {

@@ -7,19 +7,19 @@ import java.util.Iterator;
 import java.util.List;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 
 /**
- * Encapsulates an intercore pointer.
+ * Encapsulates an inter-store pointer.
  */
 public final class Surrogate extends _Impl {
   /**
-   * The core for the object being pointed to.
+   * The store for the object being pointed to.
    */
-  public final Core core;
+  public final Store store;
 
   /**
    * The onum for the object being pointed to.
@@ -27,16 +27,16 @@ public final class Surrogate extends _Impl {
   public final long onum;
 
   /**
-   * The host name of the core for the object being pointed to.
+   * The host name of the store for the object being pointed to.
    */
-  private final String coreName;
+  private final String storeName;
 
-  public Surrogate(Core core, long onum, int version, long expiry, long label,
-      ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
-      Iterator<Long> intracoreRefs) throws IOException, ClassNotFoundException {
-    super(core, onum, version, expiry, label, serializedInput, refTypes, intracoreRefs);
-    this.coreName = serializedInput.readUTF();
-    this.core = Worker.getWorker().getCore(coreName);
+  public Surrogate(Store store, long onum, int version, long expiry,
+      long label, ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
+      Iterator<Long> intraStoreRefs) throws IOException, ClassNotFoundException {
+    super(store, onum, version, expiry, label, serializedInput, refTypes, intraStoreRefs);
+    this.storeName = serializedInput.readUTF();
+    this.store = Worker.getWorker().getStore(storeName);
     this.onum = serializedInput.readLong();
   }
 
@@ -58,9 +58,9 @@ public final class Surrogate extends _Impl {
    */
   @Override
   public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
-      List<Long> intracoreRefs, List<Pair<String, Long>> intercoreRefs) {
+      List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs) {
     // This should never be called. Surrogates are created in serialized form on
-    // the core and should never be transmitted by the worker.
+    // the store and should never be transmitted by the worker.
     throw new InternalError("Attempted to serialize a surrogate.");
   }
 }

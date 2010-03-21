@@ -41,8 +41,8 @@ public interface FabILTypeSystem extends TypeSystem {
 
   ClassType DelegatingPrincipal();
 
-  /** The ClassType of fabric.worker.Core. */
-  Type Core();
+  /** The ClassType of fabric.worker.Store. */
+  Type Store();
 
   /** The ClassType of jif.lang.Label. */
   Type Label();

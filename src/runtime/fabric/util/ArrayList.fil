@@ -415,7 +415,7 @@ public class ArrayList extends AbstractList
   public boolean addAll(int index, Collection c)
   {
     checkBoundInclusive(index);
-    Iterator itr = c.iterator(LOCAL_CORE);
+    Iterator itr = c.iterator(LOCAL_STORE);
     int csize = c.size();
 
     modCount++;

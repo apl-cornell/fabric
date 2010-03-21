@@ -3,7 +3,7 @@ package fabric.dissemination.pastry;
 import java.io.IOException;
 
 import fabric.worker.Worker;
-import fabric.worker.RemoteCore;
+import fabric.worker.RemoteStore;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
@@ -31,7 +31,7 @@ public class PastryFetchManager implements FetchManager {
     }
   }
 
-  public ObjectGroup fetch(RemoteCore c, long onum) throws FetchException {
+  public ObjectGroup fetch(RemoteStore c, long onum) throws FetchException {
     Glob glob;
     try {
       glob = node.disseminator().fetch(c, onum);
@@ -39,7 +39,7 @@ public class PastryFetchManager implements FetchManager {
       glob = null;
     }
     
-    if (glob == null) return c.readObjectFromCore(onum);
+    if (glob == null) return c.readObjectFromStore(onum);
     
     return glob.decrypt(c);
   }

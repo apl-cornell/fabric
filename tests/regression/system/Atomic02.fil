@@ -2,11 +2,11 @@ package fabil;
 
 public class Atomic03 {
   public static void main(String[] args) {
-    Core core0 = Worker.getWorker().getCore("core0");
-    Core core1 = Worker.getWorker().getCore("core1");
+    Store store0 = Worker.getWorker().getStore("store0");
+    Store store1 = Worker.getWorker().getStore("store1");
     atomic {
-      Foo a = new Foo@core0();
-      Foo b = new Foo@core1();
+      Foo a = new Foo@store0();
+      Foo b = new Foo@store1();
     }
   }
 }

@@ -5,7 +5,7 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.*;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.ComparablePair;
 import fabric.common.util.Pair;
@@ -13,7 +13,7 @@ import fabric.lang.Object._Impl;
 import jif.lang.Label;
 
 /**
- * <code>_Impl</code> objects are stored on cores in serialized form as
+ * <code>_Impl</code> objects are stored on stores in serialized form as
  * <code>SerializedObject</code>s.
  */
 public final class SerializedObject implements FastSerializable {
@@ -23,22 +23,22 @@ public final class SerializedObject implements FastSerializable {
    * <li>long onum</li>
    * <li>int version number</li>
    * <li>long promise expiration</li>
-   * <li>byte whether the label pointer is an intercore ref</li>
-   * <li>short label's core's name length (only present if intercore)</li>
-   * <li>byte[] label's core's name data (only present if intercore)</li>
+   * <li>byte whether the label pointer is an inter-store ref</li>
+   * <li>short label's store's name length (only present if inter-store)</li>
+   * <li>byte[] label's store's name data (only present if inter-store)</li>
    * <li>long label's onum</li>
    * <li>short class name length</li>
    * <li>byte[] class name data</li>
    * <li>short class hash length</li>
    * <li>byte[] class hash data</li>
    * <li>int # ref types</li>
-   * <li>int # intracore refs</li>
+   * <li>int # intra-store refs</li>
    * <li>int serialized data length</li>
-   * <li>int # intercore refs</li>
+   * <li>int # inter-store refs</li>
    * <li>byte[] ref type data</li>
-   * <li>long[] intracore refs</li>
+   * <li>long[] intra-store refs</li>
    * <li>byte[] serialized data</li>
-   * <li>(utf*long)[] intercore refs</li>
+   * <li>(utf*long)[] inter-store refs</li>
    * </ul>
    */
   private byte[] objectData;
@@ -53,7 +53,7 @@ public final class SerializedObject implements FastSerializable {
 
   /**
    * Creates a serialized representation of the given object. This should only
-   * be used by fabric.core.InProcessCore and for debugging (worker.debug.*).
+   * be used by fabric.store.InProcessStore and for debugging (worker.debug.*).
    * 
    * @param obj
    *          The object to serialize.
@@ -120,13 +120,13 @@ public final class SerializedObject implements FastSerializable {
       // XXX Class hash.
       out.writeShort(0);
 
-      // Number of ref types and intracore refs.
+      // Number of ref types and intra-store refs.
       out.writeInt(0);
       out.writeInt(0);
 
       out.writeInt(serializedData.length);
 
-      // Number of intercore refs.
+      // Number of inter-store refs.
       out.writeInt(0);
 
       out.write(serializedData);
@@ -198,18 +198,18 @@ public final class SerializedObject implements FastSerializable {
 
   /**
    * @return the offset in objectData representing the start of a boolean that
-   *         indicates whether the label pointer is an intercore reference.
+   *         indicates whether the label pointer is an inter-store reference.
    */
-  private final int isIntercoreLabelPos() {
+  private final int isInterStoreLabelPos() {
     return expiryPos() + 8;
   }
 
   /**
    * @return whether the reference to the serialized object's label is an
-   *         intercore reference.
+   *         inter-store reference.
    */
-  public boolean labelRefIsIntercore() {
-    return booleanAt(isIntercoreLabelPos());
+  public boolean labelRefIsInterStore() {
+    return booleanAt(isInterStoreLabelPos());
   }
 
   /**
@@ -217,42 +217,44 @@ public final class SerializedObject implements FastSerializable {
    *         reference.
    */
   private final int labelPos() {
-    return isIntercoreLabelPos() + 1;
+    return isInterStoreLabelPos() + 1;
   }
 
   /**
-   * @return an intercore reference to the the serialized object's label.
+   * @return an inter-store reference to the the serialized object's label.
    * @throws InternalError
-   *           if the serialized object has an intracore reference to its label.
+   *           if the serialized object has an intra-store reference to its
+   *           label.
    */
-  public ComparablePair<String, Long> getIntercoreLabelRef() {
-    if (!labelRefIsIntercore())
+  public ComparablePair<String, Long> getInterStoreLabelRef() {
+    if (!labelRefIsInterStore())
       throw new InternalError("Unsupported operation: Attempted to get an "
-          + "intercore reference to an intracore label.");
+          + "inter-store reference to an intra-store label.");
 
     int labelPos = labelPos();
-    int coreNameLength = unsignedShortAt(labelPos);
-    int onumPos = labelPos + 2 + coreNameLength;
+    int storeNameLength = unsignedShortAt(labelPos);
+    int onumPos = labelPos + 2 + storeNameLength;
     DataInput in =
         new DataInputStream(new ByteArrayInputStream(objectData, labelPos,
             onumPos));
     try {
       return new ComparablePair<String, Long>(in.readUTF(), longAt(onumPos));
     } catch (IOException e) {
-      throw new InternalError("Error while reading core name.", e);
+      throw new InternalError("Error while reading store name.", e);
     }
   }
 
   /**
-   * @return an intracore reference to the serialized object's label.
+   * @return an intra-store reference to the serialized object's label.
    * @throws InternalError
-   *           if the serialized object has an intercore reference to its label.
+   *           if the serialized object has an inter-store reference to its
+   *           label.
    */
   public long getLabelOnum() {
-    if (labelRefIsIntercore())
+    if (labelRefIsInterStore())
       throw new InternalError("Unsupported operation: Attempted to get label "
-          + "onum of an object whose intercore references have not yet been "
-          + "swizzled." + getIntercoreLabelRef());
+          + "onum of an object whose inter-store references have not yet been "
+          + "swizzled." + getInterStoreLabelRef());
 
     return longAt(labelPos());
   }
@@ -263,7 +265,7 @@ public final class SerializedObject implements FastSerializable {
   private final int classNamePos() {
     int labelPos = labelPos();
     return labelPos + 8
-        + (labelRefIsIntercore() ? (unsignedShortAt(labelPos) + 2) : 0);
+        + (labelRefIsInterStore() ? (unsignedShortAt(labelPos) + 2) : 0);
   }
 
   /**
@@ -302,7 +304,7 @@ public final class SerializedObject implements FastSerializable {
   /**
    * @return the offset in objectData representing the start of an int
    *         representing the number of reference types (i.e.,
-   *         intercore/intracore/serialized).
+   *         inter-store/intra-store/serialized).
    */
   private final int numRefTypesPos() {
     int classHashPos = classHashPos();
@@ -319,17 +321,17 @@ public final class SerializedObject implements FastSerializable {
 
   /**
    * @return the offset in objectData representing the start of an int
-   *         representing the number of intracore references.
+   *         representing the number of intra-store references.
    */
-  private final int numIntracoreRefsPos() {
+  private final int numIntraStoreRefsPos() {
     return numRefTypesPos() + 4;
   }
 
   /**
-   * @return the number of intracore references in the serialized object.
+   * @return the number of intra-store references in the serialized object.
    */
-  public final int getNumIntracoreRefs() {
-    return intAt(numIntracoreRefsPos());
+  public final int getNumIntraStoreRefs() {
+    return intAt(numIntraStoreRefsPos());
   }
 
   /**
@@ -337,7 +339,7 @@ public final class SerializedObject implements FastSerializable {
    *         representing the length of the data portion of the object.
    */
   private final int serializedDataLengthPos() {
-    return numIntracoreRefsPos() + 4;
+    return numIntraStoreRefsPos() + 4;
   }
 
   private final int serializedDataLength() {
@@ -346,25 +348,25 @@ public final class SerializedObject implements FastSerializable {
 
   /**
    * @return the offset in objectData representing the start of an int
-   *         representing the number of intercore references.
+   *         representing the number of inter-store references.
    */
-  private final int numIntercoreRefsPos() {
+  private final int numInterStoreRefsPos() {
     return serializedDataLengthPos() + 4;
   }
 
   /**
-   * @return the number of intercore references in the serialized object.
+   * @return the number of inter-store references in the serialized object.
    */
-  public final int getNumIntercoreRefs() {
-    return intAt(numIntercoreRefsPos());
+  public final int getNumInterStoreRefs() {
+    return intAt(numInterStoreRefsPos());
   }
 
   /**
    * @return the offset in objectData representing the start of the reference
-   *         type (i.e., intercore/intracore/serialized) data.
+   *         type (i.e., inter-store/intra-store/serialized) data.
    */
   private final int refTypesPos() {
-    return numIntercoreRefsPos() + 4;
+    return numInterStoreRefsPos() + 4;
   }
 
   /**
@@ -394,29 +396,29 @@ public final class SerializedObject implements FastSerializable {
 
   /**
    * @return the offset in objectData representing the start of the
-   *         intracore-reference data.
+   *         intra-store-reference data.
    */
-  private final int intracoreRefsPos() {
+  private final int intraStoreRefsPos() {
     return refTypesPos() + getNumRefTypes();
   }
 
   /**
-   * @return an Iterator for the serialized object's intracore references.
+   * @return an Iterator for the serialized object's intra-store references.
    */
-  public Iterator<Long> getIntracoreRefIterator() {
-    final int numIntracoreRefs = getNumIntracoreRefs();
-    final int offset = intracoreRefsPos();
+  public Iterator<Long> getIntraStoreRefIterator() {
+    final int numIntraStoreRefs = getNumIntraStoreRefs();
+    final int offset = intraStoreRefsPos();
 
     return new Iterator<Long>() {
-      int nextIntracoreRefNum = 0;
+      int nextIntraStoreRefNum = 0;
 
       public boolean hasNext() {
-        return nextIntracoreRefNum < numIntracoreRefs;
+        return nextIntraStoreRefNum < numIntraStoreRefs;
       }
 
       public Long next() {
         if (!hasNext()) throw new NoSuchElementException();
-        return longAt(offset + 8 * (nextIntracoreRefNum++));
+        return longAt(offset + 8 * (nextIntraStoreRefNum++));
       }
 
       public void remove() {
@@ -430,7 +432,7 @@ public final class SerializedObject implements FastSerializable {
    *         data.
    */
   private final int serializedDataPos() {
-    return intracoreRefsPos() + 8 * getNumIntracoreRefs();
+    return intraStoreRefsPos() + 8 * getNumIntraStoreRefs();
   }
 
   /**
@@ -444,33 +446,33 @@ public final class SerializedObject implements FastSerializable {
   }
 
   /**
-   * @return the offset in objectData representing the start of the intercore
+   * @return the offset in objectData representing the start of the inter-store
    *         reference data.
    */
-  private final int intercoreRefsPos() {
+  private final int interStoreRefsPos() {
     return serializedDataPos() + serializedDataLength();
   }
 
   /**
-   * @return an Iterator for the serialized object's intercore references.
+   * @return an Iterator for the serialized object's inter-store references.
    */
-  public Iterator<ComparablePair<String, Long>> getIntercoreRefIterator() {
-    final int numIntercoreRefs = getNumIntercoreRefs();
-    final int offset = intercoreRefsPos();
+  public Iterator<ComparablePair<String, Long>> getInterStoreRefIterator() {
+    final int numInterStoreRefs = getNumInterStoreRefs();
+    final int offset = interStoreRefsPos();
 
     return new Iterator<ComparablePair<String, Long>>() {
-      int nextIntercoreRefNum = 0;
+      int nextInterStoreRefNum = 0;
       DataInput in =
           new DataInputStream(new ByteArrayInputStream(objectData, offset,
               objectData.length - offset));
 
       public boolean hasNext() {
-        return nextIntercoreRefNum < numIntercoreRefs;
+        return nextInterStoreRefNum < numInterStoreRefs;
       }
 
       public ComparablePair<String, Long> next() {
         if (!hasNext()) throw new NoSuchElementException();
-        nextIntercoreRefNum++;
+        nextInterStoreRefNum++;
         try {
           return new ComparablePair<String, Long>(in.readUTF(), in.readLong());
         } catch (IOException e) {
@@ -485,38 +487,38 @@ public final class SerializedObject implements FastSerializable {
   }
 
   /**
-   * Replaces the intracore and intercore references with the given intracore
-   * references. It is assumed that all intercore references are being replaced
-   * with intracore references.
+   * Replaces the intra-store and inter-store references with the given
+   * intra-store references. It is assumed that all inter-store references are
+   * being replaced with intra-store references.
    */
-  public void setRefs(List<Long> intracoreRefs) {
+  public void setRefs(List<Long> intraStoreRefs) {
     try {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       DataOutputStream out = new DataOutputStream(baos);
 
-      int numIntracoreRefs = getNumIntracoreRefs();
-      Iterator<Long> intracoreRefIt = intracoreRefs.iterator();
+      int numIntraStoreRefs = getNumIntraStoreRefs();
+      Iterator<Long> intraStoreRefIt = intraStoreRefs.iterator();
 
       // Write onum and version number.
-      out.write(objectData, 0, isIntercoreLabelPos());
+      out.write(objectData, 0, isInterStoreLabelPos());
 
       // Write the label reference.
       out.writeBoolean(false);
-      if (labelRefIsIntercore())
-        out.writeLong(intracoreRefIt.next());
+      if (labelRefIsInterStore())
+        out.writeLong(intraStoreRefIt.next());
       else out.writeLong(getLabelOnum());
 
       // Write the class name and number of ref types.
-      out.write(objectData, classNamePos(), numIntracoreRefsPos()
+      out.write(objectData, classNamePos(), numIntraStoreRefsPos()
           - classNamePos());
 
-      // Write number of intracore refs.
-      out.writeInt(getNumIntercoreRefs() + numIntracoreRefs);
+      // Write number of intra-store refs.
+      out.writeInt(getNumInterStoreRefs() + numIntraStoreRefs);
 
       // Write length of serialized data.
       out.write(objectData, serializedDataLengthPos(), 4);
 
-      // Write number of intercore refs.
+      // Write number of inter-store refs.
       out.writeInt(0);
 
       // Write ref type data.
@@ -531,9 +533,9 @@ public final class SerializedObject implements FastSerializable {
         offset++;
       }
 
-      // Write intracore refs.
-      while (intracoreRefIt.hasNext()) {
-        out.writeLong(intracoreRefIt.next());
+      // Write intra-store refs.
+      while (intraStoreRefIt.hasNext()) {
+        out.writeLong(intraStoreRefIt.next());
       }
 
       // Write serialized data.
@@ -557,23 +559,23 @@ public final class SerializedObject implements FastSerializable {
    * this method should mirror write(DataOutput).
    * 
    * @see SerializedObject#write(DataOutput)
-   * @see SerializedObject#readImpl(Core, DataInput)
+   * @see SerializedObject#readImpl(Store, DataInput)
    * @see SerializedObject#SerializedObject(DataInput)
    */
   public static void write(_Impl impl, DataOutput out) throws IOException {
     Label label = impl.get$label();
-    Core labelCore = label.$getCore();
+    Store labelStore = label.$getStore();
     long labelOnum = label.$getOnum();
-    boolean interCoreLabel =
+    boolean interStoreLabel =
         !ONumConstants.isGlobalConstant(labelOnum)
-            && !impl.$getCore().equals(labelCore);
+            && !impl.$getStore().equals(labelStore);
 
     // Write out the object header.
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
     out.writeLong(0);
-    out.writeBoolean(interCoreLabel);
-    if (interCoreLabel) out.writeUTF(labelCore.name());
+    out.writeBoolean(interStoreLabel);
+    if (interStoreLabel) out.writeUTF(labelStore.name());
     out.writeLong(labelOnum);
 
     // Write out the object's type information.
@@ -589,28 +591,28 @@ public final class SerializedObject implements FastSerializable {
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(bos);
     List<RefTypeEnum> refTypes = new ArrayList<RefTypeEnum>();
-    List<Long> intracoreRefs = new ArrayList<Long>();
-    List<Pair<String, Long>> intercoreRefs =
+    List<Long> intraStoreRefs = new ArrayList<Long>();
+    List<Pair<String, Long>> interStoreRefs =
         new ArrayList<Pair<String, Long>>();
-    impl.$serialize(oos, refTypes, intracoreRefs, intercoreRefs);
+    impl.$serialize(oos, refTypes, intraStoreRefs, interStoreRefs);
     oos.flush();
 
     // Write the object's contents.
     byte[] serializedData = bos.toByteArray();
     out.writeInt(refTypes.size());
-    out.writeInt(intracoreRefs.size());
+    out.writeInt(intraStoreRefs.size());
     out.writeInt(serializedData.length);
-    out.writeInt(intercoreRefs.size());
+    out.writeInt(interStoreRefs.size());
 
     for (RefTypeEnum refType : refTypes)
       out.writeByte(refType.ordinal());
 
-    for (Long onum : intracoreRefs)
+    for (Long onum : intraStoreRefs)
       out.writeLong(onum);
 
     out.write(serializedData);
 
-    for (Pair<String, Long> oid : intercoreRefs) {
+    for (Pair<String, Long> oid : interStoreRefs) {
       out.writeUTF(oid.first);
       out.writeLong(oid.second);
     }
@@ -621,7 +623,7 @@ public final class SerializedObject implements FastSerializable {
    * of this method should mirror write(_Impl, DataOutput).
    * 
    * @see SerializedObject#write(_Impl, DataOutput)
-   * @see SerializedObject#readImpl(Core, DataInput)
+   * @see SerializedObject#readImpl(Store, DataInput)
    * @see SerializedObject#SerializedObject(DataInput)
    */
   public void write(DataOutput out) throws IOException {
@@ -635,7 +637,7 @@ public final class SerializedObject implements FastSerializable {
    *          An input stream containing a serialized object.
    * @see SerializedObject#write(DataOutput)
    * @see SerializedObject#write(_Impl, DataOutput)
-   * @see SerializedObject#readImpl(Core, DataInput)
+   * @see SerializedObject#readImpl(Store, DataInput)
    */
   public SerializedObject(DataInput in) throws IOException {
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -649,13 +651,13 @@ public final class SerializedObject implements FastSerializable {
     out.write(buf, 0, 20);
 
     // Copy the label pointer.
-    boolean isIntercoreLabel = in.readBoolean();
-    out.writeBoolean(isIntercoreLabel);
+    boolean isInterStoreLabel = in.readBoolean();
+    out.writeBoolean(isInterStoreLabel);
     int bytesToCopy = 8;
-    if (isIntercoreLabel) {
-      int coreNameLength = in.readUnsignedShort();
-      out.writeShort(coreNameLength);
-      bytesToCopy += coreNameLength;
+    if (isInterStoreLabel) {
+      int storeNameLength = in.readUnsignedShort();
+      out.writeShort(storeNameLength);
+      bytesToCopy += storeNameLength;
     }
     copyBytes(in, out, bytesToCopy, buf);
 
@@ -673,20 +675,20 @@ public final class SerializedObject implements FastSerializable {
     int numRefTypes = in.readInt();
     out.writeInt(numRefTypes);
 
-    int numIntracoreRefs = in.readInt();
-    out.writeInt(numIntracoreRefs);
+    int numIntraStoreRefs = in.readInt();
+    out.writeInt(numIntraStoreRefs);
 
     int serializedDataLength = in.readInt();
     out.writeInt(serializedDataLength);
 
-    int numIntercoreRefs = in.readInt();
-    out.writeInt(numIntercoreRefs);
+    int numInterStoreRefs = in.readInt();
+    out.writeInt(numInterStoreRefs);
 
-    copyBytes(in, out, numRefTypes + 8 * numIntracoreRefs
+    copyBytes(in, out, numRefTypes + 8 * numIntraStoreRefs
         + serializedDataLength, buf);
 
-    for (int i = 0; i < numIntercoreRefs; i++) {
-      // Copy an intercore ref.
+    for (int i = 0; i < numInterStoreRefs; i++) {
+      // Copy an inter-store ref.
       int len = in.readUnsignedShort();
       out.writeShort(len);
       copyBytes(in, out, len + 8, buf);
@@ -734,13 +736,13 @@ public final class SerializedObject implements FastSerializable {
   /**
    * Used by the worker to deserialize this object.
    * 
-   * @param core
-   *          The core on which this object lives.
+   * @param store
+   *          The store on which this object lives.
    * @return The deserialized object.
    * @throws ClassNotFoundException
    *           Thrown when the class for this object is unavailable.
    */
-  public _Impl deserialize(Core core) {
+  public _Impl deserialize(Store store) {
     try {
       String className = getClassName();
 
@@ -750,7 +752,7 @@ public final class SerializedObject implements FastSerializable {
         throw new InvalidClassException(
             className,
             "A class of the same name was found, but its hash did not match "
-                + "the hash in the object fab://" + core.name() + "/"
+                + "the hash in the object fab://" + store.name() + "/"
                 + getOnum() + "\n"
                 + "hash from: " + path);
       }
@@ -760,15 +762,15 @@ public final class SerializedObject implements FastSerializable {
       if (constructor == null) {
         Class<?> c = Class.forName(getClassName());
         constructor =
-            c.getConstructor(Core.class, long.class, int.class, long.class,
+            c.getConstructor(Store.class, long.class, int.class, long.class,
                 long.class, ObjectInput.class, Iterator.class, Iterator.class);
         constructorTable.put(className, constructor);
       }
 
-      return (_Impl) constructor.newInstance(core, getOnum(), getVersion(),
+      return (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
           getExpiry(), getLabelOnum(), new ObjectInputStream(
               getSerializedDataStream()), getRefTypeIterator(),
-          getIntracoreRefIterator());
+          getIntraStoreRefIterator());
     } catch (Exception e) {
       throw new InternalError(e);
     }

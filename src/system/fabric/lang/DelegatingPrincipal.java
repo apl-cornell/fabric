@@ -6,7 +6,7 @@ import java.util.Iterator;
 
 import jif.lang.Label;
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.common.RefTypeEnum;
 
 public interface DelegatingPrincipal extends Principal {
@@ -21,8 +21,8 @@ public interface DelegatingPrincipal extends Principal {
       super(impl);
     }
 
-    public _Proxy(Core core, long onum) {
-      super(core, onum);
+    public _Proxy(Store store, long onum) {
+      super(store, onum);
     }
 
     public void addDelegatesTo(Principal p) {
@@ -41,20 +41,20 @@ public interface DelegatingPrincipal extends Principal {
   public abstract static class _Impl extends Principal._Impl implements
       DelegatingPrincipal {
 
-    public _Impl(Core core, Label label) {
-      super(core, label);
+    public _Impl(Store store, Label label) {
+      super(store, label);
     }
 
-    public _Impl(Core core, long onum, int version, long expiry, long label,
+    public _Impl(Store store, long onum, int version, long expiry, long label,
         ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intracoreRefs) throws IOException,
+        Iterator<Long> intraStoreRefs) throws IOException,
         ClassNotFoundException {
-      super(core, onum, version, expiry, label, in, refTypes, intracoreRefs);
+      super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
     }
 
     public static DelegatingPrincipal $addDefaultDelegates(DelegatingPrincipal p) {
-      NodePrincipal core = p.$getCore().getPrincipal();
-      p.addDelegatesTo(core);
+      NodePrincipal store = p.$getStore().getPrincipal();
+      p.addDelegatesTo(store);
       
       NodePrincipal worker = Worker.getWorker().getPrincipal();
       p.addDelegatesTo(worker);

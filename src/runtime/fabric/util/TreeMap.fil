@@ -236,7 +236,7 @@ public class TreeMap extends AbstractMap
   {
     this(sm.comparator());
     int pos = sm.size();
-    Iterator itr = sm.entrySet().iterator(LOCAL_CORE);
+    Iterator itr = sm.entrySet().iterator(LOCAL_STORE);
 
     fabricateTree(pos);
     Node node = firstNode();
@@ -332,9 +332,9 @@ public class TreeMap extends AbstractMap
           return size;
         }
 
-        public Iterator iterator(fabric.worker.Core core)
+        public Iterator iterator(fabric.worker.Store store)
         {
-          return new TreeIterator@core(ENTRIES);
+          return new TreeIterator@store(ENTRIES);
         }
 
         public void clear()
@@ -442,9 +442,9 @@ public class TreeMap extends AbstractMap
           return size;
         }
 
-        public Iterator iterator(fabric.worker.Core core)
+        public Iterator iterator(fabric.worker.Store store)
         {
-          return new TreeIterator@core(KEYS);
+          return new TreeIterator@store(KEYS);
         }
 
         public void clear()
@@ -556,7 +556,7 @@ public class TreeMap extends AbstractMap
    */
   public void putAll(Map m)
   {
-    Iterator itr = m.entrySet().iterator(LOCAL_CORE);
+    Iterator itr = m.entrySet().iterator(LOCAL_STORE);
     int pos = m.size();
     while (--pos >= 0)
       {
@@ -665,9 +665,9 @@ public class TreeMap extends AbstractMap
           return size;
         }
 
-        public Iterator iterator(fabric.worker.Core core)
+        public Iterator iterator(fabric.worker.Store store)
         {
-          return new TreeIterator@core(VALUES);
+          return new TreeIterator@store(VALUES);
         }
 
         public void clear()
@@ -1495,11 +1495,11 @@ public class TreeMap extends AbstractMap
             return SubMap.this.size();
           }
 
-          public Iterator iterator(fabric.worker.Core core)
+          public Iterator iterator(fabric.worker.Store store)
           {
             Node first = lowestGreaterThan(minKey, true);
             Node max = lowestGreaterThan(maxKey, false);
-            return new TreeIterator@core(ENTRIES, first, max);
+            return new TreeIterator@store(ENTRIES, first, max);
           }
 
           public void clear()
@@ -1573,11 +1573,11 @@ public class TreeMap extends AbstractMap
             return SubMap.this.size();
           }
 
-          public Iterator iterator(fabric.worker.Core core)
+          public Iterator iterator(fabric.worker.Store store)
           {
             Node first = lowestGreaterThan(minKey, true);
             Node max = lowestGreaterThan(maxKey, false);
-            return new TreeIterator@core(KEYS, first, max);
+            return new TreeIterator@store(KEYS, first, max);
           }
 
           public void clear()
@@ -1669,11 +1669,11 @@ public class TreeMap extends AbstractMap
             return SubMap.this.size();
           }
 
-          public Iterator iterator(fabric.worker.Core core)
+          public Iterator iterator(fabric.worker.Store store)
           {
             Node first = lowestGreaterThan(minKey, true);
             Node max = lowestGreaterThan(maxKey, false);
-            return new TreeIterator@core(VALUES, first, max);
+            return new TreeIterator@store(VALUES, first, max);
           }
 
           public void clear()

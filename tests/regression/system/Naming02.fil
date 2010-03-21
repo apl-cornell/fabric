@@ -8,9 +8,9 @@ public class Naming02 {
   public static class Init {
     public static void main(String[] args) {
       atomic {
-        Core core = fabric.worker.Worker.getWorker().getCore("core0");
-        HashMap root = (HashMap) core.getRoot();
-        root.put(name, new Naming02@core());
+        Store store = fabric.worker.Worker.getWorker().getStore("store0");
+        HashMap root = (HashMap) store.getRoot();
+        root.put(name, new Naming02@store());
       }
       System.out.println("TEST PASSED.");
     }
@@ -20,8 +20,8 @@ public class Naming02 {
     public static void main(String[] args) {
       Object o = null;
       atomic {
-        Core core = Worker.getWorker().getCore("core0");
-        HashMap root = (HashMap) core.getRoot();
+        Store store = Worker.getWorker().getStore("store0");
+        HashMap root = (HashMap) store.getRoot();
         o = root.get(name);
       }
       

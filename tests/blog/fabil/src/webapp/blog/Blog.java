@@ -74,8 +74,8 @@ public class Blog {
     return instance;
   }
   
-  public static void createNewInstance(Core c, Label l) {
-    instance = new Blog~l@c();
+  public static void createNewInstance(Store s, Label l) {
+    instance = new Blog~l@s();
   }
   
   public static void setInstance(Blog b) {

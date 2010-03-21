@@ -1,16 +1,16 @@
 public class ParamClass {
 
 	public static void main{}(String[]{} args) {
-		Core{} core = null;
+		Store{} store = null;
 		try {
-			core = worker$.getCore("core0");
+			store = worker$.getStore("store0");
 		} catch (NullPointerException unlikely) {}
 		
 		final principal{} p = new DynPrincipal("dynamic");
 		final label{} lbl = new label {p→};
 		ActualParamClass[lbl] var = null;
 		atomic {
-			var = new ActualParamClass[lbl]@core();
+			var = new ActualParamClass[lbl]@store();
 		}
 	}
 }

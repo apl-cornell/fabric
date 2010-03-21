@@ -1,6 +1,6 @@
 package jif.lang;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.lang.SecretKeyObject;
 import fabric.lang.Object;
 import fabric.util.Set;
@@ -13,8 +13,8 @@ public interface Label extends Object {
   SecretKeyObject keyObject();
   
   public class _Proxy extends Object._Proxy implements Label {
-    public _Proxy(Core core, long onum) {
-      super(core, onum);
+    public _Proxy(Store store, long onum) {
+      super(store, onum);
     }
 
     public native boolean relabelsTo(Label l, Set s);

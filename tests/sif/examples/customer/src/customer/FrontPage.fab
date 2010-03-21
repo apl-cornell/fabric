@@ -23,10 +23,10 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
         lbl <= {⊤→req.session} {
 
         Servlet[CustomerPrincipal] s = getServlet();
-        final Core bcore = worker$.getCore(Config.brokerCoreName);
+        final Store bstore = worker$.getStore(Config.brokerStoreName);
         if (s == null || !(s instanceof CustomerMain)) throw new ServletException("No servlet available"); 
         if (req == null) throw new ServletException("No request available"); 
-        if (bcore == null) throw new ServletException("Broker core is down"); 
+        if (bstore == null) throw new ServletException("Broker store is down"); 
         CustomerMain m = (CustomerMain)s;
 
         atomic {
@@ -36,7 +36,7 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
             }
 
 
-            final label amtLbl = new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←}@bcore;
+            final label amtLbl = new label {BankPrincipal→AirlinePrincipal ⊓ BankPrincipal→CustomerPrincipal; BankPrincipal←; CustomerPrincipal←}@bstore;
             if (lbl <= new label {CustomerPrincipal←}) {
                 InputNode amountInput = new TextInput[CustomerPrincipal, lbl, lbl]
                                                       (m, amtLbl, 20, "");

@@ -1,6 +1,6 @@
 package arrays;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.lang.arrays.ObjectArray;
 import fabric.util.HashMap;
 
@@ -11,13 +11,13 @@ public class ArrayTest3 {
         this.id = id;
     }
     public static void main(String[] args) {
-        Core core = fabric.worker.Worker.getWorker().getCore("core0");
+        Store store = fabric.worker.Worker.getWorker().getStore("store0");
         atomic {
-            ArrayTest3 another1 = new ArrayTest3@core(1);
-            ArrayTest3 another2 = new ArrayTest3@core(2);
-            ArrayTest3 another3 = new ArrayTest3@core(3);
+            ArrayTest3 another1 = new ArrayTest3@store(1);
+            ArrayTest3 another2 = new ArrayTest3@store(2);
+            ArrayTest3 another3 = new ArrayTest3@store(3);
             
-            ObjectArray testArray = new ObjectArray@core(ArrayTest3.class, 1000);
+            ObjectArray testArray = new ObjectArray@store(ArrayTest3.class, 1000);
             testArray.set(0, another1);
             testArray.set(999, another2);
 
@@ -30,8 +30,8 @@ public class ArrayTest3 {
                 ((ArrayTest3)testArray.get(999)).id + "," +
                 ((ArrayTest3)testArray.get(1099)).id);
             
-            // storing the array into the core with name "testArray"
-            HashMap root = (HashMap) core.getRoot();
+            // storing the array into the store with name "testArray"
+            HashMap root = (HashMap) store.getRoot();
             System.out.println("Map obtained is " + root.toString());
             
             root.put("testArray", testArray);

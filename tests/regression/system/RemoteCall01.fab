@@ -4,18 +4,18 @@ import jif.runtime.Runtime;
 import java.io.PrintStream;
 
 public class RemoteCall01 {
-  final Core{_->_; worker$<-*} core;
+  final Store{_->_; worker$<-*} store;
 
   final RemoteWorker{_->_; worker$<-*} remoteWorker;
 
   final RemoteCall01Data[{worker$->; worker$<-}]{_->_; worker$<-*} data;
 
   RemoteCall01() {
-    core = worker$.getCore("core0");
+    store = worker$.getStore("store0");
 
-    remoteWorker = worker$("core0");
-	if (core actsfor worker$) {
-      data = new RemoteCall01Data[{worker$->; worker$<-}]@core();
+    remoteWorker = worker$("store0");
+	if (store actsfor worker$) {
+      data = new RemoteCall01Data[{worker$->; worker$<-}]@store();
 	}
 	else {
       data = null;
@@ -58,12 +58,12 @@ public class RemoteCall01 {
   }
   
   public static void main{_->_; *<-*}(String[] args) {
-    final Core core = worker$.getCore("core0");
+    final Store store = worker$.getStore("store0");
     
     RemoteCall01 obj = null;
     atomic {
-      if (core actsfor worker$) {
-        obj = new RemoteCall01@core();
+      if (store actsfor worker$) {
+        obj = new RemoteCall01@store();
       }
     }
 

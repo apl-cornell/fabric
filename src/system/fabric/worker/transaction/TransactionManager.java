@@ -16,7 +16,7 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
-import fabric.core.InProcessCore;
+import fabric.store.InProcessStore;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.net.RemoteNode;
@@ -82,24 +82,24 @@ public final class TransactionManager {
    */
   // Proxy objects aren't used here because doing so would result in calls to
   // hashcode() and equals() on such objects, resulting in fetching the
-  // corresponding Impls from the core.
+  // corresponding Impls from the store.
   static final OidKeyHashMap<ReadMapEntry> readMap =
       new OidKeyHashMap<ReadMapEntry>();
 
   public static ReadMapEntry getReadMapEntry(_Impl impl, long expiry) {
     FabricSoftRef ref = impl.$ref;
 
-    // Optimization: if the impl lives on the local core, it will never be
+    // Optimization: if the impl lives on the local store, it will never be
     // evicted, so no need to store the entry in the read map.
-    if (ref.core.isLocalCore()) return new ReadMapEntry(impl, expiry);
+    if (ref.store.isLocalStore()) return new ReadMapEntry(impl, expiry);
 
     while (true) {
       ReadMapEntry result;
       synchronized (readMap) {
-        result = readMap.get(ref.core, ref.onum);
+        result = readMap.get(ref.store, ref.onum);
         if (result == null) {
           result = new ReadMapEntry(impl, expiry);
-          readMap.put(ref.core, ref.onum, result);
+          readMap.put(ref.store, ref.onum, result);
           return result;
         }
       }
@@ -107,7 +107,7 @@ public final class TransactionManager {
       synchronized (result) {
         synchronized (readMap) {
           // Make sure we still have the right entry.
-          if (result != readMap.get(ref.core, ref.onum)) continue;
+          if (result != readMap.get(ref.store, ref.onum)) continue;
 
           result.obj = impl.$ref;
           result.pinCount++;
@@ -246,7 +246,7 @@ public final class TransactionManager {
 
   /**
    * @param useAuthentication
-   *          whether to use an authenticated channel to talk to the core
+   *          whether to use an authenticated channel to talk to the store
    */
   public void commitTransaction(boolean useAuthentication)
       throws AbortException, TransactionAtomicityViolationException {
@@ -264,7 +264,7 @@ public final class TransactionManager {
 
   /**
    * @param useAuthentication
-   *          whether to use an authenticated channel to talk to the core
+   *          whether to use an authenticated channel to talk to the store
    */
   private void commitTransactionAt(long commitTime, boolean useAuthentication) {
     logger.finest(current + " attempting to commit");
@@ -310,14 +310,14 @@ public final class TransactionManager {
     // Remove and unlock reads that have valid promises on them
     current.removePromisedReads(commitTime);
 
-    // Go through the transaction log and figure out the cores we need to
+    // Go through the transaction log and figure out the stores we need to
     // contact.
-    Set<Core> cores = current.coresToContact();
+    Set<Store> stores = current.storesToContact();
     List<RemoteWorker> workers = current.workersCalled;
 
     // Send prepare messages to our cohorts.
     Map<RemoteNode, TransactionPrepareFailedException> failures =
-        sendPrepareMessages(useAuthentication, commitTime, cores, workers);
+        sendPrepareMessages(useAuthentication, commitTime, stores, workers);
 
     if (!failures.isEmpty()) {
       failures.remove(null);
@@ -329,7 +329,7 @@ public final class TransactionManager {
     }
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(useAuthentication, cores, workers);
+    sendCommitMessagesAndCleanUp(useAuthentication, stores, workers);
   }
 
   /**
@@ -338,16 +338,16 @@ public final class TransactionManager {
    */
   public Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
       long commitTime) {
-    return sendPrepareMessages(true, commitTime, current.coresToContact(),
+    return sendPrepareMessages(true, commitTime, current.storesToContact(),
         current.workersCalled);
   }
 
   /**
-   * Sends prepare messages to the given set of cores and workers. Also sends
+   * Sends prepare messages to the given set of stores and workers. Also sends
    * abort messages if any of them fails to prepare.
    */
   private Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
-      final boolean useAuthentication, final long commitTime, Set<Core> cores,
+      final boolean useAuthentication, final long commitTime, Set<Store> stores,
       List<RemoteWorker> workers) {
     final Map<RemoteNode, TransactionPrepareFailedException> failures =
         Collections
@@ -375,7 +375,7 @@ public final class TransactionManager {
       }
     }
 
-    List<Thread> threads = new ArrayList<Thread>(cores.size() + workers.size());
+    List<Thread> threads = new ArrayList<Thread>(stores.size() + workers.size());
 
     // Go through each worker and send prepare messages in parallel.
     for (final RemoteWorker worker : workers) {
@@ -397,41 +397,41 @@ public final class TransactionManager {
       threads.add(thread);
     }
 
-    // Go through each core and send prepare messages in parallel.
+    // Go through each store and send prepare messages in parallel.
     final Worker worker = Worker.getWorker();
-    for (Iterator<Core> coreIt = cores.iterator(); coreIt.hasNext();) {
-      final Core core = coreIt.next();
+    for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
+      final Store store = storeIt.next();
       Runnable runnable = new Runnable() {
         public void run() {
           try {
-            Collection<_Impl> creates = current.getCreatesForCore(core);
-            LongKeyMap<Integer> reads = current.getReadsForCore(core);
-            Collection<_Impl> writes = current.getWritesForCore(core);
+            Collection<_Impl> creates = current.getCreatesForStore(store);
+            LongKeyMap<Integer> reads = current.getReadsForStore(store);
+            Collection<_Impl> writes = current.getWritesForStore(store);
             boolean subTransactionCreated =
-                core.prepareTransaction(useAuthentication, current.tid.topTid,
+                store.prepareTransaction(useAuthentication, current.tid.topTid,
                     commitTime, creates, reads, writes);
 
             if (subTransactionCreated) {
-              RemoteWorker coreWorker = worker.getWorker(core.name());
+              RemoteWorker storeWorker = worker.getWorker(store.name());
               synchronized (current.workersCalled) {
-                current.workersCalled.add(coreWorker);
+                current.workersCalled.add(storeWorker);
               }
             }
           } catch (TransactionPrepareFailedException e) {
-            failures.put((RemoteNode) core, e);
+            failures.put((RemoteNode) store, e);
           } catch (UnreachableNodeException e) {
-            failures.put((RemoteNode) core,
-                new TransactionPrepareFailedException("Unreachable core"));
+            failures.put((RemoteNode) store,
+                new TransactionPrepareFailedException("Unreachable store"));
           }
         }
       };
 
-      // Optimization: only start in a new thread if there are more cores to
-      // contact and if it's a truly remote core (i.e., not in-process).
-      if (!(core instanceof InProcessCore || core.isLocalCore())
-          && coreIt.hasNext()) {
+      // Optimization: only start in a new thread if there are more stores to
+      // contact and if it's a truly remote store (i.e., not in-process).
+      if (!(store instanceof InProcessStore || store.isLocalStore())
+          && storeIt.hasNext()) {
         Thread thread =
-            new Thread(runnable, "worker prepare to " + core.name());
+            new Thread(runnable, "worker prepare to " + store.name());
         threads.add(thread);
         thread.start();
       } else {
@@ -450,21 +450,21 @@ public final class TransactionManager {
       }
     }
 
-    // Check for conflicts and unreachable cores/workers.
+    // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
       String logMessage =
           "Transaction tid=" + current.tid.topTid + ":  prepare failed.";
 
       for (Map.Entry<RemoteNode, TransactionPrepareFailedException> entry : failures
           .entrySet()) {
-        if (entry.getKey() instanceof RemoteCore) {
+        if (entry.getKey() instanceof RemoteStore) {
           // Remove old objects from our cache.
-          RemoteCore core = (RemoteCore) entry.getKey();
+          RemoteStore store = (RemoteStore) entry.getKey();
           LongKeyMap<SerializedObject> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
             for (SerializedObject obj : versionConflicts.values())
-              core.updateCache(obj);
+              store.updateCache(obj);
           }
         }
 
@@ -473,7 +473,7 @@ public final class TransactionManager {
       }
       logger.fine(logMessage);
 
-      sendAbortMessages(useAuthentication, cores, workers, failures.keySet());
+      sendAbortMessages(useAuthentication, stores, workers, failures.keySet());
     }
 
     synchronized (current.commitState) {
@@ -490,15 +490,15 @@ public final class TransactionManager {
    */
   public void sendCommitMessagesAndCleanUp()
       throws TransactionAtomicityViolationException {
-    sendCommitMessagesAndCleanUp(true, current.coresToContact(),
+    sendCommitMessagesAndCleanUp(true, current.storesToContact(),
         current.workersCalled);
   }
 
   /**
-   * Sends commit messages to the given set of cores and workers.
+   * Sends commit messages to the given set of stores and workers.
    */
   private void sendCommitMessagesAndCleanUp(final boolean useAuthentication,
-      Set<Core> cores, List<RemoteWorker> workers)
+      Set<Store> stores, List<RemoteWorker> workers)
       throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
@@ -525,7 +525,7 @@ public final class TransactionManager {
         Collections.synchronizedList(new ArrayList<RemoteNode>());
     final List<RemoteNode> failed =
         Collections.synchronizedList(new ArrayList<RemoteNode>());
-    List<Thread> threads = new ArrayList<Thread>(cores.size() + workers.size());
+    List<Thread> threads = new ArrayList<Thread>(stores.size() + workers.size());
 
     // Send commit messages to the workers in parallel.
     for (final RemoteWorker worker : workers) {
@@ -545,26 +545,26 @@ public final class TransactionManager {
       threads.add(thread);
     }
 
-    // Send commit messages to the cores in parallel.
-    for (Iterator<Core> coreIt = cores.iterator(); coreIt.hasNext();) {
-      final Core core = coreIt.next();
+    // Send commit messages to the stores in parallel.
+    for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
+      final Store store = storeIt.next();
       Runnable runnable = new Runnable() {
         public void run() {
           try {
-            core.commitTransaction(useAuthentication, current.tid.topTid);
+            store.commitTransaction(useAuthentication, current.tid.topTid);
           } catch (TransactionCommitFailedException e) {
-            failed.add((RemoteCore) core);
+            failed.add((RemoteStore) store);
           } catch (UnreachableNodeException e) {
-            unreachable.add((RemoteCore) core);
+            unreachable.add((RemoteStore) store);
           }
         }
       };
 
-      // Optimization: only start in a new thread if there are more cores to
-      // contact and if it's a truly remote core (i.e., not in-process).
-      if (!(core instanceof InProcessCore || core.isLocalCore())
-          && coreIt.hasNext()) {
-        Thread thread = new Thread(runnable, "worker commit to " + core.name());
+      // Optimization: only start in a new thread if there are more stores to
+      // contact and if it's a truly remote store (i.e., not in-process).
+      if (!(store instanceof InProcessStore || store.isLocalStore())
+          && storeIt.hasNext()) {
+        Thread thread = new Thread(runnable, "worker commit to " + store.name());
         threads.add(thread);
         thread.start();
       } else {
@@ -592,7 +592,7 @@ public final class TransactionManager {
     }
 
     // Update data structures to reflect successful commit.
-    logger.finest(current + " committed at cores...updating data structures");
+    logger.finest(current + " committed at stores...updating data structures");
     current.commitTopLevel();
     logger.finest(current + " committed");
 
@@ -609,19 +609,19 @@ public final class TransactionManager {
    * Sends abort messages to those nodes that haven't reported failures.
    * 
    * @param useAuthentication
-   *          whether to authenticate to the cores.
-   * @param cores
-   *          the set of cores involved in the transaction.
+   *          whether to authenticate to the stores.
+   * @param stores
+   *          the set of stores involved in the transaction.
    * @param workers
    *          the set of workers involved in the transaction.
    * @param fails
    *          the set of nodes that have reported failure.
    */
-  private void sendAbortMessages(boolean useAuthentication, Set<Core> cores,
+  private void sendAbortMessages(boolean useAuthentication, Set<Store> stores,
       List<RemoteWorker> workers, Set<RemoteNode> fails) {
-    for (Core core : cores)
-      if (!fails.contains(core))
-        core.abortTransaction(useAuthentication, current.tid);
+    for (Store store : stores)
+      if (!fails.contains(store))
+        store.abortTransaction(useAuthentication, current.tid);
 
     for (RemoteWorker worker : workers)
       if (!fails.contains(worker)) worker.abortTransaction(current.tid);
@@ -683,7 +683,7 @@ public final class TransactionManager {
     while (obj.$writeLockHolder != null
         && !current.isDescendantOf(obj.$writeLockHolder)) {
       try {
-        logger.finest(current + " wants to read " + obj.$getCore() + "/"
+        logger.finest(current + " wants to read " + obj.$getStore() + "/"
             + obj.$getOnum() + " (" + obj.getClass() + "); waiting on writer "
             + obj.$writeLockHolder);
         hadToWait = true;
@@ -754,7 +754,7 @@ public final class TransactionManager {
       // Make sure writer is in our ancestry.
       if (obj.$writeLockHolder != null
           && !current.isDescendantOf(obj.$writeLockHolder)) {
-        logger.finest(current + " wants to write " + obj.$getCore() + "/"
+        logger.finest(current + " wants to write " + obj.$getStore() + "/"
             + obj.$getOnum() + " (" + obj.getClass() + "); waiting on writer "
             + obj.$writeLockHolder);
         hadToWait = true;
@@ -766,7 +766,7 @@ public final class TransactionManager {
             boolean allReadersInAncestry = true;
             for (Log lock : readMapEntry.readLocks) {
               if (!current.isDescendantOf(lock)) {
-                logger.finest(current + " wants to write " + obj.$getCore()
+                logger.finest(current + " wants to write " + obj.$getStore()
                     + "/" + obj.$getOnum() + " (" + obj.getClass()
                     + "); aborting reader " + lock);
                 lock.flagAbort();
@@ -802,9 +802,9 @@ public final class TransactionManager {
     obj.$history = obj.clone();
     obj.$writeLockHolder = current;
 
-    if (obj.$getCore().isLocalCore()) {
-      synchronized (current.localcoreWrites) {
-        current.localcoreWrites.add(obj);
+    if (obj.$getStore().isLocalStore()) {
+      synchronized (current.localStoreWrites) {
+        current.localStoreWrites.add(obj);
       }
     } else {
       synchronized (current.writes) {
@@ -828,7 +828,7 @@ public final class TransactionManager {
     // Check the update map to see if another worker currently owns the object.
     RemoteWorker owner = current.updateMap.getUpdate(obj.$getProxy());
     if (owner != null)
-      owner.takeOwnership(current.tid, obj.$getCore(), obj.$getOnum());
+      owner.takeOwnership(current.tid, obj.$getStore(), obj.$getOnum());
 
     // We now own the object.
     obj.$isOwned = true;
@@ -836,9 +836,9 @@ public final class TransactionManager {
 
     // If the object is fresh, add it to our set of creates.
     if (obj.$version == 0) {
-      if (obj.$getCore().isLocalCore()) {
-        synchronized (current.localcoreCreates) {
-          current.localcoreCreates.add(obj);
+      if (obj.$getStore().isLocalStore()) {
+        synchronized (current.localStoreCreates) {
+          current.localStoreCreates.add(obj);
         }
       } else {
         synchronized (current.creates) {
@@ -973,7 +973,7 @@ public final class TransactionManager {
 
   /**
    * @return the worker on which the object resides. An object resides on a
-   *         worker if it is either on that worker's local core, or if it was
+   *         worker if it is either on that worker's local store, or if it was
    *         created by the current transaction and is owned by that worker.
    */
   public RemoteWorker getFetchWorker(_Proxy proxy) {

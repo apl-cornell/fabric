@@ -14,9 +14,9 @@ public abstract class Principal {
   public abstract boolean isAuthorized(final java.lang.Object authPrf,
       final Closure closure, final Label lb, final boolean executeNow);
 
-  public abstract ActsForProof findProofUpto(final Core core,
+  public abstract ActsForProof findProofUpto(final Store store,
       final Principal p, final java.lang.Object searchState);
 
-  public abstract ActsForProof findProofDownto(final Core core,
+  public abstract ActsForProof findProofDownto(final Store store,
       final Principal q, final java.lang.Object searchState);
 }

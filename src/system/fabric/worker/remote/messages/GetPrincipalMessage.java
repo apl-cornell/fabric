@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.MessageHandlerThread;
 import fabric.common.exceptions.FabricException;
@@ -25,12 +25,12 @@ public class GetPrincipalMessage extends
     }
 
     Response(DataInput in) throws IOException {
-      Core core = Worker.getWorker().getCore(in.readUTF());
-      this.principal = new NodePrincipal._Proxy(core, in.readLong());
+      Store store = Worker.getWorker().getStore(in.readUTF());
+      this.principal = new NodePrincipal._Proxy(store, in.readLong());
     }
 
     public void write(DataOutput out) throws IOException {
-      out.writeUTF(principal.$getCore().name());
+      out.writeUTF(principal.$getStore().name());
       out.writeLong(principal.$getOnum());
     }
   }

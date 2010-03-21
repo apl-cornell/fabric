@@ -4,7 +4,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.lang.InterruptedException;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.lang.arrays.ObjectArray;
 
@@ -42,7 +42,7 @@ public class ResizableArrayTest01 {
         ITER_REPS = Integer.parseInt(args[4]);
         isBatchOutput = args[5].equals("true")?true:false;
 
-        Core core = fabric.worker.Worker.getWorker().getCore("core0");
+        Store store = fabric.worker.Worker.getWorker().getStore("store0");
         long startTime, startInitialize, startReadIteration,
         startWriteIteration, startResize, endTime;
         float creation=0, initialization=0, reading=0, replacing=0, resizing=0;
@@ -51,8 +51,8 @@ public class ResizableArrayTest01 {
         ResizableArrayTest01 element2;
         
         atomic {
-            element1 = new ResizableArrayTest01@core('f');
-            element2 = new ResizableArrayTest01@core('o');
+            element1 = new ResizableArrayTest01@store('f');
+            element2 = new ResizableArrayTest01@store('o');
         }
 
         int percentage = 0;
@@ -74,7 +74,7 @@ public class ResizableArrayTest01 {
                 // create array
                 startTime = System.currentTimeMillis();
                 ObjectArray testArray;
-                testArray = new ObjectArray@core(ResizableArrayTest01.class,
+                testArray = new ObjectArray@store(ResizableArrayTest01.class,
                     SIZE1, chunkSize);
 
                 // initialize array with element 1

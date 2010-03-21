@@ -120,9 +120,9 @@ public class Benchmark {
 
     // Initialize extents
     this.atomicPartsById = new HashMap();
-    // this.atomicPartsByBuildDate = new HashMap@partCore();
+    // this.atomicPartsByBuildDate = new HashMap@partStore();
     this.compositePartsById = new HashMap();
-    // this.documentsByTitle = new HashMap@documentCore();
+    // this.documentsByTitle = new HashMap@documentStore();
     this.documentsById = new HashMap();
     this.baseAssembliesById = new HashMap();
     this.complexAssembliesById = new HashMap();

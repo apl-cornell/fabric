@@ -2,17 +2,17 @@ import fabricated.util.LinkedList;
 
 public class Subclass01 {
   private final principal        {p<-; p->} p;
-  private final Core             {p<-; p->} core;
+  private final Store             {p<-; p->} store;
   private LinkedList[{p->; p<-}] {p->; p<-} foo;
 
   public Subclass01() {
-    core = worker$.getLocalCore();
-    p    = core;
+    store = worker$.getLocalStore();
+    p    = store;
     foo  = new LinkedList();
   }
 
   public void f{p->; p<-}() {
-    JifObject[{p<-; p->}] bar = new Subclass02[{p<-; p->}]@core();
+    JifObject[{p<-; p->}] bar = new Subclass02[{p<-; p->}]@store();
     try {
       foo.add(bar);
     } catch(final NullPointerException e) {

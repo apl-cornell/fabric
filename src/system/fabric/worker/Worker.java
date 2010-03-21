@@ -41,7 +41,7 @@ import fabric.net.NameService;
 /**
  * This is the main interface to the Fabric API. Applications wishing to use
  * Fabric must first initialize it by calling one of the <code>initialize</code>
- * methods, and can then use the singleton Worker instance to access Cores and
+ * methods, and can then use the singleton Worker instance to access Stores and
  * Objects.
  */
 public final class Worker {
@@ -49,15 +49,15 @@ public final class Worker {
 
   public final int port;
 
-  // A map from core hostnames to Core objects
-  protected final Map<String, RemoteCore> cores;
+  // A map from store hostnames to Store objects
+  protected final Map<String, RemoteStore> stores;
 
   // A map from worker hostnames to RemoteWorker objects.
   private final Map<String, RemoteWorker> remoteWorkers;
 
-  protected final LocalCore localCore;
+  protected final LocalStore localStore;
 
-  // A KeyStore holding cores' public key certificates.
+  // A KeyStore holding stores' public key certificates.
   protected final KeyStore trustStore;
 
   // A socket factory for creating TLS connections.
@@ -75,17 +75,17 @@ public final class Worker {
     log = Logger.getLogger("fabric.worker");
   }
 
-  // The timeout (in milliseconds) to use whilst attempting to connect to a core
-  // node.
+  // The timeout (in milliseconds) to use whilst attempting to connect to a
+  // store node.
   public final int timeout;
 
-  // The number of times to retry connecting to each core node.
+  // The number of times to retry connecting to each store node.
   public final int retries;
 
   // The name service to use.
   public final NameService nameService;
 
-  // The manager to use for fetching objects from cores.
+  // The manager to use for fetching objects from stores.
   protected final FetchManager fetchManager;
 
   // The collection of dissemination caches used by this worker's dissemination
@@ -102,8 +102,8 @@ public final class Worker {
   private static final Timing t = Timing.APP;
 
   /**
-   * Initializes the Fabric <code>Worker</code>. When connecting to a core, the
-   * worker will retry each core node the specified number of times before
+   * Initializes the Fabric <code>Worker</code>. When connecting to a store, the
+   * worker will retry each store node the specified number of times before
    * failing. A negative retry-count is interpreted as an infinite retry-count.
    * 
    * @param keyStore
@@ -117,7 +117,7 @@ public final class Worker {
    * @param cacheSize
    *          The object cache size, in number of objects; must be positive.
    * @param maxConnections
-   *          The maximum number of connections to core nodes to maintain; must
+   *          The maximum number of connections to store nodes to maintain; must
    *          be positive.
    * @param timeout
    *          The timeout value to be used in seconds; must be positive.
@@ -129,7 +129,7 @@ public final class Worker {
   public static Worker initialize(String name, int port, String principalURL,
       KeyStore keyStore, char[] passwd, KeyStore trustStore,
       int maxConnections, int timeout, int retries, boolean useSSL,
-      String fetcher, Map<String, RemoteCore> initCoreSet)
+      String fetcher, Map<String, RemoteStore> initStoreSet)
       throws InternalError, UnrecoverableKeyException, IllegalStateException,
       UsageError {
 
@@ -144,10 +144,10 @@ public final class Worker {
     log.config("use ssl:             " + useSSL);
     instance =
         new Worker(name, port, principalURL, keyStore, passwd, trustStore,
-            maxConnections, timeout, retries, useSSL, fetcher, initCoreSet);
+            maxConnections, timeout, retries, useSSL, fetcher, initStoreSet);
 
     instance.remoteCallManager.start();
-    instance.localCore.initialize();
+    instance.localStore.initialize();
 
     return instance;
   }
@@ -161,7 +161,7 @@ public final class Worker {
   private Worker(String name, int port, String principalURL, KeyStore keyStore,
       char[] passwd, KeyStore trustStore, int maxConnections, int timeout,
       int retries, boolean useSSL, String fetcher,
-      Map<String, RemoteCore> initCoreSet) throws InternalError,
+      Map<String, RemoteStore> initStoreSet) throws InternalError,
       UnrecoverableKeyException, UsageError {
     // Sanitise input.
     if (timeout < 1) timeout = DEFAULT_TIMEOUT;
@@ -173,10 +173,10 @@ public final class Worker {
     fabric.common.Options.DEBUG_NO_SSL = !useSSL;
 
     this.nameService = new NameService();
-    this.cores = new HashMap<String, RemoteCore>();
-    if (initCoreSet != null) this.cores.putAll(initCoreSet);
+    this.stores = new HashMap<String, RemoteStore>();
+    if (initStoreSet != null) this.stores.putAll(initStoreSet);
     this.remoteWorkers = new HashMap<String, RemoteWorker>();
-    this.localCore = new LocalCore();
+    this.localStore = new LocalStore();
     this.trustStore = trustStore;
 
     // Set up the SSL socket factory.
@@ -210,9 +210,9 @@ public final class Worker {
     if (principalURL != null) {
       try {
         URI principalPath = new URI(principalURL);
-        Core core = getCore(principalPath.getHost());
+        Store store = getStore(principalPath.getHost());
         long onum = Long.parseLong(principalPath.getPath().substring(1));
-        this.principal = new NodePrincipal._Proxy(core, onum);
+        this.principal = new NodePrincipal._Proxy(store, onum);
       } catch (URISyntaxException e) {
         throw new UsageError("Invalid principal URL specified.", 1);
       }
@@ -251,26 +251,26 @@ public final class Worker {
   }
 
   /**
-   * Returns a <code>Core</code> object representing the given core.
+   * Returns a <code>Store</code> object representing the given store.
    * 
    * @param name
-   *          The core's host name.
-   * @return The corresponding <code>Core</code> object.
+   *          The store's host name.
+   * @return The corresponding <code>Store</code> object.
    */
-  public RemoteCore getCore(String name) {
+  public RemoteStore getStore(String name) {
     name = NameService.resolveAlias(name);
 
     if (name == null) {
       throw new NullPointerException();
     }
 
-    RemoteCore result = cores.get(name);
+    RemoteStore result = stores.get(name);
     if (result == null) {
       try {
         Certificate cert = trustStore.getCertificate(name);
         PublicKey pubKey = cert.getPublicKey();
-        result = new RemoteCore(name, pubKey);
-        cores.put(name, result);
+        result = new RemoteStore(name, pubKey);
+        stores.put(name, result);
       } catch (GeneralSecurityException e) {
         throw new InternalError(e);
       }
@@ -297,8 +297,8 @@ public final class Worker {
     return result;
   }
 
-  public LocalCore getLocalCore() {
-    return localCore;
+  public LocalStore getLocalStore() {
+    return localStore;
   }
 
   /**
@@ -327,11 +327,11 @@ public final class Worker {
    * 
    * @return true iff there was a cache entry for the given oid.
    */
-  public boolean updateDissemCaches(RemoteCore core, long onum, Glob update) {
+  public boolean updateDissemCaches(RemoteStore store, long onum, Glob update) {
     boolean result = false;
 
     for (Cache cache : disseminationCaches) {
-      result |= cache.updateEntry(core, onum, update);
+      result |= cache.updateEntry(store, onum, update);
     }
 
     return result;
@@ -342,10 +342,10 @@ public final class Worker {
    * 
    * @return true iff there was a cache entry for any object in the group.
    */
-  public boolean updateCache(RemoteCore core, ObjectGroup group) {
+  public boolean updateCache(RemoteStore store, ObjectGroup group) {
     boolean result = false;
     for (SerializedObject obj : group.objects().values()) {
-      result |= core.updateCache(obj);
+      result |= store.updateCache(obj);
     }
 
     return result;
@@ -370,8 +370,8 @@ public final class Worker {
    * used for (performance) testing only.
    */
   public void clearCache() {
-    for (RemoteCore core : cores.values()) {
-      core.clearCache();
+    for (RemoteStore store : stores.values()) {
+      store.clearCache();
     }
   }
 
@@ -383,9 +383,9 @@ public final class Worker {
     remoteCallManager.shutdown();
     fetchManager.destroy();
 
-    for (Core core : cores.values()) {
-      if (core instanceof RemoteCore) {
-        ((RemoteCore) core).cleanup();
+    for (Store store : stores.values()) {
+      if (store instanceof RemoteStore) {
+        ((RemoteStore) store).cleanup();
       }
     }
 
@@ -415,7 +415,7 @@ public final class Worker {
   }
 
   public static void initialize(String name, String principalURL,
-      Map<String, RemoteCore> initCoreSet) throws IOException,
+      Map<String, RemoteStore> initStoreSet) throws IOException,
       KeyStoreException, NoSuchAlgorithmException, CertificateException,
       UnrecoverableKeyException, IllegalStateException, InternalError,
       UsageError {
@@ -471,7 +471,7 @@ public final class Worker {
 
     initialize(name, port, principalURL, keyStore, passwd.toCharArray(),
         trustStore, maxConnections, timeout, retries, useSSL, fetcher,
-        initCoreSet);
+        initStoreSet);
   }
 
   // TODO: throws exception?
@@ -489,7 +489,7 @@ public final class Worker {
         initialize(opts.name);
 
         worker = getWorker();
-        if (worker.getPrincipal() == null && opts.core == null
+        if (worker.getPrincipal() == null && opts.store == null
             && opts.app != null) {
           throw new UsageError(
               "No fabric.worker.principal specified in the worker "
@@ -515,18 +515,18 @@ public final class Worker {
       }
       log.config(cmd.toString());
 
-      if (opts.core != null) {
-        // Create a principal object on the given core.
+      if (opts.store != null) {
+        // Create a principal object on the given store.
         final String name = worker.getJavaPrincipal().getName();
-        final Core core = worker.getCore(opts.core);
+        final Store store = worker.getStore(opts.store);
 
         runInSubTransaction(new Code<Void>() {
           public Void run() {
-            NodePrincipal principal = new NodePrincipal._Impl(core, null, name);
-            principal.addDelegatesTo(core.getPrincipal());
+            NodePrincipal principal = new NodePrincipal._Impl(store, null, name);
+            principal.addDelegatesTo(store.getPrincipal());
 
             System.out.println("Worker principal created:");
-            System.out.println("fab://" + opts.core + "/"
+            System.out.println("fab://" + opts.store + "/"
                 + principal.$getOnum());
             return null;
           }
@@ -562,7 +562,7 @@ public final class Worker {
       for (int i = 0; i < newArgs.length; i++)
         newArgs[i] = opts.app[i + 1];
 
-      final Core local = worker.getLocalCore();
+      final Store local = worker.getLocalStore();
       Object argsProxy = runInSubTransaction(new Code<Object>() {
         public Object run() {
           ConfPolicy conf =
@@ -584,8 +584,8 @@ public final class Worker {
     }
   }
 
-  public void setCore(String name, RemoteCore core) {
-    cores.put(name, core);
+  public void setStore(String name, RemoteStore store) {
+    stores.put(name, store);
   }
 
   /**
@@ -613,7 +613,7 @@ public final class Worker {
 
   /**
    * Executes the given code from within a top-level Fabric transaction. The
-   * transaction is committed to the core without authentication. Should not be
+   * transaction is committed to the store without authentication. Should not be
    * called by generated code. This is here to abstract away the details of
    * starting and finishing transactions.
    * 
@@ -645,7 +645,7 @@ public final class Worker {
   
   /**
    * @param useAuthentication
-   *          whether to use an authenticated channel to talk to the core
+   *          whether to use an authenticated channel to talk to the store
    */
   private static <T> T runInSubTransaction(boolean useAuthentication, Code<T> code) {
     TransactionManager tm = TransactionManager.getInstance();

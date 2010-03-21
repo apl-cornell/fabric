@@ -26,7 +26,7 @@ The etc directory contains worker and store configuration files and cryptographi
 
  -The bin/genkey script is used to create keys for new principals in the keys subdirectory.
  -For each worker X that is run, a file called X.properties should exist in the worker subdirectory.
- -For each store Y that is run, a file called Y.properties should exist in the core subdirectory.
+ -For each store Y that is run, a file called Y.properties should exist in the store subdirectory.
 
 The file logging.properties specify logging related parameters. One important parameter is java.util.logging.FileHandler.pattern that defines the output file for logging. Make sure this file has the right permissions for it to be accessible.
 
@@ -39,10 +39,10 @@ java fabric.Main tests/OO7/*.fab -d rt-classes -sourcepath src/runtime:tests -si
 
 =To start a worker=
 
-Use the "fab-core" script, or run fabric.core.Main with java, e.g.:
-java fabric.core.Main --core core0 etc/keys/core0.keystore etc/keys/trust.keystore password
+Use the "fab-store" script, or run fabric.store.Main with java, e.g.:
+java fabric.store.Main --store store0 etc/keys/store0.keystore etc/keys/trust.keystore password
 
-Debug Mode: You can alternatively use the higher level startcore script that automatically sets the classpath and command line parameters for the fab-core script and starts the worker in debug mode.
+Debug Mode: You can alternatively use the higher level startstore script that automatically sets the classpath and command line parameters for the fab-store script and starts the worker in debug mode.
 
 =To start a worker (coming soon)=
 
@@ -51,6 +51,6 @@ Use the "fab-worker" script
 =To run an application=
 
 Use the "fab" script, or run fabric.worker.Worker with java, e.g.:
-java fabric.worker.Worker OO7.Benchmark fab://core0/OO7 tiny 3
-java fabric.worker.Worker OO7.traversals.T1 fab://core0/OO7 --hot
+java fabric.worker.Worker OO7.Benchmark fab://store0/OO7 tiny 3
+java fabric.worker.Worker OO7.traversals.T1 fab://store0/OO7 --hot
   (Make sure you have $FABRIC_HOME set properly!)

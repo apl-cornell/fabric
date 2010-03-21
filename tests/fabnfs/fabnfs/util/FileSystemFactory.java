@@ -2,14 +2,14 @@ package fabnfs.util;
 
 import java.io.IOException;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 public interface FileSystemFactory {
 
-  public File makeFile(Core core, Core remoteCore, String name);
+  public File makeFile(Store store, Store remoteStore, String name);
 
-  public RandomAccessFile makeRAFile(Core localCore, Core core, String path) throws IOException;
+  public RandomAccessFile makeRAFile(Store localStore, Store store, String path) throws IOException;
 
-  public FileInputStream makeFIStream(Core localCore, Core core, String name) throws IOException;
+  public FileInputStream makeFIStream(Store localStore, Store store, String name) throws IOException;
 
 }

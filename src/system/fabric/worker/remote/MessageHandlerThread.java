@@ -240,7 +240,7 @@ public class MessageHandlerThread extends
     Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
     if (log == null) return new ReadMessage.Response(null);
 
-    _Impl obj = new _Proxy(readMessage.core, readMessage.onum).fetch();
+    _Impl obj = new _Proxy(readMessage.store, readMessage.onum).fetch();
 
     // Ensure this worker owns the object.
     synchronized (obj) {
@@ -256,7 +256,7 @@ public class MessageHandlerThread extends
     // Ensure that the remote worker is allowed to read the object.
     Label label = obj.get$label();
     if (!AuthorizationUtil.isReadPermitted(session.remotePrincipal, label
-        .$getCore(), label.$getOnum())) {
+        .$getStore(), label.$getOnum())) {
       obj = null;
     }
 
@@ -275,7 +275,7 @@ public class MessageHandlerThread extends
     if (log == null) return new TakeOwnershipMessage.Response(false);
 
     _Impl obj =
-        new _Proxy(takeOwnershipMessage.core, takeOwnershipMessage.onum)
+        new _Proxy(takeOwnershipMessage.store, takeOwnershipMessage.onum)
             .fetch();
 
     // Ensure this worker owns the object.
@@ -293,7 +293,7 @@ public class MessageHandlerThread extends
     Label label = obj.get$label();
     boolean authorized =
         AuthorizationUtil.isWritePermitted(session.remotePrincipal, label
-            .$getCore(), label.$getOnum());
+            .$getStore(), label.$getOnum());
 
     tm.associateLog(null);
 
@@ -314,13 +314,13 @@ public class MessageHandlerThread extends
       ObjectUpdateMessage objectUpdateMessage) {
     boolean response;
     if (objectUpdateMessage.group == null) {
-      RemoteCore core = worker.getCore(objectUpdateMessage.core);
+      RemoteStore store = worker.getStore(objectUpdateMessage.store);
       response =
-          worker.updateDissemCaches(core, objectUpdateMessage.onum,
+          worker.updateDissemCaches(store, objectUpdateMessage.onum,
               objectUpdateMessage.glob);
     } else {
-      RemoteCore core = worker.getCore(session.remoteNodeName);
-      response = worker.updateCache(core, objectUpdateMessage.group);
+      RemoteStore store = worker.getStore(session.remoteNodeName);
+      response = worker.updateCache(store, objectUpdateMessage.group);
     }
 
     return new ObjectUpdateMessage.Response(response);

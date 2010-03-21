@@ -2,9 +2,9 @@ build fabric
 download tomcat 5.5 from tomcat.apache.org
 ln -s fabric/tests/cms/web webapps/
 
-preparing the core
+preparing the store
 ==================
-in one terminal, log into cfscluster.cs.cornell.edu and execute bin/fab-core
+in one terminal, log into cfscluster.cs.cornell.edu and execute bin/fab-store
 
 in another terminal:
 log into cfscluster...

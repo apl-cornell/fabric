@@ -41,7 +41,7 @@ class NFSIO implements NFSConsts, RPCConsts {
 //	     System.err.print("Write(" + fileName + ", " + offset + ", (" + beginoffset + ", " + totalcount + ") " +
 //	    		     datalen + ")\n");
 
-            RandomAccessFile fd = fsinfo.factory.makeRAFile(fsinfo.localCore, fsinfo.core, fileName);
+            RandomAccessFile fd = fsinfo.factory.makeRAFile(fsinfo.localStore, fsinfo.store, fileName);
 	    fd.seek(offset);
 	    fd.write(new FileByteArray(packet.Data()), (int) packetOffset, (int) datalen);
 	    fd.close();
@@ -88,7 +88,7 @@ class NFSIO implements NFSConsts, RPCConsts {
 		throw new NFSException(xid, NFSERR_IO);
 	    }
 
-	    FileInputStream fd = fsinfo.factory.makeFIStream(fsinfo.localCore, fsinfo.core, fileName);
+	    FileInputStream fd = fsinfo.factory.makeFIStream(fsinfo.localStore, fsinfo.store, fileName);
 	    fd.skip(offset);
             FileByteArray readbuf = new FileByteArray((int) count);
 	    int numberRead = fd.read(readbuf);

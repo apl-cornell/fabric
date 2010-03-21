@@ -17,7 +17,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
 
     private Map superiors; // treat this like a set
     
-    public static LocalCore localCore = Worker.getWorker().getLocalCore();
+    public static LocalStore localStore = Worker.getWorker().getLocalStore();
 
     public AbstractPrincipal() {
       super();
@@ -87,20 +87,20 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     }
 
 
-    public ActsForProof findProofDownto(Core c, Principal q, Object searchState) {    
+    public ActsForProof findProofDownto(Store store, Principal q, Object searchState) {    
         // don't even try! We don't have any information
         // about who we can act for.
         return null;
     }
 
-    public ActsForProof findProofUpto(Core c, Principal p, Object searchState) {
+    public ActsForProof findProofUpto(Store store, Principal p, Object searchState) {
         Iterator i = this.superiors.keySet().iterator();
         while(i.hasNext()) {
             Principal s = (Principal) i.next();
-            ActsForProof prf = PrincipalUtil.findActsForProof(c, p, s, searchState);            
+            ActsForProof prf = PrincipalUtil.findActsForProof(store, p, s, searchState);            
             if (prf != null) {
                 if (PrincipalUtil.actsFor(s, this)) {
-                    return new TransitiveProof@localCore(prf, s, new DelegatesProof@localCore(s, this));
+                    return new TransitiveProof@localStore(prf, s, new DelegatesProof@localStore(s, this));
                 }
             }
         }

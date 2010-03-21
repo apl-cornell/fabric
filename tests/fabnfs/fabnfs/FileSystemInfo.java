@@ -1,6 +1,6 @@
 package fabnfs;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 import fabnfs.util.FileSystemFactory;
 
@@ -8,14 +8,14 @@ import fabnfs.util.FileSystemFactory;
 //   idea is that it be replaced by native code to get better NFS behavior.
 class FileSystemInfo extends java.lang.Object  {
 
-    Core core;
-    Core localCore;
+    Store store;
+    Store localStore;
     FileSystemFactory factory;
     public String separatorChar;
 
-    FileSystemInfo(Core core, Core localCore, FileSystemFactory factory, String sepChar) {
-      this.core = core;
-      this.localCore = localCore;
+    FileSystemInfo(Store store, Store localStore, FileSystemFactory factory, String sepChar) {
+      this.store = store;
+      this.localStore = localStore;
       this.factory = factory;
       this.separatorChar = sepChar;
     }

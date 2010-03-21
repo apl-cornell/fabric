@@ -4,24 +4,24 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.RemoteCore;
+import fabric.worker.RemoteStore;
 import fabric.common.*;
 import fabric.common.exceptions.*;
 import fabric.common.exceptions.InternalError;
-import fabric.core.MessageHandlerThread;
+import fabric.store.MessageHandlerThread;
 
 /**
  * A <code>ReadMessage</code> represents a request from a worker to read an
- * object at a core.
+ * object at a store.
  */
 public final class ReadMessage extends
-    Message<RemoteCore, ReadMessage.Response> {
+    Message<RemoteStore, ReadMessage.Response> {
   public static class Response implements Message.Response {
 
     public final ObjectGroup group;
 
     /**
-     * Used by the core to create a read-message response.
+     * Used by the store to create a read-message response.
      */
     public Response(ObjectGroup group) {
       this.group = group;
@@ -75,7 +75,7 @@ public final class ReadMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#dispatch(fabric.core.MessageHandlerThread)
+   * @see fabric.messages.Message#dispatch(fabric.store.MessageHandlerThread)
    */
   @Override
   public Response dispatch(MessageHandlerThread w) throws AccessException, ProtocolError {
@@ -85,20 +85,20 @@ public final class ReadMessage extends
   /*
    * (non-Javadoc)
    * 
-   * @see fabric.messages.Message#send(fabric.worker.Core, boolean)
+   * @see fabric.messages.Message#send(fabric.worker.Store, boolean)
    */
-  public Response send(RemoteCore core) throws FetchException {
+  public Response send(RemoteStore store) throws FetchException {
     try {
-      return send(core, true);
+      return send(store, true);
     } catch (FetchException e) {
       throw e;
     } catch (FabricException e) {
-      throw new InternalError("Unexpected response from core.", e);
+      throw new InternalError("Unexpected response from store.", e);
     }
   }
 
   @Override
-  public Response response(RemoteCore c, DataInput in) throws IOException {
+  public Response response(RemoteStore c, DataInput in) throws IOException {
     return new Response(in);
   }
   

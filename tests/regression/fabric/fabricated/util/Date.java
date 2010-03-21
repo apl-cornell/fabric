@@ -234,9 +234,9 @@ public interface Date
         
         public _Proxy(fabric.
                         worker.
-                        Core core,
+                        Store store,
                       long onum) {
-            super(core,
+            super(store,
                   onum);
         }
     }
@@ -350,7 +350,7 @@ public interface Date
         
         public _Impl(fabric.
                        worker.
-                       Core $location,
+                       Store $location,
                      jif.
                        lang.
                        Label $label,
@@ -447,10 +447,10 @@ public interface Date
             List refTypes,
           java.
             util.
-            List intracoreRefs,
+            List intraStoreRefs,
           java.
             util.
-            List intercoreRefs)
+            List interStoreRefs)
               throws java.
           io.
           IOException {
@@ -458,25 +458,25 @@ public interface Date
               $serialize(
               out,
               refTypes,
-              intracoreRefs,
-              intercoreRefs);
+              intraStoreRefs,
+              interStoreRefs);
             out.
               writeInt(
               this.
                 year);
             $writeRef(
-              $getCore(),
+              $getStore(),
               this.
                 jif$fabricated_util_Date_L,
               refTypes,
               out,
-              intracoreRefs,
-              intercoreRefs);
+              intraStoreRefs,
+              interStoreRefs);
         }
         
         public _Impl(fabric.
                        worker.
-                       Core core,
+                       Store store,
                      long onum,
                      int version,
                      long expiry,
@@ -489,21 +489,21 @@ public interface Date
                        Iterator refTypes,
                      java.
                        util.
-                       Iterator intracoreRefs)
+                       Iterator intraStoreRefs)
               throws java.
           io.
           IOException,
             java.
           lang.
           ClassNotFoundException {
-            super(core,
+            super(store,
                   onum,
                   version,
                   expiry,
                   label,
                   in,
                   refTypes,
-                  intracoreRefs);
+                  intraStoreRefs);
             this.
               year =
               in.
@@ -524,8 +524,8 @@ public interface Date
                     refTypes.
                       next(),
                   in,
-                  core,
-                  intracoreRefs);
+                  store,
+                  intraStoreRefs);
         }
         
         public void
@@ -637,9 +637,9 @@ public interface Date
             
             public _Proxy(fabric.
                             worker.
-                            Core core,
+                            Store store,
                           long onum) {
-                super(core,
+                super(store,
                       onum);
             }
             
@@ -732,14 +732,14 @@ public interface Date
             
             public _Impl(fabric.
                            worker.
-                           Core core,
+                           Store store,
                          jif.
                            lang.
                            Label label)
                   throws fabric.
               worker.
               UnreachableNodeException {
-                super(core,
+                super(store,
                       label);
             }
             

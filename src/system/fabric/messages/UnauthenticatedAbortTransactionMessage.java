@@ -4,7 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.RemoteCore;
+import fabric.worker.RemoteStore;
 import fabric.worker.debug.Timing;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
@@ -13,7 +13,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.net.RemoteNode;
 
 public class UnauthenticatedAbortTransactionMessage extends
-    Message<RemoteCore, UnauthenticatedAbortTransactionMessage.Response> {
+    Message<RemoteStore, UnauthenticatedAbortTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
     private Response() {
@@ -57,25 +57,25 @@ public class UnauthenticatedAbortTransactionMessage extends
   }
 
   @Override
-  public Response dispatch(fabric.core.MessageHandlerThread w) throws AccessException {
+  public Response dispatch(fabric.store.MessageHandlerThread w) throws AccessException {
     w.handle(this);
     return new Response();
   }
 
-  public Response send(RemoteCore core) {
+  public Response send(RemoteStore store) {
     try {
-      Timing.CORE.begin();
-      return send(core, true);
+      Timing.STORE.begin();
+      return send(store, true);
     } catch (FabricException e) {
       throw new InternalError(e);
     } finally {
-      Timing.CORE.end();
+      Timing.STORE.end();
     }
   }
 
   @Override
-  public Response response(RemoteCore core, DataInput in) {
-    return new Response(core, in);
+  public Response response(RemoteStore store, DataInput in) {
+    return new Response(store, in);
   }
 
   @Override

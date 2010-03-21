@@ -281,7 +281,7 @@ public class Vector extends AbstractList
    * visits the elements in increasing index order, but is NOT thread-safe.
    *
    * @return an Enumeration
-   * @see #iterator(fabric.worker.Core)
+   * @see #iterator(fabric.worker.Store)
    */
   // No need to synchronize as the Enumeration is not thread-safe!
   public Enumeration elements()
@@ -786,7 +786,7 @@ public class Vector extends AbstractList
   public synchronized boolean addAll(int index, Collection c)
   {
     checkBoundInclusive(index);
-    Iterator itr = c.iterator(LOCAL_CORE);
+    Iterator itr = c.iterator(LOCAL_STORE);
     int csize = c.size();
 
     modCount++;

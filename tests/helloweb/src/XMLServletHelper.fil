@@ -5,7 +5,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.util.Iterator;
 import fabric.util.Map;
 
@@ -21,7 +21,7 @@ public class XMLServletHelper {
   DocumentBuilder builder;
 
   Benchmark db;
-  Core local;
+  Store local;
 
   public Document dbSummary() {
     Document result = builder.newDocument();
@@ -102,18 +102,18 @@ public class XMLServletHelper {
   }
 
   public XMLServletHelper(String dbUri) throws Exception {
-    local = Worker.getWorker().getLocalCore();
+    local = Worker.getWorker().getLocalStore();
 
     URI    addr = new URI(dbUri);
-    Core   core = Worker.getWorker().getCore(addr.getHost());
+    Store   store = Worker.getWorker().getStore(addr.getHost());
 
-    db      = (Benchmark) ((Map) core.getRoot()).get(addr.getPath());
+    db      = (Benchmark) ((Map) store.getRoot()).get(addr.getPath());
     builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
   }
   
-  public static XMLServletHelper create(Core core, String uri) throws Exception {
+  public static XMLServletHelper create(Store store, String uri) throws Exception {
     atomic {
-      return new XMLServletHelper@core(uri);
+      return new XMLServletHelper@store(uri);
     }
   }
 }

@@ -28,8 +28,8 @@ public class FabricNewLabelDel extends JL_c {
     NewLabelExt_c ext = (NewLabelExt_c)FabricUtil.fabricExt(n);
     FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
     if (ext.location() != null) {
-      if (!ts.isSubtype(ext.location().type(), ts.Core())) {
-        throw new SemanticException("The location needs to be a Core.", ext.location().position());
+      if (!ts.isSubtype(ext.location().type(), ts.Store())) {
+        throw new SemanticException("The location needs to be a Store.", ext.location().position());
       }
     }
     return n;

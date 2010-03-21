@@ -3,7 +3,7 @@ package arrays;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.lang.arrays.internal._ObjectArray;
 
@@ -39,15 +39,15 @@ public class ObjectArrayTest01 {
         isBatchOutput = args[4].equals("true")?true:false;
 
 
-        Core core = fabric.worker.Worker.getWorker().getCore("core0");        
+        Store store = fabric.worker.Worker.getWorker().getStore("store0");        
         long startTime, startInitialize, startReadIteration, startWriteIteration, startResize, endTime;
         float creation=0, initialization=0, reading=0, replacing=0, resizing=0;
 
         ObjectArrayTest01 element1;
         ObjectArrayTest01 element2;
 	atomic {
-	  element1 = new ObjectArrayTest01@core('f');
-	  element2 = new ObjectArrayTest01@core('o'); 
+	  element1 = new ObjectArrayTest01@store('f');
+	  element2 = new ObjectArrayTest01@store('o'); 
 	}
 
         int percentage = 0;
@@ -70,7 +70,7 @@ public class ObjectArrayTest01 {
                 // create array
                 startTime = System.currentTimeMillis();
                 _ObjectArray testArray;
-                testArray = new _ObjectArray@core(ObjectArrayTest01.class, SIZE1);
+                testArray = new _ObjectArray@store(ObjectArrayTest01.class, SIZE1);
 
                 // initialize array with element 1
                 startInitialize = System.currentTimeMillis();
@@ -96,7 +96,7 @@ public class ObjectArrayTest01 {
 
                 // resize array
                 startResize = System.currentTimeMillis();
-//              _ObjectArray testArrayNew = new _ObjectArray@core(ObjectArrayTest01.class, SIZE2);
+//              _ObjectArray testArrayNew = new _ObjectArray@store(ObjectArrayTest01.class, SIZE2);
 //              for(int i = 0; i < SIZE1; i++) {
 //              testArrayNew.set(i, testArray.get(i));
 //              }

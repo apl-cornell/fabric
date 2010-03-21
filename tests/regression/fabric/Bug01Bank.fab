@@ -9,12 +9,12 @@ import fabricated.util.LinkedList;
 public class Bank[principal owner] {
 	private final label      {*L} L = new label {owner<-; owner->};
 	private final List[{*L}] {*L} accounts;
-	private final Core       {*L} location;
+	private final Store       {*L} location;
 
 	/**
 	 * create a new bank at the given location
 	 */
-	public Bank{*L} (Core {*L} location) where location actsfor owner {
+	public Bank{*L} (Store {*L} location) where location actsfor owner {
 		this.location = location;
 		this.accounts = new LinkedList[{*L}]@location();
 	}

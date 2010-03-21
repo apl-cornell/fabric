@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.w3c.dom.Document;
 
 import fabric.worker.Worker;
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 /**
  * This test uses the same basic design as the current CMS implementation.
@@ -64,7 +64,7 @@ public class XMLServlet extends HttpServlet {
         // do nothing, worker already initialized.
       }
       Worker worker = Worker.getWorker();
-      Core   local  = worker.getLocalCore();
+      Store  local  = worker.getLocalStore();
 
       this.helper = XMLServletHelper.$Impl.create(local, context.getInitParameter("uri"));
     } catch (final Exception e) {

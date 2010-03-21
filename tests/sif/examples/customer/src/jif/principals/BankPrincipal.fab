@@ -2,7 +2,7 @@ package jif.principals;
 
 import fabric.util.Map;
 import travel.Config;
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 public class BankPrincipal extends ExternalPrincipal {
   public BankPrincipal() {
@@ -13,16 +13,16 @@ public class BankPrincipal extends ExternalPrincipal {
     atomic {
       FabricWorker cl = FabricWorker.getWorker();
       if (cl != null) {
-        final Core brokerCore = cl.getCore(Config.brokerCoreName);
-        if (brokerCore != null) {
-          Map rootMap = brokerCore.getRoot();
+        final Store brokerStore = cl.getStore(Config.brokerStoreName);
+        if (brokerStore != null) {
+          Map rootMap = brokerStore.getRoot();
           if (rootMap != null) {
             Object obj = rootMap.get(Config.bankPrincipalMapKey);
             BankPrincipal bankPrincipal = null;
             if (obj instanceof BankPrincipal) {
               bankPrincipal = (BankPrincipal) obj;
             } else {
-              bankPrincipal = new BankPrincipal@brokerCore();
+              bankPrincipal = new BankPrincipal@brokerStore();
               rootMap.put(Config.bankPrincipalMapKey, bankPrincipal);
             }
             
@@ -35,8 +35,8 @@ public class BankPrincipal extends ExternalPrincipal {
     }
   }
   
-  // Don't much care what core is, we're going to create it where we want
-  public static BankPrincipal{*!:} getInstance{*!:}(Core core) {
+  // Don't much care what store is, we're going to create it where we want
+  public static BankPrincipal{*!:} getInstance{*!:}(Store store) {
       return getInstance();
   }
 }

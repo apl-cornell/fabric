@@ -43,7 +43,7 @@ package fabric.util;
  * implementations. In order to create an unmodifiable Map, subclass
  * AbstractMap and implement the <code>entrySet</code> (usually via an
  * AbstractSet).  To make it modifiable, also implement <code>put</code>,
- * and have <code>entrySet().iterator(Core)</code> support <code>remove</code>.
+ * and have <code>entrySet().iterator(Store)</code> support <code>remove</code>.
  * <p>
  *
  * It is recommended that classes which extend this support at least the
@@ -72,8 +72,8 @@ public abstract class AbstractMap implements Map
                    VALUES = 1,
                    ENTRIES = 2;
 
-  protected static final fabric.worker.Core LOCAL_CORE =
-    fabric.worker.Worker.getWorker().getLocalCore();
+  protected static final fabric.worker.Store LOCAL_STORE =
+    fabric.worker.Worker.getWorker().getLocalStore();
 
   /**
    * The cache for {@link #keySet()}.
@@ -158,7 +158,7 @@ public abstract class AbstractMap implements Map
    */
   public boolean containsKey(Object key)
   {
-    Iterator entries = entrySet().iterator(LOCAL_CORE);
+    Iterator entries = entrySet().iterator(LOCAL_STORE);
     int pos = size();
     while (--pos >= 0)
       if (equals(key, ((Map.Entry) entries.next()).getKey()))
@@ -181,7 +181,7 @@ public abstract class AbstractMap implements Map
    */
   public boolean containsValue(Object value)
   {
-    Iterator entries = entrySet().iterator(LOCAL_CORE);
+    Iterator entries = entrySet().iterator(LOCAL_STORE);
     int pos = size();
     while (--pos >= 0)
       if (equals(value, ((Map.Entry) entries.next()).getValue()))
@@ -210,7 +210,7 @@ public abstract class AbstractMap implements Map
    * Returns the value mapped by the given key. Returns <code>null</code> if
    * there is no mapping.  However, in Maps that accept null values, you
    * must rely on <code>containsKey</code> to determine if a mapping exists.
-   * This iteration takes linear time, searching entrySet().iterator(Core) of
+   * This iteration takes linear time, searching entrySet().iterator(Store) of
    * the key.  Many implementations override this method.
    *
    * @param key the key to look up
@@ -220,7 +220,7 @@ public abstract class AbstractMap implements Map
    */
   public Object get(Object key)
   {
-    Iterator entries = entrySet().iterator(LOCAL_CORE);
+    Iterator entries = entrySet().iterator(LOCAL_STORE);
     int pos = size();
     while (--pos >= 0)
       {
@@ -271,7 +271,7 @@ public abstract class AbstractMap implements Map
    * there is a slight possibility of creating two sets.
    *
    * @return a Set view of the keys
-   * @see Set#iterator(fabric.worker.Core)
+   * @see Set#iterator(fabric.worker.Store)
    * @see #size()
    * @see #containsKey(Object)
    * @see #values()
@@ -305,8 +305,8 @@ public abstract class AbstractMap implements Map
 
 	class KeysIterator implements Iterator
 	{
-	  KeysIterator(fabric.worker.Core core) {
-	    map_iterator = entrySet().iterator(core);
+	  KeysIterator(fabric.worker.Store store) {
+	    map_iterator = entrySet().iterator(store);
 	  }
 
 	  /**
@@ -358,9 +358,9 @@ public abstract class AbstractMap implements Map
 	 *
 	 * @return An iterator over the keys.
 	 */
-        public Iterator iterator(final fabric.worker.Core core)
+        public Iterator iterator(final fabric.worker.Store store)
         {
-          return new KeysIterator@core(core);
+          return new KeysIterator@store(store);
         }
       };
     return keys;
@@ -407,7 +407,7 @@ public abstract class AbstractMap implements Map
    */
   public void putAll(Map m)
   {
-    Iterator entries = m.entrySet().iterator(LOCAL_CORE);
+    Iterator entries = m.entrySet().iterator(LOCAL_STORE);
     int pos = m.size();
     while (--pos >= 0)
       {
@@ -435,7 +435,7 @@ public abstract class AbstractMap implements Map
    */
   public Object remove(Object key)
   {
-    Iterator entries = entrySet().iterator(LOCAL_CORE);
+    Iterator entries = entrySet().iterator(LOCAL_STORE);
     int pos = size();
     while (--pos >= 0)
       {
@@ -478,7 +478,7 @@ public abstract class AbstractMap implements Map
    */
   public String toString()
   {
-    Iterator entries = entrySet().iterator(LOCAL_CORE);
+    Iterator entries = entrySet().iterator(LOCAL_STORE);
     StringBuffer r = new StringBuffer("{");
     for (int pos = size(); pos > 0; pos--)
       {
@@ -508,7 +508,7 @@ public abstract class AbstractMap implements Map
    * occurs, there is a slight possibility of creating two collections.
    *
    * @return a Collection view of the values
-   * @see Collection#iterator(fabric.worker.Core)
+   * @see Collection#iterator(fabric.worker.Store)
    * @see #size()
    * @see #containsValue(Object)
    * @see #keySet()
@@ -543,8 +543,8 @@ public abstract class AbstractMap implements Map
 
 	class ValuesIterator implements Iterator
 	{
-	  ValuesIterator(fabric.worker.Core core) {
-	    map_iterator = entrySet().iterator(core);
+	  ValuesIterator(fabric.worker.Store store) {
+	    map_iterator = entrySet().iterator(store);
 	  }
 
 	  /**
@@ -596,9 +596,9 @@ public abstract class AbstractMap implements Map
 	 *
 	 * @return An iterator over the values.
 	 */
-        public Iterator iterator(final fabric.worker.Core core)
+        public Iterator iterator(final fabric.worker.Store store)
         {
-          return new ValuesIterator@core(core);
+          return new ValuesIterator@store(store);
         }
       };
     return values;

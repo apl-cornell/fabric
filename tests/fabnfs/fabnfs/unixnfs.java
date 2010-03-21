@@ -1,6 +1,6 @@
 package fabnfs;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabnfs.util.FileSystemFactory;
 
 //
@@ -32,10 +32,10 @@ class unixnfs extends nfs implements NFSConsts, MountdConsts, RPCConsts {
 //	new ntnfs(pm, tm, fsi, args);
 //    };
 
-  public static void startServer(Core localCore, Core core, FileSystemFactory factory, String[] args) {
+  public static void startServer(Store localStore, Store store, FileSystemFactory factory, String[] args) {
     PathMapper pm = new UnixPathMapper();
     TimeMapper tm = new Java3TimeMapper(); // new NTTimeMapper();
-    FileSystemInfo fsi = new FileSystemInfo(core, localCore, factory, "/");
+    FileSystemInfo fsi = new FileSystemInfo(store, localStore, factory, "/");
     new unixnfs(pm, tm, fsi, args);
 }
 

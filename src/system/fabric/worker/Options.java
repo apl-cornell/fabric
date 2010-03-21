@@ -14,9 +14,9 @@ public class Options extends fabric.common.Options {
   // This worker's name.
   public String name;
 
-  // If creating a new principal, this is the core on which the principal will
+  // If creating a new principal, this is the store on which the principal will
   // be created; otherwise, this is null.
-  public String core;
+  public String store;
 
   public int threadPool;
   public int maxConnect;
@@ -32,7 +32,7 @@ public class Options extends fabric.common.Options {
   public void setDefaultValues() {
     this.name = System.getenv("HOSTNAME");
     this.app = null;
-    this.core = null;
+    this.store = null;
     this.threadPool = 10;
     this.maxConnect = 25;
   }
@@ -57,8 +57,8 @@ public class Options extends fabric.common.Options {
     usageForFlag(out, "--time <category>", "enable timing of category");
     usageForFlag(out, "--conn <number>", "maximum number of simultaneous "
         + "connections to support", defaults.maxConnect);
-    usageForFlag(out, "--make-principal <core>",
-        "create a new principal for this worker on the given core and exit");
+    usageForFlag(out, "--make-principal <store>",
+        "create a new principal for this worker on the given store and exit");
     usageForFlag(out, "--version", "print version info and exit");
     usageForFlag(out, "--help", "print this message");
   }
@@ -111,7 +111,7 @@ public class Options extends fabric.common.Options {
     }
 
     if (args[i].equals("--make-principal")) {
-      this.core = args[i + 1];
+      this.store = args[i + 1];
       return i + 2;
     }
     

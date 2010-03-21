@@ -89,8 +89,8 @@ public class CallExt_c extends ExprExt_c {
     if (isStaticPureFabric) {
       Receiver newTarget;
 
-      if (call.name().equals("$getCore") || call.name().equals("get$label")) {
-        // HACK: A static $getCore() or get$label(). Assume this was generated
+      if (call.name().equals("$getStore") || call.name().equals("get$label")) {
+        // HACK: A static $getStore() or get$label(). Assume this was generated
         // by
         // the compiler as a default location/label and rewrite the call to
         // target

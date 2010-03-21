@@ -1,6 +1,6 @@
 package fabric.lang.arrays;
 
-import fabric.worker.Core;
+import fabric.worker.Store;
 import fabric.lang.arrays.internal._charArray;
 import fabric.lang.arrays.internal._ObjectArray;
 
@@ -55,10 +55,10 @@ public final class charArray {
   private Object root;
 
   /**
-   * Creates a new object array at the given Core with the given length.
+   * Creates a new object array at the given Store with the given length.
    * 
-   * @param core
-   *                The core on which to allocate the array.
+   * @param store
+   *                The store on which to allocate the array.
    * @param length
    *                The length of the array.
    */

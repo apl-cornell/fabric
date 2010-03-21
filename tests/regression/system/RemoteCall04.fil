@@ -7,8 +7,8 @@ public class RemoteCall04 {
   public void m() {
     i++;
 
-    Core core = Worker.getWorker().getCore("core0");
-    child = new RemoteCall04@core();
+    Store store = Worker.getWorker().getStore("store0");
+    child = new RemoteCall04@store();
   }
 
   public void m_remote(fabric.lang.Principal p) {
@@ -17,10 +17,10 @@ public class RemoteCall04 {
 
   public static void main(String[] args) {
     RemoteCall04 t = null;
-    Core core = Worker.getWorker().getCore("core0");
-    RemoteWorker remoteWorker = Worker.getWorker().getWorker("core0");
+    Store store = Worker.getWorker().getStore("store0");
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker("store0");
     atomic {
-      t = new RemoteCall04@core();
+      t = new RemoteCall04@store();
       t.i = 10;
       t.m_remote@remoteWorker(Worker.getWorker().getPrincipal());
       t.child.i = 42;

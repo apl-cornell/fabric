@@ -4,14 +4,14 @@ import jif.lang.AbstractPrincipal;
 import jif.lang.ActsForProof;
 import jif.lang.Closure;
 import jif.lang.Label;
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 public interface NodePrincipal extends AbstractPrincipal, Object {
   public static class _Proxy extends AbstractPrincipal._Proxy implements
       NodePrincipal {
 
-    public _Proxy(Core core, long onum) {
-      super(core, onum);
+    public _Proxy(Store store, long onum) {
+      super(store, onum);
     }
 
     @Override
@@ -21,11 +21,11 @@ public interface NodePrincipal extends AbstractPrincipal, Object {
     public native boolean equals(Principal p);
 
     @Override
-    public native ActsForProof findProofDownto(Core core, Principal q,
+    public native ActsForProof findProofDownto(Store store, Principal q,
         java.lang.Object searchState);
 
     @Override
-    public native ActsForProof findProofUpto(Core core, Principal p,
+    public native ActsForProof findProofUpto(Store store, Principal p,
         java.lang.Object searchState);
 
     @Override
@@ -38,7 +38,7 @@ public interface NodePrincipal extends AbstractPrincipal, Object {
 
   public static final class _Impl extends AbstractPrincipal._Impl implements
       NodePrincipal {
-    public _Impl(fabric.worker.Core $location, jif.lang.Label $label,
+    public _Impl(fabric.worker.Store $location, jif.lang.Label $label,
         java.lang.String name) {
       super($location, $label, name);
     }
@@ -50,11 +50,11 @@ public interface NodePrincipal extends AbstractPrincipal, Object {
     public native boolean equals(Principal p);
 
     @Override
-    public native ActsForProof findProofDownto(Core core, Principal q,
+    public native ActsForProof findProofDownto(Store store, Principal q,
         java.lang.Object searchState);
 
     @Override
-    public native ActsForProof findProofUpto(Core core, Principal p,
+    public native ActsForProof findProofUpto(Store store, Principal p,
         java.lang.Object searchState);
 
     @Override

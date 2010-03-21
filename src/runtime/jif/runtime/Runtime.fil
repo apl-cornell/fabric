@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import fabric.util.LinkedList;
-import fabric.worker.Core;
+import fabric.worker.Store;
 
 import jif.lang.*;
 
@@ -16,11 +16,11 @@ public class Runtime {
      * The principal under whose authority the JVM is running.
      */
     private Principal dynp;
-    private Core local;
+    private Store local;
 
     private Runtime(Principal p) {
         this.dynp = p;
-        this.local = Worker.getWorker().getLocalCore();
+        this.local = Worker.getWorker().getLocalStore();
     }
 
     /**
