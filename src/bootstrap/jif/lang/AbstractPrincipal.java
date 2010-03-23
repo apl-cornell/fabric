@@ -31,8 +31,10 @@ public interface AbstractPrincipal extends DelegatingPrincipal,
       super(store, label);
     }
 
+    @Override
     public native void addDelegatesTo(Principal p);
 
+    @Override
     public native void removeDelegatesTo(Principal p);
   }
 }
