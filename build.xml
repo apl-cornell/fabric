@@ -476,8 +476,6 @@
       <arg value="sig-classes/fabric" />
       <arg value="-sourcepath" />
       <arg value="src/signatures/fabric" />
-      <arg value="-sigcp" />
-      <arg value="sig-classes/fabric"/>
       <srcfile />
       <fileset dir="${signatures.fabric.src}" includes="**/*.fab" />
       <globmapper from="*.fab" to="*.class" />
@@ -514,8 +512,6 @@
       <arg value="sig-classes/fabil" />
       <arg value="-sourcepath" />
       <arg value="src/signatures/fabil:src/runtime" />
-      <arg value="-sigcp" />
-      <arg value="sig-classes/fabil" />
       <srcfile />
       <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
       <globmapper from="*.fil" to="*.class" />
@@ -560,8 +556,6 @@
       <arg value="${runtime.opt}" />
       <arg value="-d" />
       <arg value="rt-classes" />
-      <arg value="-sigcp" />
-      <arg value="sig-classes/fabil" />
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
       <arg value="-cp" />
@@ -610,8 +604,6 @@
       <arg value="${runtime.opt}" />
       <arg value="-d" />
       <arg value="rt-classes" />
-      <arg value="-sigcp" />
-      <arg value="sig-classes/fabil" />
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
       <arg value="-j" />
@@ -657,8 +649,6 @@
       <arg value="${runtime.opt}" />
       <arg value="-d" />
       <arg value="rt-classes" />
-      <arg value="-sigcp" />
-      <arg value="sig-classes/fabric" />
       <arg value="-sourcepath" />
       <arg value="src/runtime" />
       <arg value="-j" />
