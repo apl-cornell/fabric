@@ -270,12 +270,12 @@ abstract public class Servlet extends HttpServlet {
             if (debug(2)) {
                 // time the invocation of the action
                 DEBUG.print(laction.a.getName() + " " + laction.a.getClass()+ " ");
-                long clear = LabelUtil._Impl.getAndClearTime();
-                long time_start = System.currentTimeMillis();
+//                long clear = LabelUtil._Impl.getAndClearTime();
+//                long time_start = System.currentTimeMillis();
                 laction.a.invoke(laction.L, req);
-                long time_end = System.currentTimeMillis();
-                clear = LabelUtil._Impl.getAndClearTime();
-                DEBUG.print("Action " + (time_end - time_start) + " Dynamic_Security " + clear + " ");
+//                long time_end = System.currentTimeMillis();
+//                clear = LabelUtil._Impl.getAndClearTime();
+//                DEBUG.print("Action " + (time_end - time_start) + " Dynamic_Security " + clear + " ");
             }
             else {
                 laction.a.invoke(laction.L, req);
