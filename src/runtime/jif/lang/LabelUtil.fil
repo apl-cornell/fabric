@@ -37,35 +37,36 @@ public final class LabelUtil {
 //  };
 //  public static final boolean COUNT_TIME = false;
 
-  public static final boolean USE_CACHING = false;
+// Commenting out all caching related stuff so as to minimize confusion --kv
+//  public static final boolean USE_CACHING = false;
   
   public static final LocalStore localStore = Worker.getWorker().getLocalStore();
 
   // caches
-  private static Set/* <Pair> */cacheTrueLabelRelabels = new HashSet/* <Pair> */();
-  private static Set/* <Pair> */cacheFalseLabelRelabels = new HashSet/* <Pair> */();
-  private static Map/* <DelegationPair, Set<Pair>> */cacheTrueLabelRelabelsDependencies =
-      new HashMap/* <DelegationPair, Set<Pair>> */();
-  private static Map/* <Pair, Set<DelegationPair>> */cacheTruePolicyRelabels =
-      new HashMap/* <Pair, Set<DelegationPair>> */();
-  private static Set/* <Pair> */cacheFalsePolicyRelabels =
-      new HashSet/* <Pair> */();
-  private static Map/* <DelegationPair, Set<Pair>> */cacheTruePolicyRelabelsDependencies =
-      new HashMap/* <DelegationPair, Set<Pair>> */();
-  private static Map/* <Pair, Label> */cacheLabelJoins =
-      new HashMap/* <Pair, Label> */();
-  private static Map/* <Pair, Label> */cacheLabelMeets =
-      new HashMap/* <Pair, Label> */();
-  private static Map/* <DelegationPair, Set<Pair>> */cacheLabelJoinDependencies =
-      new HashMap/* <DelegationPair, Set<Pair>> */();
-  private static Map/* <DelegationPair, Set<Pair>> */cacheLabelMeetDependencies =
-      new HashMap/* <DelegationPair, Set<Pair>> */();
+//  private static Set/* <Pair> */cacheTrueLabelRelabels = new HashSet/* <Pair> */();
+//  private static Set/* <Pair> */cacheFalseLabelRelabels = new HashSet/* <Pair> */();
+//  private static Map/* <DelegationPair, Set<Pair>> */cacheTrueLabelRelabelsDependencies =
+//      new HashMap/* <DelegationPair, Set<Pair>> */();
+//  private static Map/* <Pair, Set<DelegationPair>> */cacheTruePolicyRelabels =
+//      new HashMap/* <Pair, Set<DelegationPair>> */();
+//  private static Set/* <Pair> */cacheFalsePolicyRelabels =
+//      new HashSet/* <Pair> */();
+//  private static Map/* <DelegationPair, Set<Pair>> */cacheTruePolicyRelabelsDependencies =
+//      new HashMap/* <DelegationPair, Set<Pair>> */();
+//  private static Map/* <Pair, Label> */cacheLabelJoins =
+//      new HashMap/* <Pair, Label> */();
+//  private static Map/* <Pair, Label> */cacheLabelMeets =
+//      new HashMap/* <Pair, Label> */();
+//  private static Map/* <DelegationPair, Set<Pair>> */cacheLabelJoinDependencies =
+//      new HashMap/* <DelegationPair, Set<Pair>> */();
+//  private static Map/* <DelegationPair, Set<Pair>> */cacheLabelMeetDependencies =
+//      new HashMap/* <DelegationPair, Set<Pair>> */();
 
   /*
    * Record that we are entering a section of code that we want to record the
    * timing of.
    */
-  static void enterTiming() {
+//  static void enterTiming() {
 //    if (COUNT_TIME) {
 //      Stats stats = (Stats) statsPerThread.get();
 //      stats.callCount++;
@@ -74,20 +75,20 @@ public final class LabelUtil {
 //        stats.enterStartTime = System.currentTimeMillis();
 //      }
 //    }
-  }
+//  }
 
   /*
    * Record that we are exiting a section of code that we want to record the
    * timing of.
    */
-  static void exitTiming() {
+//  static void exitTiming() {
 //    if (COUNT_TIME) {
 //      Stats stats = (Stats) statsPerThread.get();
 //      if ((--stats.callStackCount) == 0) {
 //        stats.totalTime += (System.currentTimeMillis() - stats.enterStartTime);
 //      }
 //    }
-  }
+//  }
 
   /*
    * Return the total time spent by the current thread in code we recorded the
@@ -95,40 +96,40 @@ public final class LabelUtil {
    * created (whichever was last). Also clears the total time recorded for this
    * thread.
    */
-  public static long getAndClearTime() {
-    long r = -1;
+//  public static long getAndClearTime() {
+//    long r = -1;
 //    if (COUNT_TIME) {
 //      Stats stats = (Stats) statsPerThread.get();
 //      r = stats.totalTime;
 //      stats.totalTime = 0;
 //    }
-    return r;
-  }
+//    return r;
+//  }
 
   /*
    * Return the total count of calls to enterTiming() since the last time this
    * method was called, and/or the thread created (whichever was last). Also
    * clears the total time recorded for this thread.
    */
-  public static int getAndClearCount() {
-    int r = -1;
+//  public static int getAndClearCount() {
+//    int r = -1;
 //    if (COUNT_TIME) {
 //      Stats stats = (Stats) statsPerThread.get();
 //      r = stats.callCount;
 //      stats.callCount = 0;
 //    }
-    return r;
-  }
+//    return r;
+//  }
 
-  public static int getAndClearTopCount() {
-    int r = -1;
+//  public static int getAndClearTopCount() {
+//    int r = -1;
 //    if (COUNT_TIME) {
 //      Stats stats = (Stats) statsPerThread.get();
 //      r = stats.topCallCount;
 //      stats.topCallCount = 0;
 //    }
-    return r;
-  }
+//    return r;
+//  }
 
   public static Label noComponents() {
     return localStore.getEmptyLabel();
@@ -172,13 +173,13 @@ public final class LabelUtil {
 
   public static ConfPolicy readerPolicy(Store store, Principal owner,
       Principal reader) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       Label label = localStore.getPublicReadonlyLabel();
       return new ReaderPolicy~label@store(owner, reader);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static ConfPolicy readerPolicy(Principal owner, Principal reader) {
@@ -187,13 +188,13 @@ public final class LabelUtil {
 
   public static ConfPolicy readerPolicy(Store store, Principal owner,
       Collection/* <Principal> */readers) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return readerPolicy(store, owner,
           PrincipalUtil.disjunction(store, readers));
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static ConfPolicy readerPolicy(Principal owner, Collection/* <Principal> */readers) {
@@ -205,14 +206,14 @@ public final class LabelUtil {
    */
   public static ConfPolicy readerPolicy(Store store, Label lbl,
       Principal owner, Principal[] readers) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       if (readers == null)
         return readerPolicy(store, owner, Collections.EMPTY_SET);
       return readerPolicy(store, owner, Arrays.asList(readers));
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static ConfPolicy readerPolicy(Label lbl, Principal owner, Principal[] readers) {
@@ -221,12 +222,12 @@ public final class LabelUtil {
 
   public static ConfPolicy readerPolicy(Store store, Principal owner,
       PrincipalSet writers) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return readerPolicy(store, owner, writers.getSet());
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static ConfPolicy readerPolicy(Principal owner, PrincipalSet writers) {
@@ -235,12 +236,12 @@ public final class LabelUtil {
 
   public static Label readerPolicyLabel(Store store, Principal owner,
       Principal reader) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return toLabel(store, readerPolicy(store, owner, reader));
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label readerPolicyLabel(Principal owner, Principal reader) {
@@ -249,15 +250,15 @@ public final class LabelUtil {
 
   public static Label readerPolicyLabel(Store store, Principal owner,
       Collection/* <Principal> */readers) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       Label l =
           toLabel(store, readerPolicy(store, owner,
               PrincipalUtil.disjunction(store, readers)));
       return l;
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label readerPolicyLabel(Principal owner, Collection/* <Principal> */readers) {
@@ -269,14 +270,14 @@ public final class LabelUtil {
    */
   public static Label readerPolicyLabel(Store store, Label lbl,
       Principal owner, Principal[] readers) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       if (readers == null)
         return readerPolicyLabel(store, owner, Collections.EMPTY_SET);
       return readerPolicyLabel(store, owner, Arrays.asList(readers));
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label readerPolicyLabel(Label lbl, Principal owner, Principal[] readers) {
@@ -285,13 +286,13 @@ public final class LabelUtil {
 
   public static Label readerPolicyLabel(Store store, Principal owner,
       PrincipalSet readers) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return readerPolicyLabel(store, owner, PrincipalUtil.disjunction(store,
           readers.getSet()));
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label readerPolicyLabel(Principal owner, PrincipalSet readers) {
@@ -299,13 +300,13 @@ public final class LabelUtil {
   }
 
   public static IntegPolicy writerPolicy(Store store, Principal owner, Principal writer) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       Label label = localStore.getPublicReadonlyLabel();
       return new WriterPolicy~label@store(owner, writer);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static IntegPolicy writerPolicy(Principal owner, Principal writer) {
@@ -314,12 +315,12 @@ public final class LabelUtil {
 
   public static IntegPolicy writerPolicy(Store store, Principal owner,
       Collection/* <Principal> */writers) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return writerPolicy(store, owner, PrincipalUtil.disjunction(store, writers));
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static IntegPolicy writerPolicy(Principal owner, Collection/* <Principal> */writers) {
@@ -327,12 +328,12 @@ public final class LabelUtil {
   }
 
   public static Label writerPolicyLabel(Store store, Principal owner, Principal writer) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return toLabel(store, writerPolicy(store, owner, writer));
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label writerPolicyLabel(Principal owner, Principal writer) {
@@ -341,13 +342,13 @@ public final class LabelUtil {
 
   public static Label writerPolicyLabel(Store store, Principal owner,
       Collection/* <Principal> */writers) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return toLabel(store, writerPolicy(store, owner,
           PrincipalUtil.disjunction(store, writers)));
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label writerPolicyLabel(Principal owner, Collection/* <Principal> */writers) {
@@ -359,14 +360,14 @@ public final class LabelUtil {
    */
   public static Label writerPolicyLabel(Store store, Label lbl, Principal owner,
       Principal[] writers) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       if (writers == null)
         return writerPolicyLabel(store, owner, Collections.EMPTY_SET);
       return writerPolicyLabel(store, owner, Arrays.asList(writers));
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label writerPolicyLabel(Label lbl, Principal owner, Principal[] writers) {
@@ -378,14 +379,14 @@ public final class LabelUtil {
    */
   public static IntegPolicy writerPolicy(Store store, Label lbl, Principal owner,
       Principal[] writers) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       if (writers == null)
         return writerPolicy(store, owner, Collections.EMPTY_SET);
       return writerPolicy(store, owner, Arrays.asList(writers));
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static IntegPolicy writerPolicy(Label lbl, Principal owner, Principal[] writers) {
@@ -394,12 +395,12 @@ public final class LabelUtil {
 
   public static IntegPolicy writerPolicy(Store store, Principal owner,
       PrincipalSet writers) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return writerPolicy(store, owner, writers.getSet());
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static IntegPolicy writerPolicy(Principal owner, PrincipalSet writers) {
@@ -407,14 +408,14 @@ public final class LabelUtil {
   }
 
   public static Label toLabel(Store store, ConfPolicy cPolicy, IntegPolicy iPolicy) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       if (cPolicy == null || iPolicy == null)
         throw new NullPointerException@localStore();
       return new PairLabel@store(cPolicy, iPolicy);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label toLabel(ConfPolicy cPolicy, IntegPolicy iPolicy) {
@@ -422,12 +423,12 @@ public final class LabelUtil {
   }
 
   public static Label toLabel(Store store, ConfPolicy policy) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return new PairLabel@store(policy, topInteg());
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label toLabel(ConfPolicy policy) {
@@ -435,12 +436,12 @@ public final class LabelUtil {
   }
 
   public static Label toLabel(Store store, IntegPolicy policy) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return new PairLabel@store(bottomConf(), policy);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label toLabel(IntegPolicy policy) {
@@ -460,17 +461,17 @@ public final class LabelUtil {
   }
   
   public static Label join(Store store, Label l1, Label l2) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       if (l1 == null) return l2;
       if (l2 == null) return l1;
 
       if (l1 instanceof PairLabel && l2 instanceof PairLabel) {
         Label result = null;
         Pair pair = new Pair(l1, l2);
-        if (USE_CACHING) {
-          result = (Label) cacheLabelJoins.get(pair);
-        }
+//        if (USE_CACHING) {
+//          result = (Label) cacheLabelJoins.get(pair);
+//        }
         if (result == null) {
           PairLabel pl1 = (PairLabel) l1;
           PairLabel pl2 = (PairLabel) l2;
@@ -478,30 +479,30 @@ public final class LabelUtil {
           result =
               new PairLabel@store(pl1.confPolicy().join(store, pl2.confPolicy(), dependencies),
                   pl1.integPolicy().join(store, pl2.integPolicy(), dependencies));
-          if (USE_CACHING) {
-            // add dependencies from delegations to the cache result
-            // i.e., what dependencies does this result rely on?
-            for (Iterator iter = dependencies.iterator(); iter.hasNext();) {
-              PrincipalUtil.DelegationPair del =
-                  (PrincipalUtil.DelegationPair) iter.next();
-              Set/* <Pair> */deps = (Set) cacheLabelJoinDependencies.get(del);
-              if (deps == null) {
-                deps = new HashSet/* <Pair> */();
-                cacheLabelJoinDependencies.put(del, deps);
-              }
-              deps.add(pair);
-            }
-            cacheLabelJoins.put(pair, result);
-          }
+//          if (USE_CACHING) {
+//            // add dependencies from delegations to the cache result
+//            // i.e., what dependencies does this result rely on?
+//            for (Iterator iter = dependencies.iterator(); iter.hasNext();) {
+//              PrincipalUtil.DelegationPair del =
+//                  (PrincipalUtil.DelegationPair) iter.next();
+//              Set/* <Pair> */deps = (Set) cacheLabelJoinDependencies.get(del);
+//              if (deps == null) {
+//                deps = new HashSet/* <Pair> */();
+//                cacheLabelJoinDependencies.put(del, deps);
+//              }
+//              deps.add(pair);
+//            }
+//            cacheLabelJoins.put(pair, result);
+//          }
         }
         return result;
 
       }
       // error! non pair labels!
       return null;
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label join(Label l1, Label l2) {
@@ -509,12 +510,12 @@ public final class LabelUtil {
   }
 
   public static Label meetLbl(Store store, Label l1, Label l2) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return meet(store, l1, l2);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label meetLbl(Label l1, Label l2) {
@@ -522,17 +523,17 @@ public final class LabelUtil {
   }
 
   public static Label meet(Store store, Label l1, Label l2) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       if (l1 == null) return l2;
       if (l2 == null) return l1;
 
       if (l1 instanceof PairLabel && l2 instanceof PairLabel) {
         Label result = null;
-        Pair pair = new Pair(l1, l2);
-        if (USE_CACHING) {
-          result = (Label) cacheLabelMeets.get(pair);
-        }
+        Pair pair = new Pair@store(l1, l2);
+//        if (USE_CACHING) {
+//          result = (Label) cacheLabelMeets.get(pair);
+//        }
         if (result == null) {
           PairLabel pl1 = (PairLabel) l1;
           PairLabel pl2 = (PairLabel) l2;
@@ -540,30 +541,30 @@ public final class LabelUtil {
           result =
               new PairLabel@store(pl1.confPolicy().meet(store, pl2.confPolicy(), dependencies),
                   pl1.integPolicy().meet(store, pl2.integPolicy(), dependencies));
-          if (USE_CACHING) {
-            // add dependencies from delegations to the cache result
-            // i.e., what dependencies does this result rely on?
-            for (Iterator iter = dependencies.iterator(); iter.hasNext();) {
-              PrincipalUtil.DelegationPair del =
-                  (PrincipalUtil.DelegationPair) iter.next();
-              Set/* <Pair> */deps = (Set) cacheLabelMeetDependencies.get(del);
-              if (deps == null) {
-                deps = new HashSet/* <Pair> */();
-                cacheLabelMeetDependencies.put(del, deps);
-              }
-              deps.add(pair);
-            }
-            cacheLabelMeets.put(pair, result);
-          }
+//          if (USE_CACHING) {
+//            // add dependencies from delegations to the cache result
+//            // i.e., what dependencies does this result rely on?
+//            for (Iterator iter = dependencies.iterator(); iter.hasNext();) {
+//              PrincipalUtil.DelegationPair del =
+//                  (PrincipalUtil.DelegationPair) iter.next();
+//              Set/* <Pair> */deps = (Set) cacheLabelMeetDependencies.get(del);
+//              if (deps == null) {
+//                deps = new HashSet/* <Pair> */();
+//                cacheLabelMeetDependencies.put(del, deps);
+//              }
+//              deps.add(pair);
+//            }
+//            cacheLabelMeets.put(pair, result);
+//          }
         }
         return result;
       }
 
       // error! non pair labels!
       return null;
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static Label meet(Label l1, Label l2) {
@@ -571,12 +572,12 @@ public final class LabelUtil {
   }
 
   public static ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return join(store, p1, p2, new HashSet/* <DelegationPair> */@store());
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static ConfPolicy join(ConfPolicy p1, ConfPolicy p2) {
@@ -585,8 +586,8 @@ public final class LabelUtil {
 
   protected static ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2,
       Set/* <DelegationPair> */s) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store();
       if (p1 instanceof JoinConfPolicy) {
         comps.addAll(((JoinConfPolicy) p1).joinComponents());
@@ -598,15 +599,15 @@ public final class LabelUtil {
       } else {
         comps.add(p2);
       }
-      comps = simplifyJoin(comps, s);
+      comps = simplifyJoin(store, comps, s);
 
       if (comps.size() == 1) {
         return (ConfPolicy) comps.iterator().next();
       }
       return new JoinConfPolicy@store(comps);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
 
   }
 
@@ -615,12 +616,12 @@ public final class LabelUtil {
   }
 
   public static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return join(store, p1, p2, new HashSet/* <DelegationPair> */@store());
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static IntegPolicy join(IntegPolicy p1, IntegPolicy p2) {
@@ -628,8 +629,8 @@ public final class LabelUtil {
   }
 
   static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2, Set/* <DelegationPair> */s) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store();
       if (p1 instanceof JoinIntegPolicy) {
         comps.addAll(((JoinIntegPolicy) p1).joinComponents());
@@ -641,15 +642,15 @@ public final class LabelUtil {
       } else {
         comps.add(p2);
       }
-      comps = simplifyJoin(comps, s);
+      comps = simplifyJoin(store, comps, s);
 
       if (comps.size() == 1) {
         return (IntegPolicy) comps.iterator().next();
       }
       return new JoinIntegPolicy@store(comps);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
 
   }
 
@@ -658,12 +659,12 @@ public final class LabelUtil {
   }
 
   public static ConfPolicy meetPol(Store store, ConfPolicy p1, ConfPolicy p2) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return meet(store, p1, p2, new HashSet/* <DelegationPair> */@store());
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static ConfPolicy meetPol(ConfPolicy p1, ConfPolicy p2) {
@@ -672,8 +673,8 @@ public final class LabelUtil {
 
   protected static ConfPolicy meet(Store store, ConfPolicy p1, ConfPolicy p2,
       Set/* <DelegationPair> */s) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store();
       if (p1 instanceof MeetConfPolicy) {
         comps.addAll(((MeetConfPolicy) p1).meetComponents());
@@ -685,15 +686,15 @@ public final class LabelUtil {
       } else {
         comps.add(p2);
       }
-      comps = simplifyMeet(comps, s);
+      comps = simplifyMeet(store, comps, s);
 
       if (comps.size() == 1) {
         return (ConfPolicy) comps.iterator().next();
       }
       return new MeetConfPolicy@store(comps);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   protected static ConfPolicy meet(ConfPolicy p1, ConfPolicy p2, Set/* <DelegationPair> */s) {
@@ -701,12 +702,12 @@ public final class LabelUtil {
   }
 
   public static IntegPolicy meetPol(Store store, IntegPolicy p1, IntegPolicy p2) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return meet(store, p1, p2, new HashSet/* <DelegationPair> */@store());
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static IntegPolicy meetPol(IntegPolicy p1, IntegPolicy p2) {
@@ -714,8 +715,8 @@ public final class LabelUtil {
   }
 
   static IntegPolicy meet(Store store, IntegPolicy p1, IntegPolicy p2, Set/* <DelegationPair> */s) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store();
       if (p1 instanceof MeetIntegPolicy) {
         comps.addAll(((MeetIntegPolicy) p1).meetComponents());
@@ -727,15 +728,15 @@ public final class LabelUtil {
       } else {
         comps.add(p2);
       }
-      comps = simplifyMeet(comps, s);
+      comps = simplifyMeet(store, comps, s);
 
       if (comps.size() == 1) {
         return (IntegPolicy) comps.iterator().next();
       }
       return new MeetIntegPolicy@store(comps);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
 
   }
 
@@ -744,158 +745,158 @@ public final class LabelUtil {
   }
 
   public static boolean equivalentTo(Label l1, Label l2) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       if (l1 == l2 || (l1 != null && l1.equals(l2))) return true;
       return relabelsTo(l1, l2) && relabelsTo(l2, l1);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static boolean isReadableBy(Label lbl, Principal p) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       Label L = toLabel(localStore, PrincipalUtil.readableByPrinPolicy(localStore, p));
       return relabelsTo(lbl, L);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
   
   public static boolean isWritableBy(Label lbl, Principal p) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       Label L = toLabel(localStore, topConf(), writerPolicy(localStore, null, p));
       return relabelsTo(lbl, L);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static boolean relabelsTo(Label from, Label to) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       if (from == null || to == null) return false;
       if (from == to || from.equals(to)) return true;
-      Pair pair = new Pair(from, to);
-      if (USE_CACHING) {
-        if (cacheTrueLabelRelabels.contains(pair)) return true;
-        if (cacheFalseLabelRelabels.contains(pair)) return false;
-      }
-      Set dependencies = new HashSet();
+      Pair pair = new Pair@localStore(from, to);
+//      if (USE_CACHING) {
+//        if (cacheTrueLabelRelabels.contains(pair)) return true;
+//        if (cacheFalseLabelRelabels.contains(pair)) return false;
+//      }
+      Set dependencies = new HashSet@localStore();
       boolean result = from != null && from.relabelsTo(to, dependencies);
-      if (USE_CACHING) {
-        if (!result) {
-          cacheFalseLabelRelabels.add(pair);
-        } else {
-          cacheTrueLabelRelabels.add(pair);
-          // add dependencies from delegations to the cache result
-          // i.e., what dependencies does this result rely on?
-          for (Iterator iter = dependencies.iterator(); iter.hasNext();) {
-            PrincipalUtil.DelegationPair del =
-                (PrincipalUtil.DelegationPair) iter.next();
-            Set/* <Pair> */deps =
-                (Set) cacheTrueLabelRelabelsDependencies.get(del);
-            if (deps == null) {
-              deps = new HashSet/* <Pair> */();
-              cacheTrueLabelRelabelsDependencies.put(del, deps);
-            }
-            deps.add(pair);
-          }
-        }
-      }
+//      if (USE_CACHING) {
+//        if (!result) {
+//          cacheFalseLabelRelabels.add(pair);
+//        } else {
+//          cacheTrueLabelRelabels.add(pair);
+//          // add dependencies from delegations to the cache result
+//          // i.e., what dependencies does this result rely on?
+//          for (Iterator iter = dependencies.iterator(); iter.hasNext();) {
+//            PrincipalUtil.DelegationPair del =
+//                (PrincipalUtil.DelegationPair) iter.next();
+//            Set/* <Pair> */deps =
+//                (Set) cacheTrueLabelRelabelsDependencies.get(del);
+//            if (deps == null) {
+//              deps = new HashSet/* <Pair> */();
+//              cacheTrueLabelRelabelsDependencies.put(del, deps);
+//            }
+//            deps.add(pair);
+//          }
+//        }
+//      }
       return result;
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static boolean relabelsTo(Policy from, Policy to) {
-    try {
-      enterTiming();
-      return relabelsTo(from, to, new HashSet/* <DelegationPair> */());
-    } finally {
-      exitTiming();
-    }
+//    try {
+//      enterTiming();
+      return relabelsTo(from, to, new HashSet/* <DelegationPair> */@localStore());
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static boolean relabelsTo(Policy from, Policy to, Set/* <DelegationPair> */s) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       if (from == null || to == null) return false;
       if (from == to || from.equals(to)) return true;
-      Pair pair = new Pair(from, to);
-      if (USE_CACHING) {
-        if (cacheTruePolicyRelabels.containsKey(pair)) {
-          s.addAll((Collection) cacheTruePolicyRelabels.get(pair));
-          return true;
-        }
-        if (cacheFalsePolicyRelabels.contains(pair)) return false;
-      }
+      Pair pair = new Pair@localStore(from, to);
+//      if (USE_CACHING) {
+//        if (cacheTruePolicyRelabels.containsKey(pair)) {
+//          s.addAll((Collection) cacheTruePolicyRelabels.get(pair));
+//          return true;
+//        }
+//        if (cacheFalsePolicyRelabels.contains(pair)) return false;
+//      }
       Set/* <DelegationPair> */dependencies =
-          new HashSet/* <DelegationPair> */();
+          new HashSet/* <DelegationPair> */@localStore();
       boolean result = from.relabelsTo(to, dependencies);
-      if (USE_CACHING) {
-        if (!result) {
-          cacheFalsePolicyRelabels.add(pair);
-        } else {
-          cacheTruePolicyRelabels.put(pair, dependencies);
-          // add dependencies from delegations to the cache result
-          // i.e., what dependencies does this result rely on?
-          for (Iterator/* <DelegationPair> */iter = dependencies.iterator(); iter
-              .hasNext();) {
-            PrincipalUtil.DelegationPair del =
-                (PrincipalUtil.DelegationPair) iter.next();
-            Set/* <Pair> */deps =
-                (Set) cacheTruePolicyRelabelsDependencies.get(del);
-            if (deps == null) {
-              deps = new HashSet/* <Pair> */();
-              cacheTruePolicyRelabelsDependencies.put(del, deps);
-            }
-            deps.add(pair);
-          }
-          s.addAll(dependencies);
-        }
-      }
+//      if (USE_CACHING) {
+//        if (!result) {
+//          cacheFalsePolicyRelabels.add(pair);
+//        } else {
+//          cacheTruePolicyRelabels.put(pair, dependencies);
+//          // add dependencies from delegations to the cache result
+//          // i.e., what dependencies does this result rely on?
+//          for (Iterator/* <DelegationPair> */iter = dependencies.iterator(); iter
+//              .hasNext();) {
+//            PrincipalUtil.DelegationPair del =
+//                (PrincipalUtil.DelegationPair) iter.next();
+//            Set/* <Pair> */deps =
+//                (Set) cacheTruePolicyRelabelsDependencies.get(del);
+//            if (deps == null) {
+//              deps = new HashSet/* <Pair> */();
+//              cacheTruePolicyRelabelsDependencies.put(del, deps);
+//            }
+//            deps.add(pair);
+//          }
+//          s.addAll(dependencies);
+//        }
+//      }
       return result;
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static String stringValue(Label lb) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       if (lb == null) return "<null>";
       return lb.toString();
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static String toString(Label lb) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       return stringValue(lb);
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
   public static int hashCode(Label lb) {
-    try {
-      enterTiming();
+//    try {
+//      enterTiming();
       if (lb == null) return 0;
       return lb.hashCode();
-    } finally {
-      exitTiming();
-    }
+//    } finally {
+//      exitTiming();
+//    }
   }
 
-  private static Set/* <Policy> */simplifyJoin(Set/* <Policy> */policies,
+  private static Set/* <Policy> */simplifyJoin(Store store, Set/* <Policy> */policies,
       Set/* <DelegationPair> */dependencies) {
-    Set/* <Policy> */needed = new LinkedHashSet/* <Policy> */();
+    Set/* <Policy> */needed = new LinkedHashSet/* <Policy> */@store();
     for (Iterator/* <Policy> */i = policies.iterator(); i.hasNext();) {
       Policy ci = (Policy) i.next();
 
@@ -919,9 +920,9 @@ public final class LabelUtil {
     return needed;
   }
 
-  private static Set/* <Policy> */simplifyMeet(Set/* <Policy> */policies,
+  private static Set/* <Policy> */simplifyMeet(Store store, Set/* <Policy> */policies,
       Set/* <DelegationPair> */dependencies) {
-    Set/* <Policy> */needed = new LinkedHashSet/* <Policy> */();
+    Set/* <Policy> */needed = new LinkedHashSet/* <Policy> */@store();
     for (Iterator/* <Policy> */i = policies.iterator(); i.hasNext();) {
       Policy ci = (Policy) i.next();
 
@@ -975,65 +976,65 @@ public final class LabelUtil {
     }
   }
 
-  static void notifyNewDelegation(Principal granter, Principal superior) {
-    try {
-      enterTiming();
-      if (USE_CACHING) {
-        // XXX for the moment, just clear out the caches.
-        cacheFalseLabelRelabels.clear();
-        cacheFalsePolicyRelabels.clear();
+//  static void notifyNewDelegation(Principal granter, Principal superior) {
+//    try {
+//      enterTiming();
+//      if (USE_CACHING) {
+//        // XXX for the moment, just clear out the caches.
+//        cacheFalseLabelRelabels.clear();
+//        cacheFalsePolicyRelabels.clear();
+//
+//        // the label meets and joins can be soundly left, they just
+//        // may not be as simplified as they could be. However, to maintain
+//        // compatability with previous behavior, we will clear the caches
+//        cacheLabelJoins.clear();
+//        cacheLabelMeets.clear();
+//        cacheLabelJoinDependencies.clear();
+//        cacheLabelMeetDependencies.clear();
+//      }
+//    } finally {
+//      exitTiming();
+//    }
+//  }
 
-        // the label meets and joins can be soundly left, they just
-        // may not be as simplified as they could be. However, to maintain
-        // compatability with previous behavior, we will clear the caches
-        cacheLabelJoins.clear();
-        cacheLabelMeets.clear();
-        cacheLabelJoinDependencies.clear();
-        cacheLabelMeetDependencies.clear();
-      }
-    } finally {
-      exitTiming();
-    }
-  }
-
-  static void notifyRevokeDelegation(Principal granter, Principal superior) {
-    try {
-      enterTiming();
-      if (USE_CACHING) {
-        PrincipalUtil.DelegationPair del =
-            new PrincipalUtil.DelegationPair(superior, granter);
-        Set/* <Pair> */deps =
-            (Set) cacheTrueLabelRelabelsDependencies.remove(del);
-        if (deps != null) {
-          for (Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-            Pair afp = (Pair) iter.next();
-            cacheTrueLabelRelabels.remove(afp);
-          }
-        }
-        deps = (Set) cacheTruePolicyRelabelsDependencies.remove(del);
-        if (deps != null) {
-          for (Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-            Pair afp = (Pair) iter.next();
-            cacheTruePolicyRelabels.remove(afp);
-          }
-        }
-        deps = (Set) cacheLabelJoinDependencies.remove(del);
-        if (deps != null) {
-          for (Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-            Pair afp = (Pair) iter.next();
-            cacheLabelJoins.remove(afp);
-          }
-        }
-        deps = (Set) cacheLabelMeetDependencies.remove(del);
-        if (deps != null) {
-          for (Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
-            Pair afp = (Pair) iter.next();
-            cacheLabelMeets.remove(afp);
-          }
-        }
-      }
-    } finally {
-      exitTiming();
-    }
-  }
+//  static void notifyRevokeDelegation(Principal granter, Principal superior) {
+//    try {
+//      enterTiming();
+//      if (USE_CACHING) {
+//        PrincipalUtil.DelegationPair del =
+//            new PrincipalUtil.DelegationPair(superior, granter);
+//        Set/* <Pair> */deps =
+//            (Set) cacheTrueLabelRelabelsDependencies.remove(del);
+//        if (deps != null) {
+//          for (Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
+//            Pair afp = (Pair) iter.next();
+//            cacheTrueLabelRelabels.remove(afp);
+//          }
+//        }
+//        deps = (Set) cacheTruePolicyRelabelsDependencies.remove(del);
+//        if (deps != null) {
+//          for (Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
+//            Pair afp = (Pair) iter.next();
+//            cacheTruePolicyRelabels.remove(afp);
+//          }
+//        }
+//        deps = (Set) cacheLabelJoinDependencies.remove(del);
+//        if (deps != null) {
+//          for (Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
+//            Pair afp = (Pair) iter.next();
+//            cacheLabelJoins.remove(afp);
+//          }
+//        }
+//        deps = (Set) cacheLabelMeetDependencies.remove(del);
+//        if (deps != null) {
+//          for (Iterator/* <Pair> */iter = deps.iterator(); iter.hasNext();) {
+//            Pair afp = (Pair) iter.next();
+//            cacheLabelMeets.remove(afp);
+//          }
+//        }
+//      }
+//    } finally {
+//      exitTiming();
+//    }
+//  }
 }

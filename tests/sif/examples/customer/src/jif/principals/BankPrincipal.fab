@@ -6,7 +6,7 @@ import fabric.worker.Store;
 
 public class BankPrincipal extends ExternalPrincipal {
   public BankPrincipal() {
-    super("customer");
+    super("bank");
   }
   
   public static BankPrincipal{*!:} getInstance{*!:}() {

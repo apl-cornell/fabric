@@ -5,7 +5,7 @@ import travel.Config;
 
 public class AirlinePrincipal extends ExternalPrincipal {
   public AirlinePrincipal() {
-    super("customer");
+    super("airline");
   }
   
   public static AirlinePrincipal{*!:} getInstance{*!:}() {

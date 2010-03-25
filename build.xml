@@ -239,7 +239,7 @@
   </copy>
 
   <!-- Now package the directory as a tar.gz file -->
-  <exec executable="tar"
+  <!--exec executable="tar"
            dir="${basedir}"
            failonerror="true"
            vmlauncher="false" >
@@ -248,10 +248,10 @@
       <arg value="-f" />
       <arg value="${name}.tar.gz" />
       <arg value="${name}/" />
-  </exec>
+  </exec-->
   
   <!-- Now delete the directory -->
-  <delete dir="${basedir}/${name}" />
+  <!--delete dir="${basedir}/${name}" /-->
 
 </target>
 
@@ -288,6 +288,7 @@
     <delete dir="${tests.classes}"/>
     <delete dir="${dist}"/>
     <delete dir="${var}"/>
+    <delete dir="${name}"/>
     <delete>
       <fileset dir="${lib}" includes="${name}*.jar"/>
     </delete>

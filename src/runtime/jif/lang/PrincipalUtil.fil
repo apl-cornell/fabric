@@ -36,12 +36,12 @@ public class PrincipalUtil {
    * synonym for the <code>actsFor</code> method.
    */
   public static boolean acts_for(Principal p, Principal q) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       return actsFor(p, q);
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
   }
 
   /**
@@ -58,8 +58,8 @@ public class PrincipalUtil {
    */
   public static ActsForProof actsForProof(Store store, Principal p, Principal q) {
     final Store localStore = Worker.getWorker().getLocalStore();
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       // try cache
       ActsForPair pair = new ActsForPair@localStore(p, q);
 //      if (LabelUtil.USE_CACHING) {
@@ -106,9 +106,9 @@ public class PrincipalUtil {
 //        cacheNotActsFor.add(pair);
 //      }
       return null;
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
   }
 
   /**
@@ -124,7 +124,7 @@ public class PrincipalUtil {
 //    }
 
     // need to notify the label cache too
-    LabelUtil.notifyNewDelegation(granter, superior);
+//    LabelUtil.notifyNewDelegation(granter, superior);
   }
 
   /**
@@ -144,7 +144,7 @@ public class PrincipalUtil {
 //      }
 //    }
     // need to notify the label cache too
-    LabelUtil.notifyRevokeDelegation(granter, superior);
+//    LabelUtil.notifyRevokeDelegation(granter, superior);
   }
 
   /**
@@ -160,8 +160,8 @@ public class PrincipalUtil {
   public static ActsForProof findActsForProof(Store store, Principal p, Principal q,
       java.lang.Object searchState) {
     final Store localStore = Worker.getWorker().getLocalStore();
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       // try the dumb things first.
       if (q == null) {
         return new DelegatesProof@store(p, q);
@@ -207,9 +207,9 @@ public class PrincipalUtil {
 
       // have failed!
       return null;
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
 
@@ -256,8 +256,8 @@ public class PrincipalUtil {
    */
   public static boolean verifyProof(ActsForProof prf, Principal actor,
       Principal granter) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       if (prf == null) return false;
       if (prf.getActor() != actor || prf.getGranter() != granter) return false;
 
@@ -306,15 +306,15 @@ public class PrincipalUtil {
 
       // unknown proof!
       return false;
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
 
   public static boolean delegatesTo(Principal granter, Principal superior) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       if (granter == null) return true;
       if (isTopPrincipal(superior)) return true;
       if (superior instanceof ConjunctivePrincipal) {
@@ -325,9 +325,9 @@ public class PrincipalUtil {
         }
       }
       return granter.delegatesTo(superior);
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
 
@@ -345,12 +345,12 @@ public class PrincipalUtil {
   }
 
   public static boolean equals(Principal p, Principal q) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       return eq(p, q);
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
 
@@ -382,8 +382,8 @@ public class PrincipalUtil {
 
   private static Capability authorize(Store store, Principal p, java.lang.Object authPrf,
       Closure c, Label lb, boolean executeNow) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       Principal closureP = c.jif$getjif_lang_Closure_P();
       Label closureL = c.jif$getjif_lang_Closure_L();
       if (closureP == p
@@ -401,9 +401,9 @@ public class PrincipalUtil {
         }
       }
       return null;
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
 
@@ -416,12 +416,12 @@ public class PrincipalUtil {
   }
 
   public static Principal bottomPrincipal() {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       return nullPrincipal();
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
   
@@ -449,12 +449,12 @@ public class PrincipalUtil {
         }
 
   public static ConfPolicy readableByPrinPolicy(Store store, Principal p) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       return new ReaderPolicy@store(topPrincipal(), p);
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
 
@@ -464,12 +464,12 @@ public class PrincipalUtil {
         }
 
   public static IntegPolicy writableByPrinPolicy(Store store, Principal p) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       return new WriterPolicy@store(topPrincipal(), p);
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
   }
 
   public static Principal disjunction(Principal left, Principal right) {
@@ -478,8 +478,8 @@ public class PrincipalUtil {
         }
 
         public static Principal disjunction(Store store, Principal left, Principal right) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       if (left == null || right == null) return null;
       if (actsFor(left, right)) return right;
       if (actsFor(right, left)) return left;
@@ -487,9 +487,9 @@ public class PrincipalUtil {
       c.add(left);
       c.add(right);
       return disjunction(store, c);
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
 
@@ -499,8 +499,8 @@ public class PrincipalUtil {
         }
 
   public static Principal conjunction(Store store, Principal left, Principal right) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       if (left == null) return right;
       if (right == null) return left;
       if (actsFor(left, right)) return left;
@@ -509,9 +509,9 @@ public class PrincipalUtil {
       c.add(left);
       c.add(right);
       return conjunction(store, c);
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
 
@@ -521,8 +521,8 @@ public class PrincipalUtil {
         }
 
   public static Principal disjunction(Store store, Collection/* <Principal> */principals) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       if (principals == null || principals.isEmpty()) {
         return topPrincipal();
       }
@@ -549,9 +549,9 @@ public class PrincipalUtil {
         }
       }
       return new DisjunctivePrincipal@store(needed);
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
 
@@ -561,8 +561,8 @@ public class PrincipalUtil {
         }
 
   public static Principal conjunction(Store store, Collection/* <Principal> */principals) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       if (principals == null || principals.isEmpty()) {
         return bottomPrincipal();
       }
@@ -590,29 +590,29 @@ public class PrincipalUtil {
         }
       }
       return new ConjunctivePrincipal@store(needed);
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
 
   public static String toString(Principal p) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       return p == null ? "_" : p.name();
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
 
   public static String stringValue(Principal p) {
-    try {
-      LabelUtil.enterTiming();
+//    try {
+//      LabelUtil.enterTiming();
       return toString(p);
-    } finally {
-      LabelUtil.exitTiming();
-    }
+//    } finally {
+//      LabelUtil.exitTiming();
+//    }
 
   }
 
