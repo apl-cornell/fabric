@@ -32,7 +32,7 @@
         <delete dir="${sif.sig-classes}" />
         <subant target="clean">
             <fileset dir="examples" includes="hello/build.xml"/>
-	          <fileset dir="examples" includes="calendar/build.xml"/>
+	          <fileset dir="examples" includes="customer/build.xml"/>
 	          <!--fileset dir="examples" includes="calendartwo/build.xml"/-->
         </subant>
     </target>
@@ -179,7 +179,7 @@
         </subant-->
         <subant target="compile">
           <!--fileset dir="examples" includes="hello/build.xml"/-->
-          <fileset dir="examples" includes="calendar/build.xml"/>
+          <fileset dir="examples" includes="customer/build.xml"/>
           <!--fileset dir="examples" includes="calendartwo/build.xml"/-->
         </subant>
     </target>
