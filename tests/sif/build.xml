@@ -115,6 +115,7 @@
                         skipemptyfilesets="true"
                         vmlauncher="false">
             <arg value="${fabric.home}/bin/fabc"/>
+            <arg value="-g"/>
             <arg value="-d"/>
             <arg value="${sif.classes}"/>
             <arg value="-sourcepath"/>
@@ -155,6 +156,7 @@
                skipemptyfilesets="true"
                vmlauncher="false">
             <arg value="${fabric.home}/bin/fabc" />
+		  <arg value="-g"/>
         	  <arg value="-cp"				 /> <arg value="${fabric.home}/tests/jif/classes"/>
         	  <arg value="-sig"/>
         	<!--        	

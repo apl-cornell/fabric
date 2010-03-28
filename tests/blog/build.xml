@@ -64,6 +64,7 @@
 	      skipemptyfilesets="true"
 	      vmlauncher="false">
 	    <arg value="${fabric.home}/bin/filc" />
+	    <arg value="-g"     />
 	    <arg value="-j"     /> <arg value="-Xmx500M" />
 	    <arg value="-j"     /> <arg value="-Xss100M" />
 	    <arg value="-cp"    /> <arg pathref="blog.classpath" />

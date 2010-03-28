@@ -20,6 +20,7 @@
 						skipemptyfilesets="true"
 						vmlauncher="false">
 				<arg value="${basedir}/../../bin/fabc" />
+				<arg value="-g" />
 				<arg value="-d" /> <arg value="classes"/>
 				<arg value="-e" />
 				<arg value="-debugpositions" />

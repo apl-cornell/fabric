@@ -96,6 +96,11 @@
   <!-- filc executable -->
   <property name="filc" location="${bin}/filc" />
 
+  <!-- Debug flag to be passed to fabc and filc. -->
+  <!-- The "dist" target should disable debugging information by setting this
+       to the empty string. -->
+  <property name="debug.flag" value="-g" />
+
   <path id="standard.classpath">
     <pathelement location="${classes}"/>
 
@@ -417,6 +422,7 @@
         skipemptyfilesets="true"
         vmlauncher="false">
       <arg value="${filc}" />
+      <arg line="${debug.flag}" />
       <arg value="-d" />
       <arg value="tests/classes" />
       <arg value="-sourcepath" />
@@ -554,6 +560,7 @@
         skipemptyfilesets="true"
         vmlauncher="false">
       <arg value="${filc}" />
+      <arg line="${debug.flag}" />
       <arg value="${runtime.opt}" />
       <arg value="-d" />
       <arg value="rt-classes" />
@@ -602,6 +609,7 @@
         skipemptyfilesets="true"
         vmlauncher="false">
       <arg value="${filc}" />
+      <arg line="${debug.flag}" />
       <arg value="${runtime.opt}" />
       <arg value="-d" />
       <arg value="rt-classes" />
@@ -647,6 +655,7 @@
         skipemptyfilesets="true"
         vmlauncher="false">
       <arg value="${fabc}" />
+      <arg line="${debug.flag}" />
       <arg value="${runtime.opt}" />
       <arg value="-d" />
       <arg value="rt-classes" />

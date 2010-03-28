@@ -25,6 +25,7 @@
                     skipemptyfilesets="true"
                     vmlauncher="false">
         <arg value="${fabric.home}/bin/fabc"/>
+        <arg value="-g"/>
         <arg value="-d"/>
         <arg value="${basedir}/web/WEB-INF/classes"/>
   			<arg value="-cp" />
@@ -49,6 +50,7 @@
                     skipemptyfilesets="true"
                     vmlauncher="false">
         <arg value="${fabric.home}/bin/fabc"/>
+        <arg value="-g"/>
         <arg value="-d"/>
         <arg value="${basedir}/web/WEB-INF/classes"/>
   			<arg value="-cp" />
@@ -86,6 +88,7 @@
                     skipemptyfilesets="true"
                     vmlauncher="false">
         <arg value="${fabric.home}/bin/fabc"/>
+        <arg value="-g"/>
         <arg value="-d"/>
         <arg value="${basedir}/web/WEB-INF/classes"/>
   			<arg value="-cp" />
