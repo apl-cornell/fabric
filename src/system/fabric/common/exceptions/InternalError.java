@@ -2,6 +2,7 @@ package fabric.common.exceptions;
 
 public class InternalError extends Error {
   public InternalError() {
+    report();
   }
 
   public InternalError(Throwable cause) {
