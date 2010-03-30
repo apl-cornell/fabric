@@ -2,12 +2,15 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import fabric.common.net.*;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 import fabric.common.net.naming.BogusNameService;
 
 public class Client extends Thread {
+  private static Logger           logger = Logger.getLogger("client");
   private static SubSocketFactory factory;
   private static String[]         names;
   private static String[]         msgs;
@@ -17,35 +20,32 @@ public class Client extends Thread {
     Random rand = new Random();
     try {
       while (true) {
-        try { sleep(1000 + rand.nextInt(3000)); } catch (InterruptedException e) {}
-
         String name = names[rand.nextInt(names.length)];
-        System.out.println("connecting to " + name);
+        logger.info("connecting to " + name);
         SubSocket   sock = factory.createSocket(name);
 
         DataOutputStream out = new DataOutputStream(sock.getOutputStream());
         DataInputStream   in = new DataInputStream(sock.getInputStream());
         
         String request = msgs[rand.nextInt(msgs.length)];
-        System.out.println("sending " + shorten(request));
+        logger.info("sending " + shorten(request));
         
         out.writeUTF(request);
         out.flush();
         
-        System.out.println("receiving reply...");
+        logger.info("receiving reply...");
         String response = in.readUTF();
-        System.out.println("received " + shorten(response));
+        logger.info("received " + shorten(response));
         
         if (!request.equals(response))
           throw new IOException("got wrong reply back");
         
         // TODO:
-        // System.out.println("closing socket");
+        // logger.info("closing socket");
         // sock.close();
       }
     } catch (IOException e) {
-      e.printStackTrace();
-      System.err.println("client thread dying...");
+      logger.log(Level.SEVERE, "client thread dying...", e);
     }
   }
   

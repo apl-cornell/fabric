@@ -1,12 +1,15 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import fabric.common.net.*;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 import fabric.common.net.naming.BogusNameService;
 
 public class EchoServer extends Thread {
+  private static Logger                 logger = Logger.getLogger("server");
   private static SubServerSocketFactory factory;
   
   private final String          name;
@@ -23,8 +26,7 @@ public class EchoServer extends Thread {
       while (true)
         new Handler(serverSocket.accept()).start();
     } catch(IOException e) {
-      e.printStackTrace();
-      System.err.println("server socket [" + name + "] dying...");
+      logger.log(Level.SEVERE, "server socket [" + name + "] dying...", e);
     }
   }
   
@@ -33,15 +35,15 @@ public class EchoServer extends Thread {
       DataInputStream   in = new DataInputStream(sock.getInputStream());
       DataOutputStream out = new DataOutputStream(sock.getOutputStream());
 
-      System.out.println(name + " receiving");
+      logger.info(name + " receiving");
       String request = in.readUTF();
       
-      try { sleep(100); } catch(InterruptedException e) {}
-      
-      System.out.println(name + " echoing: " + request);
+      logger.info(name + " echoing: " + request);
 
       out.writeUTF(request);
       out.flush();
+      
+      logger.info(name + " sent");
       // TODO
       // sock.close();
     } catch (final IOException e) {
