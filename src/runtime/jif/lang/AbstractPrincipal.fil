@@ -24,17 +24,13 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
       this.jif$init();
     }
     
-//    public AbstractPrincipal(fabric.lang.Principal p) {
-//        // TODO : Should we just ignore p?
-//        super();
-//        this.jif$init();
-//      }    
-    
     private void jif$init() {
       superiors = new HashMap();
       
-      // XXX HACK
-      superiors.keySet();
+    // XXX HACK Make read-only operations on principals really read-only. This
+    // creates the set view of the map's keys so that future calls to keySet()
+    // will not modify the hashmap object.
+    superiors.keySet();
     }
     
     protected AbstractPrincipal jif$lang$AbstractPrincipal$(final String name) {
