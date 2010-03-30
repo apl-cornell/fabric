@@ -192,6 +192,7 @@ abstract class Channel extends Thread {
     public void receiveData(byte[] b) throws IOException {
       logger.fine("putting data in pipe");
       sink.write(b);
+      sink.flush();
     }
   }
 
