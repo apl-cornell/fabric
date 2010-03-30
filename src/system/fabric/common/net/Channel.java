@@ -11,6 +11,8 @@ import java.io.PipedOutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import fabric.common.net.handshake.ShakenSocket;
 
@@ -22,6 +24,8 @@ import fabric.common.net.handshake.ShakenSocket;
  * @author mdgeorge
  */
 abstract class Channel extends Thread {
+  private static Logger logger = Logger.getLogger("fabric.common.net");
+  
   private final DataOutputStream out;
   private final DataInputStream  in;
   protected final Socket           sock;
@@ -71,6 +75,9 @@ abstract class Channel extends Thread {
 
   /** send data */
   public synchronized void sendData(int sequence, byte[] data, int offset, int len) throws IOException {
+    if (logger.isLoggable(Level.FINE))
+      logger.fine("sending " + len + " bytes of data");
+    
     out.writeInt(sequence);
     out.writeInt(len);
     out.write(data, offset, len);
@@ -129,6 +136,10 @@ abstract class Channel extends Thread {
 
         byte[] buf = new byte[len];
         in.read(buf);
+        
+        if (logger.isLoggable(Level.FINE))
+          logger.fine("received " + len + " bytes");
+        
         recvData(sequenceNumber, buf);
       }
     } catch (final IOException exc) {
@@ -179,6 +190,7 @@ abstract class Channel extends Thread {
 
     /** forward data to the reading thread */
     public void receiveData(byte[] b) throws IOException {
+      logger.fine("putting data in pipe");
       sink.write(b);
     }
   }
