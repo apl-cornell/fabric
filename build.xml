@@ -12,10 +12,10 @@
   <!-- Project name -->
   <property name="name" value="fabric" />
 
-  <property file="${basedir}/config.properties" />
-
   <!-- set the prefix for accessing environment variables -->
   <property environment="env" />
+
+  <property file="${basedir}/config.properties" />
 
   <!-- Polyglot installation -->
   <!-- If it is not defined in the properties file, use the environment variable $POLYGLOT. -->
