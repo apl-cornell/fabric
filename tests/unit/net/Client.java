@@ -18,6 +18,10 @@ public class Client extends Thread {
   @Override
   public void run() {
     Random rand = new Random();
+    
+    int  n    = 0;
+    long time = System.currentTimeMillis();
+    
     try {
       while (true) {
         String name = names[rand.nextInt(names.length)];
@@ -43,6 +47,12 @@ public class Client extends Thread {
         // TODO:
         // logger.info("closing socket");
         // sock.close();
+        
+        if (++n % 10 == 0) {
+          long now = System.currentTimeMillis();
+          System.out.println("10 msgs exchanged: " + (now - time) + "ms");
+          time = now;
+        }
       }
     } catch (IOException e) {
       logger.log(Level.SEVERE, "client thread dying...", e);
