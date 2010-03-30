@@ -24,7 +24,7 @@ public class EchoServer extends Thread {
   public void run() {
     try {
       while (true)
-        new Handler(serverSocket.accept()).start();
+        process(serverSocket.accept());
     } catch(IOException e) {
       logger.log(Level.SEVERE, "server socket [" + name + "] dying...", e);
     }
