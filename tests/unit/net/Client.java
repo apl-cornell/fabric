@@ -48,9 +48,9 @@ public class Client extends Thread {
         // logger.info("closing socket");
         // sock.close();
         
-        if (++n % 10 == 0) {
+        if (++n % 1000 == 0) {
           long now = System.currentTimeMillis();
-          System.out.println("10 msgs exchanged: " + (now - time) + "ms");
+          System.out.println("1000 msgs exchanged: " + (now - time) + "ms");
           time = now;
         }
       }
