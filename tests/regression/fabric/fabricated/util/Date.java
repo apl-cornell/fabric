@@ -21,7 +21,7 @@ public interface Date
       );
     
     public fabricated.util.Date
-      fabricated$util$Date: 2009-07-31 05:35:16 $(
+      fabricated$util$Date$(
       final int pYear);
     
     final public static java.lang.String
@@ -197,13 +197,13 @@ public interface Date
         }
         
         public fabricated.util.Date
-          fabricated$util$Date: 2009-07-31 05:35:16 $(
+          fabricated$util$Date$(
           int arg1) {
             return ((fabricated.
                       util.
                       Date)
                       fetch()).
-                     fabricated$util$Date: 2009-07-31 05:35:16 $(
+                     fabricated$util$Date$(
                      arg1);
         }
         
@@ -322,16 +322,15 @@ public interface Date
                         util.
                         Date.
                         _Impl(
-                        ,
                         lbl,
                         lbl).
                         $getProxy()).
-                     fabricated$util$Date: 2009-07-31 05:35:16 $(
+                     fabricated$util$Date$(
                      0);
         }
         
         public fabricated.util.Date
-          fabricated$util$Date: 2009-07-31 05:35:16 $(
+          fabricated$util$Date$(
           final int pYear) {
             ((fabricated.util.Date.
                _Impl)
