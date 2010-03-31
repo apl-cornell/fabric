@@ -34,6 +34,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return "fabric.lang.Principal";
   }
 
+  @Override
+  public String RuntimePackageName() {
+    return "fabric.runtime";
+  }
+
   @SuppressWarnings("unchecked")
   @Override
   public List defaultPackageImports() {

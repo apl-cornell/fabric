@@ -2,7 +2,7 @@ package travel;
 
 import java.io.PrintStream;
 import fabric.util.Map;
-import jif.runtime.Runtime;
+import fabric.runtime.Runtime;
 
 public class Main {
     public static void main{}(String[]{} args) {

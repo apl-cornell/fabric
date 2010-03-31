@@ -1,5 +1,5 @@
 import java.io.PrintStream;
-import jif.runtime.Runtime;
+import fabric.runtime.Runtime;
 
 public class Hello
 {

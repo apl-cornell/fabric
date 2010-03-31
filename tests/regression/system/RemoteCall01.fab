@@ -1,6 +1,6 @@
 package system;
 
-import jif.runtime.Runtime;
+import fabric.runtime.Runtime;
 import java.io.PrintStream;
 
 public class RemoteCall01 {

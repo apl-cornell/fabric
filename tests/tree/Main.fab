@@ -1,10 +1,10 @@
 package tree;
 
 //import java.util.Random;
+import fabric.runtime.Runtime;
 import fabric.worker.AbortException;
 import fabric.worker.Store;
 import fabric.util.Map;
-import jif.runtime.Runtime;
 import java.io.PrintStream;
 
 public class Main {

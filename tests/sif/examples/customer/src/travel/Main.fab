@@ -1,8 +1,8 @@
 package travel;
 
 import java.io.PrintStream;
+import fabric.runtime.Runtime;
 import fabric.util.Map;
-import jif.runtime.Runtime;
 
 public class Main {
     public Main() {

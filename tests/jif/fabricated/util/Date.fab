@@ -1,6 +1,6 @@
 package fabricated.util;
 
-import jif.runtime.Runtime;
+import fabric.runtime.Runtime;
 import fabricated.lang.JifObject;
 import fabricated.lang.JifString;
 import fabricated.lang.Hashable;
