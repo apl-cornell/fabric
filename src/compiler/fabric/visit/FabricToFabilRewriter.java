@@ -48,10 +48,6 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     if (fabric_ts.typeEquals(t, fabric_ts.RemoteWorker())) {
       return canonical(fabil_nf, fabil_ts.RemoteWorker(), pos);
     }
-
-    if (fabric_ts.isPrincipal(t)) {
-      return fabil_nf.TypeNodeFromQualifiedName(pos, "fabric.lang.Principal");
-    }
     
     if (fabric_ts.isFabricArray(t)) {
       return fabil_nf.FabricArrayTypeNode(pos, typeToJava(t.toArray().base(), pos));
