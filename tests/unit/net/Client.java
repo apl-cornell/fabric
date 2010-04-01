@@ -62,7 +62,7 @@ public class Client extends Thread {
   private static String shorten(String message) {
     // TODO
     if (message.length() > 25)
-      message = message.substring(0, 8) + " ... "
+      message = message.substring(0, 6) + " ... "
               + message.substring(message.length() - 12, message.length());
     return message;
   }
@@ -78,9 +78,15 @@ public class Client extends Thread {
     names = args;
     
     
-    msgs = new String[2];
+    msgs = new String[3];
     msgs[0] = "hello world";
     msgs[1] = "moo";
+    
+    StringBuilder msg = new StringBuilder("A ");
+    for (int i = 0; i < 1000; i ++)
+      msg.append("very, ");
+    msg.append("very long message");
+    msgs[2] = msg.toString();
     
     for (int i = 0; i < 1; i++)
       new Client().start();
