@@ -16,8 +16,6 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     private String name;
 
     private Map superiors; // treat this like a set
-    
-    public static LocalStore localStore = Worker.getWorker().getLocalStore();
 
     public AbstractPrincipal() {
       super();
@@ -90,6 +88,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     }
 
     public ActsForProof findProofUpto(Store store, Principal p, Object searchState) {
+        LocalStore localStore = Worker.getWorker().getLocalStore();
         Iterator i = this.superiors.keySet().iterator();
         while(i.hasNext()) {
             Principal s = (Principal) i.next();
