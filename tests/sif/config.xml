@@ -90,10 +90,7 @@
 		<pathelement location="${fabric.home}/rt-classes" />
 		<pathelement location="${fabric.home}/classes" />		
 		<pathelement location="${jif.home}/classes" />
-		<fileset dir="${jif.home}/lib">
-            <include name="*.jar" />
-            <exclude name="*sig.jar" />
-        </fileset>
+		<pathelement location="${jif.home}/lib/jif.jar" />
 		<pathelement path="${java.class.path}" />
 	</path>
 
