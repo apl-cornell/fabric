@@ -292,7 +292,7 @@ public final class TransactionManager {
         // Update data structures to reflect the commit.
         current.commitNested();
         logger.finest(current + " committed");
-        if (parent.tid.equals(current.tid.parent)) {
+        if (parent != null && parent.tid.equals(current.tid.parent)) {
           // Parent frame represents parent transaction. Pop the stack.
           current = parent;
         } else {
