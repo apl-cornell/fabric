@@ -2,7 +2,7 @@ package fabric.lang.arrays;
 
 import fabric.worker.Store;
 import fabric.lang.Object;
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 public interface longArray extends Object {
   long get(int i);

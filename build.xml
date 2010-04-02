@@ -118,13 +118,8 @@
     <pathelement path="${polyglot.home}/lib/JFlex.jar" />
 
     <!-- the Jif classes -->
-    <pathelement location="${jif.home}/rt-classes" />
-    <pathelement location="${jif.home}/lib-classes" />
     <pathelement location="${jif.home}/classes" />
-    <fileset dir="${jif.home}/lib">
-      <include name="*.jar" />
-    </fileset>
-    <pathelement location="${jif.home}/src" />
+    <pathelement location="${jif.home}/lib/jif.jar" />
 
     <pathelement path="${java.class.path}" />
   </path>

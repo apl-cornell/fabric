@@ -11,7 +11,7 @@ import fabric.worker.transaction.TransactionManager;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 public interface _shortArray extends Object {
   int get$length();

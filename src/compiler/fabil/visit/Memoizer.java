@@ -136,7 +136,7 @@ public class Memoizer extends NodeVisitor {
     // XXX HACK!
     ClassType ct = (ClassType)mi.container();
     return mi.name().equals("hashCode") && mi.formalTypes().isEmpty() 
-        && ct.fullName().equals("jif.lang.PairLabel");
+        && ct.fullName().equals("fabric.lang.security.PairLabel");
   }
   
   private static int freshTid = 0;

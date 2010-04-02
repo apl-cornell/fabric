@@ -15,10 +15,10 @@ import java.util.logging.Logger;
 
 import javax.net.ssl.*;
 
-import jif.lang.ConfPolicy;
-import jif.lang.IntegPolicy;
-import jif.lang.Label;
-import jif.lang.LabelUtil;
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.IntegPolicy;
+import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
 import fabric.worker.debug.Timing;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;

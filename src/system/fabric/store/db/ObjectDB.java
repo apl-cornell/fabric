@@ -9,10 +9,10 @@ import java.util.Iterator;
 
 import javax.security.auth.x500.X500Principal;
 
-import jif.lang.Label;
-import jif.lang.PairLabel;
-import jif.lang.ReaderPolicy;
-import jif.lang.WriterPolicy;
+import fabric.lang.security.Label;
+import fabric.lang.security.PairLabel;
+import fabric.lang.security.ReaderPolicy;
+import fabric.lang.security.WriterPolicy;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.remote.RemoteWorker;

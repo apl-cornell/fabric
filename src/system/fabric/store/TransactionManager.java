@@ -3,7 +3,7 @@ package fabric.store;
 import java.security.PrivateKey;
 import java.util.*;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 import fabric.worker.*;
 import fabric.worker.Worker.Code;
 import fabric.worker.remote.RemoteWorker;

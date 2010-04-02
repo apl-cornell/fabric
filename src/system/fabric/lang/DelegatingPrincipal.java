@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.util.Iterator;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.common.RefTypeEnum;

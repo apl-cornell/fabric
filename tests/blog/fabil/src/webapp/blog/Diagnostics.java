@@ -4,7 +4,7 @@ import java.net.InetAddress;
 
 import fabric.util.Map;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 public class Diagnostics {
 

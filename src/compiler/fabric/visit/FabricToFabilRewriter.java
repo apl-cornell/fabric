@@ -3,24 +3,21 @@ package fabric.visit;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabil.FabILOptions;
-import fabil.ast.FabILNodeFactory;
-import fabil.types.FabILTypeSystem;
-import fabric.ast.FabricNodeFactory;
-import fabric.types.FabricArrayType;
-import fabric.types.FabricTypeSystem;
+import jif.translate.JifToJavaRewriter;
+import jif.types.Param;
+import jif.types.label.Label;
 import polyglot.ast.Call;
 import polyglot.ast.Expr;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.Job;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
-import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import jif.translate.JifToJavaRewriter;
-import jif.types.Param;
-import jif.types.label.Label;
-import jif.types.principal.Principal;
+import fabil.FabILOptions;
+import fabil.ast.FabILNodeFactory;
+import fabil.types.FabILTypeSystem;
+import fabric.ast.FabricNodeFactory;
+import fabric.types.FabricTypeSystem;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
   protected boolean principalExpected = false;
@@ -32,7 +29,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
 
   @Override
   public String runtimeLabelUtil() {
-    return "jif.lang.LabelUtil";
+    return jif_ts().LabelUtilClassName();
   }
 
   @Override

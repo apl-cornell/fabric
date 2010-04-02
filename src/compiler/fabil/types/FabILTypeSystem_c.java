@@ -1,5 +1,6 @@
 package fabil.types;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   public Type Label() {
-    return load("jif.lang.Label");
+    return load("fabric.lang.security.Label");
   }
 
   public ClassType InternalError() {
@@ -91,11 +92,12 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public List defaultPackageImports() {
     // Include fabric.lang as a default import.
-    List<String> result = super.defaultPackageImports();
+    List<String> result = new ArrayList<String>(6);
     result.add("fabric.lang");
-    result.add("jif.lang");
+    result.add("fabric.lang.security");
     result.add("fabric.worker");
     result.add("fabric.worker.remote");
+    result.addAll(super.defaultPackageImports());
     return result;
   }
 
@@ -398,5 +400,17 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     Flags f = super.legalInterfaceFlags();
     f = f.set(FabILFlags.NONFABRIC);
     return f;
+  }
+
+  @Override
+  public String translateClass(Resolver c, ClassType t) {
+    // Fully qualify classes in fabric.lang.security.
+    if (t.package_() != null) {
+      if (t.package_().equals(createPackage("fabric.lang.security"))) {
+        return super.translateClass(null, t);
+      }
+    }
+    
+    return super.translateClass(c, t);
   }
 }

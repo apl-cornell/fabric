@@ -1,6 +1,6 @@
 package sif.html;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 /**
  * A non-breaking space.

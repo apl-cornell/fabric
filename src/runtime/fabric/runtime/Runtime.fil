@@ -6,8 +6,6 @@ import java.util.GregorianCalendar;
 import fabric.util.LinkedList;
 import fabric.worker.Store;
 
-import jif.lang.*;
-
 /**
  * The runtime interface between Fabric programs and the underlying system.
  * Ported from Jif.

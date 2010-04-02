@@ -6,7 +6,7 @@ import java.io.ObjectOutput;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 import fabric.worker.*;
 import fabric.worker.debug.Timing;
 import fabric.worker.remote.RemoteWorker;

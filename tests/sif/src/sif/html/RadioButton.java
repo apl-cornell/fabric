@@ -1,7 +1,7 @@
 package sif.html;
 
 import sif.servlet.HTMLWriter;
-import jif.lang.Label;
+import fabric.lang.security.Label;
 import fabric.lang.Principal;
 
 /**

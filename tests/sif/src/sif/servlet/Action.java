@@ -2,7 +2,7 @@ package sif.servlet;
 
 import javax.servlet.ServletException;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 /**
  * @author andru

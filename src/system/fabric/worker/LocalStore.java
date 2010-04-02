@@ -5,11 +5,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import jif.lang.ConfPolicy;
-import jif.lang.IntegPolicy;
-import jif.lang.Label;
-import jif.lang.LabelUtil;
-import jif.lang.PrincipalUtil.TopPrincipal;
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.IntegPolicy;
+import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
+import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.common.ONumConstants;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;

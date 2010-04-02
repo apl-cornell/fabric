@@ -1,8 +1,8 @@
 package sif.html;
 
 import sif.servlet.HTMLWriter;
-import jif.lang.Label;
-import jif.lang.LabelUtil;
+import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
 
 /** A Node represents part of an HTML document.
  *  It can be written out to an HTMLWriter in a

@@ -44,7 +44,7 @@ public interface FabILTypeSystem extends TypeSystem {
   /** The ClassType of fabric.worker.Store. */
   Type Store();
 
-  /** The ClassType of jif.lang.Label. */
+  /** The ClassType of fabric.lang.security.Label. */
   Type Label();
 
   ClassType InternalError();

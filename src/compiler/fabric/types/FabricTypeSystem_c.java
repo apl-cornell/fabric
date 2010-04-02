@@ -39,13 +39,30 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return "fabric.runtime";
   }
 
+  @Override
+  public String PrincipalUtilClassName() {
+    return "fabric.lang.security.PrincipalUtil";
+  }
+
+  @Override
+  public String LabelClassName() {
+    return "fabric.lang.security.Label";
+  }
+
+  @Override
+  public String LabelUtilClassName() {
+    return "fabric.lang.security.LabelUtil";
+  }
+
   @SuppressWarnings("unchecked")
   @Override
   public List defaultPackageImports() {
     // Include fabric.lang and fabric.worker as default imports.
-    List<String> result = super.defaultPackageImports();
+    List<String> result = new ArrayList<String>(5);
     result.add("fabric.lang");
+    result.add("fabric.lang.security");
     result.add("fabric.worker");
+    result.addAll(super.defaultPackageImports());
     return result;
   }
   
@@ -330,5 +347,17 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
     return new FabricArrayType_c(this, pos, type,
                                  /*isConst */ false, /*isNonConst*/ true,
                                  /*isNative*/ true);
+  }
+
+  @Override
+  public String translateClass(Resolver c, ClassType t) {
+    // Fully qualify classes in fabric.lang.security.
+    if (t.package_() != null) {
+      if (t.package_().equals(createPackage("fabric.lang.security"))) {
+        return super.translateClass(null, t);
+      }
+    }
+    
+    return super.translateClass(c, t);
   }
 }

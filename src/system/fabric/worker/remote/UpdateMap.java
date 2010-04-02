@@ -10,7 +10,7 @@ import java.util.*;
 
 import javax.crypto.Cipher;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 import fabric.worker.AbortException;
 import fabric.worker.Worker;

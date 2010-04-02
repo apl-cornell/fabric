@@ -5,7 +5,7 @@ import static fabric.worker.transaction.Log.CommitState.Values.*;
 import java.util.*;
 import java.util.logging.Logger;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 import fabric.worker.*;
 import fabric.worker.debug.Timing;
 import fabric.worker.remote.RemoteWorker;

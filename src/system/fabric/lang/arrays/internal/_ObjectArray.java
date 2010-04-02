@@ -11,7 +11,7 @@ import fabric.common.RefTypeEnum;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 public interface _ObjectArray<T extends Object> extends Object {
   int get$length();

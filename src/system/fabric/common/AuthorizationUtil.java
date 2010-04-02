@@ -1,7 +1,7 @@
 package fabric.common;
 
-import jif.lang.Label;
-import jif.lang.LabelUtil;
+import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.common.util.OidKeyHashMap;

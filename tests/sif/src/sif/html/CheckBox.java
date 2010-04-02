@@ -2,7 +2,7 @@ package sif.html;
 
 import sif.servlet.HTMLWriter;
 import sif.servlet.Request;
-import jif.lang.Label;
+import fabric.lang.security.Label;
 import fabric.lang.Principal;
 
 public final class CheckBox extends InputNode {

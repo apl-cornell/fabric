@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import fabric.util.Iterator;
 import fabric.util.Collection;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 import webapp.PageLoader;
 import webapp.Action;

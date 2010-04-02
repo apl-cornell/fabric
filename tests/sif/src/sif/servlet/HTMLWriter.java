@@ -6,7 +6,7 @@ import java.util.*;
 
 import sif.html.*;
 
-import jif.lang.*;
+import fabric.lang.security.*;
 
 /**
  * @author andru

@@ -6,8 +6,8 @@ import java.util.*;
 import sif.servlet.*;
 import sif.servlet.HTMLWriter.LevelStack;
 
-import jif.lang.Label;
-import jif.lang.LabelUtil;
+import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
 
 public class PrecomputedPage {	    
     final Label L;

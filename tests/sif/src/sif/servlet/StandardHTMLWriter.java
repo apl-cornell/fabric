@@ -5,7 +5,7 @@ import java.util.*;
 
 import sif.html.*;
 
-import jif.lang.*;
+import fabric.lang.security.*;
 
 /**
  * Just prints stuff directly.

@@ -2,8 +2,8 @@ package sif.html;
 
 import sif.servlet.Servlet;
 import fabric.lang.Principal;
-import jif.lang.Label;
-import jif.lang.PrincipalUtil;
+import fabric.lang.security.Label;
+import fabric.lang.security.PrincipalUtil;
 
 
 /**

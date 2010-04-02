@@ -1,7 +1,7 @@
 package sif.html;
 
 import sif.servlet.HTMLWriter;
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 public final class Body extends BlockContainer {
     public Body(Label L, Label E, Label cL, Label cE, Node contents) {

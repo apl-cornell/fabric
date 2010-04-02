@@ -1,14 +1,15 @@
 package fabric.translate;
 
-import fabil.ast.FabILNodeFactory;
-import fabric.types.FabricTypeSystem;
-
-import polyglot.ast.*;
-import polyglot.types.*;
-import polyglot.util.Position;
-import polyglot.visit.NodeVisitor;
 import jif.translate.BinaryToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
+import polyglot.ast.Binary;
+import polyglot.ast.Expr;
+import polyglot.types.SemanticException;
+import polyglot.types.Type;
+import polyglot.util.Position;
+import polyglot.visit.NodeVisitor;
+import fabil.ast.FabILNodeFactory;
+import fabric.types.FabricTypeSystem;
 
 public class BinaryToFabilExt_c extends BinaryToJavaExt_c {
   protected Type lhsType, rhsType;
@@ -23,13 +24,13 @@ public class BinaryToFabilExt_c extends BinaryToJavaExt_c {
   
   @Override
   public Expr actsforToJava(JifToJavaRewriter rw, boolean isEquiv) throws SemanticException {
-    Binary b = (Binary) node();
-    String meth = isEquiv?"equivalentTo":"actsFor";
-    String comparison = "jif.lang.PrincipalUtil." + meth + "((%E), (%E))";
-    
-    FabricTypeSystem ts = (FabricTypeSystem)rw.jif_ts();
+    FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();
     FabILNodeFactory nf = (FabILNodeFactory)rw.java_nf();
 
+    Binary b = (Binary) node();
+    String meth = isEquiv?"equivalentTo":"actsFor";
+    String comparison = ts.PrincipalUtilClassName() + "." + meth + "((%E), (%E))";
+    
     Expr l = wrapExpr(ts, nf, lhsType, b.left());
     Expr r = wrapExpr(ts, nf, rhsType, b.right());
     

@@ -2,7 +2,7 @@ package fabric.lang;
 
 import java.security.PrivateKey;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 import fabric.worker.Store;
 import fabric.net.UnreachableNodeException;

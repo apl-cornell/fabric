@@ -2,7 +2,7 @@ package sif.html;
 
 import sif.servlet.Servlet;
 import fabric.lang.Principal;
-import jif.lang.PrincipalUtil;
+import fabric.lang.security.PrincipalUtil;
 
 /**
  * To create radio buttions, a Radio is needed.

@@ -2,9 +2,9 @@ package sif.html;
 
 import sif.servlet.Action;
 import sif.servlet.HTMLWriter;
-import jif.lang.Label;
+import fabric.lang.security.Label;
 import fabric.lang.Principal;
-import jif.lang.PrincipalUtil;
+import fabric.lang.security.PrincipalUtil;
 
 /** A Form contains Inputs and generates requests. */
 public final class Form extends BlockContainer {

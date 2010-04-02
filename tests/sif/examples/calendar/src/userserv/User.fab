@@ -47,7 +47,7 @@ public class User[principal servP, covariant label T] extends AbstractPrincipal 
 
     public boolean{authPrf; closure; lb; executeNow; *lb; this; this←} 
         isAuthorized(java.lang.Object authPrf, 
-                jif.lang.Closure[this, lb] closure,
+                fabric.lang.security.Closure[this, lb] closure,
                 label lb,
                 boolean executeNow) where authority (this) 
     {

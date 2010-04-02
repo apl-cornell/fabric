@@ -1,4 +1,5 @@
 package fabric.lang;
+import fabric.lang.security;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;
@@ -7,8 +8,6 @@ import fabric.util.LinkedHashSet;
 import fabric.util.Set;
 import fabric.util.HashMap;
 import fabric.util.Map;
-
-import jif.lang.*;
 
 public final class NodePrincipal extends AbstractPrincipal {
 

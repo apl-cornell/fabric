@@ -8,7 +8,7 @@ import java.security.PublicKey;
 import java.util.Iterator;
 import java.util.List;
 
-import jif.lang.*;
+import fabric.lang.security.*;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;

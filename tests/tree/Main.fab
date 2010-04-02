@@ -21,7 +21,7 @@ public class Main {
 		}
 		atomic {
 			final Store{*bot} tc = treeStore;
-			pp = new jif.lang.ExternalPrincipal@tc("localhost");
+			pp = new ExternalPrincipal@tc("localhost");
 			lbl = new label {pp→;pp←}@treeStore;
 		}
 	}

@@ -1,6 +1,6 @@
 package fabric.util;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 import fabric.worker.Store;
 import fabric.lang.Object;
 

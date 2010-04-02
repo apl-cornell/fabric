@@ -10,7 +10,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.ComparablePair;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 /**
  * <code>_Impl</code> objects are stored on stores in serialized form as

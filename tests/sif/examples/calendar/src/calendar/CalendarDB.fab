@@ -2,7 +2,6 @@ package calendar;
 
 import userserv.*;
 
-import jif.lang.LabelUtil;
 import fabricated.util.HashSet;
 import fabricated.util.Set;
 import fabricated.util.Date;

@@ -1,0 +1,8 @@
+package fabric.lang.security;
+
+/**
+ * Represents a confidentiality policy
+ */
+public final class ConfPolicy {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+}

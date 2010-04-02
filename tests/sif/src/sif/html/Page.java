@@ -2,7 +2,7 @@ package sif.html;
 
 import sif.servlet.HTMLWriter;
 import sif.servlet.Servlet;
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 /**
  * A Page is an entire HTML page.

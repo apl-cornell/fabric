@@ -16,9 +16,9 @@ import fabric.worker.Store;
 import sif.html.*;
 
 import fabric.lang.Principal;
-import jif.lang.Label;
-import jif.lang.PrincipalUtil;
-import jif.lang.LabelUtil;
+import fabric.lang.security.Label;
+import fabric.lang.security.PrincipalUtil;
+import fabric.lang.security.LabelUtil;
 import jif.lang.JifObject;
 import jif.lang.JifString;
 
@@ -528,7 +528,7 @@ abstract public class Servlet extends HttpServlet {
       });
     }
 
-    protected SessionState createSessionState(jif.lang.Label lbl, String id, sif.servlet.SessionPrincipal prin) {
+    protected SessionState createSessionState(fabric.lang.security.Label lbl, String id, sif.servlet.SessionPrincipal prin) {
       throw new Error("Only applications can create a session state");
     }
     

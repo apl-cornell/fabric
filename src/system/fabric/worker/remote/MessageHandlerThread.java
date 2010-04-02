@@ -4,7 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 import fabric.worker.*;
 import fabric.worker.remote.messages.GetPrincipalMessage;
 import fabric.worker.remote.messages.ReadMessage;

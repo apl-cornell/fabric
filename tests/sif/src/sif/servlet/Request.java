@@ -7,8 +7,8 @@ import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 
-import jif.lang.Label;
-import jif.lang.LabelUtil;
+import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
 import fabric.lang.Principal;
 
 import org.apache.commons.fileupload.FileItem;

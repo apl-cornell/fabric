@@ -1,9 +1,9 @@
 package fabric.lang;
 
-import jif.lang.AbstractPrincipal;
-import jif.lang.ActsForProof;
-import jif.lang.Closure;
-import jif.lang.Label;
+import fabric.lang.security.AbstractPrincipal;
+import fabric.lang.security.ActsForProof;
+import fabric.lang.security.Closure;
+import fabric.lang.security.Label;
 import fabric.worker.Store;
 
 public interface NodePrincipal extends AbstractPrincipal, Object {
@@ -38,7 +38,7 @@ public interface NodePrincipal extends AbstractPrincipal, Object {
 
   public static final class _Impl extends AbstractPrincipal._Impl implements
       NodePrincipal {
-    public _Impl(fabric.worker.Store $location, jif.lang.Label $label,
+    public _Impl(fabric.worker.Store $location, fabric.lang.security.Label $label,
         java.lang.String name) {
       super($location, $label, name);
     }

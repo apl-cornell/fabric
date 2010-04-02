@@ -78,7 +78,10 @@
             description="Build the base SIF framework using the Java compiler, not including the signature files">
         
         <javac source="1.5" target="1.5" srcdir="${src}" destdir="${sif.classes}" debug="true" debuglevel="lines,vars,source">
-            <classpath refid="standard.classpath" />
+            <classpath>
+	      <path refid="standard.classpath" />
+	      <pathelement location="../jif/classes" />
+	    </classpath>
         </javac>
         
         <!--apply executable="bash"
@@ -122,10 +125,6 @@
             <arg value="${fab-src}"/>
       			<arg value="-cp" />
       			<arg pathref="standard.classpath" />
-            <arg value="-sigcp"/>
-            <arg value="${fabric.home}/sig-classes/fabric"/>
-            <arg value="-filsigcp"/>
-            <arg value="${fabric.home}/sig-classes/fabil"/>
         		<arg value="-e" />
         		<arg value="-debugpositions"/>
         	<!--        	
@@ -206,7 +205,7 @@
         </copy>
         <!--
         <copy todir="${catalina.home}/shared/lib">
-            <fileset dir="${basedir}/lib" includes="common*.jar,sif.jar,jif.jar,jiflib.jar,jifrt.jar"    defaultexcludes="yes"/>
+            <fileset dir="${basedir}/lib" includes="common*.jar,sif.jar,jif.jar"    defaultexcludes="yes"/>
         </copy>
         <copy todir="${catalina.home}/shared/lib">
             <fileset dir="${fabric.home}/lib" includes="FreePastry*.jar, commons*.jar"    defaultexcludes="yes"/>

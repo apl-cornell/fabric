@@ -2,8 +2,8 @@ package fabric.lang.arrays.internal;
 
 import fabric.worker.Store;
 import fabric.lang.arrays.*;
-import jif.lang.Label;
 import fabric.lang.Object;
+import fabric.lang.security.Label;
 
 /**
  * A utility class for converting Java arrays into Fabric arrays.

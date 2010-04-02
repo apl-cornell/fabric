@@ -5,7 +5,7 @@ import java.security.*;
 
 import javax.crypto.*;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.Worker.Code;

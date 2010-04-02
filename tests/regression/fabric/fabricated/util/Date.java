@@ -118,7 +118,7 @@ public interface Date
        "t873Dw9lUf\nZZso3M+K8jkW60U9r0OfF/atOjp39+7t7hMlsUnPxr6jAD6h" +
        "7Ou0s6+dmeqUm8fKZ+ui/wZWMcS6\nFiUAAA==");
     
-    public jif.lang.Label
+    public fabric.lang.security.Label
       get$jif$fabricated_util_Date_L(
       );
     
@@ -175,7 +175,7 @@ public interface Date
                      postDec$year();
         }
         
-        public jif.lang.Label
+        public fabric.lang.security.Label
           get$jif$fabricated_util_Date_L(
           ) {
             return ((fabricated.
@@ -188,8 +188,8 @@ public interface Date
         
         public static fabricated.util.Date
           valueOf(
-          jif.lang.Label arg1,
-          jif.lang.Label arg2) {
+          fabric.lang.security.Label arg1,
+          fabric.lang.security.Label arg2) {
             return fabricated.util.Date._Impl.
                      valueOf(
                      arg1,
@@ -209,7 +209,7 @@ public interface Date
         
         public static boolean
           jif$Instanceof(
-          jif.lang.Label arg1,
+          fabric.lang.security.Label arg1,
           java.lang.Object arg2) {
             return fabricated.util.Date._Impl.
                      jif$Instanceof(
@@ -219,7 +219,7 @@ public interface Date
         
         public static fabricated.util.Date
           jif$cast$fabricated_util_Date(
-          jif.lang.Label arg1,
+          fabric.lang.security.Label arg1,
           java.lang.Object arg2) {
             return fabricated.util.Date._Impl.
                      jif$cast$fabricated_util_Date(
@@ -315,8 +315,8 @@ public interface Date
         
         public static fabricated.util.Date
           valueOf(
-          final jif.lang.Label jif$L,
-          final jif.lang.Label lbl) {
+          final fabric.lang.security.Label jif$L,
+          final fabric.lang.security.Label lbl) {
             return ((fabricated.util.Date)
                       new fabricated.
                         util.
@@ -353,7 +353,7 @@ public interface Date
                      jif.
                        lang.
                        Label $label,
-                     final jif.lang.Label jif$L) {
+                     final fabric.lang.security.Label jif$L) {
             super($location,
                   $label);
             this.
@@ -369,7 +369,7 @@ public interface Date
         
         public static boolean
           jif$Instanceof(
-          final jif.lang.Label jif$L,
+          final fabric.lang.security.Label jif$L,
           final java.lang.Object o) {
             if (fabric.lang.Object._Proxy.
                   $getProxy(
@@ -381,7 +381,7 @@ public interface Date
                       fabric.lang.WrappedJavaInlineable.
                         $wrap(
                         o));
-                return jif.lang.LabelUtil._Impl.
+                return fabric.lang.security.LabelUtil._Impl.
                          relabelsTo(
                          c.
                            get$jif$fabricated_util_Date_L(),
@@ -392,7 +392,7 @@ public interface Date
         
         public static fabricated.util.Date
           jif$cast$fabricated_util_Date(
-          final jif.lang.Label jif$L,
+          final fabric.lang.security.Label jif$L,
           final java.lang.Object o) {
             if (fabric.lang.Object._Proxy.
                   idEquals(
@@ -413,14 +413,14 @@ public interface Date
               );
         }
         
-        public jif.lang.Label
+        public fabric.lang.security.Label
           get$jif$fabricated_util_Date_L(
           ) {
             return this.
                      jif$fabricated_util_Date_L;
         }
         
-        private jif.lang.Label
+        private fabric.lang.security.Label
           jif$fabricated_util_Date_L;
         
         protected fabric.
