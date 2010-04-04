@@ -143,12 +143,12 @@ public class TransactionManager {
 
       // Check writes and update version numbers
       for (SerializedObject o : req.writes) {
-        // Make sure no one else has written the object and fetch the old copy
+        // Make sure no one else has used the object and fetch the old copy
         // from the store.
         long onum = o.getOnum();
         SerializedObject storeCopy;
         synchronized (database) {
-          if (database.isWritten(onum))
+          if (database.isPrepared(onum, tid))
             throw new TransactionPrepareFailedException("Object " + onum
                 + " has been locked by an uncommitted transaction");
 
@@ -251,7 +251,9 @@ public class TransactionManager {
       }
 
       // readHistory.record(req);
-      database.finishPrepare(tid, worker);
+      synchronized (database) {
+        database.finishPrepare(tid, worker);
+      }
 
       return result;
     } catch (TransactionPrepareFailedException e) {
