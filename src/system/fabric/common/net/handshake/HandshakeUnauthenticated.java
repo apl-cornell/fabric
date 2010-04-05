@@ -3,7 +3,6 @@ package fabric.common.net.handshake;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import fabric.common.net.naming.SocketAddress;
