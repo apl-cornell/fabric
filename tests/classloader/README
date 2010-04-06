@@ -1,0 +1,5 @@
+This is an example to test the design of the fabric class loader.  In addition
+to the bytecode, there are properties files with the same name that contain the
+extended information that would be in the corresponding fabric objects.  Also,
+there are .codebase files which contain the extended information that would be
+in the fabric codebase objects. 
