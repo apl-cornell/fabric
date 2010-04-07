@@ -64,10 +64,5 @@ class Tickets[principal bank, principal airline, principal user]  { // on airlin
     }
 }
 
-
-class SimplePrincipal extends AbstractPrincipal {
-    SimplePrincipal(String{*<-} name) { super(name); }
-}
-
 class PurchasingError extends Exception {
 }
