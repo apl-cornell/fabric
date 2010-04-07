@@ -318,19 +318,6 @@ public final class Log {
    */
   @SuppressWarnings("unchecked")
   void abort() {
-    // Contact all remote workers that we've called and have them abort.
-    List<Thread> abortThreads = new ArrayList<Thread>(workersCalled.size());
-    for (final RemoteWorker worker : workersCalled) {
-      Thread thread = new Thread() {
-        @Override
-        public void run() {
-          worker.abortTransaction(tid);
-        }
-      };
-      thread.start();
-      abortThreads.add(thread);
-    }
-
     // Release read locks.
     for (LongKeyMap<ReadMapEntry> submap : reads) {
       for (ReadMapEntry entry : submap.values()) {
@@ -376,17 +363,6 @@ public final class Log {
       if (abortSignal != null) {
         synchronized (this) {
           if (abortSignal.equals(tid)) abortSignal = null;
-        }
-      }
-    }
-
-    // Wait for remote workers to finish aborting.
-    for (Thread thread : abortThreads) {
-      while (true) {
-        try {
-          thread.join();
-          break;
-        } catch (InterruptedException e) {
         }
       }
     }

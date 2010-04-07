@@ -176,6 +176,14 @@ public final class TransactionManager {
   }
 
   public void abortTransaction() {
+    abortTransaction(true);
+  }
+
+  /**
+   * @param recurseToCohorts
+   *          true iff should send abort messages to stores and workers.
+   */
+  private void abortTransaction(boolean recurseToCohorts) {
     if (current.tid.depth == 0) {
       // Make sure no other thread is working on this transaction.
       synchronized (current.commitState) {
@@ -219,6 +227,7 @@ public final class TransactionManager {
     // Wait for all other threads to finish.
     current.waitForThreads();
 
+    if (recurseToCohorts) sendAbortMessages();
     current.abort();
     logger.warning(current + " aborted");
 
@@ -324,7 +333,7 @@ public final class TransactionManager {
       TransactionPrepareFailedException e =
           new TransactionPrepareFailedException(failures);
       logger.warning(current + " error committing: abort exception: " + e);
-      abortTransaction();
+      abortTransaction(false);
       throw new AbortException(e);
     }
 
@@ -347,8 +356,8 @@ public final class TransactionManager {
    * abort messages if any of them fails to prepare.
    */
   private Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
-      final boolean useAuthentication, final long commitTime, Set<Store> stores,
-      List<RemoteWorker> workers) {
+      final boolean useAuthentication, final long commitTime,
+      Set<Store> stores, List<RemoteWorker> workers) {
     final Map<RemoteNode, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
@@ -375,7 +384,8 @@ public final class TransactionManager {
       }
     }
 
-    List<Thread> threads = new ArrayList<Thread>(stores.size() + workers.size());
+    List<Thread> threads =
+        new ArrayList<Thread>(stores.size() + workers.size());
 
     // Go through each worker and send prepare messages in parallel.
     for (final RemoteWorker worker : workers) {
@@ -525,7 +535,8 @@ public final class TransactionManager {
         Collections.synchronizedList(new ArrayList<RemoteNode>());
     final List<RemoteNode> failed =
         Collections.synchronizedList(new ArrayList<RemoteNode>());
-    List<Thread> threads = new ArrayList<Thread>(stores.size() + workers.size());
+    List<Thread> threads =
+        new ArrayList<Thread>(stores.size() + workers.size());
 
     // Send commit messages to the workers in parallel.
     for (final RemoteWorker worker : workers) {
@@ -564,7 +575,8 @@ public final class TransactionManager {
       // contact and if it's a truly remote store (i.e., not in-process).
       if (!(store instanceof InProcessStore || store.isLocalStore())
           && storeIt.hasNext()) {
-        Thread thread = new Thread(runnable, "worker commit to " + store.name());
+        Thread thread =
+            new Thread(runnable, "worker commit to " + store.name());
         threads.add(thread);
         thread.start();
       } else {
@@ -603,6 +615,16 @@ public final class TransactionManager {
     TransactionRegistry.remove(current.tid.topTid);
 
     current = null;
+  }
+
+  /**
+   * Sends abort messages to all other nodes that were contacted during the
+   * transaction.
+   */
+  @SuppressWarnings("unchecked")
+  private void sendAbortMessages() {
+    sendAbortMessages(true, current.storesToContact(), current.workersCalled,
+        Collections.EMPTY_SET);
   }
 
   /**
