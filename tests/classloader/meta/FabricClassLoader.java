@@ -9,10 +9,11 @@ public class FabricClassLoader extends ClassLoader {
   private Map<Class, java.lang.Class> classes;
   
   @Override
-  public java.lang.Class findClass(String name) throws ClassNotFoundException {
+  public java.lang.Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
     try {
       Class    cls = codebase.resolveClassName(name);
       return   cls.toJavaClass();
+      // TODO: resolve
     } catch(IOException e) {
       throw new ClassNotFoundException();
     }
