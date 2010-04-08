@@ -3,7 +3,7 @@ package sif.html;
 import sif.servlet.Action;
 import sif.servlet.HTMLWriter;
 import fabric.lang.security.Label;
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil;
 
 /** A Form contains Inputs and generates requests. */

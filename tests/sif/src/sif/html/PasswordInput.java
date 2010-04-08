@@ -2,7 +2,7 @@ package sif.html;
 
 import sif.servlet.Servlet;
 import fabric.lang.security.Label;
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 
 /** An input that allows typing in a password. */
 public final class PasswordInput extends TextInput {

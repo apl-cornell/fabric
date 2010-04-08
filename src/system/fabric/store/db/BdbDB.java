@@ -20,7 +20,7 @@ import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.OidKeyHashMap;
 import fabric.store.SubscriptionManager;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 
 /**
  * An ObjectDB backed by a Berkeley Database.

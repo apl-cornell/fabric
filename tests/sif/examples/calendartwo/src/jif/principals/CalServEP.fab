@@ -14,7 +14,7 @@ public class CalServEP extends ExternalPrincipal {
     static final String{*!:} P = "jif.principals.CalServEP.P";
     static final String{*!:} storeName = "gaia.systems.cs.cornell.edu";
 
-    public static fabric.lang.Principal{*!:} getInstance{*!:}() {
+    public static fabric.lang.security.Principal{*!:} getInstance{*!:}() {
         atomic {
                 FabricWorker cl = FabricWorker.getWorker();
                 if (cl != null) {
@@ -38,7 +38,7 @@ public class CalServEP extends ExternalPrincipal {
         return null;
     }
 
-    public static fabric.lang.Principal{*!:} getInstance{*!:}(Store store) {
+    public static fabric.lang.security.Principal{*!:} getInstance{*!:}(Store store) {
         return getInstance();
     }
 

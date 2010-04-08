@@ -1,5 +1,5 @@
 package sif.servlet;
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 
 public class SSW[covariant label T] {
     public final Principal{T} sessionPrincipal;

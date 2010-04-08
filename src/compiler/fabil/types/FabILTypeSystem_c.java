@@ -57,11 +57,11 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   public ClassType Principal() {
-    return load("fabric.lang.Principal");
+    return load("fabric.lang.security.Principal");
   }
 
   public ClassType DelegatingPrincipal() {
-    return load("fabric.lang.DelegatingPrincipal");
+    return load("fabric.lang.security.DelegatingPrincipal");
   }
 
   public Type Store() {

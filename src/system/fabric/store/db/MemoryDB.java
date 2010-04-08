@@ -12,7 +12,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.store.SubscriptionManager;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 
 /**
  * <p>

@@ -1,7 +1,7 @@
 package fabric.worker.remote;
 
 import fabric.common.AbstractMessageHandlerThread;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 
 public final class SessionAttributes extends
     AbstractMessageHandlerThread.SessionAttributes {

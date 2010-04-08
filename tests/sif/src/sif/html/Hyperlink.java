@@ -4,7 +4,7 @@ import sif.servlet.Action;
 import sif.servlet.HTMLWriter;
 import sif.servlet.Servlet;
 import fabric.lang.security.Label;
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil;
 
 /**

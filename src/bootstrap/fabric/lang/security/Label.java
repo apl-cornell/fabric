@@ -1,7 +1,6 @@
 package fabric.lang.security;
 
 import fabric.worker.Store;
-import fabric.lang.SecretKeyObject;
 import fabric.lang.Object;
 import fabric.util.Set;
 

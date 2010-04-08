@@ -9,7 +9,7 @@ import fabric.common.SerializedObject;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongSet;
 import fabric.dissemination.Glob;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 
 /**
  * Abstracts groups and globs.  This class is thread-safe.

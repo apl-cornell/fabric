@@ -1,7 +1,5 @@
 package fabric.lang.security;
 
-import fabric.lang.security.Label;
-import fabric.lang.security.PrincipalUtil;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.util.*;

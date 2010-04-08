@@ -581,7 +581,6 @@
     <!-- XXX HACK -->
     <delete>
       <fileset dir="${signatures.fabil.classes}">
-	<include name="fabric/lang/KeyObject.class" />
 	<include name="fabric/util/Iterable.class" />
 	<include name="fabric/util/Set.class" />
 	<include name="fabric/util/Iterator.class" />

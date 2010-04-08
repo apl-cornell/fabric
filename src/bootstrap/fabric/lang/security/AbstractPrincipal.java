@@ -1,8 +1,6 @@
 package fabric.lang.security;
 
 import fabric.worker.Store;
-import fabric.lang.DelegatingPrincipal;
-import fabric.lang.Principal;
 
 public interface AbstractPrincipal extends DelegatingPrincipal,
     fabric.lang.Object {

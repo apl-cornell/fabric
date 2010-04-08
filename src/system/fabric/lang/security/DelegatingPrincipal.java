@@ -1,10 +1,9 @@
-package fabric.lang;
+package fabric.lang.security;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.util.Iterator;
 
-import fabric.lang.security.Label;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.common.RefTypeEnum;

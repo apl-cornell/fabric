@@ -4,7 +4,7 @@ import java.net.SocketAddress;
 import java.util.logging.Logger;
 
 import fabric.common.AbstractConnectionHandler;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 
 /**
  * <p>

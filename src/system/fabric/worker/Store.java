@@ -5,7 +5,7 @@ import java.util.Collection;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FetchException;
 import fabric.common.util.LongKeyMap;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 import fabric.lang.Object._Impl;
 import fabric.net.UnreachableNodeException;
 

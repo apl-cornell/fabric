@@ -36,7 +36,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
         return this;
     }
     
-    protected AbstractPrincipal fabric$lang$security$AbstractPrincipal$(final String name, final fabric.lang.Principal p) {
+    protected AbstractPrincipal fabric$lang$security$AbstractPrincipal$(final String name, final fabric.lang.security.Principal p) {
         { this.name = name; }
         return this;
     }

@@ -5,7 +5,7 @@ import sif.servlet.*;
 import sif.html.*;
 import fabricated.util.List;
 import fabricated.util.Date;
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 
 public class CalServDeclassifier authority (CalServEP) {
 

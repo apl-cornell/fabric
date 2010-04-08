@@ -2,7 +2,6 @@ package fabric.lang.security;
 
 import fabric.worker.Store;
 import fabric.lang.Object;
-import fabric.lang.Principal;
 
 public interface LabelUtil extends Object {
   

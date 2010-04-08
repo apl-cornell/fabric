@@ -3,7 +3,6 @@ package fabric.lang.security;
 import fabric.worker.Store;
 import fabric.net.UnreachableNodeException;
 import fabric.lang.Object;
-import fabric.lang.Principal;
 
 public interface PrincipalUtil extends Object {
   public interface TopPrincipal extends Principal, Object {

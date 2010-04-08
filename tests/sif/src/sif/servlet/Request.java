@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;

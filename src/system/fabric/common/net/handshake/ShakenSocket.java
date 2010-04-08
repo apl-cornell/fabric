@@ -2,7 +2,7 @@ package fabric.common.net.handshake;
 
 import java.net.Socket;
 
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 
 public class ShakenSocket {
   public final String    name;

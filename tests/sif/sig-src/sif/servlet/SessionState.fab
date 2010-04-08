@@ -1,5 +1,5 @@
 package sif.servlet;
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 
 /**
  * Global state for a single session.

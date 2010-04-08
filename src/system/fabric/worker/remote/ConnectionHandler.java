@@ -5,7 +5,7 @@ import java.util.Collections;
 
 import fabric.worker.Worker;
 import fabric.common.AbstractConnectionHandler;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 
 /**
  * <p>

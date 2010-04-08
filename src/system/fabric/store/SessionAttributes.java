@@ -10,7 +10,7 @@ import fabric.worker.remote.RemoteWorker;
 import fabric.common.AbstractMessageHandlerThread;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 
 final class SessionAttributes extends AbstractMessageHandlerThread.SessionAttributes {
   /**

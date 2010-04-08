@@ -1,7 +1,5 @@
 package fabric.lang.security;
 
-import fabric.lang.security.IntegPolicy;
-import fabric.lang.security.WriterPolicy;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.util.ArrayList;

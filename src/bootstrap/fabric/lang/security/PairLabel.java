@@ -2,7 +2,6 @@ package fabric.lang.security;
 
 import fabric.worker.Store;
 import fabric.net.UnreachableNodeException;
-import fabric.lang.SecretKeyObject;
 
 public interface PairLabel extends Label {
   public static class _Impl extends fabric.lang.Object._Impl implements

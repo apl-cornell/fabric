@@ -1,4 +1,4 @@
-package fabric.lang;
+package fabric.lang.security;
 
 public abstract class DelegatingPrincipal extends Principal {
 

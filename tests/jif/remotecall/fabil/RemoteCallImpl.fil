@@ -4,7 +4,7 @@ public class RemoteCallImpl extends fabric.lang.Object {
     
     public int m1(final int x) { return x + 1; }
     
-    public int m1_remote(final fabric.lang.Principal worker$principal,
+    public int m1_remote(final fabric.lang.security.Principal worker$principal,
                          final int x) {
         if (LabelUtil.relabelsTo(
               LabelUtil.toLabel(
@@ -31,7 +31,7 @@ public class RemoteCallImpl extends fabric.lang.Object {
         }
     }
     
-    public void m2_remote(final fabric.lang.Principal worker$principal) {
+    public void m2_remote(final fabric.lang.security.Principal worker$principal) {
         if (LabelUtil.relabelsTo(
               LabelUtil.toLabel(
                 LabelUtil.bottomConf(),
@@ -53,8 +53,8 @@ public class RemoteCallImpl extends fabric.lang.Object {
         return this;
     }
         
-    public RemoteCallImpl(final fabric.lang.Principal jif$alice,
-                          final fabric.lang.Principal jif$bob) {
+    public RemoteCallImpl(final fabric.lang.security.Principal jif$alice,
+                          final fabric.lang.security.Principal jif$bob) {
         super();
         this.jif$RemoteCallImpl_alice = jif$alice;
         this.jif$RemoteCallImpl_bob = jif$bob;
@@ -64,8 +64,8 @@ public class RemoteCallImpl extends fabric.lang.Object {
     
     private void jif$init() {  }
     
-    public static boolean jif$Instanceof(final fabric.lang.Principal jif$alice,
-                                         final fabric.lang.Principal jif$bob,
+    public static boolean jif$Instanceof(final fabric.lang.security.Principal jif$alice,
+                                         final fabric.lang.security.Principal jif$bob,
                                          final java.lang.Object o) {
         if (o instanceof RemoteCallImpl) {
             RemoteCallImpl c = (RemoteCallImpl) o;
@@ -83,13 +83,13 @@ public class RemoteCallImpl extends fabric.lang.Object {
     }
     
     public static RemoteCallImpl jif$cast$RemoteCallImpl(
-      final fabric.lang.Principal jif$alice,
-      final fabric.lang.Principal jif$bob, final java.lang.Object o) {
+      final fabric.lang.security.Principal jif$alice,
+      final fabric.lang.security.Principal jif$bob, final java.lang.Object o) {
         if (o == null) return null;
         if (jif$Instanceof(jif$alice, jif$bob, o)) return (RemoteCallImpl) o;
         throw new ClassCastException();
     }
     
-    final private fabric.lang.Principal jif$RemoteCallImpl_alice;
-    final private fabric.lang.Principal jif$RemoteCallImpl_bob;
+    final private fabric.lang.security.Principal jif$RemoteCallImpl_alice;
+    final private fabric.lang.security.Principal jif$RemoteCallImpl_bob;
 }

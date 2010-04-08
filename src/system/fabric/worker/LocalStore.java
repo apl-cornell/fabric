@@ -15,10 +15,10 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 import fabric.util.HashMap;
 import fabric.util.Map;
 

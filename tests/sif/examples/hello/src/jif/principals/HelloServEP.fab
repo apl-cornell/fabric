@@ -6,7 +6,7 @@ public class HelloServEP extends ExternalPrincipal {
     }
 
     private static HelloServEP{*!:*} P;
-    public static fabric.lang.Principal getInstance{*!:*}() {
+    public static fabric.lang.security.Principal getInstance{*!:*}() {
 	if (P == null) {
 		atomic {
 			P = new HelloServEP();

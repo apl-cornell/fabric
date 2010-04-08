@@ -10,7 +10,7 @@ import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.MessageHandlerThread;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 import fabric.messages.Message;
 import fabric.net.UnreachableNodeException;
 

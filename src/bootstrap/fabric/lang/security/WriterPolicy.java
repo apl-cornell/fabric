@@ -2,7 +2,6 @@ package fabric.lang.security;
 
 import fabric.worker.Store;
 import fabric.net.UnreachableNodeException;
-import fabric.lang.Principal;
 
 public interface WriterPolicy extends AbstractPolicy, IntegPolicy {
   Principal owner();

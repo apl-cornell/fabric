@@ -5,7 +5,7 @@ import fabric.lang.security.LabelUtil;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.common.util.OidKeyHashMap;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 
 public class AuthorizationUtil {
 

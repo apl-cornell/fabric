@@ -15,7 +15,7 @@ import fabric.worker.Store;
 
 import sif.html.*;
 
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 import fabric.lang.security.Label;
 import fabric.lang.security.PrincipalUtil;
 import fabric.lang.security.LabelUtil;

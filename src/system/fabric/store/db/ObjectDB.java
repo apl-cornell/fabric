@@ -22,7 +22,7 @@ import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.*;
 import fabric.store.SubscriptionManager;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 
 /**
  * <p>

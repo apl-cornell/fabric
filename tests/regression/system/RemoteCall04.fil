@@ -11,7 +11,7 @@ public class RemoteCall04 {
     child = new RemoteCall04@store();
   }
 
-  public void m_remote(fabric.lang.Principal p) {
+  public void m_remote(fabric.lang.security.Principal p) {
     m();
   }
 

@@ -14,7 +14,7 @@ import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.*;
 import fabric.dissemination.Glob;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.messages.*;

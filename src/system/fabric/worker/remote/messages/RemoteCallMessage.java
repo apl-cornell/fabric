@@ -11,7 +11,7 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 import fabric.lang.Object._Proxy;
 import fabric.messages.Message;
 import fabric.net.UnreachableNodeException;

@@ -12,7 +12,7 @@ import fabric.worker.Worker.Code;
 import fabric.common.*;
 import fabric.common.exceptions.BadSignatureException;
 import fabric.common.exceptions.InternalError;
-import fabric.lang.SecretKeyObject;
+import fabric.lang.security.SecretKeyObject;
 
 /**
  * A glob is an ObjectGroup that has been encrypted and signed.

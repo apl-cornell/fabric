@@ -16,7 +16,7 @@ import fabric.common.util.*;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.dissemination.Glob;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 import fabric.lang.Statistics;
 
 public class TransactionManager {

@@ -32,7 +32,7 @@ import fabric.common.exceptions.UsageError;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.Cache;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;

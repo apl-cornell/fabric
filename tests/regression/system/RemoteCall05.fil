@@ -12,7 +12,7 @@ public class RemoteCall05 {
     i = i + n;
   }
 
-  public void f_store0_remote(fabric.lang.Principal p, int n) {
+  public void f_store0_remote(fabric.lang.security.Principal p, int n) {
     f_store0(n);
   }
 
@@ -25,7 +25,7 @@ public class RemoteCall05 {
     f_store0_remote@remoteWorker(Worker.getWorker().getPrincipal(), n-1);
   }
 
-  public void f_worker0_remote(fabric.lang.Principal p, int n) {
+  public void f_worker0_remote(fabric.lang.security.Principal p, int n) {
     f_worker0(n);
   }
 

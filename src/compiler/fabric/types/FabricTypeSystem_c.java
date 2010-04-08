@@ -31,7 +31,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
 
   @Override
   public String PrincipalClassName() {
-    return "fabric.lang.Principal";
+    return "fabric.lang.security.Principal";
   }
 
   @Override

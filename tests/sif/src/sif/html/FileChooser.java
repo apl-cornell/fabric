@@ -3,7 +3,7 @@ package sif.html;
 import sif.servlet.HTMLWriter;
 import sif.servlet.Servlet;
 import fabric.lang.security.Label;
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 
 /**
  * A "file" input that allows the client to upload the contents of a file.

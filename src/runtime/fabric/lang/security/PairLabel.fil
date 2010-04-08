@@ -1,6 +1,5 @@
 package fabric.lang.security;
 
-import fabric.lang.security.ConfPolicy;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.LocalStore;

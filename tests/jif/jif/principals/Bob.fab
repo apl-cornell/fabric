@@ -1,6 +1,6 @@
 package jif.principals;
 
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 
 public class Bob extends ExternalPrincipal {
     public Bob() {

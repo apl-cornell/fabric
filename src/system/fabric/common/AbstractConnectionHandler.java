@@ -17,7 +17,7 @@ import fabric.common.AbstractMessageHandlerThread.Pool;
 import fabric.common.AbstractMessageHandlerThread.SessionAttributes;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 import fabric.net.ChannelMultiplexerThread;
 
 /**

@@ -17,7 +17,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.dissemination.Glob;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.messages.AbortTransactionMessage;

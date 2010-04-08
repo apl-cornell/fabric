@@ -7,7 +7,7 @@ public class RemoteCall01 {
     i++;
   }
 
-  public void m_remote(fabric.lang.Principal p) {
+  public void m_remote(fabric.lang.security.Principal p) {
     i++;
   }
 

@@ -3,7 +3,7 @@ package sif.html;
 import sif.servlet.HTMLWriter;
 import sif.servlet.Request;
 import fabric.lang.security.Label;
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 
 public final class CheckBox extends InputNode {
     private final boolean checked;

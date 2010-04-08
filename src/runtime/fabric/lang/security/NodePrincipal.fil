@@ -1,5 +1,4 @@
-package fabric.lang;
-import fabric.lang.security;
+package fabric.lang.security;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;

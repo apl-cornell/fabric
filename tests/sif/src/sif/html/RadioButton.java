@@ -2,7 +2,7 @@ package sif.html;
 
 import sif.servlet.HTMLWriter;
 import fabric.lang.security.Label;
-import fabric.lang.Principal;
+import fabric.lang.security.Principal;
 
 /**
  * A Radio Button input. Any of the radio buttons may be queried to find

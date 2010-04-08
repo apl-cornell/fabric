@@ -21,7 +21,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
-import fabric.lang.SecretKeyObject;
+import fabric.lang.security.SecretKeyObject;
 import fabric.lang.Object._Proxy;
 
 /**

@@ -1,4 +1,4 @@
-package fabric.lang;
+package fabric.lang.security;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -21,7 +21,7 @@ import fabric.net.UnreachableNodeException;
  * This is implemented in Java so that the constructor can provide default
  * labels so that a Principal p can be labelled with {p→_; p←p}.
  */
-public interface Principal extends Object {
+public interface Principal extends fabric.lang.Object {
 
   String name();
 
@@ -42,7 +42,8 @@ public interface Principal extends Object {
 
   PrivateKeyObject getPrivateKeyObject();
 
-  public static class _Proxy extends Object._Proxy implements Principal {
+  public static class _Proxy extends fabric.lang.Object._Proxy implements
+      Principal {
 
     public _Proxy(Principal._Impl impl) {
       super(impl);
@@ -89,7 +90,8 @@ public interface Principal extends Object {
     }
   }
 
-  abstract public static class _Impl extends Object._Impl implements Principal {
+  abstract public static class _Impl extends fabric.lang.Object._Impl implements
+      Principal {
 
     private PublicKey publicKey;
     private PrivateKeyObject privateKeyObject;
@@ -99,10 +101,10 @@ public interface Principal extends Object {
       // overly restrictive label.
       super(store, label == null ? Worker.getWorker().getLocalStore()
           .getPublicReadonlyLabel() : label);
-      
+
       Principal._Proxy thisProxy = (Principal._Proxy) this.$getProxy();
       IntegPolicy integ =
-        LabelUtil._Impl.writerPolicy(store, thisProxy, thisProxy);
+          LabelUtil._Impl.writerPolicy(store, thisProxy, thisProxy);
 
       if (label == null) {
         // Replace the temporary label with {this <- this}.
@@ -114,7 +116,7 @@ public interface Principal extends Object {
       // Generate a new key pair for this principal.
       KeyPair keyPair = Crypto.genKeyPair();
       this.publicKey = keyPair.getPublic();
-      
+
       // Create the label {this->this; this<-this} for the private key object.
       ConfPolicy conf =
           LabelUtil._Impl.readerPolicy(store, thisProxy, thisProxy);
@@ -139,7 +141,7 @@ public interface Principal extends Object {
         final Principal q, final java.lang.Object searchState);
 
     @Override
-    protected Object._Proxy $makeProxy() {
+    protected fabric.lang.Object._Proxy $makeProxy() {
       return new Principal._Proxy(this);
     }
 
@@ -168,8 +170,9 @@ public interface Principal extends Object {
     }
   }
 
-  interface _Static extends Object, Cloneable {
-    final class _Proxy extends Object._Proxy implements Principal._Static {
+  interface _Static extends fabric.lang.Object, Cloneable {
+    final class _Proxy extends fabric.lang.Object._Proxy implements
+        Principal._Static {
 
       public _Proxy(Principal._Static._Impl impl) {
         super(impl);
@@ -183,22 +186,23 @@ public interface Principal extends Object {
 
       static {
         Principal._Static._Impl impl =
-            (Principal._Static._Impl) Object._Static._Proxy
+            (Principal._Static._Impl) fabric.lang.Object._Static._Proxy
                 .$makeStaticInstance(Principal._Static._Impl.class);
         $instance = (Principal._Static) impl.$getProxy();
         impl.$init();
       }
     }
 
-    class _Impl extends Object._Impl implements fabric.lang.Principal._Static {
+    class _Impl extends fabric.lang.Object._Impl implements
+        fabric.lang.security.Principal._Static {
 
       public _Impl(Store store, Label label) throws UnreachableNodeException {
         super(store, label);
       }
 
       @Override
-      protected Object._Proxy $makeProxy() {
-        return new fabric.lang.Principal._Static._Proxy(this);
+      protected fabric.lang.Object._Proxy $makeProxy() {
+        return new fabric.lang.security.Principal._Static._Proxy(this);
       }
 
       private void $init() {

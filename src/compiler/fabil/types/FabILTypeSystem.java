@@ -125,19 +125,19 @@ public interface FabILTypeSystem extends TypeSystem {
 
   /**
    * @return true iff the given class type is a subtype of
-   *         fabric.lang.Principal.
+   *         fabric.lang.security.Principal.
    */
   boolean isPrincipalClass(ClassType type);
 
   /**
    * @return true iff the given type is a class type that is a subtype of
-   *         fabric.lang.Principal.
+   *         fabric.lang.security.Principal.
    */
   boolean isPrincipalClass(Type type);
 
   /**
    * @return true iff the given type is a class type that is a subtype of
-   *         fabric.lang.Principal.
+   *         fabric.lang.security.Principal.
    */
   boolean isPrincipalClass(TypeNode type);
 

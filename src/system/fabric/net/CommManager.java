@@ -16,7 +16,7 @@ import fabric.common.Options;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NoSuchNodeError;
 import fabric.common.util.Pair;
-import fabric.lang.NodePrincipal;
+import fabric.lang.security.NodePrincipal;
 import fabric.net.ChannelMultiplexerThread.CallbackHandler;
 
 /**

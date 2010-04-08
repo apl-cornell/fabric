@@ -1,6 +1,5 @@
 package fabric.lang.security;
 
-
 /**
  * This is an abstract implementation of the principal interface.
  * It provides convenience methods for delgating authority to superiors.
