@@ -1,6 +1,6 @@
 package fabric.lang.security;
 
-import fabric.util.Set;
+import java.util.Set;
 
 /**
  * This code is mostly copied from Jif.

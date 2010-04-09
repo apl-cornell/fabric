@@ -2,7 +2,7 @@ package fabric.lang.security;
 
 import fabric.util.Iterator;
 import fabric.util.Map;
-import fabric.util.Set;
+import java.util.Set;
 
 /**
  * This code is mostly copied from Jif.

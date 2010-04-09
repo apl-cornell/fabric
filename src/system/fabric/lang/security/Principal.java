@@ -8,14 +8,13 @@ import java.security.PublicKey;
 import java.util.Iterator;
 import java.util.List;
 
-import fabric.lang.security.*;
-import fabric.worker.Worker;
-import fabric.worker.Store;
-import fabric.worker.transaction.TransactionManager;
 import fabric.common.Crypto;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
 import fabric.net.UnreachableNodeException;
+import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * This is implemented in Java so that the constructor can provide default

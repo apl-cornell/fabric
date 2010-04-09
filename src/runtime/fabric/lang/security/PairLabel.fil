@@ -4,8 +4,8 @@ import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.LocalStore;
 import fabric.common.ONumConstants;
-import fabric.util.HashSet;
-import fabric.util.Set;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A Label is the runtime representation of a Jif label. A Label consists of a
@@ -40,7 +40,7 @@ public final class PairLabel implements Label {
       if (this == that || this.equals(that)) return true;
       
       final Store localStore = Worker.getWorker().getLocalStore();
-      Set temp = new HashSet@localStore();
+      Set temp = new HashSet();
       if (LabelUtil.relabelsTo(this.confPol, that.confPol, temp)
           && LabelUtil.relabelsTo(this.integPol, that.integPol, temp)) {
         s.addAll(temp);

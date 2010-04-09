@@ -22,7 +22,7 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
     return components;
   }
 
-  public boolean relabelsTo(Policy pol, Set s) {
+  public boolean relabelsTo(Policy pol, java.util.Set s) {
     if (this == pol || this.equals(pol)) return true;
 
     // this == c1 meet ... meet cn
@@ -40,7 +40,7 @@ public abstract class MeetPolicy extends AbstractPolicy implements Policy {
       // we have this <= di
       MeetPolicy mp = (MeetPolicy) pol;
       boolean sat = true;
-      Set temp = new HashSet@localStore();
+      java.util.Set temp = new java.util.HashSet();
       for (Iterator i = mp.meetComponents().iterator(); i.hasNext();) {
         Policy Di = (Policy) i.next();
         if (!LabelUtil.relabelsTo(this, Di, temp)) {

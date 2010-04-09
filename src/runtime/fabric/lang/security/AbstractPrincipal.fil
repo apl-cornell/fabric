@@ -57,14 +57,12 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
 
     public void addDelegatesTo(Principal p) {
         if (this.superiors.put(p, this) == null) {
-          // Need to figure out how to properly cache delegations. -MJL
-          // PrincipalUtil.notifyNewDelegation(this, p);
+            PrincipalUtil.notifyNewDelegation(this, p);
         }
     }
     public void removeDelegatesTo(Principal p) {
         if (this.superiors.remove(p) != null) {
-          // Need to figure out how to properly cache delegations. -MJL
-          // PrincipalUtil.notifyRevokeDelegation(this, p);
+            PrincipalUtil.notifyRevokeDelegation(this, p);
         }
     }
 

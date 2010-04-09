@@ -11,19 +11,19 @@ public final class MeetConfPolicy extends MeetPolicy implements ConfPolicy {
     super(policies);
   }
 
-  public ConfPolicy join(Store store, ConfPolicy p, Set s) {
+  public ConfPolicy join(Store store, ConfPolicy p, java.util.Set s) {
     return LabelUtil.join(store, this, p, s);
   }
 
-  public ConfPolicy join(ConfPolicy p, Set s) {
+  public ConfPolicy join(ConfPolicy p, java.util.Set s) {
     return LabelUtil.join(this, p, s);
   }
 
-  public ConfPolicy meet(Store store, ConfPolicy p, Set s) {
+  public ConfPolicy meet(Store store, ConfPolicy p, java.util.Set s) {
     return LabelUtil.meet(store, this, p, s);
   }
 
-  public ConfPolicy meet(ConfPolicy p, Set s) {
+  public ConfPolicy meet(ConfPolicy p, java.util.Set s) {
     return LabelUtil.meet(this, p, s);
   }
 

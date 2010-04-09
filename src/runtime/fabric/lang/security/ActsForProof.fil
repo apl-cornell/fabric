@@ -1,6 +1,6 @@
 package fabric.lang.security;
 
-import fabric.util.Set;
+import java.util.Set;
 
 /**
  * This code is mostly copied from Jif.
@@ -23,9 +23,9 @@ public abstract class ActsForProof {
   }
 
   /*
-   * Gather the set of PrincipalUtil.DelegationPairs that this proof relies on.
+   * Gather the set of AuthorizationCache.DelegationPairs that this proof relies
+   * on.
    */
-  public void gatherDelegationDependencies(Set/* <DelegationPair> */s) {
-  }
+  public abstract void gatherDelegationDependencies(Set/* <DelegationPair> */s);
 
 }

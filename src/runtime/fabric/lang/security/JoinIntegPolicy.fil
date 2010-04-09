@@ -11,11 +11,11 @@ public final class JoinIntegPolicy extends JoinPolicy implements IntegPolicy {
     super(policies);
   }
 
-  public IntegPolicy join(Store store, IntegPolicy p, Set s) {
+  public IntegPolicy join(Store store, IntegPolicy p, java.util.Set s) {
     return LabelUtil.join(store, this, p, s);
   }
 
-  public IntegPolicy join(IntegPolicy p, Set s) {
+  public IntegPolicy join(IntegPolicy p, java.util.Set s) {
     return LabelUtil.join(this, p, s);
   }
 
@@ -27,11 +27,11 @@ public final class JoinIntegPolicy extends JoinPolicy implements IntegPolicy {
     return LabelUtil.join(this, p);
   }
 
-  public IntegPolicy meet(Store store, IntegPolicy p, Set s) {
+  public IntegPolicy meet(Store store, IntegPolicy p, java.util.Set s) {
     return LabelUtil.meet(store, this, p, s);
   }
 
-  public IntegPolicy meet(IntegPolicy p, Set s) {
+  public IntegPolicy meet(IntegPolicy p, java.util.Set s) {
     return LabelUtil.meet(this, p, s);
   }
 

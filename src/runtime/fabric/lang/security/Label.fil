@@ -1,6 +1,6 @@
 package fabric.lang.security;
 
-import fabric.util.Set;
+import java.util.Set;
 
 /**
  * A Label is the runtime representation of a Fabric label. This code is mostly

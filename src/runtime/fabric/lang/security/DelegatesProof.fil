@@ -1,6 +1,6 @@
 package fabric.lang.security;
 
-import fabric.util.Set;
+import java.util.Set;
 
 /**
  * This code is mostly copied from Jif.
@@ -23,7 +23,7 @@ public final class DelegatesProof extends ActsForProof {
         && ((ConjunctivePrincipal) getActor()).conjuncts.contains(getGranter())) {
       return;
     }
-    // XXX where should new object be created?
-    s.add(new PrincipalUtil.DelegationPair(getActor(), getGranter()));
+
+    s.add(new SecurityCache.DelegationPair(getActor(), getGranter()));
   }
 }

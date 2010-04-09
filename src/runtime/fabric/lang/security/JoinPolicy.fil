@@ -22,10 +22,10 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
     return components;
   }
 
-  public boolean relabelsTo(Policy pol, Set s) {
+  public boolean relabelsTo(Policy pol, java.util.Set s) {
     if (this == pol || this.equals(pol)) return true;
 
-    Set temp = new HashSet@localStore();
+    java.util.Set temp = new java.util.HashSet();
     // this == c1 join ... join cn
     // this <= pol if for all Ci, Ci <= pol
     boolean sat = true;

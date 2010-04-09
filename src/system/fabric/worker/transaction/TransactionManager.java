@@ -5,22 +5,23 @@ import static fabric.worker.transaction.Log.CommitState.Values.*;
 import java.util.*;
 import java.util.logging.Logger;
 
-import fabric.lang.security.Label;
-import fabric.worker.*;
-import fabric.worker.debug.Timing;
-import fabric.worker.remote.RemoteWorker;
-import fabric.worker.remote.UpdateMap;
 import fabric.common.FabricThread;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
-import fabric.store.InProcessStore;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
+import fabric.lang.security.SecurityCache;
+import fabric.lang.security.Label;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
+import fabric.store.InProcessStore;
+import fabric.worker.*;
+import fabric.worker.debug.Timing;
+import fabric.worker.remote.RemoteWorker;
+import fabric.worker.remote.UpdateMap;
 
 /**
  * Holds transaction management information for a single thread. Each thread has
@@ -1004,6 +1005,10 @@ public final class TransactionManager {
     Label label = current.updateMap.getCreate(proxy);
 
     return current.updateMap.getUpdate(proxy, label);
+  }
+  
+  public SecurityCache getSecurityCache() {
+    return (SecurityCache) current.securityCache;
   }
 
   /**

@@ -2,11 +2,6 @@ package fabric.worker.transaction;
 
 import java.util.*;
 
-import fabric.worker.Worker;
-import fabric.worker.Store;
-import fabric.worker.debug.Timing;
-import fabric.worker.remote.RemoteWorker;
-import fabric.worker.remote.UpdateMap;
 import fabric.common.TransactionID;
 import fabric.common.Util;
 import fabric.common.util.LongKeyHashMap;
@@ -14,6 +9,12 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
+import fabric.lang.security.SecurityCache;
+import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.worker.debug.Timing;
+import fabric.worker.remote.RemoteWorker;
+import fabric.worker.remote.UpdateMap;
 
 /**
  * Stores per-transaction information. Records the objects that are created,
@@ -117,6 +118,8 @@ public final class Log {
     public Values value = Values.UNPREPARED;
   }
 
+  public final AbstractSecurityCache securityCache;
+
   /**
    * Creates a new log with the given parent and the given transaction ID. The
    * TID for the parent and the given TID are assumed to be consistent. If the
@@ -154,12 +157,15 @@ public final class Log {
         }
 
         commitState = parent.commitState;
+        this.securityCache =
+            new SecurityCache((SecurityCache) parent.securityCache);
       } finally {
         Timing.SUBTX.end();
       }
     } else {
       this.updateMap = new UpdateMap(this.tid.topTid);
       commitState = new CommitState();
+      this.securityCache = new SecurityCache(null);
 
       // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
@@ -353,6 +359,7 @@ public final class Log {
       writes.clear();
       localStoreWrites.clear();
       workersCalled.clear();
+      securityCache.reset();
 
       if (parent != null) {
         updateMap = new UpdateMap(parent.updateMap);
@@ -466,6 +473,9 @@ public final class Log {
           parent.workersCalled.add(worker);
       }
     }
+
+    // Replace the parent's security cache with the current cache.
+    parent.securityCache.set((SecurityCache) securityCache);
 
     // Merge the update map.
     synchronized (parent.updateMap) {

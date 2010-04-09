@@ -2,7 +2,9 @@ package fabric.lang.security;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;
-import fabric.util.*;
+import fabric.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * This code is mostly copied from Jif.
