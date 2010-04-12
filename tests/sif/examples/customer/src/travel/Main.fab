@@ -22,12 +22,9 @@ public class Main {
       boolean returnBool = false;
 
       atomic {
-          try {
-              if (broker != null && bworker actsfor BankPrincipal && bworker actsfor broker) {
-                  broker.coordinatePurchase@bworker(amount);
-                  returnBool = true;
-              }
-          } catch (PurchasingError e) {returnBool = false;}
+          if (broker != null && bworker actsfor BankPrincipal && bworker actsfor broker) {
+              returnBool = broker.coordinatePurchase@bworker(amount);
+          }
       }
         
       return returnBool;

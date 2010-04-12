@@ -8,10 +8,10 @@ public class Broker[principal bank, principal customer] extends AbstractPrincipa
     final principal{this←} airline;
     final Tickets[bank, airline, customer]{this←} custTickets;
 
-    public void coordinatePurchase{}(
+    public boolean coordinatePurchase{}(
       float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amountArg) 
           : {bank->customerAcct.user; this←; bank<-; airline<-}
-        throws PurchasingError
+//        throws PurchasingError
         where authority(this), endorse({this←}), this actsfor bank, this actsfor airline, 
         customerAcct.user equiv CustomerPrincipal,
         airlineAcct.user equiv AirlinePrincipal,        
@@ -39,9 +39,11 @@ public class Broker[principal bank, principal customer] extends AbstractPrincipa
                 }
             }
 
-            if (!success) throw new PurchasingError();
+//            if (!success) throw new PurchasingError();
+            return success;
         } catch (NullPointerException e) {
-            throw new PurchasingError();
+//            throw new PurchasingError();
+            return false;
         }
     }
 
