@@ -19,10 +19,14 @@ To set up your environment for Fabric:
 
 Set $FABRIC_HOME to the project's top-level directory
 Copy config.properties.in to config.properties and edit as appropriate.
+Add $FABRIC_HOME/bin to your path.
 
 To compile an application:
 use the "fabc" script, or run fabric.Main with java, e.g.:
 java fabric.Main tests/OO7/*.fab -d rt-classes -sourcepath src/runtime:tests -sigcp sig-classes
+
+To run a Fabric node (store or worker), you will need SSL keys and certificates
+for the node. The "genkey" script will generate keys for nodes.
 
 To start a store:
 use the "fab-store" script, or run fabric.store.Main with java, e.g.:
