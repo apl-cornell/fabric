@@ -32,9 +32,6 @@ To start a store:
 use the "fab-store" script, or run fabric.store.Main with java, e.g.:
 java fabric.store.Main --store store0 etc/keys/store0.keystore etc/keys/trust.keystore password
 
-To start a worker (coming soon):
-use the "fab-worker" script
-
 To run an application:
 use the "fab" script, or run fabric.worker.Worker with java, e.g.:
 java fabric.worker.Worker OO7.Benchmark fab://store0/OO7 tiny 3
@@ -43,7 +40,7 @@ java fabric.worker.Worker OO7.traversals.T1 fab://store0/OO7 --hot
 
 
 Eclipse setup:
-The set up eclipse for Fabric, your project's classpath should have the
+To set up eclipse for Fabric, your project's classpath should have the
 following entries:
 
 * source folder src/compiler
