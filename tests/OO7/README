@@ -1,9 +1,8 @@
 OO7 Example Application
 =======================
 
-This is a simple implementation of the OO7 Object-oriented database benchmark
-on top of fabric.
-
+This is a simple implementation of the OO7 object-oriented database benchmark
+on top of Fabric. It is written using FabIL.
 
 To build:
   $ cd fabil/
