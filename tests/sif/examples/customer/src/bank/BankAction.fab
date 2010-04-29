@@ -8,7 +8,7 @@ import sif.servlet.Request;
 import sif.servlet.Servlet;
 
 
-public abstract class CustomerAction extends Action[CustomerPrincipal] {
+public abstract class BankAction extends Action[BankPrincipal] {
     // 2 methods copied from UAction.fab
     /** 
      * Utility method to create a Table with class "banner" and containing

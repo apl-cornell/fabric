@@ -1,9 +1,9 @@
-<project name="customer-travel-example" default="compile" basedir=".">
+<project name="bank-travel-example" default="compile" basedir=".">
   <description>
     Build file for the Customer SIF application.
   </description>
 
-  <property name="app.name" value="customer" />
+  <property name="app.name" value="bank" />
 
   <import file="${basedir}/../../config.xml" />
 
@@ -157,7 +157,7 @@
 	</target-->
 	
 	<target name="compile" depends="travel,principals"
-		description="Compiles the customer application code">
+		description="Compiles the bank application code">
     <apply executable="bash"
                     parallel="true"
                     failonerror="true"
@@ -192,7 +192,7 @@
     	  <arg value="-report"/> <arg value="debug=5" />
     	-->
         <srcfile />
-        <fileset dir="${basedir}" includes="src/customer/*.fab,src/travel/*.fab" />
+        <fileset dir="${basedir}" includes="src/bank/*.fab,src/travel/*.fab" />
         <mapper type="regexp"
                 from="^src(.*)\.fab"
                 to="classes\1\.class" />            
@@ -205,15 +205,15 @@
   </target>
 
    <target name="jar" depends="compile">
-    <jar jarfile="customer.jar" basedir="${basedir}/web/WEB-INF/classes" excludes="**/*.java" />
+    <jar jarfile="bank.jar" basedir="${basedir}/web/WEB-INF/classes" excludes="**/*.java" />
    </target>
     
 	
   <target name="install" depends="configure-install, compile" description="Copies the classes to the tomcat directory">
     <fail unless="catalina.home.defined"
           message="The Tomcat installation directory is unknown. Please either edit config.properties, or set the envirnoment variable CATALINA_HOME to the Tomcat installation directory." />
-    <delete dir="${catalina.home}/webapps/customer" />
-    <copy todir="${catalina.home}/webapps/customer" includeEmptyDirs="no">
+    <delete dir="${catalina.home}/webapps/bank" />
+    <copy todir="${catalina.home}/webapps/bank" includeEmptyDirs="no">
 		<fileset dir="${basedir}/web" defaultexcludes="yes"/>
 	</copy>
   </target>

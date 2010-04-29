@@ -10,15 +10,14 @@ import sif.servlet.SessionPrincipal;
 
 import javax.servlet.ServletException;
 
-public final class CustomerMain extends Servlet[CustomerPrincipal] {
+public final class BankMain extends Servlet[BankPrincipal] {
   final Store{this} localStore;
   final Store{this} brokerstore;
   final principal{this} broker;
   
-  public CustomerMain() throws ServletException {
+  public BankMain() throws ServletException {
     FabricWorker cl = FabricWorker.getWorker();
     Store lStore = null;
-    AbstractPrincipal customerPrincipal = null;
     if (cl != null) {
       lStore = cl.getLocalStore();
     }
@@ -43,7 +42,7 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
     
   }
     
-  public void initialize{CustomerPrincipal:;CustomerPrincipal!:}()
+  public void initialize{BankPrincipal:;BankPrincipal!:}()
       throws ServletException {
       addStartAction(new FrontPage(this));
   }
@@ -52,7 +51,7 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
     return "";
   }
 
-  protected String defaultActionName(Request[CustomerPrincipal] req) {
+  protected String defaultActionName(Request[BankPrincipal] req) {
     return "frontpage";
   }
   

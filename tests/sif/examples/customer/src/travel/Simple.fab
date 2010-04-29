@@ -38,7 +38,7 @@ class Balance[principal bank, principal user] { // on bank store and worker
 
 // XXX Why do we have an Account class when Balance is good enough?
 class Account[principal bank]  { // on bank store and worker
-    final principal{bank←} user;
+    final Principal{bank←} user;
     final Balance[bank,user] {bank←} balance;
 
     Account(principal{bank←} user_) {

@@ -127,10 +127,12 @@ public class Create {
              broker.addDelegatesTo(brokerWorker);
                bank.addDelegatesTo(bankWorker);
 
-            Map root = (Map) brokerStore.getRoot();
+            java.util.Map<K, V> root = (Map) brokerStore.getRoot();
             root.put(Config.brokerMapKey, broker);
             root.put(Config.bankPrincipalMapKey, bank);
             root.put(Config.customerPrincipalMapKey, customer);
+            root.put(Config.airlineAccountKey, airlineAccount);
+            root.put(Config.customerAccountKey, customerAccount);
         }
     }
 }

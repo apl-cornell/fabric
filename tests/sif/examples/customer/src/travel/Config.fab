@@ -5,6 +5,13 @@ public final class Config {
   public static final String{*!:} bankStoreName = "core01.systems.cs.cornell.edu";
   public static final String{*!:} airlineStoreName = "core02.systems.cs.cornell.edu";
   
+  
+  /**
+   * The keys in the root map for finding the accounts on the bank store
+   */
+  public static final String{*!:} airlineAccountKey = "theAirlineAccount";
+  public static final String{*!:} customerAccountKey = "theCustomerAccount";
+  
   /**
    * The key in the root map for finding the broker object.
    */
