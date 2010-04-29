@@ -8,23 +8,12 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.*;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.*;
 import java.util.logging.Logger;
 
 import javax.net.ssl.*;
 
-import fabric.lang.security.ConfPolicy;
-import fabric.lang.security.IntegPolicy;
-import fabric.lang.security.Label;
-import fabric.lang.security.LabelUtil;
-import fabric.worker.debug.Timing;
-import fabric.worker.remote.RemoteCallManager;
-import fabric.worker.remote.RemoteWorker;
-import fabric.worker.transaction.Log;
-import fabric.worker.transaction.TransactionManager;
-import fabric.worker.transaction.TransactionRegistry;
 import fabric.common.*;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
@@ -32,11 +21,17 @@ import fabric.common.exceptions.UsageError;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.Cache;
-import fabric.lang.security.NodePrincipal;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
+import fabric.lang.security.*;
 import fabric.net.NameService;
+import fabric.worker.debug.Timing;
+import fabric.worker.remote.RemoteCallManager;
+import fabric.worker.remote.RemoteWorker;
+import fabric.worker.transaction.Log;
+import fabric.worker.transaction.TransactionManager;
+import fabric.worker.transaction.TransactionRegistry;
 
 /**
  * This is the main interface to the Fabric API. Applications wishing to use
@@ -57,7 +52,7 @@ public final class Worker {
 
   protected final LocalStore localStore;
 
-  // A KeyStore holding stores' public key certificates.
+  // A KeyStore holding trusted CA certificates.
   protected final KeyStore trustStore;
 
   // A socket factory for creating TLS connections.
@@ -266,14 +261,8 @@ public final class Worker {
 
     RemoteStore result = stores.get(name);
     if (result == null) {
-      try {
-        Certificate cert = trustStore.getCertificate(name);
-        PublicKey pubKey = cert.getPublicKey();
-        result = new RemoteStore(name, pubKey);
-        stores.put(name, result);
-      } catch (GeneralSecurityException e) {
-        throw new InternalError(e);
-      }
+      result = new RemoteStore(name);
+      stores.put(name, result);
     }
     return result;
   }

@@ -4,6 +4,7 @@ import java.io.ObjectStreamException;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.security.PublicKey;
+import java.security.cert.Certificate;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -48,9 +49,9 @@ public class RemoteStore extends RemoteNode implements Store {
 
   /**
    * The store's public SSL key. Used for verifying signatures on object groups.
-   * XXX Should use store's NodePrincipal key instead.
+   * This is null until getPublicKey() is called.
    */
-  private transient final PublicKey publicKey;
+  private transient PublicKey publicKey;
 
   /**
    * Cache of serialized objects that the store has sent us.
@@ -98,17 +99,25 @@ public class RemoteStore extends RemoteNode implements Store {
   /**
    * Creates a store representing the store at the given host name.
    */
-  protected RemoteStore(String name, PublicKey key) {
+  protected RemoteStore(String name) {
     super(name, true);
 
     this.objects = new LongKeyHashMap<FabricSoftRef>();
     this.fetchLocks = new LongKeyHashMap<FetchLock>();
     this.fresh_ids = new LinkedList<Long>();
     this.serialized = new LongKeyHashMap<SerializedObjectSoftRef>();
-    this.publicKey = key;
+    this.publicKey = null;
     this.serializedRefQueue = new ReferenceQueue<SerializedObject>();
     this.collector = new SerializedCollector();
     this.collector.start();
+  }
+
+  /**
+   * Creates a store representing the store at the given host name.
+   */
+  protected RemoteStore(String name, PublicKey key) {
+    this(name);
+    this.publicKey = key;
   }
 
   /**
@@ -483,6 +492,18 @@ public class RemoteStore extends RemoteNode implements Store {
    * @return The store's public key for verifying Glob signatures.
    */
   public PublicKey getPublicKey() {
+    if (publicKey == null) {
+      // No key cached. Fetch the certificate chain from the store.
+      GetCertificateChainMessage.Response response =
+          new GetCertificateChainMessage().send(this);
+      Certificate[] certificateChain = response.certificateChain;
+
+      // Validate the certificate chain.
+      if (Crypto.validateCertificateChain(certificateChain,
+          Worker.instance.trustStore)) {
+        publicKey = certificateChain[0].getPublicKey();
+      }
+    }
     return publicKey;
   }
 

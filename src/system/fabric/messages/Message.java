@@ -238,7 +238,8 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
     OBJECT_UPDATE(ObjectUpdateMessage.class),
     UNAUTHENTICATED_PREPARE_TRANSACTION(UnauthenticatedPrepareTransactionMessage.class),
     UNAUTHENTICATED_COMMIT_TRANSACTION(UnauthenticatedCommitTransactionMessage.class),
-    UNAUTHENTICATED_ABORT_TRANSACTION(UnauthenticatedAbortTransactionMessage.class);
+    UNAUTHENTICATED_ABORT_TRANSACTION(UnauthenticatedAbortTransactionMessage.class),
+    GET_CERT_CHAIN(GetCertificateChainMessage.class);
 
     private final Class<? extends Message<?, ?>> messageClass;
 

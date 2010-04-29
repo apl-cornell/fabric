@@ -1,6 +1,9 @@
 package fabric.common;
 
 import java.security.*;
+import java.security.cert.*;
+import java.security.cert.Certificate;
+import java.util.Arrays;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
@@ -126,5 +129,29 @@ public final class Crypto {
     }
 
     return result;
+  }
+
+  /**
+   * Validates the given certificate chain against the given trust store.
+   */
+  public static boolean validateCertificateChain(
+      Certificate[] certificateChain, KeyStore trustStore) {
+    try {
+      PKIXParameters params = new PKIXParameters(trustStore);
+      params.setRevocationEnabled(false);
+      CertificateFactory certFactory = CertificateFactory.getInstance("X509");
+      CertPath certPath =
+          certFactory.generateCertPath(Arrays.asList(certificateChain));
+      CertPathValidator pathValidator = CertPathValidator.getInstance("PKIX");
+      pathValidator.validate(certPath, params);
+      return true;
+    } catch (KeyStoreException e) {
+    } catch (CertificateException e) {
+    } catch (NoSuchAlgorithmException e) {
+    } catch (CertPathValidatorException e) {
+    } catch (InvalidAlgorithmParameterException e) {
+    }
+    
+    return false;
   }
 }

@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.security.*;
+import java.security.cert.Certificate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -39,17 +40,20 @@ public class Node {
     public final TransactionManager tm;
     public final SurrogateManager sm;
     public final ObjectDB os;
+    public final Certificate[] certificateChain;
     public final PublicKey publicKey;
     public final PrivateKey privateKey;
 
     private Store(String name, SSLSocketFactory factory, ObjectDB os,
-        TransactionManager tm, SurrogateManager sm, PublicKey publicKey,
+        TransactionManager tm, SurrogateManager sm,
+        Certificate[] certificateChain, PublicKey publicKey,
         PrivateKey privateKey) {
       this.name = name;
       this.factory = factory;
       this.os = os;
       this.tm = tm;
       this.sm = sm;
+      this.certificateChain = certificateChain;
       this.publicKey = publicKey;
       this.privateKey = privateKey;
     }
@@ -84,13 +88,16 @@ public class Node {
         sslContext.init(kmf.getKeyManagers(), tm, null);
         sslSocketFactory = sslContext.getSocketFactory();
 
+        Certificate[] certificateChain =
+            keyRepositories.keyStore.getCertificateChain(storeName);
         PublicKey publicKey =
             (PublicKey) keyRepositories.trustStore.getKey(storeName,
                 keyRepositories.password);
         PrivateKey privateKey =
             (PrivateKey) keyRepositories.keyStore.getKey(storeName,
                 keyRepositories.password);
-        addStore(storeName, sslSocketFactory, objectDB, publicKey, privateKey);
+        addStore(storeName, sslSocketFactory, objectDB, certificateChain,
+            publicKey, privateKey);
         SSLSocketFactoryTable.register(storeName, sslSocketFactory);
       } catch (KeyManagementException e) {
         throw new InternalError("Unable to initialise key manager factory.", e);
@@ -176,21 +183,26 @@ public class Node {
    *          the <code>SSLSocketFactory</code> for initiating SSL sessions with
    *          the store.
    * @param tm
-   *          a <code>TransactionManager</code> to use for the store being added.
+   *          a <code>TransactionManager</code> to use for the store being
+   *          added.
+   * @param certificateChain
+   *          The store's SSL certificate chain.
    * @param publicKey
-   *          The store's public key.
+   *          The store's public SSL key.
    * @param privateKey
-   *          The store's private key, used for signing disseminated objects.
+   *          The store's private SSL key, used for signing disseminated
+   *          objects.
    */
   private void addStore(String storeName, SSLSocketFactory sslSocketFactory,
-      ObjectDB os, PublicKey publicKey, PrivateKey privateKey)
-      throws DuplicateStoreException {
+      ObjectDB os, Certificate[] certificateChain, PublicKey publicKey,
+      PrivateKey privateKey) throws DuplicateStoreException {
     if (stores.containsKey(storeName)) throw new DuplicateStoreException();
 
     TransactionManager tm = new TransactionManager(os, privateKey);
     SurrogateManager sm = new SimpleSurrogateManager(tm);
     Store store =
-        new Store(storeName, sslSocketFactory, os, tm, sm, publicKey, privateKey);
+        new Store(storeName, sslSocketFactory, os, tm, sm, certificateChain,
+            publicKey, privateKey);
     stores.put(storeName, store);
   }
 

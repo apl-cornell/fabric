@@ -163,6 +163,17 @@ public class MessageHandlerThread extends
   }
 
   /**
+   * Processes the given request for the store's SSL certificate chain.
+   */
+  public GetCertificateChainMessage.Response handle(
+      GetCertificateChainMessage msg) {
+    logger.finer("Handling request for SSL cert chain, worker="
+        + session.remoteNode.name);
+    return new GetCertificateChainMessage.Response(
+        session.store.certificateChain);
+  }
+
+  /**
    * @return true iff a subtransaction was created for making Statistics
    *         objects.
    */
