@@ -1,5 +1,9 @@
 #!/usr/bin/perl
 
+# Counts lines of code in the Fabric project and categorizes them.
+# This script no longer works.  Needs to be updated to account for the fact
+# that we're not using CVS anymore.
+
 my $width=40;
 
 if ($ENV{'FABRIC_HOME'} ne '') {

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Wrapper script for fabric.store.Main, the Fabric store.
+
 source "$(dirname $0)/defs"
 
 while true; do

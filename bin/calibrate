@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Use collect performance numbers of some variety...not really sure.
+
 source  "$(dirname $0)/defs"
 classpath="$TOP/classes:$classpath"
 

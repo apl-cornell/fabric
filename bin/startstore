@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Vikram's wrapper script for fab-store.
+
 source "$(dirname $0)/defs"
 
 pushd $TOP

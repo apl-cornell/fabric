@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Wrapper script for fabric.worker.Worker, the Fabric worker.
+
 source "$(dirname $0)/defs"
 
 while true; do

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Updates the project image on Emulab.
+
 source "$(dirname $0)/defs"
 
 # Transfer files.
