@@ -15,6 +15,7 @@ public class PropertyNameService implements NameService {
   private static final Logger logger = Logger.getLogger("fabric.common.net");
   
   private Map<String, SocketAddress> entries;
+  private SocketAddress              defaultAddr;
   
   /** Loads the entries in the name service from properties files in a directory.
    * Scans the provided directory looking for files named *.properties.  Creates
@@ -43,6 +44,7 @@ public class PropertyNameService implements NameService {
     String defaultHost = p.getProperty(hostProp);
     String defaultPort = p.getProperty(portProp);
     
+    this.defaultAddr   = new SocketAddress(InetAddress.getByName(defaultHost), Integer.parseInt(defaultPort));
     
     //
     // load other properties files from the directory
@@ -99,7 +101,7 @@ public class PropertyNameService implements NameService {
   public SocketAddress localResolve(String name) throws IOException{
     SocketAddress result = entries.get(name);
     if (result == null)
-      throw new IOException("Failed to resolve local address for " + name);
+      result = defaultAddr;
     
     return result;
   }
@@ -107,7 +109,8 @@ public class PropertyNameService implements NameService {
   public SocketAddress resolve(String name) throws IOException {
     SocketAddress result = entries.get(name);
     if (result == null)
-      throw new IOException("Failed to resolve host name " + name);
+      result = defaultAddr;
+    
     return result;
   }
 
