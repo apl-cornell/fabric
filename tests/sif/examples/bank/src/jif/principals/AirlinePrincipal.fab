@@ -1,0 +1,42 @@
+package jif.principals;
+
+import fabric.util.Map;
+import travel.Config;
+
+public class AirlinePrincipal extends ExternalPrincipal {
+  public AirlinePrincipal() {
+    super("airline");
+  }
+  
+  public static AirlinePrincipal{*!:} getInstance{*!:}() {
+    atomic {
+      FabricWorker cl = FabricWorker.getWorker();
+      if (cl != null) {
+        final Store brokerStore = cl.getStore(Config.brokerStoreName);
+        if (brokerStore != null) {
+          Map rootMap = brokerStore.getRoot();
+          if (rootMap != null) {
+            Object obj = rootMap.get(Config.airlinePrincipalMapKey);
+            AirlinePrincipal airlinePrincipal = null;
+            if (obj instanceof AirlinePrincipal) {
+              airlinePrincipal = (AirlinePrincipal) obj;
+            } else {
+              airlinePrincipal = new AirlinePrincipal@brokerStore();
+              rootMap.put(Config.airlinePrincipalMapKey, airlinePrincipal);
+            }
+            
+            return airlinePrincipal;
+          }
+        }
+      }
+      
+      return null;
+    }
+  }
+
+  // Don't much care what store is, we're going to create it where we want
+  public static AirlinePrincipal{*!:} getInstance{*!:}(Store store) {
+      return getInstance();
+  }
+  
+}
