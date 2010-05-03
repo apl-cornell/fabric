@@ -103,7 +103,8 @@ fi
 
 # Import the CA certificate, if one was specified.
 if [[ -n "${CA}" ]] ; then
-  ${TOP}/bin/add-trusted-ca --keystore "${KEYSTORE}" --pass "${PASSWD}" "${CA}"
+  "${TOP}"/bin/add-trusted-ca --keystore "${KEYSTORE}" --pass "${PASSWD}" \
+    "${CA}"
 fi
 
 # Import the signed certificate.
