@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# Adds to a keystore a signed certificate for a Fabric node.
+
+source "$(dirname "$0")/defs"
+
+function usage() {
+  cat >&2 <<EOF
+Usage: $(basename "$0") [options] CERT
+
+  Adds to a keystore the signed certificate in CERT.
+
+Options:
+  --ca filename
+      the CA's certificate. This will be added to the keystore as a trusted
+      certificate entry. This is only needed if the CA's certificate is not
+      already in the keystore.
+
+  --keystore filename
+      the keystore to which the new key pair is to be added.
+      Default: ${TOP}/etc/keys/HOSTNAME.keystore
+	The HOSTNAME is determined from the certificate.
+
+  --pass password
+      the password for the keystore. This must be at least six characters long.
+      If this is not provided on the command line, the user will be prompted
+      for the password.
+EOF
+  exit 1
+}
+
+function error() {
+  echo "$(basename "$0")": "$@" >&2
+  echo "Try \`$(basename "$0") --help' for more information" >&2
+  exit 1
+}
+
+function noArg() {
+  error "Missing argument to --$1 option."
+}
+
+KEYSIZE="${DEFAULT_KEYSIZE}"
+
+[[ $# == 0 ]] && usage
+
+while true; do
+  case "$1" in
+    "") break ;;
+    --ca)
+      shift
+      CA="$1"
+      shift || noArg ca
+      ;;
+    --keystore)
+      shift
+      KEYSTORE="$1"
+      shift || noArg keystore
+      ;;
+    --pass)
+      shift
+      PASSWD="$1"
+      shift || noArg pass
+      ;;
+    -h|--help|-\?)
+      usage
+      ;;
+    -*)
+      error "Invalid option: $1"
+      ;;
+    *)
+      [[ -n "${CERT}" ]] && error "Too many arguments."
+
+      CERT="$1"
+      shift
+  esac
+done
+
+[[ -z "${CERT}" ]] && error Must specify a signed certificate file.
+[[ ! -f "${CERT}" ]] && error Certificate file not found: "${CERT}"
+[[ -n "${CA}" && ! -f "${CA}" ]] && error CA certificate file not found: "${CA}"
+
+# Extract the hostname from the certificate.
+HOSTNAME=$(openssl x509 -in "${CERT}" -subject | head -n 1 | sed 's|.*/CN=||')
+for i in C ST L O OU ; do
+  HOSTNAME=$(echo ${HOSTNAME} | sed "s|/${i}=.*||")
+done
+[[ -z "${HOSTNAME}" ]] && exit 1
+
+# Assign default values to unspecified options.
+[[ -z "${KEYSTORE}" ]] && KEYSTORE="${TOP}/etc/keys/${HOSTNAME}.keystore"
+
+# Make sure the keystore exists.
+[[ ! -f "${KEYSTORE}" ]] && error Keystore file not found: "${KEYSTORE}"
+
+# If necessary, ask for the keystore password.
+if [[ -z "${PASSWD}" ]] ; then
+  echo -n "Enter keystore password: "
+  stty -echo
+  read -r PASSWD
+  stty echo
+  echo
+fi
+
+# Import the CA certificate, if one was specified.
+if [[ -n "${CA}" ]] ; then
+  ${TOP}/bin/add-trusted-ca --keystore "${KEYSTORE}" --pass "${PASSWD}" "${CA}"
+fi
+
+# Import the signed certificate.
+keytool -importcert -alias "${HOSTNAME}" -file "${CERT}" \
+  -keystore "${KEYSTORE}" -storepass "${PASSWD}"
+

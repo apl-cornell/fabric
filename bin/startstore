@@ -15,7 +15,7 @@ fi
 
 L=$TOP/lib
 export CLASSPATH="$L/customer.jar:$L/fabcoll.jar:$L/fabric.jar:$L/fabric-rt.jar:$L/java_cup.jar:$L/JFlex.jar:$L/jif.jar:$L/polyglot.jar:$L/rt.jar:$L/sif.jar:$L/je-3.3.75.jar:$L/FreePastry-2.1.jar:."
-CMD="fab-store -j -Xdebug -j -Xrunjdwp:transport=dt_socket,address=3044,server=y,suspend=n --store $HOSTNAME etc/keys/$HOSTNAME.keystore etc/keys/trust.keystore password"
+CMD="fab-store -j -Xdebug -j -Xrunjdwp:transport=dt_socket,address=3044,server=y,suspend=n --store $HOSTNAME etc/keys/$HOSTNAME.keystore password"
 echo Using CLASSPATH=$CLASSPATH
 echo executing command
 echo $CMD

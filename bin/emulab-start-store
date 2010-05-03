@@ -10,6 +10,6 @@ cd "${TOP}"
 java -Xmx512M -classpath "${TOP}/classes:${TOP}/rt-classes:${TOP}/lib/je-3.2.68.jar:${TOP}/lib/FreePastry-2.1.jar" fabric.store.Main \
   --store ${HOSTNAME} \
       "${TOP}/etc/keys/${HOSTNAME}.keystore" \
-      "${TOP}/etc/keys/trust.keystore" password \
+      password \
   >& /tmp/fabric-store.log
 

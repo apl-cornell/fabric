@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Adds a certificate authority to a keystore.
+
+source "$(dirname "$0")/defs"
+
+function usage() {
+  cat >&2 <<EOF
+Usage: $(basename "$0") [options] CERT
+
+  Adds the certificate authority CERT to a keystore.
+
+Options:
+  --keystore filename
+      the keystore to which CERT is to be added. The keystore will be created
+      if it does not exist.
+      Default: ${TOP}/etc/keys/${HOSTNAME:-\$HOSTNAME}.keystore
+
+  --pass password
+      the password for the keystore. This must be at least six characters long.
+      If this is not provided on the command line, the user will be prompted
+      for the password.
+EOF
+  exit 1
+}
+
+function error() {
+  echo "$(basename "$0")": "$@" >&2
+  echo "Try \`$(basename "$0") --help' for more information" >&2
+  exit 1
+}
+
+function noArg() {
+  error "Missing argument to --$1 option."
+}
+
+[[ -n "${HOSTNAME}" ]] && KEYSTORE="${TOP}/etc/keys/${HOSTNAME}.keystore"
+
+[[ $# == 0 ]] && usage
+
+while true; do
+  case "$1" in
+    "") break ;;
+    --keystore)
+      shift
+      KEYSTORE="$1"
+      shift || noArg keystore
+      ;;
+    --pass)
+      shift
+      PASSWD="$1"
+      shift || noArg pass
+      ;;
+    -h|--help|-\?)
+      usage
+      ;;
+    -*)
+      error "Invalid option: $1"
+      ;;
+    *)
+      [[ -n "${CERT}" ]] && error "Too many arguments."
+
+      CERT="$1"
+      shift
+  esac
+done
+
+[[ -z "${CERT}" ]] && error Must specify a CA certificate.
+[[ ! -f "${CERT}" ]] && error Certificate file not found: "${CERT}"
+
+ALIAS="$(openssl x509 -in "${CERT}" -subject_hash)"
+
+if [[ -z "${PASSWD}" ]] ; then
+  keytool -importcert -alias "${ALIAS}" -file "${CERT}" \
+    -keystore "${KEYSTORE}"
+else
+  keytool -importcert -alias "${ALIAS}" -file "${CERT}" \
+    -keystore "${KEYSTORE}" -storepass "${PASSWD}"
+fi
+

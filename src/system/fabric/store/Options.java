@@ -23,7 +23,7 @@ public class Options extends fabric.common.Options {
   /**
    * Maps store names to their associated key and trust stores.
    */
-  public Map<String, StoreKeyRepositories> stores;
+  public Map<String, StoreKeyRepository> stores;
 
   /**
    * The name of the primary store.
@@ -33,15 +33,12 @@ public class Options extends fabric.common.Options {
   public int threadPool;
   public int timeout;
 
-  public static class StoreKeyRepositories {
+  public static class StoreKeyRepository {
     public final KeyStore keyStore;
-    public final KeyStore trustStore;
     public final char[] password;
 
-    public StoreKeyRepositories(KeyStore keyStore, KeyStore trustStore,
-        char[] password) {
+    public StoreKeyRepository(KeyStore keyStore, char[] password) {
       this.keyStore = keyStore;
-      this.trustStore = trustStore;
       this.password = password;
     }
   }
@@ -56,7 +53,7 @@ public class Options extends fabric.common.Options {
   @Override
   public void setDefaultValues() {
     this.port = 3372;
-    this.stores = new TreeMap<String, StoreKeyRepositories>();
+    this.stores = new TreeMap<String, StoreKeyRepository>();
     this.threadPool = 10;
     this.timeout = 15;
     this.primaryStoreName = null;
@@ -76,12 +73,13 @@ public class Options extends fabric.common.Options {
     out.println("where [options] includes:");
     usageForFlag(out, "--port <number>", "port on which to listen",
         defaults.port);
-    usageForFlag(out,
-        "--store <hostname> <keystore file> <truststore file> <passwd>",
-        "participate in the given store with the associated key and trust "
-            + "stores. Can be specified multiple times. The first store "
-            + "specified will be the node's \"primary\" store, and the store "
-            + "node's worker will run under the primary store's principal.");
+    usageForFlag(
+        out,
+        "--store <hostname> <keystore file> <passwd>",
+        "participate in the given store with the associated key store. Can be "
+            + "specified multiple times. The first store specified will be the "
+            + "node's \"primary\" store, and the store node's worker will run "
+            + "under the primary store's principal.");
     usageForFlag(out, "--pool <number>", "size of pool of message-handler "
         + "threads", defaults.threadPool);
     usageForFlag(out, "--timeout <seconds>", "time-out for idle worker "
@@ -123,40 +121,34 @@ public class Options extends fabric.common.Options {
       i++;
       String storeName = args[i];
       String keyFile = args[i + 1];
-      String trustFile = args[i + 2];
-      char[] passwd = args[i + 3].toCharArray();
+      char[] passwd = args[i + 2].toCharArray();
 
       if (this.stores.containsKey(storeName))
         throw new UsageError("Duplicate store: " + args[i]);
 
-      KeyStore keyStore, trustStore;
+      KeyStore keyStore;
       try {
         keyStore = KeyStore.getInstance("JKS");
         keyStore.load(new FileInputStream(keyFile), passwd);
-
-        trustStore = KeyStore.getInstance("JKS");
-        trustStore.load(new FileInputStream(trustFile), passwd);
       } catch (KeyStoreException e) {
-        throw new InternalError("Unable to open key or trust store.", e);
+        throw new InternalError("Unable to open key store.", e);
       } catch (NoSuchAlgorithmException e) {
         throw new InternalError(e);
       } catch (CertificateException e) {
-        throw new InternalError("Unable to open key or trust store.", e);
+        throw new InternalError("Unable to open key store.", e);
       } catch (FileNotFoundException e) {
         throw new UsageError("File not found: " + e.getMessage());
       } catch (IOException e) {
         if (e.getCause() instanceof UnrecoverableKeyException)
-          throw new UsageError(
-              "Unable to open key or trust store: invalid password.");
-        throw new InternalError("Unable to open key or trust store.", e);
+          throw new UsageError("Unable to open key store: invalid password.");
+        throw new InternalError("Unable to open key store.", e);
       }
 
-      this.stores.put(storeName, new StoreKeyRepositories(keyStore, trustStore,
-          passwd));
+      this.stores.put(storeName, new StoreKeyRepository(keyStore, passwd));
 
       if (this.primaryStoreName == null) this.primaryStoreName = storeName;
 
-      return i + 4;
+      return i + 3;
     }
 
     if (args[i].equals("--pool")) {

@@ -500,7 +500,7 @@ public class RemoteStore extends RemoteNode implements Store {
 
       // Validate the certificate chain.
       if (Crypto.validateCertificateChain(certificateChain,
-          Worker.instance.trustStore)) {
+          Worker.instance.keyStore)) {
         publicKey = certificateChain[0].getPublicKey();
       }
     }

@@ -52,8 +52,8 @@ public final class Worker {
 
   protected final LocalStore localStore;
 
-  // A KeyStore holding trusted CA certificates.
-  protected final KeyStore trustStore;
+  // A KeyStore holding the worker's key pair and any trusted CA certificates.
+  protected final KeyStore keyStore;
 
   // A socket factory for creating TLS connections.
   public final SSLSocketFactory sslSocketFactory;
@@ -64,9 +64,10 @@ public final class Worker {
 
   // The logger
   public static final Logger log;
-  
+
   static {
-    System.setProperty("java.util.logging.config.file", Resources.relpathRewrite("etc", "logging.properties"));
+    System.setProperty("java.util.logging.config.file", Resources
+        .relpathRewrite("etc", "logging.properties"));
     log = Logger.getLogger("fabric.worker");
   }
 
@@ -103,12 +104,9 @@ public final class Worker {
    * 
    * @param keyStore
    *          The worker's key store. Should contain the worker's X509
-   *          certificate.
+   *          certificate and any trusted CA certificates.
    * @param passwd
    *          The password for unlocking the key store.
-   * @param trustStore
-   *          The trust store to use. If this value is null, then the default
-   *          trust store will be used.
    * @param cacheSize
    *          The object cache size, in number of objects; must be positive.
    * @param maxConnections
@@ -122,11 +120,10 @@ public final class Worker {
    *          Whether SSL encryption is desired. Used for debugging purposes.
    */
   public static Worker initialize(String name, int port, String principalURL,
-      KeyStore keyStore, char[] passwd, KeyStore trustStore,
-      int maxConnections, int timeout, int retries, boolean useSSL,
-      String fetcher, Map<String, RemoteStore> initStoreSet)
-      throws InternalError, UnrecoverableKeyException, IllegalStateException,
-      UsageError {
+      KeyStore keyStore, char[] passwd, int maxConnections, int timeout,
+      int retries, boolean useSSL, String fetcher,
+      Map<String, RemoteStore> initStoreSet) throws InternalError,
+      UnrecoverableKeyException, IllegalStateException, UsageError {
 
     if (instance != null)
       throw new IllegalStateException(
@@ -138,8 +135,8 @@ public final class Worker {
     log.config("retries:             " + retries);
     log.config("use ssl:             " + useSSL);
     instance =
-        new Worker(name, port, principalURL, keyStore, passwd, trustStore,
-            maxConnections, timeout, retries, useSSL, fetcher, initStoreSet);
+        new Worker(name, port, principalURL, keyStore, passwd, maxConnections,
+            timeout, retries, useSSL, fetcher, initStoreSet);
 
     instance.remoteCallManager.start();
     instance.localStore.initialize();
@@ -154,10 +151,9 @@ public final class Worker {
 
   @SuppressWarnings("unchecked")
   private Worker(String name, int port, String principalURL, KeyStore keyStore,
-      char[] passwd, KeyStore trustStore, int maxConnections, int timeout,
-      int retries, boolean useSSL, String fetcher,
-      Map<String, RemoteStore> initStoreSet) throws InternalError,
-      UnrecoverableKeyException, UsageError {
+      char[] passwd, int maxConnections, int timeout, int retries,
+      boolean useSSL, String fetcher, Map<String, RemoteStore> initStoreSet)
+      throws InternalError, UnrecoverableKeyException, UsageError {
     // Sanitise input.
     if (timeout < 1) timeout = DEFAULT_TIMEOUT;
 
@@ -166,13 +162,13 @@ public final class Worker {
     this.timeout = 1000 * timeout;
     this.retries = retries;
     fabric.common.Options.DEBUG_NO_SSL = !useSSL;
-
+    
+    this.keyStore = keyStore;
     this.nameService = new NameService();
     this.stores = new HashMap<String, RemoteStore>();
     if (initStoreSet != null) this.stores.putAll(initStoreSet);
     this.remoteWorkers = new HashMap<String, RemoteWorker>();
     this.localStore = new LocalStore();
-    this.trustStore = trustStore;
 
     // Set up the SSL socket factory.
     try {
@@ -180,12 +176,9 @@ public final class Worker {
       KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
       kmf.init(keyStore, passwd);
 
-      TrustManager[] tm = null;
-      if (trustStore != null) {
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
-        tmf.init(trustStore);
-        tm = tmf.getTrustManagers();
-      }
+      TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
+      tmf.init(keyStore);
+      TrustManager[] tm = tmf.getTrustManagers();
       sslContext.init(kmf.getKeyManagers(), tm, null);
       this.sslSocketFactory = sslContext.getSocketFactory();
       SSLSocketFactoryTable.register(name, sslSocketFactory);
@@ -437,14 +430,6 @@ public final class Worker {
     keyStore.load(in, passwd.toCharArray());
     in.close();
 
-    KeyStore trustStore = KeyStore.getInstance("JKS");
-    String trustPass = p.getProperty("fabric.worker.trustpassword");
-    String trustFile =
-        p.getProperty("fabric.worker.trustfilename", "trust.keystore");
-    in = Resources.readFile("etc/keys", trustFile);
-    trustStore.load(in, trustPass.toCharArray());
-    in.close();
-
     int port = Integer.parseInt(p.getProperty("fabric.worker.port", "3373"));
     int maxConnections =
         Integer.parseInt(p.getProperty("fabric.worker.maxConnections", "50"));
@@ -459,8 +444,7 @@ public final class Worker {
         Boolean.parseBoolean(p.getProperty("fabric.worker.useSSL", "true"));
 
     initialize(name, port, principalURL, keyStore, passwd.toCharArray(),
-        trustStore, maxConnections, timeout, retries, useSSL, fetcher,
-        initStoreSet);
+        maxConnections, timeout, retries, useSSL, fetcher, initStoreSet);
   }
 
   // TODO: throws exception?
@@ -511,7 +495,8 @@ public final class Worker {
 
         runInSubTransaction(new Code<Void>() {
           public Void run() {
-            NodePrincipal principal = new NodePrincipal._Impl(store, null, name);
+            NodePrincipal principal =
+                new NodePrincipal._Impl(store, null, name);
             principal.addDelegatesTo(store.getPrincipal());
 
             System.out.println("Worker principal created:");
@@ -631,12 +616,13 @@ public final class Worker {
   public static <T> T runInSubTransaction(Code<T> code) {
     return runInSubTransaction(true, code);
   }
-  
+
   /**
    * @param useAuthentication
    *          whether to use an authenticated channel to talk to the store
    */
-  private static <T> T runInSubTransaction(boolean useAuthentication, Code<T> code) {
+  private static <T> T runInSubTransaction(boolean useAuthentication,
+      Code<T> code) {
     TransactionManager tm = TransactionManager.getInstance();
 
     boolean success = false;

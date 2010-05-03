@@ -19,7 +19,7 @@ import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SSLSocketFactoryTable;
 import fabric.common.exceptions.InternalError;
-import fabric.store.Options.StoreKeyRepositories;
+import fabric.store.Options.StoreKeyRepository;
 import fabric.store.db.ObjectDB;
 
 public class Node {
@@ -66,10 +66,10 @@ public class Node {
 
     // Instantiate the stores with their object databases and SSL socket
     // factories.
-    for (Map.Entry<String, StoreKeyRepositories> storeEntry : opts.stores
+    for (Map.Entry<String, StoreKeyRepository> storeEntry : opts.stores
         .entrySet()) {
       String storeName = storeEntry.getKey();
-      StoreKeyRepositories keyRepositories = storeEntry.getValue();
+      StoreKeyRepository keyRepository = storeEntry.getValue();
 
       ObjectDB objectDB = loadStore(storeName);
       SSLSocketFactory sslSocketFactory;
@@ -78,24 +78,22 @@ public class Node {
       try {
         SSLContext sslContext = SSLContext.getInstance("TLS");
         KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-        kmf.init(keyRepositories.keyStore, keyRepositories.password);
-        TrustManager[] tm = null;
-        if (keyRepositories.trustStore != null) {
-          TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
-          tmf.init(keyRepositories.trustStore);
-          tm = tmf.getTrustManagers();
-        }
+        kmf.init(keyRepository.keyStore, keyRepository.password);
+
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
+        tmf.init(keyRepository.keyStore);
+        TrustManager[] tm = tmf.getTrustManagers();
         sslContext.init(kmf.getKeyManagers(), tm, null);
         sslSocketFactory = sslContext.getSocketFactory();
 
         Certificate[] certificateChain =
-            keyRepositories.keyStore.getCertificateChain(storeName);
-        PublicKey publicKey =
-            (PublicKey) keyRepositories.trustStore.getKey(storeName,
-                keyRepositories.password);
+            keyRepository.keyStore.getCertificateChain(storeName);
+        Certificate publicKeyCert =
+            keyRepository.keyStore.getCertificate(storeName);
+        PublicKey publicKey = publicKeyCert.getPublicKey();
         PrivateKey privateKey =
-            (PrivateKey) keyRepositories.keyStore.getKey(storeName,
-                keyRepositories.password);
+            (PrivateKey) keyRepository.keyStore.getKey(storeName,
+                keyRepository.password);
         addStore(storeName, sslSocketFactory, objectDB, certificateChain,
             publicKey, privateKey);
         SSLSocketFactoryTable.register(storeName, sslSocketFactory);
