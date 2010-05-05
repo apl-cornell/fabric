@@ -1,4 +1,4 @@
-<project name="sif" default="sif" basedir=".">
+<project name="sif" default="all" basedir=".">
     <description>
     SIF build file
   </description>
@@ -34,6 +34,8 @@
             <fileset dir="examples" includes="hello/build.xml"/>
 	          <fileset dir="examples" includes="customer/build.xml"/>
 	          <fileset dir="examples" includes="bank/build.xml"/>
+	          <fileset dir="examples" includes="airline/build.xml"/>
+	          <fileset dir="examples" includes="travel/build.xml"/>
 	          <!--fileset dir="examples" includes="calendartwo/build.xml"/-->
         </subant>
     </target>
@@ -175,14 +177,15 @@
     <target name="sif-examples"
             depends="sif"
             description="Builds all examples">
-        <!-- compile the user example first, since other examples depend on it -->
-        <!--subant target="compile">
-            <fileset dir="examples" includes="user/build.xml"/>
-        </subant-->
+        <!-- compile the travel package first, since other examples depend on it -->
+        <subant target="compile">
+            <fileset dir="examples" includes="travel/build.xml"/>
+        </subant>
         <subant target="compile">
           <!--fileset dir="examples" includes="hello/build.xml"/-->
           <fileset dir="examples" includes="customer/build.xml"/>
           <fileset dir="examples" includes="bank/build.xml"/>
+          <fileset dir="examples" includes="airline/build.xml"/>
           <!--fileset dir="examples" includes="calendartwo/build.xml"/-->
         </subant>
     </target>
