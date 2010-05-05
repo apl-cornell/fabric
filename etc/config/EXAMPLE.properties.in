@@ -49,5 +49,5 @@
 # The IP address or DNS name that this node can be reached at.  This is
 # optional; the default is <node name>
 
-#fabric.naming.address = fabric.example.net
+#fabric.node.address = fabric.example.net
 
