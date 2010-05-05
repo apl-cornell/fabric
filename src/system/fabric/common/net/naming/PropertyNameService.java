@@ -39,7 +39,7 @@ public class PropertyNameService implements NameService {
    */
   public PropertyNameService(PortType portType) throws IOException {
     ConfigProperties defs = ConfigProperties.getDefaults();
-    this.defaultAddr   = new SocketAddress(InetAddress.getByName(defs.name), portType.getPort(defs));
+    this.defaultAddr   = new SocketAddress(null, portType.getPort(defs));
     
     //
     // load other properties files from the directory

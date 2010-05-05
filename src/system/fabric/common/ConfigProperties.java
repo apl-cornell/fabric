@@ -3,6 +3,7 @@ package fabric.common;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,13 +41,16 @@ public class ConfigProperties {
     defaults       = new Properties();
     InputStream in = null;
     try {
-      in = Resources.readFile("etc", "defaults.properties");
+      in = Resources.readFile("etc", "config.properties");
       defaults.load(in);
     } catch(IOException e) {
       // continue with system properties
     } finally {
       try { in.close(); } catch(Exception e) {}
     }
+    
+    for(Entry<Object, Object> e : defaults.entrySet())
+      logger.log(Level.FINE, "default property: {0}", e);
   }
 
 
@@ -55,10 +59,14 @@ public class ConfigProperties {
   }
   
   public static ConfigProperties getDefaults() {
-    return new ConfigProperties("default", defaults);
+    return new ConfigProperties("default", new Properties(defaults));
   }
   
   private ConfigProperties(String name, Properties p) {
+    logger.log(Level.FINE, "properties for {0}", name);
+    for (Entry<?, ?> e : defaults.entrySet())
+      logger.log(Level.FINE, " ... {0}", e);
+    
     this.name = name;
 
     //
@@ -109,7 +117,7 @@ public class ConfigProperties {
     Properties  p    = new Properties(defaults);
     InputStream file = null;
     try {
-      file = Resources.readFile("etc", "config.d", name + ".properties"); 
+      file = Resources.readFile("etc", "config", name + ".properties"); 
       p.load(file);
     } catch (IOException e) {
       // continue with defaults

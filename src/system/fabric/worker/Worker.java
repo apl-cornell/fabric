@@ -1,5 +1,6 @@
 package fabric.worker;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -412,7 +413,7 @@ public final class Worker {
     char[]   passwd   = props.password;
     String filename   = props.keystore;
     
-    InputStream in = Resources.readFile("etc/keys", filename);
+    InputStream in = new FileInputStream(filename);
     keyStore.load(in, passwd);
     in.close();
 
