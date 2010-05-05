@@ -1,0 +1,18 @@
+package travel;
+
+import fabric.util.Map;
+
+public class Tickets[principal bank, principal airline, principal user]  { // on airline store and worker
+    // XXX should be airline←
+    int {airline←bank; airline→user} num_tickets;
+    Tickets{airline←}() {
+        num_tickets = 0;
+    }
+    
+    public int{airline←bank; airline→user} getNumTickets() {
+        return num_tickets;
+    }
+}
+
+class PurchasingError extends Exception {
+}
