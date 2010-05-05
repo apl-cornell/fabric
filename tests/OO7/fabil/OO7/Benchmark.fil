@@ -312,7 +312,7 @@ public class Benchmark {
   }
 
   static void printUsage() {
-    System.out.println("usage: tailor Benchmark <path> <size> <fanout> [options]");
+    System.out.println("usage: fab Benchmark <path> <size> <fanout> [options]");
     System.out.println("  creates a OO7 database and places it at the given path.");
     System.out.println("");
     System.out.println("  <path>    should be a fabric URI, eg. \"fab://localhost/OO7\"");
