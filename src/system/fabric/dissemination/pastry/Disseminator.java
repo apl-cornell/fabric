@@ -1,8 +1,11 @@
 package fabric.dissemination.pastry;
 
+import static fabric.common.Logging.MISC_LOGGER;
+
 import java.io.IOException;
-import java.util.*;
-import java.util.logging.Logger;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 import rice.Continuation;
 import rice.Executable;
@@ -16,13 +19,13 @@ import rice.pastry.commonapi.PastryIdFactory;
 import rice.pastry.leafset.LeafSet;
 import rice.pastry.routing.RouteSet;
 import rice.pastry.routing.RoutingTable;
-import fabric.worker.Worker;
-import fabric.worker.Store;
-import fabric.worker.RemoteStore;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.dissemination.pastry.messages.*;
+import fabric.worker.RemoteStore;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * A pastry application that implements the functionality of a Fabric
@@ -58,8 +61,6 @@ public class Disseminator implements Application {
 
   /** Aggregation interval, in milliseconds. */
   protected long AGGREGATION_INTERVAL = 20 * 60 * 1000;
-
-  private Logger log = Logger.getLogger("fabric.dissem.pastry");
 
   /**
    * Creates a disseminator attached to the given pastry node.
@@ -102,7 +103,7 @@ public class Disseminator implements Application {
         AGGREGATION_INTERVAL);
 
     endpoint.register();
-    log.info("Pastry disseminator created");
+    MISC_LOGGER.info("Pastry disseminator created");
   }
 
   private static final Continuation<Object, Exception> halt =
@@ -170,8 +171,6 @@ public class Disseminator implements Application {
    */
   public Glob fetch(RemoteStore c, long onum)
       throws DisseminationTimeoutException {
-    log.fine("Pastry dissem fetch request " + c + " " + onum);
-
     Glob g = cache.get(c, onum);
 
     if (g != null) {
@@ -210,7 +209,6 @@ public class Disseminator implements Application {
    * it to the worker if it is waiting for this object.
    */
   protected void fetch(final Fetch.Reply msg) {
-    log.fine("Pastry dissem fetch reply");
     forward(msg); // caches glob
 
     process(new Executable<Void, RuntimeException>() {

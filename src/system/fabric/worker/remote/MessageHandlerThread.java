@@ -2,10 +2,23 @@ package fabric.worker.remote;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
-import java.util.logging.Logger;
 
+import fabric.common.AbstractMessageHandlerThread;
+import fabric.common.AuthorizationUtil;
+import fabric.common.TransactionID;
+import fabric.common.exceptions.ProtocolError;
+import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
-import fabric.worker.*;
+import fabric.messages.AbortTransactionMessage;
+import fabric.messages.CommitTransactionMessage;
+import fabric.messages.ObjectUpdateMessage;
+import fabric.messages.PrepareTransactionMessage;
+import fabric.net.RemoteNode;
+import fabric.worker.RemoteStore;
+import fabric.worker.TransactionAtomicityViolationException;
+import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.Worker;
 import fabric.worker.remote.messages.GetPrincipalMessage;
 import fabric.worker.remote.messages.ReadMessage;
 import fabric.worker.remote.messages.RemoteCallMessage;
@@ -14,23 +27,9 @@ import fabric.worker.remote.messages.GetPrincipalMessage.Response;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
-import fabric.common.AbstractMessageHandlerThread;
-import fabric.common.AuthorizationUtil;
-import fabric.common.TransactionID;
-import fabric.common.exceptions.ProtocolError;
-import fabric.lang.Object._Impl;
-import fabric.lang.Object._Proxy;
-import fabric.messages.AbortTransactionMessage;
-import fabric.messages.CommitTransactionMessage;
-import fabric.messages.ObjectUpdateMessage;
-import fabric.messages.PrepareTransactionMessage;
-import fabric.net.RemoteNode;
 
 public class MessageHandlerThread extends
     AbstractMessageHandlerThread<SessionAttributes, MessageHandlerThread> {
-
-  static final Logger logger =
-      Logger.getLogger("fabric.worker.remote.MessageHandler");
 
   private final RemoteCallManager rcm;
 
@@ -68,11 +67,6 @@ public class MessageHandlerThread extends
   @Override
   protected boolean shuttingDown() {
     return rcm.shuttingDown;
-  }
-
-  @Override
-  protected Logger getLogger() {
-    return logger;
   }
 
   public RemoteCallMessage.Response handle(

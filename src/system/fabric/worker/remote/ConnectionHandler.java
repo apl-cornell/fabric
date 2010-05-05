@@ -1,11 +1,15 @@
 package fabric.worker.remote;
 
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
+
 import java.net.SocketAddress;
 import java.util.Collections;
+import java.util.logging.Level;
 
-import fabric.worker.Worker;
 import fabric.common.AbstractConnectionHandler;
+import fabric.common.Logging;
 import fabric.lang.security.NodePrincipal;
+import fabric.worker.Worker;
 
 /**
  * <p>
@@ -42,13 +46,15 @@ public class ConnectionHandler extends
 
   @Override
   protected void logAuthenticationFailure() {
-    MessageHandlerThread.logger.info("Worker rejected connection: authentication failed.");
+    NETWORK_CONNECTION_LOGGER
+        .info("Worker rejected connection: authentication failed.");
   }
 
   @Override
   protected void logSession(SocketAddress remote, SessionAttributes session) {
-    MessageHandlerThread.logger.info("Worker accepted connection from "
-        + session.remoteNodeName + " at " + remote);
+    Logging.log(NETWORK_CONNECTION_LOGGER, Level.INFO,
+        "Worker accepted connection from {0} at {1}", session.remoteNodeName,
+        remote);
   }
 
   @Override

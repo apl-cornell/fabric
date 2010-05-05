@@ -1,5 +1,7 @@
 package fabric.net;
 
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
+
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -10,18 +12,16 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.security.auth.x500.X500Principal;
 
-import fabric.worker.Worker;
 import fabric.common.Options;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NoSuchNodeError;
 import fabric.common.net.naming.SocketAddress;
-import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.ChannelMultiplexerThread.CallbackHandler;
+import fabric.worker.Worker;
 
 /**
  * <p>
@@ -33,7 +33,6 @@ import fabric.net.ChannelMultiplexerThread.CallbackHandler;
  * </p>
  */
 class CommManager {
-  private final static Logger LOGGER = Logger.getLogger("fabric.messages");
   private final RemoteNode node;
   private final ChannelMultiplexerThread muxer;
   private final boolean useSSL;
@@ -117,7 +116,8 @@ class CommManager {
         // in.
         // Increment loop counter variables.
 
-        LOGGER.log(Level.WARNING, "Failed to connect", e);
+        NETWORK_CONNECTION_LOGGER.log(Level.WARNING,
+            "Failed to connect to " + node.name(), e);
 
         hostIdx++;
         if (hostIdx == numHosts) {
@@ -127,7 +127,8 @@ class CommManager {
         continue;
       } catch (IOException e) {
         // Retry.
-        LOGGER.log(Level.WARNING, "Failed to connect", e);
+        NETWORK_CONNECTION_LOGGER.log(Level.WARNING, "Failed to connect to "
+            + node.name(), e);
 
         if (hosts == null) {
           // Attempt to reuse an existing connection failed. Just restart the

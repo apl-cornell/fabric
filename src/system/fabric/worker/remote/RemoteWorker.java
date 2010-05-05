@@ -1,12 +1,25 @@
 package fabric.worker.remote;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 
-import fabric.worker.Worker;
+import fabric.common.ObjectGroup;
+import fabric.common.TransactionID;
+import fabric.common.exceptions.InternalError;
+import fabric.common.net.naming.SocketAddress;
+import fabric.dissemination.Glob;
+import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
+import fabric.lang.security.NodePrincipal;
+import fabric.messages.AbortTransactionMessage;
+import fabric.messages.CommitTransactionMessage;
+import fabric.messages.ObjectUpdateMessage;
+import fabric.messages.PrepareTransactionMessage;
+import fabric.net.RemoteNode;
+import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.Worker;
 import fabric.worker.remote.messages.GetPrincipalMessage;
 import fabric.worker.remote.messages.ReadMessage;
 import fabric.worker.remote.messages.RemoteCallMessage;
@@ -14,20 +27,6 @@ import fabric.worker.remote.messages.TakeOwnershipMessage;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
-import fabric.common.ObjectGroup;
-import fabric.common.TransactionID;
-import fabric.common.exceptions.InternalError;
-import fabric.common.net.naming.SocketAddress;
-import fabric.dissemination.Glob;
-import fabric.lang.security.NodePrincipal;
-import fabric.lang.Object._Impl;
-import fabric.lang.Object._Proxy;
-import fabric.messages.AbortTransactionMessage;
-import fabric.messages.CommitTransactionMessage;
-import fabric.messages.ObjectUpdateMessage;
-import fabric.messages.PrepareTransactionMessage;
-import fabric.net.RemoteNode;
-import fabric.net.UnreachableNodeException;
 
 /**
  * Encapsulates a remote worker. This class maintains the connection to the

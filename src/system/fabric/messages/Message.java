@@ -2,18 +2,17 @@ package fabric.messages;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.util.logging.Logger;
 
-import fabric.worker.remote.messages.GetPrincipalMessage;
-import fabric.worker.remote.messages.RemoteCallMessage;
-import fabric.worker.remote.messages.TakeOwnershipMessage;
 import fabric.common.MessageHandler;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FabricRuntimeException;
 import fabric.common.exceptions.InternalError;
-import fabric.store.MessageHandlerThread;
 import fabric.net.RemoteNode;
 import fabric.net.Stream;
+import fabric.store.MessageHandlerThread;
+import fabric.worker.remote.messages.GetPrincipalMessage;
+import fabric.worker.remote.messages.RemoteCallMessage;
+import fabric.worker.remote.messages.TakeOwnershipMessage;
 
 /**
  * @param <N>
@@ -27,7 +26,6 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
    * The <code>MessageType</code> corresponding to this class.
    */
   protected final MessageType messageType;
-  protected final static Logger logger = Logger.getLogger("fabric.messages");
 
   protected Message(MessageType messageType) {
     this.messageType = messageType;

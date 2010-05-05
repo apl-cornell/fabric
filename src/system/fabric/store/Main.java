@@ -1,9 +1,10 @@
 package fabric.store;
 
+import static fabric.common.Logging.STORE_LOGGER;
+
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.logging.Logger;
-
+import java.util.logging.Level;
 
 import fabric.common.Resources;
 import fabric.common.Version;
@@ -27,11 +28,9 @@ public class Main {
   public static void start(String args[]) {
     System.setProperty("java.util.logging.config.file",
                        Resources.relpathRewrite("etc", "logging.properties"));
-    Logger logger = Logger.getLogger("fabric.store");
-    
-    logger.info("Store node");
-    logger.config("Fabric version " + new Version());
-    logger.info("");
+    STORE_LOGGER.info("Store node");
+    STORE_LOGGER.log(Level.CONFIG, "Fabric version {0}", new Version());
+    STORE_LOGGER.info("");
 
     // Parse the command-line options.
     Options opts;

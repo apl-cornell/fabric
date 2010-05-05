@@ -1,12 +1,13 @@
 package fabric.store;
 
+import static fabric.common.Logging.STORE_REQUEST_LOGGER;
+
 import java.util.Collection;
 import java.util.Collections;
-import java.util.logging.Logger;
+import java.util.logging.Level;
 
-import fabric.worker.TransactionCommitFailedException;
-import fabric.worker.TransactionPrepareFailedException;
 import fabric.common.AbstractMessageHandlerThread;
+import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
@@ -14,12 +15,11 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.messages.*;
+import fabric.worker.TransactionCommitFailedException;
+import fabric.worker.TransactionPrepareFailedException;
 
 public class MessageHandlerThread extends
     AbstractMessageHandlerThread<SessionAttributes, MessageHandlerThread> {
-
-  private static final Logger logger =
-      Logger.getLogger("fabric.store.MessageHandler");
 
   /**
    * A factory for creating MessageHandlerThread instances. This is used by
@@ -42,20 +42,16 @@ public class MessageHandlerThread extends
     fabric.worker.transaction.TransactionManager.startThread(this);
   }
 
-  @Override
-  protected Logger getLogger() {
-    return logger;
-  }
-
   public void handle(AbortTransactionMessage message) throws AccessException,
       ProtocolError {
     if (session.workerIsDissem)
       throw new ProtocolError("Message not supported.");
 
-    logger.finer("Handling Abort Message");
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+        "Handling Abort Message from {0} for tid={1}",
+        session.workerPrincipalName, message.tid.topTid);
     session.store.tm.abortTransaction(session.workerPrincipal,
         message.tid.topTid);
-    logger.fine("Transaction " + message.tid.topTid + " aborted");
   }
 
   /**
@@ -66,7 +62,8 @@ public class MessageHandlerThread extends
     if (session.workerIsDissem)
       throw new ProtocolError("Message not supported.");
 
-    logger.finer("Handling Allocate Message");
+    STORE_REQUEST_LOGGER.log(Level.FINER, "Handling Allocate Message from {0}",
+        session.workerPrincipalName);
     long[] onums = session.store.tm.newOnums(session.workerPrincipal, msg.num);
     return new AllocateMessage.Response(onums);
   }
@@ -95,8 +92,8 @@ public class MessageHandlerThread extends
     if (session.workerIsDissem)
       throw new ProtocolError("Message not supported.");
 
-    logger.finer("Handling Prepare Message, worker="
-        + session.workerPrincipalName + ", tid=" + msg.tid);
+    STORE_REQUEST_LOGGER.log(Level.FINER, "Handling Prepare Message, worker="
+        + session.workerPrincipalName + ", tid={0}", msg.tid);
 
     try {
       boolean subTransactionCreated =
@@ -117,7 +114,9 @@ public class MessageHandlerThread extends
     if (session.workerIsDissem)
       throw new ProtocolError("Message not supported.");
 
-    logger.finer("Handling Read Message");
+    STORE_REQUEST_LOGGER.log(Level.FINER,
+        "Handling Read Message from {0}, onum=" + msg.onum,
+        session.workerPrincipalName);
     session.recordRead();
 
     ObjectGroup group =
@@ -131,7 +130,9 @@ public class MessageHandlerThread extends
    */
   public DissemReadMessage.Response handle(DissemReadMessage msg)
       throws AccessException {
-    logger.finer("Handling DissemRead message");
+    STORE_REQUEST_LOGGER.log(Level.FINER,
+        "Handling DissemRead message from {0}, onum=" + msg.onum,
+        session.remoteNode);
     session.recordRead();
 
     Glob glob = session.store.tm.getGlob(msg.onum, session.remoteNode, this);
@@ -145,8 +146,9 @@ public class MessageHandlerThread extends
    */
   public UnauthenticatedPrepareTransactionMessage.Response handle(
       UnauthenticatedPrepareTransactionMessage msg) {
-    logger.finer("Handling Unauthenticated Prepare Message, worker="
-        + session.remoteNode.name + ", tid=" + msg.tid);
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+        "Handling Unauthenticated Prepare Message from {0}, tid={1}",
+        session.remoteNode, msg.tid);
 
     try {
       final Collection<SerializedObject> EMPTY_COLLECTION =
@@ -167,8 +169,8 @@ public class MessageHandlerThread extends
    */
   public GetCertificateChainMessage.Response handle(
       GetCertificateChainMessage msg) {
-    logger.finer("Handling request for SSL cert chain, worker="
-        + session.remoteNode.name);
+    STORE_REQUEST_LOGGER.log(Level.FINER,
+        "Handling request for SSL cert chain, worker={0}", session.remoteNode);
     return new GetCertificateChainMessage.Response(
         session.store.certificateChain);
   }
@@ -192,7 +194,6 @@ public class MessageHandlerThread extends
     boolean subTransactionCreated =
         session.store.tm.prepare(session.workerPrincipal, req);
 
-    logger.fine("Transaction " + req.tid + " prepared");
     // Store the size of the transaction for debugging at the end of the
     // session
     // Note: this number does not include surrogates
@@ -207,8 +208,9 @@ public class MessageHandlerThread extends
    */
   public UnauthenticatedCommitTransactionMessage.Response handle(
       UnauthenticatedCommitTransactionMessage message) {
-    logger.finer("Handling Unauthenticated Commit Message, worker="
-        + session.remoteNode.name + ", tid=" + message.transactionID);
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+        "Handling Unauthenticated Commit Message from {0}, tid={1}",
+        session.remoteNode, message.transactionID);
 
     try {
       commitTransaction(message.transactionID);
@@ -225,7 +227,6 @@ public class MessageHandlerThread extends
 
     session.store.tm.commitTransaction(session.remoteNode,
         session.workerPrincipal, transactionID);
-    logger.fine("Transaction " + transactionID + " committed");
 
     session.recordCommitSuccess(transactionID);
   }
@@ -235,9 +236,9 @@ public class MessageHandlerThread extends
    */
   public void handle(UnauthenticatedAbortTransactionMessage message)
       throws AccessException {
-    logger.finer("Handling Abort Message");
+    STORE_REQUEST_LOGGER.log(Level.FINER, "Handling Abort Message from {0}",
+        session.remoteNode);
     session.store.tm.abortTransaction(session.workerPrincipal,
         message.tid.topTid);
-    logger.fine("Transaction " + message.tid.topTid + " aborted");
   }
 }

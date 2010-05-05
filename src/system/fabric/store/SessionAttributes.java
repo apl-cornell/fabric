@@ -1,18 +1,22 @@
 package fabric.store;
 
+import static fabric.common.Logging.STORE_LOGGER;
+
 import java.security.PrivateKey;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.logging.Logger;
+import java.util.logging.Level;
 
-import fabric.worker.Worker;
-import fabric.worker.remote.RemoteWorker;
 import fabric.common.AbstractMessageHandlerThread;
+import fabric.common.Logging;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.security.NodePrincipal;
+import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 
-final class SessionAttributes extends AbstractMessageHandlerThread.SessionAttributes {
+final class SessionAttributes extends
+    AbstractMessageHandlerThread.SessionAttributes {
   /**
    * Whether the worker is a dissemination node.
    */
@@ -29,7 +33,7 @@ final class SessionAttributes extends AbstractMessageHandlerThread.SessionAttrib
   final RemoteWorker remoteNode;
 
   /**
-   * The name the remote principal.
+   * The name of the remote principal.
    */
   final String workerPrincipalName;
 
@@ -56,7 +60,6 @@ final class SessionAttributes extends AbstractMessageHandlerThread.SessionAttrib
   private int numCreates;
   private int numWrites;
   Map<String, Integer> numSendsByType;
-  private static final Logger logger = Logger.getLogger("fabric.store.MessageHandler");
 
   /** Associates debugging log messages with pending transactions */
   private final LongKeyMap<LogRecord> pendingLogs;
@@ -121,20 +124,21 @@ final class SessionAttributes extends AbstractMessageHandlerThread.SessionAttrib
   @Override
   public void endSession() {
     // Report any statistics that may have been recorded.
-    logger.info(numReads + " read requests");
-    logger.info(numObjectsSent + " objects sent");
-    logger.info(numGlobsSent + " encrypted globs sent");
-    logger.info(numGlobsCreated + " encrypted globs created");
+    STORE_LOGGER.info(numReads + " read requests");
+    STORE_LOGGER.info(numObjectsSent + " objects sent");
+    STORE_LOGGER.info(numGlobsSent + " encrypted globs sent");
+    STORE_LOGGER.info(numGlobsCreated + " encrypted globs created");
     if (numGlobsCreated != 0)
-      logger.info("  " + (numGlobbedObjects / numGlobsCreated)
+      STORE_LOGGER.info("  " + (numGlobbedObjects / numGlobsCreated)
           + " objects per glob");
-    logger.info(numPrepares + " prepare requests");
-    logger.info(numCommits + " commit requests");
-    logger.info(numCreates + " objects created");
-    logger.info(numWrites + " objects updated");
+    STORE_LOGGER.info(numPrepares + " prepare requests");
+    STORE_LOGGER.info(numCommits + " commit requests");
+    STORE_LOGGER.info(numCreates + " objects created");
+    STORE_LOGGER.info(numWrites + " objects updated");
 
     for (Map.Entry<String, Integer> entry : numSendsByType.entrySet()) {
-      logger.info("\t" + entry.getValue() + " " + entry.getKey() + " sent");
+      Logging.log(STORE_LOGGER, Level.INFO, "\t{0} {1} sent", entry.getValue(),
+          entry.getKey());
     }
   }
 

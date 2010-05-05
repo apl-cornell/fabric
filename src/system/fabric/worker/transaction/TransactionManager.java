@@ -1,11 +1,13 @@
 package fabric.worker.transaction;
 
+import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 import static fabric.worker.transaction.Log.CommitState.Values.*;
 
 import java.util.*;
-import java.util.logging.Logger;
+import java.util.logging.Level;
 
 import fabric.common.FabricThread;
+import fabric.common.Logging;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
@@ -13,8 +15,8 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
-import fabric.lang.security.SecurityCache;
 import fabric.lang.security.Label;
+import fabric.lang.security.SecurityCache;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
@@ -71,8 +73,6 @@ public final class TransactionManager {
    * The innermost running transaction for the thread being managed.
    */
   private Log current;
-
-  static final Logger logger = Logger.getLogger("fabric.worker.transaction");
 
   /**
    * A map from OIDs to a version number and a list of logs for transactions
@@ -168,7 +168,8 @@ public final class TransactionManager {
           return;
         }
 
-        logger.finest(current + " got abort signal");
+        WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got abort signal",
+            current);
         // Abort the transaction.
         // TODO Provide a reason for the abort.
         throw new RetryException();
@@ -209,7 +210,8 @@ public final class TransactionManager {
         case COMMITTING:
         case COMMITTED:
           // Too late to abort! We shouldn't really enter this situation.
-          logger.fine("Ignoring attempt to abort a committed transaction.");
+          WORKER_TRANSACTION_LOGGER
+              .warning("Ignoring attempt to abort a committed transaction.");
           return;
 
         case ABORTING:
@@ -219,7 +221,7 @@ public final class TransactionManager {
       }
     }
 
-    logger.warning(current + " aborting");
+    WORKER_TRANSACTION_LOGGER.warning(current + " aborting");
     // Assume only one thread will be executing this.
 
     // Set the abort flag in all our children.
@@ -230,7 +232,7 @@ public final class TransactionManager {
 
     if (recurseToCohorts) sendAbortMessages();
     current.abort();
-    logger.warning(current + " aborted");
+    WORKER_TRANSACTION_LOGGER.warning(current + " aborted");
 
     synchronized (current.commitState) {
       current.commitState.value = ABORTED;
@@ -277,7 +279,8 @@ public final class TransactionManager {
    *          whether to use an authenticated channel to talk to the store
    */
   private void commitTransactionAt(long commitTime, boolean useAuthentication) {
-    logger.finest(current + " attempting to commit");
+    WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
+        current);
     // Assume only one thread will be executing this.
 
     // XXX This is a long and ugly method. Refactor?
@@ -293,7 +296,7 @@ public final class TransactionManager {
       throw e;
     }
 
-    logger.finest(current + " committing");
+    WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committing", current);
 
     Log parent = current.parent;
     if (current.tid.parent != null) {
@@ -301,7 +304,7 @@ public final class TransactionManager {
         Timing.SUBTX.begin();
         // Update data structures to reflect the commit.
         current.commitNested();
-        logger.finest(current + " committed");
+        WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committed", current);
         if (parent != null && parent.tid.equals(current.tid.parent)) {
           // Parent frame represents parent transaction. Pop the stack.
           current = parent;
@@ -333,7 +336,8 @@ public final class TransactionManager {
       failures.remove(null);
       TransactionPrepareFailedException e =
           new TransactionPrepareFailedException(failures);
-      logger.warning(current + " error committing: abort exception: " + e);
+      Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
+          "{0} error committing: abort exception: {1}", current, e);
       abortTransaction(false);
       throw new AbortException(e);
     }
@@ -373,8 +377,9 @@ public final class TransactionManager {
         return failures;
       case COMMITTING:
       case COMMITTED:
-        logger.fine("Ignoring prepare request (transaction state = "
-            + current.commitState.value + ")");
+        WORKER_TRANSACTION_LOGGER.log(Level.FINE,
+            "Ignoring prepare request (transaction state = {0})",
+            current.commitState.value);
         return failures;
       case PREPARE_FAILED:
       case ABORTING:
@@ -479,10 +484,12 @@ public final class TransactionManager {
           }
         }
 
-        logMessage +=
-            "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
+        if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+          logMessage +=
+              "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
+        }
       }
-      logger.fine(logMessage);
+      WORKER_TRANSACTION_LOGGER.fine(logMessage);
 
       sendAbortMessages(useAuthentication, stores, workers, failures.keySet());
     }
@@ -516,8 +523,9 @@ public final class TransactionManager {
       case UNPREPARED:
       case PREPARING:
         // This shouldn't happen.
-        logger.fine("Ignoring commit request (transaction state = "
-            + current.commitState.value + ")");
+        WORKER_TRANSACTION_LOGGER.log(Level.FINE,
+            "Ignoring commit request (transaction state = {0}",
+            current.commitState.value);
         return;
       case PREPARED:
         current.commitState.value = COMMITTING;
@@ -598,16 +606,19 @@ public final class TransactionManager {
     }
 
     if (!(unreachable.isEmpty() && failed.isEmpty())) {
-      logger.severe(current
-          + " error committing: atomicity violation -- failed:" + failed
-          + " unreachable:" + unreachable);
+      Logging
+          .log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
+              "{0} error committing: atomicity violation "
+                  + "-- failed: {1} unreachable: {2}", current, failed,
+              unreachable);
       throw new TransactionAtomicityViolationException(failed, unreachable);
     }
 
     // Update data structures to reflect successful commit.
-    logger.finest(current + " committed at stores...updating data structures");
+    WORKER_TRANSACTION_LOGGER.log(Level.FINEST,
+        "{0} committed at stores...updating data structures", current);
     current.commitTopLevel();
-    logger.finest(current + " committed");
+    WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committed", current);
 
     synchronized (current.commitState) {
       current.commitState.value = COMMITTED;
@@ -706,9 +717,10 @@ public final class TransactionManager {
     while (obj.$writeLockHolder != null
         && !current.isDescendantOf(obj.$writeLockHolder)) {
       try {
-        logger.finest(current + " wants to read " + obj.$getStore() + "/"
-            + obj.$getOnum() + " (" + obj.getClass() + "); waiting on writer "
-            + obj.$writeLockHolder);
+        Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST, current
+            + "{0} wants to read {1}/" + obj.$getOnum()
+            + " ({2}); waiting on writer {3}", current, obj.$getStore(), obj
+            .getClass(), obj.$writeLockHolder);
         hadToWait = true;
         obj.$numWaiting++;
         obj.wait();
@@ -727,7 +739,8 @@ public final class TransactionManager {
     obj.$updateMapVersion = -1;
 
     current.acquireReadLock(obj);
-    if (hadToWait) logger.finest(current + " got read lock");
+    if (hadToWait)
+      WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got read lock", current);
   }
 
   /**
@@ -777,9 +790,10 @@ public final class TransactionManager {
       // Make sure writer is in our ancestry.
       if (obj.$writeLockHolder != null
           && !current.isDescendantOf(obj.$writeLockHolder)) {
-        logger.finest(current + " wants to write " + obj.$getStore() + "/"
-            + obj.$getOnum() + " (" + obj.getClass() + "); waiting on writer "
-            + obj.$writeLockHolder);
+        Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+            "{0} wants to write {1}/" + obj.$getOnum()
+                + " ({2}); waiting on writer {3}", current, obj.$getStore(),
+            obj.getClass(), obj.$writeLockHolder);
         hadToWait = true;
       } else {
         // Abort any incompatible readers.
@@ -789,9 +803,10 @@ public final class TransactionManager {
             boolean allReadersInAncestry = true;
             for (Log lock : readMapEntry.readLocks) {
               if (!current.isDescendantOf(lock)) {
-                logger.finest(current + " wants to write " + obj.$getStore()
-                    + "/" + obj.$getOnum() + " (" + obj.getClass()
-                    + "); aborting reader " + lock);
+                Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+                    "{0} wants to write {1}/" + obj.$getOnum()
+                        + " ({2}); aborting reader {3}", current, obj
+                        .$getStore(), obj.getClass(), lock);
                 lock.flagAbort();
                 allReadersInAncestry = false;
               }
@@ -816,7 +831,9 @@ public final class TransactionManager {
     // Set the write stamp.
     obj.$writer = current;
 
-    if (hadToWait) logger.finest(current + " got write lock");
+    if (hadToWait)
+      WORKER_TRANSACTION_LOGGER
+          .log(Level.FINEST, "{0} got write lock", current);
 
     if (obj.$writeLockHolder == current) return;
 
@@ -910,8 +927,9 @@ public final class TransactionManager {
     try {
       Timing.BEGIN.begin();
       current = new Log(current, tid);
-      logger.finest(current.parent + " started subtx " + current
-          + " in thread " + Thread.currentThread());
+      Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+          "{0} started subtx {1} in thread {2}", current.parent, current,
+          Thread.currentThread());
     } finally {
       Timing.BEGIN.end();
     }
@@ -1006,7 +1024,7 @@ public final class TransactionManager {
 
     return current.updateMap.getUpdate(proxy, label);
   }
-  
+
   public SecurityCache getSecurityCache() {
     return (SecurityCache) current.securityCache;
   }

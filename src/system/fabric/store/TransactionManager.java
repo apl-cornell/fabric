@@ -1,23 +1,28 @@
 package fabric.store;
 
+import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
+
 import java.security.PrivateKey;
 import java.util.*;
 
-import fabric.lang.security.Label;
-import fabric.worker.*;
-import fabric.worker.Worker.Code;
-import fabric.worker.remote.RemoteWorker;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.*;
+import fabric.dissemination.Glob;
+import fabric.lang.Statistics;
+import fabric.lang.security.Label;
+import fabric.lang.security.NodePrincipal;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
-import fabric.dissemination.Glob;
-import fabric.lang.security.NodePrincipal;
-import fabric.lang.Statistics;
+import fabric.worker.Store;
+import fabric.worker.TransactionCommitFailedException;
+import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.Worker;
+import fabric.worker.Worker.Code;
+import fabric.worker.remote.RemoteWorker;
 
 public class TransactionManager {
 
@@ -62,6 +67,8 @@ public class TransactionManager {
       throws AccessException {
     synchronized (database) {
       database.rollback(transactionID, worker);
+      STORE_TRANSACTION_LOGGER.fine("Aborted transaction "
+          + transactionID);
     }
   }
 
@@ -74,6 +81,8 @@ public class TransactionManager {
     synchronized (database) {
       try {
         database.commit(transactionID, workerNode, workerPrincipal, sm);
+        STORE_TRANSACTION_LOGGER.fine("Committed transaction "
+            + transactionID);
       } catch (final AccessException e) {
         throw new TransactionCommitFailedException("Insufficient Authorization");
       } catch (final RuntimeException e) {
@@ -254,6 +263,8 @@ public class TransactionManager {
       synchronized (database) {
         database.finishPrepare(tid, worker);
       }
+      
+      STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
 
       return result;
     } catch (TransactionPrepareFailedException e) {
@@ -380,8 +391,8 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  public Glob getGlob(long onum, RemoteWorker subscriber, MessageHandlerThread handler)
-      throws AccessException {
+  public Glob getGlob(long onum, RemoteWorker subscriber,
+      MessageHandlerThread handler) throws AccessException {
     return getGroupContainerAndSubscribe(onum, subscriber, true, handler)
         .getGlob();
   }

@@ -1,24 +1,20 @@
 package fabric.worker;
 
+import static fabric.common.Logging.WORKER_LOCAL_STORE_LOGGER;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Logger;
 
-import fabric.lang.security.ConfPolicy;
-import fabric.lang.security.IntegPolicy;
-import fabric.lang.security.Label;
-import fabric.lang.security.LabelUtil;
-import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.common.ONumConstants;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
-import fabric.lang.security.NodePrincipal;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
-import fabric.lang.security.Principal;
+import fabric.lang.security.*;
+import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.util.HashMap;
 import fabric.util.Map;
 
@@ -37,25 +33,23 @@ public final class LocalStore implements Store {
 
   private Set<Pair<Principal, Principal>> localDelegates;
 
-  private static final Logger log = Logger.getLogger("fabric.worker.LocalStore");
-
   public synchronized boolean prepareTransaction(boolean useAuthentication,
       long tid, long commitTime, Collection<Object._Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object._Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
-    log.fine("Local transaction preparing");
+    WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
     return false;
   }
 
   public synchronized void abortTransaction(boolean useAuthentication,
       TransactionID tid) {
-    log.fine("Local transaction aborting");
+    WORKER_LOCAL_STORE_LOGGER.fine("Local transaction aborting");
   }
 
   public synchronized void commitTransaction(boolean useAuthentication,
       long transactionID) {
-    log.fine("Local transaction committing");
+    WORKER_LOCAL_STORE_LOGGER.fine("Local transaction committing");
   }
 
   public synchronized long createOnum() {

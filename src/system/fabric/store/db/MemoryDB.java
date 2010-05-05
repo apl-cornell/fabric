@@ -1,18 +1,21 @@
 package fabric.store.db;
 
+import static fabric.common.Logging.STORE_DB_LOGGER;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.logging.Logger;
 
-import fabric.worker.remote.RemoteWorker;
-import fabric.common.*;
+import fabric.common.ONumConstants;
+import fabric.common.Resources;
+import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
-import fabric.store.SubscriptionManager;
 import fabric.lang.security.NodePrincipal;
+import fabric.store.SubscriptionManager;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * <p>
@@ -49,8 +52,6 @@ public class MemoryDB extends ObjectDB {
    */
   private long nextGlobID;
 
-  private Logger log = Logger.getLogger("fabric.store.db.mem");
-
   /**
    * Opens the store contained in file "var/storeName" if it exists, or an empty
    * store otherwise.
@@ -82,7 +83,7 @@ public class MemoryDB extends ObjectDB {
       this.objectTable = new LongKeyHashMap<SerializedObject>();
     }
 
-    log.info("MemDB loaded");
+    STORE_DB_LOGGER.info("MemDB loaded");
   }
 
   @Override

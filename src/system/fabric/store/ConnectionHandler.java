@@ -1,7 +1,9 @@
 package fabric.store;
 
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
+
 import java.net.SocketAddress;
-import java.util.logging.Logger;
+import java.util.logging.Level;
 
 import fabric.common.AbstractConnectionHandler;
 import fabric.lang.security.NodePrincipal;
@@ -18,7 +20,6 @@ import fabric.lang.security.NodePrincipal;
 class ConnectionHandler extends
     AbstractConnectionHandler<Node.Store, SessionAttributes, MessageHandlerThread> {
   private final Node node;
-  private static final Logger LOGGER = Logger.getLogger("fabric.store.worker");
 
   public ConnectionHandler(Node node) {
     super(node.opts.threadPool, new MessageHandlerThread.Factory());
@@ -46,18 +47,21 @@ class ConnectionHandler extends
 
   @Override
   protected void logAuthenticationFailure() {
-    LOGGER.info("Store rejected connection: worker failed authentication.");
+    NETWORK_CONNECTION_LOGGER
+        .info("Store rejected connection: remote worker failed authentication.");
   }
 
   @Override
   protected void logSession(SocketAddress remote, SessionAttributes session) {
-    LOGGER.info("Store " + session.store.name + " accepted connection from "
-        + remote);
+    NETWORK_CONNECTION_LOGGER.log(Level.INFO, "Store " + session.store.name
+        + " accepted connection from {0}", remote);
 
     if (session.workerIsDissem) {
-      LOGGER.info("Worker connected as dissemination node");
+      NETWORK_CONNECTION_LOGGER
+          .info("Remote worker connected as dissemination node");
     } else {
-      LOGGER.info("Worker principal is " + session.workerPrincipalName
+      NETWORK_CONNECTION_LOGGER.info("Remote worker principal is "
+          + session.workerPrincipalName
           + (session.workerPrincipal == null ? " (acting as null)" : ""));
     }
   }

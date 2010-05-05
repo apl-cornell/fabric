@@ -1,11 +1,12 @@
 package fabric.common;
 
+import static fabric.common.Logging.CONFIG_LOGGER;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.Map.Entry;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 public class ConfigProperties {
@@ -31,8 +32,6 @@ public class ConfigProperties {
 
   public final String workerPrincipal;
 
-  private static Logger logger = Logger.getLogger("fabric.config");
-
   static {
     //
     // load the default properties files
@@ -50,7 +49,7 @@ public class ConfigProperties {
     }
     
     for(Entry<Object, Object> e : defaults.entrySet())
-      logger.log(Level.FINE, "default property: {0}", e);
+      CONFIG_LOGGER.log(Level.FINE, "default property: {0}", e);
   }
 
 
@@ -63,9 +62,9 @@ public class ConfigProperties {
   }
   
   private ConfigProperties(String name, Properties p) {
-    logger.log(Level.FINE, "properties for {0}", name);
+    CONFIG_LOGGER.log(Level.FINE, "properties for {0}", name);
     for (Entry<?, ?> e : defaults.entrySet())
-      logger.log(Level.FINE, " ... {0}", e);
+      CONFIG_LOGGER.log(Level.FINE, " ... {0}", e);
     
     this.name = name;
 
@@ -103,7 +102,7 @@ public class ConfigProperties {
     //
 
     for (Object prop : p.keySet())
-      logger.log(Level.WARNING, "Unused property: {0}", prop);
+      CONFIG_LOGGER.log(Level.WARNING, "Unused property: {0}", prop);
   }
 
   /** like p.getProperty(name, default), but removes the property. */

@@ -1,5 +1,7 @@
 package fabric.worker;
 
+import static fabric.common.Logging.WORKER_LOGGER;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +13,6 @@ import java.net.URISyntaxException;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.*;
-import java.util.logging.Logger;
 
 import javax.net.ssl.*;
 
@@ -65,13 +66,9 @@ public final class Worker {
   protected final NodePrincipal principal;
   public final java.security.Principal javaPrincipal;
 
-  // The logger
-  public static final Logger log;
-
   static {
     System.setProperty("java.util.logging.config.file", Resources
         .relpathRewrite("etc", "logging.properties"));
-    log = Logger.getLogger("fabric.worker");
   }
 
   // The timeout (in milliseconds) to use whilst attempting to connect to a
@@ -135,11 +132,11 @@ public final class Worker {
       throw new IllegalStateException(
           "The Fabric worker has already been initialized");
 
-    log.info("Initializing Fabric worker");
-    log.config("maximum connections: " + maxConnections);
-    log.config("timeout:             " + timeout);
-    log.config("retries:             " + retries);
-    log.config("use ssl:             " + useSSL);
+    WORKER_LOGGER.info("Initializing Fabric worker");
+    WORKER_LOGGER.config("maximum connections: " + maxConnections);
+    WORKER_LOGGER.config("timeout:             " + timeout);
+    WORKER_LOGGER.config("retries:             " + retries);
+    WORKER_LOGGER.config("use ssl:             " + useSSL);
     instance =
         new Worker(name, port, principalURL, keyStore, passwd, maxConnections,
             timeout, retries, useSSL, fetcher, initStoreSet);
@@ -431,9 +428,9 @@ public final class Worker {
 
   // TODO: throws exception?
   public static void main(String[] args) throws Throwable {
-    log.info("Worker node");
-    log.config("Fabric version " + new Version());
-    log.info("");
+    WORKER_LOGGER.info("Worker node");
+    WORKER_LOGGER.config("Fabric version " + new Version());
+    WORKER_LOGGER.info("");
 
     // Parse the command-line options.
     Worker worker = null;
@@ -468,7 +465,7 @@ public final class Worker {
         cmd.append(" ");
         cmd.append(s);
       }
-      log.config(cmd.toString());
+      WORKER_LOGGER.config(cmd.toString());
 
       if (opts.store != null) {
         // Create a principal object on the given store.
@@ -505,7 +502,7 @@ public final class Worker {
       final NodePrincipal workerPrincipal = worker.getPrincipal();
       runInSubTransaction(new Code<Void>() {
         public Void run() {
-          log.config("Worker principal is " + workerPrincipal);
+          WORKER_LOGGER.config("Worker principal is " + workerPrincipal);
           return null;
         }
       });

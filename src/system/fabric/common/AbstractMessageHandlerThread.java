@@ -8,11 +8,10 @@ import java.nio.channels.Pipe.SinkChannel;
 import java.nio.channels.Pipe.SourceChannel;
 import java.util.Stack;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import fabric.worker.transaction.TransactionManager;
 import fabric.common.exceptions.InternalError;
 import fabric.messages.Message;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * Abstracts a message-handler thread for processing messages. This implements
@@ -92,7 +91,8 @@ public abstract class AbstractMessageHandlerThread<Session extends AbstractMessa
       } catch (ClosedByInterruptException e) {
       } catch (EOFException e) {
       } catch (final IOException e) {
-        getLogger().log(Level.WARNING, "Connection closed prematurely", e);
+        Logging.NETWORK_CONNECTION_LOGGER.log(Level.WARNING,
+            "Connection closed prematurely", e);
       }
 
       // Return this handler to the pool.
@@ -108,11 +108,6 @@ public abstract class AbstractMessageHandlerThread<Session extends AbstractMessa
   protected boolean shuttingDown() {
     return false;
   }
-
-  /**
-   * Returns a Logger to use for debug logging.
-   */
-  protected abstract Logger getLogger();
 
   /**
    * The execution body of the message-handler thread.

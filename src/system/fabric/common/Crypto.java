@@ -12,7 +12,7 @@ import javax.crypto.spec.SecretKeySpec;
 import fabric.common.exceptions.InternalError;
 
 /**
- * This is the clearinghouse for all things crypto.
+ * This is the clearing house for all things crypto.
  */
 public final class Crypto {
   public static final String ALG_SIGNATURE = "SHA256withRSA";

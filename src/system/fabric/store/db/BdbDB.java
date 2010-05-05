@@ -1,15 +1,14 @@
 package fabric.store.db;
 
 import static com.sleepycat.je.OperationStatus.SUCCESS;
+import static fabric.common.Logging.STORE_DB_LOGGER;
 
 import java.io.*;
 import java.util.Arrays;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import com.sleepycat.je.*;
 
-import fabric.worker.remote.RemoteWorker;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
@@ -19,8 +18,9 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.OidKeyHashMap;
-import fabric.store.SubscriptionManager;
 import fabric.lang.security.NodePrincipal;
+import fabric.store.SubscriptionManager;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * An ObjectDB backed by a Berkeley Database.
@@ -29,7 +29,7 @@ public class BdbDB extends ObjectDB {
 
   private Environment env;
   private Database meta;
-  
+
   /**
    * Database containing the actual serialized Fabric objects.
    */
@@ -38,8 +38,6 @@ public class BdbDB extends ObjectDB {
 
   private final DatabaseEntry initializationStatus;
   private final DatabaseEntry onumCounter;
-
-  private Logger log = Logger.getLogger("fabric.store.db.BdbDB");
 
   private long nextOnum;
 
@@ -80,7 +78,7 @@ public class BdbDB extends ObjectDB {
       conf.setTransactional(true);
       env = new Environment(new File(path), conf);
 
-      log.info("Bdb env opened");
+      STORE_DB_LOGGER.info("Bdb env opened");
 
       DatabaseConfig dbconf = new DatabaseConfig();
       dbconf.setAllowCreate(true);
@@ -91,9 +89,9 @@ public class BdbDB extends ObjectDB {
 
       initRwCount();
 
-      log.info("Bdb databases opened");
+      STORE_DB_LOGGER.info("Bdb databases opened");
     } catch (DatabaseException e) {
-      log.log(Level.SEVERE, "Bdb error in <init>: ", e);
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in <init>: ", e);
       throw new InternalError(e);
     }
 
@@ -126,9 +124,9 @@ public class BdbDB extends ObjectDB {
       txn.commit();
 
       preparedTransactions.put(new ByteArray(key), pending);
-      log.finer("Bdb prepare success tid " + tid);
+      STORE_DB_LOGGER.finer("Bdb prepare success tid " + tid);
     } catch (DatabaseException e) {
-      log.log(Level.SEVERE, "Bdb error in finishPrepare: ", e);
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in finishPrepare: ", e);
       throw new InternalError(e);
     }
   }
@@ -136,7 +134,7 @@ public class BdbDB extends ObjectDB {
   @Override
   public void commit(long tid, RemoteWorker workerNode,
       NodePrincipal workerPrincipal, SubscriptionManager sm) {
-    log.finer("Bdb commit begin tid " + tid);
+    STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
 
     try {
       Transaction txn = env.beginTransaction(null, null);
@@ -145,7 +143,7 @@ public class BdbDB extends ObjectDB {
       if (pending != null) {
         for (SerializedObject o : pending.modData) {
           long onum = o.getOnum();
-          log.finest("Bdb committing onum " + onum);
+          STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
           DatabaseEntry onumData = new DatabaseEntry(toBytes(onum));
           DatabaseEntry objData = new DatabaseEntry(toBytes(o));
           db.put(txn, onumData, objData);
@@ -158,39 +156,39 @@ public class BdbDB extends ObjectDB {
         }
 
         txn.commit();
-        log.finer("Bdb commit success tid " + tid);
+        STORE_DB_LOGGER.finer("Bdb commit success tid " + tid);
       } else {
         txn.abort();
-        log.warning("Bdb commit not found tid " + tid);
+        STORE_DB_LOGGER.warning("Bdb commit not found tid " + tid);
         throw new InternalError("Unknown transaction id " + tid);
       }
     } catch (DatabaseException e) {
       // Problem. Clear out cached versions.
       cachedVersions.clear();
 
-      log.log(Level.SEVERE, "Bdb error in commit: ", e);
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in commit: ", e);
       throw new InternalError(e);
     }
   }
 
   @Override
   public void rollback(long tid, NodePrincipal worker) {
-    log.finer("Bdb rollback begin tid " + tid);
+    STORE_DB_LOGGER.finer("Bdb rollback begin tid " + tid);
 
     try {
       Transaction txn = env.beginTransaction(null, null);
       remove(worker, txn, tid);
       txn.commit();
-      log.finer("Bdb rollback success tid " + tid);
+      STORE_DB_LOGGER.finer("Bdb rollback success tid " + tid);
     } catch (DatabaseException e) {
-      log.log(Level.SEVERE, "Bdb error in rollback: ", e);
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in rollback: ", e);
       throw new InternalError(e);
     }
   }
 
   @Override
   public SerializedObject read(long onum) {
-    log.finest("Bdb read onum " + onum);
+    STORE_DB_LOGGER.finest("Bdb read onum " + onum);
     DatabaseEntry key = new DatabaseEntry(toBytes(onum));
     DatabaseEntry data = new DatabaseEntry();
 
@@ -204,7 +202,7 @@ public class BdbDB extends ObjectDB {
         return result;
       }
     } catch (DatabaseException e) {
-      log.log(Level.SEVERE, "Bdb error in read: ", e);
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in read: ", e);
       throw new InternalError(e);
     }
 
@@ -230,7 +228,7 @@ public class BdbDB extends ObjectDB {
         return true;
       }
     } catch (DatabaseException e) {
-      log.log(Level.SEVERE, "Bdb error in exists: ", e);
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in exists: ", e);
       throw new InternalError(e);
     }
 
@@ -241,7 +239,7 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public long[] newOnums(int num) {
-    log.fine("Bdb new onums begin");
+    STORE_DB_LOGGER.fine("Bdb new onums begin");
 
     try {
       long[] onums = new long[num];
@@ -262,7 +260,8 @@ public class BdbDB extends ObjectDB {
           meta.put(txn, onumCounter, data);
           txn.commit();
 
-          log.fine("Bdb reserved onums " + nextOnum + "--" + lastReservedOnum);
+          STORE_DB_LOGGER.fine("Bdb reserved onums " + nextOnum + "--"
+              + lastReservedOnum);
         }
 
         onums[i] = nextOnum++;
@@ -270,7 +269,7 @@ public class BdbDB extends ObjectDB {
 
       return onums;
     } catch (DatabaseException e) {
-      log.log(Level.SEVERE, "Bdb error in newOnums: ", e);
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in newOnums: ", e);
       throw new InternalError(e);
     }
   }
@@ -290,7 +289,7 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public boolean isInitialized() {
-    log.fine("Bdb is initialized begin");
+    STORE_DB_LOGGER.fine("Bdb is initialized begin");
 
     try {
       Transaction txn = env.beginTransaction(null, null);
@@ -305,14 +304,14 @@ public class BdbDB extends ObjectDB {
 
       return result;
     } catch (DatabaseException e) {
-      log.log(Level.SEVERE, "Bdb error in isInitialized: ", e);
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in isInitialized: ", e);
       throw new InternalError(e);
     }
   }
 
   @Override
   public void setInitialized() {
-    log.fine("Bdb set initialized begin");
+    STORE_DB_LOGGER.fine("Bdb set initialized begin");
 
     try {
       Transaction txn = env.beginTransaction(null, null);
@@ -320,7 +319,7 @@ public class BdbDB extends ObjectDB {
       meta.put(txn, initializationStatus, data);
       txn.commit();
     } catch (DatabaseException e) {
-      log.log(Level.SEVERE, "Bdb error in isInitialized: ", e);
+      STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error in isInitialized: ", e);
       throw new InternalError(e);
     }
   }

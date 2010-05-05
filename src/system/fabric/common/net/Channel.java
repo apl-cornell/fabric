@@ -1,18 +1,12 @@
 package fabric.common.net;
 
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import static fabric.common.Logging.NETWORK_CHANNEL_LOGGER;
+
+import java.io.*;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import fabric.common.net.handshake.ShakenSocket;
 
@@ -24,8 +18,6 @@ import fabric.common.net.handshake.ShakenSocket;
  * @author mdgeorge
  */
 abstract class Channel extends Thread {
-  private static Logger logger = Logger.getLogger("fabric.common.net");
-  
   private final DataOutputStream out;
   private final DataInputStream  in;
   protected final Socket           sock;
@@ -75,8 +67,8 @@ abstract class Channel extends Thread {
 
   /** send data */
   public synchronized void sendData(int sequence, byte[] data, int offset, int len) throws IOException {
-    if (logger.isLoggable(Level.FINE))
-      logger.fine("sending " + len + " bytes of data");
+    NETWORK_CHANNEL_LOGGER.log(Level.FINE, "sending " + len
+        + " bytes of data on {0}", this);
     
     out.writeInt(sequence);
     out.writeInt(len);
@@ -137,8 +129,8 @@ abstract class Channel extends Thread {
         byte[] buf = new byte[len];
         in.read(buf);
         
-        if (logger.isLoggable(Level.FINE))
-          logger.fine("received " + len + " bytes");
+        NETWORK_CHANNEL_LOGGER.log(Level.FINE, "received " + len
+            + " bytes on {0}", this);
         
         recvData(sequenceNumber, buf);
       }
@@ -190,7 +182,7 @@ abstract class Channel extends Thread {
 
     /** forward data to the reading thread */
     public void receiveData(byte[] b) throws IOException {
-      logger.fine("putting data in pipe");
+      NETWORK_CHANNEL_LOGGER.fine("putting data in pipe");
       sink.write(b);
       sink.flush();
     }

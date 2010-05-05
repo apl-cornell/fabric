@@ -1,12 +1,13 @@
 package fabric.common.net.naming;
 
+import static fabric.common.Logging.NAMING_LOGGER;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import fabric.common.ConfigProperties;
 import fabric.common.Resources;
@@ -21,9 +22,7 @@ public class PropertyNameService implements NameService {
     
     abstract int getPort(ConfigProperties p);
   }
-  
-  private static final Logger logger = Logger.getLogger("fabric.common.net");
-  
+ 
   private Map<String, SocketAddress> entries;
   private SocketAddress              defaultAddr;
   
@@ -66,7 +65,7 @@ public class PropertyNameService implements NameService {
     //
     // log entries
     //
-    if (logger.isLoggable(Level.FINEST)) {
+    if (NAMING_LOGGER.isLoggable(Level.FINEST)) {
       // find length so output is pretty
       int size = 0;
       for (String name : entries.keySet())
@@ -74,8 +73,8 @@ public class PropertyNameService implements NameService {
     
       // print nicely
       for (Map.Entry<String, SocketAddress> e : entries.entrySet())
-        logger.finest(String.format("name service: %1$" + size + "s -> %2$s",
-                                                   e.getKey(), e.getValue()));
+        NAMING_LOGGER.finest(String.format("name service: %1$" + size
+            + "s -> %2$s", e.getKey(), e.getValue()));
     }
   }
   

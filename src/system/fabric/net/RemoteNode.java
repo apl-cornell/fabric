@@ -1,7 +1,6 @@
 package fabric.net;
 
 import java.io.IOException;
-import java.util.logging.Logger;
 
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.naming.SocketAddress;
@@ -10,8 +9,6 @@ import fabric.common.net.naming.SocketAddress;
  * Abstracts remote stores and remote workers.
  */
 public abstract class RemoteNode {
-  final static Logger logger = Logger.getLogger("fabric.messages");
-
   /**
    * The DNS hostname of the node.
    */
