@@ -1,47 +1,19 @@
 package fabric.store;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintStream;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.util.Map;
-import java.util.TreeMap;
 
-import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
 
 public class Options extends fabric.common.Options {
 
-  public int port;
-
   /**
-   * Maps store names to their associated key and trust stores.
+   * The name of the store.
    */
-  public Map<String, StoreKeyRepository> stores;
-
-  /**
-   * The name of the primary store.
-   */
-  public String primaryStoreName;
+  public String storeName;
 
   public int threadPool;
   public int timeout;
-
-  public static class StoreKeyRepository {
-    public final KeyStore keyStore;
-    public final char[] password;
-
-    public StoreKeyRepository(KeyStore keyStore, char[] password) {
-      this.keyStore = keyStore;
-      this.password = password;
-    }
-  }
 
   private Options() {
   }
@@ -52,18 +24,15 @@ public class Options extends fabric.common.Options {
 
   @Override
   public void setDefaultValues() {
-    this.port = 3372;
-    this.stores = new TreeMap<String, StoreKeyRepository>();
+    this.storeName  = null;
     this.threadPool = 10;
-    this.timeout = 15;
-    this.primaryStoreName = null;
+    this.timeout    = 15;
   }
 
   @Override
   public void validateOptions() throws UsageError {
-
-    if (null == primaryStoreName) throw new UsageError("No stores specified");
-
+    if (null == storeName)
+      throw new UsageError("No store specified");
   }
 
   public static void usage(PrintStream out) {
@@ -71,15 +40,7 @@ public class Options extends fabric.common.Options {
 
     out.println("Usage: fab-store [options]");
     out.println("where [options] includes:");
-    usageForFlag(out, "--port <number>", "port on which to listen",
-        defaults.port);
-    usageForFlag(
-        out,
-        "--store <hostname> <keystore file> <passwd>",
-        "participate in the given store with the associated key store. Can be "
-            + "specified multiple times. The first store specified will be the "
-            + "node's \"primary\" store, and the store node's worker will run "
-            + "under the primary store's principal.");
+    usageForFlag(out, "--store <hostname>", "The name of the store.");
     usageForFlag(out, "--pool <number>", "size of pool of message-handler "
         + "threads", defaults.threadPool);
     usageForFlag(out, "--timeout <seconds>", "time-out for idle worker "
@@ -107,54 +68,16 @@ public class Options extends fabric.common.Options {
       throw new TerminationException(0);
     }
 
-    if (args[i].equals("--port")) {
-      i++;
-      try {
-        this.port = new Integer(args[i]).intValue();
-      } catch (NumberFormatException e) {
-        throw new UsageError("Invalid port number: " + args[i]);
-      }
-      return i + 1;
-    }
-
     if (args[i].equals("--store")) {
       i++;
-      String storeName = args[i];
-      String keyFile = args[i + 1];
-      char[] passwd = args[i + 2].toCharArray();
-
-      if (this.stores.containsKey(storeName))
-        throw new UsageError("Duplicate store: " + args[i]);
-
-      KeyStore keyStore;
-      try {
-        keyStore = KeyStore.getInstance("JKS");
-        keyStore.load(new FileInputStream(keyFile), passwd);
-      } catch (KeyStoreException e) {
-        throw new InternalError("Unable to open key store.", e);
-      } catch (NoSuchAlgorithmException e) {
-        throw new InternalError(e);
-      } catch (CertificateException e) {
-        throw new InternalError("Unable to open key store.", e);
-      } catch (FileNotFoundException e) {
-        throw new UsageError("File not found: " + e.getMessage());
-      } catch (IOException e) {
-        if (e.getCause() instanceof UnrecoverableKeyException)
-          throw new UsageError("Unable to open key store: invalid password.");
-        throw new InternalError("Unable to open key store.", e);
-      }
-
-      this.stores.put(storeName, new StoreKeyRepository(keyStore, passwd));
-
-      if (this.primaryStoreName == null) this.primaryStoreName = storeName;
-
-      return i + 3;
+      storeName = args[i];
+      return i + 1;
     }
 
     if (args[i].equals("--pool")) {
       i++;
       try {
-        this.threadPool = new Integer(args[i]).intValue();
+        this.threadPool = Integer.parseInt(args[i]);
       } catch (NumberFormatException e) {
         throw new UsageError("Invalid argument: " + args[i]);
       }

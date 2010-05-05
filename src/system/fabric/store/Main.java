@@ -1,9 +1,7 @@
 package fabric.store;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 
@@ -27,24 +25,8 @@ public class Main {
   }
 
   public static void start(String args[]) {
-    try {
-      InputStream in = Resources.readFile("etc", "store.properties");
-      Properties p = new Properties(System.getProperties());
-      p.load(in);
-      in.close();
-
-      String loggingProperties = p.getProperty("java.util.logging.config.file");
-      if (loggingProperties != null) {
-        p.setProperty("java.util.logging.config.file", Resources
-            .relpathRewrite(loggingProperties));
-      }
-
-      System.setProperties(p);
-    } catch (final IOException exc) {
-      System.err.println("Failed to load store configuration file");
-      exc.printStackTrace();
-    }
-    
+    System.setProperty("java.util.logging.config.file",
+                       Resources.relpathRewrite("etc", "logging.properties"));
     Logger logger = Logger.getLogger("fabric.store");
     
     logger.info("Store node");

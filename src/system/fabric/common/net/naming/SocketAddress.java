@@ -1,6 +1,7 @@
 package fabric.common.net.naming;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 /**
  * This class encapsulates a host name and a port number. It is similar to
@@ -24,6 +25,10 @@ public final class SocketAddress {
 
   public InetAddress getAddress() {
     return this.addr;
+  }
+
+  public InetSocketAddress toInetSocketAddress() {
+    return new InetSocketAddress(getAddress(), getPort());
   }
   
   @Override

@@ -1,8 +1,10 @@
 package fabric.net;
 
+import java.io.IOException;
 import java.util.logging.Logger;
 
 import fabric.common.exceptions.InternalError;
+import fabric.common.net.naming.SocketAddress;
 
 /**
  * Abstracts remote stores and remote workers.
@@ -37,6 +39,11 @@ public abstract class RemoteNode {
     this.supportsUnencrypted = supportsUnencrypted;
   }
 
+  /**
+   * @return
+   */
+  protected abstract SocketAddress lookup() throws IOException;
+  
   /**
    * @return the node's hostname.
    */

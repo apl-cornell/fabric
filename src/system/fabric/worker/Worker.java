@@ -24,8 +24,10 @@ import fabric.dissemination.pastry.Cache;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
+import fabric.common.net.naming.NameService;
+import fabric.common.net.naming.PropertyNameService;
+import fabric.common.net.naming.PropertyNameService.PortType;
 import fabric.lang.security.*;
-import fabric.net.NameService;
 import fabric.worker.debug.Timing;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
@@ -78,9 +80,12 @@ public final class Worker {
   // The number of times to retry connecting to each store node.
   public final int retries;
 
-  // The name service to use.
-  public final NameService nameService;
+  // The name service to use for finding stores.
+  public final NameService storeNameService;
 
+  // The name service to use for finding workers.
+  public final NameService workerNameService;
+  
   // The manager to use for fetching objects from stores.
   protected final FetchManager fetchManager;
 
@@ -164,7 +169,13 @@ public final class Worker {
     fabric.common.Options.DEBUG_NO_SSL = !useSSL;
     
     this.keyStore = keyStore;
-    this.nameService = new NameService();
+    try {
+      this.storeNameService  = new PropertyNameService(PortType.STORE_AUTH);
+      this.workerNameService = new PropertyNameService(PortType.WORKER);
+    } catch(IOException e) {
+      throw new InternalError("Unable to load the name service", e);
+    }
+    
     this.stores = new HashMap<String, RemoteStore>();
     if (initStoreSet != null) this.stores.putAll(initStoreSet);
     this.remoteWorkers = new HashMap<String, RemoteWorker>();
@@ -246,12 +257,6 @@ public final class Worker {
    * @return The corresponding <code>Store</code> object.
    */
   public RemoteStore getStore(String name) {
-    name = NameService.resolveAlias(name);
-
-    if (name == null) {
-      throw new NullPointerException();
-    }
-
     RemoteStore result = stores.get(name);
     if (result == null) {
       result = new RemoteStore(name);
@@ -264,10 +269,6 @@ public final class Worker {
    * @return a <code>RemoteWorker</code> object
    */
   public RemoteWorker getWorker(String name) {
-    name = NameService.resolveAlias(name);
-
-    if (name == null) throw new NullPointerException();
-
     RemoteWorker result;
     synchronized (remoteWorkers) {
       result = remoteWorkers.get(name);
@@ -401,49 +402,29 @@ public final class Worker {
       KeyStoreException, NoSuchAlgorithmException, CertificateException,
       UnrecoverableKeyException, IllegalStateException, InternalError,
       UsageError {
-    // Read in the Fabric properties file and update the System properties
-    InputStream in = Resources.readFile("etc", "worker.properties");
-    Properties p = new Properties(System.getProperties());
-    p.load(in);
-    in.close();
-    System.setProperties(p);
-
-    if (name != null) {
-      try {
-        in = Resources.readFile("etc", "worker", name + ".properties");
-        p = new Properties(System.getProperties());
-        p.load(in);
-        in.close();
-      } catch (IOException e) {
-      }
-    }
-
+    
+    ConfigProperties props = new ConfigProperties(name);
+    
     if (principalURL == null)
-      principalURL = p.getProperty("fabric.worker.principal");
+      principalURL = props.workerPrincipal;
 
     KeyStore keyStore = KeyStore.getInstance("JKS");
-    String passwd = p.getProperty("fabric.worker.password");
-    String filename =
-        p.getProperty("fabric.worker.keystore", name == null ? null
-            : (name + ".keystore"));
-    in = Resources.readFile("etc/keys", filename);
-    keyStore.load(in, passwd.toCharArray());
+    char[]   passwd   = props.password;
+    String filename   = props.keystore;
+    
+    InputStream in = Resources.readFile("etc/keys", filename);
+    keyStore.load(in, passwd);
     in.close();
 
-    int port = Integer.parseInt(p.getProperty("fabric.worker.port", "3373"));
-    int maxConnections =
-        Integer.parseInt(p.getProperty("fabric.worker.maxConnections", "50"));
-    int timeout = Integer.parseInt(p.getProperty("fabric.worker.timeout", "2"));
-    int retries = Integer.parseInt(p.getProperty("fabric.worker.retries", "5"));
+    int port           = props.workerPort;
+    int maxConnections = props.maxConnections;
+    int timeout        = props.timeout;
+    int retries        = props.retries;
 
-    String fetcher =
-        p.getProperty("fabric.worker.fetchmanager",
-            "fabric.worker.DirectFetchManager");
+    String fetcher = props.dissemClass;
+    boolean useSSL = props.useSSL;
 
-    boolean useSSL =
-        Boolean.parseBoolean(p.getProperty("fabric.worker.useSSL", "true"));
-
-    initialize(name, port, principalURL, keyStore, passwd.toCharArray(),
+    initialize(name, port, principalURL, keyStore, passwd,
         maxConnections, timeout, retries, useSSL, fetcher, initStoreSet);
   }
 

@@ -1,17 +1,27 @@
 package fabric.common.net.naming;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import fabric.common.ConfigProperties;
+import fabric.common.Resources;
+
 public class PropertyNameService implements NameService {
 
+  public enum PortType {
+    WORKER       { @Override int getPort(ConfigProperties p) { return p.workerPort;      } },
+    STORE_AUTH   { @Override int getPort(ConfigProperties p) { return p.storeAuthPort;   } },
+    STORE_UNAUTH { @Override int getPort(ConfigProperties p) { return p.storeUnauthPort; } },
+    ;
+    
+    abstract int getPort(ConfigProperties p);
+  }
+  
   private static final Logger logger = Logger.getLogger("fabric.common.net");
   
   private Map<String, SocketAddress> entries;
@@ -27,48 +37,17 @@ public class PropertyNameService implements NameService {
    *                  parsed by {@link InetAddress#getByName}
    * @param portProp  the property name for the port.
    */
-  public PropertyNameService(File directory, String hostProp, String portProp, File defProperty) throws IOException {
-    //
-    // load default properties file
-    //
-    Properties      p  = new Properties();
-    FileInputStream in = null;
-    try {
-      in = new FileInputStream(defProperty);
-      p.load(in);
-    } finally {
-      if (in != null)
-        in.close();
-    }
-    
-    String defaultHost = p.getProperty(hostProp);
-    String defaultPort = p.getProperty(portProp);
-    
-    this.defaultAddr   = new SocketAddress(InetAddress.getByName(defaultHost), Integer.parseInt(defaultPort));
+  public PropertyNameService(PortType portType) throws IOException {
+    ConfigProperties defs = ConfigProperties.getDefaults();
+    this.defaultAddr   = new SocketAddress(InetAddress.getByName(defs.name), portType.getPort(defs));
     
     //
     // load other properties files from the directory
     //
     entries = new HashMap<String, SocketAddress> ();
-    
+    File directory = Resources.getFile("etc", "config");
     for (File f : directory.listFiles())
       if (f.getName().endsWith(".properties")) {
-        //
-        // read the file
-        //
-        try {
-          in = new FileInputStream(f);
-          p.clear();
-          p.load(in);
-        } catch(IOException e) {
-          logger.log(Level.WARNING, "exception while loading name service entry from " + f.getName());
-          logger.log(Level.INFO,    "  ... filename:  " + f.getPath());
-          logger.log(Level.INFO,    "  ... exception: ", e);
-          logger.log(Level.INFO,    "  ... ignoring entry");
-          continue;
-        } finally {
-          try { in.close(); } catch (IOException e) {}
-        }
         
         //
         // get the properties
@@ -76,8 +55,10 @@ public class PropertyNameService implements NameService {
         String name = f.getName();
         name = name.substring(0, name.lastIndexOf('.'));
         
-        String host =                  p.getProperty(hostProp, defaultHost);
-        int    port = Integer.parseInt(p.getProperty(portProp, defaultPort));
+        ConfigProperties props = new ConfigProperties(name);
+        
+        String host = props.address;
+        int    port = portType.getPort(props);
         
         this.entries.put(name, new SocketAddress(InetAddress.getByName(host), port));
     }
@@ -98,7 +79,7 @@ public class PropertyNameService implements NameService {
     }
   }
   
-  public SocketAddress localResolve(String name) throws IOException{
+  public SocketAddress localResolve(String name) {
     SocketAddress result = entries.get(name);
     if (result == null)
       result = defaultAddr;
@@ -106,7 +87,7 @@ public class PropertyNameService implements NameService {
     return result;
   }
 
-  public SocketAddress resolve(String name) throws IOException {
+  public SocketAddress resolve(String name) {
     SocketAddress result = entries.get(name);
     if (result == null)
       result = defaultAddr;

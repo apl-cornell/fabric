@@ -1,25 +1,25 @@
 package fabric.store;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.security.*;
 import java.security.cert.Certificate;
-import java.util.HashMap;
+import java.security.cert.CertificateException;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.net.ssl.*;
 
 import fabric.worker.Worker;
 import fabric.worker.RemoteStore;
+import fabric.common.ConfigProperties;
 import fabric.common.ONumConstants;
-import fabric.common.Resources;
 import fabric.common.SSLSocketFactoryTable;
 import fabric.common.exceptions.InternalError;
-import fabric.store.Options.StoreKeyRepository;
 import fabric.store.db.ObjectDB;
 
 public class Node {
@@ -30,7 +30,7 @@ public class Node {
    * A map from store host-names to corresponding <code>SSLSocketFactory</code>s
    * and <code>TransactionManager</code>s.
    */
-  protected Map<String, Store> stores;
+  protected Store store;
 
   private final ConnectionHandler connectionHandler;
 
@@ -43,60 +43,62 @@ public class Node {
     public final Certificate[] certificateChain;
     public final PublicKey publicKey;
     public final PrivateKey privateKey;
+    public final int port;
 
-    private Store(String name, SSLSocketFactory factory, ObjectDB os,
-        TransactionManager tm, SurrogateManager sm,
-        Certificate[] certificateChain, PublicKey publicKey,
-        PrivateKey privateKey) {
+    private Store(String name) {
       this.name = name;
-      this.factory = factory;
-      this.os = os;
-      this.tm = tm;
-      this.sm = sm;
-      this.certificateChain = certificateChain;
-      this.publicKey = publicKey;
-      this.privateKey = privateKey;
-    }
-  }
 
-  public Node(Options opts) {
-    this.opts = opts;
-    this.stores = new HashMap<String, Store>();
-    this.connectionHandler = new ConnectionHandler(this);
+      //
+      // read properties file
+      //
+      ConfigProperties props = new ConfigProperties(name);
+      
+      char[] password = props.password;
+      
+      //
+      // Set up SSL
+      //
+      KeyStore keyStore;
+      FileInputStream in = null;
+      try {
+        keyStore = KeyStore.getInstance("JKS");
+        in       = new FileInputStream(props.keystore);
+        keyStore.load(in, password);
+        in.close();
+      } catch (KeyStoreException e) {
+        throw new InternalError("Unable to open key store.", e);
+      } catch (NoSuchAlgorithmException e) {
+        throw new InternalError(e);
+      } catch (CertificateException e) {
+        throw new InternalError("Unable to open key store.", e);
+      } catch (FileNotFoundException e) {
+        throw new InternalError("File not found: " + e.getMessage());
+      } catch (IOException e) {
+        if (e.getCause() instanceof UnrecoverableKeyException)
+          throw new InternalError("Unable to open key store: invalid password.");
+        throw new InternalError("Unable to open key store.", e);
+      }
 
-    // Instantiate the stores with their object databases and SSL socket
-    // factories.
-    for (Map.Entry<String, StoreKeyRepository> storeEntry : opts.stores
-        .entrySet()) {
-      String storeName = storeEntry.getKey();
-      StoreKeyRepository keyRepository = storeEntry.getValue();
-
-      ObjectDB objectDB = loadStore(storeName);
-      SSLSocketFactory sslSocketFactory;
-
-      // Create the SSL socket factory.
       try {
         SSLContext sslContext = SSLContext.getInstance("TLS");
         KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-        kmf.init(keyRepository.keyStore, keyRepository.password);
+        kmf.init(keyStore, password);
 
         TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
-        tmf.init(keyRepository.keyStore);
+        tmf.init(keyStore);
         TrustManager[] tm = tmf.getTrustManagers();
         sslContext.init(kmf.getKeyManagers(), tm, null);
-        sslSocketFactory = sslContext.getSocketFactory();
+        this.factory = sslContext.getSocketFactory();
 
-        Certificate[] certificateChain =
-            keyRepository.keyStore.getCertificateChain(storeName);
+
+        this.certificateChain =
+            keyStore.getCertificateChain(name);
         Certificate publicKeyCert =
-            keyRepository.keyStore.getCertificate(storeName);
-        PublicKey publicKey = publicKeyCert.getPublicKey();
-        PrivateKey privateKey =
-            (PrivateKey) keyRepository.keyStore.getKey(storeName,
-                keyRepository.password);
-        addStore(storeName, sslSocketFactory, objectDB, certificateChain,
-            publicKey, privateKey);
-        SSLSocketFactoryTable.register(storeName, sslSocketFactory);
+            keyStore.getCertificate(name);
+        this.publicKey  = publicKeyCert.getPublicKey();
+        this.privateKey = (PrivateKey) keyStore.getKey(name, password);
+        
+        SSLSocketFactoryTable.register(name, this.factory);
       } catch (KeyManagementException e) {
         throw new InternalError("Unable to initialise key manager factory.", e);
       } catch (UnrecoverableKeyException e1) {
@@ -105,40 +107,37 @@ public class Node {
         throw new InternalError(e1);
       } catch (KeyStoreException e1) {
         throw new InternalError("Unable to initialise key manager factory.", e1);
-      } catch (DuplicateStoreException e) {
-        // Should never happen.
       }
+      
+      this.os   = loadStore(props);
+      this.tm   = new TransactionManager(this.os, this.privateKey);
+      this.sm   = new SimpleSurrogateManager(tm);
+      this.port = props.storeAuthPort;
     }
+  }
 
+  public Node(Options opts) {
+    this.opts              = opts;
+    this.connectionHandler = new ConnectionHandler(this);
+
+    this.store = new Store(opts.storeName);
+    
     // Start the worker before instantiating the stores in case their object
     // databases need initialization. (The initialization code will be run on
     // the worker.)
     startWorker();
 
     // Ensure each store's object database has been properly initialized.
-    for (Store store : stores.values()) {
-      store.os.ensureInit();
-    }
+    store.os.ensureInit();
 
     System.out.println("Store started");
   }
 
-  private ObjectDB loadStore(String storeName) {
-    Properties p = new Properties(System.getProperties());
-
+  private ObjectDB loadStore(ConfigProperties props) {
     try {
-      InputStream in =
-          Resources.readFile("etc", "store", storeName + ".properties");
-      p.load(in);
-      in.close();
-    } catch (IOException e) {
-    }
-
-    try {
-      String database = p.getProperty("fabric.store.db");
       final ObjectDB os =
-          (ObjectDB) Class.forName(database).getConstructor(String.class)
-              .newInstance(storeName);
+          (ObjectDB) Class.forName(props.backendClass).getConstructor(String.class)
+              .newInstance(props.name);
 
       // register a hook to close the object database gracefully.
       Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -159,49 +158,14 @@ public class Node {
 
   private void startWorker() {
     try {
-      Map<String, RemoteStore> initStoreSet =
-          new HashMap<String, RemoteStore>();
-      for (String s : stores.keySet()) {
-        initStoreSet.put(s, new InProcessStore(s, stores.get(s)));
-      }
+      Map<String, RemoteStore> initStoreSet = Collections.singletonMap(
+          store.name, (RemoteStore) new InProcessStore(store.name, store));
 
-      Worker.initialize(opts.primaryStoreName, "fab://" + opts.primaryStoreName
+      Worker.initialize(store.name, "fab://" + store.name
           + "/" + ONumConstants.STORE_PRINCIPAL, initStoreSet);
     } catch (Exception e) {
       throw new InternalError(e);
     }
-  }
-
-  /**
-   * Adds a new Store to this node.
-   * 
-   * @param storeName
-   *          the host name for the store being added.
-   * @param sslSocketFactory
-   *          the <code>SSLSocketFactory</code> for initiating SSL sessions with
-   *          the store.
-   * @param tm
-   *          a <code>TransactionManager</code> to use for the store being
-   *          added.
-   * @param certificateChain
-   *          The store's SSL certificate chain.
-   * @param publicKey
-   *          The store's public SSL key.
-   * @param privateKey
-   *          The store's private SSL key, used for signing disseminated
-   *          objects.
-   */
-  private void addStore(String storeName, SSLSocketFactory sslSocketFactory,
-      ObjectDB os, Certificate[] certificateChain, PublicKey publicKey,
-      PrivateKey privateKey) throws DuplicateStoreException {
-    if (stores.containsKey(storeName)) throw new DuplicateStoreException();
-
-    TransactionManager tm = new TransactionManager(os, privateKey);
-    SurrogateManager sm = new SimpleSurrogateManager(tm);
-    Store store =
-        new Store(storeName, sslSocketFactory, os, tm, sm, certificateChain,
-            publicKey, privateKey);
-    stores.put(storeName, store);
   }
 
   /**
@@ -212,7 +176,7 @@ public class Node {
    * @return The requested store, or null if it does not exist.
    */
   public Store getStore(String name) {
-    return stores.get(name);
+    return name.equals(store.name) ? store : null;
   }
 
   /**
@@ -222,8 +186,7 @@ public class Node {
    * @return null if there is no corresponding binding.
    */
   public TransactionManager getTransactionManager(String storeName) {
-    Store c = stores.get(storeName);
-    return c == null ? null : c.tm;
+    return storeName.equals(store.name) ? store.tm : null;
   }
 
   /**
@@ -231,18 +194,15 @@ public class Node {
    * <code>SSLSocketFactory</code>.
    */
   public SSLSocketFactory getSSLSocketFactory(String storeName) {
-    Store c = stores.get(storeName);
-    return c == null ? null : c.factory;
+    return storeName.equals(store.name) ? store.factory : null; 
   }
 
   public SurrogateManager getSurrogateManager(String storeName) {
-    Store c = stores.get(storeName);
-    return c == null ? null : c.sm;
+    return storeName.equals(store.name) ? store.sm : null; 
   }
 
   public PrivateKey getPrivateKey(String storeName) {
-    Store c = stores.get(storeName);
-    return c == null ? null : c.privateKey;
+    return storeName.equals(store.name) ? store.privateKey : null;
   }
 
   /**
@@ -252,7 +212,8 @@ public class Node {
     // Start listening.
     ServerSocketChannel server = ServerSocketChannel.open();
     server.configureBlocking(true);
-    server.socket().bind(new InetSocketAddress(opts.port));
+    // TODO: ugliness...soon to be replaced - mdg
+    server.socket().bind(new InetSocketAddress(store.port));
 
     // The main server loop.
     while (true) {

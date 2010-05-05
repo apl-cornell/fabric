@@ -7,14 +7,18 @@ import java.nio.channels.Channels;
 import java.nio.channels.Pipe;
 import java.nio.channels.SocketChannel;
 import java.security.Principal;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.security.auth.x500.X500Principal;
 
 import fabric.worker.Worker;
 import fabric.common.Options;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NoSuchNodeError;
+import fabric.common.net.naming.SocketAddress;
 import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.ChannelMultiplexerThread.CallbackHandler;
@@ -91,13 +95,18 @@ class CommManager {
     for (int retry = 0; worker.retries < 0 || retry < worker.retries;) {
       try {
         if (hosts == null) {
-          Pair<List<InetSocketAddress>, Principal> entry =
-              worker.nameService.lookup(node);
-          hosts = entry.first;
-          nodePrincipal = entry.second;
+          //
+          // Note: This code originally cycled through a list of addresses, and
+          //       thus looks more complicated than it is.  I'm not fixing it
+          //       since it is soon to be replaced.  -mdg
+          //
+          SocketAddress addr = node.lookup();
+          nodePrincipal      = new X500Principal("cn=" + node.name());
 
-          numHosts = hosts.size();
-          startHostIdx = Worker.RAND.nextInt(numHosts);
+          hosts = Collections.singletonList(addr.toInetSocketAddress());
+
+          numHosts = 1;
+          startHostIdx = 0;
         }
 
         // Attempt to establish a connection.

@@ -1,0 +1,53 @@
+# This is an example node configuration file.
+# Copy this file to <node name>.properties and edit that file.
+
+
+# File in ${FABRIC_HOME}/etc/keys that holds the node's private key store.
+# This is optional.  By default, this is <node name>.keystore.
+#
+# Create the private key store with:
+#   ${FABRIC_HOME}/bin/genkey <node name>
+
+#fabric.node.keystore = node.name.example.keystore
+
+
+
+# The oid for the worker's principal object.
+#
+# The following command will create a new principal object on the given store
+# and print out the object's oid.
+#
+#   ${FABRIC_HOME}/fab --make-principal <store name>
+#
+# When creating a principal object, this configuration parameter is optional;
+# however, if one is given, it must either point to a valid principal object,
+# or to an unallocated oid.
+#
+# A worker principal oid must be supplied here before using the worker for
+# anything besides principal-object creation.
+
+#fabric.worker.principal = fab://store.name.example/19
+
+
+
+# The port for the worker to listen on for remote-call requests.
+# This is optional.
+
+#fabric.worker.port    = 3372
+
+
+
+# The ports for the store to listen on for authenticated and unauthenticated
+# connections.
+# This is optional.
+
+#fabric.store.authport    = 3472
+#fabric.store.unauthport  = 3572
+
+
+
+# The IP address or DNS name that this node can be reached at.  This is
+# optional; the default is <node name>
+
+#fabric.naming.address = fabric.example.net
+

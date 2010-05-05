@@ -1,5 +1,6 @@
 package fabric.worker.remote;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 
 import fabric.worker.Worker;
@@ -16,6 +17,7 @@ import fabric.worker.transaction.TransactionRegistry;
 import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
+import fabric.common.net.naming.SocketAddress;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.Object._Impl;
@@ -145,10 +147,8 @@ public final class RemoteWorker extends RemoteNode {
     final NodePrincipal principal = response.principal;
     final String expectedPrincipalName;
     try {
-      expectedPrincipalName =
-          Worker.getWorker().nameService.lookup(this).second.getName();
-    } catch (UnknownHostException e) {
-      return null;
+      // Note: this check may not make sense anymore.  -mdg
+      expectedPrincipalName = "cn=" + name;
     } catch (IllegalStateException e) {
       throw new InternalError(e);
     }
@@ -191,5 +191,10 @@ public final class RemoteWorker extends RemoteNode {
     ObjectUpdateMessage.Response response =
       new ObjectUpdateMessage(onum, group).send(this);
   return response.resubscribe;
+  }
+
+  @Override
+  protected SocketAddress lookup() throws IOException {
+    return Worker.getWorker().workerNameService.resolve(name);
   }
 }

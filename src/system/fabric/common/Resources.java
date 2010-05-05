@@ -20,6 +20,10 @@ public class Resources {
     return filename;
   }
   
+  public static File getFile(String... relpath) {
+    return new File(relpathRewrite(relpath));
+  }
+  
   public static InputStream readFile(String... relpath) throws IOException {
     return new FileInputStream(relpathRewrite(relpath));
   }
@@ -42,7 +46,7 @@ public class Resources {
    */
   public static class LogConfigLoader {
     public LogConfigLoader() {
-      String configFile = System.getProperty("fabric.logging.config.file");
+      String configFile = Resources.relpathRewrite("etc", "logging.properties");
       if (configFile == null) return;
 
       // Make the filename absolute if it isn't already.

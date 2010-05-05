@@ -1,5 +1,6 @@
 package fabric.worker;
 
+import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
@@ -13,6 +14,7 @@ import fabric.common.*;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.net.naming.SocketAddress;
 import fabric.common.util.*;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
@@ -526,4 +528,8 @@ public class RemoteStore extends RemoteNode implements Store {
     }
   }
 
+  @Override
+  protected SocketAddress lookup() throws IOException {
+    return Worker.getWorker().storeNameService.resolve(name);
+  }
 }
