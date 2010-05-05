@@ -81,6 +81,7 @@
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
         <arg value="-e" />
         <!--
+        <arg value="-rdebug" />
         <arg value="-report" />     <arg value="frontend=1" />
         <arg value="-dump" />     <arg value="AmbiguityRemover" />
         <arg value="-debugpositions" />
