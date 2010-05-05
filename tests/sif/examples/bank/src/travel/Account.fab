@@ -37,14 +37,25 @@ class Balance[principal bank, principal user] { // on bank store and worker
 }
 
 // XXX Why do we have an Account class when Balance is good enough?
-class Account[principal bank]  { // on bank store and worker
-    final Principal{bank←} user;
+public class Account[principal bank]  { // on bank store and worker
+    public final Principal{bank←} user;
     final Balance[bank,user] {bank←} balance;
 
     Account(principal{bank←} user_) {
         user = user_;
         balance = new Balance(); // @ bank store
     }
+    
+    public String{bank←} name() {
+        if (user == null) return "";
+        return user.name();
+    }
+    
+    public float{bank←; bank→user} balance() {
+        if (balance == null) return 0;
+        return balance.value;
+    }
+    
     public boolean{bank←; bank→user} debit{bank←}(float{bank←; bank→user} amt) {
         try { return balance.debit(amt); }
         catch (NullPointerException e) { return false; }
@@ -54,15 +65,4 @@ class Account[principal bank]  { // on bank store and worker
         catch (NullPointerException e) { return false; }
     }
 
-}
-
-class Tickets[principal bank, principal airline, principal user]  { // on airline store and worker
-    // XXX should be airline←
-    int {airline←bank; airline→user} num_tickets;
-    Tickets{airline←}() {
-        num_tickets = 0;
-    }
-}
-
-class PurchasingError extends Exception {
 }

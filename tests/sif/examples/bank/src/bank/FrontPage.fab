@@ -11,6 +11,7 @@ import fabric.util.Map;
 
 import travel.Broker;
 import travel.Config;
+import travel.Account;
 
 
 public class FrontPage extends BankAction authority (BankPrincipal) {
@@ -35,7 +36,9 @@ public class FrontPage extends BankAction authority (BankPrincipal) {
                 loginBank(req.session, req);
             }
 
-            String name = worker$.name;
+            FabricWorker w = worker$;
+            if (w == null) throw new ServletException("Internal Error");
+            String name = w.name;
             final Store store = worker$.getStore(name);
             Map root = null;
             if (store != null) {
@@ -43,14 +46,15 @@ public class FrontPage extends BankAction authority (BankPrincipal) {
             }
             if (root == null) throw new ServletException("Store " + name + " not accessible");
             
-            Account[BankPrincipal] airlineAccount,customerAccount = null;
+            Account[BankPrincipal] airlineAccount_ = null,customerAccount_ = null;
             
             Object aobj = root.get(Config.airlineAccountKey);
             Object cobj = root.get(Config.customerAccountKey);
             if (aobj instanceof Account[BankPrincipal] && cobj instanceof Account[BankPrincipal]) {
-                airlineAccount = (Account[BankPrincipal])aobj;
-                customerAccount = (Account[BankPrincipal])cobj;
+                airlineAccount_ = (Account[BankPrincipal])aobj;
+                customerAccount_ = (Account[BankPrincipal])cobj;
             }
+            final Account[BankPrincipal] airlineAccount = airlineAccount_,customerAccount = customerAccount_;
             if (airlineAccount == null || customerAccount == null)
                 throw new ServletException("Could not fetch bank information base");
             
@@ -59,18 +63,22 @@ public class FrontPage extends BankAction authority (BankPrincipal) {
             final label lblc = new label {BankPrincipal→CustomerPrincipal; BankPrincipal←};
             final label lbla = new label {BankPrincipal→AirlinePrincipal; BankPrincipal←};
             final label lblca = new label {BankPrincipal→AirlinePrincipal; BankPrincipal→AirlinePrincipal; BankPrincipal←};
-            if (lbl equiv new label {BankPrincipal←}) {
+            if (lbl equiv new label {BankPrincipal←} &&
+                    lblc <= lblca && 
+                    lbla <= lblca && 
+                    req.session actsfor BankPrincipal &&
+                    airlineAccount.user equiv AirlinePrincipal &&
+                    customerAccount.user equiv CustomerPrincipal) {
                 Text msg = new Text[lbl,lbl]("The following are the accounts maintained by the Acme Bank");
-                Text name1 = new Text[lbl,lbl](airlineAccount.user.name());
-                Text name2 = new Text[lbl,lbl](customerAccount.user.name());
-                Text value1 = new Text[lbla,lbl](Float.toString(airlineAccount.balance.value));
-                Text value2 = new Text[lblc,lbl](Float.toString(customerAccount.balance.value));
+                Text name1 = new Text(airlineAccount.name());
+                Text name2 = new Text(customerAccount.name());
+                Text value1 = new Text[lbla,lbl](Float.toString(airlineAccount.balance()));
+                Text value2 = new Text[lblc,lbl](Float.toString(customerAccount.balance()));
                 NodeList[lblca, lbl] entries = NodeList.EMPTY();
-                entries = entries==null?null:entries.append(new TRow[lbl, lbl](
-                        new NodeList[lbl,lbl](msg)));
+                entries = entries==null?null:entries.append(lbl, lbl, new TRow[lbl, lbl](msg));
                 entries = entries==null?null:entries.append(new TRow[lbla, lbl](
                         new NodeList[lbla,lbl](name1,value1)));
-                entries = entries==null?null:entries.append(new TRow[lblc, lbl](
+                entries = entries==null?null:entries.append(lblc, lbl, new TRow[lblc, lbl](
                         new NodeList[lblc,lbl](name2,value2)));
                 s.createPage(req, "Bank Home Page", lblca, lbl,
                         new NodeList[lblca,lbl](lbl, lbl, createBanner(lbl, "Welcome to the Acme Bank System"),

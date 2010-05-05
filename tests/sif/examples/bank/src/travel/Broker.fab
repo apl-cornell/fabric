@@ -8,7 +8,7 @@ public class Broker[principal bank, principal customer] extends AbstractPrincipa
     final principal{this←} airline;
     final Tickets[bank, airline, customer]{this←} custTickets;
 
-    public boolean coordinatePurchase{}(
+    public boolean{bank->customerAcct.user; this←; bank<-; airline<-; customer←} coordinatePurchase{}(
       float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amountArg) 
           : {bank->customerAcct.user; this←; bank<-; airline<-}
 //        throws PurchasingError

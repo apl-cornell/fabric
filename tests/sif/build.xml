@@ -33,6 +33,7 @@
         <subant target="clean">
             <fileset dir="examples" includes="hello/build.xml"/>
 	          <fileset dir="examples" includes="customer/build.xml"/>
+	          <fileset dir="examples" includes="bank/build.xml"/>
 	          <!--fileset dir="examples" includes="calendartwo/build.xml"/-->
         </subant>
     </target>
@@ -181,6 +182,7 @@
         <subant target="compile">
           <!--fileset dir="examples" includes="hello/build.xml"/-->
           <fileset dir="examples" includes="customer/build.xml"/>
+          <fileset dir="examples" includes="bank/build.xml"/>
           <!--fileset dir="examples" includes="calendartwo/build.xml"/-->
         </subant>
     </target>

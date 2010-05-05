@@ -1,4 +1,4 @@
-package customer;
+package bank;
 
 import travel.Config;
 import travel.Broker;

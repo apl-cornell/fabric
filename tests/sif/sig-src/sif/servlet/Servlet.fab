@@ -22,7 +22,7 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
             String{*:req.session} title, 
             label cL,
             label cE,
-            Node[cL,cE] body) where {*cL;*cE} <= {*:req.session}, {body} <= {*cE};
+            Node[cL,cE] body) where {*cL;*cE} <= {⊤→req.session}, {body} <= {*cE};
 
     public native final void createPage{*:req.session}(
             Request[servletP]{*dynL;*preL} req, 

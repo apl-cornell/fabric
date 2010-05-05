@@ -49,6 +49,7 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
                         new StartTransaction(m, amountInput.input),
                         lbl, lbl,
                         new Table[lbl, lbl](entries));
+                // XXX How come lbl <= ⊤→req.session is not required here?
                 s.createPage(req, "Customer Home Page", lbl, lbl,
                         new NodeList[lbl,lbl](lbl, lbl, createBanner(lbl, "Welcome to the Acme Flight Booking System"),
                                 lbl, lbl, createBody(lbl, lbl, form)));
