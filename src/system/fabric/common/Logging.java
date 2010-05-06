@@ -1,12 +1,31 @@
 package fabric.common;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Map.Entry;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 /**
  * This is the clearing house of all loggers available for use in the system.
  */
 public final class Logging {
+  // //////////////////////////////////////////////////////////////////////////
+  // static configuration
+  // //////////////////////////////////////////////////////////////////////////
+  
+  static {
+    System.setProperty("java.util.logging.config.class", LogConfigLoader.class.getName());
+  }
+  
   // //////////////////////////////////////////////////////////////////////////
   // STORE LOGGERS
   // //////////////////////////////////////////////////////////////////////////
@@ -172,5 +191,43 @@ public final class Logging {
       Object param2, Object param3, Object param4) {
     if (!logger.isLoggable(level)) return;
     logger.log(level, msg, new Object[] { param1, param2, param3, param4 });
+  }
+
+  /**
+   * A class for loading the configuration for java.util.Logger.
+   */
+  public static class LogConfigLoader {
+    public LogConfigLoader() {
+      String configFile = Resources.relpathRewrite("etc", "logging.properties");
+  
+      // Read the configuration.
+      try {
+        InputStream in = new FileInputStream(configFile);
+        Properties p = new Properties();
+        p.load(in);
+        in.close();
+  
+        // Make the log filename absolute if it isn't already.
+        final String key = "java.util.logging.FileHandler.pattern";
+        String logFile = p.getProperty(key);
+        if (logFile != null && !new File(logFile).isAbsolute()) {
+          p.setProperty(key, Resources.relpathRewrite(logFile));
+        }
+  
+        // Load the properties into the LogManager. ugh.
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PrintStream pout = new PrintStream(out);
+        for (Map.Entry<Object, Object> entry : p.entrySet()) {
+          pout.println(entry.getKey() + " = " + entry.getValue());
+        }
+        pout.flush();
+        out.flush();
+  
+        LogManager.getLogManager().readConfiguration(
+            new ByteArrayInputStream(out.toByteArray()));
+      } catch (IOException e) {
+      }
+  
+    }
   }
 }

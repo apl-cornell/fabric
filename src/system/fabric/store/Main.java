@@ -26,8 +26,6 @@ public class Main {
   }
 
   public static void start(String args[]) {
-    System.setProperty("java.util.logging.config.file",
-                       Resources.relpathRewrite("etc", "logging.properties"));
     STORE_LOGGER.info("Store node");
     STORE_LOGGER.log(Level.CONFIG, "Fabric version {0}", new Version());
     STORE_LOGGER.info("");

@@ -66,11 +66,6 @@ public final class Worker {
   protected final NodePrincipal principal;
   public final java.security.Principal javaPrincipal;
 
-  static {
-    System.setProperty("java.util.logging.config.file", Resources
-        .relpathRewrite("etc", "logging.properties"));
-  }
-
   // The timeout (in milliseconds) to use whilst attempting to connect to a
   // store node.
   public final int timeout;
