@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2002 by ObjectLearn. All Rights Reserved. --><web-app>
+
+    <!-- Remove the comments below to define a servlet.          -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!--     <servlet>                                           -->
+    <!--       <servlet-name>MyServlet</servlet-name>            -->
+    <!--       <servlet-class>examples.MyServlet</servlet-class> -->
+    <!--       <init-param>                                      -->
+    <!--         <param-name>myparam</param-name>                -->
+    <!--         <param-value>12345</param-value>                -->
+    <!--       </init-param>                                     -->
+    <!--     </servlet>                                          -->
+    <!--                                                         -->
+    <!--                                                         -->
+    <!--     <servlet-mapping>                                   -->
+    <!--           <servlet-name>MyServlet</servlet-name>        -->
+    <!--           <url-pattern>/mine/*</url-pattern>            -->
+    <!--     </servlet-mapping>                                  -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+
+    <display-name>CMS</display-name>
+    <description>Cornell Course Management Server (POJO port)</description>
+
+    <servlet>
+        <servlet-name>Web</servlet-name>
+        <servlet-class>cms.www.AccessController</servlet-class>
+
+        <init-param>
+            <param-name>cms.root.name</param-name>
+            <param-value>cms_db</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>cms.root.core</param-name>
+            <param-value>fabric-cms.systems.cs.cornell.edu</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Web</servlet-name>
+        <url-pattern>/test/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>Web</servlet-name>
+        <url-pattern>/auth/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>Web</servlet-name>
+        <url-pattern>/guest/*</url-pattern>
+    </servlet-mapping>
+
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error.jsp</location>
+    </error-page>
+
+</web-app>

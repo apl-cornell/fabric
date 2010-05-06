@@ -1,0 +1,18 @@
+Building CMS:
+  1. install java, ant, tomcat5.5
+  2. in fabric dir run ant jars
+  3. in cms dir switch to fabricized version (cvs up -rPd cms_fabric
+  4. in cms dir run ant
+
+Configuring Tomcat:
+  5. link fab jars into web dir    (ln -s lib/fabric{,-rt}.jar tests/cms/web/WEB-INF/lib/
+  6. link web into webapps dir     (sudo ln -s tests/cms/web /var/lib/tomcat5.5/webapps
+  7. link 55cms.policy into tomcat (sudo ln -s tests/cms/config/55cms.policy /etc/tomcat5.5/policy.d
+  8. tell tomcat where fabric is   (sudo echo "fabric.prefix=`pwd`" >> /etc/tomcat5.5/catalina.properties 
+  9. if your store is not fabric-cms.systems.cs.cornell.edu edit web/WEB-INF/web.xml accordingly
+
+Running CMS:
+ 10. restart tomcat                 (sudo service tomcat5.5 restart
+ 11. start the core                 (bin/fab-core --core fabric-cms.systems.cs.cornell.edu etc/keys/fabric-cms.systems.cs.cornell.edu.keystore etc/keys/trust.keystore password
+ 12. create the cmsserver principal (bin/fab --name cmsserver --make-principal fabric-cms.systems.cs.cornell.edu
+ 13. navigate to http://localhost:8180/web

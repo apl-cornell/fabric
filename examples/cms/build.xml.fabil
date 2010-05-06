@@ -1,0 +1,55 @@
+<project name="fabric-cms" default="cms">
+
+<dirname  property="cms.home" file="${ant.file.fabric-cms}" />
+<property name="fabric.home"  value="${cms.home}/../.." />
+
+<path id="fabil.sigpath">
+  <pathelement location="${fabric.home}/sig-classes/fabil" />
+  </path>
+
+<path id="fabil.classpath">
+  <pathelement location="${fabric.home}/classes" />
+  <pathelement location="${fabric.home}/rt-classes" />
+  <pathelement location="${fabric.home}/rt-classes" />
+  </path>
+
+<path id="cms.classpath">
+  <path refid="fabil.classpath"/>
+  <fileset dir="${cms.home}/web/WEB-INF/lib" includes="*.jar" />
+  <pathelement location="${fabric.home}/lib/servlet-api.jar"  />
+  </path>
+
+<target name="cms" description="build cms">
+  <apply executable="bash"
+      parallel="true"
+      failonerror="true"
+      dir="${cms.home}/pojo"
+      dest="${cms.home}/web/WEB-INF/classes"
+      relative="false"
+      skipemptyfilesets="true"
+      vmlauncher="false">
+    <arg value="${fabric.home}/bin/filc" />
+    <arg value="-j"     /> <arg value="-Xmx500M" />
+    <arg value="-j"     /> <arg value="-Xss100M" />
+    <arg value="-d"     /> <arg file="${cms.home}/web/WEB-INF/classes" />
+    <arg value="-cp"    /> <arg pathref="cms.classpath" />
+    <arg value="-sigcp" /> <arg pathref="fabil.sigpath"   />
+    <arg value="-sx"    /> <arg value="java"/>
+    <srcfile />
+    <fileset dir="${cms.home}/pojo">
+      <include name="cms/controller/test/*.java" />
+      <include name="cms/model/*.java" />
+      <include name="cms/www/AccessController.java" />
+      <include name="cms/www/util/DOMWriter.java" />
+      <include name="cms/www/xml/*.java" />
+      <include name="cms/view/test/Dump.java" />
+      </fileset>
+    <globmapper from="*.java" to="*.class" />
+  </apply>
+</target>
+
+<target name="clean" description="remove generated files">
+  <delete dir="${cms.home}/web/WEB-INF/classes"/>
+</target>
+
+</project>
