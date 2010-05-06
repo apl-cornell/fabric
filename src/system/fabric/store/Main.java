@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.logging.Level;
 
-import fabric.common.Resources;
 import fabric.common.Version;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
