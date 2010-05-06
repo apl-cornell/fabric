@@ -116,6 +116,12 @@ public final class Logging {
    * For events related to the naming service.
    */
   public static final Logger NAMING_LOGGER = Logger.getLogger("fabric.naming");
+  
+  /**
+   * For class-hashing events.
+   */
+  public static final Logger CLASS_HASHING_LOGGER =
+      Logger.getLogger("fabric.class_hashing");
 
   /**
    * For other events that don't fit into any other category. Use sparingly.

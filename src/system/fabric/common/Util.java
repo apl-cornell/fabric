@@ -1,10 +1,13 @@
 package fabric.common;
 
+import static fabric.common.Logging.CLASS_HASHING_LOGGER;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.*;
+import java.util.logging.Level;
 
 public final class Util {
 
@@ -18,21 +21,36 @@ public final class Util {
    */
   public static byte[] hash(Class<?> c) throws IOException {
     String className = c.getName();
+    CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing class by class object: {0}",
+        className);
+
     byte[] result = classHashCache.get(className);
-    if (result != null) return result;
+    if (result != null) {
+      CLASS_HASHING_LOGGER.finer("  Hash found in cache");
+      return result;
+    }
 
     MessageDigest digest = Crypto.digestInstance();
-    
+
     ClassLoader classLoader = c.getClassLoader();
     if (classLoader == null) {
       classLoader = ClassLoader.getSystemClassLoader();
     }
 
-    InputStream classIn =
-        classLoader.getResourceAsStream(className.replace('.', '/') + ".class");
+    String classFileName = className.replace('.', '/') + ".class";
 
-    if (classIn == null)
+    Logging.log(CLASS_HASHING_LOGGER, Level.FINEST,
+        "  Using {0} to load class bytecode from {1}", classLoader,
+        classFileName);
+
+    InputStream classIn = classLoader.getResourceAsStream(classFileName);
+
+    if (classIn == null) {
+      Logging.log(CLASS_HASHING_LOGGER, Level.WARNING,
+          "Unable to load {0} from {1} using {2}", className, classFileName,
+          classLoader);
       throw new InternalError("Class not found: " + className);
+    }
 
     byte[] buf = new byte[BUF_LEN];
     int count = classIn.read(buf);
@@ -48,20 +66,25 @@ public final class Util {
     result = digest.digest();
     classHashCache.put(className, result);
 
-    return new byte[] {0};
+    return result;
   }
 
   public static byte[] hashClass(String className) throws IOException,
       ClassNotFoundException {
+    CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing class by name: {0}",
+        className);
     byte[] result = classHashCache.get(className);
-    if (result != null) return result;
+    if (result != null) {
+      CLASS_HASHING_LOGGER.finer("  Hash found in cache");
+      return result;
+    }
     return hash(Class.forName(className));
   }
-  
+
   public static URL locateClass(String className) throws ClassNotFoundException {
     // TODO: copied from hash(className)
-    Class<?> c = Class.forName(className); 
-    
+    Class<?> c = Class.forName(className);
+
     ClassLoader classLoader = c.getClassLoader();
     if (classLoader == null) {
       classLoader = ClassLoader.getSystemClassLoader();
@@ -69,9 +92,8 @@ public final class Util {
 
     URL result =
         classLoader.getResource(className.replace('.', '/') + ".class");
-    
-    return result;
 
+    return result;
 
   }
 
@@ -132,7 +154,6 @@ public final class Util {
           }
 
           public void remove() {
-            // TODO Auto-generated method stub
             throw new UnsupportedOperationException();
           }
         };

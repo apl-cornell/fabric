@@ -117,8 +117,10 @@ public final class SerializedObject implements FastSerializable {
       out.writeShort(className.length);
       out.write(className);
       
-      // XXX Class hash.
-      out.writeShort(0);
+      // Class hash.
+      byte[] classHash = Util.hash(Surrogate.class);
+      out.writeShort(classHash.length);
+      out.write(classHash);
 
       // Number of ref types and intra-store refs.
       out.writeInt(0);
@@ -291,12 +293,12 @@ public final class SerializedObject implements FastSerializable {
   }
   
   private boolean checkClassHash(byte[] hash) {
-//    int classHashPos = classHashPos();
-//    if (hash.length != unsignedShortAt(classHashPos)) return false;
-//
-//    for (int i = 0; i < hash.length; i++) {
-//      if (hash[i] != objectData[classHashPos+i+2]) return false;
-//    }
+    int classHashPos = classHashPos();
+    if (hash.length != unsignedShortAt(classHashPos)) return false;
+
+    for (int i = 0; i < hash.length; i++) {
+      if (hash[i] != objectData[classHashPos+i+2]) return false;
+    }
     
     return true;
   }
