@@ -1,13 +1,20 @@
 package fabric.common;
 
+import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.*;
 import java.security.cert.Certificate;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.security.auth.x500.X500Principal;
+
+import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 import fabric.common.exceptions.InternalError;
 
@@ -153,5 +160,29 @@ public final class Crypto {
     }
     
     return false;
+  }
+  
+  /**
+   * generates a certificate, signed by the issuer, binding the subject's name
+   * to their public key.
+   */
+  public X509Certificate createCertificate(
+      String subjectName, PublicKey subjectKey,
+      String issuerName, PrivateKey issuerKey) throws GeneralSecurityException {
+    
+    Calendar expiry = Calendar.getInstance();
+    expiry.add(Calendar.YEAR, 1);
+    
+    X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
+    
+    certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
+    certGen.setIssuerDN(new X509Name("CN=" + issuerName));
+    certGen.setSubjectDN(new X509Name("CN=" + subjectName));
+    certGen.setSignatureAlgorithm("SHA1WithRSAEncryption");
+    certGen.setPublicKey(subjectKey);
+    certGen.setNotBefore(new Date(System.currentTimeMillis()));
+    certGen.setNotAfter(expiry.getTime());
+    
+    return certGen.generate(issuerKey);
   }
 }
