@@ -541,10 +541,7 @@ public abstract class ObjectDB {
       public Void run() {
         // No need to initialize global constants here, as those objects will be
         // supplied by the workers' local store.
-        String principalName =
-            new X500Principal("CN=" + name
-                + ",OU=Fabric,O=Cornell University,L=Ithaca,ST=NY,C=US")
-                .getName();
+        String principalName = new X500Principal("CN=" + name).getName();
         NodePrincipal._Impl principal =
             new NodePrincipal._Impl(store, null, principalName);
         principal.$forceRenumber(ONumConstants.STORE_PRINCIPAL);

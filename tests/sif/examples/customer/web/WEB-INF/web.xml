@@ -20,7 +20,7 @@
 -->
       <init-param>
 	    <param-name>worker</param-name>
-	    <param-value>calendarapp</param-value>
+	    <param-value>customer</param-value>
       </init-param>      
     
       <init-param>

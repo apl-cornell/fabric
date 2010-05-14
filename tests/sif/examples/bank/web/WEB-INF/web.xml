@@ -6,8 +6,8 @@
 
 <web-app>
     <servlet>
-      <servlet-name>customer</servlet-name>
-      <servlet-class>customer.CustomerMain</servlet-class>
+      <servlet-name>bank</servlet-name>
+      <servlet-class>bank.BankMain</servlet-class>
       <init-param>
 	    <param-name>style_sheet_url</param-name>
 	    <param-value>travel.css</param-value>
@@ -20,7 +20,7 @@
 -->
       <init-param>
 	    <param-name>worker</param-name>
-	    <param-value>calendarapp</param-value>
+	    <param-value>bankweb</param-value>
       </init-param>      
     
       <init-param>
@@ -29,16 +29,16 @@
       </init-param>      
     </servlet>
     <servlet-mapping>
-      <servlet-name>customer</servlet-name>
+      <servlet-name>bank</servlet-name>
       <url-pattern>/sif/*</url-pattern>
     </servlet-mapping>
 
     <!-- General description of your web application -->
 
-    <display-name>Customer Web Interface Application</display-name>
+    <display-name>Bank Web Interface Application</display-name>
 
     <description>
-       Web Interface for an Customer.
+       Web Interface for the Bank.
     </description>
 
     <!-- Define the default session timeout for your application,

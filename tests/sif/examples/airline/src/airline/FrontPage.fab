@@ -39,13 +39,12 @@ public class FrontPage extends AirlineAction authority (AirlinePrincipal) {
 
             FabricWorker w = worker$;
             if (w == null) throw new ServletException("Internal Error");
-            String name = w.name;
-            final Store store = worker$.getStore(name);
+            final Store store = worker$.getStore(Config.airlineStoreName);
             Map root = null;
             if (store != null) {
                 root = (Map) store.getRoot();
             }
-            if (root == null) throw new ServletException("Store " + name + " not accessible");
+            if (root == null) throw new ServletException("Airline Store not accessible");
             
             Tickets[BankPrincipal,AirlinePrincipal,CustomerPrincipal] tickets = null;
             Object obj = root.get(Config.ticketsKey);
@@ -53,21 +52,23 @@ public class FrontPage extends AirlineAction authority (AirlinePrincipal) {
                 tickets = (Tickets[BankPrincipal,AirlinePrincipal,CustomerPrincipal])obj;
             }
             if (tickets == null)
-                throw new ServletException("Could not fetch bank information base");
+                throw new ServletException("Could not fetch airline information base");
             
             // Display the number of tickets sold by this airline to CustomerPrincipal
 
             final label lblt = new label {AirlinePrincipal→CustomerPrincipal; AirlinePrincipal←BankPrincipal};
             if (lbl equiv new label {AirlinePrincipal←} &&
                     req.session actsfor AirlinePrincipal) {
-                Text msg = new Text[lbl,lbl]("Acme Airlines has sold the following number of tickets");
+                Text msg = new Text[lbl,lbl]("Acme Airlines has sold the following number of tickets:");
                 Text ticks = new Text[lblt,lbl](Integer.toString(tickets.getNumTickets()));
                 NodeList[lblt, lbl] entries = NodeList.EMPTY();
-                entries = entries==null?null:entries.append(lbl, lbl, new TRow[lbl, lbl](msg));
-                entries = entries==null?null:entries.append(new TRow[lblt, lbl](ticks));
-                s.createPage(req, "Bank Home Page", lblt, lbl,
+                entries = entries==null?null:entries.append(lbl, lbl, 
+                        new TRow[lbl, lbl](new TCell[lbl, lbl](msg)));
+                entries = entries==null?null:entries.append(
+                        new TRow[lblt, lbl](new TCell[lblt, lbl](ticks)));
+                s.createPage(req, "Airline Home Page", lblt, lbl,
                         new NodeList[lblt,lbl](lbl, lbl, createBanner(lbl, "Welcome to the Acme Airline Information System"),
-                                lblt, lbl, createBody(lblt, lbl, entries)));
+                                lblt, lbl, new Table[lblt, lbl](entries)));
             }
         }
     }

@@ -38,13 +38,12 @@ public class FrontPage extends BankAction authority (BankPrincipal) {
 
             FabricWorker w = worker$;
             if (w == null) throw new ServletException("Internal Error");
-            String name = w.name;
-            final Store store = worker$.getStore(name);
+            final Store store = worker$.getStore(Config.bankStoreName);
             Map root = null;
             if (store != null) {
                 root = (Map) store.getRoot();
             }
-            if (root == null) throw new ServletException("Store " + name + " not accessible");
+            if (root == null) throw new ServletException("Bank Store not accessible");
             
             Account[BankPrincipal] airlineAccount_ = null,customerAccount_ = null;
             
@@ -70,19 +69,20 @@ public class FrontPage extends BankAction authority (BankPrincipal) {
                     airlineAccount.user equiv AirlinePrincipal &&
                     customerAccount.user equiv CustomerPrincipal) {
                 Text msg = new Text[lbl,lbl]("The following are the accounts maintained by the Acme Bank");
-                Text name1 = new Text(airlineAccount.name());
+                Text name1 = new Text(airlineAccount.name() + ": ");
                 Text name2 = new Text(customerAccount.name());
                 Text value1 = new Text[lbla,lbl](Float.toString(airlineAccount.balance()));
                 Text value2 = new Text[lblc,lbl](Float.toString(customerAccount.balance()));
                 NodeList[lblca, lbl] entries = NodeList.EMPTY();
-                entries = entries==null?null:entries.append(lbl, lbl, new TRow[lbl, lbl](msg));
-                entries = entries==null?null:entries.append(new TRow[lbla, lbl](
-                        new NodeList[lbla,lbl](name1,value1)));
-                entries = entries==null?null:entries.append(lblc, lbl, new TRow[lblc, lbl](
-                        new NodeList[lblc,lbl](name2,value2)));
+                entries = entries==null?null:entries.append(lbl, lbl, 
+                        new TRow[lbl, lbl](new TCell[lbl, lbl](msg)));
+                entries = entries==null?null:entries.append(new TRow[lbla, lbl](new TCell[lbla, lbl]
+                        (new NodeList[lbla,lbl](name1,value1))));
+                entries = entries==null?null:entries.append(lblc, lbl, new TRow[lblc, lbl](new TCell[lblc, lbl]
+                        (new NodeList[lblc,lbl](name2,value2))));
                 s.createPage(req, "Bank Home Page", lblca, lbl,
                         new NodeList[lblca,lbl](lbl, lbl, createBanner(lbl, "Welcome to the Acme Bank System"),
-                                lblca, lbl, createBody(lblca, lbl, entries)));
+                                lblca, lbl, new Table[lblca, lbl](entries)));
             }
         }
     }

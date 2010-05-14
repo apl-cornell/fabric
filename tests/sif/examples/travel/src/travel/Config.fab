@@ -1,9 +1,9 @@
 package travel;
 
 public final class Config {
-  public static final String{*!:} brokerStoreName = "core00.systems.cs.cornell.edu";
-  public static final String{*!:} bankStoreName = "core01.systems.cs.cornell.edu";
-  public static final String{*!:} airlineStoreName = "core02.systems.cs.cornell.edu";
+  public static final String{*!:} brokerStoreName = "broker";
+  public static final String{*!:} bankStoreName = "bank";
+  public static final String{*!:} airlineStoreName = "airline";
   
   
   /**
