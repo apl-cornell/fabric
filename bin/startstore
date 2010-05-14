@@ -5,19 +5,53 @@
 source "$(dirname $0)/defs"
 
 pushd $TOP
-if [ "$1" = "fresh" ] 
+while true; do
+    case "$1" in
+    "") break;;
+    -v) verbose="1"; shift;;
+    -debug)
+        debug="1"
+        shift
+        port=$1
+        shift
+        ;;
+    -fresh)
+        fresh="1"; shift;;
+    *) break;;
+    esac
+done
+
+if [ -n "$fresh" ] 
   then
-    echo "Deleting the var directory. This will start a fresh store with no initial persistent data"
+    if [ -n "$verbose" ]
+        then
+        echo "Deleting the var directory. This will start a fresh store with no initial persistent data"
+    fi
     rm -rf var
   else
-    echo "Using persistent data in var to initialize this store."
+    if [ -n "$verbose" ]
+        then
+        echo "Using persistent data in var to initialize this store."
+    fi
 fi
 
-L=$TOP/lib
-export CLASSPATH="$L/customer.jar:$L/fabcoll.jar:$L/fabric.jar:$L/fabric-rt.jar:$L/java_cup.jar:$L/JFlex.jar:$L/jif.jar:$L/polyglot.jar:$L/rt.jar:$L/sif.jar:$L/je-3.3.75.jar:$L/FreePastry-2.1.jar:."
-CMD="fab-store -j -Xdebug -j -Xrunjdwp:transport=dt_socket,address=3044,server=y,suspend=n --store $HOSTNAME etc/keys/$HOSTNAME.keystore password"
-echo Using CLASSPATH=$CLASSPATH
-echo executing command
-echo $CMD
+L=$FABRIC
+#export CLASSPATH="$L/customer.jar:$L/fabcoll.jar:$L/fabric.jar:$L/fabric-rt.jar:$L/java_cup.jar:$L/JFlex.jar:$L/jif.jar:$L/polyglot.jar:$L/rt.jar:$L/sif.jar:$L/je-3.3.75.jar:$L/FreePastry-2.1.jar:."
+export CLASSPATH="$L/tests/sif/examples/travel/classes:$L/tests/sif/examples/customer/web/WEB-INF/classes:$L/tests/sif/examples/airline/web/WEB-INF/classes:$L/tests/sif/examples/bank/web/WEB-INF/classes:$L/tests/jif/classes:$L/classes:$L/rt-classes:$POLYGLOT/java_cup.jar:$POLYGLOT/JFlex.jar:$JIF/classes:$POLYGLOT/classes:$JAVA_HOME/jre/lib/rt.jar:$L/tests/sif/classes:$L/lib/je-3.3.75.jar:$L/lib/FreePastry-2.1.jar:."
+
+if [ -n "$debug" ]
+    then
+    CMD="fab-store -j -Xdebug -j -Xrunjdwp:transport=dt_socket,address=$port,server=y,suspend=n --store $1"
+    else
+    CMD="fab-store --store $1"
+fi
+
+if [ -n "$verbose" ]
+    then
+    echo Using CLASSPATH=$CLASSPATH
+    echo executing command
+    echo $CMD
+fi
 $CMD
 popd
+
