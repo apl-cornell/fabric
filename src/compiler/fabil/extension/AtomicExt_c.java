@@ -33,8 +33,6 @@ public class AtomicExt_c extends FabILExt_c {
     Stmt abort  = nf.Eval(CG, nf.Call(CG, ar.transactionManager(),
                                           nf.Id(CG, "abortTransaction")));
    
-//    Id flag = nf.Id(CG, "$commit" + (freshTid++));
-    
     FabILTypeSystem ts = ar.typeSystem();
     
     List<Stmt> lds = new ArrayList<Stmt>();
@@ -116,11 +114,6 @@ public class AtomicExt_c extends FabILExt_c {
     		   "  }\n" +
     		   "}\n";
     
-//    String block = "{ boolean "+flag+" = true;\n" +
-//                   "  %S\n" +
-//                   "  try { %LS }\n" +
-//                   "  catch (final Throwable $_) { "+flag+" = false; throw new fabric.worker.AbortException($_); }\n" +
-//                   "  finally { if ("+flag+") {%S} else {%S} } }\n";
     return ar.qq().parseStmt(block, lds, begin, atomic.statements(), commit, abort, restores);
   }
 
