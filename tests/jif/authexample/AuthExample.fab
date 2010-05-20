@@ -1,0 +1,19 @@
+
+public class AuthExample authority(BankPrincipal) {
+    public static void main{worker$←}(String{worker$←}[]{worker$←} args) {
+        atomic {
+            AuthExample obj = new AuthExample();
+            obj.loginBank();
+        } // The addDelegates should not be committed to the store here
+    }
+    
+    public void loginBank{worker$←}()
+    where authority(BankPrincipal), endorse({BankPrincipal←}) {
+            final DelegatingPrincipal p = (DelegatingPrincipal)BankPrincipal;
+            if (p == null) return;
+            final principal wktrusted = endorse(worker$, {worker$←} to {BankPrincipal←});
+            if (p equiv BankPrincipal) {
+                p.addDelegatesTo(wktrusted);
+            }
+    }
+}
