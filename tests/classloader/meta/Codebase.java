@@ -8,12 +8,18 @@ import java.util.Properties;
 public class Codebase {
   /* in the fabric implementation, classes would be a map from strings to oids */
   private Map<String, String> classes;
+  /* mapping of class names to their type (fabric-loaded or system-loaded) */
+  private Map<String, String> classTypes;
   
   /* in the fabric implementation, name will be the OID */
   String name;
   
   Class resolveClassName(String name) throws IOException {
     return Class.getClass(classes.get(name));
+  }
+  
+  String getClassType(String name) {
+    return classTypes.get(name);
   }
   
   FabricClassLoader getClassLoader() {
@@ -27,15 +33,29 @@ public class Codebase {
   private Codebase (String name) throws IOException {
     this.name    = name;
     this.classes = new HashMap<String, String> ();
+    this.classTypes = new HashMap<String, String> ();
     
     Properties p = Util.readProperties(name);
-    for (String className : p.stringPropertyNames())
-      classes.put(className, p.getProperty(className));
+    for (String propName : p.stringPropertyNames()) {
+      String className = propName.substring(0, propName.length() - 5);
+      if(propName.endsWith("name")) {
+        classes.put(className, p.getProperty(propName));
+      } else if(propName.endsWith("type")) {
+        classTypes.put(className, p.getProperty(propName));
+      } else {
+        throw new IOException("Malformed codebase file. Unknown property: " + 
+            propName);
+      }
+    }
   }
 
   /* this map and the getCodebase method simulate the oid <-> object mapping, and
    * would be removed in a full fabric implementation */
   private static Map<String, Codebase> codebases;
+  
+  static {
+    codebases = new HashMap<String, Codebase>();
+  }
   
   static Codebase getCodebase(String filename) throws IOException {
     Codebase result = codebases.get(filename);

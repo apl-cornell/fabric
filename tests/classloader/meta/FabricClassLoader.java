@@ -10,13 +10,20 @@ public class FabricClassLoader extends ClassLoader {
   
   @Override
   public java.lang.Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    System.out.println("FabricClassLoader.loadClass(\"" + name + "\")");
+    if(codebase.getClassType(name).equals("system")) {
+      System.out.println(" -using system classloader");
+      return getSystemClassLoader().loadClass(name);
+    }
+    
     try {
       Class    cls = codebase.resolveClassName(name);
       return   cls.toJavaClass();
       // TODO: resolve
     } catch(IOException e) {
+      System.out.println("fail");
       throw new ClassNotFoundException();
-    }
+    } 
   }
   
   java.lang.Class getJavaClass(Class cls) {
@@ -37,6 +44,7 @@ public class FabricClassLoader extends ClassLoader {
   private static Map<String, FabricClassLoader> classloaders;
   
   static FabricClassLoader getClassLoader(Codebase codebase) {
+    classloaders = new HashMap<String, FabricClassLoader>();
     FabricClassLoader result = classloaders.get(codebase.name);
     if (result == null) {
       result = new FabricClassLoader(codebase);

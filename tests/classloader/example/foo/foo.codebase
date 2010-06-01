@@ -1,3 +1,18 @@
-A = foo/A
-B = foo/B
-C = bar/C
+foo.A.type 	= fabric
+foo.A.name 	= foo/A
+
+foo.B.type	= fabric
+foo.B.name 	= foo/B
+
+foo.C.type	= fabric
+foo.C.name 	= bar/C
+
+foo.D.type	= fabric
+foo.D.name 	= foo/B
+
+foo.fail.type = fabric
+foo.fail.name = foo/Fail
+
+java.lang.Object.type = system
+java.lang.System.type = system
+java.io.PrintStream.type = system

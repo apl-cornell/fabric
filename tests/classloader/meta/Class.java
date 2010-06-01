@@ -1,6 +1,7 @@
 package meta;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -14,6 +15,7 @@ public class Class {
     return codebase.getClassLoader().getJavaClass(this);
   }
   
+  
   /* this constructor simulates the process of loading a class on to the fabric.
    * In the full fabric implementation, it will need to be replaced by a fabric
    * program that assembles class files with their context information into a
@@ -23,11 +25,16 @@ public class Class {
     this.codebase = Codebase.getCodebase(p.getProperty("codebase"));
     this.bytecode = Util.readFully(baseName + ".class");
     this.name     = p.getProperty("name", baseName);
+        
   }
 
   /* this map and the getClass method simulate the oid <-> object mapping, and
    * would be removed in a full fabric implementation */
   private static Map<String, Class> classes;
+  
+  static {
+    classes = new HashMap<String, Class>();
+  }
   
   public static Class getClass(String basename) throws IOException {
     Class result = classes.get(basename);
@@ -36,5 +43,9 @@ public class Class {
       classes.put(basename, result);
     }
     return result;
+  }
+  
+  public Codebase getCodebase() {
+    return codebase;
   }
 }
