@@ -13,8 +13,7 @@ import fabric.common.FabricThread;
  * The thread in which the Fabric program executes. This is here to ensure that
  * the program executes in a FabricThread.
  */
-public final class MainThread extends Thread implements FabricThread {
-  private TransactionManager tm;
+public final class MainThread extends FabricThread.AbstractImpl {
   private final Options opts;
   private final Method main;
   private final Object args;
@@ -22,7 +21,6 @@ public final class MainThread extends Thread implements FabricThread {
 
   private MainThread(Options opts, Method main, Object args) {
     super("Main worker application");
-    this.tm = null;
     this.opts = opts;
     this.main = main;
     this.args = args;
@@ -76,23 +74,5 @@ public final class MainThread extends Thread implements FabricThread {
 
     Throwable uncaught = thread.uncaughtException;
     if (uncaught != null) throw uncaught;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.common.FabricThread#getTransactionManager()
-   */
-  public final TransactionManager getTransactionManager() {
-    return tm;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.common.FabricThread#setTransactionManager(fabric.worker.transaction.TransactionManager)
-   */
-  public final void setTransactionManager(TransactionManager tm) {
-    this.tm = tm;
   }
 }
