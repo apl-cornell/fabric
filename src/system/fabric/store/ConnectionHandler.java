@@ -5,8 +5,8 @@ import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
 import java.net.SocketAddress;
 import java.util.logging.Level;
 
-import fabric.common.AbstractConnectionHandler;
 import fabric.lang.security.NodePrincipal;
+import fabric.net.AbstractConnectionHandler;
 
 /**
  * <p>

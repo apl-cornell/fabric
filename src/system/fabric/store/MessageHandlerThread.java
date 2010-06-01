@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.logging.Level;
 
-import fabric.common.AbstractMessageHandlerThread;
 import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -15,6 +14,7 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.messages.*;
+import fabric.net.AbstractMessageHandlerThread;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 

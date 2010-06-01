@@ -78,7 +78,7 @@ class CommManager {
   /**
    * Connects to the remote node and initializes the session.
    * 
-   * @see fabric.common.AbstractConnectionHandler
+   * @see fabric.net.AbstractConnectionHandler
    * @return a connected SocketChannel configured in blocking mode.
    */
   private SocketChannel connect() {

@@ -6,9 +6,9 @@ import java.net.SocketAddress;
 import java.util.Collections;
 import java.util.logging.Level;
 
-import fabric.common.AbstractConnectionHandler;
 import fabric.common.Logging;
 import fabric.lang.security.NodePrincipal;
+import fabric.net.AbstractConnectionHandler;
 import fabric.worker.Worker;
 
 /**

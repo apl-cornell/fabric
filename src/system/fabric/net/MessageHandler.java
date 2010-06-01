@@ -1,4 +1,4 @@
-package fabric.common;
+package fabric.net;
 
 /**
  * A marker interface for classes that can handle

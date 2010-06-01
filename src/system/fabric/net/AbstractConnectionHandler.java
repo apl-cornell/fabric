@@ -1,4 +1,4 @@
-package fabric.common;
+package fabric.net;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -13,12 +13,13 @@ import java.util.Set;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;
-import fabric.common.AbstractMessageHandlerThread.Pool;
-import fabric.common.AbstractMessageHandlerThread.SessionAttributes;
+import fabric.common.Options;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
-import fabric.net.ChannelMultiplexerThread;
+import fabric.net.AbstractMessageHandlerThread.Factory;
+import fabric.net.AbstractMessageHandlerThread.Pool;
+import fabric.net.AbstractMessageHandlerThread.SessionAttributes;
 
 /**
  * Abstraction for initializing incoming network connections and handing them

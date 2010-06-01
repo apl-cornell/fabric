@@ -1,4 +1,4 @@
-package fabric.common;
+package fabric.net;
 
 import java.io.*;
 import java.nio.channels.Channels;
@@ -9,6 +9,9 @@ import java.nio.channels.Pipe.SourceChannel;
 import java.util.Stack;
 import java.util.logging.Level;
 
+import fabric.common.FabricThread;
+import fabric.common.Logging;
+import fabric.common.FabricThread.AbstractImpl;
 import fabric.common.exceptions.InternalError;
 import fabric.messages.Message;
 import fabric.worker.transaction.TransactionManager;

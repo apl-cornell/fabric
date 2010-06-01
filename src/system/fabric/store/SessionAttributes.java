@@ -7,11 +7,11 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 
-import fabric.common.AbstractMessageHandlerThread;
 import fabric.common.Logging;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.security.NodePrincipal;
+import fabric.net.AbstractMessageHandlerThread;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 

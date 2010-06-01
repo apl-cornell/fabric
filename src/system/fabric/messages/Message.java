@@ -3,10 +3,10 @@ package fabric.messages;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 
-import fabric.common.MessageHandler;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FabricRuntimeException;
 import fabric.common.exceptions.InternalError;
+import fabric.net.MessageHandler;
 import fabric.net.RemoteNode;
 import fabric.net.Stream;
 import fabric.store.MessageHandlerThread;

@@ -3,7 +3,6 @@ package fabric.worker.remote;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
-import fabric.common.AbstractMessageHandlerThread;
 import fabric.common.AuthorizationUtil;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
@@ -14,6 +13,7 @@ import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
+import fabric.net.AbstractMessageHandlerThread;
 import fabric.net.RemoteNode;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionAtomicityViolationException;
@@ -48,7 +48,7 @@ public class MessageHandlerThread extends
     }
 
     public MessageHandlerThread createMessageHandler(
-        fabric.common.AbstractMessageHandlerThread.Pool<MessageHandlerThread> pool) {
+        fabric.net.AbstractMessageHandlerThread.Pool<MessageHandlerThread> pool) {
       return new MessageHandlerThread(rcm, pool);
     }
   }
