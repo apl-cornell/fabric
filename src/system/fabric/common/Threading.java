@@ -71,7 +71,7 @@ public class Threading {
    * 
    * @author mdgeorge
    */
-  public abstract class NamedRunnable implements Runnable {
+  public static abstract class NamedRunnable implements Runnable {
     private String name;
     
     public NamedRunnable(String name) {
@@ -105,7 +105,7 @@ public class Threading {
    * 
    * @author mdgeorge
    */
-  public abstract class NamedCallable<V> implements Callable<V> {
+  public static abstract class NamedCallable<V> implements Callable<V> {
     private String name;
     
     public NamedCallable(String name) {
