@@ -12,7 +12,7 @@ import fabric.common.FabricThread;
 /**
  * A thread that handles incoming requests from other workers.
  */
-public class RemoteCallManager extends FabricThread.AbstractImpl {
+public class RemoteCallManager extends FabricThread.Impl {
 
   volatile boolean shuttingDown;
 

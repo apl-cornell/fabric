@@ -13,7 +13,7 @@ import fabric.common.FabricThread;
  * The thread in which the Fabric program executes. This is here to ensure that
  * the program executes in a FabricThread.
  */
-public final class MainThread extends FabricThread.AbstractImpl {
+public final class MainThread extends FabricThread.Impl {
   private final Options opts;
   private final Method main;
   private final Object args;

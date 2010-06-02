@@ -11,7 +11,6 @@ import java.util.logging.Level;
 
 import fabric.common.FabricThread;
 import fabric.common.Logging;
-import fabric.common.FabricThread.AbstractImpl;
 import fabric.common.exceptions.InternalError;
 import fabric.messages.Message;
 import fabric.worker.transaction.TransactionManager;
@@ -22,7 +21,7 @@ import fabric.worker.transaction.TransactionManager;
  * worker to perform access control.
  */
 public abstract class AbstractMessageHandlerThread<Session extends AbstractMessageHandlerThread.SessionAttributes, MessageHandlerThread extends AbstractMessageHandlerThread<Session, MessageHandlerThread>>
-    extends FabricThread.AbstractImpl implements MessageHandler {
+    extends FabricThread.Impl implements MessageHandler {
   private final String threadName;
 
   // The I/O streams for communicating with the worker.
