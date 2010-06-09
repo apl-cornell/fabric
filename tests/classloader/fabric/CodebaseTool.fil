@@ -1,0 +1,241 @@
+package fabric;
+
+import java.util.Properties;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
+import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.FileOutputStream;
+import java.io.File;
+
+public class CodebaseTool {
+
+  private String baseName;
+  
+  /**
+   * Usage:
+   * To load a codebase from Fabric to the filesystem
+   *    CodebaseTool import [storeName] [onum] [exportDir]
+   * To store a codebase into Fabric from the filesystem
+   *    CodebaseTool export [pathToCodebase] [CodebasePropertiesFilename] [storeName]
+   */
+  public static void main(String[] args) throws IOException {
+    if(args.length < 1) {
+      showUsage(); 
+      return;
+    }
+    String action = args[0];
+    if(action.equals("import")) {
+      handleImport(args);
+    } else if(action.equals("export")) {
+      handleExport(args);
+    } else {
+      System.err.println("Unrecognized action");
+      showUsage();
+      return;
+    }
+  }
+  
+  private static void handleImport(String[] args) throws IOException {
+    if(args.length != 4) {
+      System.err.println("Incorrect number of arguments");
+      showUsage();
+      return;
+    }
+    String storeName = args[1];
+    long onum = Long.parseLong(args[2]);
+    String baseName = args[3];
+    Store ls = Worker.getWorker().getLocalStore();
+    atomic {
+      File f = new File(baseName);
+      f.mkdirs();
+      CodebaseTool tool = new CodebaseTool@ls(baseName);
+      Store s = Worker.getWorker().getStore(storeName);
+      tool.toFilesystem(s, onum);
+    }
+  }
+  
+  private static void handleExport(String[] args) throws IOException {
+    if(args.length != 4) {
+      System.err.println("Incorrect number of arguments");
+      showUsage();
+      return;
+    }
+    String baseName = args[1];
+    String propsFile = args[2];
+    String propsFileFull = baseName + File.separator + propsFile;
+    String storeName = args[3];
+    Store s = Worker.getWorker().getStore(storeName);
+    Store ls = Worker.getWorker().getLocalStore();
+    atomic {
+      File f = new File(propsFileFull);
+      if(!f.exists()) {
+        System.err.println("Properties file " + propsFileFull + " does not exist.");
+        return;
+      }
+      CodebaseTool tool = new CodebaseTool@ls(baseName);
+      Properties props = tool.readProperties(propsFile);
+      Codebase c = tool.toFabric(props, s);
+      System.out.println("Codebase stored to fab://" + c.getOid());
+    }
+    
+  }
+  
+  public CodebaseTool(String basename) {
+    this.baseName = basename;
+  }
+  
+  /**
+   * Loads a codebase and all of its classes into the filesystem
+   * @param s store the codebase is located on
+   * @param onum the onum of the codebase object
+   */
+  void toFilesystem(Store s, long onum) throws IOException {
+    atomic {
+      Object obj = Worker.getWorker().getObjectByOid(s, onum);
+      if(obj == null || !(obj instanceof Codebase)) {
+        System.err.println("Object not a codebase.");
+        return;
+      }
+
+      System.out.println("A");
+      Codebase c = (Codebase)obj;
+      System.out.println("D");
+      Properties p = new Properties();
+
+      System.out.println("C");
+      Iterator/* String */ classesIter = c.getClasses().keySet().iterator();
+
+      System.out.println("B");
+      String className, classType;
+
+      System.out.println("E");
+      while(classesIter.hasNext()) {
+        className = (String)classesIter.next();
+        classType = c.getClassType(className);
+        p.setProperty(className + ".type", classType);
+        if(classType.equals("fabric")) {
+          Class cls = c.getClass(className);
+            p.setProperty(className + ".oid", cls.getOid());
+          System.out.println("Hello");
+          toFile(cls);
+        }
+      }
+      toFile(p, "codebase.codebase");
+    }
+  }
+  
+  /**
+   * Imports new codebase to Fabric, using given properties file
+   * @param p properties that define the codebase
+   * @return the newly generated codebase
+   */
+  Codebase toFabric(Properties p, Store s) throws IOException {
+    atomic {
+	  Map/*String, String*/ classTypes = new HashMap/*String, String*/();
+      Set/*String*/ classNames = new HashSet/*String*/();
+      Iterator propNamesIter = p.stringPropertyNames().iterator();
+      while(propNamesIter.hasNext()) {
+        String propName = (String)propNamesIter.next();
+		String className = propName.substring(0, propName.length() - 5);
+		if(propName.endsWith("name")) {
+		  classNames.add(className);
+        } else if(propName.endsWith("type")) {
+          classTypes.put(className, p.getProperty(propName));
+          classNames.add(className);
+        } else if(propName.endsWith("oid")) {
+        	//TODO: check in fabric to see if there are any differences
+        	//for now ignore, and assume there are always differences...
+		} else {
+		  throw new IOException("Malformed codebase file. Unknown property: " + 
+		             propName);
+		}
+	  }
+
+      Map/*String, Class*/ classes = new HashMap/*String, Class*/();
+      Iterator/*String*/ classesIter = classNames.iterator();
+      while(classesIter.hasNext()) {
+        String name = (String)classesIter.next();
+        String classType = (String)classTypes.get(name);
+        if(classType == null)
+          throw new IllegalArgumentException("No class type defined for " + 
+						 name);
+        if(classType.equals("system")) {
+          classes.put(name, null);
+        } else {
+          byte native[] bytecode = new byte native[0]; //XXX: Compiler bug /*(byte native[])readFile(name.replaceAll("\\.", "/")); */
+          Class c = new Class@s(name, bytecode);
+		  classes.put(name, c);
+	    }
+      }
+      Codebase codebase = new Codebase@s(classes, classTypes);
+      return codebase;  
+    }
+  }
+  
+  private void toFile(Class c) throws IOException {
+    atomic {
+      String name = c.getName();
+      String filename = baseName + File.separator + name.replaceAll("\\.", File.separator) + ".class";
+      System.out.println(filename);
+      File f= new File(filename).getParentFile();
+      if(f != null) f.mkdirs();
+      FileOutputStream str = new FileOutputStream(filename);
+      str.write(c.bytecode);
+      str.close();
+    }
+  }
+  
+  private void toFile(Properties p, String name) throws IOException {
+	atomic {
+	  FileOutputStream fs = new FileOutputStream(baseName + File.separator + name);
+	  p.store(fs, null);
+	  fs.close();
+	}
+  }
+  
+  private byte[] readFile(String filename) throws IOException {
+    File f   = new File(baseName + File.separator + filename);
+    int  len = (int) f.length();
+    byte[] bytecode = new byte[len];
+    InputStream  in = new FileInputStream(f);
+    try {
+      for(int i = 0; i < len; i++) {
+        int r = in.read();
+        if (r < 0)
+          throw new IOException("bytecode shorter than advertised");
+        bytecode[i] = (byte) r; 
+      }
+      
+      if (in.read() > 0)
+        throw new IOException("bytecode longer than advertised");
+      
+      return bytecode;
+    } finally {
+      in.close();
+    }
+  }
+  
+  private Properties readProperties(String file) throws IOException {
+    atomic {
+	  InputStream in = new FileInputStream(baseName + File.separator + file);
+	  Properties  p  = new Properties();
+	  p.load(in);
+	  in.close();
+	  return p;
+    }
+  }
+  
+  private static void showUsage() {
+    System.err.println("Usage:");
+    System.err.println("To load a codebase from Fabric to the filesystem");
+    System.err.println("    CodebaseTool import [storeName] [onum] [exportDir]");
+    System.err.println("To store a codebase into Fabric from the filesystem");
+    System.err.println("    CodebaseTool export [pathToCodebase] [CodebasePropertiesFilename]");
+  }
+  
+}

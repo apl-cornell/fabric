@@ -10,8 +10,8 @@ foo.C.name 	= bar/C
 foo.D.type	= fabric
 foo.D.name 	= foo/B
 
-foo.fail.type = fabric
-foo.fail.name = foo/Fail
+foo.Fail.type = fabric
+foo.Fail.name = foo/Fail
 
 java.lang.Object.type = system
 java.lang.System.type = system

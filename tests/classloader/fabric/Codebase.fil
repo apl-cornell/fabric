@@ -1,0 +1,50 @@
+package fabric;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Iterator;
+import java.util.Properties;
+
+public class Codebase {
+  /* map from strings to classes */
+  private Map/*String, Class*/ classes;
+  /* mapping of class names to their type (fabric-loaded or system-loaded) */
+  private Map/*String, String*/ classTypes;
+  
+  Class resolveClassName(String name) throws IOException {
+    return (Class)classes.get(name);
+  }
+
+  public java.lang.Class toJavaClass(Class c) {
+    return getClassLoader().getJavaClass(c);
+  }
+  
+  FabricClassLoader getClassLoader() {
+    return FabricClassLoader.getClassLoader(this);
+  }
+  
+  public Codebase(Map/*String, Class*/ classes, Map/*String, String*/ classTypes) {
+    this.classes = new HashMap(classes);
+    this.classTypes = new HashMap(classTypes);
+  }
+
+  String getOid() {
+    return $getStore().name() + "/" + hashCode();
+  }
+  
+  public Map/*String, Class*/ getClasses() {
+    return Collections.unmodifiableMap(classes);
+  }
+  
+  public Class getClass(String s) {
+	  return (Class)classes.get(s);
+  }
+  
+  public String getClassType(String name) {
+    return (String)classTypes.get(name);
+  }
+  
+
+}
