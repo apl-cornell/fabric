@@ -18,21 +18,21 @@ import fabric.net.AbstractConnectionHandler;
  * </p>
  */
 class ConnectionHandler extends
-    AbstractConnectionHandler<Node.Store, SessionAttributes, MessageHandlerThread> {
+    AbstractConnectionHandler<Store, SessionAttributes, MessageHandlerThread> {
   private final Node node;
 
-  public ConnectionHandler(Node node) {
-    super(node.opts.threadPool, new MessageHandlerThread.Factory());
+  public ConnectionHandler(Node node, int threadPool) {
+    super(threadPool, new MessageHandlerThread.Factory());
     this.node = node;
   }
 
   @Override
-  protected Node.Store getNodeByName(String name) {
+  protected Store getNodeByName(String name) {
     return node.getStore(name);
   }
 
   @Override
-  protected SessionAttributes newAuthenticatedSession(Node.Store store,
+  protected SessionAttributes newAuthenticatedSession(Store store,
       String workerName, String workerPrincipalName,
       NodePrincipal workerPrincipal) {
     return new SessionAttributes(store, workerName, workerPrincipalName,
@@ -40,7 +40,7 @@ class ConnectionHandler extends
   }
 
   @Override
-  protected SessionAttributes newUnauthenticatedSession(Node.Store store,
+  protected SessionAttributes newUnauthenticatedSession(Store store,
       String workerName) {
     return new SessionAttributes(store, workerName);
   }

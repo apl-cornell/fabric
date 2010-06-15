@@ -25,7 +25,7 @@ final class SessionAttributes extends
   /**
    * The store with which the worker is interacting.
    */
-  final Node.Store store;
+  final Store store;
 
   /**
    * The remote worker node.
@@ -78,7 +78,7 @@ final class SessionAttributes extends
    * Constructs a SessionAttributes object corresponding to a dissemination
    * node.
    */
-  SessionAttributes(Node.Store store, String workerName) {
+  SessionAttributes(Store store, String workerName) {
     this.workerIsDissem = true;
     this.store = store;
     this.remoteNode = Worker.getWorker().getWorker(workerName);
@@ -93,7 +93,7 @@ final class SessionAttributes extends
   /**
    * Constructs a SessionAttributes object corresponding to a worker node.
    */
-  SessionAttributes(Node.Store store, String workerName,
+  SessionAttributes(Store store, String workerName,
       String workerPrincipalName, NodePrincipal worker) {
     this.workerIsDissem = false;
     this.store = store;

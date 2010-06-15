@@ -13,7 +13,6 @@ import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.store.Node.Store;
 import fabric.lang.Object._Impl;
 
 /**

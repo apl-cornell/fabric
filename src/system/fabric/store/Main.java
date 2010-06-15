@@ -34,23 +34,32 @@ public class Main {
     try {
       opts = new Options(args);
     } catch (UsageError ue) {
-      PrintStream out = ue.exitCode == 0 ? System.out : System.err;
-      if (ue.getMessage() != null && ue.getMessage().length() > 0) {
-        out.println(ue.getMessage());
-        out.println();
-      }
-
-      Options.usage(out);
+      printUsage(ue);
       throw new TerminationException(ue.exitCode);
     }
     
     // Start up store-node services.
-    try {
-      Node node = new Node(opts);
-      node.start();
-    } catch (IOException e) {
-      throw new TerminationException(e.getMessage(), 1);
+    final Node node = new Node(opts);
+
+    // initialize
+    node.initialize();
+
+    // register a hook to shut down gracefully.
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override public void run() { node.shutdown(); }
+    });
+
+    // run
+    node.run();
+  }
+  
+  private static void printUsage(UsageError ue) {
+    PrintStream out = ue.exitCode == 0 ? System.out : System.err;
+    if (ue.getMessage() != null && ue.getMessage().length() > 0) {
+      out.println(ue.getMessage());
+      out.println();
     }
 
+    Options.usage(out);
   }
 }
