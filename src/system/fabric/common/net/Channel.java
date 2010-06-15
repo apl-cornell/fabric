@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.ShakenSocket;
 
 

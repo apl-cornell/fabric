@@ -8,7 +8,7 @@ import java.security.cert.Certificate;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import fabric.common.net.NotImplementedException;
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.naming.SocketAddress;
 
 public class HandshakeAuthenticated implements HandshakeProtocol {

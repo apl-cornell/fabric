@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.net.SocketFactory;
 
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.Channel.Connection;
 import fabric.common.net.handshake.HandshakeProtocol;
 import fabric.common.net.handshake.ShakenSocket;

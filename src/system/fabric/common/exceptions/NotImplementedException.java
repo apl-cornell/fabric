@@ -1,4 +1,4 @@
-package fabric.common.net;
+package fabric.common.exceptions;
 
 public class NotImplementedException extends RuntimeException {
   public NotImplementedException() {

@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.Channel.Connection;
 import fabric.common.net.SubServerSocketFactory.Acceptor.ConnectionQueue.ServerChannel;
 import fabric.common.net.handshake.HandshakeProtocol;

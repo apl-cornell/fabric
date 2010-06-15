@@ -2,7 +2,7 @@ package fabric.common.net.naming;
 
 import java.io.IOException;
 
-import fabric.common.net.NotImplementedException;
+import fabric.common.exceptions.NotImplementedException;
 
 public class DNSNameService implements NameService {
 

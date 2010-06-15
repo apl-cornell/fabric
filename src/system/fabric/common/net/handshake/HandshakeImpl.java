@@ -5,7 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-import fabric.common.net.NotImplementedException;
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.naming.SocketAddress;
 
 /**
