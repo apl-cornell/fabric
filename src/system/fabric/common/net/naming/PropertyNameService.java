@@ -15,9 +15,8 @@ import fabric.common.Resources;
 public class PropertyNameService implements NameService {
 
   public enum PortType {
-    WORKER       { @Override int getPort(ConfigProperties p) { return p.workerPort;      } },
-    STORE_AUTH   { @Override int getPort(ConfigProperties p) { return p.storeAuthPort;   } },
-    STORE_UNAUTH { @Override int getPort(ConfigProperties p) { return p.storeUnauthPort; } },
+    WORKER { @Override int getPort(ConfigProperties p) { return p.workerPort; } },
+    STORE  { @Override int getPort(ConfigProperties p) { return p.storePort;  } },
     ;
     
     abstract int getPort(ConfigProperties p);
