@@ -86,7 +86,7 @@ public class Threading {
       current.setName(oldName);
     }
     
-    public abstract void runImpl();
+    protected abstract void runImpl();
   }
   
   
@@ -121,6 +121,6 @@ public class Threading {
       return result;
     }
     
-    public abstract V callImpl();
+    protected abstract V callImpl();
   }
 }
