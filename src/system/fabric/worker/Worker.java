@@ -163,7 +163,7 @@ public final class Worker {
     
     this.keyStore = keyStore;
     try {
-      this.storeNameService  = new PropertyNameService(PortType.STORE_AUTH);
+      this.storeNameService  = new PropertyNameService(PortType.STORE);
       this.workerNameService = new PropertyNameService(PortType.WORKER);
     } catch(IOException e) {
       throw new InternalError("Unable to load the name service", e);
