@@ -170,7 +170,7 @@ public class FabricDataProvider implements DataProvider {
 		StoreObject(String storeName, long onum) {
 			s = Worker.getWorker().getStore(storeName);
 			String name = "fab://" + storeName + "/" + onum;
-			fabric.lang.Object obj = Worker.getWorker().getObjectByOid(s, onum);
+			fabric.lang.Object obj = new fabric.lang.Object._Proxy(s, onum);
 			DataObject dataObj = new DataObject(name, obj, obj.getClass());
 			rootObjects = new LinkedList<Object>();
 			rootObjects.add(dataObj);
@@ -213,13 +213,21 @@ public class FabricDataProvider implements DataProvider {
 		return store;
 	}
 
-	public List<Object> getChildrenForNode(Object obj) {
-		Getter g = (Getter)obj;
-		return g.getChildren();
+	public List<Object> getChildrenForNode(final Object obj) {
+          return Worker.runInSubTransaction(new Worker.Code<List<Object>>() { 
+            public List<Object> run() {
+              Getter g = (Getter)obj;
+	      return g.getChildren();
+            }
+          });
 	}
 	
-	public String getDescriptionForNode(Object obj) {
-		Getter g = (Getter)obj;
+	public String getDescriptionForNode(final Object obj) {
+          return Worker.runInSubTransaction(new Worker.Code<String>() { 
+	    public String run() {
+                Getter g = (Getter)obj;
 		return g.getValue();
+            }
+          });
 	}
 }
