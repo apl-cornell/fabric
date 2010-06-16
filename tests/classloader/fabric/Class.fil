@@ -10,66 +10,24 @@ import fabric.worker.Worker;
 import fabric.worker.Store;
 
 public class Class {
-  byte native[]   bytecode;
+  byte[]   bytecode;
   String   name;
+  
+  public Class(String name, byte[] bytecode) {
+    this.name = new String(name);
+    this.bytecode = bytecode;
+  }
   
   public String getName() {
 	  return name;
   }
   
-  //XXX: compiler bug
-  /*
-  public byte native[] getClassBytecode() {
-	  /*byte native[] copy = new byte native[bytecode.length];
-	  System.arraycopy(bytecode, 0, copy, 0, bytecode.length);
-	  return copy;*
-	  return bytecode;
-  } */
-  
-  public Class(String name, byte native[] bytecode) {
-    this.name = new String(name);
-    this.bytecode = bytecode;
+  public byte[] getBytecode() {
+	  atomic {
+		  byte[] copy = new byte[bytecode.length];
+		  for(int i = 0; i < copy.length; i++)
+			  copy[i] = bytecode[i];
+		  return copy;
+	  }
   }
-
-  /**
-   * Loads class from the fabric by the given oid
-   * @param storeName name of store
-   * @param onum onum
-   * @return Class object
-   */
-  public static Class getClass(String storeName, long onum) {
-    Store store = Worker.getWorker().getStore(storeName);
-    return (Class)Worker.getWorker().getObjectByOid(store, onum);
-  }
-  
-  /**
-   * Loads class from the fabric by the given oid
-   * @param oid oid in the form, "storeName/onum"
-   * @return Class object
-   */
-  public static Class getClass(String oid) {
-    int sep = oid.indexOf('/');
-    String storeName = oid.substring(0, sep);
-    long onum = Long.parseLong(oid.substring(sep));
-    return getClass(storeName, onum);
-  }
-  
-  String getOid() {
-    return $getStore().name() + "/" + hashCode();
-  }
-  /*
-  public void writeToFile() throws IOException {
-   String basename = name.replaceAll("\\.", "/");
-   Util.write(basename + ".class", bytecode);
-   Properties p = new Properties();
-   p.setProperty("name", name);
-   p.setProperty("codebase", codebase.getOid());
-   FileOutputStream propsOut = new FileOutputStream(basename + ".properties");
-   try {
-     p.store(propsOut, null);
-   } finally {
-     propsOut.close();
-   }
-  }
-  */
 }

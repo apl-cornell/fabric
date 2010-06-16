@@ -1,11 +1,11 @@
 package fabric;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Iterator;
 import java.util.Properties;
+import fabric.util.Collections;
+import fabric.util.HashMap;
+import fabric.util.Map;
+import fabric.util.Iterator;
 
 public class Codebase {
   /* map from strings to classes */
@@ -29,13 +29,11 @@ public class Codebase {
     this.classes = new HashMap(classes);
     this.classTypes = new HashMap(classTypes);
   }
-
-  String getOid() {
-    return $getStore().name() + "/" + hashCode();
-  }
   
   public Map/*String, Class*/ getClasses() {
-    return Collections.unmodifiableMap(classes);
+	atomic {
+		return Collections.unmodifiableMap(classes);
+	}
   }
   
   public Class getClass(String s) {
@@ -46,5 +44,4 @@ public class Codebase {
     return (String)classTypes.get(name);
   }
   
-
 }

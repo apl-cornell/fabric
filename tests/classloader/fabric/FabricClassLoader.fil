@@ -8,7 +8,8 @@ public class FabricClassLoader extends ClassLoader {
   private Codebase                    codebase;
   private Map/*Class, java.lang.Class*/ classes;
   
-  public java.lang.Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
+  public java.lang.Class loadClass(String name, boolean resolve) 
+  	throws ClassNotFoundException {
     System.out.println("FabricClassLoader.loadClass(\"" + name + "\")");
     if(codebase.getClassType(name).equals("system")) {
       System.out.println(" -using system classloader");
