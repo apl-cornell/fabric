@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.naming.SocketAddress;
+import fabric.lang.security.NodePrincipal;
 
 
 /**
@@ -53,6 +55,13 @@ public class SubSocket {
     return state.getInputStream();
   }
 
+  /** 
+   * Return the Principal that represents the remote endpoint of the connection
+   */
+  public final NodePrincipal getPrincipal() {
+    throw new NotImplementedException();
+  }
+  
   //////////////////////////////////////////////////////////////////////////////
   // State design pattern implementation                                      //
   //                                                                          //
