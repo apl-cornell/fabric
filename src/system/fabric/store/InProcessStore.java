@@ -32,7 +32,7 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void abortTransaction(boolean useAuthentication, TransactionID tid) {
+  public void abortTransaction(TransactionID tid) {
     try {
       tm.abortTransaction(Worker.getWorker().getPrincipal(), tid.topTid);
     } catch (AccessException e) {
@@ -41,11 +41,9 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void commitTransaction(boolean useAuthentication, long transactionID)
+  public void commitTransaction(long transactionID)
       throws TransactionCommitFailedException {
-    tm
-        .commitTransaction(null, Worker.getWorker().getPrincipal(),
-            transactionID);
+    tm.commitTransaction(null, Worker.getWorker().getPrincipal(), transactionID);
   }
 
   @Override
@@ -59,7 +57,7 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   @SuppressWarnings("deprecation")
-  public boolean prepareTransaction(boolean useAuthentication, long tid,
+  public boolean prepareTransaction(long tid,
       long commitTime, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =

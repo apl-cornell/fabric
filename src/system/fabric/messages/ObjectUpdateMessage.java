@@ -3,12 +3,9 @@ package fabric.messages;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.security.PublicKey;
 
-import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.common.ObjectGroup;
-import fabric.common.exceptions.BadSignatureException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.dissemination.Glob;
@@ -16,36 +13,13 @@ import fabric.dissemination.Glob;
 /**
  * Represents push notification that an object has been updated.
  */
-public class ObjectUpdateMessage extends
-    Message<RemoteWorker, ObjectUpdateMessage.Response> {
-
-  public static class Response implements Message.Response {
-    public final boolean resubscribe;
-
-    public Response(boolean resubscribe) {
-      this.resubscribe = resubscribe;
-    }
-
-    /**
-     * Deserialization constructor.
-     * 
-     * @param node
-     *          The node from which the response is being read.
-     * @param in
-     *          the input stream from which to read the response.
-     */
-    Response(RemoteWorker node, DataInput in) throws IOException {
-      this.resubscribe = in.readBoolean();
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see fabric.messages.Message.Response#write(java.io.DataOutput)
-     */
-    public void write(DataOutput out) throws IOException {
-      out.writeBoolean(resubscribe);
-    }
-  }
+public class ObjectUpdateMessage
+     extends Message<ObjectUpdateMessage.Response>
+  implements MessageToWorker
+{
+  //////////////////////////////////////////////////////////////////////////////
+  // message  contents                                                        //
+  //////////////////////////////////////////////////////////////////////////////
 
   public final String store;
   public final long onum;
@@ -74,31 +48,30 @@ public class ObjectUpdateMessage extends
     this(null, onum, null, update);
   }
 
-  /**
-   * Deserialization constructor.
-   */
-  protected ObjectUpdateMessage(DataInput in) throws IOException,
-      BadSignatureException {
-    super(MessageType.OBJECT_UPDATE);
+  //////////////////////////////////////////////////////////////////////////////
+  // response contents                                                        //
+  //////////////////////////////////////////////////////////////////////////////
 
-    this.onum = in.readLong();
+  public static class Response implements Message.Response {
+    public final boolean resubscribe;
 
-    if (in.readBoolean()) {
-      this.store = in.readUTF();
-      PublicKey key = Worker.getWorker().getStore(store).getPublicKey();
-      this.glob = new Glob(key, in);
-      this.group = null;
-    } else {
-      this.store = null;
-      this.glob = null;
-      this.group = new ObjectGroup(in);
+    public Response(boolean resubscribe) {
+      this.resubscribe = resubscribe;
     }
+
   }
 
-  @Override
-  public Response dispatch(fabric.worker.remote.MessageHandlerThread w) {
-    return w.handle(this);
+  //////////////////////////////////////////////////////////////////////////////
+  // visitor methods                                                          //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public Response dispatch(MessageToWorkerHandler h) throws FabricException {
+    return h.handle(this);
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // convenience method for sending                                           //
+  //////////////////////////////////////////////////////////////////////////////
 
   public Response send(RemoteWorker worker) {
     try {
@@ -109,13 +82,12 @@ public class ObjectUpdateMessage extends
     }
   }
 
-  @Override
-  public Response response(RemoteWorker node, DataInput in) throws IOException {
-    return new Response(node, in);
-  }
+  //////////////////////////////////////////////////////////////////////////////
+  // serialization cruft                                                      //
+  //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public void write(DataOutput out) throws IOException {
+  protected void writeMessage(DataOutput out) throws IOException {
     out.writeLong(onum);
 
     if (group == null) {
@@ -126,6 +98,33 @@ public class ObjectUpdateMessage extends
       out.writeBoolean(false);
       group.write(out);
     }
+  }
+
+  /* readMessage */
+  protected ObjectUpdateMessage(DataInput in) throws IOException {
+    super(MessageType.OBJECT_UPDATE);
+
+    this.onum = in.readLong();
+
+    if (in.readBoolean()) {
+      this.store = in.readUTF();
+      this.glob  = new Glob(in);
+      this.group = null;
+    } else {
+      this.store = null;
+      this.glob  = null;
+      this.group = new ObjectGroup(in);
+    }
+  }
+
+  @Override
+  protected void writeResponse(DataOutput out, Response r) throws IOException {
+    out.writeBoolean(r.resubscribe);
+  }
+
+  @Override
+  protected Response readResponse(DataInput in) throws IOException {
+    return new Response(in.readBoolean());
   }
 
 }

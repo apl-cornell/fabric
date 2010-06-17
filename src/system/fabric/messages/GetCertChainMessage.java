@@ -1,38 +1,39 @@
 package fabric.messages;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import java.io.*;
+import java.security.cert.Certificate;
 
-import fabric.worker.debug.Timing;
-import fabric.common.*;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
-import fabric.net.RemoteNode;
+import fabric.net.UnreachableNodeException;
+import fabric.worker.RemoteStore;
+import fabric.worker.debug.Timing;
 
-public class AbortTransactionMessage
-     extends Message<AbortTransactionMessage.Response>
-  implements MessageToStore, MessageToWorker
+/**
+ * A request to get the certificate chain that certifies a store's public SSL
+ * key.
+ */
+public class GetCertChainMessage
+     extends Message<GetCertChainMessage.Response>
+  implements MessageToStore
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
-  /** The tid for the transaction that is aborting.  */
-  public final TransactionID tid;
-
-  public AbortTransactionMessage(TransactionID tid) {
-    super(MessageType.ABORT_TRANSACTION);
-    this.tid = tid;
+  public GetCertChainMessage() {
+    super(MessageType.GET_CERT_CHAIN);
   }
-
 
   //////////////////////////////////////////////////////////////////////////////
   // response contents                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
-    public Response() {
+    public final Certificate[] certificateChain;
+
+    public Response(Certificate[] certificateChain) {
+      this.certificateChain = certificateChain;
     }
   }
 
@@ -43,21 +44,19 @@ public class AbortTransactionMessage
   public Response dispatch(MessageToStoreHandler h) throws FabricException {
     return h.handle(this);
   }
-  
-  public Response dispatch(MessageToWorkerHandler h) throws FabricException {
-    return h.handle(this);
-  }
-  
+
   //////////////////////////////////////////////////////////////////////////////
   // convenience method for sending                                           //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response send(RemoteNode node) {
+  public Response send(RemoteStore store) throws UnreachableNodeException {
     try {
       Timing.STORE.begin();
-      return send(node, true);
+      return send(store, false);
+    } catch (UnreachableNodeException e) {
+      throw e;
     } catch (FabricException e) {
-      throw new InternalError(e);
+      throw new InternalError("Unexpected response from store.", e);
     } finally {
       Timing.STORE.end();
     }
@@ -68,21 +67,23 @@ public class AbortTransactionMessage
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  protected void writeMessage(DataOutput out) throws IOException {
-    tid.write(out);
+  protected void writeMessage(DataOutput out) {
   }
 
   /* readMessage */
-  protected AbortTransactionMessage(DataInput in) throws IOException {
-    this(new TransactionID(in));
+  protected GetCertChainMessage(DataInput in) {
+    this();
+  }
+  
+  @Override
+  protected void writeResponse(DataOutput out, Response r) throws IOException {
+    writeObject(out, r.certificateChain);
   }
 
   @Override
-  protected void writeResponse(DataOutput out, Response r) {
+  protected Response readResponse(DataInput in) throws IOException {
+    Certificate[] certChain = readObject(in, Certificate[].class);
+    return new Response(certChain);
   }
 
-  @Override
-  protected Response readResponse(DataInput in) {
-    return new Response();
-  }
 }

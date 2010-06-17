@@ -1,42 +1,21 @@
 package fabric.worker.remote;
 
+import fabric.common.exceptions.NotImplementedException;
 import fabric.lang.security.NodePrincipal;
-import fabric.net.AbstractMessageHandlerThread;
 
-public final class SessionAttributes extends
-    AbstractMessageHandlerThread.SessionAttributes {
-
-  /**
-   * Whether this is a connection for dissemination updates.
-   */
-  final boolean isDissemConnection;
+public final class SessionAttributes  {
 
   /**
    * The name of the remote node that is being served.
    */
-  final String remoteNodeName;
+  public final String remoteNodeName;
+  public final NodePrincipal remotePrincipal;
   
-  /**
-   * The name of the remote node principal.
-   */
-  final String remoteNodePrincipalName;
-
-  /**
-   * The remote node's principal object.
-   */
-  final NodePrincipal remotePrincipal;
-
   SessionAttributes(String remoteNodeName) {
-    this.isDissemConnection = true;
-    this.remoteNodeName = remoteNodeName;
-    this.remoteNodePrincipalName = null;
-    this.remotePrincipal = null;
+    throw new NotImplementedException();
   }
 
   SessionAttributes(String workerName, String workerPrincipalName, NodePrincipal worker) {
-    this.isDissemConnection = false;
-    this.remoteNodeName = workerName;
-    this.remoteNodePrincipalName = workerPrincipalName;
-    this.remotePrincipal = worker;
+    throw new NotImplementedException();
   }
 }

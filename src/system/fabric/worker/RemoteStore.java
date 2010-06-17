@@ -14,6 +14,7 @@ import fabric.common.*;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.naming.SocketAddress;
 import fabric.common.util.*;
 import fabric.dissemination.Glob;
@@ -140,31 +141,22 @@ public class RemoteStore extends RemoteNode implements Store {
   /**
    * Sends a PREPARE message to the store.
    */
-  public boolean prepareTransaction(boolean useAuthentication, long tid,
-      long commitTime, Collection<Object._Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Object._Impl> writes)
-      throws TransactionPrepareFailedException, UnreachableNodeException {
-    if (useAuthentication) {
-      PrepareTransactionMessage.Response response =
-          new PrepareTransactionMessage(tid, commitTime, toCreate, reads,
-              writes).send(this);
+  public boolean prepareTransaction(long tid,
+                                    long commitTime,
+                                    Collection<Object._Impl> toCreate,
+                                    LongKeyMap<Integer> reads,
+                                    Collection<Object._Impl> writes)
+          throws TransactionPrepareFailedException,
+                 UnreachableNodeException {
+    PrepareTransactionMessage.Response response =
+      new PrepareTransactionMessage(tid, commitTime, toCreate, reads,
+          writes).send(this);
 
-      if (!response.success)
-        throw new TransactionPrepareFailedException(response.versionConflicts,
-            response.message);
+    if (!response.success)
+      throw new TransactionPrepareFailedException(response.versionConflicts,
+          response.message);
 
-      return response.subTransactionCreated;
-    } else {
-      UnauthenticatedPrepareTransactionMessage.Response response =
-          new UnauthenticatedPrepareTransactionMessage(tid, commitTime,
-              toCreate, reads, writes).send(this);
-
-      if (!response.success)
-        throw new TransactionPrepareFailedException(response.versionConflicts,
-            response.message);
-
-      return response.subTransactionCreated;
-    }
+    return response.subTransactionCreated;
   }
 
   /**
@@ -343,9 +335,12 @@ public class RemoteStore extends RemoteNode implements Store {
    */
   public final Glob readEncryptedObjectFromStore(long onum)
       throws FetchException {
-    DissemReadMessage.Response response =
-        new DissemReadMessage(onum).send(this);
-    return response.glob;
+    DissemReadMessage.Response response = new DissemReadMessage(onum).send(this);
+    // TODO
+    // PublicKey key = Worker.getWorker().getStore(name).getPublicKey();
+    // response.glob.verifySignature(key);
+    // return response.glob
+    throw new NotImplementedException();
   }
 
   /**
@@ -382,29 +377,20 @@ public class RemoteStore extends RemoteNode implements Store {
    * (non-Javadoc)
    * @see fabric.worker.Store#abortTransaction(long)
    */
-  public void abortTransaction(boolean useAuthentication, TransactionID tid) {
-    if (useAuthentication)
-      new AbortTransactionMessage(tid).send(this);
-    else new UnauthenticatedAbortTransactionMessage(tid).send(this);
+  public void abortTransaction(TransactionID tid) {
+    new AbortTransactionMessage(tid).send(this);
   }
 
   /*
    * (non-Javadoc)
    * @see fabric.worker.Store#commitTransaction(int)
    */
-  public void commitTransaction(boolean useAuthentication, long transactionID)
+  public void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
-    if (useAuthentication) {
-      CommitTransactionMessage.Response response =
-          new CommitTransactionMessage(transactionID).send(this);
-      if (!response.success)
-        throw new TransactionCommitFailedException(response.message);
-    } else {
-      UnauthenticatedCommitTransactionMessage.Response response =
-          new UnauthenticatedCommitTransactionMessage(transactionID).send(this);
-      if (!response.success)
-        throw new TransactionCommitFailedException(response.message);
-    }
+    CommitTransactionMessage.Response response =
+      new CommitTransactionMessage(transactionID).send(this);
+    if (!response.success)
+      throw new TransactionCommitFailedException(response.message);
   }
 
   @Override
@@ -496,8 +482,8 @@ public class RemoteStore extends RemoteNode implements Store {
   public PublicKey getPublicKey() {
     if (publicKey == null) {
       // No key cached. Fetch the certificate chain from the store.
-      GetCertificateChainMessage.Response response =
-          new GetCertificateChainMessage().send(this);
+      GetCertChainMessage.Response response =
+          new GetCertChainMessage().send(this);
       Certificate[] certificateChain = response.certificateChain;
 
       // Validate the certificate chain.

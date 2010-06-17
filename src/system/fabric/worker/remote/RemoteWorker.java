@@ -12,18 +12,18 @@ import fabric.lang.Object._Proxy;
 import fabric.lang.security.NodePrincipal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
+import fabric.messages.DirtyReadMessage;
+import fabric.messages.GetPrincipalMessage;
 import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
+import fabric.messages.RemoteCallMessage;
+import fabric.messages.TakeOwnershipMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
-import fabric.worker.remote.messages.GetPrincipalMessage;
-import fabric.worker.remote.messages.ReadMessage;
-import fabric.worker.remote.messages.RemoteCallMessage;
-import fabric.worker.remote.messages.TakeOwnershipMessage;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
@@ -117,7 +117,7 @@ public final class RemoteWorker extends RemoteNode {
   }
 
   public _Impl readObject(TransactionID tid, Store store, long onum) {
-    ReadMessage.Response response = new ReadMessage(tid, store, onum).send(this);
+    DirtyReadMessage.Response response = new DirtyReadMessage(tid, store, onum).send(this);
     return response.obj;
   }
 

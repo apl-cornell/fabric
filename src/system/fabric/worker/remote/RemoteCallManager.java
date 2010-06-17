@@ -8,6 +8,7 @@ import java.nio.channels.SocketChannel;
 
 import fabric.worker.Worker;
 import fabric.common.FabricThread;
+import fabric.common.exceptions.NotImplementedException;
 
 /**
  * A thread that handles incoming requests from other workers.
@@ -16,12 +17,9 @@ public class RemoteCallManager extends FabricThread.Impl {
 
   volatile boolean shuttingDown;
 
-  private final ConnectionHandler connectionHandler;
-
   public RemoteCallManager() {
     super("remote call manager");
     this.shuttingDown = false;
-    this.connectionHandler = new ConnectionHandler(this);
   }
 
   @Override
@@ -37,7 +35,8 @@ public class RemoteCallManager extends FabricThread.Impl {
         try {
           // Accept a connection and give it to the connection handler.
           SocketChannel connection = server.accept();
-          connectionHandler.handle(connection);
+          // TODO
+          throw new NotImplementedException();
         } catch (ClosedByInterruptException e) {
           continue;
         }
@@ -49,7 +48,6 @@ public class RemoteCallManager extends FabricThread.Impl {
 
   public void shutdown() {
     shuttingDown = true;
-    connectionHandler.shutdown();
     interrupt();
   }
 }

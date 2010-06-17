@@ -2,7 +2,6 @@ package fabric.store;
 
 import static fabric.common.Logging.STORE_LOGGER;
 
-import java.security.PrivateKey;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -11,12 +10,10 @@ import fabric.common.Logging;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.security.NodePrincipal;
-import fabric.net.AbstractMessageHandlerThread;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
-final class SessionAttributes extends
-    AbstractMessageHandlerThread.SessionAttributes {
+final class SessionAttributes  {
   /**
    * Whether the worker is a dissemination node.
    */
@@ -28,11 +25,6 @@ final class SessionAttributes extends
   final Store store;
 
   /**
-   * The remote worker node.
-   */
-  final RemoteWorker remoteNode;
-
-  /**
    * The name of the remote principal.
    */
   final String workerPrincipalName;
@@ -41,13 +33,11 @@ final class SessionAttributes extends
    * The worker's principal object.
    */
   final NodePrincipal workerPrincipal;
-
+  
   /**
-   * The private signing key for the store with which the worker is interacting.
-   * XXX This is currently the SSL private key. Should use the store's
-   * NodePrincipal's key instead.
+   * The worker's node
    */
-  final PrivateKey privateKey;
+  final RemoteWorker remoteNode;
 
   // Bookkeeping information for debugging/monitoring purposes:
   private int numReads;
@@ -81,10 +71,9 @@ final class SessionAttributes extends
   SessionAttributes(Store store, String workerName) {
     this.workerIsDissem = true;
     this.store = store;
-    this.remoteNode = Worker.getWorker().getWorker(workerName);
     this.workerPrincipalName = null;
     this.workerPrincipal = null;
-    this.privateKey = store.privateKey;
+    this.remoteNode      = Worker.getWorker().getWorker(workerName);
 
     this.pendingLogs = new LongKeyHashMap<LogRecord>();
     resetStats();
@@ -93,14 +82,13 @@ final class SessionAttributes extends
   /**
    * Constructs a SessionAttributes object corresponding to a worker node.
    */
-  SessionAttributes(Store store, String workerName,
+ SessionAttributes(Store store, String workerName,
       String workerPrincipalName, NodePrincipal worker) {
     this.workerIsDissem = false;
     this.store = store;
-    this.remoteNode = Worker.getWorker().getWorker(workerName);
     this.workerPrincipalName = workerPrincipalName;
     this.workerPrincipal = worker;
-    this.privateKey = store.privateKey;
+    this.remoteNode      = Worker.getWorker().getWorker(workerName);
 
     this.pendingLogs = new LongKeyHashMap<LogRecord>();
     resetStats();
@@ -121,7 +109,6 @@ final class SessionAttributes extends
     pendingLogs.clear();
   }
 
-  @Override
   public void endSession() {
     // Report any statistics that may have been recorded.
     STORE_LOGGER.info(numReads + " read requests");

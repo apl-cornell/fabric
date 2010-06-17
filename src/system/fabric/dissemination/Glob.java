@@ -207,13 +207,13 @@ public class Glob implements FastSerializable {
     return timestamp < glob.timestamp;
   }
 
-  public boolean verifySignature(PublicKey key) throws SignatureException,
-      InvalidKeyException {
+  public void verifySignature(PublicKey key) throws SignatureException, InvalidKeyException {
     // Check the signature.
     Signature verifier = Crypto.signatureInstance();
     verifier.initVerify(key);
     updateSignature(verifier);
-    return verifier.verify(signature);
+    if (!verifier.verify(signature))
+      throw new SignatureException("Failed to verify signature");
   }
 
   /** Serializer. */
@@ -248,8 +248,7 @@ public class Glob implements FastSerializable {
    *          The public key for verifying the signature. (If null, signature
    *          verification is bypassed.)
    */
-  public Glob(PublicKey key, DataInput in) throws IOException,
-      BadSignatureException {
+  public Glob(DataInput in) throws IOException {
     this.timestamp = in.readLong();
     if (in.readBoolean()) {
       Store store = Worker.getWorker().getStore(in.readUTF());
@@ -269,13 +268,6 @@ public class Glob implements FastSerializable {
 
     this.signature = new byte[in.readInt()];
     in.readFully(this.signature);
-
-    try {
-      if (key != null && !verifySignature(key))
-        throw new BadSignatureException();
-    } catch (GeneralSecurityException e) {
-      throw new InternalError(e);
-    }
   }
 
   /**

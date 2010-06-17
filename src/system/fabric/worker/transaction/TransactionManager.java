@@ -251,34 +251,17 @@ public final class TransactionManager {
   /**
    * Commits the transaction if possible; otherwise, aborts the transaction.
    */
-  public void commitTransaction() throws AbortException,
-      TransactionAtomicityViolationException {
-    commitTransaction(true);
-  }
-
-  /**
-   * @param useAuthentication
-   *          whether to use an authenticated channel to talk to the store
-   */
-  public void commitTransaction(boolean useAuthentication)
+  public void commitTransaction()
       throws AbortException, TransactionAtomicityViolationException {
     Timing.COMMIT.begin();
     try {
-      commitTransactionAt(System.currentTimeMillis(), useAuthentication);
+      commitTransactionAt(System.currentTimeMillis());
     } finally {
       Timing.COMMIT.end();
     }
   }
 
   public void commitTransactionAt(long commitTime) {
-    commitTransactionAt(commitTime, true);
-  }
-
-  /**
-   * @param useAuthentication
-   *          whether to use an authenticated channel to talk to the store
-   */
-  private void commitTransactionAt(long commitTime, boolean useAuthentication) {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
     // Assume only one thread will be executing this.
@@ -330,7 +313,7 @@ public final class TransactionManager {
 
     // Send prepare messages to our cohorts.
     Map<RemoteNode, TransactionPrepareFailedException> failures =
-        sendPrepareMessages(useAuthentication, commitTime, stores, workers);
+        sendPrepareMessages(commitTime, stores, workers);
 
     if (!failures.isEmpty()) {
       failures.remove(null);
@@ -343,7 +326,7 @@ public final class TransactionManager {
     }
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(useAuthentication, stores, workers);
+    sendCommitMessagesAndCleanUp(stores, workers);
   }
 
   /**
@@ -352,7 +335,7 @@ public final class TransactionManager {
    */
   public Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
       long commitTime) {
-    return sendPrepareMessages(true, commitTime, current.storesToContact(),
+    return sendPrepareMessages(commitTime, current.storesToContact(),
         current.workersCalled);
   }
 
@@ -361,7 +344,7 @@ public final class TransactionManager {
    * abort messages if any of them fails to prepare.
    */
   private Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
-      final boolean useAuthentication, final long commitTime,
+      final long commitTime,
       Set<Store> stores, List<RemoteWorker> workers) {
     final Map<RemoteNode, TransactionPrepareFailedException> failures =
         Collections
@@ -424,7 +407,7 @@ public final class TransactionManager {
             LongKeyMap<Integer> reads = current.getReadsForStore(store);
             Collection<_Impl> writes = current.getWritesForStore(store);
             boolean subTransactionCreated =
-                store.prepareTransaction(useAuthentication, current.tid.topTid,
+                store.prepareTransaction(current.tid.topTid,
                     commitTime, creates, reads, writes);
 
             if (subTransactionCreated) {
@@ -491,7 +474,7 @@ public final class TransactionManager {
       }
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
 
-      sendAbortMessages(useAuthentication, stores, workers, failures.keySet());
+      sendAbortMessages(stores, workers, failures.keySet());
     }
 
     synchronized (current.commitState) {
@@ -508,14 +491,13 @@ public final class TransactionManager {
    */
   public void sendCommitMessagesAndCleanUp()
       throws TransactionAtomicityViolationException {
-    sendCommitMessagesAndCleanUp(true, current.storesToContact(),
-        current.workersCalled);
+    sendCommitMessagesAndCleanUp(current.storesToContact(), current.workersCalled);
   }
 
   /**
    * Sends commit messages to the given set of stores and workers.
    */
-  private void sendCommitMessagesAndCleanUp(final boolean useAuthentication,
+  private void sendCommitMessagesAndCleanUp(
       Set<Store> stores, List<RemoteWorker> workers)
       throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
@@ -571,7 +553,7 @@ public final class TransactionManager {
       Runnable runnable = new Runnable() {
         public void run() {
           try {
-            store.commitTransaction(useAuthentication, current.tid.topTid);
+            store.commitTransaction(current.tid.topTid);
           } catch (TransactionCommitFailedException e) {
             failed.add((RemoteStore) store);
           } catch (UnreachableNodeException e) {
@@ -635,7 +617,7 @@ public final class TransactionManager {
    */
   @SuppressWarnings("unchecked")
   private void sendAbortMessages() {
-    sendAbortMessages(true, current.storesToContact(), current.workersCalled,
+    sendAbortMessages(current.storesToContact(), current.workersCalled,
         Collections.EMPTY_SET);
   }
 
@@ -651,11 +633,11 @@ public final class TransactionManager {
    * @param fails
    *          the set of nodes that have reported failure.
    */
-  private void sendAbortMessages(boolean useAuthentication, Set<Store> stores,
+  private void sendAbortMessages(Set<Store> stores,
       List<RemoteWorker> workers, Set<RemoteNode> fails) {
     for (Store store : stores)
       if (!fails.contains(store))
-        store.abortTransaction(useAuthentication, current.tid);
+        store.abortTransaction(current.tid);
 
     for (RemoteWorker worker : workers)
       if (!fails.contains(worker)) worker.abortTransaction(current.tid);

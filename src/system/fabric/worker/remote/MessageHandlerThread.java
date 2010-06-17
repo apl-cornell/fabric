@@ -5,76 +5,51 @@ import java.util.Map;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.TransactionID;
+import fabric.common.Threading.NamedRunnable;
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
+import fabric.messages.DirtyReadMessage;
+import fabric.messages.GetPrincipalMessage;
+import fabric.messages.MessageToWorkerHandler;
 import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
-import fabric.net.AbstractMessageHandlerThread;
+import fabric.messages.RemoteCallMessage;
+import fabric.messages.TakeOwnershipMessage;
+import fabric.messages.GetPrincipalMessage.Response;
 import fabric.net.RemoteNode;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
-import fabric.worker.remote.messages.GetPrincipalMessage;
-import fabric.worker.remote.messages.ReadMessage;
-import fabric.worker.remote.messages.RemoteCallMessage;
-import fabric.worker.remote.messages.TakeOwnershipMessage;
-import fabric.worker.remote.messages.GetPrincipalMessage.Response;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
 
-public class MessageHandlerThread extends
-    AbstractMessageHandlerThread<SessionAttributes, MessageHandlerThread> {
+public class MessageHandlerThread
+     extends NamedRunnable
+  implements MessageToWorkerHandler 
+{
 
+  public MessageHandlerThread(String name) {
+    super(name);
+    // TODO Auto-generated constructor stub
+    throw new NotImplementedException();
+  }
+
+  private final SessionAttributes session;  
+  
   private final RemoteCallManager rcm;
 
   private final Worker worker;
 
-  /**
-   * A factory for creating MessageHandlerThread instances. This is used by
-   * AbstractMessageHandlerThread.Pool.
-   */
-  static class Factory implements
-      AbstractMessageHandlerThread.Factory<MessageHandlerThread> {
-    private final RemoteCallManager rcm;
-
-    Factory(RemoteCallManager rcm) {
-      this.rcm = rcm;
-    }
-
-    public MessageHandlerThread createMessageHandler(
-        fabric.net.AbstractMessageHandlerThread.Pool<MessageHandlerThread> pool) {
-      return new MessageHandlerThread(rcm, pool);
-    }
-  }
-
-  /**
-   * Instantiates a new message-handler thread and starts it running.
-   */
-  public MessageHandlerThread(RemoteCallManager rcm,
-      Pool<MessageHandlerThread> pool) {
-    super("RCM message handler", pool);
-    this.rcm = rcm;
-    this.worker = Worker.getWorker();
-    TransactionManager.startThread(this);
-  }
-
-  @Override
-  protected boolean shuttingDown() {
-    return rcm.shuttingDown;
-  }
-
   public RemoteCallMessage.Response handle(
       final RemoteCallMessage remoteCallMessage) throws RemoteCallException,
       ProtocolError {
-    if (session.isDissemConnection)
-      throw new ProtocolError("Message not supported.");
-
     // We assume that this thread's transaction manager is free (i.e., it's not
     // managing any tranaction's log) at the start of the method and ensure that
     // it will be free at the end of the method.
@@ -150,27 +125,22 @@ public class MessageHandlerThread extends
    * In each message handler, we maintain the invariant that upon exit, the
    * worker's TransactionManager is associated with a null log.
    */
-  public void handle(AbortTransactionMessage abortTransactionMessage)
-      throws ProtocolError {
-    if (session.isDissemConnection)
-      throw new ProtocolError("Message not supported.");
-
+  public AbortTransactionMessage.Response handle(AbortTransactionMessage abortTransactionMessage) {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(abortTransactionMessage.tid.topTid);
-    if (log == null) return;
-
-    TransactionManager tm = TransactionManager.getInstance();
-    tm.associateAndSyncLog(log, abortTransactionMessage.tid);
-    tm.abortTransaction();
-    tm.associateLog(null);
+    if (log != null) {
+      TransactionManager tm = TransactionManager.getInstance();
+      tm.associateAndSyncLog(log, abortTransactionMessage.tid);
+      tm.abortTransaction();
+      tm.associateLog(null);
+    }
+    
+    return new AbortTransactionMessage.Response();
   }
 
   public PrepareTransactionMessage.Response handle(
-      PrepareTransactionMessage prepareTransactionMessage) throws ProtocolError {
-    if (session.isDissemConnection)
-      throw new ProtocolError("Message not supported.");
-
+      PrepareTransactionMessage prepareTransactionMessage) {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
@@ -200,10 +170,7 @@ public class MessageHandlerThread extends
    * worker's TransactionManager is associated with a null log.
    */
   public CommitTransactionMessage.Response handle(
-      CommitTransactionMessage commitTransactionMessage) throws ProtocolError {
-    if (session.isDissemConnection)
-      throw new ProtocolError("Message not supported.");
-
+      CommitTransactionMessage commitTransactionMessage) {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry
@@ -226,20 +193,17 @@ public class MessageHandlerThread extends
     return new CommitTransactionMessage.Response(true);
   }
 
-  public ReadMessage.Response handle(ReadMessage readMessage)
+  public DirtyReadMessage.Response handle(DirtyReadMessage readMessage)
       throws ProtocolError {
-    if (session.isDissemConnection)
-      throw new ProtocolError("Message not supported.");
-
     Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
-    if (log == null) return new ReadMessage.Response(null);
+    if (log == null) return new DirtyReadMessage.Response(null);
 
     _Impl obj = new _Proxy(readMessage.store, readMessage.onum).fetch();
 
     // Ensure this worker owns the object.
     synchronized (obj) {
       if (!obj.$isOwned) {
-        return new ReadMessage.Response(null);
+        return new DirtyReadMessage.Response(null);
       }
     }
 
@@ -256,14 +220,11 @@ public class MessageHandlerThread extends
 
     tm.associateLog(null);
 
-    return new ReadMessage.Response(obj);
+    return new DirtyReadMessage.Response(obj);
   }
 
   public TakeOwnershipMessage.Response handle(
       TakeOwnershipMessage takeOwnershipMessage) throws ProtocolError {
-    if (session.isDissemConnection)
-      throw new ProtocolError("Message not supported.");
-
     Log log =
         TransactionRegistry.getInnermostLog(takeOwnershipMessage.tid.topTid);
     if (log == null) return new TakeOwnershipMessage.Response(false);
@@ -304,19 +265,33 @@ public class MessageHandlerThread extends
     return new GetPrincipalMessage.Response(worker.getPrincipal());
   }
 
-  public ObjectUpdateMessage.Response handle(
-      ObjectUpdateMessage objectUpdateMessage) {
+  public ObjectUpdateMessage.Response handle(ObjectUpdateMessage objectUpdateMessage) {
     boolean response;
     if (objectUpdateMessage.group == null) {
-      RemoteStore store = worker.getStore(objectUpdateMessage.store);
-      response =
-          worker.updateDissemCaches(store, objectUpdateMessage.onum,
-              objectUpdateMessage.glob);
+      // TODO
+      //RemoteStore store = worker.getStore(objectUpdateMessage.store);
+      //objectUpdateMessage.glob.verifySignature(store.getPublicKey());
+
+      //response =
+      //    worker.updateDissemCaches(store, objectUpdateMessage.onum,
+      //        objectUpdateMessage.glob);
+      throw new NotImplementedException();
     } else {
-      RemoteStore store = worker.getStore(session.remoteNodeName);
-      response = worker.updateCache(store, objectUpdateMessage.group);
+      // TODO
+      // RemoteStore store = worker.getStore(session.remoteNodeName);
+      // objectUpdateMessage.glob.verifySignature(store.getPublicKey());
+
+      // response = worker.updateCache(store, objectUpdateMessage.group);
+      throw new NotImplementedException();
     }
 
-    return new ObjectUpdateMessage.Response(response);
+    // TODO
+    // return new ObjectUpdateMessage.Response(response);
+  }
+
+  @Override
+  protected void runImpl() {
+    // TODO Auto-generated method stub
+    throw new NotImplementedException();
   }
 }

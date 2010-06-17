@@ -31,7 +31,7 @@ public interface Store {
    * @return whether a subtransaction was created on the store as a result of
    *         the prepare.
    */
-  boolean prepareTransaction(boolean useAuthentication, long tid,
+  boolean prepareTransaction(long tid,
       long commitTime, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws UnreachableNodeException,
       TransactionPrepareFailedException;
@@ -69,12 +69,11 @@ public interface Store {
   /**
    * Notifies the store that the transaction is being Aborted.
    * 
-   * @param useAuthentication
    * @param transactionID
    *          the ID of the aborting transaction. This is assumed to specify a
    *          top-level transaction.
    */
-  void abortTransaction(boolean useAuthentication, TransactionID tid);
+  void abortTransaction(TransactionID tid);
 
   /**
    * Notifies the Store that the transaction should be committed.
@@ -84,7 +83,7 @@ public interface Store {
    * @throws UnreachableNodeException
    * @throws TransactionCommitFailedException
    */
-  void commitTransaction(boolean useAuthentication, long transactionID)
+  void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException;
 
   /**

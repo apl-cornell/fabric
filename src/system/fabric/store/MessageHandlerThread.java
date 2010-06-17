@@ -9,49 +9,47 @@ import java.util.logging.Level;
 import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.Threading.NamedRunnable;
 import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.messages.*;
-import fabric.net.AbstractMessageHandlerThread;
+import fabric.messages.ObjectUpdateMessage.Response;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 
-public class MessageHandlerThread extends
-    AbstractMessageHandlerThread<SessionAttributes, MessageHandlerThread> {
+public class MessageHandlerThread
+     extends NamedRunnable
+  implements MessageToStoreHandler {
 
-  /**
-   * A factory for creating MessageHandlerThread instances. This is used by
-   * AbstractMessageHandlerThread.Pool.
-   */
-  static class Factory implements
-      AbstractMessageHandlerThread.Factory<MessageHandlerThread> {
-    public MessageHandlerThread createMessageHandler(
-        Pool<MessageHandlerThread> pool) {
-      return new MessageHandlerThread(pool);
-    }
-  }
-
+  private final SessionAttributes session;
+  
   /**
    * Instantiates a new message-handler thread and starts it running.
    */
-  private MessageHandlerThread(Pool<MessageHandlerThread> pool) {
-    super("Store message handler", pool);
+  private MessageHandlerThread() {
+    super("Store message handler");
 
-    fabric.worker.transaction.TransactionManager.startThread(this);
+    // TODO
+    session = null;
+    throw new NotImplementedException();
+  }
+  
+  public SessionAttributes getSession() {
+    return this.session;
   }
 
-  public void handle(AbortTransactionMessage message) throws AccessException,
-      ProtocolError {
-    if (session.workerIsDissem)
-      throw new ProtocolError("Message not supported.");
-
+  public AbortTransactionMessage.Response handle(AbortTransactionMessage message)
+  throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Abort Message from {0} for tid={1}",
         session.workerPrincipalName, message.tid.topTid);
     session.store.tm.abortTransaction(session.workerPrincipal,
         message.tid.topTid);
+    return new AbortTransactionMessage.Response();
   }
 
   /**
@@ -59,9 +57,6 @@ public class MessageHandlerThread extends
    */
   public AllocateMessage.Response handle(AllocateMessage msg)
       throws AccessException, ProtocolError {
-    if (session.workerIsDissem)
-      throw new ProtocolError("Message not supported.");
-
     STORE_REQUEST_LOGGER.log(Level.FINER, "Handling Allocate Message from {0}",
         session.workerPrincipalName);
     long[] onums = session.store.tm.newOnums(session.workerPrincipal, msg.num);
@@ -73,9 +68,6 @@ public class MessageHandlerThread extends
    */
   public CommitTransactionMessage.Response handle(
       CommitTransactionMessage message) throws ProtocolError {
-    if (session.workerIsDissem)
-      throw new ProtocolError("Message not supported.");
-
     try {
       commitTransaction(message.transactionID);
       return new CommitTransactionMessage.Response(true);
@@ -89,9 +81,6 @@ public class MessageHandlerThread extends
    */
   public PrepareTransactionMessage.Response handle(PrepareTransactionMessage msg)
       throws ProtocolError {
-    if (session.workerIsDissem)
-      throw new ProtocolError("Message not supported.");
-
     STORE_REQUEST_LOGGER.log(Level.FINER, "Handling Prepare Message, worker="
         + session.workerPrincipalName + ", tid={0}", msg.tid);
 
@@ -111,9 +100,6 @@ public class MessageHandlerThread extends
    */
   public ReadMessage.Response handle(ReadMessage msg) throws AccessException,
       ProtocolError {
-    if (session.workerIsDissem)
-      throw new ProtocolError("Message not supported.");
-
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling Read Message from {0}, onum=" + msg.onum,
         session.workerPrincipalName);
@@ -142,36 +128,13 @@ public class MessageHandlerThread extends
   }
 
   /**
-   * Processes the given unauthenticated prepare request.
-   */
-  public UnauthenticatedPrepareTransactionMessage.Response handle(
-      UnauthenticatedPrepareTransactionMessage msg) {
-    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Unauthenticated Prepare Message from {0}, tid={1}",
-        session.remoteNode, msg.tid);
-
-    try {
-      final Collection<SerializedObject> EMPTY_COLLECTION =
-          Collections.emptyList();
-      boolean subTransactionCreated =
-          prepareTransaction(msg.tid, msg.commitTime, EMPTY_COLLECTION,
-              EMPTY_COLLECTION, msg.reads);
-      return new UnauthenticatedPrepareTransactionMessage.Response(
-          subTransactionCreated);
-    } catch (TransactionPrepareFailedException e) {
-      return new UnauthenticatedPrepareTransactionMessage.Response(e
-          .getMessage(), e.versionConflicts);
-    }
-  }
-
-  /**
    * Processes the given request for the store's SSL certificate chain.
    */
-  public GetCertificateChainMessage.Response handle(
-      GetCertificateChainMessage msg) {
+  public GetCertChainMessage.Response handle(
+      GetCertChainMessage msg) {
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling request for SSL cert chain, worker={0}", session.remoteNode);
-    return new GetCertificateChainMessage.Response(
+    return new GetCertChainMessage.Response(
         session.store.certificateChain);
   }
 
@@ -203,24 +166,6 @@ public class MessageHandlerThread extends
     return subTransactionCreated;
   }
 
-  /**
-   * Processes the given unauthenticated commit request.
-   */
-  public UnauthenticatedCommitTransactionMessage.Response handle(
-      UnauthenticatedCommitTransactionMessage message) {
-    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Unauthenticated Commit Message from {0}, tid={1}",
-        session.remoteNode, message.transactionID);
-
-    try {
-      commitTransaction(message.transactionID);
-      return new UnauthenticatedCommitTransactionMessage.Response(true);
-    } catch (TransactionCommitFailedException e) {
-      return new UnauthenticatedCommitTransactionMessage.Response(false, e
-          .getMessage());
-    }
-  }
-
   private void commitTransaction(long transactionID)
       throws TransactionCommitFailedException {
     session.recordCommitAttempt();
@@ -231,14 +176,11 @@ public class MessageHandlerThread extends
     session.recordCommitSuccess(transactionID);
   }
 
-  /**
-   * Processes the unauthenticated abort request.
-   */
-  public void handle(UnauthenticatedAbortTransactionMessage message)
-      throws AccessException {
-    STORE_REQUEST_LOGGER.log(Level.FINER, "Handling Abort Message from {0}",
-        session.remoteNode);
-    session.store.tm.abortTransaction(session.workerPrincipal,
-        message.tid.topTid);
+  @Override
+  protected void runImpl() {
+    // TODO Auto-generated method stub
+    fabric.worker.transaction.TransactionManager.startThread(Thread.currentThread());
+    throw new NotImplementedException();
   }
+
 }

@@ -5,15 +5,30 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.worker.debug.Timing;
-import fabric.worker.remote.MessageHandlerThread;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.exceptions.ProtocolError;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 
-public class CommitTransactionMessage extends
-    Message<RemoteNode, CommitTransactionMessage.Response> {
+public class CommitTransactionMessage
+     extends Message<CommitTransactionMessage.Response>
+  implements MessageToStore, MessageToWorker
+{
+  //////////////////////////////////////////////////////////////////////////////
+  // message  contents                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public final long transactionID;
+
+  public CommitTransactionMessage(long transactionID) {
+    super(MessageType.COMMIT_TRANSACTION);
+    this.transactionID = transactionID;
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // response contents                                                        //
+  //////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
     public final boolean success;
@@ -27,58 +42,23 @@ public class CommitTransactionMessage extends
       this.success = success;
       this.message = message;
     }
-
-    /**
-     * Deserialization constructor, used by the worker.
-     * 
-     * @param node
-     *          The node from which the response is being read.
-     * @param in
-     *          the input stream from which to read the response.
-     */
-    Response(RemoteNode node, DataInput in) throws IOException {
-      this.success = in.readBoolean();
-      if (in.readBoolean())
-        this.message = in.readUTF();
-      else this.message = null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see fabric.messages.Message.Response#write(java.io.DataOutput)
-     */
-    public void write(DataOutput out) throws IOException {
-      out.writeBoolean(success);
-      if (message != null) {
-        out.writeBoolean(true);
-        out.writeUTF(message);
-      } else out.writeBoolean(false);
-    }
   }
 
-  public final long transactionID;
+  //////////////////////////////////////////////////////////////////////////////
+  // visitor methods                                                          //
+  //////////////////////////////////////////////////////////////////////////////
 
-  public CommitTransactionMessage(long transactionID) {
-    super(MessageType.COMMIT_TRANSACTION);
-    this.transactionID = transactionID;
+  public Response dispatch(MessageToStoreHandler h) throws FabricException {
+    return h.handle(this);
   }
 
-  /**
-   * Deserialization constructor.
-   */
-  protected CommitTransactionMessage(DataInput in) throws IOException {
-    this(in.readLong());
+  public Response dispatch(MessageToWorkerHandler h) throws FabricException {
+    return h.handle(this);
   }
 
-  @Override
-  public Response dispatch(fabric.store.MessageHandlerThread w) throws ProtocolError {
-    return w.handle(this);
-  }
-
-  @Override
-  public Response dispatch(MessageHandlerThread handler) throws ProtocolError {
-    return handler.handle(this);
-  }
+  //////////////////////////////////////////////////////////////////////////////
+  // convenience method for sending                                           //
+  //////////////////////////////////////////////////////////////////////////////
 
   public Response send(RemoteNode node) throws UnreachableNodeException {
     try {
@@ -93,18 +73,38 @@ public class CommitTransactionMessage extends
     }
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // serialization cruft                                                      //
+  //////////////////////////////////////////////////////////////////////////////
+
   @Override
-  public Response response(RemoteNode node, DataInput in) throws IOException {
-    return new Response(node, in);
+  protected void writeMessage(DataOutput out) throws IOException {
+    out.writeLong(transactionID);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabric.messages.Message#write(java.io.DataOutput)
-   */
+  /* readMessage */
+  protected CommitTransactionMessage(DataInput in) throws IOException {
+    this(in.readLong());
+  }
+
   @Override
-  public void write(DataOutput out) throws IOException {
-    out.writeLong(transactionID);
+  protected void writeResponse(DataOutput out, Response r) throws IOException {
+    out.writeBoolean(r.success);
+    if (r.message != null) {
+      out.writeBoolean(true);
+      out.writeUTF(r.message);
+    }
+    else
+      out.writeBoolean(false);
+  }
+
+  @Override
+  protected Response readResponse(DataInput in) throws IOException {
+    boolean success = in.readBoolean();
+    if (in.readBoolean())
+      return new Response(success, in.readUTF());
+    else 
+      return new Response(success);
   }
 
 }
