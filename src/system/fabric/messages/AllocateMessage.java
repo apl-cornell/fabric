@@ -6,6 +6,7 @@ import fabric.worker.RemoteStore;
 import fabric.worker.debug.Timing;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
+import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
 
 /**
@@ -45,8 +46,8 @@ public final class AllocateMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToStoreHandler h) throws FabricException {
-    return h.handle(this);
+  public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
+    return h.handle(p, this);
   }
   
   //////////////////////////////////////////////////////////////////////////////

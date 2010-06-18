@@ -5,6 +5,7 @@ import java.security.cert.Certificate;
 
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
+import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.RemoteStore;
 import fabric.worker.debug.Timing;
@@ -41,8 +42,8 @@ public class GetCertChainMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToStoreHandler h) throws FabricException {
-    return h.handle(this);
+  public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
+    return h.handle(p, this);
   }
 
   //////////////////////////////////////////////////////////////////////////////

@@ -10,6 +10,7 @@ import fabric.worker.remote.RemoteWorker;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
+import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
 
 /**
@@ -53,8 +54,8 @@ public class TakeOwnershipMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToWorkerHandler h) throws FabricException {
-    return h.handle(this);
+  public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
+    return h.handle(p, this);
   }
 
   //////////////////////////////////////////////////////////////////////////////

@@ -11,6 +11,7 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
+import fabric.lang.security.NodePrincipal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DirtyReadMessage;
@@ -43,12 +44,10 @@ public class MessageHandlerThread
 
   private final SessionAttributes session;  
   
-  private final RemoteCallManager rcm;
-
   private final Worker worker;
 
   public RemoteCallMessage.Response handle(
-      final RemoteCallMessage remoteCallMessage) throws RemoteCallException,
+      NodePrincipal p, final RemoteCallMessage remoteCallMessage) throws RemoteCallException,
       ProtocolError {
     // We assume that this thread's transaction manager is free (i.e., it's not
     // managing any tranaction's log) at the start of the method and ensure that
@@ -125,7 +124,7 @@ public class MessageHandlerThread
    * In each message handler, we maintain the invariant that upon exit, the
    * worker's TransactionManager is associated with a null log.
    */
-  public AbortTransactionMessage.Response handle(AbortTransactionMessage abortTransactionMessage) {
+  public AbortTransactionMessage.Response handle(NodePrincipal p, AbortTransactionMessage abortTransactionMessage) {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(abortTransactionMessage.tid.topTid);
@@ -140,7 +139,7 @@ public class MessageHandlerThread
   }
 
   public PrepareTransactionMessage.Response handle(
-      PrepareTransactionMessage prepareTransactionMessage) {
+      NodePrincipal p, PrepareTransactionMessage prepareTransactionMessage) {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
@@ -170,7 +169,7 @@ public class MessageHandlerThread
    * worker's TransactionManager is associated with a null log.
    */
   public CommitTransactionMessage.Response handle(
-      CommitTransactionMessage commitTransactionMessage) {
+      NodePrincipal p, CommitTransactionMessage commitTransactionMessage) {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry
@@ -193,7 +192,7 @@ public class MessageHandlerThread
     return new CommitTransactionMessage.Response(true);
   }
 
-  public DirtyReadMessage.Response handle(DirtyReadMessage readMessage)
+  public DirtyReadMessage.Response handle(NodePrincipal p, DirtyReadMessage readMessage)
       throws ProtocolError {
     Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
     if (log == null) return new DirtyReadMessage.Response(null);
@@ -224,7 +223,7 @@ public class MessageHandlerThread
   }
 
   public TakeOwnershipMessage.Response handle(
-      TakeOwnershipMessage takeOwnershipMessage) throws ProtocolError {
+      NodePrincipal p, TakeOwnershipMessage takeOwnershipMessage) throws ProtocolError {
     Log log =
         TransactionRegistry.getInnermostLog(takeOwnershipMessage.tid.topTid);
     if (log == null) return new TakeOwnershipMessage.Response(false);
@@ -261,11 +260,11 @@ public class MessageHandlerThread
     return new TakeOwnershipMessage.Response(false);
   }
 
-  public Response handle(GetPrincipalMessage getPrincipalMessage) {
+  public Response handle(NodePrincipal p, GetPrincipalMessage getPrincipalMessage) {
     return new GetPrincipalMessage.Response(worker.getPrincipal());
   }
 
-  public ObjectUpdateMessage.Response handle(ObjectUpdateMessage objectUpdateMessage) {
+  public ObjectUpdateMessage.Response handle(NodePrincipal p, ObjectUpdateMessage objectUpdateMessage) {
     boolean response;
     if (objectUpdateMessage.group == null) {
       // TODO

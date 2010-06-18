@@ -16,6 +16,7 @@ import fabric.common.exceptions.NotImplementedException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
+import fabric.lang.security.NodePrincipal;
 import fabric.messages.*;
 import fabric.messages.ObjectUpdateMessage.Response;
 import fabric.worker.TransactionCommitFailedException;
@@ -42,7 +43,7 @@ public class MessageHandlerThread
     return this.session;
   }
 
-  public AbortTransactionMessage.Response handle(AbortTransactionMessage message)
+  public AbortTransactionMessage.Response handle(NodePrincipal p, AbortTransactionMessage message)
   throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Abort Message from {0} for tid={1}",
@@ -55,7 +56,7 @@ public class MessageHandlerThread
   /**
    * Processes the given request for new OIDs.
    */
-  public AllocateMessage.Response handle(AllocateMessage msg)
+  public AllocateMessage.Response handle(NodePrincipal p, AllocateMessage msg)
       throws AccessException, ProtocolError {
     STORE_REQUEST_LOGGER.log(Level.FINER, "Handling Allocate Message from {0}",
         session.workerPrincipalName);
@@ -67,7 +68,7 @@ public class MessageHandlerThread
    * Processes the given commit request
    */
   public CommitTransactionMessage.Response handle(
-      CommitTransactionMessage message) throws ProtocolError {
+      NodePrincipal p, CommitTransactionMessage message) throws ProtocolError {
     try {
       commitTransaction(message.transactionID);
       return new CommitTransactionMessage.Response(true);
@@ -79,7 +80,7 @@ public class MessageHandlerThread
   /**
    * Processes the given PREPARE request.
    */
-  public PrepareTransactionMessage.Response handle(PrepareTransactionMessage msg)
+  public PrepareTransactionMessage.Response handle(NodePrincipal p, PrepareTransactionMessage msg)
       throws ProtocolError {
     STORE_REQUEST_LOGGER.log(Level.FINER, "Handling Prepare Message, worker="
         + session.workerPrincipalName + ", tid={0}", msg.tid);
@@ -98,7 +99,7 @@ public class MessageHandlerThread
   /**
    * Processes the given read request.
    */
-  public ReadMessage.Response handle(ReadMessage msg) throws AccessException,
+  public ReadMessage.Response handle(NodePrincipal p, ReadMessage msg) throws AccessException,
       ProtocolError {
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling Read Message from {0}, onum=" + msg.onum,
@@ -114,7 +115,7 @@ public class MessageHandlerThread
   /**
    * Processes the given dissemination-read request.
    */
-  public DissemReadMessage.Response handle(DissemReadMessage msg)
+  public DissemReadMessage.Response handle(NodePrincipal p, DissemReadMessage msg)
       throws AccessException {
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling DissemRead message from {0}, onum=" + msg.onum,
@@ -131,7 +132,7 @@ public class MessageHandlerThread
    * Processes the given request for the store's SSL certificate chain.
    */
   public GetCertChainMessage.Response handle(
-      GetCertChainMessage msg) {
+      NodePrincipal p, GetCertChainMessage msg) {
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling request for SSL cert chain, worker={0}", session.remoteNode);
     return new GetCertChainMessage.Response(

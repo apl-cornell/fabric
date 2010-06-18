@@ -8,6 +8,7 @@ import fabric.worker.RemoteStore;
 import fabric.common.exceptions.*;
 import fabric.common.exceptions.InternalError;
 import fabric.dissemination.Glob;
+import fabric.lang.security.NodePrincipal;
 
 /**
  * A <code>DissemReadMessage</code> represents a request from a dissemination
@@ -48,8 +49,8 @@ public final class DissemReadMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToStoreHandler h) throws FabricException {
-    return h.handle(this);
+  public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
+    return h.handle(p, this);
   }
 
 

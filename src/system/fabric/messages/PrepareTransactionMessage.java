@@ -12,6 +12,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object._Impl;
+import fabric.lang.security.NodePrincipal;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 
@@ -145,12 +146,12 @@ public class PrepareTransactionMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToStoreHandler h) throws FabricException {
-    return h.handle(this);
+  public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
+    return h.handle(p, this);
   }
 
-  public Response dispatch(MessageToWorkerHandler h) throws FabricException {
-    return h.handle(this);
+  public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
+    return h.handle(p, this);
   }
 
   //////////////////////////////////////////////////////////////////////////////

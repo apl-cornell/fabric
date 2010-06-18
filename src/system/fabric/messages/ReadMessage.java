@@ -8,6 +8,7 @@ import fabric.worker.RemoteStore;
 import fabric.common.*;
 import fabric.common.exceptions.*;
 import fabric.common.exceptions.InternalError;
+import fabric.lang.security.NodePrincipal;
 
 /**
  * A <code>ReadMessage</code> represents a request from a worker to read an
@@ -47,8 +48,8 @@ public class ReadMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToStoreHandler h) throws FabricException {
-    return h.handle(this);
+  public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
+    return h.handle(p, this);
   }
 
   //////////////////////////////////////////////////////////////////////////////

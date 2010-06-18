@@ -9,6 +9,7 @@ import fabric.worker.remote.UpdateMap;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
+import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.lang.Object._Proxy;
 import fabric.net.UnreachableNodeException;
@@ -76,8 +77,8 @@ public class RemoteCallMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToWorkerHandler h) throws FabricException {
-    return h.handle(this);
+  public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
+    return h.handle(p, this);
   }
 
   //////////////////////////////////////////////////////////////////////////////

@@ -41,8 +41,8 @@ public class GetPrincipalMessage
   // visitor methods                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Response dispatch(MessageToWorkerHandler h) throws FabricException {
-    return h.handle(this);
+  public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
+    return h.handle(p, this);
   }
 
   //////////////////////////////////////////////////////////////////////////////
