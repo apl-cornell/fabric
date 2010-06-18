@@ -12,8 +12,24 @@ import fabric.net.Stream;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
-/** 
- * @param <R> The class of responses.
+/**
+ * Messages provide an interface for serializing requests and responses.  The
+ * <code>Message</code> class itself provides facilities for serialization and
+ * deserialization, while the concrete subclasses give the structure of each
+ * type of message.
+ * 
+ * <p>Messages are intended to be used in a synchronous, call-return style.  To
+ * support this, each Message type is bound to a specific Response type.  On the
+ * sender side, this allows type safety in the <code>send</code> method, for
+ * example:<br>
+ * <pre>
+ * ReadMessage.Response r = new ReadMessage(...).send(...);
+ * </pre>
+ * while on the receiver side, type safety is enforced by only accepting
+ * <code>R</code> in the <code>respond(...)</code> method.  
+ * 
+ * @param <R> The response type
+ * @author mdgeorge
  */
 public abstract class Message<R extends Message.Response> {
 
@@ -85,7 +101,10 @@ public abstract class Message<R extends Message.Response> {
   // API for concrete message implementations                                 //
   //////////////////////////////////////////////////////////////////////////////
   
-  /** This enum gives a mapping between message types and ordinals. */
+  /**
+   * This enum gives a mapping between message types and ordinals. This is used
+   * for efficient encoding and decoding of the type of a message.
+   */
   @SuppressWarnings("all")
   protected static enum MessageType {
     ALLOCATE_ONUMS      {Message parse(DataInput in) throws IOException { return new AllocateMessage           (in); }},
@@ -107,7 +126,7 @@ public abstract class Message<R extends Message.Response> {
   }
 
   /** The <code>MessageType</code> corresponding to this class. */
-  private final MessageType messageType;
+  protected final MessageType messageType;
 
   /** Constructs a message of the given <code>MessageType</code> */
   protected Message(MessageType messageType) {
@@ -239,7 +258,7 @@ public abstract class Message<R extends Message.Response> {
       throw new IOException("Unable to deserialize java object -- no such class");
     }
   }
-
+  
   //////////////////////////////////////////////////////////////////////////////
   // abstract serialization methods                                           //
   //////////////////////////////////////////////////////////////////////////////
