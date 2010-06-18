@@ -5,7 +5,6 @@ import fabric.lang.security.NodePrincipal;
 
 /** Message destined for a Worker. */
 public interface MessageToWorker {
-  /** Visitor method 
-   * @param p TODO*/
+  /** Visitor method */
   public Message.Response dispatch(MessageToWorkerHandler handler, NodePrincipal p) throws FabricException;
 }

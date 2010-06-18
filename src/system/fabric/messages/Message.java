@@ -125,7 +125,7 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
    * @throws IOException
    *            if the provided <code>DataOutput</code> fails.
    */
-  public void respond(DataOutput out, Exception e) throws IOException {
+  public void respond(DataOutput out, E e) throws IOException {
     // Clear out the stack trace before sending an exception out.
     e.setStackTrace(new StackTraceElement[0]);
     
