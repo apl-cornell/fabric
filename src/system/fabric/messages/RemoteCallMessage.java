@@ -114,7 +114,7 @@ public class RemoteCallMessage
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
     oos.writeObject(receiverType);
-    Message.writeRef(receiver, oos);
+    writeRef(receiver, oos);
 
     oos.writeUTF(methodName);
     oos.writeInt(args == null ? 0 : args.length);
@@ -124,7 +124,7 @@ public class RemoteCallMessage
         oos.writeObject(parameterTypes[i]);
         if (args[i] instanceof _Proxy) {
           oos.writeBoolean(true);
-          Message.writeRef((_Proxy) args[i], oos);
+          writeRef((_Proxy) args[i], oos);
         } else {
           oos.writeBoolean(false);
           oos.writeObject(args[i]);
@@ -224,7 +224,7 @@ public class RemoteCallMessage
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     out.writeBoolean(r.result instanceof _Proxy);
     if (r.result instanceof _Proxy)
-      Message.writeRef((_Proxy) r.result, out);
+      writeRef((_Proxy) r.result, out);
     else {
       writeObject(out, r.result);
     }

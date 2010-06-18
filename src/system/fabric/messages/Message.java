@@ -13,25 +13,110 @@ import fabric.net.Stream;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
-/**
- * @param <N>
- *          The class of nodes to which messages of this type may be sent.
- * @param <R>
- *          The class of responses.
+/** 
+ * @param <R> The class of responses.
  */
 public abstract class Message<R extends Message.Response> {
 
-  /**
-   * The <code>MessageType</code> corresponding to this class.
-   */
-  protected final MessageType messageType;
+  //////////////////////////////////////////////////////////////////////////////
+  // public API                                                               //
+  //////////////////////////////////////////////////////////////////////////////
+  
+  /** Marker interface for Message responses. */
+  public static interface Response {
+  }
 
+  /**
+   * Read a Message from the given <code>DataInput</code>
+   * 
+   * @throws IOException
+   *           If a malformed message is sent, or in the case of a failure in
+   *           the <code>DataInput</code> provided.
+   */
+  public static Message<?> receive(DataInput in) throws IOException {
+    try {
+      MessageType messageType = MessageType.values()[in.readByte()];
+      
+      return messageType.parse(in);
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new IOException("Unrecognized message");
+    }
+  }
+  
+  /**
+   * Send a successful response this message.
+   *
+   * @param out
+   *            the channel on which to send the response
+   * @param r
+   *            the response to send.
+   * @throws IOException
+   *            if the provided <code>DataOutput</code> fails.
+   */
+  public void respond(DataOutput out, R r) throws IOException {
+    // Signal that no error occurred.
+    out.writeBoolean(false);
+
+    // Write out the response.
+    writeResponse(out, r);
+  }
+  
+  /**
+   * Send a response to this message that indicates an exception.
+   * 
+   * @param out
+   *            the channel on which to send the response
+   * @param e
+   *            the exception to send
+   * @throws IOException
+   *            if the provided <code>DataOutput</code> fails.
+   */
+  public void respond(DataOutput out, Exception e) throws IOException {
+    // Clear out the stack trace before sending an exception out.
+    e.setStackTrace(new StackTraceElement[0]);
+    
+    // Signal that an error occurred and write out the exception.
+    out.writeBoolean(true);
+    
+    // write out the exception
+    writeObject(out, e);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // API for concrete message implementations                                 //
+  //////////////////////////////////////////////////////////////////////////////
+  
+  /** This enum gives a mapping between message types and ordinals. */
+  @SuppressWarnings("all")
+  protected static enum MessageType {
+    ALLOCATE_ONUMS      {Message parse(DataInput in) throws IOException { return new AllocateMessage           (in); }},
+    READ_ONUM           {Message parse(DataInput in) throws IOException { return new ReadMessage               (in); }},
+    PREPARE_TRANSACTION {Message parse(DataInput in) throws IOException { return new PrepareTransactionMessage (in); }},
+    COMMIT_TRANSACTION  {Message parse(DataInput in) throws IOException { return new CommitTransactionMessage  (in); }},
+    ABORT_TRANSACTION   {Message parse(DataInput in) throws IOException { return new AbortTransactionMessage   (in); }},
+    DISSEM_READ_ONUM    {Message parse(DataInput in) throws IOException { return new DissemReadMessage         (in); }},
+    REMOTE_CALL         {Message parse(DataInput in) throws IOException { return new RemoteCallMessage         (in); }},
+    DIRTY_READ          {Message parse(DataInput in) throws IOException { return new DirtyReadMessage          (in); }},
+    TAKE_OWNERSHIP      {Message parse(DataInput in) throws IOException { return new TakeOwnershipMessage      (in); }},
+    GET_PRINCIPAL       {Message parse(DataInput in) throws IOException { return new GetPrincipalMessage       (in); }},
+    OBJECT_UPDATE       {Message parse(DataInput in) throws IOException { return new ObjectUpdateMessage       (in); }},
+    GET_CERT_CHAIN      {Message parse(DataInput in) throws IOException { return new GetCertChainMessage       (in); }},
+    ;
+
+    /** Read a message of the appropriate type from the given DataInput. */
+    abstract Message<?> parse(DataInput in) throws IOException;
+  }
+
+  /** The <code>MessageType</code> corresponding to this class. */
+  private final MessageType messageType;
+
+  /** Constructs a message of the given <code>MessageType</code> */
   protected Message(MessageType messageType) {
     this.messageType = messageType;
   }
 
   /**
-   * Sends this message to the given node.
+   * Sends this message to the given node and awaits a response.
    * 
    * @param message
    *          The message to send.
@@ -39,12 +124,13 @@ public abstract class Message<R extends Message.Response> {
    * @throws FabricException
    *           if an error occurs at the remote node while handling the message.
    */
-  protected final R send(RemoteNode node, boolean useSSL) throws FabricException {
+  protected final R send(RemoteNode node, boolean useSSL)
+           throws FabricException {
+    
     Stream stream = node.openStream(useSSL);
-
-    DataInputStream in = stream.in;
+    DataInputStream  in  = stream.in;
     DataOutputStream out = stream.out;
-
+    
     try {
       // Write this message out.
       out.writeByte(messageType.ordinal());
@@ -53,14 +139,10 @@ public abstract class Message<R extends Message.Response> {
 
       // Read in the reply. Determine if an error occurred.
       if (in.readBoolean()) {
-        try {
-          // We have an error.
-          FabricException exc = (FabricException) readObject(in);
-          exc.fillInStackTrace();
-          throw exc;
-        } catch (ClassNotFoundException e) {
-          throw new InternalError("Unexpected response from remote node", e);
-        }
+        // We have an error.
+        FabricException exc = readObject(in, FabricException.class);
+        exc.fillInStackTrace();
+        throw exc;
       }
     } catch (IOException e) {
       throw new InternalError(e);
@@ -73,87 +155,19 @@ public abstract class Message<R extends Message.Response> {
       throw e;
     } catch (Exception e) {
       throw new InternalError(e);
-    } finally {
-      try {
-        stream.close();
-      } catch (IOException e) {
-        throw new InternalError(e);
-      }
     }
   }
 
   /**
-   * This reads a <code>Message</code> from the provided input stream,
-   * dispatches it to the given <code>MessageHandler</code>, and writes the
-   * response to the provided OutputStream. Used only by the store.
-   * 
-   * @param in
-   *          The input stream to read the incoming message from.
-   * @throws IOException
-   *           If a malformed message is sent, or in the case of a failure in
-   *           the i/o streams provided.
+   * Serializes a fabric object reference.
    */
-  public static Message<?> receive(DataInput in) throws IOException {
-    try {
-      MessageType messageType = MessageType.values()[in.readByte()];
-      
-      return messageType.parse(in);
-    } catch (final ArrayIndexOutOfBoundsException e) {
-      throw new IOException("Unrecognized message");
-    }
-  }
-  
-  public void respond(DataOutput out, R r) throws IOException {
-    // Signal that no error occurred.
-    out.writeBoolean(false);
-
-    // Write out the response.
-    writeResponse(out, r);
-  }
-  
-  public void respond(DataOutputStream out, Exception e) throws IOException {
-    // Clear out the stack trace before sending an exception out.
-    e.setStackTrace(new StackTraceElement[0]);
-    
-    // Signal that an error occurred and write out the exception.
-    out.writeBoolean(true);
-    
-    // write out the exception
-    writeObject(out, e);
-  }
-
-  private static Object readObject(DataInputStream in) throws IOException,
-      ClassNotFoundException {
-    ObjectInputStream ois = new ObjectInputStream(in);
-    return ois.readObject();
+  protected void writeRef(_Proxy ref, DataOutput out) throws IOException {
+    out.writeUTF(ref.$getStore().name());
+    out.writeLong(ref.$getOnum());
   }
 
   /**
-   * Creates a Response message of the appropriate type using the provided input
-   * stream.
-   * 
-   * @param node
-   *          the remote node from which the response originated.
-   * @param in
-   *          Input stream containing the message.
-   * @return A Response message with the appropriate type.
-   */
-  protected abstract R readResponse(DataInput in) throws IOException,
-      FabricException;
-
-  protected abstract void writeResponse(DataOutput out, R response) throws IOException;
-  
-  /**
-   * Writes this message out on the given output stream. Only used by the
-   * worker.
-   * 
-   * @throws IOException
-   *           if the output stream throws an IOException.
-   */
-  protected abstract void writeMessage(DataOutput out) throws IOException;
-
-  /**
-   * Used for passing object references between workers.
+   * Deserializes a fabric object reference.
    * 
    * @param type
    *          The type of the reference being read. This must be the interface
@@ -195,15 +209,7 @@ public abstract class Message<R extends Message.Response> {
   }
 
   /**
-   * Used for passing object references between workers.
-   */
-  public static void writeRef(_Proxy ref, DataOutput out) throws IOException {
-    out.writeUTF(ref.$getStore().name());
-    out.writeLong(ref.$getOnum());
-  }
-
-  /**
-   * Used for serializing java objects to a DataOutput
+   * Serialize a java object to a DataOutput
    */
   protected void writeObject(DataOutput out, Object o) throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -217,7 +223,7 @@ public abstract class Message<R extends Message.Response> {
   }
 
   /**
-   * Used for deserializing java objects from a DataOutput
+   * Deserialize a java object from a DataOutput
    */
   protected <T> T readObject(DataInput in, Class<T> type) throws IOException {
     // TODO
@@ -239,30 +245,48 @@ public abstract class Message<R extends Message.Response> {
     */
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // abstract serialization methods                                           //
+  //////////////////////////////////////////////////////////////////////////////
+  
+  /**
+   * Writes this message out on the given output stream.
+   * @throws IOException
+   *           if the <code>DataOutput</code> fails.
+   */
+  protected abstract void writeMessage(DataOutput out) throws IOException;
 
+  /**
+   * Each subclass should have a constructor of the form:
+   * 
+   * protected Message(DataInput in) throws IOException
+   * 
+   * that constructs a message of the given type, reading the data from the
+   * provided <code>DataInput</code>.
+   * 
+   * @throws IOException
+   *            if the message is malformed, or if the <code>DataInput</code>
+   *            fails.
+   */
+  /* readMessage */
+  // protected Message(DataInput in) throws IOException
+  
+  /**
+   * Creates a Response message of the appropriate type using the provided
+   * <code>DataOutput</code>
+   * 
+   * @throws IOException
+   *            if the response is malformed, or if the <code>DataInput</code>
+   *            fails.
+   */
+  protected abstract R readResponse(DataInput in) throws IOException;
 
-  public static interface Response {
-  }
-
-  /** This enum gives a mapping between message types and ordinals. */
-  @SuppressWarnings("all")
-  protected static enum MessageType {
-    ALLOCATE_ONUMS      {Message parse(DataInput in) throws IOException { return new AllocateMessage           (in); }},
-    READ_ONUM           {Message parse(DataInput in) throws IOException { return new ReadMessage               (in); }},
-    PREPARE_TRANSACTION {Message parse(DataInput in) throws IOException { return new PrepareTransactionMessage (in); }},
-    COMMIT_TRANSACTION  {Message parse(DataInput in) throws IOException { return new CommitTransactionMessage  (in); }},
-    ABORT_TRANSACTION   {Message parse(DataInput in) throws IOException { return new AbortTransactionMessage   (in); }},
-    DISSEM_READ_ONUM    {Message parse(DataInput in) throws IOException { return new DissemReadMessage         (in); }},
-    REMOTE_CALL         {Message parse(DataInput in) throws IOException { return new RemoteCallMessage         (in); }},
-    DIRTY_READ          {Message parse(DataInput in) throws IOException { return new DirtyReadMessage          (in); }},
-    TAKE_OWNERSHIP      {Message parse(DataInput in) throws IOException { return new TakeOwnershipMessage      (in); }},
-    GET_PRINCIPAL       {Message parse(DataInput in) throws IOException { return new GetPrincipalMessage       (in); }},
-    OBJECT_UPDATE       {Message parse(DataInput in) throws IOException { return new ObjectUpdateMessage       (in); }},
-    GET_CERT_CHAIN      {Message parse(DataInput in) throws IOException { return new GetCertChainMessage       (in); }},
-    ;
-
-    /** Read a message of the appropriate type from the given DataInput. */
-    abstract Message<?> parse(DataInput in) throws IOException;
-  }
-
+  /**
+   * Writes a Response message of the appropriate type using the provided
+   * <code>DataOutput</code>.
+   * 
+   * @throws IOException
+   *            if the <code>DataOutput</code> fails.
+   */
+  protected abstract void writeResponse(DataOutput out, R response) throws IOException;
 }
