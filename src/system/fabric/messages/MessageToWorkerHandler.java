@@ -3,7 +3,20 @@ package fabric.messages;
 import fabric.common.exceptions.FabricException;
 import fabric.lang.security.NodePrincipal;
 
-
+/**
+ * This interface acts as a visitor for MessagesToWorker.  It also documents the
+ * list of all messages that a worker needs to be able to handle. The methods
+ * all have the form:
+ * <br>
+ * <pre>
+ * public Response handle(NodePrincipal, Message)
+ *   throws FabricException
+ * </pre>
+ * 
+ * and there is one such method for each message that the worker handles.
+ * 
+ * @author mdgeorge
+ */
 public interface MessageToWorkerHandler {
   public   AbortTransactionMessage.Response handle(NodePrincipal p, AbortTransactionMessage   msg) throws FabricException;
   public  CommitTransactionMessage.Response handle(NodePrincipal p, CommitTransactionMessage  msg) throws FabricException;
