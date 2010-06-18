@@ -2,10 +2,10 @@ package fabric.worker;
 
 import java.io.PrintStream;
 
+import fabric.common.Timing;
 import fabric.common.exceptions.TerminationException;
 import fabric.common.exceptions.UsageError;
 
-import fabric.worker.debug.Timing;
 
 public class Options extends fabric.common.Options {
   // The application to run and its parameters.

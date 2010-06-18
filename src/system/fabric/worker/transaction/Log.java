@@ -2,6 +2,7 @@ package fabric.worker.transaction;
 
 import java.util.*;
 
+import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.Util;
 import fabric.common.util.LongKeyHashMap;
@@ -12,7 +13,6 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
-import fabric.worker.debug.Timing;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.UpdateMap;
 

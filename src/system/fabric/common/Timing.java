@@ -1,4 +1,4 @@
-package fabric.worker.debug;
+package fabric.common;
 
 import java.io.PrintStream;
 import java.util.Stack;

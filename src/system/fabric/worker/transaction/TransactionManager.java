@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import fabric.common.FabricThread;
 import fabric.common.Logging;
 import fabric.common.SerializedObject;
+import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
@@ -21,7 +22,6 @@ import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
 import fabric.worker.*;
-import fabric.worker.debug.Timing;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.UpdateMap;
 

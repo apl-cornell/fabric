@@ -30,7 +30,6 @@ import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.PropertyNameService;
 import fabric.common.net.naming.PropertyNameService.PortType;
 import fabric.lang.security.*;
-import fabric.worker.debug.Timing;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.Log;
