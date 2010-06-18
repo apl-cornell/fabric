@@ -2,12 +2,8 @@ package fabric.messages;
 
 import java.io.*;
 
-import fabric.worker.RemoteStore;
-import fabric.worker.debug.Timing;
 import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.InternalError;
 import fabric.lang.security.NodePrincipal;
-import fabric.net.UnreachableNodeException;
 
 /**
  * An <code>AllocateMessage</code> represents a request to allocate a number
@@ -50,23 +46,6 @@ public final class AllocateMessage
     return h.handle(p, this);
   }
   
-  //////////////////////////////////////////////////////////////////////////////
-  // convenience method for sending                                           //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Response send(RemoteStore store) throws UnreachableNodeException {
-    try {
-      Timing.STORE.begin();
-      return send(store, true);
-    } catch (UnreachableNodeException e) {
-      throw e;
-    } catch (FabricException e) {
-      throw new InternalError("Unexpected response from store.", e);
-    } finally {
-      Timing.STORE.end();
-    }
-  }
-
   //////////////////////////////////////////////////////////////////////////////
   // serialization cruft                                                      //
   //////////////////////////////////////////////////////////////////////////////

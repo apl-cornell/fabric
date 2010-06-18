@@ -4,9 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.RemoteStore;
-import fabric.common.exceptions.*;
-import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.FabricException;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
 
@@ -53,20 +51,6 @@ public final class DissemReadMessage
     return h.handle(p, this);
   }
 
-
-  //////////////////////////////////////////////////////////////////////////////
-  // convenience method for sending                                           //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Response send(RemoteStore store) throws FetchException {
-    try {
-      return send(store, false);
-    } catch (FetchException e) {
-      throw e;
-    } catch (FabricException e) {
-      throw new InternalError("Unexpected response from store.", e);
-    }
-  }
 
   //////////////////////////////////////////////////////////////////////////////
   // serialization cruft                                                      //

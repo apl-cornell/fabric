@@ -4,12 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.debug.Timing;
 import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.InternalError;
 import fabric.lang.security.NodePrincipal;
-import fabric.net.RemoteNode;
-import fabric.net.UnreachableNodeException;
 
 public class CommitTransactionMessage
      extends Message<CommitTransactionMessage.Response>
@@ -55,23 +51,6 @@ public class CommitTransactionMessage
 
   public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
     return h.handle(p, this);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // convenience method for sending                                           //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Response send(RemoteNode node) throws UnreachableNodeException {
-    try {
-      Timing.STORE.begin();
-      return super.send(node, true);
-    } catch (UnreachableNodeException e) {
-      throw e;
-    } catch (FabricException e) {
-      throw new InternalError("Unexpected response from node.", e);
-    } finally {
-      Timing.STORE.end();
-    }
   }
 
   //////////////////////////////////////////////////////////////////////////////

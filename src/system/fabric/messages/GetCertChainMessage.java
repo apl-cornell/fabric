@@ -4,11 +4,7 @@ import java.io.*;
 import java.security.cert.Certificate;
 
 import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.InternalError;
 import fabric.lang.security.NodePrincipal;
-import fabric.net.UnreachableNodeException;
-import fabric.worker.RemoteStore;
-import fabric.worker.debug.Timing;
 
 /**
  * A request to get the certificate chain that certifies a store's public SSL
@@ -44,23 +40,6 @@ public class GetCertChainMessage
 
   public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
     return h.handle(p, this);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // convenience method for sending                                           //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Response send(RemoteStore store) throws UnreachableNodeException {
-    try {
-      Timing.STORE.begin();
-      return send(store, false);
-    } catch (UnreachableNodeException e) {
-      throw e;
-    } catch (FabricException e) {
-      throw new InternalError("Unexpected response from store.", e);
-    } finally {
-      Timing.STORE.end();
-    }
   }
 
   //////////////////////////////////////////////////////////////////////////////

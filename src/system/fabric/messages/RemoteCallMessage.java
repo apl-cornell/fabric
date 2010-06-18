@@ -3,16 +3,12 @@ package fabric.messages;
 import java.io.*;
 import java.lang.reflect.Method;
 
-import fabric.worker.remote.RemoteCallException;
-import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.UpdateMap;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.InternalError;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.lang.Object._Proxy;
-import fabric.net.UnreachableNodeException;
 
 public class RemoteCallMessage
      extends Message<RemoteCallMessage.Response>
@@ -79,24 +75,6 @@ public class RemoteCallMessage
 
   public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
     return h.handle(p, this);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // convenience method for sending                                           //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Response send(RemoteWorker worker) throws UnreachableNodeException,
-      RemoteCallException {
-    try {
-      return super.send(worker, true);
-    } catch (UnreachableNodeException e) {
-      throw e;
-    } catch (RemoteCallException e) {
-      throw e;
-    } catch (FabricException e) {
-      throw new InternalError("Unexpected response from worker " + worker.name,
-          e);
-    }
   }
 
   //////////////////////////////////////////////////////////////////////////////

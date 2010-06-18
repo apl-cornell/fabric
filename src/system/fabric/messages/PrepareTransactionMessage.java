@@ -5,16 +5,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.*;
 
-import fabric.worker.debug.Timing;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
-import fabric.net.RemoteNode;
-import fabric.net.UnreachableNodeException;
 
 /**
  * A <code>PrepareTransactionMessage</code> represents a transaction request to
@@ -152,23 +148,6 @@ public class PrepareTransactionMessage
 
   public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
     return h.handle(p, this);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // convenience method for sending                                           //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Response send(RemoteNode node) throws UnreachableNodeException {
-    try {
-      Timing.STORE.begin();
-      return super.send(node, true);
-    } catch (UnreachableNodeException e) {
-      throw e;
-    } catch (FabricException e) {
-      throw new InternalError("Unexpected response from node.", e);
-    } finally {
-      Timing.STORE.end();
-    }
   }
 
   //////////////////////////////////////////////////////////////////////////////

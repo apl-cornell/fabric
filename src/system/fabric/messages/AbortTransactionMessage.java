@@ -4,12 +4,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.debug.Timing;
-import fabric.common.*;
+import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.InternalError;
 import fabric.lang.security.NodePrincipal;
-import fabric.net.RemoteNode;
 
 public class AbortTransactionMessage
      extends Message<AbortTransactionMessage.Response>
@@ -49,21 +46,6 @@ public class AbortTransactionMessage
     return h.handle(p, this);
   }
   
-  //////////////////////////////////////////////////////////////////////////////
-  // convenience method for sending                                           //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Response send(RemoteNode node) {
-    try {
-      Timing.STORE.begin();
-      return send(node, true);
-    } catch (FabricException e) {
-      throw new InternalError(e);
-    } finally {
-      Timing.STORE.end();
-    }
-  }
-
   //////////////////////////////////////////////////////////////////////////////
   // serialization cruft                                                      //
   //////////////////////////////////////////////////////////////////////////////

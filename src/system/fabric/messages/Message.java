@@ -6,9 +6,8 @@ import java.lang.reflect.InvocationTargetException;
 
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.net.SubSocket;
 import fabric.lang.Object._Proxy;
-import fabric.net.RemoteNode;
-import fabric.net.Stream;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -16,7 +15,7 @@ import fabric.worker.Worker;
  * Messages provide an interface for serializing requests and responses.  The
  * <code>Message</code> class itself provides facilities for serialization and
  * deserialization, while the concrete subclasses give the structure of each
- * type of message.
+ * type of message.</p>
  * 
  * <p>Messages are intended to be used in a synchronous, call-return style.  To
  * support this, each Message type is bound to a specific Response type.  On the
@@ -26,7 +25,14 @@ import fabric.worker.Worker;
  * ReadMessage.Response r = new ReadMessage(...).send(...);
  * </pre>
  * while on the receiver side, type safety is enforced by only accepting
- * <code>R</code> in the <code>respond(...)</code> method.  
+ * <code>R</code> in the <code>respond(...)</code> method.</p>
+ * 
+ * <p>Messages use two instances of the visitor pattern, one for Messages bound
+ * for the store ({@link MessageToStore}) and one for Messages bound for the
+ * worker ({@link MessageToWorker}).  These interfaces would be subclasses of
+ * <code>Message</code>, except that some message types (e.g.
+ * <code>CommitTransactionMessage</code>) go to both, and Java doesn't support
+ * multiple inheritance.</p>
  * 
  * @param <R> The response type
  * @author mdgeorge
@@ -39,6 +45,39 @@ public abstract class Message<R extends Message.Response> {
   
   /** Marker interface for Message responses. */
   public static interface Response {
+  }
+
+  /**
+   * Sends this message to the given node and awaits a response.
+   * 
+   * @param message
+   *            the message to send.
+   * @return
+   *            the reply from the node.
+   * @throws FabricException
+   *            if an error occurs at the remote node while handling the message.
+   * @throws IOException
+   *            in the event of a communications failure. 
+   */
+  public final R send(SubSocket s) throws IOException, FabricException {
+    DataInputStream  in  = new DataInputStream(s.getInputStream());
+    DataOutputStream out = new DataOutputStream(s.getOutputStream());
+    
+    // Write this message out.
+    out.writeByte(messageType.ordinal());
+    writeMessage(out);
+    out.flush();
+
+    // Read in the reply. Determine if an error occurred.
+    if (in.readBoolean()) {
+      // We have an error.
+      FabricException exc = readObject(in, FabricException.class);
+      exc.fillInStackTrace();
+      throw exc;
+    }
+
+    // Read the response.
+    return readResponse(in);
   }
 
   /**
@@ -131,49 +170,6 @@ public abstract class Message<R extends Message.Response> {
   /** Constructs a message of the given <code>MessageType</code> */
   protected Message(MessageType messageType) {
     this.messageType = messageType;
-  }
-
-  /**
-   * Sends this message to the given node and awaits a response.
-   * 
-   * @param message
-   *          The message to send.
-   * @return The reply from the node.
-   * @throws FabricException
-   *           if an error occurs at the remote node while handling the message.
-   */
-  protected final R send(RemoteNode node, boolean useSSL)
-           throws FabricException {
-    
-    Stream stream = node.openStream(useSSL);
-    DataInputStream  in  = stream.in;
-    DataOutputStream out = stream.out;
-    
-    try {
-      // Write this message out.
-      out.writeByte(messageType.ordinal());
-      writeMessage(out);
-      out.flush();
-
-      // Read in the reply. Determine if an error occurred.
-      if (in.readBoolean()) {
-        // We have an error.
-        FabricException exc = readObject(in, FabricException.class);
-        exc.fillInStackTrace();
-        throw exc;
-      }
-    } catch (IOException e) {
-      throw new InternalError(e);
-    }
-
-    // Read the response.
-    try {
-      return readResponse(in);
-    } catch (RuntimeException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new InternalError(e);
-    }
   }
 
   /**

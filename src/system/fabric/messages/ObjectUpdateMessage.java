@@ -4,7 +4,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.remote.RemoteWorker;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
@@ -68,19 +67,6 @@ public class ObjectUpdateMessage
 
   public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
     return h.handle(p, this);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // convenience method for sending                                           //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Response send(RemoteWorker worker) {
-    try {
-      boolean encrypt = group != null;
-      return send(worker, encrypt);
-    } catch (FabricException e) {
-      throw new InternalError("Unexpected response from worker.", e);
-    }
   }
 
   //////////////////////////////////////////////////////////////////////////////

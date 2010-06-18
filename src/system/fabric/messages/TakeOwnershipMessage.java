@@ -6,12 +6,9 @@ import java.io.IOException;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;
-import fabric.worker.remote.RemoteWorker;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.InternalError;
 import fabric.lang.security.NodePrincipal;
-import fabric.net.UnreachableNodeException;
 
 /**
  * Represents a request from a worker to take ownership of an object from
@@ -56,21 +53,6 @@ public class TakeOwnershipMessage
 
   public Response dispatch(MessageToWorkerHandler h, NodePrincipal p) throws FabricException {
     return h.handle(p, this);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // convenience method for sending                                           //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Response send(RemoteWorker remoteWorker)
-      throws UnreachableNodeException {
-    try {
-      return super.send(remoteWorker, true);
-    } catch (UnreachableNodeException e) {
-      throw e;
-    } catch (FabricException e) {
-      throw new InternalError("Unexpected response from worker.", e);
-    }
   }
 
   //////////////////////////////////////////////////////////////////////////////

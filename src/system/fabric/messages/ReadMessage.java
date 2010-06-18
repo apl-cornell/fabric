@@ -4,10 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.RemoteStore;
-import fabric.common.*;
-import fabric.common.exceptions.*;
-import fabric.common.exceptions.InternalError;
+import fabric.common.ObjectGroup;
+import fabric.common.exceptions.FabricException;
 import fabric.lang.security.NodePrincipal;
 
 /**
@@ -50,20 +48,6 @@ public class ReadMessage
 
   public Response dispatch(NodePrincipal p, MessageToStoreHandler h) throws FabricException {
     return h.handle(p, this);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // convenience method for sending                                           //
-  //////////////////////////////////////////////////////////////////////////////
-
-  public Response send(RemoteStore store) throws FetchException {
-    try {
-      return send(store, true);
-    } catch (FetchException e) {
-      throw e;
-    } catch (FabricException e) {
-      throw new InternalError("Unexpected response from store.", e);
-    }
   }
 
   //////////////////////////////////////////////////////////////////////////////
