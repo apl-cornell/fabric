@@ -103,7 +103,7 @@ public class RemoteStore extends RemoteNode implements Store {
    * Creates a store representing the store at the given host name.
    */
   protected RemoteStore(String name) {
-    super(name, true);
+    super(name);
 
     this.objects = new LongKeyHashMap<FabricSoftRef>();
     this.fetchLocks = new LongKeyHashMap<FetchLock>();
@@ -121,16 +121,6 @@ public class RemoteStore extends RemoteNode implements Store {
   protected RemoteStore(String name, PublicKey key) {
     this(name);
     this.publicKey = key;
-  }
-
-  /**
-   * Cleans up the SerializedObject collector thread.
-   */
-  @Override
-  public void cleanup() {
-    super.cleanup();
-    collector.destroyed = true;
-    collector.interrupt();
   }
 
   public synchronized long createOnum() throws UnreachableNodeException {
@@ -511,10 +501,5 @@ public class RemoteStore extends RemoteNode implements Store {
         serialized.clear();
       }
     }
-  }
-
-  @Override
-  protected SocketAddress lookup() throws IOException {
-    return Worker.getWorker().storeNameService.resolve(name);
   }
 }

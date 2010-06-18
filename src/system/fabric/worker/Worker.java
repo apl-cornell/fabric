@@ -358,16 +358,6 @@ public final class Worker {
     shutdown_();
     remoteCallManager.shutdown();
     fetchManager.destroy();
-
-    for (Store store : stores.values()) {
-      if (store instanceof RemoteStore) {
-        ((RemoteStore) store).cleanup();
-      }
-    }
-
-    for (RemoteWorker worker : remoteWorkers.values()) {
-      worker.cleanup();
-    }
   }
 
   /**

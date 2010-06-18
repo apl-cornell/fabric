@@ -42,7 +42,7 @@ public final class RemoteWorker extends RemoteNode {
    * RemoteWorker, use fabric.worker.Worker.getWorker() instead.
    */
   public RemoteWorker(String name) {
-    super(name, true);
+    super(name);
   }
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
@@ -192,8 +192,4 @@ public final class RemoteWorker extends RemoteNode {
   return response.resubscribe;
   }
 
-  @Override
-  protected SocketAddress lookup() throws IOException {
-    return Worker.getWorker().workerNameService.resolve(name);
-  }
 }
