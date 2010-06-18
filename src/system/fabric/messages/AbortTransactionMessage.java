@@ -9,7 +9,7 @@ import fabric.common.exceptions.FabricException;
 import fabric.lang.security.NodePrincipal;
 
 public class AbortTransactionMessage
-     extends Message<AbortTransactionMessage.Response>
+     extends Message<AbortTransactionMessage.Response, FabricException>
   implements MessageToStore, MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -20,7 +20,7 @@ public class AbortTransactionMessage
   public final TransactionID tid;
 
   public AbortTransactionMessage(TransactionID tid) {
-    super(MessageType.ABORT_TRANSACTION);
+    super(MessageType.ABORT_TRANSACTION, FabricException.class);
     this.tid = tid;
   }
 

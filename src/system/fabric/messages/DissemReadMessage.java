@@ -14,7 +14,7 @@ import fabric.lang.security.NodePrincipal;
  * receive the next update to the object.
  */
 public final class DissemReadMessage
-           extends Message<DissemReadMessage.Response>
+           extends Message<DissemReadMessage.Response, FabricException>
         implements MessageToStore
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@ public final class DissemReadMessage
   public final long onum;
 
   public DissemReadMessage(long onum) {
-    super(MessageType.DISSEM_READ_ONUM);
+    super(MessageType.DISSEM_READ_ONUM, FabricException.class);
     this.onum = onum;
   }
 

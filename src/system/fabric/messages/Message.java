@@ -37,7 +37,7 @@ import fabric.worker.Worker;
  * @param <R> The response type
  * @author mdgeorge
  */
-public abstract class Message<R extends Message.Response> {
+public abstract class Message<R extends Message.Response, E extends Exception> {
 
   //////////////////////////////////////////////////////////////////////////////
   // public API                                                               //
@@ -59,7 +59,7 @@ public abstract class Message<R extends Message.Response> {
    * @throws IOException
    *            in the event of a communications failure. 
    */
-  public final R send(SubSocket s) throws IOException, FabricException {
+  public final R send(SubSocket s) throws IOException, E {
     DataInputStream  in  = new DataInputStream(s.getInputStream());
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
     
@@ -71,7 +71,7 @@ public abstract class Message<R extends Message.Response> {
     // Read in the reply. Determine if an error occurred.
     if (in.readBoolean()) {
       // We have an error.
-      FabricException exc = readObject(in, FabricException.class);
+      E exc = readObject(in, this.exceptionClass);
       exc.fillInStackTrace();
       throw exc;
     }
@@ -87,7 +87,7 @@ public abstract class Message<R extends Message.Response> {
    *           If a malformed message is sent, or in the case of a failure in
    *           the <code>DataInput</code> provided.
    */
-  public static Message<?> receive(DataInput in) throws IOException {
+  public static Message<?,?> receive(DataInput in) throws IOException {
     try {
       MessageType messageType = MessageType.values()[in.readByte()];
       
@@ -161,15 +161,21 @@ public abstract class Message<R extends Message.Response> {
     ;
 
     /** Read a message of the appropriate type from the given DataInput. */
-    abstract Message<?> parse(DataInput in) throws IOException;
+    abstract Message<?,?> parse(DataInput in) throws IOException;
   }
 
   /** The <code>MessageType</code> corresponding to this class. */
   protected final MessageType messageType;
+  
+  /** The class of Exceptions that may be thrown in response to this Message */
+  protected final Class<E> exceptionClass; 
 
-  /** Constructs a message of the given <code>MessageType</code> */
-  protected Message(MessageType messageType) {
-    this.messageType = messageType;
+  /** Constructs a message of the given <code>MessageType</code> 
+   * @param exceptionClass TODO
+   * @param exceptionClass TODO*/
+  protected Message(MessageType messageType, Class<E> exceptionClass) {
+    this.messageType    = messageType;
+    this.exceptionClass = exceptionClass;
   }
 
   /**

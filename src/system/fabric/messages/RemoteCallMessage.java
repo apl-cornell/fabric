@@ -11,7 +11,7 @@ import fabric.lang.security.Principal;
 import fabric.lang.Object._Proxy;
 
 public class RemoteCallMessage
-     extends Message<RemoteCallMessage.Response>
+     extends Message<RemoteCallMessage.Response, FabricException>
   implements MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -40,7 +40,7 @@ public class RemoteCallMessage
   public RemoteCallMessage(TransactionID tid, UpdateMap updateMap,
       Class<?> receiverType, _Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args) {
-    super(MessageType.REMOTE_CALL);
+    super(MessageType.REMOTE_CALL, FabricException.class);
 
     if (parameterTypes == null ? args != null
         : parameterTypes.length != args.length)
@@ -121,7 +121,7 @@ public class RemoteCallMessage
   /* readMessage */
   @SuppressWarnings("unchecked")
   protected RemoteCallMessage(DataInput in) throws IOException {
-    super(MessageType.REMOTE_CALL);
+    super(MessageType.REMOTE_CALL, FabricException.class);
 
     if (in.readBoolean())
       this.tid = new TransactionID(in);

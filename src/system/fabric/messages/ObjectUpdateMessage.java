@@ -14,7 +14,7 @@ import fabric.lang.security.NodePrincipal;
  * Represents push notification that an object has been updated.
  */
 public class ObjectUpdateMessage
-     extends Message<ObjectUpdateMessage.Response>
+     extends Message<ObjectUpdateMessage.Response, FabricException>
   implements MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -28,7 +28,7 @@ public class ObjectUpdateMessage
 
   private ObjectUpdateMessage(String store, long onum, Glob glob,
       ObjectGroup group) {
-    super(MessageType.OBJECT_UPDATE);
+    super(MessageType.OBJECT_UPDATE, FabricException.class);
     this.store = store;
     this.onum = onum;
     this.glob = glob;
@@ -89,7 +89,7 @@ public class ObjectUpdateMessage
 
   /* readMessage */
   protected ObjectUpdateMessage(DataInput in) throws IOException {
-    super(MessageType.OBJECT_UPDATE);
+    super(MessageType.OBJECT_UPDATE, FabricException.class);
 
     this.onum = in.readLong();
 

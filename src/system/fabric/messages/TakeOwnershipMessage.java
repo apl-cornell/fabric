@@ -15,7 +15,7 @@ import fabric.lang.security.NodePrincipal;
  * another worker.
  */
 public class TakeOwnershipMessage
-     extends Message<TakeOwnershipMessage.Response>
+     extends Message<TakeOwnershipMessage.Response, FabricException>
   implements MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -27,7 +27,7 @@ public class TakeOwnershipMessage
   public final long onum;
 
   public TakeOwnershipMessage(TransactionID tid, Store store, long onum) {
-    super(MessageType.TAKE_OWNERSHIP);
+    super(MessageType.TAKE_OWNERSHIP, FabricException.class);
 
     this.tid = tid;
     this.store = store;

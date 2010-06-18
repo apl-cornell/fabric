@@ -13,7 +13,7 @@ import fabric.lang.security.NodePrincipal;
  * object at a store.
  */
 public class ReadMessage
-     extends Message<ReadMessage.Response>
+     extends Message<ReadMessage.Response, FabricException>
   implements MessageToStore
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -24,7 +24,7 @@ public class ReadMessage
   public final long onum;
 
   public ReadMessage(long onum) {
-    super(MessageType.READ_ONUM);
+    super(MessageType.READ_ONUM, FabricException.class);
     this.onum = onum;
   }
 

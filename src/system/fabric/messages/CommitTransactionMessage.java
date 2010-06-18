@@ -8,7 +8,7 @@ import fabric.common.exceptions.FabricException;
 import fabric.lang.security.NodePrincipal;
 
 public class CommitTransactionMessage
-     extends Message<CommitTransactionMessage.Response>
+     extends Message<CommitTransactionMessage.Response, FabricException>
   implements MessageToStore, MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -18,7 +18,7 @@ public class CommitTransactionMessage
   public final long transactionID;
 
   public CommitTransactionMessage(long transactionID) {
-    super(MessageType.COMMIT_TRANSACTION);
+    super(MessageType.COMMIT_TRANSACTION, FabricException.class);
     this.transactionID = transactionID;
   }
 

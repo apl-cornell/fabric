@@ -10,7 +10,7 @@ import fabric.lang.security.NodePrincipal;
  * of object IDs at a store.
  */
 public final class AllocateMessage
-           extends Message<AllocateMessage.Response>
+           extends Message<AllocateMessage.Response, FabricException>
         implements MessageToStore 
 {
 
@@ -22,7 +22,7 @@ public final class AllocateMessage
   public final int num;
 
   public AllocateMessage(int num) {
-    super(MessageType.ALLOCATE_ONUMS);
+    super(MessageType.ALLOCATE_ONUMS, FabricException.class);
     this.num = num;
   }
 

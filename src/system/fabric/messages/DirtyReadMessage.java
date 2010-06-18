@@ -16,7 +16,7 @@ import fabric.lang.security.NodePrincipal;
  * Represents a request from a worker to read an object owned by another worker.
  */
 public class DirtyReadMessage
-     extends Message<DirtyReadMessage.Response>
+     extends Message<DirtyReadMessage.Response, FabricException>
   implements MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -28,7 +28,7 @@ public class DirtyReadMessage
   public final long onum;
 
   public DirtyReadMessage(TransactionID tid, Store store, long onum) {
-    super(MessageType.DIRTY_READ);
+    super(MessageType.DIRTY_READ, FabricException.class);
 
     this.tid = tid;
     this.store = store;

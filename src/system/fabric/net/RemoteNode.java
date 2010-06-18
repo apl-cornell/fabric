@@ -28,7 +28,7 @@ public abstract class RemoteNode {
     return name;
   }
 
-  protected <R extends Message.Response> R send(Message<R> message) {
+  protected <R extends Message.Response, E extends Exception> R send(Message<R, E> message) {
     throw new NotImplementedException();
   }
 }

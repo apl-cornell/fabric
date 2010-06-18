@@ -11,7 +11,7 @@ import fabric.lang.security.NodePrincipal;
  * key.
  */
 public class GetCertChainMessage
-     extends Message<GetCertChainMessage.Response>
+     extends Message<GetCertChainMessage.Response, FabricException>
   implements MessageToStore
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -19,7 +19,7 @@ public class GetCertChainMessage
   //////////////////////////////////////////////////////////////////////////////
 
   public GetCertChainMessage() {
-    super(MessageType.GET_CERT_CHAIN);
+    super(MessageType.GET_CERT_CHAIN, FabricException.class);
   }
 
   //////////////////////////////////////////////////////////////////////////////

@@ -17,7 +17,7 @@ import fabric.lang.security.NodePrincipal;
  * a store.
  */
 public class PrepareTransactionMessage
-     extends Message<PrepareTransactionMessage.Response>
+     extends Message<PrepareTransactionMessage.Response, FabricException>
   implements MessageToWorker, MessageToStore
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -69,7 +69,7 @@ public class PrepareTransactionMessage
   public PrepareTransactionMessage(long tid, long commitTime,
       Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) {
-    super(MessageType.PREPARE_TRANSACTION);
+    super(MessageType.PREPARE_TRANSACTION, FabricException.class);
 
     this.tid = tid;
     this.commitTime = commitTime;
@@ -194,7 +194,7 @@ public class PrepareTransactionMessage
 
   /* readMessage */
   protected PrepareTransactionMessage(DataInput in) throws IOException {
-    super(MessageType.PREPARE_TRANSACTION);
+    super(MessageType.PREPARE_TRANSACTION, FabricException.class);
     this.creates = null;
     this.writes = null;
 
