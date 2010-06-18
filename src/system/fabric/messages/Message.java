@@ -6,7 +6,6 @@ import java.lang.reflect.InvocationTargetException;
 
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.exceptions.NotImplementedException;
 import fabric.lang.Object._Proxy;
 import fabric.net.RemoteNode;
 import fabric.net.Stream;
@@ -226,23 +225,19 @@ public abstract class Message<R extends Message.Response> {
    * Deserialize a java object from a DataOutput
    */
   protected <T> T readObject(DataInput in, Class<T> type) throws IOException {
-    // TODO
-    throw new NotImplementedException();
-    /*
     byte[] buf = new byte[in.readInt()];
     in.readFully(buf);
 
-    ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(buf));
-    Certificate[] certificateChain;
+    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buf));
+    
     try {
-      certificateChain = (Certificate[]) ois.readObject();
+      Object o = ois.readObject();
+      return type.cast(o);
+    } catch (ClassCastException e) {
+      throw new IOException("Unable to deserialize java object -- wrong type");
     } catch (ClassNotFoundException e) {
-      certificateChain = null;
+      throw new IOException("Unable to deserialize java object -- no such class");
     }
-
-    this.certificateChain = certificateChain;
-    */
   }
 
   //////////////////////////////////////////////////////////////////////////////
