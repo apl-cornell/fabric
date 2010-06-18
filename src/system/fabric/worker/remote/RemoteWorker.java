@@ -50,7 +50,7 @@ public final class RemoteWorker extends RemoteNode {
       throws UnreachableNodeException, RemoteCallException {
     TransactionManager tm = TransactionManager.getInstance();
     tm.registerRemoteCall(this);
-
+ 
     TransactionID tid = tm.getCurrentTid();
     UpdateMap updateMap = tm.getUpdateMap();
 
@@ -58,8 +58,8 @@ public final class RemoteWorker extends RemoteNode {
         receiver.fetch().$getProxy().getClass().getEnclosingClass();
 
     RemoteCallMessage.Response response =
-        new RemoteCallMessage(tid, updateMap, receiverClass, receiver,
-            methodName, parameterTypes, args).send(this);
+        send(new RemoteCallMessage(tid, updateMap, receiverClass, receiver,
+            methodName, parameterTypes, args));
 
     // Commit any outstanding subtransactions that occurred as a result of the
     // remote call.
@@ -78,7 +78,7 @@ public final class RemoteWorker extends RemoteNode {
   public void prepareTransaction(long tid, long commitTime)
       throws UnreachableNodeException, TransactionPrepareFailedException {
     PrepareTransactionMessage.Response response =
-        new PrepareTransactionMessage(tid, commitTime).send(this);
+        send(new PrepareTransactionMessage(tid, commitTime));
     if (!response.success)
       throw new TransactionPrepareFailedException(response.message);
   }
@@ -86,7 +86,7 @@ public final class RemoteWorker extends RemoteNode {
   public void commitTransaction(long tid) throws UnreachableNodeException,
       TransactionCommitFailedException {
     CommitTransactionMessage.Response response =
-        new CommitTransactionMessage(tid).send(this);
+        send(new CommitTransactionMessage(tid));
     if (!response.success)
       throw new TransactionCommitFailedException(response.message);
   }
@@ -99,7 +99,7 @@ public final class RemoteWorker extends RemoteNode {
    */
   public void abortTransaction(TransactionID tid)
       throws UnreachableNodeException {
-    new AbortTransactionMessage(tid).send(this);
+    send(new AbortTransactionMessage(tid));
   }
 
   /**
@@ -117,7 +117,7 @@ public final class RemoteWorker extends RemoteNode {
   }
 
   public _Impl readObject(TransactionID tid, Store store, long onum) {
-    DirtyReadMessage.Response response = new DirtyReadMessage(tid, store, onum).send(this);
+    DirtyReadMessage.Response response = send(new DirtyReadMessage(tid, store, onum));
     return response.obj;
   }
 
@@ -129,7 +129,7 @@ public final class RemoteWorker extends RemoteNode {
    */
   public void takeOwnership(TransactionID tid, Store store, long onum) {
     TakeOwnershipMessage.Response response =
-        new TakeOwnershipMessage(tid, store, onum).send(this);
+        send(new TakeOwnershipMessage(tid, store, onum));
     if (!response.success) {
       throw new InternalError("Unable to take ownership of object fab://"
           + store.name() + "/" + onum + " from " + name + " -- either " + name
@@ -142,7 +142,7 @@ public final class RemoteWorker extends RemoteNode {
    */
   public NodePrincipal getPrincipal() {
     GetPrincipalMessage.Response response =
-        new GetPrincipalMessage().send(this);
+        send(new GetPrincipalMessage());
     final NodePrincipal principal = response.principal;
     final String expectedPrincipalName;
     try {
@@ -177,7 +177,7 @@ public final class RemoteWorker extends RemoteNode {
    */
   public boolean notifyObjectUpdate(String store, long onum, Glob glob) {
     ObjectUpdateMessage.Response response =
-        new ObjectUpdateMessage(store, onum, glob).send(this);
+        send(new ObjectUpdateMessage(store, onum, glob));
     return response.resubscribe;
   }
   
@@ -188,7 +188,7 @@ public final class RemoteWorker extends RemoteNode {
    */
   public boolean notifyObjectUpdate(long onum, ObjectGroup group) {
     ObjectUpdateMessage.Response response =
-      new ObjectUpdateMessage(onum, group).send(this);
+      send(new ObjectUpdateMessage(onum, group));
   return response.resubscribe;
   }
 

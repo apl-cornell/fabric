@@ -149,8 +149,7 @@ public class RemoteStore extends RemoteNode implements Store {
           throws TransactionPrepareFailedException,
                  UnreachableNodeException {
     PrepareTransactionMessage.Response response =
-      new PrepareTransactionMessage(tid, commitTime, toCreate, reads,
-          writes).send(this);
+      send(new PrepareTransactionMessage(tid, commitTime, toCreate, reads, writes));
 
     if (!response.success)
       throw new TransactionPrepareFailedException(response.versionConflicts,
@@ -323,7 +322,7 @@ public class RemoteStore extends RemoteNode implements Store {
    *           if there was an error while fetching the object from the store.
    */
   public ObjectGroup readObjectFromStore(long onum) throws FetchException {
-    ReadMessage.Response response = new ReadMessage(onum).send(this);
+    ReadMessage.Response response = send(new ReadMessage(onum));
     return response.group;
   }
 
@@ -335,7 +334,7 @@ public class RemoteStore extends RemoteNode implements Store {
    */
   public final Glob readEncryptedObjectFromStore(long onum)
       throws FetchException {
-    DissemReadMessage.Response response = new DissemReadMessage(onum).send(this);
+    DissemReadMessage.Response response = send(new DissemReadMessage(onum));
     // TODO
     // PublicKey key = Worker.getWorker().getStore(name).getPublicKey();
     // response.glob.verifySignature(key);
@@ -366,7 +365,7 @@ public class RemoteStore extends RemoteNode implements Store {
     while (fresh_ids.size() < num) {
       // log.info("Requesting new onums, storeid=" + storeID);
       if (num < 512) num = 512;
-      AllocateMessage.Response response = new AllocateMessage(num).send(this);
+      AllocateMessage.Response response = send(new AllocateMessage(num));
 
       for (long oid : response.oids)
         fresh_ids.add(oid);
@@ -378,7 +377,7 @@ public class RemoteStore extends RemoteNode implements Store {
    * @see fabric.worker.Store#abortTransaction(long)
    */
   public void abortTransaction(TransactionID tid) {
-    new AbortTransactionMessage(tid).send(this);
+    send(new AbortTransactionMessage(tid));
   }
 
   /*
@@ -388,7 +387,7 @@ public class RemoteStore extends RemoteNode implements Store {
   public void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
     CommitTransactionMessage.Response response =
-      new CommitTransactionMessage(transactionID).send(this);
+      send(new CommitTransactionMessage(transactionID));
     if (!response.success)
       throw new TransactionCommitFailedException(response.message);
   }
@@ -483,7 +482,7 @@ public class RemoteStore extends RemoteNode implements Store {
     if (publicKey == null) {
       // No key cached. Fetch the certificate chain from the store.
       GetCertChainMessage.Response response =
-          new GetCertChainMessage().send(this);
+          send(new GetCertChainMessage());
       Certificate[] certificateChain = response.certificateChain;
 
       // Validate the certificate chain.
