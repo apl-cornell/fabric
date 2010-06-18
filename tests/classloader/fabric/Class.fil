@@ -11,6 +11,7 @@ import fabric.worker.Store;
 
 public class Class {
   byte[]   bytecode;
+  Codebase codebase;
   String   name;
   
   public Class(String name, byte[] bytecode) {
@@ -20,6 +21,14 @@ public class Class {
   
   public String getName() {
 	  return name;
+  }
+  
+  public void setCodebase(Codebase c) {
+	  codebase = c;
+  }
+
+  public Codebase getCodebase() {
+	  return codebase;
   }
   
   public byte[] getBytecode() {

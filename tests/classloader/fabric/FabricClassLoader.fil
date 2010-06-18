@@ -25,16 +25,21 @@ public class FabricClassLoader extends ClassLoader {
       return javaCls;
       
     } catch(IOException e) {
-      System.out.println("fail");
       throw new ClassNotFoundException();
     } 
   }
 
+  byte native[] toByteArray(byte[] arr) {
+    byte native[] n = new byte native[arr.length];
+    for(int i = 0 ; i < n.length; i++)
+      n[i] = arr[i];
+    return n;
+  }
   
   java.lang.Class getJavaClass(Class cls) {
     java.lang.Class result = (java.lang.Class)classes.get(cls);
     if (result == null) {
-      result = defineClass(cls.name, cls.bytecode, 0, cls.bytecode.length);
+      result = defineClass(cls.getName(), toByteArray(cls.getBytecode()), 0, cls.bytecode.length);
       classes.put(cls, result);
     }
     return result;
@@ -48,7 +53,7 @@ public class FabricClassLoader extends ClassLoader {
   /* this object may be part of the local store */
   private static Map/*Codebase, FabricClassLoader*/ classloaders;
   
-  static FabricClassLoader getClassLoader(Codebase codebase) {
+  public static FabricClassLoader getClassLoader(Codebase codebase) {
 	if(classloaders == null)
 		classloaders = new HashMap/*Codebase, FabricClassLoader*/();
    

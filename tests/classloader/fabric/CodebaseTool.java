@@ -4,14 +4,14 @@ import java.util.Properties;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
 import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.FileOutputStream;
 import java.io.File;
 import fabric.worker.Worker;
+import java.util.LinkedList;
+import java.util.List;
 import fabric.worker.Store;
 import fabric.lang.security.Label;
 import fabric.common.exceptions.UsageError;
@@ -158,6 +158,18 @@ public class CodebaseTool {
     return mn;
   }
   
+  String classNameToFile(String name) {
+    return name.replaceAll("\\.", "/") + ".class";
+  }
+  
+  boolean arrEquals(byte[] a, fabric.lang.arrays.byteArray b) {
+    if((a == null) != (b == null)) return false;
+    if(a.length != b.getLength()) return false;
+    for(int i = 0; i < a.length; i++)
+      if(a[i] != b.get(i)) return false;
+    return true;
+  }
+  
   /**
    * Imports new codebase to Fabric, using given properties file
    * @param p properties that define the codebase
@@ -165,19 +177,32 @@ public class CodebaseTool {
    */
   Codebase toFabric(Properties p, final Store s) throws IOException {
       final Map<String, String> classTypes = new HashMap<String, String>();
-      final Set<String> classNames = new HashSet<String>();
+      final Map<String, Class> classNames = new HashMap<String, Class>();
       Iterator propNamesIter = p.stringPropertyNames().iterator();
       while(propNamesIter.hasNext()) {
         String propName = (String)propNamesIter.next();
         String className = propName.substring(0, propName.length() - 5);
         if(propName.endsWith("name")) {
-          classNames.add(className);
+          if(!classNames.containsKey(className))
+            classNames.put(className, null);
         } else if(propName.endsWith("type")) {
           classTypes.put(className, p.getProperty(propName));
-          classNames.add(className);
+          if(!classNames.containsKey(className))
+            classNames.put(className, null);
         } else if(propName.endsWith("oid")) {
-          //TODO: check in fabric to see if there are any differences
-          //for now ignore, and assume there are always differences...
+          Class c = (Class)fabric.lang.Object._Proxy.$getProxy(getObjectByOid(
+              p.getProperty(propName)));
+          
+          //Check for differences in class, if there are, construct new class
+          byte[] bytecode = readFile(classNameToFile(className));
+          if(arrEquals(bytecode, c.getBytecode())) {
+            //TODO :rethink this part... see wiki.
+            classNames.put(className, c);
+          } else {
+            classNames.put(className, null);
+            //TODO: Also include dependencies in this codebase
+            //  (compiler will provide this info.)
+          }
         } else {
           throw new IOException("Malformed codebase file. Unknown property: " + 
                      propName);
@@ -186,9 +211,12 @@ public class CodebaseTool {
 
       return Worker.runInSubTransaction(new Worker.Code<Codebase>() { 
         public Codebase run() {
+          //XXX TODO: label for class signatures
           Label l = Worker.getWorker().getLocalStore().getEmptyLabel();
+          
           fabric.util.Map/*String, Class*/ classes = (fabric.util.HashMap)new fabric.util.HashMap._Impl/*String, Class*/(s, l).$getProxy();
-          Iterator<String> classesIter = classNames.iterator();
+          Iterator<String> classesIter = classNames.keySet().iterator();
+          List<Class> toAddCodebase = new LinkedList<Class>();
           while(classesIter.hasNext()) {
             String name = (String)classesIter.next();
             String classType = (String)classTypes.get(name);
@@ -199,10 +227,17 @@ public class CodebaseTool {
               classes.put(fabric.lang.WrappedJavaInlineable.$wrap(name), null);
             } else {
               try {
-                byte[] bytecode = readFile(name.replaceAll("\\.", "/") + ".class");
-                Class c = (Class)new Class._Impl(s, l, name, 
-                    toByteArray(s, l, bytecode)).$getProxy();
-                classes.put(fabric.lang.WrappedJavaInlineable.$wrap(name), c);
+                if(classNames.get(name) != null) {
+                  classes.put(fabric.lang.WrappedJavaInlineable.$wrap(name), 
+                      classNames.get(name));
+                } else {
+                  //Class is new, so create on fabric
+                  byte[] bytecode = readFile(classNameToFile(name));
+                  Class c = (Class)new Class._Impl(s, l, name, 
+                      toByteArray(s, l, bytecode)).$getProxy();
+                  toAddCodebase.add(c);
+                  classes.put(fabric.lang.WrappedJavaInlineable.$wrap(name), c);
+                }
               } catch(IOException ex) {
                 throw new RuntimeException("Could not load bytecode", ex);
               }
@@ -210,6 +245,9 @@ public class CodebaseTool {
           }
           Codebase codebase = (Codebase)new Codebase._Impl(s, l, classes, 
               toFabMap(classTypes, Worker.getWorker().getLocalStore(), l)).$getProxy();
+          for(Class c : toAddCodebase) {
+            c.setCodebase(codebase);
+          }
           return codebase;  
         }
       });

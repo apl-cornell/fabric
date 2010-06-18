@@ -18,7 +18,7 @@ public class Codebase {
   }
 
   public java.lang.Class toJavaClass(Class c) {
-    return getClassLoader().getJavaClass(c);
+    return c.getCodebase().getClassLoader().getJavaClass(c);
   }
   
   FabricClassLoader getClassLoader() {
