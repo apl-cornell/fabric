@@ -18,7 +18,7 @@ def main():
 	global categories, store, worker, size, overhead
 
 	store   = sys.argv[1]
-	worker = "worker0"
+	worker = "worker"
 	size   = "tiny"
 
 	print "===== Finding categories ======"
