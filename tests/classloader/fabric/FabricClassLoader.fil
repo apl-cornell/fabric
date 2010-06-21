@@ -5,28 +5,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FabricClassLoader extends ClassLoader {
-  private Codebase                    codebase;
-  private Map/*Class, java.lang.Class*/ classes;
+  private Codebase                       codebase;
+  private Map/*Class, java.lang.Class*/  classes;
   
   public java.lang.Class loadClass(String name, boolean resolve) 
   	throws ClassNotFoundException {
     System.out.println("FabricClassLoader.loadClass(\"" + name + "\")");
-    if(codebase.getClassType(name).equals("system")) {
-      System.out.println(" -using system classloader");
-      return getSystemClassLoader().loadClass(name);
-    }
-    
-    try {
-      Class    cls = codebase.resolveClassName(name);
-      
-      java.lang.Class javaCls = codebase.toJavaClass(cls);
-      if(resolve)
-    	  resolveClass(javaCls);
-      return javaCls;
-      
-    } catch(IOException e) {
-      throw new ClassNotFoundException();
-    } 
+
+    java.lang.Class javaCls = codebase.toJavaClass(name);
+	if (javaCls == null) {
+	  throw new ClassNotFoundException(name);
+	}
+	if(resolve)
+	  resolveClass(javaCls);
+	return javaCls;
   }
 
   byte native[] toByteArray(byte[] arr) {

@@ -1,0 +1,35 @@
+package fabric;
+
+import java.io.IOException;
+import java.util.Properties;
+import fabric.util.Collections;
+import fabric.util.HashMap;
+import fabric.util.Map;
+import fabric.util.Iterator;
+
+public class SystemCodebase extends Codebase {	
+	
+	private static SystemCodebase instance;
+	
+	private SystemCodebase() {
+		super(new HashMap());
+	}
+	
+	public static Codebase getInstance() {
+		if (instance == null) {
+			atomic {
+				instance = new SystemCodebase();
+			}
+		}
+		return instance;
+	}
+	
+	/*@Override*/
+	public java.lang.Class toJavaClass(String name) {
+		try {
+			return ClassLoader.getSystemClassLoader().loadClass(name);
+		} catch(ClassNotFoundException ex) {
+			return null;
+		}
+	}	
+}

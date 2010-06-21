@@ -7,27 +7,26 @@ import fabric.util.HashMap;
 import fabric.util.Map;
 import fabric.util.Iterator;
 
-public class Codebase {
+public class Codebase {	
+	
   /* map from strings to classes */
   private Map/*String, Class*/ classes;
-  /* mapping of class names to their type (fabric-loaded or system-loaded) */
-  private Map/*String, String*/ classTypes;
   
-  Class resolveClassName(String name) throws IOException {
+  Class resolveClassName(String name) {
     return (Class)classes.get(name);
   }
 
-  public java.lang.Class toJavaClass(Class c) {
-    return c.getCodebase().getClassLoader().getJavaClass(c);
+  public java.lang.Class toJavaClass(String name) {
+	  	Class c = resolveClassName(name);
+	    return c.getCodebase().getClassLoader().getJavaClass(c);
   }
   
   FabricClassLoader getClassLoader() {
     return FabricClassLoader.getClassLoader(this);
   }
   
-  public Codebase(Map/*String, Class*/ classes, Map/*String, String*/ classTypes) {
+  public Codebase(Map/*String, Class*/ classes) {
     this.classes = new HashMap(classes);
-    this.classTypes = new HashMap(classTypes);
   }
   
   public Map/*String, Class*/ getClasses() {
@@ -38,10 +37,6 @@ public class Codebase {
   
   public Class getClass(String s) {
 	  return (Class)classes.get(s);
-  }
-  
-  public String getClassType(String name) {
-    return (String)classTypes.get(name);
   }
   
 }
