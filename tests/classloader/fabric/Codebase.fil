@@ -18,7 +18,10 @@ public class Codebase {
 
   public java.lang.Class toJavaClass(String name) {
 	  	Class c = resolveClassName(name);
-	    return c.getCodebase().getClassLoader().getJavaClass(c);
+	  	if (c.getCodebase().equals(this))
+	  		return c.getCodebase().getClassLoader().getJavaClass(c);
+	  	else
+	  		return c.getCodebase().toJavaClass(name);
   }
   
   FabricClassLoader getClassLoader() {

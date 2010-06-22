@@ -9,19 +9,8 @@ import fabric.util.Iterator;
 
 public class SystemCodebase extends Codebase {	
 	
-	private static SystemCodebase instance;
-	
-	private SystemCodebase() {
+	public SystemCodebase() {
 		super(new HashMap());
-	}
-	
-	public static Codebase getInstance() {
-		if (instance == null) {
-			atomic {
-				instance = new SystemCodebase();
-			}
-		}
-		return instance;
 	}
 	
 	/*@Override*/

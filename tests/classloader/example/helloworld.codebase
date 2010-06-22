@@ -1,3 +1,5 @@
+# NO LONGER NEEDED! Will be deleted soon...
+
 helloworld.Hello.type                = fabric
 helloworld.Hello$_Impl.type          = fabric
 helloworld.Hello$_Proxy.type         = fabric
