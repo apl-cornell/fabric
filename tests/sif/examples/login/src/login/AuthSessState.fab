@@ -22,7 +22,7 @@ public class AuthSessState[principal servP, covariant label T] extends SessionSt
     	super(si, sp);
     }
     
-    public principal currentUser() {
+    public principal{T;sessionPrincipal←} currentUser() {
     	try {
     		return wrapper.currentUser;
     	} catch (NullPointerException e) {return null;}

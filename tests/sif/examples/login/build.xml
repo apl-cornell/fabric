@@ -38,7 +38,7 @@
         <arg value="-report" />     <arg value="labelEnv=1" />
         -->
         <srcfile />
-        <fileset dir="${basedir}" includes="src/travel/*.fab" />
+        <fileset dir="${basedir}" includes="src/login/*.fab" />
         <mapper type="regexp"
                 from="^src(.*)\.fab"
                 to="classes\1\.class" />

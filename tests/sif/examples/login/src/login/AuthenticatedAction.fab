@@ -6,7 +6,7 @@ import sif.servlet.*;
 import sif.html.*;
 
 /**
- * A User Action class.
+ * Extend this class to create actions that are protected by login requirement
  */
 abstract public class AuthenticatedAction[principal servP] extends AbstractAction[servP] {
     public AuthenticatedAction(Servlet[servP] m) {
@@ -26,7 +26,7 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
      * @return false if the user is not logged in, true otherwise.
      * @throws ServletException
      */
-    boolean{*lbl;req.session!:} static ensureLoggedIn{*lbl}
+    static boolean{*lbl;req.session←} ensureLoggedIn{*lbl}
                                 (label{*lbl} lbl,
                                  Request[servP]{*lbl} req,
                                  Action[servP]{*lbl} successAction)
@@ -80,7 +80,7 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
             if (css == null) return;
 
             if (req.session equiv css.sessionPrincipal) {
-                this.invokeImpl(newLbl, req, m, css, css.currentUser());
+                this.invokeImpl(newLbl, req, servlet, css, css.currentUser());
             }
             else {
                 throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
@@ -97,7 +97,7 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
           where caller(req.session),
           lbl <= {⊤→req.session},
           req.session equiv state.sessionPrincipal,
-          session actsfor currentUser;
+          req.session actsfor currentUser;
 
 }
 
