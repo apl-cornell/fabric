@@ -140,6 +140,22 @@ public class MessageHandlerThread
   }
 
   /**
+   * Processes the given request for a new node principal
+   */
+  public MakePrincipalMessage.Response handle(NodePrincipal p, MakePrincipalMessage msg) {
+    // TODO
+    throw new NotImplementedException();
+    
+    // Create the principal
+    
+    // Create certificate binding requester key to the OID
+    
+    // construct the cert chain
+    
+  }
+  
+
+  /**
    * @return true iff a subtransaction was created for making Statistics
    *         objects.
    */

@@ -25,4 +25,5 @@ public interface MessageToStoreHandler {
   public       GetCertChainMessage.Response handle(NodePrincipal p, GetCertChainMessage       msg) throws FabricException;
   public PrepareTransactionMessage.Response handle(NodePrincipal p, PrepareTransactionMessage msg) throws FabricException;
   public               ReadMessage.Response handle(NodePrincipal p, ReadMessage               msg) throws FabricException;
+  public      MakePrincipalMessage.Response handle(NodePrincipal p, MakePrincipalMessage      msg) throws FabricException;
 }

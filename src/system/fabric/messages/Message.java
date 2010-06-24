@@ -158,6 +158,7 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
     GET_PRINCIPAL       {Message parse(DataInput in) throws IOException { return new GetPrincipalMessage       (in); }},
     OBJECT_UPDATE       {Message parse(DataInput in) throws IOException { return new ObjectUpdateMessage       (in); }},
     GET_CERT_CHAIN      {Message parse(DataInput in) throws IOException { return new GetCertChainMessage       (in); }},
+    MAKE_PRINCIPAL      {Message parse(DataInput in) throws IOException { return new MakePrincipalMessage      (in); }},
     ;
 
     /** Read a message of the appropriate type from the given DataInput. */
