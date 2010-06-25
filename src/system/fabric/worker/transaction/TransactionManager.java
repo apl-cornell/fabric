@@ -624,8 +624,6 @@ public final class TransactionManager {
   /**
    * Sends abort messages to those nodes that haven't reported failures.
    * 
-   * @param useAuthentication
-   *          whether to authenticate to the stores.
    * @param stores
    *          the set of stores involved in the transaction.
    * @param workers
