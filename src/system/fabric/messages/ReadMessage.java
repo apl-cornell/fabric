@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.FetchException;
 import fabric.lang.security.NodePrincipal;
 
 /**
@@ -13,7 +14,7 @@ import fabric.lang.security.NodePrincipal;
  * object at a store.
  */
 public class ReadMessage
-     extends Message<ReadMessage.Response, FabricException>
+     extends Message<ReadMessage.Response, FetchException>
   implements MessageToStore
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -24,7 +25,7 @@ public class ReadMessage
   public final long onum;
 
   public ReadMessage(long onum) {
-    super(MessageType.READ_ONUM, FabricException.class);
+    super(MessageType.READ_ONUM, FetchException.class);
     this.onum = onum;
   }
 

@@ -141,9 +141,6 @@ public class RemoteStore extends RemoteNode implements Store {
     PrepareTransactionMessage.Response response =
       send(new PrepareTransactionMessage(tid, commitTime, toCreate, reads, writes));
 
-    if (!response.success)
-      throw new TransactionPrepareFailedException(response.versionConflicts,
-          response.message);
 
     return response.subTransactionCreated;
   }
@@ -378,8 +375,6 @@ public class RemoteStore extends RemoteNode implements Store {
       throws UnreachableNodeException, TransactionCommitFailedException {
     CommitTransactionMessage.Response response =
       send(new CommitTransactionMessage(transactionID));
-    if (!response.success)
-      throw new TransactionCommitFailedException(response.message);
   }
 
   @Override

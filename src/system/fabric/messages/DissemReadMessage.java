@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.FetchException;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
 
@@ -14,7 +15,7 @@ import fabric.lang.security.NodePrincipal;
  * receive the next update to the object.
  */
 public final class DissemReadMessage
-           extends Message<DissemReadMessage.Response, FabricException>
+           extends Message<DissemReadMessage.Response, FetchException>
         implements MessageToStore
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -25,7 +26,7 @@ public final class DissemReadMessage
   public final long onum;
 
   public DissemReadMessage(long onum) {
-    super(MessageType.DISSEM_READ_ONUM, FabricException.class);
+    super(MessageType.DISSEM_READ_ONUM, FetchException.class);
     this.onum = onum;
   }
 

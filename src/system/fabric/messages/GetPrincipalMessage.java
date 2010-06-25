@@ -10,7 +10,7 @@ import fabric.common.exceptions.FabricException;
 import fabric.lang.security.NodePrincipal;
 
 public class GetPrincipalMessage
-     extends Message<GetPrincipalMessage.Response, FabricException>
+     extends Message<GetPrincipalMessage.Response, RuntimeException>
   implements MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -18,7 +18,7 @@ public class GetPrincipalMessage
   //////////////////////////////////////////////////////////////////////////////
 
   public GetPrincipalMessage() {
-    super(MessageType.GET_PRINCIPAL, FabricException.class);
+    super(MessageType.GET_PRINCIPAL, RuntimeException.class);
   }
 
   //////////////////////////////////////////////////////////////////////////////

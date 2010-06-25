@@ -6,9 +6,10 @@ import java.io.IOException;
 
 import fabric.common.exceptions.FabricException;
 import fabric.lang.security.NodePrincipal;
+import fabric.worker.TransactionCommitFailedException;
 
 public class CommitTransactionMessage
-     extends Message<CommitTransactionMessage.Response, FabricException>
+     extends Message<CommitTransactionMessage.Response, TransactionCommitFailedException>
   implements MessageToStore, MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -18,7 +19,7 @@ public class CommitTransactionMessage
   public final long transactionID;
 
   public CommitTransactionMessage(long transactionID) {
-    super(MessageType.COMMIT_TRANSACTION, FabricException.class);
+    super(MessageType.COMMIT_TRANSACTION, TransactionCommitFailedException.class);
     this.transactionID = transactionID;
   }
 
@@ -28,17 +29,6 @@ public class CommitTransactionMessage
   //////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
-    public final boolean success;
-    public final String message;
-
-    public Response(boolean success) {
-      this(success, null);
-    }
-
-    public Response(boolean success, String message) {
-      this.success = success;
-      this.message = message;
-    }
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -68,23 +58,13 @@ public class CommitTransactionMessage
   }
 
   @Override
-  protected void writeResponse(DataOutput out, Response r) throws IOException {
-    out.writeBoolean(r.success);
-    if (r.message != null) {
-      out.writeBoolean(true);
-      out.writeUTF(r.message);
-    }
-    else
-      out.writeBoolean(false);
+  protected void writeResponse(DataOutput out, Response r) {
+    // do nothing
   }
 
   @Override
-  protected Response readResponse(DataInput in) throws IOException {
-    boolean success = in.readBoolean();
-    if (in.readBoolean())
-      return new Response(success, in.readUTF());
-    else 
-      return new Response(success);
+  protected Response readResponse(DataInput in) {
+    return new Response();
   }
 
 }

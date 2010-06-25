@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;
+import fabric.worker.transaction.TakeOwnershipFailedException;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
 import fabric.lang.security.NodePrincipal;
@@ -15,7 +16,7 @@ import fabric.lang.security.NodePrincipal;
  * another worker.
  */
 public class TakeOwnershipMessage
-     extends Message<TakeOwnershipMessage.Response, FabricException>
+     extends Message<TakeOwnershipMessage.Response, TakeOwnershipFailedException>
   implements MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -27,7 +28,7 @@ public class TakeOwnershipMessage
   public final long onum;
 
   public TakeOwnershipMessage(TransactionID tid, Store store, long onum) {
-    super(MessageType.TAKE_OWNERSHIP, FabricException.class);
+    super(MessageType.TAKE_OWNERSHIP, TakeOwnershipFailedException.class);
 
     this.tid = tid;
     this.store = store;
@@ -39,12 +40,6 @@ public class TakeOwnershipMessage
   //////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
-    public final boolean success;
-
-    public Response(boolean success) {
-      this.success = success;
-    }
-
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -74,12 +69,11 @@ public class TakeOwnershipMessage
 
   @Override
   public void writeResponse(DataOutput out, Response r) throws IOException {
-    out.writeBoolean(r.success);
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    return new Response(in.readBoolean());
+    return new Response();
   }
 
 }

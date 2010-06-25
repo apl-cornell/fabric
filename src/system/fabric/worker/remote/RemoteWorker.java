@@ -1,11 +1,10 @@
 package fabric.worker.remote;
 
-import java.io.IOException;
-
 import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
+import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.net.naming.SocketAddress;
+import fabric.common.exceptions.NotImplementedException;
 import fabric.dissemination.Glob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
@@ -25,6 +24,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.transaction.Log;
+import fabric.worker.transaction.TakeOwnershipFailedException;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
 
@@ -79,16 +79,12 @@ public final class RemoteWorker extends RemoteNode {
       throws UnreachableNodeException, TransactionPrepareFailedException {
     PrepareTransactionMessage.Response response =
         send(new PrepareTransactionMessage(tid, commitTime));
-    if (!response.success)
-      throw new TransactionPrepareFailedException(response.message);
   }
 
   public void commitTransaction(long tid) throws UnreachableNodeException,
       TransactionCommitFailedException {
     CommitTransactionMessage.Response response =
         send(new CommitTransactionMessage(tid));
-    if (!response.success)
-      throw new TransactionCommitFailedException(response.message);
   }
 
   /**
@@ -117,8 +113,12 @@ public final class RemoteWorker extends RemoteNode {
   }
 
   public _Impl readObject(TransactionID tid, Store store, long onum) {
-    DirtyReadMessage.Response response = send(new DirtyReadMessage(tid, store, onum));
-    return response.obj;
+    try {
+      DirtyReadMessage.Response response = send(new DirtyReadMessage(tid, store, onum));
+      return response.obj;
+    } catch(FetchException e) {
+      throw new NotImplementedException();
+    }
   }
 
   /**
@@ -128,12 +128,10 @@ public final class RemoteWorker extends RemoteNode {
    *          the tid for the current transaction.
    */
   public void takeOwnership(TransactionID tid, Store store, long onum) {
-    TakeOwnershipMessage.Response response =
-        send(new TakeOwnershipMessage(tid, store, onum));
-    if (!response.success) {
-      throw new InternalError("Unable to take ownership of object fab://"
-          + store.name() + "/" + onum + " from " + name + " -- either " + name
-          + " doesn't own the object or authorization has failed.");
+    try {
+      TakeOwnershipMessage.Response response = send(new TakeOwnershipMessage(tid, store, onum));
+    } catch(TakeOwnershipFailedException e) {
+      throw new InternalError(e);
     }
   }
 

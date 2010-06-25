@@ -11,13 +11,14 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
+import fabric.worker.TransactionPrepareFailedException;
 
 /**
  * A <code>PrepareTransactionMessage</code> represents a transaction request to
  * a store.
  */
 public class PrepareTransactionMessage
-     extends Message<PrepareTransactionMessage.Response, FabricException>
+     extends Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException>
   implements MessageToWorker, MessageToStore
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -69,7 +70,7 @@ public class PrepareTransactionMessage
   public PrepareTransactionMessage(long tid, long commitTime,
       Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) {
-    super(MessageType.PREPARE_TRANSACTION, FabricException.class);
+    super(MessageType.PREPARE_TRANSACTION, TransactionPrepareFailedException.class);
 
     this.tid = tid;
     this.commitTime = commitTime;
@@ -85,9 +86,6 @@ public class PrepareTransactionMessage
   //////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
-    public final boolean success;
-    public final String message;
-
     /**
      * If the remote node is a store, this will indicate whether the worker
      * should send a commit/abort message to the store's worker to commit/abort
@@ -97,44 +95,14 @@ public class PrepareTransactionMessage
     public final boolean subTransactionCreated;
 
     /**
-     * A set of objects involved in the transaction that were out of date.
-     */
-    public final LongKeyMap<SerializedObject> versionConflicts;
-
-    /**
      * Creates a Response indicating a successful prepare.
      */
     public Response() {
       this(false);
     }
 
-    public Response(boolean subTX) {
-      this(/* success */ true, subTX, /* message */ null, /* conflicts */ null);
-    }
-
-    /**
-     * Creates a Response indicating a failed prepare.
-     */
-    public Response(String message) {
-      this(message, null);
-    }
-
-    /**
-     * Creates a Response indicating a failed prepare.
-     */
-    public Response(String message,
-        LongKeyMap<SerializedObject> versionConflicts) {
-      this(/* success = */ false, /* subTX = */ false, message, versionConflicts);
-    }
-
-    protected Response(boolean success,
-                       boolean subTXCreated,
-                       String message,
-                       LongKeyMap<SerializedObject> conflicts) {
-      this.success               = success;
-      this.subTransactionCreated = subTXCreated;
-      this.message               = message;
-      this.versionConflicts      = conflicts;
+    public Response(boolean subTransactionCreated) {
+      this.subTransactionCreated = subTransactionCreated;
     }
   }
 
@@ -194,7 +162,7 @@ public class PrepareTransactionMessage
 
   /* readMessage */
   protected PrepareTransactionMessage(DataInput in) throws IOException {
-    super(MessageType.PREPARE_TRANSACTION, FabricException.class);
+    super(MessageType.PREPARE_TRANSACTION, TransactionPrepareFailedException.class);
     this.creates = null;
     this.writes = null;
 
@@ -235,38 +203,12 @@ public class PrepareTransactionMessage
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
-    out.writeBoolean(r.success);
     out.writeBoolean(r.subTransactionCreated);
-    if (r.message != null) {
-      out.writeBoolean(true);
-      out.writeUTF(r.message);
-    } else out.writeBoolean(false);
-
-    if (r.versionConflicts == null)
-      out.writeInt(0);
-    else {
-      out.writeInt(r.versionConflicts.size());
-      for (SerializedObject obj : r.versionConflicts.values()) {
-        obj.write(out);
-      }
-    }
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    boolean success               = in.readBoolean();
     boolean subTransactionCreated = in.readBoolean();
-    String  message               = in.readBoolean() ? in.readUTF() : null;
-
-
-    int size = in.readInt();
-    LongKeyHashMap<SerializedObject> versionConflicts = new LongKeyHashMap<SerializedObject>(size);
-    for (int i = 0; i < size; i++) {
-      SerializedObject obj = new SerializedObject(in);
-      versionConflicts.put(obj.getOnum(), obj);
-    }
-
-    return new Response(success, subTransactionCreated, message, versionConflicts);
+    return new Response(subTransactionCreated);
   }
-
 }

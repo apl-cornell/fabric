@@ -9,6 +9,7 @@ import fabric.worker.Store;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.FetchException;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 
@@ -16,7 +17,7 @@ import fabric.lang.security.NodePrincipal;
  * Represents a request from a worker to read an object owned by another worker.
  */
 public class DirtyReadMessage
-     extends Message<DirtyReadMessage.Response, FabricException>
+     extends Message<DirtyReadMessage.Response, FetchException>
   implements MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -28,7 +29,7 @@ public class DirtyReadMessage
   public final long onum;
 
   public DirtyReadMessage(TransactionID tid, Store store, long onum) {
-    super(MessageType.DIRTY_READ, FabricException.class);
+    super(MessageType.DIRTY_READ, FetchException.class);
 
     this.tid = tid;
     this.store = store;

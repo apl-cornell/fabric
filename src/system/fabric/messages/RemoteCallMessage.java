@@ -3,6 +3,7 @@ package fabric.messages;
 import java.io.*;
 import java.lang.reflect.Method;
 
+import fabric.worker.remote.RemoteCallException;
 import fabric.worker.remote.UpdateMap;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.FabricException;
@@ -11,7 +12,7 @@ import fabric.lang.security.Principal;
 import fabric.lang.Object._Proxy;
 
 public class RemoteCallMessage
-     extends Message<RemoteCallMessage.Response, FabricException>
+     extends Message<RemoteCallMessage.Response, RemoteCallException>
   implements MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -40,7 +41,7 @@ public class RemoteCallMessage
   public RemoteCallMessage(TransactionID tid, UpdateMap updateMap,
       Class<?> receiverType, _Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args) {
-    super(MessageType.REMOTE_CALL, FabricException.class);
+    super(MessageType.REMOTE_CALL, RemoteCallException.class);
 
     if (parameterTypes == null ? args != null
         : parameterTypes.length != args.length)
@@ -121,7 +122,7 @@ public class RemoteCallMessage
   /* readMessage */
   @SuppressWarnings("unchecked")
   protected RemoteCallMessage(DataInput in) throws IOException {
-    super(MessageType.REMOTE_CALL, FabricException.class);
+    super(MessageType.REMOTE_CALL, RemoteCallException.class);
 
     if (in.readBoolean())
       this.tid = new TransactionID(in);

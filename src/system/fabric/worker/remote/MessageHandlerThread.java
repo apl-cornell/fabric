@@ -1,6 +1,7 @@
 package fabric.worker.remote;
 
 import java.lang.reflect.InvocationTargetException;
+import java.text.MessageFormat;
 import java.util.Map;
 
 import fabric.common.AuthorizationUtil;
@@ -25,9 +26,11 @@ import fabric.messages.GetPrincipalMessage.Response;
 import fabric.net.RemoteNode;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionAtomicityViolationException;
+import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.transaction.Log;
+import fabric.worker.transaction.TakeOwnershipFailedException;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
 
@@ -138,13 +141,15 @@ public class MessageHandlerThread
     return new AbortTransactionMessage.Response();
   }
 
-  public PrepareTransactionMessage.Response handle(
-      NodePrincipal p, PrepareTransactionMessage prepareTransactionMessage) {
+  public PrepareTransactionMessage.Response handle(NodePrincipal p,
+                                                   PrepareTransactionMessage prepareTransactionMessage)
+  throws TransactionPrepareFailedException
+  {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
     if (log == null)
-      return new PrepareTransactionMessage.Response("No such transaction");
+      throw new TransactionPrepareFailedException("No such transaction");
 
     TransactionManager tm = TransactionManager.getInstance();
     tm.associateLog(log);
@@ -160,16 +165,17 @@ public class MessageHandlerThread
 
     if (failures.isEmpty())
       return new PrepareTransactionMessage.Response();
-    else return new PrepareTransactionMessage.Response(
-        "Transaction prepare failed.");
+    else 
+      throw new TransactionPrepareFailedException("Transaction prepare failed.");
   }
 
   /**
    * In each message handler, we maintain the invariant that upon exit, the
    * worker's TransactionManager is associated with a null log.
    */
-  public CommitTransactionMessage.Response handle(
-      NodePrincipal p, CommitTransactionMessage commitTransactionMessage) {
+  public CommitTransactionMessage.Response handle(NodePrincipal p,
+                                                  CommitTransactionMessage commitTransactionMessage)
+  throws TransactionCommitFailedException {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry
@@ -177,7 +183,7 @@ public class MessageHandlerThread
     if (log == null) {
       // If no log exists, assume that another worker in the transaction has
       // already committed the requested transaction.
-      return new CommitTransactionMessage.Response(true);
+      return new CommitTransactionMessage.Response();
     }
 
     TransactionManager tm = TransactionManager.getInstance();
@@ -186,10 +192,10 @@ public class MessageHandlerThread
       tm.sendCommitMessagesAndCleanUp();
     } catch (TransactionAtomicityViolationException e) {
       tm.associateLog(null);
-      return new CommitTransactionMessage.Response(false);
+      throw new TransactionCommitFailedException("Atomicity violation");
     }
 
-    return new CommitTransactionMessage.Response(true);
+    return new CommitTransactionMessage.Response();
   }
 
   public DirtyReadMessage.Response handle(NodePrincipal p, DirtyReadMessage readMessage)
@@ -222,42 +228,48 @@ public class MessageHandlerThread
     return new DirtyReadMessage.Response(obj);
   }
 
-  public TakeOwnershipMessage.Response handle(
-      NodePrincipal p, TakeOwnershipMessage takeOwnershipMessage) throws ProtocolError {
+  public TakeOwnershipMessage.Response handle(NodePrincipal p, TakeOwnershipMessage msg)
+  throws TakeOwnershipFailedException {
     Log log =
-        TransactionRegistry.getInnermostLog(takeOwnershipMessage.tid.topTid);
-    if (log == null) return new TakeOwnershipMessage.Response(false);
+        TransactionRegistry.getInnermostLog(msg.tid.topTid);
+    if (log == null) 
+      throw new TakeOwnershipFailedException(MessageFormat.format(
+          "Object fab://{0}/{1} is not owned by {2} in transaction {3}",
+          msg.store.name(), msg.onum, null, msg.tid));
 
     _Impl obj =
-        new _Proxy(takeOwnershipMessage.store, takeOwnershipMessage.onum)
+        new _Proxy(msg.store, msg.onum)
             .fetch();
 
     // Ensure this worker owns the object.
     synchronized (obj) {
       if (!obj.$isOwned) {
-        return new TakeOwnershipMessage.Response(false);
+        throw new TakeOwnershipFailedException(MessageFormat.format(
+            "Object fab://{0}/{1} is not owned by {2} in transaction {3}",
+            msg.store.name(), msg.onum, null, msg.tid));
       }
-    }
 
-    // Run the authorization in the remote worker transaction.
-    TransactionManager tm = TransactionManager.getInstance();
-    tm.associateAndSyncLog(log, takeOwnershipMessage.tid);
+      // Run the authorization in the remote worker transaction.
+      TransactionManager tm = TransactionManager.getInstance();
+      tm.associateAndSyncLog(log, msg.tid);
 
-    // Ensure that the remote worker is allowed to write the object.
-    Label label = obj.get$label();
-    boolean authorized =
+      // Ensure that the remote worker is allowed to write the object.
+      Label label = obj.get$label();
+      boolean authorized =
         AuthorizationUtil.isWritePermitted(session.remotePrincipal, label
             .$getStore(), label.$getOnum());
 
-    tm.associateLog(null);
+      tm.associateLog(null);
 
-    if (authorized) {
+      if(!authorized)
+        throw new TakeOwnershipFailedException(MessageFormat.format(
+            "{0} is not authorized to own fab://{1}/{2}",
+            session.remoteNodeName, msg.store.name(), msg.onum));
+      
       // Relinquish ownership.
       obj.$isOwned = false;
-      return new TakeOwnershipMessage.Response(true);
+      return new TakeOwnershipMessage.Response();
     }
-
-    return new TakeOwnershipMessage.Response(false);
   }
 
   public Response handle(NodePrincipal p, GetPrincipalMessage getPrincipalMessage) {
@@ -265,7 +277,6 @@ public class MessageHandlerThread
   }
 
   public ObjectUpdateMessage.Response handle(NodePrincipal p, ObjectUpdateMessage objectUpdateMessage) {
-    boolean response;
     if (objectUpdateMessage.group == null) {
       // TODO
       //RemoteStore store = worker.getStore(objectUpdateMessage.store);

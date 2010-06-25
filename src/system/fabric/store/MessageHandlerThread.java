@@ -3,7 +3,6 @@ package fabric.store;
 import static fabric.common.Logging.STORE_REQUEST_LOGGER;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
@@ -11,14 +10,12 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Threading.NamedRunnable;
 import fabric.common.exceptions.AccessException;
-import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
 import fabric.messages.*;
-import fabric.messages.ObjectUpdateMessage.Response;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 
@@ -45,11 +42,12 @@ public class MessageHandlerThread
 
   public AbortTransactionMessage.Response handle(NodePrincipal p, AbortTransactionMessage message)
   throws AccessException {
+    
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Abort Message from {0} for tid={1}",
-        session.workerPrincipalName, message.tid.topTid);
-    session.store.tm.abortTransaction(session.workerPrincipal,
-        message.tid.topTid);
+                "Handling Abort Message from {0} for tid={1}",
+                session.workerPrincipalName, message.tid.topTid);
+    
+    session.store.tm.abortTransaction(session.workerPrincipal, message.tid.topTid);
     return new AbortTransactionMessage.Response();
   }
 
@@ -57,9 +55,11 @@ public class MessageHandlerThread
    * Processes the given request for new OIDs.
    */
   public AllocateMessage.Response handle(NodePrincipal p, AllocateMessage msg)
-      throws AccessException, ProtocolError {
-    STORE_REQUEST_LOGGER.log(Level.FINER, "Handling Allocate Message from {0}",
-        session.workerPrincipalName);
+  throws AccessException {
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+                "Handling Allocate Message from {0}",
+                session.workerPrincipalName);
+    
     long[] onums = session.store.tm.newOnums(session.workerPrincipal, msg.num);
     return new AllocateMessage.Response(onums);
   }
@@ -67,44 +67,41 @@ public class MessageHandlerThread
   /**
    * Processes the given commit request
    */
-  public CommitTransactionMessage.Response handle(
-      NodePrincipal p, CommitTransactionMessage message) throws ProtocolError {
-    try {
-      commitTransaction(message.transactionID);
-      return new CommitTransactionMessage.Response(true);
-    } catch (TransactionCommitFailedException e) {
-      return new CommitTransactionMessage.Response(false, e.getMessage());
-    }
+  public CommitTransactionMessage.Response handle(NodePrincipal p,
+                                                  CommitTransactionMessage message)
+  throws TransactionCommitFailedException {
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+                "Handling Commit Message from {0} for tid={1}",
+                session.workerPrincipalName, message.transactionID);
+    session.store.tm.commitTransaction(session.remoteNode, session.workerPrincipal, message.transactionID);
+    return new CommitTransactionMessage.Response();
   }
 
   /**
    * Processes the given PREPARE request.
    */
-  public PrepareTransactionMessage.Response handle(NodePrincipal p, PrepareTransactionMessage msg)
-      throws ProtocolError {
-    STORE_REQUEST_LOGGER.log(Level.FINER, "Handling Prepare Message, worker="
-        + session.workerPrincipalName + ", tid={0}", msg.tid);
+  public PrepareTransactionMessage.Response handle(NodePrincipal p,
+                                                   PrepareTransactionMessage msg)
+  throws TransactionPrepareFailedException {
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+                "Handling Prepare Message, worker={0}, tid={1}",
+                new Object[] {session.workerPrincipalName, msg.tid});
 
-    try {
-      boolean subTransactionCreated =
-          prepareTransaction(msg.tid, msg.commitTime, msg.serializedCreates,
-              msg.serializedWrites, msg.reads);
-      return new PrepareTransactionMessage.Response(subTransactionCreated);
-    } catch (TransactionPrepareFailedException e) {
-      return new PrepareTransactionMessage.Response(e.getMessage(),
-          e.versionConflicts);
-    }
+    boolean subTransactionCreated = prepareTransaction(msg.tid,
+                                                       msg.commitTime,
+                                                       msg.serializedCreates,
+                                                       msg.serializedWrites,
+                                                       msg.reads);
+    return new PrepareTransactionMessage.Response(subTransactionCreated);
   }
 
   /**
    * Processes the given read request.
    */
-  public ReadMessage.Response handle(NodePrincipal p, ReadMessage msg) throws AccessException,
-      ProtocolError {
+  public ReadMessage.Response handle(NodePrincipal p, ReadMessage msg) throws AccessException {
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling Read Message from {0}, onum=" + msg.onum,
         session.workerPrincipalName);
-    session.recordRead();
 
     ObjectGroup group =
         session.store.tm.getGroup(session.workerPrincipal, session.remoteNode,
@@ -120,10 +117,8 @@ public class MessageHandlerThread
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling DissemRead message from {0}, onum=" + msg.onum,
         session.remoteNode);
-    session.recordRead();
 
     Glob glob = session.store.tm.getGlob(msg.onum, session.remoteNode, this);
-    if (glob != null) session.recordGlobSent();
 
     return new DissemReadMessage.Response(glob);
   }
@@ -154,16 +149,15 @@ public class MessageHandlerThread
     
   }
   
-
   /**
    * @return true iff a subtransaction was created for making Statistics
    *         objects.
    */
-  private boolean prepareTransaction(long tid, long commitTime,
+  private boolean prepareTransaction(
+      long tid, long commitTime,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites, LongKeyMap<Integer> reads)
       throws TransactionPrepareFailedException {
-    session.recordPrepare();
 
     PrepareRequest req =
         new PrepareRequest(tid, commitTime, serializedCreates,
@@ -174,25 +168,9 @@ public class MessageHandlerThread
     boolean subTransactionCreated =
         session.store.tm.prepare(session.workerPrincipal, req);
 
-    // Store the size of the transaction for debugging at the end of the
-    // session
-    // Note: this number does not include surrogates
-    session.addPendingLog(req.tid, serializedCreates.size(), serializedWrites
-        .size());
-
     return subTransactionCreated;
   }
-
-  private void commitTransaction(long transactionID)
-      throws TransactionCommitFailedException {
-    session.recordCommitAttempt();
-
-    session.store.tm.commitTransaction(session.remoteNode,
-        session.workerPrincipal, transactionID);
-
-    session.recordCommitSuccess(transactionID);
-  }
-
+  
   @Override
   protected void runImpl() {
     // TODO Auto-generated method stub
