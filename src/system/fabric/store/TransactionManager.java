@@ -375,10 +375,6 @@ public class TransactionManager {
       database.cacheGroupContainer(group.objects().keySet(), container);
     }
 
-    if (handler != null) {
-      handler.getSession().recordGlobCreated(group.objects().size());
-    }
-
     return container;
   }
 
@@ -444,10 +440,6 @@ public class TransactionManager {
     while (!toVisit.isEmpty()) {
       SerializedObject curObj = toVisit.remove();
       group.put(curObj.getOnum(), curObj);
-
-      if (handler != null) {
-        handler.getSession().recordObjectSent(curObj.getClassName());
-      }
 
       if (group.size() == MAX_GROUP_SIZE) break;
 
