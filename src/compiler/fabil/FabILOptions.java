@@ -11,5 +11,7 @@ public interface FabILOptions {
   public int optLevel();
 
   public boolean signatureMode();
+  
+  public boolean dumpDependencies();
 
 }
