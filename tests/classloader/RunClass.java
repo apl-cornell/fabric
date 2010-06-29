@@ -1,14 +1,15 @@
 
-import fabric.worker.Worker;
-import fabric.worker.Store;
-import fabric.FabricClassLoader;
-import fabric.Codebase;
-import fabric.lang.security.Label;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
-import fabric.common.exceptions.UsageError;
 import java.lang.reflect.InvocationTargetException;
+import java.security.GeneralSecurityException;
+
+import fabric.Codebase;
+import fabric.FabricClassLoader;
+import fabric.common.exceptions.UsageError;
 import fabric.lang.arrays.ObjectArray;
+import fabric.lang.security.Label;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 public class RunClass {
 
@@ -18,7 +19,7 @@ public class RunClass {
   public static void main(String[] args) 
     throws IOException, GeneralSecurityException, IllegalAccessException, 
     ClassNotFoundException, InvocationTargetException, NoSuchMethodException, UsageError {
-    if(args.length != 4) {
+    if (args.length != 4) {
       System.out.println("Usage: RunClass workerName codebaseStore codebaseOnum className");
       return;
     }
@@ -38,6 +39,7 @@ public class RunClass {
             Worker.getWorker().getLocalStore().getEmptyLabel());
         try {
           cls.getMethod("main", ObjectArray.class).invoke(null, programArgs);
+          System.exit(0);
           return null;
         } catch(Exception ex) {
           System.err.println(ex.getMessage());
@@ -46,7 +48,6 @@ public class RunClass {
       }
     });
     
-    System.exit(0);
   }
   
   private static ObjectArray toObjectArray(String[] args, Store s, Label l) {
