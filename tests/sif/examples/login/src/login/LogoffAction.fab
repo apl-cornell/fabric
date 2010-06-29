@@ -16,18 +16,21 @@ public class LogoffAction[principal servP] extends AbstractAction[servP] {
         where caller(req.session),
         lbl <= {*:req.session} {
 
-        Servlet[servP] servlet = getServlet();
+        Servlet[servP] servlet_ = getServlet();
         SessionState state = req.getSessionState(lbl);
-        if (req == null || servlet == null || state == null) throw new ServletException("Error processing request");
+        if (req == null || !(servlet_ instanceof AbstractServlet[servP]) || servlet_ == null || state == null) 
+            throw new ServletException("Error processing request");
+        final AbstractServlet[servP] servlet = (AbstractServlet[servP])servlet_;
+        
 
         atomic {
             Action[servP] a = (Action[servP])servlet.findStartAction(req, servlet.defaultActionName(req));
-            if (!ensureLoggedIn(lbl, req, a)) return;
+//            if (!ensureLoggedIn(lbl, req, a)) return;
 
             final label newLbl = new label {*lbl; req.session!:};
             SessionState ss = req.getSessionState(lbl);
             if (!(ss instanceof AuthSessState[servP, lbl])) throw new ServletException("Incorrect session state");
-            final AuthSessState[servP, lbl] css = (SessState[servP, lbl])ss;
+            final AuthSessState[servP, lbl] css = (AuthSessState[servP, lbl])ss;
 
             if (req.session equiv css.sessionPrincipal) {
                 final principal{req.session!:;*lbl} currentUser = state.currentUser();

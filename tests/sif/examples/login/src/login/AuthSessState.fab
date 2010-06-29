@@ -35,8 +35,8 @@ public class AuthSessState[principal servP, covariant label T] extends SessionSt
     	} catch (NullPointerException e) {}
     }
     
-//    public static USessState[Q, {P←}]{P←} declassifySS{P←}(USessState[Q, {P→;P←}]{P→;P←} ss_, principal{P←} P, principal{P←} Q)
-//    where caller(P) {
+    public static AuthSessState[Q, {P←}]{P←} declassifySS{P←}(AuthSessState[Q, {P→;P←}]{P→;P←} ss_, principal{P←} P, principal{P←} Q)
+    where caller(P) {
 //    	final USessState[Q,{P→;P←}]{P←} ss = declassify(ss_, {P→;P←} to {P←});
 //    	if(ss == null) return null;
 //    	final SSW[{P→;P←}]{P←} ssremote = declassify(ss.remote, {P→;P←} to {P←});
@@ -56,8 +56,6 @@ public class AuthSessState[principal servP, covariant label T] extends SessionSt
 //        	uw.currentUser(currentUser);
 //        }
 //        return new USessState[Q,{P←}](rem, uw);
-//        return null;
-//    	
-//    }
-    
+        return null;
+    }
 }

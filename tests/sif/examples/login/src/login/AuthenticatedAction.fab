@@ -19,35 +19,34 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
     }
     
     /**
-     * Ensure that there is a logged in user. This method should be called first
-     * in the invoke() method of any action that requires the user to be logged in.
+     * Ensure that there is a logged in user.
      * 
      * @param req the Request
      * @return false if the user is not logged in, true otherwise.
      * @throws ServletException
      */
-    static boolean{*lbl;req.session←} ensureLoggedIn{*lbl}
+    protected boolean{*lbl;req.session←} ensureLoggedIn{*lbl}
                                 (label{*lbl} lbl,
                                  Request[servP]{*lbl} req,
-                                 Action[servP]{*lbl} successAction)
-    throws (ServletException{*lbl;req.session!:})
+                                 AuthenticatedAction[servP]{*lbl} successAction,
+                                 AbstractServlet[servP]{*lbl} servlet)
+    throws (ServletException{*lbl;req.session←})
     where caller(req.session),
-    lbl <= {*:req.session}
+    lbl <= {⊤→req.session}
     {
         if (req == null) return false;
         ServletException{*lbl;req.session!:} ex = null;
         boolean{*lbl;req.session!:} ret = true;
         try {
-            final AuthSessState[servP, lbl] state = (AuthSessState[servP, lbl])req.getSessionState();
-            final LoginAction[servP] la = new LoginAction[servP](this, successAction, req.session);
+            final AuthSessState[servP, lbl] state = (AuthSessState[servP, lbl])req.getSessionState(lbl);
+            final LoginAction[servP] la = new LoginAction[servP](servlet, successAction, req.session);
             
-            if (state != null && 
-                    state.sessionPrincipal equiv la.session && 
-                    req.session equiv la.session &&
-                    state.currentUser() == null) {
+            if (state != null && state.currentUser() == null
+                    && new label {req.session←} <= lbl
+                    && state.sessionPrincipal equiv req.session) {
                 // not logged in yet.
                 try {
-                    la.invokeImpl(lbl, req, this, state, null);
+                    la.invoke(lbl, req);
                     ret = false;
                 }
                 catch (ServletException e) {
@@ -64,35 +63,52 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
     throws (ServletException{*lbl;*:req.session;req.session!:})
         where caller(req.session),
         lbl <= {*:req.session} {
-
-        Servlet[servP] servlet = getServlet();
-        SessionState state = req.getSessionState();
-        if (req == null || servlet == null || state == null) throw new ServletException("Error processing request");        
+        if(req == null) throw new ServletException("Error processing request");
+        Servlet[servP] servlet_ = getServlet();
+        SessionState state_ = req.getSessionState(lbl);
+        if (servlet_ == null || state_ == null ||
+                !(servlet_ instanceof AbstractServlet[servP]) ||
+                !(state_ instanceof AuthSessState[servP,lbl]))
+            throw new ServletException("Error processing request");
+        final AbstractServlet[servP] servlet = (AbstractServlet[servP])servlet_;
+        final AuthSessState[servP,lbl] state = (AuthSessState[servP,lbl])state_;
+        if (state == null || servlet == null) return;
 
         atomic {
-            // Check if someone is logged in
-            if (!ensureLoggedIn(lbl, req, this)) return;
-
+            // Check if someone is logged in. If not, then the login page is created.
+            // Simply returning will display that login page
+            if (!ensureLoggedIn(lbl, req, this, servlet)) return;
             final label newLbl = new label {*lbl; req.session!:};
-            SessionState ss = req.getSessionState();
-            if (!(ss instanceof AuthSessState[servP, lbl])) throw new ServletException("Incorrect session state");
-            final AuthSessState[servP, lbl] css = (AuthSessState[servP, lbl])ss;
-            if (css == null) return;
-
-            if (req.session equiv css.sessionPrincipal) {
-                this.invokeImpl(newLbl, req, servlet, css, css.currentUser());
+            if (req.session equiv state.sessionPrincipal)
+            {
+                callWrapper(newLbl, req, servlet, state);
             }
             else {
                 throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
             }
         }
     }
+    
+    public void callWrapper{*lbl}(label{*lbl} lbl,
+            Request[servP]{*lbl} req,
+            Servlet[servP]{*lbl} servlet,
+            AuthSessState[servP, lbl]{*lbl} state) 
+                throws (ServletException{*lbl;req.session!:})
+                where caller(req.session),
+                lbl <= {⊤→req.session},
+                req.session equiv state.sessionPrincipal {
+        if (state == null || req == null) return;
+        final principal currentUser = state.currentUser();
+        if(req.session actsfor currentUser) {
+            this.invokeImpl(lbl, req, servlet, state, currentUser);
+        }
+    }
           
-    public abstract void invokeImpl{*lbl}(label{*lbl} lbl,
-                                      Request[servP]{*lbl} req,
-                                      Servlet[servP]{*lbl} servlet,
-                                      AuthSessState[servP, lbl]{*lbl} state,
-                                      principal{*lbl} currentUser) 
+    public abstract void invokeImpl{*lbl;req.session←}(label{*lbl;req.session←} lbl,
+                                      Request[servP]{*lbl;req.session←} req,
+                                      Servlet[servP]{*lbl;req.session←} servlet,
+                                      AuthSessState[servP, {*lbl;req.session←}]{*lbl;req.session←} state,
+                                      principal{*lbl;req.session←} currentUser) 
         throws (ServletException{*lbl;req.session!:})
           where caller(req.session),
           lbl <= {⊤→req.session},

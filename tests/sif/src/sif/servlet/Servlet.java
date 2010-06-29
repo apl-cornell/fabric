@@ -238,7 +238,7 @@ abstract public class Servlet extends HttpServlet {
 
 
         if (action_name != null) {
-            laction = findAction(req, action_name);                
+            laction = findAction(req, action_name);
         }
         else {
             Action a = this.findDefaultAction(req);
