@@ -1,37 +1,34 @@
-package fabric;
+package fabric.lang;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Loads Java classes from Fabric.
+ * 
+ * @author Lucas Waye <lrw48@cornell.edu>
+ */
 public class FabricClassLoader extends ClassLoader {
-  private Codebase                       codebase;
-  private Map/*Class, java.lang.Class*/  classes;
+  Codebase              codebase;
+  Map/*FClass, Class*/  classes;
   
-  public java.lang.Class loadClass(String name, boolean resolve) 
+  public Class loadClass(String name, boolean resolve) 
   	throws ClassNotFoundException {
-    System.out.println("FabricClassLoader.loadClass(\"" + name + "\")");
-
-    java.lang.Class javaCls = codebase.toJavaClass(name);
+    Class javaCls = codebase.toJavaClass(name);
 	if (javaCls == null) {
 	  throw new ClassNotFoundException(name);
 	}
-	if(resolve)
+	if (resolve)
 	  resolveClass(javaCls);
 	return javaCls;
   }
-
-  byte native[] toByteArray(byte[] arr) {
-    byte native[] n = new byte native[arr.length];
-    for(int i = 0 ; i < n.length; i++)
-      n[i] = arr[i];
-    return n;
-  }
   
-  java.lang.Class getJavaClass(Class cls) {
-    java.lang.Class result = (java.lang.Class)classes.get(cls);
+  Class getJavaClass(FClass cls) {
+    Class result = (Class)classes.get(cls);
     if (result == null) {
-      result = defineClass(cls.getName(), toByteArray(cls.getBytecode()), 0, cls.bytecode.length);
+      result = defineClass(cls.getName(), toByteArray(cls.getBytecode()), 0, 
+    		  cls.bytecode.length);
       classes.put(cls, result);
     }
     return result;
@@ -39,14 +36,14 @@ public class FabricClassLoader extends ClassLoader {
   
   private FabricClassLoader(Codebase cb) {
     this.codebase = cb;
-    this.classes  = new HashMap/*Class, java.lang.Class*/();
+    this.classes  = new HashMap/*FClass, Class*/();
   }
   
   /* this object may be part of the local store */
   private static Map/*Codebase, FabricClassLoader*/ classloaders;
   
   public static FabricClassLoader getClassLoader(Codebase codebase) {
-	if(classloaders == null)
+	if (classloaders == null)
 		classloaders = new HashMap/*Codebase, FabricClassLoader*/();
    
 	FabricClassLoader result = (FabricClassLoader)classloaders.get(codebase);
@@ -55,5 +52,12 @@ public class FabricClassLoader extends ClassLoader {
       classloaders.put(codebase, result);
     }
     return result;
+  }
+
+  byte native[] toByteArray(byte[] arr) {
+    byte native[] n = new byte native[arr.length];
+    for (int i = 0 ; i < n.length; i++)
+      n[i] = arr[i];
+    return n;
   }
 }

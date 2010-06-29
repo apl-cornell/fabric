@@ -1,4 +1,3 @@
-package fabric;
 
 import java.util.Properties;
 import java.util.Set;
@@ -9,13 +8,18 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.FileOutputStream;
 import java.io.File;
-import fabric.worker.Worker;
 import java.util.LinkedList;
 import java.util.List;
+
+import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.lang.security.Label;
+import fabric.lang.Codebase;
+import fabric.lang.SystemCodebase;
+import fabric.lang.FClass;
 import fabric.common.exceptions.UsageError;
 import java.security.GeneralSecurityException;
+
 
 public class CodebaseTool {
 
@@ -33,8 +37,8 @@ public class CodebaseTool {
       showUsage(); 
       return;
     }
-    Worker.initialize(args[0]);
-    String action = args[1];
+    Worker.initialize(args[1]);
+    String action = args[0];
     if(action.equals("import")) {
       handleImport(args);
     } else if(action.equals("export")) {
@@ -44,7 +48,6 @@ public class CodebaseTool {
       showUsage();
       return;
     }
-    //TODO: worker threads seem to keep program running
     System.exit(0);
   }
   
@@ -108,7 +111,7 @@ public class CodebaseTool {
             fabric.util.Iterator i = current.getClasses().keySet().iterator();
             while(i.hasNext()) {
               String className = i.next().toString();
-              Class cls = current.getClass(className);
+              FClass cls = current.getClass(className);
               if(cls.getBytecode().getLength() != 0)
                 toFile(cls);
               if(codebasesLoaded.contains(cls.getCodebase())) {
@@ -133,14 +136,14 @@ public class CodebaseTool {
           Queue<String> classesToCreate = new LinkedList<String>(rootClasses);
           Label l = Worker.getWorker().getLocalStore().getEmptyLabel();
           fabric.util.Map/*String, Class*/ classes = (fabric.util.HashMap)new fabric.util.HashMap._Impl/*String, Class*/(s, l).$getProxy();
-          Set<Class> toSetCodebase = new HashSet<Class>();
+          Set<FClass> toSetCodebase = new HashSet<FClass>();
           SystemCodebase sysCb = (SystemCodebase)new SystemCodebase._Impl(s, l).$getProxy();
           while (!classesToCreate.isEmpty()) {
             String currentClass = classesToCreate.remove();
             String filename = classNameToFile(currentClass);
             byte[] bytecode = readFile(filename);
-            Class c = (Class)new Class._Impl(s, l, currentClass, 
-                toByteArray(s, l, bytecode)).$getProxy();
+            FClass c = (FClass)new FClass._Impl(
+                s, l, currentClass, toByteArray(s, l, bytecode)).$getProxy();
             classes.put(fabric.lang.WrappedJavaInlineable.$wrap(currentClass), c);
             toSetCodebase.add(c);
             if (!fileExists(filename + ".fabproperties")) {
@@ -156,16 +159,17 @@ public class CodebaseTool {
               String file = classNameToFile(dep);
               if(!fileExists(file)) {
                 // Assume system class
-                Class sysClass = (Class)new Class._Impl(s, l, dep, toByteArray(s, l, new byte[0])).$getProxy();
+                FClass sysClass = (FClass)new FClass._Impl(
+                    s, l, dep, toByteArray(s, l, new byte[0])).$getProxy();
                 sysClass.setCodebase(sysCb);
                 classes.put(fabric.lang.WrappedJavaInlineable.$wrap(dep), sysClass);
               } else {
                 byte[] fileBytecode = readFile(file);
                 Properties p = readProperties(file + ".fabproperties");
                 String oid = p.getProperty("oid");
-                Class depClass = null;
+                FClass depClass = null;
                 if (oid != null)
-                  depClass = (Class)fabric.lang.Object._Proxy.$getProxy(getObjectByOid(oid));
+                  depClass = (FClass)fabric.lang.Object._Proxy.$getProxy(getObjectByOid(oid));
                 if (depClass == null || !arrEquals(fileBytecode, depClass.getBytecode())) {
                   classesToCreate.add(dep);
                 } else {
@@ -175,7 +179,7 @@ public class CodebaseTool {
             }
           }
           Codebase codebase = (Codebase)new Codebase._Impl(s, l, classes).$getProxy();
-          for(Class c : toSetCodebase) {
+          for(FClass c : toSetCodebase) {
             c.setCodebase(codebase);
           }
           return codebase;
@@ -243,7 +247,7 @@ public class CodebaseTool {
     return n;
   }
   
-  private void toFile(fabric.Class c) throws IOException {
+  private void toFile(FClass c) throws IOException {
     String name = c.getName();
     String filename = baseName + File.separator + classNameToFile(name);
     File f= new File(filename).getParentFile();
@@ -305,132 +309,8 @@ public class CodebaseTool {
   private static void showUsage() {
     System.err.println("Usage:");
     System.err.println("To load a codebase from Fabric to the filesystem");
-    System.err.println("    CodebaseTool import [workername] [storeName] [onum] [exportDir]");
+    System.err.println("    codebasetool import [workername] [storeName] [onum] [exportDir]");
     System.err.println("To store a codebase into Fabric from the filesystem");
-    System.err.println("    CodebaseTool export [workername] [pathToCodebase] [storeName] [classToExport] [...]");
-  }
-  
-
-  /**
-   * Loads a codebase and all of its classes into the filesystem
-   * @param s store the codebase is located on
-   * @param onum the onum of the codebase object
-   */
-  /*
-  void toFilesystem(Store s, long onum) throws IOException {
-      Object obj = fabric.lang.Object._Proxy.$getProxy(getObjectByOid(s, onum));
-      if(obj == null || !(obj instanceof fabric.Codebase)) {
-        System.err.println("Object not a codebase.");
-        return;
-      }
-
-      final Codebase c = (Codebase)obj;
-      Properties p = new Properties();
-      fabric.util.Iterator/* String  classesIter = 
-        Worker.runInSubTransaction(new Worker.Code<fabric.util.Iterator>() {
-          public fabric.util.Iterator run() {
-            return c.getClasses().keySet().iterator();
-          }
-      });
-      String className, classType;
-
-      while(classesIter.hasNext()) {
-        className = classesIter.next().toString();
-        classType = c.getClassType(className);
-        p.setProperty(className + ".type", classType);
-        if(classType.equals("fabric")) {
-          Class cls = c.getClass(className);
-          p.setProperty(className + ".oid", getOid(cls));
-          toFile(cls);
-        }
-      }
-      toFile(p, "codebase.codebase");
-   }
-   */
-  
-  /**
-   * Imports new codebase to Fabric, using given properties file
-   * @param p properties that define the codebase
-   * @return the newly generated codebase
-   */
-  /*
-  Codebase toFabric(Properties p, final Store s) throws IOException {
-      final Map<String, String> classTypes = new HashMap<String, String>();
-      final Map<String, Class> classNames = new HashMap<String, Class>();
-      Iterator propNamesIter = p.stringPropertyNames().iterator();
-      while(propNamesIter.hasNext()) {
-        String propName = (String)propNamesIter.next();
-        String className = propName.substring(0, propName.length() - 5);
-        if(propName.endsWith("name")) {
-          if(!classNames.containsKey(className))
-            classNames.put(className, null);
-        } else if(propName.endsWith("type")) {
-          classTypes.put(className, p.getProperty(propName));
-          if(!classNames.containsKey(className))
-            classNames.put(className, null);
-        } else if(propName.endsWith("oid")) {
-          Class c = (Class)fabric.lang.Object._Proxy.$getProxy(getObjectByOid(
-              p.getProperty(propName)));
-          
-          //Check for differences in class, if there are, construct new class
-          byte[] bytecode = readFile(classNameToFile(className));
-          if(arrEquals(bytecode, c.getBytecode())) {
-            //TODO :rethink this part... see wiki.
-            classNames.put(className, c);
-          } else {
-            classNames.put(className, null);
-            //TODO: Also include dependencies in this codebase
-            //  (compiler will provide this info.)
-          }
-        } else {
-          throw new IOException("Malformed codebase file. Unknown property: " + 
-                     propName);
-        }
-      }
-
-      return Worker.runInSubTransaction(new Worker.Code<Codebase>() { 
-        public Codebase run() {
-          //XXX TODO: label for class signatures
-          Label l = Worker.getWorker().getLocalStore().getEmptyLabel();
-          
-          fabric.util.Map/*String, Class* classes = (fabric.util.HashMap)new fabric.util.HashMap._Impl/*String, Class(s, l).$getProxy();
-          Iterator<String> classesIter = classNames.keySet().iterator();
-          List<Class> toAddCodebase = new LinkedList<Class>();
-          while(classesIter.hasNext()) {
-            String name = (String)classesIter.next();
-            String classType = (String)classTypes.get(name);
-            if(classType == null)
-              throw new IllegalArgumentException("No class type defined for " + 
-                                                     name);
-            if(classType.equals("system")) {
-              classes.put(fabric.lang.WrappedJavaInlineable.$wrap(name), null);
-            } else {
-              try {
-                if(classNames.get(name) != null) {
-                  classes.put(fabric.lang.WrappedJavaInlineable.$wrap(name), 
-                      classNames.get(name));
-                } else {
-                  //Class is new, so create on fabric
-                  byte[] bytecode = readFile(classNameToFile(name));
-                  Class c = (Class)new Class._Impl(s, l, name, 
-                      toByteArray(s, l, bytecode)).$getProxy();
-                  toAddCodebase.add(c);
-                  classes.put(fabric.lang.WrappedJavaInlineable.$wrap(name), c);
-                }
-              } catch(IOException ex) {
-                throw new RuntimeException("Could not load bytecode", ex);
-              }
-            }
-          }
-          Codebase codebase = (Codebase)new Codebase._Impl(s, l, classes, 
-              toFabMap(classTypes, Worker.getWorker().getLocalStore(), l)).$getProxy();
-          for(Class c : toAddCodebase) {
-            c.setCodebase(codebase);
-          }
-          return codebase;  
-        }
-      });
-  }
-  */
-  
+    System.err.println("    codebasetool export [workername] [pathToCodebase] [storeName] [classToExport] [...]");
+  }  
 }

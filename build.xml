@@ -55,6 +55,7 @@
   <property name="runtime.src" location="${src}/runtime"/>
   <property name="tests.fabnfs" location="${basedir}/tests/fabnfs"/>
   <property name="tools.storebrowser" location="${basedir}/tools/storebrowser"/>
+  <property name="tools.classloader" location="${basedir}/tools/classloader"/>
   <property name="signatures.fabil.src" location="${src}/signatures/fabil"/>
   <property name="signatures.fabric.src" location="${src}/signatures/fabric"/>
 
@@ -674,8 +675,20 @@
   </target>
 
   <!-- Compiles the Fabric tools -->
-  <target name="tools" depends="storebrowser"
+  <target name="tools" depends="storebrowser,classloader-tools"
     description="Builds all Fabric tools" />
+
+  <!-- Compiles the classloader tools -->
+  <target name="classloader-tools" depends="worker,fabil-runtime"
+    description="Builds the classloader tools">
+    <mkdir dir="${tools.classes}" /> 
+    <javac target="1.5" srcdir="${tools.classloader}" destdir="${tools.classes}">
+      <classpath>
+        <pathelement location="${runtime.classes}" />
+        <path refid="standard.classpath"/>
+      </classpath>
+    </javac>
+  </target>
 
   <!-- Compiles the store browser -->
   <target name="storebrowser" depends="worker,fabil-runtime"

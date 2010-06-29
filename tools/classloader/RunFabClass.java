@@ -3,15 +3,15 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.GeneralSecurityException;
 
-import fabric.Codebase;
-import fabric.FabricClassLoader;
+import fabric.lang.Codebase;
+import fabric.lang.FabricClassLoader;
 import fabric.common.exceptions.UsageError;
 import fabric.lang.arrays.ObjectArray;
 import fabric.lang.security.Label;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
-public class RunClass {
+public class RunFabClass {
 
   /**
    * RunClass workerName codebaseStore codebaseOnum className
@@ -20,7 +20,7 @@ public class RunClass {
     throws IOException, GeneralSecurityException, IllegalAccessException, 
     ClassNotFoundException, InvocationTargetException, NoSuchMethodException, UsageError {
     if (args.length != 4) {
-      System.out.println("Usage: RunClass workerName codebaseStore codebaseOnum className");
+      System.out.println("Usage: runfabclass workerName codebaseStore codebaseOnum className");
       return;
     }
     String workerName = args[0], storeName = args[1], className = args[3];
@@ -34,6 +34,7 @@ public class RunClass {
     FabricClassLoader loader = FabricClassLoader.getClassLoader(c);
     final Class cls = loader.loadClass(className);
     Worker.runInSubTransaction(new Worker.Code<Void>() {
+      @SuppressWarnings("unchecked")
       public Void run() {
         ObjectArray programArgs = toObjectArray(new String[0], ls, 
             Worker.getWorker().getLocalStore().getEmptyLabel());
