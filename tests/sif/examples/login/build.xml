@@ -26,7 +26,7 @@
         <arg value="-d"/>
         <arg value="${basedir}/classes"/>
   			<arg value="-cp" />
-  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/classes" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/classes:${fabric.home}/lib/servlet-api.jar" />
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
         <arg value="-e" />
