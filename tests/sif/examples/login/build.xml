@@ -13,7 +13,7 @@
         <pathelement location="${basedir}/${destdir}" />
     </path>
 	
-	<target name="compile" description="Compiles the common travel programs necessary for this app">
+	<target name="compile" description="Compiles the common authentication programs necessary for this app">
     <apply executable="bash"
                     parallel="true"
                     failonerror="true"

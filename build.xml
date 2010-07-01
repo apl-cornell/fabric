@@ -264,7 +264,7 @@
 
   <!-- Compiles Fabric -->
   <target name="all"
-    depends="fabric-compiler,fabil-compiler,fabric-system,worker-debug,fabric-signatures,tools"
+    depends="fabric-compiler,fabil-compiler,fabric-system,worker-debug,fabric-signatures"
     description="Builds Fabric"/>
 
   <!-- Compiles the Fabric system -->
