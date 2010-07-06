@@ -1,5 +1,5 @@
 CMS Fabric Build README
-FabIL version of CMS is in tests/cms/pojo and tests/cms/web with tag cms_fabric
+FabIL version of CMS is in examples/cms/fabil and tests/cms/web with tag cms_fabric
 --------------------------------------------------------------------------------
 
 Some path aliases are used in this README. Here are their descriptions:
@@ -33,59 +33,59 @@ Run the following command in {fabric home}:
 
 ./bin/filc \
 -d rt-classes \
--sourcepath src/runtime:tests/cms/pojo \
+-sourcepath src/runtime:examples/cms/fabil \
 -addsigcp sig-classes/fabil \
--cp rt-classes:/lib/fabric.jar:rt-classes:lib/fabric-rt.jar \
+-cp rt-classes:/lib/fabric.jar:rt-classes:lib/fabric-rt.jar:examples/cms/web-fabil/WEB-INF/lib/commons-fileupload-1.2.1.jar:examples/cms/web-fabil/WEB-INF/lib/mail.jar:examples/cms/web-fabil/WEB-INF/lib/ostermillerutils_1_05_00_for_java_1_4.jar
 -sx java \
-tests/cms/pojo/cms/model/SiteNotice.java \
-tests/cms/pojo/cms/model/CategoryContentsFileList.java \
-tests/cms/pojo/cms/model/CategoryContentsFileEntry.java \
-tests/cms/pojo/cms/model/AnswerSet.java \
-tests/cms/pojo/cms/model/TimeSlot.java \
-tests/cms/pojo/cms/model/CategoryRow.java \
-tests/cms/pojo/cms/model/Email.java \
-tests/cms/pojo/cms/model/Comment.java \
-tests/cms/pojo/cms/model/CategoryContentsLink.java \
-tests/cms/pojo/cms/model/GroupAssignedTo.java \
-tests/cms/pojo/cms/model/RegradeRequest.java \
-tests/cms/pojo/cms/model/SolutionFile.java \
-tests/cms/pojo/cms/model/SubmittedFile.java \
-tests/cms/pojo/cms/model/Course.java \
-tests/cms/pojo/cms/model/Student.java \
-tests/cms/pojo/cms/model/GroupMember.java \
-tests/cms/pojo/cms/model/AssignmentFile.java \
-tests/cms/pojo/cms/model/Transactions.java \
-tests/cms/pojo/cms/model/SubProblem.java \
-tests/cms/pojo/cms/model/CategoryColumn.java \
-tests/cms/pojo/cms/model/Log.java \
-tests/cms/pojo/cms/model/FileData.java \
-tests/cms/pojo/cms/model/CategoryContents.java \
-tests/cms/pojo/cms/model/Assignment.java \
-tests/cms/pojo/cms/model/Group.java \
-tests/cms/pojo/cms/model/OldAnnouncement.java \
-tests/cms/pojo/cms/model/CategoryContentsNumber.java \
-tests/cms/pojo/cms/model/AssignmentItem.java \
-tests/cms/pojo/cms/model/CategoryContentsString.java \
-tests/cms/pojo/cms/model/LogSearchParams.java \
-tests/cms/pojo/cms/model/Semester.java \
-tests/cms/pojo/cms/model/GroupGrade.java \
-tests/cms/pojo/cms/model/LogDetail.java \
-tests/cms/pojo/cms/model/CategoryContentsDate.java \
-tests/cms/pojo/cms/model/Answer.java \
-tests/cms/pojo/cms/model/FileEntry.java \
-tests/cms/pojo/cms/model/Choice.java \
-tests/cms/pojo/cms/model/Grade.java \
-tests/cms/pojo/cms/model/Announcement.java \
-tests/cms/pojo/cms/model/CommentFile.java \
-tests/cms/pojo/cms/model/Staff.java \
-tests/cms/pojo/cms/model/Category.java \
-tests/cms/pojo/cms/model/User.java \
-tests/cms/pojo/cms/model/RequiredSubmission.java \
-tests/cms/pojo/cms/model/NotImplementedException.java \
-tests/cms/pojo/cms/model/CMSRoot.java \
-tests/cms/pojo/cms/www/xml/CategoryXMLUtil.java \
-tests/cms/pojo/cms/controller/test/CreateDB.java \
-tests/cms/pojo/cms/www/util/DOMWriter.java
+examples/cms/fabil/cms/model/SiteNotice.java \
+examples/cms/fabil/cms/model/CategoryContentsFileList.java \
+examples/cms/fabil/cms/model/CategoryContentsFileEntry.java \
+examples/cms/fabil/cms/model/AnswerSet.java \
+examples/cms/fabil/cms/model/TimeSlot.java \
+examples/cms/fabil/cms/model/CategoryRow.java \
+examples/cms/fabil/cms/model/Email.java \
+examples/cms/fabil/cms/model/Comment.java \
+examples/cms/fabil/cms/model/CategoryContentsLink.java \
+examples/cms/fabil/cms/model/GroupAssignedTo.java \
+examples/cms/fabil/cms/model/RegradeRequest.java \
+examples/cms/fabil/cms/model/SolutionFile.java \
+examples/cms/fabil/cms/model/SubmittedFile.java \
+examples/cms/fabil/cms/model/Course.java \
+examples/cms/fabil/cms/model/Student.java \
+examples/cms/fabil/cms/model/GroupMember.java \
+examples/cms/fabil/cms/model/AssignmentFile.java \
+examples/cms/fabil/cms/model/Transactions.java \
+examples/cms/fabil/cms/model/SubProblem.java \
+examples/cms/fabil/cms/model/CategoryColumn.java \
+examples/cms/fabil/cms/model/Log.java \
+examples/cms/fabil/cms/model/FileData.java \
+examples/cms/fabil/cms/model/CategoryContents.java \
+examples/cms/fabil/cms/model/Assignment.java \
+examples/cms/fabil/cms/model/Group.java \
+examples/cms/fabil/cms/model/OldAnnouncement.java \
+examples/cms/fabil/cms/model/CategoryContentsNumber.java \
+examples/cms/fabil/cms/model/AssignmentItem.java \
+examples/cms/fabil/cms/model/CategoryContentsString.java \
+examples/cms/fabil/cms/model/LogSearchParams.java \
+examples/cms/fabil/cms/model/Semester.java \
+examples/cms/fabil/cms/model/GroupGrade.java \
+examples/cms/fabil/cms/model/LogDetail.java \
+examples/cms/fabil/cms/model/CategoryContentsDate.java \
+examples/cms/fabil/cms/model/Answer.java \
+examples/cms/fabil/cms/model/FileEntry.java \
+examples/cms/fabil/cms/model/Choice.java \
+examples/cms/fabil/cms/model/Grade.java \
+examples/cms/fabil/cms/model/Announcement.java \
+examples/cms/fabil/cms/model/CommentFile.java \
+examples/cms/fabil/cms/model/Staff.java \
+examples/cms/fabil/cms/model/Category.java \
+examples/cms/fabil/cms/model/User.java \
+examples/cms/fabil/cms/model/RequiredSubmission.java \
+examples/cms/fabil/cms/model/NotImplementedException.java \
+examples/cms/fabil/cms/model/CMSRoot.java \
+examples/cms/fabil/cms/www/xml/CategoryXMLUtil.java \
+examples/cms/fabil/cms/controller/test/CreateDB.java \
+examples/cms/fabil/cms/www/util/DOMWriter.java
 
 6) Build Fabric jars
 
