@@ -13,27 +13,28 @@ import travel.Broker;
 import travel.Config;
 import travel.Account;
 
+import login.*;
+
 
 public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (BankPrincipal) {
     public FrontPage(BankMain{this} m) throws ServletException {
-        super();
-        initFields("frontpage", m);
+        super("frontpage", m);
     }
 
     public final void invokeImpl{*lbl}(label{*lbl} lbl,
             Request[BankPrincipal]{*lbl} req,
             Servlet[BankPrincipal]{*lbl} servlet,
             AuthSessState[BankPrincipal, lbl]{*lbl} state,
-            principal currentUser) 
-            throws (ServletException{*lbl;⊤→req.session;req.session←})
+            principal{*lbl} currentUser) 
+            throws (ServletException{*lbl;req.session←})
             where caller(req.session),
             lbl <= {⊤→req.session},
             req.session equiv state.sessionPrincipal,
-            session actsfor currentUser {
+            req.session actsfor currentUser {
 
         if (servlet == null || !(servlet instanceof BankMain)) throw new ServletException("No servlet available"); 
         if (req == null || state == null || currentUser == null) throw new ServletException("Error processing request"); 
-        BankMain m = (BankMain)s;
+        BankMain m = (BankMain)servlet;
 
         atomic {
             // Display the front page only for the bank principal
@@ -82,7 +83,7 @@ public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (Ban
                                                                                               (new NodeList[lbla,lbl](name1,value1))));
                     entries = entries==null?null:entries.append(lblc, lbl, new TRow[lblc, lbl](new TCell[lblc, lbl]
                                                                                                          (new NodeList[lblc,lbl](name2,value2))));
-                    s.createPage(req, "Bank Home Page", lblca, lbl,
+                    m.createPage(req, "Bank Home Page", lblca, lbl,
                             new NodeList[lblca,lbl](lbl, lbl, createBanner(lbl, "Welcome to the Acme Bank System"),
                                     lblca, lbl, new Table[lblca, lbl](entries)));
                 }

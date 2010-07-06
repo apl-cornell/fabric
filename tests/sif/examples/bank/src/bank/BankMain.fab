@@ -29,17 +29,15 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
     if (brokerstore != null) {
         root = (Map) brokerstore.getRoot();
     }
+    Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
     if (root != null) {
-        Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
         Object obj = root.get(Config.brokerMapKey);
         if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
-            brokerInit =
-                (Broker[BankPrincipal, CustomerPrincipal])obj;
+            brokerInit = (Broker[BankPrincipal, CustomerPrincipal])obj;
+        }
     }
     broker = brokerInit;
-    } else {
-        broker = null;
-    }
+    super();
     
   }
     
@@ -58,13 +56,13 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
   
   // TODO Provide default implementations for these 2 methods in Servlet.fab:
   // This method will only be called by the runtime
-  protected AuthSessState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+  protected AuthSessState[BankPrincipal, lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
       String{*lbl} id, SessionPrincipal{*lbl} session) {
-    SessionState[lbl] toReturn = null;
+    AuthSessState[BankPrincipal, lbl] toReturn = null;
     atomic {
       if (localStore != null && localStore equiv worker$ &&
 	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
-	toReturn = new AuthSessState[lbl]@localStore(id, session);
+	toReturn = new AuthSessState[BankPrincipal, lbl]@localStore(id, session);
       }
     }
     return toReturn;
@@ -88,7 +86,9 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
           String{p:; p!:} userID,
           principal{p:; p!:} p)
           where caller(p) {
-      if userID.equals("bank") return BankPrincipal;
+      if (userID == null) return null;
+      if (userID.equals("bank")) return BankPrincipal;
+      return null;
   }
   
 }

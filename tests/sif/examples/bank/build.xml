@@ -28,7 +28,7 @@
         <arg value="-d"/>
         <arg value="${basedir}/web/WEB-INF/classes"/>
   			<arg value="-cp" />
-  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${fabric.home}/lib/servlet-api.jar:${basedir}/../travel/classes" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${fabric.home}/lib/servlet-api.jar:${basedir}/../travel/classes:${basedir}/../login/classes" />
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
     		<arg value="-filsigcp"/>
@@ -50,7 +50,7 @@
     	  <arg value="-report"/> <arg value="debug=5" />
     	-->
         <srcfile />
-        <fileset dir="${basedir}" includes="src/bank/*.fab,src/travel/*.fab" />
+        <fileset dir="${basedir}" includes="src/bank/*.fab" />
         <mapper type="regexp"
                 from="^src(.*)\.fab"
                 to="classes\1\.class" />            

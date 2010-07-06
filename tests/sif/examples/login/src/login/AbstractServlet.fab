@@ -3,7 +3,14 @@ package login;
 import sif.servlet.Servlet;
 import sif.servlet.Request;
 
+import javax.servlet.ServletException;
+
+
 public abstract class AbstractServlet[principal servP] extends Servlet[servP] {
+    
+    public AbstractServlet() throws ServletException {
+        
+    }
     
     public abstract principal{p:;p!:;p} lookupUserID{p:; p!:}(
             String{p:; p!:} userID,

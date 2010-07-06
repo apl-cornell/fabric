@@ -96,6 +96,7 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
                 throws (ServletException{*lbl;req.session!:})
                 where caller(req.session),
                 lbl <= {⊤→req.session},
+                {req.session←} <= lbl,
                 req.session equiv state.sessionPrincipal {
         if (state == null || req == null) return;
         final principal currentUser = state.currentUser();
@@ -104,12 +105,12 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
         }
     }
           
-    public abstract void invokeImpl{*lbl;req.session←}(label{*lbl;req.session←} lbl,
-                                      Request[servP]{*lbl;req.session←} req,
-                                      Servlet[servP]{*lbl;req.session←} servlet,
-                                      AuthSessState[servP, {*lbl;req.session←}]{*lbl;req.session←} state,
-                                      principal{*lbl;req.session←} currentUser) 
-        throws (ServletException{*lbl;req.session!:})
+    public abstract void invokeImpl{*lbl}(label{*lbl} lbl,
+                                      Request[servP]{*lbl} req,
+                                      Servlet[servP]{*lbl} servlet,
+                                      AuthSessState[servP, {*lbl}]{*lbl} state,
+                                      principal{*lbl} currentUser) 
+        throws (ServletException{*lbl;req.session←})
           where caller(req.session),
           lbl <= {⊤→req.session},
           req.session equiv state.sessionPrincipal,
