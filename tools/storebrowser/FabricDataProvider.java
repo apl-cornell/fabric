@@ -27,12 +27,24 @@ public class FabricDataProvider implements DataProvider {
 								
 				List<Object> toReturn = new LinkedList<Object>();
 			
-				for(Field f : c.getDeclaredFields()) {
-					f.setAccessible(true);
-					
-					toReturn.add(new DataObject(f.getName(), f.get(obj), 
-							f.getType()));
-				}
+				if (c.getDeclaringClass() != null && 
+                    fabric.util.Map.class.isAssignableFrom(c.getDeclaringClass())) {
+                                  
+                  fabric.util.Map m = (fabric.util.Map)((fabric.lang.Object)obj).$getProxy();
+                  Iterator i = m.keySet().iterator();
+                  while(i.hasNext()) {
+                    fabric.lang.Object key = i.next();
+                    String keyStr = key.toString();
+                    toReturn.add(new RootObject(keyStr, m.get(key)));
+                  }
+                } else {
+                  for(Field f : c.getDeclaredFields()) {
+      				f.setAccessible(true);
+      					
+      				toReturn.add(new DataObject(f.getName(), f.get(obj), 
+      					f.getType()));
+                  }
+                }
 
 				return toReturn;
 			} catch(Exception ex) {
