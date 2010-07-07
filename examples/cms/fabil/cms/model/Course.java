@@ -228,7 +228,8 @@ public class Course implements Comparable {
   }
   
   public Collection/*Student*/ findActiveStudents() {
-    SortedSet result = new TreeSet(Student.LAST_NAME_COMPARATOR);
+    Store s = Worker.getWorker().getLocalStore();
+    SortedSet result = new TreeSet@s(Student.getLAST_NAME_COMPARATOR());
     
     for (Iterator it = students.values().iterator(); it.hasNext();) {
       Student student = (Student) it.next();

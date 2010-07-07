@@ -6,9 +6,9 @@ public class Student {
 
   public static final String ENROLLED = "Enrolled", DROPPED = "Dropped";
   
-  public static Comparator LAST_NAME_COMPARATOR;
+  private static Comparator LAST_NAME_COMPARATOR;
   
-  public static Comparator NETID_COMPARATOR;
+  private static Comparator NETID_COMPARATOR;
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -89,28 +89,38 @@ public class Student {
   // public constructors                                                      //
   //////////////////////////////////////////////////////////////////////////////
 
-  public Student(Course course, User user) {
-    if(NETID_COMPARATOR == null) {
-      NETID_COMPARATOR = new Comparator() {
-        public int compare(Object o1, Object o2) {
-          if (!(o1 instanceof Student && o2 instanceof Student)) return 0;
-          Student s1 = (Student) o1;
-          Student s2 = (Student) o2;
-          return User.NETID_COMPARATOR.compare(s1.getUser(), s2.getUser());
-        }
-      };
-    }
-    
+  public static Comparator getLAST_NAME_COMPARATOR() {
     if(LAST_NAME_COMPARATOR == null) {
       LAST_NAME_COMPARATOR = new Comparator() {
         public int compare(Object o1, Object o2) {
           if (!(o1 instanceof Student && o2 instanceof Student)) return 0;
           Student s1 = (Student) o1;
           Student s2 = (Student) o2;
-          return User.LAST_NAME_COMPARATOR.compare(s1.getUser(), s2.getUser());
+          return User.getLAST_NAME_COMPARATOR().compare(s1.getUser(), s2.getUser());
         }
       };
     }
+    return LAST_NAME_COMPARATOR;
+  }
+  
+  public static Comparator getNETID_COMPARATOR() {
+    if(NETID_COMPARATOR == null) {
+      NETID_COMPARATOR = new Comparator() {
+        public int compare(Object o1, Object o2) {
+          if (!(o1 instanceof Student && o2 instanceof Student)) return 0;
+          Student s1 = (Student) o1;
+          Student s2 = (Student) o2;
+          return User.getNETID_COMPARATOR().compare(s1.getUser(), s2.getUser());
+        }
+      };
+    }
+    return NETID_COMPARATOR;
+  }
+  
+  public Student(Course course, User user) {
+    
+    
+   
     
     
     setUser(user);

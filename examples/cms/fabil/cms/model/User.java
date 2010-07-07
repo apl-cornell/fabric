@@ -14,9 +14,9 @@ public class User implements Principal {
   public static final int AUTHORIZATION_LEVEL_CORNELL_COMMUNITY = 3;
   public static final int AUTHORIZATION_LEVEL_GUEST = 3;
   
-  public static Comparator LAST_NAME_COMPARATOR;
+  private static Comparator LAST_NAME_COMPARATOR;
   
-  public static Comparator NETID_COMPARATOR;
+  private static Comparator NETID_COMPARATOR;
   
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //
@@ -70,7 +70,7 @@ public class User implements Principal {
   public String getCUID()      { return this.CUID;      }
   public String getCollege()   { return this.college;   }
   
-  public User (CMSRoot db, String netID, String firstName, String lastName, String CUID, String college) {
+  public static Comparator getLAST_NAME_COMPARATOR() {
     if(LAST_NAME_COMPARATOR == null) {
       LAST_NAME_COMPARATOR = new Comparator() {
         public int compare(Object o1, Object o2) {
@@ -87,7 +87,10 @@ public class User implements Principal {
         }
       };
     }
-    
+    return LAST_NAME_COMPARATOR;
+  }
+  
+  public static Comparator getNETID_COMPARATOR() {
     if(NETID_COMPARATOR == null) {
       NETID_COMPARATOR = new Comparator() {
         public int compare(Object o1, Object o2) {
@@ -98,6 +101,13 @@ public class User implements Principal {
         }
       };
     }
+    return NETID_COMPARATOR;
+  }
+  
+  public User (CMSRoot db, String netID, String firstName, String lastName, String CUID, String college) {
+    
+    
+    
     
     this.db = db;
     this.isAdmin = false;
