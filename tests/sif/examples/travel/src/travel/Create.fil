@@ -80,7 +80,17 @@ public class Create {
      * ticketsLabel: Label
      *  f {bank<-airline}
      */
+    
     public static void main(String[] args) {
+        RemoteWorker  brokerWorker = Worker.getWorker().getWorker(Config.brokerStoreName);
+        Store  brokerStore = Worker.getWorker().getStore(Config.brokerStoreName);
+        IntegPolicy bottomInteg = LabelUtil.bottomInteg(); 
+        ConfPolicy bottomConf = LabelUtil.bottomConf();
+        Label bottom = LabelUtil.toLabel(brokerStore, bottomConf, bottomInteg);
+        Create cr = new Create~bottom@brokerStore();
+        cr.create@brokerWorker(args);
+    }
+    public void create(String[] args) {
         atomic {
             Store  brokerStore = Worker.getWorker().getStore(Config.brokerStoreName);
             Store    bankStore = Worker.getWorker().getStore(Config.bankStoreName);
@@ -113,6 +123,8 @@ public class Create {
             airline.addDelegatesTo(broker);
                bank.addDelegatesTo(broker);
 
+               // Why do we have two sets of delegations? Don't the store and colocated worker share the
+               // same principal?
             // add store delegations
             airline.addDelegatesTo(airlineStore.getPrincipal());
              broker.addDelegatesTo(brokerStore.getPrincipal());
