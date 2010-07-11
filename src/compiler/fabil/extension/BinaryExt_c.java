@@ -12,6 +12,10 @@ public class BinaryExt_c extends ExprExt_c {
     Binary           node = node();
     QQ               qq   = pr.qq();
     
+    if (node.left().type().isPrimitive() || 
+        node.right().type().isPrimitive())
+      return node;
+    
     if (node.operator().equals(Binary.EQ))
       return qq.parseExpr(" fabric.lang.Object._Proxy.idEquals(%E, %E)", node.left(), node.right());
     else if (node.operator().equals(Binary.NE))

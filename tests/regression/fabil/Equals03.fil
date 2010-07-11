@@ -4,11 +4,17 @@ public class Equals03 {
 
   int a;
   int b;
+  
+  Integer c;
+  Integer d;
 
   public Equals03() {
 	  a = 859;
 	  b = 859;
 	  System.out.println(a == b);
+	  c = new Integer(859);
+	  d = new Integer(859);
+	  System.out.println(c == d);
   }
   
   public static void main(String[] args) {
