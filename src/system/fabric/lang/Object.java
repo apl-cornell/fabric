@@ -192,7 +192,7 @@ public interface Object {
     public static final boolean idEquals(java.lang.Object o1, java.lang.Object o2) {
       if (o1 instanceof Object && o2 instanceof Object)
         return ((Object) o1).idEquals((Object) o2);
-      return o1 == o2;
+      return o1.equals(o2);
     }
 
     /**
