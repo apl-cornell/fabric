@@ -1,0 +1,19 @@
+package fabil;
+
+public class Equals03 {
+
+  int a;
+  int b;
+
+  public Equals03() {
+	  a = 859;
+	  b = 859;
+	  System.out.println(a == b);
+  }
+  
+  public static void main(String[] args) {
+	atomic {  
+	  new Equals03();
+	}
+  }
+}
