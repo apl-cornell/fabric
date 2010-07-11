@@ -6,9 +6,9 @@ public class Student {
 
   public static final String ENROLLED = "Enrolled", DROPPED = "Dropped";
   
-  private static Comparator LAST_NAME_COMPARATOR;
+  public static Comparator LAST_NAME_COMPARATOR;
   
-  private static Comparator NETID_COMPARATOR;
+  public static Comparator NETID_COMPARATOR;
 
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //

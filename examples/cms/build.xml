@@ -29,6 +29,7 @@
       skipemptyfilesets="true"
       vmlauncher="false">
     <arg value="${fabric.home}/bin/filc" />
+  	<arg value="-dumpdeps" /> 
     <arg value="-j"     /> <arg value="-Xmx500M" />
     <arg value="-j"     /> <arg value="-Xss100M" />
     <arg value="-d"     /> <arg file="${cms.home}/web-fabil/WEB-INF/classes" />
@@ -48,6 +49,7 @@
       <include name="cms/www/util/Emailer.java" />
       <include name="cms/www/util/Util.java" />
       <include name="cms/www/util/Profiler.java" />
+        <include name="cms/www/util/DateTimeUtil.java" />
       <include name="cms/www/util/RequestTracker.java" />
       <include name="cms/www/xml/*.java" />
       <include name="cms/view/test/Dump.java" />
@@ -55,6 +57,15 @@
     <globmapper from="*.java" to="*.class" />
   </apply>
 </target>
+	
+<target name="fabservlet" 
+    description="fab servlet">
+    <javac target="1.5"  destdir="${cms.home}/web-fabil/WEB-INF/classes" debug="on">
+      <classpath refid="cms.classpath" />
+	    <src path="${cms.home}/fabil" />
+	   	<include name="FabricServlet.java" />	
+    </javac>
+  </target>
 
 <target name="clean" description="remove generated files">
   <delete dir="${cms.home}/web-fabil/WEB-INF/classes"/>

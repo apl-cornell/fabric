@@ -14,9 +14,9 @@ public class User implements Principal {
   public static final int AUTHORIZATION_LEVEL_CORNELL_COMMUNITY = 3;
   public static final int AUTHORIZATION_LEVEL_GUEST = 3;
   
-  private static Comparator LAST_NAME_COMPARATOR;
+  public static Comparator LAST_NAME_COMPARATOR;
   
-  private static Comparator NETID_COMPARATOR;
+  public static Comparator NETID_COMPARATOR;
   
   //////////////////////////////////////////////////////////////////////////////
   // private members                                                          //

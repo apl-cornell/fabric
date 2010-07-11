@@ -664,7 +664,7 @@ public class XMLBuilder {
     if (requester.isAdminPrivByCourse(course))
       root.setAttribute(A_ISADMIN, "true");
     List students = new ArrayList(course.getStudents());
-    Collections.sort(students, Student.LAST_NAME_COMPARATOR);
+    Collections.sort(students, Student.getLAST_NAME_COMPARATOR());
     
     Iterator studentsIter = students.iterator();
     while (studentsIter.hasNext()) {

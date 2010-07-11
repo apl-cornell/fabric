@@ -682,7 +682,7 @@
   <target name="classloader-tools" depends="worker,fabil-runtime"
     description="Builds the classloader tools">
     <mkdir dir="${tools.classes}" /> 
-    <javac target="1.5" srcdir="${tools.classloader}" destdir="${tools.classes}">
+    <javac target="1.5" srcdir="${tools.classloader}" destdir="${tools.classes}" debug="on">
       <classpath>
         <pathelement location="${runtime.classes}" />
         <path refid="standard.classpath"/>

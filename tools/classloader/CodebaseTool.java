@@ -85,14 +85,16 @@ public class CodebaseTool {
       rootClasses.add(args[i]);
     
     final Codebase c = tool.storeCode(rootClasses, s);
-    Worker.runInSubTransaction(new Worker.Code<Void>() {
-      public Void run() {
-        s.getRoot().put(fabric.lang.WrappedJavaInlineable.$wrap("latestCodebase"), c); //XXX for testing
-        return null;
-      }
-    });
-    
-    System.out.println("Codebase stored to " + tool.getOid(c));
+    if (c != null) {
+      System.out.println("Done storing codebase");
+      Worker.runInSubTransaction(new Worker.Code<Void>() {
+        public Void run() {
+          s.getRoot().put(fabric.lang.WrappedJavaInlineable.$wrap("latestCodebase"), c); //XXX for testing
+          return null;
+        }
+      });
+      System.out.println("Codebase stored to " + tool.getOid(c));
+    }
   }
   
   public CodebaseTool(String basename) {
@@ -138,12 +140,16 @@ public class CodebaseTool {
           fabric.util.Map/*String, Class*/ classes = (fabric.util.HashMap)new fabric.util.HashMap._Impl/*String, Class*/(s, l).$getProxy();
           Set<FClass> toSetCodebase = new HashSet<FClass>();
           SystemCodebase sysCb = (SystemCodebase)new SystemCodebase._Impl(s, l).$getProxy();
+          Set<String> seenClasses = new HashSet<String>();
           while (!classesToCreate.isEmpty()) {
             String currentClass = classesToCreate.remove();
+            seenClasses.add(currentClass);
             String filename = classNameToFile(currentClass);
             byte[] bytecode = readFile(filename);
             FClass c = (FClass)new FClass._Impl(
                 s, l, currentClass, toByteArray(s, l, bytecode)).$getProxy();
+
+            System.out.println("Creating class " + currentClass + " at " + getOid(c));
             classes.put(fabric.lang.WrappedJavaInlineable.$wrap(currentClass), c);
             toSetCodebase.add(c);
             if (!fileExists(filename + ".fabproperties")) {
@@ -154,8 +160,9 @@ public class CodebaseTool {
             String[] dependencies = classProperties.containsKey("dependencies") ? 
                 classProperties.getProperty("dependencies").split(",") : new String[0];
             for (String dep : dependencies) {
-              if (classes.containsKey(fabric.lang.WrappedJavaInlineable.$wrap(dep))) 
-                continue; //already processed
+              if (seenClasses.contains(dep))
+                continue;
+              seenClasses.add(dep);
               String file = classNameToFile(dep);
               if(!fileExists(file)) {
                 // Assume system class
