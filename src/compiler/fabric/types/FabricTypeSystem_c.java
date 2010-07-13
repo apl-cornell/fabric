@@ -97,6 +97,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements FabricTypeSys
   public ClassType Store() {
     return load("fabric.worker.Store");
   }
+  
+  public ClassType DelegatingPrincipal() {
+    return load("fabric.lang.security.DelegatingPrincipal");
+  }  
 
   private JifLocalInstance workerLocalInstance = null;
   

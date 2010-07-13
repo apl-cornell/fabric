@@ -26,7 +26,7 @@ public class NewJifExt_c extends JifNewExt {
     // bypass check if this is a principal object. This condition will be enforced
     // with the $addDefaultDelegates method
     if (newType instanceof FabricClassType && 
-        !newType.isSubtype(((FabILTypeSystem)lc.typeSystem()).DelegatingPrincipal())) {
+        !newType.isSubtype(((FabricTypeSystem)lc.typeSystem()).DelegatingPrincipal())) {
       FabricClassType ct = (FabricClassType)newType;
       ext.labelCheck(lc, ct.defaultFieldLabel());
     }
