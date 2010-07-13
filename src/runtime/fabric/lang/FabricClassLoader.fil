@@ -13,15 +13,18 @@ public class FabricClassLoader extends ClassLoader {
   Codebase              codebase;
   Map/*FClass, Class*/  classes;
   
-  public Class loadClass(String name, boolean resolve) 
+  public Class findClass(String name) 
   	throws ClassNotFoundException {
     Class javaCls = codebase.toJavaClass(name);
 	if (javaCls == null) {
 	  throw new ClassNotFoundException(name);
 	}
-	if (resolve)
-	  resolveClass(javaCls);
+	
 	return javaCls;
+  }
+  
+  public Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
+	  return super.loadClass(name, resolve);
   }
   
   Class getJavaClass(FClass cls) {
@@ -34,7 +37,8 @@ public class FabricClassLoader extends ClassLoader {
     return result;
   }
   
-  private FabricClassLoader(Codebase cb) {
+  private FabricClassLoader(Codebase cb, ClassLoader parent) {
+	super(parent);
     this.codebase = cb;
     this.classes  = new HashMap/*FClass, Class*/();
   }
@@ -48,7 +52,7 @@ public class FabricClassLoader extends ClassLoader {
    
 	FabricClassLoader result = (FabricClassLoader)classloaders.get(codebase);
     if (result == null) {
-      result = new FabricClassLoader(codebase);
+      result = new FabricClassLoader(codebase, FabricClassLoader.class.getClassLoader());
       classloaders.put(codebase, result);
     }
     return result;

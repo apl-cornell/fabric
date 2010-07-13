@@ -43,13 +43,14 @@
       <include name="cms/model/*.java" />
       <include name="cms/www/AccessController.java" />
       <include name="cms/www/TransactionHandler.java" />
+      <include name="cms/www/TransactionResult.java" />
       <include name="cms/www/util/DOMWriter.java" />
       <include name="cms/www/util/CSVParseException.java" />
       <include name="cms/www/util/StringUtil.java" />
       <include name="cms/www/util/Emailer.java" />
       <include name="cms/www/util/Util.java" />
       <include name="cms/www/util/Profiler.java" />
-        <include name="cms/www/util/DateTimeUtil.java" />
+      <include name="cms/www/util/DateTimeUtil.java" />
       <include name="cms/www/util/RequestTracker.java" />
       <include name="cms/www/xml/*.java" />
       <include name="cms/view/test/Dump.java" />

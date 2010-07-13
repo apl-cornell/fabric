@@ -24,8 +24,8 @@
 
     <servlet>
         <servlet-name>Web</servlet-name>
-        <servlet-class>cms.www.AccessController</servlet-class> 
-	   <!--  <servlet-class>FabricServlet</servlet-class> -->
+        <!-- <servlet-class>cms.www.AccessController</servlet-class> -->
+	    <servlet-class>FabricServlet</servlet-class> 
 
         <init-param>
             <param-name>cms.root.name</param-name>
@@ -39,7 +39,7 @@
         
         <init-param>
             <param-name>servletoid</param-name>
-            <param-value>fab://store0/878</param-value>
+            <param-value>fab://store0/29544</param-value>
         </init-param>
         
     </servlet>

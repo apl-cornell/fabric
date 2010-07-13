@@ -903,7 +903,7 @@ public class AccessController extends HttpServlet {
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
     
-    try {
+    /*try {
       String name = config.getInitParameter("fabric.client");
       if (name == null)
         name = InetAddress.getLocalHost().getHostName();
@@ -911,7 +911,7 @@ public class AccessController extends HttpServlet {
     }
     catch(Exception ex) { 
       throw new RuntimeException~label@core(ex);
-    }
+    } */
     localStore = Worker.getWorker().getLocalStore();
     core = Worker.getWorker().getStore(config.getInitParameter("cms.root.core"));
     label = localStore.getEmptyLabel();

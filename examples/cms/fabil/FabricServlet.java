@@ -56,6 +56,7 @@ public class FabricServlet extends HttpServlet {
     Worker.runInSubTransaction(new Worker.Code<Void>() {
       public Void run() {
         try {
+          ClassLoader nLoader = this.getClass().getClassLoader();
           FClass c = (FClass)getObjectByOid(delOid);
           FabricClassLoader loader = FabricClassLoader.getClassLoader(c.getCodebase());
           final Class cls = loader.loadClass(c.getName());

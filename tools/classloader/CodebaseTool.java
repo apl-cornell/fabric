@@ -139,7 +139,7 @@ public class CodebaseTool {
           Label l = Worker.getWorker().getLocalStore().getEmptyLabel();
           fabric.util.Map/*String, Class*/ classes = (fabric.util.HashMap)new fabric.util.HashMap._Impl/*String, Class*/(s, l).$getProxy();
           Set<FClass> toSetCodebase = new HashSet<FClass>();
-          SystemCodebase sysCb = (SystemCodebase)new SystemCodebase._Impl(s, l).$getProxy();
+          //SystemCodebase sysCb = (SystemCodebase)new SystemCodebase._Impl(s, l).$getProxy();
           Set<String> seenClasses = new HashSet<String>();
           while (!classesToCreate.isEmpty()) {
             String currentClass = classesToCreate.remove();
@@ -166,10 +166,10 @@ public class CodebaseTool {
               String file = classNameToFile(dep);
               if(!fileExists(file)) {
                 // Assume system class
-                FClass sysClass = (FClass)new FClass._Impl(
-                    s, l, dep, toByteArray(s, l, new byte[0])).$getProxy();
-                sysClass.setCodebase(sysCb);
-                classes.put(fabric.lang.WrappedJavaInlineable.$wrap(dep), sysClass);
+                //FClass sysClass = (FClass)new FClass._Impl(
+                //    s, l, dep, toByteArray(s, l, new byte[0])).$getProxy();
+                //sysClass.setCodebase(sysCb);
+                //classes.put(fabric.lang.WrappedJavaInlineable.$wrap(dep), sysClass);
               } else {
                 byte[] fileBytecode = readFile(file);
                 Properties p = readProperties(file + ".fabproperties");
