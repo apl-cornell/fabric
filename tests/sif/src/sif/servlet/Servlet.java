@@ -37,7 +37,7 @@ abstract public class Servlet extends HttpServlet {
     
     static {
       try {
-        Worker.initialize("customer");
+        Worker.initialize("bankweb");
       } catch(IllegalStateException e) {
         // TODO: need to fix this up
         // do nothing, worker already initialized.

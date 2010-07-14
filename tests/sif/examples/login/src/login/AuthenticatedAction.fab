@@ -65,16 +65,16 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
         lbl <= {*:req.session} {
         if(req == null) throw new ServletException("Error processing request");
         Servlet[servP] servlet_ = getServlet();
-        SessionState state_ = req.getSessionState(lbl);
-        if (servlet_ == null || state_ == null ||
-                !(servlet_ instanceof AbstractServlet[servP]) ||
-                !(state_ instanceof AuthSessState[servP,lbl]))
-            throw new ServletException("Error processing request");
-        final AbstractServlet[servP] servlet = (AbstractServlet[servP])servlet_;
-        final AuthSessState[servP,lbl] state = (AuthSessState[servP,lbl])state_;
-        if (state == null || servlet == null) return;
-
         atomic {
+            SessionState state_ = req.getSessionState(lbl);
+            if (servlet_ == null || state_ == null ||
+                    !(servlet_ instanceof AbstractServlet[servP]) ||
+                    !(state_ instanceof AuthSessState[servP,lbl]))
+                throw new ServletException("Error processing request");
+            final AbstractServlet[servP] servlet = (AbstractServlet[servP])servlet_;
+            final AuthSessState[servP,lbl] state = (AuthSessState[servP,lbl])state_;
+            if (state == null || servlet == null) return;
+
             // Check if someone is logged in. If not, then the login page is created.
             // Simply returning will display that login page
             if (!ensureLoggedIn(lbl, req, this, servlet)) return;

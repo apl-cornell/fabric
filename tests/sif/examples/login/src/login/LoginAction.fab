@@ -270,7 +270,7 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
         if (ex != null) throw ex;
     }        
     
-    private String{req.session:;req.session←} runClosure{req.session:;req.session←}(Request[servP]{req.session→;req.session←} req,
+    private String{req.session→;req.session←} runClosure{req.session:;req.session←}(Request[servP]{req.session→;req.session←} req,
             principal{req.session→;req.session←} loginUser,
             SessionPrincipal{req.session:;req.session←} sp,
             String{req.session:;req.session←} password) 
@@ -284,13 +284,13 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
             
             final Store{req.session←} localStore = worker.getLocalStore();
 //            SessionPrincipal spdeclass = SessionPrincipal.declassifySP(sp, session);
-            SessionPrincipal spdeclass = declassify(sp, {req.session:;req.session←} to {req.session←});
-            LoginClosure[servP, logUser] lc = new LoginClosure[servP, logUser]{req.session←}@localStore(spdeclass);
-            Capability[logUser, {logUser:}] cap = 
+            SessionPrincipal spdeclass = declassify(sp, {req.session→;req.session←} to {req.session←});
+            LoginClosure[logUser] lc = new LoginClosure[logUser]{req.session←}@localStore(spdeclass);
+            Capability[logUser, {logUser→}] cap = 
                 PrincipalUtil.authorize(logUser, 
                                         declassify(password, {req.session←}),
                                         lc,
-                                        new label {logUser:});
+                                        new label {logUser→});
             if (cap == null) {                                                
                 return "Unknown or incorrect username and password.";
             }

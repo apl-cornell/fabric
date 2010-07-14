@@ -82,13 +82,15 @@ public class Create {
      */
     
     public static void main(String[] args) {
-        RemoteWorker  brokerWorker = Worker.getWorker().getWorker(Config.brokerStoreName);
-        Store  brokerStore = Worker.getWorker().getStore(Config.brokerStoreName);
-        IntegPolicy bottomInteg = LabelUtil.bottomInteg(); 
-        ConfPolicy bottomConf = LabelUtil.bottomConf();
-        Label bottom = LabelUtil.toLabel(brokerStore, bottomConf, bottomInteg);
-        Create cr = new Create~bottom@brokerStore();
-        cr.create@brokerWorker(args);
+        atomic {
+            RemoteWorker  brokerWorker = Worker.getWorker().getWorker(Config.brokerStoreName);
+            Store  brokerStore = Worker.getWorker().getStore(Config.brokerStoreName);
+            IntegPolicy bottomInteg = LabelUtil.bottomInteg(); 
+            ConfPolicy bottomConf = LabelUtil.bottomConf();
+            Label bottom = LabelUtil.toLabel(brokerStore, bottomConf, bottomInteg);
+            Create cr = new Create~bottom@brokerStore();
+            cr.create@brokerWorker(args);
+        }
     }
     public void create(String[] args) {
         atomic {
@@ -134,10 +136,16 @@ public class Create {
             Principal  brokerWorker = Worker.getWorker().getWorker(args[0]).getPrincipal();
             Principal    bankWorker = Worker.getWorker().getWorker(args[1]).getPrincipal();
             Principal airlineWorker = Worker.getWorker().getWorker(args[2]).getPrincipal();
+            Principal bankweb = Worker.getWorker().getWorker(args[3]).getPrincipal();
+            Principal airlineweb = Worker.getWorker().getWorker(args[4]).getPrincipal();
 
             airline.addDelegatesTo(airlineWorker);
              broker.addDelegatesTo(brokerWorker);
                bank.addDelegatesTo(bankWorker);
+               
+            // make bankweb and airlineweb act for bank and airline respectively
+            bank.addDelegatesTo(bankweb);
+            airline.addDelegatesTo(airlineweb);
 
             Map root1 = (Map) brokerStore.getRoot();
             root1.put(Config.brokerMapKey, broker);
