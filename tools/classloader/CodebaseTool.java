@@ -13,7 +13,9 @@ import java.util.List;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;
+import fabric.lang.security.LabelUtil;
 import fabric.lang.security.Label;
+import fabric.lang.security.Principal;
 import fabric.lang.Codebase;
 import fabric.lang.SystemCodebase;
 import fabric.lang.FClass;
@@ -130,26 +132,36 @@ public class CodebaseTool {
     });
   }
   
+  private Label getClassLabel(Store s, String className) {
+    Principal p = Worker.getWorker().getPrincipal();
+    return LabelUtil._Proxy.toLabel(s, LabelUtil._Proxy.writerPolicy(s, p, p));
+  }
+  
+  private Label getCodebaseLabel(Store s) {
+    Principal p = Worker.getWorker().getPrincipal();
+    return LabelUtil._Proxy.toLabel(s, LabelUtil._Proxy.writerPolicy(s, p, p));
+  }
+  
   private Codebase storeCode(final List<String> rootClasses, final Store s)
   throws IOException {
     return Worker.runInSubTransaction(new Worker.Code<Codebase>() {
       public Codebase run() {
         try {
           Queue<String> classesToCreate = new LinkedList<String>(rootClasses);
-          Label l = Worker.getWorker().getLocalStore().getEmptyLabel();
-          fabric.util.Map/*String, Class*/ classes = (fabric.util.HashMap)new fabric.util.HashMap._Impl/*String, Class*/(s, l).$getProxy();
+          Label cl = getCodebaseLabel(s);
+          fabric.util.Map/*String, Class*/ classes = (fabric.util.HashMap)new fabric.util.HashMap._Impl/*String, Class*/(s, cl).$getProxy();
           Set<FClass> toSetCodebase = new HashSet<FClass>();
-          //SystemCodebase sysCb = (SystemCodebase)new SystemCodebase._Impl(s, l).$getProxy();
           Set<String> seenClasses = new HashSet<String>();
           while (!classesToCreate.isEmpty()) {
             String currentClass = classesToCreate.remove();
             seenClasses.add(currentClass);
             String filename = classNameToFile(currentClass);
+            Label l = getClassLabel(s, currentClass); 
             byte[] bytecode = readFile(filename);
             FClass c = (FClass)new FClass._Impl(
                 s, l, currentClass, toByteArray(s, l, bytecode)).$getProxy();
 
-            System.out.println("Creating class " + currentClass + " at " + getOid(c));
+            System.out.println("Crseating class " + currentClass + " at " + getOid(c));
             classes.put(fabric.lang.WrappedJavaInlineable.$wrap(currentClass), c);
             toSetCodebase.add(c);
             if (!fileExists(filename + ".fabproperties")) {
@@ -166,10 +178,7 @@ public class CodebaseTool {
               String file = classNameToFile(dep);
               if(!fileExists(file)) {
                 // Assume system class
-                //FClass sysClass = (FClass)new FClass._Impl(
-                //    s, l, dep, toByteArray(s, l, new byte[0])).$getProxy();
-                //sysClass.setCodebase(sysCb);
-                //classes.put(fabric.lang.WrappedJavaInlineable.$wrap(dep), sysClass);
+                // and ignore - parent classloader will load it
               } else {
                 byte[] fileBytecode = readFile(file);
                 Properties p = readProperties(file + ".fabproperties");
@@ -185,7 +194,7 @@ public class CodebaseTool {
               }
             }
           }
-          Codebase codebase = (Codebase)new Codebase._Impl(s, l, classes).$getProxy();
+          Codebase codebase = (Codebase)new Codebase._Impl(s, cl, classes).$getProxy();
           for(FClass c : toSetCodebase) {
             c.setCodebase(codebase);
           }
