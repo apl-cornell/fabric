@@ -17,7 +17,6 @@ import fabric.lang.security.LabelUtil;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.lang.Codebase;
-import fabric.lang.SystemCodebase;
 import fabric.lang.FClass;
 import fabric.common.exceptions.UsageError;
 import java.security.GeneralSecurityException;
