@@ -4,6 +4,7 @@ import static fabric.common.Logging.CLASS_HASHING_LOGGER;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.*;
@@ -38,10 +39,13 @@ public final class Util {
     }
 
     String classFileName = className.replace('.', '/') + ".class";
-
-    Logging.log(CLASS_HASHING_LOGGER, Level.FINEST,
-        "  Using {0} to load class bytecode from {1}", classLoader,
-        classFileName);
+    
+    if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
+      URL classResource = classLoader.getResource(classFileName);
+      Logging.log(CLASS_HASHING_LOGGER, Level.FINEST,
+          "  Using {0} to load class bytecode from {1}", classLoader,
+          classResource);
+    }
 
     InputStream classIn = classLoader.getResourceAsStream(classFileName);
 
@@ -65,6 +69,12 @@ public final class Util {
 
     result = digest.digest();
     classHashCache.put(className, result);
+    
+    if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
+      String hash = new BigInteger(1, result).toString(16);
+      Logging.log(CLASS_HASHING_LOGGER, Level.FINEST, "  Hash for {0} is {1}",
+          className, hash);
+    }
 
     return result;
   }
