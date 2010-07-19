@@ -10,10 +10,10 @@ To build:
 
 To create the database (e.g. small database named "OO7" with fanout=3):
   $ cd classes/
-  $ fab --name [worker name] OO7.Benchmark fab://[store name]/OO7 SMALL 3
+  $ fab --worker [worker name] OO7.Benchmark fab://[store name]/OO7 SMALL 3
 
 To execute a traversal (e.g. T1):
   $ cd classes/
-  $ fab --name [worker name] OO7.traversals.T1 fab://[store name]/OO7
+  $ fab --worker [worker name] OO7.traversals.T1 fab://[store name]/OO7
 
 

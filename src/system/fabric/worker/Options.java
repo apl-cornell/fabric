@@ -51,7 +51,7 @@ public class Options extends fabric.common.Options {
     out.println("  [app] is the name of Fabric application's main class");
     out.println("  [param...] are the parameters to the Fabric application");
     out.println("and [options] includes:");
-    usageForFlag(out, "--name <name>", "this worker's name", "$HOSTNAME");
+    usageForFlag(out, "--worker <name>", "this worker's name", "$HOSTNAME");
     usageForFlag(out, "--pool <number>", "size of pool of threads for "
         + "serving remote requests", defaults.threadPool);
     usageForFlag(out, "--time <category>", "enable timing of category");
@@ -85,7 +85,7 @@ public class Options extends fabric.common.Options {
       throw new TerminationException(0);
     }
 
-    if (args[i].equals("--name")) {
+    if (args[i].equals("--worker")) {
       this.name = args[i + 1];
       return i + 2;
     }

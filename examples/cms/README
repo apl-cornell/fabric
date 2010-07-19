@@ -130,7 +130,7 @@ cd {fabric home}
 ./bin/fab-store --store store0 etc/keys/store0.keystore etc/keys/trust.keystore password --store store1 etc/keys/store1.keystore etc/keys/trust.keystore password
 
 12) Set up a principal:
-./bin/fab --name worker0 --make-principal store0
+./bin/fab --worker worker0 --make-principal store0
 
 13) Start Tomcat and load: http://localhost:8180/web/guest
 

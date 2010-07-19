@@ -18,7 +18,7 @@ Using
 
 By default, the blog server stores objects on store0 with worker name worker0.
 	1) Start store0
-	2) Make a principal for worker0 (fab --name worker0 --make-principal store0)
+	2) Make a principal for worker0 (fab --worker worker0 --make-principal store0)
 	3) Run ant run-blog
 	
 This will start a blog server on port 8080 (http://localhost:8080/web)
