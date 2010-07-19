@@ -42,7 +42,6 @@ class Store implements Runnable {
   public final Certificate[]      certificateChain;
   public final PublicKey          publicKey;
   public final PrivateKey         privateKey;
-  public final int                port;
   public final ConfigProperties   config;
 
   Store(Node node, String name) {
@@ -111,9 +110,13 @@ class Store implements Runnable {
     this.os   = loadStore();
     this.tm   = new TransactionManager(this.os, this.privateKey);
     this.sm   = new SimpleSurrogateManager(tm);
-    this.port = config.storePort;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // lifecycle                                                                //
+  //////////////////////////////////////////////////////////////////////////////
+
+  
   public void initialize() {
     // Ensure each store's object database has been properly initialized.
     os.ensureInit();
@@ -160,4 +163,11 @@ class Store implements Runnable {
       throw new InternalError("could not initialize store", exc);
     }
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // message handlers                                                         //
+  //////////////////////////////////////////////////////////////////////////////
+
+  
+  
 }
