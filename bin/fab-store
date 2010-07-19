@@ -8,6 +8,7 @@ while true; do
   case "$1" in
     "") break;;
     -v) verbose="1"; shift;;
+    -classpath) EXTRACP=$2; shift; shift;;    
     -j)
             shift
             vmargs="$vmargs '$1'"
@@ -17,20 +18,18 @@ while true; do
             shift
             vmargs="$vmargs -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3370"
             ;;
-    -cp)
-            shift
-            classpath="$classpath:$1"
-            shift
-            ;;
     *) args="$args '$1'"; shift;;
   esac
 done
 
+classpath="$TOP/classes:$classpath"
+classpath="$TOP/rt-classes:$classpath"
 classpath="$JIF/rt-classes:$classpath"
-classpath="$TOP/classes:$TOP/rt-classes:$classpath"
 classpath="$TOP/lib/fabric.jar:$classpath"
+classpath="$TOP/lib/fabric-rt.jar:$classpath"
 classpath="$TOP/lib/je-3.3.75.jar:$classpath"
 classpath="$TOP/lib/FreePastry-2.1.jar:$classpath"
+classpath="$EXTRACP:$classpath"
 
 command="\"$JAVA\" $vmargs -classpath \"$(fixpath $classpath)\" fabric.store.Main $args"
 
