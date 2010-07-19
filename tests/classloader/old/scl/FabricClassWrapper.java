@@ -1,4 +1,4 @@
-package scl;
+package old.scl;
 
 public class FabricClassWrapper implements ClassWrapper{
 	final InternalClassLoader icl;

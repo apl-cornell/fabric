@@ -139,6 +139,9 @@ public class CallExt_c extends ExprExt_c {
   public Node rewriteRemoteCalls(RemoteCallRewriter rr) {
     FabILCall c = (FabILCall) node();
     if (c.remoteWorker() == null) return c;
+    
+    if (!(c.name().length() > 7 && c.name().substring(c.name().length()-7).
+        equals("_remote"))) return c;
 
     NodeFactory nf = rr.nodeFactory();
 

@@ -15,7 +15,7 @@
 
 <path id="cms.classpath">
   <path refid="fabil.classpath"/>
-  <fileset dir="${cms.home}/web/WEB-INF/lib" includes="*.jar" />
+  <fileset dir="${cms.home}/web-fabil/WEB-INF/lib" includes="*.jar" />
   <pathelement location="${fabric.home}/lib/servlet-api.jar"  />
   </path>
 
@@ -23,33 +23,53 @@
   <apply executable="bash"
       parallel="true"
       failonerror="true"
-      dir="${cms.home}/pojo"
-      dest="${cms.home}/web/WEB-INF/classes"
+      dir="${cms.home}/fabil"
+      dest="${cms.home}/web-fabil/WEB-INF/classes"
       relative="false"
       skipemptyfilesets="true"
       vmlauncher="false">
     <arg value="${fabric.home}/bin/filc" />
+  	<arg value="-dumpdeps" /> 
     <arg value="-j"     /> <arg value="-Xmx500M" />
     <arg value="-j"     /> <arg value="-Xss100M" />
-    <arg value="-d"     /> <arg file="${cms.home}/web/WEB-INF/classes" />
+    <arg value="-d"     /> <arg file="${cms.home}/web-fabil/WEB-INF/classes" />
     <arg value="-cp"    /> <arg pathref="cms.classpath" />
     <arg value="-sigcp" /> <arg pathref="fabil.sigpath"   />
     <arg value="-sx"    /> <arg value="java"/>
     <srcfile />
-    <fileset dir="${cms.home}/pojo">
+    <fileset dir="${cms.home}/fabil">
       <include name="cms/controller/test/*.java" />
+      <include name="cms/auth/Principal.java" />
       <include name="cms/model/*.java" />
       <include name="cms/www/AccessController.java" />
+      <include name="cms/www/TransactionHandler.java" />
+      <include name="cms/www/TransactionResult.java" />
       <include name="cms/www/util/DOMWriter.java" />
+      <include name="cms/www/util/CSVParseException.java" />
+      <include name="cms/www/util/StringUtil.java" />
+      <include name="cms/www/util/Emailer.java" />
+      <include name="cms/www/util/Util.java" />
+      <include name="cms/www/util/Profiler.java" />
+      <include name="cms/www/util/DateTimeUtil.java" />
+      <include name="cms/www/util/RequestTracker.java" />
       <include name="cms/www/xml/*.java" />
       <include name="cms/view/test/Dump.java" />
       </fileset>
     <globmapper from="*.java" to="*.class" />
   </apply>
 </target>
+	
+<target name="fabservlet" 
+    description="fab servlet">
+    <javac target="1.5"  destdir="${cms.home}/web-fabil/WEB-INF/classes" debug="on">
+      <classpath refid="cms.classpath" />
+	    <src path="${cms.home}/fabil" />
+	   	<include name="FabricServlet.java" />	
+    </javac>
+  </target>
 
 <target name="clean" description="remove generated files">
-  <delete dir="${cms.home}/web/WEB-INF/classes"/>
+  <delete dir="${cms.home}/web-fabil/WEB-INF/classes"/>
 </target>
 
 </project>

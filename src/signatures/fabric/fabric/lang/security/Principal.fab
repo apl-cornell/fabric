@@ -8,8 +8,11 @@ public abstract class Principal {
     public abstract boolean{this; p; this←} delegatesTo(principal p);
     
     public abstract boolean equals(Principal p);
-    
-    public abstract boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+
+    // XXX Can we label this method anywhich way we want, since it won't
+    // be invoked from Fabric code??
+    // XXX Where will the declassification w.r.t. password happen?
+    public abstract boolean{authPrf; closure; lb; *lb; executeNow; this; this→; this←}
 	isAuthorized{this←}(java.lang.Object authPrf, 
 			    Closure[this, lb] closure,
 			    label lb,

@@ -21,7 +21,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
 
     protected native boolean{this;p;this!:} superiorsContains(Principal p) where authority (this);
     
-    public native boolean{authPrf; closure; lb; *lb; executeNow; this; this!:}
+    public native boolean{authPrf; closure; lb; *lb; executeNow; this; this→; this←}
         isAuthorized{this!:}(java.lang.Object authPrf, 
                 Closure[this, lb] closure,
                 label lb,

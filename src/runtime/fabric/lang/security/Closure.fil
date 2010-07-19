@@ -6,7 +6,7 @@ package fabric.lang.security;
 public interface Closure {
   java.lang.Object invoke();
 
-  Principal jif$getjif_lang_Closure_P();
+  Principal jif$getfabric_lang_security_Closure_P();
 
-  Label jif$getjif_lang_Closure_L();
+  Label jif$getfabric_lang_security_Closure_L();
 }

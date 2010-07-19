@@ -20,6 +20,7 @@ public interface FabricTypeSystem extends JifTypeSystem {
   
   ClassType Store();
 
+  ClassType DelegatingPrincipal();
   /**
    * Constructs a principal for the local worker. 
    * 
@@ -52,4 +53,5 @@ public interface FabricTypeSystem extends JifTypeSystem {
 
   FabricArrayType fabricArrayOf(Position pos, Type t);
   FabricArrayType fabricArrayOf(Position pos, Type t, int dims);
+  
 }

@@ -56,7 +56,7 @@ abstract public class UAction[principal servP] extends Action[servP] {
         }
     }
 
-          
+
     public abstract void invokeImpl{*lbl}(label{*lbl} lbl,
                                       Request[servP]{*lbl} req,
                                       UServlet[servP]{*lbl} servlet,

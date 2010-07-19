@@ -49,9 +49,8 @@ import com.Ostermiller.util.CSVPrinter;
 import com.Ostermiller.util.ExcelCSVParser;
 import com.Ostermiller.util.ExcelCSVPrinter;
 
-import fabric.client.*;
 import cms.model.*;
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 /**
  * TransactionHandler is a wrapper class for Transaction. For each
@@ -67,7 +66,7 @@ public class TransactionHandler {
   private CMSRoot      database     = null;
   private Transactions transactions = null;
 
-  private Core localCore;
+  private Store localStore;
   private Label dlabel;
   
   private static class UploadTooBigException extends IOException {
@@ -89,8 +88,8 @@ public class TransactionHandler {
   public TransactionHandler(final CMSRoot database) {
     this.database     = database;
     this.transactions = new Transactions(database); 
-    this.localCore    = Client.getClient().getLocalCore();
-    this.dlabel       = Client.getClient().getLocalCore().getEmptyLabel();
+    this.localStore    = Worker.getWorker().getLocalStore();
+    this.dlabel       = Worker.getWorker().getLocalStore().getEmptyLabel();
   }
 
   /**

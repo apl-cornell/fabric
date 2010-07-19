@@ -64,7 +64,7 @@ public class GroupMember implements Comparable {
     if (!(o instanceof GroupMember)) return 0;
     
     GroupMember member = (GroupMember) o;
-    return Student.NETID_COMPARATOR.compare(this.student, member.student);
+    return Student.getNETID_COMPARATOR().compare(this.student, member.student);
   }
 }
 

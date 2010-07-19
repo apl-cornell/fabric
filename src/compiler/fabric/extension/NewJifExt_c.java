@@ -1,7 +1,9 @@
 package fabric.extension;
 
+import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricUtil;
 import fabric.types.FabricClassType;
+import fabric.types.FabricTypeSystem;
 import polyglot.ast.New;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
@@ -21,7 +23,10 @@ public class NewJifExt_c extends JifNewExt {
     NewExt_c ext = (NewExt_c)FabricUtil.fabricExt(n);
     
     Type newType = n.objectType().type();
-    if (newType instanceof FabricClassType) {
+    // bypass check if this is a principal object. This condition will be enforced
+    // with the $addDefaultDelegates method
+    if (newType instanceof FabricClassType && 
+        !newType.isSubtype(((FabricTypeSystem)lc.typeSystem()).DelegatingPrincipal())) {
       FabricClassType ct = (FabricClassType)newType;
       ext.labelCheck(lc, ct.defaultFieldLabel());
     }

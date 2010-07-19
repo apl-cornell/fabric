@@ -26,9 +26,19 @@
         <arg value="-d"/>
         <arg value="${basedir}/classes"/>
   			<arg value="-cp" />
-  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/classes" />
+  			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/classes:${basedir}/../login/classes" />
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
+        <arg value="-e" />
+        <arg value="-debugpositions" />
+        <!--
+        <arg value="-rdebug" />
+        <arg value="-dump" />     <arg value="AmbiguityRemover" />
+        <arg value="-report" />     <arg value="frontend=1" />
+        <arg value="-print" />     <arg value="AmbiguityRemover" />
+        <arg value="-report" />     <arg value="solver=5" />
+        <arg value="-report" />     <arg value="labelEnv=1" />
+        -->        
         <srcfile />
         <fileset dir="${basedir}" includes="src/jif/principals/*.fab" />
         <mapper type="regexp"
@@ -79,6 +89,7 @@
         <arg value="${fabric.home}/sig-classes/fabric:${fabric.home}/tests/sif/sig-classes"/>
         <arg value="-e" />
         <!--
+        <arg value="-rdebug" />
         <arg value="-report" />     <arg value="frontend=1" />
         <arg value="-dump" />     <arg value="AmbiguityRemover" />
         <arg value="-debugpositions" />
@@ -106,6 +117,14 @@
   			<arg value="${fabric.home}/rt-classes:${fabric.home}/tests/sif/classes:${fabric.home}/tests/jif/classes:${basedir}/classes" />
         <arg value="-sigcp"/>
         <arg value="${fabric.home}/sig-classes/fabil:${fabric.home}/tests/sif/sig-classes"/>
+        <!--
+        <arg value="-rdebug" />
+        <arg value="-report" />     <arg value="frontend=1" />
+        <arg value="-dump" />     <arg value="AmbiguityRemover" />
+        <arg value="-debugpositions" />
+        <arg value="-report" />     <arg value="solver=5" />
+        <arg value="-report" />     <arg value="labelEnv=1" />
+        -->        
         <srcfile />
         <fileset dir="${basedir}" includes="src/travel/*.fil" />
         <mapper type="regexp"
@@ -123,13 +142,5 @@
    <target name="jar" depends="compile">
     <jar jarfile="travel.jar" basedir="${basedir}/classes" excludes="**/*.java" />
    </target>
-  <target name="install" depends="configure-install, compile" description="Copies the classes to the tomcat directory">
-    <fail unless="catalina.home.defined"
-          message="The Tomcat installation directory is unknown. Please either edit config.properties, or set the envirnoment variable CATALINA_HOME to the Tomcat installation directory." />
-    <delete dir="${catalina.home}/webapps/travel" />
-    <copy todir="${catalina.home}/webapps/travel" includeEmptyDirs="no">
-		<fileset dir="${basedir}/web" defaultexcludes="yes"/>
-	</copy>
-  </target>
 </project>
 

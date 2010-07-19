@@ -9,8 +9,9 @@ import sif.servlet.SessionState;
 import sif.servlet.SessionPrincipal;
 
 import javax.servlet.ServletException;
+import login.*;
 
-public final class BankMain extends Servlet[BankPrincipal] {
+public final class BankMain extends AbstractServlet[BankPrincipal] {
   final Store{this} localStore;
   final Store{this} brokerstore;
   final principal{this} broker;
@@ -28,17 +29,15 @@ public final class BankMain extends Servlet[BankPrincipal] {
     if (brokerstore != null) {
         root = (Map) brokerstore.getRoot();
     }
+    Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
     if (root != null) {
-        Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
         Object obj = root.get(Config.brokerMapKey);
         if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
-            brokerInit =
-                (Broker[BankPrincipal, CustomerPrincipal])obj;
+            brokerInit = (Broker[BankPrincipal, CustomerPrincipal])obj;
+        }
     }
     broker = brokerInit;
-    } else {
-        broker = null;
-    }
+    super();
     
   }
     
@@ -57,13 +56,13 @@ public final class BankMain extends Servlet[BankPrincipal] {
   
   // TODO Provide default implementations for these 2 methods in Servlet.fab:
   // This method will only be called by the runtime
-  protected SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+  protected AuthSessState[BankPrincipal, lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
       String{*lbl} id, SessionPrincipal{*lbl} session) {
-    SessionState[lbl] toReturn = null;
+    AuthSessState[BankPrincipal, lbl] toReturn = null;
     atomic {
       if (localStore != null && localStore equiv worker$ &&
 	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
-	toReturn = new SessionState[lbl]@localStore(id, session);
+	toReturn = new AuthSessState[BankPrincipal, lbl]@localStore(id, session);
       }
     }
     return toReturn;
@@ -79,7 +78,18 @@ public final class BankMain extends Servlet[BankPrincipal] {
     }
     return toReturn;
   }
-  
+
+  /**
+   * Look up a User from a given user id
+   */
+  public principal{p:;p!:;p} lookupUserID{p:; p!:}(
+          String{p:; p!:} userID,
+          principal{p:; p!:} p)
+          where caller(p) {
+      if (userID == null) return null;
+      if (userID.equals("bank")) return BankPrincipal;
+      return null;
+  }
   
 }
 

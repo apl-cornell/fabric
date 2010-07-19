@@ -170,8 +170,8 @@ public class Dump {
   //////////////////////////////////////////////////////////////////////////////
 
   public static void main(String[] args) {
-    Core local = Client.getClient().getLocalCore();
-    Core core  = Client.getClient().getCore(args[0]);
+    Store local = Worker.getWorker().getLocalStore();
+    Store core  = Worker.getWorker().getStore(args[0]);
 
     atomic {
       CMSRoot database = (CMSRoot) ((Map) core.getRoot()).get(args[1]);

@@ -4,8 +4,6 @@ import fabric.util.*;
 import java.util.Properties;
 import java.util.Date;
 
-import fabric.client.*;
-
 import java.net.ConnectException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,7 +23,7 @@ import cms.www.util.Profiler;
 public class Transactions {
   private CMSRoot database;
   private Properties env = null;
-  private Core localCore;
+  private Store localStore;
   private Label dlabel;
 
   // This field is used for sending links in emails to users,
@@ -37,8 +35,8 @@ public class Transactions {
   public Transactions(CMSRoot database) {
     this.database = database;
     env = new Properties();
-    localCore = Client.getClient().getCore("core0");//Client.getClient().getLocalCore();
-    dlabel = Client.getClient().getLocalCore().getEmptyLabel();
+    localStore = Worker.getWorker().getStore("core0");//Client.getClient().getLocalStore();
+    dlabel = Worker.getWorker().getLocalStore().getEmptyLabel();
     env.put("java.naming.factory.initial", "com.sun.jndi.ldap.LdapCtxFactory");
     env.put("java.naming.provider.url", "ldap://directory.cornell.edu");
   }

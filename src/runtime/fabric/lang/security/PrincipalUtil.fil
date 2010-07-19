@@ -358,8 +358,8 @@ public class PrincipalUtil {
       Closure c, Label lb, boolean executeNow) {
 //    try {
 //      LabelUtil.enterTiming();
-      Principal closureP = c.jif$getjif_lang_Closure_P();
-      Label closureL = c.jif$getjif_lang_Closure_L();
+      Principal closureP = c.jif$getfabric_lang_security_Closure_P();
+      Label closureL = c.jif$getfabric_lang_security_Closure_L();
       if (closureP == p
           || (p != null && closureP != null && p.equals(closureP) && closureP
               .equals(p))) {

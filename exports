@@ -1,0 +1,10 @@
+# File system exports go here.  The format is:
+# Directory	address[/bits]
+#
+# for example, to export the root of the C drive to every address
+# that starts with 192.168.0:
+/tmp		192.168.0/24
+/tmp		128.84.97/24
+/tmp		128.84.98/24
+/tmp       128.84.223/24
+/tmp        127.0.1/24

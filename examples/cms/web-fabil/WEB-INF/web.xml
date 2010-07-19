@@ -20,11 +20,12 @@
     <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
 
     <display-name>CMS</display-name>
-    <description>Cornell Course Management Server (POJO port)</description>
+    <description>Cornell Course Management Server (FabIL port)</description>
 
     <servlet>
         <servlet-name>Web</servlet-name>
-        <servlet-class>cms.www.AccessController</servlet-class>
+        <!-- <servlet-class>cms.www.AccessController</servlet-class> -->
+	    <servlet-class>FabricServlet</servlet-class> 
 
         <init-param>
             <param-name>cms.root.name</param-name>
@@ -33,8 +34,14 @@
 
         <init-param>
             <param-name>cms.root.core</param-name>
-            <param-value>fabric-cms.systems.cs.cornell.edu</param-value>
+            <param-value>store0</param-value>
         </init-param>
+        
+        <init-param>
+            <param-name>servletoid</param-name>
+            <param-value>fab://store0/29544</param-value>
+        </init-param>
+        
     </servlet>
 
     <servlet-mapping>

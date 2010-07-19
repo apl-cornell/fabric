@@ -117,9 +117,9 @@ public class CreateDB {
 
   public static void main(String[] args) {
     atomic {
-      LocalCore  localCore = Client.getClient().getLocalCore();
-      Core       core      = Client.getClient().getCore(args[0]);
-      Label      label     = localCore.getEmptyLabel();
+      LocalStore  localStore = Worker.getWorker().getLocalStore();
+      Store       core      = Worker.getWorker().getStore(args[0]);
+      Label      label     = localStore.getEmptyLabel();
 
       CMSRoot database = null;
 

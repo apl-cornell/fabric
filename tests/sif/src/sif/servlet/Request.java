@@ -46,8 +46,7 @@ public final class Request {
     Request(Servlet srv, HttpServletRequest req) {
         servlet = srv;
         request = req;
-//        session = this.getSessionState().sessionPrincipal();
-        session = srv.createSessionPrincipal(req.getSession().getId());
+        session = this.getSessionState(null).sessionPrincipal();
         bnd = Servlet.getOutputChannelBound(this);
         
         this.isMultipart = ServletFileUpload.isMultipartContent(req);
@@ -144,12 +143,16 @@ public final class Request {
         //return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + request.getServletPath();
     }
     
+    // need lbl argument just for compatibility with the signature
     public SessionState getSessionState(Label lbl) {
 	SessionState result =
 	  (SessionState)request.getSession(true).getAttribute("session_state");
-
+	
 	if (result == null) {
-	    result = servlet.createSessionState(lbl, request.getSession().getId(), session);
+	    String id = request.getSession().getId();
+	    SessionPrincipal sessionPrin = servlet.createSessionPrincipal(id);
+	    Label initLbl = servlet.trustedBySessionLabel(sessionPrin);
+	    result = servlet.createSessionState(initLbl, id, sessionPrin);
 	    request.getSession(true).setAttribute("session_state", result);
 	}
 

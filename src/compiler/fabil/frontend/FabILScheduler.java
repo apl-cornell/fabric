@@ -112,6 +112,21 @@ public class FabILScheduler extends JLScheduler {
 
     return g;
   }
+  
+  public Goal ClassReferencesCollected(final Job job) {
+    TypeSystem ts = extInfo.typeSystem();
+    Goal g =
+        internGoal(new VisitorGoal(job, new ClassReferencesCollector(job, ts)) {
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+            List<Goal> l = new ArrayList<Goal>();
+            l.add(Memoized(job));
+            return l;
+          }
+        });
+
+    return g;
+  }
 
   public Goal CollectStaticInitializers(final Job job) {
     FabILNodeFactory nf = (FabILNodeFactory) job.extensionInfo().nodeFactory();
@@ -411,6 +426,7 @@ public class FabILScheduler extends JLScheduler {
           l.add(RewriteRemoteCalls(job));
           l.add(Memoized(job));
           l.add(InstrumentThreads(job));
+          l.add(ClassReferencesCollected(job));
         }
         return l;
       }

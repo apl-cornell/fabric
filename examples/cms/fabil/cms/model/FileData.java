@@ -9,7 +9,7 @@ import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import fabric.client.*;
+import fabric.worker.Worker;
 
 /**
  * The File class encapsulates storage of file data. Files may be implemented as
@@ -26,8 +26,8 @@ public class FileData {
 
   private byte[] file;
   private String name;
-  private jif.lang.Label dlabel;
-  private LocalCore localCore;
+  private fabric.lang.security.Label dlabel;
+  private LocalStore localStore;
   
   //////////////////////////////////////////////////////////////////////////////
   // public setters                                                           //
@@ -48,8 +48,8 @@ public class FileData {
   public FileData(String name) {
     this.name = name;
     this.state = new Initialized();
-    this.localCore = Client.getClient().getLocalCore();
-    this.dlabel = localCore.getEmptyLabel();
+    this.localStore = Worker.getWorker().getLocalStore();
+    this.dlabel = localStore.getEmptyLabel();
   }
 
   //////////////////////////////////////////////////////////////////////////////

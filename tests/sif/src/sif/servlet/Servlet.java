@@ -37,7 +37,7 @@ abstract public class Servlet extends HttpServlet {
     
     static {
       try {
-        Worker.initialize("customer");
+        Worker.initialize("bankweb");
       } catch(IllegalStateException e) {
         // TODO: need to fix this up
         // do nothing, worker already initialized.
@@ -164,7 +164,7 @@ abstract public class Servlet extends HttpServlet {
         try {
             response.setContentType("text/html");
             if (request.getCharacterEncoding() == null)
-                request.setCharacterEncoding("ISO-8859-1");						
+                request.setCharacterEncoding("ISO-8859-1");
 
             Request req = new Request(this, request);
 //          hw = new StandardHTMLWriter(req, rw);
@@ -238,7 +238,7 @@ abstract public class Servlet extends HttpServlet {
 
 
         if (action_name != null) {
-            laction = findAction(req, action_name);                
+            laction = findAction(req, action_name);
         }
         else {
             Action a = this.findDefaultAction(req);
@@ -313,6 +313,15 @@ abstract public class Servlet extends HttpServlet {
         }
       });
     }
+    
+    Label trustedBySessionLabel(final SessionPrincipal session) {
+      return Worker.runInSubTransaction(new fabric.worker.Worker.Code<Label>() {
+        public Label run() {
+          Store local = Worker.getWorker().getLocalStore();
+          return LabelUtil._Impl.writerPolicyLabel(local, session, session);        
+        }
+      });
+    }    
 
     /**
      * @throws ServletException

@@ -54,6 +54,8 @@
   <property name="bootstrap.src" location="${src}/bootstrap"/>
   <property name="runtime.src" location="${src}/runtime"/>
   <property name="tests.fabnfs" location="${basedir}/tests/fabnfs"/>
+  <property name="tools.storebrowser" location="${basedir}/tools/storebrowser"/>
+  <property name="tools.classloader" location="${basedir}/tools/classloader"/>
   <property name="signatures.fabil.src" location="${src}/signatures/fabil"/>
   <property name="signatures.fabric.src" location="${src}/signatures/fabric"/>
 
@@ -62,6 +64,7 @@
   <property name="bootstrap.classes" location="${basedir}/bs-classes"/>
   <property name="runtime.classes" location="${basedir}/rt-classes"/>
   <property name="tests.classes" location="${basedir}/tests/classes"/>
+  <property name="tools.classes" location="${basedir}/tools/classes"/>
   <property name="signatures.classes" location="${basedir}/sig-classes"/>
   <property name="signatures.fabil.classes" location="${signatures.classes}/fabil"/>
   <property name="signatures.fabric.classes" location="${signatures.classes}/fabric"/>
@@ -83,6 +86,9 @@
 
   <!-- Var directory -->
   <property name="var" location="${basedir}/var"/>
+
+  <!-- Tools directory -->
+  <property name="tools" location="${basedir}/tools"/>
 
   <!-- Jar files -->
   <property name="base.jar" location="${lib}/${name}.jar" />
@@ -286,6 +292,7 @@
     <delete dir="${classes}"/>
     <delete dir="${bootstrap.classes}"/>
     <delete dir="${tests.classes}"/>
+    <delete dir="${tools.classes}"/>
     <delete dir="${dist}"/>
     <delete dir="${var}"/>
     <delete dir="${name}"/>
@@ -664,6 +671,34 @@
     <javac target="1.5" srcdir="${src}" destdir="${classes}" debug="on"
         includes="tests/**">
       <classpath refid="standard.classpath"/>
+    </javac>
+  </target>
+
+  <!-- Compiles the Fabric tools -->
+  <target name="tools" depends="storebrowser,classloader-tools"
+    description="Builds all Fabric tools" />
+
+  <!-- Compiles the classloader tools -->
+  <target name="classloader-tools" depends="worker,fabil-runtime"
+    description="Builds the classloader tools">
+    <mkdir dir="${tools.classes}" /> 
+    <javac target="1.5" srcdir="${tools.classloader}" destdir="${tools.classes}" debug="on">
+      <classpath>
+        <pathelement location="${runtime.classes}" />
+        <path refid="standard.classpath"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <!-- Compiles the store browser -->
+  <target name="storebrowser" depends="worker,fabil-runtime"
+    description="Builds the Fabric GUI store browser">
+    <mkdir dir="${tools.classes}" /> 
+    <javac target="1.5" srcdir="${tools.storebrowser}" destdir="${tools.classes}">
+      <classpath>
+        <pathelement location="${runtime.classes}" />
+        <path refid="standard.classpath"/>
+      </classpath>
     </javac>
   </target>
 

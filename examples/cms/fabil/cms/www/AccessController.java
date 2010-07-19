@@ -14,7 +14,7 @@ import fabric.util.*;
 import java.util.Date;
 import java.util.Iterator;
 
-import fabric.client.Client;
+import fabric.worker.Worker;
 
 import java.text.ParseException;
 
@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.xml.parsers.ParserConfigurationException;
 
-import jif.lang.Label;
+import fabric.lang.security.Label;
 
 import cms.controller.test.CreateDB;
 
@@ -889,8 +889,8 @@ public class AccessController extends HttpServlet {
   private HashMap    debugPrincipalMap;
   private XMLBuilder xmlBuilder;
   
-  private LocalCore localCore;
-  private Core core;
+  private LocalStore localStore;
+  private Store core;
   private Label label;
 
   /**
@@ -903,18 +903,18 @@ public class AccessController extends HttpServlet {
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
     
-    try {
+    /*try {
       String name = config.getInitParameter("fabric.client");
       if (name == null)
         name = InetAddress.getLocalHost().getHostName();
-      fabric.client.Client.initialize(name);
+      fabric.worker.Worker.initialize(name);
     }
     catch(Exception ex) { 
       throw new RuntimeException~label@core(ex);
-    }
-    localCore = Client.getClient().getLocalCore();
-    core = Client.getClient().getCore(config.getInitParameter("cms.root.core"));
-    label = localCore.getEmptyLabel();
+    } */
+    localStore = Worker.getWorker().getLocalStore();
+    core = Worker.getWorker().getStore(config.getInitParameter("cms.root.core"));
+    label = localStore.getEmptyLabel();
     CMSRoot database = null;
 
     Map root = null;
@@ -940,9 +940,9 @@ public class AccessController extends HttpServlet {
     atomic {
       if (xmlBuilder == null) {
         try {
-          xmlBuilder = new XMLBuilder~label@localCore(database);
+          xmlBuilder = new XMLBuilder~label@localStore(database);
         } catch (ParserConfigurationException e) {
-          throw new ServletException~label@localCore(e);
+          throw new ServletException~label@localStore(e);
         }
       }
       //transactions = (TransactionHandler)root.get("cms_transactions");
@@ -953,7 +953,7 @@ public class AccessController extends HttpServlet {
   
       debug = xmlBuilder.getDatabase().getDebugMode();
       if (xmlBuilder.getDatabase().getDebugMode())
-        debugPrincipalMap = new HashMap~label@localCore();
+        debugPrincipalMap = new HashMap~label@localStore();
       maxFileSize = xmlBuilder.getDatabase().getMaxFileSize();
     }
   }
@@ -975,7 +975,12 @@ public class AccessController extends HttpServlet {
    */
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
+    try {
       processRequest(request, response);
+    } catch(Exception ex) {
+      //XXX Do something
+      System.err.println(ex.getMessage());
+    }
   }
 
   /**
@@ -988,7 +993,12 @@ public class AccessController extends HttpServlet {
    */
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
+    try {
       processRequest(request, response);
+    } catch(Exception ex) {
+      //XXX Do something
+      System.err.println(ex.getMessage());
+    }
   }
 
   /**
@@ -1045,7 +1055,7 @@ public class AccessController extends HttpServlet {
    *           IOException
    */
   protected void processRequest(HttpServletRequest request,
-      HttpServletResponse response) throws ServletException, IOException {
+      HttpServletResponse response) throws ServletException, IOException, Exception {
     String action = request.getParameter(P_ACTION);
     response.setCharacterEncoding("iso-8859-1");
     String path = request.getPathInfo();
@@ -1073,7 +1083,7 @@ public class AccessController extends HttpServlet {
     
     String buildURL = "";
     HttpSession session = request.getSession(true);
-    session.setAttribute(TIME, new Long~label@localCore(System.currentTimeMillis()));
+    session.setAttribute(TIME, new Long~label@localStore(System.currentTimeMillis()));
     /*
      * Course data for all of a user's courses are cached in the session and can
      * be retrieved for fast reference
@@ -1092,7 +1102,7 @@ public class AccessController extends HttpServlet {
           String value = "blank"; //XXX ((String native[])reqmap.get(key))[0];
           System.out.println("reqparam: " + key + "=" + value);
         }
-        session.setAttribute(A_DEBUG, new Boolean~label@localCore(debug));
+        session.setAttribute(A_DEBUG, new Boolean~label@localStore(debug));
         session.setAttribute(A_COOKIES, request.getCookies());
         Document xml  = null;
         User     user = null;
@@ -1123,7 +1133,7 @@ public class AccessController extends HttpServlet {
               RequestHandlerInfo info =
                   handleSpecificAction(action, request, response, session, user);
               if (info == null)
-                throw new RuntimeException~label@localCore(
+                throw new RuntimeException~label@localStore(
                     "Action handler return value should not be null!");
               buildURL = info.getBuildURL();
               xml = info.getXMLDocument();
@@ -1156,7 +1166,7 @@ public class AccessController extends HttpServlet {
     } catch (Exception e) {
       System.out.println("Error in AccessController.processRequest(): " + e);
       e.printStackTrace();
-      throw new ServletException~label@localCore(e);
+      throw new ServletException~label@localStore(e);
     } */
     } finally { }
   }
@@ -2146,7 +2156,7 @@ public class AccessController extends HttpServlet {
     else if (action.equals(ACT_REMOVECMSADMIN)) {
       if (user.isCMSAdmin()) {
         buildURL = CMSADMIN_URL;
-        TransactionResult result = new TransactionResult~label@localCore();
+        TransactionResult result = new TransactionResult~label@localStore();
         if (user.getNetID().equals(request.getParameter(P_NETID)))
           result.addError("Can't remove current user");
         else result =
@@ -2328,7 +2338,7 @@ public class AccessController extends HttpServlet {
             
             xml =
                 xmlBuilder.buildErrorPage(user.getNetID(), action,
-                    new NotImplementedException~label@localCore(message));
+                    new NotImplementedException~label@localStore(message));
             buildURL = ERROR_URL;
           } else {
             buildURL = ASSIGNADMIN_URL;
@@ -2461,7 +2471,7 @@ public class AccessController extends HttpServlet {
         Course course = getCourse(request.getParameter(P_COURSEID));
         if (course != null) {
           if (user.isStudentInCourseByCourse(course)) {
-            TransactionResult result = new TransactionResult~label@localCore();
+            TransactionResult result = new TransactionResult~label@localStore();
             result.addError("No scope (which courses to apply settings to?) was received from browser.");
             buildURL = STUDENTPREFS_URL;
             xml = xmlBuilder.buildStudentPrefsPage(user, course);
@@ -2589,7 +2599,7 @@ public class AccessController extends HttpServlet {
       Course     course = assign.getCourse();
       if (user.isAssignPrivByCourse(course)) {
         buildURL = ASSIGNSCHED_URL;
-        java.util.Collection results = new java.util.Vector~label@localCore();
+        java.util.Collection results = new java.util.Vector~label@localStore();
         Iterator entries = request.getParameterMap().entrySet().iterator();
         while (entries.hasNext()) {
           // entry.key   is a String representing the group
@@ -2751,7 +2761,7 @@ public class AccessController extends HttpServlet {
             result);
         xml = xmlBuilder.addStatus(xml, result);
         buildURL = CONFIRMTABLE_URL;
-        session.setAttribute(A_ISCLASSLIST, new Boolean~label@localCore(isClasslist));
+        session.setAttribute(A_ISCLASSLIST, new Boolean~label@localStore(isClasslist));
       } else buildURL = FORBIDDEN_URL;
     }
     // Enter Cornell-member perspective
@@ -2870,7 +2880,7 @@ public class AccessController extends HttpServlet {
     }
     boolean xhfg = true;
     if (debug) Profiler.endAction(action);
-    return new RequestHandlerInfo~label@localCore(buildURL, xml);
+    return new RequestHandlerInfo~label@localStore(buildURL, xml);
   }
 
   private Course getAssumedCourse(HttpServletRequest request, User user) {
@@ -2948,7 +2958,7 @@ public class AccessController extends HttpServlet {
    * @return A List of Groups
    */
   private List extractGroupsFromMainGradingPageRequest(HttpServletRequest request) {
-    List result = new ArrayList~label@localCore();
+    List result = new ArrayList~label@localStore();
     Iterator i = request.getParameterMap().keySet().iterator();
     while(i.hasNext()) {
       String param = ((String)i.next()).trim();
@@ -2971,7 +2981,7 @@ public class AccessController extends HttpServlet {
     response.setContentType("application/download");
     response.setHeader("Content-disposition", "attachment; filename=\""
         + file.getName() + "\"");
-    Streams.copy(file.read(), new BufferedOutputStream~label@localCore(response.getOutputStream()), true);
+    Streams.copy(file.read(), new BufferedOutputStream~label@localStore(response.getOutputStream()), true);
   }
 }
 

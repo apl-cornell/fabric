@@ -4,11 +4,7 @@ import java.util.*;
 
 import polyglot.ast.*;
 import polyglot.qq.QQ;
-import polyglot.types.ClassType;
-import polyglot.types.Flags;
-import polyglot.types.MethodInstance;
-import polyglot.types.PrimitiveType;
-import polyglot.types.Type;
+import polyglot.types.*;
 import polyglot.util.Position;
 import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
@@ -272,7 +268,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     methodDecl.append(flags + " ");
 
     Type returnType = mi.returnType();
-    if (returnType.isArray()) returnType = ts.toFabricRuntimeArray(returnType.toArray());
+    if (returnType.isArray() && ts.isFabricArray(returnType)) {
+      returnType = ts.toFabricRuntimeArray(returnType.toArray());
+    }
 
     String name = mi.name();
     methodDecl.append("%T " + name + "(");
