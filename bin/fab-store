@@ -32,7 +32,7 @@ classpath="$TOP/lib/fabric.jar:$classpath"
 classpath="$TOP/lib/je-3.3.75.jar:$classpath"
 classpath="$TOP/lib/FreePastry-2.1.jar:$classpath"
 
-command="\"$JAVA\" $vmargs -classpath \"$(fixpath $classpath)\" fabric.store.Main $args"
+command="\"$JAVA\" $vmargs -classpath \"$(fixpath $classpath)\" fabric.store.Node $args"
 
 if [ -n "$verbose" ]
 then
