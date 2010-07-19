@@ -1,13 +1,20 @@
 package fabric.store;
 
+import static fabric.common.Logging.STORE_LOGGER;
+
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Map;
+import java.util.logging.Level;
 
 import fabric.worker.Worker;
 import fabric.worker.RemoteStore;
 import fabric.common.ONumConstants;
+import fabric.common.Version;
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.TerminationException;
+import fabric.common.exceptions.UsageError;
 import fabric.common.net.SubServerSocketFactory;
 import fabric.common.net.handshake.HandshakeImpl;
 import fabric.common.net.handshake.HandshakeProtocol;
@@ -25,6 +32,72 @@ import fabric.common.net.naming.PropertyNameService.PortType;
  */
 public class Node {
 
+  //////////////////////////////////////////////////////////////////////////////
+  // store invocation                                                         //
+  //////////////////////////////////////////////////////////////////////////////
+  
+  /** Main method.  Calls {@link start} and outputs errors nicely. */
+  public static void main(String[] args) {
+    try {
+      start(args);
+    } catch (TerminationException te) {
+      if (te.getMessage() != null)
+        (te.exitCode == 0 ? System.out : System.err).println(te.getMessage());
+
+      System.exit(te.exitCode);
+    }
+  }
+
+  
+  /**
+   * Main entry point for the store.  This method is useful for applications
+   * that wish to embed a fabric store.
+   * 
+   * @throws TerminationException to indicate that the store is shutting down
+   */
+  public static void start(String args[]) throws TerminationException {
+    STORE_LOGGER.info("Store node");
+    STORE_LOGGER.log(Level.CONFIG, "Fabric version {0}", new Version());
+    STORE_LOGGER.info("");
+
+    // Parse the command-line options.
+    Options opts;
+    try {
+      opts = new Options(args);
+    } catch (UsageError ue) {
+      printUsage(ue);
+      throw new TerminationException(ue.exitCode);
+    }
+    
+    // Start up store-node services.
+    final Node node = new Node(opts);
+
+    // initialize
+    node.initialize();
+
+    // register a hook to shut down gracefully.
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override public void run() { node.shutdown(); }
+    });
+
+    // run
+    node.run();
+  }
+  
+  private static void printUsage(UsageError ue) {
+    PrintStream out = ue.exitCode == 0 ? System.out : System.err;
+    if (ue.getMessage() != null && ue.getMessage().length() > 0) {
+      out.println(ue.getMessage());
+      out.println();
+    }
+
+    Options.usage(out);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // setup and shutdown                                                       //
+  //////////////////////////////////////////////////////////////////////////////
+  
   //
   // Note: Although this interface is designed for multiple stores, in the
   // current implementation we only allow a single store per process.
