@@ -2,6 +2,7 @@ package fabric.store;
 
 import static fabric.common.Logging.STORE_REQUEST_LOGGER;
 
+import java.security.cert.Certificate;
 import java.util.Collection;
 import java.util.logging.Level;
 
@@ -11,7 +12,6 @@ import fabric.common.SerializedObject;
 import fabric.common.Threading.NamedRunnable;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.NotImplementedException;
-import fabric.common.exceptions.ProtocolError;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
@@ -24,6 +24,8 @@ public class MessageHandlerThread
   implements MessageToStoreHandler {
 
   private final SessionAttributes session;
+  private final TransactionManager tm;
+  private Certificate[] certificateChain;
   
   /**
    * Instantiates a new message-handler thread and starts it running.
@@ -36,18 +38,14 @@ public class MessageHandlerThread
     throw new NotImplementedException();
   }
   
-  public SessionAttributes getSession() {
-    return this.session;
-  }
-
   public AbortTransactionMessage.Response handle(NodePrincipal p, AbortTransactionMessage message)
   throws AccessException {
     
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Abort Message from {0} for tid={1}",
-                session.workerPrincipalName, message.tid.topTid);
+                p.name(), message.tid.topTid);
     
-    session.store.tm.abortTransaction(session.workerPrincipal, message.tid.topTid);
+    tm.abortTransaction(p, message.tid.topTid);
     return new AbortTransactionMessage.Response();
   }
 
@@ -58,9 +56,9 @@ public class MessageHandlerThread
   throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Allocate Message from {0}",
-                session.workerPrincipalName);
+                p.name());
     
-    long[] onums = session.store.tm.newOnums(session.workerPrincipal, msg.num);
+    long[] onums = tm.newOnums(p, msg.num);
     return new AllocateMessage.Response(onums);
   }
 
@@ -73,7 +71,7 @@ public class MessageHandlerThread
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Commit Message from {0} for tid={1}",
                 session.workerPrincipalName, message.transactionID);
-    session.store.tm.commitTransaction(session.remoteNode, session.workerPrincipal, message.transactionID);
+    tm.commitTransaction(session.remoteNode, p, message.transactionID);
     return new CommitTransactionMessage.Response();
   }
 
@@ -85,7 +83,7 @@ public class MessageHandlerThread
   throws TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Prepare Message, worker={0}, tid={1}",
-                new Object[] {session.workerPrincipalName, msg.tid});
+                p.name(), msg.tid);
 
     boolean subTransactionCreated = prepareTransaction(msg.tid,
                                                        msg.commitTime,
@@ -98,14 +96,13 @@ public class MessageHandlerThread
   /**
    * Processes the given read request.
    */
-  public ReadMessage.Response handle(NodePrincipal p, ReadMessage msg) throws AccessException {
-    STORE_REQUEST_LOGGER.log(Level.FINER,
-        "Handling Read Message from {0}, onum=" + msg.onum,
-        session.workerPrincipalName);
+  public ReadMessage.Response handle(NodePrincipal p, ReadMessage msg)
+  throws AccessException {
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+                "Handling Read Message from {0}, onum={1}",
+                p.name(), msg.onum);
 
-    ObjectGroup group =
-        session.store.tm.getGroup(session.workerPrincipal, session.remoteNode,
-            msg.onum, this);
+    ObjectGroup group = tm.getGroup(p, session.remoteNode, msg.onum, this);
     return new ReadMessage.Response(group);
   }
 
@@ -113,12 +110,12 @@ public class MessageHandlerThread
    * Processes the given dissemination-read request.
    */
   public DissemReadMessage.Response handle(NodePrincipal p, DissemReadMessage msg)
-      throws AccessException {
-    STORE_REQUEST_LOGGER.log(Level.FINER,
-        "Handling DissemRead message from {0}, onum=" + msg.onum,
-        session.remoteNode);
+  throws AccessException {
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+                "Handling DissemRead message from {0}, onum={1}",
+                p.name(), msg.onum);
 
-    Glob glob = session.store.tm.getGlob(msg.onum, session.remoteNode, this);
+    Glob glob = tm.getGlob(msg.onum, session.remoteNode, this);
 
     return new DissemReadMessage.Response(glob);
   }
@@ -126,12 +123,12 @@ public class MessageHandlerThread
   /**
    * Processes the given request for the store's SSL certificate chain.
    */
-  public GetCertChainMessage.Response handle(
-      NodePrincipal p, GetCertChainMessage msg) {
-    STORE_REQUEST_LOGGER.log(Level.FINER,
-        "Handling request for SSL cert chain, worker={0}", session.remoteNode);
-    return new GetCertChainMessage.Response(
-        session.store.certificateChain);
+  public GetCertChainMessage.Response handle(NodePrincipal p,
+                                             GetCertChainMessage msg) {
+    Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+                "Handling request for SSL cert chain, worker={0}",
+                session.remoteNode);
+    return new GetCertChainMessage.Response(certificateChain);
   }
 
   /**
