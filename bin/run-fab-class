@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Wrapper script for the fabric GUI store browser 
+# Runs classes that are stored in Fabric. 
+# This is a wrapper script for RunFabClass.
 
 source "$(dirname $0)/defs"
 
