@@ -1,5 +1,7 @@
 package fabric.lang;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,7 +59,17 @@ public class FabricClassLoader extends ClassLoader {
     }
     return result;
   }
-
+  
+  public InputStream getResourceAsStream(String name) {
+	  /* TODO: support non-class resources also */
+	  name = name.substring(0,name.length()-".class".length());
+	  FClass fcls = codebase.resolveClassName(name);
+      if(fcls != null) 
+    	  return new ByteArrayInputStream(toByteArray(fcls.getBytecode()));
+      else 
+    	  return null;
+  }
+  
   byte native[] toByteArray(byte[] arr) {
     byte native[] n = new byte native[arr.length];
     for (int i = 0 ; i < n.length; i++)
