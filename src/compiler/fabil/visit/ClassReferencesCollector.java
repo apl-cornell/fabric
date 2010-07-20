@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 
 import polyglot.ast.Node;
@@ -13,7 +15,12 @@ import polyglot.ast.SourceCollection;
 import polyglot.ast.SourceFile;
 import polyglot.ast.Typed;
 import polyglot.frontend.Job;
+import polyglot.frontend.Source;
 
+import polyglot.types.ClassType;
+import polyglot.types.Named;
+import polyglot.types.ReferenceType;
+import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorInfo;
@@ -21,6 +28,7 @@ import polyglot.util.InternalCompilerError;
 import polyglot.visit.NodeVisitor;
 import fabil.FabILOptions;
 import fabil.types.FabILTypeSystem;
+
 import java.util.Set;
 
 /**
@@ -47,11 +55,13 @@ public class ClassReferencesCollector extends NodeVisitor {
   private FabILTypeSystem ts;
   private Job job;
   private Set<String> classes;
+  private Map<String,Set<String>> nestedClasses;
   
   public ClassReferencesCollector(Job job, TypeSystem ts) {
     this.job = job;
     this.ts = (FabILTypeSystem)ts;
     classes = new HashSet<String>(Arrays.asList(ALWAYS_REQUIRED_CLASSES));
+    nestedClasses = new HashMap<String,Set<String>>();
   }
   
   @Override
@@ -79,16 +89,35 @@ public class ClassReferencesCollector extends NodeVisitor {
   }
   
   private void writeDependencies(SourceFile sfn) {
-    String pkg = sfn.package_().package_().fullName();
+    String pkg = null;
+    if(sfn.package_() != null)
+      pkg = sfn.package_().package_().fullName();
     File of = job.extensionInfo().targetFactory().outputFile(pkg, sfn.source());
+    
+    String tlClass = of.getName();
+    tlClass = tlClass.substring(0,tlClass.length()-5);
+    if (pkg != null)
+      tlClass = pkg + "." + tlClass;
+    Set<String> nested = nestedClasses.get(tlClass);
+    
     String basePath = of.getAbsolutePath();
     basePath = basePath.substring(0, basePath.length()-5);
+    
     for (String classSuffix : GENERATED_CLASSES) {
       StringBuilder path = new StringBuilder();
       path.append(basePath).append(classSuffix).append(".class").append(
           PROPERTIES_EXTENSION);
       writeDependencies(new File(path.toString()));
     }
+    /* write deps for any nested classes declared in this sourcefile */
+    if(nested != null)
+      for(String nestedClass : nested) {
+        StringBuilder path = new StringBuilder();
+        if(of.getParent() != null)
+          path.append(of.getParent()).append(File.separatorChar);
+        path.append(nestedClass).append(".class").append(PROPERTIES_EXTENSION);
+        writeDependencies(new File(path.toString())); 
+      }
   }
   
   private void writeDependencies(File f) {
@@ -126,12 +155,34 @@ public class ClassReferencesCollector extends NodeVisitor {
     // The types not checked are manually added from ALWAYS_REQUIRED_CLASSES. 
     if (type != null) {
       if (type.isClass()) {
+        ClassType ct = (ClassType)type;
         String typeName = type.toString();
+        Set<String> nested = null;
+        /* generate correct filename for nested classes */
+        if(ct.isNested()) {
+          typeName = ct.name();
+          while(ct.outer() != null) {
+            ct = ct.outer();
+            typeName = ct.name() + "$" + typeName;
+          }
+          nested = nestedClasses.get(ct.fullName());
+          if(nested == null) {
+            nested = new HashSet<String>();
+            nestedClasses.put(ct.fullName(), nested);
+          }
+        }                  
+        
         if (type.descendsFrom(ts.FObject()) || type.equals(ts.FObject())) {
-          for (String classSuffix : GENERATED_CLASSES)
+          for (String classSuffix : GENERATED_CLASSES) {
             classes.add(typeName + classSuffix);
+            if(nested != null)
+              nested.add(typeName + classSuffix);
+          } 
+           
         } else {
           classes.add(typeName);
+          if(nested != null)
+            nested.add(typeName);
         }
       }
     }
