@@ -157,11 +157,6 @@ public class Node {
   //////////////////////////////////////////////////////////////////////////////
   // public accessors                                                         //
   //////////////////////////////////////////////////////////////////////////////
-  
-  /** Returns the store corresponding to the given name, or null if none exists. */
-  public Store getStore(String name) {
-    return name.equals(store.name) ? store : null;
-  }
 
   /** Return the server socket factory associated with this node. */
   public SubServerSocketFactory getServerSocketFactory() {
