@@ -8,7 +8,7 @@ public interface Codebase extends fabric.lang.Object {
 
   public fabric.lang.FClass resolveClassName(java.lang.String name);
 
-  public java.lang.Class toJavaClass(java.lang.String name);
+  public java.lang.Class<?> toJavaClass(java.lang.String name);
 
   public fabric.lang.FabricClassLoader getClassLoader();
 

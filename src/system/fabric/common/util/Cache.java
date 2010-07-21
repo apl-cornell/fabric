@@ -105,14 +105,13 @@ public class Cache<K, V> {
       collector.interrupt();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void run() {
       while (!destroyed) {
         try {
-          ValueSoftRef ref = (ValueSoftRef) queue.remove();
+          ValueSoftRef<?, ?> ref = (ValueSoftRef<?, ?>) queue.remove();
           synchronized (ref.cache) {
-            ValueSoftRef curRef = (ValueSoftRef) ref.cache.map.get(ref.key);
+            ValueSoftRef<?, ?> curRef = ref.cache.map.get(ref.key);
             if (ref == curRef) ref.cache.remove(ref.key);
           }
         } catch (InterruptedException e) {
