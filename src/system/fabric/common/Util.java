@@ -10,6 +10,9 @@ import java.security.MessageDigest;
 import java.util.*;
 import java.util.logging.Level;
 
+import fabric.lang.FabricClassLoader;
+import fabric.lang.Codebase;
+
 public final class Util {
 
   private static final Map<String, byte[]> classHashCache =
@@ -22,10 +25,20 @@ public final class Util {
    */
   public static byte[] hash(Class<?> c) throws IOException {
     String className = c.getName();
+    String cacheKey;
+    if(c.getClassLoader() instanceof FabricClassLoader) {
+      FabricClassLoader cl = (FabricClassLoader)c.getClassLoader();
+      Codebase codebase = cl.getCodebase();
+      // qualify classname by codebase
+      cacheKey = "fab://" + codebase.$getStore().name() + "/" 
+      + codebase.$getOnum() + "/" + className;
+    } else
+      cacheKey = className;
+    
     CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing class by class object: {0}",
         className);
 
-    byte[] result = classHashCache.get(className);
+    byte[] result = classHashCache.get(cacheKey);
     if (result != null) {
       CLASS_HASHING_LOGGER.finer("  Hash found in cache");
       return result;
@@ -68,7 +81,7 @@ public final class Util {
     if (superClass != null) digest.update(hash(superClass));
 
     result = digest.digest();
-    classHashCache.put(className, result);
+    classHashCache.put(cacheKey, result);
     
     if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
       String hash = new BigInteger(1, result).toString(16);
@@ -79,21 +92,36 @@ public final class Util {
     return result;
   }
 
-  public static byte[] hashClass(String className) throws IOException,
+  public static byte[] hashClass(Codebase codebase, String className) throws IOException,
       ClassNotFoundException {
     CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing class by name: {0}",
         className);
+    String cacheKey;
+    
+    if(codebase == null)
+      cacheKey = className;
+    else
+      cacheKey = "fab://" + codebase.$getStore().name() + "/" 
+                    + codebase.$getOnum() + "/" + className;
+    
     byte[] result = classHashCache.get(className);
     if (result != null) {
       CLASS_HASHING_LOGGER.finer("  Hash found in cache");
       return result;
     }
-    return hash(Class.forName(className));
+    if(codebase == null)
+      return hash(Class.forName(className));
+    else
+      return hash(FabricClassLoader.getClassLoader(codebase).findClass(className));
   }
 
-  public static URL locateClass(String className) throws ClassNotFoundException {
+  public static URL locateClass(Codebase codebase, String className) throws ClassNotFoundException {
     // TODO: copied from hash(className)
-    Class<?> c = Class.forName(className);
+    Class<?> c;
+    if(codebase == null)
+      c = Class.forName(className);
+    else
+      c = FabricClassLoader.getClassLoader(codebase).findClass(className);
 
     ClassLoader classLoader = c.getClassLoader();
     if (classLoader == null) {

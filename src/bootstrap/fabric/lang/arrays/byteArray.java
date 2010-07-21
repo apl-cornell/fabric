@@ -8,6 +8,8 @@ public interface byteArray extends Object {
   byte get(int i);
 
   byte set(int i, byte value);
+  
+  int  get$length();
 
   public static class _Impl extends Object._Impl implements byteArray {
     public _Impl(Store store, Label label, int length) {
@@ -17,5 +19,7 @@ public interface byteArray extends Object {
     public native byte get(int i);
 
     public native byte set(int i, byte value);
+    
+    public native int  get$length();
   }
 }
