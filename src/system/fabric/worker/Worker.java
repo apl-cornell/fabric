@@ -117,9 +117,9 @@ public final class Worker {
    * @param useSSL
    *          Whether SSL encryption is desired. Used for debugging purposes.
    */
-  public static Worker initialize(String name, int port, String principalURL,
+  private static Worker initialize(String name, int port, String principalURL,
       KeyStore keyStore, char[] passwd, int maxConnections, int timeout,
-      int retries, boolean useSSL, String fetcher,
+      int retries, boolean useSSL, String fetcher, Properties dissemConfig,
       Map<String, RemoteStore> initStoreSet) throws InternalError,
       UnrecoverableKeyException, IllegalStateException, UsageError {
 
@@ -134,7 +134,7 @@ public final class Worker {
     WORKER_LOGGER.config("use ssl:             " + useSSL);
     instance =
         new Worker(name, port, principalURL, keyStore, passwd, maxConnections,
-            timeout, retries, useSSL, fetcher, initStoreSet);
+            timeout, retries, useSSL, fetcher, dissemConfig, initStoreSet);
 
     instance.remoteCallManager.start();
     instance.localStore.initialize();
@@ -150,8 +150,9 @@ public final class Worker {
   @SuppressWarnings("unchecked")
   private Worker(String name, int port, String principalURL, KeyStore keyStore,
       char[] passwd, int maxConnections, int timeout, int retries,
-      boolean useSSL, String fetcher, Map<String, RemoteStore> initStoreSet)
-      throws InternalError, UnrecoverableKeyException, UsageError {
+      boolean useSSL, String fetcher, Properties dissemConfig,
+      Map<String, RemoteStore> initStoreSet) throws InternalError,
+      UnrecoverableKeyException, UsageError {
     // Sanitise input.
     if (timeout < 1) timeout = DEFAULT_TIMEOUT;
 
@@ -221,8 +222,9 @@ public final class Worker {
     try {
       Constructor<FetchManager> fetchManagerConstructor =
           (Constructor<FetchManager>) Class.forName(fetcher).getConstructor(
-              Worker.class);
-      this.fetchManager = fetchManagerConstructor.newInstance(this);
+              Worker.class, Properties.class);
+      this.fetchManager =
+          fetchManagerConstructor.newInstance(this, dissemConfig);
     } catch (Exception e) {
       throw new InternalError("Unable to load fetch manager", e);
     }
@@ -377,13 +379,6 @@ public final class Worker {
     FabricSoftRef.destroy();
   }
 
-  public static void initialize() throws IOException, KeyStoreException,
-      NoSuchAlgorithmException, CertificateException,
-      UnrecoverableKeyException, IllegalStateException, InternalError,
-      UsageError {
-    initialize(null);
-  }
-
   public static void initialize(String name) throws UnrecoverableKeyException,
       KeyStoreException, NoSuchAlgorithmException, CertificateException,
       IllegalStateException, IOException, InternalError, UsageError {
@@ -415,10 +410,11 @@ public final class Worker {
     int retries        = props.retries;
 
     String fetcher = props.dissemClass;
+    Properties dissemConfig = props.disseminationProperties;
     boolean useSSL = props.useSSL;
 
-    initialize(name, port, principalURL, keyStore, passwd,
-        maxConnections, timeout, retries, useSSL, fetcher, initStoreSet);
+    initialize(name, port, principalURL, keyStore, passwd, maxConnections,
+        timeout, retries, useSSL, fetcher, dissemConfig, initStoreSet);
   }
 
   // TODO: throws exception?

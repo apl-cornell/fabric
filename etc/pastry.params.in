@@ -1,9 +1,0 @@
-# a sample pastry.params file. rename to pastry.params to use.
-# pastry modifies pastry.params, so that should not be placed in cvs directly.
-
-bootstrap=localhost:13373
-firewall_test_policy=never
-nat_search_policy=never
-pastry_socket_allow_loopback=true
-replication_interval=300000
-aggregation_interval=600000
