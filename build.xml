@@ -1076,8 +1076,24 @@ public class Version {
     <delete dir="${basedir}/fabric-${fabric.version}" />
     <move tofile="${basedir}/fabric-${fabric.version}" file="${tmp}" />
     <tar destfile="${basedir}/fabric-${fabric.version}.tar.gz"
-	basedir="${basedir}" includes="fabric-${fabric.version}/**"
-	compression="gzip" />
+	compression="gzip">
+      <!-- Include everything but bin, which needs to be handled specially. -->
+      <fileset dir="${basedir}">
+	<include name="fabric-${fabric.version}/**" />
+	<exclude name="fabric-${fabric.version}/bin/**" />
+      </fileset>
+
+      <!-- Everything in bin except defs.in needs to be executable. -->
+      <tarfileset dir="${basedir}" filemode="755">
+	<include name="fabric-${fabric.version}/bin/*" />
+	<exclude name="fabric-${fabric.version}/bin/defs.in" />
+      </tarfileset>
+
+      <!-- Finally, include bin/defs.in. -->
+      <fileset dir="${basedir}">
+	<include name="fabric-${fabric.version}/bin/defs.in" />
+      </fileset>
+    </tar>
   </target>
 
   <!-- Creates a distribution directory in ${tmp} from the working copy. -->
@@ -1112,13 +1128,6 @@ public class Version {
 	<include name="store-browser" />
       </fileset>
     </copy>
-
-    <!-- Make binaries executable. -->
-    <chmod perm="a+x" verbose="true">
-      <fileset dir="${tmp}/bin">
-	<exclude name="defs.in" />
-      </fileset>
-    </chmod>
 
     <!-- Copy docs. -->
     <copy todir="${tmp}/doc" includeEmptyDirs="false">
