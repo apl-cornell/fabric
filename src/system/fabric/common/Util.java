@@ -15,28 +15,35 @@ import fabric.lang.Codebase;
 
 public final class Util {
 
-  private static final Map<String, byte[]> classHashCache =
-      Collections.synchronizedMap(new HashMap<String, byte[]>());
+  private static final Map<String, byte[]> classHashCache = Collections
+      .synchronizedMap(new HashMap<String, byte[]>());
 
   private static final int BUF_LEN = 4096;
+
+  /**
+   * Returns the key to use for looking stuff up in classHashCache.
+   */
+  private static String getCacheKey(Codebase codebase, String className) {
+    if (codebase == null) return className;
+    return "fab://" + codebase.$getStore().name() + "/" + codebase.$getOnum()
+        + "/" + className;
+  }
 
   /**
    * Generates a cryptographically secure hash of the given class.
    */
   public static byte[] hash(Class<?> c) throws IOException {
+    Codebase codebase = null;
+    if (c.getClassLoader() instanceof FabricClassLoader) {
+      FabricClassLoader cl = (FabricClassLoader) c.getClassLoader();
+      codebase = cl.getCodebase();
+    }
+
     String className = c.getName();
-    String cacheKey;
-    if(c.getClassLoader() instanceof FabricClassLoader) {
-      FabricClassLoader cl = (FabricClassLoader)c.getClassLoader();
-      Codebase codebase = cl.getCodebase();
-      // qualify classname by codebase
-      cacheKey = "fab://" + codebase.$getStore().name() + "/" 
-      + codebase.$getOnum() + "/" + className;
-    } else
-      cacheKey = className;
-    
+    String cacheKey = getCacheKey(codebase, className);
+
     CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing class by class object: {0}",
-        className);
+        cacheKey);
 
     byte[] result = classHashCache.get(cacheKey);
     if (result != null) {
@@ -52,7 +59,7 @@ public final class Util {
     }
 
     String classFileName = className.replace('.', '/') + ".class";
-    
+
     if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
       URL classResource = classLoader.getResource(classFileName);
       Logging.log(CLASS_HASHING_LOGGER, Level.FINEST,
@@ -82,7 +89,7 @@ public final class Util {
 
     result = digest.digest();
     classHashCache.put(cacheKey, result);
-    
+
     if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
       String hash = new BigInteger(1, result).toString(16);
       Logging.log(CLASS_HASHING_LOGGER, Level.FINEST, "  Hash for {0} is {1}",
@@ -92,36 +99,30 @@ public final class Util {
     return result;
   }
 
-  public static byte[] hashClass(Codebase codebase, String className) throws IOException,
-      ClassNotFoundException {
+  public static byte[] hashClass(Codebase codebase, String className)
+      throws IOException, ClassNotFoundException {
     CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing class by name: {0}",
         className);
-    String cacheKey;
-    
-    if(codebase == null)
-      cacheKey = className;
-    else
-      cacheKey = "fab://" + codebase.$getStore().name() + "/" 
-                    + codebase.$getOnum() + "/" + className;
-    
-    byte[] result = classHashCache.get(className);
+    String cacheKey = getCacheKey(codebase, className);
+    byte[] result = classHashCache.get(cacheKey);
+
     if (result != null) {
       CLASS_HASHING_LOGGER.finer("  Hash found in cache");
       return result;
     }
-    if(codebase == null)
-      return hash(Class.forName(className));
-    else
-      return hash(FabricClassLoader.getClassLoader(codebase).findClass(className));
+
+    if (codebase == null) return hash(Class.forName(className));
+
+    return hash(FabricClassLoader.getClassLoader(codebase).findClass(className));
   }
 
-  public static URL locateClass(Codebase codebase, String className) throws ClassNotFoundException {
+  public static URL locateClass(Codebase codebase, String className)
+      throws ClassNotFoundException {
     // TODO: copied from hash(className)
     Class<?> c;
-    if(codebase == null)
+    if (codebase == null)
       c = Class.forName(className);
-    else
-      c = FabricClassLoader.getClassLoader(codebase).findClass(className);
+    else c = FabricClassLoader.getClassLoader(codebase).findClass(className);
 
     ClassLoader classLoader = c.getClassLoader();
     if (classLoader == null) {
