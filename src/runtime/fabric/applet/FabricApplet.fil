@@ -1,0 +1,6 @@
+package fabric.applet;
+import java.applet.Applet;
+
+public abstract class FabricApplet {
+	public abstract Applet getApplet();
+}

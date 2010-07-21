@@ -1,0 +1,32 @@
+Scribble is an example of an applet whose class and instances are stored in
+fabric.  Scribble.html uses FabricAppletPanel to load the applet class and
+instantiate a new Scribble object.  Scribble2.html loads a Scribble object from
+fabric.  
+
+
+0.1. Start and initialize store with worker0's principal: 
+fab-store --store store0
+fab --name worker0 --make-principal store0 
+(note principal OID for config)
+
+0.2. Jars in applet/examples/lib/ must be signed.
+
+1. Compile Scribble.fil
+	cd applet/examples/Scribble
+	filc -dumpdeps Scribble.fil
+
+2. Push Scribble classes to store0.
+codebasetool export worker0 . store0 Scribble
+(note OID of Scribble class)
+
+3. Edit classOid parameter in Scribble.html if necessary.
+
+4. Browse to Scribble.html
+(note OID of Scribble instance in Java Console).
+
+5. Edit objectOid parameter in Scribble2.html if necessary.
+
+6. Browse to Scribble2.html
+
+KNOWN ISSUES: Loading the instance in Scribble2.html causes the 
+Scribble.html applet to stop repainting/responding? Why?

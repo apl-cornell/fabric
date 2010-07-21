@@ -90,6 +90,13 @@
   <!-- Tools directory -->
   <property name="tools" location="${basedir}/tools"/>
 
+  <!-- Applet properties -->
+  <property name="applet.dir" location="${basedir}/examples/applet"/>
+  <property name="applet.name" value="fabapp"/>
+  <property name="applet.src" location="${applet.dir}/src"/>
+  <property name="applet.classes" location="${applet.dir}/classes"/>
+  <property name="applet.jar" location="${lib}/${applet.name}.jar" />
+
   <!-- Jar files -->
   <property name="base.jar" location="${lib}/${name}.jar" />
   <property name="runtime.jar" location="${lib}/${name}-rt.jar" />
@@ -293,6 +300,7 @@
     <delete dir="${bootstrap.classes}"/>
     <delete dir="${tests.classes}"/>
     <delete dir="${tools.classes}"/>
+    <delete dir="${applet.classes}"/>
     <delete dir="${dist}"/>
     <delete dir="${var}"/>
     <delete dir="${name}"/>
@@ -700,6 +708,45 @@
         <path refid="standard.classpath"/>
       </classpath>
     </javac>
+  </target>
+
+  <!-- Compiles the fabric applet -->
+  <target name="applet" depends="worker,fabil-runtime"
+    description="Builds the Fabric Browser Applet">
+    <mkdir dir="${applet.classes}" /> 
+    <javac target="1.5" srcdir="${applet.src}" destdir="${applet.classes}">
+      <classpath>
+        <pathelement location="${runtime.classes}" />
+        <path refid="standard.classpath"/>
+      </classpath>
+    </javac>
+    </target>
+
+  <target name="signed-jars" depends="package">
+  	<copy todir="${applet.dir}/applets/lib">
+  	  <fileset dir="${name}/lib" includes="*.jar"/>
+  	</copy>
+   	<signjar alias="Applet" storepass="password"
+   		keystore="${applet.dir}/appletcert.keystore">
+   		<fileset dir="${applet.dir}/applets/lib" includes="*.jar"/>
+   	</signjar>
+  </target>
+
+  <target name="jar-applet" depends="applet,signed-jars">
+     <jar jarfile="${applet.jar}" basedir="${applet.classes}" excludes="**/*.java">
+   		<manifest>
+   		 <attribute name="Built-By" value="${user.name}"/>
+   		 <attribute name="Class-Path" value="lib/FreePastry-2.1.jar 
+   		 	lib/JFlex.jar lib/fabcoll.jar lib/fabric-rt.jar lib/fabric.jar 
+   		 	lib/java_cup.jar lib/je-3.3.75.jar lib/jif.jar lib/polyglot.jar"/>
+   		</manifest>
+   		<fileset dir="${applet.src}" includes="JNLP-INF/**"/>
+   	</jar>
+   	<signjar jar="${applet.jar}" alias="Applet" storepass="password"
+   		keystore="${applet.dir}/appletcert.keystore"/>
+   	<copy file="${applet.jar}" todir="${applet.dir}/applets" overwrite="true"/>
+   	<!-- <copy file="${applet.src}/JNLP-INF/APPLICATION.jnlp" 
+   		tofile="${applet.dir}/applets/fabapp.jnlp" overwrite="true"/> -->
   </target>
 
   <!-- Jar targets -->
