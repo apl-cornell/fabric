@@ -1113,6 +1113,13 @@ public class Version {
       </fileset>
     </copy>
 
+    <!-- Make binaries executable. -->
+    <chmod perm="a+x" verbose="true">
+      <fileset dir="${tmp}/bin">
+	<exclude name="defs.in" />
+      </fileset>
+    </chmod>
+
     <!-- Copy docs. -->
     <copy todir="${tmp}/doc" includeEmptyDirs="false">
       <fileset dir="${doc}">
