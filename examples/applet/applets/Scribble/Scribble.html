@@ -7,10 +7,12 @@
 	<applet title="Scribble" code="FabricAppletPanel.class"
 		archive="../fabapp.jar"
 		width="100%" height="100%">
- 		<param name="codebase_lookup" value="false">
+		<param name="codebase_lookup" value="false" />
+		<param name="separate_jvm" value="true" />
 		<param name="storeName" value="store0"/>
 		<param name="workerName" value="worker0"/>
-		<param name="classOid" value="fab://store0/553"/> 
+		<!-- change to OID of Scribble class -->
+		<param name="classOid" value="fab://store0/554"/> 
 	</applet>
 </body>
 </html>

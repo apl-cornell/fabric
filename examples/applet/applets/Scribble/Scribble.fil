@@ -16,6 +16,10 @@ public class Scribble extends FabricApplet {
 
 	ArrayList lines;
 	Applet applet;
+
+    int last_x, last_y;
+    int offset_x, offset_y;
+    
 	// This class stores the coordinates of one line of the scribble.
 	public final class Line {
 	     public int x1, y1, x2, y2;
@@ -31,7 +35,9 @@ public class Scribble extends FabricApplet {
 
 	public void saveLine(int x1, int y1, int x2, int y2) {
 		Store store  = $getStore();
-		lines.add(new Line@store(x1, y1, x2, y2));
+		atomic {
+			lines.add(new Line@store(x1, y1, x2, y2));
+		}
 	}
 	
 	public java.applet.Applet getApplet() {
@@ -46,12 +52,10 @@ public class Scribble extends FabricApplet {
 	
 	class _Applet extends Applet {
 
-	    int last_x, last_y;
-	    int offset_x, offset_y;
-	    Scribble container;
+	    Scribble c;
 
 		public _Applet(Scribble container) {
-			this.container = container;
+			this.c = container;
 		}
 
 		public void init () {
@@ -59,32 +63,36 @@ public class Scribble extends FabricApplet {
 		}
 	    
 	    public void paint(Graphics g) {
-	        Line l;
-	        //System.out.println("repainting " + container.lines.size() + "lines");
-	        for(int i = 0; i < container.lines.size(); i++) {
-	            l = (Line)container.lines.get(i);
-	            g.drawLine(l.x1 - offset_x, l.y1 - offset_y, 
-	                      l.x2 - offset_x, l.y2 - offset_y);
+	        atomic {
+	        	Line l;
+
+		        for(int i = 0; i < c.lines.size(); i++) {
+		            l = (Line)c.lines.get(i);
+		            g.drawLine(l.x1 - c.offset_x, l.y1 - c.offset_y, 
+		                      l.x2 - c.offset_x, l.y2 - c.offset_y);
+		        }
 	        }
 	    }
 	    
 	    public boolean mouseDown(Event e, int x, int y)
-	    {
-	        last_x = x; last_y = y;
+	    {	
+	    	atomic {
+	    		c.last_x = x; 
+	    		c.last_y = y;
+	    	}
 	        return true;
 	    }
 	    public boolean mouseDrag(Event e, int x, int y)
 	    {
 	        Graphics g = getGraphics();
-			Store store  = container.$getStore();
-	        g.drawLine(last_x, last_y, x, y);
-			atomic {
-		        container.saveLine(last_x + offset_x, 
-		        					last_y + offset_y, 
-		        					x + offset_x, y + offset_y);
+			atomic {	
+		        g.drawLine(c.last_x, c.last_y, x, y);
+		        c.saveLine(c.last_x + c.offset_x, 
+		        					c.last_y + c.offset_y, 
+		        					x + c.offset_x, y + c.offset_y);
+		        c.last_x = x;
+		        c.last_y = y;
 			}
-	        last_x = x;
-	        last_y = y;
 	        return true;
 	    }
 	    // handle mouse up, too,, just for symmetry.
