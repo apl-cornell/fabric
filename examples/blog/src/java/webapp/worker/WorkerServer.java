@@ -12,7 +12,7 @@ public class WorkerServer {
   public static int port = 9000;
 
   public WorkerServer(String portStr) throws Exception {
-    String jetty_home = System.getProperty("jetty.home", "./bin/pojo");
+    String jetty_home = System.getProperty("jetty.home", "./classes/java");
 
     port = Integer.parseInt(System.getProperty("port", Integer.toString(port)));
     port = portStr != null ? Integer.parseInt(portStr) : port;

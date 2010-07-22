@@ -10,7 +10,7 @@ public class BlogServer {
   }
 
   public BlogServer() throws Exception {
-    String jetty_home = System.getProperty("jetty.home", "./bin");
+    String jetty_home = System.getProperty("jetty.home", "./classes");
 
     Server server = new Server(8080);
 
