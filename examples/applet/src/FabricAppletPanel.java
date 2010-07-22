@@ -4,6 +4,7 @@ import java.applet.AppletStub;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -41,8 +42,8 @@ public class FabricAppletPanel extends Applet implements AppletStub {
   /**
    * The applet (if loaded).
    */
+  protected FabricApplet fabapp;
   protected Applet applet;
-
   /**
    * Applet will allow initialization. Should be set to false if loading a
    * serialized applet that was pickled in the init=true state.
@@ -126,17 +127,12 @@ public class FabricAppletPanel extends Applet implements AppletStub {
     return FabricClassLoader.getClassLoader(codebase);
   }
 
-  protected void setupAppletAppContext() {
-    // do nothing
-  }
-
   /**
    * Construct an applet viewer and start the applet.
    */
   @Override
   public void init() {
     try {
-	  
       // Get the width (if any)
       defaultAppletSize.width = getWidth();
       currentAppletSize.width = defaultAppletSize.width;
@@ -155,10 +151,6 @@ public class FabricAppletPanel extends Applet implements AppletStub {
     setLayout(new BorderLayout());
 
     try {
-      // public static Worker initialize(String name, int port, String principalURL,
-      //      KeyStore keyStore, char[] passwd, int maxConnections, int timeout,
-      //      int retries, boolean useSSL, String fetcher,
-      //      Map<String, RemoteStore> initStoreSet)
       Worker.initialize(getWorkerName());
     } catch (IllegalStateException ise) {
       // already initialized
@@ -170,9 +162,9 @@ public class FabricAppletPanel extends Applet implements AppletStub {
     
     runLoader();
 
-    applet.resize(defaultAppletSize);
+    fabapp.getApplet().resize(defaultAppletSize);
     if (doInit) {
-      applet.init();
+      fabapp.getApplet().init();
     }
 
     // Need the default(fallback) font to be created in this AppContext
@@ -189,26 +181,26 @@ public class FabricAppletPanel extends Applet implements AppletStub {
   @Override
   public void start() {
     /* always run init */
-    if(applet == null)
+    if(fabapp == null)
       runLoader();
     
-    applet.resize(currentAppletSize);
-    applet.start();
+    fabapp.getApplet().resize(currentAppletSize);
+    fabapp.getApplet().start();
     validate();
-    applet.setVisible(true);
-
+    fabapp.getApplet().setVisible(true);
   }
 
   @Override
   public void stop() {
-    applet.setVisible(false);
-    applet.stop();
+    fabapp.getApplet().setVisible(false);
+    fabapp.getApplet().stop();
   }
 
   @Override
   public void destroy() {
-    applet.destroy();
-    remove(applet);
+    remove(fabapp.getApplet());
+    fabapp.getApplet().destroy();
+    Worker.getWorker().shutdown();
   }
 
   /**
@@ -225,10 +217,15 @@ public class FabricAppletPanel extends Applet implements AppletStub {
      * stronger security guarantees.
      */
     
-    setupAppletAppContext();
-
     try {
-      applet = createApplet();
+      applet = loadApplet();
+      if (applet != null) {
+        // Stick it in the frame
+        applet.setStub(this);
+        applet.setVisible(false);
+        add("Center", applet);
+        validate();
+      }
     } catch (ClassNotFoundException e) {
       showAppletException(e);
       return;
@@ -239,24 +236,17 @@ public class FabricAppletPanel extends Applet implements AppletStub {
       showAppletException(e);
       return;
     }
-
-    if (applet != null) {
-      // Stick it in the frame
-      applet.setStub(this);
-      applet.setVisible(false);
-      add("Center", applet);
-      validate();
-    }
   }
 
 
-  protected Applet createApplet() throws ClassNotFoundException,
+  protected Applet loadApplet() throws ClassNotFoundException,
       IllegalAccessException, IllegalArgumentException,
       InvocationTargetException, SecurityException, NoSuchMethodException {
 
     final String objectOid = getObjectOid();
     final String classOid = getClassOid();
     final String className = getClassName();
+    Applet applet;
     
     if (classOid != null && className == null && objectOid == null) {
       FabricClassLoader loader = getClassLoader(getFabricCodeBase());
@@ -268,7 +258,7 @@ public class FabricAppletPanel extends Applet implements AppletStub {
       Class cls = loader.findClass(((FClass) o).getName());
 
       if (FabricApplet.class.isAssignableFrom(cls)) {
-        FabricApplet fabapp = createAppletInstance(cls);
+        fabapp = createAppletInstance(cls);
         if(fabapp != null) {
           System.out.println("Created instance of " + cls.getName() 
               + " at " + getOid(fabapp));
@@ -285,7 +275,7 @@ public class FabricAppletPanel extends Applet implements AppletStub {
 
       Class cls = loader.findClass(className);
       if (FabricApplet.class.isAssignableFrom(cls)) {
-        FabricApplet fabapp = createAppletInstance(cls);
+        fabapp = createAppletInstance(cls);
        
         if(fabapp != null) {
           System.out.println("Created instance of " + cls.getName() 
@@ -306,9 +296,10 @@ public class FabricAppletPanel extends Applet implements AppletStub {
       if (!(o instanceof FabricApplet))
         throw new RuntimeException("objectOid is not a FabricApplet." + o);
       
-      applet = ((FabricApplet)o).getApplet();      
+      fabapp = (FabricApplet)o;
+      applet = fabapp.getApplet();      
       doInit = false; // skip over the first init
-    }
+    } else throw new RuntimeException("Invalid parameter combination.");
     
     return applet;
   }
@@ -316,6 +307,7 @@ public class FabricAppletPanel extends Applet implements AppletStub {
   private FabricApplet createAppletInstance(Class cls)
       throws SecurityException, NoSuchMethodException,
       IllegalArgumentException {
+
     final Label lbl = getLabel();
     final Store store = getStore();
     if(lbl == null || store == null) 
@@ -347,8 +339,8 @@ public class FabricAppletPanel extends Applet implements AppletStub {
    */
   @Override
   public boolean isActive() {
-    if (applet == null) return false;
-    return applet.isActive();
+    if (fabapp == null) return false;
+    return fabapp.getApplet().isActive();
   }
 
   /**
@@ -371,7 +363,22 @@ public class FabricAppletPanel extends Applet implements AppletStub {
   }
 
   public Applet getApplet() {
-    return applet;
+    if(fabapp == null) return null;
+    return fabapp.getApplet();
+  }
+  
+  public void paint(Graphics g) {
+    // need to re-add applet object if fabapp made a 
+    // new instance.
+    if(fabapp != null && applet != fabapp.getApplet()) {
+      applet = fabapp.getApplet();
+      applet.setStub(this);
+      applet.setVisible(false);
+      removeAll();
+      add("Center", applet);
+      applet.setVisible(true);
+      validate();
+    }
   }
   
   /**
