@@ -87,7 +87,7 @@
 	    </classpath>
         </javac>
         
-        <!--apply executable="bash"
+        <apply executable="bash"
                         parallel="true"
                         failonerror="true"
                         dest="${basedir}"
@@ -106,7 +106,7 @@
             <mapper type="regexp"
                     from="^src(.*)\.fil"
                     to="classes\1\.class" />            
-        </apply-->
+        </apply>
     </target>
     
     <target name="sif-fab"
