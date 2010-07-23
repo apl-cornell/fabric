@@ -1080,50 +1080,25 @@ public class Version {
   </target>
 
   <!-- Creates a distribution tarball from the current working copy. -->
-  <target name="dist.tar" depends="dist-tmp">
+  <target name="dist.tar" depends="configure-version,build-all,jars,javadoc">
     <delete dir="${basedir}/fabric-${fabric.version}" />
     <move tofile="${basedir}/fabric-${fabric.version}" file="${tmp}" />
     <tar destfile="${basedir}/fabric-${fabric.version}.tar.gz"
 	compression="gzip">
-      <!-- Include everything but bin, which needs to be handled specially. -->
-      <fileset dir="${basedir}">
-	<include name="fabric-${fabric.version}/**" />
-	<exclude name="fabric-${fabric.version}/bin/**" />
-      </fileset>
-
-      <!-- Everything in bin except defs.in needs to be executable. -->
-      <tarfileset dir="${basedir}" filemode="755">
-	<include name="fabric-${fabric.version}/bin/*" />
-	<exclude name="fabric-${fabric.version}/bin/defs.in" />
-      </tarfileset>
-
-      <!-- Finally, include bin/defs.in. -->
-      <fileset dir="${basedir}">
-	<include name="fabric-${fabric.version}/bin/defs.in" />
-      </fileset>
-    </tar>
-  </target>
-
-  <!-- Creates a distribution directory in ${tmp} from the working copy. -->
-  <target name="dist-tmp"
-      depends="configure-version,build-all,jars,javadoc,mkdir-tmp">
-    <!-- Copy top-level files. -->
-    <copy todir="${tmp}" includeEmptyDirs="false">
-      <fileset dir="${basedir}">
+      <!-- Include top-level files. -->
+      <tarfileset dir="${basedir}" prefix="fabric-${fabric.version}">
 	<include name="version.properties" />
 	<include name="build.xml" />
 	<include name="config.properties.in" />
 	<include name="README" />
-      </fileset>
-    </copy>
+      </tarfileset>
 
-    <!-- Copy binaries. -->
-    <copy todir="${tmp}/bin" includeEmptyDirs="false">
-      <fileset dir="${bin}">
+      <!-- Include scripts in bin and make them executable. -->
+      <tarfileset dir="${bin}" prefix="fabric-${fabric.version}/bin"
+	  filemode="755">
 	<include name="add-trusted-ca" />
 	<include name="ca-sign" />
 	<include name="codebase-tool" />
-	<include name="defs.in" />
 	<include name="fab" />
 	<include name="fabc" />
 	<include name="fab-store" />
@@ -1134,28 +1109,27 @@ public class Version {
 	<include name="make-node" />
 	<include name="run-fab-class" />
 	<include name="store-browser" />
-      </fileset>
-    </copy>
+      </tarfileset>
 
-    <!-- Copy docs. -->
-    <copy todir="${tmp}/doc" includeEmptyDirs="false">
-      <fileset dir="${doc}">
+      <!-- Include bin/defs.in. -->
+      <tarfileset dir="${bin}" prefix="fabric-${fabric.version}/bin">
+	<include name="defs.in" />
+      </tarfileset>
+
+      <!-- Include docs. -->
+      <tarfileset dir="${doc}" prefix="fabric-${fabric.version}/doc">
 	<include name="api/**" />
-      </fileset>
-    </copy>
+      </tarfileset>
 
-    <!-- Copy configuration. -->
-    <copy todir="${tmp}/etc" includeEmptyDirs="false">
-      <fileset dir="${etc}">
+      <!-- Include configuration files. -->
+      <tarfileset dir="${etc}" prefix="fabric-${fabric.version}/etc">
 	<include name="config/EXAMPLE.properties.in" />
 	<include name="config.properties" />
 	<include name="logging.properties" />
-      </fileset>
-    </copy>
+      </tarfileset>
 
-    <!-- Copy libraries. -->
-    <copy todir="${tmp}/lib" includeEmptyDirs="false">
-      <fileset dir="${lib}">
+      <!-- Include library dependencies. -->
+      <tarfileset dir="${lib}" prefix="fabric-${fabric.version}/lib">
 	<!-- Compiled jars -->
 	<include name="${name}.jar" />
 	<include name="${name}-rt.jar" />
@@ -1173,12 +1147,10 @@ public class Version {
 	<include name="FreePastry-2.1.jar" />
 	<include name="je-3.3.75.jar" />
 	<include name="bcprov-jdk15-145.jar" />
-      </fileset>
-    </copy>
+      </tarfileset>
 
-    <!-- Copy compiler and system sources. -->
-    <copy todir="${tmp}/src" includeEmptyDirs="false">
-      <fileset dir="${src}">
+      <!-- Include compiler and system sources. -->
+      <tarfileset dir="${src}" prefix="fabric-${fabric.version}/src">
 	<include name="**/README" />
 	<include name="bootstrap/**/*.java" />
 	<include name="compiler/**/*.java" />
@@ -1194,29 +1166,26 @@ public class Version {
 	<include name="system/**/*.java" />
 	<!-- These will be handled below. -->
 	<exclude name="runtime/fabric/util/**" />
-      </fileset>
-    </copy>
+      </tarfileset>
 
-    <!-- Handle runtime/fabric/util specially to exclude unused classes. -->
-    <copy todir="${tmp}/src/runtime/fabric/util" includeEmptyDirs="false">
-      <fileset dir="${runtime.src}/fabric/util">
+      <!-- Handle runtime/fabric/util specially to exclude unused classes. -->
+      <tarfileset dir="${runtime.src}/fabric/util"
+	  prefix="fabric-${fabric.version}/src/runtime/fabric/util">
 	<include name="**/*.fil" />
 	<!-- Only include classes that were compiled. -->
 	<present targetdir="${runtime.classes}/fabric/util">
 	  <globmapper from="*.fil" to="*.java" />
 	</present>
-      </fileset>
-    </copy>
+      </tarfileset>
 
-    <!-- Copy tools. -->
-    <copy todir="${tmp}/tools" includeEmptyDirs="false">
-      <fileset dir="${tools}">
+      <!-- Include tools. -->
+      <tarfileset dir="${tools}" prefix="fabric-${fabric.version}/tools">
 	<include name="storebrowser/**/README" />
 	<include name="storebrowser/**/*.java" />
 	<include name="classloader/**/README" />
 	<include name="classloader/**/*.java" />
-      </fileset>
-    </copy>
+      </tarfileset>
+    </tar>
   </target>
 
   <!--
