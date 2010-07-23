@@ -17,67 +17,28 @@
   ****************************************************************************
   -->
 
-  <!-- Project name -->
-  <property name="name" value="fabric" />
-
-  <!-- set the prefix for accessing environment variables -->
-  <property environment="env" />
-
-  <property file="${basedir}/config.properties" />
-
-  <!-- Polyglot installation location -->
-  <!-- If it is not defined in the properties file, use the environment
-       variable $POLYGLOT. -->
-  <condition property="polyglot.home" value="${env.POLYGLOT}">
-    <and>
-      <isset property="env.POLYGLOT" />
-      <not>
-        <isset property="polyglot.home" />
-      </not>
-    </and>
-  </condition>
-  <!-- As a last resort, try to use polyglot.jar from distribution -->
-  <condition property="polyglot.home" value="${basedir}">
-    <not><isset property="polyglot.home" /></not>
-  </condition>
-
-  <!-- Jif installation -->
-  <!-- If it is not defined in the properties file, use the environment
-       variable $JIF. -->
-  <condition property="jif.home" value="${env.JIF}">
-    <and>
-      <isset property="env.JIF" />
-      <not>
-        <isset property="jif.home" />
-      </not>
-    </and>
-  </condition>
-  <!-- As a last resort, try to use jif.jar from distribution -->
-  <condition property="jif.home" value="${basedir}">
-    <not><isset property="jif.home" /></not>
-  </condition>
+  <!-- Import common definitions. -->
+  <import file="common.xml" />
 
   <!-- Source directories -->
-  <property name="src" location="${basedir}/src"/>
+  <property name="src" location="${fabric.home}/src"/>
   <property name="system.src" location="${src}/system"/>
   <property name="compiler.src" location="${src}/compiler"/>
   <property name="bootstrap.src" location="${src}/bootstrap"/>
   <property name="runtime.src" location="${src}/runtime"/>
-  <property name="examples.fabnfs" location="${basedir}/examples/fabnfs"/>
   <property name="signatures.fabil.src" location="${src}/signatures/fabil"/>
   <property name="signatures.fabric.src" location="${src}/signatures/fabric"/>
 
   <!-- Directories for class file targets -->
-  <property name="classes" location="${basedir}/classes"/>
-  <property name="bootstrap.classes" location="${basedir}/bs-classes"/>
-  <property name="runtime.classes" location="${basedir}/rt-classes"/>
-  <property name="tests.classes" location="${basedir}/tests/classes"/>
-  <property name="signatures.classes" location="${basedir}/sig-classes"/>
+  <property name="bootstrap.classes" location="${fabric.home}/bs-classes"/>
+  <property name="runtime.classes" location="${fabric.home}/rt-classes"/>
+  <property name="tests.classes" location="${fabric.home}/tests/classes"/>
+  <property name="signatures.classes" location="${fabric.home}/sig-classes"/>
   <property name="signatures.fabil.classes" location="${signatures.classes}/fabil"/>
   <property name="signatures.fabric.classes" location="${signatures.classes}/fabric"/>
 
   <!-- Applet properties -->
-  <property name="applet.dir" location="${basedir}/examples/applet"/>
+  <property name="applet.dir" location="${fabric.home}/examples/applet"/>
   <property name="applet.name" value="fabapp"/>
   <property name="applet.src" location="${applet.dir}/src"/>
   <property name="applet.classes" location="${applet.dir}/classes"/>
@@ -86,29 +47,23 @@
   <!-- Timestamp file for bootstrap classes. -->
   <property name="bootstrap.tstamp" location="${bootstrap.classes}/.tstamp"/>
 
-  <!-- Binaries directory -->
-  <property name="bin" location="${basedir}/bin"/>
-
   <!-- Documentation directory -->
-  <property name="doc" location="${basedir}/doc"/>
+  <property name="doc" location="${fabric.home}/doc"/>
 
   <!-- Configuration directory -->
-  <property name="etc" location="${basedir}/etc"/>
-
-  <!-- Library directory -->
-  <property name="lib" location="${basedir}/lib"/>
+  <property name="etc" location="${fabric.home}/etc"/>
 
   <!-- var directory (for store databases) -->
-  <property name="var" location="${basedir}/var"/>
+  <property name="var" location="${fabric.home}/var"/>
 
   <!-- Tools directories -->
-  <property name="tools" location="${basedir}/tools"/>
+  <property name="tools" location="${fabric.home}/tools"/>
   <property name="tools.storebrowser" location="${tools}/storebrowser"/>
   <property name="tools.classloader" location="${tools}/classloader"/>
   <property name="tools.classes" location="${tools}/classes"/>
 
   <!-- tmp directory (for creating the distribution) -->
-  <property name="tmp" location="${basedir}/tmp"/>
+  <property name="tmp" location="${fabric.home}/tmp"/>
 
   <!-- SCM root locations -->
   <property name="svn.root.fabric"
@@ -119,44 +74,10 @@
       value=":ext:gforge.cis.cornell.edu:/cvsroot/polyglot"/>
 
   <!-- Jar files -->
-  <property name="jar.base" location="${lib}/${name}.jar" />
-  <property name="jar.runtime" location="${lib}/${name}-rt.jar" />
-  <property name="jar.signature.fabil" location="${lib}/${name}-il-sig.jar" />
-  <property name="jar.signature.fabric" location="${lib}/${name}-sig.jar" />
-
-  <!-- fabc executable -->
-  <property name="fabc" location="${bin}/fabc" />
-
-  <!-- filc executable -->
-  <property name="filc" location="${bin}/filc" />
-
-  <!-- Debug flag to be passed to fabc and filc. -->
-  <!-- The "dist" target should disable debugging information by setting this
-       to the empty string. -->
-  <property name="debug.flag" value="-g" />
-
-  <path id="standard.classpath">
-    <pathelement location="${classes}"/>
-
-    <!-- jar files in the lib directory, excluding generated jars -->
-    <fileset dir="${lib}">
-        <include name="*.jar" />
-        <exclude name="${name}*.jar" />
-    </fileset>
-
-    <!-- the Polyglot classes -->
-    <pathelement path="${polyglot.home}/classes" />
-    <pathelement path="${polyglot.home}/lib/polyglot.jar" />
-    <pathelement path="${polyglot.home}/lib/ppg.jar" />
-    <pathelement path="${polyglot.home}/lib/java_cup.jar" />
-    <pathelement path="${polyglot.home}/lib/JFlex.jar" />
-
-    <!-- the Jif classes -->
-    <pathelement location="${jif.home}/classes" />
-    <pathelement location="${jif.home}/lib/jif.jar" />
-
-    <pathelement path="${java.class.path}" />
-  </path>
+  <property name="jar.base" location="${lib}/fabric.jar" />
+  <property name="jar.runtime" location="${lib}/fabric-rt.jar" />
+  <property name="jar.signature.fabil" location="${lib}/fabric-il-sig.jar" />
+  <property name="jar.signature.fabric" location="${lib}/fabric-sig.jar" />
 
   <!--
   ****************************************************************************
@@ -182,23 +103,33 @@
   <target name="bin" depends="configure,bin-check" unless="bin.up-to-date"
       description="Configures the executables in the bin directory">
     <fail message="Failed to find Polyglot.  Make sure that your POLYGLOT environment variable is set, and that you have built Polyglot.">
-      <condition> <not> <and>
-        <isset property="polyglot.home" />
-        <available classname="polyglot.main.Version" classpathref="standard.classpath" />
-      </and> </not> </condition>
+      <condition>
+	<not>
+	  <and>
+	    <isset property="polyglot.home" />
+	    <available classname="polyglot.main.Version"
+		classpathref="standard.classpath" />
+	  </and>
+	</not>
+      </condition>
     </fail>
 
     <fail message="Failed to find Jif.  Make sure that your JIF environment variable is set and that you have built Jif.">
-      <condition> <not> <and>
-        <isset property="jif.home" />
-        <available classname="jif.Version" classpathref="standard.classpath" />
-      </and> </not> </condition>
+      <condition>
+	<not>
+	  <and>
+	    <isset property="jif.home" />
+	    <available classname="jif.Version"
+		classpathref="standard.classpath" />
+	  </and>
+	</not>
+      </condition>
     </fail>
 
     <copy file="${bin}/defs.in" tofile="${bin}/defs">
       <filterset>
         <filter token="JAVA_HOME" value="${java.home}"    />
-        <filter token="TOP"       value="${basedir}"      />
+        <filter token="TOP"       value="${fabric.home}"      />
         <filter token="POLYGLOT"  value="${polyglot.home}" />
         <filter token="JIF"       value="${jif.home}" />
       </filterset>
@@ -219,7 +150,7 @@
   </target>
 
   <target name="configure-version" unless="fabric.version">
-    <property file="${basedir}/version.properties" prefix="fabric" />
+    <property file="${fabric.home}/version.properties" prefix="fabric" />
     <property name="fabric.version" value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}" />
   </target>
 
@@ -243,8 +174,8 @@
     <delete file="${jar.signature.fabric}" />
 
     <subant target="clean" failonerror="false">
-      <filelist dir="${basedir}" files="tests/sif/build.xml"/>
-      <filelist dir="${basedir}" files="tests/jif/build.xml"/>
+      <filelist dir="${fabric.home}" files="tests/sif/build.xml"/>
+      <filelist dir="${fabric.home}" files="tests/jif/build.xml"/>
     </subant>    
   </target>
 
@@ -325,7 +256,7 @@
     <apply executable="bash"
            parallel="true"
            failonerror="true"
-           dir="${basedir}"
+           dir="${fabric.home}"
            dest="${signatures.fabric.classes}"
            relative="false"
            skipemptyfilesets="true"
@@ -351,7 +282,7 @@
     <apply executable="bash"
            parallel="true"
            failonerror="true"
-           dir="${basedir}"
+           dir="${fabric.home}"
            dest="${signatures.fabil.classes}"
            relative="false"
            skipemptyfilesets="true"
@@ -548,7 +479,7 @@
     <apply executable="bash"
         parallel="true"
         failonerror="true"
-        dir="${basedir}"
+        dir="${fabric.home}"
         dest="${runtime.classes}"
         relative="false"
         skipemptyfilesets="true"
@@ -590,7 +521,7 @@
     <apply executable="bash"
         parallel="true"
         failonerror="true"
-        dir="${basedir}"
+        dir="${fabric.home}"
         dest="${runtime.classes}"
         relative="false"
         skipemptyfilesets="true"
@@ -636,7 +567,7 @@
     <apply executable="bash"
         parallel="true"
         failonerror="true"
-        dir="${basedir}"
+        dir="${fabric.home}"
         dest="${runtime.classes}"
         relative="false"
         skipemptyfilesets="true"
@@ -670,43 +601,12 @@
   -->
 
   <!-- Compiles the Fabric test programs -->
-  <target name="tests" depends="nfsserver,fablib"
+  <target name="tests" depends="fablib"
       description="Builds the Fabric test programs">
     <javac target="1.6" srcdir="${src}" destdir="${classes}" debug="on"
 	includeAntRuntime="false" includes="tests/**">
       <classpath refid="standard.classpath"/>
     </javac>
-  </target>
-
-  <!-- Compiles the Fabric NFS server -->
-  <target name="nfsserver" depends="worker,fabil-compiler,fabil-runtime"
-      description="Builds the Fabric NFS server implementation">
-    <javac target="1.6" srcdir="${examples.fabnfs}" destdir="${tests.classes}"
-	includeAntRuntime="false" debug="on">
-      <include name="fabnfs/**" />
-      <classpath refid="standard.classpath"/>
-    </javac>
-    <apply executable="bash"
-        parallel="true"
-        failonerror="true"
-        dir="${basedir}"
-        dest="${tests.classes}"
-        relative="false"
-        skipemptyfilesets="true"
-        vmlauncher="false">
-      <arg value="${filc}" />
-      <arg line="${debug.flag}" />
-      <arg value="-d" />
-      <arg value="tests/classes" />
-      <arg value="-sourcepath" />
-      <arg value="${examples.fabnfs}" />
-      <arg value="-cp" />
-      <arg value="tests/classes" />
-      <srcfile />
-      <fileset dir="${examples.fabnfs}"
-          includes="fabnfs/*.fil" />
-      <globmapper from="*.fil" to="*.class" />
-    </apply>
   </target>
 
   <!-- Compiles the SIF framework -->
@@ -742,7 +642,7 @@
   </target>
 
   <target name="bump-major">
-    <propertyfile file="${basedir}/version.properties">
+    <propertyfile file="${fabric.home}/version.properties">
       <entry key="version.major" type="int" operation="+" value="1"
 	  pattern="0" />
       <entry key="version.minor" type="int" value="0" />
@@ -755,7 +655,7 @@
   </target>
 
   <target name="bump-minor">
-    <propertyfile file="${basedir}/version.properties">
+    <propertyfile file="${fabric.home}/version.properties">
       <entry key="version.minor" type="int" operation="+" value="1"
 	  pattern="0" />
       <entry key="version.patch" type="int" value="0" />
@@ -767,7 +667,7 @@
   </target>
 
   <target name="bump-patch">
-    <propertyfile file="${basedir}/version.properties">
+    <propertyfile file="${fabric.home}/version.properties">
       <entry key="version.patch" type="int" operation="+" value="1"
 	  pattern="0" />
     </propertyfile>
@@ -921,21 +821,21 @@ public class Version {
 
   <target name="jar-base"
       depends="jar-manifest,fabil-compiler,fabric-system"
-      description="Builds ${name}.jar">
+      description="Builds fabric.jar">
     <jar jarfile="${jar.base}" basedir="${classes}" manifest="${tmp.manifest}"
 	excludes="**/*.java" />
   </target>
 
   <target name="jar-runtime"
       depends="jar-manifest,fabil-runtime,fabric-runtime"
-      description="Builds ${name}-rt.jar">
+      description="Builds fabric-rt.jar">
     <jar jarfile="${jar.runtime}" basedir="${runtime.classes}"
 	manifest="${tmp.manifest}" excludes="**/*.java" />
   </target>
 
   <target name="jar-sig"
       depends="jar-manifest,fabil-signatures,fabric-signatures"
-      description="Builds ${name}-sig.jar and ${name}-il-sig.jar">
+      description="Builds fabric-sig.jar and fabric-il-sig.jar">
     <jar jarfile="${jar.signature.fabil}" basedir="${signatures.fabil.classes}"
 	manifest="${tmp.manifest}" excludes="**/*.java" />
     <jar jarfile="${jar.signature.fabric}"
@@ -959,7 +859,7 @@ public class Version {
 
   <target name="signed-jars" depends="package">
     <copy todir="${applet.dir}/applets/lib">
-      <fileset dir="${name}/lib" includes="*.jar"/>
+      <fileset dir="fabric/lib" includes="*.jar"/>
     </copy>
     <signjar alias="Applet" storepass="password"
 	keystore="${applet.dir}/appletcert.keystore">
@@ -1072,7 +972,7 @@ public class Version {
     </antcall>
 
     <!-- Move the distribution tarball out of the scratch directory. -->
-    <move tofile="${basedir}/fabric-${fabric.version}.tar.gz"
+    <move tofile="${fabric.home}/fabric-${fabric.version}.tar.gz"
 	file="${tmp}/fabric/fabric-${fabric.version}.tar.gz" />
 
     <!-- Clean up. -->
@@ -1081,12 +981,12 @@ public class Version {
 
   <!-- Creates a distribution tarball from the current working copy. -->
   <target name="dist.tar" depends="configure-version,build-all,jars,javadoc">
-    <delete dir="${basedir}/fabric-${fabric.version}" />
-    <move tofile="${basedir}/fabric-${fabric.version}" file="${tmp}" />
-    <tar destfile="${basedir}/fabric-${fabric.version}.tar.gz"
+    <delete dir="${fabric.home}/fabric-${fabric.version}" />
+    <move tofile="${fabric.home}/fabric-${fabric.version}" file="${tmp}" />
+    <tar destfile="${fabric.home}/fabric-${fabric.version}.tar.gz"
 	compression="gzip">
       <!-- Include top-level files. -->
-      <tarfileset dir="${basedir}" prefix="fabric-${fabric.version}">
+      <tarfileset dir="${fabric.home}" prefix="fabric-${fabric.version}">
 	<include name="version.properties" />
 	<include name="build.xml" />
 	<include name="config.properties.in" />
@@ -1131,10 +1031,10 @@ public class Version {
       <!-- Include library dependencies. -->
       <tarfileset dir="${lib}" prefix="fabric-${fabric.version}/lib">
 	<!-- Compiled jars -->
-	<include name="${name}.jar" />
-	<include name="${name}-rt.jar" />
-	<include name="${name}-il-sig.jar" />
-	<include name="${name}-sig.jar" />
+	<include name="fabric.jar" />
+	<include name="fabric-rt.jar" />
+	<include name="fabric-il-sig.jar" />
+	<include name="fabric-sig.jar" />
 
 	<!-- Polyglot, Jif, and dependencies -->
 	<include name="polyglot.jar" />
@@ -1263,12 +1163,12 @@ public class Version {
 
   <target name="package" depends="build-all,jars,fablib">
     <!-- Delete any old version of the packaged directory -->
-    <delete dir="${name}"/>
+    <delete dir="fabric"/>
     <!-- Create the package directory and subdirectories -->
-    <mkdir dir="${name}"/>
-    <mkdir dir="${name}/lib"/>
-    <mkdir dir="${name}/bin"/>
-    <mkdir dir="${name}/etc"/>
+    <mkdir dir="fabric"/>
+    <mkdir dir="fabric/lib"/>
+    <mkdir dir="fabric/bin"/>
+    <mkdir dir="fabric/etc"/>
     <!-- Make sure polyglot and jif jars are built -->
     <subant target="jar" failonerror="false">
 		  <fileset file="${polyglot.home}/build.xml"/>
@@ -1276,63 +1176,63 @@ public class Version {
     </subant>
     <!-- Package the collections -->
     <subant target="jar" failonerror="false">
-		  <fileset file="${basedir}/tests/jif/build.xml"/>
+		  <fileset file="${fabric.home}/tests/jif/build.xml"/>
     </subant>
     <!-- Package SIF -->
     <subant target="jar" failonerror="false">
-		  <fileset file="${basedir}/tests/sif/build.xml"/>
+		  <fileset file="${fabric.home}/tests/sif/build.xml"/>
     </subant>
     <!-- Package SIF examples -->
     <subant target="jar-examples" failonerror="false">
-		  <fileset file="${basedir}/tests/sif/build.xml"/>
+		  <fileset file="${fabric.home}/tests/sif/build.xml"/>
     </subant>
 
     <!-- Move these jars into lib -->
-    <move todir="${name}/lib">
-      <fileset dir="${basedir}/tests/jif" includes="fabcoll.jar"/>
-      <fileset dir="${basedir}/tests/sif" includes="*.jar"/>
+    <move todir="fabric/lib">
+      <fileset dir="${fabric.home}/tests/jif" includes="fabcoll.jar"/>
+      <fileset dir="${fabric.home}/tests/sif" includes="*.jar"/>
     </move>
     
     <!-- Now copy other jar files into lib -->
-    <copy todir="${name}/lib">
-      <fileset dir="${basedir}/lib" includes="fabric.jar,fabric-rt.jar"/>
-      <fileset dir="${basedir}/lib" includes="FreePastry-2.1.jar,je-3.3.75.jar"/>
+    <copy todir="fabric/lib">
+      <fileset dir="${fabric.home}/lib" includes="fabric.jar,fabric-rt.jar"/>
+      <fileset dir="${fabric.home}/lib" includes="FreePastry-2.1.jar,je-3.3.75.jar"/>
       <fileset dir="${polyglot.home}/lib" includes="polyglot.jar,JFlex.jar,java_cup.jar"/>
       <fileset dir="${jif.home}/lib" includes="jif.jar"/>
       <fileset dir="${java.home}/lib" includes="rt.jar"/>
     </copy>
 
     <!-- Copy necessary scripts into bin -->
-    <copy todir="${name}/bin">
-      <fileset dir="${basedir}/bin" includes="fabc,fab,fab-store,genkey,startstore"/>
+    <copy todir="fabric/bin">
+      <fileset dir="${fabric.home}/bin" includes="fabc,fab,fab-store,genkey,startstore"/>
     </copy>
 
     <!-- Make sure these scripts are executable -->
-    <chmod perm="755" dir="${name}/bin" includes="*" verbose="true"/>
+    <chmod perm="755" dir="fabric/bin" includes="*" verbose="true"/>
 
-    <copy file="${basedir}/bin/defs.package"  tofile="${name}/bin/defs" />
-    <copy file="${basedir}/README.package"  tofile="${name}/README" />
+    <copy file="${fabric.home}/bin/defs.package"  tofile="fabric/bin/defs" />
+    <copy file="${fabric.home}/README.package"  tofile="fabric/README" />
 
 
     <!-- Copy etc -->
-    <copy todir="${name}/etc">
-      <fileset dir="${basedir}/etc" />
+    <copy todir="fabric/etc">
+      <fileset dir="${fabric.home}/etc" />
     </copy>
 
     <!-- Now package the directory as a tar.gz file -->
     <!--exec executable="tar"
-	     dir="${basedir}"
+	     dir="${fabric.home}"
 	     failonerror="true"
 	     vmlauncher="false" >
 	<arg value="-c" />
 	<arg value="-z" />
 	<arg value="-f" />
-	<arg value="${name}.tar.gz" />
-	<arg value="${name}/" />
+	<arg value="fabric.tar.gz" />
+	<arg value="fabric/" />
     </exec-->
     
     <!-- Now delete the directory -->
-    <!--delete dir="${basedir}/${name}" /-->
+    <!--delete dir="${fabric.home}/fabric" /-->
 
   </target>
 

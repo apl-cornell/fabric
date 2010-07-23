@@ -1,0 +1,85 @@
+<!-- Common definitions. -->
+
+<project name="fabric.common">
+  <dirname property="fabric.home" file="${ant.file.fabric.common}" />
+
+  <!-- set the prefix for accessing environment variables -->
+  <property environment="env" />
+
+  <property file="${fabric.home}/config.properties" />
+
+  <!-- Polyglot installation location -->
+  <!-- If it is not defined in the properties file, use the environment
+       variable $POLYGLOT. -->
+  <condition property="polyglot.home" value="${env.POLYGLOT}">
+    <and>
+      <isset property="env.POLYGLOT" />
+      <not>
+        <isset property="polyglot.home" />
+      </not>
+    </and>
+  </condition>
+  <!-- As a last resort, try to use polyglot.jar from distribution -->
+  <condition property="polyglot.home" value="${fabric.home}">
+    <not><isset property="polyglot.home" /></not>
+  </condition>
+
+  <!-- Jif installation -->
+  <!-- If it is not defined in the properties file, use the environment
+       variable $JIF. -->
+  <condition property="jif.home" value="${env.JIF}">
+    <and>
+      <isset property="env.JIF" />
+      <not>
+        <isset property="jif.home" />
+      </not>
+    </and>
+  </condition>
+  <!-- As a last resort, try to use jif.jar from distribution -->
+  <condition property="jif.home" value="${fabric.home}">
+    <not><isset property="jif.home" /></not>
+  </condition>
+
+  <!-- Directories for class file targets -->
+  <property name="classes" location="${fabric.home}/classes"/>
+
+  <!-- Binaries directory -->
+  <property name="bin" location="${fabric.home}/bin"/>
+
+  <!-- Library directory -->
+  <property name="lib" location="${fabric.home}/lib"/>
+
+  <!-- fabc executable -->
+  <property name="fabc" location="${bin}/fabc" />
+
+  <!-- filc executable -->
+  <property name="filc" location="${bin}/filc" />
+
+  <!-- Debug flag to be passed to fabc and filc. -->
+  <property name="debug.flag" value="-g" />
+
+  <!-- XXX TODO make this less monolithic -->
+  <path id="standard.classpath">
+    <pathelement location="${classes}"/>
+
+    <!-- jar files in the lib directory, excluding generated jars -->
+    <fileset dir="${lib}">
+        <include name="*.jar" />
+        <exclude name="fabric*.jar" />
+    </fileset>
+
+    <!-- the Polyglot classes -->
+    <pathelement path="${polyglot.home}/classes" />
+    <pathelement path="${polyglot.home}/lib/polyglot.jar" />
+    <pathelement path="${polyglot.home}/lib/ppg.jar" />
+    <pathelement path="${polyglot.home}/lib/java_cup.jar" />
+    <pathelement path="${polyglot.home}/lib/JFlex.jar" />
+
+    <!-- the Jif classes -->
+    <pathelement location="${jif.home}/classes" />
+    <pathelement location="${jif.home}/lib/jif.jar" />
+
+    <pathelement path="${java.class.path}" />
+  </path>
+</project>
+
