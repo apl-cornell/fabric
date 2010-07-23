@@ -29,14 +29,12 @@ public class Scribble extends FabricApplet {
 	}
 	
 	public Scribble () {
-		Store store  = $getStore();
-		lines = new ArrayList@store(100);
+		lines = new ArrayList(100);
 	}
 
 	public void saveLine(int x1, int y1, int x2, int y2) {
-		Store store  = $getStore();
 		atomic {
-			lines.add(new Line@store(x1, y1, x2, y2));
+			lines.add(new Line(x1, y1, x2, y2));
 		}
 	}
 	
