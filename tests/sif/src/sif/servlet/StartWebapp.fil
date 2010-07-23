@@ -4,41 +4,38 @@ import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.*;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.xml.XmlConfiguration;
+import org.eclipse.jetty.xml.*;
+import java.io.File;
 
 public class StartWebapp {
     
     public final static int port = 8080;
     
-    // each arg[i] is a directory that contains the
+    // each args[i] is a directory that contains the
     // compiled code of a SIF example, usually named 'web/'
     public static void main(String[] args) throws Exception {
         Server server = new Server(port);
-        Handler native[] handlers = new Handler native[args.length/2];
+        Handler native[] handlers = new Handler native[args.length];
         
-        for (int i = 0; i < args.length; i+=2) {
-            String arg = args[i+1];
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
             WebAppContext webapp = new WebAppContext();
-            webapp.setDescriptor(arg + "WEB-INF/web.xml");
             webapp.setResourceBase(arg);
-            webapp.setContextPath("/"+args[i]);
-            webapp.setParentLoaderPriority(true);
 
-            
             Resource webinf = webapp.getWebInf();
             if (webinf != null && webinf.isDirectory()) {
-                Resource deps = webinf.addPath("deps.xml");
-                
-                if(deps.exists()) {
-                    XmlConfiguration depsConfig = new XmlConfiguration(deps.getURL());
-                    depsConfig.configure(webapp);
+                Resource webxml = webinf.addPath("web.xml");
+                if(webxml.exists()) {
+                    XmlParser parser = new XmlParser();
+                    XmlParser.Node node = parser.parse(new File(webxml.getURI()));
+                    XmlParser.Node servlet = node.get("servlet");
+                    XmlParser.Node name = servlet.get("servlet-name");
+                    String appName = name.get(0).toString();
+                    webapp.setContextPath("/"+appName);
                 }
             }
-//            webapp.setWar(arg);
-            webapp.setExtraClasspath(webapp.getExtraClasspath()+":/home/kvikram/Academics/Research/fabric/tests/sif/classes/");
-            System.out.println(webapp.getExtraClasspath());
-            
-            System.out.println("Starting http://localhost:" + port + "/" + args[i]);
+            webapp.setParentLoaderPriority(true);
+            System.out.println("Starting http://localhost:" + port + webapp.getContextPath());
             handlers[i] = webapp;
         }
 
