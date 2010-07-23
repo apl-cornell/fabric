@@ -65,10 +65,10 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    * @see polyglot.main.Options#parseCommand(java.lang.String[], int,
    *      java.util.Set)
    */
-  @SuppressWarnings("unchecked")
   @Override
-  public int parseCommand(String[] args, int index, Set source)
-      throws UsageError, TerminationException {
+  public int parseCommand(String[] args, int index,
+      @SuppressWarnings("rawtypes") Set source) throws UsageError,
+      TerminationException {
     if (args[index].equals("-sig")) {
       index++;
       signatureMode = true;

@@ -17,9 +17,8 @@ import polyglot.visit.AmbiguityRemover;
 
 public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
 
-  @SuppressWarnings("unchecked")
   public ClassDecl_c(Position pos, Flags flags, Id name, TypeNode superClass,
-      List interfaces, ClassBody body) {
+      List<TypeNode> interfaces, ClassBody body) {
     super(pos, flags, name, superClass, interfaces, body);
   }
 

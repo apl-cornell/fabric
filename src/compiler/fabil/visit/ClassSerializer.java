@@ -25,7 +25,7 @@ public class ClassSerializer extends polyglot.visit.ClassSerializer {
    * 
    * @see polyglot.visit.ClassSerializer#createSerializationMembers(polyglot.ast.ClassDecl)
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public List createSerializationMembers(ClassDecl cd) {
     Ext ext = cd.ext();

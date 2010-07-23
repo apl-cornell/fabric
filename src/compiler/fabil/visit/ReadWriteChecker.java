@@ -60,10 +60,9 @@ public class ReadWriteChecker extends DataFlow {
     }
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  protected Item confluence(List items, Term node, boolean entry,
-      FlowGraph graph) {
+  protected Item confluence(@SuppressWarnings("rawtypes") List items,
+      Term node, boolean entry, FlowGraph graph) {
     DataFlowItem out = null;
     
     for (Object o : items) {
@@ -83,7 +82,7 @@ public class ReadWriteChecker extends DataFlow {
     return out;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   protected Map flow(Item in, FlowGraph graph, Term n, boolean entry,
       Set edgeKeys) {
@@ -262,10 +261,9 @@ public class ReadWriteChecker extends DataFlow {
     return out;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   protected void check(FlowGraph graph, Term n, boolean entry, Item inItem,
-      Map outItems) {
+      @SuppressWarnings("rawtypes") Map outItems) {
     DataFlowItem in = (DataFlowItem) inItem;
     
     if (!entry) {

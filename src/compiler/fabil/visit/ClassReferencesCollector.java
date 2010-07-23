@@ -3,24 +3,14 @@ package fabil.visit;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import polyglot.ast.Node;
 import polyglot.ast.SourceCollection;
 import polyglot.ast.SourceFile;
 import polyglot.ast.Typed;
 import polyglot.frontend.Job;
-import polyglot.frontend.Source;
-
 import polyglot.types.ClassType;
-import polyglot.types.Named;
-import polyglot.types.ReferenceType;
-import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorInfo;
@@ -28,8 +18,6 @@ import polyglot.util.InternalCompilerError;
 import polyglot.visit.NodeVisitor;
 import fabil.FabILOptions;
 import fabil.types.FabILTypeSystem;
-
-import java.util.Set;
 
 /**
  * Collects all types referenced by a class and outputs them to a file.
@@ -78,9 +66,10 @@ public class ClassReferencesCollector extends NodeVisitor {
       writeDependencies(sfn);
     } else if (ast instanceof SourceCollection) {
       SourceCollection sc = (SourceCollection) ast;
-      for (Iterator i = sc.sources().iterator(); i.hasNext(); ) {
-          SourceFile sfn = (SourceFile) i.next();
-          writeDependencies(sfn);
+      @SuppressWarnings("unchecked")
+      List<SourceFile> sources = sc.sources();
+      for (SourceFile sfn : sources) {
+        writeDependencies(sfn);
       }
     } else {
       throw new InternalCompilerError("AST root must be a SourceFile; " +
