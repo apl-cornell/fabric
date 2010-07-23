@@ -1,4 +1,17 @@
+<!--
+  This is the Apache Ant build file for the Fabric CMS example.
+-->
+
 <project name="fabric-cms" default="cms">
+  <description>
+    Fabric CMS build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
 
   <dirname  property="cms.home" file="${ant.file.fabric-cms}" />
   <property name="fabric.home"  value="${cms.home}/../.." />
@@ -19,7 +32,29 @@
     <pathelement location="${fabric.home}/lib/servlet-api.jar"  />
   </path>
 
-  <target name="cms" description="build cms">
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${cms.home}/web-fabil/WEB-INF/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean" />
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <!-- Main target for compiling the webapp. -->
+  <target name="build-all" depends="cms,fabservlet"
+      description="Builds the Fabric CMS webapp" />
+
+  <target name="cms">
     <apply executable="bash"
 	parallel="true"
 	failonerror="true"
@@ -59,18 +94,13 @@
     </apply>
   </target>
 
-  <target name="fabservlet" 
-    description="fab servlet">
-    <javac target="1.6"  destdir="${cms.home}/web-fabil/WEB-INF/classes"
+  <target name="fabservlet" description="Fabric CMS servlet">
+    <javac target="1.6" destdir="${cms.home}/web-fabil/WEB-INF/classes"
 	includeAntRuntime="false" debug="on">
       <classpath refid="cms.classpath" />
       <src path="${cms.home}/fabil" />
       <include name="FabricServlet.java" />	
     </javac>
-  </target>
-
-  <target name="clean" description="remove generated files">
-    <delete dir="${cms.home}/web-fabil/WEB-INF/classes"/>
   </target>
 
 </project>
