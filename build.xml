@@ -4,7 +4,7 @@
 
   Targets are public (i.e., intended to be callable by the user) if and only if
   they have a description attribute.  Public targets will show up when the user
-  runs "ant -p".
+  runs "ant -p".  Internal targets should not have description attributes!
 -->
 <project name="fabric" default="build-all" basedir=".">
   <description>
@@ -378,7 +378,7 @@
     description="Builds the classloader tools">
     <mkdir dir="${tools.classes}" /> 
     <javac target="1.6" srcdir="${tools.classloader}"
-	destdir="${tools.classes}" debug="on">
+	destdir="${tools.classes}" includeAntRuntime="false" debug="on">
       <classpath>
         <pathelement location="${runtime.classes}" />
         <path refid="standard.classpath"/>
@@ -390,7 +390,8 @@
   <target name="storebrowser" depends="worker,fabil-runtime"
     description="Builds the Fabric GUI store browser">
     <mkdir dir="${tools.classes}" /> 
-    <javac target="1.6" srcdir="${tools.storebrowser}" destdir="${tools.classes}">
+    <javac target="1.6" srcdir="${tools.storebrowser}"
+	destdir="${tools.classes}" includeAntRuntime="false">
       <classpath>
         <pathelement location="${runtime.classes}" />
         <path refid="standard.classpath"/>
@@ -401,7 +402,8 @@
   <!-- Compiles the Fabric system-debugging tools -->
   <target name="debug-tools" depends="worker,fabil-runtime"
       description="Builds the Fabric debugging tools">
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}" debug="on">
+    <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
+	includeAntRuntime="false" debug="on">
       <include name="fabric/worker/debug/**" />
       <classpath>
         <pathelement location="${runtime.classes}" />
@@ -433,7 +435,7 @@
       unless="bootstrap.up-to-date">
     <touch file="${bootstrap.tstamp}"/>
     <javac target="1.6" srcdir="${bootstrap.src}"
-        destdir="${bootstrap.classes}" debug="on">
+	destdir="${bootstrap.classes}" includeAntRuntime="false" debug="on">
       <include name="**" />
       <sourcepath path="${system.src}"/>
       <classpath refid="standard.classpath"/>
@@ -460,7 +462,8 @@
   <!-- Compiles the Fabric runtime classes that are implemented in Java -->
   <target name="native" depends="bootstrap,native-check"
       unless="native.up-to-date">
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}" debug="on">
+    <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
+	includeAntRuntime="false" debug="on">
       <include name="fabric/lang/**" />
       <include name="fabric/common/util/**" />
       <classpath>
@@ -480,7 +483,8 @@
 
   <!-- Compiles the Fabric store -->
   <target name="store" depends="init,native,fabil-runtime">
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}" debug="on">
+    <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
+	includeAntRuntime="false" debug="on">
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
       <include name="fabric/store/**" />
@@ -493,7 +497,8 @@
 
   <!-- Compiles the Fabric worker API -->
   <target name="worker" depends="init,native,fabil-runtime">
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}" debug="on">
+    <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
+	includeAntRuntime="false" debug="on">
       <include name="fabric/worker/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
@@ -507,7 +512,8 @@
 
   <!-- Compiles the Fabric dissemination node -->
   <target name="dissemination" depends="worker">
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}" debug="on">
+    <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
+	includeAntRuntime="false" debug="on">
       <include name="fabric/dissemination/**" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
@@ -533,7 +539,8 @@
       <not><isset property="runtime.opt" /></not>
     </condition>
 
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}" debug="on">
+    <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
+	includeAntRuntime="false" debug="on">
       <include name="fabric/worker/RetryException.java" />
       <include name="fabric/worker/UserAbortException.java" />
     </javac>
@@ -666,7 +673,7 @@
   <target name="tests" depends="nfsserver,fablib"
       description="Builds the Fabric test programs">
     <javac target="1.6" srcdir="${src}" destdir="${classes}" debug="on"
-        includes="tests/**">
+	includeAntRuntime="false" includes="tests/**">
       <classpath refid="standard.classpath"/>
     </javac>
   </target>
@@ -675,7 +682,7 @@
   <target name="nfsserver" depends="worker,fabil-compiler,fabil-runtime"
       description="Builds the Fabric NFS server implementation">
     <javac target="1.6" srcdir="${examples.fabnfs}" destdir="${tests.classes}"
-        debug="on">
+	includeAntRuntime="false" debug="on">
       <include name="fabnfs/**" />
       <classpath refid="standard.classpath"/>
     </javac>
@@ -715,7 +722,8 @@
   <target name="applet" depends="worker,fabil-runtime"
       description="Builds the Fabric Browser Applet">
     <mkdir dir="${applet.classes}" /> 
-    <javac target="1.6" srcdir="${applet.src}" destdir="${applet.classes}">
+    <javac target="1.6" srcdir="${applet.src}" destdir="${applet.classes}"
+	includeAntRuntime="false">
       <classpath>
         <pathelement location="${runtime.classes}" />
         <path refid="standard.classpath"/>
@@ -1489,7 +1497,8 @@ public class Version {
 
   <target name="compile-ext">
     <javac source="1.6" target="1.6" srcdir="${compiler.src}"
-        destdir="${classes}" debug="on" includes="${ext.pkg}/**">
+	destdir="${classes}" debug="on" includeAntRuntime="false"
+	includes="${ext.pkg}/**">
       <classpath refid="standard.classpath" />
     </javac>
   </target>

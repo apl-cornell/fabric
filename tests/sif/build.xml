@@ -80,7 +80,10 @@
             depends="init,configure,sif-fab"
             description="Build the base SIF framework using the Java compiler, not including the signature files">
         
-        <javac source="1.5" target="1.5" srcdir="${src}" destdir="${sif.classes}" debug="true" debuglevel="lines,vars,source">
+	<javac source="1.6" target="1.6" srcdir="${src}"
+	    destdir="${sif.classes}" debug="true"
+	    includeAntRuntime="false"
+	    debuglevel="lines,vars,source">
             <classpath>
 	      <path refid="standard.classpath" />
 	      <pathelement location="../jif/classes" />
