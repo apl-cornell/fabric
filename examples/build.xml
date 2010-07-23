@@ -1,0 +1,48 @@
+<!--
+  This is the Apache Ant build file for Fabric examples.
+-->
+
+<project name="fabric-examples" default="build-all" basedir=".">
+  <description>
+    Fabric examples build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean"
+      description="Cleans up the directory tree: deletes the classes directories">
+    <!-- Recursively call "clean" on subdirectories. -->
+    <subant target="clean">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+  <!-- Makes the directory tree truly pristine. -->
+  <target name="clobber" depends="clean"
+      description="Cleans up the directory tree, deleting generated binaries, scripts, and source files">
+    <!-- Recursively call "clobber" on subdirectories. -->
+    <subant target="clobber">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <!-- Main target for compiling the Fabric examples -->
+  <target name="build-all">
+    <!-- Recursively call "build-all" on subdirectories. -->
+    <subant target="build-all">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+</project>
+
