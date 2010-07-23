@@ -41,7 +41,7 @@
     <javac target="1.6" srcdir="${fabnfs.home}/src"
 	destdir="${fabnfs.home}/classes" includeAntRuntime="false" debug="on">
       <include name="fabnfs/**" />
-      <classpath refid="standard.classpath" />
+      <classpath refid="fabric.classpath" />
     </javac>
 
     <apply executable="bash"

@@ -58,26 +58,44 @@
   <!-- Debug flag to be passed to fabc and filc. -->
   <property name="debug.flag" value="-g" />
 
-  <!-- XXX TODO make this less monolithic -->
-  <path id="standard.classpath">
-    <pathelement location="${classes}"/>
-
-    <!-- jar files in the lib directory, excluding generated jars -->
-    <fileset dir="${lib}">
-        <include name="*.jar" />
-        <exclude name="fabric*.jar" />
-    </fileset>
-
-    <!-- the Polyglot classes -->
+  <!-- Polyglot classpath -->
+  <path id="polyglot.classpath">
     <pathelement path="${polyglot.home}/classes" />
     <pathelement path="${polyglot.home}/lib/polyglot.jar" />
     <pathelement path="${polyglot.home}/lib/ppg.jar" />
     <pathelement path="${polyglot.home}/lib/java_cup.jar" />
     <pathelement path="${polyglot.home}/lib/JFlex.jar" />
+  </path>
 
-    <!-- the Jif classes -->
+  <!-- Jif classpath -->
+  <path id="jif.classpath">
+    <path refid="polyglot.classpath" />
     <pathelement location="${jif.home}/classes" />
     <pathelement location="${jif.home}/lib/jif.jar" />
+  </path>
+
+  <!-- Classpath consisting of libraries on which the system depends. -->
+  <path id="lib.classpath">
+    <fileset dir="${lib}">
+        <include name="*.jar" />
+        <exclude name="fabric*.jar" />
+    </fileset>
+  </path>
+
+  <!-- Classpath for building Fabric applications. -->
+  <path id="fabric.classpath">
+    <pathelement location="${classes}" />
+    <pathelement location="${lib}/fabric.jar" />
+  </path>
+
+  <!-- XXX Remove this -->
+  <path id="standard.classpath">
+    <pathelement location="${classes}"/>
+
+    <path refid="lib.classpath" />
+
+    <!-- Jif (and Polyglot) -->
+    <path refid="jif.classpath" />
 
     <pathelement path="${java.class.path}" />
   </path>

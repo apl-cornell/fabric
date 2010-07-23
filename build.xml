@@ -108,7 +108,7 @@
 	  <and>
 	    <isset property="polyglot.home" />
 	    <available classname="polyglot.main.Version"
-		classpathref="standard.classpath" />
+		classpathref="polyglot.classpath" />
 	  </and>
 	</not>
       </condition>
@@ -120,7 +120,7 @@
 	  <and>
 	    <isset property="jif.home" />
 	    <available classname="jif.Version"
-		classpathref="standard.classpath" />
+		classpathref="jif.classpath" />
 	  </and>
 	</not>
       </condition>
@@ -367,9 +367,9 @@
     <touch file="${bootstrap.tstamp}"/>
     <javac target="1.6" srcdir="${bootstrap.src}"
 	destdir="${bootstrap.classes}" includeAntRuntime="false" debug="on">
-      <include name="**" />
+      <include name="**/*.java" />
       <sourcepath path="${system.src}"/>
-      <classpath refid="standard.classpath"/>
+      <classpath refid="lib.classpath"/>
     </javac>
 
     <!--
@@ -399,7 +399,7 @@
       <include name="fabric/common/util/**" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
-        <path refid="standard.classpath"/>
+        <path refid="lib.classpath"/>
       </classpath>
     </javac>
   </target>
@@ -421,7 +421,7 @@
       <include name="fabric/store/**" />
       <classpath>
         <pathelement location="${runtime.classes}" />
-        <path refid="standard.classpath"/>
+        <path refid="lib.classpath"/>
       </classpath>
     </javac>
   </target>
@@ -436,7 +436,7 @@
       <exclude name="fabric/worker/debug/**" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
-        <path refid="standard.classpath"/>
+        <path refid="lib.classpath"/>
       </classpath>
     </javac>
   </target>
@@ -448,7 +448,7 @@
       <include name="fabric/dissemination/**" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
-        <path refid="standard.classpath"/>
+        <path refid="lib.classpath"/>
       </classpath>
     </javac>
   </target>
@@ -1261,7 +1261,7 @@ public class Version {
       unless="jflex.lexer.up-to-date">
     <java classname="JFlex.Main" fork="true" dir="${lexer.dir}"
         failonerror="true">
-      <classpath refid="standard.classpath" />
+      <classpath refid="polyglot.classpath" />
       <arg value="${jflex.file}" />
     </java>
   </target>
@@ -1289,7 +1289,7 @@ public class Version {
       unless="ppg.parser.up-to-date">
     <java classname="ppg.PPG" fork="true" dir="${parser.dir}"
         output="${parser.dir}/${cup.file}" failonerror="true" logError="true">
-      <classpath refid="standard.classpath" />
+      <classpath refid="jif.classpath" />
       <arg value="${ppg.file}" />
     </java>
     <antcall target="cup-parser" />
@@ -1320,7 +1320,7 @@ public class Version {
   <target name="cup-parser-using-jar" depends="cup-parser-deps"
       unless="cup.parser.up-to-date">
     <java classname="java_cup.Main" fork="true" dir="${parser.dir}" failonerror="true">
-      <classpath refid="standard.classpath" />
+      <classpath refid="polyglot.classpath" />
       <arg value="-parser"/>
       <arg value="${parser.class}"/>
       <arg value="-symbols"/>
@@ -1368,7 +1368,7 @@ public class Version {
     <javac source="1.6" target="1.6" srcdir="${compiler.src}"
 	destdir="${classes}" debug="on" includeAntRuntime="false"
 	includes="${ext.pkg}/**">
-      <classpath refid="standard.classpath" />
+      <classpath refid="jif.classpath" />
     </javac>
   </target>
 
