@@ -31,18 +31,10 @@
 
   <!-- Directories for class file targets -->
   <property name="bootstrap.classes" location="${fabric.home}/bs-classes"/>
-  <property name="runtime.classes" location="${fabric.home}/rt-classes"/>
   <property name="tests.classes" location="${fabric.home}/tests/classes"/>
   <property name="signatures.classes" location="${fabric.home}/sig-classes"/>
   <property name="signatures.fabil.classes" location="${signatures.classes}/fabil"/>
   <property name="signatures.fabric.classes" location="${signatures.classes}/fabric"/>
-
-  <!-- Applet properties -->
-  <property name="applet.dir" location="${fabric.home}/examples/applet"/>
-  <property name="applet.name" value="fabapp"/>
-  <property name="applet.src" location="${applet.dir}/src"/>
-  <property name="applet.classes" location="${applet.dir}/classes"/>
-  <property name="applet.jar" location="${lib}/${applet.name}.jar" />
 
   <!-- Timestamp file for bootstrap classes. -->
   <property name="bootstrap.tstamp" location="${bootstrap.classes}/.tstamp"/>
@@ -186,7 +178,6 @@
     <delete dir="${bootstrap.classes}"/>
     <delete dir="${tests.classes}"/>
     <delete dir="${tools.classes}"/>
-    <delete dir="${applet.classes}"/>
     <delete dir="${tmp}"/>
     <delete dir="${var}"/>
     <delete file="${jar.base}" />
@@ -618,19 +609,6 @@
     </subant>
   </target>
 
-  <!-- Compiles the Fabric applet -->
-  <target name="applet" depends="worker,fabil-runtime"
-      description="Builds the Fabric Browser Applet">
-    <mkdir dir="${applet.classes}" /> 
-    <javac target="1.6" srcdir="${applet.src}" destdir="${applet.classes}"
-	includeAntRuntime="false">
-      <classpath>
-        <pathelement location="${runtime.classes}" />
-        <path refid="standard.classpath"/>
-      </classpath>
-    </javac>
-  </target>
-
   <!--
   ****************************************************************************
     Version-management targets
@@ -855,34 +833,6 @@ public class Version {
       <attribute name="Implementation-Version" value="${fabric.version}" />
       <attribute name="Built-Date" value="${fabric.version.build}" />
     </manifest>
-  </target>
-
-  <target name="signed-jars" depends="package">
-    <copy todir="${applet.dir}/applets/lib">
-      <fileset dir="fabric/lib" includes="*.jar"/>
-    </copy>
-    <signjar alias="Applet" storepass="password"
-	keystore="${applet.dir}/appletcert.keystore">
-      <fileset dir="${applet.dir}/applets/lib" includes="*.jar"/>
-    </signjar>
-  </target>
-
-  <target name="jar-applet" depends="applet,signed-jars">
-    <jar jarfile="${applet.jar}" basedir="${applet.classes}"
-	excludes="**/*.java">
-      <manifest>
-	<attribute name="Built-By" value="${user.name}"/>
-	<attribute name="Class-Path" value="lib/FreePastry-2.1.jar 
-	    lib/JFlex.jar lib/fabcoll.jar lib/fabric-rt.jar lib/fabric.jar 
-	    lib/java_cup.jar lib/je-3.3.75.jar lib/jif.jar lib/polyglot.jar"/>
-      </manifest>
-      <fileset dir="${applet.src}" includes="JNLP-INF/**"/>
-    </jar>
-    <signjar jar="${applet.jar}" alias="Applet" storepass="password"
-	keystore="${applet.dir}/appletcert.keystore"/>
-    <copy file="${applet.jar}" todir="${applet.dir}/applets" overwrite="true"/>
-    <!-- <copy file="${applet.src}/JNLP-INF/APPLICATION.jnlp"
-	 tofile="${applet.dir}/applets/fabapp.jnlp" overwrite="true"/> -->
   </target>
 
   <!--
