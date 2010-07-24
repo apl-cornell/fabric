@@ -11,6 +11,7 @@ import java.util.List;
 import fabric.common.Crypto;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
+import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -105,17 +106,22 @@ public interface Principal extends fabric.lang.Object {
       IntegPolicy integ =
           LabelUtil._Impl.writerPolicy(store, thisProxy, thisProxy);
 
-      // {this <- this}
-      ConfPolicy bottomConf =
-          Worker.getWorker().getLocalStore().getBottomConfidPolicy();
-      Label thisIntegLabel = LabelUtil._Impl.toLabel(store, bottomConf, integ);
+      // Always ensure that the principal can modify its own object.
+      // Because of bootstrapping issues, we special case the top principal.
+      if (!(this instanceof TopPrincipal)) {
+        // {this <- this}
+        ConfPolicy bottomConf =
+            Worker.getWorker().getLocalStore().getBottomConfidPolicy();
+        Label thisIntegLabel =
+            LabelUtil._Impl.toLabel(store, bottomConf, integ);
 
-      if (label == null) {
-        // Replace the temporary label with {this <- this}.
-        this.$label = thisIntegLabel;
-      } else {
-        // Join the given label with {this <- this}.
-        this.$label = LabelUtil._Impl.join(this.$label, thisIntegLabel);
+        if (label == null) {
+          // Replace the temporary label with {this <- this}.
+          this.$label = thisIntegLabel;
+        } else {
+          // Join the given label with {this <- this}.
+          this.$label = LabelUtil._Impl.join(this.$label, thisIntegLabel);
+        }
       }
 
       // Generate a new key pair for this principal.
