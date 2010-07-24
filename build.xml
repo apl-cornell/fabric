@@ -48,6 +48,9 @@
   <!-- var directory (for store databases) -->
   <property name="var" location="${fabric.home}/var"/>
 
+  <!-- Examples directory -->
+  <property name="examples" location="${fabric.home}/examples"/>
+
   <!-- Tools directories -->
   <property name="tools" location="${fabric.home}/tools"/>
   <property name="tools.storebrowser" location="${tools}/storebrowser"/>
@@ -181,6 +184,10 @@
     <delete dir="${tmp}"/>
     <delete dir="${var}"/>
     <delete file="${jar.base}" />
+
+    <subant target="clean">
+      <filelist dir="${examples}" files="build.xml" />
+    </subant>
   </target>
 
   <!-- Makes the directory tree truly pristine. -->
@@ -198,6 +205,10 @@
 	<include name="**/*_ppg.cup" />
       </fileset>
     </delete>
+
+    <subant target="clobber">
+      <filelist dir="${examples}" files="build.xml" />
+    </subant>
   </target>
 
   <!--
@@ -332,6 +343,14 @@
         <path refid="standard.classpath" />
       </classpath>
     </javac>
+  </target>
+
+  <!-- Compiles the Fabric examples -->
+  <target name="examples" depends="build-all"
+      description="Builds the Fabric application examples">
+    <subant target="build-all">
+      <fileset dir="${examples}" includes="build.xml" />
+    </subant>
   </target>
 
   <!--
