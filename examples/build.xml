@@ -14,7 +14,7 @@
   -->
 
   <target name="clean"
-      description="Cleans up the directory tree: deletes the classes directories">
+      description="Removes generated files">
     <!-- Recursively call "clean" on subdirectories. -->
     <subant target="clean">
       <fileset dir="." includes="*/build.xml" />
@@ -22,8 +22,7 @@
   </target>
 
   <!-- Makes the directory tree truly pristine. -->
-  <target name="clobber" depends="clean"
-      description="Cleans up the directory tree, deleting generated binaries, scripts, and source files">
+  <target name="clobber" depends="clean">
     <!-- Recursively call "clobber" on subdirectories. -->
     <subant target="clobber">
       <fileset dir="." includes="*/build.xml" />
@@ -37,7 +36,7 @@
   -->
 
   <!-- Main target for compiling the Fabric examples -->
-  <target name="build-all">
+  <target name="build-all" description="Compiles all Fabric examples">
     <!-- Recursively call "build-all" on subdirectories. -->
     <subant target="build-all">
       <fileset dir="." includes="*/build.xml" />
