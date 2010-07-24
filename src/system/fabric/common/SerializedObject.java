@@ -30,6 +30,12 @@ public final class SerializedObject implements FastSerializable {
    * <li>short label's store's name length (only present if inter-store)</li>
    * <li>byte[] label's store's name data (only present if inter-store)</li>
    * <li>long label's onum</li>
+   * <li>byte whether the class is a system class</li>
+   * <li>short codebase's store's name length (only present if not a system
+   * class)</li>
+   * <li>byte[] codebase's store's name data (only present if not a system
+   * class)</li>
+   * <li>long codebase's onum (only present if not a system class)</li>
    * <li>short class name length</li>
    * <li>byte[] class name data</li>
    * <li>short class hash length</li>
@@ -117,12 +123,12 @@ public final class SerializedObject implements FastSerializable {
 
       // system class == true
       out.writeBoolean(true);
-      
+
       // Class name.
       byte[] className = Surrogate.class.getName().getBytes("UTF-8");
       out.writeShort(className.length);
       out.write(className);
-      
+
       // Class hash.
       byte[] classHash = Util.hash(Surrogate.class);
       out.writeShort(classHash.length);
@@ -267,21 +273,31 @@ public final class SerializedObject implements FastSerializable {
     return longAt(labelPos());
   }
 
+  /**
+   * @return the offset in objectData representing the start of a boolean that
+   *         indicates whether the object's class is a system class.
+   */
   private final int isSystemClassPos() {
     int labelPos = labelPos();
     return labelPos + 8
-        + (labelRefIsInterStore() ? (unsignedShortAt(labelPos) + 2) : 0);    
+        + (labelRefIsInterStore() ? (unsignedShortAt(labelPos) + 2) : 0);
   }
+
   /**
    * @return whether the class of the serialized object is a system class.
    */
   public boolean isSystemClass() {
     return booleanAt(isSystemClassPos());
   }
-  
+
+  /**
+   * @return the offset in objectData representing the start of the object's
+   *         class's codebase reference.
+   */
   private final int codebasePos() {
     return isSystemClassPos() + 1;
   }
+
   /**
    * Maps class names to their deserialization constructors.
    */
@@ -290,29 +306,29 @@ public final class SerializedObject implements FastSerializable {
 
   /**
    * @return the codebase of the serialized object's class or null for system
-   * classes.
+   *         classes.
    */
   public fabric.lang.Codebase getCodebase() {
-    if(isSystemClass()) 
-      return null;
+    if (isSystemClass()) return null;
 
     int cbPos = codebasePos();
     int storeNameLength = unsignedShortAt(cbPos);
     int onumPos = cbPos + 2 + storeNameLength;
     DataInput in =
-        new DataInputStream(new ByteArrayInputStream(objectData, cbPos,
-            onumPos));
+        new DataInputStream(
+            new ByteArrayInputStream(objectData, cbPos, onumPos));
     try {
       String cbStoreName = in.readUTF();
       long cbOnum = longAt(onumPos);
-      String cbKey = "fab://"+cbStoreName+"/"+cbOnum;
+      String cbKey = "fab://" + cbStoreName + "/" + cbOnum;
       fabric.lang.Codebase cb = codebaseTable.get(cbKey);
-      
-      if(cb == null) {
+
+      if (cb == null) {
         Store cbStore = Worker.getWorker().getStore(cbStoreName);
-        cb = (Codebase) fabric.lang.Object._Proxy.$getProxy(
-              new fabric.lang.Object._Proxy(cbStore, cbOnum));
-        
+        cb =
+            (Codebase) fabric.lang.Object._Proxy
+                .$getProxy(new fabric.lang.Object._Proxy(cbStore, cbOnum));
+
         codebaseTable.put(cbKey, cb);
       }
       return cb;
@@ -328,10 +344,9 @@ public final class SerializedObject implements FastSerializable {
    */
   private final int classNamePos() {
     int offset = codebasePos();
-    return offset
-        + (isSystemClass() ? 0 : (2 + unsignedShortAt(offset) + 8));
+    return offset + (isSystemClass() ? 0 : (2 + unsignedShortAt(offset) + 8));
   }
-  
+
   /**
    * @return the serialized object's class name.
    */
@@ -353,15 +368,15 @@ public final class SerializedObject implements FastSerializable {
     int classNamePos = classNamePos();
     return classNamePos + 2 + unsignedShortAt(classNamePos);
   }
-  
+
   private boolean checkClassHash(byte[] hash) {
     int classHashPos = classHashPos();
     if (hash.length != unsignedShortAt(classHashPos)) return false;
 
     for (int i = 0; i < hash.length; i++) {
-      if (hash[i] != objectData[classHashPos+i+2]) return false;
+      if (hash[i] != objectData[classHashPos + i + 2]) return false;
     }
-    
+
     return true;
   }
 
@@ -526,9 +541,8 @@ public final class SerializedObject implements FastSerializable {
 
     return new Iterator<ComparablePair<String, Long>>() {
       int nextInterStoreRefNum = 0;
-      DataInput in =
-          new DataInputStream(new ByteArrayInputStream(objectData, offset,
-              objectData.length - offset));
+      DataInput in = new DataInputStream(new ByteArrayInputStream(objectData,
+          offset, objectData.length - offset));
 
       public boolean hasNext() {
         return nextInterStoreRefNum < numInterStoreRefs;
@@ -572,9 +586,9 @@ public final class SerializedObject implements FastSerializable {
         out.writeLong(intraStoreRefIt.next());
       else out.writeLong(getLabelOnum());
 
-      // Write the class name and number of ref types.
-      out.write(objectData, classNamePos(), numIntraStoreRefsPos()
-          - classNamePos());
+      // Write the codebase information, class name and number of ref types.
+      out.write(objectData, isSystemClassPos(), numIntraStoreRefsPos()
+          - isSystemClassPos());
 
       // Write number of intra-store refs.
       out.writeInt(getNumInterStoreRefs() + numIntraStoreRefs);
@@ -643,20 +657,22 @@ public final class SerializedObject implements FastSerializable {
     out.writeLong(labelOnum);
 
     // Write the object's type information
-    Class<?> implClass = impl.getClass();    
-    boolean isSystemClass = 
-      !(implClass.getClassLoader() instanceof FabricClassLoader);
+    Class<?> implClass = impl.getClass();
+    boolean isSystemClass =
+        !(implClass.getClassLoader() instanceof FabricClassLoader);
     out.writeBoolean(isSystemClass);
 
-    // write the codebase pointer
-    if(!isSystemClass) {
-      FabricClassLoader cl = (FabricClassLoader)implClass.getClassLoader();
+    // Write the codebase pointer.
+    if (!isSystemClass) {
+      FabricClassLoader cl = (FabricClassLoader) implClass.getClassLoader();
       Codebase cb = cl.getCodebase();
-      out.writeUTF(cb.$getStore().name());
+      byte[] storeName = cb.$getStore().name().getBytes("UTF-8");
+      out.writeShort(storeName.length);
+      out.write(storeName);
       out.writeLong(cb.$getOnum());
     }
-    
-    // write the classname
+
+    // Write the classname.
     byte[] className = implClass.getName().getBytes("UTF-8");
     out.writeShort(className.length);
     out.write(className);
@@ -738,17 +754,20 @@ public final class SerializedObject implements FastSerializable {
     }
     copyBytes(in, out, bytesToCopy, buf);
 
+    // Copy codebase information.
     boolean isSystemClass = in.readBoolean();
     out.writeBoolean(isSystemClass);
+    
     // Copy codebase pointer for non-system class
-    if(!isSystemClass) {
+    if (!isSystemClass) {
       int storeNameLength = in.readUnsignedShort();
       out.writeShort(storeNameLength);
       copyBytes(in, out, storeNameLength, buf);
+      
       long cbOnum = in.readLong();
       out.writeLong(cbOnum);
     }
-    
+
     // Copy the class name.
     int classNameLength = in.readUnsignedShort();
     out.writeShort(classNameLength);
@@ -834,36 +853,34 @@ public final class SerializedObject implements FastSerializable {
     try {
       String className = getClassName();
       Codebase cb = getCodebase();
-      
+
       // Check the class hash before deserializing.
       if (!checkClassHash(Util.hashClass(cb, className))) {
         URL path = Util.locateClass(cb, className);
-        throw new InvalidClassException(
-            className,
+        throw new InvalidClassException(className,
             "A class of the same name was found, but its hash did not match "
                 + "the hash in the object fab://" + store.name() + "/"
-                + getOnum() + "\n"
-                + "hash from: " + path);
+                + getOnum() + "\n" + "hash from: " + path);
       }
 
       // store system classes by name, fabric classes with codebase oid
       String ctorkey;
-      if(cb == null)
+      if (cb == null)
         ctorkey = className;
       else
-        // qualify classname by codebase 
-        ctorkey = "fab://" + cb.$getStore().name() + "/" 
-                    + cb.$getOnum() + "/" + className;
-      
+      // qualify classname by codebase
+      ctorkey =
+          "fab://" + cb.$getStore().name() + "/" + cb.$getOnum() + "/"
+              + className;
+
       Constructor<?> constructor = constructorTable.get(ctorkey);
 
       if (constructor == null) {
         Class<?> c;
         if (cb == null)
           c = Class.forName(getClassName());
-        else
-          c = FabricClassLoader.getClassLoader(cb).findClass(getClassName());
-          
+        else c = FabricClassLoader.getClassLoader(cb).findClass(getClassName());
+
         constructor =
             c.getConstructor(Store.class, long.class, int.class, long.class,
                 long.class, ObjectInput.class, Iterator.class, Iterator.class);
