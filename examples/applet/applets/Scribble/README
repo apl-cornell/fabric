@@ -16,7 +16,6 @@ libraries.
 	fab --name worker --make-principal database
 
 1. Compile Scribble.fil
-	cd applets/Scribble
 	filc -dumpdeps Scribble.fil
 
 2. Push Scribble classes to store0.
