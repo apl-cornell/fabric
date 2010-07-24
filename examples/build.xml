@@ -44,5 +44,7 @@
     </subant>
   </target>
 
+  <target name="all" depends="build-all" />
+
 </project>
 

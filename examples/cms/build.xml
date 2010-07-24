@@ -54,6 +54,8 @@
   <target name="build-all" depends="cms,fabservlet"
       description="Builds the Fabric CMS webapp" />
 
+  <target name="all" depends="build-all" />
+
   <target name="cms">
     <apply executable="bash"
 	parallel="true"
