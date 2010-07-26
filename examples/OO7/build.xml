@@ -35,7 +35,7 @@
   ****************************************************************************
   -->
 
-  <target name="build-all"
+  <target name="build"
       description="Builds the Fabric OO7 implementation">
     <mkdir dir="${OO7.home}/classes" />
     <apply executable="bash"
@@ -60,6 +60,7 @@
     </apply>
   </target>
 
+  <target name="build-all" depends="build" />
   <target name="all" depends="build-all" />
 
 </project>

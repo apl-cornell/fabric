@@ -90,17 +90,5 @@
     <pathelement location="${runtime.classes}" />
     <pathelement location="${lib}/fabric-rt.jar" />
   </path>
-
-  <!-- XXX Remove this -->
-  <path id="standard.classpath">
-    <pathelement location="${classes}"/>
-
-    <path refid="lib.classpath" />
-
-    <!-- Jif (and Polyglot) -->
-    <path refid="jif.classpath" />
-
-    <pathelement path="${java.class.path}" />
-  </path>
 </project>
 

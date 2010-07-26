@@ -64,10 +64,10 @@
   -->
 
   <!-- Main target for compiling the webapp. -->
-  <target name="build-all" depends="build-blog, build-worker"
+  <target name="build" depends="build-blog, build-worker"
       description="Builds the Fabric blog webapp" />
 
-  <!-- This target is here for legacy reasons. -->
+  <target name="build-all" depends="build" />
   <target name="all" depends="build-all" />
 
   <!--

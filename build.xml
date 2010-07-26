@@ -33,8 +33,10 @@
   <property name="bootstrap.classes" location="${fabric.home}/bs-classes"/>
   <property name="tests.classes" location="${fabric.home}/tests/classes"/>
   <property name="signatures.classes" location="${fabric.home}/sig-classes"/>
-  <property name="signatures.fabil.classes" location="${signatures.classes}/fabil"/>
-  <property name="signatures.fabric.classes" location="${signatures.classes}/fabric"/>
+  <property name="signatures.fabil.classes"
+      location="${signatures.classes}/fabil"/>
+  <property name="signatures.fabric.classes"
+      location="${signatures.classes}/fabric"/>
 
   <!-- Timestamp file for bootstrap classes. -->
   <property name="bootstrap.tstamp" location="${bootstrap.classes}/.tstamp"/>
@@ -149,7 +151,7 @@
 
   <target name="bin-check">
     <uptodate property="bin.up-to-date" srcfile="bin/defs.in"
-              targetfile="bin/defs" />
+	targetfile="bin/defs" />
   </target>
 
   <!--
@@ -166,6 +168,7 @@
     <delete file="${jar.signature.fabil}" />
     <delete file="${jar.signature.fabric}" />
 
+    <!-- XXX refactor -->
     <subant target="clean" failonerror="false">
       <filelist dir="${fabric.home}" files="tests/sif/build.xml"/>
       <filelist dir="${fabric.home}" files="tests/jif/build.xml"/>
@@ -412,7 +415,7 @@
     </javac>
   </target>
 
-  <!-- Compiles the Fabric worker API -->
+  <!-- Compiles the Fabric worker -->
   <target name="worker" depends="init,native,fabil-runtime">
     <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
 	includeAntRuntime="false" debug="on">
@@ -452,10 +455,6 @@
       depends="bin,fabil-compiler,fabil-signatures">
     <mkdir dir="${runtime.classes}" />
 
-    <condition property="runtime.opt" value="-O0">
-      <not><isset property="runtime.opt" /></not>
-    </condition>
-
     <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
 	includeAntRuntime="false" debug="on">
       <include name="fabric/worker/RetryException.java" />
@@ -472,7 +471,7 @@
         vmlauncher="false">
       <arg value="${filc}" />
       <arg line="${debug.flag}" />
-      <arg value="${runtime.opt}" />
+      <arg value="-O0" />
       <arg value="-d" />
       <arg value="rt-classes" />
       <arg value="-sourcepath" />
@@ -489,10 +488,6 @@
   <target name="fabil-runtime"
       depends="init,fabil-compiler,fabil-signatures,fabric-arrays">
     <mkdir dir="${runtime.classes}" />
-
-    <condition property="runtime.opt" value="-O0">
-      <not><isset property="runtime.opt" /></not>
-    </condition>
 
     <!-- XXX HACK -->
     <delete>
@@ -514,7 +509,7 @@
         vmlauncher="false">
       <arg value="${filc}" />
       <arg line="${debug.flag}" />
-      <arg value="${runtime.opt}" />
+      <arg value="-O0" />
       <arg value="-d" />
       <arg value="rt-classes" />
       <arg value="-sourcepath" />
@@ -546,10 +541,6 @@
       depends="fabric-signatures,fabil-runtime">
     <mkdir dir="${runtime.classes}" />
 
-    <condition property="runtime.opt" value="-O0">
-      <not><isset property="runtime.opt" /></not>
-    </condition>
-
     <apply executable="bash"
         parallel="true"
         failonerror="true"
@@ -560,7 +551,7 @@
         vmlauncher="false">
       <arg value="${fabc}" />
       <arg line="${debug.flag}" />
-      <arg value="${runtime.opt}" />
+      <arg value="-O0" />
       <arg value="-d" />
       <arg value="rt-classes" />
       <arg value="-sourcepath" />
@@ -575,11 +566,6 @@
     </apply>
   </target>
 
-  <!-- Used to pass -O to filc when compiling the runtime. -->
-  <target name="opt">
-    <property name="runtime.opt" value="-O" />
-  </target>
-
   <!--
   ****************************************************************************
     Example-application targets
@@ -591,10 +577,11 @@
       description="Builds the Fabric test programs">
     <javac target="1.6" srcdir="${src}" destdir="${classes}" debug="on"
 	includeAntRuntime="false" includes="tests/**">
-      <classpath refid="standard.classpath"/>
+      <classpath refid="fabric.classpath"/>
     </javac>
   </target>
 
+  <!-- XXX refactor -->
   <!-- Compiles the SIF framework -->
   <target name="fablib"
       depends="worker,fabric-compiler,fabric-runtime,fabric-signatures">
@@ -795,7 +782,7 @@ public class Version {
 
   <target name="jar-base" depends="fabil-compiler,fabric-system"
       description="Builds fabric.jar">
-    <antcall target="jar">
+    <antcall target="make-jar">
       <param name="file" value="${jar.base}" />
       <param name="base" value="${classes}" />
     </antcall>
@@ -803,7 +790,7 @@ public class Version {
 
   <target name="jar-runtime" depends="fabil-runtime,fabric-runtime"
       description="Builds fabric-rt.jar">
-    <antcall target="jar">
+    <antcall target="make-jar">
       <param name="file" value="${jar.runtime}" />
       <param name="base" value="${runtime.classes}" />
     </antcall>
@@ -811,12 +798,12 @@ public class Version {
 
   <target name="jar-sig" depends="fabil-signatures,fabric-signatures"
       description="Builds fabric-sig.jar and fabric-il-sig.jar">
-    <antcall target="jar">
+    <antcall target="make-jar">
       <param name="file" value="${jar.signature.fabil}" />
       <param name="base" value="${signatures.fabil.classes}" />
     </antcall>
 
-    <antcall target="jar">
+    <antcall target="make-jar">
       <param name="file" value="${jar.signature.fabric}" />
       <param name="base" value="${signatures.fabric.classes}" />
     </antcall>
@@ -834,7 +821,7 @@ public class Version {
       <regexpmapper from="^[^/]*/classes/(.*)$$" to="\1" />
     </copy>
 
-    <antcall target="jar">
+    <antcall target="make-jar">
       <param name="file" value="${jar.tools}" />
       <param name="base" value="${tmp}" />
     </antcall>
@@ -854,7 +841,7 @@ public class Version {
       file - Destination jar file.
       base - base directory from which all class files will be included.
   -->
-  <target name="jar" depends="jar-manifest">
+  <target name="make-jar" depends="jar-manifest">
     <jar jarfile="${file}" basedir="${base}" manifest="${tmp.manifest}"
 	includes="**/*.class" />
   </target>

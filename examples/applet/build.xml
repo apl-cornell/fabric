@@ -42,7 +42,7 @@
   ****************************************************************************
   -->
 
-  <target name="build-all"
+  <target name="build"
       description="Builds the Fabric browser applet">
     <mkdir dir="${applet.classes}" />
     <javac target="1.6" srcdir="${applet.src}"
@@ -52,8 +52,9 @@
     </javac>
   </target>
 
-  <target name="all" depends="build-all" />
   <target name="applet" depends="build-all" />
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
 
   <!--
   ****************************************************************************

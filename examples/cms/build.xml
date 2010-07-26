@@ -51,9 +51,11 @@
   -->
 
   <!-- Main target for compiling the webapp. -->
-  <target name="build-all" depends="cms,fabservlet"
+  <!-- XXX does this make sense? -->
+  <target name="build" depends="cms,fabservlet"
       description="Builds the Fabric CMS webapp" />
 
+  <target name="build-all" depends="build" />
   <target name="all" depends="build-all" />
 
   <target name="cms">
@@ -96,7 +98,8 @@
     </apply>
   </target>
 
-  <target name="fabservlet" description="Fabric CMS servlet">
+  <!-- Compiles the Fabric CMS servlet -->
+  <target name="fabservlet">
     <javac target="1.6" destdir="${cms.home}/web-fabil/WEB-INF/classes"
 	includeAntRuntime="false" debug="on">
       <classpath refid="cms.classpath" />

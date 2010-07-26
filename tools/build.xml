@@ -36,13 +36,14 @@
   -->
 
   <!-- Main target for compiling the Fabric tools -->
-  <target name="build-all" description="Compiles all Fabric tools">
+  <target name="build" description="Compiles the Fabric tools">
     <!-- Recursively call "build-all" on subdirectories. -->
     <subant target="build-all">
       <fileset dir="." includes="*/build.xml" />
     </subant>
   </target>
 
+  <target name="build-all" depends="build" />
   <target name="all" depends="build-all" />
 
   <!--
