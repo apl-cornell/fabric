@@ -1,6 +1,7 @@
+package fabric.tools.storebrowser;
+
 import java.util.Arrays;
 import java.util.List;
-
 
 public class DummyDataProvider implements DataProvider {
 

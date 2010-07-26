@@ -1,0 +1,70 @@
+<!--
+  This is the Apache Ant build file for the Fabric store browser GUI.
+-->
+
+<project name="storebrowser" default="build-all" basedir=".">
+  <description>
+    Fabric store browser GUI build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="storebrowser.home" file="${ant.file.storebrowser}" />
+  <property name="jar" location="${lib}/fabric-storebrowser.jar" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${storebrowser.home}/classes"/>
+    <delete file="${jar}" />
+  </target>
+
+  <target name="clobber" depends="clean" />
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build-all"
+      description="Builds the Fabric store browser GUI tool">
+    <mkdir dir="${storebrowser.home}/classes" />
+    <javac target="1.6" srcdir="${storebrowser.home}/src"
+	destdir="${storebrowser.home}/classes" includeAntRuntime="false"
+	debug="on">
+      <classpath>
+	<path refid="fabric.classpath" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="all" depends="build-all" />
+
+  <!--
+  ****************************************************************************
+    Jar targets
+  ****************************************************************************
+  -->
+
+  <target name="jar" depends="build-all"
+      description="Builds a jar for the Fabric store browser GUI">
+    <antcall target="fabric.common.jar">
+      <param name="file" value="${jar}" />
+      <param name="base" value="${storebrowser.home}/classes" />
+    </antcall>
+  </target>
+
+  <target name="jar-all" depends="jar" />
+
+</project>

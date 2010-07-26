@@ -102,5 +102,49 @@
 
     <pathelement path="${java.class.path}" />
   </path>
+
+  <!--
+  ____________________________________________________________________________
+    Configuration helper targets.
+  -->
+
+  <target name="configure-buildstring" depends="configure-version"
+      unless="fabric.version.build">
+    <tstamp>
+      <format property="now" pattern="yyyy-MM-dd HH:mm:ss" />
+    </tstamp>
+    <property name="fabric.version.build" value="${fabric.version} (${now})" />
+  </target>
+
+  <target name="configure-version" unless="fabric.version">
+    <property file="${fabric.home}/version.properties" prefix="fabric" />
+    <property name="fabric.version" value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}" />
+  </target>
+
+  <!--
+  ____________________________________________________________________________
+    Jar helper targets.
+  -->
+
+  <!--
+    Common target for creating jar files.
+
+    Parameters:
+      file - Destination jar file.
+      base - base directory from which all class files will be included.
+  -->
+  <target name="jar" depends="jar-manifest">
+    <jar jarfile="${file}" basedir="${base}" manifest="${tmp.manifest}"
+	includes="**/*.class" />
+  </target>
+
+  <target name="jar-manifest" depends="configure-buildstring">
+    <tempfile property="tmp.manifest" deleteonexit="true" />
+    <manifest file="${tmp.manifest}">
+      <attribute name="Built-By" value="${user.name}" />
+      <attribute name="Implementation-Version" value="${fabric.version}" />
+      <attribute name="Built-Date" value="${fabric.version.build}" />
+    </manifest>
+  </target>
 </project>
 

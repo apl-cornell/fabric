@@ -90,11 +90,11 @@
 
   <target name="signed-jars">
     <!--
-      Call the "jars" target on the Fabric build file to ensure the Fabric jars
-      are up-to-date.
+      Call the "jar-all" target on the Fabric build file to ensure the Fabric
+      jars are up-to-date.
     -->
     <ant inheritAll="false" antfile="${fabric.home}/build.xml"
-	dir="${fabric.home}" target="jars" />
+	dir="${fabric.home}" target="jar-all" />
 
     <copy todir="${applet.lib}">
       <fileset dir="${lib}" includes="*.jar"/>

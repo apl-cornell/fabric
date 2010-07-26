@@ -32,9 +32,9 @@ classpath="$TOP/classes:$TOP/rt-classes:$classpath"
 classpath="$TOP/lib/fabric.jar:$classpath"
 classpath="$TOP/lib/je-3.3.75.jar:$classpath"
 classpath="$TOP/lib/FreePastry-2.1.jar:$classpath"
-classpath="$TOP/tools/classes:$classpath"
+classpath="$TOP/tools/classloader/classes:$classpath"
 
-command="\"$JAVA\" $vmargs -classpath \"$(fixpath $classpath)\" RunFabClass $args"
+command="\"$JAVA\" $vmargs -classpath \"$(fixpath $classpath)\" fabric.tools.classloader.RunFabClass $args"
 
 if [ -n "$verbose" ]
 then

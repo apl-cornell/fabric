@@ -1,5 +1,6 @@
-import java.util.List;
+package fabric.tools.storebrowser;
 
+import java.util.List;
 
 /**
  * Hook to provide data to the tree navigation menu

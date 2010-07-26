@@ -51,11 +51,8 @@
   <!-- Examples directory -->
   <property name="examples" location="${fabric.home}/examples"/>
 
-  <!-- Tools directories -->
+  <!-- Tools directory -->
   <property name="tools" location="${fabric.home}/tools"/>
-  <property name="tools.storebrowser" location="${tools}/storebrowser"/>
-  <property name="tools.classloader" location="${tools}/classloader"/>
-  <property name="tools.classes" location="${tools}/classes"/>
 
   <!-- tmp directory (for creating the distribution) -->
   <property name="tmp" location="${fabric.home}/tmp"/>
@@ -82,7 +79,8 @@
 
   <!-- Main configuration target. -->
   <target name="configure" description="Configures Fabric"
-      depends="configure-buildstring" unless="configure.up-to-date">
+      depends="fabric.common.configure-buildstring"
+      unless="configure.up-to-date">
 
     <echo message="java version is ${java.version}"/>
     <echo message="current directory is ${user.dir}"/>
@@ -136,19 +134,6 @@
     Configuration helper targets.
   -->
 
-  <target name="configure-buildstring" depends="configure-version"
-      unless="fabric.version.build">
-    <tstamp>
-      <format property="now" pattern="yyyy-MM-dd HH:mm:ss" />
-    </tstamp>
-    <property name="fabric.version.build" value="${fabric.version} (${now})" />
-  </target>
-
-  <target name="configure-version" unless="fabric.version">
-    <property file="${fabric.home}/version.properties" prefix="fabric" />
-    <property name="fabric.version" value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}" />
-  </target>
-
   <target name="bin-check">
     <uptodate property="bin.up-to-date" srcfile="bin/defs.in"
               targetfile="bin/defs" />
@@ -180,13 +165,13 @@
     <delete dir="${classes}"/>
     <delete dir="${bootstrap.classes}"/>
     <delete dir="${tests.classes}"/>
-    <delete dir="${tools.classes}"/>
     <delete dir="${tmp}"/>
     <delete dir="${var}"/>
     <delete file="${jar.base}" />
 
     <subant target="clean">
       <filelist dir="${examples}" files="build.xml" />
+      <filelist dir="${tools}" files="build.xml" />
     </subant>
   </target>
 
@@ -208,6 +193,7 @@
 
     <subant target="clobber">
       <filelist dir="${examples}" files="build.xml" />
+      <filelist dir="${tools}" files="build.xml" />
     </subant>
   </target>
 
@@ -303,33 +289,11 @@
   </target>
 
   <!-- Compiles the Fabric tools -->
-  <target name="tools" depends="storebrowser,classloader-tools,debug-tools"
-    description="Builds all Fabric tools" />
-
-  <!-- Compiles the classloader tools -->
-  <target name="classloader-tools" depends="worker,fabil-runtime"
-    description="Builds the classloader tools">
-    <mkdir dir="${tools.classes}" /> 
-    <javac target="1.6" srcdir="${tools.classloader}"
-	destdir="${tools.classes}" includeAntRuntime="false" debug="on">
-      <classpath>
-        <pathelement location="${runtime.classes}" />
-        <path refid="standard.classpath"/>
-      </classpath>
-    </javac>
-  </target>
-
-  <!-- Compiles the store browser -->
-  <target name="storebrowser" depends="worker,fabil-runtime"
-    description="Builds the Fabric GUI store browser">
-    <mkdir dir="${tools.classes}" /> 
-    <javac target="1.6" srcdir="${tools.storebrowser}"
-	destdir="${tools.classes}" includeAntRuntime="false">
-      <classpath>
-        <pathelement location="${runtime.classes}" />
-        <path refid="standard.classpath"/>
-      </classpath>
-    </javac>
+  <target name="tools" depends="fabil-runtime,debug-tools"
+      description="Builds all Fabric tools">
+    <subant target="build-all">
+      <fileset dir="${tools}" includes="build.xml" />
+    </subant>
   </target>
 
   <!-- Compiles the Fabric system-debugging tools -->
@@ -339,8 +303,7 @@
 	includeAntRuntime="false" debug="on">
       <include name="fabric/worker/debug/**" />
       <classpath>
-        <pathelement location="${runtime.classes}" />
-        <path refid="standard.classpath" />
+        <path refid="fabric.classpath" />
       </classpath>
     </javac>
   </target>
@@ -647,7 +610,7 @@
     </propertyfile>
 
     <!-- Reread version info and regenerate version files -->
-    <antcall target="configure-buildstring" />
+    <antcall target="fabric.common.configure-buildstring" />
     <antcall target="gen-version" />
   </target>
 
@@ -659,7 +622,7 @@
     </propertyfile>
 
     <!-- Reread version info and regenerate version files -->
-    <antcall target="configure-buildstring" />
+    <antcall target="fabric.common.configure-buildstring" />
     <antcall target="gen-version" />
   </target>
 
@@ -670,7 +633,7 @@
     </propertyfile>
 
     <!-- Reread version info and regenerate version files -->
-    <antcall target="configure-buildstring" />
+    <antcall target="fabric.common.configure-buildstring" />
     <antcall target="gen-version" />
   </target>
 
@@ -681,12 +644,13 @@
 
   <!-- Generates version files in the source tree. -->
   <target name="gen-version">
-    <antcall target="configure-buildstring" />
+    <antcall target="fabric.common.configure-buildstring" />
     <antcall target="gen-version-java" />
   </target>
 
   <!-- Puts version information into the Java sources. -->
-  <target name="gen-version-java" depends="configure-buildstring">
+  <target name="gen-version-java"
+      depends="fabric.common.configure-buildstring">
     <antcall target="gen-version-java-compiler">
       <param name="name.code" value="fabil" />
       <param name="name.human" value="FabIL" />
@@ -813,45 +777,43 @@ public class Version {
   -->
 
   <!-- Main target for generating jars. -->
-  <target name="jars" depends="jar-base,jar-runtime,jar-sig"
+  <target name="jar-all" depends="jar-base,jar-runtime,jar-sig,jar-tools"
     description="Builds all jars" />
 
-  <target name="jar-base"
-      depends="jar-manifest,fabil-compiler,fabric-system"
+  <target name="jar-base" depends="fabil-compiler,fabric-system"
       description="Builds fabric.jar">
-    <jar jarfile="${jar.base}" basedir="${classes}" manifest="${tmp.manifest}"
-	excludes="**/*.java" />
+    <antcall target="fabric.common.jar">
+      <param name="file" value="${jar.base}" />
+      <param name="base" value="${classes}" />
+    </antcall>
   </target>
 
-  <target name="jar-runtime"
-      depends="jar-manifest,fabil-runtime,fabric-runtime"
+  <target name="jar-runtime" depends="fabil-runtime,fabric-runtime"
       description="Builds fabric-rt.jar">
-    <jar jarfile="${jar.runtime}" basedir="${runtime.classes}"
-	manifest="${tmp.manifest}" excludes="**/*.java" />
+    <antcall target="fabric.common.jar">
+      <param name="file" value="${jar.runtime}" />
+      <param name="base" value="${runtime.classes}" />
+    </antcall>
   </target>
 
-  <target name="jar-sig"
-      depends="jar-manifest,fabil-signatures,fabric-signatures"
+  <target name="jar-sig" depends="fabil-signatures,fabric-signatures"
       description="Builds fabric-sig.jar and fabric-il-sig.jar">
-    <jar jarfile="${jar.signature.fabil}" basedir="${signatures.fabil.classes}"
-	manifest="${tmp.manifest}" excludes="**/*.java" />
-    <jar jarfile="${jar.signature.fabric}"
-	basedir="${signatures.fabric.classes}" manifest="${tmp.manifest}"
-	excludes="**/*.java" />
+    <antcall target="fabric.common.jar">
+      <param name="file" value="${jar.signature.fabil}" />
+      <param name="base" value="${signatures.fabil.classes}" />
+    </antcall>
+
+    <antcall target="fabric.common.jar">
+      <param name="file" value="${jar.signature.fabric}" />
+      <param name="base" value="${signatures.fabric.classes}" />
+    </antcall>
   </target>
 
-  <!--
-  ____________________________________________________________________________
-    Jar helper targets.
-  -->
-
-  <target name="jar-manifest" depends="configure-buildstring">
-    <tempfile property="tmp.manifest" deleteonexit="true" />
-    <manifest file="${tmp.manifest}">
-      <attribute name="Built-By" value="${user.name}" />
-      <attribute name="Implementation-Version" value="${fabric.version}" />
-      <attribute name="Built-Date" value="${fabric.version.build}" />
-    </manifest>
+  <target name="jar-tools" depends="tools"
+      description="Builds Jar files for all the Fabric tools">
+    <subant target="jar-all">
+      <fileset dir="${tools}" includes="build.xml" />
+    </subant>
   </target>
 
   <!--
@@ -876,7 +838,8 @@ public class Version {
   -->
 
   <!-- Creates the distribution tarball from CVS and SVN. -->
-  <target name="dist-tarball" depends="configure-buildstring,jdk-home">
+  <target name="dist-tarball"
+      depends="fabric.common.configure-buildstring,jdk-home">
     <antcall target="mkdir-tmp" />
 
     <!-- Check out Polyglot from CVS. -->
@@ -949,9 +912,9 @@ public class Version {
   </target>
 
   <!-- Creates a distribution tarball from the current working copy. -->
-  <target name="dist.tar" depends="configure-version,build-all,jars,javadoc">
+  <target name="dist.tar"
+      depends="configure-version,build-all,jar-all,javadoc">
     <delete dir="${fabric.home}/fabric-${fabric.version}" />
-    <move tofile="${fabric.home}/fabric-${fabric.version}" file="${tmp}" />
     <tar destfile="${fabric.home}/fabric-${fabric.version}.tar.gz"
 	compression="gzip">
       <!-- Include top-level files. -->
@@ -1004,6 +967,8 @@ public class Version {
 	<include name="fabric-rt.jar" />
 	<include name="fabric-il-sig.jar" />
 	<include name="fabric-sig.jar" />
+	<include name="fabric-classloader.jar" />
+	<include name="fabric-storebrowser.jar" />
 
 	<!-- Polyglot, Jif, and dependencies -->
 	<include name="polyglot.jar" />
@@ -1049,9 +1014,12 @@ public class Version {
 
       <!-- Include tools. -->
       <tarfileset dir="${tools}" prefix="fabric-${fabric.version}/tools">
+	<include name="build.xml" />
 	<include name="storebrowser/**/README" />
+	<include name="storebrowser/**/build.xml" />
 	<include name="storebrowser/**/*.java" />
 	<include name="classloader/**/README" />
+	<include name="classloader/**/build.xml" />
 	<include name="classloader/**/*.java" />
       </tarfileset>
     </tar>
@@ -1130,7 +1098,7 @@ public class Version {
     ******************************************************************
   -->
 
-  <target name="package" depends="build-all,jars,fablib">
+  <target name="package" depends="build-all,jar-all,fablib">
     <!-- Delete any old version of the packaged directory -->
     <delete dir="fabric"/>
     <!-- Create the package directory and subdirectories -->
