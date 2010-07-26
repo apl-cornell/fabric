@@ -16,7 +16,6 @@
   <import file="../../common.xml" />
 
   <dirname property="classloader.home" file="${ant.file.classloader}" />
-  <property name="jar" location="${lib}/fabric-classloader.jar" />
 
   <!--
   ****************************************************************************
@@ -26,7 +25,6 @@
 
   <target name="clean" description="Removes generated files">
     <delete dir="${classloader.home}/classes"/>
-    <delete file="${jar}" />
   </target>
 
   <target name="clobber" depends="clean" />
@@ -50,21 +48,5 @@
   </target>
 
   <target name="all" depends="build-all" />
-
-  <!--
-  ****************************************************************************
-    Jar targets
-  ****************************************************************************
-  -->
-
-  <target name="jar" depends="build-all"
-      description="Builds a jar for the Fabric classloader tools">
-    <antcall target="fabric.common.jar">
-      <param name="file" value="${jar}" />
-      <param name="base" value="${classloader.home}/classes" />
-    </antcall>
-  </target>
-
-  <target name="jar-all" depends="jar" />
 
 </project>

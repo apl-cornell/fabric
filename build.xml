@@ -70,6 +70,7 @@
   <property name="jar.runtime" location="${lib}/fabric-rt.jar" />
   <property name="jar.signature.fabil" location="${lib}/fabric-il-sig.jar" />
   <property name="jar.signature.fabric" location="${lib}/fabric-sig.jar" />
+  <property name="jar.tools" location="${lib}/fabric-tools.jar" />
 
   <!--
   ****************************************************************************
@@ -79,8 +80,7 @@
 
   <!-- Main configuration target. -->
   <target name="configure" description="Configures Fabric"
-      depends="fabric.common.configure-buildstring"
-      unless="configure.up-to-date">
+      depends="configure-buildstring" unless="configure.up-to-date">
 
     <echo message="java version is ${java.version}"/>
     <echo message="current directory is ${user.dir}"/>
@@ -133,6 +133,19 @@
   ____________________________________________________________________________
     Configuration helper targets.
   -->
+
+  <target name="configure-buildstring" depends="configure-version"
+      unless="fabric.version.build">
+    <tstamp>
+      <format property="now" pattern="yyyy-MM-dd HH:mm:ss" />
+    </tstamp>
+    <property name="fabric.version.build" value="${fabric.version} (${now})" />
+  </target>
+
+  <target name="configure-version" unless="fabric.version">
+    <property file="${fabric.home}/version.properties" prefix="fabric" />
+    <property name="fabric.version" value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}" />
+  </target>
 
   <target name="bin-check">
     <uptodate property="bin.up-to-date" srcfile="bin/defs.in"
@@ -263,7 +276,7 @@
   </target>
 
   <!-- Compiles the FabIL signatures -->
-  <target name="fabil-signatures" depends="init,fabil-compiler,bin"
+  <target name="fabil-signatures" depends="init,fabil-compiler,bin,native"
       description="Compiles the FabIL signature clasess">
     <mkdir dir="${signatures.fabil.classes}" />
 
@@ -610,7 +623,7 @@
     </propertyfile>
 
     <!-- Reread version info and regenerate version files -->
-    <antcall target="fabric.common.configure-buildstring" />
+    <antcall target="configure-buildstring" />
     <antcall target="gen-version" />
   </target>
 
@@ -622,7 +635,7 @@
     </propertyfile>
 
     <!-- Reread version info and regenerate version files -->
-    <antcall target="fabric.common.configure-buildstring" />
+    <antcall target="configure-buildstring" />
     <antcall target="gen-version" />
   </target>
 
@@ -633,7 +646,7 @@
     </propertyfile>
 
     <!-- Reread version info and regenerate version files -->
-    <antcall target="fabric.common.configure-buildstring" />
+    <antcall target="configure-buildstring" />
     <antcall target="gen-version" />
   </target>
 
@@ -644,13 +657,13 @@
 
   <!-- Generates version files in the source tree. -->
   <target name="gen-version">
-    <antcall target="fabric.common.configure-buildstring" />
+    <antcall target="configure-buildstring" />
     <antcall target="gen-version-java" />
   </target>
 
   <!-- Puts version information into the Java sources. -->
   <target name="gen-version-java"
-      depends="fabric.common.configure-buildstring">
+      depends="configure-buildstring">
     <antcall target="gen-version-java-compiler">
       <param name="name.code" value="fabil" />
       <param name="name.human" value="FabIL" />
@@ -782,7 +795,7 @@ public class Version {
 
   <target name="jar-base" depends="fabil-compiler,fabric-system"
       description="Builds fabric.jar">
-    <antcall target="fabric.common.jar">
+    <antcall target="jar">
       <param name="file" value="${jar.base}" />
       <param name="base" value="${classes}" />
     </antcall>
@@ -790,7 +803,7 @@ public class Version {
 
   <target name="jar-runtime" depends="fabil-runtime,fabric-runtime"
       description="Builds fabric-rt.jar">
-    <antcall target="fabric.common.jar">
+    <antcall target="jar">
       <param name="file" value="${jar.runtime}" />
       <param name="base" value="${runtime.classes}" />
     </antcall>
@@ -798,12 +811,12 @@ public class Version {
 
   <target name="jar-sig" depends="fabil-signatures,fabric-signatures"
       description="Builds fabric-sig.jar and fabric-il-sig.jar">
-    <antcall target="fabric.common.jar">
+    <antcall target="jar">
       <param name="file" value="${jar.signature.fabil}" />
       <param name="base" value="${signatures.fabil.classes}" />
     </antcall>
 
-    <antcall target="fabric.common.jar">
+    <antcall target="jar">
       <param name="file" value="${jar.signature.fabric}" />
       <param name="base" value="${signatures.fabric.classes}" />
     </antcall>
@@ -811,9 +824,48 @@ public class Version {
 
   <target name="jar-tools" depends="tools"
       description="Builds Jar files for all the Fabric tools">
-    <subant target="jar-all">
-      <fileset dir="${tools}" includes="build.xml" />
-    </subant>
+    <!-- Create the jar's directory structure in a temporary directory. --> 
+    <antcall target="mkdir-tmp" />
+
+    <copy todir="${tmp}">
+      <fileset dir="${tools}">
+	<include name="*/classes/**/*.class" />
+      </fileset>
+      <regexpmapper from="^[^/]*/classes/(.*)$$" to="\1" />
+    </copy>
+
+    <antcall target="jar">
+      <param name="file" value="${jar.tools}" />
+      <param name="base" value="${tmp}" />
+    </antcall>
+
+    <antcall target="rmdir-tmp" />
+  </target>
+
+  <!--
+  ____________________________________________________________________________
+    Jar helper targets.
+  -->
+
+  <!--
+    Common target for creating jar files.
+
+    Parameters:
+      file - Destination jar file.
+      base - base directory from which all class files will be included.
+  -->
+  <target name="jar" depends="jar-manifest">
+    <jar jarfile="${file}" basedir="${base}" manifest="${tmp.manifest}"
+	includes="**/*.class" />
+  </target>
+
+  <target name="jar-manifest" depends="configure-buildstring">
+    <tempfile property="tmp.manifest" deleteonexit="true" />
+    <manifest file="${tmp.manifest}">
+      <attribute name="Built-By" value="${user.name}" />
+      <attribute name="Implementation-Version" value="${fabric.version}" />
+      <attribute name="Built-Date" value="${fabric.version.build}" />
+    </manifest>
   </target>
 
   <!--
@@ -839,7 +891,7 @@ public class Version {
 
   <!-- Creates the distribution tarball from CVS and SVN. -->
   <target name="dist-tarball"
-      depends="fabric.common.configure-buildstring,jdk-home">
+      depends="configure-buildstring,jdk-home">
     <antcall target="mkdir-tmp" />
 
     <!-- Check out Polyglot from CVS. -->
@@ -967,8 +1019,7 @@ public class Version {
 	<include name="fabric-rt.jar" />
 	<include name="fabric-il-sig.jar" />
 	<include name="fabric-sig.jar" />
-	<include name="fabric-classloader.jar" />
-	<include name="fabric-storebrowser.jar" />
+	<include name="fabric-tools.jar" />
 
 	<!-- Polyglot, Jif, and dependencies -->
 	<include name="polyglot.jar" />
