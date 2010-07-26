@@ -36,7 +36,7 @@
 	          <fileset dir="examples" includes="bank/build.xml"/>
 	          <fileset dir="examples" includes="airline/build.xml"/>
 	          <fileset dir="examples" includes="travel/build.xml"/>
-	          <!--fileset dir="examples" includes="calendartwo/build.xml"/-->
+	          <fileset dir="examples" includes="login/build.xml"/>
         </subant>
     </target>
 
@@ -180,8 +180,9 @@
     <target name="sif-examples"
             depends="sif"
             description="Builds all examples">
-        <!-- compile the travel package first, since other examples depend on it -->
+        <!-- compile the travel and login packages first, since other examples depend on it -->
         <subant target="compile">
+            <fileset dir="examples" includes="login/build.xml"/>
             <fileset dir="examples" includes="travel/build.xml"/>
         </subant>
         <subant target="compile">
