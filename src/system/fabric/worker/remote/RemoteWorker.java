@@ -64,9 +64,7 @@ public final class RemoteWorker extends RemoteNode {
     // Commit any outstanding subtransactions that occurred as a result of the
     // remote call.
     Log innermost = TransactionRegistry.getInnermostLog(tid.topTid);
-    tm.associateLog(innermost);
-    for (int i = innermost.getTid().depth; i > tid.depth; i--)
-      tm.commitTransaction();
+    tm.associateAndSyncLog(innermost, tid);
 
     // Merge in the update map we got.
     if (response.updateMap != null)

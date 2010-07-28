@@ -728,15 +728,11 @@ public interface Object {
         final LocalStore store = Worker.getWorker().getLocalStore();
 
         return Worker.runInSubTransaction(new Worker.Code<Object>() {
-          public Object run() {
-            try {
-              Constructor<? extends Object._Impl> constr =
-                  c.getConstructor(Store.class, Label.class);
-              Label emptyLabel = store.getEmptyLabel();
-              return constr.newInstance(store, emptyLabel);
-            } catch (Exception e) {
-              throw new AbortException(e);
-            }
+          public Object run() throws Throwable {
+            Constructor<? extends Object._Impl> constr =
+              c.getConstructor(Store.class, Label.class);
+            Label emptyLabel = store.getEmptyLabel();
+            return constr.newInstance(store, emptyLabel);
           }
         });
       }

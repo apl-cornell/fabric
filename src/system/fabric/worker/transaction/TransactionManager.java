@@ -116,10 +116,10 @@ public final class TransactionManager {
           int ver = impl.$getVersion();
           if (ver == result.versionNumber) return result;
 
-          // Version numbers don't match. Abort all other transactions.
+          // Version numbers don't match. Retry all other transactions.
           // XXX What if we just read in an older copy of the object?
           for (Log reader : result.readLocks) {
-            reader.flagAbort();
+            reader.flagRetry();
           }
 
           result.versionNumber = ver;
@@ -160,19 +160,13 @@ public final class TransactionManager {
     this.current = null;
   }
 
-  private void checkAbortSignal() {
-    if (current.abortSignal != null) {
+  private void checkRetrySignal() {
+    if (current.retrySignal != null) {
       synchronized (current) {
-        if (!current.tid.isDescendantOf(current.abortSignal)) {
-          current.abortSignal = null;
-          return;
-        }
-
-        WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got abort signal",
+        WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got retry signal",
             current);
-        // Abort the transaction.
-        // TODO Provide a reason for the abort.
-        throw new RetryException();
+        
+        throw new TransactionRestartingException(current.retrySignal);
       }
     }
   }
@@ -224,8 +218,8 @@ public final class TransactionManager {
     WORKER_TRANSACTION_LOGGER.warning(current + " aborting");
     // Assume only one thread will be executing this.
 
-    // Set the abort flag in all our children.
-    current.flagAbort();
+    // Set the retry flag in all our children.
+    current.flagRetry();
 
     // Wait for all other threads to finish.
     current.waitForThreads();
@@ -250,35 +244,58 @@ public final class TransactionManager {
 
   /**
    * Commits the transaction if possible; otherwise, aborts the transaction.
+   * 
+   * @throws AbortException
+   *           if the transaction was aborted.
+   * @throws TransactionRestartingException
+   *           if the transaction was aborted and needs to be retried.
    */
   public void commitTransaction() throws AbortException,
-      TransactionAtomicityViolationException {
+      TransactionRestartingException, TransactionAtomicityViolationException {
     commitTransaction(true);
   }
 
   /**
+   * Commits the transaction if possible; otherwise, aborts the transaction.
+   * 
    * @param useAuthentication
    *          whether to use an authenticated channel to talk to the store
+   * @throws AbortException
+   *           if the transaction was aborted.
+   * @throws TransactionRestartingException
+   *           if the transaction was aborted and needs to be retried.
    */
   public void commitTransaction(boolean useAuthentication)
-      throws AbortException, TransactionAtomicityViolationException {
+      throws AbortException, TransactionRestartingException,
+      TransactionAtomicityViolationException {
     Timing.COMMIT.begin();
     try {
-      commitTransactionAt(System.currentTimeMillis(), useAuthentication);
+      commitTransactionAt(System.currentTimeMillis(), useAuthentication, false);
     } finally {
       Timing.COMMIT.end();
     }
   }
 
-  public void commitTransactionAt(long commitTime) {
-    commitTransactionAt(commitTime, true);
+  public void commitTransactionAt(long commitTime) throws AbortException,
+      TransactionRestartingException {
+    commitTransactionAt(commitTime, true, false);
   }
 
   /**
+   * Commits the transaction if possible; otherwise, aborts the transaction.
+   * 
    * @param useAuthentication
    *          whether to use an authenticated channel to talk to the store
+   * @param ignoreRetrySignal
+   *          whether to ignore the retry signal
+   * @throws AbortException
+   *           if the transaction was aborted.
+   * @throws TransactionRestartingException
+   *           if the transaction was aborted and needs to be retried.
    */
-  private void commitTransactionAt(long commitTime, boolean useAuthentication) {
+  private void commitTransactionAt(long commitTime, boolean useAuthentication,
+      boolean ignoreRetrySignal) throws AbortException,
+      TransactionRestartingException {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
     // Assume only one thread will be executing this.
@@ -288,12 +305,22 @@ public final class TransactionManager {
     // Wait for all sub-transactions to finish.
     current.waitForThreads();
 
-    // Make sure we're not supposed to abort.
-    try {
-      checkAbortSignal();
-    } catch (AbortException e) {
-      abortTransaction();
-      throw e;
+    TransactionID ignoredRetrySignal = null;
+    if (!ignoreRetrySignal) {
+      // Make sure we're not supposed to abort or retry.
+      try {
+        checkRetrySignal();
+      } catch (TransactionAbortingException e) {
+        abortTransaction();
+        throw new AbortException();
+      } catch (TransactionRestartingException e) {
+        abortTransaction();
+        throw e;
+      }
+    } else {
+      synchronized (current) {
+        ignoredRetrySignal = current.retrySignal;
+      }
     }
 
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committing", current);
@@ -312,6 +339,26 @@ public final class TransactionManager {
           // Reuse the current frame for the parent transaction. Update its TID.
           current.tid = current.tid.parent;
         }
+        
+        if (ignoredRetrySignal != null) {
+          // Preserve the ignored retry signal.
+          synchronized (current) {
+            TransactionID signal = ignoredRetrySignal;
+            if (current.retrySignal != null) {
+              signal = signal.getLowestCommonAncestor(current.retrySignal);
+
+              if (signal == null) {
+                throw new InternalError("Something is broken with transaction "
+                    + "management. Found retry signals for different "
+                    + "transactions in the same log. (In transaction "
+                    + current.tid + ".  Retry1=" + current.retrySignal
+                    + "; Retry2=" + ignoredRetrySignal);
+              }
+            }
+
+            current.retrySignal = signal;
+          }
+        }
         return;
       } finally {
         Timing.SUBTX.end();
@@ -328,7 +375,8 @@ public final class TransactionManager {
     Set<Store> stores = current.storesToContact();
     List<RemoteWorker> workers = current.workersCalled;
 
-    // Send prepare messages to our cohorts.
+    // Send prepare messages to our cohorts. This will also abort our cohorts if
+    // the prepare fails.
     Map<RemoteNode, TransactionPrepareFailedException> failures =
         sendPrepareMessages(useAuthentication, commitTime, stores, workers);
 
@@ -337,9 +385,9 @@ public final class TransactionManager {
       TransactionPrepareFailedException e =
           new TransactionPrepareFailedException(failures);
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
-          "{0} error committing: abort exception: {1}", current, e);
+          "{0} error committing: prepare failed exception: {1}", current, e);
       abortTransaction(false);
-      throw new AbortException(e);
+      throw new TransactionRestartingException(current.tid);
     }
 
     // Send commit messages to our cohorts.
@@ -667,8 +715,8 @@ public final class TransactionManager {
       if (current == null)
         throw new InternalError("Cannot create objects outside a transaction");
 
-      // Make sure we're not supposed to abort.
-      checkAbortSignal();
+      // Make sure we're not supposed to abort/retry.
+      checkRetrySignal();
 
       // Grab a write lock on the object.
       obj.$writer = current;
@@ -709,8 +757,8 @@ public final class TransactionManager {
   private void ensureReadLock(_Impl obj) {
     if (obj.$reader == current) return;
 
-    // Make sure we're not supposed to abort.
-    checkAbortSignal();
+    // Make sure we're not supposed to abort/retry.
+    checkRetrySignal();
 
     // Check read condition: wait until all writers are in our ancestry.
     boolean hadToWait = false;
@@ -728,8 +776,8 @@ public final class TransactionManager {
       }
       obj.$numWaiting--;
 
-      // Make sure we weren't aborted while we were waiting.
-      checkAbortSignal();
+      // Make sure we weren't aborted/retried while we were waiting.
+      checkRetrySignal();
     }
 
     // Set the object's reader stamp to the current transaction.
@@ -780,8 +828,8 @@ public final class TransactionManager {
     // Nothing to do if the write stamp is us.
     if (obj.$writer == current) return;
 
-    // Make sure we're not supposed to abort.
-    checkAbortSignal();
+    // Make sure we're not supposed to abort/retry.
+    checkRetrySignal();
 
     // Check write condition: wait until writer is in our ancestry and all
     // readers are in our ancestry.
@@ -796,7 +844,7 @@ public final class TransactionManager {
             obj.getClass(), obj.$writeLockHolder);
         hadToWait = true;
       } else {
-        // Abort any incompatible readers.
+        // Restart any incompatible readers.
         ReadMapEntry readMapEntry = obj.$readMapEntry;
         if (readMapEntry != null) {
           synchronized (readMapEntry) {
@@ -807,7 +855,7 @@ public final class TransactionManager {
                     "{0} wants to write {1}/" + obj.$getOnum()
                         + " ({2}); aborting reader {3}", current, obj
                         .$getStore(), obj.getClass(), lock);
-                lock.flagAbort();
+                lock.flagRetry();
                 allReadersInAncestry = false;
               }
             }
@@ -824,8 +872,8 @@ public final class TransactionManager {
       }
       obj.$numWaiting--;
 
-      // Make sure we weren't aborted while we were waiting.
-      checkAbortSignal();
+      // Make sure we weren't aborted/retried while we were waiting.
+      checkRetrySignal();
     }
 
     // Set the write stamp.
@@ -912,7 +960,7 @@ public final class TransactionManager {
    * Starts a new transaction. The sub-transaction runs in the same thread as
    * the caller.
    */
-  public void startTransaction() throws AbortException {
+  public void startTransaction() {
     startTransaction(null);
   }
 
@@ -922,7 +970,11 @@ public final class TransactionManager {
    * tid is generated for the sub-transaction.
    */
   public void startTransaction(TransactionID tid) {
-    if (current != null) checkAbortSignal();
+    startTransaction(tid, false);
+  }
+  
+  private void startTransaction(TransactionID tid, boolean ignoreRetrySignal) {
+    if (current != null && !ignoreRetrySignal) checkRetrySignal();
 
     try {
       Timing.BEGIN.begin();
@@ -1041,13 +1093,15 @@ public final class TransactionManager {
       return;
     }
 
-    // Do the commits that we've missed.
+    // Do the commits that we've missed. Ignore retry signals for now; they will
+    // be handled the next time the application code interacts with the
+    // transaction manager.
     TransactionID commonAncestor = log.getTid().getLowestCommonAncestor(tid);
     for (int i = log.getTid().depth; i > commonAncestor.depth; i--)
-      commitTransaction();
+      commitTransactionAt(System.currentTimeMillis(), true, true);
 
     // Start new transactions if necessary.
-    if (commonAncestor.depth != tid.depth) startTransaction(tid);
+    if (commonAncestor.depth != tid.depth) startTransaction(tid, true);
   }
 
 }

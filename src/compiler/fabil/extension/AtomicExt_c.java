@@ -73,6 +73,7 @@ public class AtomicExt_c extends FabILExt_c {
     String label = "$label" + (freshTid++);
     String flag = "$commit" + (freshTid++);
     String e = "$e" + (freshTid++);
+    String currentTid = "$currentTid" + (freshTid++);
     
     String block = "{\n" +
     		   "  %LS\n" +
@@ -91,6 +92,15 @@ public class AtomicExt_c extends FabILExt_c {
                    "      " + flag + " = false;" +
                    "      break " + label + ";\n" +
                    "    }\n" : "") +
+                   "    catch (final fabric.worker.TransactionRestartingException " + e + ") {\n" +
+                   "      " + flag + " = false;" +
+                   "      fabric.common.TransactionID " + currentTid + " = \n" +
+                   "        fabric.worker.transaction.TransactionManager.getInstance().getCurrentTid();\n" +
+                   "      if (" + e + ".tid.isDescendantOf(" + currentTid + "))\n" +
+                   "        continue;\n" +
+                   "      if (" + currentTid + ".parent != null) throw " + e + ";\n" +
+                   "      throw new InternalError(\"Something is broken with transaction management. Got a signal to restart a different transaction than the one being managed.\");\n" +
+                   "    }\n" +
     		   "    catch (final Throwable " + e + ") {\n" +
     		   "      " + flag + " = false;\n" +
     		   "      throw new fabric.worker.AbortException(" + e + ");\n" +
@@ -102,7 +112,16 @@ public class AtomicExt_c extends FabILExt_c {
     		   "        }\n" +
     		   "        catch (final fabric.worker.AbortException " + e + ") {\n" +
     		   "          " + flag + " = false;\n" +
-    		   "        }\n" +
+                   "        }\n" +
+                   "        catch (final fabric.worker.TransactionRestartingException " + e + ") {\n" +
+                   "          " + flag + " = false;\n" +
+                   "          fabric.common.TransactionID " + currentTid + " = \n" +
+                   "            fabric.worker.transaction.TransactionManager.getInstance().getCurrentTid();\n" +
+                   "          if (" + currentTid + " == null || " + e + ".tid.isDescendantOf(" + currentTid + ")\n" +
+                   "              && !" + currentTid + ".equals(" + e + ".tid))\n" +
+                   "            continue;\n" +
+                   "          throw " + e + ";\n" +
+                   "        }\n" +
     		   "      }\n" +
     		   "      else {\n" +
     		   "        %S\n" +

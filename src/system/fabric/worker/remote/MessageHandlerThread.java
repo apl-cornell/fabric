@@ -177,12 +177,11 @@ public class MessageHandlerThread extends
     if (log == null)
       return new PrepareTransactionMessage.Response("No such transaction");
 
-    TransactionManager tm = TransactionManager.getInstance();
-    tm.associateLog(log);
-
     // Commit up to the top level.
-    for (int i = 0; i < log.getTid().depth; i++)
-      tm.commitTransactionAt(prepareTransactionMessage.commitTime);
+    TransactionManager tm = TransactionManager.getInstance();
+    TransactionID topTid = log.getTid();
+    while (topTid.depth > 0) topTid = topTid.parent;
+    tm.associateAndSyncLog(log, topTid);
 
     Map<RemoteNode, TransactionPrepareFailedException> failures =
         tm.sendPrepareMessages(prepareTransactionMessage.commitTime);

@@ -51,11 +51,12 @@ public final class Log {
   Thread thread;
 
   /**
-   * A flag indicating whether this transaction should abort. This flag should
-   * be checked before each operation. This flag is set when it's non-null and
-   * indicates the outermost transaction in the stack that is aborting.
+   * A flag indicating whether this transaction should abort or be retried. This
+   * flag should be checked before each operation. This flag is set when it's
+   * non-null and indicates the transaction in the stack that is
+   * to be retried; all child transactions are to be aborted.
    */
-  volatile TransactionID abortSignal;
+  volatile TransactionID retrySignal;
 
   /**
    * Maps OIDs to <code>readMap</code> entries for objects read in this
@@ -139,7 +140,7 @@ public final class Log {
 
     this.child = null;
     this.thread = Thread.currentThread();
-    this.abortSignal = null;
+    this.retrySignal = parent == null ? null : parent.retrySignal;
     this.reads = new OidKeyHashMap<ReadMapEntry>();
     this.readsReadByParent = new ArrayList<ReadMapEntry>();
     this.creates = new ArrayList<_Impl>();
@@ -298,16 +299,17 @@ public final class Log {
   }
 
   /**
-   * Sets the abort flag on this and the logs of all sub-transactions.
+   * Sets the retry flag on this and the logs of all sub-transactions.
    */
-  public void flagAbort() {
+  public void flagRetry() {
     Queue<Log> toFlag = new LinkedList<Log>();
     toFlag.add(this);
     while (!toFlag.isEmpty()) {
       Log log = toFlag.remove();
       synchronized (log) {
         if (log.child != null) toFlag.add(log.child);
-        log.abortSignal = tid;
+        if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid))
+          log.retrySignal = tid;
         // XXX This was here to unblock a thread that may have been waiting on a
         // XXX lock. Commented out because it was causing a bunch of
         // XXX InterruptedExceptions and ClosedByInterruptExceptions that
@@ -367,9 +369,9 @@ public final class Log {
         updateMap = new UpdateMap(tid.topTid);
       }
 
-      if (abortSignal != null) {
+      if (retrySignal != null) {
         synchronized (this) {
-          if (abortSignal.equals(tid)) abortSignal = null;
+          if (retrySignal.equals(tid)) retrySignal = null;
         }
       }
     }

@@ -618,6 +618,20 @@ public final class Worker {
       } catch (RetryException e) {
         success = false;
         continue;
+      } catch (TransactionRestartingException e) {
+        success = false;
+        
+        TransactionID currentTid = tm.getCurrentTid();
+        if (e.tid.isDescendantOf(currentTid))
+          // Restart this transaction.
+          continue;
+        
+        // Need to restart a parent transaction.
+        if (currentTid.parent != null) throw e;
+        
+        throw new InternalError("Something is broken with transaction "
+            + "management. Got a signal to restart a different transaction "
+            + "than the one being managed.");
       } catch (Throwable e) {
         success = false;
         throw new AbortException(e);
@@ -627,6 +641,19 @@ public final class Worker {
             tm.commitTransaction(useAuthentication);
           } catch (AbortException e) {
             success = false;
+          } catch (TransactionRestartingException e) {
+            success = false;
+            
+            // This is the TID for the parent of the transaction we just tried
+            // to commit.
+            TransactionID currentTid = tm.getCurrentTid();
+            if (currentTid == null || e.tid.isDescendantOf(currentTid)
+                && !currentTid.equals(e.tid))
+              // Restart the transaction just we tried to commit.
+              continue;
+            
+            // Need to restart a parent transaction.
+            throw e;
           }
         } else {
           tm.abortTransaction();
@@ -638,7 +665,7 @@ public final class Worker {
   }
 
   public static interface Code<T> {
-    T run();
+    T run() throws Throwable;
   }
 
 }
