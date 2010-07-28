@@ -122,7 +122,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     return result;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     if (init != null) {

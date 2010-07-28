@@ -35,18 +35,6 @@ abstract public class Servlet extends HttpServlet {
     static final int DEBUG_LEVEL = -1;
     public static final PrintStream DEBUG = System.err;
     
-    static {
-      try {
-        Worker.initialize("bankweb");
-      } catch(IllegalStateException e) {
-        // TODO: need to fix this up
-        // do nothing, worker already initialized.
-      } catch (final Exception e) {
-        System.out.println("Fabric: Worker unable to initialize");
-      }      
-    }
-
-
     protected Servlet(Principal servletP) {
         this.servletP = servletP;
     }

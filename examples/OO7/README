@@ -5,8 +5,7 @@ This is a simple implementation of the OO7 object-oriented database benchmark
 on top of Fabric. It is written using FabIL.
 
 To build:
-  $ cd fabil/
-  $ filc -d ../classes OO7/*.fil
+  $ ant
 
 To create the database (e.g. small database named "OO7" with fanout=3):
   $ cd classes/

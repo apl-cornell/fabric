@@ -1,0 +1,101 @@
+// Adapted from the book _Java in a Nutshell_ by David Flanagan.
+import java.applet.Applet;
+import java.awt.*;
+
+import fabric.lang.security.AbstractPrincipal;
+import fabric.lang.security.IntegPolicy;
+import fabric.lang.security.LabelUtil;
+import fabric.util.ArrayList;
+import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.lang.security.Label;
+import fabric.applet.FabricApplet;
+
+
+public class Scribble extends FabricApplet {
+
+	ArrayList lines;
+	Applet applet;
+
+    int last_x, last_y;
+    int offset_x, offset_y;
+    
+	// This class stores the coordinates of one line of the scribble.
+	public final class Line {
+	     public int x1, y1, x2, y2;
+	     public Line(int x1, int y1, int x2, int y2) {
+	         this.x1 = x1; this.y1 = y1; this.x2 = x2; this.y2 = y2;
+		}
+	}
+	
+	public Scribble () {
+		lines = new ArrayList(100);
+	}
+
+	public void saveLine(int x1, int y1, int x2, int y2) {
+		atomic {
+			lines.add(new Line(x1, y1, x2, y2));
+		}
+	}
+	
+	public java.applet.Applet getApplet() {
+		if(applet == null)
+			applet = makeApplet();
+		return applet;
+	}
+	
+	protected Applet makeApplet() {
+		return new _Applet(this);
+	}
+	
+	class _Applet extends Applet {
+
+	    Scribble c;
+
+		public _Applet(Scribble container) {
+			this.c = container;
+		}
+
+		public void init () {
+		
+		}
+	    
+	    public void paint(Graphics g) {
+	        atomic {
+	        	Line l;
+
+		        for(int i = 0; i < c.lines.size(); i++) {
+		            l = (Line)c.lines.get(i);
+		            g.drawLine(l.x1 - c.offset_x, l.y1 - c.offset_y, 
+		                      l.x2 - c.offset_x, l.y2 - c.offset_y);
+		        }
+	        }
+	    }
+	    
+	    public boolean mouseDown(Event e, int x, int y)
+	    {	
+	    	atomic {
+	    		c.last_x = x; 
+	    		c.last_y = y;
+	    	}
+	        return true;
+	    }
+	    public boolean mouseDrag(Event e, int x, int y)
+	    {
+	        Graphics g = getGraphics();
+			atomic {	
+		        g.drawLine(c.last_x, c.last_y, x, y);
+		        c.saveLine(c.last_x + c.offset_x, 
+		        					c.last_y + c.offset_y, 
+		        					x + c.offset_x, y + c.offset_y);
+		        c.last_x = x;
+		        c.last_y = y;
+			}
+	        return true;
+	    }
+	    // handle mouse up, too,, just for symmetry.
+	    public boolean mouseUp(Event e, int x, int y) {  return true; }
+	 	
+	}
+
+}

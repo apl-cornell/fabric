@@ -446,7 +446,7 @@ public class FabILScheduler extends JLScheduler {
   
   public Goal SignatureClean(final Job job) {
     Goal g = internGoal(new VisitorGoal(job, new SignatureCleaner()) {
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings({ "unchecked", "rawtypes" })
       @Override
       public Collection prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
@@ -462,7 +462,7 @@ public class FabILScheduler extends JLScheduler {
   @Override
   public Goal CodeGenerated(final Job job) {
     Goal g = internGoal(new CodeGenerated(job){
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings({ "unchecked", "rawtypes" })
       @Override
       public Collection prerequisiteGoals(Scheduler scheduler) {
         FabILOptions opts = (FabILOptions) job.extensionInfo().getOptions();

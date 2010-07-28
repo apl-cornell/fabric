@@ -84,6 +84,7 @@
 		</fileset>
 		<fileset dir="${fabric.home}/lib">
 			<include name="*.jar" />
+            <include name="jetty/*.jar" />
 			<exclude name="*sig.jar" />
 		</fileset>
 		<pathelement location="${sif.classes}" />
@@ -140,4 +141,5 @@
 	</target>
 
 </project>
+
 

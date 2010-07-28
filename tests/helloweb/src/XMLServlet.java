@@ -58,7 +58,7 @@ public class XMLServlet extends HttpServlet {
     try {
       System.setProperty("fabric.prefix", context.getInitParameter("fabric-prefix"));
       try {
-        Worker.initialize();
+        Worker.initialize(null);
       } catch(IllegalStateException e) {
         // TODO: need to fix this up
         // do nothing, worker already initialized.

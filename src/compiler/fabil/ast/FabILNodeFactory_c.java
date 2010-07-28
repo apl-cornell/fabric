@@ -98,10 +98,11 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
    * polyglot.types.Flags, polyglot.ast.Id, polyglot.ast.TypeNode,
    * java.util.List, polyglot.ast.ClassBody)
    */
-  @SuppressWarnings("unchecked")
   @Override
   public ClassDecl ClassDecl(Position pos, Flags flags, Id name,
-      TypeNode superClass, List interfaces, ClassBody body) {
+      TypeNode superClass, @SuppressWarnings("rawtypes") List interfaces,
+      ClassBody body) {
+    @SuppressWarnings("unchecked")
     ClassDecl n =
         new ClassDecl_c(pos, flags, name, superClass, CollectionUtil
             .nonNullList(interfaces), body);
@@ -137,8 +138,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @SuppressWarnings("unchecked")
   @Override
-  public New New(Position pos, Expr outer, TypeNode objectType, List args,
-      ClassBody body) {
+  public New New(Position pos, Expr outer, TypeNode objectType,
+      @SuppressWarnings("rawtypes") List args, ClassBody body) {
     return New(pos, outer, objectType, null, null, args, body);
   }
 
@@ -189,13 +190,13 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @SuppressWarnings("unchecked")
   @Override
-  public Call Call(Position pos, Receiver target, Id name, List args) {
+  public Call Call(Position pos, Receiver target, Id name,
+      @SuppressWarnings("rawtypes") List args) {
     return Call(pos, target, name, null, args);
   }
 
-  @SuppressWarnings("unchecked")
   public Call Call(Position pos, Receiver target, Id name, Expr remoteWorker,
-      List args) {
+      List<Expr> args) {
     Call n = new FabILCall_c(pos, target, name, remoteWorker, args);
     n = (Call) n.ext(extFactory().extCall());
     n = (Call) n.del(delFactory().delCall());

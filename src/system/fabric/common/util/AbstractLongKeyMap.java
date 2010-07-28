@@ -457,6 +457,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
   public void putAll(LongKeyMap<? extends V> m)
   {
     // FIXME: bogus circumlocution.
+    @SuppressWarnings("rawtypes")
     Iterator entries2 = m.entrySet().iterator();
     Iterator<LongKeyMap.Entry<? extends V>> entries
       = entries2;
@@ -747,7 +748,6 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
      * @param o the object to compare
      * @return <code>true</code> if it is equal
      */
-    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object o)
     {
@@ -756,11 +756,11 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
       // Optimize for our own entries.
       if (o instanceof SimpleEntry)
         {
-          SimpleEntry e = (SimpleEntry) o;
+          SimpleEntry<?> e = (SimpleEntry<?>) o;
           return (key == e.key
                   && AbstractLongKeyMap.equals(value, e.value));
         }
-      LongKeyMap.Entry e = (LongKeyMap.Entry) o;
+      LongKeyMap.Entry<?> e = (LongKeyMap.Entry<?>) o;
       return (key == e.getKey()
               && AbstractLongKeyMap.equals(value, e.getValue()));
     }

@@ -29,9 +29,8 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
     this.label = label;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public FabricArrayInit elements(List elements) {
+  public FabricArrayInit elements(@SuppressWarnings("rawtypes") List elements) {
     return (FabricArrayInit) super.elements(elements);
   }
 
@@ -122,7 +121,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   }
 
   @Override
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   public List acceptCFG(CFGBuilder v, List succs) {
     Term last = null;
 

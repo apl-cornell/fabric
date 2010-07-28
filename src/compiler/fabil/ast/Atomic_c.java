@@ -21,7 +21,7 @@ public class Atomic_c extends Block_c implements Atomic {
     super(pos, statements);
   }
   
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     // the current semantics of an atomic block is that it executes like a

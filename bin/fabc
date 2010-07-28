@@ -37,9 +37,7 @@ while true; do
   esac
 done
 
-
-
-
+# Jar files should always appear *after* their corresponding class directories.
 classpath="$classpath:$TOP/classes"
 classpath="$classpath:$TOP/lib/fabric.jar"
 classpath="$classpath:$TOP/rt-classes"
@@ -49,6 +47,7 @@ classpath="$classpath:$POLYGLOT/lib/polyglot.jar"
 classpath="$classpath:$POLYGLOT/lib/java_cup.jar"
 classpath="$classpath:$POLYGLOT/lib/JFlex.jar"
 classpath="$classpath:$JIF/classes"
+classpath="$classpath:$JIF/lib/jif.jar"
 classpath="$classpath:$cp"
 
 sigcp="$TOP/sig-classes/fabric:$TOP/lib/fabric-sig.jar:$sigcp"

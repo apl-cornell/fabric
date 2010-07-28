@@ -1,6 +1,7 @@
 package fabric.dissemination.pastry;
 
 import java.io.IOException;
+import java.util.Properties;
 
 import fabric.worker.Worker;
 import fabric.worker.RemoteStore;
@@ -22,9 +23,9 @@ public class PastryFetchManager implements FetchManager {
   
   private Node node;
   
-  public PastryFetchManager(Worker worker) {
+  public PastryFetchManager(Worker worker, Properties dissemConfig) {
     try {
-      node = new Node();  // start a new pastry node
+      node = new Node(dissemConfig);  // start a new pastry node
       worker.registerDisseminationCache(node.disseminator.cache);
     } catch (IOException e) {
       throw new InternalError(e);

@@ -107,7 +107,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     return result;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     if (qualifier != null) {

@@ -88,7 +88,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return new FabILParsedClassType_c(this, init, fromSource);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public List defaultPackageImports() {
     // Include fabric.lang as a default import.
@@ -104,7 +104,8 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @SuppressWarnings("unchecked")
   @Override
   protected List<MethodInstance> findAcceptableMethods(ReferenceType container,
-      String name, List argTypes, ClassType currClass) throws SemanticException {
+      String name, @SuppressWarnings("rawtypes") List argTypes,
+      ClassType currClass) throws SemanticException {
     List<MethodInstance> result =
         super.findAcceptableMethods(container, name, argTypes, currClass);
     if (isJavaInlineable(container)) {
@@ -402,10 +403,14 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return f;
   }
 
+  @SuppressWarnings("deprecation")
   @Override
   public String translateClass(Resolver c, ClassType t) {
     // Fully qualify classes in fabric.lang.security.
     if (t.package_() != null) {
+      // Using the deprecated method because the non-deprecated version
+      // (packageForName) declares that a SemanticException can be thrown, even
+      // though the two methods behave identically.
       if (t.package_().equals(createPackage("fabric.lang.security"))) {
         return super.translateClass(null, t);
       }

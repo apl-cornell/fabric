@@ -1,0 +1,49 @@
+package sif.servlet;
+
+import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.handler.*;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.xml.*;
+import java.io.File;
+
+public class StartWebapp {
+    
+    public final static int port = 8080;
+    
+    // each args[i] is a directory that contains the
+    // compiled code of a SIF example, usually named 'web/'
+    public static void main(String[] args) throws Exception {
+        Server server = new Server(port);
+        Handler native[] handlers = new Handler native[args.length];
+        
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            WebAppContext webapp = new WebAppContext();
+            webapp.setResourceBase(arg);
+
+            Resource webinf = webapp.getWebInf();
+            if (webinf != null && webinf.isDirectory()) {
+                Resource webxml = webinf.addPath("web.xml");
+                if(webxml.exists()) {
+                    XmlParser parser = new XmlParser();
+                    XmlParser.Node node = parser.parse(new File(webxml.getURI()));
+                    XmlParser.Node servlet = node.get("servlet");
+                    XmlParser.Node name = servlet.get("servlet-name");
+                    String appName = name.get(0).toString();
+                    webapp.setContextPath("/"+appName);
+                }
+            }
+            webapp.setParentLoaderPriority(true);
+            System.out.println("Starting http://localhost:" + port + webapp.getContextPath());
+            handlers[i] = webapp;
+        }
+
+        ContextHandlerCollection contexts = new ContextHandlerCollection();
+        contexts.setHandlers(handlers);
+        server.setHandler(contexts);
+        
+        server.start();
+        server.join();
+    }
+}

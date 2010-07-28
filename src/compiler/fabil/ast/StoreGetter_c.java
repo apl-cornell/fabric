@@ -16,7 +16,7 @@ public class StoreGetter_c extends Expr_c implements StoreGetter {
     super(pos);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   @Override
   public List acceptCFG(CFGBuilder v, List succs) {
     return succs;

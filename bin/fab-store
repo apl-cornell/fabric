@@ -8,6 +8,7 @@ while true; do
   case "$1" in
     "") break;;
     -v) verbose="1"; shift;;
+    -classpath) EXTRACP=$2; shift; shift;;    
     -j)
             shift
             vmargs="$vmargs '$1'"
@@ -17,20 +18,18 @@ while true; do
             shift
             vmargs="$vmargs -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3370"
             ;;
-    -cp)
-            shift
-            classpath="$classpath:$1"
-            shift
-            ;;
     *) args="$args '$1'"; shift;;
   esac
 done
 
-classpath="$JIF/rt-classes:$classpath"
-classpath="$TOP/classes:$TOP/rt-classes:$classpath"
-classpath="$TOP/lib/fabric.jar:$classpath"
-classpath="$TOP/lib/je-3.3.75.jar:$classpath"
-classpath="$TOP/lib/FreePastry-2.1.jar:$classpath"
+# Jar files should always appear *after* their corresponding class directories.
+EXTRACP="$EXTRACP:$TOP/classes"
+EXTRACP="$EXTRACP:$TOP/lib/fabric.jar"
+EXTRACP="$EXTRACP:$TOP/rt-classes"
+EXTRACP="$EXTRACP:$TOP/lib/fabric-rt.jar"
+EXTRACP="$EXTRACP:$TOP/lib/je-3.3.75.jar"
+EXTRACP="$EXTRACP:$TOP/lib/FreePastry-2.1.jar"
+classpath="$EXTRACP:$classpath"
 
 command="\"$JAVA\" $vmargs -classpath \"$(fixpath $classpath)\" fabric.store.Node $args"
 

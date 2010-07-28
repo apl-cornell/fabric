@@ -36,7 +36,7 @@
 	          <fileset dir="examples" includes="bank/build.xml"/>
 	          <fileset dir="examples" includes="airline/build.xml"/>
 	          <fileset dir="examples" includes="travel/build.xml"/>
-	          <!--fileset dir="examples" includes="calendartwo/build.xml"/-->
+	          <fileset dir="examples" includes="login/build.xml"/>
         </subant>
     </target>
 
@@ -80,14 +80,17 @@
             depends="init,configure,sif-fab"
             description="Build the base SIF framework using the Java compiler, not including the signature files">
         
-        <javac source="1.5" target="1.5" srcdir="${src}" destdir="${sif.classes}" debug="true" debuglevel="lines,vars,source">
+	<javac source="1.6" target="1.6" srcdir="${src}"
+	    destdir="${sif.classes}" debug="true"
+	    includeAntRuntime="false"
+	    debuglevel="lines,vars,source">
             <classpath>
 	      <path refid="standard.classpath" />
 	      <pathelement location="../jif/classes" />
 	    </classpath>
         </javac>
         
-        <!--apply executable="bash"
+        <apply executable="bash"
                         parallel="true"
                         failonerror="true"
                         dest="${basedir}"
@@ -106,7 +109,7 @@
             <mapper type="regexp"
                     from="^src(.*)\.fil"
                     to="classes\1\.class" />            
-        </apply-->
+        </apply>
     </target>
     
     <target name="sif-fab"
@@ -177,8 +180,9 @@
     <target name="sif-examples"
             depends="sif"
             description="Builds all examples">
-        <!-- compile the travel package first, since other examples depend on it -->
+        <!-- compile the travel and login packages first, since other examples depend on it -->
         <subant target="compile">
+            <fileset dir="examples" includes="login/build.xml"/>
             <fileset dir="examples" includes="travel/build.xml"/>
         </subant>
         <subant target="compile">

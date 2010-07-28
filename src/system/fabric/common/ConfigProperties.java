@@ -4,8 +4,8 @@ import static fabric.common.Logging.CONFIG_LOGGER;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.logging.Level;
 
 
@@ -31,6 +31,8 @@ public class ConfigProperties {
 
   public final String workerPrincipal;
 
+  public final Properties disseminationProperties;
+
   static {
     //
     // load the default properties files
@@ -47,7 +49,7 @@ public class ConfigProperties {
       try { in.close(); } catch(Exception e) {}
     }
     
-    for(Entry<Object, Object> e : defaults.entrySet())
+    for (Entry<Object, Object> e : defaults.entrySet())
       CONFIG_LOGGER.log(Level.FINE, "default property: {0}", e);
   }
 
@@ -66,11 +68,6 @@ public class ConfigProperties {
       CONFIG_LOGGER.log(Level.FINE, " ... {0}", e);
     
     this.name = name;
-
-    //
-    // load the configuration file
-    //
-
 
     //
     // parse properties with default values
@@ -96,15 +93,23 @@ public class ConfigProperties {
     this.backendClass    =                       removeProperty(p, "fabric.store.db.class",            null);
 
     //
-    // print out unused properties
+    // Collect dissemination properties while printing other unused properties.
     //
-
-    for (Object prop : p.keySet())
-      CONFIG_LOGGER.log(Level.WARNING, "Unused property: {0}", prop);
+    
+    this.disseminationProperties = new Properties(defaults);
+    for (Object prop : p.keySet()) {
+      String key = (String) prop;
+      if (key.startsWith("fabric.dissemination."))
+        disseminationProperties.setProperty(key, p.getProperty(key));
+      else CONFIG_LOGGER.log(Level.WARNING, "Unused property: {0}", key);
+    }
   }
 
-  /** like p.getProperty(name, default), but removes the property. */
-  private static String removeProperty(Properties p, String name, String defaultValue) {
+  /**
+   * Like p.getProperty(name, defaultValue), but removes the property.
+   */
+  private static String removeProperty(Properties p, String name,
+      String defaultValue) {
     String result = p.getProperty(name, defaultValue);
     p.remove(name);
     return result;
