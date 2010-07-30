@@ -43,7 +43,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       loc = ext.location();
       labelloc = loc;
       
-      Label fieldLabel = ct.defaultFieldLabel();
+      Label fieldLabel = ct.defaultFabilFieldLabel();
       if (fieldLabel != null && !sigMode) {
         labelExpr = rw.labelToJava(fieldLabel);
         if (labelloc == null) labelloc = nf.StoreGetter(n.position());

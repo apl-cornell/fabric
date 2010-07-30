@@ -8,35 +8,35 @@ import login.LoginClosure;
 
 public class BankPrincipal extends ExternalPrincipal {
 
-//  private final BankPassword[this]{this←} pass;
+  private final BankPassword[this]{this←} pass;
   
   public BankPrincipal() {
     // XXX Is this kind of initialization secure?
-//    this.pass  = new BankPassword[this]("password");
+    this.pass  = new BankPassword[this]("password");
     super("bank");
   }
   
   // XXX Can we label this method any which way we want, since it won't
   // be invoked from Fabric code??
   // XXX Where will the declassification w.r.t. password happen?
-//  public boolean{authPrf; closure; lb; executeNow; *lb; this; this→; this←}
-//  isAuthorized(java.lang.Object authPrf, 
-//          fabric.lang.security.Closure[this, lb] closure,
-//          label lb,
-//          boolean executeNow) where authority (this) 
-//  {
-//      if (closure instanceof LoginClosure[this] && authPrf instanceof String) {
-//          String passwd = (String)authPrf;
-//          if (pass == null) return false;
-//          String myPass = pass.password;
-//
-//          if (myPass == passwd || (myPass != null && myPass.equals(passwd))) {
-//              // password supplied agrees with this password!
-//              return true;
-//          }
-//      }
-//      return false;
-//  }
+  public boolean{authPrf; closure; lb; executeNow; *lb; this; this→; this←}
+  isAuthorized(java.lang.Object authPrf, 
+          fabric.lang.security.Closure[this, lb] closure,
+          label lb,
+          boolean executeNow) where authority (this) 
+  {
+      if (closure instanceof LoginClosure[this] && authPrf instanceof String) {
+          String passwd = (String)authPrf;
+          if (pass == null) return false;
+          String myPass = pass.password;
+
+          if (myPass == passwd || (myPass != null && myPass.equals(passwd))) {
+              // password supplied agrees with this password!
+              return true;
+          }
+      }
+      return false;
+  }
   
   
   public static BankPrincipal{*!:} getInstance{*!:}() {
