@@ -52,7 +52,7 @@
         <fileset dir="${basedir}" includes="src/airline/*.fab,src/travel/*.fab" />
         <mapper type="regexp"
                 from="^src(.*)\.fab"
-                to="classes\1\.class" />            
+                to="web/WEB-INF/classes\1\.class" />            
     </apply>
 		
 	</target>

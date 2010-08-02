@@ -190,7 +190,6 @@
           <fileset dir="examples" includes="customer/build.xml"/>
           <fileset dir="examples" includes="bank/build.xml"/>
           <fileset dir="examples" includes="airline/build.xml"/>
-          <!--fileset dir="examples" includes="calendartwo/build.xml"/-->
         </subant>
     </target>
 
