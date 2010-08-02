@@ -19,7 +19,6 @@
     <subant target="clean">
       <fileset dir="." includes="*/build.xml" />
     </subant>
-  	<delete dir="classes"/>
   </target>
 
   <!-- Makes the directory tree truly pristine. -->
