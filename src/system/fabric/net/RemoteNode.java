@@ -1,6 +1,7 @@
 package fabric.net;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.naming.SocketAddress;
@@ -8,7 +9,7 @@ import fabric.common.net.naming.SocketAddress;
 /**
  * Abstracts remote stores and remote workers.
  */
-public abstract class RemoteNode {
+public abstract class RemoteNode implements Serializable {
   /**
    * The DNS hostname of the node.
    */
