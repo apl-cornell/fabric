@@ -349,6 +349,11 @@ public interface Object {
         label = Worker.getWorker().getLocalStore().getPublicReadonlyLabel();
 
       if (label == null) throw new InternalError("Null label!");
+      
+      if (!(store instanceof LocalStore)
+          && label.$getStore() instanceof LocalStore
+          && !ONumConstants.isGlobalConstant(label.$getOnum()))
+        throw new InternalError("Remote object has local label");
 
       this.$label = label;
     }
