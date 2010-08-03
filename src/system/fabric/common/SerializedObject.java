@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.*;
 
+import fabric.worker.LocalStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.common.exceptions.InternalError;
@@ -653,7 +654,16 @@ public final class SerializedObject implements FastSerializable {
     out.writeInt(impl.$version);
     out.writeLong(0);
     out.writeBoolean(interStoreLabel);
-    if (interStoreLabel) out.writeUTF(labelStore.name());
+    if (interStoreLabel) {
+      if (labelStore instanceof LocalStore) {
+        Class<?> objClass = impl.getClass();
+        String objStr = impl.toString();
+        throw new InternalError("Creating remote ref to local store.  Remote "
+            + "object has class " + objClass + ".  Its string representation "
+            + "is \"" + objStr + "\", and its label is local.");
+      }
+      out.writeUTF(labelStore.name());
+    }
     out.writeLong(labelOnum);
 
     // Write the object's type information
