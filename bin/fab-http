@@ -15,6 +15,11 @@ while true; do
             vmargs="$vmargs '$1'"
             shift
             ;;
+    --port)
+    				shift
+    				port=$1
+    				shift
+    				;;
     --debug)
             shift
             vmargs="$vmargs -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3371"
@@ -24,6 +29,11 @@ while true; do
     *) args="$args sif.servlet.StartWebapp $@"; break;;
   esac
 done
+
+if [ -n "$port" ]
+then
+	args="$args --port $port"
+fi
 
 
 classpath="$JIF/rt-classes:$classpath"

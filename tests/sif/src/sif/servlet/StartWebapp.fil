@@ -9,16 +9,32 @@ import java.io.File;
 
 public class StartWebapp {
     
-    public final static int port = 8080;
+    public static int port = 8080;
     
     // each args[i] is a directory that contains the
     // compiled code of a SIF example, usually named 'web/'
     public static void main(String[] args) throws Exception {
+        
+        int numApps = args.length;
+        
+        // first hunt for port number
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("--port")) {
+                port = Integer.parseInt(args[i+1]);
+                numApps -= 2;
+                break;
+            }
+        }
+        
         Server server = new Server(port);
-        Handler native[] handlers = new Handler native[args.length];
+        Handler native[] handlers = new Handler native[numApps];
         
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
+            if (arg.equals("--port")) {
+                i++;
+                continue;
+            }
             WebAppContext webapp = new WebAppContext();
             webapp.setResourceBase(arg);
 
