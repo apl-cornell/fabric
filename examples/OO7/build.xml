@@ -4,7 +4,7 @@
 
 <project name="OO7" default="build-all" basedir=".">
   <description>
-    Fabric NFS build file
+    Fabric OO7 build file
   </description>
 
   <!--
