@@ -75,12 +75,11 @@ public class TransactionManager {
   /**
    * Execute the commit phase of two phase commit.
    */
-  public void commitTransaction(RemoteWorker workerNode,
-      NodePrincipal workerPrincipal, long transactionID)
-      throws TransactionCommitFailedException {
+  public void commitTransaction(NodePrincipal workerPrincipal, long transactionID)
+       throws TransactionCommitFailedException {
     synchronized (database) {
       try {
-        database.commit(transactionID, workerNode, workerPrincipal, sm);
+        database.commit(transactionID, workerPrincipal, sm);
         STORE_TRANSACTION_LOGGER.fine("Committed transaction "
             + transactionID);
       } catch (final AccessException e) {
@@ -508,7 +507,7 @@ public class TransactionManager {
                 database.beginTransaction(tid, worker);
                 database.registerUpdate(tid, worker, newObj);
                 database.finishPrepare(tid, worker);
-                database.commit(tid, null, worker, sm);
+                database.commit(tid, null, sm);
               } catch (AccessException exc) {
                 // TODO: this should probably use the store principal instead of
                 // the worker principal, and AccessExceptions should be

@@ -91,9 +91,8 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  public void commit(long tid, RemoteWorker workerNode,
-      NodePrincipal workerPrincipal, SubscriptionManager sm)
-      throws AccessException {
+  public void commit(long tid, NodePrincipal workerPrincipal, SubscriptionManager sm)
+       throws AccessException {
     PendingTransaction tx = remove(workerPrincipal, tid);
 
     // merge in the objects
@@ -101,7 +100,7 @@ public class MemoryDB extends ObjectDB {
       objectTable.put(o.getOnum(), o);
 
       // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum(), workerNode);
+      notifyCommittedUpdate(sm, o.getOnum());
     }
   }
 

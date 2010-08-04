@@ -12,6 +12,7 @@ import fabric.common.SerializedObject;
 import fabric.common.Threading.NamedRunnable;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.NotImplementedException;
+import fabric.common.net.SubSocket;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
@@ -38,7 +39,7 @@ public class MessageHandlerThread
     throw new NotImplementedException();
   }
   
-  public AbortTransactionMessage.Response handle(NodePrincipal p, AbortTransactionMessage message)
+  public AbortTransactionMessage.Response handle(SubSocket sock, AbortTransactionMessage message)
   throws AccessException {
     
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
@@ -52,7 +53,7 @@ public class MessageHandlerThread
   /**
    * Processes the given request for new OIDs.
    */
-  public AllocateMessage.Response handle(NodePrincipal p, AllocateMessage msg)
+  public AllocateMessage.Response handle(SubSocket sock, AllocateMessage msg)
   throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Allocate Message from {0}",
@@ -65,20 +66,20 @@ public class MessageHandlerThread
   /**
    * Processes the given commit request
    */
-  public CommitTransactionMessage.Response handle(NodePrincipal p,
+  public CommitTransactionMessage.Response handle(SubSocket sock,
                                                   CommitTransactionMessage message)
   throws TransactionCommitFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Commit Message from {0} for tid={1}",
-                session.workerPrincipalName, message.transactionID);
-    tm.commitTransaction(session.remoteNode, p, message.transactionID);
+                p.get$name(), message.transactionID);
+    tm.commitTransaction(p, message.transactionID);
     return new CommitTransactionMessage.Response();
   }
 
   /**
    * Processes the given PREPARE request.
    */
-  public PrepareTransactionMessage.Response handle(NodePrincipal p,
+  public PrepareTransactionMessage.Response handle(SubSocket sock,
                                                    PrepareTransactionMessage msg)
   throws TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
@@ -96,7 +97,7 @@ public class MessageHandlerThread
   /**
    * Processes the given read request.
    */
-  public ReadMessage.Response handle(NodePrincipal p, ReadMessage msg)
+  public ReadMessage.Response handle(SubSocket sock, ReadMessage msg)
   throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Read Message from {0}, onum={1}",
@@ -109,7 +110,7 @@ public class MessageHandlerThread
   /**
    * Processes the given dissemination-read request.
    */
-  public DissemReadMessage.Response handle(NodePrincipal p, DissemReadMessage msg)
+  public DissemReadMessage.Response handle(SubSocket sock, DissemReadMessage msg)
   throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling DissemRead message from {0}, onum={1}",
@@ -123,7 +124,7 @@ public class MessageHandlerThread
   /**
    * Processes the given request for the store's SSL certificate chain.
    */
-  public GetCertChainMessage.Response handle(NodePrincipal p,
+  public GetCertChainMessage.Response handle(SubSocket sock,
                                              GetCertChainMessage msg) {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling request for SSL cert chain, worker={0}",
@@ -134,7 +135,7 @@ public class MessageHandlerThread
   /**
    * Processes the given request for a new node principal
    */
-  public MakePrincipalMessage.Response handle(NodePrincipal p, MakePrincipalMessage msg) {
+  public MakePrincipalMessage.Response handle(SubSocket sock, MakePrincipalMessage msg) {
     // TODO
     throw new NotImplementedException();
     

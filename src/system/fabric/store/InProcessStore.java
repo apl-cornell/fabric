@@ -43,7 +43,7 @@ public class InProcessStore extends RemoteStore {
   @Override
   public void commitTransaction(long transactionID)
       throws TransactionCommitFailedException {
-    tm.commitTransaction(null, Worker.getWorker().getPrincipal(), transactionID);
+    tm.commitTransaction(null, transactionID);
   }
 
   @Override
