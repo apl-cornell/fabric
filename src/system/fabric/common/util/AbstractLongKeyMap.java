@@ -453,14 +453,9 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @throws NullPointerException if <code>m</code> is null.
    * @see #put(Object, Object)
    */
-  @SuppressWarnings("unchecked")
-  public void putAll(LongKeyMap<? extends V> m)
+  public <T extends V> void putAll(LongKeyMap<T> m)
   {
-    // FIXME: bogus circumlocution.
-    @SuppressWarnings("rawtypes")
-    Iterator entries2 = m.entrySet().iterator();
-    Iterator<LongKeyMap.Entry<? extends V>> entries
-      = entries2;
+    Iterator<LongKeyMap.Entry<T>> entries= m.entrySet().iterator();
     int pos = m.size();
     while (--pos >= 0)
       {
@@ -751,10 +746,10 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
     @Override
     public boolean equals(Object o)
     {
-      if (! (o instanceof LongKeyMap.Entry))
+      if (! (o instanceof LongKeyMap.Entry<?>))
         return false;
       // Optimize for our own entries.
-      if (o instanceof SimpleEntry)
+      if (o instanceof SimpleEntry<?>)
         {
           SimpleEntry<?> e = (SimpleEntry<?>) o;
           return (key == e.key

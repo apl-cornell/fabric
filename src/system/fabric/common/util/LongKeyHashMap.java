@@ -379,20 +379,17 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
    *
    * @param m the map to be hashed into this
    */
-  @SuppressWarnings("unchecked")
   @Override
-  public void putAll(LongKeyMap<? extends V> m)
+  public <T extends V> void putAll(LongKeyMap<T> m)
   {
-    final LongKeyMap<V> addMap = (LongKeyMap<V>) m;
-    final Iterator<LongKeyMap.Entry<V>> it = addMap.entrySet().iterator();
+    final Iterator<LongKeyMap.Entry<T>> it = m.entrySet().iterator();
     while (it.hasNext())
       {
-	final LongKeyMap.Entry<V> e = it.next();
+	final LongKeyMap.Entry<T> e = it.next();
         // Optimize in case the Entry is one of our own.
-        if (e instanceof AbstractLongKeyMap.SimpleEntry)
+        if (e instanceof AbstractLongKeyMap.SimpleEntry<?>)
           {
-            AbstractLongKeyMap.SimpleEntry<? extends V> entry
-	      = (AbstractLongKeyMap.SimpleEntry<? extends V>) e;
+            AbstractLongKeyMap.SimpleEntry<T> entry = (AbstractLongKeyMap.SimpleEntry<T>) e;
             put(entry.key, entry.value);
           }
         else

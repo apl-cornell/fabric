@@ -222,7 +222,7 @@ public interface LongKeyMap<V>
    *         if <code>m</code> is null.
    * @see #put(Object, Object)
    */
-  void putAll(LongKeyMap<? extends V> m);
+  <T extends V> void putAll(LongKeyMap<T> m);
 
   /**
    * Removes the mapping for this key if present (optional operation). If
