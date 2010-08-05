@@ -386,8 +386,9 @@ public final class TransactionManager {
           new TransactionPrepareFailedException(failures);
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
           "{0} error committing: prepare failed exception: {1}", current, e);
+      TransactionID tid = current.tid;
       abortTransaction(false);
-      throw new TransactionRestartingException(current.tid);
+      throw new TransactionRestartingException(tid);
     }
 
     // Send commit messages to our cohorts.
