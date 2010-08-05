@@ -634,6 +634,10 @@ public final class Worker {
             + "than the one being managed.");
       } catch (Throwable e) {
         success = false;
+        
+        // Retry if the exception was a result of stale objects.
+        if (tm.checkForStaleObjects()) continue;
+        
         throw new AbortException(e);
       } finally {
         if (success) {

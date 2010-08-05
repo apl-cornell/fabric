@@ -237,7 +237,9 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
     UNAUTHENTICATED_PREPARE_TRANSACTION(UnauthenticatedPrepareTransactionMessage.class),
     UNAUTHENTICATED_COMMIT_TRANSACTION(UnauthenticatedCommitTransactionMessage.class),
     UNAUTHENTICATED_ABORT_TRANSACTION(UnauthenticatedAbortTransactionMessage.class),
-    GET_CERT_CHAIN(GetCertificateChainMessage.class);
+    GET_CERT_CHAIN(GetCertificateChainMessage.class),
+    STALENESS_CHECK(StalenessCheckMessage.class),
+    INTERWORKER_STALENESS_CHECK(fabric.worker.remote.messages.StalenessCheckMessage.class);
 
     private final Class<? extends Message<?, ?>> messageClass;
 

@@ -4,6 +4,7 @@ import static fabric.common.Logging.STORE_REQUEST_LOGGER;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 
 import fabric.common.AbstractMessageHandlerThread;
@@ -240,5 +241,16 @@ public class MessageHandlerThread extends
         session.remoteNode);
     session.store.tm.abortTransaction(session.workerPrincipal,
         message.tid.topTid);
+  }
+
+  /**
+   * Processes the given staleness check request.
+   */
+  public List<SerializedObject> handle(StalenessCheckMessage message)
+      throws AccessException {
+    STORE_REQUEST_LOGGER.log(Level.FINER,
+        "Handling Staleness Check Message from {0}", session.remoteNode);
+    return session.store.tm.checkForStaleObjects(session.workerPrincipal,
+        message.versions);
   }
 }

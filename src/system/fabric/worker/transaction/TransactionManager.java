@@ -165,7 +165,7 @@ public final class TransactionManager {
       synchronized (current) {
         WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got retry signal",
             current);
-        
+
         throw new TransactionRestartingException(current.retrySignal);
       }
     }
@@ -339,7 +339,7 @@ public final class TransactionManager {
           // Reuse the current frame for the parent transaction. Update its TID.
           current.tid = current.tid.parent;
         }
-        
+
         if (ignoredRetrySignal != null) {
           // Preserve the ignored retry signal.
           synchronized (current) {
@@ -452,8 +452,8 @@ public final class TransactionManager {
             failures.put(worker, new TransactionPrepareFailedException(
                 "Unreachable worker"));
           } catch (TransactionPrepareFailedException e) {
-            failures.put(worker, new TransactionPrepareFailedException(e
-                .getMessage()));
+            failures.put(worker,
+                new TransactionPrepareFailedException(e.getMessage()));
           }
         }
       };
@@ -767,8 +767,8 @@ public final class TransactionManager {
       try {
         Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST, current
             + "{0} wants to read {1}/" + obj.$getOnum()
-            + " ({2}); waiting on writer {3}", current, obj.$getStore(), obj
-            .getClass(), obj.$writeLockHolder);
+            + " ({2}); waiting on writer {3}", current, obj.$getStore(),
+            obj.getClass(), obj.$writeLockHolder);
         hadToWait = true;
         obj.$numWaiting++;
         obj.wait();
@@ -853,8 +853,8 @@ public final class TransactionManager {
               if (!current.isDescendantOf(lock)) {
                 Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
                     "{0} wants to write {1}/" + obj.$getOnum()
-                        + " ({2}); aborting reader {3}", current, obj
-                        .$getStore(), obj.getClass(), lock);
+                        + " ({2}); aborting reader {3}", current,
+                    obj.$getStore(), obj.getClass(), lock);
                 lock.flagRetry();
                 allReadersInAncestry = false;
               }
@@ -957,6 +957,75 @@ public final class TransactionManager {
   }
 
   /**
+   * Checks whether any of the objects used by a transaction are stale.
+   * 
+   * @return true iff stale objects were found
+   */
+  public boolean checkForStaleObjects() {
+    Set<Store> stores = current.storesToCheckFreshness();
+    int numNodesToContact = stores.size() + current.workersCalled.size();
+    final List<RemoteNode> nodesWithStaleObjects =
+        Collections.synchronizedList(new ArrayList<RemoteNode>(
+            numNodesToContact));
+    List<Thread> threads = new ArrayList<Thread>(numNodesToContact);
+
+    // Go through each worker and send check messages in parallel.
+    for (final RemoteWorker worker : current.workersCalled) {
+      Thread thread = new Thread("worker freshness check to " + worker.name()) {
+        @Override
+        public void run() {
+          try {
+            if (worker.checkForStaleObjects(current.tid))
+              nodesWithStaleObjects.add(worker);
+          } catch (UnreachableNodeException e) {
+            // Conservatively assume it had stale objects.
+            nodesWithStaleObjects.add(worker);
+          }
+        }
+      };
+      thread.start();
+      threads.add(thread);
+    }
+
+    // Go through each store and send check messages in parallel.
+    for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
+      final Store store = storeIt.next();
+      Runnable runnable = new Runnable() {
+        public void run() {
+          LongKeyMap<Integer> reads = current.getReadsForStore(store);
+          if (store.checkForStaleObjects(reads))
+            nodesWithStaleObjects.add((RemoteNode) store);
+        }
+      };
+
+      // Optimization: only start a new thread if there are more stores to
+      // contact and if it's truly a remote store (i.e., not in-process).
+      if (!(store instanceof InProcessStore || store.isLocalStore())
+          && storeIt.hasNext()) {
+        Thread thread =
+            new Thread(runnable, "worker freshness check to " + store.name());
+        threads.add(thread);
+        thread.start();
+      } else {
+        runnable.run();
+      }
+    }
+
+    // Wait for replies.
+    for (Thread thread : threads) {
+      while (true) {
+        try {
+          thread.join();
+          break;
+        } catch (InterruptedException e) {
+        }
+      }
+    }
+
+    return !nodesWithStaleObjects.isEmpty();
+  }
+
+  /**
    * Starts a new transaction. The sub-transaction runs in the same thread as
    * the caller.
    */
@@ -972,7 +1041,7 @@ public final class TransactionManager {
   public void startTransaction(TransactionID tid) {
     startTransaction(tid, false);
   }
-  
+
   private void startTransaction(TransactionID tid, boolean ignoreRetrySignal) {
     if (current != null && !ignoreRetrySignal) checkRetrySignal();
 

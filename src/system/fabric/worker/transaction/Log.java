@@ -201,7 +201,8 @@ public final class Log {
   }
 
   /**
-   * Returns a set of stores affected by this transaction.
+   * Returns a set of stores affected by this transaction. This is the set of
+   * stores to contact when preparing and committing a transaction.
    */
   Set<Store> storesToContact() {
     Set<Store> result = new HashSet<Store>();
@@ -222,6 +223,19 @@ public final class Log {
 
     return result;
   }
+  
+  /**
+   * @return a set of stores to contact when checking for object freshness.
+   */
+  Set<Store> storesToCheckFreshness() {
+    Set<Store> result = new HashSet<Store>();
+    result.addAll(reads.storeSet());
+    for (ReadMapEntry entry : readsReadByParent) {
+      result.add(entry.obj.store);
+    }
+    
+    return result;
+  }
 
   /**
    * Returns a map from onums to version numbers of objects read at the given
@@ -235,6 +249,12 @@ public final class Log {
 
     for (LongKeyMap.Entry<ReadMapEntry> entry : submap.entrySet()) {
       result.put(entry.getKey(), entry.getValue().versionNumber);
+    }
+    
+    if (parent != null) {
+      for (ReadMapEntry entry : readsReadByParent) {
+        result.put(entry.obj.onum, entry.versionNumber);
+      }
     }
 
     if (store.isLocalStore()) {

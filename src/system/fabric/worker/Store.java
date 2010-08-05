@@ -88,6 +88,13 @@ public interface Store {
       throws UnreachableNodeException, TransactionCommitFailedException;
 
   /**
+   * Determines whether the given set of objects are stale.
+   * 
+   * @return true iff stale objects were found.
+   */
+  boolean checkForStaleObjects(LongKeyMap<Integer> reads);
+
+  /**
    * Obtains a new, unused object number from the Store.
    * 
    * @throws UnreachableNodeException

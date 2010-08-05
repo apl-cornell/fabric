@@ -407,6 +407,16 @@ public class RemoteStore extends RemoteNode implements Store {
     }
   }
 
+  public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
+    StalenessCheckMessage.Response response =
+        new StalenessCheckMessage(reads).send(this);
+    
+    for (SerializedObject obj : response.staleObjects)
+      updateCache(obj);
+    
+    return !response.staleObjects.isEmpty();
+  }
+
   @Override
   public String toString() {
     return "Store@" + name;

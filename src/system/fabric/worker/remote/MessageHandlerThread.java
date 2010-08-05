@@ -19,11 +19,7 @@ import fabric.worker.RemoteStore;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
-import fabric.worker.remote.messages.GetPrincipalMessage;
-import fabric.worker.remote.messages.ReadMessage;
-import fabric.worker.remote.messages.RemoteCallMessage;
-import fabric.worker.remote.messages.TakeOwnershipMessage;
-import fabric.worker.remote.messages.GetPrincipalMessage.Response;
+import fabric.worker.remote.messages.*;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
@@ -299,7 +295,8 @@ public class MessageHandlerThread extends
     return new TakeOwnershipMessage.Response(false);
   }
 
-  public Response handle(GetPrincipalMessage getPrincipalMessage) {
+  public GetPrincipalMessage.Response handle(
+      GetPrincipalMessage getPrincipalMessage) {
     return new GetPrincipalMessage.Response(worker.getPrincipal());
   }
 
@@ -317,5 +314,23 @@ public class MessageHandlerThread extends
     }
 
     return new ObjectUpdateMessage.Response(response);
+  }
+
+  public StalenessCheckMessage.Response handle(
+      StalenessCheckMessage stalenessCheckMessage) throws ProtocolError {
+    if (session.isDissemConnection)
+      throw new ProtocolError("Message not supported.");
+    
+    TransactionID tid = stalenessCheckMessage.tid;
+    if (tid == null) return new StalenessCheckMessage.Response(false);
+    
+    TransactionManager tm = TransactionManager.getInstance();
+    Log log = TransactionRegistry.getOrCreateInnermostLog(tid);
+    tm.associateAndSyncLog(log, tid);
+    
+    boolean result = tm.checkForStaleObjects();
+    
+    tm.associateLog(null);
+    return new StalenessCheckMessage.Response(result);
   }
 }

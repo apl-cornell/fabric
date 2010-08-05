@@ -95,6 +95,10 @@ public final class LocalStore implements Store {
   public Object._Impl readObjectFromCache(long onum) {
     return readObject(onum);
   }
+  
+  public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
+    return false;
+  }
 
   /**
    * The singleton LocalStore object is managed by the Worker class.

@@ -20,10 +20,7 @@ import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
-import fabric.worker.remote.messages.GetPrincipalMessage;
-import fabric.worker.remote.messages.ReadMessage;
-import fabric.worker.remote.messages.RemoteCallMessage;
-import fabric.worker.remote.messages.TakeOwnershipMessage;
+import fabric.worker.remote.messages.*;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
@@ -115,7 +112,8 @@ public final class RemoteWorker extends RemoteNode {
   }
 
   public _Impl readObject(TransactionID tid, Store store, long onum) {
-    ReadMessage.Response response = new ReadMessage(tid, store, onum).send(this);
+    ReadMessage.Response response =
+        new ReadMessage(tid, store, onum).send(this);
     return response.obj;
   }
 
@@ -144,7 +142,7 @@ public final class RemoteWorker extends RemoteNode {
     final NodePrincipal principal = response.principal;
     final String expectedPrincipalName;
     try {
-      // Note: this check may not make sense anymore.  -mdg
+      // Note: this check may not make sense anymore. -mdg
       expectedPrincipalName = "cn=" + name;
     } catch (IllegalStateException e) {
       throw new InternalError(e);
@@ -178,7 +176,7 @@ public final class RemoteWorker extends RemoteNode {
         new ObjectUpdateMessage(store, onum, glob).send(this);
     return response.resubscribe;
   }
-  
+
   /**
    * Notifies the worker that an object has been updated.
    * 
@@ -186,8 +184,18 @@ public final class RemoteWorker extends RemoteNode {
    */
   public boolean notifyObjectUpdate(long onum, ObjectGroup group) {
     ObjectUpdateMessage.Response response =
-      new ObjectUpdateMessage(onum, group).send(this);
-  return response.resubscribe;
+        new ObjectUpdateMessage(onum, group).send(this);
+    return response.resubscribe;
+  }
+
+  /**
+   * Asks the worker to check that the objects used in a given transaction are
+   * up-to-date.
+   */
+  public boolean checkForStaleObjects(TransactionID tid) {
+    StalenessCheckMessage.Response response =
+        new StalenessCheckMessage(tid).send(this);
+    return response.result;
   }
 
   @Override
