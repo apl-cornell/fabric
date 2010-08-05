@@ -4,7 +4,7 @@
         <delete dir="classes" />
     </target>
 
-    <import file="../sif/config.xml"/>
+    <!--import file="../sif/config.xml"/-->
 
    <target name="jar" depends="tests-jif">
     <jar jarfile="fabcoll.jar" basedir="${basedir}/classes" excludes="**/*.java" />
