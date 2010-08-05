@@ -20,7 +20,7 @@ public interface _shortArray extends Object {
 
   short get(int i);
 
-  public static class _Impl extends Object._Impl implements _shortArray {
+  public static class _Impl extends Object._Impl implements _shortArray, _InternalArrayImpl {
     private short[] value;
 
     /**
@@ -104,8 +104,11 @@ public interface _shortArray extends Object {
     public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
       _shortArray._Impl src = (_shortArray._Impl) other;
-      value = new short[src.value.length];
-      System.arraycopy(src.value, 0, value, 0, src.value.length);
+      value = src.value;
+    }
+
+    public void cloneValues() {
+      value = value.clone();
     }
 
     /*

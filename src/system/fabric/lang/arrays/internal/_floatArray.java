@@ -20,7 +20,8 @@ public interface _floatArray extends Object {
 
   float get(int i);
 
-  public static class _Impl extends Object._Impl implements _floatArray {
+  public static class _Impl extends Object._Impl implements _floatArray,
+      _InternalArrayImpl {
     private float[] value;
 
     /**
@@ -104,8 +105,11 @@ public interface _floatArray extends Object {
     public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
       _floatArray._Impl src = (_floatArray._Impl) other;
-      value = new float[src.value.length];
-      System.arraycopy(src.value, 0, value, 0, src.value.length);
+      value = src.value;
+    }
+
+    public void cloneValues() {
+      value = value.clone();
     }
 
     /*

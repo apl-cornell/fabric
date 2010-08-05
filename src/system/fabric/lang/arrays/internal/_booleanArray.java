@@ -20,7 +20,8 @@ public interface _booleanArray extends Object {
 
   boolean get(int i);
 
-  public static class _Impl extends Object._Impl implements _booleanArray {
+  public static class _Impl extends Object._Impl implements _booleanArray,
+      _InternalArrayImpl {
     private boolean[] value;
 
     /**
@@ -104,8 +105,11 @@ public interface _booleanArray extends Object {
     public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
       _booleanArray._Impl src = (_booleanArray._Impl) other;
-      value = new boolean[src.value.length];
-      System.arraycopy(src.value, 0, value, 0, src.value.length);
+      value = src.value;
+    }
+
+    public void cloneValues() {
+      value = value.clone();
     }
 
     /*

@@ -11,6 +11,7 @@ import fabric.common.RefTypeEnum;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
+import fabric.lang.arrays.internal._InternalArrayImpl;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
 import fabric.net.UnreachableNodeException;
@@ -377,7 +378,10 @@ public interface Object {
     @Override
     public final _Impl clone() {
       try {
-        return (_Impl) super.clone();
+        _Impl result = (_Impl) super.clone();
+        if (result instanceof _InternalArrayImpl)
+          ((_InternalArrayImpl) result).cloneValues();
+        return result;
       } catch (Exception e) {
         throw new InternalError(e);
       }

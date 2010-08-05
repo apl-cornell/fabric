@@ -20,7 +20,8 @@ public interface _charArray extends Object {
 
   char get(int i);
 
-  public static class _Impl extends Object._Impl implements _charArray {
+  public static class _Impl extends Object._Impl implements _charArray,
+      _InternalArrayImpl {
     private char[] value;
 
     /**
@@ -104,8 +105,11 @@ public interface _charArray extends Object {
     public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
       _charArray._Impl src = (_charArray._Impl) other;
-      value = new char[src.value.length];
-      System.arraycopy(src.value, 0, value, 0, src.value.length);
+      value = src.value;
+    }
+
+    public void cloneValues() {
+      value = value.clone();
     }
 
     /*
