@@ -5,12 +5,14 @@
 
   <dirname property="transient.home" file="${ant.file.transient.common}" />
 
+  <property name="jar.transient" location="${fabric.home}/lib/fabric-transient.jar" />
+
   <path id="transient.classpath">
-    <pathelement path="${transient.home}/classes" />
+    <pathelement path="${jar.transient}" />
   </path>
 
   <target name="transient">
-    <subant target="build-all">
+    <subant target="jar">
       <fileset dir="${transient.home}" includes="build.xml" />
     </subant>
   </target>

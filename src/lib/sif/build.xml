@@ -11,9 +11,7 @@
 
   <import file="../../../common.xml" />
   <import file="${fabric.home}/src/lib/transient/common.xml" />
-
-  <!-- source directory -->
-  <dirname property="sif.home" file="${ant.file.sif}" />
+  <import file="common.xml" />
 
   <!-- signature source directory -->
   <property name="sig-src" location="${sif.home}/sig-src" />
@@ -32,12 +30,6 @@
 
   <!-- directory for signature classes -->
   <property name="sif.sig-classes" location="${sif.home}/sig-classes" />
-
-  <!-- sif jar file -->
-  <property name="jar.sif" location="${fabric.home}/lib/fabric-sif.jar" />
-
-  <!-- sif signature jar file -->
-  <property name="jar.sif-sig" location="${fabric.home}/lib/fabric-sif-sig.jar" />
 
   <!-- the standard classpath -->
   <path id="standard.classpath">
@@ -67,9 +59,17 @@
   ****************************************************************************
   -->
 
+  <uptodate property="jar.uptodate" targetfile="${jar.sif}">
+    <srcfiles dir="${src}" />
+    <srcfiles dir="${fab-src}" />
+    <srcfiles dir="${fil-src}" />
+    <srcfiles dir="${sig-src}" />
+  </uptodate>
+
   <target name="jar"
-          depends="build-all"
+          unless="jar.uptodate"
           description="Builds the sif jar file">
+    <antcall target="build-all" />
     <jar jarfile="${jar.sif}"     basedir="${sif.classes}"     excludes="**/*.java" />
     <jar jarfile="${jar.sif-sig}" basedir="${sif.sig-classes}" excludes="**/*.java" />
   </target>
