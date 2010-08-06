@@ -1,0 +1,21 @@
+<project name="transient.common">
+  <description>
+    This is the include file for projects that build against the transient library.
+  </description>
+
+  <dirname property="transient.home" file="${ant.file.transient.common}" />
+
+  <path id="transient.classpath">
+    <pathelement path="${transient.home}/classes" />
+  </path>
+
+  <target name="transient">
+    <subant target="build-all">
+      <fileset dir="${transient.home}" includes="build.xml" />
+    </subant>
+  </target>
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

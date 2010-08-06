@@ -56,6 +56,9 @@
   <!-- Tools directory -->
   <property name="tools" location="${fabric.home}/tools"/>
 
+  <!-- Lib directory -->
+  <property name="libs" location="${fabric.home}/src/lib"/>
+
   <!-- tmp directory (for creating the distribution) -->
   <property name="tmp" location="${fabric.home}/tmp"/>
 
@@ -99,25 +102,25 @@
       description="Configures the executables in the bin directory">
     <fail message="Failed to find Polyglot.  Make sure that your POLYGLOT environment variable is set, and that you have built Polyglot.">
       <condition>
-	<not>
-	  <and>
-	    <isset property="polyglot.home" />
-	    <available classname="polyglot.main.Version"
-		classpathref="polyglot.classpath" />
-	  </and>
-	</not>
+        <not>
+          <and>
+            <isset property="polyglot.home" />
+            <available classname="polyglot.main.Version"
+                classpathref="polyglot.classpath" />
+          </and>
+        </not>
       </condition>
     </fail>
 
     <fail message="Failed to find Jif.  Make sure that your JIF environment variable is set and that you have built Jif.">
       <condition>
-	<not>
-	  <and>
-	    <isset property="jif.home" />
-	    <available classname="jif.Version"
-		classpathref="jif.classpath" />
-	  </and>
-	</not>
+        <not>
+          <and>
+            <isset property="jif.home" />
+            <available classname="jif.Version"
+                classpathref="jif.classpath" />
+          </and>
+        </not>
       </condition>
     </fail>
 
@@ -151,7 +154,7 @@
 
   <target name="bin-check">
     <uptodate property="bin.up-to-date" srcfile="bin/defs.in"
-	targetfile="bin/defs" />
+        targetfile="bin/defs" />
   </target>
 
   <!--
@@ -167,12 +170,6 @@
     <delete file="${jar.runtime}" />
     <delete file="${jar.signature.fabil}" />
     <delete file="${jar.signature.fabric}" />
-
-    <!-- XXX refactor -->
-    <subant target="clean" failonerror="false">
-      <filelist dir="${fabric.home}" files="tests/sif/build.xml"/>
-      <filelist dir="${fabric.home}" files="tests/jif/build.xml"/>
-    </subant>    
   </target>
 
   <target name="clean" depends="dust"
@@ -187,7 +184,8 @@
 
     <subant target="clean">
       <filelist dir="${examples}" files="build.xml" />
-      <filelist dir="${tools}" files="build.xml" />
+      <filelist dir="${tools}"    files="build.xml" />
+      <filelist dir="${libs}"     files="build.xml" />
     </subant>
   </target>
 
@@ -200,16 +198,17 @@
       </fileset>
 
       <fileset dir="${compiler.src}">
-	<include name="**/Grm.java" />
-	<include name="**/sym.java" />
-	<include name="**/Lexer_c.java" />
-	<include name="**/*_ppg.cup" />
+        <include name="**/Grm.java" />
+        <include name="**/sym.java" />
+        <include name="**/Lexer_c.java" />
+        <include name="**/*_ppg.cup" />
       </fileset>
     </delete>
 
     <subant target="clobber">
       <filelist dir="${examples}" files="build.xml" />
-      <filelist dir="${tools}" files="build.xml" />
+      <filelist dir="${tools}"    files="build.xml" />
+      <filelist dir="${libs}"     files="build.xml" />
     </subant>
   </target>
 
@@ -316,12 +315,20 @@
   <target name="debug-tools" depends="worker,fabil-runtime"
       description="Builds the Fabric debugging tools">
     <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
-	includeAntRuntime="false" debug="on">
+        includeAntRuntime="false" debug="on">
       <include name="fabric/worker/debug/**" />
       <classpath>
         <path refid="fabric.classpath" />
       </classpath>
     </javac>
+  </target>
+
+  <!-- Compiles the Fabric libraries -->
+  <target name="libs" depends="build-all"
+      description="Builds the libraries built on top of Fabric">
+    <subant target="build-all">
+      <fileset dir="${libs}" includes="build.xml" />
+    </subant>
   </target>
 
   <!-- Compiles the Fabric examples -->
@@ -355,7 +362,7 @@
       unless="bootstrap.up-to-date">
     <touch file="${bootstrap.tstamp}"/>
     <javac target="1.6" srcdir="${bootstrap.src}"
-	destdir="${bootstrap.classes}" includeAntRuntime="false" debug="on">
+           destdir="${bootstrap.classes}" includeAntRuntime="false" debug="on">
       <include name="**/*.java" />
       <sourcepath path="${system.src}"/>
       <classpath refid="lib.classpath"/>
@@ -383,7 +390,7 @@
   <target name="native" depends="bootstrap,native-check"
       unless="native.up-to-date">
     <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
-	includeAntRuntime="false" debug="on">
+           includeAntRuntime="false" debug="on">
       <include name="fabric/lang/**" />
       <include name="fabric/common/util/**" />
       <classpath>
@@ -404,7 +411,7 @@
   <!-- Compiles the Fabric store -->
   <target name="store" depends="init,native,fabil-runtime">
     <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
-	includeAntRuntime="false" debug="on">
+        includeAntRuntime="false" debug="on">
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
       <include name="fabric/store/**" />
@@ -418,7 +425,7 @@
   <!-- Compiles the Fabric worker -->
   <target name="worker" depends="init,native,fabil-runtime">
     <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
-	includeAntRuntime="false" debug="on">
+        includeAntRuntime="false" debug="on">
       <include name="fabric/worker/**" />
       <include name="fabric/common/**" />
       <include name="fabric/messages/**" />
@@ -433,7 +440,7 @@
   <!-- Compiles the Fabric dissemination node -->
   <target name="dissemination" depends="worker">
     <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
-	includeAntRuntime="false" debug="on">
+        includeAntRuntime="false" debug="on">
       <include name="fabric/dissemination/**" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />
@@ -456,7 +463,7 @@
     <mkdir dir="${runtime.classes}" />
 
     <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
-	includeAntRuntime="false" debug="on">
+        includeAntRuntime="false" debug="on">
       <include name="fabric/worker/RetryException.java" />
       <include name="fabric/worker/UserAbortException.java" />
     </javac>
@@ -492,10 +499,10 @@
     <!-- XXX HACK -->
     <delete>
       <fileset dir="${signatures.fabil.classes}">
-	<include name="fabric/util/Iterable.class" />
-	<include name="fabric/util/Set.class" />
-	<include name="fabric/util/Iterator.class" />
-	<include name="fabric/util/Collection.class" />
+        <include name="fabric/util/Iterable.class" />
+        <include name="fabric/util/Set.class" />
+        <include name="fabric/util/Iterator.class" />
+        <include name="fabric/util/Collection.class" />
       </fileset>
     </delete>
 
@@ -573,22 +580,12 @@
   -->
 
   <!-- Compiles the Fabric test programs -->
-  <target name="tests" depends="fablib"
+  <target name="tests"
       description="Builds the Fabric test programs">
     <javac target="1.6" srcdir="${src}" destdir="${classes}" debug="on"
-	includeAntRuntime="false" includes="tests/**">
+        includeAntRuntime="false" includes="tests/**">
       <classpath refid="fabric.classpath"/>
     </javac>
-  </target>
-
-  <!-- XXX refactor -->
-  <!-- Compiles the SIF framework -->
-  <target name="fablib"
-      depends="worker,fabric-compiler,fabric-runtime,fabric-signatures">
-    <subant target="" failonerror="false">
-      <fileset file="tests/jif/build.xml"/>
-      <fileset file="tests/sif/build.xml"/>
-    </subant>
   </target>
 
   <!--
@@ -604,7 +601,7 @@
   <target name="bump-major">
     <propertyfile file="${fabric.home}/version.properties">
       <entry key="version.major" type="int" operation="+" value="1"
-	  pattern="0" />
+          pattern="0" />
       <entry key="version.minor" type="int" value="0" />
       <entry key="version.patch" type="int" value="0" />
     </propertyfile>
@@ -617,7 +614,7 @@
   <target name="bump-minor">
     <propertyfile file="${fabric.home}/version.properties">
       <entry key="version.minor" type="int" operation="+" value="1"
-	  pattern="0" />
+          pattern="0" />
       <entry key="version.patch" type="int" value="0" />
     </propertyfile>
 
@@ -629,7 +626,7 @@
   <target name="bump-patch">
     <propertyfile file="${fabric.home}/version.properties">
       <entry key="version.patch" type="int" operation="+" value="1"
-	  pattern="0" />
+          pattern="0" />
     </propertyfile>
 
     <!-- Reread version info and regenerate version files -->
@@ -755,17 +752,17 @@ public class Version {
   <target name="javadoc" description="Runs javadoc over the Fabric source code">
     <!-- Compiler classes -->
     <javadoc sourcepath="${compiler.src}" destdir="${doc}/api/compiler"
-	encoding="UTF-8">
+        encoding="UTF-8">
       <packageset dir="${compiler.src}" defaultexcludes="yes">
-	<include name="**" />
+        <include name="**" />
       </packageset>
     </javadoc>
 
     <!-- System classes -->
     <javadoc sourcepath="${system.src}" destdir="${doc}/api/system"
-	encoding="UTF-8">
+        encoding="UTF-8">
       <packageset dir="${system.src}" defaultexcludes="yes">
-	<include name="**" />
+        <include name="**" />
       </packageset>
     </javadoc>
   </target>
@@ -816,7 +813,7 @@ public class Version {
 
     <copy todir="${tmp}">
       <fileset dir="${tools}">
-	<include name="*/classes/**/*.class" />
+        <include name="*/classes/**/*.class" />
       </fileset>
       <regexpmapper from="^[^/]*/classes/(.*)$$" to="\1" />
     </copy>
@@ -843,7 +840,7 @@ public class Version {
   -->
   <target name="make-jar" depends="jar-manifest">
     <jar jarfile="${file}" basedir="${base}" manifest="${tmp.manifest}"
-	includes="**/*.class" />
+        includes="**/*.class" />
   </target>
 
   <target name="jar-manifest" depends="configure-buildstring">
@@ -926,13 +923,13 @@ public class Version {
     <!-- Copy tarballs into the scratch copy. -->
     <copy todir="${tmp}/fabric/lib">
       <fileset dir="${tmp}/polyglot/lib">
-	<include name="polyglot.jar" />
-	<include name="ppg.jar" />
-	<include name="JFlex.jar" />
-	<include name="java_cup.jar" />
+        <include name="polyglot.jar" />
+        <include name="ppg.jar" />
+        <include name="JFlex.jar" />
+        <include name="java_cup.jar" />
       </fileset>
       <fileset dir="${tmp}/jif/lib">
-	<include name="jif.jar" />
+        <include name="jif.jar" />
       </fileset>
     </copy>
 
@@ -944,7 +941,7 @@ public class Version {
 
     <!-- Move the distribution tarball out of the scratch directory. -->
     <move tofile="${fabric.home}/fabric-${fabric.version}.tar.gz"
-	file="${tmp}/fabric/fabric-${fabric.version}.tar.gz" />
+        file="${tmp}/fabric/fabric-${fabric.version}.tar.gz" />
 
     <!-- Clean up. -->
     <antcall target="rmdir-tmp" />
@@ -955,110 +952,110 @@ public class Version {
       depends="configure-version,build-all,jar-all,javadoc">
     <delete dir="${fabric.home}/fabric-${fabric.version}" />
     <tar destfile="${fabric.home}/fabric-${fabric.version}.tar.gz"
-	compression="gzip">
+        compression="gzip">
       <!-- Include top-level files. -->
       <tarfileset dir="${fabric.home}" prefix="fabric-${fabric.version}">
-	<include name="version.properties" />
-	<include name="build.xml" />
-	<include name="config.properties.in" />
-	<include name="README" />
+        <include name="version.properties" />
+        <include name="build.xml" />
+        <include name="config.properties.in" />
+        <include name="README" />
       </tarfileset>
 
       <!-- Include scripts in bin and make them executable. -->
       <tarfileset dir="${bin}" prefix="fabric-${fabric.version}/bin"
-	  filemode="755">
-	<include name="add-trusted-ca" />
-	<include name="ca-sign" />
-	<include name="codebase-tool" />
-	<include name="fab" />
-	<include name="fabc" />
-	<include name="fab-store" />
-	<include name="filc" />
-	<include name="genkey" />
-	<include name="import-cert" />
-	<include name="make-ca" />
-	<include name="make-node" />
-	<include name="run-fab-class" />
-	<include name="store-browser" />
+          filemode="755">
+        <include name="add-trusted-ca" />
+        <include name="ca-sign" />
+        <include name="codebase-tool" />
+        <include name="fab" />
+        <include name="fabc" />
+        <include name="fab-store" />
+        <include name="filc" />
+        <include name="genkey" />
+        <include name="import-cert" />
+        <include name="make-ca" />
+        <include name="make-node" />
+        <include name="run-fab-class" />
+        <include name="store-browser" />
       </tarfileset>
 
       <!-- Include bin/defs.in. -->
       <tarfileset dir="${bin}" prefix="fabric-${fabric.version}/bin">
-	<include name="defs.in" />
+        <include name="defs.in" />
       </tarfileset>
 
       <!-- Include docs. -->
       <tarfileset dir="${doc}" prefix="fabric-${fabric.version}/doc">
-	<include name="api/**" />
+        <include name="api/**" />
       </tarfileset>
 
       <!-- Include configuration files. -->
       <tarfileset dir="${etc}" prefix="fabric-${fabric.version}/etc">
-	<include name="config/EXAMPLE.properties.in" />
-	<include name="config.properties" />
-	<include name="logging.properties" />
+        <include name="config/EXAMPLE.properties.in" />
+        <include name="config.properties" />
+        <include name="logging.properties" />
       </tarfileset>
 
       <!-- Include library dependencies. -->
       <tarfileset dir="${lib}" prefix="fabric-${fabric.version}/lib">
-	<!-- Compiled jars -->
-	<include name="fabric.jar" />
-	<include name="fabric-rt.jar" />
-	<include name="fabric-il-sig.jar" />
-	<include name="fabric-sig.jar" />
-	<include name="fabric-tools.jar" />
+        <!-- Compiled jars -->
+        <include name="fabric.jar" />
+        <include name="fabric-rt.jar" />
+        <include name="fabric-il-sig.jar" />
+        <include name="fabric-sig.jar" />
+        <include name="fabric-tools.jar" />
 
-	<!-- Polyglot, Jif, and dependencies -->
-	<include name="polyglot.jar" />
-	<include name="jif.jar" />
-	<include name="JFlex.jar" />
-	<include name="java_cup.jar" />
-	<include name="ppg.jar" />
+        <!-- Polyglot, Jif, and dependencies -->
+        <include name="polyglot.jar" />
+        <include name="jif.jar" />
+        <include name="JFlex.jar" />
+        <include name="java_cup.jar" />
+        <include name="ppg.jar" />
 
-	<!-- FreePastry, BDB, BouncyCastle -->
-	<include name="FreePastry-2.1.jar" />
-	<include name="je-3.3.75.jar" />
-	<include name="bcprov-jdk15-145.jar" />
+        <!-- FreePastry, BDB, BouncyCastle -->
+        <include name="FreePastry-2.1.jar" />
+        <include name="je-3.3.75.jar" />
+        <include name="bcprov-jdk15-145.jar" />
       </tarfileset>
 
       <!-- Include compiler and system sources. -->
       <tarfileset dir="${src}" prefix="fabric-${fabric.version}/src">
-	<include name="**/README" />
-	<include name="bootstrap/**/*.java" />
-	<include name="compiler/**/*.java" />
-	<include name="compiler/**/package.html" />
-	<include name="compiler/**/parse/*.flex" />
-	<include name="compiler/**/parse/*.cup" />
-	<include name="compiler/**/parse/*.ppg" />
-	<include name="compiler/**/doc-files/**" />
-	<include name="runtime/**/*.fil" />
-	<include name="runtime/**/*.fab" />
-	<include name="signatures/fabil/**/*.fil" />
-	<include name="signatures/fabric/**/*.fab" />
-	<include name="system/**/*.java" />
-	<!-- These will be handled below. -->
-	<exclude name="runtime/fabric/util/**" />
+        <include name="**/README" />
+        <include name="bootstrap/**/*.java" />
+        <include name="compiler/**/*.java" />
+        <include name="compiler/**/package.html" />
+        <include name="compiler/**/parse/*.flex" />
+        <include name="compiler/**/parse/*.cup" />
+        <include name="compiler/**/parse/*.ppg" />
+        <include name="compiler/**/doc-files/**" />
+        <include name="runtime/**/*.fil" />
+        <include name="runtime/**/*.fab" />
+        <include name="signatures/fabil/**/*.fil" />
+        <include name="signatures/fabric/**/*.fab" />
+        <include name="system/**/*.java" />
+        <!-- These will be handled below. -->
+        <exclude name="runtime/fabric/util/**" />
       </tarfileset>
 
       <!-- Handle runtime/fabric/util specially to exclude unused classes. -->
       <tarfileset dir="${runtime.src}/fabric/util"
-	  prefix="fabric-${fabric.version}/src/runtime/fabric/util">
-	<include name="**/*.fil" />
-	<!-- Only include classes that were compiled. -->
-	<present targetdir="${runtime.classes}/fabric/util">
-	  <globmapper from="*.fil" to="*.java" />
-	</present>
+          prefix="fabric-${fabric.version}/src/runtime/fabric/util">
+        <include name="**/*.fil" />
+        <!-- Only include classes that were compiled. -->
+        <present targetdir="${runtime.classes}/fabric/util">
+          <globmapper from="*.fil" to="*.java" />
+        </present>
       </tarfileset>
 
       <!-- Include tools. -->
       <tarfileset dir="${tools}" prefix="fabric-${fabric.version}/tools">
-	<include name="build.xml" />
-	<include name="storebrowser/**/README" />
-	<include name="storebrowser/**/build.xml" />
-	<include name="storebrowser/**/*.java" />
-	<include name="classloader/**/README" />
-	<include name="classloader/**/build.xml" />
-	<include name="classloader/**/*.java" />
+        <include name="build.xml" />
+        <include name="storebrowser/**/README" />
+        <include name="storebrowser/**/build.xml" />
+        <include name="storebrowser/**/*.java" />
+        <include name="classloader/**/README" />
+        <include name="classloader/**/build.xml" />
+        <include name="classloader/**/*.java" />
       </tarfileset>
     </tar>
   </target>
@@ -1072,10 +1069,10 @@ public class Version {
     <property file="${jif.home}/config.properties" prefix="jif" />
     <condition property="jif.jdk.home" value="${env.JAVA_HOME}">
       <and>
-	<isset property="env.JAVA_HOME" />
-	<not>
-	  <isset property="jif.jdk.home" />
-	</not>
+        <isset property="env.JAVA_HOME" />
+        <not>
+          <isset property="jif.jdk.home" />
+        </not>
       </and>
     </condition>
   </target>
@@ -1089,7 +1086,7 @@ public class Version {
   -->
   <target name="cvs-checkout">
     <cvs command="checkout ${name}" quiet="true" cvsRsh="ssh" cvsRoot="${root}"
-	dest="${tmp}" failonerror="true" />
+        dest="${tmp}" failonerror="true" />
   </target>
 
   <!--
@@ -1122,12 +1119,12 @@ public class Version {
 
     Parameters:
       sub-ant.dir - the subdirectory in ${tmp} in which to find the build.xml
-		    file.
+                    file.
       sub-ant.target - the target to run.
   -->
   <target name="sub-ant-dist">
     <ant inheritAll="false" antfile="${tmp}/${sub-ant.dir}/build.xml"
-	dir="${tmp}/${sub-ant.dir}" target="${sub-ant.target}" />
+        dir="${tmp}/${sub-ant.dir}" target="${sub-ant.target}" />
   </target>
 
   <!--
@@ -1136,7 +1133,7 @@ public class Version {
     ******************************************************************
   -->
 
-  <target name="package" depends="build-all,jar-all,fablib">
+  <target name="package" depends="build-all,jar-all,libs">
     <!-- Delete any old version of the packaged directory -->
     <delete dir="fabric"/>
     <!-- Create the package directory and subdirectories -->
@@ -1146,20 +1143,20 @@ public class Version {
     <mkdir dir="fabric/etc"/>
     <!-- Make sure polyglot and jif jars are built -->
     <subant target="jar" failonerror="false">
-		  <fileset file="${polyglot.home}/build.xml"/>
-		  <fileset file="${jif.home}/build.xml"/>
+                  <fileset file="${polyglot.home}/build.xml"/>
+                  <fileset file="${jif.home}/build.xml"/>
     </subant>
     <!-- Package the collections -->
     <subant target="jar" failonerror="false">
-		  <fileset file="${fabric.home}/tests/jif/build.xml"/>
+                  <fileset file="${fabric.home}/tests/jif/build.xml"/>
     </subant>
     <!-- Package SIF -->
     <subant target="jar" failonerror="false">
-		  <fileset file="${fabric.home}/tests/sif/build.xml"/>
+                  <fileset file="${fabric.home}/tests/sif/build.xml"/>
     </subant>
     <!-- Package SIF examples -->
     <subant target="jar-examples" failonerror="false">
-		  <fileset file="${fabric.home}/tests/sif/build.xml"/>
+                  <fileset file="${fabric.home}/tests/sif/build.xml"/>
     </subant>
 
     <!-- Move these jars into lib -->
@@ -1196,14 +1193,14 @@ public class Version {
 
     <!-- Now package the directory as a tar.gz file -->
     <!--exec executable="tar"
-	     dir="${fabric.home}"
-	     failonerror="true"
-	     vmlauncher="false" >
-	<arg value="-c" />
-	<arg value="-z" />
-	<arg value="-f" />
-	<arg value="fabric.tar.gz" />
-	<arg value="fabric/" />
+             dir="${fabric.home}"
+             failonerror="true"
+             vmlauncher="false" >
+        <arg value="-c" />
+        <arg value="-z" />
+        <arg value="-f" />
+        <arg value="fabric.tar.gz" />
+        <arg value="fabric/" />
     </exec-->
     
     <!-- Now delete the directory -->
@@ -1341,8 +1338,8 @@ public class Version {
 
   <target name="compile-ext">
     <javac source="1.6" target="1.6" srcdir="${compiler.src}"
-	destdir="${classes}" debug="on" includeAntRuntime="false"
-	includes="${ext.pkg}/**">
+        destdir="${classes}" debug="on" includeAntRuntime="false"
+        includes="${ext.pkg}/**">
       <classpath refid="jif.classpath" />
     </javac>
   </target>

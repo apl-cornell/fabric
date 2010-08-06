@@ -1,0 +1,76 @@
+<!--
+  This is the Apache Ant build file for the transient library implementation.
+-->
+
+<project name="transient" default="build-all" basedir=".">
+  <description>
+    Build file for the transient library.
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../../common.xml" />
+
+  <dirname property="transient.home" file="${ant.file.transient}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${transient.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean" />
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+          description="Builds the transient class package">
+    <mkdir dir="${transient.home}/classes" />
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${transient.home}"
+           dest="${transient.home}/classes"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabc}" />
+      <arg line="${debug.flag}" />
+      <arg value="-d"           /> <arg value="${transient.home}/classes" />
+      <arg value="-sourcepath"  /> <arg value="${transient.home}/src" />
+      <arg value="-cp"          /> <arg value="${transient.home}/classes" />
+      <srcfile />
+      <fileset dir="${transient.home}/src"
+               includes="jif/util/Map.fab,
+                         jif/lang/ExternalPrincipal.fab,
+                         jif/util/List.fab,
+                         jif/util/LinkedList.fab,
+                         jif/lang/JifString.fab,
+                         jif/util/Set.fab,
+                         jif/util/Date.fab,
+                         jif/util/ArrayList.fab,
+                         jif/util/HashMap.fab" />
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

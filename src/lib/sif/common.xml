@@ -1,0 +1,26 @@
+<project name="sif.common">
+  <description>
+    This is the include file for projects that build against the sif library.
+  </description>
+
+  <dirname property="sif.home" file="${ant.file.sif.common}" />
+
+  <path id="sif.classpath">
+    <pathelement path="${sif.home}/classes" />
+  </path>
+
+  <path id="sif.sigcp">
+    <pathelement path="${sif.home}/sig-classes" />
+  </path>
+
+  <target name="sif">
+    <subant target="build-all">
+      <fileset dir="${sif.home}" includes="build.xml" />
+    </subant>
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->
