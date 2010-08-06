@@ -22,7 +22,8 @@
   </target>
 
   <!-- Makes the directory tree truly pristine. -->
-  <target name="clobber" depends="clean">
+  <target name="clobber" depends="clean"
+      description="Removes generated files and state of stores">
     <!-- Recursively call "clobber" on subdirectories. -->
     <subant target="clobber">
       <fileset dir="." includes="*/build.xml" />

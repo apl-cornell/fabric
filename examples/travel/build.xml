@@ -36,7 +36,10 @@
     <delete dir="${travel.home}/classes"/>
   </target>
 
-  <target name="clobber" depends="clean" />
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${travel.home}/var"/>
+  </target>
 
   <!--
   ****************************************************************************
