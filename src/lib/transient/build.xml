@@ -16,6 +16,7 @@
   <import file="../../../common.xml" />
 
   <dirname property="transient.home" file="${ant.file.transient}" />
+  <property name="jar.transient" location="${fabric.home}/lib/fabric-transient.jar" />
 
   <!--
   ****************************************************************************
@@ -25,6 +26,7 @@
 
   <target name="clean" description="Removes generated files">
     <delete dir="${transient.home}/classes"/>
+    <delete file="${jar.transient}"/>
   </target>
 
   <target name="clobber" depends="clean" />
@@ -64,6 +66,10 @@
                          jif/util/HashMap.fab" />
       <globmapper from="*.fab" to="*.class" />
     </apply>
+  </target>
+
+  <target name="jar" depends="build-all" description="Create transient library jar">
+    <jar jarfile="${jar.transient}" basedir="${transient.home}/classes" includes="**/*.class" />
   </target>
 
   <target name="build-all" depends="build" />

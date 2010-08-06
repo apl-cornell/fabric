@@ -31,7 +31,6 @@
 
   <!-- Directories for class file targets -->
   <property name="bootstrap.classes" location="${fabric.home}/bs-classes"/>
-  <property name="tests.classes" location="${fabric.home}/tests/classes"/>
   <property name="signatures.classes" location="${fabric.home}/sig-classes"/>
   <property name="signatures.fabil.classes"
       location="${signatures.classes}/fabil"/>
@@ -177,7 +176,6 @@
     <!-- Delete the ${classes} and ${tmp} directory trees -->
     <delete dir="${classes}"/>
     <delete dir="${bootstrap.classes}"/>
-    <delete dir="${tests.classes}"/>
     <delete dir="${tmp}"/>
     <delete dir="${var}"/>
     <delete file="${jar.base}" />
@@ -352,7 +350,6 @@
     <mkdir dir="${classes}"/>
     <mkdir dir="${bootstrap.classes}"/>
     <mkdir dir="${runtime.classes}"/>
-    <mkdir dir="${tests.classes}"/>
     <mkdir dir="${signatures.fabil.classes}"/>
     <mkdir dir="${signatures.fabric.classes}"/>
   </target>
@@ -571,21 +568,6 @@
 
       <globmapper from="*.fab" to="*.class" />
     </apply>
-  </target>
-
-  <!--
-  ****************************************************************************
-    Example-application targets
-  ****************************************************************************
-  -->
-
-  <!-- Compiles the Fabric test programs -->
-  <target name="tests"
-      description="Builds the Fabric test programs">
-    <javac target="1.6" srcdir="${src}" destdir="${classes}" debug="on"
-        includeAntRuntime="false" includes="tests/**">
-      <classpath refid="fabric.classpath"/>
-    </javac>
   </target>
 
   <!--
@@ -863,7 +845,6 @@ public class Version {
       description="Generates the distribution">
     <!-- Output a checklist for verifying that the distribution is good. -->
     <echo message="Examples build and run" />
-    <echo message="Regression tests successful" />
     <echo message="CHANGES file up-to-date" />
     <echo message="Version bump" />
   </target>
@@ -1164,7 +1145,7 @@ public class Version {
       <fileset dir="${fabric.home}/tests/jif" includes="fabcoll.jar"/>
       <fileset dir="${fabric.home}/tests/sif" includes="*.jar"/>
     </move>
-    
+
     <!-- Now copy other jar files into lib -->
     <copy todir="fabric/lib">
       <fileset dir="${fabric.home}/lib" includes="fabric.jar,fabric-rt.jar"/>

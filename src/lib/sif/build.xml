@@ -33,6 +33,12 @@
   <!-- directory for signature classes -->
   <property name="sif.sig-classes" location="${sif.home}/sig-classes" />
 
+  <!-- sif jar file -->
+  <property name="jar.sif" location="${fabric.home}/lib/fabric-sif.jar" />
+
+  <!-- sif signature jar file -->
+  <property name="jar.sif-sig" location="${fabric.home}/lib/fabric-sif-sig.jar" />
+
   <!-- the standard classpath -->
   <path id="standard.classpath">
     <path refid="lib.classpath" />
@@ -49,6 +55,8 @@
   <target name="clean" description="Removes generated files">
     <delete dir="${sif.classes}"/>
     <delete dir="${sif.sig-classes}"/>
+    <delete file="${jar.sif}"/>
+    <delete file="${jar.sif-sig}"/>
   </target>
 
   <target name="clobber" depends="clean" />
@@ -62,7 +70,8 @@
   <target name="jar"
           depends="build-all"
           description="Builds the sif jar file">
-    <jar jarfile="sif.jar" basedir="${sif.classes}" excludes="**/*.java" />
+    <jar jarfile="${jar.sif}"     basedir="${sif.classes}"     excludes="**/*.java" />
+    <jar jarfile="${jar.sif-sig}" basedir="${sif.sig-classes}" excludes="**/*.java" />
   </target>
 
   <!--

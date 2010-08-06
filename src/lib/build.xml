@@ -7,11 +7,8 @@
     Fabric libraries build file
   </description>
 
-  <!--
-  ****************************************************************************
-    Targets for cleaning up the directory tree.
-  ****************************************************************************
-  -->
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
 
   <target name="clean"
       description="Removes generated files">
@@ -29,13 +26,7 @@
     </subant>
   </target>
 
-  <!--
-  ****************************************************************************
-    Compilation targets.
-  ****************************************************************************
-  -->
-
-  <!-- Main target for compiling the Fabric examples -->
+  <!-- Main target for compiling the Fabric libraries -->
   <target name="build" description="Compiles the Fabric libraries">
     <!-- Recursively call "build-all" on subdirectories. -->
     <subant target="build-all">
@@ -43,8 +34,15 @@
     </subant>
   </target>
 
-  <target name="build-all" depends="build" />
-  <target name="all" depends="build-all" />
+  <!-- target for jarring the Fabric libraries -->
+  <target name="jar" description="Creates Fabric library jars">
+    <subant target="jar">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
 
 </project>
 
+<!--
+vim: ts=2 sw=2 ai et
+-->
