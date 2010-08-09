@@ -133,7 +133,8 @@ public class MessageHandlerThread extends
           || cause instanceof SecurityException
           || cause instanceof IllegalAccessException
           || cause instanceof InvocationTargetException
-          || cause instanceof NoSuchMethodException)
+          || cause instanceof NoSuchMethodException
+          || cause instanceof RuntimeException)
         throw new RemoteCallException(cause);
 
       throw e;
