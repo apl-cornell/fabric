@@ -470,7 +470,7 @@ public final class TransactionManager {
         public void run() {
           try {
             Collection<_Impl> creates = current.getCreatesForStore(store);
-            LongKeyMap<Integer> reads = current.getReadsForStore(store);
+            LongKeyMap<Integer> reads = current.getReadsForStore(store, false);
             Collection<_Impl> writes = current.getWritesForStore(store);
             boolean subTransactionCreated =
                 store.prepareTransaction(useAuthentication, current.tid.topTid,
@@ -993,7 +993,7 @@ public final class TransactionManager {
       final Store store = storeIt.next();
       Runnable runnable = new Runnable() {
         public void run() {
-          LongKeyMap<Integer> reads = current.getReadsForStore(store);
+          LongKeyMap<Integer> reads = current.getReadsForStore(store, true);
           if (store.checkForStaleObjects(reads))
             nodesWithStaleObjects.add((RemoteNode) store);
         }

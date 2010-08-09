@@ -239,10 +239,12 @@ public final class Log {
 
   /**
    * Returns a map from onums to version numbers of objects read at the given
-   * store. Reads on created and modified objects are not included.
+   * store. Reads on created objects are never included.
+   * 
+   * @param includeModified whether to include reads on modified objects.
    */
   @SuppressWarnings("unchecked")
-  LongKeyMap<Integer> getReadsForStore(Store store) {
+  LongKeyMap<Integer> getReadsForStore(Store store, boolean includeModified) {
     LongKeyMap<Integer> result = new LongKeyHashMap<Integer>();
     LongKeyMap<ReadMapEntry> submap = reads.get(store);
     if (submap == null) return result;
@@ -256,12 +258,16 @@ public final class Log {
         result.put(entry.obj.onum, entry.versionNumber);
       }
     }
-
+    
     if (store.isLocalStore()) {
-      for (_Impl write : Util.chain(localStoreWrites, localStoreCreates))
+      Iterable<_Impl> writesToExclude =
+          includeModified ? Collections.EMPTY_LIST : localStoreWrites;
+      for (_Impl write : Util.chain(writesToExclude, localStoreCreates))
         result.remove(write.$getOnum());
     } else {
-      for (_Impl write : Util.chain(writes, creates))
+      Iterable<_Impl> writesToExclude =
+          includeModified ? Collections.EMPTY_LIST : writes;
+      for (_Impl write : Util.chain(writesToExclude, creates))
         if (write.$getStore() == store) result.remove(write.$getOnum());
     }
 
