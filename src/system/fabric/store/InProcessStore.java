@@ -2,6 +2,7 @@ package fabric.store;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import fabric.worker.Worker;
 import fabric.worker.RemoteStore;
@@ -44,9 +45,7 @@ public class InProcessStore extends RemoteStore {
   @Override
   public void commitTransaction(boolean useAuthentication, long transactionID)
       throws TransactionCommitFailedException {
-    tm
-        .commitTransaction(null, Worker.getWorker().getPrincipal(),
-            transactionID);
+    tm.commitTransaction(null, Worker.getWorker().getPrincipal(), transactionID);
   }
 
   @Override
@@ -88,6 +87,15 @@ public class InProcessStore extends RemoteStore {
     if (obj == null) throw new FetchException(new AccessException(this, onum));
     map.put(onum, obj);
     return new ObjectGroup(map);
+  }
+
+  @Override
+  protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
+    try {
+      return tm.checkForStaleObjects(getPrincipal(), reads);
+    } catch (AccessException e) {
+      throw new InternalError(e);
+    }
   }
 
 }

@@ -8,6 +8,7 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import fabric.common.*;
@@ -17,9 +18,9 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.net.naming.SocketAddress;
 import fabric.common.util.*;
 import fabric.dissemination.Glob;
-import fabric.lang.security.NodePrincipal;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
+import fabric.lang.security.NodePrincipal;
 import fabric.messages.*;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
@@ -408,13 +409,19 @@ public class RemoteStore extends RemoteNode implements Store {
   }
 
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
-    StalenessCheckMessage.Response response =
-        new StalenessCheckMessage(reads).send(this);
+    List<SerializedObject> staleObjects = getStaleObjects(reads);
     
-    for (SerializedObject obj : response.staleObjects)
+    for (SerializedObject obj : staleObjects)
       updateCache(obj);
     
-    return !response.staleObjects.isEmpty();
+    return !staleObjects.isEmpty();
+  }
+
+  /**
+   * Helper for checkForStaleObjects.
+   */
+  protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
+    return new StalenessCheckMessage(reads).send(this).staleObjects;
   }
 
   @Override
