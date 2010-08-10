@@ -133,6 +133,23 @@ public final class Logging {
   // //////////////////////////////////////////////////////////////////////////
 
   /**
+   * Logs a message, with one object parameter.
+   * 
+   * @param logger
+   *          The logger to log to
+   * @param level
+   *          One of the message level identifiers, e.g. SEVERE
+   * @param msg
+   *          The string message (or a key in the message catalog)
+   * @param param1
+   *          first parameter to the message
+   */
+  public static void log(Logger logger, Level level, String msg, Object param1) {
+    if (!logger.isLoggable(level)) return;
+    logger.log(level, msg, param1);
+  }
+
+  /**
    * Logs a message, with two object parameters.
    * 
    * @param logger

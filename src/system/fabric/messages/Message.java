@@ -1,8 +1,13 @@
 package fabric.messages;
 
+import static fabric.common.Logging.NETWORK_MESSAGE_RECEIVE_LOGGER;
+import static fabric.common.Logging.NETWORK_MESSAGE_SEND_LOGGER;
+
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.MessageHandler;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FabricRuntimeException;
@@ -51,6 +56,9 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
       out.writeByte(messageType.ordinal());
       write(out);
       out.flush();
+      
+      Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE, "Sent {0} to {1}",
+          messageType, node);
 
       // Read in the reply. Determine if an error occurred.
       if (in.readBoolean()) {
@@ -120,6 +128,9 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
       } catch (Exception e) {
         throw new FabricException(e);
       }
+      
+      Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
+          "Received {0}", m.messageType);
 
       Response r = m.dispatch(handler);
 
