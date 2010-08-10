@@ -229,7 +229,9 @@ public final class TransactionManager {
     WORKER_TRANSACTION_LOGGER.warning(current + " aborted");
 
     synchronized (current.commitState) {
-      current.commitState.value = ABORTED;
+      // The commit state reflects the state of the top-level transaction, so
+      // only set the flag if a top-level transaction is being aborted.
+      if (current.tid.depth == 0) current.commitState.value = ABORTED;
 
       if (current.tid.parent == null || current.parent != null
           && current.parent.tid.equals(current.tid.parent)) {
