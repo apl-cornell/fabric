@@ -15,21 +15,12 @@
   ****************************************************************************
   -->
 
+  <import file="../../common.xml" />
   <dirname property="blog.home" file="${ant.file.fabric-blog}" />
   <property name="fabric.home" value="${blog.home}/../.." />
 
-  <path id="fabil.sigpath">
-    <pathelement location="${fabric.home}/sig-classes/fabil" />
-  </path>
-
-  <path id="fabil.classpath">
-    <pathelement location="${fabric.home}/classes" />
-    <pathelement location="${fabric.home}/rt-classes" />
-    <pathelement location="${fabric.home}/rt-classes" />
-  </path>
-
   <path id="blog.classpath">
-    <path refid="fabil.classpath"/>
+    <path refid="fabric.classpath"/>
     <fileset dir="${blog.home}/lib">
       <include name="*.jar"/>
     </fileset>
@@ -102,7 +93,6 @@
       <arg value="-j"     /> <arg value="-Xmx500M" />
       <arg value="-j"     /> <arg value="-Xss100M" />
       <arg value="-cp"    /> <arg pathref="blog.classpath" />
-      <arg value="-sigcp" /> <arg pathref="fabil.sigpath"   />
       <arg value="-sx"    /> <arg value="java"/>
       <arg value="-d"     /> <arg value="${blog.home}/classes/fabil"/>
       <srcfile />
