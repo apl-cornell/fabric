@@ -1008,10 +1008,11 @@ public class Version {
         <include name="java_cup.jar" />
         <include name="ppg.jar" />
 
-        <!-- FreePastry, BDB, BouncyCastle -->
+        <!-- FreePastry, BDB, BouncyCastle, Jetty -->
         <include name="FreePastry-2.1.jar" />
         <include name="je-3.3.75.jar" />
         <include name="bcprov-jdk15-145.jar" />
+	<include name="jetty/*.jar" />
       </tarfileset>
 
       <!-- Include compiler and system sources. -->
