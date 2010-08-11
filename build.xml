@@ -302,23 +302,11 @@
   </target>
 
   <!-- Compiles the Fabric tools -->
-  <target name="tools" depends="fabil-runtime,debug-tools"
+  <target name="tools" depends="fabil-runtime"
       description="Builds all Fabric tools">
     <subant target="build-all">
       <fileset dir="${tools}" includes="build.xml" />
     </subant>
-  </target>
-
-  <!-- Compiles the Fabric system-debugging tools -->
-  <target name="debug-tools" depends="worker,fabil-runtime"
-      description="Builds the Fabric debugging tools">
-    <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
-        includeAntRuntime="false" debug="on">
-      <include name="fabric/worker/debug/**" />
-      <classpath>
-        <path refid="fabric.classpath" />
-      </classpath>
-    </javac>
   </target>
 
   <!-- Compiles the Fabric libraries -->
@@ -756,8 +744,8 @@ public class Version {
   -->
 
   <!-- Main target for generating jars. -->
-  <target name="jar-all" depends="jar-base,jar-runtime,jar-sig,jar-tools"
-    description="Builds all jars" />
+  <target name="jar-all" description="Builds all jars"
+      depends="jar-base,jar-runtime,jar-sig,jar-tools,jar-libs" />
 
   <target name="jar-base" depends="fabil-compiler,fabric-system"
       description="Builds fabric.jar">
@@ -806,6 +794,13 @@ public class Version {
     </antcall>
 
     <antcall target="rmdir-tmp" />
+  </target>
+
+  <target name="jar-libs"
+      description="Builds Jar files for all the libraries that are built on top of Fabric">
+    <subant target="jar">
+      <fileset dir="${libs}" includes="build.xml" />
+    </subant>
   </target>
 
   <!--
@@ -938,6 +933,7 @@ public class Version {
       <tarfileset dir="${fabric.home}" prefix="fabric-${fabric.version}">
         <include name="version.properties" />
         <include name="build.xml" />
+        <include name="common.xml" />
         <include name="config.properties.in" />
         <include name="README" />
       </tarfileset>
@@ -985,6 +981,11 @@ public class Version {
         <include name="fabric-il-sig.jar" />
         <include name="fabric-sig.jar" />
         <include name="fabric-tools.jar" />
+
+	<!-- Compiled library jars -->
+	<include name="fabric-sif.jar" />
+	<include name="fabric-sif-sig.jar" />
+	<include name="fabric-transient.jar" />
 
         <!-- Polyglot, Jif, and dependencies -->
         <include name="polyglot.jar" />
@@ -1037,6 +1038,35 @@ public class Version {
         <include name="classloader/**/README" />
         <include name="classloader/**/build.xml" />
         <include name="classloader/**/*.java" />
+      </tarfileset>
+
+      <!-- Include examples. -->
+      <tarfileset dir="${examples}" prefix="fabric-${fabric.version}/examples">
+	<include name="build.xml" />
+	<include name="applet/**" />
+	<include name="blog/**" />
+	<include name="OO7/**" />
+	<include name="sif-hello/**" />
+	<include name="travel/**" />
+      </tarfileset>
+
+      <!-- Include library sources. -->
+      <tarfileset dir="${libs}" prefix="fabric-${fabric.version}/src/lib">
+	<include name="build.xml" />
+
+	<!-- SIF -->
+	<include name="sif/build.xml" />
+	<include name="sif/common.xml" />
+	<include name="sif/fab-src/**/*.fab" />
+	<include name="sif/sig-src/**/*.fab" />
+	<include name="sif/src/**/*.fil" />
+	<include name="sif/src/**/*.java" />
+
+	<!-- transient -->
+	<include name="transient/README" />
+	<include name="transient/build.xml" />
+	<include name="transient/common.xml" />
+	<include name="transient/src/**/*.fab" />
       </tarfileset>
     </tar>
   </target>
