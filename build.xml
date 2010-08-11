@@ -954,6 +954,7 @@ public class Version {
         <include name="make-node" />
         <include name="run-fab-class" />
         <include name="store-browser" />
+        <include name="fab-http" />
       </tarfileset>
 
       <!-- Include bin/defs.in. -->
