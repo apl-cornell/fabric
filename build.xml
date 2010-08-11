@@ -719,21 +719,34 @@ public class Version {
   ****************************************************************************
   -->
 
-  <target name="javadoc" description="Runs javadoc over the Fabric source code">
-    <!-- Compiler classes -->
-    <javadoc sourcepath="${compiler.src}" destdir="${doc}/api/compiler"
-        encoding="UTF-8">
-      <packageset dir="${compiler.src}" defaultexcludes="yes">
-        <include name="**" />
-      </packageset>
-    </javadoc>
+  <target name="javadoc"
+          depends="javadoc-compiler, javadoc-system"
+          description="Runs javadoc over the Fabric source code" />
 
-    <!-- System classes -->
-    <javadoc sourcepath="${system.src}" destdir="${doc}/api/system"
-        encoding="UTF-8">
-      <packageset dir="${system.src}" defaultexcludes="yes">
-        <include name="**" />
-      </packageset>
+  <!-- Compiler classes -->
+  <target name="javadoc-compiler">
+    <javadoc sourcepath="${compiler.src}"
+             destdir="${doc}/api/compiler"
+             encoding="UTF-8"
+             overview="${compiler.src}/overview.html">
+
+      <packageset dir="${compiler.src}" defaultexcludes="yes" />
+
+      <group title="Fabric Compiler" packages="fabric*" />
+
+      <group title="Fabil Compiler" packages="fabil*" />
+
+    </javadoc>
+  </target>
+
+  <!-- System classes -->
+  <target name="javadoc-system">
+    <javadoc sourcepath="${system.src}"
+             destdir="${doc}/api/system"
+             encoding="UTF-8">
+
+      <packageset dir="${system.src}" defaultexcludes="yes" />
+
     </javadoc>
   </target>
 
@@ -1277,3 +1290,6 @@ public class Version {
 
 </project>
 
+<!--
+vim: ts=2 sw=2 ai et
+-->
