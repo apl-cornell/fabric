@@ -39,8 +39,6 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
   /**
    * Sends this message to the given node.
    * 
-   * @param message
-   *          The message to send.
    * @return The reply from the node.
    * @throws FabricException
    *           if an error occurs at the remote node while handling the message.

@@ -29,12 +29,9 @@ public class PropertyNameService implements NameService {
   /** Loads the entries in the name service from properties files in a directory.
    * Scans the provided directory looking for files named *.properties.  Creates
    * a name service entry for each file found, with the name given by the filename
-   * (e.g foo for foo.properties), and address given by the hostProp and portProp
-   * properties in the file.
+   * (e.g foo for foo.properties), and address given by the PortType argument
    * 
-   * @param hostProp  the property name for the host.  Host properties are
-   *                  parsed by {@link InetAddress#getByName}
-   * @param portProp  the property name for the port.
+   * @param portType the type of port number to read.
    */
   public PropertyNameService(PortType portType) throws IOException {
     ConfigProperties defs = ConfigProperties.getDefaults();

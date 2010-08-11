@@ -561,9 +561,6 @@ public final class Worker {
    * called by generated code. This is here to abstract away the details of
    * starting and finishing transactions.
    * 
-   * @param tid
-   *          The parent transaction for the subtransaction that will be
-   *          created.
    */
   public static <T> T runInTransactionUnauthenticated(Code<T> code) {
     TransactionManager tm = TransactionManager.getInstance();

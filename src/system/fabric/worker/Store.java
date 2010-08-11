@@ -70,7 +70,7 @@ public interface Store {
    * Notifies the store that the transaction is being Aborted.
    * 
    * @param useAuthentication
-   * @param transactionID
+   * @param tid
    *          the ID of the aborting transaction. This is assumed to specify a
    *          top-level transaction.
    */

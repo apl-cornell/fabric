@@ -69,21 +69,9 @@ package fabric.common.util;
  * @author Eric Blake (ebb9@email.byu.edu)
  * @author Tom Tromey (tromey@redhat.com)
  * @author Andrew John Hughes (gnu_andrew@member.fsf.org)
- * @see List
- * @see Set
- * @see Map
- * @see SortedSet
- * @see SortedMap
- * @see HashSet
- * @see TreeSet
- * @see ArrayList
- * @see LinkedList
- * @see Vector
- * @see Collections
- * @see Arrays
- * @see AbstractCollection
+ * @see LongSet
+ * @see LongKeyMap
  * @since 1.2
- * @status updated to 1.4
  */
 public interface LongCollection extends LongIterable
 {

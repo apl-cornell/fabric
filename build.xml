@@ -742,10 +742,15 @@ public class Version {
   <!-- System classes -->
   <target name="javadoc-system">
     <javadoc sourcepath="${system.src}"
+             overview="${system.src}/overview.html"
              destdir="${doc}/api/system"
              encoding="UTF-8">
 
       <packageset dir="${system.src}" defaultexcludes="yes" />
+
+      <group title="Worker Implementation" packages="fabric.worker*:fabric.lang:fabric.lang.security" />
+      <group title="Store Implementation"  packages="fabric.store*"  />
+      <group title="Dissemination Layer"   packages="fabric.dissemination*" />
 
     </javadoc>
   </target>

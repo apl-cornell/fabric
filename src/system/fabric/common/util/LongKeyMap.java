@@ -43,8 +43,7 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * An object that maps keys onto values. Keys cannot be duplicated. This
- * interface replaces the obsolete {@link Dictionary} abstract class.
+ * An object that maps keys onto values. Keys cannot be duplicated.
  * <p>
  *
  * The map has three collection views, which are backed by the map
@@ -72,14 +71,10 @@ import java.util.Set;
  *
  * @author Original author unknown
  * @author Eric Blake (ebb9@email.byu.edu)
- * @see HashMap
- * @see TreeMap
- * @see Hashtable
- * @see SortedMap
- * @see Collection
- * @see Set
+ * @see LongKeyHashMap
+ * @see LongCollection
+ * @see LongSet
  * @since 1.2
- * @status updated to 1.4
  */
 public interface LongKeyMap<V>
 {
@@ -128,7 +123,7 @@ public interface LongKeyMap<V>
    * not supported via this set.
    *
    * @return the set view of all mapping entries
-   * @see Map.Entry
+   * @see LongKeyMap.Entry
    */
   Set<LongKeyMap.Entry<V>> entrySet();
 
@@ -141,7 +136,7 @@ public interface LongKeyMap<V>
    *
    * @param o the object to be compared
    * @return true if the object equals this map
-   * @see Set#equals(Object)
+   * @see LongSet#equals(Object)
    */
   boolean equals(Object o);
 
@@ -154,7 +149,7 @@ public interface LongKeyMap<V>
    * @return the value associated with the key, or null if key not in map
    * @throws ClassCastException if the key is an inappropriate type
    * @throws NullPointerException if this map does not accept null keys
-   * @see #containsKey(Object)
+   * @see #containsKey(long)
    */
   V get(long key);
 
@@ -173,7 +168,7 @@ public interface LongKeyMap<V>
    *         prevents it from existing in this map
    * @throws NullPointerException if either the key or the value is null,
    *         and the map forbids null keys or values
-   * @see #containsKey(Object)
+   * @see #containsKey(long)
    */
   V put(long key, V value);
 
@@ -184,7 +179,7 @@ public interface LongKeyMap<V>
    * Object.hashCode.
    *
    * @return the hash code
-   * @see Map.Entry#hashCode()
+   * @see LongKeyMap.Entry#hashCode()
    */
   int hashCode();
 
@@ -220,7 +215,7 @@ public interface LongKeyMap<V>
    *         prevents it from existing in this map
    * @throws NullPointerException if the map forbids null keys or values, or
    *         if <code>m</code> is null.
-   * @see #put(Object, Object)
+   * @see #put(long, Object)
    */
   <T extends V> void putAll(LongKeyMap<T> m);
 
@@ -229,7 +224,7 @@ public interface LongKeyMap<V>
    * the key is not present, this returns null. Note that maps which permit
    * null values may also return null if the key was removed.
    *
-   * @param key the key to remove
+   * @param o the key to remove
    * @return the value the key mapped to, or null if not present.
    * @throws UnsupportedOperationException if deletion is unsupported
    * @throws NullPointerException if the key is null and this map doesn't
@@ -271,10 +266,9 @@ public interface LongKeyMap<V>
    *
    * @author Original author unknown
    * @author Eric Blake (ebb9@email.byu.edu)
-   * @see Map
-   * @see Map#entrySet()
+   * @see LongKeyMap
+   * @see LongKeyMap#entrySet()
    * @since 1.2
-   * @status updated to 1.4
    */
   interface Entry<V>
   {
@@ -327,9 +321,9 @@ public interface LongKeyMap<V>
      * this must be:
      * 
 <p><pre>(o instanceof Map.Entry)
-&& (getKey() == null ? ((Map.Entry) o).getKey() == null
+&amp;&amp; (getKey() == null ? ((Map.Entry) o).getKey() == null
                      : getKey().equals(((Map.Entry) o).getKey()))
-&& (getValue() == null ? ((Map.Entry) o).getValue() == null
+&amp;&amp; (getValue() == null ? ((Map.Entry) o).getValue() == null
                        : getValue().equals(((Map.Entry) o).getValue()))</pre>
      *
      * @param o the object to compare

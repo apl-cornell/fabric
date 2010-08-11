@@ -57,19 +57,15 @@ package fabric.common.util;
  * The iterators are <i>fail-fast</i>, meaning that any structural
  * modification, except for <code>remove()</code> called on the iterator
  * itself, cause the iterator to throw a
- * {@link ConcurrentModificationException} rather than exhibit
+ * <code>ConcurrentModificationException</code> rather than exhibit
  * non-deterministic behavior.
  *
  * @author Jon Zeppieri
  * @author Eric Blake (ebb9@email.byu.edu)
- * @see Collection
- * @see Set
- * @see TreeSet
- * @see Collections#synchronizedSet(Set)
- * @see HashMap
- * @see LinkedHashSet
+ * @see LongCollection
+ * @see LongSet
+ * @see LongKeyHashMap
  * @since 1.2
- * @status updated to 1.4
  */
 public class LongHashSet extends AbstractLongSet
   implements LongSet //, Cloneable, Serializable
@@ -133,8 +129,8 @@ public class LongHashSet extends AbstractLongSet
    * Adds the given Object to the set if it is not already in the Set.
    * This set permits a null element.
    *
-   * @param o the Object to add to this Set
-   * @return true if the set did not already contain o
+   * @param v the Object to add to this Set
+   * @return true if the set did not already contain v
    */
   @Override
   public boolean add(long v)
@@ -175,8 +171,8 @@ public class LongHashSet extends AbstractLongSet
   /**
    * Returns true if the supplied element is in this Set.
    *
-   * @param o the Object to look for
-   * @return true if it is in the set
+   * @param v the long to look for
+   * @return true if v is in the set
    */
   @Override
   public boolean contains(long v)
@@ -199,10 +195,9 @@ public class LongHashSet extends AbstractLongSet
    * Returns an Iterator over the elements of this Set, which visits the
    * elements in no particular order.  For this class, the Iterator allows
    * removal of elements. The iterator is fail-fast, and will throw a
-   * ConcurrentModificationException if the set is modified externally.
+   * <code>ConcurrentModificationException</code> if the set is modified externally.
    *
    * @return a set iterator
-   * @see ConcurrentModificationException
    */
   @Override
   public LongIterator iterator()
@@ -213,7 +208,7 @@ public class LongHashSet extends AbstractLongSet
   /**
    * Removes the supplied Object from this Set if it is in the Set.
    *
-   * @param o the object to remove
+   * @param v the long to remove
    * @return true if an element was removed
    */
   @Override

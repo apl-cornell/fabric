@@ -87,15 +87,9 @@ import java.util.*;
  * @author Jochen Hoenicke
  * @author Bryce McKinlay
  * @author Eric Blake (ebb9@email.byu.edu)
- * @see Object#hashCode()
- * @see Collection
- * @see Map
- * @see TreeMap
- * @see LinkedHashMap
- * @see IdentityHashMap
- * @see Hashtable
+ * @see LongCollection
+ * @see LongKeyMap
  * @since 1.2
- * @status updated to 1.4
  */
 public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
   implements LongKeyMap<V>, Cloneable, Serializable
@@ -288,8 +282,8 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
    *
    * @param key the key for which to fetch an associated value
    * @return what the key maps to, if present
-   * @see #put(Object, Object)
-   * @see #containsKey(Object)
+   * @see #put(long, Object)
+   * @see #containsKey(long)
    */
   @Override
   public V get(long key)
@@ -337,8 +331,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
    * @param key the key used to locate the value
    * @param value the value to be stored in the HashMap
    * @return the prior mapping of the key, or null if there was none
-   * @see #get(Object)
-   * @see Object#equals(Object)
+   * @see #get(long)
    */
   @Override
   public V put(long key, V value)
@@ -453,7 +446,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
    *
    * @param value the value to search for in this HashMap
    * @return true if at least one key maps to the value
-   * @see #containsKey(Object)
+   * @see #containsKey(long)
    */
   @Override
   public boolean containsValue(Object value)
@@ -604,7 +597,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
    * @return a set view of the entries
    * @see #keySet()
    * @see #values()
-   * @see Map.Entry
+   * @see LongKeyMap.Entry
    */
   @Override
   public Set<LongKeyMap.Entry<V>> entrySet()
@@ -662,7 +655,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V>
    * @param value the value
    * @param idx the index in buckets where the new Entry belongs
    * @param callRemove whether to call the removeEldestEntry method
-   * @see #put(Object, Object)
+   * @see #put(long, Object)
    */
   void addEntry(long key, V value, int idx, boolean callRemove)
   {

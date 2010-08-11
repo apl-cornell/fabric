@@ -48,11 +48,8 @@ package fabric.common.util;
  *
  * @author Original author unknown
  * @author Eric Blake (ebb9@email.byu.edu)
- * @see Collection
- * @see ListIterator
- * @see Enumeration
+ * @see LongCollection
  * @since 1.2
- * @status updated to 1.4
  */
 public interface LongIterator
 {
