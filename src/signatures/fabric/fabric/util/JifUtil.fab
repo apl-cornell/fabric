@@ -1,0 +1,7 @@
+package fabric.util;
+
+public class JifUtil {	
+	public native static int{*lbl} hashCode(label lbl, Object o); 
+	public native static String{*lbl} toString(label lbl, Object o); 
+	public native static boolean{*lbl; o2} equals(Object o1, label lbl, Object o2);
+}

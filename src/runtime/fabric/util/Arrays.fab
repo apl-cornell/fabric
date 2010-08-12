@@ -1,0 +1,176 @@
+package fabric.util;
+import fabric.lang.JifObject;
+import fabric.lang.JifWrappedObject;
+public class Arrays
+{
+  /**
+   * This class is non-instantiable.
+   */
+  private Arrays()
+  {
+  }
+  /**
+   * Returns a list "view" of the specified array. This method is intended to
+   * make it easy to use the Collections API with existing array-based APIs and
+   * programs. Changes in the list or the array show up in both places. The
+   * list does not support element addition or removal, but does permit
+   * value modification. The returned list implements both Serializable and
+   * RandomAccess.
+   *
+   * @param a the array to return a view of (<code>null</code> not permitted)
+   * @return a fixed-size list, changes to which "write through" to the array
+   * 
+   * @throws NullPointerException if <code>a</code> is <code>null</code>.
+   * @see Serializable
+   * @see RandomAccess
+   * @see Arrays.ArrayList
+   */
+  public static List[lbl] asList{*lbl}(label{*lbl} lbl, 
+		  final Object{*lbl}[]{*lbl} a) 
+		  throws (NullPointerException{*lbl})
+  {
+	  JifObject[lbl]{*lbl} native []{*lbl} arr = 
+		  new JifObject[lbl][a.length];
+	  
+	  try {
+		  for(int i=0; i < a.length ; i++)
+			  arr[i] = new JifWrappedObject[lbl](a[i]);
+	  } catch (IndexOutOfBoundsException imposs) {}
+
+	  return new Arrays$ArrayList[lbl](arr);
+  }
+  
+  public static List[lbl] asList{*lbl}(label{*lbl} lbl, 
+		  final JifObject[lbl]{*lbl} native []{*lbl} a) 
+		  throws (NullPointerException{*lbl})
+  {
+	return new Arrays$ArrayList[lbl](a);
+  }
+  
+}
+
+class Arrays$ArrayList[label L] extends AbstractList[L] {
+	
+	/**
+	 * The array we are viewing.
+	 * 
+	 * @serial the array
+	 */
+	private final JifObject[L]{L} native []{L} a;
+	
+	/**
+	 * Construct a list view of the array.
+	 * 
+	 * @param a
+	 *            the array to view
+	 * @throws NullPointerException
+	 *             if a is null
+	 */
+	Arrays$ArrayList{L}(JifObject[L]{L} native []{L} a) 
+		throws (NullPointerException{L}) {
+		// We have to explicitly check.
+		if (a == null)
+			throw new NullPointerException();
+		this.a = a;
+		super();
+	}
+	
+	/**
+	 * Returns the object at the specified index in the array.
+	 * 
+	 * @param index
+	 *            The index to retrieve an object from.
+	 * @return The object at the array index specified.
+	 */
+	
+	public JifObject[L]{L;index} get(int index):{L;index}
+		throws (IndexOutOfBoundsException{L;index}) {
+		JifObject[L] r = null;
+		try {
+			r = a[index];
+		} catch (NullPointerException imposs) {
+		} 
+		return r;
+	}
+	
+	/**
+	 * Returns the size of the array.
+	 * 
+	 * @return The size.
+	 */
+	public int{L} size() {
+		int r = 0;
+		try {
+			r = a.length;	
+		} catch (NullPointerException imposs) {}
+		return r;
+	}
+	/**
+	 * Replaces the object at the specified index with the supplied element.
+	 * 
+	 * @param index
+	 *            The index at which to place the new object.
+	 * @param element
+	 *            The new object.
+	 * @return The object replaced by this operation.
+	 */
+	public JifObject[L]{L} set{L}(int{L} index, JifObject[L]{L} element):{L} 
+		throws (IndexOutOfBoundsException{L}){
+			JifObject[L] old = null;
+			try {
+				old = a[index];
+				a[index] = element;
+			} catch (NullPointerException imposs) {}
+			return old;
+	}
+	
+	/**
+	 * Returns true if the array contains the supplied object.
+	 * 
+	 * @param o
+	 *            The object to look for.
+	 * @return True if the object was found.
+	 */
+	public boolean{L;o} contains(JifObject[L] o) {
+		return lastIndexOf(o) >= 0;
+	}
+	
+	/**
+	 * Returns the first index at which the object, o, occurs in the array.
+	 * 
+	 * @param o
+	 *            The object to search for.
+	 * @return The first relevant index.
+	 */
+	public int{L;o} indexOf(JifObject[L] o) {
+		try {
+			int size = a.length;
+			for (int i = 0; i < size; i++)
+					if (a[i].equals(o))
+						return i;
+		} catch (NullPointerException imposs) {
+		} catch (IndexOutOfBoundsException imposs) {}
+
+		return -1;
+	}
+	
+	/**
+	 * Returns the last index at which the object, o, occurs in the array.
+	 * 
+	 * @param o
+	 *            The object to search for.
+	 * @return The last relevant index.
+	 */
+	public int{L;o} lastIndexOf(JifObject[L] o) {
+		try {	
+			int i = a.length;
+			while (--i >= 0)
+				if (a[i].equals(o))
+					return i;
+		} catch (NullPointerException imposs) {
+		} catch (IndexOutOfBoundsException imposs) {}
+
+		return -1;
+	}
+
+}

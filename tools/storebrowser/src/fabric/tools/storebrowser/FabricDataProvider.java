@@ -6,6 +6,8 @@ import java.util.List;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.util.Iterator;
+import fabric.lang.JifObject;
+import fabric.lang.JifWrappedObject;
 import java.util.LinkedList;
 import java.util.Collections;
 import java.lang.reflect.Field;
@@ -33,11 +35,15 @@ public class FabricDataProvider implements DataProvider {
                     fabric.util.Map.class.isAssignableFrom(c.getDeclaringClass())) {
                                   
                   fabric.util.Map m = (fabric.util.Map)((fabric.lang.Object)obj).$getProxy();
-                  Iterator i = m.keySet().iterator();
+                  Iterator i = m.entrySet().iterator();
                   while(i.hasNext()) {
-                    fabric.lang.Object key = i.next();
-                    String keyStr = key.toString();
-                    toReturn.add(new RootObject(keyStr, m.get(key)));
+					fabric.util.MapEntry e = (fabric.util.MapEntry)i.next();
+                    String keyStr = e.getKey().toString();
+					JifObject val = e.getValue();
+					if(val instanceof JifWrappedObject)
+                    	toReturn.add(new RootObject(keyStr, ((JifWrappedObject)val).unwrap()));
+					else
+                    	toReturn.add(new RootObject(keyStr, val));
                   }
                 } else {
                   for(Field f : c.getDeclaredFields()) {
@@ -169,11 +175,16 @@ public class FabricDataProvider implements DataProvider {
 			Worker.runInSubTransaction(new fabric.worker.Worker.Code<Void>() {
 				public Void run() {
 					fabric.util.Map m = s.getRoot();
-					Iterator i = m.keySet().iterator();
+					Iterator i = m.entrySet().iterator();
 					while(i.hasNext()) {
-						fabric.lang.Object key = i.next();
-						String keyStr = key.toString();
-						rootObjects.add(new RootObject(keyStr, m.get(key)));
+						fabric.util.MapEntry e = (fabric.util.MapEntry)i.next();
+                    	String keyStr = e.getKey().toString();
+						JifObject val = e.getValue();
+						if(val instanceof JifWrappedObject)
+                    		rootObjects.add(new RootObject(keyStr, 
+								((JifWrappedObject)val).unwrap()));
+						else
+                    		rootObjects.add(new RootObject(keyStr, val));
 					}
 					return null;
 				}

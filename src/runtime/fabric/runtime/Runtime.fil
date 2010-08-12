@@ -49,11 +49,11 @@ public class Runtime {
 //    }
 
     private Label defaultOutputLabel() {
-        ConfPolicy cp = LabelUtil.readerPolicy(local, dynp, new LinkedList());
+        ConfPolicy cp = LabelUtil.readerPolicy(local, dynp, new LinkedList(get$label()));
         return LabelUtil.toLabel(cp);
     }
     private Label defaultInputLabel() {
-        IntegPolicy ip = LabelUtil.writerPolicy(local, dynp, new LinkedList());
+        IntegPolicy ip = LabelUtil.writerPolicy(local, dynp, new LinkedList(get$label()));
         return LabelUtil.toLabel(ip);
     }
 

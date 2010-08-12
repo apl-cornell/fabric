@@ -1,0 +1,536 @@
+package fabric.util;
+
+import fabric.lang.JifObject;
+import fabric.lang.JifString;
+import fabric.lang.IDComparable;
+
+public class Collections {
+
+	/**
+	 * This class is non-instantiable.
+	 */
+	private Collections() {
+	}
+
+	  /**
+	   * @return An empty Set parameterized on lbl.
+	   */
+	  public static Set[lbl] EMPTY_SET(label lbl) {
+		return new Collections$EmptySet[lbl]();
+	  }	  
+	  /**
+	   * @return An empty Iterator parameterized on lbl .
+	   */
+	  public static Iterator[lbl] EMPTY_ITERATOR(label lbl) {
+		  return new Collections$EmptyIterator[lbl]();
+	  }
+	  
+	  public static Collection[lbl] unmodifiableCollection{lbl}(label{*lbl} lbl, 
+			  Collection[lbl]{*lbl} c):{*lbl} throws (NullPointerException{c}) {
+		  return new Collections$UnmodifiableCollection[lbl](c);	
+	  }
+	
+      public static Set[lbl] unmodifiableSet{lbl}(label{*lbl} lbl, 
+    	Set[lbl]{*lbl} s):{*lbl} throws (NullPointerException{s}) {
+    		return new Collections$UnmodifiableSet[lbl](s);	
+      }
+}
+
+class Collections$EmptySet[label L] extends AbstractSet[L] {
+	/**
+	 * A private constructor adds overhead.
+	 */	
+	Collections$EmptySet() {}
+	
+	/**
+	 * The size: always 0!
+	 * 
+	 * @return 0.
+	 */
+	public int{L} size() {
+		return 0;
+	}
+
+	/**
+	 * Returns an iterator that does not iterate.
+	 * 
+	 * @return A non-iterating iterator.
+	 */
+	public Iterator[L]{L} iterator{L}() {
+		return Collections.EMPTY_ITERATOR(L);
+	}
+	/**
+	 * Any index is out of bounds.
+	 * 
+	 * @throws IndexOutOfBoundsException for any index.
+	 */
+	public JifObject[L]{L;index} get(int index):{L;index}
+    	throws (IndexOutOfBoundsException{L;index}) {
+    	throw new IndexOutOfBoundsException();
+    }
+
+    	/**
+	 * The empty set never contains anything.
+	 * 
+	 * @param o
+	 *            The object to search for.
+	 * @return <code>false</code>.
+	 */
+	public boolean{L;o} contains(JifObject[L] o) {
+		return false;
+	}
+    public boolean{L;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o) {
+    	return false;
+    }
+
+	/**
+	 * This is true only if the given collection is also empty.
+	 * 
+	 * @param c
+	 *            The collection of objects which are to be compared against the
+	 *            members of this set.
+	 * @return <code>true</code> if c is empty.
+	 */
+	public boolean{L;c} containsAll{L}(Collection[L]{L} c) 
+		throws (NullPointerException{c})
+	{
+		return c.isEmpty();
+	}
+
+	/**
+	 * Equal only if the other set is empty.
+	 * 
+	 * @param o
+	 *            The object to compare with this set.
+	 * @return <code>true</code> if o is an empty instance of <code>Set</code>.
+	 */
+	public boolean{L;o} equals(JifObject[L] o) {
+		return o instanceof Set[L] && ((Set[L]) o).isEmpty();
+	}
+
+	/**
+	 * The hashcode is always 0.
+	 * 
+	 * @return 0.
+	 */
+	public int{L} hashCode() {
+		return 0;
+	}
+
+	/**
+	 * Always succeeds with a <code>false</code> result.
+	 * 
+	 * @param o
+	 *            The object to remove.
+	 * @return <code>false</code>.
+	 */
+	public boolean{L} remove{L}(JifObject[L]{L} o)
+	{
+		return false;
+	}
+
+	/**
+	 * Always succeeds with a <code>false</code> result.
+	 * 
+	 * @param c
+	 *            The collection of objects which should all be removed from
+	 *            this set.
+	 * @return <code>false</code>.
+	 */
+    public boolean{L} removeAll{L}(Collection[L]{L} c) {
+		return false;
+	}
+
+	/**
+	 * Always succeeds with a <code>false</code> result.
+	 * 
+	 * @param c
+	 *            The collection of objects which should all be retained within
+	 *            this set.
+	 * @return <code>false</code>.
+	 */
+    public boolean{L} retainAll{L}(Collection[L]{L} c) {
+		return false;
+	}
+    public boolean{L} retainAll{L}(label lbl, Collection[lbl]{L} c) where lbl <= L 
+    {
+    	return false;
+    }
+
+	/**
+	 * The string never changes.
+	 * 
+	 * @return the string "[]".
+	 */
+	public String{L} toString() {
+		return "[]";
+	}
+} // class EmptySet
+
+class Collections$EmptyIterator[label L] implements Iterator[L] {
+
+    public boolean{L} hasNext() {
+    	return false;
+    }
+    public JifObject[L]{L} next{L}() throws (NoSuchElementException{L}) {
+    	throw new NoSuchElementException();
+    }
+    
+    public void remove{L}() throws (IllegalStateException{L}) {
+    	throw new IllegalStateException();
+    }
+}
+/**
+ * The implementation of {@link #unmodifiableCollection(Collection)}. This
+ * class name is required for compatibility with Sun's JDK serializability.
+ *
+ * @author Eric Blake (ebb9@email.byu.edu)
+ */
+class Collections$UnmodifiableCollection[label L]
+  implements Collection[L]
+{
+  /**
+   * The wrapped collection. Package visible for use by subclasses.
+   * @serial the real collection
+   */
+  final Collection[L]{L} c;
+
+  /**
+   * Wrap a given collection.
+   * @param c the collection to wrap
+   * @throws NullPointerException if c is null
+   */
+  Collections$UnmodifiableCollection{L}(Collection[L]{L} c) 
+  	throws (NullPointerException{c}) 
+  {
+    if (c == null)
+      throw new NullPointerException();
+    this.c = c;
+  }
+
+  /**
+   * Blocks the addition of elements to the underlying collection.
+   * This method always returns false.  Note this differs from the Java 
+   * equivalent, which throws UnsupportedOperation.
+   * @param o the object to add.
+   * @return Always <code>false</code>, since collection is unmodifiable.
+   */
+  public boolean{L} add{L}(JifObject[L]{L} o):{L} throws (ClassCastException{L}, 
+		  IllegalArgumentException{L})
+  {
+	  return false;
+  }
+
+  /**
+   * Blocks the addition of a collection of elements to the underlying
+   * collection. 
+   * This method always returns false.  Note this differs from the Java 
+   * equivalent, which throws UnsupportedOperation.
+   * @param c the collection to add.
+   * @return Always <code>false</code>, since collection is unmodifiable.
+   */
+  public boolean{L} addAll{L}(Collection[L]{L} c) throws (ClassCastException{L}, 
+		  IllegalArgumentException{L})
+  {
+	  return false;
+  }
+
+  /**
+   * Blocks the clearing of the underlying collection.  
+   * This method is a no-op.  Note this differs from the Java 
+   * equivalent, which throws UnsupportedOperation.
+   */
+  public void clear{L}() {}
+
+  /**
+   * Test whether the underlying collection contains a given object as one of its
+   * elements.
+   *
+   * @param o the element to look for.
+   * @return <code>true</code> if the underlying collection contains at least
+   *         one element e such that
+   *         <code>o == null ? e == null : o.equals(e)</code>.
+   */
+  public boolean{L;o} contains(JifObject[L] o)
+  {
+	try {
+		return c.contains(o);
+	} catch (NullPointerException imposs) {	}
+	return false;
+  }
+  
+  public boolean{L;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o)
+  {
+	try {
+		return c.contains(lbl, o);
+	} catch (NullPointerException imposs) {	}
+	return false;	
+  }
+  
+  /**
+   * Test whether the underlying collection contains every element in a given
+   * collection.
+   *
+   * @param c1 the collection to test for.
+   * @return <code>true</code> if for every element o in c, contains(o) would
+   *         return <code>true</code>.
+   * @throws NullPointerException if some element of c is null and the underlying
+   *   collection does not support null values.
+   * @throws NullPointerException if c itself is null.
+   */
+  public boolean{L;c1} containsAll{L}(Collection[L]{L} c1)
+  	throws (NullPointerException{c1})
+  { 
+	try {
+	  return c.containsAll(c1);
+	} catch (NullPointerException imposs) {	}
+	return false;
+  }
+
+  /**
+   * Tests whether the underlying collection is empty, that is,
+   * if size() == 0.
+   *
+   * @return <code>true</code> if this collection contains no elements.
+   */
+  public boolean{L} isEmpty()
+  {
+	try {
+		return c.isEmpty();
+	} catch (NullPointerException imposs) {	}
+	return false;
+  }
+
+  /**
+   * Obtain an Iterator over the underlying collection, which maintains
+   * its unmodifiable nature.
+   *
+   * @return an UnmodifiableIterator over the elements of the underlying
+   *         collection, in any order.
+   */
+  public Iterator[L]{L} iterator{L}()
+  {
+	  try {
+	  	return new Collections$UnmodifiableIterator(c.iterator());
+	  } catch (NullPointerException imposs) { }
+	  return null;
+  }
+
+  /**
+   * Blocks the removal of an object from the underlying collection.
+   * This method always returns false.  Note this differs from the Java 
+   * equivalent, which throws UnsupportedOperation.
+   *
+   * @param o the object to remove.
+   * @return Always <code>false</code>, since collection is unmodifiable.
+   */
+  public boolean{L} remove{L}(JifObject[L]{L} o)
+  {
+	  return false;
+  }
+
+  /**
+   * Blocks the removal of objects from the underlying collection.
+   * This method always returns false.  Note this differs from the Java 
+   * equivalent, which throws UnsupportedOperation.
+   *
+   * @param c The collection of objects to remove.
+   * @return Always <code>false</code>, since collection is unmodifiable.
+   */
+  public boolean{L} removeAll{L}(Collection[L]{L} c)
+  {
+	  return false;
+  }
+
+  /**
+   * Blocks the removal of objects from the underlying collection.
+   * This method always returns false.  Note this differs from the Java 
+   * equivalent, which throws UnsupportedOperation.
+   *
+   * @param c The collection of objects to retain.
+   * @return Always <code>false</code>, since collection is unmodifiable.
+   */
+  public boolean{L} retainAll{L}(Collection[L]{L} c)  
+  {
+	  return false;
+  }
+
+  /**
+   * Blocks the removal of objects from the underlying collection.
+   * This method always returns false.  Note this differs from the Java 
+   * equivalent, which throws UnsupportedOperation.
+   *
+   * @param c The collection of objects to retain.
+   * @return Always <code>false</code>, since collection is unmodifiable.
+   */
+  public boolean{L} retainAll{L}(label lbl, Collection[lbl]{L} c) 
+  	where lbl <= L {
+	  return false;
+  }
+
+  /**
+   * Retrieves the number of elements in the underlying collection.
+   *
+   * @return the number of elements in the collection.
+   */
+  public int{L} size()
+  {
+    try {
+    	return c.size();
+	} catch (NullPointerException imposs) {	}
+	return 0;
+  }
+
+  public JifObject[L]{L;index} get(int index):{L;index} 
+  	throws (IndexOutOfBoundsException{L;index}) {
+  	try{
+  		return c.get(index);
+  	} catch (NullPointerException imposs) {	}
+	return null;
+  }
+  	
+  public boolean{L} add{L}(String{L} o):{L} throws (ClassCastException{L}, 
+		  IllegalArgumentException{L}) {
+	return false;
+  }
+  
+  public boolean{L} remove{L}(String{L} o) {
+	return false;
+  }
+  
+  public boolean{L;o} contains{L}(String{L} o) {
+	try {
+	  return c.contains(new JifString[L]{L}(o));
+	} catch (NullPointerException imposs) {	}
+	return false;
+  }
+  
+  public boolean{L;*lbl;lbl;o} contains{*lbl}(label lbl, String{*lbl} o) {
+	JifString s = new JifString[lbl](o);
+	try {
+	  return c.contains(lbl,s);
+	} catch (NullPointerException imposs) {	}
+	return false;
+  }
+  
+  public boolean{L; other} equals(IDComparable[L] other) {
+	try {
+      return c.equals(other);
+	} catch (NullPointerException imposs) {	}
+	return false;
+  }
+
+  public boolean{L; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
+	try {
+	  return c.equals(lbl, obj);
+	} catch (NullPointerException imposs) {	}
+	return false;
+  }
+  
+  public String{L} toString() {
+	try {
+	  return c.toString();
+	} catch (NullPointerException imposs) {	}
+	return null;
+  }
+  
+  public int{L} hashCode() {
+	try {
+	  return c.hashCode();
+	} catch (NullPointerException imposs) {	}
+	return 0;
+  }
+  
+} // class UnmodifiableCollection
+
+/**
+ * The implementation of the various iterator methods in the
+ * unmodifiable classes.
+ * @author Original author: Eric Blake (ebb9@email.byu.edu)
+ * @author ported to Fabric by Owen Arden (owen@cs.cornell.edu)
+ */
+class Collections$UnmodifiableIterator[label L] implements Iterator[L]
+{
+  /**
+   * The wrapped iterator.
+   */
+  private final Iterator[L]{L} i;
+
+  /**
+   * Only trusted code creates a wrapper.
+   * @param i the wrapped iterator
+   */
+  Collections$UnmodifiableIterator(Iterator[L]{L} i) 
+  	throws (NullPointerException{L})
+  {
+	if(i == null)
+		throw new NullPointerException();
+	else
+		this.i = i;
+  }
+
+  /**
+   * Obtains the next element in the underlying collection.
+   *
+   * @return the next element in the collection.
+   * @throws NoSuchElementException if there are no more elements.
+   */
+  public JifObject[L]{L} next{L}() throws (NoSuchElementException{L})
+  {
+	JifObject[L] next = null;
+	try {
+		next = i.next();
+	} catch (NullPointerException imposs) {	}
+	return next;	
+  }
+  
+  /**
+   * Tests whether there are still elements to be retrieved from the
+   * underlying collection by <code>next()</code>.  When this method
+   * returns <code>true</code>, an exception will not be thrown on calling
+   * <code>next()</code>.
+   *
+   * @return <code>true</code> if there is at least one more element in the underlying
+   *         collection.
+   */
+  public boolean{L} hasNext()
+  {
+	try {
+	  return i.hasNext();
+	} catch (NullPointerException imposs) {	}
+	return false;
+  }
+
+  /**
+   * Blocks the removal of elements from the underlying collection by the
+   * iterator.
+   *
+   * This method is a no-op. Note this differs from the Java equivalent, 
+   * which throws UnsupportedOperation.
+   */
+  public void remove{L}() throws (IllegalStateException{L})
+  {
+	  return;
+  }
+} // class UnmodifiableIterator
+
+/**
+ * The implementation of {@link #unmodifiableSet(Set)}. This class
+ * name is required for compatibility with Sun's JDK serializability.
+ *
+ * @author Eric Blake (ebb9@email.byu.edu)
+ */
+class Collections$UnmodifiableSet[label L] extends 
+	Collections$UnmodifiableCollection[L] implements Set[L]
+{
+  /**
+   * Wrap a given set.
+   * @param s the set to wrap
+   * @throws NullPointerException if s is null
+   */
+  Collections$UnmodifiableSet{L}(Set[L]{L} s) throws (NullPointerException{s})
+  {
+    super(s);
+  }
+} // class UnmodifiableSet
+

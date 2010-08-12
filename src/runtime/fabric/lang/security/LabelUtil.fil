@@ -3,8 +3,14 @@ package fabric.lang.security;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.Policy;
+import fabric.lang.security.Principal;
 import fabric.lang.security.SecurityCache;
 import fabric.util.*;
+import fabric.lang.JifObject;
+import fabric.lang.JifWrappedObject;
+import fabric.util.JifUtil;
 
 /**
  * A Label is the runtime representation of a Jif label. A Label consists of a
@@ -186,8 +192,8 @@ public final class LabelUtil {
 //    try {
 //      enterTiming();
       if (readers == null)
-        return readerPolicy(store, owner, Collections.EMPTY_SET);
-      return readerPolicy(store, owner, Arrays.asList(readers));
+        return readerPolicy(store, owner, Collections.EMPTY_SET(lbl));
+      return readerPolicy(store, owner, Arrays.asList(lbl, readers));
 //    } finally {
 //      exitTiming();
 //    }
@@ -250,8 +256,8 @@ public final class LabelUtil {
 //    try {
 //      enterTiming();
       if (readers == null)
-        return readerPolicyLabel(store, owner, Collections.EMPTY_SET);
-      return readerPolicyLabel(store, owner, Arrays.asList(readers));
+        return readerPolicyLabel(store, owner, Collections.EMPTY_SET(lbl));
+      return readerPolicyLabel(store, owner, Arrays.asList(lbl,readers));
 //    } finally {
 //      exitTiming();
 //    }
@@ -339,9 +345,10 @@ public final class LabelUtil {
       Principal[] writers) {
 //    try {
 //      enterTiming();
+	  //XXX: check these labels
       if (writers == null)
-        return writerPolicyLabel(store, owner, Collections.EMPTY_SET);
-      return writerPolicyLabel(store, owner, Arrays.asList(writers));
+        return writerPolicyLabel(store, owner, Collections.EMPTY_SET(lbl));
+      return writerPolicyLabel(store, owner, Arrays.asList(lbl,writers));
 //    } finally {
 //      exitTiming();
 //    }
@@ -358,9 +365,10 @@ public final class LabelUtil {
       Principal[] writers) {
 //    try {
 //      enterTiming();
+	  //XXX: check these labels
       if (writers == null)
-        return writerPolicy(store, owner, Collections.EMPTY_SET);
-      return writerPolicy(store, owner, Arrays.asList(writers));
+        return writerPolicy(store, owner, Collections.EMPTY_SET(lbl));
+      return writerPolicy(store, owner, Arrays.asList(lbl, writers));
 //    } finally {
 //      exitTiming();
 //    }
@@ -549,21 +557,26 @@ public final class LabelUtil {
       java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
-      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store();
+	  Label lbl = join(p1.get$label(), p2.get$label());
+      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store(lbl);
       if (p1 instanceof JoinConfPolicy) {
         comps.addAll(((JoinConfPolicy) p1).joinComponents());
       } else {
-        comps.add(p1);
+    	JifObject _p1 = (new JifWrappedObject(p1.get$label()))
+    		.fabric$lang$JifWrappedObject$(p1);
+        comps.add(_p1);
       }
       if (p2 instanceof JoinConfPolicy) {
         comps.addAll(((JoinConfPolicy) p2).joinComponents());
       } else {
-        comps.add(p2);
+      	JifObject _p2 = (new JifWrappedObject(p2.get$label()))
+      		.fabric$lang$JifWrappedObject$(p2);
+        comps.add(_p2);
       }
       comps = simplifyJoin(store, comps, s);
 
       if (comps.size() == 1) {
-        return (ConfPolicy) comps.iterator().next();
+        return (ConfPolicy) JifUtil.unwrap(comps.iterator().next());
       }
       return new JoinConfPolicy@store(comps);
 //    } finally {
@@ -592,21 +605,26 @@ public final class LabelUtil {
   static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
-      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store();
+	  Label lbl = join(p1.get$label(), p2.get$label());
+      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store(lbl);
       if (p1 instanceof JoinIntegPolicy) {
         comps.addAll(((JoinIntegPolicy) p1).joinComponents());
       } else {
-        comps.add(p1);
+      	JifObject _p1 = (new JifWrappedObject(p1.get$label()))
+      		.fabric$lang$JifWrappedObject$(p1);
+      	comps.add(_p1);
       }
       if (p2 instanceof JoinIntegPolicy) {
         comps.addAll(((JoinIntegPolicy) p2).joinComponents());
       } else {
-        comps.add(p2);
+        JifObject _p2 = (new JifWrappedObject(p2.get$label()))
+      		.fabric$lang$JifWrappedObject$(p2);
+      	comps.add(_p2);
       }
       comps = simplifyJoin(store, comps, s);
 
       if (comps.size() == 1) {
-        return (IntegPolicy) comps.iterator().next();
+        return (IntegPolicy) JifUtil.unwrap(comps.iterator().next());
       }
       return new JoinIntegPolicy@store(comps);
 //    } finally {
@@ -636,21 +654,26 @@ public final class LabelUtil {
       java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
-      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store();
+	  Label lbl = join(p1.get$label(), p2.get$label());
+      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store(lbl);
       if (p1 instanceof MeetConfPolicy) {
         comps.addAll(((MeetConfPolicy) p1).meetComponents());
       } else {
-        comps.add(p1);
+        JifObject _p1 = (new JifWrappedObject(p1.get$label()))
+    		.fabric$lang$JifWrappedObject$(p1);
+    	comps.add(_p1);
       }
       if (p2 instanceof MeetConfPolicy) {
         comps.addAll(((MeetConfPolicy) p2).meetComponents());
       } else {
-        comps.add(p2);
+        JifObject _p2 = (new JifWrappedObject(p2.get$label()))
+    		.fabric$lang$JifWrappedObject$(p2);
+    	comps.add(_p2);
       }
       comps = simplifyMeet(store, comps, s);
 
       if (comps.size() == 1) {
-        return (ConfPolicy) comps.iterator().next();
+        return (ConfPolicy) JifUtil.unwrap(comps.iterator().next());
       }
       return new MeetConfPolicy@store(comps);
 //    } finally {
@@ -678,21 +701,26 @@ public final class LabelUtil {
   static IntegPolicy meet(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
 //    try {
 //      enterTiming();
-      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store();
+	  Label lbl = join(p1.get$label(), p2.get$label());
+      Set/* <Policy> */comps = new LinkedHashSet/* <Policy> */@store(lbl);
       if (p1 instanceof MeetIntegPolicy) {
         comps.addAll(((MeetIntegPolicy) p1).meetComponents());
       } else {
-        comps.add(p1);
+        JifObject _p1 = (new JifWrappedObject(p1.get$label()))
+    		.fabric$lang$JifWrappedObject$(p1);
+    	comps.add(_p1);
       }
       if (p2 instanceof MeetIntegPolicy) {
         comps.addAll(((MeetIntegPolicy) p2).meetComponents());
       } else {
-        comps.add(p2);
+        JifObject _p2 = (new JifWrappedObject(p2.get$label()))
+  			.fabric$lang$JifWrappedObject$(p2);
+        comps.add(_p2);
       }
       comps = simplifyMeet(store, comps, s);
 
       if (comps.size() == 1) {
-        return (IntegPolicy) comps.iterator().next();
+        return (IntegPolicy) JifUtil.unwrap(comps.iterator().next());
       }
       return new MeetIntegPolicy@store(comps);
 //    } finally {
@@ -841,14 +869,16 @@ public final class LabelUtil {
 
   private static Set/* <Policy> */simplifyJoin(Store store, Set/* <Policy> */policies,
       java.util.Set/* <DelegationPair> */dependencies) {
-    Set/* <Policy> */needed = new LinkedHashSet/* <Policy> */@store();
+	
+    Set/* <Policy> */needed = new LinkedHashSet/* <Policy> */@store(
+    		policies.jif$getfabric_util_Set_L());
     for (Iterator/* <Policy> */i = policies.iterator(); i.hasNext();) {
-      Policy ci = (Policy) i.next();
+      Policy ci = (Policy) JifUtil.unwrap(i.next());
 
       boolean subsumed = (ci == null); // null components are always subsumed.
       for (Iterator/* <Policy> */j = needed.iterator(); !subsumed
           && j.hasNext();) {
-        Policy cj = (Policy) j.next();
+        Policy cj = (Policy) JifUtil.unwrap(j.next());
         if (relabelsTo(ci, cj, dependencies)) {
           subsumed = true;
           break;
@@ -859,7 +889,11 @@ public final class LabelUtil {
         }
       }
 
-      if (!subsumed) needed.add(ci);
+      if (!subsumed) {
+    	  JifObject _ci = (new JifWrappedObject(ci.get$label()))
+    	  	.fabric$lang$JifWrappedObject$(ci);
+    	  needed.add(_ci);
+      }
     }
 
     return needed;
@@ -867,14 +901,16 @@ public final class LabelUtil {
 
   private static Set/* <Policy> */simplifyMeet(Store store, Set/* <Policy> */policies,
       java.util.Set/* <DelegationPair> */dependencies) {
-    Set/* <Policy> */needed = new LinkedHashSet/* <Policy> */@store();
+
+	Set/* <Policy> */needed = new LinkedHashSet/* <Policy> */@store(
+	   		policies.jif$getfabric_util_Set_L());
     for (Iterator/* <Policy> */i = policies.iterator(); i.hasNext();) {
-      Policy ci = (Policy) i.next();
+      Policy ci = (Policy) JifUtil.unwrap(i.next());
 
       boolean subsumed = (ci == null); // null components are always subsumed.
       for (Iterator/* <Policy> */j = needed.iterator(); !subsumed
           && j.hasNext();) {
-        Policy cj = (Policy) j.next();
+        Policy cj = (Policy) JifUtil.unwrap(j.next());
         if (relabelsTo(cj, ci, dependencies)) {
           subsumed = true;
           break;
@@ -885,7 +921,11 @@ public final class LabelUtil {
         }
       }
 
-      if (!subsumed) needed.add(ci);
+      if (!subsumed) {
+    	  JifObject _ci = (new JifWrappedObject(ci.get$label()))
+  	  		.fabric$lang$JifWrappedObject$(ci);
+    	  needed.add(_ci);
+      }
     }
 
     return needed;

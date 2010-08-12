@@ -3,6 +3,9 @@ package fabric.lang.security;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.util.*;
+import fabric.lang.JifObject;
+import fabric.lang.JifWrappedObject;
+import fabric.util.JifUtil;
 
 /**
  * Abstract class representing the join of policies. All the policies should be
@@ -15,7 +18,15 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
 
   JoinPolicy(Set policies) {
     // Copy the contents into a linked hash set so we can sign these policies.
-    components = Collections.unmodifiableSet(new LinkedHashSet(policies));
+    //components = Collections.unmodifiableSet(new LinkedHashSet(policies));
+	Label lbl = get$label();
+	components = new LinkedHashSet(lbl);
+	for(Iterator i = policies.iterator(); i.hasNext();) {
+		Object next = JifUtil.unwrap(i.next());
+		JifObject _next = (new JifWrappedObject(next.get$label()))
+    		.fabric$lang$JifWrappedObject$(next);
+		components.add(_next);
+	}
   }
 
   public Set joinComponents() {
@@ -23,14 +34,14 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
   }
 
   public boolean relabelsTo(Policy pol, java.util.Set s) {
-    if (this == pol || this.equals(pol)) return true;
+    if (this == pol || this.equals((Object)pol)) return true;
 
     java.util.Set temp = new java.util.HashSet();
     // this == c1 join ... join cn
     // this <= pol if for all Ci, Ci <= pol
     boolean sat = true;
     for (Iterator i = components.iterator(); i.hasNext();) {
-      Policy Ci = (Policy) i.next();
+      Policy Ci = (Policy) JifUtil.unwrap(i.next());
       if (!LabelUtil.relabelsTo(Ci, pol, temp)) {
         sat = false;
         break;
@@ -50,7 +61,7 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
       MeetPolicy mp = (MeetPolicy) pol;
       sat = true;
       for (Iterator i = mp.meetComponents().iterator(); i.hasNext();) {
-        Policy Di = (Policy) i.next();
+        Policy Di = (Policy) JifUtil.unwrap(i.next());
         if (!LabelUtil.relabelsTo(this, Di, temp)) {
           sat = false;
           break;
@@ -67,7 +78,7 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
       JoinPolicy jp = (JoinPolicy) pol;
       for (Iterator i = jp.joinComponents().iterator(); i.hasNext();) {
         temp.clear();
-        Policy Di = (Policy) i.next();
+        Policy Di = (Policy) JifUtil.unwrap(i.next());
         if (LabelUtil.relabelsTo(this, Di, temp)) {
           s.addAll(temp);
           return true;
@@ -93,7 +104,7 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
   public final String toString() {
     String str = "";
     for (Iterator iter = components.iterator(); iter.hasNext();) {
-      str += ((Policy) iter.next()).toString();
+      str += iter.next().toString();
       if (iter.hasNext()) str += "; ";
     }
     return str;

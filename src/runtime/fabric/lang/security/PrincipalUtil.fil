@@ -5,13 +5,17 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil;
-import fabric.util.ArrayList;
+
+import fabric.lang.JifObject;
+import fabric.lang.JifWrappedObject;
+import fabric.util.LinkedList;
 import fabric.util.Collection;
 import fabric.util.Map;
 import fabric.util.Set;
 import fabric.util.HashMap;
 import fabric.util.Iterator;
 import fabric.util.LinkedHashSet;
+import fabric.util.JifUtil;
 import java.util.HashSet;
 
 /**
@@ -250,9 +254,10 @@ public class PrincipalUtil {
         // go though each disjunct, and make sure there is a proof
         // from the disjunct to the granter
         for (Iterator iter = dp.disjuncts.iterator(); iter.hasNext();) {
-          Principal disjunct = (Principal) iter.next();
+          JifObject jobj = iter.next();  
+          Principal disjunct = (Principal)JifUtil.unwrap(jobj);
           ActsForProof pr =
-              (ActsForProof) proof.getDisjunctProofs().get(disjunct);
+              (ActsForProof) proof.getDisjunctProofs().get(jobj);
           if (!verifyProof(pr, disjunct, granter)) return false;
         }
         // we have verified a proof from each disjunct to the granter
@@ -266,10 +271,11 @@ public class PrincipalUtil {
         // go though each conjunct, and make sure there is a proof
         // from actor to the conjunct
         for (Iterator iter = cp.conjuncts.iterator(); iter.hasNext();) {
-          Principal conjunct = (Principal) iter.next();
+          JifObject jobj = iter.next();  
+          Principal conjunct = (Principal) JifUtil.unwrap(jobj);
           ActsForProof pr =
-              (ActsForProof) proof.getConjunctProofs().get(conjunct);
-          if (!verifyProof(pr, actor, conjunct)) return false;
+              (ActsForProof) proof.getConjunctProofs().get(jobj);
+          if (!verifyProof(pr, conjunct, actor)) return false;
         }
         // we have verified a proof from actor to each conjunct.
         return true;
@@ -293,7 +299,7 @@ public class PrincipalUtil {
     if (superior instanceof ConjunctivePrincipal) {
       ConjunctivePrincipal cp = (ConjunctivePrincipal) superior;
       for (Iterator iter = cp.conjuncts.iterator(); iter.hasNext();) {
-        Principal conjunct = (Principal) iter.next();
+        Principal conjunct = (Principal) JifUtil.unwrap(iter.next());
         if (equals(conjunct, granter)) return true;
       }
     }
@@ -457,9 +463,14 @@ public class PrincipalUtil {
       if (left == null || right == null) return null;
       if (actsFor(left, right)) return right;
       if (actsFor(right, left)) return left;
-      Collection/* <Principal> */c = new ArrayList/* <Principal> */@store(2);
-      c.add(left);
-      c.add(right);
+      Label lbl = LabelUtil.join(left.get$label(), right.get$label());
+      Collection/* <Principal> */c = new LinkedList/* <Principal> */@store(lbl);
+      JifObject _left = (new JifWrappedObject(left.get$label()))
+      	.fabric$lang$JifWrappedObject$(left);
+      c.add(_left);
+      JifObject _right = (new JifWrappedObject(right.get$label()))
+    	.fabric$lang$JifWrappedObject$(right);
+      c.add(_right);
       return disjunction(store, c);
 //    } finally {
 //      LabelUtil.exitTiming();
@@ -479,9 +490,14 @@ public class PrincipalUtil {
       if (right == null) return left;
       if (actsFor(left, right)) return left;
       if (actsFor(right, left)) return right;
-      Collection/* <Principal> */c = new ArrayList/* <Principal> */@store(2);
-      c.add(left);
-      c.add(right);
+      Label lbl = LabelUtil.join(left.get$label(), right.get$label());
+      Collection/* <Principal> */c = new LinkedList/* <Principal> */@store(lbl);
+      JifObject _left = (new JifWrappedObject(left.get$label()))
+      	.fabric$lang$JifWrappedObject$(left);
+      c.add(_left);
+      JifObject _right = (new JifWrappedObject(right.get$label()))
+    	.fabric$lang$JifWrappedObject$(right);
+      c.add(_right);
       return conjunction(store, c);
 //    } finally {
 //      LabelUtil.exitTiming();
@@ -502,16 +518,18 @@ public class PrincipalUtil {
       }
       final Store localStore = Worker.getWorker().getLocalStore();
       if (principals.size() == 1) {
-        Object o = principals.iterator(localStore).next();
+        Object o = JifUtil.unwrap(principals.iterator().next());
         if (o == null || o instanceof Principal) return (Principal) o;
         return topPrincipal();
       }
 
       // go through the collection of principals, and flatten them
-      Set/* <Principal> */needed = new LinkedHashSet/* <Principal> */@store();
-      for (Iterator/* <Principal> */iter = principals.iterator(localStore); iter
+      Set/* <Principal> */needed = new LinkedHashSet/* <Principal> */@store(
+    		  principals.jif$getfabric_util_Collection_L());
+      for (Iterator/* <Principal> */iter = principals.iterator(); iter
       .hasNext();) {
-        Object o = iter.next();
+        JifObject jobj = iter.next();
+        Object o = JifUtil.unwrap(jobj);
         Principal p = null;
         if (o instanceof Principal) p = (Principal) o;
         if (p == null) return p;
@@ -519,7 +537,7 @@ public class PrincipalUtil {
         if (p instanceof DisjunctivePrincipal) {
           needed.addAll(((DisjunctivePrincipal) p).disjuncts);
         } else {
-          needed.add(p);
+          needed.add(jobj);
         }
       }
       return new DisjunctivePrincipal@store(needed);
@@ -534,7 +552,7 @@ public class PrincipalUtil {
     return conjunction(store, principals);
   }
 
-  public static Principal conjunction(Store store, Collection/* <Principal> */principals) {
+  public static Principal conjunction(Store store, fabric.util.Collection/* <Principal> */principals) {
 //    try {
 //      LabelUtil.enterTiming();
       if (principals == null || principals.isEmpty()) {
@@ -542,16 +560,20 @@ public class PrincipalUtil {
       }
       final Store localStore = Worker.getWorker().getLocalStore();
       if (principals.size() == 1) {
-        Object o = principals.iterator(localStore).next();
+        Object o = JifUtil.unwrap(principals.iterator().next());
         if (o == null || o instanceof Principal) return (Principal) o;
         return bottomPrincipal();
       }
 
       // go through the collection of principals, and flatten them
-      Set/* <Principal> */needed = new LinkedHashSet/* <Principal> */@store();
-      for (Iterator/* <Principal> */iter = principals.iterator(localStore); iter
+      Set/* <Principal> */needed = 
+        new LinkedHashSet/* <Principal> */@store(principals
+    	  .jif$getfabric_util_Collection_L());
+      
+      for (Iterator/* <Principal> */iter = principals.iterator(); iter
       .hasNext();) {
-        Object o = iter.next();
+        JifObject jobj = iter.next();
+        Object o = JifUtil.unwrap(jobj);
         Principal p = null;
         if (o instanceof Principal) p = (Principal) o;
 
@@ -560,7 +582,7 @@ public class PrincipalUtil {
         if (p instanceof ConjunctivePrincipal) {
           needed.addAll(((ConjunctivePrincipal) p).conjuncts);
         } else {
-          needed.add(p);
+          needed.add(jobj);
         }
       }
       return new ConjunctivePrincipal@store(needed);

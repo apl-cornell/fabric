@@ -557,7 +557,7 @@ public abstract class ObjectDB {
             (Label) new PairLabel._Impl(store, null, confid, integ).$getProxy();
 
         fabric.util.HashMap._Impl map =
-            new fabric.util.HashMap._Impl(store, label);
+            new fabric.util.HashMap._Impl(store, label, label, label);
         map.$forceRenumber(ONumConstants.ROOT_MAP);
 
         return null;

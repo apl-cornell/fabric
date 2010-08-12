@@ -1,0 +1,18 @@
+package fabric.util;
+import fabric.lang.JifObject;
+import fabric.lang.JifString;
+import fabric.lang.Hashable;
+import fabric.lang.IDComparable;
+import fabric.lang.ToStringable;
+
+
+/**
+ * MapEntry is used to represent entries in a map. Note that it extends
+ * JifObject[K], so has codes, equality, and toString do not depend on the
+ * value at all.
+ */
+public interface MapEntry[label K, label V] extends JifObject[K] {
+        JifObject[K]{K} getKey();
+        JifObject[V]{K} getValue();
+        JifObject[V]{K} setValue{K}(JifObject[V]{K} value);
+}

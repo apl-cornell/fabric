@@ -3,6 +3,7 @@ package fabric.lang.security;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.util.Iterator;
+import fabric.util.JifUtil;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -35,7 +36,7 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
       // this <= p1 join ... join p2 if there exists a pi such that
       // this <= pi
       for (Iterator iter = jp.joinComponents().iterator(); iter.hasNext();) {
-        Policy pi = (Policy) iter.next();
+        Policy pi = (Policy) JifUtil.unwrap(iter.next());
         if (LabelUtil.relabelsTo(this, pi, s)) return true;
       }
       return false;
@@ -45,7 +46,7 @@ public class ReaderPolicy extends AbstractPolicy implements ConfPolicy {
       // this <= pi
       Set temp = new HashSet();
       for (Iterator iter = mp.meetComponents().iterator(); iter.hasNext();) {
-        Policy pi = (Policy) iter.next();
+        Policy pi = (Policy) JifUtil.unwrap(iter.next());
         if (!LabelUtil.relabelsTo(this, pi, temp)) return false;
       }
       s.addAll(temp);

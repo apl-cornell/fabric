@@ -19,6 +19,8 @@ import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
+import fabric.lang.JifObject;
+import fabric.lang.JifWrappedObject;
 import fabric.common.exceptions.UsageError;
 import java.security.GeneralSecurityException;
 
@@ -89,9 +91,11 @@ public class CodebaseTool {
     final Codebase c = tool.storeCode(rootClasses, s);
     if (c != null) {
       System.out.println("Done storing codebase");
+	  final JifWrappedObject jwo = (new JifWrappedObject._Impl(s, c.get$label(),
+		 c.get$label())).fabric$lang$JifWrappedObject$(c);
       Worker.runInSubTransaction(new Worker.Code<Void>() {
         public Void run() {
-          s.getRoot().put(fabric.lang.WrappedJavaInlineable.$wrap("latestCodebase"), c); //XXX for testing
+          s.getRoot().put("latestCodebase", jwo); //XXX for testing
           return null;
         }
       });
@@ -112,9 +116,9 @@ public class CodebaseTool {
           while (!codebasesToLoad.isEmpty()) {
             Codebase current = codebasesToLoad.remove();
             codebasesLoaded.add(current);
-            fabric.util.Iterator i = current.getClasses().keySet().iterator();
+            fabric.util.Iterator i = current.getClasses().entrySet().iterator();
             while(i.hasNext()) {
-              String className = i.next().toString();
+              String className = ((fabric.util.MapEntry)i.next()).getKey().toString();
               FClass cls = current.getClass(className);
               if(cls.getBytecode().getLength() != 0)
                 toFile(cls);
@@ -149,7 +153,7 @@ public class CodebaseTool {
         try {
           Queue<String> classesToCreate = new LinkedList<String>(rootClasses);
           Label cl = getCodebaseLabel(s);
-          fabric.util.Map/*String, Class*/ classes = (fabric.util.HashMap)new fabric.util.HashMap._Impl/*String, Class*/(s, cl).$getProxy();
+          fabric.util.Map/*String, Class*/ classes = (fabric.util.HashMap)new fabric.util.HashMap._Impl/*String, Class*/(s, cl, cl, cl).$getProxy();
           Set<FClass> toSetCodebase = new HashSet<FClass>();
           Set<String> seenClasses = new HashSet<String>();
           while (!classesToCreate.isEmpty()) {
@@ -161,8 +165,10 @@ public class CodebaseTool {
             FClass c = (FClass)new FClass._Impl(
                 s, l, currentClass, toByteArray(s, l, bytecode)).$getProxy();
 
-            System.out.println("Crseating class " + currentClass + " at " + getOid(c));
-            classes.put(fabric.lang.WrappedJavaInlineable.$wrap(currentClass), c);
+            System.out.println("Creating class " + currentClass + " at " + getOid(c));
+	        JifWrappedObject jwo = (new JifWrappedObject._Impl(s, l, l))
+	      		.fabric$lang$JifWrappedObject$(c);
+            classes.put(currentClass, jwo);
             toSetCodebase.add(c);
             if (!fileExists(filename + ".fabproperties")) {
               System.out.println(currentClass + " does not contain a .fabproperties file");
@@ -189,7 +195,10 @@ public class CodebaseTool {
                 if (depClass == null || !arrEquals(fileBytecode, depClass.getBytecode())) {
                   classesToCreate.add(dep);
                 } else {
-                  classes.put(fabric.lang.WrappedJavaInlineable.$wrap(dep), depClass);
+	              JifWrappedObject jwdep = (new JifWrappedObject._Impl(s, 
+					depClass.get$label(), depClass.get$label()))
+	      	      	.fabric$lang$JifWrappedObject$(depClass);
+                  classes.put(dep, jwdep);
                 }
               }
             }
@@ -209,6 +218,7 @@ public class CodebaseTool {
 
   /*** Utility methods below ***/
 
+/*
   private fabric.util.Map toFabMap(java.util.Map m, Store s, Label l) {
     fabric.util.Map mn = (fabric.util.Map)new fabric.util.HashMap._Impl(s, l).$getProxy();
     for(Object obj : m.keySet()) {
@@ -217,7 +227,7 @@ public class CodebaseTool {
     }
     return mn;
   }
-  
+ */ 
   private String classNameToFile(String name) {
     return name.replaceAll("\\.", File.separator) + ".class";
   }

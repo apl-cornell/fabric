@@ -2,9 +2,10 @@ package fabric.lang;
 
 import java.io.IOException;
 import java.util.Properties;
-import fabric.util.Collections;
+//import fabric.util.Collections;
 import fabric.util.HashMap;
 import fabric.util.Map;
+import fabric.util.MapEntry;
 import fabric.util.Iterator;
 
 /**
@@ -38,12 +39,19 @@ public class Codebase {
   }
   
   public Codebase(Map/*String, FClass*/ classes) {
-    this.classes = new HashMap(classes);
+    this.classes = new HashMap(classes.jif$getfabric_util_Map_K(),
+							classes.jif$getfabric_util_Map_V())
+							.fabric$util$HashMap$(classes.size());
+	for(Iterator i = classes.entrySet().iterator(); i.hasNext();) {
+		MapEntry e = (MapEntry)i.next();
+		classes.put(e.getKey(), e.getValue());
+	}
   }
   
   public Map/*String, FClass*/ getClasses() {
 	atomic {
-		return Collections.unmodifiableMap(classes);
+		//return Collections.unmodifiableMap(classes);
+		return classes;
 	}
   }
   

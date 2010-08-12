@@ -3,9 +3,13 @@ package fabric.lang.security;
 import fabric.util.Map;
 import fabric.util.HashMap;
 import fabric.util.Iterator;
+import fabric.util.MapEntry;
+import fabric.lang.JifObject;
+import fabric.lang.JifWrappedObject;
+import fabric.util.JifUtil;
+
+import fabric.lang.security.Principal;
 import java.lang.Object;
-
-
 /**
  * This is an abstract implementation of the principal interface.
  * It provides convenience methods for delgating authority to superiors.
@@ -23,12 +27,14 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     }
     
     private void jif$init() {
-      superiors = new HashMap();
-      
-    // XXX HACK Make read-only operations on principals really read-only. This
-    // creates the set view of the map's keys so that future calls to keySet()
-    // will not modify the hashmap object.
-    superiors.keySet();
+      Label lbl = get$label();
+      superiors = new HashMap(lbl,lbl);
+
+      // XXX: is this still necessary? 
+      // XXX HACK Make read-only operations on principals really read-only. This
+	  // creates the set view of the map's keys so that future calls to keySet()
+	  // will not modify the hashmap object.
+      //superiors.keySet();
     }
     
     protected AbstractPrincipal fabric$lang$security$AbstractPrincipal$(final String name) {
@@ -56,21 +62,32 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     }
 
     public void addDelegatesTo(Principal p) {
-        if (this.superiors.put(p, this) == null) {
+    	JifObject _p = (new JifWrappedObject(p.get$label()))
+    		.fabric$lang$JifWrappedObject$(p);
+    	JifObject _this = (new JifWrappedObject(get$label()))
+    		.fabric$lang$JifWrappedObject$(this);
+
+        if (this.superiors.put(_p, _this) == null) {
             PrincipalUtil.notifyNewDelegation(this, p);
         }
     }
+    
     public void removeDelegatesTo(Principal p) {
-        if (this.superiors.remove(p) != null) {
+    	JifObject _p = (new JifWrappedObject(p.get$label()))
+			.fabric$lang$JifWrappedObject$(p);
+    	
+        if (this.superiors.remove(_p) != null) {
             PrincipalUtil.notifyRevokeDelegation(this, p);
         }
     }
 
     protected boolean superiorsContains(Principal p) {
-        return this.superiors.containsKey(p);
+    	JifObject _p = (new JifWrappedObject(p.get$label()))
+			.fabric$lang$JifWrappedObject$(p);
+        return this.superiors.containsKey(_p);
     }
 
-    public boolean isAuthorized(Object authPrf, 
+    public boolean isAuthorized(java.lang.Object authPrf, 
             Closure closure,
             Label lb,
             boolean executeNow) {
@@ -79,17 +96,17 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     }
 
 
-    public ActsForProof findProofDownto(Store store, Principal q, Object searchState) {    
+    public ActsForProof findProofDownto(Store store, Principal q, java.lang.Object searchState) {    
         // don't even try! We don't have any information
         // about who we can act for.
         return null;
     }
 
-    public ActsForProof findProofUpto(Store store, Principal p, Object searchState) {
+    public ActsForProof findProofUpto(Store store, Principal p, java.lang.Object searchState) {
         LocalStore localStore = Worker.getWorker().getLocalStore();
-        Iterator i = this.superiors.keySet().iterator();
+        Iterator i = this.superiors.entrySet().iterator();
         while(i.hasNext()) {
-            Principal s = (Principal) i.next();
+            Principal s = (Principal) JifUtil.unwrap(((MapEntry)i.next()).getKey());
             ActsForProof prf = PrincipalUtil.findActsForProof(store, p, s, searchState);            
             if (prf != null) {
                 if (PrincipalUtil.actsFor(s, this)) {

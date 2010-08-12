@@ -2,6 +2,8 @@ package fabric.lang.security;
 
 import fabric.util.LinkedHashSet;
 import fabric.util.Set;
+import fabric.lang.JifObject;
+import fabric.lang.JifWrappedObject;
 
 /**
  * This code is mostly copied from Jif.
@@ -10,13 +12,16 @@ public class PrincipalSet {
   private Set set;
 
   public PrincipalSet() {
-    set = new LinkedHashSet();
+    set = new LinkedHashSet(get$label());
   }
 
   public PrincipalSet add(Principal p) {
     PrincipalSet ps = new PrincipalSet();
     ps.set.addAll(set);
-    ps.set.add(p);
+
+    JifObject _p = (new JifWrappedObject(p.get$label()))
+		.fabric$lang$JifWrappedObject$(p);
+    ps.set.add(_p);
     return ps;
   }
 

@@ -1,0 +1,21 @@
+package fabric.util;
+
+import fabric.lang.JifObject;
+import fabric.lang.JifString;
+import fabric.lang.Hashable;
+import fabric.lang.IDComparable;
+import fabric.lang.ToStringable;
+
+/**
+ * A list iterator interface for the Jif collection framework.
+ */
+public interface ListIterator[label L] extends Iterator[L] {
+    boolean{L} hasPrevious();
+    JifObject[L]{L} previous{L}():{L} throws (NoSuchElementException{L});
+    int{L} nextIndex();
+    int{L} previousIndex();
+    
+    void set{L}(JifObject[L]{L} o):{L} throws (IllegalStateException{L});
+    void add{L}(JifObject[L]{L} o):{L} 
+        throws (ClassCastException{L}, IllegalArgumentException{L});
+}

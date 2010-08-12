@@ -2,7 +2,8 @@ package fabric.lang.security;
 
 import fabric.util.Iterator;
 import fabric.util.Map;
-import java.util.Set;
+import fabric.lang.JifObject;
+import fabric.util.JifUtil;
 
 /**
  * This code is mostly copied from Jif.
@@ -20,10 +21,10 @@ public final class ToConjunctProof extends ActsForProof {
     return conjunctProofs;
   }
 
-  public void gatherDelegationDependencies(Set s) {
+  public void gatherDelegationDependencies(java.util.Set s) {
     ConjunctivePrincipal cp = (ConjunctivePrincipal) getGranter();
     for (Iterator iter = cp.conjuncts.iterator(); iter.hasNext();) {
-      Principal conjunct = (Principal) iter.next();
+      JifObject conjunct = iter.next();
       ActsForProof pr = (ActsForProof) this.getConjunctProofs().get(conjunct);
       pr.gatherDelegationDependencies(s);
     }

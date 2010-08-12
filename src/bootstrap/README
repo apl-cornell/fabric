@@ -1,3 +1,6 @@
 This directory contains skeletons of classes that are implemented in Fabric but
 are required to compile the parts of the system that is implemented in Java.
 
+Since they are necessary for bootstrapping, these skeletons are
+source-controlled.  However, with a working fabric compiler, most can be
+automatically generated using the "-bootstrap-skel" compiler flag.

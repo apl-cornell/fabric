@@ -1,0 +1,19 @@
+package fabric.util;
+import fabric.lang.JifObject;
+import fabric.lang.JifString;
+import fabric.lang.Hashable;
+import fabric.lang.IDComparable;
+import fabric.lang.ToStringable;
+
+public class LinkedHashSet[label L] extends HashSet[L] {
+
+	 public LinkedHashSet{L}(int{L} initialCapacity, float{L} loadFactor) 
+	 	throws (IllegalArgumentException{L}) {
+		 super(initialCapacity, loadFactor);
+	 }
+	  
+	 public LinkedHashSet{L}(int{L} initialCapacity) 
+	 	throws (IllegalArgumentException{L}) { 
+		 super(initialCapacity);
+	 }
+}

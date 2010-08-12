@@ -14,4 +14,6 @@ public interface FabILOptions {
   
   public boolean dumpDependencies();
 
+  public boolean createJavaSkel();
+
 }

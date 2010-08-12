@@ -77,12 +77,7 @@
 
     <signjar jar="${applet.jar}" alias="Applet" storepass="password"
 	keystore="${applet.home}/appletcert.keystore"/>
-
-    <!-- <copy file="${applet.src}/JNLP-INF/APPLICATION.jnlp"
-	 tofile="${applet.home}/applets/fabapp.jnlp" overwrite="true"/> -->
   </target>
-
-  <target name="jar-applet" depends="jar" />
 
   <!--
   ____________________________________________________________________________

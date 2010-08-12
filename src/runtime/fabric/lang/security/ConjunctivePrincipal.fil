@@ -1,8 +1,12 @@
 package fabric.lang.security;
 
+import fabric.lang.security.Principal;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.util.*;
+import fabric.lang.JifObject;
+import fabric.lang.JifWrappedObject;
+import fabric.util.JifUtil;
 
 /**
  * A conjunction of two or more (non-null) principals. This code is mostly
@@ -20,7 +24,7 @@ public final class ConjunctivePrincipal extends Principal {
   public String name() {
     StringBuffer sb = new StringBuffer@localStore();
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
-      Principal p = (Principal) iter.next();
+      Principal p = (Principal) JifUtil.unwrap(iter.next());
       sb.append(PrincipalUtil.toString(p));
       if (iter.hasNext()) sb.append("&");
     }
@@ -33,7 +37,7 @@ public final class ConjunctivePrincipal extends Principal {
       return cp.conjuncts.containsAll(this.conjuncts);
     }
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
-      Principal q = (Principal) iter.next();
+      Principal q = (Principal) JifUtil.unwrap(iter.next());
       if (!PrincipalUtil.delegatesTo(q, p)) return false;
     }
     // every conjuct delegates to p.
@@ -60,7 +64,7 @@ public final class ConjunctivePrincipal extends Principal {
   public boolean isAuthorized(java.lang.Object authPrf, Closure closure, Label lb,
       boolean executeNow) {
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
-      Principal p = (Principal) iter.next();
+      Principal p = (Principal) JifUtil.unwrap(iter.next());
       if (!p.isAuthorized(authPrf, closure, lb, executeNow)) return false;
     }
     // all conjuncts authorize the closure.
@@ -68,12 +72,18 @@ public final class ConjunctivePrincipal extends Principal {
   }
 
   public ActsForProof findProofUpto(Store store, Principal p, java.lang.Object searchState) {
-    Map proofs = new HashMap@store();
+	Label lbl = get$label();
+	Map proofs = new HashMap@store(lbl,lbl);
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
-      Principal q = (Principal) iter.next();
+      Principal q = (Principal) JifUtil.unwrap(iter.next());
       ActsForProof prf = PrincipalUtil.findActsForProof(store, p, q, searchState);
       if (prf == null) return null;
-      proofs.put(q, prf);
+
+      JifObject _q = (new JifWrappedObject(q.get$label()))
+      	.fabric$lang$JifWrappedObject$(q);
+      JifObject _prf = (new JifWrappedObject(prf.get$label()))
+    	.fabric$lang$JifWrappedObject$(prf);
+      proofs.put(_q, _prf);
     }
 
     // proofs contains a proof for every conjunct,
@@ -84,7 +94,7 @@ public final class ConjunctivePrincipal extends Principal {
 
   public ActsForProof findProofDownto(Store store, Principal q, java.lang.Object searchState) {
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
-      Principal witness = (Principal) iter.next();
+      Principal witness = (Principal) JifUtil.unwrap(iter.next());
       ActsForProof prf =
           PrincipalUtil.findActsForProof(store, witness, q, searchState);
       if (prf != null) {

@@ -1,0 +1,35 @@
+package fabric.lang;
+import fabric.util.JifUtil;
+
+public class JifWrappedObject[covariant label L] implements JifObject[L] {
+
+	final protected Object{L} obj;
+
+	public JifWrappedObject(Object{L} obj) {
+		this.obj = obj;
+	}
+
+	public Object{L} unwrap() {
+		return obj;
+	}
+
+	public int{L} hashCode() {
+		return JifUtil.hashCode(L, obj);
+	}
+	
+	public String{L} toString() {
+		return JifUtil.toString(L, obj);
+	}
+	
+	public boolean{L;o} equals(IDComparable[L] o) {
+		return JifUtil.equals(obj, L, o);
+	}
+	
+	public boolean{L; *lbl; lbl; o} 
+		equals(label lbl, IDComparable[lbl] o) {
+		if(o instanceof IDComparable[L])
+			return JifUtil.equals(obj, lbl, o);
+		else 
+			return false;
+	}
+}

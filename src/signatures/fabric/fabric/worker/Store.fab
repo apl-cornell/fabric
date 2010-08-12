@@ -7,7 +7,7 @@ public class Store {
   public native static Principal getPrincipal(); 
   
   // XXX TODO Add necessary labels here so that access to the root map is not abused
-  public native fabric.util.Map getRoot();
+  public native fabric.util.Map[{_->_;_<-_},{_->_;_<-_}] getRoot();
   public native String name();  
   
 }

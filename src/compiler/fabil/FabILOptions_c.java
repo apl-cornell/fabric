@@ -39,6 +39,11 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
   /** Whether to perform optimizations. */
   public int optLevel;
 
+  /**
+   * Whether to create a Java skeleton for each class.
+   */
+  public boolean createJavaSkel;
+
   public FabILOptions_c(ExtensionInfo extension) {
     super(extension);
     this.sigcp = null;
@@ -57,6 +62,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     this.signatureMode = false;
     this.dumpDependencies = false;
     this.optLevel = 0;
+    this.createJavaSkel = false;
   }
 
   /*
@@ -90,6 +96,9 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
         } catch (NumberFormatException e) {}
       }
       index++;
+    } else if (args[index].equals("-bootstrap-skel")) {
+      index++;
+      createJavaSkel = true;
     } else {
       return super.parseCommand(args, index, source);
     }
@@ -111,6 +120,7 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
     usageForFlag(out, "-addsigcp <path>",
         "additional path for FabIL signatures; prefixed to sigcp");
     usageForFlag(out, "-dumpdeps", "output dependencies for each class");
+    usageForFlag(out, "-bootstrap-skel", "generate java bootstrap skeletons for each class");
     usageForFlag(out, "-O", "turn optimizations on");
   }
 
@@ -157,6 +167,13 @@ public class FabILOptions_c extends polyglot.main.Options implements FabILOption
    */
   public boolean dumpDependencies() {
     return dumpDependencies;
+  }
+  /*
+   * (non-Javadoc)
+   * @see fabil.FabILOptions#createJavaSkel()
+   */
+  public boolean createJavaSkel() {
+    return createJavaSkel;
   }
 
   /* (non-Javadoc)

@@ -1,6 +1,8 @@
 package fabric.lang.security;
 
 import java.util.Set;
+import fabric.lang.JifObject;
+import fabric.lang.JifWrappedObject;
 
 /**
  * This code is mostly copied from Jif.
@@ -19,9 +21,12 @@ public final class DelegatesProof extends ActsForProof {
       return;
     }
 
-    if (getActor() instanceof ConjunctivePrincipal
-        && ((ConjunctivePrincipal) getActor()).conjuncts.contains(getGranter())) {
-      return;
+    if (getActor() instanceof ConjunctivePrincipal) {
+    	JifObject granter = 
+    		(new JifWrappedObject(getGranter().get$label())).
+    			fabric$lang$JifWrappedObject$(getGranter());
+    	if(((ConjunctivePrincipal) getActor()).conjuncts.contains(granter))
+    		return;
     }
 
     s.add(new SecurityCache.DelegationPair(getActor(), getGranter()));

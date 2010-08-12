@@ -259,7 +259,7 @@ public final class LocalStore implements Store {
                 (Principal) null);
         Label label = LabelUtil._Impl.toLabel(LocalStore.this, conf, integ);
 
-        rootMap = (Map) new HashMap._Impl(LocalStore.this, label).$getProxy();
+        rootMap = (Map) new HashMap._Impl(LocalStore.this, label, label, label).$getProxy();
         localDelegates = new HashSet<Pair<Principal, Principal>>();
 
         return null;

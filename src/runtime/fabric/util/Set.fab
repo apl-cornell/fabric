@@ -1,0 +1,15 @@
+package fabric.util;
+
+import fabric.lang.JifObject;
+import fabric.lang.JifString;
+import fabric.lang.Hashable;
+import fabric.lang.IDComparable;
+import fabric.lang.ToStringable;
+
+/**
+ * A set of JifObjects.
+ *
+ * @see jif.util.Collection
+ */
+public interface Set[label L] extends Collection[L] {
+}

@@ -5,7 +5,8 @@ import java.awt.*;
 import fabric.lang.security.AbstractPrincipal;
 import fabric.lang.security.IntegPolicy;
 import fabric.lang.security.LabelUtil;
-import fabric.util.ArrayList;
+import fabric.util.LinkedList;
+import fabric.util.List;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.lang.security.Label;
@@ -14,7 +15,7 @@ import fabric.applet.FabricApplet;
 
 public class Scribble extends FabricApplet {
 
-	ArrayList lines;
+	List lines;
 	Applet applet;
 
     int last_x, last_y;
@@ -29,7 +30,7 @@ public class Scribble extends FabricApplet {
 	}
 	
 	public Scribble () {
-		lines = new ArrayList(100);
+		lines = new LinkedList(get$label());
 	}
 
 	public void saveLine(int x1, int y1, int x2, int y2) {
