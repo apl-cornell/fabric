@@ -1,46 +1,86 @@
-This is a very simple web application example.
+This is the travel example.
 
-====Compiling the Sif-hello Example====
+====Compiling the Travel Example====
 
 Running 'ant examples' in the Fabric base directory will compile all examples
-including the sif-hello example.
+including the travel example.
 
-If only this sif-hello example needs to be compiled, first run 'ant libs' in the
+If only the travel example needs to be compiled, first run 'ant libs' in the
 Fabric base directory to make sure all library code is compiled. Then run 'ant'
-in the $FABRIC/exampes/sif-hello directory to compile the this example.
+in the $FABRIC/exampes/travel directory to compile the travel example.
 
-====Running the Sif-hello Example====
+====Running the Travel Example====
 
-The sif-hello example runs on one store (store0) and one worker (worker0)
-The store does not have any persistent application data.
+The Travel example runs on three stores (bank, airline and broker) and three
+workers (customer, bankweb and airlineweb). The stores have persistent 
+application data and the workers each host a web application.
 
-Follow these steps to start this web application, and check it in your browser:
+I. The following steps need to be performed to start up all the stores and
+initialize them with the right data:
 
-Step 1. Start a fresh instance of the store0
+Step 1. Start fresh instances of the broker, airline and bank stores.
 
 The following items should be on the classpath:
 
-a. $FABRIC/examples/sif-hello/classes
+a. $FABRIC/examples/travel/classes
 b. $FABRIC/src/lib/transient/classes
 c. $FABRIC/classes
 d. $FABRIC/rt-classes
 e. $FABRIC/src/lib/sif/classes
 
-Running the following command will start a new store for this application:
-$ fab-store --store store0
+Run the following commands, each in a separate terminal:
 
-Step 2. Create principals for worker0
+$ fab-store --store broker
+$ fab-store --store airline
+$ fab-store --store bank
 
-Run the following command to do this:
+Step 2. Create principals for each of the three workers: customer, bankweb and
+airlineweb.
 
-$ fab --name worker0 --make-principal store0
+Run the following commands in the same terminal:
 
-Step 3. 
-Make sure $FABRIC/examples/travel/classes is on your classpath, and
+$ fab --name customer --make-principal broker
+$ fab --name bankweb --make-principal broker
+$ fab --name airlineweb --make-principal broker
+
+Step 3. Start the dummy bankweb and airlineweb workers, to be used in the 
+initialization.
+
+$ fab --name airlineweb
+$ fab --name bankweb
+
+Step 4. Use the Create.fil program to initialize state on all stores.
+
+The following item should be on the classpath:
+
+a. $FABRIC/examples/travel/classes
+
 Run the following command in any terminal:
 
-$ fab-http --name worker0 $FABRIC/examples/sif-hello/web --port 8080
+$ fab --name customer travel.Create broker bank airline bankweb airlineweb
 
-Step 4.
-Check the application at: http://localhost:8080/hello
+II. The following steps need to be performed to start up all the workers with
+corresponding web applications:
+
+Step 1. Start the customer application.
+
+$ fab-http --name customer -cp $FABRIC/examples/travel/classes $FABRIC/examples/travel/web/customer --port 8080
+
+The application can be accessed at: http://localhost:8080/customer
+
+Step 2. Start the bank application.
+
+$ fab-http --name bankweb -cp $FABRIC/examples/travel/classes $FABRIC/examples/travel/web/bank --port 8081
+
+The application can be accessed at: http://localhost:8081/bank
+
+Step 3. Start the airline application.
+
+$ fab-http --name airlineweb -cp $FABRIC/examples/travel/classes $FABRIC/examples/travel/web/airline --port 8082
+
+The application can be accessed at: http://localhost:8082/airline
+
+
+
+
 
