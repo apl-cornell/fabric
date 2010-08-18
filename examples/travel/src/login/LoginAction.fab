@@ -194,7 +194,7 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
         if (loginAct.inpUserID.inputLbl <= sessLbl && 
                 loginAct.inpPassword.inputLbl <= sessLbl &&
                 new label {*lbl; req.session←} <= loginAct.inpUserID.inputLbl &&
-                lbl <= new label {req.session:;req.session←} &&
+                lbl <= new label {req.session→;req.session←} &&
                 sessLbl <= loginAct.inpPassword.inputLbl) {
             String userID = req.getParam(loginAct.inpUserID);
             String password = req.getParam(loginAct.inpPassword);
@@ -244,8 +244,8 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
                             final principal logU = declassify(endorse(loginUser, {session→;session←}), {session←});
                             try {
                                 final AuthSessState[servP, {session←}] state_ = 
-                                    (AuthSessState[servP, {session←}])AuthSessState[servP, {session←}].declassifySS(state, session);
-                                if(state_.sessionPrincipal equiv session) {
+                                    (AuthSessState[servP, {session←}])AuthSessState[servP, {session←}].declassifySS(state, session, servP);
+                                if(state_.sessionPrincipal equiv session) { // NPE thrown here!!
                                     state_.currentUser(logU);
                                 }
                             } catch(ClassCastException e) {}
