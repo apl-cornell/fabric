@@ -62,30 +62,30 @@ public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (Ban
 
                 // Display the account balances of all accounts maintained by the bank
 
+                final label bp = new label {BankPrincipal←};
                 final label lblc = new label {BankPrincipal→CustomerPrincipal; BankPrincipal←};
                 final label lbla = new label {BankPrincipal→AirlinePrincipal; BankPrincipal←};
                 final label lblca = new label {BankPrincipal→AirlinePrincipal; BankPrincipal→AirlinePrincipal; BankPrincipal←};
-                if (lbl equiv new label {BankPrincipal←} &&
-                        lblc <= lblca && 
+                if (lbl <= bp && lblc <= lblca && 
                         lbla <= lblca && 
                         req.session actsfor BankPrincipal &&
                         airlineAccount.user equiv AirlinePrincipal &&
                         customerAccount.user equiv CustomerPrincipal) {
-                    Text msg = new Text[lbl,lbl]("The following are the accounts maintained by the Acme Bank");
+                    Text msg = new Text[bp,bp]("The following are the accounts maintained by the Acme Bank");
                     Text name1 = new Text(airlineAccount.name() + ": ");
-                    Text name2 = new Text(customerAccount.name());
-                    Text value1 = new Text[lbla,lbl](Float.toString(airlineAccount.balance()));
-                    Text value2 = new Text[lblc,lbl](Float.toString(customerAccount.balance()));
-                    NodeList[lblca, lbl] entries = NodeList.EMPTY();
-                    entries = entries==null?null:entries.append(lbl, lbl, 
-                            new TRow[lbl, lbl](new TCell[lbl, lbl](msg)));
-                    entries = entries==null?null:entries.append(new TRow[lbla, lbl](new TCell[lbla, lbl]
-                                                                                              (new NodeList[lbla,lbl](name1,value1))));
-                    entries = entries==null?null:entries.append(lblc, lbl, new TRow[lblc, lbl](new TCell[lblc, lbl]
-                                                                                                         (new NodeList[lblc,lbl](name2,value2))));
-                    m.createPage(req, "Bank Home Page", lblca, lbl,
-                            new NodeList[lblca,lbl](lbl, lbl, createBanner(lbl, "Welcome to the Acme Bank System"),
-                                    lblca, lbl, new Table[lblca, lbl](entries)));
+                    Text name2 = new Text(customerAccount.name() + ": ");
+                    Text value1 = new Text[lbla,bp](Float.toString(airlineAccount.balance()));
+                    Text value2 = new Text[lblc,bp](Float.toString(customerAccount.balance()));
+                    NodeList[lblca, bp] entries = NodeList.EMPTY();
+                    entries = entries==null?null:entries.append(bp, bp, 
+                            new TRow[bp, bp](new TCell[bp, bp](msg)));
+                    entries = entries==null?null:entries.append(new TRow[lbla, bp](new TCell[lbla, bp]
+                                                                                              (new NodeList[lbla,bp](name1,value1))));
+                    entries = entries==null?null:entries.append(lblc, bp, new TRow[lblc, bp](new TCell[lblc, bp]
+                                                                                                         (new NodeList[lblc,bp](name2,value2))));
+                    m.createPage(req, "Bank Home Page", lblca, bp,
+                            new NodeList[lblca,bp](bp, bp, createBanner(bp, "Welcome to the Acme Bank System"),
+                                    lblca, bp, new Table[lblca, bp](entries)));
                 }
             }
         }
