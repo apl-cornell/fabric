@@ -93,14 +93,12 @@
       <arg value="-j"     /> <arg value="-Xmx500M" />
       <arg value="-j"     /> <arg value="-Xss100M" />
       <arg value="-cp"    /> <arg pathref="blog.classpath" />
-      <arg value="-sx"    /> <arg value="java"/>
       <arg value="-d"     /> <arg value="${blog.home}/classes/fabil"/>
       <srcfile />
       <fileset dir="${blog.home}/src/fabil">
-	<include name="**/*.java" />
-	<exclude name="webapp/FabricUtils.java" />
+	<include name="**/*.fil" />
       </fileset>
-      <globmapper from="*.java" to="*.class" />
+      <globmapper from="*.fil" to="*.class" />
     </apply>
     <touch file="${blog.home}/classes/fabil/.timestamp" />
   </target>
@@ -108,7 +106,7 @@
   <target name="build-blog-uptodate">
     <uptodate property="fabil-blog.uptodate" 
 	targetfile="${blog.home}/classes/fabil/.timestamp">
-      <srcfiles dir="${blog.home}/src/fabil" includes="**/*.java"/>
+      <srcfiles dir="${blog.home}/src/fabil" includes="**/*.fil"/>
     </uptodate>
   </target>
 
@@ -143,6 +141,7 @@
       <arg value="${fabric.home}/bin/fab" />
       <arg value="-cp"    /> <arg pathref="blogserver.runtime.classpath" />
       <arg value="--name" /> <arg value="worker0" />
+      <arg value="--debug" />
       <arg value="webapp.blog.BlogServer" /> 
     </exec>
   </target>
