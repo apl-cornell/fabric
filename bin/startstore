@@ -35,9 +35,8 @@ if [ -n "$fresh" ]
     fi
 fi
 
-L=$FABRIC
-#export CLASSPATH="$L/customer.jar:$L/fabcoll.jar:$L/fabric.jar:$L/fabric-rt.jar:$L/java_cup.jar:$L/JFlex.jar:$L/jif.jar:$L/polyglot.jar:$L/rt.jar:$L/sif.jar:$L/je-3.3.75.jar:$L/FreePastry-2.1.jar:."
-export CLASSPATH="$L/tests/sif/examples/travel/classes:$L/tests/sif/examples/customer/web/WEB-INF/classes:$L/tests/sif/examples/airline/web/WEB-INF/classes:$L/tests/sif/examples/bank/web/WEB-INF/classes:$L/tests/jif/classes:$L/classes:$L/rt-classes:$POLYGLOT/java_cup.jar:$POLYGLOT/JFlex.jar:$JIF/classes:$POLYGLOT/classes:$JAVA_HOME/jre/lib/rt.jar:$L/tests/sif/classes:$L/lib/je-3.3.75.jar:$L/lib/FreePastry-2.1.jar:."
+SIF=$FABRIC/src/lib/sif
+export CLASSPATH="$FABRIC/examples/travel/classes:$FABRIC/src/lib/transient/classes:$FABRIC/classes:$FABRIC/rt-classes:$POLYGLOT/java_cup.jar:$POLYGLOT/JFlex.jar:$JIF/classes:$POLYGLOT/classes:$JAVA_HOME/jre/lib/rt.jar:$SIF/classes:$FABRIC/lib/je-3.3.75.jar:$FABRIC/lib/FreePastry-2.1.jar:."
 
 if [ -n "$debug" ]
     then
