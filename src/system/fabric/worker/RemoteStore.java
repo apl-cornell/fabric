@@ -68,6 +68,12 @@ public class RemoteStore extends RemoteNode implements Store {
    */
   private transient final SerializedCollector collector;
 
+  /** 
+   * The principal of the node running the store. Used in the 
+   * Fabric signature for the root map labels.
+   */
+  private NodePrincipal node;
+  
   private class SerializedCollector extends Thread {
     private final ReferenceQueue<SerializedObject> queue;
     private boolean destroyed;
@@ -104,7 +110,6 @@ public class RemoteStore extends RemoteNode implements Store {
    */
   protected RemoteStore(String name) {
     super(name, true);
-
     this.objects = new LongKeyHashMap<FabricSoftRef>();
     this.fetchLocks = new LongKeyHashMap<FetchLock>();
     this.fresh_ids = new LinkedList<Long>();
@@ -113,6 +118,8 @@ public class RemoteStore extends RemoteNode implements Store {
     this.serializedRefQueue = new ReferenceQueue<SerializedObject>();
     this.collector = new SerializedCollector();
     this.collector.start();
+    this.node = getPrincipal();
+
   }
 
   /**

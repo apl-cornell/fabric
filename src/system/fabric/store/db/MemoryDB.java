@@ -112,6 +112,7 @@ public class MemoryDB extends ObjectDB {
 
   @Override
   public SerializedObject read(long onum) {
+    System.out.println("reading " + onum);
     return objectTable.get(onum);
   }
 
@@ -159,6 +160,9 @@ public class MemoryDB extends ObjectDB {
   private PendingTransaction remove(NodePrincipal worker, long tid)
       throws AccessException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    if (submap == null)
+      throw new AccessException("Invalid transaction id(submap): " + tid);
+
     PendingTransaction tx = submap.remove(worker);
     if (submap.isEmpty()) pendingByTid.remove(tid);
 

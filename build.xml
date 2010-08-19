@@ -381,7 +381,6 @@
     <javac target="1.6" srcdir="${system.src}" destdir="${classes}"
            includeAntRuntime="false" debug="on">
       <include name="fabric/lang/**" />
-      <include name="fabric/util/**" />
       <include name="fabric/common/util/**" />
       <classpath>
         <pathelement location="${bootstrap.classes}" />

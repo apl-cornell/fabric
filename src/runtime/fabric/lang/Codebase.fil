@@ -2,7 +2,7 @@ package fabric.lang;
 
 import java.io.IOException;
 import java.util.Properties;
-//import fabric.util.Collections;
+import fabric.util.Collections;
 import fabric.util.HashMap;
 import fabric.util.Map;
 import fabric.util.MapEntry;
@@ -20,7 +20,7 @@ public class Codebase {
   private Map/*String, FClass*/ classes;
   
   FClass resolveClassName(String name) {
-    return (FClass)classes.get(name);
+    return (FClass)((JifWrappedObject)classes.get(name)).unwrap();
   }
 
   public Class toJavaClass(String name) {
@@ -44,7 +44,7 @@ public class Codebase {
 							.fabric$util$HashMap$(classes.size());
 	for(Iterator i = classes.entrySet().iterator(); i.hasNext();) {
 		MapEntry e = (MapEntry)i.next();
-		classes.put(e.getKey(), e.getValue());
+		this.classes.put(e.getKey(), e.getValue());
 	}
   }
   
@@ -56,7 +56,7 @@ public class Codebase {
   }
   
   public FClass getClass(String s) {
-	  return (FClass)classes.get(s);
+      return (FClass)((JifWrappedObject)classes.get(s)).unwrap();
   }
   
 }

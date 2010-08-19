@@ -11,6 +11,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.lang.security.Label;
 import fabric.applet.FabricApplet;
+import fabric.util.JifUtil;
 
 
 public class Scribble extends FabricApplet {
@@ -35,7 +36,8 @@ public class Scribble extends FabricApplet {
 
 	public void saveLine(int x1, int y1, int x2, int y2) {
 		atomic {
-			lines.add(new Line(x1, y1, x2, y2));
+			lines.add(new JifWrappedObject(get$label())
+						.fabric$lang$JifWrappedObject$(new Line(x1, y1, x2, y2)));
 		}
 	}
 	
@@ -66,7 +68,7 @@ public class Scribble extends FabricApplet {
 	        	Line l;
 
 		        for(int i = 0; i < c.lines.size(); i++) {
-		            l = (Line)c.lines.get(i);
+		            l = (Line)JifUtil.unwrap(c.lines.get(i));
 		            g.drawLine(l.x1 - c.offset_x, l.y1 - c.offset_y, 
 		                      l.x2 - c.offset_x, l.y2 - c.offset_y);
 		        }

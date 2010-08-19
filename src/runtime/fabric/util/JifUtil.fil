@@ -19,9 +19,9 @@ public class JifUtil {
 	}
 	
 	public static Object unwrap(JifObject jobj) {
-		if(jobj instanceof JifWrappedObject)
+		if(jobj instanceof JifWrappedObject) {
 			return ((JifWrappedObject)jobj).unwrap();
-		else 
+		} else 
 			return (Object)jobj;
 	}
 }

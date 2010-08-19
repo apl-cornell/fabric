@@ -28,7 +28,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     
     private void jif$init() {
       Label lbl = get$label();
-      superiors = new HashMap(lbl,lbl);
+      superiors = new HashMap(lbl,lbl).fabric$util$HashMap$();
 
       // XXX: is this still necessary? 
       // XXX HACK Make read-only operations on principals really read-only. This
@@ -82,6 +82,10 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     }
 
     protected boolean superiorsContains(Principal p) {
+		//XXX: Is this correct? Null principals seem to be allowed 
+		//  as the bottom principal, but aren't explicitly handled
+		//  here. --oba
+    	if(p==null) return false;
     	JifObject _p = (new JifWrappedObject(p.get$label()))
 			.fabric$lang$JifWrappedObject$(p);
         return this.superiors.containsKey(_p);
@@ -106,6 +110,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
         LocalStore localStore = Worker.getWorker().getLocalStore();
         Iterator i = this.superiors.entrySet().iterator();
         while(i.hasNext()) {
+        	//System.out.println(((MapEntry)i.next()).getKey().getClass());
             Principal s = (Principal) JifUtil.unwrap(((MapEntry)i.next()).getKey());
             ActsForProof prf = PrincipalUtil.findActsForProof(store, p, s, searchState);            
             if (prf != null) {

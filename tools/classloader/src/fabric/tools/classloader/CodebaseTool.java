@@ -91,10 +91,10 @@ public class CodebaseTool {
     final Codebase c = tool.storeCode(rootClasses, s);
     if (c != null) {
       System.out.println("Done storing codebase");
-	  final JifWrappedObject jwo = (new JifWrappedObject._Impl(s, c.get$label(),
-		 c.get$label())).fabric$lang$JifWrappedObject$(c);
       Worker.runInSubTransaction(new Worker.Code<Void>() {
         public Void run() {
+          JifWrappedObject jwo = (new JifWrappedObject._Impl(s, c.get$label(),
+              c.get$label())).fabric$lang$JifWrappedObject$(c);
           s.getRoot().put("latestCodebase", jwo); //XXX for testing
           return null;
         }
@@ -122,7 +122,7 @@ public class CodebaseTool {
               FClass cls = current.getClass(className);
               if(cls.getBytecode().getLength() != 0)
                 toFile(cls);
-              if(codebasesLoaded.contains(cls.getCodebase())) {
+              if(!codebasesLoaded.contains(cls.getCodebase())) {
                 codebasesToLoad.add(cls.getCodebase());
                 codebasesLoaded.add(current);
               }
@@ -153,7 +153,9 @@ public class CodebaseTool {
         try {
           Queue<String> classesToCreate = new LinkedList<String>(rootClasses);
           Label cl = getCodebaseLabel(s);
-          fabric.util.Map/*String, Class*/ classes = (fabric.util.HashMap)new fabric.util.HashMap._Impl/*String, Class*/(s, cl, cl, cl).$getProxy();
+          fabric.util.Map/*String, Class*/ classes = 
+            ((fabric.util.HashMap)new fabric.util.HashMap._Impl/*String, Class*/(s, cl, cl, cl))
+              .fabric$util$HashMap$();
           Set<FClass> toSetCodebase = new HashSet<FClass>();
           Set<String> seenClasses = new HashSet<String>();
           while (!classesToCreate.isEmpty()) {
@@ -208,7 +210,7 @@ public class CodebaseTool {
             c.setCodebase(codebase);
           }
           return codebase;
-        } catch(Exception ex) { 
+        } catch(Exception ex) {
           System.out.println(ex.getMessage());
           return null;
         }

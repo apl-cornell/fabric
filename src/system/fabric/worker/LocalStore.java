@@ -33,6 +33,8 @@ public final class LocalStore implements Store {
 
   private Set<Pair<Principal, Principal>> localDelegates;
 
+  public NodePrincipal node;
+  
   public synchronized boolean prepareTransaction(boolean useAuthentication,
       long tid, long commitTime, Collection<Object._Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object._Impl> writes) {
@@ -189,6 +191,7 @@ public final class LocalStore implements Store {
   }
 
   public void initialize() {
+    
     // Bootstrap labels with some proxies. Any remaining references to these
     // proxies will be resolved by the hack in readObject().
     this.emptyLabel =
@@ -197,6 +200,8 @@ public final class LocalStore implements Store {
     this.publicReadonlyLabel =
         new Label._Proxy(LocalStore.this, ONumConstants.PUBLIC_READONLY_LABEL);
 
+    this.node = getPrincipal();
+    
     Worker.runInSubTransaction(new Worker.Code<Void>() {
       @SuppressWarnings("deprecation")
       public Void run() {
@@ -259,7 +264,9 @@ public final class LocalStore implements Store {
                 (Principal) null);
         Label label = LabelUtil._Impl.toLabel(LocalStore.this, conf, integ);
 
-        rootMap = (Map) new HashMap._Impl(LocalStore.this, label, label, label).$getProxy();
+        rootMap = (Map) (new HashMap._Impl(LocalStore.this, label, label, label))
+          .fabric$util$HashMap$();
+
         localDelegates = new HashSet<Pair<Principal, Principal>>();
 
         return null;
