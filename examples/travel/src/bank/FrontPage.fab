@@ -24,7 +24,7 @@ public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (Ban
     public final void invokeImpl{*lbl}(label{*lbl} lbl,
             Request[BankPrincipal]{*lbl} req,
             Servlet[BankPrincipal]{*lbl} servlet,
-            AuthSessState[BankPrincipal, lbl]{*lbl} state,
+            AuthSessState[lbl]{*lbl} state,
             principal{*lbl} currentUser) 
             throws (ServletException{*lbl;req.session←})
             where caller(req.session),
@@ -90,20 +90,4 @@ public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (Ban
             }
         }
     }
-
-    // TODO Add Login in 3rd stage. Use the userserv library  
-    // For now, automatically make req.session actsfor BankPrincipal
-    private final void loginBank{session←}(principal{session←} session, Request[BankPrincipal]{session←} reqParam) 
-    where authority(BankPrincipal), endorse({BankPrincipal←})
-    {
-        final Request[BankPrincipal] req = endorse(reqParam, {session←} to {BankPrincipal←});
-        final DelegatingPrincipal p = (DelegatingPrincipal)BankPrincipal;
-        if (p == null) return;
-        final principal sessionLow = endorse(session, {session←} to {BankPrincipal←});
-        if (p equiv BankPrincipal) {
-            p.addDelegatesTo(sessionLow);
-        }
-
-    }
-
 }

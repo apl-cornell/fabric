@@ -4,7 +4,7 @@ import sif.servlet.SessionState;
 import sif.servlet.SessionPrincipal;
 import jif.util.*;
 
-public class AuthSessState[principal servP, covariant label T] extends SessionState[T] {
+public class AuthSessState[covariant label T] extends SessionState[T] {
     public final PrincipalWrapper[T]{T} wrapper;
     
     public AuthSessState(String{T} id, SessionPrincipal{T} session) {
@@ -39,10 +39,10 @@ public class AuthSessState[principal servP, covariant label T] extends SessionSt
     	} catch (NullPointerException e) {}
     }
     
-    public static AuthSessState[Q, {P←}]{P←} declassifySS{P←}(
-            AuthSessState[Q, {P→;P←}]{P→;P←} ss_, principal{P←} P, principal{P←} Q)
+    public static AuthSessState[{P←}]{P←} declassifySS{P←}(
+            AuthSessState[{P→;P←}]{P→;P←} ss_, principal{P←} P)
             where caller(P) {
-    	final AuthSessState[Q,{P→;P←}]{P←} ss = declassify(ss_, {P→;P←} to {P←});
+    	final AuthSessState[{P→;P←}]{P←} ss = declassify(ss_, {P→;P←} to {P←});
     	if (ss == null) return null;
         final SessionPrincipal{P←} sessionP = declassify(ss.sessionPrincipal, {P→;P←} to {P←});
         final String{P←}    sessionId = declassify(ss.sessionId, {P→;P←} to {P←});
@@ -62,7 +62,7 @@ public class AuthSessState[principal servP, covariant label T] extends SessionSt
         }
         PrincipalWrapper[{P←}]{P←} newWrapper = new PrincipalWrapper[{P←}](lbl, wrapwrap);
 
-        final AuthSessState[Q, {P←}]{P←} toReturn = new AuthSessState[Q, {P←}](
+        final AuthSessState[{P←}]{P←} toReturn = new AuthSessState[{P←}](
                 sessionP, sessionId, newWrapper);
         return toReturn;
     }
