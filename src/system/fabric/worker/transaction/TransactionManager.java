@@ -449,6 +449,9 @@ public final class TransactionManager {
           } catch (TransactionPrepareFailedException e) {
             failures.put(worker,
                 new TransactionPrepareFailedException(e.getMessage()));
+          } catch (TransactionRestartingException e) {
+            failures.put(worker, new TransactionPrepareFailedException(
+                "transaction restarting"));
           }
         }
       };
