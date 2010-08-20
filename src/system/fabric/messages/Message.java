@@ -62,11 +62,19 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
       if (in.readBoolean()) {
         try {
           // We have an error.
-          FabricException exc = (FabricException) readObject(in);
+          Exception exc = (Exception) readObject(in);
           exc.fillInStackTrace();
           Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
               "Received error response for {0} from {1}", messageType, node);
-          throw exc;
+          
+          if (exc instanceof FabricException)
+            throw (FabricException) exc;
+          
+          if (exc instanceof FabricRuntimeException)
+            throw (FabricRuntimeException) exc;
+          
+          throw new InternalError("Received unexpected result from " + node,
+              exc);
         } catch (ClassNotFoundException e) {
           throw new InternalError("Unexpected response from remote node", e);
         }
