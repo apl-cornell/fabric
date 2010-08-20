@@ -1,7 +1,6 @@
 package fabric.worker.remote;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
 
 import fabric.common.AbstractMessageHandlerThread;
 import fabric.common.AuthorizationUtil;
@@ -14,7 +13,6 @@ import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
-import fabric.net.RemoteNode;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -164,7 +162,8 @@ public class MessageHandlerThread extends
   }
 
   public PrepareTransactionMessage.Response handle(
-      PrepareTransactionMessage prepareTransactionMessage) throws ProtocolError {
+      PrepareTransactionMessage prepareTransactionMessage)
+      throws ProtocolError, TransactionPrepareFailedException {
     if (session.isDissemConnection)
       throw new ProtocolError("Message not supported.");
 
@@ -172,7 +171,7 @@ public class MessageHandlerThread extends
     Log log =
         TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
     if (log == null)
-      return new PrepareTransactionMessage.Response("No such transaction");
+      throw new TransactionPrepareFailedException("No such transaction");
 
     // Commit up to the top level.
     TransactionManager tm = TransactionManager.getInstance();
@@ -180,15 +179,13 @@ public class MessageHandlerThread extends
     while (topTid.depth > 0) topTid = topTid.parent;
     tm.associateAndSyncLog(log, topTid);
 
-    Map<RemoteNode, TransactionPrepareFailedException> failures =
-        tm.sendPrepareMessages(prepareTransactionMessage.commitTime);
+    try {
+      tm.sendPrepareMessages(prepareTransactionMessage.commitTime);
+    } finally {
+      tm.associateLog(null);
+    }
 
-    tm.associateLog(null);
-
-    if (failures.isEmpty())
-      return new PrepareTransactionMessage.Response();
-    else return new PrepareTransactionMessage.Response(
-        "Transaction prepare failed.");
+    return new PrepareTransactionMessage.Response();
   }
 
   /**

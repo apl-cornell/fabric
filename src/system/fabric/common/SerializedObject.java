@@ -20,7 +20,7 @@ import fabric.lang.Object._Impl;
  * <code>_Impl</code> objects are stored on stores in serialized form as
  * <code>SerializedObject</code>s.
  */
-public final class SerializedObject implements FastSerializable {
+public final class SerializedObject implements FastSerializable, Serializable {
   /**
    * The serialized object. Format:
    * <ul>

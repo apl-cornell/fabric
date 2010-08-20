@@ -89,22 +89,17 @@ public class MessageHandlerThread extends
    * Processes the given PREPARE request.
    */
   public PrepareTransactionMessage.Response handle(PrepareTransactionMessage msg)
-      throws ProtocolError {
+      throws ProtocolError, TransactionPrepareFailedException {
     if (session.workerIsDissem)
       throw new ProtocolError("Message not supported.");
 
     STORE_REQUEST_LOGGER.log(Level.FINER, "Handling Prepare Message, worker="
         + session.workerPrincipalName + ", tid={0}", msg.tid);
 
-    try {
-      boolean subTransactionCreated =
-          prepareTransaction(msg.tid, msg.commitTime, msg.serializedCreates,
-              msg.serializedWrites, msg.reads);
-      return new PrepareTransactionMessage.Response(subTransactionCreated);
-    } catch (TransactionPrepareFailedException e) {
-      return new PrepareTransactionMessage.Response(e.getMessage(),
-          e.versionConflicts);
-    }
+    boolean subTransactionCreated =
+      prepareTransaction(msg.tid, msg.commitTime, msg.serializedCreates,
+          msg.serializedWrites, msg.reads);
+    return new PrepareTransactionMessage.Response(subTransactionCreated);
   }
 
   /**

@@ -150,10 +150,6 @@ public class RemoteStore extends RemoteNode implements Store {
           new PrepareTransactionMessage(tid, commitTime, toCreate, reads,
               writes).send(this);
 
-      if (!response.success)
-        throw new TransactionPrepareFailedException(response.versionConflicts,
-            response.message);
-
       return response.subTransactionCreated;
     } else {
       UnauthenticatedPrepareTransactionMessage.Response response =

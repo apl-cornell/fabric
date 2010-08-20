@@ -72,10 +72,7 @@ public final class RemoteWorker extends RemoteNode {
 
   public void prepareTransaction(long tid, long commitTime)
       throws UnreachableNodeException, TransactionPrepareFailedException {
-    PrepareTransactionMessage.Response response =
-        new PrepareTransactionMessage(tid, commitTime).send(this);
-    if (!response.success)
-      throw new TransactionPrepareFailedException(response.message);
+    new PrepareTransactionMessage(tid, commitTime).send(this);
   }
 
   public void commitTransaction(long tid) throws UnreachableNodeException,
