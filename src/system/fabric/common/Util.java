@@ -2,8 +2,7 @@ package fabric.common;
 
 import static fabric.common.Logging.CLASS_HASHING_LOGGER;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.math.BigInteger;
 import java.net.URL;
 import java.security.MessageDigest;
@@ -198,6 +197,29 @@ public final class Util {
         };
       }
     };
+  }
+  
+  /**
+   * Turns an object into an array of bytes using Java serialization.
+   */
+  public static byte[] serialize(Object obj) throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(baos);
+    oos.writeObject(obj);
+    oos.flush();
+    baos.flush();
+    
+    return baos.toByteArray();
+  }
+  
+  /**
+   * Turns an array of bytes into an object using Java serialization.
+   */
+  public static Object deserialize(byte[] bytes) throws IOException,
+      ClassNotFoundException {
+    ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+    ObjectInputStream ois = new ObjectInputStream(bais);
+    return ois.readObject();
   }
 
 }
