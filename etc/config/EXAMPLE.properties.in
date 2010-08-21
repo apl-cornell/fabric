@@ -37,12 +37,10 @@
 
 
 
-# The ports for the store to listen on for authenticated and unauthenticated
-# connections.
+# The port for the store to listen on.
 # This is optional.
 
-#fabric.store.authport    = 3472
-#fabric.store.unauthport  = 3572
+#fabric.store.port        = 3472
 
 
 

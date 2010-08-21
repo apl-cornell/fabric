@@ -112,7 +112,7 @@ public class Node {
       this.os   = loadStore(props);
       this.tm   = new TransactionManager(this.os, this.privateKey);
       this.sm   = new SimpleSurrogateManager(tm);
-      this.port = props.storeAuthPort;
+      this.port = props.storePort;
     }
   }
 

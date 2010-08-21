@@ -27,8 +27,7 @@ public class ConfigProperties {
   public final String address;
 
   public final String backendClass;
-  public final int storeAuthPort;
-  public final int storeUnauthPort;
+  public final int storePort;
 
   public final String workerPrincipal;
 
@@ -90,8 +89,7 @@ public class ConfigProperties {
     this.workerPrincipal =                       removeProperty(p, "fabric.worker.principal",          null);
 
     /************************** Store  Properties *****************************/
-    this.storeAuthPort   = Integer.parseInt(     removeProperty(p, "fabric.store.authport",            "3472"));
-    this.storeUnauthPort = Integer.parseInt(     removeProperty(p, "fabric.store.unauthport",          "3472"));
+    this.storePort       = Integer.parseInt(     removeProperty(p, "fabric.store.port",                "3472"));
     this.backendClass    =                       removeProperty(p, "fabric.store.db.class",            null);
 
     //
