@@ -8,6 +8,7 @@ on top of Fabric. It is written using FabIL.
 Compiling
 ---------
 To build the example, run ant:
+
   $ ant
 
 
@@ -43,7 +44,7 @@ traversals.
 
 	$ bin/t1 fab://database/OO7
 
-     The script will execute a traversal and print out timing information.  To
+     The script will execute a traversal and print out timing information. To
      execute a traversal against a "hot" worker cache, add the "--hot" option:
 
        $ bin/t1 fab://database/OO7 --hot
