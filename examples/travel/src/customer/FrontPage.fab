@@ -57,8 +57,8 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
         }
     }
     
-    // TODO Add Login in 3rd stage. Use the userserv library  
-    // For now, automatically make req.session actsfor CustomerPrincipal
+    // Automatically make req.session actsfor CustomerPrincipal, since we are on a worker that allows this
+    // i.e. The customer worker principal acts for CustomerPrincipal
     private final void loginCustomer{session←}(principal{session←} session, Request[CustomerPrincipal]{session←} reqParam) 
     where authority(CustomerPrincipal), endorse({CustomerPrincipal←})
     {
