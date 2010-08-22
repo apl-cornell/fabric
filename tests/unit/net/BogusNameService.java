@@ -1,5 +1,7 @@
-package fabric.common.net.naming;
+package net;
 
+import fabric.common.net.naming.NameService;
+import fabric.common.net.naming.SocketAddress;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
