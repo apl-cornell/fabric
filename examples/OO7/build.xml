@@ -25,6 +25,7 @@
 
   <target name="clean" description="Removes generated files">
     <delete dir="${OO7.home}/classes"/>
+    <delete dir="${OO7.home}/var"/>
   </target>
 
   <target name="clobber" depends="clean" />
@@ -55,7 +56,10 @@
       <arg value="-cp" />
       <arg value="classes" />
       <srcfile />
-      <fileset dir="src/fabil" includes="OO7/*.fil" />
+      <fileset dir="src/fabil">
+	<include name="OO7/*.fil" />
+	<include name="OO7/traversals/*.fil" />
+      </fileset>
       <globmapper from="*.fil" to="*.class" />
     </apply>
   </target>

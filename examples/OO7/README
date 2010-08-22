@@ -7,12 +7,27 @@ on top of Fabric. It is written using FabIL.
 To build:
   $ ant
 
-To create the database (e.g. small database named "OO7" with fanout=3):
-  $ cd classes/
-  $ fab --name [worker name] OO7.Benchmark fab://[store name]/OO7 SMALL 3
+Start the store that will be holding the OO7 databases:
+  $ bin/start-store
 
-To execute a traversal (e.g. T1):
-  $ cd classes/
-  $ fab --name [worker name] OO7.traversals.T1 fab://[store name]/OO7
+  This will start a store named "database".
 
+If you are starting with a fresh store, you will need to initialize the worker
+by creating its principal object on the store:
+  $ bin/init-worker
+
+To create a OO7 database:
+  $ bin/create-db fab://[store_name]/[db_name] [db_size] [fanout]
+
+  e.g. small database named "OO7" with fanout=3:
+    $ bin/create-db fab://database/OO7 small 3
+
+To execute a traversal (e.g. T1 on the database named "OO7"):
+  $ bin/t1 fab://database/OO7
+
+  Similar scripts for running T2a, T2b, T2c, and T6 traversals are also
+  available in the 'bin' directory.
+
+To clean up the store's persistent state, remove the 'var' directory:
+  $ rm -rf var
 
