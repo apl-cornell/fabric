@@ -249,6 +249,8 @@ public final class ChannelMultiplexerThread extends Thread {
         }
       } catch (IOException e) {
         throw new InternalError(e);
+      } catch (ClosedSelectorException e) {
+        if (!destroyed) throw new InternalError(e);
       }
     }
   }
