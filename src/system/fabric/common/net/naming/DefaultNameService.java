@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import fabric.common.ConfigProperties;
 import fabric.common.Resources;
 
-public class PropertyNameService implements NameService {
+public class DefaultNameService implements NameService {
 
   public enum PortType {
     WORKER { @Override int getPort(ConfigProperties p) { return p.workerPort; } },
@@ -32,7 +32,7 @@ public class PropertyNameService implements NameService {
    * 
    * @param portType the type of port number to read.
    */
-  public PropertyNameService(PortType portType) throws IOException {
+  public DefaultNameService(PortType portType) throws IOException {
     ConfigProperties defs = ConfigProperties.getDefaults();
     this.defaultAddr   = new SocketAddress(null, portType.getPort(defs));
     
@@ -52,7 +52,7 @@ public class PropertyNameService implements NameService {
         
         ConfigProperties props = new ConfigProperties(name);
         
-        String host = props.address;
+        String host = props.hostname;
         int    port = portType.getPort(props);
         
         this.entries.put(name, new SocketAddress(InetAddress.getByName(host), port));

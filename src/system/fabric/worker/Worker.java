@@ -27,8 +27,8 @@ import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
 import fabric.common.net.naming.NameService;
-import fabric.common.net.naming.PropertyNameService;
-import fabric.common.net.naming.PropertyNameService.PortType;
+import fabric.common.net.naming.DefaultNameService;
+import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.lang.security.*;
 import fabric.worker.debug.Timing;
 import fabric.worker.remote.RemoteCallManager;
@@ -164,8 +164,8 @@ public final class Worker {
     
     this.keyStore = keyStore;
     try {
-      this.storeNameService  = new PropertyNameService(PortType.STORE);
-      this.workerNameService = new PropertyNameService(PortType.WORKER);
+      this.storeNameService  = new DefaultNameService(PortType.STORE);
+      this.workerNameService = new DefaultNameService(PortType.WORKER);
     } catch(IOException e) {
       throw new InternalError("Unable to load the name service", e);
     }
