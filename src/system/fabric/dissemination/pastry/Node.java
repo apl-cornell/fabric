@@ -77,6 +77,7 @@ public class Node {
   }
 
   private void waitForReady() throws IOException {
+    System.out.println("Waiting for Pastry node to be ready. (Why does this take so long?)");
     synchronized (node) {
       while (!node.isReady() && !node.joinFailed()) {
         try {
@@ -91,6 +92,7 @@ public class Node {
             + ")");
       }
     }
+    System.out.println("Pastry node ready.");
   }
 
   private int findFreePort(int port) {
