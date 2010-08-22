@@ -30,30 +30,23 @@ public class Broker[principal bank, principal customer] extends AbstractPrincipa
             final RemoteWorker bankWorker = cl.getWorker(Config.bankStoreName);
             final RemoteWorker airlineWorker = cl.getWorker(Config.airlineStoreName);
             boolean success = false;
-            if (bankWorker actsfor bank && airlineWorker actsfor airline) {
+            if (bankWorker actsfor bank && airlineWorker actsfor airline && this actsfor airline) {
                 success = true;
                 atomic {
                     success = customerAcct.debit@bankWorker(amount) && success;   // @wBank
                     success = airlineAcct.credit@bankWorker(amount) && success;   // @wBank
-                    success = incTickets@airlineWorker() && success;  // @wAirline
+                    success = custTickets.incTickets@airlineWorker() && success;  // @wAirline
                 }
             }
 
+            // TODO Ideally when the transaction is not successful, it should be rolled back.
+            // Support for it is still in the works.
 //            if (!success) throw new PurchasingError();
             return success;
         } catch (NullPointerException e) {
 //            throw new PurchasingError();
             return false;
         }
-    }
-
-        // XXX why airline←
-    public boolean{this←} incTickets{this←}() :{airline←} {
-        if (custTickets != null && this actsfor airline) {
-            custTickets.num_tickets++;
-            return true;
-        }
-        return false;
     }
 
     Broker{this←}(Account[bank]{this←} ca,
