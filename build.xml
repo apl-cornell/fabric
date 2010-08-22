@@ -748,8 +748,13 @@ public class Version {
 
       <packageset dir="${system.src}" defaultexcludes="yes" />
 
-      <group title="Worker Implementation" packages="fabric.worker*:fabric.lang:fabric.lang.security" />
-      <group title="Store Implementation"  packages="fabric.store*"  />
+      <group title="Worker Implementation">
+        <package name="fabric.worker*" />
+        <package name="fabric.lang" />
+        <package name="fabric.lang.security" />
+      </group>
+
+      <group title="Store Implementation"  packages="fabric.store*" />
       <group title="Dissemination Layer"   packages="fabric.dissemination*" />
 
     </javadoc>
@@ -1001,10 +1006,10 @@ public class Version {
         <include name="fabric-sig.jar" />
         <include name="fabric-tools.jar" />
 
-	<!-- Compiled library jars -->
-	<include name="fabric-sif.jar" />
-	<include name="fabric-sif-sig.jar" />
-	<include name="fabric-transient.jar" />
+        <!-- Compiled library jars -->
+        <include name="fabric-sif.jar" />
+        <include name="fabric-sif-sig.jar" />
+        <include name="fabric-transient.jar" />
 
         <!-- Polyglot, Jif, and dependencies -->
         <include name="polyglot.jar" />
@@ -1017,7 +1022,7 @@ public class Version {
         <include name="FreePastry-2.1.jar" />
         <include name="je-3.3.75.jar" />
         <include name="bcprov-jdk15-145.jar" />
-	<include name="jetty/*.jar" />
+        <include name="jetty/*.jar" />
       </tarfileset>
 
       <!-- Include compiler and system sources. -->
@@ -1062,12 +1067,13 @@ public class Version {
 
       <!-- Include examples. -->
       <tarfileset dir="${examples}" prefix="fabric-${fabric.version}/examples">
-	<include name="build.xml" />
-	<include name="applet/**" />
-	<include name="blog/**" />
-	<include name="OO7/**" />
-	<include name="sif-hello/**" />
-	<include name="travel/**" />
+        <include name="build.xml" />
+        <include name="applet/**" />
+        <include name="blog/**" />
+        <include name="OO7/**" />
+        <include name="sif-hello/**" />
+        <include name="travel/**" />
+        <exclude name="travel/prototype/**" />
       </tarfileset>
 
       <!-- Include library sources. -->
