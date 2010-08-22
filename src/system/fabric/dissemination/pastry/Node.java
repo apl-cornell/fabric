@@ -77,12 +77,18 @@ public class Node {
   }
 
   private void waitForReady() throws IOException {
-    System.out.println("Waiting for Pastry node to be ready. (Why does this take so long?)");
+    int spinCount = 0;
     synchronized (node) {
       while (!node.isReady() && !node.joinFailed()) {
         try {
           node.wait(500);
         } catch (InterruptedException e) {
+        }
+        if (++spinCount == 2) {
+          System.out.println("Waiting for Pastry node to be ready. (Why does this take so long?)");
+        }
+        if (spinCount % 20 == 0) {
+          System.out.println("Still waiting...");
         }
       }
 
