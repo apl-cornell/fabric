@@ -10,9 +10,9 @@ import webapp.PageStats;
 public class Statistics {
 
   private static ThreadLocal<Statistics> instance;
-  private static Set<String> workers;
-  private static Set<String> busyWorkers;
-  private static boolean workerError;
+  private static Set<String> clients;
+  private static Set<String> busyClients;
+  private static boolean clientError;
 
   private Set<Object> updates;
   private Set<Object> reads;
@@ -24,9 +24,9 @@ public class Statistics {
       instance = new ThreadLocal<Statistics>();
     Statistics s = instance.get();
     if (s == null) {
-      busyWorkers = new HashSet<String>();
-      workers = new HashSet<String>();
-      workerError = false;
+      busyClients = new HashSet<String>();
+      clients = new HashSet<String>();
+      clientError = false;
       s = new Statistics();
       instance.set(s);
     }
@@ -61,16 +61,16 @@ public class Statistics {
     currentPage.numTransactions++;
   }
 
-  public static void addWorker(String workerHost) {
-    workers.add(workerHost);
+  public static void addClient(String clientHost) {
+    clients.add(clientHost);
   }
 
-  public static void removeWorker(String workerHost) {
-    workers.remove(workerHost);
+  public static void removeClient(String clientHost) {
+    clients.remove(clientHost);
   }
 
-  public static Collection<String> getWorkers() {
-    return Collections.unmodifiableCollection(workers);
+  public static Collection<String> getClients() {
+    return Collections.unmodifiableCollection(clients);
   }
 
   public void doneApp() {
@@ -88,32 +88,32 @@ public class Statistics {
     return currentPage;
   }
 
-  public static void setWorkerDone(String worker) {
-    busyWorkers.remove(worker);
+  public static void setClientDone(String client) {
+    busyClients.remove(client);
   }
 
-  public static void setBusyWorker(String worker) {
-    busyWorkers.add(worker);
+  public static void setBusyClient(String client) {
+    busyClients.add(client);
   }
 
-  public static Collection<String> getBusyWorkers() {
-    return Collections.unmodifiableCollection(busyWorkers);
+  public static Collection<String> getBusyClients() {
+    return Collections.unmodifiableCollection(busyClients);
   }
 
-  public static void removeAllBusyWorkers() {
-    busyWorkers.clear();
+  public static void removeAllBusyClients() {
+    busyClients.clear();
   }
 
-  public static void setWorkerError() {
-    workerError = true;
-    removeAllBusyWorkers();
+  public static void setClientError() {
+    clientError = true;
+    removeAllBusyClients();
   }
 
-  public static void unsetWorkerError() {
-    workerError = false;
+  public static void unsetClientError() {
+    clientError = false;
   }
 
-  public static boolean getWorkerError() {
-    return workerError;
+  public static boolean getClientError() {
+    return clientError;
   }
 }

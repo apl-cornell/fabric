@@ -1,4 +1,4 @@
-package webapp.worker;
+package webapp.client;
 
 import java.io.IOException;
 
@@ -10,14 +10,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import webapp.Action;
 
-public class WorkerServlet extends HttpServlet {
+public class ClientServlet extends HttpServlet {
 
   private static final long serialVersionUID = 1L;
 
-  private Worker worker;
+  private Client client;
 
-  public WorkerServlet() {
-    worker = new Worker("");
+  public ClientServlet() {
+    client = new Client("");
   }
 
   @Override
@@ -30,19 +30,19 @@ public class WorkerServlet extends HttpServlet {
 
     } else if (action.equals("sethost")) {
       String host = request.getParameter("host");
-      if (!worker.setHost(host)) {
+      if (!client.setHost(host)) {
         request.setAttribute("error", "Could not connect to host");
       }
     } else if (action.equals("clearhost")) {
-      worker.setHost(null);
+      client.setHost(null);
     } else if (action.equals("start")) {
-      worker.startAction(Action.valueOf(request.getParameter("daction")),
+      client.startAction(Action.valueOf(request.getParameter("daction")),
           Integer.parseInt(request.getParameter("requests")));
     }
 
-    request.setAttribute("median", worker.getMedian());
-    request.setAttribute("worker", worker);
-    showJsp(request, response, "/jsp/worker.jsp");
+    request.setAttribute("median", client.getMedian());
+    request.setAttribute("client", client);
+    showJsp(request, response, "/jsp/client.jsp");
   }
 
   private void showJsp(HttpServletRequest request,

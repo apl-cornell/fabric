@@ -55,7 +55,7 @@
   -->
 
   <!-- Main target for compiling the webapp. -->
-  <target name="build" depends="build-blog, build-worker"
+  <target name="build" depends="build-blog, build-client"
       description="Builds the Fabric blog webapp" />
 
   <target name="build-all" depends="build" />
@@ -66,7 +66,7 @@
     Compilation helper targets.
   -->
 
-  <target name="build-worker" depends="setup-dirs">
+  <target name="build-client" depends="setup-dirs">
     <javac srcdir="${blog.home}/src/java" destdir="${blog.home}/classes/java"
 	includeAntRuntime="false">
       <classpath refid="blog.classpath" />
@@ -128,9 +128,9 @@
   ****************************************************************************
   -->
 
-  <target name="run-worker" depends="build-worker"
+  <target name="run-client" depends="build-client"
       description="Runs a web client that stress tests the blog">
-    <java fork="true" classname="webapp.worker.WorkerServer">
+    <java fork="true" classname="webapp.client.ClientServer">
       <classpath refid="blog.runtime.classpath" />
     </java>
   </target>

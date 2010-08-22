@@ -1,4 +1,4 @@
-package webapp.worker;
+package webapp.client;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -13,7 +13,7 @@ import webapp.Action;
 import webapp.PageLoader;
 import webapp.PageStats;
 
-public class Worker {
+public class Client {
 
   public enum State {
     Idle, InProgress, Error
@@ -27,7 +27,7 @@ public class Worker {
   private String error;
   private List<PageStats> pageStats;
 
-  public Worker(String name) {
+  public Client(String name) {
     this.name = name;
     state = State.Idle;
     pageStats = new LinkedList<PageStats>();
@@ -87,7 +87,7 @@ public class Worker {
       case MassUpdateTitles:
         return "/web?action=massupdate";
       case NewPost:
-        return "/web?action=createpost&title=Hello+From+Worker&content=Greetings.";
+        return "/web?action=createpost&title=Hello+From+Client&content=Greetings.";
       case NumOccurrencesComment:
         return "/web?action=numoccurrences&word=comment";
       case ReadManyPosts:
@@ -114,15 +114,15 @@ public class Worker {
             pageStats.add(p);
             requestsRemaining--;
           }
-          PageLoader.getPage(host + "/web?workeraction=done&port="
-              + WorkerServer.port);
+          PageLoader.getPage(host + "/web?clientaction=done&port="
+              + ClientServer.port);
           state = State.Idle;
         } catch (IOException ex) {
           state = State.Error;
           error = "Could not complete benchmark";
           error += "\n" + ex.getMessage();
           try {
-            PageLoader.getPage(host + "/web?workeraction=error");
+            PageLoader.getPage(host + "/web?clientaction=error");
           } catch (IOException ex2) {}
         }
       }
@@ -153,15 +153,15 @@ public class Worker {
   public boolean setHost(String host) {
     if (host == null && this.host != null) {
       try {
-        PageLoader.getPage(this.host + "/web?workeraction=removeme&port="
-            + WorkerServer.port);
+        PageLoader.getPage(this.host + "/web?clientaction=removeme&port="
+            + ClientServer.port);
       } catch (IOException ex) {}
       this.host = null;
       return true;
     } else {
       try {
         String res = PageLoader.getPage(host
-            + "/web?workeraction=connect&port=" + WorkerServer.port);
+            + "/web?clientaction=connect&port=" + ClientServer.port);
         if (!res.trim().equals("ok"))
           return false;
         this.host = host;
