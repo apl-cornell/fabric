@@ -1,0 +1,17 @@
+#!/bin/bash
+
+APP_HOME="$(dirname $0)/.."
+cd "${APP_HOME}"
+
+PATH="${PATH}:../../bin"
+JETTY="lib"
+
+export FABRIC_HOME="$(pwd)"
+
+CP="classes/fabil:classes/java"
+for i in "${JETTY}"/*.jar ; do
+  CP="${CP}:$i"
+done
+
+fab --debug -classpath "${CP}" --name blog-worker webapp.blog.BlogServer "$@"
+
