@@ -13,6 +13,7 @@ This directory contains the following sub-directories:
   - src: source code for the travel example, written in Fabric
   - bin: a collection of scripts for running the example
   - etc: configuration files for the example's stores and workers
+  - web: supporting files (HTML, CSS, etc.) for the webapps
 
 Compiling
 ---------
