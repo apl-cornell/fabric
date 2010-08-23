@@ -25,10 +25,12 @@
 
   <target name="clean" description="Removes generated files">
     <delete dir="${OO7.home}/classes"/>
-    <delete dir="${OO7.home}/var"/>
   </target>
 
-  <target name="clobber" depends="clean" />
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${OO7.home}/var"/>
+  </target>
 
   <!--
   ****************************************************************************
