@@ -4,6 +4,13 @@ OO7 Example Application
 This is a simple implementation of the OO7 object-oriented database benchmark
 on top of Fabric. It is written using FabIL.
 
+This directory contains the following sub-directories:
+
+  - src/fabil: source code for the FabIL implementation of OO7
+  - src/java: source code for the Java implementation of OO7
+  - bin: a collection of scripts for running the example
+  - etc: configuration files for the example's store and worker
+
 
 Compiling
 ---------
@@ -18,7 +25,7 @@ This example comes with a store named "database" for storing the OO7 databases,
 and a worker named "worker" for creating OO7 databases and running the OO7
 traversals.
 
-  0. Start in the OO7 example directory:
+  0. Begin in the OO7 example directory:
 
         $ cd $FABRIC/examples/OO7
 
