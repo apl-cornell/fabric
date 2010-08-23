@@ -14,7 +14,7 @@ This directory contains the following sub-directories:
 
 Compiling
 ---------
-To build the example, run ant:
+To build the example, run 'ant' in the OO7 example directory:
 
   $ ant
 

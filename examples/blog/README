@@ -18,7 +18,7 @@ This directory contains the following sub-directories:
 
 Compiling
 ---------
-To build the example, run ant:
+To build the example, run 'ant' in the blog example directory:
 
   $ ant
 
@@ -36,12 +36,12 @@ worker named "blog-worker" for running the web frontend.
 
 	$ bin/start-store
 
-  2. If you are starting with a frest store, you will need to initialize the
+  2. If you are starting with a fresh store, you will need to initialize the
      worker by creating its principal object on the store:
 
 	$ bin/init-worker
 
-  3. Start a blog server.  It will listen on port 8080.
+  3. Start a blog server. It will listen on port 8080.
 
 	$ bin/start-blog
 
@@ -54,7 +54,7 @@ worker named "blog-worker" for running the web frontend.
      Once the client is started, you can access it by browsing to
      http://localhost:9000/web
 
-     The client will ask to be connected to a blog.  To do so, give it the URL
+     The client will ask to be connected to a blog. To do so, give it the URL
      http://localhost:8080
 
      Once the client is connected to the blog, you can run stress tests using
@@ -63,7 +63,7 @@ worker named "blog-worker" for running the web frontend.
      see the status of any benchmark that you start.
 
      You can run multiple clients simultaneously by specifying different port
-     numbers.  The client runs on port 9000 by default.
+     numbers. The client runs on port 9000 by default.
 
         $ bin/start-client 9001
 
