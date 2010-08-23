@@ -1,0 +1,8 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+xterm -title "AirlineWeb worker" -e "${BIN_DIR}/start-airlineweb" &
+sleep 1
+xterm -title "BankWeb worker" -e "${BIN_DIR}/start-bankweb" &
+

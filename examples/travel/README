@@ -1,86 +1,102 @@
-This is the travel example.
+Airline Travel Webapp Example
+=============================
 
-====Compiling the Travel Example====
+This is a suite of web applications implemented on top of Fabric. It consists
+of three simple webapps: one for a customer to purchase airline tickets, one
+for an airline agent to examine the number of tickets sold, and one for a bank
+manager to examine account balances.
 
-Running 'ant examples' in the Fabric base directory will compile all examples
-including the travel example.
+These webapps are standalone, so they can be started without any extra programs.
 
-If only the travel example needs to be compiled, first run 'ant libs' in the
-Fabric base directory to make sure all library code is compiled. Then run 'ant'
-in the $FABRIC/exampes/travel directory to compile the travel example.
+This directory contains the following sub-directories:
 
-====Running the Travel Example====
+  - src: source code for the travel example, written in Fabric
+  - bin: a collection of scripts for running the example
+  - etc: configuration files for the example's stores and workers
 
-The Travel example runs on three stores (bank, airline and broker) and three
-workers (customer, bankweb and airlineweb). The stores have persistent 
+Compiling
+---------
+To build the example, run 'ant' in the travel example directory:
+
+  $ ant
+
+
+Using
+-----
+This example uses three stores ("bank", "airline", and "broker") and three
+workers ("customer", "bankweb" and "airlineweb"). The stores have persistent
 application data and the workers each host a web application.
 
-I. The following steps need to be performed to start up all the stores and
-initialize them with the right data:
+  0. Start in the travel example directory:
 
-Step 1. Start fresh instances of the broker, airline and bank stores.
+      $ cd $FABRIC/examples/travel
 
-The following items should be on the classpath:
+  I. Start up all the stores and, if necessary, initialize their state:
 
-a. $FABRIC/examples/travel/classes
-b. $FABRIC/src/lib/transient/classes
-c. $FABRIC/classes
-d. $FABRIC/rt-classes
-e. $FABRIC/src/lib/sif/classes
+    1. Start fresh instances of the broker, airline and bank stores. The
+       'start-all-stores' script will start each store in a separate xterm
+       window:
 
-Run the following commands, each in a separate terminal:
+	  $ bin/start-all-stores
 
-$ fab-store --store broker
-$ fab-store --store airline
-$ fab-store --store bank
+       Or, if you prefer, you can start each store individually in your
+       favourite terminal emulator:
 
-Step 2. Create principals for each of the three workers: customer, bankweb and
-airlineweb.
+	  $ bin/start-broker
+	  $ bin/start-airline
+	  $ bin/start-bank
 
-Run the following commands in the same terminal:
+       If you are starting from fresh stores, you will need to initialize the
+       workers and the application state by following the next four steps.
+       Otherwise, skip to II below.
 
-$ fab --name customer --make-principal broker
-$ fab --name bankweb --make-principal broker
-$ fab --name airlineweb --make-principal broker
+    2. Initialize the workers by creating their principal objects:
+       
+	  $ bin/init-workers
 
-Step 3. Start the dummy bankweb and airlineweb workers, to be used in the 
-initialization.
+    3. Start the dummy bankweb and airlineweb workers, to be used in the
+       initialization of the application state. The 'start-web-workers' script
+       will start each in a separate xterm window:
 
-$ fab --name airlineweb
-$ fab --name bankweb
+	  $ bin/start-web-workers
 
-Step 4. Use the Create.fil program to initialize state on all stores.
+       Or, if you prefer, you can start each worker individually in your
+       favourite terminal emulator:
 
-The following item should be on the classpath:
+	  $ bin/start-airlineweb
+	  $ bin/start-bankweb
 
-a. $FABRIC/examples/travel/classes
+    4. Use the Create.fil program to initialize state on all stores. You can do
+       this by running the 'init-state' script:
 
-Run the following command in any terminal:
+	  $ bin/init-state
 
-$ fab --name customer travel.Create broker bank airline bankweb airlineweb
+    5. Exit out of the airlineweb and bankweb workers by pressing CTRL-C in
+       their respective terminals.
 
-II. The following steps need to be performed to start up all the workers with
-corresponding web applications:
+  II. Start the three workers with their corresponding web applications. The
+      'start-webapps' script will start each in a separate xterm window:
 
-Step 1. Start the customer application.
+	  $ bin/start-all-webapps
 
-$ fab-http --name customer -cp $FABRIC/examples/travel/classes $FABRIC/examples/travel/web/customer --port 8080
+      Or, if you prefer, you can start each individually in your favourite
+      terminal emulator:
 
-The application can be accessed at: http://localhost:8080/customer
+	  $ bin/start-customer-webapp
+	  $ bin/start-bank-webapp
+	  $ bin/start-customer-webapp
 
-Step 2. Start the bank application.
+      The customer application can be accessed at:
+	http://localhost:8080/customer
 
-$ fab-http --name bankweb -cp $FABRIC/examples/travel/classes $FABRIC/examples/travel/web/bank --port 8081
+      The bank application can be accessed at:
+	http://localhost:8081/bank
 
-The application can be accessed at: http://localhost:8081/bank
+      The airline application can be accessed at:
+	http://localhost:8082/airline
 
-Step 3. Start the airline application.
+  III. You can clean up the stores' persistent state by removing 'var' from the
+       travel example directory:
 
-$ fab-http --name airlineweb -cp $FABRIC/examples/travel/classes $FABRIC/examples/travel/web/airline --port 8082
-
-The application can be accessed at: http://localhost:8082/airline
-
-
-
-
+	  $ rm -rf var
 
