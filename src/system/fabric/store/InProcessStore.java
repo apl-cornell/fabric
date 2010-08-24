@@ -26,11 +26,13 @@ import fabric.lang.Object._Impl;
  */
 public class InProcessStore extends RemoteStore {
 
-  protected TransactionManager tm;
+  protected final TransactionManager tm;
+  protected final SurrogateManager sm;
 
   public InProcessStore(String name, Store c) {
     super(name, c.publicKey);
     tm = c.tm;
+    sm = c.sm;
   }
 
   @Override
@@ -76,6 +78,9 @@ public class InProcessStore extends RemoteStore {
     PrepareRequest req =
         new PrepareRequest(tid, commitTime, serializedCreates,
             serializedWrites, reads);
+    
+    // Swizzle remote pointers.
+    sm.createSurrogates(req);
 
     return tm.prepare(Worker.getWorker().getPrincipal(), req);
   }
