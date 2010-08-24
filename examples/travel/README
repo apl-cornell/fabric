@@ -40,6 +40,10 @@ application data and the workers each host a web application.
 
 	  $ bin/start-all-stores
 
+       You can also use an xterm replacement (e.g., gnome-terminal or konsole):
+
+	  $ XTERM=gnome-terminal bin/start-all-stores
+
        Or, if you prefer, you can start each store individually in your
        favourite terminal emulator:
 
@@ -61,6 +65,10 @@ application data and the workers each host a web application.
 
 	  $ bin/start-web-workers
 
+       You can also use an xterm replacement (e.g., gnome-terminal or konsole):
+
+	  $ XTERM=gnome-terminal bin/start-web-workers
+
        Or, if you prefer, you can start each worker individually in your
        favourite terminal emulator:
 
@@ -79,6 +87,10 @@ application data and the workers each host a web application.
       'start-webapps' script will start each in a separate xterm window:
 
 	  $ bin/start-all-webapps
+
+      You can also use an xterm replacement (e.g., gnome-terminal or konsole):
+
+	  $ XTERM=gnome-terminal bin/start-all-webapps
 
       Or, if you prefer, you can start each individually in your favourite
       terminal emulator:
