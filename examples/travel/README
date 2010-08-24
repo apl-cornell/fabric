@@ -97,7 +97,7 @@ application data and the workers each host a web application.
 
 	  $ bin/start-customer-webapp
 	  $ bin/start-bank-webapp
-	  $ bin/start-customer-webapp
+	  $ bin/start-airline-webapp
 
       The customer application can be accessed at:
 	http://localhost:8080/customer
