@@ -8,17 +8,18 @@ import fabric.util.Map;
 import java.io.PrintStream;
 
 public class Main {
-	public Store{*bot} treeStore;
-	public Store{*bot} nodeStore;
+	public final Store{*bot} treeStore;
+	public final Store{*bot} nodeStore;
 	public final principal{*bot} pp;
 	public final label{*bot} lbl;
 	public static final label{*bot} bot = new label {⊥→⊥;⊤←⊤};
+	private final String{*bot} storeName = "store0";
 
 	public Main() {
-		if(worker$ != null) {
-			treeStore = worker$.getStore("store0");
-			nodeStore = worker$.getStore("store1");
-		}
+//		if(worker$ != null) {
+			treeStore = worker$.getStore(storeName);
+			nodeStore = treeStore; //worker$.getStore("store1");
+//		}
 		atomic {
 			final Store{*bot} tc = treeStore;
 			pp = new ExternalPrincipal@tc("localhost");
@@ -79,14 +80,17 @@ public class Main {
 
 		if(out == null || arg == null) return;
 		try {
-			Map root = (Map) worker$.getStore("store1").getRoot();
+			Map root = (Map) worker$.getStore(storeName).getRoot();
 			//    Random random = new Random();
 			if (arg.equals("create")) {
 				atomic {
 					//					final label plbl = new label {*lbl}@treeStore;
 					Tree[lbl] treeVar = null;
-					treeVar = new Tree[lbl]@treeStore(nodeStore);
+					if (treeStore actsfor pp) {
+						treeVar = new Tree[lbl]@treeStore(nodeStore);
+					}
 					root.put("theTree", treeVar);
+					// insert 10 nodes to the tree
 					for (int i = 0; i < 10; i++) {
 						atomic {
 							//            int toInsert = random.nextInt();
@@ -103,12 +107,15 @@ public class Main {
 				treeVar = (Tree[lbl]) root.get("theTree");
 
 				int cycle = 0;
-				while (true) {
+				while (cycle<1000) {
 					atomic {
 						//        int toFind = random.nextInt();
 						//        tree.lookup(toFind);
 
 						treeVar.lookup(cycle);
+//						if (treeVar.lookup(cycle)!=null) {
+//							out.println(" found tree node with id: "+cycle);
+//						}
 					}
 
 					if (++cycle % 10 == 0)
