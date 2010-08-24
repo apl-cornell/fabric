@@ -1,4 +1,4 @@
-This package contains ``transient'' versions various fabric libraries.  They
+This package contains ``transient'' versions various Fabric libraries.  They
 are transient in that they extend from java.lang.Object, and are thus not
 persistable.
 
