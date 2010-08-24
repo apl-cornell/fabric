@@ -1068,7 +1068,6 @@ public class Version {
       <!-- Include examples. -->
       <tarfileset dir="${examples}" prefix="fabric-${fabric.version}/examples">
         <include name="build.xml" />
-        <include name="applet/**" />
         <include name="blog/**" />
         <include name="OO7/**" />
         <include name="sif-hello/**" />
