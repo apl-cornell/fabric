@@ -4,7 +4,7 @@ APP_HOME="$(dirname $0)/.."
 cd "${APP_HOME}"
 
 PATH="${PATH}:../../bin"
-JETTY="lib"
+JETTY="../../lib/jetty"
 
 export FABRIC_HOME="$(pwd)"
 

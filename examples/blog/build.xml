@@ -21,7 +21,7 @@
 
   <path id="blog.classpath">
     <path refid="fabric.classpath"/>
-    <fileset dir="${blog.home}/lib">
+    <fileset dir="${lib}/jetty">
       <include name="*.jar"/>
     </fileset>
   </path>
