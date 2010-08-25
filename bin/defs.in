@@ -107,5 +107,7 @@ FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/FreePastry-2.1.jar"
 # Classpath for Fabric stores.
 # Jar files should always appear *after* their corresponding class directories.
 FABRIC_STORE_CP="${FABRIC_WORKER_CP}"
-FABRIC_STORE_CP="${FABRIC_STORE_CP}:${TOP}/lib/je-3.3.75.jar"
+for i in "${TOP}"/lib/je-*.jar ; do
+  FABRIC_STORE_CP="${FABRIC_STORE_CP}:$i"
+done
 
