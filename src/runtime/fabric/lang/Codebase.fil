@@ -17,10 +17,12 @@ import fabric.util.Iterator;
 public class Codebase {	
 	
   /** All of the classes in the codebase **/
-  private Map/*String, FClass*/ classes;
+  private final Map/*String, FClass*/ classes;
   
   FClass resolveClassName(String name) {
-    return (FClass)((JifWrappedObject)classes.get(name)).unwrap();
+	atomic {
+		return (FClass)((JifWrappedObject)classes.get(name)).unwrap();
+	}
   }
 
   public Class toJavaClass(String name) {
@@ -39,12 +41,14 @@ public class Codebase {
   }
   
   public Codebase(Map/*String, FClass*/ classes) {
-    this.classes = new HashMap(classes.jif$getfabric_util_Map_K(),
-							classes.jif$getfabric_util_Map_V())
-							.fabric$util$HashMap$(classes.size());
-	for(Iterator i = classes.entrySet().iterator(); i.hasNext();) {
-		MapEntry e = (MapEntry)i.next();
-		this.classes.put(e.getKey(), e.getValue());
+	atomic {
+	    this.classes = new HashMap(classes.jif$getfabric_util_Map_K(),
+								classes.jif$getfabric_util_Map_V())
+								.fabric$util$HashMap$(classes.size());
+		for(Iterator i = classes.entrySet().iterator(); i.hasNext();) {
+			MapEntry e = (MapEntry)i.next();
+			this.classes.put(e.getKey(), e.getValue());
+		}
 	}
   }
   
