@@ -21,7 +21,7 @@
 
   <path id="blog.classpath">
     <path refid="fabric.classpath"/>
-    <fileset dir="${blog.home}/lib">
+    <fileset dir="${lib}/jetty">
       <include name="*.jar"/>
     </fileset>
   </path>
@@ -46,7 +46,10 @@
     <delete dir="${blog.home}/classes"/>
   </target>
 
-  <target name="clobber" depends="clean" />
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${blog.home}/var"/>
+  </target>
 
   <!--
   ****************************************************************************
@@ -55,7 +58,7 @@
   -->
 
   <!-- Main target for compiling the webapp. -->
-  <target name="build" depends="build-blog, build-worker"
+  <target name="build" depends="build-blog, build-client"
       description="Builds the Fabric blog webapp" />
 
   <target name="build-all" depends="build" />
@@ -66,7 +69,7 @@
     Compilation helper targets.
   -->
 
-  <target name="build-worker" depends="setup-dirs">
+  <target name="build-client" depends="setup-dirs">
     <javac srcdir="${blog.home}/src/java" destdir="${blog.home}/classes/java"
 	includeAntRuntime="false">
       <classpath refid="blog.classpath" />
@@ -93,14 +96,12 @@
       <arg value="-j"     /> <arg value="-Xmx500M" />
       <arg value="-j"     /> <arg value="-Xss100M" />
       <arg value="-cp"    /> <arg pathref="blog.classpath" />
-      <arg value="-sx"    /> <arg value="java"/>
       <arg value="-d"     /> <arg value="${blog.home}/classes/fabil"/>
       <srcfile />
       <fileset dir="${blog.home}/src/fabil">
-	<include name="**/*.java" />
-	<exclude name="webapp/FabricUtils.java" />
+	<include name="**/*.fil" />
       </fileset>
-      <globmapper from="*.java" to="*.class" />
+      <globmapper from="*.fil" to="*.class" />
     </apply>
     <touch file="${blog.home}/classes/fabil/.timestamp" />
   </target>
@@ -108,7 +109,7 @@
   <target name="build-blog-uptodate">
     <uptodate property="fabil-blog.uptodate" 
 	targetfile="${blog.home}/classes/fabil/.timestamp">
-      <srcfiles dir="${blog.home}/src/fabil" includes="**/*.java"/>
+      <srcfiles dir="${blog.home}/src/fabil" includes="**/*.fil"/>
     </uptodate>
   </target>
 
@@ -130,9 +131,9 @@
   ****************************************************************************
   -->
 
-  <target name="run-worker" depends="build-worker"
+  <target name="run-client" depends="build-client"
       description="Runs a web client that stress tests the blog">
-    <java fork="true" classname="webapp.worker.WorkerServer">
+    <java fork="true" classname="webapp.client.ClientServer">
       <classpath refid="blog.runtime.classpath" />
     </java>
   </target>
@@ -142,7 +143,8 @@
     <exec executable="bash" failonerror="true">
       <arg value="${fabric.home}/bin/fab" />
       <arg value="-cp"    /> <arg pathref="blogserver.runtime.classpath" />
-      <arg value="--name" /> <arg value="worker0" />
+      <arg value="--name" /> <arg value="blog-worker" />
+      <arg value="--debug" />
       <arg value="webapp.blog.BlogServer" /> 
     </exec>
   </target>

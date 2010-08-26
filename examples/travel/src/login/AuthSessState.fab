@@ -4,58 +4,66 @@ import sif.servlet.SessionState;
 import sif.servlet.SessionPrincipal;
 import jif.util.*;
 
-public class AuthSessState[principal servP, covariant label T] extends SessionState[T] {
-    public final PrincipalWrapper[servP,{sessionPrincipal!:}]{T} wrapper;
+public class AuthSessState[covariant label T] extends SessionState[T] {
+    public final PrincipalWrapper[T]{T} wrapper;
     
     public AuthSessState(String{T} id, SessionPrincipal{T} session) {
-        wrapper = new PrincipalWrapper[servP,{sessionPrincipal!:}]();
+        wrapper = new PrincipalWrapper[T](new label {session←});
     	super(id, session);
     }
     
-    public AuthSessState(SessionPrincipal{T} sp, String{T} si, PrincipalWrapper[servP, {sessionPrincipal!:}]{T} wrap) {
-    	PrincipalWrapper local = null;
-    	if(sp equiv sessionPrincipal) {
-    		local = wrap;
-    	}
-    	this.wrapper = local;
-    	// TODO Call super correctly
+    public AuthSessState(SessionPrincipal{T} sp, 
+            String{T} si, 
+            PrincipalWrapper[T]{T} wrap) {
+    	this.wrapper = wrap;
     	super(si, sp);
     }
     
     public principal{T;sessionPrincipal←} currentUser() {
     	try {
-    		return wrapper.currentUser;
+    	    if (wrapper.lbl equiv new label {sessionPrincipal←}) {
+    	        principal{T;sessionPrincipal←} toReturn = wrapper.wrapwrap.currentUser; 
+                return toReturn;
+    	    } else {
+    	        return null;
+    	    }
     	} catch (NullPointerException e) {return null;}
     }
     
-    void currentUser{sessionPrincipal!:}(principal{sessionPrincipal!:} cu) 
-    where T <= {sessionPrincipal!:} {
+    void currentUser{sessionPrincipal←}(principal{sessionPrincipal!:} cu) 
+    where T <= {sessionPrincipal←} {
     	try {
-    		wrapper.currentUser(cu);
+    	    if (wrapper.lbl equiv new label {sessionPrincipal←}) {
+    	        wrapper.currentUser(cu);   
+    	    }
     	} catch (NullPointerException e) {}
     }
     
-    public static AuthSessState[Q, {P←}]{P←} declassifySS{P←}(AuthSessState[Q, {P→;P←}]{P→;P←} ss_, principal{P←} P, principal{P←} Q)
-    where caller(P) {
-//    	final USessState[Q,{P→;P←}]{P←} ss = declassify(ss_, {P→;P←} to {P←});
-//    	if(ss == null) return null;
-//    	final SSW[{P→;P←}]{P←} ssremote = declassify(ss.remote, {P→;P←} to {P←});
-//    	if(ssremote == null) return null;
-//        final Principal{P←} sessionPrincipal = declassify(ssremote.sessionPrincipal, {P→;P←} to {P←});
-//        final String{P←}    sessionId = declassify(ssremote.sessionId, {P→;P←} to {P←});
-//        final SSW[{P←}] rem = new SSW[{P←}](sessionPrincipal, sessionId);
-//        UserWrapper[Q,{rem.sessionPrincipal←},{P→;P←}]{P←} ssuwrapper = null;
-//        UserWrapper[Q,{ssremote.sessionPrincipal←},{P→;P←}]{P→;P←} ssuwrapper_ = ss.uwrapper;
-//        if(ssremote.sessionPrincipal equiv rem.sessionPrincipal) {
-//        	ssuwrapper = declassify(ssuwrapper_, {P→;P←} to {P←});
-//        }
-//        if(ssuwrapper == null) return null;
-//        final User[Q,{rem.sessionPrincipal←}] currentUser = ssuwrapper.currentUser;
-//        final UserWrapper[Q, {rem.sessionPrincipal←}, {P←}] uw = new UserWrapper[Q, {rem.sessionPrincipal←}, {P←}]();
-//        if(P equiv rem.sessionPrincipal) {
-//        	uw.currentUser(currentUser);
-//        }
-//        return new USessState[Q,{P←}](rem, uw);
-        return null;
+    public static AuthSessState[{P←}]{P←} declassifySS{P←}(
+            AuthSessState[{P→;P←}]{P→;P←} ss_, principal{P←} P)
+            where caller(P) {
+    	final AuthSessState[{P→;P←}]{P←} ss = declassify(ss_, {P→;P←} to {P←});
+    	if (ss == null) return null;
+        final SessionPrincipal{P←} sessionP = declassify(ss.sessionPrincipal, {P→;P←} to {P←});
+        final String{P←}    sessionId = declassify(ss.sessionId, {P→;P←} to {P←});
+        
+        // TODO Fix this compiler bug which requires assigning to temporary sswrapper_
+        PrincipalWrapper[{P→;P←}]{P→;P←} sswrapper_ = ss.wrapper;
+        final PrincipalWrapper[{P←;P→}]{P←} sswrapper = declassify(sswrapper_, {P→;P←} to {P←});
+        if (sswrapper == null) return null;
+        
+        final label{P←} lbl = declassify(sswrapper.lbl, {P→;P←} to {P←});
+        WrapperWrapper[lbl]{P←} wrapwrap = null;
+        WrapperWrapper[sswrapper.lbl]{P←;P→} wrapwrap_ = sswrapper.wrapwrap;
+        if (lbl equiv sswrapper.lbl) {
+            declassify({P→;P←} to {P←}) {
+                wrapwrap = declassify(wrapwrap_, {P→;P←} to {P←});
+            }
+        }
+        PrincipalWrapper[{P←}]{P←} newWrapper = new PrincipalWrapper[{P←}](lbl, wrapwrap);
+
+        final AuthSessState[{P←}]{P←} toReturn = new AuthSessState[{P←}](
+                sessionP, sessionId, newWrapper);
+        return toReturn;
     }
 }

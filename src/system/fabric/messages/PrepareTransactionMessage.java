@@ -5,6 +5,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.*;
 
+import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.TransactionRestartingException;
 import fabric.worker.debug.Timing;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.FabricException;
@@ -24,7 +26,6 @@ public class PrepareTransactionMessage extends
     Message<RemoteNode, PrepareTransactionMessage.Response> {
 
   public static class Response implements Message.Response {
-    public final boolean success;
     public final String message;
 
     /**
@@ -48,28 +49,9 @@ public class PrepareTransactionMessage extends
     }
 
     public Response(boolean subTransactionCreated) {
-      this.success = true;
       this.subTransactionCreated = subTransactionCreated;
       this.message = null;
       this.versionConflicts = null;
-    }
-
-    /**
-     * Creates a Response indicating a failed prepare.
-     */
-    public Response(String message) {
-      this(message, null);
-    }
-
-    /**
-     * Creates a Response indicating a failed prepare.
-     */
-    public Response(String message,
-        LongKeyMap<SerializedObject> versionConflicts) {
-      this.success = false;
-      this.subTransactionCreated = false;
-      this.message = message;
-      this.versionConflicts = versionConflicts;
     }
 
     /**
@@ -81,7 +63,6 @@ public class PrepareTransactionMessage extends
      *          the input stream from which to read the response.
      */
     Response(RemoteNode node, DataInput in) throws IOException {
-      this.success = in.readBoolean();
       this.subTransactionCreated = in.readBoolean();
       if (in.readBoolean())
         this.message = in.readUTF();
@@ -100,7 +81,6 @@ public class PrepareTransactionMessage extends
      * @see fabric.messages.Message.Response#write(java.io.DataOutput)
      */
     public void write(DataOutput out) throws IOException {
-      out.writeBoolean(success);
       out.writeBoolean(subTransactionCreated);
       if (message != null) {
         out.writeBoolean(true);
@@ -221,26 +201,28 @@ public class PrepareTransactionMessage extends
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabric.messages.Message#dispatch(fabric.store.MessageHandlerThread)
-   */
   @Override
-  public Response dispatch(fabric.store.MessageHandlerThread w) throws ProtocolError {
+  public Response dispatch(fabric.store.MessageHandlerThread w)
+      throws ProtocolError, TransactionPrepareFailedException {
     return w.handle(this);
   }
 
   @Override
   public Response dispatch(fabric.worker.remote.MessageHandlerThread handler)
-      throws ProtocolError {
+      throws ProtocolError, TransactionPrepareFailedException {
     return handler.handle(this);
   }
 
-  public Response send(RemoteNode node) throws UnreachableNodeException {
+  public Response send(RemoteNode node) throws UnreachableNodeException,
+      TransactionPrepareFailedException {
     try {
       Timing.STORE.begin();
       return super.send(node, true);
     } catch (UnreachableNodeException e) {
+      throw e;
+    } catch (TransactionPrepareFailedException e) {
+      throw e;
+    } catch (TransactionRestartingException e) {
       throw e;
     } catch (FabricException e) {
       throw new InternalError("Unexpected response from node.", e);

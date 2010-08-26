@@ -1,0 +1,46 @@
+This is a very simple web application example.
+
+====Compiling the Sif-hello Example====
+
+Running 'ant examples' in the Fabric base directory will compile all examples
+including the sif-hello example.
+
+If only this sif-hello example needs to be compiled, first run 'ant libs' in the
+Fabric base directory to make sure all library code is compiled. Then run 'ant'
+in the $FABRIC/exampes/sif-hello directory to compile the this example.
+
+====Running the Sif-hello Example====
+
+The sif-hello example runs on one store (store0) and one worker (worker0)
+The store does not have any persistent application data.
+
+Follow these steps to start this web application, and check it in your browser:
+
+Step 1. Start a fresh instance of the store0
+
+The following items should be on the classpath:
+
+a. $FABRIC/examples/sif-hello/classes
+b. $FABRIC/src/lib/transient/classes
+c. $FABRIC/classes
+d. $FABRIC/rt-classes
+e. $FABRIC/src/lib/sif/classes
+
+Running the following command will start a new store for this application:
+$ fab-store --store store0
+
+Step 2. Create principals for worker0
+
+Run the following command to do this:
+
+$ fab --name worker0 --make-principal store0
+
+Step 3. 
+Make sure $FABRIC/examples/sif-hello/classes is on your classpath, and
+Run the following command in any terminal:
+
+$ fab-http --name worker0 $FABRIC/examples/sif-hello/web --port 8080
+
+Step 4.
+Check the application at: http://localhost:8080/hello
+

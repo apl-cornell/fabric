@@ -9,15 +9,15 @@ public abstract class AbstractList2[label S, label C] extends AbstractCollection
     }
 
 
-    abstract public JifObject[C]{S;index} get(int index):{S;index}
+    abstract public jif.lang.JifObject[C]{S;index} get(int index):{S;index}
         throws (IndexOutOfBoundsException{S;index});
 
-//    public boolean{S} remove{S}(JifObject[C]{S} o) {
+//    public boolean{S} remove{S}(jif.lang.JifObject[C]{S} o) {
 //        int index = 0;
 //        int sz = size();
 //        while (index < sz) {
 //            try {
-//                JifObject[C]{S} e = get(index);
+//                jif.lang.JifObject[C]{S} e = get(index);
 //                if (e == o || (e != null && e.equals(o))) {
 //                    // remove it...
 //                    remove(index);
@@ -34,20 +34,20 @@ public abstract class AbstractList2[label S, label C] extends AbstractCollection
 
 
     // Search Operations
-    public boolean{S;C;*lbl;lbl;elem} contains(label lbl, JifObject[lbl] elem) {
+    public boolean{S;C;*lbl;lbl;elem} contains(label lbl, jif.lang.JifObject[lbl] elem) {
         return indexOf(lbl,elem) >= 0;
     }
 
 
-    public int{S;C;o} indexOf(JifObject[C] o) {
+    public int{S;C;o} indexOf(jif.lang.JifObject[C] o) {
         return indexOf(C, o);
     }
-    public int{S;C;*lbl;lbl;o} indexOf(label lbl, JifObject[lbl] o) {
+    public int{S;C;*lbl;lbl;o} indexOf(label lbl, jif.lang.JifObject[lbl] o) {
         int i = 0;
         int sz = size();
         try {
             while (i < sz) {
-                JifObject[C] e = get(i);
+                jif.lang.JifObject[C] e = get(i);
                 if (o == e || (o != null && o.equals(C, e))) {
                     return i;
                 }
@@ -58,14 +58,14 @@ public abstract class AbstractList2[label S, label C] extends AbstractCollection
         return -1;
     }
 
-    public int{S;C;o} lastIndexOf(JifObject[C] o) {
+    public int{S;C;o} lastIndexOf(jif.lang.JifObject[C] o) {
         return lastIndexOf(C, o);
     }
-    public int{S;C;*lbl;lbl;o} lastIndexOf(label lbl, JifObject[lbl] o) {
+    public int{S;C;*lbl;lbl;o} lastIndexOf(label lbl, jif.lang.JifObject[lbl] o) {
         int i = size() - 1;
         try {
             while (i >= 0) {
-                JifObject[C] e = get(i);
+                jif.lang.JifObject[C] e = get(i);
                 if (o == e || (o != null && o.equals(C, e))) {
                     return i;
                 }
@@ -76,15 +76,15 @@ public abstract class AbstractList2[label S, label C] extends AbstractCollection
         return -1;
     }
 
-    public int{S;o} indexOfByRef(JifObject[C] o) {
+    public int{S;o} indexOfByRef(jif.lang.JifObject[C] o) {
         return indexOfByRef(C, o);
     }
-    public int{S;lbl;o} indexOfByRef(label lbl, JifObject[lbl] o) {
+    public int{S;lbl;o} indexOfByRef(label lbl, jif.lang.JifObject[lbl] o) {
         int i = 0;
         int sz = size();
         try {
             while (i < sz) {
-                JifObject[C] e = get(i);
+                jif.lang.JifObject[C] e = get(i);
                 if (o == e) {
                     return i;
                 }
@@ -95,14 +95,14 @@ public abstract class AbstractList2[label S, label C] extends AbstractCollection
         return -1;
     }
 
-    public int{S;o} lastIndexOfByRef(JifObject[C] o) {
+    public int{S;o} lastIndexOfByRef(jif.lang.JifObject[C] o) {
         return lastIndexOfByRef(C, o);
     }
-    public int{S;lbl;o} lastIndexOfByRef(label lbl, JifObject[lbl] o) {
+    public int{S;lbl;o} lastIndexOfByRef(label lbl, jif.lang.JifObject[lbl] o) {
         int i = size() - 1;
         try {
             while (i >= 0) {
-                JifObject[C] e = get(i);
+                jif.lang.JifObject[C] e = get(i);
                 if (o == e) {
                     return i;
                 }
@@ -140,7 +140,7 @@ public abstract class AbstractList2[label S, label C] extends AbstractCollection
         
         while (i < size()) {
             try {
-                JifObject[C] obj = get(i);
+                jif.lang.JifObject[C] obj = get(i);
                 hashCode = 31*hashCode + (obj==null ? 0 : obj.hashCode());
             }
             catch (IndexOutOfBoundsException e) {}
@@ -149,11 +149,11 @@ public abstract class AbstractList2[label S, label C] extends AbstractCollection
         return hashCode;
     }
     
-    public boolean{S;C;o} equals(IDComparable[{S;C}] o) {
+    public boolean{S;C;o} equals(jif.lang.IDComparable[{S;C}] o) {
         return equals(new label {S;C}, o);
     }
 
-    public boolean{S;C; *lbl; lbl; o} equals(label lbl, IDComparable[lbl] o) {
+    public boolean{S;C; *lbl; lbl; o} equals(label lbl, jif.lang.IDComparable[lbl] o) {
         if (o == null) 
             return false;
         
@@ -173,8 +173,8 @@ public abstract class AbstractList2[label S, label C] extends AbstractCollection
         int i = 0;
         while (i < sz) {
             try {
-                JifObject[lbl] o1 = that.get(i);
-                JifObject[C] o2 = this.get(i);
+                jif.lang.JifObject[lbl] o1 = that.get(i);
+                jif.lang.JifObject[C] o2 = this.get(i);
                 
                 if (!(o1==null ? o2==null : o1.equals(C, o2))) {
                     return false;
@@ -196,7 +196,7 @@ public abstract class AbstractList2[label S, label C] extends AbstractCollection
         int maxIndex = size() - 1;
         while (i <= maxIndex) {
             try {
-                JifObject[C] obj = get(i);
+                jif.lang.JifObject[C] obj = get(i);
                 s = s + (obj==null?"null":obj.toString());
                 if (i < maxIndex)
                     s = s + ", ";
@@ -238,7 +238,7 @@ class ListItr2[label S, label C]  implements ListIterator2[S,C] {
         return false;
     }
     
-    public JifObject[C]{S} next{S}():{S} 
+    public jif.lang.JifObject[C]{S} next{S}():{S} 
         throws (NoSuchElementException) {
             lastIndexReturned = nextIndex;
 
@@ -272,7 +272,7 @@ class ListItr2[label S, label C]  implements ListIterator2[S,C] {
         return false;
     }
 
-    public JifObject[C]{S} previous{S}():{S} 
+    public jif.lang.JifObject[C]{S} previous{S}():{S} 
         throws (NoSuchElementException) {
             lastIndexReturned = nextIndex - 1;
 
@@ -322,7 +322,7 @@ class ListItr2[label S, label C]  implements ListIterator2[S,C] {
         lastIndexReturned = -1;
     }
 
-    public void set{S}(JifObject[C]{S} o):{S} 
+    public void set{S}(jif.lang.JifObject[C]{S} o):{S} 
         throws (IllegalStateException{S}) {
             List2[S,C] l = this.list;
             if (l == null) 
@@ -339,7 +339,7 @@ class ListItr2[label S, label C]  implements ListIterator2[S,C] {
             }
         }
 
-    public void add{S}(JifObject[C]{S} o):{S} 
+    public void add{S}(jif.lang.JifObject[C]{S} o):{S} 
         throws (ClassCastException{S}, IllegalArgumentException{S}) {
             List2[S,C] l = this.list;
             if (l == null) return;

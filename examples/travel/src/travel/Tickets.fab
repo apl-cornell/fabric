@@ -3,16 +3,27 @@ package travel;
 import fabric.util.Map;
 
 public class Tickets[principal bank, principal airline, principal user]  { // on airline store and worker
-    // XXX should be airline←
-    int {airline←bank; airline→user} num_tickets;
+
+    int {airline←} num_tickets;
+    int {airline←} total_tickets;
     Tickets{airline←}() {
         num_tickets = 0;
+        total_tickets = 5;
     }
     
-    public int{airline←bank; airline→user} getNumTickets() {
+    public int{airline←} getNumTickets() {
         return num_tickets;
     }
+    
+    public boolean{airline←} incTickets{airline←}() :{airline←} {
+        if (num_tickets < total_tickets) {
+            num_tickets++;
+            return true;
+        }
+        return false;
+    }
+    
 }
 
-class PurchasingError extends Exception {
-}
+//class PurchasingError extends Exception {
+//}

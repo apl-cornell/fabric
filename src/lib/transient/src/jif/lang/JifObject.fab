@@ -7,7 +7,7 @@ package jif.lang;
  * (which may have arbitrary labels), the signatures
  * for the equivalent methods in java.lang.Object are unsuitable.
  */
-nonfabric public interface JifObject[covariant label L] extends IDComparable[L], 
+nonfabric public interface JifObject[covariant label L] extends jif.lang.IDComparable[L], 
 					    Hashable[L], 
 					    ToStringable[L] 
 {

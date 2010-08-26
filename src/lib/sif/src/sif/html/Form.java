@@ -18,7 +18,7 @@ public final class Form extends BlockContainer {
     }
     void writeOptions(HTMLWriter p) {
         p.print(" method=POST");
-//        p.print(" enctype=\"multipart/form-data\"");
+        p.print(" enctype=\"multipart/form-data\"");
         //p.breakLine();
         p.print(" action=");
         p.print("\"");

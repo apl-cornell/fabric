@@ -8,6 +8,7 @@ import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.UpdateMap;
 import fabric.worker.remote.MessageHandlerThread;
 import fabric.common.TransactionID;
+import fabric.common.Util;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
@@ -53,10 +54,8 @@ public class RemoteCallMessage extends
         byte[] buf = new byte[in.readInt()];
         in.readFully(buf);
 
-        ObjectInputStream ois =
-            new ObjectInputStream(new ByteArrayInputStream(buf));
         try {
-          this.result = ois.readObject();
+          this.result = Util.deserialize(buf);
         } catch (ClassNotFoundException e) {
           throw new RemoteCallException(e);
         }
@@ -72,13 +71,7 @@ public class RemoteCallMessage extends
       if (result instanceof _Proxy)
         writeRef((_Proxy) result, out);
       else {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(result);
-        oos.flush();
-        baos.flush();
-
-        byte[] buf = baos.toByteArray();
+        byte[] buf = Util.serialize(result);
         out.writeInt(buf.length);
         out.write(buf);
       }

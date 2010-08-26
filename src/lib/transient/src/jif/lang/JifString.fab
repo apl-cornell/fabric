@@ -1,10 +1,10 @@
 /*
  * A wrapper for Java Strings, to allow them to be treated as 
- * JifObjects
+ * jif.lang.JifObjects
  */
 package jif.lang;
 
-public final class JifString[covariant label L] extends java.lang.Object implements JifObject[L] {
+public final class JifString[covariant label L] extends java.lang.Object implements jif.lang.JifObject[L] {
     public final String{L} s;
     public JifString(String{L} s) { this.s = s; }
 
@@ -18,18 +18,18 @@ public final class JifString[covariant label L] extends java.lang.Object impleme
 //    }
     public boolean{L; anObject} equals(Object anObject) {
         if (anObject == null) return s == null;
-        if (anObject instanceof IDComparable[L]) {
-            return equals((IDComparable[L])anObject);
+        if (anObject instanceof jif.lang.IDComparable[L]) {
+            return equals((jif.lang.IDComparable[L])anObject);
         }
         return false;
     }
-    public boolean{L; other} equals(IDComparable[L] other) {
+    public boolean{L; other} equals(jif.lang.IDComparable[L] other) {
         return equals(L, other);
     }
 
-    public boolean{L; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
-        if (obj instanceof JifString[lbl]) {
-            JifString[lbl] that = (JifString[lbl])obj;
+    public boolean{L; *lbl; lbl; obj} equals(label lbl, jif.lang.IDComparable[lbl] obj) {
+        if (obj instanceof jif.lang.JifString[lbl]) {
+            jif.lang.JifString[lbl] that = (JifString[lbl])obj;
             if (this.s == null) return that.s == null;
             return this.s.equals(that.s);
         }
@@ -40,25 +40,25 @@ public final class JifString[covariant label L] extends java.lang.Object impleme
         if (s == null) return anotherString == null;
         return s.equalsIgnoreCase(anotherString);
     }
-    public boolean{L; anotherString} equalsIgnoreCase(JifString[L] anotherString) {
+    public boolean{L; anotherString} equalsIgnoreCase(jif.lang.JifString[L] anotherString) {
         if (anotherString == null) return s == null;
         return equalsIgnoreCase(anotherString.s);
     }
     public int{L; anotherString} compareTo(String anotherString) throws (NullPointerException{L;anotherString}) {
         return -anotherString.compareTo(s);
     }
-    public int{L; anotherString} compareTo(JifString[L] anotherString) throws (NullPointerException{L;anotherString}) {
+    public int{L; anotherString} compareTo(jif.lang.JifString[L] anotherString) throws (NullPointerException{L;anotherString}) {
         return compareTo(anotherString.s);        
     }
     public int{L; o} compareTo(java.lang.Object o) throws (ClassCastException{o}, NullPointerException{L;o}) {
         if (o instanceof String) return compareTo((String)o);
-        return compareTo((JifString[L])o); 
+        return compareTo((jif.lang.JifString[L])o); 
     }
 
     public int{L; str} compareToIgnoreCase(String str) throws (NullPointerException{str;L}) {
         return -str.compareToIgnoreCase(s);        
     }
-    public int{L; str} compareToIgnoreCase(JifString[L] str) throws (NullPointerException{str;L}) {
+    public int{L; str} compareToIgnoreCase(jif.lang.JifString[L] str) throws (NullPointerException{str;L}) {
         return compareToIgnoreCase(str.s);        
     }
     public boolean{L; other; toffset; ooffset; len} regionMatches(int toffset, String other, int ooffset, 
@@ -122,40 +122,40 @@ public final class JifString[covariant label L] extends java.lang.Object impleme
         if (s == null) return -1;
         return s.lastIndexOf(str, fromIndex);                
     }
-//    public JifString[L]{L; beginIndex} substring{L}(int{L} beginIndex) throws (StringIndexOutOfBoundsException{L; beginIndex}) {
+//    public jif.lang.JifString[L]{L; beginIndex} substring{L}(int{L} beginIndex) throws (StringIndexOutOfBoundsException{L; beginIndex}) {
 //        if (s == null) throw new StringIndexOutOfBoundsException();
-//        return new JifString[L](s.substring(beginIndex));                
+//        return new jif.lang.JifString[L](s.substring(beginIndex));                
 //    }
-//    public JifString[L]{L; beginIndex; endIndex} substring{L}(int{L} beginIndex, int{L} endIndex) throws (StringIndexOutOfBoundsException{L; beginIndex; endIndex}) {
+//    public jif.lang.JifString[L]{L; beginIndex; endIndex} substring{L}(int{L} beginIndex, int{L} endIndex) throws (StringIndexOutOfBoundsException{L; beginIndex; endIndex}) {
 //        if (s == null) throw new StringIndexOutOfBoundsException();
-//        return new JifString[L](s.substring(beginIndex, endIndex));                
+//        return new jif.lang.JifString[L](s.substring(beginIndex, endIndex));                
 //    }
 
-//    public JifString[L]{L;str} concat{L}(String{L} str) throws (NullPointerException{L}) {
-//        if (s == null) return new JifString[L](str);
-//        return new JifString[L](s.concat(str));                        
+//    public jif.lang.JifString[L]{L;str} concat{L}(String{L} str) throws (NullPointerException{L}) {
+//        if (s == null) return new jif.lang.JifString[L](str);
+//        return new jif.lang.JifString[L](s.concat(str));                        
 //    }
-//    public JifString[L]{L} replace{L}(char{L} oldChar, char{L} newChar) {
+//    public jif.lang.JifString[L]{L} replace{L}(char{L} oldChar, char{L} newChar) {
 //        if (s == null) return this;
-//        return new JifString[L](s.replace(oldChar, newChar));
+//        return new jif.lang.JifString[L](s.replace(oldChar, newChar));
 //    }
 //    public byte{L}[]{L} getBytes{L}() {
 //        if (s == null) return null;
 //        return s.getBytes();
 //    }
     //    public String{L} toLowerCase(Locale locale);
-//    public JifString[L]{L} toLowerCase{L}() {
+//    public jif.lang.JifString[L]{L} toLowerCase{L}() {
 //        if (s == null) return this;
-//        return new JifString[L](s.toLowerCase());
+//        return new jif.lang.JifString[L](s.toLowerCase());
 //    }
     //    public String toUpperCase(Locale locale);
-//    public JifString[L]{L} toUpperCase{L}() {
+//    public jif.lang.JifString[L]{L} toUpperCase{L}() {
 //        if (s == null) return this;
-//        return new JifString[L](s.toUpperCase());
+//        return new jif.lang.JifString[L](s.toUpperCase());
 //    }
-//    public JifString[L]{L} trim{L}() {
+//    public jif.lang.JifString[L]{L} trim{L}() {
 //        if (s == null) return this;
-//        return new JifString[L](s.trim());
+//        return new jif.lang.JifString[L](s.trim());
 //    }
     public String{L} toString() {
         return s;

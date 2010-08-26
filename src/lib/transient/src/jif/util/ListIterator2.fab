@@ -5,11 +5,11 @@ package jif.util;
  */
 public interface ListIterator2[label S, label C] extends Iterator2[S,C] {
     boolean{S} hasPrevious();
-    JifObject[C]{S} previous{S}():{S} throws (NoSuchElementException{S});
+    jif.lang.JifObject[C]{S} previous{S}():{S} throws (NoSuchElementException{S});
     int{S} nextIndex();
     int{S} previousIndex();
     
-    void set{S}(JifObject[C]{S} o):{S} throws (IllegalStateException{S});
-    void add{S}(JifObject[C]{S} o):{S} 
+    void set{S}(jif.lang.JifObject[C]{S} o):{S} throws (IllegalStateException{S});
+    void add{S}(jif.lang.JifObject[C]{S} o):{S} 
         throws (ClassCastException{S}, IllegalArgumentException{S});
 }

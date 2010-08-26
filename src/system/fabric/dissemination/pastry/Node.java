@@ -6,6 +6,8 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Properties;
 
+import fabric.common.util.Pair;
+
 import rice.environment.Environment;
 import rice.environment.params.Parameters;
 import rice.pastry.NodeIdFactory;
@@ -34,12 +36,17 @@ public class Node {
     // Load values from dissemConfig into the parameters for the Pastry
     // environment.
     Parameters params = env.getParameters();
-    for (String key : new String[] { "bootstrap", "firewall_test_policy",
-        "nat_search_policy", "pastry_socket_allow_loopback",
-        "replication_interval", "aggregation_interval" }) {
+    for (Pair<String, String> property : new Pair[] {
+        new Pair<String, String>("bootstrap", "localhost:13373"),
+        new Pair<String, String>("firewall_test_policy", "never"),
+        new Pair<String, String>("nat_search_policy", "never"),
+        new Pair<String, String>("pastry_socket_allow_loopback", "true"),
+        new Pair<String, String>("replication_interval", "300000"),
+        new Pair<String, String>("aggregation_interval", "600000") }) {
+      String key = property.first;
       String value =
           dissemConfig.getProperty("fabric.dissemination.pastry." + key);
-      if (value == null) value = params.getString(key);
+      if (value == null) value = property.second;
       params.setString(key, value);
     }
 
@@ -70,11 +77,18 @@ public class Node {
   }
 
   private void waitForReady() throws IOException {
+    int spinCount = 0;
     synchronized (node) {
       while (!node.isReady() && !node.joinFailed()) {
         try {
           node.wait(500);
         } catch (InterruptedException e) {
+        }
+        if (++spinCount == 2) {
+          System.out.println("Waiting for Pastry node to be ready. (Why does this take so long?)");
+        }
+        if (spinCount % 20 == 0) {
+          System.out.println("Still waiting...");
         }
       }
 
@@ -84,6 +98,7 @@ public class Node {
             + ")");
       }
     }
+    System.out.println("Pastry node ready.");
   }
 
   private int findFreePort(int port) {

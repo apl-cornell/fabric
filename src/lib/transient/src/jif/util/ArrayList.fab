@@ -14,7 +14,7 @@ public class ArrayList[label L]
      * The array buffer into which the elements of the ArrayList are stored.
      * The capacity of the ArrayList is the length of this array buffer.
      */
-    private JifObject[L]{L} native[]{L} elementData;
+    private jif.lang.JifObject[L]{L} native[]{L} elementData;
 
     /**
      * The size of the ArrayList (the number of elements it contains).
@@ -27,7 +27,7 @@ public class ArrayList[label L]
      *
      */
     public ArrayList() {
-        this.elementData = new JifObject[L][10];
+        this.elementData = new jif.lang.JifObject[L][10];
         super();
     }
 
@@ -39,18 +39,18 @@ public class ArrayList[label L]
      * @param   minCapacity   the desired minimum capacity.
      */
     public void ensureCapacity{L}(int{L} minCapacity) {
-        JifObject[L]{L} native[] ed = elementData;
+        jif.lang.JifObject[L]{L} native[] ed = elementData;
         if (ed != null) {
             int oldCapacity = ed.length;
             if (minCapacity > oldCapacity) {
-                JifObject[L]{L} native[] oldData = ed;
+                jif.lang.JifObject[L]{L} native[] oldData = ed;
                 int newCapacity = 1 + (int)(oldCapacity * 1.5);
                 if (newCapacity < minCapacity) {
                     newCapacity = minCapacity;
                 }
 
                 try {
-                    ed = new JifObject[L][newCapacity];
+                    ed = new jif.lang.JifObject[L][newCapacity];
                 }
                 catch (NegativeArraySizeException imposs) {}
                 
@@ -85,7 +85,7 @@ public class ArrayList[label L]
      * @throws    IndexOutOfBoundsException if index is out of range <tt>(index
      *                   &lt; 0 || index &gt;= size())</tt>.
      */
-    public JifObject[L]{L;index} get(int index):{L;index} 
+    public jif.lang.JifObject[L]{L;index} get(int index):{L;index} 
         throws (IndexOutOfBoundsException{L;index}) {
 	    RangeCheck(index);
 
@@ -108,11 +108,11 @@ public class ArrayList[label L]
      * @throws    IndexOutOfBoundsException if index out of range
      *                  <tt>(index &lt; 0 || index &gt;= size())</tt>.
      */
-    public JifObject[L]{L} set{L}(int{L} index, JifObject[L]{L} element):{L} 
+    public jif.lang.JifObject[L]{L} set{L}(int{L} index, JifObject[L]{L} element):{L} 
         throws (IndexOutOfBoundsException{L}) {
 	    RangeCheck(index);
 
-	    JifObject[L] oldValue = null;
+	    jif.lang.JifObject[L] oldValue = null;
 	    try {
 		oldValue = elementData[index];
 		elementData[index] = element;
@@ -129,7 +129,7 @@ public class ArrayList[label L]
      * @param o element to be appended to this list.
      * @return <tt>true</tt> (as per the general contract of Collection.add).
      */
-    public boolean{L} add{L}(JifObject[L]{L} o) {
+    public boolean{L} add{L}(jif.lang.JifObject[L]{L} o) {
         ensureCapacity(size + 1);  
         try {
             elementData[size++] = o;
@@ -150,7 +150,7 @@ public class ArrayList[label L]
      * @throws    IndexOutOfBoundsException if index is out of range
      *                  <tt>(index &lt; 0 || index &gt; size())</tt>.
      */
-    public void add{L}(int{L} index, JifObject[L]{L} element):{L} 
+    public void add{L}(int{L} index, jif.lang.JifObject[L]{L} element):{L} 
         throws (IndexOutOfBoundsException{L}) {
 	    if (index > size || index < 0)
 		throw new IndexOutOfBoundsException(
@@ -169,14 +169,14 @@ public class ArrayList[label L]
 	    size++;
 	}
 
-    public JifObject[L]{L} remove{L}(int{L} index)
+    public jif.lang.JifObject[L]{L} remove{L}(int{L} index)
         throws (IndexOutOfBoundsException{L}) {
         RangeCheck(index);
-        JifObject[L]{L}  native[] ed = elementData;
+        jif.lang.JifObject[L]{L}  native[] ed = elementData;
         
         if (ed != null) {
             try {
-                JifObject[L] obj = ed[index];
+                jif.lang.JifObject[L] obj = ed[index];
                 
                 int i = index;
                 while (i+1 < size) {

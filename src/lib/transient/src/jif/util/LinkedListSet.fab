@@ -20,14 +20,14 @@ public class LinkedListSet[label L] extends AbstractSet[L]
     }
 
 
-    public boolean{L;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o) {
+    public boolean{L;*lbl;lbl;o} contains(label lbl, jif.lang.JifObject[lbl] o) {
         try {
             return list.contains(lbl,o);
         }
         catch (NullPointerException impossible) { return false;}
     }
 
-    public boolean{L} add{L}(JifObject[L]{L} o) {
+    public boolean{L} add{L}(jif.lang.JifObject[L]{L} o) {
         try {
             if (!list.contains(o)) {
                 list.add(o);
@@ -38,14 +38,14 @@ public class LinkedListSet[label L] extends AbstractSet[L]
         catch (NullPointerException impossible) { return false;}
     }
 
-    public JifObject[L]{L;index} get(int index):{L;index} throws (IndexOutOfBoundsException{L;index}) {
+    public jif.lang.JifObject[L]{L;index} get(int index):{L;index} throws (IndexOutOfBoundsException{L;index}) {
         try {
             return list.get(index);
         }
         catch (NullPointerException impossible) { return null;}
     }
     
-    public boolean{L} remove{L}(JifObject[L]{L} o) {
+    public boolean{L} remove{L}(jif.lang.JifObject[L]{L} o) {
         try {
             return list.remove(o);
         }

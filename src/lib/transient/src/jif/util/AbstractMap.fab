@@ -17,20 +17,20 @@ public abstract class AbstractMap[label K, label V] extends java.lang.Object imp
         return size() == 0;
     }
     
-    public boolean{K;key} containsKey(JifObject[K] key)
+    public boolean{K;key} containsKey(jif.lang.JifObject[K] key)
     {
         return containsKey(K, key);
     }    
-    public JifObject[V]{K; key} get(JifObject[K] key) {
+    public jif.lang.JifObject[V]{K; key} get(JifObject[K] key) {
         return get(K, key);
     }
     
     
     // Modification Operations
     
-    public abstract JifObject[V]{K} put{K}(JifObject[K]{K} key, JifObject[V]{K} value);
+    public abstract jif.lang.JifObject[V]{K} put{K}(JifObject[K]{K} key, JifObject[V]{K} value);
     
-    public abstract JifObject[V]{K} remove{K}(JifObject[K]{K} key);
+    public abstract jif.lang.JifObject[V]{K} remove{K}(JifObject[K]{K} key);
     
     
     // Bulk Operations
@@ -53,19 +53,19 @@ public abstract class AbstractMap[label K, label V] extends java.lang.Object imp
      */
         
     public final boolean{K;key} containsKey{K}(String{K} key) {
-        return this.containsKey(new JifString[K](key));
+        return this.containsKey(new jif.lang.JifString[K](key));
     }
-    public final JifObject[V]{K; key} get{K}(String{K} key) {
-        return this.get(new JifString[K](key));
+    public final jif.lang.JifObject[V]{K; key} get{K}(String{K} key) {
+        return this.get(new jif.lang.JifString[K](key));
     }
-    public final JifObject[V]{K; *lbl; lbl; key} get{*lbl}(label lbl, String{*lbl} key) {
-        return this.get(lbl, new JifString[lbl](key));
+    public final jif.lang.JifObject[V]{K; *lbl; lbl; key} get{*lbl}(label lbl, String{*lbl} key) {
+        return this.get(lbl, new jif.lang.JifString[lbl](key));
     }
-    public final JifObject[V]{K} put{K}(String{K} key, JifObject[V]{K} value) {
-        return this.put(new JifString[K](key), value);
+    public final jif.lang.JifObject[V]{K} put{K}(String{K} key, JifObject[V]{K} value) {
+        return this.put(new jif.lang.JifString[K](key), value);
     }
-    public final JifObject[V]{K} remove{K}(String{K} key) {
-        return this.remove(new JifString[K](key));
+    public final jif.lang.JifObject[V]{K} remove{K}(String{K} key) {
+        return this.remove(new jif.lang.JifString[K](key));
     }
     
     
@@ -81,11 +81,11 @@ public abstract class AbstractMap[label K, label V] extends java.lang.Object imp
     }
     
     // Comparison and hashing    
-    public boolean{K;V;o} equals(IDComparable[{K;V}] o)
+    public boolean{K;V;o} equals(jif.lang.IDComparable[{K;V}] o)
     {
         return equals(new label {K;V}, o);
     }
-    public boolean{K;V; *lbl; lbl; o} equals(label lbl, IDComparable[lbl] o) {
+    public boolean{K;V; *lbl; lbl; o} equals(label lbl, jif.lang.IDComparable[lbl] o) {
         if (o == this) return true;        
         if (!(o instanceof Map[K,V])) return false;
         
@@ -97,8 +97,8 @@ public abstract class AbstractMap[label K, label V] extends java.lang.Object imp
             for (int i = 0; es != null && i < es.size(); i++) {
                 MapEntry[K,V] e = (MapEntry[K,V])es.get(i);
                 if (e == null) continue;
-                JifObject[K] key = e.getKey();
-                JifObject[V] value = e.getValue();
+                jif.lang.JifObject[K] key = e.getKey();
+                jif.lang.JifObject[V] value = e.getValue();
                 if (value == null) {
                     if (!(t.get(key)==null && t.containsKey(key))) {
                         return false;
@@ -134,8 +134,8 @@ public abstract class AbstractMap[label K, label V] extends java.lang.Object imp
             try {
                 MapEntry[K,V] e = (MapEntry[K,V])es.get(i);
                 if (e == null) continue;
-                JifObject[K] key = e.getKey();
-                JifObject[V] value = e.getValue();
+                jif.lang.JifObject[K] key = e.getKey();
+                jif.lang.JifObject[V] value = e.getValue();
                 String k = key == this ?"(this Map)" : (key==null?"null":key.toString());
                 String v = value == this ?"(this Map)" : (value==null?"null":value.toString());
                 buf += (k + "=" + v);
@@ -161,8 +161,8 @@ class AbstractMapKeySet[label K, label V] extends AbstractSet[K] {
         return new AbstractMapKeySetIterator[K,V](parent); 
     }
 
-    public JifObject[K]{K;index} get(int index):{K;index} throws (IndexOutOfBoundsException{K;index}) {
-        JifObject[K] n = parentEntrySet==null?null:parentEntrySet.get(index);
+    public jif.lang.JifObject[K]{K;index} get(int index):{K;index} throws (IndexOutOfBoundsException{K;index}) {
+        jif.lang.JifObject[K] n = parentEntrySet==null?null:parentEntrySet.get(index);
         if (n instanceof MapEntry[K,V]) return ((MapEntry[K,V])n).getKey(); 
         return null;
     }
@@ -171,7 +171,7 @@ class AbstractMapKeySet[label K, label V] extends AbstractSet[K] {
         return parent==null?0:parent.size();
     }
     
-    public boolean{K;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o) {
+    public boolean{K;*lbl;lbl;o} contains(label lbl, jif.lang.JifObject[lbl] o) {
         return parent==null?false:parent.containsKey(lbl, o);
     }
 }
@@ -186,8 +186,8 @@ class AbstractMapKeySetIterator[label K, label V] extends java.lang.Object imple
         return i==null?false:i.hasNext();
     }
 
-    public JifObject[K]{K} next{K}() throws (NoSuchElementException{K}) {
-        JifObject[K] n = (i==null?null:i.next());
+    public jif.lang.JifObject[K]{K} next{K}() throws (NoSuchElementException{K}) {
+        jif.lang.JifObject[K] n = (i==null?null:i.next());
         if (n instanceof MapEntry[K,V]) return ((MapEntry[K,V])n).getKey(); 
         return null;
     }

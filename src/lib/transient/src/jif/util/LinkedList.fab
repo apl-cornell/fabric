@@ -26,7 +26,7 @@ public class LinkedList[label L] extends AbstractList[L]
         return s;
     }
 
-    public boolean{L} add{L}(JifObject[L]{L} o) {
+    public boolean{L} add{L}(jif.lang.JifObject[L]{L} o) {
         LinkedListEntry[L]{L} n = new LinkedListEntry[L]();
         LinkedListEntry[L]{L} m = tail; // use a local to avoid NPE
         n.data = o;
@@ -43,7 +43,7 @@ public class LinkedList[label L] extends AbstractList[L]
         return true;
     }
 
-    public boolean{L} remove{L}(JifObject[L]{L} o) {
+    public boolean{L} remove{L}(jif.lang.JifObject[L]{L} o) {
         LinkedListEntry[L] e = head;
         while (e != null) {
             if (e.data == o || (o != null && o.equals(e.data))) {
@@ -70,7 +70,7 @@ public class LinkedList[label L] extends AbstractList[L]
         return false;
     }
 
-    public JifObject[L]{L} remove{L}(int{L} index) throws (IndexOutOfBoundsException{L}) {
+    public jif.lang.JifObject[L]{L} remove{L}(int{L} index) throws (IndexOutOfBoundsException{L}) {
         int s = 0;
         int size = size();
 
@@ -110,13 +110,13 @@ public class LinkedList[label L] extends AbstractList[L]
         int hashCode = 1;
         LinkedListEntry[L] e = head;
         while (e != null) {
-            JifObject[L] mobj = e.data;
+            jif.lang.JifObject[L] mobj = e.data;
             hashCode = 31*hashCode + (mobj==null ? 0 : mobj.hashCode());
         }
         return hashCode;
     }
 
-    public JifObject[L]{L;index} get(int index):{L;index} throws (IndexOutOfBoundsException{L;index}) {
+    public jif.lang.JifObject[L]{L;index} get(int index):{L;index} throws (IndexOutOfBoundsException{L;index}) {
         if (index < 0 || index >= size()) {
             throw new IndexOutOfBoundsException();
         }
@@ -135,7 +135,7 @@ public class LinkedList[label L] extends AbstractList[L]
         return null;
     }
 
-    public JifObject[L]{L} getFirst():{L} throws (IndexOutOfBoundsException{L}) {
+    public jif.lang.JifObject[L]{L} getFirst():{L} throws (IndexOutOfBoundsException{L}) {
         LinkedListEntry[L] m = head;
         if (m != null) {
             return m.data;
@@ -143,7 +143,7 @@ public class LinkedList[label L] extends AbstractList[L]
         throw new IndexOutOfBoundsException();
     }
 
-    public JifObject[L]{L} getLast():{L} throws (IndexOutOfBoundsException{L}) {
+    public jif.lang.JifObject[L]{L} getLast():{L} throws (IndexOutOfBoundsException{L}) {
         LinkedListEntry[L] m = tail;
         if (m != null) {
             return m.data;
@@ -152,13 +152,13 @@ public class LinkedList[label L] extends AbstractList[L]
     }
 
 
-    public JifObject[L]{L} set{L}(int{L} index, JifObject[L]{L} element):{L} throws (IndexOutOfBoundsException{L}) {
+    public jif.lang.JifObject[L]{L} set{L}(int{L} index, jif.lang.JifObject[L]{L} element):{L} throws (IndexOutOfBoundsException{L}) {
         int s = 0;
         
         LinkedListEntry[L] e = head;
         while (e != null) {
             if (s == index) {
-                JifObject[L] old = e.data;
+                jif.lang.JifObject[L] old = e.data;
                 e.data = element;
                 return old;
             }
@@ -168,7 +168,7 @@ public class LinkedList[label L] extends AbstractList[L]
         throw new IndexOutOfBoundsException();
     }
 
-    public void add{L}(int{L} index, JifObject[L]{L} element):{L} throws (IndexOutOfBoundsException{L}) {
+    public void add{L}(int{L} index, jif.lang.JifObject[L]{L} element):{L} throws (IndexOutOfBoundsException{L}) {
         LinkedListEntry[L] n = new LinkedListEntry[L]();
         n.data = element;
         
@@ -221,7 +221,7 @@ public class LinkedList[label L] extends AbstractList[L]
     }
 
 
-    public int{L;o} indexOf(JifObject[L] o) {
+    public int{L;o} indexOf(jif.lang.JifObject[L] o) {
         int s = 0;
         
         LinkedListEntry[L] e = head;
@@ -235,7 +235,7 @@ public class LinkedList[label L] extends AbstractList[L]
         return -1;
     }
 
-    public int{L;o} lastIndexOf(JifObject[L] o) {
+    public int{L;o} lastIndexOf(jif.lang.JifObject[L] o) {
         int s = 0;
         int last = -1;
         
@@ -256,6 +256,6 @@ class LinkedListEntry[label L] extends java.lang.Object {
     LinkedListEntry() {}
     LinkedListEntry[L]{L} next;
     LinkedListEntry[L]{L} prev;
-    JifObject[L]{L} data;
+    jif.lang.JifObject[L]{L} data;
 }
 

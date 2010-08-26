@@ -62,9 +62,19 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
       if (in.readBoolean()) {
         try {
           // We have an error.
-          FabricException exc = (FabricException) readObject(in);
+          Exception exc = (Exception) readObject(in);
           exc.fillInStackTrace();
-          throw exc;
+          Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
+              "Received error response for {0} from {1}", messageType, node);
+          
+          if (exc instanceof FabricException)
+            throw (FabricException) exc;
+          
+          if (exc instanceof FabricRuntimeException)
+            throw (FabricRuntimeException) exc;
+          
+          throw new InternalError("Received unexpected result from " + node,
+              exc);
         } catch (ClassNotFoundException e) {
           throw new InternalError("Unexpected response from remote node", e);
         }
@@ -81,6 +91,9 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
     } catch (Exception e) {
       throw new InternalError(e);
     } finally {
+      Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
+          "Received response for {0} from {1}", messageType, node);
+      
       try {
         stream.close();
       } catch (IOException e) {
@@ -108,10 +121,10 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
   public static void receive(DataInput in, DataOutputStream out,
       MessageHandler handler) throws IOException {
 
+    Message<?, ?> m = null;
     try {
       MessageType messageType = MessageType.values()[in.readByte()];
       Class<? extends Message<?, ?>> messageClass = messageType.messageClass;
-      Message<?, ?> m;
 
       try {
         m =
@@ -138,6 +151,9 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
       // Write out the response.
       r.write(out);
       out.flush();
+      
+      Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE,
+          "Sent response to {0}", m.messageType);
     } catch (final FabricException e) {
       // Clear out the stack trace before sending the exception to the worker.
       e.setStackTrace(new StackTraceElement[0]);
@@ -146,6 +162,11 @@ public abstract class Message<N extends RemoteNode, R extends Message.Response> 
       out.writeBoolean(true);
       writeObject(e, out);
       out.flush();
+      
+      if (m != null) {
+        Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE,
+            "Sent error response to {0}", m.messageType);
+      }
     } catch (final FabricRuntimeException e) {
       // TODO: this is copied and pasted from above. We need to figure out what
       // exceptions _not_ to catch and then catch all the others.

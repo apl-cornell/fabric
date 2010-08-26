@@ -19,31 +19,31 @@ public abstract class AbstractCollection[label L] extends java.lang.Object imple
     }
 
 
-    public boolean{L;o} contains(JifObject[L] o) {
+    public boolean{L;o} contains(jif.lang.JifObject[L] o) {
         return contains(L, o);
     }
 
-    public boolean{L} add{L}(JifObject[L]{L} o):{L} throws (ClassCastException{L}, IllegalArgumentException{L})
+    public boolean{L} add{L}(jif.lang.JifObject[L]{L} o):{L} throws (ClassCastException{L}, IllegalArgumentException{L})
     {
         return false;
     }
 
     public boolean{L} add{L}(String{L} o):{L} throws (ClassCastException{L}, IllegalArgumentException{L}) {
-        return add(new JifString[L](o));
+        return add(new jif.lang.JifString[L](o));
     }
     public boolean{L} remove{L}(String{L} o) {
-        return remove(new JifString[L](o));        
+        return remove(new jif.lang.JifString[L](o));        
     }
     public boolean{L;o} contains{L}(String{L} o) {
-        return contains(new JifString[L](o));                
+        return contains(new jif.lang.JifString[L](o));                
     }
     public boolean{L;*lbl;lbl;o} contains{*lbl}(label lbl, String{*lbl} o) {
-        return contains(lbl, new JifString[lbl](o));                        
+        return contains(lbl, new jif.lang.JifString[lbl](o));                        
     }
 
 
 
-    public boolean{L} remove{L}(JifObject[L]{L} o) {
+    public boolean{L} remove{L}(jif.lang.JifObject[L]{L} o) {
         try {
             Iterator[L] e = iterator();
             if (e != null) {
@@ -132,7 +132,7 @@ public abstract class AbstractCollection[label L] extends java.lang.Object imple
         Iterator[L] e = iterator();
         while (e != null && e.hasNext()) {
             try {
-                JifObject[L] o = e.next();
+                jif.lang.JifObject[L] o = e.next();
                 if(c == null || !c.contains(L, o)) {
                     e.remove();
                     modified = true;
@@ -157,14 +157,14 @@ public abstract class AbstractCollection[label L] extends java.lang.Object imple
         }
     }
 
-    public JifObject[L]{L} native[]{L} toArray{L}() {
+    public jif.lang.JifObject[L]{L} native[]{L} toArray{L}() {
 //        try {
-//            JifObject[L]{L}[] newArray = new JifObject[L][this.size()]; 
+//            jif.lang.JifObject[L]{L}[] newArray = new JifObject[L][this.size()]; 
 //            Iterator[L] e = iterator();
 //            int index = 0;
 //            while (e != null && e.hasNext()) {
 //                try {
-//                    JifObject[L] o = e.next();
+//                    jif.lang.JifObject[L] o = e.next();
 //                    newArray[index] = o;
 //                }
 //                catch (NoSuchElementException impossible) { }
@@ -176,7 +176,7 @@ public abstract class AbstractCollection[label L] extends java.lang.Object imple
 //        catch (NegativeArraySizeException impossible) { }
         return null;
     }
-//    public JifObject[L]{L}const[]{L} toConstArray{L}() {
+//    public jif.lang.JifObject[L]{L}const[]{L} toConstArray{L}() {
 //        try {
 //            return toArray().clone();
 //        }
@@ -190,7 +190,7 @@ public abstract class AbstractCollection[label L] extends java.lang.Object imple
 
         while (i < size()) {
             try {
-                JifObject[L] obj = get(i);                
+                jif.lang.JifObject[L] obj = get(i);                
                 if (obj == this) {
                     s += "(this Collection)";
                 }

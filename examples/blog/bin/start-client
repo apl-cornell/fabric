@@ -1,0 +1,18 @@
+#!/bin/bash
+
+APP_HOME="$(dirname $0)/.."
+cd "${APP_HOME}"
+
+PATH="${PATH}:../../bin"
+JETTY="../../lib/jetty"
+
+CP="classes/java"
+for i in "${JETTY}"/*.jar ; do
+  CP="${CP}:$i"
+done
+
+PORT=9000
+[[ $# -gt 0 ]] && PORT="$1"
+
+java -Dport="${PORT}" -classpath "${CP}" webapp.client.ClientServer
+

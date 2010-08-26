@@ -1,11 +1,11 @@
 package jif.util;
 /**
  * MapEntry is used to represent entries in a map. Note that it extends
- * JifObject[K], so has codes, equality, and toString do not depend on the
+ * jif.lang.JifObject[K], so has codes, equality, and toString do not depend on the
  * value at all.
  */
-nonfabric public interface MapEntry[label K, label V] extends JifObject[K] {
-        JifObject[K]{K} getKey();
-        JifObject[V]{K} getValue();
-        JifObject[V]{K} setValue{K}(JifObject[V]{K} value);
+nonfabric public interface MapEntry[label K, label V] extends jif.lang.JifObject[K] {
+        jif.lang.JifObject[K]{K} getKey();
+        jif.lang.JifObject[V]{K} getValue();
+        jif.lang.JifObject[V]{K} setValue{K}(jif.lang.JifObject[V]{K} value);
 }

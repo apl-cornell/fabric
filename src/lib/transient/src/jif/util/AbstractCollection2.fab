@@ -18,11 +18,11 @@ public abstract class AbstractCollection2[label S, label C] implements Collectio
         return size() == 0;
     }
 
-    public boolean{S;C;o} contains(JifObject[C] o) {
+    public boolean{S;C;o} contains(jif.lang.JifObject[C] o) {
         return contains(C, o);
     }
 
-    public boolean{S} add{S}(JifObject[C]{S} o):{S} throws (ClassCastException{S}, IllegalArgumentException{S})
+    public boolean{S} add{S}(jif.lang.JifObject[C]{S} o):{S} throws (ClassCastException{S}, IllegalArgumentException{S})
     {
     	return false;
     }

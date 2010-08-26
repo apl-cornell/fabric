@@ -14,78 +14,67 @@ import travel.Config;
 import travel.Account;
 import travel.Tickets;
 
+import login.*;
 
-public class FrontPage extends AirlineAction authority (AirlinePrincipal) {
+
+public class FrontPage extends AuthenticatedAction[AirlinePrincipal] authority (AirlinePrincipal) {
     public FrontPage(AirlineMain{this} m) throws ServletException {
-        super();
-        initFields("frontpage", m);
+        super("frontpage", m);
     }
     
-    public final void invoke{*lbl}(label{*lbl} lbl, Request[AirlinePrincipal]{*lbl} req) 
-    throws (ServletException{*lbl;⊤→req.session;req.session←})
-        where caller(req.session),
-        lbl <= {⊤→req.session} {
+    public final void invokeImpl{*lbl}(label{*lbl} lbl,
+            Request[AirlinePrincipal]{*lbl} req,
+            Servlet[AirlinePrincipal]{*lbl} servlet,
+            AuthSessState[lbl]{*lbl} state,
+            principal{*lbl} currentUser) 
+            throws (ServletException{*lbl;req.session←})
+            where caller(req.session),
+            lbl <= {⊤→req.session},
+            req.session equiv state.sessionPrincipal,
+            req.session actsfor currentUser {
 
-        Servlet[AirlinePrincipal] s = getServlet();
-        if (s == null || !(s instanceof AirlineMain)) throw new ServletException("No servlet available"); 
-        if (req == null) throw new ServletException("No request available"); 
-        AirlineMain m = (AirlineMain)s;
-
-        atomic {
-            
-            if (lbl <= new label {req.session←}) {
-                loginAirline(req.session, req);
-            }
-
-            FabricWorker w = worker$;
-            if (w == null) throw new ServletException("Internal Error");
-            final Store store = worker$.getStore(Config.airlineStoreName);
-            Map root = null;
-            if (store != null) {
-                root = (Map) store.getRoot();
-            }
-            if (root == null) throw new ServletException("Airline Store not accessible");
-            
-            Tickets[BankPrincipal,AirlinePrincipal,CustomerPrincipal] tickets = null;
-            Object obj = root.get(Config.ticketsKey);
-            if (obj instanceof Tickets[BankPrincipal,AirlinePrincipal,CustomerPrincipal]) {
-                tickets = (Tickets[BankPrincipal,AirlinePrincipal,CustomerPrincipal])obj;
-            }
-            if (tickets == null)
-                throw new ServletException("Could not fetch airline information base");
-            
-            // Display the number of tickets sold by this airline to CustomerPrincipal
-
-            final label lblt = new label {AirlinePrincipal→CustomerPrincipal; AirlinePrincipal←BankPrincipal};
-            if (lbl equiv new label {AirlinePrincipal←} &&
-                    req.session actsfor AirlinePrincipal) {
-                Text msg = new Text[lbl,lbl]("Acme Airlines has sold the following number of tickets:");
-                Text ticks = new Text[lblt,lbl](Integer.toString(tickets.getNumTickets()));
-                NodeList[lblt, lbl] entries = NodeList.EMPTY();
-                entries = entries==null?null:entries.append(lbl, lbl, 
-                        new TRow[lbl, lbl](new TCell[lbl, lbl](msg)));
-                entries = entries==null?null:entries.append(
-                        new TRow[lblt, lbl](new TCell[lblt, lbl](ticks)));
-                s.createPage(req, "Airline Home Page", lblt, lbl,
-                        new NodeList[lblt,lbl](lbl, lbl, createBanner(lbl, "Welcome to the Acme Airline Information System"),
-                                lblt, lbl, new Table[lblt, lbl](entries)));
-            }
-        }
-    }
-    
-    // TODO Add Login in 3rd stage. Use the userserv library  
-    // For now, automatically make req.session actsfor AirlinePrincipal
-    private final void loginAirline{session←}(principal{session←} session, Request[AirlinePrincipal]{session←} reqParam) 
-    where authority(AirlinePrincipal), endorse({AirlinePrincipal←})
-    {
-        final Request[AirlinePrincipal] req = endorse(reqParam, {session←} to {AirlinePrincipal←});
-        final DelegatingPrincipal p = (DelegatingPrincipal)AirlinePrincipal;
-        if (p == null) return;
-        final principal sessionLow = endorse(session, {session←} to {AirlinePrincipal←});
-        if (p equiv AirlinePrincipal) {
-            p.addDelegatesTo(sessionLow);
-        }
+        if (servlet == null || !(servlet instanceof AirlineMain)) throw new ServletException("No servlet available"); 
+        if (req == null || state == null || currentUser == null) throw new ServletException("Error processing request"); 
+        AirlineMain m = (AirlineMain)servlet;
         
+        atomic {
+            // Display the front page only if the logged in user is the airline principal
+            if (currentUser equiv AirlinePrincipal) {
+                FabricWorker w = worker$;
+                if (w == null) throw new ServletException("Internal Error");
+                final Store store = worker$.getStore(Config.airlineStoreName);
+                Map root = null;
+                if (store != null) {
+                    root = (Map) store.getRoot();
+                }
+                if (root == null) throw new ServletException("Airline Store not accessible");
+
+                Tickets[BankPrincipal,AirlinePrincipal,CustomerPrincipal] tickets = null;
+                Object obj = root.get(Config.ticketsKey);
+                if (obj instanceof Tickets[BankPrincipal,AirlinePrincipal,CustomerPrincipal]) {
+                    tickets = (Tickets[BankPrincipal,AirlinePrincipal,CustomerPrincipal])obj;
+                }
+                if (tickets == null)
+                    throw new ServletException("Could not fetch airline information base");
+
+                // Display the number of tickets sold by this airline to CustomerPrincipal
+
+                final label ap = new label {AirlinePrincipal←}; 
+                final label lblt = new label {AirlinePrincipal→CustomerPrincipal; AirlinePrincipal←BankPrincipal};
+                if (lbl <= ap  &&
+                        req.session actsfor AirlinePrincipal) {
+                    Text msg = new Text[ap,ap]("Acme Airlines has sold the following number of tickets:");
+                    Text ticks = new Text[lblt,ap](Integer.toString(tickets.getNumTickets()));
+                    NodeList[lblt, ap] entries = NodeList.EMPTY();
+                    entries = entries==null?null:entries.append(ap, ap, 
+                            new TRow[ap, ap](new TCell[ap, ap](msg)));
+                    entries = entries==null?null:entries.append(
+                            new TRow[lblt, ap](new TCell[lblt, ap](ticks)));
+                    m.createPage(req, "Airline Home Page", lblt, ap,
+                            new NodeList[lblt,ap](ap, ap, createBanner(ap, "Welcome to the Acme Airline Information System"),
+                                    lblt, ap, new Table[lblt, ap](entries)));
+                }
+            }
+        }
     }
-    
 }

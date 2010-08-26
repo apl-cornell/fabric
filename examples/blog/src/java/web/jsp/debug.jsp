@@ -44,20 +44,20 @@
 </td>
 <td valign="top">
 <h2>Run Benchmark</h2>
-<c:if test="${workerError }">
-<p style="color:red">Worker Error - Benchmark Stopped</p>
-<p>Check worker for more details</p>
+<c:if test="${clientError }">
+<p style="color:red">Client Error - Benchmark Stopped</p>
+<p>Check client for more details</p>
 </c:if>
 <c:choose>
-<c:when test="${fn:length(busyworkers) > 0 }">
-<p>Benchmark in progress... [<a href="?debugaction=reload">Refresh</a>]<br/> Check on the status of workers to the right.</p>
+<c:when test="${fn:length(busyclients) > 0 }">
+<p>Benchmark in progress... [<a href="?debugaction=reload">Refresh</a>]<br/> Check on the status of clients to the right.</p>
 </c:when>
-<c:when test="${fn:length(workers) > 0 }">
+<c:when test="${fn:length(clients) > 0 }">
 <form action="?" method="post">
 <input type="hidden" name="debugaction" value="benchmark"/>
-<p>Number of workers: 
-<select name="numworkers">
-    <c:forEach  var="i" begin="1" end="${fn:length(workers) }">
+<p>Number of clients: 
+<select name="numclients">
+    <c:forEach  var="i" begin="1" end="${fn:length(clients) }">
         <option value="${i }">${i }</option>
     </c:forEach>
 </select>
@@ -74,15 +74,15 @@
 </form>
 </c:when>
 <c:otherwise>
-<p>Please connect a worker to start a benchmark</p>
+<p>Please connect a client to start a benchmark</p>
 </c:otherwise>
 </c:choose>
 </td>
 <td valign="top">
-<h2>Workers</h2>
+<h2>Clients</h2>
 <ul>
-<c:forEach var="entry" items="${workers}">
-    <li><a href="http://${entry}/web">${entry}</a> [<a href="?workeraction=removeother&amp;id=${entry}">x</a>]</li>
+<c:forEach var="entry" items="${clients}">
+    <li><a href="http://${entry}/web">${entry}</a> [<a href="?clientaction=removeother&amp;id=${entry}">x</a>]</li>
 </c:forEach>
 </ul>
 </td>

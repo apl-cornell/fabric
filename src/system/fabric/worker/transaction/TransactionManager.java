@@ -231,7 +231,10 @@ public final class TransactionManager {
     synchronized (current.commitState) {
       // The commit state reflects the state of the top-level transaction, so
       // only set the flag if a top-level transaction is being aborted.
-      if (current.tid.depth == 0) current.commitState.value = ABORTED;
+      if (current.tid.depth == 0) {
+        current.commitState.value = ABORTED;
+        current.commitState.notifyAll();
+      }
 
       if (current.tid.parent == null || current.parent != null
           && current.parent.tid.equals(current.tid.parent)) {
@@ -377,21 +380,9 @@ public final class TransactionManager {
     Set<Store> stores = current.storesToContact();
     List<RemoteWorker> workers = current.workersCalled;
 
-    // Send prepare messages to our cohorts. This will also abort our cohorts if
-    // the prepare fails.
-    Map<RemoteNode, TransactionPrepareFailedException> failures =
-        sendPrepareMessages(useAuthentication, commitTime, stores, workers);
-
-    if (!failures.isEmpty()) {
-      failures.remove(null);
-      TransactionPrepareFailedException e =
-          new TransactionPrepareFailedException(failures);
-      Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
-          "{0} error committing: prepare failed exception: {1}", current, e);
-      TransactionID tid = current.tid;
-      abortTransaction(false);
-      throw new TransactionRestartingException(tid);
-    }
+    // Send prepare messages to our cohorts. This will also abort our portion of
+    // the transaction if the prepare fails.
+    sendPrepareMessages(useAuthentication, commitTime, stores, workers);
 
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(useAuthentication, stores, workers);
@@ -401,19 +392,20 @@ public final class TransactionManager {
    * Sends prepare messages to the cohorts. Also sends abort messages if any
    * cohort fails to prepare.
    */
-  public Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
-      long commitTime) {
-    return sendPrepareMessages(true, commitTime, current.storesToContact(),
+  public void sendPrepareMessages(long commitTime) {
+    sendPrepareMessages(true, commitTime, current.storesToContact(),
         current.workersCalled);
   }
 
   /**
-   * Sends prepare messages to the given set of stores and workers. Also sends
-   * abort messages if any of them fails to prepare.
+   * Sends prepare messages to the given set of stores and workers. If the
+   * prepare fails, the local portion of the transaction is rolled back.
+   * 
+   * @throws TransactionRestartingException
+   *           if the prepare fails.
    */
-  private Map<RemoteNode, TransactionPrepareFailedException> sendPrepareMessages(
-      final boolean useAuthentication, final long commitTime,
-      Set<Store> stores, List<RemoteWorker> workers) {
+  private void sendPrepareMessages(final boolean useAuthentication,
+      final long commitTime, Set<Store> stores, List<RemoteWorker> workers) {
     final Map<RemoteNode, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
@@ -425,19 +417,19 @@ public final class TransactionManager {
         break;
       case PREPARING:
       case PREPARED:
-        return failures;
+        return;
       case COMMITTING:
       case COMMITTED:
         WORKER_TRANSACTION_LOGGER.log(Level.FINE,
             "Ignoring prepare request (transaction state = {0})",
             current.commitState.value);
-        return failures;
+        return;
       case PREPARE_FAILED:
       case ABORTING:
       case ABORTED:
         // XXX HACK UGLY
         failures.put(null, null);
-        return failures;
+        abortPrepare(failures);
       }
     }
 
@@ -457,6 +449,9 @@ public final class TransactionManager {
           } catch (TransactionPrepareFailedException e) {
             failures.put(worker,
                 new TransactionPrepareFailedException(e.getMessage()));
+          } catch (TransactionRestartingException e) {
+            failures.put(worker, new TransactionPrepareFailedException(
+                "transaction restarting"));
           }
         }
       };
@@ -543,15 +538,34 @@ public final class TransactionManager {
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
 
       sendAbortMessages(useAuthentication, stores, workers, failures.keySet());
+      
+      synchronized (current.commitState) {
+        current.commitState.value = PREPARE_FAILED;
+        current.commitState.notifyAll();
+      }
+      
+      abortPrepare(failures);
+    } else {
+      synchronized (current.commitState) {
+        current.commitState.value = PREPARED;
+        current.commitState.notifyAll();
+      }
     }
+  }
 
-    synchronized (current.commitState) {
-      current.commitState.value =
-          failures.isEmpty() ? PREPARED : PREPARE_FAILED;
-      current.commitState.notifyAll();
-    }
-
-    return failures;
+  /**
+   * Aborts a failed prepare. Throws a TransactionRestartingException to
+   * indicate that the transaction should be restarted.
+   */
+  private void abortPrepare(Map<RemoteNode, TransactionPrepareFailedException> failures) {
+    failures.remove(null);
+    TransactionPrepareFailedException e =
+      new TransactionPrepareFailedException(failures);
+    Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
+        "{0} error committing: prepare failed exception: {1}", current, e);
+    TransactionID tid = current.tid;
+    abortTransaction(false);
+    throw new TransactionRestartingException(tid);
   }
 
   /**

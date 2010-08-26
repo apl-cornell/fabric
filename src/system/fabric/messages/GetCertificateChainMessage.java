@@ -3,6 +3,7 @@ package fabric.messages;
 import java.io.*;
 import java.security.cert.Certificate;
 
+import fabric.common.Util;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.net.RemoteNode;
@@ -50,13 +51,7 @@ public class GetCertificateChainMessage extends
     }
 
     public void write(DataOutput out) throws IOException {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      ObjectOutputStream oos = new ObjectOutputStream(baos);
-      oos.writeObject(certificateChain);
-      oos.flush();
-      baos.flush();
-
-      byte[] buf = baos.toByteArray();
+      byte[] buf = Util.serialize(certificateChain);
       out.writeInt(buf.length);
       out.write(buf);
     }

@@ -1,0 +1,3 @@
+This directory contains JAR files compiled from the Fabric sources, as well as
+various third-party libraries in binary form.  Sources for some of these
+third-party libraries can be found in the 'src' subdirectory.

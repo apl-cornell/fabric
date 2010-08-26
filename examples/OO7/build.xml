@@ -27,7 +27,10 @@
     <delete dir="${OO7.home}/classes"/>
   </target>
 
-  <target name="clobber" depends="clean" />
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${OO7.home}/var"/>
+  </target>
 
   <!--
   ****************************************************************************
@@ -55,7 +58,10 @@
       <arg value="-cp" />
       <arg value="classes" />
       <srcfile />
-      <fileset dir="src/fabil" includes="OO7/*.fil" />
+      <fileset dir="src/fabil">
+	<include name="OO7/*.fil" />
+	<include name="OO7/traversals/*.fil" />
+      </fileset>
       <globmapper from="*.fil" to="*.class" />
     </apply>
   </target>

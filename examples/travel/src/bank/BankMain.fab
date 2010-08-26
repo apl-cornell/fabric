@@ -56,23 +56,25 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
   
   // TODO Provide default implementations for these 2 methods in Servlet.fab:
   // This method will only be called by the runtime
-  protected AuthSessState[BankPrincipal, lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+  protected AuthSessState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
       String{*lbl} id, SessionPrincipal{*lbl} session) {
-    AuthSessState[BankPrincipal, lbl] toReturn = null;
+    AuthSessState[lbl] toReturn = null;
     atomic {
       if (localStore != null && localStore equiv worker$ &&
 	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
-	toReturn = new AuthSessState[BankPrincipal, lbl]@localStore(id, session);
+	toReturn = new AuthSessState[lbl]@localStore(id, session);
       }
     }
     return toReturn;
   }
   
   // This method will only be called by the runtime
-  protected SessionPrincipal createSessionPrincipal(String{broker→;broker←} id) {
+  // The id can have a bottom label, since it is a random number 
+  // that was just created  
+  protected SessionPrincipal createSessionPrincipal(String{⊥→;⊤←} id) {
     SessionPrincipal toReturn = null;
     atomic {
-      if (brokerstore != null && brokerstore equiv broker) {
+      if (brokerstore != null) {
 	toReturn = new SessionPrincipal@brokerstore(id);
       }
     }

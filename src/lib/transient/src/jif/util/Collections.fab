@@ -26,7 +26,7 @@ public class Collections {
             Iterator[L] iter = src.iterator();
             while (iter != null && iter.hasNext()) {
                 try {
-                    JifObject[M] jo = iter.next();
+                    jif.lang.JifObject[M] jo = iter.next();
                     try {
                         if (cce == null && iae == null)
                             dst.add(jo);
@@ -63,7 +63,7 @@ public class Collections {
         if (L <= M) {
             for (int{*M} i = 0; i < src.size(); i++) {
                 try {
-                    JifObject[M] jo = src.get(i);
+                    jif.lang.JifObject[M] jo = src.get(i);
 //                    try {
 //                        if (cce == null && iae == null)
                             dst.add(jo);

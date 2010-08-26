@@ -1,10 +1,10 @@
 /*
  * A wrapper for Java Integers, to allow them to be treated as 
- * JifObjects
+ * jif.lang.JifObjects
  */
 package jif.lang;
 
-public final class JifInteger[covariant label L] implements JifObject[L] {
+public final class JifInteger[covariant label L] implements jif.lang.JifObject[L] {
     // XXX Need to make the translated class implement IsSerializable
     public final Integer{L} s;
     
@@ -71,16 +71,16 @@ public final class JifInteger[covariant label L] implements JifObject[L] {
 
     public boolean{L; anObject} equals(Object anObject) {
         if (anObject == null) return s == null;
-        if (anObject instanceof IDComparable[L]) {
-            return equals((IDComparable[L])anObject);
+        if (anObject instanceof jif.lang.IDComparable[L]) {
+            return equals((jif.lang.IDComparable[L])anObject);
         }
         return false;
     }
-    public boolean{L; other} equals(IDComparable[L] other) {
+    public boolean{L; other} equals(jif.lang.IDComparable[L] other) {
         return equals(L, other);
     }
 
-    public boolean{L; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
+    public boolean{L; *lbl; lbl; obj} equals(label lbl, jif.lang.IDComparable[lbl] obj) {
         if (obj instanceof JifInteger[lbl]) {
             JifInteger[lbl] that = (JifInteger[lbl])obj;
             if (this.s == null) return that.s == null;

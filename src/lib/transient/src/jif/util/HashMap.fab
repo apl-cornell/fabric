@@ -139,7 +139,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
      * The shift distances in this function were chosen as the result
      * of an automated search over the entire four-dimensional search space.
      */
-    static int{lbl;*lbl;x} hash(label lbl, Hashable[lbl] x) {
+    static int{lbl;*lbl;x} hash(label lbl, jif.lang.Hashable[lbl] x) {
         int h = x==null?19760210:x.hashCode();
 
         h += ~(h << 9);
@@ -149,7 +149,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
         return h;
     }
 
-    static boolean{lbx;x;lby;y;*lbx;*lby} eq(label lbx, IDComparable[lbx] x, label lby, IDComparable[lby] y) {
+    static boolean{lbx;x;lby;y;*lbx;*lby} eq(label lbx, jif.lang.IDComparable[lbx] x, label lby, jif.lang.IDComparable[lby] y) {
         return x == y || (x != null && x.equals(lby, y));
     }
 
@@ -173,7 +173,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
         return size == 0;
     }
 
-    public JifObject[V]{K; *lbl;lbl;key} get(label lbl, JifObject[lbl] key) {
+    public jif.lang.JifObject[V]{K; *lbl;lbl;key} get(label lbl, jif.lang.JifObject[lbl] key) {
         int hash = hash(lbl, key);
         int i = indexFor(hash, table);
         HashMapEntry[K,V] e = null;
@@ -190,7 +190,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
         }
     }
 
-    public boolean{K;*lbl;lbl;key} containsKey(label lbl, JifObject[lbl] key) {
+    public boolean{K;*lbl;lbl;key} containsKey(label lbl, jif.lang.JifObject[lbl] key) {
         int hash = hash(lbl, key);
         int i = indexFor(hash, table);
         HashMapEntry[K,V] e = null;
@@ -213,7 +213,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
      * HashMap.  Returns null if the HashMap contains no mapping
      * for this key.
      */
-    HashMapEntry[K,V]{K; *lbl; lbl; key} getEntry(label lbl, JifObject[lbl] key) {
+    HashMapEntry[K,V]{K; *lbl; lbl; key} getEntry(label lbl, jif.lang.JifObject[lbl] key) {
         int hash = hash(lbl, key);
         int i = indexFor(hash, table);
         HashMapEntry[K,V] e = null;
@@ -231,7 +231,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
         }
     }
   
-    public JifObject[V]{K} put{K}(JifObject[K]{K} key, JifObject[V]{K} value) {
+    public jif.lang.JifObject[V]{K} put{K}(jif.lang.JifObject[K]{K} key, jif.lang.JifObject[V]{K} value) {
         int hash = hash(K, key);
         int i = indexFor(hash, table);
 
@@ -243,7 +243,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
         catch (ArrayIndexOutOfBoundsException imposs) { }
         for (; e != null; e = e.next) {
             if (e.hash == hash && eq(K, key, K, e.key)) {
-                JifObject[V] oldValue = e.getValue();
+                jif.lang.JifObject[V] oldValue = e.getValue();
                 e.value = value;
                 e.recordAccess(this);
                 return oldValue;
@@ -254,7 +254,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
         return null;
     }
 
-    private void putForCreate{K}(JifObject[K]{K} key, JifObject[V]{K} value) {
+    private void putForCreate{K}(jif.lang.JifObject[K]{K} key, jif.lang.JifObject[V]{K} value) {
         int hash = hash(K, key);
         int i = indexFor(hash, table);
 
@@ -347,13 +347,13 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
 //        }
 //    }
   
-    public JifObject[V]{K} remove{K}(JifObject[K]{K} key) {
+    public jif.lang.JifObject[V]{K} remove{K}(jif.lang.JifObject[K]{K} key) {
         HashMapEntry[K,V] e = removeEntryForKey(key);
         if (e != null)  return e.getValue();
         return null;
     }
 
-    HashMapEntry[K,V]{K} removeEntryForKey{K}(JifObject[K]{K} key) {
+    HashMapEntry[K,V]{K} removeEntryForKey{K}(jif.lang.JifObject[K]{K} key) {
         int hash = hash(K, key);
         int i = indexFor(hash, table);
         HashMapEntry[K,V] prev = null;
@@ -391,12 +391,12 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
     /**
      * Special version of remove for EntrySet.
      */
-    HashMapEntry[K,V]{K} removeMapping{K}(JifObject[K]{K} o) {
+    HashMapEntry[K,V]{K} removeMapping{K}(jif.lang.JifObject[K]{K} o) {
         if (!(o instanceof HashMapEntry[K,V]))
             return null;
 
         HashMapEntry[K,V] entry = (HashMapEntry[K,V])o;
-        JifObject[K] k = entry.getKey();        
+        jif.lang.JifObject[K] k = entry.getKey();        
         int hash = hash(K, k);
         int i = indexFor(hash, table);
         HashMapEntry[K,V] prev = null;
@@ -516,7 +516,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
      *
      * Subclass overrides this to alter the behavior of put method.
      */
-    void addEntry{K}(int{K} hash, JifObject[K]{K} key, JifObject[V]{K} value, int{K} bucketIndex) {
+    void addEntry{K}(int{K} hash, jif.lang.JifObject[K]{K} key, jif.lang.JifObject[V]{K} value, int{K} bucketIndex) {
         HashMapEntry[K,V] e = null;
         try {
             e = new HashMapEntry[K,V](hash, key, value, table[bucketIndex]);
@@ -537,7 +537,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
      * Subclass overrides this to alter the behavior of HashMap(Map),
      * clone, and readObject.
      */
-    void createEntry{K}(int{K} hash, JifObject[K]{K} key, JifObject[V]{K} value, int{K} bucketIndex) {
+    void createEntry{K}(int{K} hash, jif.lang.JifObject[K]{K} key, jif.lang.JifObject[V]{K} value, int{K} bucketIndex) {
         HashMapEntry[K,V] e = null;
         try {
             e = new HashMapEntry[K,V](hash, key, value, table[bucketIndex]);
@@ -566,7 +566,7 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
         return entrySet;
     }
     
-    public boolean{K;V; *lbl; lbl; o} equals(label lbl, IDComparable[lbl] o) {
+    public boolean{K;V; *lbl; lbl; o} equals(label lbl, jif.lang.IDComparable[lbl] o) {
         if (o == this) return true;        
         if (!(o instanceof Map[K,V])) return false;
         
@@ -577,8 +577,8 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
         while (e != null && e.after != header) {
             e = e.after;
             if (e == null) continue;
-            JifObject[K] key = e.getKey();
-            JifObject[V] value = e.getValue();
+            jif.lang.JifObject[K] key = e.getKey();
+            jif.lang.JifObject[V] value = e.getValue();
             if (value == null) {
                 if (!(t.get(key)==null && t.containsKey(key))) {
                     return false;
@@ -607,8 +607,8 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
             e = e.after;
             if (e == null) continue;
             try {
-                JifObject[K] key = e.getKey();
-                JifObject[V] value = e.getValue();
+                jif.lang.JifObject[K] key = e.getKey();
+                jif.lang.JifObject[V] value = e.getValue();
                 String k = key == this ?"(this Map)" : (key==null?"null":key.toString());
                 String v = value == this ?"(this Map)" : (value==null?"null":value.toString());
                 buf += (k + "=" + v);
@@ -622,8 +622,8 @@ public class HashMap[label K, label V] extends AbstractMap[K,V] {
 }
 
 class HashMapEntry[label K, label V] extends java.lang.Object implements MapEntry[K,V] {
-    final JifObject[K]{this} key;
-    JifObject[V]{K} value;
+    final jif.lang.JifObject[K]{this} key;
+    jif.lang.JifObject[V]{K} value;
     final int{this} hash;
     HashMapEntry[K,V]{K} next;
 
@@ -633,31 +633,31 @@ class HashMapEntry[label K, label V] extends java.lang.Object implements MapEntr
     /**
      * Create new entry.
      */
-    HashMapEntry(int{this} h, JifObject[K]{this} k, JifObject[V]{K} v, HashMapEntry[K,V]{K} n) { 
+    HashMapEntry(int{this} h, jif.lang.JifObject[K]{this} k, jif.lang.JifObject[V]{K} v, HashMapEntry[K,V]{K} n) { 
         value = v; 
         key = k;
         hash = h;
         next = n;
     }
     
-    public JifObject[K] getKey() {
+    public jif.lang.JifObject[K] getKey() {
         return key;
     }
 
-    public JifObject[V]{K} getValue() {
+    public jif.lang.JifObject[V]{K} getValue() {
         return value;
     }
 
-    public JifObject[V]{K} setValue{K}(JifObject[V]{K} newValue) {
-        JifObject[V] oldValue = value;
+    public jif.lang.JifObject[V]{K} setValue{K}(jif.lang.JifObject[V]{K} newValue) {
+        jif.lang.JifObject[V] oldValue = value;
         value = newValue;
         return oldValue;
     }
 
-    public boolean{K; obj} equals(IDComparable[K] obj) {
+    public boolean{K; obj} equals(jif.lang.IDComparable[K] obj) {
         return equals(K, obj);
     }
-    public boolean{K; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
+    public boolean{K; *lbl; lbl; obj} equals(label lbl, jif.lang.IDComparable[lbl] obj) {
         return this == obj;
     }
 
@@ -712,7 +712,7 @@ class HashMapEntrySet[label K, label V] extends AbstractSet[K] {
         return new HashMapEntrySetIterator[K,V](parent); 
     }
 
-    public JifObject[K]{K;index} get(int index):{K;index} throws (IndexOutOfBoundsException{K;index}) {
+    public jif.lang.JifObject[K]{K;index} get(int index):{K;index} throws (IndexOutOfBoundsException{K;index}) {
         if (index < 0 || index >= size()) throw new IndexOutOfBoundsException();
         try {
             HashMapEntry[K,V] c = parent.header.after;
@@ -730,7 +730,7 @@ class HashMapEntrySet[label K, label V] extends AbstractSet[K] {
         return parent==null?0:parent.size();
     }
     
-    public boolean{K;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o) {
+    public boolean{K;*lbl;lbl;o} contains(label lbl, jif.lang.JifObject[lbl] o) {
         if (o instanceof HashMapEntry[K,V] && parent != null) {
             HashMapEntry[K,V] e = (HashMapEntry[K,V])o;
             return parent.getEntry(K, e.key) == o;
@@ -738,7 +738,7 @@ class HashMapEntrySet[label K, label V] extends AbstractSet[K] {
         return false;
     }
 
-    public boolean{K} remove{K}(JifObject[K]{K} o) {
+    public boolean{K} remove{K}(jif.lang.JifObject[K]{K} o) {
         if (parent != null) return parent.removeMapping(o) != null;
         return false;
     }
@@ -765,7 +765,7 @@ class HashMapEntrySetIterator[label K, label V] extends java.lang.Object impleme
         return next != (parent==null?null:parent.header);
     }
 
-    public JifObject[K]{K} next{K}() throws (NoSuchElementException{K}) {
+    public jif.lang.JifObject[K]{K} next{K}() throws (NoSuchElementException{K}) {
         if (parent != null) {
             if (next == null) {
                 // initialization that we couldn't do in the constructor.
@@ -791,7 +791,7 @@ class HashMapEntrySetIterator[label K, label V] extends java.lang.Object impleme
         if (parent != null) {
             if (current == null || current == parent.header) throw new IllegalStateException();
             HashMapEntry[K,V] c = current;
-            JifObject[K] k = c==null?null:c.key;
+            jif.lang.JifObject[K] k = c==null?null:c.key;
             current = parent.header;
             parent.removeEntryForKey(k);
         }

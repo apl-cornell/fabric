@@ -23,17 +23,17 @@ public class HashSet[label L] extends AbstractSet[L] {
         return 0;
     }
     
-    public boolean{L;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o) {
+    public boolean{L;*lbl;lbl;o} contains(label lbl, jif.lang.JifObject[lbl] o) {
         if (map != null) return map.containsKey(lbl, o);
         return false;
     }
     
-    public boolean{L} add{L}(JifObject[L]{L} o):{L} throws (ClassCastException{L}, IllegalArgumentException{L}) {
+    public boolean{L} add{L}(jif.lang.JifObject[L]{L} o):{L} throws (ClassCastException{L}, IllegalArgumentException{L}) {
         if (map != null) return (map.put(o, o) == null);                        
         return false;
     }
     
-    public boolean{L} remove{L}(JifObject[L]{L} o) {
+    public boolean{L} remove{L}(jif.lang.JifObject[L]{L} o) {
         if (map != null) return (map.remove(o) != null);
         return false;
     }
@@ -42,7 +42,7 @@ public class HashSet[label L] extends AbstractSet[L] {
         if (map != null) map.clear();
     }
 
-    public JifObject[L]{L;index} get(int index):{L;index} throws (IndexOutOfBoundsException{L;index}) {
+    public jif.lang.JifObject[L]{L;index} get(int index):{L;index} throws (IndexOutOfBoundsException{L;index}) {
         if (map != null) {
             Set[L] ks = map.keySet();
             if (ks != null) return ks.get(index);
@@ -50,7 +50,7 @@ public class HashSet[label L] extends AbstractSet[L] {
         return null;
     }
     
-    public boolean{L;o;lbl;*lbl} equals(label lbl, IDComparable[lbl] o) {
+    public boolean{L;o;lbl;*lbl} equals(label lbl, jif.lang.IDComparable[lbl] o) {
         if (o == this) return true;
         if (!(o instanceof Set[lbl])) return false;
         Set[lbl] that = (Set[lbl])o;
@@ -62,7 +62,7 @@ public class HashSet[label L] extends AbstractSet[L] {
         while (e != null && e.after != map.header) {
             e = e.after;
             if (e == null) continue;
-            JifObject[L] key = e.getKey();
+            jif.lang.JifObject[L] key = e.getKey();
             if (!that.contains(L, key)) return false;
         }
         return true;

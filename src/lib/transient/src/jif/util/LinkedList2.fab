@@ -31,7 +31,7 @@ public class LinkedList2[label S, label C] extends AbstractList2[S,C]
         return s;
     }
 
-    public boolean{S} add{S}(JifObject[C]{S} o) {
+    public boolean{S} add{S}(jif.lang.JifObject[C]{S} o) {
         LinkedListEntry2[S,C]{S} n = new LinkedListEntry2[S,C]();
         LinkedListEntry2[S,C]{S} m = tail; // use a local to avoid NPE
         n.data = o;
@@ -51,7 +51,7 @@ public class LinkedList2[label S, label C] extends AbstractList2[S,C]
     	// The semantics of this method is to remove this particular object reference from the list
     	// without looking at the value inside it. This is different from the standard remove method
     	// available in Collections
-    public boolean{S} removeByRef{S}(JifObject[C]{S} o) {
+    public boolean{S} removeByRef{S}(jif.lang.JifObject[C]{S} o) {
         LinkedListEntry2[S,C] e = head;
         while (e != null) {
             if (e.data == o) {
@@ -81,7 +81,7 @@ public class LinkedList2[label S, label C] extends AbstractList2[S,C]
         // The semantics of this method is to remove this particular object reference from the list
         // without looking at the value inside it. This is different from the standard remove method
         // available in Collections
-  public boolean{S} remove{S}(JifObject[C]{S} o) where {C} <= {S} {
+  public boolean{S} remove{S}(jif.lang.JifObject[C]{S} o) where {C} <= {S} {
     LinkedListEntry2[S,C] e = head;
     while (e != null) {
         if (e.data == o || (o != null && o.equals(e.data))) {
@@ -108,7 +108,7 @@ public class LinkedList2[label S, label C] extends AbstractList2[S,C]
     return false;
   }
   
-    public JifObject[C]{S} remove{S}(int{S} index) throws (IndexOutOfBoundsException{S}) {
+    public jif.lang.JifObject[C]{S} remove{S}(int{S} index) throws (IndexOutOfBoundsException{S}) {
         int s = 0;
         int size = size();
 
@@ -148,13 +148,13 @@ public class LinkedList2[label S, label C] extends AbstractList2[S,C]
         int hashCode = 1;
         LinkedListEntry2[S,C] e = head;
         while (e != null) {
-            JifObject[C] mobj = e.data;
+            jif.lang.JifObject[C] mobj = e.data;
             hashCode = 31*hashCode + (mobj==null ? 0 : mobj.hashCode());
         }
         return hashCode;
     }
 
-    public JifObject[C]{S;index} get(int index):{S;index} throws (IndexOutOfBoundsException{S;index}) {
+    public jif.lang.JifObject[C]{S;index} get(int index):{S;index} throws (IndexOutOfBoundsException{S;index}) {
         if (index < 0 || index >= size()) {
             throw new IndexOutOfBoundsException();
         }
@@ -173,7 +173,7 @@ public class LinkedList2[label S, label C] extends AbstractList2[S,C]
         return null;
     }
 
-    public JifObject[C]{S} getFirst():{S} throws (IndexOutOfBoundsException{S}) {
+    public jif.lang.JifObject[C]{S} getFirst():{S} throws (IndexOutOfBoundsException{S}) {
         LinkedListEntry2[S,C] m = head;
         if (m != null) {
             return m.data;
@@ -181,7 +181,7 @@ public class LinkedList2[label S, label C] extends AbstractList2[S,C]
         throw new IndexOutOfBoundsException();
     }
 
-    public JifObject[C]{S} getLast():{S} throws (IndexOutOfBoundsException{S}) {
+    public jif.lang.JifObject[C]{S} getLast():{S} throws (IndexOutOfBoundsException{S}) {
         LinkedListEntry2[S,C] m = tail;
         if (m != null) {
             return m.data;
@@ -190,13 +190,13 @@ public class LinkedList2[label S, label C] extends AbstractList2[S,C]
     }
 
 
-    public JifObject[C]{S} set{S}(int{S} index, JifObject[C]{S} element):{S} throws (IndexOutOfBoundsException{S}) {
+    public jif.lang.JifObject[C]{S} set{S}(int{S} index, JifObject[C]{S} element):{S} throws (IndexOutOfBoundsException{S}) {
         int s = 0;
         
         LinkedListEntry2[S,C] e = head;
         while (e != null) {
             if (s == index) {
-                JifObject[C] old = e.data;
+                jif.lang.JifObject[C] old = e.data;
                 e.data = element;
                 return old;
             }
@@ -206,7 +206,7 @@ public class LinkedList2[label S, label C] extends AbstractList2[S,C]
         throw new IndexOutOfBoundsException();
     }
 
-    public void add{S}(int{S} index, JifObject[C]{S} element):{S} throws (IndexOutOfBoundsException{S}) {
+    public void add{S}(int{S} index, jif.lang.JifObject[C]{S} element):{S} throws (IndexOutOfBoundsException{S}) {
         LinkedListEntry2[S,C] n = new LinkedListEntry2[S,C]();
         n.data = element;
         
@@ -259,7 +259,7 @@ public class LinkedList2[label S, label C] extends AbstractList2[S,C]
     }
 
 
-    public int{S;C;o} indexOf(JifObject[C] o) {
+    public int{S;C;o} indexOf(jif.lang.JifObject[C] o) {
         int s = 0;
         
         LinkedListEntry2[S,C] e = head;
@@ -273,7 +273,7 @@ public class LinkedList2[label S, label C] extends AbstractList2[S,C]
         return -1;
     }
 
-    public int{S;C;o} lastIndexOf(JifObject[C] o) {
+    public int{S;C;o} lastIndexOf(jif.lang.JifObject[C] o) {
         int s = 0;
         int last = -1;
         
@@ -294,6 +294,6 @@ class LinkedListEntry2[label S, label C] {
     LinkedListEntry2() {}
     LinkedListEntry2[S,C]{S} next;
     LinkedListEntry2[S,C]{S} prev;
-    JifObject[C]{S} data;
+    jif.lang.JifObject[C]{S} data;
 }
 

@@ -14,7 +14,7 @@ public class Main {
     }
     
     Worker worker = fabric.worker.Worker.getWorker();
-    Map root = (Map) worker.getStore("store1").getRoot();
+    Map root = (Map) worker.getStore("store0").getRoot();
     Random random = new Random();
     Tree theTree = null;
     if (args[0].equals("create")) {

@@ -20,9 +20,9 @@ public class LogoffAction[principal servP] extends AbstractAction[servP] {
         Servlet[servP] servlet_ = getServlet();
         SessionState state_ = req.getSessionState(lbl);
         if (!(servlet_ instanceof AbstractServlet[servP]) ||
-                !(state_ instanceof AuthSessState[servP, lbl])) 
+                !(state_ instanceof AuthSessState[lbl])) 
             throw new ServletException("Error processing request");
-        final AuthSessState[servP, lbl] state = (AuthSessState[servP, lbl])state_;
+        final AuthSessState[lbl] state = (AuthSessState[lbl])state_;
         final AbstractServlet[servP] servlet = (AbstractServlet[servP])servlet_;
         if (state == null || servlet == null)    throw new ServletException("Error processing request");
 

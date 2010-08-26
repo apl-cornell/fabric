@@ -34,8 +34,8 @@ public class BlogServlet extends HttpServlet {
     String action = request.getParameter("action");
     String jsp = PAGE_POSTS;
 
-    if (request.getParameter("workeraction") != null) {
-      handleWorkerAction(request, response);
+    if (request.getParameter("clientaction") != null) {
+      handleClientAction(request, response);
       return;
     }
 
@@ -70,25 +70,25 @@ public class BlogServlet extends HttpServlet {
     showJsp(request, response, jsp);
   }
 
-  private void handleWorkerAction(HttpServletRequest request,
+  private void handleClientAction(HttpServletRequest request,
       HttpServletResponse response) throws IOException {
     request.setAttribute("debug", true);
-    String workerAction = request.getParameter("workeraction");
-    if (workerAction.equals("connect")) {
-      Statistics.addWorker(request.getRemoteAddr() + ":"
+    String clientAction = request.getParameter("clientaction");
+    if (clientAction.equals("connect")) {
+      Statistics.addClient(request.getRemoteAddr() + ":"
           + request.getParameter("port"));
       response.getOutputStream().print("ok");
-    } else if (workerAction.equals("removeother")) {
-      Statistics.removeWorker(request.getParameter("id"));
+    } else if (clientAction.equals("removeother")) {
+      Statistics.removeClient(request.getParameter("id"));
       redirect(response, "/web");
-    } else if (workerAction.equals("removeme")) {
-      Statistics.removeWorker(request.getRemoteAddr() + ":"
+    } else if (clientAction.equals("removeme")) {
+      Statistics.removeClient(request.getRemoteAddr() + ":"
           + request.getParameter("port"));
-    } else if (workerAction.equals("done")) {
-      Statistics.setWorkerDone(request.getRemoteAddr() + ":"
+    } else if (clientAction.equals("done")) {
+      Statistics.setClientDone(request.getRemoteAddr() + ":"
           + request.getParameter("port"));
-    } else if (workerAction.equals("error")) {
-      Statistics.setWorkerError();
+    } else if (clientAction.equals("error")) {
+      Statistics.setClientError();
     }
 
   }
@@ -108,19 +108,19 @@ public class BlogServlet extends HttpServlet {
       // TODO
     } else if (debugAction.equals("benchmark")) {
       try {
-        Statistics.unsetWorkerError();
-        int numWorkers = Integer.parseInt(request.getParameter("numworkers"));
+        Statistics.unsetClientError();
+        int numClients = Integer.parseInt(request.getParameter("numclients"));
         String action = request.getParameter("action");
         int requests = Integer.parseInt(request.getParameter("size"));
-        String[] workers = new String[Statistics.getWorkers().size()];
-        workers = Statistics.getWorkers().toArray(workers);
-        for (int i = 0; i < numWorkers; i++) {
-          Statistics.setBusyWorker(workers[i]);
-          PageLoader.getPage("http://" + workers[i]
+        String[] clients = new String[Statistics.getClients().size()];
+        clients = Statistics.getClients().toArray(clients);
+        for (int i = 0; i < numClients; i++) {
+          Statistics.setBusyClient(clients[i]);
+          PageLoader.getPage("http://" + clients[i]
               + "/web?action=start&daction=" + action + "&requests=" + requests);
         }
       } catch (IOException ex) {
-        Statistics.removeAllBusyWorkers();
+        Statistics.removeAllBusyClients();
         request.setAttribute("errormsg", "Could not initiate benchmark: "
             + ex.getMessage());
         ex.printStackTrace();
@@ -165,10 +165,10 @@ public class BlogServlet extends HttpServlet {
 
   private void prepareDebugMenu(HttpServletRequest request) {
     request.setAttribute("blog", Blog.getInstance());
-    request.setAttribute("workers", Statistics.getWorkers());
+    request.setAttribute("clients", Statistics.getClients());
     request.setAttribute("actions", Action.values());
-    request.setAttribute("busyworkers", Statistics.getBusyWorkers());
-    request.setAttribute("workerError", Statistics.getWorkerError());
+    request.setAttribute("busyclients", Statistics.getBusyClients());
+    request.setAttribute("clientError", Statistics.getClientError());
     request.setAttribute("statistics", Statistics.getInstance());
   }
 

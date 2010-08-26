@@ -31,8 +31,8 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
         final AbstractServlet[servP] servlet = (AbstractServlet[servP])servlet_;
         if (req == null) throw new ServletException("Error processing request");
         SessionState state_ = req.getSessionState(lbl);
-        if (!(state_ instanceof AuthSessState[servP, lbl])) throw new ServletException("Incorrect session state");
-        final AuthSessState[servP, lbl] state = (AuthSessState[servP, lbl])state_;
+        if (!(state_ instanceof AuthSessState[lbl])) throw new ServletException("Incorrect session state");
+        final AuthSessState[lbl] state = (AuthSessState[lbl])state_;
         if (servlet == null || state == null) throw new ServletException("Error processing request");
         
         atomic {
@@ -58,7 +58,7 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
     protected void producePage{*lbl}(label{*lbl} lbl,
                                            Request[servP]{*lbl} req,
                                            Servlet[servP]{*lbl} servlet,
-                                           AuthSessState[servP, lbl]{*lbl} state,
+                                           AuthSessState[lbl]{*lbl} state,
                                            String{*lbl} uidError, 
                                            String{*lbl} passwdError) 
              where req.session equiv state.sessionPrincipal,
@@ -128,8 +128,8 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
         AbstractServlet[servP] servlet = (AbstractServlet[servP])servlet_;
         if (req == null) throw new ServletException("Error processing request");
         SessionState state_ = req.getSessionState(lbl);
-        if (!(state_ instanceof AuthSessState[servP, lbl])) throw new ServletException("Incorrect session state");
-        final AuthSessState[servP, lbl] state = (AuthSessState[servP, lbl])state_;
+        if (!(state_ instanceof AuthSessState[lbl])) throw new ServletException("Incorrect session state");
+        final AuthSessState[lbl] state = (AuthSessState[lbl])state_;
         if (servlet == null || state == null) throw new ServletException("Error processing request");
 
         atomic {
@@ -147,7 +147,7 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
     public void invokeImpl{*lbl}(label{*lbl} lbl,
                                           Request[servP]{*lbl} req,
                                           AbstractServlet[servP]{*lbl} servlet,
-                                          AuthSessState[servP, lbl]{*lbl} state) 
+                                          AuthSessState[lbl]{*lbl} state) 
         throws (ServletException{*lbl;req.session←})
             where caller(req.session),
             lbl <= {⊤→req.session},
@@ -171,7 +171,7 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
     protected void submit{*lbl}(label{*lbl} lbl,
                                 Request[servP]{*lbl} req,
                                 AbstractServlet[servP]{*lbl} servlet,
-                                AuthSessState[servP, {*lbl}]{*lbl} state) 
+                                AuthSessState[lbl]{*lbl} state) 
         throws (ServletException{*lbl;req.session←})
         where req.session equiv state.sessionPrincipal,
               lbl <= {⊤→req.session},
@@ -194,7 +194,7 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
         if (loginAct.inpUserID.inputLbl <= sessLbl && 
                 loginAct.inpPassword.inputLbl <= sessLbl &&
                 new label {*lbl; req.session←} <= loginAct.inpUserID.inputLbl &&
-                lbl <= new label {req.session:;req.session←} &&
+                lbl <= new label {req.session→;req.session←} &&
                 sessLbl <= loginAct.inpPassword.inputLbl) {
             String userID = req.getParam(loginAct.inpUserID);
             String password = req.getParam(loginAct.inpPassword);
@@ -243,9 +243,9 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
                         declassify({req.session→;req.session←} to {req.session←}) {                     
                             final principal logU = declassify(endorse(loginUser, {session→;session←}), {session←});
                             try {
-                                final AuthSessState[servP, {session←}] state_ = 
-                                    (AuthSessState[servP, {session←}])AuthSessState[servP, {session←}].declassifySS(state, session);
-                                if(state_.sessionPrincipal equiv session) {
+                                final AuthSessState[{session←}] state_ = 
+                                    (AuthSessState[{session←}])AuthSessState[{session←}].declassifySS(state, session);
+                                if(state_.sessionPrincipal equiv session) { // NPE thrown here!!
                                     state_.currentUser(logU);
                                 }
                             } catch(ClassCastException e) {}

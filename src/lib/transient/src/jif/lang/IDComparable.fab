@@ -9,6 +9,6 @@ package jif.lang;
  * is parameterized on a label.
  */
 nonfabric public interface IDComparable[covariant label L] {
-    boolean{L; obj} equals(IDComparable[L] obj);
-    boolean{L; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj);
+    boolean{L; obj} equals(jif.lang.IDComparable[L] obj);
+    boolean{L; *lbl; lbl; obj} equals(label lbl, jif.lang.IDComparable[lbl] obj);
 }

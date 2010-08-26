@@ -24,11 +24,10 @@ public class ConfigProperties {
   public final int    retries;
   public final int    timeout;
   public final boolean useSSL;
-  public final String address;
+  public final String hostname;
 
   public final String backendClass;
-  public final int storeAuthPort;
-  public final int storeUnauthPort;
+  public final int storePort;
 
   public final String workerPrincipal;
 
@@ -82,7 +81,7 @@ public class ConfigProperties {
     this.useSSL          = Boolean.parseBoolean( removeProperty(p, "fabric.node.useSSL",               "true"));
     this.keystore        = Resources.relpathRewrite("etc", "keys",
                                                  removeProperty(p, "fabric.node.keystore",             name + ".keystore"));
-    this.address         =                       removeProperty(p, "fabric.node.address",              "localhost");
+    this.hostname        =                       removeProperty(p, "fabric.node.hostname",             name);
     
     /************************** Worker Properties *****************************/
     this.workerPort      = Integer.parseInt(     removeProperty(p, "fabric.worker.port",               "3372"));
@@ -90,9 +89,8 @@ public class ConfigProperties {
     this.workerPrincipal =                       removeProperty(p, "fabric.worker.principal",          null);
 
     /************************** Store  Properties *****************************/
-    this.storeAuthPort   = Integer.parseInt(     removeProperty(p, "fabric.store.authport",            "3472"));
-    this.storeUnauthPort = Integer.parseInt(     removeProperty(p, "fabric.store.unauthport",          "3472"));
-    this.backendClass    =                       removeProperty(p, "fabric.store.db.class",            null);
+    this.storePort       = Integer.parseInt(     removeProperty(p, "fabric.store.port",                "3472"));
+    this.backendClass    =                       removeProperty(p, "fabric.store.db.class",            "fabric.store.db.BdbDB");
 
     //
     // Collect dissemination properties while printing other unused properties.

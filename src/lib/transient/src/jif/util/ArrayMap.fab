@@ -39,11 +39,11 @@ public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
         
     }
     
-    public JifObject[V]{K;*lbl;lbl;key} get(label lbl, JifObject[lbl] key) {
+    public jif.lang.JifObject[V]{K;*lbl;lbl;key} get(label lbl, JifObject[lbl] key) {
         try {
             for(int i = 0; i < size; i++) {
                 ArrayMapEntry[K,V] e = entryArray[i]; 
-                JifObject[K] k = e.key;
+                jif.lang.JifObject[K] k = e.key;
                 if (k == key || (k != null && k.equals(lbl, key))) {
                     return e.value;
                 }
@@ -54,11 +54,11 @@ public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
         return null;
     }
     
-    public boolean{K;*lbl;lbl;key} containsKey(label lbl, JifObject[lbl] key) {
+    public boolean{K;*lbl;lbl;key} containsKey(label lbl, jif.lang.JifObject[lbl] key) {
         try {
             for(int i = 0; i < size; i++) {
                 ArrayMapEntry[K,V] e = entryArray[i]; 
-                JifObject[K] k = e.key;
+                jif.lang.JifObject[K] k = e.key;
                 if (k == key || (k != null && k.equals(lbl, key))) {
                     return true;
                 }
@@ -71,14 +71,14 @@ public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
     
     
     // Modification Operations    
-    public JifObject[V]{K} put{K}(JifObject[K]{K} key, JifObject[V]{K} value) {
+    public jif.lang.JifObject[V]{K} put{K}(JifObject[K]{K} key, JifObject[V]{K} value) {
         boolean found = false;
-        JifObject[V] old = null;
+        jif.lang.JifObject[V] old = null;
         
         try {
             for(int i = 0; i < size; i++) {
                 ArrayMapEntry[K,V] e = entryArray[i]; 
-                JifObject[K] k = e.key;
+                jif.lang.JifObject[K] k = e.key;
                 if (k == key || (k != null && k.equals(key))) {
                     found = true;
                     old = e.value;
@@ -105,12 +105,12 @@ public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
         return null;        
     }
     
-    public JifObject[V]{K} remove{K}(JifObject[K]{K} key) {
-        JifObject[V] old;
+    public jif.lang.JifObject[V]{K} remove{K}(JifObject[K]{K} key) {
+        jif.lang.JifObject[V] old;
         try {
             for(int i = 0; i < size; i++) {
                 ArrayMapEntry[K,V] e = entryArray[i]; 
-                JifObject[K] k = e.key;
+                jif.lang.JifObject[K] k = e.key;
                 if (k == key || (k != null && k.equals(key))) {
                     old = e.value;                    
                     remove(i);
@@ -149,35 +149,35 @@ public class ArrayMap[label K, label V] extends AbstractMap[K,V] {
 }
 
 class ArrayMapEntry[label K, label V] implements MapEntry[K,V] {
-    final JifObject[K]{this} key;
-    JifObject[V]{K} value;
+    final jif.lang.JifObject[K]{this} key;
+    jif.lang.JifObject[V]{K} value;
 
     /**
      * Create new entry.
      */
-    ArrayMapEntry(JifObject[K]{this} k, JifObject[V]{K} v) { 
+    ArrayMapEntry(jif.lang.JifObject[K]{this} k, JifObject[V]{K} v) { 
         value = v; 
         key = k;
     }
     
-    public JifObject[K] getKey() {
+    public jif.lang.JifObject[K] getKey() {
         return key;
     }
 
-    public JifObject[V]{K} getValue() {
+    public jif.lang.JifObject[V]{K} getValue() {
         return value;
     }
 
-    public JifObject[V]{K} setValue{K}(JifObject[V]{K} newValue) {
-        JifObject[V] oldValue = value;
+    public jif.lang.JifObject[V]{K} setValue{K}(JifObject[V]{K} newValue) {
+        jif.lang.JifObject[V] oldValue = value;
         value = newValue;
         return oldValue;
     }
 
-    public boolean{K; obj} equals(IDComparable[K] obj) {
+    public boolean{K; obj} equals(jif.lang.IDComparable[K] obj) {
         return equals(K, obj);
     }
-    public boolean{K; *lbl; lbl; obj} equals(label lbl, IDComparable[lbl] obj) {
+    public boolean{K; *lbl; lbl; obj} equals(label lbl, jif.lang.IDComparable[lbl] obj) {
         return this == obj;
     }
 
@@ -203,7 +203,7 @@ class ArrayMapEntrySet[label K, label V] extends AbstractSet[K] {
         return parent==null?0:parent.size();
     }	
     
-    public boolean{K;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o) {
+    public boolean{K;*lbl;lbl;o} contains(label lbl, jif.lang.JifObject[lbl] o) {
         try {
             for(int i = 0; i < parent.size; i++) {
                 if(parent.entryArray[i].equals(lbl, o)) {
@@ -218,7 +218,7 @@ class ArrayMapEntrySet[label K, label V] extends AbstractSet[K] {
     }
     
     // XXX no locking required?
-    public boolean{K} remove{K}(JifObject[K]{K} o) {
+    public boolean{K} remove{K}(jif.lang.JifObject[K]{K} o) {
         try {
             for(int i = 0; i < parent.size; i++) {
                 if(parent.entryArray[i].equals(o)) {
@@ -235,7 +235,7 @@ class ArrayMapEntrySet[label K, label V] extends AbstractSet[K] {
         return new ArrayMapEntrySetIterator[K,V](this.parent);
     }
            
-    public JifObject[K]{K;index} get(int index):{K;index} throws (IndexOutOfBoundsException{K;index}) {
+    public jif.lang.JifObject[K]{K;index} get(int index):{K;index} throws (IndexOutOfBoundsException{K;index}) {
         try {
             return parent.entryArray[index];
         } 
@@ -265,7 +265,7 @@ class ArrayMapEntrySetIterator[label K, label V] implements Iterator[K] {
         return false;		
     }
     
-    public JifObject[K]{K} next{K}() throws (NoSuchElementException{K}) {
+    public jif.lang.JifObject[K]{K} next{K}() throws (NoSuchElementException{K}) {
         try {
             if(next >= parent.size) {
                 throw new NoSuchElementException();

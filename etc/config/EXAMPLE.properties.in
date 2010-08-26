@@ -37,17 +37,15 @@
 
 
 
-# The ports for the store to listen on for authenticated and unauthenticated
-# connections.
+# The port for the store to listen on.
 # This is optional.
 
-#fabric.store.authport    = 3472
-#fabric.store.unauthport  = 3572
+#fabric.store.port        = 3472
 
 
 
 # The IP address or DNS name that this node can be reached at.  This is
 # optional; the default is <node name>
 
-#fabric.node.address = fabric.example.net
+#fabric.node.hostname = fabric.example.net
 
