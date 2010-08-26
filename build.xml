@@ -959,6 +959,7 @@ public class Version {
         <include name="common.xml" />
         <include name="config.properties.in" />
         <include name="README" />
+        <include name="COPYING" />
       </tarfileset>
 
       <!-- Include scripts in bin and make them executable. -->
@@ -990,6 +991,18 @@ public class Version {
         <include name="api/**" />
       </tarfileset>
 
+      <!-- Include licences. -->
+      <tarfileset dir="${doc}/licenses"
+          prefix="fabric-${fabric.version}/doc/licenses">
+        <include name="apache-2.0.txt" />
+        <include name="eclipse-1.0.html" />
+        <include name="free-pastry.txt" />
+        <include name="gpl-2.0.txt" />
+        <include name="lgpl-2.1.txt" />
+        <include name="mit-x11.txt" />
+        <include name="sleepycat.txt" />
+      </tarfileset>
+
       <!-- Include configuration files. -->
       <tarfileset dir="${etc}" prefix="fabric-${fabric.version}/etc">
         <include name="config/EXAMPLE.properties.in" />
@@ -1011,18 +1024,36 @@ public class Version {
         <include name="fabric-sif-sig.jar" />
         <include name="fabric-transient.jar" />
 
-        <!-- Polyglot, Jif, and dependencies -->
+        <!-- Polyglot, PPG, and Jif -->
         <include name="polyglot.jar" />
         <include name="jif.jar" />
-        <include name="JFlex.jar" />
-        <include name="java_cup.jar" />
         <include name="ppg.jar" />
 
-        <!-- FreePastry, BDB, BouncyCastle, Jetty -->
-        <include name="FreePastry-2.1.jar" />
-        <include name="je-3.3.75.jar" />
-        <include name="bcprov-jdk15-145.jar" />
-        <include name="jetty/*.jar" />
+        <!--
+          ********************************************************************
+          * The following are all third-party libraries!                     *
+          *                                                                  *
+          * If you add anything here, be sure to add a corresponding section *
+          * to the COPYING file.                                             *
+          ********************************************************************
+        -->
+        <!-- JFlex -->
+        <include name="JFlex.jar" />
+        <!-- Java CUP -->
+        <include name="java_cup.jar" />
+        <!-- FreePastry -->
+        <include name="FreePastry-*.jar" />
+        <!-- BDB -->
+        <include name="je-*.jar" />
+        <include name="src/je-*.tar.gz" />
+        <!-- BouncyCastle -->
+        <include name="bcprov-*.jar" />
+        <!-- Jetty -->
+        <include name="jetty/jetty-*.jar" />
+        <!-- Apache Commons -->
+        <include name="jetty/commons-*.jar" />
+        <!-- Java Servlet API -->
+        <include name="jetty/servlet-api-*.jar" />
       </tarfileset>
 
       <!-- Include compiler and system sources. -->
