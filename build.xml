@@ -953,7 +953,7 @@ public class Version {
   </target>
 
   <!-- Stamps all source files with a copyright notice. -->
-  <target name="copyright-stamp" />
+  <target name="copyright-stamp">
     <apply executable="bash"
         parallel="true"
         failonerror="true"
