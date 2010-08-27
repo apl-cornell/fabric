@@ -1,0 +1,36 @@
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+
+class Hello {
+  /*
+  final String message;
+
+  public Hello(String message) {
+    this.message = message;
+  }
+
+  public static void main(String[] args) throws Exception {
+
+    // get a reference to the store called "store"
+    final Store store = worker$.getStore("store");
+
+    atomic {
+      // create an object there holding our important message
+      Hello h = new Hello("Hello World!  Fabric is coming for you...");
+
+      // store a reference to it in the store's root map
+      Map root = store.getRoot();
+      root.put("hello", h);
+
+      // output the contents of the object
+      Runtime runtime = Runtime.getRuntime();
+      runtime.out().println(h.message);
+    }
+  }
+  */
+}
+
+
+/*
+** vim: ts=2 sw=2 et syntax=java
+*/

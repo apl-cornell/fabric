@@ -1,0 +1,71 @@
+<!--
+  This is the Apache Ant build file for the Fabric "hello world" example
+-->
+
+<project name="hello" default="build-all" basedir=".">
+  <description>
+    Build Hello world example
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="hello.home" file="${ant.file.hello}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${hello.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${hello.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+          description="Builds the Hello World example">
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${hello.home}"
+           dest="${hello.home}/classes"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabric.home}/bin/fabc"/>
+      <arg value="-g"/>
+      <arg value="-d"          /> <arg value="${hello.home}/classes"/>
+      <arg value="-sourcepath" /> <arg value="${hello.home}/src" />
+      <arg value="-cp"         /> <arg value="${hello.home}/classes" />
+      <arg value="-e"/>
+      <srcfile />
+
+      <fileset dir="${hello.home}/src" includes="**/*.fab" />
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->
