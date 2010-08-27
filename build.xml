@@ -1050,6 +1050,9 @@ public class Version {
         <include name="bcprov-*.jar" />
         <!-- Jetty -->
         <include name="jetty/jetty-*.jar" />
+        <include name="jetty/jsp-*.jar" /> <!-- part of Jetty -->
+        <!-- JDT Core -->
+        <include name="jetty/core-*.jar" />
         <!-- Apache Commons -->
         <include name="jetty/commons-*.jar" />
         <!-- Java Servlet API -->

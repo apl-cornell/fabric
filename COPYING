@@ -79,6 +79,16 @@ below.
 
     Files:
       lib/jetty/jetty-*.jar
+      lib/jetty/jsp-*.jar
+
+
+  JDT Core is software developed by the Eclipse Foundation and is
+  released under the Eclipse Public License 1.0.  A copy of this
+  license can be found in the file doc/licenses/eclipse-1.0.html,
+  included in this distribution.
+
+    Files:
+      lib/jetty/core-*.jar
 
 
   The following is software developed by the Apache Software
@@ -93,6 +103,3 @@ below.
     Java Servlet API
       Files:
 	lib/jetty/servlet-api-*.jar
-
-Additionally, any build targets derived from the above files are not
-released under the GNU Lesser General Public License.
