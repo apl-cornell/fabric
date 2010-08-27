@@ -6,6 +6,10 @@ import fabric.lang.JifObjectWrapper;
 
 public class JifUtil {	
 	
+	public static int hashCode(Label lbl, Object o) {
+		return o.hashCode();
+	}
+
 	public static Object unwrap(JifObject jobj) {
 		if(jobj instanceof JifObjectWrapper) {
 			return ((JifObjectWrapper)jobj).getObject();

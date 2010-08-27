@@ -1,5 +1,5 @@
 package fabric.lang;
-
+import fabric.util.JifUtil;
 /**
  * This is a wrapper for ordinary Objects. It provides only pointer-equality on
  * the wrapped object, a constant hash value of 0, and a null to-String value. 
@@ -26,7 +26,7 @@ public final class JifObjectWrapper[covariant label L] implements JifObject[L] {
   }
   
   public int{L} hashCode() {
-    return 0;
+    return JifUtil.hashCode(L, obj);
   }
   
   public String{L} toString() {
