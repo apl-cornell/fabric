@@ -24,8 +24,8 @@ from the GNU General Public License) are enumerated below.
 
 
   GNU Classpath is software developed by the Free Software
-  Foundation.  It was modified for use as part of the Fabric runtime
-  system.
+  Foundation.  It was modified by the Fabric project group at Cornell
+  University for use as part of the Fabric runtime system.
 
     Files:
       src/runtime/fabric/util/*.fil
