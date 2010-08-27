@@ -1,46 +1,51 @@
-This is a very simple web application example.
+Sif Example Application
+=======================
 
-====Compiling the Sif-hello Example====
+This is a simple web service example, built using Fabric and the Fabric port of
+the SIF servlet library.  This webapp is standalone, so it can be started
+without any extra programs.
 
-Running 'ant examples' in the Fabric base directory will compile all examples
-including the sif-hello example.
+This directory contains the following sub-directories:
 
-If only this sif-hello example needs to be compiled, first run 'ant libs' in the
-Fabric base directory to make sure all library code is compiled. Then run 'ant'
-in the $FABRIC/exampes/sif-hello directory to compile the this example.
+  - src: source code for the sif example, written in Fabric
+  - bin: a collection of scripts for running the example
+  - etc: configuration files for the example's store and worker
+  - web: web server configuration information
 
-====Running the Sif-hello Example====
 
-The sif-hello example runs on one store (store0) and one worker (worker0)
-The store does not have any persistent application data.
+Compiling
+---------
+To build the example, run 'ant' in the OO7 example directory:
 
-Follow these steps to start this web application, and check it in your browser:
+  $ ant
 
-Step 1. Start a fresh instance of the store0
 
-The following items should be on the classpath:
+Using
+-----
+This example comes with a store named "backend" for storing persistent data,
+and a worker named "webserver" that provides the web-based user interface.
 
-a. $FABRIC/examples/sif-hello/classes
-b. $FABRIC/src/lib/transient/classes
-c. $FABRIC/classes
-d. $FABRIC/rt-classes
-e. $FABRIC/src/lib/sif/classes
+  0. Begin in the sif-hello example directory:
 
-Running the following command will start a new store for this application:
-$ fab-store --store store0
+        $ cd $FABRIC/examples/sif-hello
 
-Step 2. Create principals for worker0
+  1. Start the "backend" store:
 
-Run the following command to do this:
+        $ bin/start-store
 
-$ fab --name worker0 --make-principal store0
+  2. If you are starting with a fresh store, you will need to initialize the
+     worker by creating its principal object on the store:
 
-Step 3. 
-Make sure $FABRIC/examples/sif-hello/classes is on your classpath, and
-Run the following command in any terminal:
+        $ bin/init-worker
 
-$ fab-http --name worker0 $FABRIC/examples/sif-hello/web --port 8080
+  3. Start the web-server:
 
-Step 4.
-Check the application at: http://localhost:8080/hello
+        $ bin/start-store
+
+  4. Point your favorite web browser to http://localhost:8080/hello
+
+  5. You can clean up the store's persistent state by removing the 'var'
+     directory:
+
+        $ rm -rf var
 
