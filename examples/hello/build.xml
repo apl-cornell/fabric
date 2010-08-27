@@ -50,6 +50,9 @@
            vmlauncher="false">
       <arg value="${fabric.home}/bin/fabc"/>
       <arg value="-g"/>
+      <arg value="-e"/>
+      <arg value="-debugpositions"/>
+      <arg value="-report"     /> <arg value="frontend=1" />
       <arg value="-d"          /> <arg value="${hello.home}/classes"/>
       <arg value="-sourcepath" /> <arg value="${hello.home}/src" />
       <arg value="-cp"         /> <arg value="${hello.home}/classes" />

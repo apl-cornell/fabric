@@ -2,34 +2,41 @@ import fabric.util.Map;
 import fabric.runtime.Runtime;
 
 class Hello {
-  /*
-  final String message;
-
-  public Hello(String message) {
-    this.message = message;
-  }
-
-  public static void main(String[] args) throws Exception {
+  public static void main{p<-;p->} (principal{p->;p<-} p, String[] args):{p<-;p->} throws Exception where caller(p) {
 
     // get a reference to the store called "store"
     final Store store = worker$.getStore("store");
 
+    Runtime[p] runtime = Runtime[p].getRuntime();
+
     atomic {
-      // create an object there holding our important message
-      Hello h = new Hello("Hello World!  Fabric is coming for you...");
+      // because we're storing p's message on "store", we must ensure that p trusts store
+      if (store actsfor p) {
 
-      // store a reference to it in the store's root map
-      Map root = store.getRoot();
-      root.put("hello", h);
+        // create an object there holding our important message
+        Message[p]{p->;p<-} h = new Message[p]@store("Hello World!  Fabric is coming for you...");
 
-      // output the contents of the object
-      Runtime runtime = Runtime.getRuntime();
-      runtime.out().println(h.message);
+        // store a reference to it in the store's root map
+        Map root = store.getRoot();
+        root.put("hello", h);
+
+        // output the contents of the object
+        runtime.out().println(h.message);
+
+      } else {
+        runtime.out().println("store is not sufficiently trusted.");
+      }
     }
   }
-  */
 }
 
+class Message[principal p] {
+  public final String{p->;p<-} message;
+
+  public Message(String{p->;p<-} message):{p<-;p->} {
+    this.message = message;
+  }
+}
 
 /*
 ** vim: ts=2 sw=2 et syntax=java

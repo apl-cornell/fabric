@@ -1,0 +1,29 @@
+import jif.util.Map;
+import jif.runtime.Runtime;
+
+class Hello {
+  public static void main{p<-;p->} (principal{p->;p<-} p, String[] args):{p<-;p->} throws Exception where caller(p) {
+
+    Runtime[p] runtime = Runtime[p].getRuntime();
+
+    // because we're storing p's message on "store", we must ensure that p trusts store
+
+    // create an object there holding our important message
+    Message[p]{p->;p<-} h = new Message[p]("Hello World!  Fabric is coming for you...");
+
+    // output the contents of the object
+    runtime.out().println(h.message);
+  }
+}
+
+class Message[principal p] {
+  public final String{p->;p<-} message;
+
+  public Message(String{p->;p<-} message):{p<-;p->} {
+    this.message = message;
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et syntax=java
+*/
