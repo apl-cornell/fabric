@@ -21,6 +21,14 @@ Steve Chong provided guidance on extending Jif and provided quick
 bug fixes to the base Jif compiler.
 
 The development of the Fabric project has been supported by a number
-of funding sources, including National Science Foundation award
-0627649, Office of Naval Research award N000140910652, and Air Force
-Research Laboratory award FA8750-08-2-0079.
+of funding sources, including:
+
+  * National Science Foundation grants 0430161 and 0627649
+  * Microsoft Corporation
+  * AF-TRUST, which receives support from the DAF Air Force Office
+    of Scientific Research (FA9550-06-1-0244) and the NSF (0424422)
+  * Air Force Research Laboratories NICECAP grant FA8750-08-2-0079
+  * Office of Naval Research award N000140910652
+
+This work does not necessarily represent the opinions, expressed or
+implied, of any of these sponsors.
