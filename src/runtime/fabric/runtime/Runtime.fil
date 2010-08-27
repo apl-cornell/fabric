@@ -5,6 +5,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import fabric.util.LinkedList;
 import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * The runtime interface between Fabric programs and the underlying system.
@@ -37,16 +38,10 @@ public class Runtime {
         return new Runtime(p);
     }
 
-// TODO: Requires using JNI    
-//    /** Get the current user  */
-//    public static Principal user(Principal parameter) {
-//        String username = currentUser();
-//        return NativePrincipal.getInstance(username);
-//    }
-//    /** Get a native user  */
-//    public static Principal getUser(Principal parameter, String username) {
-//        return NativePrincipal.getInstance(username);
-//    }
+    /** Get the current user  */
+    public static Principal user(Principal parameter) {
+      return Worker.getWorker().getPrincipal();
+    }
 
     private Label defaultOutputLabel() {
         ConfPolicy cp = LabelUtil.readerPolicy(local, dynp, new LinkedList());
