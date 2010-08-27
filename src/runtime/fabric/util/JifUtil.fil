@@ -10,6 +10,14 @@ public class JifUtil {
 		return o.hashCode();
 	}
 
+	public static String toString(Label lbl, Object o) {
+		return o.toString();
+	}
+	
+	public static boolean equals(Object o1, Label lbl, Object o2) {
+		return o1.equals(o2);
+	}
+	
 	public static Object unwrap(JifObject jobj) {
 		if(jobj instanceof JifObjectWrapper) {
 			return ((JifObjectWrapper)jobj).getObject();
