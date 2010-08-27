@@ -961,7 +961,7 @@ public class Version {
         relative="false"
         skipemptyfilesets="true"
         vmlauncher="false">
-      <arg value="${copyright-stamp}" />
+      <arg value="${bin}/copyright-stamp" />
       <fileset dir="${fabric.home}">
         <include name="**/*.java" />
         <include name="**/*.fil" />
