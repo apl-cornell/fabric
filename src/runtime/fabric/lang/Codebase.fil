@@ -21,7 +21,7 @@ public class Codebase {
   
   FClass resolveClassName(String name) {
 	atomic {
-		return (FClass)((JifWrappedObject)classes.get(name)).unwrap();
+		return (FClass)((JifObjectWrapper)classes.get(name)).getObject();
 	}
   }
 
@@ -60,7 +60,7 @@ public class Codebase {
   }
   
   public FClass getClass(String s) {
-      return (FClass)((JifWrappedObject)classes.get(s)).unwrap();
+      return (FClass)((JifObjectWrapper)classes.get(s)).getObject();
   }
   
 }

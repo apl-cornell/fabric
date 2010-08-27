@@ -84,7 +84,7 @@ public interface Hashable_JIF_IMPL extends fabric.lang.Object {
     }
     
     final public static java.lang.String jlc$CompilerVersion$fabil = "0.1.0";
-    final public static long jlc$SourceLastModified$fabil = 1281544053000L;
+    final public static long jlc$SourceLastModified$fabil = 1282915709000L;
     final public static java.lang.String jlc$ClassType$fabil =
       ("H4sIAAAAAAAAAKVXXWxURRSe3bbblm7oDwUaoOUClewqbI1GgmwMNkjDliWs" +
        "bVEpkmX27tztwOy9\nl3vntluwRKMR5MFEwb/EnxcTEsOTRH0x0Qj++2D6IL" +

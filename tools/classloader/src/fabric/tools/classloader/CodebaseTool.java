@@ -20,7 +20,7 @@ import fabric.lang.security.Principal;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.JifObject;
-import fabric.lang.JifWrappedObject;
+import fabric.lang.JifObjectWrapper;
 import fabric.common.exceptions.UsageError;
 import java.security.GeneralSecurityException;
 
@@ -93,8 +93,8 @@ public class CodebaseTool {
       System.out.println("Done storing codebase");
       Worker.runInSubTransaction(new Worker.Code<Void>() {
         public Void run() {
-          JifWrappedObject jwo = (new JifWrappedObject._Impl(s, c.get$label(),
-              c.get$label())).fabric$lang$JifWrappedObject$(c);
+          JifObjectWrapper jwo = (new JifObjectWrapper._Impl(s, c.get$label(),
+              c.get$label())).fabric$lang$JifObjectWrapper$(c);
           s.getRoot().put("latestCodebase", jwo); //XXX for testing
           return null;
         }
@@ -168,8 +168,8 @@ public class CodebaseTool {
                 s, l, currentClass, toByteArray(s, l, bytecode)).$getProxy();
 
             System.out.println("Creating class " + currentClass + " at " + getOid(c));
-	        JifWrappedObject jwo = (new JifWrappedObject._Impl(s, l, l))
-	      		.fabric$lang$JifWrappedObject$(c);
+	        JifObjectWrapper jwo = (new JifObjectWrapper._Impl(s, l, l))
+	      		.fabric$lang$JifObjectWrapper$(c);
             classes.put(currentClass, jwo);
             toSetCodebase.add(c);
             if (!fileExists(filename + ".fabproperties")) {
@@ -197,9 +197,9 @@ public class CodebaseTool {
                 if (depClass == null || !arrEquals(fileBytecode, depClass.getBytecode())) {
                   classesToCreate.add(dep);
                 } else {
-	              JifWrappedObject jwdep = (new JifWrappedObject._Impl(s, 
+	              JifObjectWrapper jwdep = (new JifObjectWrapper._Impl(s, 
 					depClass.get$label(), depClass.get$label()))
-	      	      	.fabric$lang$JifWrappedObject$(depClass);
+	      	      	.fabric$lang$JifObjectWrapper$(depClass);
                   classes.put(dep, jwdep);
                 }
               }

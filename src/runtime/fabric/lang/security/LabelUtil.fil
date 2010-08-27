@@ -9,7 +9,7 @@ import fabric.lang.security.Principal;
 import fabric.lang.security.SecurityCache;
 import fabric.util.*;
 import fabric.lang.JifObject;
-import fabric.lang.JifWrappedObject;
+import fabric.lang.JifObjectWrapper;
 import fabric.util.JifUtil;
 
 /**
@@ -562,15 +562,15 @@ public final class LabelUtil {
       if (p1 instanceof JoinConfPolicy) {
         comps.addAll(((JoinConfPolicy) p1).joinComponents());
       } else {
-    	JifObject _p1 = (new JifWrappedObject(p1.get$label()))
-    		.fabric$lang$JifWrappedObject$(p1);
+    	JifObject _p1 = (new JifObjectWrapper(p1.get$label()))
+    		.fabric$lang$JifObjectWrapper$(p1);
         comps.add(_p1);
       }
       if (p2 instanceof JoinConfPolicy) {
         comps.addAll(((JoinConfPolicy) p2).joinComponents());
       } else {
-      	JifObject _p2 = (new JifWrappedObject(p2.get$label()))
-      		.fabric$lang$JifWrappedObject$(p2);
+      	JifObject _p2 = (new JifObjectWrapper(p2.get$label()))
+      		.fabric$lang$JifObjectWrapper$(p2);
         comps.add(_p2);
       }
       comps = simplifyJoin(store, comps, s);
@@ -610,15 +610,15 @@ public final class LabelUtil {
       if (p1 instanceof JoinIntegPolicy) {
         comps.addAll(((JoinIntegPolicy) p1).joinComponents());
       } else {
-      	JifObject _p1 = (new JifWrappedObject(p1.get$label()))
-      		.fabric$lang$JifWrappedObject$(p1);
+      	JifObject _p1 = (new JifObjectWrapper(p1.get$label()))
+      		.fabric$lang$JifObjectWrapper$(p1);
       	comps.add(_p1);
       }
       if (p2 instanceof JoinIntegPolicy) {
         comps.addAll(((JoinIntegPolicy) p2).joinComponents());
       } else {
-        JifObject _p2 = (new JifWrappedObject(p2.get$label()))
-      		.fabric$lang$JifWrappedObject$(p2);
+        JifObject _p2 = (new JifObjectWrapper(p2.get$label()))
+      		.fabric$lang$JifObjectWrapper$(p2);
       	comps.add(_p2);
       }
       comps = simplifyJoin(store, comps, s);
@@ -659,15 +659,15 @@ public final class LabelUtil {
       if (p1 instanceof MeetConfPolicy) {
         comps.addAll(((MeetConfPolicy) p1).meetComponents());
       } else {
-        JifObject _p1 = (new JifWrappedObject(p1.get$label()))
-    		.fabric$lang$JifWrappedObject$(p1);
+        JifObject _p1 = (new JifObjectWrapper(p1.get$label()))
+    		.fabric$lang$JifObjectWrapper$(p1);
     	comps.add(_p1);
       }
       if (p2 instanceof MeetConfPolicy) {
         comps.addAll(((MeetConfPolicy) p2).meetComponents());
       } else {
-        JifObject _p2 = (new JifWrappedObject(p2.get$label()))
-    		.fabric$lang$JifWrappedObject$(p2);
+        JifObject _p2 = (new JifObjectWrapper(p2.get$label()))
+    		.fabric$lang$JifObjectWrapper$(p2);
     	comps.add(_p2);
       }
       comps = simplifyMeet(store, comps, s);
@@ -706,15 +706,15 @@ public final class LabelUtil {
       if (p1 instanceof MeetIntegPolicy) {
         comps.addAll(((MeetIntegPolicy) p1).meetComponents());
       } else {
-        JifObject _p1 = (new JifWrappedObject(p1.get$label()))
-    		.fabric$lang$JifWrappedObject$(p1);
+        JifObject _p1 = (new JifObjectWrapper(p1.get$label()))
+    		.fabric$lang$JifObjectWrapper$(p1);
     	comps.add(_p1);
       }
       if (p2 instanceof MeetIntegPolicy) {
         comps.addAll(((MeetIntegPolicy) p2).meetComponents());
       } else {
-        JifObject _p2 = (new JifWrappedObject(p2.get$label()))
-  			.fabric$lang$JifWrappedObject$(p2);
+        JifObject _p2 = (new JifObjectWrapper(p2.get$label()))
+  			.fabric$lang$JifObjectWrapper$(p2);
         comps.add(_p2);
       }
       comps = simplifyMeet(store, comps, s);
@@ -890,8 +890,8 @@ public final class LabelUtil {
       }
 
       if (!subsumed) {
-    	  JifObject _ci = (new JifWrappedObject(ci.get$label()))
-    	  	.fabric$lang$JifWrappedObject$(ci);
+    	  JifObject _ci = (new JifObjectWrapper(ci.get$label()))
+    	  	.fabric$lang$JifObjectWrapper$(ci);
     	  needed.add(_ci);
       }
     }
@@ -922,8 +922,8 @@ public final class LabelUtil {
       }
 
       if (!subsumed) {
-    	  JifObject _ci = (new JifWrappedObject(ci.get$label()))
-  	  		.fabric$lang$JifWrappedObject$(ci);
+    	  JifObject _ci = (new JifObjectWrapper(ci.get$label()))
+  	  		.fabric$lang$JifObjectWrapper$(ci);
     	  needed.add(_ci);
       }
     }

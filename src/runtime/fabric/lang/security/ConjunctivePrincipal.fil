@@ -5,7 +5,7 @@ import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.util.*;
 import fabric.lang.JifObject;
-import fabric.lang.JifWrappedObject;
+import fabric.lang.JifObjectWrapper;
 import fabric.util.JifUtil;
 
 /**
@@ -79,10 +79,10 @@ public final class ConjunctivePrincipal extends Principal {
       ActsForProof prf = PrincipalUtil.findActsForProof(store, p, q, searchState);
       if (prf == null) return null;
 
-      JifObject _q = (new JifWrappedObject(q.get$label()))
-      	.fabric$lang$JifWrappedObject$(q);
-      JifObject _prf = (new JifWrappedObject(prf.get$label()))
-    	.fabric$lang$JifWrappedObject$(prf);
+      JifObject _q = (new JifObjectWrapper(q.get$label()))
+      	.fabric$lang$JifObjectWrapper$(q);
+      JifObject _prf = (new JifObjectWrapper(prf.get$label()))
+    	.fabric$lang$JifObjectWrapper$(prf);
       proofs.put(_q, _prf);
     }
 

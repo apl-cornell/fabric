@@ -88,7 +88,7 @@ public interface Map_JIF_IMPL extends fabric.lang.Object {
     }
     
     final public static java.lang.String jlc$CompilerVersion$fabil = "0.1.0";
-    final public static long jlc$SourceLastModified$fabil = 1281544489000L;
+    final public static long jlc$SourceLastModified$fabil = 1282915709000L;
     final public static java.lang.String jlc$ClassType$fabil =
       ("H4sIAAAAAAAAAK1XXWxURRSebtttSzf0h78GaLlAbXYVWqORIBuDDdK47Tas" +
        "balSJMvs3bnbobP3\n3t47t92CJRqNIA8mCv4l/ryYkBieJOqLiUbw3wfTB/" +

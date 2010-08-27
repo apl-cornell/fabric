@@ -1,6 +1,6 @@
 package fabric.util;
 import fabric.lang.JifObject;
-import fabric.lang.JifWrappedObject;
+import fabric.lang.JifObjectWrapper;
 public class Arrays
 {
   /**
@@ -34,7 +34,7 @@ public class Arrays
 	  
 	  try {
 		  for(int i=0; i < a.length ; i++)
-			  arr[i] = new JifWrappedObject[lbl](a[i]);
+			  arr[i] = new JifObjectWrapper[lbl](a[i]);
 	  } catch (IndexOutOfBoundsException imposs) {}
 
 	  return new Arrays$ArrayList[lbl](arr);

@@ -2,7 +2,7 @@ package fabric.lang.security;
 
 import java.util.Set;
 import fabric.lang.JifObject;
-import fabric.lang.JifWrappedObject;
+import fabric.lang.JifObjectWrapper;
 
 /**
  * This code is mostly copied from Jif.
@@ -23,8 +23,8 @@ public final class DelegatesProof extends ActsForProof {
 
     if (getActor() instanceof ConjunctivePrincipal) {
     	JifObject granter = 
-    		(new JifWrappedObject(getGranter().get$label())).
-    			fabric$lang$JifWrappedObject$(getGranter());
+    		(new JifObjectWrapper(getGranter().get$label())).
+    			fabric$lang$JifObjectWrapper$(getGranter());
     	if(((ConjunctivePrincipal) getActor()).conjuncts.contains(granter))
     		return;
     }

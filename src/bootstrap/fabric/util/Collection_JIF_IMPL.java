@@ -86,7 +86,7 @@ public interface Collection_JIF_IMPL extends fabric.lang.Object {
     }
     
     final public static java.lang.String jlc$CompilerVersion$fabil = "0.1.0";
-    final public static long jlc$SourceLastModified$fabil = 1281544489000L;
+    final public static long jlc$SourceLastModified$fabil = 1282915709000L;
     final public static java.lang.String jlc$ClassType$fabil =
       ("H4sIAAAAAAAAAKVXXWxURRSe3bbblm7oD38N0PYWKtlVaI1GgmwMNkjDliWs" +
        "bVEpkmX27tztwOy9\nt/fObbdgiUYjyIOJgn+JPy8mJIYnifpiohH898H0QX" +

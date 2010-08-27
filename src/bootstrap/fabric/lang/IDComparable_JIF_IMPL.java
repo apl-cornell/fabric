@@ -87,7 +87,7 @@ public interface IDComparable_JIF_IMPL extends fabric.lang.Object {
     }
     
     final public static java.lang.String jlc$CompilerVersion$fabil = "0.1.0";
-    final public static long jlc$SourceLastModified$fabil = 1281544053000L;
+    final public static long jlc$SourceLastModified$fabil = 1282915709000L;
     final public static java.lang.String jlc$ClassType$fabil =
       ("H4sIAAAAAAAAAKVXW2xURRie3bbblm7ohVsDtD2FSnYVtkYjQTYGm0LDliWs" +
        "bVEpkmX27JztwOw5\nh3PmtFuwjUYjyIOJAl4SLy8mJIYnifpiohG8+2D6IL" +

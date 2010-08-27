@@ -2,7 +2,7 @@ package fabric.util;
 import fabric.lang.security.Label;
 import fabric.lang.Object;
 import fabric.lang.JifObject;
-import fabric.lang.JifWrappedObject;
+import fabric.lang.JifObjectWrapper;
 
 public class JifUtil {	
 	
@@ -19,8 +19,8 @@ public class JifUtil {
 	}
 	
 	public static Object unwrap(JifObject jobj) {
-		if(jobj instanceof JifWrappedObject) {
-			return ((JifWrappedObject)jobj).unwrap();
+		if(jobj instanceof JifObjectWrapper) {
+			return ((JifObjectWrapper)jobj).getObject();
 		} else 
 			return (Object)jobj;
 	}

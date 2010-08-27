@@ -7,7 +7,7 @@ import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.util.Iterator;
 import fabric.lang.JifObject;
-import fabric.lang.JifWrappedObject;
+import fabric.lang.JifObjectWrapper;
 import java.util.LinkedList;
 import java.util.Collections;
 import java.lang.reflect.Field;
@@ -40,8 +40,8 @@ public class FabricDataProvider implements DataProvider {
 					fabric.util.MapEntry e = (fabric.util.MapEntry)i.next();
                     String keyStr = e.getKey().toString();
 					JifObject val = e.getValue();
-					if(val instanceof JifWrappedObject)
-                    	toReturn.add(new RootObject(keyStr, ((JifWrappedObject)val).unwrap()));
+					if(val instanceof JifObjectWrapper)
+                    	toReturn.add(new RootObject(keyStr, ((JifObjectWrapper)val).getObject()));
 					else
                     	toReturn.add(new RootObject(keyStr, val));
                   }
@@ -180,9 +180,9 @@ public class FabricDataProvider implements DataProvider {
 						fabric.util.MapEntry e = (fabric.util.MapEntry)i.next();
                     	String keyStr = e.getKey().toString();
 						JifObject val = e.getValue();
-						if(val instanceof JifWrappedObject)
+						if(val instanceof JifObjectWrapper)
                     		rootObjects.add(new RootObject(keyStr, 
-								((JifWrappedObject)val).unwrap()));
+								((JifObjectWrapper)val).getObject()));
 						else
                     		rootObjects.add(new RootObject(keyStr, val));
 					}

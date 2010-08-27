@@ -7,7 +7,7 @@ import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil;
 
 import fabric.lang.JifObject;
-import fabric.lang.JifWrappedObject;
+import fabric.lang.JifObjectWrapper;
 import fabric.util.LinkedList;
 import fabric.util.Collection;
 import fabric.util.Map;
@@ -465,11 +465,11 @@ public class PrincipalUtil {
       if (actsFor(right, left)) return left;
       Label lbl = LabelUtil.join(left.get$label(), right.get$label());
       Collection/* <Principal> */c = new LinkedList/* <Principal> */@store(lbl);
-      JifObject _left = (new JifWrappedObject(left.get$label()))
-      	.fabric$lang$JifWrappedObject$(left);
+      JifObject _left = (new JifObjectWrapper(left.get$label()))
+      	.fabric$lang$JifObjectWrapper$(left);
       c.add(_left);
-      JifObject _right = (new JifWrappedObject(right.get$label()))
-    	.fabric$lang$JifWrappedObject$(right);
+      JifObject _right = (new JifObjectWrapper(right.get$label()))
+    	.fabric$lang$JifObjectWrapper$(right);
       c.add(_right);
       return disjunction(store, c);
 //    } finally {
@@ -492,11 +492,11 @@ public class PrincipalUtil {
       if (actsFor(right, left)) return right;
       Label lbl = LabelUtil.join(left.get$label(), right.get$label());
       Collection/* <Principal> */c = new LinkedList/* <Principal> */@store(lbl);
-      JifObject _left = (new JifWrappedObject(left.get$label()))
-      	.fabric$lang$JifWrappedObject$(left);
+      JifObject _left = (new JifObjectWrapper(left.get$label()))
+      	.fabric$lang$JifObjectWrapper$(left);
       c.add(_left);
-      JifObject _right = (new JifWrappedObject(right.get$label()))
-    	.fabric$lang$JifWrappedObject$(right);
+      JifObject _right = (new JifObjectWrapper(right.get$label()))
+    	.fabric$lang$JifObjectWrapper$(right);
       c.add(_right);
       return conjunction(store, c);
 //    } finally {

@@ -4,7 +4,7 @@ import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.util.*;
 import fabric.lang.JifObject;
-import fabric.lang.JifWrappedObject;
+import fabric.lang.JifObjectWrapper;
 import fabric.util.JifUtil;
 
 /**
@@ -23,8 +23,8 @@ public abstract class JoinPolicy extends AbstractPolicy implements Policy {
 	components = new LinkedHashSet(lbl);
 	for(Iterator i = policies.iterator(); i.hasNext();) {
 		Object next = JifUtil.unwrap(i.next());
-		JifObject _next = (new JifWrappedObject(next.get$label()))
-    		.fabric$lang$JifWrappedObject$(next);
+		JifObject _next = (new JifObjectWrapper(next.get$label()))
+    		.fabric$lang$JifObjectWrapper$(next);
 		components.add(_next);
 	}
   }

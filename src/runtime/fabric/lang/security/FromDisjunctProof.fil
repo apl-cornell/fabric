@@ -4,7 +4,7 @@ import fabric.lang.security.Principal;
 import fabric.util.Iterator;
 import fabric.util.Map;
 import fabric.lang.JifObject;
-import fabric.lang.JifWrappedObject;
+import fabric.lang.JifObjectWrapper;
 import fabric.util.JifUtil;
 
 /**
@@ -27,8 +27,8 @@ public final class FromDisjunctProof extends ActsForProof {
 		DisjunctivePrincipal dp = (DisjunctivePrincipal) getActor();
 		for (Iterator iter = dp.disjuncts.iterator(); iter.hasNext();) {
 			Principal disjunct = (Principal) JifUtil.unwrap(iter.next());
-			JifObject _disjunct = (new JifWrappedObject(disjunct.get$label()))
-					.fabric$lang$JifWrappedObject$(disjunct);
+			JifObject _disjunct = (new JifObjectWrapper(disjunct.get$label()))
+					.fabric$lang$JifObjectWrapper$(disjunct);
 			ActsForProof pr = (ActsForProof) this.getDisjunctProofs().get(
 					_disjunct);
 			pr.gatherDelegationDependencies(s);

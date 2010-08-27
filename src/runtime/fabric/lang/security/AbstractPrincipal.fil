@@ -5,7 +5,7 @@ import fabric.util.HashMap;
 import fabric.util.Iterator;
 import fabric.util.MapEntry;
 import fabric.lang.JifObject;
-import fabric.lang.JifWrappedObject;
+import fabric.lang.JifObjectWrapper;
 import fabric.util.JifUtil;
 
 import fabric.lang.security.Principal;
@@ -62,10 +62,10 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     }
 
     public void addDelegatesTo(Principal p) {
-    	JifObject _p = (new JifWrappedObject(p.get$label()))
-    		.fabric$lang$JifWrappedObject$(p);
-    	JifObject _this = (new JifWrappedObject(get$label()))
-    		.fabric$lang$JifWrappedObject$(this);
+    	JifObject _p = (new JifObjectWrapper(p.get$label()))
+    		.fabric$lang$JifObjectWrapper$(p);
+    	JifObject _this = (new JifObjectWrapper(get$label()))
+    		.fabric$lang$JifObjectWrapper$(this);
 
         if (this.superiors.put(_p, _this) == null) {
             PrincipalUtil.notifyNewDelegation(this, p);
@@ -73,8 +73,8 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     }
     
     public void removeDelegatesTo(Principal p) {
-    	JifObject _p = (new JifWrappedObject(p.get$label()))
-			.fabric$lang$JifWrappedObject$(p);
+    	JifObject _p = (new JifObjectWrapper(p.get$label()))
+			.fabric$lang$JifObjectWrapper$(p);
     	
         if (this.superiors.remove(_p) != null) {
             PrincipalUtil.notifyRevokeDelegation(this, p);
@@ -86,8 +86,8 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
 		//  as the bottom principal, but aren't explicitly handled
 		//  here. --oba
     	if(p==null) return false;
-    	JifObject _p = (new JifWrappedObject(p.get$label()))
-			.fabric$lang$JifWrappedObject$(p);
+    	JifObject _p = (new JifObjectWrapper(p.get$label()))
+			.fabric$lang$JifObjectWrapper$(p);
         return this.superiors.containsKey(_p);
     }
 
