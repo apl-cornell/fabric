@@ -40,7 +40,7 @@ and a worker named "webserver" that provides the web-based user interface.
 
   3. Start the web-server:
 
-        $ bin/start-store
+        $ bin/start-webapp
 
   4. Point your favorite web browser to http://localhost:8080/hello
 
