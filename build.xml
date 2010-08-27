@@ -985,8 +985,9 @@ public class Version {
         <include name="build.xml" />
         <include name="common.xml" />
         <include name="config.properties.in" />
-        <include name="README" />
         <include name="COPYING" />
+        <include name="CREDITS" />
+        <include name="README" />
       </tarfileset>
 
       <!-- Include scripts in bin and make them executable. -->
