@@ -1,0 +1,50 @@
+#!/bin/bash
+
+if [[ $# == 0 ]] ; then
+  cat >&2 <<EOF
+Usage: $(basename "$0") FILE ...
+
+  Stamps the given source files with the Fabric copyright notice.
+EOF
+  exit 1
+fi
+
+# Find a temporary file for the copyright notice.
+NOTICE=/tmp/tmp-${RANDOM}
+while [[ -f "${TMP}" ]] ; do
+  NOTICE=/tmp/tmp-${RANDOM}
+done
+
+# Output the copyright notice to the temporary file.
+cat > "${NOTICE}" <<EOF
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+ * more details.
+ */
+EOF
+
+# Find a temporary scratch file.
+SCRATCH=/tmp/tmp-${RANDOM}
+while [[ -f "${TMP}" ]] ; do
+  SCRATCH=/tmp/tmp-${RANDOM}
+done
+
+# Process input.
+for i in "$@" ; do
+  cat "${NOTICE}" "${i}" > "${SCRATCH}"
+  mv "${SCRATCH}" "${i}"
+done
+
+rm "${NOTICE}"
+
