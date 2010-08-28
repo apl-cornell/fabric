@@ -16,6 +16,7 @@ import fabric.worker.Store;
 import fabric.common.AbstractMessageHandlerThread.Pool;
 import fabric.common.AbstractMessageHandlerThread.SessionAttributes;
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.ChannelMultiplexerThread;
@@ -240,7 +241,7 @@ public abstract class AbstractConnectionHandler<Node, Session extends SessionAtt
                 authenticatedPrincipal = principal;
               }
             } catch (ClassCastException e) {
-            } catch (InternalError e) {
+            } catch (RuntimeFetchException e) {
               // XXX If the worker principal doesn't exist, authenticate as the
               // XXX bottom principal. This is for ease of debugging so we don't
               // XXX need to keep editing worker property files every time we

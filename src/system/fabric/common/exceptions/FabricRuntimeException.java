@@ -8,4 +8,8 @@ public class FabricRuntimeException extends RuntimeException {
   public FabricRuntimeException(String message) {
     super(message);
   }
+  
+  public FabricRuntimeException(Throwable cause) {
+    super(cause);
+  }
 }

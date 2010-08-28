@@ -10,6 +10,7 @@ import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.Pair;
 import fabric.lang.arrays.internal._InternalArrayImpl;
 import fabric.lang.security.Label;
@@ -148,8 +149,7 @@ public interface Object {
           }
           
         } catch (FetchException e) {
-          // TODO figure out how to communicate error
-          throw new InternalError(e);
+          throw new RuntimeFetchException(e);
         }
 
         ref = result.$ref;
