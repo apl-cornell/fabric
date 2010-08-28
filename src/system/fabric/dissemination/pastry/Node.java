@@ -98,7 +98,10 @@ public class Node {
             + ")");
       }
     }
-    System.out.println("Pastry node ready.");
+    
+    if (spinCount >= 2) {
+      System.out.println("Pastry node ready.");
+    }
   }
 
   private int findFreePort(int port) {
