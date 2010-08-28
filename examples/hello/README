@@ -1,8 +1,8 @@
 Hello World
 =======================
 
-This is a port of every programmer's favorite program to the Fabric language.
-It stores the string "Hello World" persistently, and then prints it out.
+This is a Fabric port of every programmer's favorite program.  It stores the
+string "Hello World" persistently, and then prints it out.
 
 This directory contains the following sub-directories:
 
@@ -22,9 +22,9 @@ Using
 This example comes with a store named "store" for storing persistent data,
 and a worker named "worker" to run the computation.
 
-  0. Begin in the sif-hello example directory:
+  0. Begin in the hello example directory:
 
-        $ cd $FABRIC/examples/sif-hello
+        $ cd $FABRIC/examples/hello
 
   1. Start the store:
 
