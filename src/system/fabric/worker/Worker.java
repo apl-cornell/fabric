@@ -138,6 +138,8 @@ public final class Worker {
 
     instance.remoteCallManager.start();
     instance.localStore.initialize();
+    
+    System.out.println("Worker started");
 
     return instance;
   }
