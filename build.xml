@@ -1222,8 +1222,10 @@ public class Version {
       sub-ant.target - the target to run.
   -->
   <target name="sub-ant-dist">
-    <ant inheritAll="false" antfile="${tmp}/${sub-ant.dir}/build.xml"
-        dir="${tmp}/${sub-ant.dir}" target="${sub-ant.target}" />
+    <ant inheritAll="false"
+         antfile="${tmp}/${sub-ant.dir}/build.xml"
+         dir="${tmp}/${sub-ant.dir}"
+         target="${sub-ant.target}" />
   </target>
 
   <!--
