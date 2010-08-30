@@ -37,7 +37,7 @@ This package contains the following:
 
  - src/runtime:
 
-     The parts of the Fabric runtime system that are implmenented in FabIL.
+     The parts of the Fabric runtime system that are implemented in FabIL.
 
  - src/lib:
 
@@ -48,7 +48,7 @@ This package contains the following:
 
      Fabric example programs (details below).
 
- - tools
+ - tools:
 
      Tools to aid in the development of Fabric programs, including a
      browser to inspect the contents of a store, and an experimental
@@ -63,12 +63,12 @@ Fabric uses Apache Ant for its build process.  To build Fabric, simply run
   $ ant
 
 from the top level directory.  For other useful build targets, run ant -p from
-the top level directory.
+the top-level directory.
 
 Fabric Example Programs
 =======================
 
-There are a number of example programs in the examples directory.  Each
+There are a number of example programs in the 'examples' directory.  Each
 example is pre-configured and includes a separate README describing how
 to build and run it.  We briefly list the examples here:
 
@@ -81,14 +81,14 @@ to build and run it.  We briefly list the examples here:
    web services can be built on top of Fabric.
 
  - examples/travel: A more complete demonstration of Fabric's features.  This
-   application involves coordination between a airline, bank, and customer to
+   application involves coordination between an airline, bank, and customer to
    negotiate the purchase of a ticket.  Each principal (airline, bank, and
    customer) also has a user interface written using the SIF library.
 
  - examples/OO7: This is an implementation of the OO7 Object Oriented
    Database Benchmark [3].  It is written using FabIL, the intermediate
-   language for Fabric, and thus doesn't benefit from the static
-   information flow checking that the full Fabric language provides.
+   language for Fabric, and thus does not benefit from the static
+   information-flow checking that the full Fabric language provides.
 
  - examples/blog: This is a simple web application implemented in FabIL.
    It is similar in structure to the Course Management System that we
@@ -98,7 +98,7 @@ to build and run it.  We briefly list the examples here:
 Invoking Fabric
 ===============
 
-To compile a Fabric program, run the Fabric compiler fabc:
+To compile a Fabric program, run the Fabric compiler, fabc:
 
   $ fabc Foo.fab
 
@@ -114,13 +114,13 @@ separate dissemination nodes; rather each worker and store participates
 as a peer in the dissemination network.
 
 
-To start a store, run
+To start a store, run:
 
   $ fab-store --store [store host name]
 
 Unless you are using the experimental mobile code support, the store
-must have the classes of objects that it will store on it's classpath.
-This can be specified with the -classpath option or in the $CLASSPATH
+must have the classes of objects that it will store on its classpath.
+This can be specified with the -classpath option or in the CLASSPATH
 environment variable.
 
 
@@ -137,7 +137,7 @@ where [main class] is the fully-qualified name of the class you wish to
 invoke.  If the main class is omitted, the worker will simply start and
 wait for remote calls.  As with stores, workers must have the classes
 they will use on their classpath, which can be specified with the
--classpath option or in the $CLASSPATH environment variable.
+-classpath option or in the CLASSPATH environment variable.
 
 
 
@@ -149,41 +149,41 @@ language [4].  A good place to start is with the Jif manual, available at
 
     http://www.cs.cornell.edu/jif/doc/jif-3.3.0/manual.html
 
-Fabric extends jif with support for nested transactions, explicit remote
+Fabric extends Jif with support for nested transactions, explicit remote
 calls, and the creation of persistent objects on stores.
 
- - Nested transactions are specified with an atomic block, for example:
-
-   atomic {
-     o1.f();
-     o2.g();
-   }
-
-   The semantics of the atomic block are that statements inside the
-   atomic block will be executed simultaneously and without interference
-   from other simultaneous transactions, even those taking place at
-   other network nodes.
-
- - Explicit remote calls are specified using the o.f@w(x) synatx:
-
-   RemoteWorker w = FabricWorker.getWorker().getWorker("workername");
-   o.f@w(args);
-
-   Unlike many other distributed systems with remote calls, the objects
-   used during the computation of f need not reside at w.  Also note
-   that transactions can span multiple remote calls; these calls will be
-   executed as a single transaction.
-
- - Persistent objects are created by specifying a store to store them.
-   For example:
-
-   Store s = FabricWorker.getWorker().getStore("storename");
-   Object o = new Object@s(args);
-
-   If a store is not specified, objects are created at the same store as
-   the object "this".  Each worker also contains a local, non-persistent
-   store.  A reference to this store can be obtained by calling
-   FabricWorker.getWorker().getLocalStore().
+  - Nested transactions are specified with an atomic block, for example:
+ 
+      atomic {
+        o1.f();
+        o2.g();
+      }
+ 
+    The semantics of the atomic block are that statements inside the
+    atomic block will be executed simultaneously and without interference
+    from other simultaneous transactions, even those taking place at
+    other network nodes.
+ 
+  - Explicit remote calls are specified using the o.f@w(x) syntax:
+ 
+      RemoteWorker w = FabricWorker.getWorker().getWorker("workername");
+      o.f@w(args);
+ 
+    Unlike many other distributed systems with remote calls, the objects
+    used during the computation of f need not reside at w.  Also note
+    that transactions can span multiple remote calls; these calls will be
+    executed as a single transaction.
+ 
+  - Persistent objects are created by specifying a store to store them.
+    For example:
+ 
+      Store s = FabricWorker.getWorker().getStore("storename");
+      Object o = new Object@s(args);
+ 
+    If a store is not specified, objects are created at the same store as
+    the object "this".  Each worker also contains a local, non-persistent
+    store.  A reference to this store can be obtained by calling
+    FabricWorker.getWorker().getLocalStore().
 
 References
 ==========
