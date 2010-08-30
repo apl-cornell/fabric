@@ -240,9 +240,9 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
 
   /** Update the provided node with a given location.
    * 
-   * @param result   a Node having a LocatedExt as a fabric extension
+   * @param result   a Node having a LocatedExt as a Fabric extension
    * @param location the expression representing the location
-   * @return         a copy of <code>result</code> with the fabric extension
+   * @return         a copy of <code>result</code> with the Fabric extension
    *                 updated with the location
    */
   protected Node setLocation(Node result, Expr location) {

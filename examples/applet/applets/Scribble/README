@@ -1,15 +1,15 @@
 Scribble is an example of an applet whose class and instances are stored in
-fabric.  Scribble.html uses FabricAppletPanel to load the applet class and
+Fabric.  Scribble.html uses FabricAppletPanel to load the applet class and
 instantiate a new Scribble object on store0.  Scribble2.html loads the instance 
-from fabric. Currently, Scribble2.html must be loaded in a different browser
+from Fabric. Currently, Scribble2.html must be loaded in a different browser
 (i.e. Firefox and Safari) or on a different system since the applets share a VM
 and therefore a worker.
 
-0.0  Copy or symlink the fabric directory to ~/.fabric (or just fabric/etc to
+0.0  Copy or symlink the Fabric directory to ~/.fabric (or just fabric/etc to
 .fabric/etc). This allows the applet to find configuration files and keys
 without environment variables, which don't seem to be set in the browser's VM.
 
-0.1. Run 'ant jar' to build the applet jar and create signed jars of the fabric
+0.1. Run 'ant jar' to build the applet jar and create signed jars of the Fabric
 libraries.
 
 0.2. Start and initialize some stores: 

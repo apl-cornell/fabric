@@ -6,12 +6,12 @@ import java.util.Map;
 import java.util.Properties;
 
 public class Codebase {
-  /* in the fabric implementation, classes would be a map from strings to oids */
+  /* in the Fabric implementation, classes would be a map from strings to oids */
   private Map<String, String> classes;
   /* mapping of class names to their type (fabric-loaded or system-loaded) */
   private Map<String, String> classTypes;
   
-  /* in the fabric implementation, name will be the OID */
+  /* in the Fabric implementation, name will be the OID */
   String name;
   
   Class resolveClassName(String name) throws IOException {
@@ -26,10 +26,10 @@ public class Codebase {
     return FabricClassLoader.getClassLoader(this);
   }
   
-  /* this constructor simulates the process of loading a codebase on to the fabric.
+  /* this constructor simulates the process of loading a codebase onto Fabric.
    * In the full fabric implementation, it will need to be replaced by a fabric
    * program that assembles class files with their context information into a
-   * Class object, and commits it to the fabric */
+   * Class object, and commits it to Fabric */
   private Codebase (String name) throws IOException {
     this.name    = name;
     this.classes = new HashMap<String, String> ();

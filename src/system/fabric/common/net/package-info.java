@@ -1,5 +1,5 @@
 /**
- * Implementation of the fabric networking layer.
+ * Implementation of the Fabric networking layer.
  */
 
 package fabric.common.net;

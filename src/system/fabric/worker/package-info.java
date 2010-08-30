@@ -1,4 +1,4 @@
 /**
- * The fabric worker implementation.
+ * The Fabric worker implementation.
  */
 package fabric.worker;

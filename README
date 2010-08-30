@@ -19,7 +19,7 @@ This package contains the following:
 
  - etc:
 
-     configuration files for fabric.
+     configuration files for Fabric.
 
  - lib:
 
@@ -40,7 +40,7 @@ This package contains the following:
 
  - src/lib:
 
-     libraries that are built using fabric, including the fabric port of the
+     libraries that are built using Fabric, including the Fabric port of the
      Servlets with Information Flow (SIF) library.
 
  - examples:
@@ -51,13 +51,13 @@ This package contains the following:
 
      Tools to aid in the development of Fabric programs, including a browser to
      inspect the contents of a store, and an experimental tool for loading
-     mobile code onto the fabric.
+     mobile code onto Fabric.
 
 
 Building Fabric
 ===============
 
-Fabric uses Apache Ant for its build process.  To build fabric, simply run
+Fabric uses Apache Ant for its build process.  To build Fabric, simply run
 
   $ ant
 
@@ -86,9 +86,9 @@ run it.  We briefly list the examples here:
 
 
  - examples/OO7: This is an implementation of the OO7 Object Oriented Database
-   Benchmark.  It is written using FabIL, the intermediate language for fabric,
+   Benchmark.  It is written using FabIL, the intermediate language for Fabric,
    and thus doesn't benefit from the static information flow checking that the
-   full fabric language provides.
+   full Fabric language provides.
 
  - examples/blog: This is a simple web application implemented in FabIL.  It is
    similar in structure to the Course Management System that we used for the
@@ -99,7 +99,7 @@ run it.  We briefly list the examples here:
 Invoking Fabric
 ===============
 
-To compile a fabric program, run the Fabric compiler fabc:
+To compile a Fabric program, run the Fabric compiler fabc:
 
   $ fabc Foo.fab
 
@@ -110,7 +110,7 @@ fabc -help for a complete list.
 
 
 
-There are three types of nodes in the fabric design: stores, workers, and
+There are three types of nodes in the Fabric design: stores, workers, and
 dissemination nodes.  In the current implementation, there are no separate
 dissemination nodes; rather each worker and store participates as a peer in the
 dissemination network.

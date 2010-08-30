@@ -1,5 +1,5 @@
 /**
- * Implementation of the fabric store.
+ * Implementation of the Fabric store.
  */
 
 package fabric.store;

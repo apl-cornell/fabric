@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Wrapper script for the fabric GUI store browser 
+# Wrapper script for the Fabric GUI store browser 
 
 source "$(dirname $0)/defs"
 

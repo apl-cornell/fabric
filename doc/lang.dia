@@ -150,7 +150,7 @@
         <dia:string>##</dia:string>
       </dia:attribute>
       <dia:attribute name="comment">
-        <dia:string>#Root of the fabric object hierarchy#</dia:string>
+        <dia:string>#Root of the Fabric object hierarchy#</dia:string>
       </dia:attribute>
       <dia:attribute name="abstract">
         <dia:boolean val="true"/>

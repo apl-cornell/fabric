@@ -4,7 +4,7 @@ import polyglot.ast.ExtFactory;
 import fabric.extension.*;
 
 /**
- * This class constructs {@link FabricExt} objects for the fabric language
+ * This class constructs {@link FabricExt} objects for the Fabric language
  * constructs.
  * @author mdgeorge
  *
