@@ -59,6 +59,17 @@ This Fabric distribution builds on Unix.  We recommend that you use Java
 is compiled with the Apache Ant build tool (http://ant.apache.org/).
 
 
+Configuring Fabric
+------------------
+
+Before using Fabric, you must configure the scripts in the 'bin'
+directory by running
+
+  $ ant bin
+
+from the top-level directory.
+
+
 Building Fabric
 ---------------
 
