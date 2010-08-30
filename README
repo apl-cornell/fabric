@@ -2,7 +2,7 @@ This is Fabric, a language and runtime system that supports secure federated
 distributed systems.  This document briefly describes the contents of the
 package and should get you started running some Fabric examples.  For more
 information, see our paper "Fabric: A Platform for Secure Distributed
-Computation and Storage" published in SOSP 2009.
+Computation and Storage" published in SOSP 2009 [1].
 
 Package Contents
 ================
@@ -41,7 +41,7 @@ This package contains the following:
  - src/lib:
 
      libraries that are built using Fabric, including the Fabric port of the
-     Servlets with Information Flow (SIF) library.
+     Servlets with Information Flow (SIF) library [2].
 
  - examples:
 
@@ -84,16 +84,14 @@ run it.  We briefly list the examples here:
    negotiate the purchase of a ticket.  Each principal (airline, bank, and
    customer) also has a user interface written using the SIF library.
 
-
  - examples/OO7: This is an implementation of the OO7 Object Oriented Database
-   Benchmark.  It is written using FabIL, the intermediate language for Fabric,
+   Benchmark [3].  It is written using FabIL, the intermediate language for Fabric,
    and thus doesn't benefit from the static information flow checking that the
    full Fabric language provides.
 
  - examples/blog: This is a simple web application implemented in FabIL.  It is
-   similar in structure to the Course Management System that we used for the
-   performance evaluation of Fabric.
-
+   similar in structure to the Course Management System that we used for
+   evaluating performance of Fabric (see [1]).
 
 
 Invoking Fabric
@@ -148,7 +146,7 @@ The Fabric Language
 ===================
 
 The Fabric programming language is an extension of the Jif programming
-language.  A good place to start is with the Jif manual, available at
+language [4].  A good place to start is with the Jif manual, available at
 
     http://www.cs.cornell.edu/jif/doc/jif-3.3.0/manual.html
 
@@ -164,19 +162,19 @@ and the creation of persistent objects on stores.
 
    The semantics of the atomic block are that statements inside the atomic
    block will be executed simultaneously and without interference from other
-   simultaneous transactions.
+   simultaneous transactions, even those taking place at other network nodes.
 
  - Explicit remote calls are specified using the o.f@w(x) synatx:
 
    RemoteWorker w = FabricWorker.getWorker().getWorker("workername");
    o.f@w(args);
 
-   unlike many other distributed systems with remote calls, the objects used
+   Unlike many other distributed systems with remote calls, the objects used
    during the computation of f need not reside at w.  Also note that
    transactions can span multiple remote calls; these calls will be executed as
    a single transaction.
 
- - Persistent Objects are created by specifying a store to store them.  For example:
+ - Persistent objects are created by specifying a store to store them.  For example:
 
    Store s = FabricWorker.getWorker().getStore("storename");
    Object o = new Object@s(args);
@@ -186,3 +184,22 @@ and the creation of persistent objects on stores.
    reference to this store can be obtained by calling
    FabricWorker.getWorker().getLocalStore().
 
+References
+==========
+
+[1] Jed Liu, Michael D. George, K. Vikram, Xin Qi, Lucas Waye, and
+    Andrew C.  Myers.  Fabric: A platform for secure distributed
+    computation and storage. Proc. 22nd ACM Symposium on Operating Systems
+    Principles (SOSP'09), pages 321–334, October 2009.
+
+[2] Stephen Chong, K. Vikram, Andrew C. Myers.  SIF: Enforcing
+    Confidentiality and Integrity in Web Applications.  Proc. USENIX
+    Security Symposium 2007, pages 1–16, August 2007.
+
+[3] Michael J. Carey, David J. DeWitt, an Jeffrey F. Naughton.
+    The OO7 Benchmark. Proc. 1993 ACM SIGMOD International Conference
+    on Management of Data, pp. 12-21, May 1993.
+
+[4] Andrew C. Myers. Practical Mostly-Static Information Flow Control.
+    Proc. 26th ACM Symposium on Principles of Programming Languages (POPL),
+    pages 228–241, January 1999. See also http://www.cs.cornell.edu/jif.
