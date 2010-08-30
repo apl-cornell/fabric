@@ -42,10 +42,10 @@ traversals.
 
 	$ bin/create-db fab://[store_name]/[db_name] [db_size] [fanout]
 
-     e.g. to create a small database named "OO7" with fanout=3 on the
+     e.g. to create a tiny database named "OO7" with fanout=3 on the
      "database" store:
 
-	$ bin/create-db fab://database/OO7 small 3
+	$ bin/create-db fab://database/OO7 tiny 3
 
   4. Execute a traversal (e.g. T1 on the database named "OO7"):
 
