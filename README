@@ -10,7 +10,6 @@ Distributed Computation and Storage" published in SOSP 2009 [1].
 
 Package Contents
 ----------------
-
 This package contains the following:
 
   - bin:
@@ -53,7 +52,6 @@ This package contains the following:
 
 Requirements
 ------------
-
 This Fabric distribution builds on Unix.  We recommend that you use Java
 6 or later.  We have experienced problems with older versions.  Fabric
 is compiled with the Apache Ant build tool (http://ant.apache.org/).
@@ -61,7 +59,6 @@ is compiled with the Apache Ant build tool (http://ant.apache.org/).
 
 Configuring Fabric
 ------------------
-
 Before using Fabric, you must configure the scripts in the 'bin'
 directory by running
 
@@ -72,7 +69,6 @@ from the top-level directory.
 
 Building Fabric
 ---------------
-
 Fabric comes pre-compiled as Jar files in the 'lib' directory.  If you
 wish to rebuild Fabric, simply run
 
@@ -84,7 +80,6 @@ from the top-level directory.  For other useful build targets, run
 
 Fabric Example Programs
 -----------------------
-
 There are a number of example programs in the 'examples' directory.
 Each example is pre-configured and includes a separate README describing
 how to build and run it.  We briefly list the examples here:
@@ -93,25 +88,25 @@ how to build and run it.  We briefly list the examples here:
       Every programmer's favorite program, ported to Fabric.  This
       example creates a persistent object containing the message "hello
       world" and then outputs that message on the console.
- 
+
   - examples/sif-hello:
       A demonstration of the Fabric port of the Servlets with
       Information Flow (SIF) library.  This example shows how web
       services can be built on top of Fabric.
- 
+
   - examples/travel:
       A more complete demonstration of Fabric's features.  This
       application involves coordination between an airline, bank, and
       customer to negotiate the purchase of a ticket.  Each principal
       (airline, bank, and customer) also has a user interface written
       using the SIF library.
- 
+
   - examples/OO7:
       This is an implementation of the OO7 Object Oriented Database
       Benchmark [3].  It is written using FabIL, the intermediate
       language for Fabric, and thus does not benefit from the static
       information-flow checking that the full Fabric language provides.
- 
+
   - examples/blog:
       This is a simple web application implemented in FabIL.  It is
       similar in structure to the Course Management System that we used
@@ -120,7 +115,6 @@ how to build and run it.  We briefly list the examples here:
 
 Invoking Fabric
 ---------------
-
 To compile a Fabric program, run the Fabric compiler, fabc:
 
   $ fabc Foo.fab
@@ -165,7 +159,6 @@ they will use on their classpath, which can be specified with the
 
 The Fabric Language
 -------------------
-
 The Fabric programming language is an extension of the Jif programming
 language [4].  A good place to start is with the Jif manual, available
 at:
@@ -176,33 +169,33 @@ Fabric extends Jif with support for nested transactions, explicit remote
 calls, and the creation of persistent objects on stores.
 
   - Nested transactions are specified with an atomic block, for example:
- 
+
       atomic {
         o1.f();
         o2.g();
       }
- 
+
     The semantics of the atomic block are that statements inside the
     atomic block will be executed simultaneously and without
     interference from other simultaneous transactions, even those taking
     place at other network nodes.
- 
+
   - Explicit remote calls are specified using the o.m@w(x) syntax:
- 
+
       RemoteWorker w = FabricWorker.getWorker().getWorker("workername");
       o.m@w(args);
- 
+
     Unlike many other distributed systems with remote calls, the objects
     used during the computation of the method m need not reside at the
     remote worker w.  Also note that transactions can span multiple
     remote calls; these calls will be executed as a single transaction.
- 
+
   - Persistent objects are created by specifying a store to store them.
     For example:
- 
+
       Store s = FabricWorker.getWorker().getStore("storename");
       Object o = new Object@s(args);
- 
+
     If a store is not specified, objects are created at the same store
     as the object "this".  Each worker also contains a local,
     non-persistent store.  A reference to this store can be obtained by
@@ -211,7 +204,6 @@ calls, and the creation of persistent objects on stores.
 
 References
 ----------
-
 [1] Jed Liu, Michael D. George, K. Vikram, Xin Qi, Lucas Waye, and
     Andrew C.  Myers.  Fabric: A platform for secure distributed
     computation and storage. Proc. 22nd ACM Symposium on Operating Systems

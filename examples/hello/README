@@ -1,12 +1,12 @@
 Hello World
-=======================
+===========
 
 This is a Fabric port of every programmer's favorite program.  It stores the
 string "Hello World" persistently, and then prints it out.
 
 This directory contains the following sub-directories:
 
-  - src: source code for the sif example, written in Fabric
+  - src: source code for the example, written in Fabric
   - bin: a collection of scripts for running the example
   - etc: configuration files for the example's store and worker
 
