@@ -1136,6 +1136,18 @@ public class Version {
         <include name="sif-hello/**" />
         <include name="travel/**" />
         <exclude name="travel/prototype/**" />
+        <!-- Exclude scripts.  These will be handled below. -->
+        <exclude name="*/bin/*" />
+      </tarfileset>
+
+      <!-- Include examples. -->
+      <tarfileset dir="${examples}" prefix="fabric-${fabric.version}/examples"
+          filemode="755">
+        <include name="blog/bin/**" />
+        <include name="hello/bin/**" />
+        <include name="OO7/bin/**" />
+        <include name="sif-hello/bin/**" />
+        <include name="travel/bin/**" />
       </tarfileset>
 
       <!-- Include library sources. -->
