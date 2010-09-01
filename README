@@ -120,8 +120,8 @@ To compile a Fabric program, run the Fabric compiler, fabc:
   $ fabc Foo.fab
 
 The fabc compiler has many options similar to the javac compiler,
-including the -d option to output classes in a different directory, the
--cp option to specify the classpath, and the -sourcepath option to
+including the -d option to output classes in a different directory,
+the -cp option to specify the classpath, and the -sourcepath option to
 specify the source path.  Run "fabc -help" for a complete list.
 
 
@@ -205,9 +205,9 @@ calls, and the creation of persistent objects on stores.
 References
 ----------
 [1] Jed Liu, Michael D. George, K. Vikram, Xin Qi, Lucas Waye, and
-    Andrew C.  Myers.  Fabric: A platform for secure distributed
-    computation and storage. Proc. 22nd ACM Symposium on Operating Systems
-    Principles (SOSP'09), pages 321–334, October 2009.
+    Andrew C. Myers.  Fabric: A platform for secure distributed
+    computation and storage. Proc. 22nd ACM Symposium on Operating
+    Systems Principles (SOSP'09), pages 321–334, October 2009.
 
 [2] Stephen Chong, K. Vikram, Andrew C. Myers.  SIF: Enforcing
     Confidentiality and Integrity in Web Applications.  Proc. USENIX
