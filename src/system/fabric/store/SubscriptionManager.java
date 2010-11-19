@@ -12,6 +12,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.Pair;
+import fabric.net.UnreachableNodeException;
 import fabric.store.db.GroupContainer;
 import fabric.dissemination.Glob;
 
@@ -111,12 +112,18 @@ public class SubscriptionManager extends FabricThread.AbstractImpl {
         boolean resubscribe;
         if (node == updater && !isDissem)
           resubscribe = true;
-        else if (isDissem)
-          resubscribe = node.notifyObjectUpdate(store, onum, glob);
         else {
-          ObjectGroup group = groupContainer.getGroup(node.getPrincipal());
-          resubscribe =
-              group != null && node.notifyObjectUpdate(onum, group);
+          try {
+            if (isDissem)
+              resubscribe = node.notifyObjectUpdate(store, onum, glob);
+            else {
+              ObjectGroup group = groupContainer.getGroup(node.getPrincipal());
+              resubscribe =
+                  group != null && node.notifyObjectUpdate(onum, group);
+            }
+          } catch (UnreachableNodeException e) {
+            resubscribe = false;
+          }
         }
 
         if (resubscribe) newSubscribers.add(subscriber);

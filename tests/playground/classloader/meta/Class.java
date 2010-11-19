@@ -16,10 +16,10 @@ public class Class {
   }
   
   
-  /* this constructor simulates the process of loading a class on to the fabric.
-   * In the full fabric implementation, it will need to be replaced by a fabric
+  /* this constructor simulates the process of loading a class onto Fabric.
+   * In the full Fabric implementation, it will need to be replaced by a fabric
    * program that assembles class files with their context information into a
-   * Class object, and commits it to the fabric */
+   * Class object, and commits it to Fabric */
   private Class (String baseName) throws IOException {
     Properties p  = Util.readProperties(baseName + ".properties");
     this.codebase = Codebase.getCodebase(p.getProperty("codebase"));

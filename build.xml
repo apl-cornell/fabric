@@ -914,6 +914,12 @@ public class Version {
       </fileset>
     </copy>
 
+    <!-- Attach copyright notices to source files in the scratch copy. -->
+    <antcall target="sub-ant-dist">
+      <param name="sub-ant.dir" value="fabric" />
+      <param name="sub-ant.target" value="copyright-stamp" />
+    </antcall>
+
     <!-- Create the distribution tarball in the scratch copy. -->
     <antcall target="sub-ant-dist">
       <param name="sub-ant.dir" value="fabric" />
@@ -928,6 +934,27 @@ public class Version {
     <antcall target="rmdir-tmp" />
   </target>
 
+  <!-- Stamps all source files with a copyright notice. -->
+  <target name="copyright-stamp">
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${fabric.home}"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${bin}/copyright-stamp" />
+      <fileset dir="${fabric.home}">
+        <include name="**/*.java" />
+        <include name="**/*.fil" />
+        <include name="**/*.fab" />
+
+        <!-- Don't stamp third-party software. -->
+        <exclude name="lib/**" />
+      </fileset>
+    </apply>
+  </target>
+
   <!-- Creates a distribution tarball from the current working copy. -->
   <target name="dist.tar"
       depends="configure-version,build-all,jar-all,javadoc">
@@ -940,8 +967,9 @@ public class Version {
         <include name="build.xml" />
         <include name="common.xml" />
         <include name="config.properties.in" />
-        <include name="README" />
         <include name="COPYING" />
+        <include name="CREDITS" />
+        <include name="README" />
       </tarfileset>
 
       <!-- Include scripts in bin and make them executable. -->
@@ -1032,6 +1060,9 @@ public class Version {
         <include name="bcprov-*.jar" />
         <!-- Jetty -->
         <include name="jetty/jetty-*.jar" />
+        <include name="jetty/jsp-*.jar" /> <!-- part of Jetty -->
+        <!-- JDT Core -->
+        <include name="jetty/core-*.jar" />
         <!-- Apache Commons -->
         <include name="jetty/commons-*.jar" />
         <!-- Java Servlet API -->
@@ -1082,10 +1113,23 @@ public class Version {
       <tarfileset dir="${examples}" prefix="fabric-${fabric.version}/examples">
         <include name="build.xml" />
         <include name="blog/**" />
+        <include name="hello/**" />
         <include name="OO7/**" />
         <include name="sif-hello/**" />
         <include name="travel/**" />
         <exclude name="travel/prototype/**" />
+        <!-- Exclude scripts.  These will be handled below. -->
+        <exclude name="*/bin/*" />
+      </tarfileset>
+
+      <!-- Include examples. -->
+      <tarfileset dir="${examples}" prefix="fabric-${fabric.version}/examples"
+          filemode="755">
+        <include name="blog/bin/**" />
+        <include name="hello/bin/**" />
+        <include name="OO7/bin/**" />
+        <include name="sif-hello/bin/**" />
+        <include name="travel/bin/**" />
       </tarfileset>
 
       <!-- Include library sources. -->
@@ -1172,8 +1216,10 @@ public class Version {
       sub-ant.target - the target to run.
   -->
   <target name="sub-ant-dist">
-    <ant inheritAll="false" antfile="${tmp}/${sub-ant.dir}/build.xml"
-        dir="${tmp}/${sub-ant.dir}" target="${sub-ant.target}" />
+    <ant inheritAll="false"
+         antfile="${tmp}/${sub-ant.dir}/build.xml"
+         dir="${tmp}/${sub-ant.dir}"
+         target="${sub-ant.target}" />
   </target>
 
   <!--

@@ -1,51 +1,222 @@
-This is Fabric.
+Fabric
+======
+
+Fabric is a language and runtime system that supports secure federated
+distributed systems.  This document briefly describes the contents of
+the package and should get you started running some Fabric examples.
+For more information, see our paper "Fabric: A Platform for Secure
+Distributed Computation and Storage" published in SOSP 2009 [1].
 
 
-To build Fabric:
-1. check out polyglot, jif, and fabric
-2. build polyglot:
-    polyglot$ ant
-    polyglot$ ant jar
-3. build jif:
-	jif$ for i in `pwd`/../polyglot/lib/*.jar; do classpath=$classpath:$i; done; export CLASSPATH=$classpath
-	jif$ export JAVA_HOME=/usr/lib/jvm/java-6-sun
-	jif$ ant
-4. copy config.properties.in to config.properties and edit it appropriately
-5. ant
+Package Contents
+----------------
+This package contains the following:
 
-    
+  - bin:
+      Scripts for invoking the compiler, runtime, and for configuration
+      tasks.
 
-To set up your environment for Fabric:
+  - doc:
+      The Fabric internal API documentation and licenses.
 
-Set $FABRIC_HOME to the project's top-level directory
-Copy config.properties.in to config.properties and edit as appropriate.
-Add $FABRIC_HOME/bin to your path.
+  - etc:
+      Configuration files for Fabric.
 
-To compile an application:
-use the "fabc" script, or run fabric.Main with java, e.g.:
-java fabric.Main tests/OO7/*.fab -d rt-classes -sourcepath src/runtime:tests -sigcp sig-classes
+  - lib:
+      Other software that Fabric depends on.
 
-To run a Fabric node (store or worker), you will need SSL keys and certificates
-for the node. The "genkey" script will generate keys for nodes.
+  - src/compiler:
+      The Fabric and FabIL compilers (FabIL is the intermediate language
+      that Fabric compiles into).
 
-To start a store:
-use the "fab-store" script, or run fabric.store.Main with java, e.g.:
-java fabric.store.Main --store store0 etc/keys/store0.keystore etc/keys/trust.keystore password
+  - src/system:
+      The parts of the Fabric runtime system that are implemented in
+      Java.
 
-To run an application:
-use the "fab" script, or run fabric.worker.Worker with java, e.g.:
-java fabric.worker.Worker OO7.Benchmark fab://store0/OO7 tiny 3
-java fabric.worker.Worker OO7.traversals.T1 fab://store0/OO7 --hot
-  (Make sure you have $FABRIC_HOME set properly!)
+  - src/runtime:
+      The parts of the Fabric runtime system that are implemented in
+      FabIL.
+
+  - src/lib:
+      Libraries that are built using Fabric, including the Fabric port
+      of the Servlets with Information Flow (SIF) library [2].
+
+  - examples:
+      Fabric example programs (details below).
+
+  - tools:
+      Tools to aid in the development of Fabric programs, including a
+      browser to inspect the contents of a store, and an experimental
+      tool for loading mobile code onto Fabric.
 
 
-Eclipse setup:
-To set up eclipse for Fabric, your project's classpath should have the
-following entries:
+Requirements
+------------
+This Fabric distribution builds on Unix.  We recommend that you use Java
+6 or later.  We have experienced problems with older versions.  Fabric
+is compiled with the Apache Ant build tool (http://ant.apache.org/).
 
-* source folder src/compiler
-* source folder src/system
-* class folder classes
-* class folder rt-classes
-* jar files from lib folder
-* Polyglot project or Polyglot jar/classes
+
+Configuring Fabric
+------------------
+Before using Fabric, you must configure the scripts in the 'bin'
+directory by running
+
+  $ ant bin
+
+from the top-level directory.
+
+
+Building Fabric
+---------------
+Fabric comes pre-compiled as Jar files in the 'lib' directory.  If you
+wish to rebuild Fabric, simply run
+
+  $ ant
+
+from the top-level directory.  For other useful build targets, run
+"ant -p" from the top-level directory.
+
+
+Fabric Example Programs
+-----------------------
+There are a number of example programs in the 'examples' directory.
+Each example is pre-configured and includes a separate README describing
+how to build and run it.  We briefly list the examples here:
+
+  - examples/hello:
+      Every programmer's favorite program, ported to Fabric.  This
+      example creates a persistent object containing the message "hello
+      world" and then outputs that message on the console.
+
+  - examples/sif-hello:
+      A demonstration of the Fabric port of the Servlets with
+      Information Flow (SIF) library.  This example shows how web
+      services can be built on top of Fabric.
+
+  - examples/travel:
+      A more complete demonstration of Fabric's features.  This
+      application involves coordination between an airline, bank, and
+      customer to negotiate the purchase of a ticket.  Each principal
+      (airline, bank, and customer) also has a user interface written
+      using the SIF library.
+
+  - examples/OO7:
+      This is an implementation of the OO7 Object Oriented Database
+      Benchmark [3].  It is written using FabIL, the intermediate
+      language for Fabric, and thus does not benefit from the static
+      information-flow checking that the full Fabric language provides.
+
+  - examples/blog:
+      This is a simple web application implemented in FabIL.  It is
+      similar in structure to the Course Management System that we used
+      for evaluating performance of Fabric (see [1]).
+
+
+Invoking Fabric
+---------------
+To compile a Fabric program, run the Fabric compiler, fabc:
+
+  $ fabc Foo.fab
+
+The fabc compiler has many options similar to the javac compiler,
+including the -d option to output classes in a different directory,
+the -cp option to specify the classpath, and the -sourcepath option to
+specify the source path.  Run "fabc -help" for a complete list.
+
+
+There are three types of nodes in the Fabric design: stores, workers,
+and dissemination nodes.  In the current implementation, there are no
+separate dissemination nodes; rather each worker and store participates
+as a peer in the dissemination network.
+
+
+To start a store, run:
+
+  $ fab-store --store [store host name]
+
+Unless you are using the experimental mobile code support, the store
+must have the classes of objects that it will store on its classpath.
+This can be specified with the -classpath option or in the CLASSPATH
+environment variable.
+
+
+Before workers are started, they must create a principal object on a
+store.  This is accomplished by running
+
+  $ fab --name [worker host name] --make-principal [store host name]
+
+Once this is done, you can start the worker by running:
+
+  $ fab --name [worker host name] [main class]
+
+where [main class] is the fully-qualified name of the class you wish to
+invoke.  If the main class is omitted, the worker will simply start and
+wait for remote calls.  As with stores, workers must have the classes
+they will use on their classpath, which can be specified with the
+-classpath option or in the CLASSPATH environment variable.
+
+
+The Fabric Language
+-------------------
+The Fabric programming language is an extension of the Jif programming
+language [4].  A good place to start is with the Jif manual, available
+at:
+
+    http://www.cs.cornell.edu/jif/doc/jif-3.3.0/manual.html
+
+Fabric extends Jif with support for nested transactions, explicit remote
+calls, and the creation of persistent objects on stores.
+
+  - Nested transactions are specified with an atomic block, for example:
+
+      atomic {
+        o1.f();
+        o2.g();
+      }
+
+    The semantics of the atomic block are that statements inside the
+    atomic block will be executed simultaneously and without
+    interference from other simultaneous transactions, even those taking
+    place at other network nodes.
+
+  - Explicit remote calls are specified using the o.m@w(x) syntax:
+
+      RemoteWorker w = FabricWorker.getWorker().getWorker("workername");
+      o.m@w(args);
+
+    Unlike many other distributed systems with remote calls, the objects
+    used during the computation of the method m need not reside at the
+    remote worker w.  Also note that transactions can span multiple
+    remote calls; these calls will be executed as a single transaction.
+
+  - Persistent objects are created by specifying a store to store them.
+    For example:
+
+      Store s = FabricWorker.getWorker().getStore("storename");
+      Object o = new Object@s(args);
+
+    If a store is not specified, objects are created at the same store
+    as the object "this".  Each worker also contains a local,
+    non-persistent store.  A reference to this store can be obtained by
+    calling FabricWorker.getWorker().getLocalStore().
+
+
+References
+----------
+[1] Jed Liu, Michael D. George, K. Vikram, Xin Qi, Lucas Waye, and
+    Andrew C. Myers.  Fabric: A platform for secure distributed
+    computation and storage. Proc. 22nd ACM Symposium on Operating
+    Systems Principles (SOSP'09), pages 321–334, October 2009.
+
+[2] Stephen Chong, K. Vikram, Andrew C. Myers.  SIF: Enforcing
+    Confidentiality and Integrity in Web Applications.  Proc. USENIX
+    Security Symposium 2007, pages 1–16, August 2007.
+
+[3] Michael J. Carey, David J. DeWitt, an Jeffrey F. Naughton.
+    The OO7 Benchmark. Proc. 1993 ACM SIGMOD International Conference
+    on Management of Data, pp. 12-21, May 1993.
+
+[4] Andrew C. Myers. Practical Mostly-Static Information Flow Control.
+    Proc. 26th ACM Symposium on Principles of Programming Languages (POPL),
+    pages 228–241, January 1999. See also http://www.cs.cornell.edu/jif.

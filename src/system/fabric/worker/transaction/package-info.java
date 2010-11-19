@@ -1,4 +1,4 @@
 /**
- * Transaction management for the fabric worker.
+ * Transaction management for the Fabric worker.
  */
 package fabric.worker.transaction;

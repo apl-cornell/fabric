@@ -19,7 +19,7 @@
  *    interface, even those that produce <code>Jif</code> extensions rather than
  *    <code>FabricExt</code> extensions.  The <code>FabricExtFactory</code>
  *    interface simply designates a factory that is able to create extensions for
- *    all of the fabric AST nodes.</p>
+ *    all of the Fabric AST nodes.</p>
  * 
  * <p>The {@link fabric.ast.FabricJifExtFactory_c} class is responsible for creating all of
  *    the <code>Jif</code> extensions in the diagram above.  It is a simple

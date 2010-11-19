@@ -1,5 +1,5 @@
 /**
- * Visitors for the fabric language.
+ * Visitors for the Fabric language.
  */
 
 package fabric.visit;

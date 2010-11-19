@@ -1,0 +1,82 @@
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+
+class Hello {
+
+  //
+  // The main method.  The declaration has a few annotations:
+  //
+  // 1. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  //                           ---------
+  // This annotation is the begin label, which bounds the side effects of the
+  // method.  This annotation prevents someone from outputting spurious
+  // messages to the console (the p<- component) or leaking information by
+  // calling this method in a secret context (the p-> component).
+  //
+  //
+  // 2. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  //                                      ----------------
+  // This extra parameter to main represents the principal who is invoking the
+  // method.  It has the label {p<-} because we require the principal object
+  // itself to have high integrity.
+  //
+  //
+  // 3. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  //                                                                       ---------
+  // This is the end label of the method.  It bounds the amount of information
+  // that can be learned by the successful completion of this method.
+  //
+  //
+  // 4. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  //                                                                                 ----------------
+  // In Fabric, all exceptions must be declared, because they represent a
+  // possible information flow.  Here we are lazy and simply declare "throws Exception"
+  //
+  public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+
+    // This is a fancy version of "hello, world", in that we create a
+    // persistent object to store our message, and save it in the root map of
+    // the store for later retrieval.
+
+    atomic {
+
+      // get a reference to the store called "store"
+      final Store store = worker$.getStore("store");
+
+      // get a reference to the runtime.  This is how fabric programs access the console.
+      Runtime[p] runtime = Runtime[p].getRuntime();
+
+      // because we're storing p's message on "store", we must ensure that p trusts store
+      if (store actsfor p) {
+
+        // create an object there holding our important message
+        Message[p]{p->;p<-} h = new Message[p]@store("Hello World!  Fabric is coming for you...");
+
+        // store a reference to our object in the store's root map
+        Map root = store.getRoot();
+        root.put("hello", h);
+
+        // output the contents of the object
+        runtime.out().println(h.message);
+
+      } else {
+        runtime.out().println("store is not sufficiently trusted.");
+      }
+    }
+  }
+}
+
+// We use a separate class to store the message.  The class is parameterized by
+// a principal.
+class Message[principal p] {
+
+  public final String{p->;p<-} message;
+
+  public Message(String{p->;p<-} message):{p<-;p->} {
+    this.message = message;
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et syntax=java
+*/

@@ -105,8 +105,14 @@ application data and the workers each host a web application.
       The bank application can be accessed at:
 	http://localhost:8081/bank
 
+	User: bank
+	Pass: knab
+
       The airline application can be accessed at:
 	http://localhost:8082/airline
+
+	User: airline
+	Pass: enilria
 
   III. You can clean up the stores' persistent state by removing 'var' from the
        travel example directory:
