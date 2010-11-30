@@ -137,6 +137,8 @@ class Store implements Runnable {
         // Accept a connection and handle it.
         SubSocket connection = server.accept();
 
+        // XXX not setting timeout
+        // worker.setSoTimeout(opts.timeout * 1000);
         throw new NotImplementedException();
         // connectionHandler.handle(connection);
       }

@@ -311,9 +311,9 @@ public abstract class ObjectDB {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid, NodePrincipal workerPrincipal,
-                              SubscriptionManager sm)
-                throws AccessException;
+  public abstract void commit(long tid, RemoteWorker workerNode,
+      NodePrincipal workerPrincipal, SubscriptionManager sm)
+      throws AccessException;
 
   /**
    * Cause the objects prepared in transaction [tid] to be discarded.
@@ -389,7 +389,8 @@ public abstract class ObjectDB {
    * @param worker
    *          the worker that performed the update.
    */
-  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum) {
+  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum,
+      RemoteWorker worker) {
     // Remove from the glob table the glob associated with the onum.
     Long globID = globIDByOnum.remove(onum);
     GroupContainer group = null;
