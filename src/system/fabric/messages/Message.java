@@ -4,7 +4,6 @@ import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.SubSocket;
 import fabric.lang.Object._Proxy;
@@ -12,30 +11,37 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 
 /**
- * Messages provide an interface for serializing requests and responses.  The
+ * Messages provide an interface for serializing requests and responses. The
  * <code>Message</code> class itself provides facilities for serialization and
  * deserialization, while the concrete subclasses give the structure of each
  * type of message.</p>
- * 
- * <p>Messages are intended to be used in a synchronous, call-return style.  To
- * support this, each Message type is bound to a specific Response type.  On the
+ * <p>
+ * Messages are intended to be used in a synchronous, call-return style. To
+ * support this, each Message type is bound to a specific Response type. On the
  * sender side, this allows type safety in the <code>send</code> method, for
  * example:<br>
+ * 
  * <pre>
  * ReadMessage.Response r = new ReadMessage(...).send(...);
  * </pre>
- * while on the receiver side, type safety is enforced by only accepting
- * <code>R</code> in the <code>respond(...)</code> method.</p>
  * 
- * <p>Messages use two instances of the visitor pattern, one for Messages bound
- * for the store ({@link MessageToStore}) and one for Messages bound for the
- * worker ({@link MessageToWorker}).  These interfaces would be subclasses of
+ * while on the receiver side, type safety is enforced by only accepting
+ * <code>R</code> in the <code>respond(...)</code> method.
+ * </p>
+ * <p>
+ * Messages use two instances of the visitor pattern, one for Messages bound for
+ * the store ({@link MessageToStore}) and one for Messages bound for the worker
+ * ({@link MessageToWorker}). These interfaces would be subclasses of
  * <code>Message</code>, except that some message types (e.g.
  * <code>CommitTransactionMessage</code>) go to both, and Java doesn't support
- * multiple inheritance.</p>
+ * multiple inheritance.
+ * </p>
  * 
- * @param <R> The response type
- * @author mdgeorge
+ * @param <R>
+ *          The response type
+ * @param <E>
+ *          The exception type that may occur at the remote node while handling
+ *          the message.
  */
 public abstract class Message<R extends Message.Response, E extends Exception> {
 
@@ -54,7 +60,7 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
    *            the message to send.
    * @return
    *            the reply from the node.
-   * @throws FabricException
+   * @throws E
    *            if an error occurs at the remote node while handling the message.
    * @throws IOException
    *            in the event of a communications failure. 

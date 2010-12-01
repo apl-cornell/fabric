@@ -162,10 +162,10 @@ public final class Crypto {
   }
   
   /**
-   * generates a certificate, signed by the issuer, binding the subject's name
+   * Generates a certificate, signed by the issuer, binding the subject's name
    * to their public key.
    */
-  public X509Certificate createCertificate(
+  public static X509Certificate createCertificate(
       String subjectName, PublicKey subjectKey,
       String issuerName, PrivateKey issuerKey) throws GeneralSecurityException {
     

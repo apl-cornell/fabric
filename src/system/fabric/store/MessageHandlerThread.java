@@ -2,13 +2,14 @@ package fabric.store;
 
 import static fabric.common.Logging.STORE_REQUEST_LOGGER;
 
+import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
 import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.logging.Level;
 
-import fabric.common.Logging;
-import fabric.common.ObjectGroup;
-import fabric.common.SerializedObject;
+import fabric.common.*;
 import fabric.common.Threading.NamedRunnable;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.NotImplementedException;
@@ -18,6 +19,8 @@ import fabric.lang.security.NodePrincipal;
 import fabric.messages.*;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.Worker;
+import fabric.worker.Worker.Code;
 
 public class MessageHandlerThread
      extends NamedRunnable
@@ -134,16 +137,32 @@ public class MessageHandlerThread
   /**
    * Processes the given request for a new node principal
    */
-  public MakePrincipalMessage.Response handle(NodePrincipal p, MakePrincipalMessage msg) {
-    // TODO
-    throw new NotImplementedException();
+  public MakePrincipalMessage.Response handle(NodePrincipal p,
+      MakePrincipalMessage msg) throws GeneralSecurityException {
+    // Note: p should always be null.
     
-    // Create the principal
+    // Get the store's node object and its signing key. 
+    final String storeName = session.store.name;
+    final fabric.worker.Store store = Worker.getWorker().getStore(storeName);
+    final PrivateKey storeKey = session.store.privateKey;
     
-    // Create certificate binding requester key to the OID
+    // Create a principal object on the store and get the resulting object's
+    // onum.
+    long principalOnum = Worker.runInTransaction(null, new Code<Long>() {
+      public Long run() {
+        NodePrincipal principal = new NodePrincipal._Impl(store, null, null);
+        principal.addDelegatesTo(store.getPrincipal());
+        return principal.$getOnum();
+      }
+    });
     
-    // construct the cert chain
+    // Create a certificate that binds the requester's key to the new principal
+    // object's OID.
+    X509Certificate cert =
+        Crypto.createCertificate(storeName + "/" + principalOnum,
+            msg.requesterKey, storeName, storeKey);
     
+    return new MakePrincipalMessage.Response(principalOnum, cert);
   }
   
   /**
