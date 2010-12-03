@@ -9,42 +9,50 @@ while true; do
     "") break;;
     -v) verbose="1"; shift;;
     -cp) EXTRACP=$2; shift; shift;;
-    -classpath) EXTRACP=$2; shift; shift;;    
+    -classpath) EXTRACP=$2; shift; shift;;
     -j)
             shift
-            vmargs="$vmargs '$1'"
+            vmargs="${vmargs} '$1'"
+            shift
+            ;;
+    --port)
+            shift
+            port=$1
             shift
             ;;
     --debug)
             shift
-            vmargs="$vmargs -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3371"
+            vmargs="${vmargs} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3371"
             ;;
     --*)
-        args="$args '$1'"; shift; args="$args '$1'"; shift;;
-    *) args="$args sif.servlet.StartWebapp $@"; break;;
+        args="${args} '$1'"; shift; args="${args} '$1'"; shift;;
+    *) args="${args} sif.servlet.StartWebapp $@"; break;;
   esac
 done
 
-
-classpath="$JIF/rt-classes:$classpath"
-classpath="$TOP/classes:$classpath"
-classpath="$TOP/lib/fabric.jar:$classpath"
-classpath="$TOP/rt-classes:$classpath"
-classpath="$TOP/lib/fabric-rt.jar:$classpath"
-classpath="$TOP/lib/FreePastry-2.1.jar:$classpath"
-classpath="$EXTRACP:$classpath"
-classpath=$classpath:$TOP/tests/sif/classes
-classpath=$classpath:$TOP/tests/jif/classes
-
-#add jetty jars
-classpath=$classpath:$TOP/lib/jetty/jetty-ajp-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-annotations-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-client-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-continuation-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-deploy-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-http-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-io-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-jmx-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-jndi-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-plus-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-policy-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-rewrite-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-security-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-server-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-servlet-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-servlets-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-util-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-webapp-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-websocket-7.1.5.v20100705.jar:$TOP/lib/jetty/jetty-xml-7.1.5.v20100705.jar:$TOP/lib/jetty/servlet-api-2.5.jar:$TOP/lib/jetty/commons-fileupload-1.1.1.jar:$TOP/lib/jetty/commons-io-1.2.jar
-
-command="\"$JAVA_HOME\"/bin/java $vmargs -classpath \"$(fixpath $classpath)\" fabric.worker.Worker $args"
-
-if [ -n "$verbose" ]
+if [ -n "${port}" ]
 then
-  echo "$command"
+  args="${args} --port ${port}"
 fi
 
-eval "$command"
+# Library dependencies.
+# Jar files should always appear *after* their corresponding class directories.
+LIBCP="${TOP}/src/lib/sif/classes"
+LIBCP="${LIBCP}:${TOP}/lib/fabric-sif.jar"
+LIBCP="${LIBCP}:${TOP}/src/lib/transient/classes"
+LIBCP="${LIBCP}:${TOP}/lib/fabric-transient.jar"
+for i in "${TOP}"/lib/jetty/*.jar ; do
+  LIBCP="${LIBCP}:$i"
+done
+
+classpath="${FABRIC_WORKER_CP}:${LIBCP}:${EXTRACP}:${classpath}"
+
+command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" fabric.worker.Worker ${args}"
+
+if [ -n "${verbose}" ]
+then
+  echo "${command}"
+fi
+
+eval "${command}"
 

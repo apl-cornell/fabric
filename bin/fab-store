@@ -11,31 +11,24 @@ while true; do
     -classpath) EXTRACP=$2; shift; shift;;    
     -j)
             shift
-            vmargs="$vmargs '$1'"
+            vmargs="${vmargs} '$1'"
             shift
             ;;
     --debug)
             shift
-            vmargs="$vmargs -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3370"
+            vmargs="${vmargs} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3370"
             ;;
-    *) args="$args '$1'"; shift;;
+    *) args="${args} '$1'"; shift;;
   esac
 done
 
-# Jar files should always appear *after* their corresponding class directories.
-EXTRACP="$EXTRACP:$TOP/classes"
-EXTRACP="$EXTRACP:$TOP/lib/fabric.jar"
-EXTRACP="$EXTRACP:$TOP/rt-classes"
-EXTRACP="$EXTRACP:$TOP/lib/fabric-rt.jar"
-EXTRACP="$EXTRACP:$TOP/lib/je-3.3.75.jar"
-EXTRACP="$EXTRACP:$TOP/lib/FreePastry-2.1.jar"
-classpath="$EXTRACP:$classpath"
+classpath="${FABRIC_STORE_CP}:${EXTRACP}:${classpath}"
 
-command="\"$JAVA\" $vmargs -classpath \"$(fixpath $classpath)\" fabric.store.Node $args"
+command="\"{$JAVA}\" $vmargs -classpath \"$(fixpath $classpath)\" fabric.store.Node $args"
 
-if [ -n "$verbose" ]
+if [ -n "${verbose}" ]
 then
-  echo "$command"
+  echo "${command}"
 fi
 
-eval "$command"
+eval "${command}"
