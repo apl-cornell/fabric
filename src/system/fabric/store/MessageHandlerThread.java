@@ -159,7 +159,7 @@ public class MessageHandlerThread
     // Create a certificate that binds the requester's key to the new principal
     // object's OID.
     X509Certificate cert =
-        Crypto.createCertificate(storeName + "/" + principalOnum,
+        Crypto.createCertificate(Long.toString(principalOnum),
             msg.requesterKey, storeName, storeKey);
     
     return new MakePrincipalMessage.Response(principalOnum, cert);
