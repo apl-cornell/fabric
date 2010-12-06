@@ -1,0 +1,46 @@
+Hello World
+===========
+
+This is a Fabric port of every programmer's favorite program.  It stores the
+string "Hello World" persistently, and then prints it out.
+
+This directory contains the following sub-directories:
+
+  - src: source code for the example, written in Fabric
+  - bin: a collection of scripts for running the example
+  - etc: configuration files for the example's store and worker
+
+Compiling
+---------
+To build the example, run 'ant' in the hello example directory:
+
+  $ ant
+
+
+Using
+-----
+This example comes with a store named "store" for storing persistent data,
+and a worker named "worker" to run the computation.
+
+  0. Begin in the hello example directory:
+
+        $ cd $FABRIC/examples/hello
+
+  1. Start the store:
+
+        $ bin/start-store
+
+  2. If you are starting with a fresh store, you will need to initialize the
+     worker by creating its principal object on the store:
+
+        $ bin/init-worker
+
+  3. Run the program:
+
+        $ bin/say-hello
+
+  4. You can clean up the store's persistent state by removing the 'var'
+     directory:
+
+        $ rm -rf var
+

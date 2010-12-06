@@ -12,7 +12,7 @@ import javax.crypto.Cipher;
 
 import fabric.lang.security.Label;
 
-import fabric.worker.AbortException;
+import fabric.worker.TransactionAbortingException;
 import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.LocalStore;
@@ -198,7 +198,8 @@ public class UpdateMap implements FastSerializable {
       RemoteWorker result = Worker.getWorker().getWorker(hostname);
 
       if (!isValidWriter(result, proxy)) {
-        throw new AbortException("Invalid update map entry found.");
+        throw new TransactionAbortingException(
+            "Invalid update map entry found.");
       }
 
       return result;

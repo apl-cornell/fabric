@@ -8,19 +8,22 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import fabric.common.*;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.naming.SocketAddress;
 import fabric.common.util.*;
 import fabric.dissemination.Glob;
-import fabric.lang.security.NodePrincipal;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
+import fabric.lang.security.NodePrincipal;
 import fabric.messages.*;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
@@ -140,7 +143,6 @@ public class RemoteStore extends RemoteNode implements Store {
                  UnreachableNodeException {
     PrepareTransactionMessage.Response response =
       send(new PrepareTransactionMessage(tid, commitTime, toCreate, reads, writes));
-
 
     return response.subTransactionCreated;
   }
@@ -375,6 +377,26 @@ public class RemoteStore extends RemoteNode implements Store {
       throws UnreachableNodeException, TransactionCommitFailedException {
     CommitTransactionMessage.Response response =
       send(new CommitTransactionMessage(transactionID));
+  }
+
+  public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
+    List<SerializedObject> staleObjects = getStaleObjects(reads);
+    
+    for (SerializedObject obj : staleObjects)
+      updateCache(obj);
+    
+    return !staleObjects.isEmpty();
+  }
+
+  /**
+   * Helper for checkForStaleObjects.
+   */
+  protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
+    try {
+      return send(new StalenessCheckMessage(reads)).staleObjects;
+    } catch (final AccessException e) {
+      throw new RuntimeFetchException(e);
+    }
   }
 
   @Override

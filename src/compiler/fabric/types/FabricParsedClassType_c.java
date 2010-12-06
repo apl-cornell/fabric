@@ -77,6 +77,37 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements Fabr
     return defaultFieldLabel;
   }
   
+  public Label defaultFabilFieldLabel() {
+    // Type checking has been done, so all field labels are guaranteed to
+    // be the same
+    // ThisLabelChecker has already run and checked that 'this' is
+    // being used correctly.
+    FabricTypeSystem ts = (FabricTypeSystem)typeSystem();
+
+    // If the default field label has not been computed yet
+    // or if this is a DelegatingPrincipal (XXX Principal instead?)
+    // then compute defaultFieldLabel
+    if (!fieldLabelFound || isSubtype(ts.DelegatingPrincipal())) {
+      FabricClassType superType = (FabricClassType)superType();
+      if (superType != null && superType.defaultFabilFieldLabel() != null) {
+        defaultFieldLabel = superType.defaultFabilFieldLabel();
+      }
+      else {
+        for (FieldInstance fi : (List<FieldInstance>)fields()) {
+          if (fi.flags().isStatic()) continue;
+          Type t = fi.type();
+          if (ts.isLabeled(t)) {
+            defaultFieldLabel = ts.labelOfType(t);
+            break;
+          }
+        }
+      }
+      fieldLabelFound = true;
+    }
+    return defaultFieldLabel;
+  }
+  
+  
   public void removeMethod(MethodInstance mi) {
     for (Iterator<MethodInstance> it = methods.iterator(); it.hasNext(); ) {
       if (it.next() == mi) {

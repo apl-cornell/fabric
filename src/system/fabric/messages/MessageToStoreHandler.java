@@ -3,6 +3,7 @@ package fabric.messages;
 import java.security.GeneralSecurityException;
 
 import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.AccessException;
 import fabric.lang.security.NodePrincipal;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -30,4 +31,5 @@ public interface MessageToStoreHandler {
   public PrepareTransactionMessage.Response handle(NodePrincipal p, PrepareTransactionMessage msg) throws TransactionPrepareFailedException;
   public               ReadMessage.Response handle(NodePrincipal p, ReadMessage               msg) throws FabricException;
   public      MakePrincipalMessage.Response handle(NodePrincipal p, MakePrincipalMessage      msg) throws GeneralSecurityException;
+  public     StalenessCheckMessage.Response handle(NodePrincipal p, StalenessCheckMessage     msg) throws AccessException;
 }

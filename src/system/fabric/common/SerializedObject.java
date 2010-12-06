@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.*;
 
+import fabric.worker.LocalStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.common.exceptions.InternalError;
@@ -19,7 +20,7 @@ import fabric.lang.Object._Impl;
  * <code>_Impl</code> objects are stored on stores in serialized form as
  * <code>SerializedObject</code>s.
  */
-public final class SerializedObject implements FastSerializable {
+public final class SerializedObject implements FastSerializable, Serializable {
   /**
    * The serialized object. Format:
    * <ul>
@@ -636,9 +637,9 @@ public final class SerializedObject implements FastSerializable {
    * Writes the given _Impl out to the given output stream. The behaviour of
    * this method should mirror write(DataOutput).
    * 
-   * @see SerializedObject#write(DataOutput)
-   * @see SerializedObject#readImpl(Store, DataInput)
-   * @see SerializedObject#SerializedObject(DataInput)
+   * @see #write(DataOutput)
+   * @see #readImpl(Store, DataInput)
+   * @see #SerializedObject(DataInput)
    */
   public static void write(_Impl impl, DataOutput out) throws IOException {
     Label label = impl.get$label();
@@ -653,7 +654,16 @@ public final class SerializedObject implements FastSerializable {
     out.writeInt(impl.$version);
     out.writeLong(0);
     out.writeBoolean(interStoreLabel);
-    if (interStoreLabel) out.writeUTF(labelStore.name());
+    if (interStoreLabel) {
+      if (labelStore instanceof LocalStore) {
+        Class<?> objClass = impl.getClass();
+        String objStr = impl.toString();
+        throw new InternalError("Creating remote ref to local store.  Remote "
+            + "object has class " + objClass + ".  Its string representation "
+            + "is \"" + objStr + "\", and its label is local.");
+      }
+      out.writeUTF(labelStore.name());
+    }
     out.writeLong(labelOnum);
 
     // Write the object's type information
@@ -728,9 +738,9 @@ public final class SerializedObject implements FastSerializable {
    * 
    * @param in
    *          An input stream containing a serialized object.
-   * @see SerializedObject#write(DataOutput)
-   * @see SerializedObject#write(_Impl, DataOutput)
-   * @see SerializedObject#readImpl(Store, DataInput)
+   * @see #write(DataOutput)
+   * @see #write(_Impl, DataOutput)
+   * @see #readImpl(Store, DataInput)
    */
   public SerializedObject(DataInput in) throws IOException {
     ByteArrayOutputStream bos = new ByteArrayOutputStream();

@@ -21,7 +21,7 @@ public interface _ObjectArray<T extends Object> extends Object {
   T get(int i);
 
   public static class _Impl<T extends Object> extends Object._Impl implements
-      _ObjectArray<T> {
+      _ObjectArray<T>, _InternalArrayImpl {
     /**
      * The class representing the proxy type for the array elements.
      */
@@ -158,8 +158,11 @@ public interface _ObjectArray<T extends Object> extends Object {
     public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
       _ObjectArray._Impl<T> src = (_ObjectArray._Impl<T>) other;
-      value = new Object[src.value.length];
-      System.arraycopy(src.value, 0, value, 0, src.value.length);
+      value = src.value;
+    }
+
+    public void cloneValues() {
+      value = value.clone();
     }
 
     /*

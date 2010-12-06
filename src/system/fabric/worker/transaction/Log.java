@@ -51,11 +51,12 @@ public final class Log {
   Thread thread;
 
   /**
-   * A flag indicating whether this transaction should abort. This flag should
-   * be checked before each operation. This flag is set when it's non-null and
-   * indicates the outermost transaction in the stack that is aborting.
+   * A flag indicating whether this transaction should abort or be retried. This
+   * flag should be checked before each operation. This flag is set when it's
+   * non-null and indicates the transaction in the stack that is
+   * to be retried; all child transactions are to be aborted.
    */
-  volatile TransactionID abortSignal;
+  volatile TransactionID retrySignal;
 
   /**
    * Maps OIDs to <code>readMap</code> entries for objects read in this
@@ -139,7 +140,7 @@ public final class Log {
 
     this.child = null;
     this.thread = Thread.currentThread();
-    this.abortSignal = null;
+    this.retrySignal = parent == null ? null : parent.retrySignal;
     this.reads = new OidKeyHashMap<ReadMapEntry>();
     this.readsReadByParent = new ArrayList<ReadMapEntry>();
     this.creates = new ArrayList<_Impl>();
@@ -200,7 +201,8 @@ public final class Log {
   }
 
   /**
-   * Returns a set of stores affected by this transaction.
+   * Returns a set of stores affected by this transaction. This is the set of
+   * stores to contact when preparing and committing a transaction.
    */
   Set<Store> storesToContact() {
     Set<Store> result = new HashSet<Store>();
@@ -221,13 +223,28 @@ public final class Log {
 
     return result;
   }
+  
+  /**
+   * @return a set of stores to contact when checking for object freshness.
+   */
+  Set<Store> storesToCheckFreshness() {
+    Set<Store> result = new HashSet<Store>();
+    result.addAll(reads.storeSet());
+    for (ReadMapEntry entry : readsReadByParent) {
+      result.add(entry.obj.store);
+    }
+    
+    return result;
+  }
 
   /**
    * Returns a map from onums to version numbers of objects read at the given
-   * store. Reads on created and modified objects are not included.
+   * store. Reads on created objects are never included.
+   * 
+   * @param includeModified whether to include reads on modified objects.
    */
   @SuppressWarnings("unchecked")
-  LongKeyMap<Integer> getReadsForStore(Store store) {
+  LongKeyMap<Integer> getReadsForStore(Store store, boolean includeModified) {
     LongKeyMap<Integer> result = new LongKeyHashMap<Integer>();
     LongKeyMap<ReadMapEntry> submap = reads.get(store);
     if (submap == null) return result;
@@ -235,12 +252,22 @@ public final class Log {
     for (LongKeyMap.Entry<ReadMapEntry> entry : submap.entrySet()) {
       result.put(entry.getKey(), entry.getValue().versionNumber);
     }
-
+    
+    if (parent != null) {
+      for (ReadMapEntry entry : readsReadByParent) {
+        result.put(entry.obj.onum, entry.versionNumber);
+      }
+    }
+    
     if (store.isLocalStore()) {
-      for (_Impl write : Util.chain(localStoreWrites, localStoreCreates))
+      Iterable<_Impl> writesToExclude =
+          includeModified ? Collections.EMPTY_LIST : localStoreWrites;
+      for (_Impl write : Util.chain(writesToExclude, localStoreCreates))
         result.remove(write.$getOnum());
     } else {
-      for (_Impl write : Util.chain(writes, creates))
+      Iterable<_Impl> writesToExclude =
+          includeModified ? Collections.EMPTY_LIST : writes;
+      for (_Impl write : Util.chain(writesToExclude, creates))
         if (write.$getStore() == store) result.remove(write.$getOnum());
     }
 
@@ -298,16 +325,17 @@ public final class Log {
   }
 
   /**
-   * Sets the abort flag on this and the logs of all sub-transactions.
+   * Sets the retry flag on this and the logs of all sub-transactions.
    */
-  public void flagAbort() {
+  public void flagRetry() {
     Queue<Log> toFlag = new LinkedList<Log>();
     toFlag.add(this);
     while (!toFlag.isEmpty()) {
       Log log = toFlag.remove();
       synchronized (log) {
         if (log.child != null) toFlag.add(log.child);
-        log.abortSignal = tid;
+        if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid))
+          log.retrySignal = tid;
         // XXX This was here to unblock a thread that may have been waiting on a
         // XXX lock. Commented out because it was causing a bunch of
         // XXX InterruptedExceptions and ClosedByInterruptExceptions that
@@ -367,9 +395,9 @@ public final class Log {
         updateMap = new UpdateMap(tid.topTid);
       }
 
-      if (abortSignal != null) {
+      if (retrySignal != null) {
         synchronized (this) {
-          if (abortSignal.equals(tid)) abortSignal = null;
+          if (retrySignal.equals(tid)) retrySignal = null;
         }
       }
     }

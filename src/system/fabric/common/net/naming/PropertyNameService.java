@@ -55,7 +55,7 @@ public class PropertyNameService implements NameService {
         
         ConfigProperties props = new ConfigProperties(name);
         
-        String host = props.address;
+        String host = props.hostname;
         int    port = portType.getPort(props);
         
         this.entries.put(name, new SocketAddress(InetAddress.getByName(host), port));

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+"${BIN_DIR}/run-in-xterm" "Customer webapp worker" \
+  "${BIN_DIR}/start-customer-webapp" &
+sleep 1
+"${BIN_DIR}/run-in-xterm" "Bank webapp worker" \
+  "${BIN_DIR}/start-bank-webapp" &
+sleep 1
+"${BIN_DIR}/run-in-xterm" "Airline webapp worker" \
+  "${BIN_DIR}/start-airline-webapp" &
+

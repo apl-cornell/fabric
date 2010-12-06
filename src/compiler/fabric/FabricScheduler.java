@@ -11,6 +11,7 @@ import fabric.visit.FabricTypeBuilder;
 import fabric.visit.PrincipalCastAdder;
 import fabric.visit.RemoteCallWrapperAdder;
 import fabric.visit.RemoteCallWrapperUpdater;
+import fabric.visit.ThisLabelChecker;
 
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
@@ -152,22 +153,46 @@ public class FabricScheduler extends JifScheduler {
     return g;
   }
   
-  @Override
-  public Goal Serialized(Job job) {
-    FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
-    if (!opts.signatureMode()) return super.Serialized(job);
-    
-    // Signature mode.  Don't run some passes.
-    Goal g = internGoal(new Serialized(job) {
-      @SuppressWarnings("unchecked")
+  public Goal ThisLabelChecked(Job job) {
+    FabricTypeSystem  ts = fabext.typeSystem();   
+    FabricNodeFactory nf = fabext.nodeFactory();    
+    Goal g = internGoal(new VisitorGoal(job, new ThisLabelChecker(job, ts, nf)) {
       @Override
-      public Collection prerequisiteGoals(Scheduler scheduler) {
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
         l.add(scheduler.TypeChecked(job));
         l.add(scheduler.ExceptionsChecked(job));
         return l;
       }
     });
+    return g;
+  }
+  
+  
+  
+  @Override
+  public Goal Serialized(Job job) {
+    FabricOptions opts = (FabricOptions) job.extensionInfo().getOptions();
+    Goal g = null;
+    if (!opts.signatureMode()) {
+      g = super.Serialized(job);
+      try {
+        g.addPrerequisiteGoal(ThisLabelChecked(job), this);
+      } catch (CyclicDependencyException e) {
+        e.printStackTrace();
+      }
+    } else {
+      // Signature mode.  Don't run some passes.
+      g = internGoal(new Serialized(job) {
+        @SuppressWarnings("unchecked")
+        @Override
+        public Collection prerequisiteGoals(Scheduler scheduler) {
+          List<Goal> l = new ArrayList<Goal>();
+          l.add(ThisLabelChecked(job));
+          return l;
+        }
+      });
+    }
     return g;
   }
 

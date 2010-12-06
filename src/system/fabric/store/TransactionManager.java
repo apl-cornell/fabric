@@ -134,7 +134,11 @@ public class TransactionManager {
     Store store = Worker.getWorker().getStore(database.getName());
     if (worker == null || worker.$getStore() != store
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
-      checkPerms(worker, req.reads.keySet(), req.writes);
+      try {
+        checkPerms(worker, req.reads.keySet(), req.writes);
+      } catch (AccessException e) {
+        throw new TransactionPrepareFailedException(e.getMessage());
+      }
     }
 
     synchronized (database) {
@@ -283,55 +287,52 @@ public class TransactionManager {
 
   /**
    * Checks that the worker principal has permissions to read/write the given
-   * objects. If it doesn't, a TransactionPrepareFailedException is thrown.
+   * objects. If it doesn't, a AccessException is thrown.
    */
   private void checkPerms(final NodePrincipal worker, final LongSet reads,
-      final Collection<SerializedObject> writes)
-      throws TransactionPrepareFailedException {
+      final Collection<SerializedObject> writes) throws AccessException {
     // The code that does the actual checking.
-    Code<TransactionPrepareFailedException> checker =
-        new Code<TransactionPrepareFailedException>() {
-          public TransactionPrepareFailedException run() {
-            Store store = Worker.getWorker().getStore(database.getName());
+    Code<AccessException> checker = new Code<AccessException>() {
+      public AccessException run() {
+        Store store = Worker.getWorker().getStore(database.getName());
 
-            for (LongIterator it = reads.iterator(); it.hasNext();) {
-              long onum = it.next();
+        for (LongIterator it = reads.iterator(); it.hasNext();) {
+          long onum = it.next();
 
-              fabric.lang.Object storeCopy =
-                  new fabric.lang.Object._Proxy(store, onum);
+          fabric.lang.Object storeCopy =
+              new fabric.lang.Object._Proxy(store, onum);
 
-              Label label = storeCopy.get$label();
+          Label label = storeCopy.get$label();
 
-              // Check read permissions.
-              if (!AuthorizationUtil.isReadPermitted(worker, label.$getStore(),
-                  label.$getOnum())) {
-                return new TransactionPrepareFailedException("Insufficient "
-                    + "privileges to read object " + onum);
-              }
-            }
-
-            for (SerializedObject o : writes) {
-              long onum = o.getOnum();
-
-              fabric.lang.Object storeCopy =
-                  new fabric.lang.Object._Proxy(store, onum);
-
-              Label label = storeCopy.get$label();
-
-              // Check write permissions.
-              if (!AuthorizationUtil.isWritePermitted(worker, label.$getStore(),
-                  label.$getOnum())) {
-                return new TransactionPrepareFailedException("Insufficient "
-                    + "privileges to write object " + onum);
-              }
-            }
-
-            return null;
+          // Check read permissions.
+          if (!AuthorizationUtil.isReadPermitted(worker, label.$getStore(),
+              label.$getOnum())) {
+            return new AccessException("Insufficient privileges to read "
+                + "object " + onum);
           }
-        };
+        }
 
-    TransactionPrepareFailedException failure =
-        Worker.runInTransaction(null, checker);
+        for (SerializedObject o : writes) {
+          long onum = o.getOnum();
+
+          fabric.lang.Object storeCopy =
+              new fabric.lang.Object._Proxy(store, onum);
+
+          Label label = storeCopy.get$label();
+
+          // Check write permissions.
+          if (!AuthorizationUtil.isWritePermitted(worker, label.$getStore(),
+              label.$getOnum())) {
+            return new AccessException("Insufficient privileges to write "
+                + "object " + onum);
+          }
+        }
+
+        return null;
+      }
+    };
+
+    AccessException failure = Worker.runInTransaction(null, checker);
 
     if (failure != null) throw failure;
   }
@@ -582,6 +583,36 @@ public class TransactionManager {
     synchronized (database) {
       return database.newOnums(num);
     }
+  }
+
+  /**
+   * Checks the given set of objects for staleness and returns a list of updates
+   * for any stale objects found.
+   */
+  @SuppressWarnings("unchecked")
+  List<SerializedObject> checkForStaleObjects(NodePrincipal worker,
+      LongKeyMap<Integer> versions) throws AccessException {
+    // First, check read and write permissions.
+    Store store = Worker.getWorker().getStore(database.getName());
+    if (worker == null || worker.$getStore() != store
+        || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
+      checkPerms(worker, versions.keySet(), Collections.EMPTY_LIST);
+    }
+    
+    List<SerializedObject> result = new ArrayList<SerializedObject>();
+    for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
+      long onum = entry.getKey();
+      int version = entry.getValue();
+      
+      synchronized (database) {
+        int curVersion = database.getVersion(onum);
+        if (curVersion != version) {
+          result.add(database.read(onum));
+        }
+      }
+    }
+    
+    return result;
   }
 
 }

@@ -55,17 +55,9 @@ package fabric.common.util;
  *
  * @author Original author unknown
  * @author Eric Blake (ebb9@email.byu.edu)
- * @see Collection
- * @see List
- * @see SortedSet
- * @see HashSet
- * @see TreeSet
- * @see LinkedHashSet
- * @see AbstractSet
- * @see Collections#singleton(Object)
- * @see Collections#EMPTY_SET
+ * @see LongCollection
+ * @see AbstractLongSet
  * @since 1.2
- * @status updated to 1.4
  */
 public interface LongSet extends LongCollection
 {
@@ -101,7 +93,7 @@ public interface LongSet extends LongCollection
    *         it from being added
    * @throws NullPointerException if null is not permitted in this set, or
    *         if the argument c is null
-   * @see #add(Object)
+   * @see #add(long)
    */
   boolean addAll(LongCollection c);
 
@@ -138,7 +130,7 @@ public interface LongSet extends LongCollection
    *         a valid type for this set.
    * @throws NullPointerException if some element of c is null and this
    *         set doesn't support null values.
-   * @see #contains(Object)
+   * @see #contains(long)
    */
   boolean containsAll(LongCollection c);
 
@@ -204,7 +196,7 @@ public interface LongSet extends LongCollection
    *         a valid type for this set.
    * @throws NullPointerException if some element of c is null and this
    *         set doesn't support removing null values.
-   * @see #remove(Object)
+   * @see #remove(long)
    */
   boolean removeAll(LongCollection c);
 
@@ -221,7 +213,7 @@ public interface LongSet extends LongCollection
    *         a valid type for this set.
    * @throws NullPointerException if some element of c is null and this
    *         set doesn't support retaining null values.
-   * @see #remove(Object)
+   * @see #remove(long)
    */
   boolean retainAll(LongCollection c);
 
@@ -241,7 +233,7 @@ public interface LongSet extends LongCollection
    * affect the other.
    *
    * @return an array of this set's elements
-   * @see #toArray(Object[])
+   * @see #toArray(long[])
    */
   long[] toArray();
 

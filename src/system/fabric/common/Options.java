@@ -64,7 +64,7 @@ public abstract class Options {
    *          output PrintStream
    * @param flag
    *          the name of the flag.
-   * @param description
+   * @param desc
    *          description of the flag.
    */
   protected static void usageForFlag(PrintStream out, String flag, String desc) {
@@ -118,7 +118,7 @@ public abstract class Options {
    *          output PrintStream
    * @param flag
    *          the name of the flag.
-   * @param description
+   * @param desc
    *          description of the flag.
    * @param defVal
    *          default value
@@ -135,7 +135,7 @@ public abstract class Options {
    *          output PrintStream
    * @param flag
    *          the name of the flag.
-   * @param description
+   * @param desc
    *          description of the flag.
    * @param defVal
    *          default value

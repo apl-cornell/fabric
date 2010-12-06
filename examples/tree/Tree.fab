@@ -1,0 +1,85 @@
+package tree;
+
+import fabric.worker.Store;
+
+public class Tree[label L] {
+  private TreeNode[L]{L} root;
+  private final Store{L} nodeLocation;
+
+  Tree{L}(Store{L} nodeLocation) {
+    this.root = null;
+    this.nodeLocation = nodeLocation;
+  }
+
+  public void insert{L}(int{L} value) {
+    atomic {
+      root = insertHelper(root, value);
+    }
+  }
+
+  private TreeNode[L]{L} insertHelper{L}(TreeNode[L]{L} cur, int{L} value) {
+    
+      if ( nodeLocation!=null ) {
+        final Principal p = nodeLocation.getPrincipal();
+        if ( L <= new label {*:p} && new label {*!:p} <= L) {
+          if (cur == null)
+            return new TreeNode[L]{L}@nodeLocation(null, null, value);
+          if (cur.value < value)
+            cur.right = insertHelper(cur.right, value);
+          else
+            cur.left = insertHelper(cur.left, value);
+        }
+      }
+      return cur;
+  }
+
+  public void insertIterative{L}(int{L} value) { 
+    atomic {
+      if ( nodeLocation!=null ) {
+        final Principal p = nodeLocation.getPrincipal();
+        if ( L <= new label {*:p} && new label {*!:p} <= L) {
+          TreeNode newNode = new TreeNode[L]{L}@nodeLocation(null, null, value);
+
+          if (root == null) {
+            root = newNode;
+            return;
+          }
+
+          TreeNode cur = root;
+          while (true) {
+            if(cur == null) return;
+            if (cur.value < value) {
+              if (cur.right == null) {
+                cur.right = newNode;
+                return;
+              }
+              cur = cur.right;
+              continue;
+            }
+
+            if (cur.left == null) {
+              cur.left = newNode;
+              return;
+            }
+            cur = cur.left;
+          }
+        }
+      }
+    }
+  }
+
+  public TreeNode[L]{L} lookup{L}(int{L} value) {
+    TreeNode[L] cur = root;
+    while (cur != null) {
+      if (cur.value == value) return cur;
+      if (cur.value < value) cur = cur.left;
+      else cur = cur.right;
+    }
+
+    return null;
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et syntax=java
+*/

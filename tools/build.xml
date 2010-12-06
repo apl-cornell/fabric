@@ -53,7 +53,7 @@
   -->
 
   <!-- Main target for generating jars for the Fabric tools -->
-  <target name="jar-all" description="Compiles all Fabric tools">
+  <target name="jar-all" description="Creates jar files for all Fabric tools">
     <!-- Recursively call "jar-all" on subdirectories. -->
     <subant target="jar-all">
       <fileset dir="." includes="*/build.xml" />

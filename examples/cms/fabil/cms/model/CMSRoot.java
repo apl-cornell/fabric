@@ -9,7 +9,7 @@ import java.util.Date;
 /**
  * This class is the root container for all of the objects in the CMS Database.
  * Note that comments are descriptions of the ``real'' CMS, and may not yet
- * reflect the fabric re-implementation.
+ * reflect the Fabric re-implementation.
  *
  * @author mdgeorge
  * @see edu.cornell.csuglab.cms.base.Root

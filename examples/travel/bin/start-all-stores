@@ -1,0 +1,10 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+"${BIN_DIR}/run-in-xterm" "Broker store" "${BIN_DIR}/start-broker" &
+sleep 1
+"${BIN_DIR}/run-in-xterm" "Airline store" "${BIN_DIR}/start-airline" &
+sleep 1
+"${BIN_DIR}/run-in-xterm" "Bank store" "${BIN_DIR}/start-bank" &
+

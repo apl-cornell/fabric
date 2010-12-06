@@ -69,7 +69,7 @@ public interface Store {
   /**
    * Notifies the store that the transaction is being Aborted.
    * 
-   * @param transactionID
+   * @param tid
    *          the ID of the aborting transaction. This is assumed to specify a
    *          top-level transaction.
    */
@@ -85,6 +85,13 @@ public interface Store {
    */
   void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException;
+
+  /**
+   * Determines whether the given set of objects are stale.
+   * 
+   * @return true iff stale objects were found.
+   */
+  boolean checkForStaleObjects(LongKeyMap<Integer> reads);
 
   /**
    * Obtains a new, unused object number from the Store.

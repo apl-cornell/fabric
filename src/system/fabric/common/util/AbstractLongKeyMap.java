@@ -61,21 +61,18 @@ import java.util.Set;
  * @author Original author unknown
  * @author Bryce McKinlay
  * @author Eric Blake (ebb9@email.byu.edu)
- * @see Map
- * @see Collection
- * @see HashMap
- * @see LinkedHashMap
- * @see TreeMap
- * @see WeakHashMap
- * @see IdentityHashMap
+ * @see LongKeyMap
+ * @see LongCollection
+ * @see LongKeyHashMap
+ * @see LongKeyCache
+ * @see TwoKeyHashMap
  * @since 1.2
- * @status updated to 1.4
  */
 public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
 {
   /** 
    * A class containing an immutable key and value.  The
-   * implementation of {@link Entry#setValue(V)} for this class
+   * implementation of {@link Entry#setValue(Object) setValue(V)} for this class
    * simply throws an {@link UnsupportedOperationException},
    * thus preventing changes being made.  This is useful when
    * a static thread-safe view of a map is required.
@@ -150,7 +147,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * Element addition is not supported via this set.
    *
    * @return the entry set
-   * @see Map.Entry
+   * @see LongKeyMap.Entry
    */
   public abstract Set<LongKeyMap.Entry<V>> entrySet();
 
@@ -163,7 +160,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    *
    * @throws UnsupportedOperationException if <code>entrySet().clear()</code>
    *         does not support clearing.
-   * @see Set#clear()
+   * @see LongSet#clear()
    */
   public void clear()
   {
@@ -224,7 +221,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    *
    * @param value the value to search for
    * @return true if the map contains the value
-   * @see #containsKey(Object)
+   * @see #containsKey(long)
    */
   public boolean containsValue(Object value)
   {
@@ -265,7 +262,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @param key the key to look up
    * @return the value associated with the key, or null if key not in map
    * @throws NullPointerException if this map does not accept null keys
-   * @see #containsKey(Object)
+   * @see #containsKey(long)
    */
   public V get(long key)
   {
@@ -286,8 +283,8 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * entrySet().hashCode().
    *
    * @return the hash code
-   * @see Map.Entry#hashCode()
-   * @see Set#hashCode()
+   * @see LongKeyMap.Entry#hashCode()
+   * @see LongSet#hashCode()
    */
   @Override
   public int hashCode()
@@ -321,9 +318,9 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * there is a slight possibility of creating two sets.
    *
    * @return a Set view of the keys
-   * @see Set#iterator()
+   * @see LongSet#iterator()
    * @see #size()
-   * @see #containsKey(Object)
+   * @see #containsKey(long)
    * @see #values()
    */
   public LongSet keySet()
@@ -429,7 +426,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * @throws IllegalArgumentException if something about this key or value
    *         prevents it from existing in this map
    * @throws NullPointerException if the map forbids null keys or values
-   * @see #containsKey(Object)
+   * @see #containsKey(long)
    */
   public V put(long key, V value)
   {
@@ -451,16 +448,11 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    *         prevents it from existing in this map.
    * @throws NullPointerException if the map forbids null keys or values.
    * @throws NullPointerException if <code>m</code> is null.
-   * @see #put(Object, Object)
+   * @see #put(long, Object)
    */
-  @SuppressWarnings("unchecked")
-  public void putAll(LongKeyMap<? extends V> m)
+  public <T extends V> void putAll(LongKeyMap<T> m)
   {
-    // FIXME: bogus circumlocution.
-    @SuppressWarnings("rawtypes")
-    Iterator entries2 = m.entrySet().iterator();
-    Iterator<LongKeyMap.Entry<? extends V>> entries
-      = entries2;
+    Iterator<LongKeyMap.Entry<T>> entries= m.entrySet().iterator();
     int pos = m.size();
     while (--pos >= 0)
       {
@@ -527,7 +519,8 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * values complete abruptly in toString().
    *
    * @return a String representation
-   * @see Map.Entry#toString()
+   * @see AbstractLongKeyMap.SimpleEntry#toString()
+   * @see AbstractLongKeyMap.SimpleImmutableEntry#toString()
    */
   @Override
   public String toString()
@@ -562,7 +555,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
    * occurs, there is a slight possibility of creating two collections.
    *
    * @return a Collection view of the values
-   * @see Collection#iterator()
+   * @see LongCollection#iterator()
    * @see #size()
    * @see #containsValue(Object)
    * @see #keySet()
@@ -751,10 +744,10 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V>
     @Override
     public boolean equals(Object o)
     {
-      if (! (o instanceof LongKeyMap.Entry))
+      if (! (o instanceof LongKeyMap.Entry<?>))
         return false;
       // Optimize for our own entries.
-      if (o instanceof SimpleEntry)
+      if (o instanceof SimpleEntry<?>)
         {
           SimpleEntry<?> e = (SimpleEntry<?>) o;
           return (key == e.key

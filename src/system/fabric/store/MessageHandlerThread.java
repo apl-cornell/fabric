@@ -7,6 +7,7 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 
 import fabric.common.*;
@@ -87,7 +88,6 @@ public class MessageHandlerThread
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Prepare Message, worker={0}, tid={1}",
                 p.name(), msg.tid);
-
     boolean subTransactionCreated = prepareTransaction(msg.tid,
                                                        msg.commitTime,
                                                        msg.serializedCreates,
@@ -163,6 +163,16 @@ public class MessageHandlerThread
             msg.requesterKey, storeName, storeKey);
     
     return new MakePrincipalMessage.Response(principalOnum, cert);
+  }
+
+  /**
+   * Processes the given staleness check request.
+   */
+  public StalenessCheckMessage.Response handle(NodePrincipal p,
+      StalenessCheckMessage message) throws AccessException {
+    STORE_REQUEST_LOGGER.log(Level.FINER,
+	"Handling Staleness Check Message from {0}", p);
+    return new StalenessCheckMessage.Response(session.store.tm.checkForStaleObjects(session.workerPrincipal, message.versions));
   }
   
   /**

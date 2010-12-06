@@ -1,9 +1,15 @@
 package fabric.messages;
 
+import static fabric.common.Logging.NETWORK_MESSAGE_RECEIVE_LOGGER;
+import static fabric.common.Logging.NETWORK_MESSAGE_SEND_LOGGER;
+
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
+import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.SubSocket;
 import fabric.lang.Object._Proxy;
@@ -56,8 +62,6 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
   /**
    * Sends this message to the given node and awaits a response.
    * 
-   * @param message
-   *            the message to send.
    * @return
    *            the reply from the node.
    * @throws E
@@ -68,22 +72,36 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
   public final R send(SubSocket s) throws IOException, E {
     DataInputStream  in  = new DataInputStream(s.getInputStream());
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
-    
+
     // Write this message out.
     out.writeByte(messageType.ordinal());
     writeMessage(out);
     out.flush();
+
+    Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE,
+                "Sent {0} to {1}", messageType, s);
 
     // Read in the reply. Determine if an error occurred.
     if (in.readBoolean()) {
       // We have an error.
       E exc = readObject(in, this.exceptionClass);
       exc.fillInStackTrace();
+
+      Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
+                  "Received error response for {0} from {1}", messageType, s);
+
       throw exc;
     }
 
     // Read the response.
-    return readResponse(in);
+    R response = readResponse(in);
+
+    Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
+                "Received response for {0} from {1}", messageType, s);
+
+    in.close();
+
+    return response;
   }
 
   /**
@@ -94,10 +112,17 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
    *           the <code>DataInput</code> provided.
    */
   public static Message<?,?> receive(DataInput in) throws IOException {
+    Message<?, ?> m = null;
     try {
       MessageType messageType = MessageType.values()[in.readByte()];
-      
-      return messageType.parse(in);
+
+      Message<?,?> message = messageType.parse(in);
+
+      Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
+                  "Received {0}", messageType);
+
+      return m;
+
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new IOException("Unrecognized message");
     }
@@ -119,6 +144,9 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
 
     // Write out the response.
     writeResponse(out, r);
+
+    Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE,
+        "Sent successful response to {0}", messageType);
   }
   
   /**
@@ -134,12 +162,15 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
   public void respond(DataOutput out, E e) throws IOException {
     // Clear out the stack trace before sending an exception out.
     e.setStackTrace(new StackTraceElement[0]);
-    
+
     // Signal that an error occurred and write out the exception.
     out.writeBoolean(true);
-    
+
     // write out the exception
     writeObject(out, e);
+
+    Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE,
+        "Sent error response to {0}", messageType);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -152,19 +183,21 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
    */
   @SuppressWarnings("all")
   protected static enum MessageType {
-    ALLOCATE_ONUMS      {Message parse(DataInput in) throws IOException { return new AllocateMessage           (in); }},
-    READ_ONUM           {Message parse(DataInput in) throws IOException { return new ReadMessage               (in); }},
-    PREPARE_TRANSACTION {Message parse(DataInput in) throws IOException { return new PrepareTransactionMessage (in); }},
-    COMMIT_TRANSACTION  {Message parse(DataInput in) throws IOException { return new CommitTransactionMessage  (in); }},
-    ABORT_TRANSACTION   {Message parse(DataInput in) throws IOException { return new AbortTransactionMessage   (in); }},
-    DISSEM_READ_ONUM    {Message parse(DataInput in) throws IOException { return new DissemReadMessage         (in); }},
-    REMOTE_CALL         {Message parse(DataInput in) throws IOException { return new RemoteCallMessage         (in); }},
-    DIRTY_READ          {Message parse(DataInput in) throws IOException { return new DirtyReadMessage          (in); }},
-    TAKE_OWNERSHIP      {Message parse(DataInput in) throws IOException { return new TakeOwnershipMessage      (in); }},
-    GET_PRINCIPAL       {Message parse(DataInput in) throws IOException { return new GetPrincipalMessage       (in); }},
-    OBJECT_UPDATE       {Message parse(DataInput in) throws IOException { return new ObjectUpdateMessage       (in); }},
-    GET_CERT_CHAIN      {Message parse(DataInput in) throws IOException { return new GetCertChainMessage       (in); }},
-    MAKE_PRINCIPAL      {Message parse(DataInput in) throws IOException { return new MakePrincipalMessage      (in); }},
+    ALLOCATE_ONUMS        {Message parse(DataInput in) throws IOException { return new AllocateMessage             (in); }},
+    READ_ONUM             {Message parse(DataInput in) throws IOException { return new ReadMessage                 (in); }},
+    PREPARE_TRANSACTION   {Message parse(DataInput in) throws IOException { return new PrepareTransactionMessage   (in); }},
+    COMMIT_TRANSACTION    {Message parse(DataInput in) throws IOException { return new CommitTransactionMessage    (in); }},
+    ABORT_TRANSACTION     {Message parse(DataInput in) throws IOException { return new AbortTransactionMessage     (in); }},
+    DISSEM_READ_ONUM      {Message parse(DataInput in) throws IOException { return new DissemReadMessage           (in); }},
+    REMOTE_CALL           {Message parse(DataInput in) throws IOException { return new RemoteCallMessage           (in); }},
+    DIRTY_READ            {Message parse(DataInput in) throws IOException { return new DirtyReadMessage            (in); }},
+    TAKE_OWNERSHIP        {Message parse(DataInput in) throws IOException { return new TakeOwnershipMessage        (in); }},
+    GET_PRINCIPAL         {Message parse(DataInput in) throws IOException { return new GetPrincipalMessage         (in); }},
+    OBJECT_UPDATE         {Message parse(DataInput in) throws IOException { return new ObjectUpdateMessage         (in); }},
+    GET_CERT_CHAIN        {Message parse(DataInput in) throws IOException { return new GetCertChainMessage         (in); }},
+    MAKE_PRINCIPAL        {Message parse(DataInput in) throws IOException { return new MakePrincipalMessage        (in); }},
+    STALENESS_CHECK       {Message parse(DataInput in) throws IOException { return new StalenessCheckMessage       (in); }},
+    INTERWORKER_STALENESS {Message parse(DataInput in) throws IOException { return new InterWorkerStalenessMessage (in); }},
     ;
 
     /** Read a message of the appropriate type from the given DataInput. */
@@ -173,7 +206,7 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
 
   /** The <code>MessageType</code> corresponding to this class. */
   protected final MessageType messageType;
-  
+
   /** The class of Exceptions that may be thrown in response to this Message */
   protected final Class<E> exceptionClass; 
 
@@ -211,14 +244,14 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
         break;
       }
     }
-  
+
     if (proxyType == null)
       throw new InternalError("Unable to find proxy class for " + type);
-  
+
     try {
       Constructor<? extends _Proxy> constructor =
           proxyType.getConstructor(Store.class, long.class);
-  
+
       return constructor.newInstance(store, in.readLong());
     } catch (SecurityException e) {
       throw new InternalError(e);

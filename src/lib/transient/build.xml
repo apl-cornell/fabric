@@ -1,0 +1,93 @@
+<!--
+  This is the Apache Ant build file for the transient library implementation.
+-->
+
+<project name="transient" default="build-all" basedir=".">
+  <description>
+    Build file for the transient library.
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../../common.xml" />
+  <import file="common.xml" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${transient.home}/classes"/>
+    <delete file="${jar.transient}"/>
+  </target>
+
+  <target name="clobber" depends="clean" />
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+          description="Builds the transient class package">
+    <mkdir dir="${transient.home}/classes" />
+    <apply executable="bash"
+           parallel="true"
+           failonerror="true"
+           dir="${transient.home}"
+           dest="${transient.home}/classes"
+           relative="false"
+           skipemptyfilesets="true"
+           vmlauncher="false">
+      <arg value="${fabc}" />
+      <arg line="${debug.flag}" />
+      <arg value="-d"           /> <arg value="${transient.home}/classes" />
+      <arg value="-sourcepath"  /> <arg value="${transient.home}/src" />
+      <arg value="-cp"          /> <arg value="${transient.home}/classes" />
+
+      <srcfile />
+      <fileset dir="${transient.home}/src">
+        <include name="jif/util/Map.fab" />
+        <include name="jif/lang/ExternalPrincipal.fab" />
+        <include name="jif/util/List.fab" />
+        <include name="jif/util/LinkedList.fab" />
+        <include name="jif/lang/JifString.fab" />
+        <include name="jif/util/Set.fab" />
+        <include name="jif/util/Date.fab" />
+        <include name="jif/util/ArrayList.fab" />
+        <include name="jif/util/HashMap.fab" />
+      </fileset>
+      <globmapper from="*.fab" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+  <!--
+  ****************************************************************************
+    Jar targets         
+  ****************************************************************************
+  -->
+
+  <uptodate property="jar.uptodate" targetfile="${jar.transient}">
+    <srcfiles dir="${transient.home}/src" />
+  </uptodate>
+
+  <target name="jar" unless="jar.uptodate" description="Create transient library jar">
+    <antcall target="build-all" />
+    <jar jarfile="${jar.transient}" basedir="${transient.home}/classes" includes="**/*.class" />
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

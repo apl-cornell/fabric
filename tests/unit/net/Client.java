@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 
 import fabric.common.net.*;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
-import fabric.common.net.naming.BogusNameService;
 
 public class Client extends Thread {
   private static Logger           logger = Logger.getLogger("client");

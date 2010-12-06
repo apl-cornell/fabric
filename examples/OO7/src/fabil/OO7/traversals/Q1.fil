@@ -1,4 +1,4 @@
-package OO7.traversal;
+package OO7.traversals;
 
 public class Q1 {
   /* TODO: extract into a separate traversal

@@ -3,11 +3,12 @@ package fabric.common;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.Random;
 
 
-public class TransactionID implements FastSerializable {
+public class TransactionID implements FastSerializable, Serializable {
   /**
    * Source for random tids.
    */

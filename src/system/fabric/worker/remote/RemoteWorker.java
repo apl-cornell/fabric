@@ -17,6 +17,7 @@ import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
+import fabric.messages.InterWorkerStalenessMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
@@ -64,9 +65,7 @@ public final class RemoteWorker extends RemoteNode {
     // Commit any outstanding subtransactions that occurred as a result of the
     // remote call.
     Log innermost = TransactionRegistry.getInnermostLog(tid.topTid);
-    tm.associateLog(innermost);
-    for (int i = innermost.getTid().depth; i > tid.depth; i--)
-      tm.commitTransaction();
+    tm.associateAndSyncLog(innermost, tid);
 
     // Merge in the update map we got.
     if (response.updateMap != null)
@@ -76,9 +75,9 @@ public final class RemoteWorker extends RemoteNode {
   }
 
   public void prepareTransaction(long tid, long commitTime)
-      throws UnreachableNodeException, TransactionPrepareFailedException {
-    PrepareTransactionMessage.Response response =
-        send(new PrepareTransactionMessage(tid, commitTime));
+       throws UnreachableNodeException,
+              TransactionPrepareFailedException {
+    send(new PrepareTransactionMessage(tid, commitTime));
   }
 
   public void commitTransaction(long tid) throws UnreachableNodeException,
@@ -144,7 +143,7 @@ public final class RemoteWorker extends RemoteNode {
     final NodePrincipal principal = response.principal;
     final String expectedPrincipalName;
     try {
-      // Note: this check may not make sense anymore.  -mdg
+      // Note: this check may not make sense anymore. -mdg
       expectedPrincipalName = "cn=" + name;
     } catch (IllegalStateException e) {
       throw new InternalError(e);
@@ -178,7 +177,7 @@ public final class RemoteWorker extends RemoteNode {
         send(new ObjectUpdateMessage(store, onum, glob));
     return response.resubscribe;
   }
-  
+
   /**
    * Notifies the worker that an object has been updated.
    * 
@@ -187,7 +186,16 @@ public final class RemoteWorker extends RemoteNode {
   public boolean notifyObjectUpdate(long onum, ObjectGroup group) {
     ObjectUpdateMessage.Response response =
       send(new ObjectUpdateMessage(onum, group));
-  return response.resubscribe;
+    return response.resubscribe;
   }
 
+  /**
+   * Asks the worker to check that the objects used in a given transaction are
+   * up-to-date.
+   */
+  public boolean checkForStaleObjects(TransactionID tid) {
+    InterWorkerStalenessMessage.Response response =
+        send(new InterWorkerStalenessMessage(tid));
+    return response.result;
+  }
 }

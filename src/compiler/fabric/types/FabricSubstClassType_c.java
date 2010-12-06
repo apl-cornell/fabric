@@ -20,4 +20,9 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements Fabri
     JifSubst subst = (JifSubst)subst();
     return subst.substLabel(base.defaultFieldLabel());
   }
+
+  public Label defaultFabilFieldLabel() {
+    // TODO Auto-generated method stub
+    return defaultFieldLabel();
+  }
 }

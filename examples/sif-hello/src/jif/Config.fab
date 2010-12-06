@@ -1,0 +1,11 @@
+package jif;
+
+public final class Config {
+  public static final String{*!:} helloStoreName = "backend";  
+  
+  /**
+   * The key in the root map for finding the airline principal.
+   */
+  public static final String{*!:} helloServPrincipalMapKey = "hello";
+  
+}

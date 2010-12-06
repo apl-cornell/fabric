@@ -78,7 +78,7 @@
   <!-- Classpath consisting of libraries on which the system depends. -->
   <path id="lib.classpath">
     <fileset dir="${lib}">
-        <include name="*.jar" />
+        <include name="**/*.jar" />
         <exclude name="fabric*.jar" />
     </fileset>
   </path>
@@ -92,3 +92,7 @@
   </path>
 </project>
 
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

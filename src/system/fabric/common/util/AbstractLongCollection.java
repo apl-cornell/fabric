@@ -62,11 +62,8 @@ package fabric.common.util;
  * @author Eric Blake (ebb9@email.byu.edu)
  * @author Tom Tromey (tromey@redhat.com)
  * @author Andrew John Hughes (gnu_andrew@member.fsf.org)
- * @see Collection
- * @see AbstractSet
- * @see AbstractList
- * @since 1.2
- * @status updated to 1.4
+ * @see LongCollection
+ * @see AbstractLongSet
  */
 public abstract class AbstractLongCollection
   implements LongCollection, LongIterable
@@ -137,7 +134,7 @@ public abstract class AbstractLongCollection
    *         in c prevents it being added.
    * @throws NullPointerException if any element in c is null and this
    *         collection doesn't allow null values.
-   * @see #add(Object)
+   * @see #add(long)
    */
   public boolean addAll(LongCollection c)
   {
@@ -159,7 +156,7 @@ public abstract class AbstractLongCollection
    *
    * @throws UnsupportedOperationException if the Iterator returned by
    *         iterator does not provide an implementation of remove
-   * @see Iterator#remove()
+   * @see LongIterator#remove()
    */
   public void clear()
   {
@@ -203,7 +200,7 @@ public abstract class AbstractLongCollection
    * @return true if this collection contains all the elements in the given
    *         collection
    * @throws NullPointerException if the given collection is null
-   * @see #contains(Object)
+   * @see #contains(long)
    */
   public boolean containsAll(LongCollection c)
   {
@@ -244,7 +241,7 @@ public abstract class AbstractLongCollection
    *         equivalently if the collection did contain o.
    * @throws UnsupportedOperationException if this collection's Iterator
    *         does not support the remove method
-   * @see Iterator#remove()
+   * @see LongIterator#remove()
    */
   public boolean remove(long o)
   {
@@ -272,7 +269,7 @@ public abstract class AbstractLongCollection
    * @throws UnsupportedOperationException if this collection's Iterator
    *         does not support the remove method
    * @throws NullPointerException if the collection, c, is null.
-   * @see Iterator#remove()
+   * @see LongIterator#remove()
    */
   public boolean removeAll(LongCollection c)
   {
@@ -293,7 +290,7 @@ public abstract class AbstractLongCollection
    * @throws UnsupportedOperationException if this collection's Iterator
    *         does not support the remove method
    * @throws NullPointerException if the collection, c, is null.
-   * @see Iterator#remove()
+   * @see LongIterator#remove()
    */
   // Package visible for use throughout java.util.
   boolean removeAllInternal(LongCollection c)
@@ -323,7 +320,7 @@ public abstract class AbstractLongCollection
    * @throws UnsupportedOperationException if this collection's Iterator
    *         does not support the remove method
    * @throws NullPointerException if the collection, c, is null.
-   * @see Iterator#remove()
+   * @see LongIterator#remove()
    */
   public boolean retainAll(LongCollection c)
   {
@@ -345,7 +342,7 @@ public abstract class AbstractLongCollection
    * @throws UnsupportedOperationException if this collection's Iterator
    *         does not support the remove method
    * @throws NullPointerException if the collection, c, is null.
-   * @see Iterator#remove()
+   * @see LongIterator#remove()
    */
   // Package visible for use throughout java.util.
   boolean retainAllInternal(LongCollection c)

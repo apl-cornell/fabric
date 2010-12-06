@@ -2,6 +2,7 @@ package fabric.store;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import fabric.worker.Worker;
 import fabric.worker.RemoteStore;
@@ -24,11 +25,13 @@ import fabric.lang.Object._Impl;
  */
 public class InProcessStore extends RemoteStore {
 
-  protected TransactionManager tm;
+  protected final TransactionManager tm;
+  protected final SurrogateManager sm;
 
   public InProcessStore(String name, Store c) {
     super(name, c.publicKey);
     tm = c.tm;
+    sm = c.sm;
   }
 
   @Override
@@ -74,6 +77,9 @@ public class InProcessStore extends RemoteStore {
     PrepareRequest req =
         new PrepareRequest(tid, commitTime, serializedCreates,
             serializedWrites, reads);
+    
+    // Swizzle remote pointers.
+    sm.createSurrogates(req);
 
     return tm.prepare(Worker.getWorker().getPrincipal(), req);
   }
@@ -85,6 +91,15 @@ public class InProcessStore extends RemoteStore {
     if (obj == null) throw new FetchException(new AccessException(this, onum));
     map.put(onum, obj);
     return new ObjectGroup(map);
+  }
+
+  @Override
+  protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
+    try {
+      return tm.checkForStaleObjects(getPrincipal(), reads);
+    } catch (AccessException e) {
+      throw new InternalError(e);
+    }
   }
 
 }

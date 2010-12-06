@@ -20,7 +20,8 @@ public interface _byteArray extends Object {
 
   byte get(int i);
 
-  public static class _Impl extends Object._Impl implements _byteArray {
+  public static class _Impl extends Object._Impl implements _byteArray,
+      _InternalArrayImpl {
     private byte[] value;
 
     /**
@@ -104,8 +105,11 @@ public interface _byteArray extends Object {
     public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
       _byteArray._Impl src = (_byteArray._Impl) other;
-      value = new byte[src.value.length];
-      System.arraycopy(src.value, 0, value, 0, src.value.length);
+      value = src.value;
+    }
+
+    public void cloneValues() {
+      value = value.clone();
     }
 
     /*

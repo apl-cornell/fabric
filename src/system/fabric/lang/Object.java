@@ -11,7 +11,9 @@ import fabric.common.RefTypeEnum;
 import fabric.common.Timing;
 import fabric.common.exceptions.FetchException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.Pair;
+import fabric.lang.arrays.internal._InternalArrayImpl;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
 import fabric.net.UnreachableNodeException;
@@ -147,8 +149,7 @@ public interface Object {
           }
           
         } catch (FetchException e) {
-          // TODO figure out how to communicate error
-          throw new InternalError(e);
+          throw new RuntimeFetchException(e);
         }
 
         ref = result.$ref;
@@ -349,6 +350,11 @@ public interface Object {
         label = Worker.getWorker().getLocalStore().getPublicReadonlyLabel();
 
       if (label == null) throw new InternalError("Null label!");
+      
+      if (!(store instanceof LocalStore)
+          && label.$getStore() instanceof LocalStore
+          && !ONumConstants.isGlobalConstant(label.$getOnum()))
+        throw new InternalError("Remote object has local label");
 
       this.$label = label;
     }
@@ -372,7 +378,10 @@ public interface Object {
     @Override
     public final _Impl clone() {
       try {
-        return (_Impl) super.clone();
+        _Impl result = (_Impl) super.clone();
+        if (result instanceof _InternalArrayImpl)
+          ((_InternalArrayImpl) result).cloneValues();
+        return result;
       } catch (Exception e) {
         throw new InternalError(e);
       }
@@ -728,15 +737,11 @@ public interface Object {
         final LocalStore store = Worker.getWorker().getLocalStore();
 
         return Worker.runInSubTransaction(new Worker.Code<Object>() {
-          public Object run() {
-            try {
-              Constructor<? extends Object._Impl> constr =
-                  c.getConstructor(Store.class, Label.class);
-              Label emptyLabel = store.getEmptyLabel();
-              return constr.newInstance(store, emptyLabel);
-            } catch (Exception e) {
-              throw new AbortException(e);
-            }
+          public Object run() throws Throwable {
+            Constructor<? extends Object._Impl> constr =
+              c.getConstructor(Store.class, Label.class);
+            Label emptyLabel = store.getEmptyLabel();
+            return constr.newInstance(store, emptyLabel);
           }
         });
       }

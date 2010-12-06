@@ -20,7 +20,8 @@ public interface _intArray extends Object {
 
   int get(int i);
 
-  public static class _Impl extends Object._Impl implements _intArray {
+  public static class _Impl extends Object._Impl implements _intArray,
+      _InternalArrayImpl {
     private int[] value;
 
     /**
@@ -104,8 +105,11 @@ public interface _intArray extends Object {
     public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
       _intArray._Impl src = (_intArray._Impl) other;
-      value = new int[src.value.length];
-      System.arraycopy(src.value, 0, value, 0, src.value.length);
+      value = src.value;
+    }
+
+    public void cloneValues() {
+      value = value.clone();
     }
 
     /*

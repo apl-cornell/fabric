@@ -120,7 +120,9 @@ public interface Principal extends fabric.lang.Object {
           this.$label = thisIntegLabel;
         } else {
           // Join the given label with {this <- this}.
-          this.$label = LabelUtil._Impl.join(this.$label, thisIntegLabel);
+          this.$label =
+              LabelUtil._Impl.join(this.$label.$getStore(), this.$label,
+                  thisIntegLabel);
         }
       }
 

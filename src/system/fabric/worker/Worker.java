@@ -27,8 +27,8 @@ import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.arrays.ObjectArray;
 import fabric.common.net.naming.NameService;
-import fabric.common.net.naming.PropertyNameService;
-import fabric.common.net.naming.PropertyNameService.PortType;
+import fabric.common.net.naming.DefaultNameService;
+import fabric.common.net.naming.DefaultNameService.PortType;
 import fabric.lang.security.*;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
@@ -137,6 +137,8 @@ public final class Worker {
 
     instance.remoteCallManager.start();
     instance.localStore.initialize();
+    
+    System.out.println("Worker started");
 
     return instance;
   }
@@ -163,8 +165,8 @@ public final class Worker {
     
     this.keyStore = keyStore;
     try {
-      this.storeNameService  = new PropertyNameService(PortType.STORE);
-      this.workerNameService = new PropertyNameService(PortType.WORKER);
+      this.storeNameService  = new DefaultNameService(PortType.STORE);
+      this.workerNameService = new DefaultNameService(PortType.WORKER);
     } catch(IOException e) {
       throw new InternalError("Unable to load the name service", e);
     }
@@ -575,8 +577,26 @@ public final class Worker {
       } catch (RetryException e) {
         success = false;
         continue;
+      } catch (TransactionRestartingException e) {
+        success = false;
+        
+        TransactionID currentTid = tm.getCurrentTid();
+        if (e.tid.isDescendantOf(currentTid))
+          // Restart this transaction.
+          continue;
+        
+        // Need to restart a parent transaction.
+        if (currentTid.parent != null) throw e;
+        
+        throw new InternalError("Something is broken with transaction "
+            + "management. Got a signal to restart a different transaction "
+            + "than the one being managed.");
       } catch (Throwable e) {
         success = false;
+        
+        // Retry if the exception was a result of stale objects.
+        if (tm.checkForStaleObjects()) continue;
+        
         throw new AbortException(e);
       } finally {
         if (success) {
@@ -584,6 +604,19 @@ public final class Worker {
             tm.commitTransaction();
           } catch (AbortException e) {
             success = false;
+          } catch (TransactionRestartingException e) {
+            success = false;
+            
+            // This is the TID for the parent of the transaction we just tried
+            // to commit.
+            TransactionID currentTid = tm.getCurrentTid();
+            if (currentTid == null || e.tid.isDescendantOf(currentTid)
+                && !currentTid.equals(e.tid))
+              // Restart the transaction just we tried to commit.
+              continue;
+            
+            // Need to restart a parent transaction.
+            throw e;
           }
         } else {
           tm.abortTransaction();
@@ -595,7 +628,7 @@ public final class Worker {
   }
 
   public static interface Code<T> {
-    T run();
+    T run() throws Throwable;
   }
 
 }

@@ -50,14 +50,11 @@ package fabric.common.util;
  *
  * @author Original author unknown
  * @author Eric Blake (ebb9@email.byu.edu)
- * @see Collection
- * @see AbstractCollection
- * @see Set
- * @see HashSet
- * @see TreeSet
- * @see LinkedHashSet
+ * @see LongCollection
+ * @see AbstractLongCollection
+ * @see LongSet
+ * @see LongHashSet
  * @since 1.2
- * @status updated to 1.4
  */
 public abstract class AbstractLongSet
   extends AbstractLongCollection
@@ -120,9 +117,9 @@ public abstract class AbstractLongSet
    * @return true if the set was modified as a result
    * @throws UnsupportedOperationException if remove is not supported
    * @throws NullPointerException if the collection is null
-   * @see AbstractCollection#remove(Object)
-   * @see Collection#contains(Object)
-   * @see Iterator#remove()
+   * @see AbstractLongCollection#remove(long)
+   * @see LongCollection#contains(long)
+   * @see LongIterator#remove()
    */
   @Override
   public boolean removeAll(LongCollection c)

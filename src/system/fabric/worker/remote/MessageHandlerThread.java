@@ -22,6 +22,8 @@ import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
+import fabric.messages.StalenessCheckMessage;
+import fabric.messages.InterWorkerStalenessMessage;
 import fabric.messages.GetPrincipalMessage.Response;
 import fabric.net.RemoteNode;
 import fabric.worker.RemoteStore;
@@ -114,7 +116,8 @@ public class MessageHandlerThread
           || cause instanceof SecurityException
           || cause instanceof IllegalAccessException
           || cause instanceof InvocationTargetException
-          || cause instanceof NoSuchMethodException)
+          || cause instanceof NoSuchMethodException
+          || cause instanceof RuntimeException)
         throw new RemoteCallException(cause);
 
       throw e;
@@ -151,22 +154,26 @@ public class MessageHandlerThread
     if (log == null)
       throw new TransactionPrepareFailedException("No such transaction");
 
-    TransactionManager tm = TransactionManager.getInstance();
-    tm.associateLog(log);
-
     // Commit up to the top level.
-    for (int i = 0; i < log.getTid().depth; i++)
-      tm.commitTransactionAt(prepareTransactionMessage.commitTime);
+    TransactionManager tm = TransactionManager.getInstance();
+    TransactionID topTid = log.getTid();
+    while (topTid.depth > 0) topTid = topTid.parent;
+    tm.associateAndSyncLog(log, topTid);
 
-    Map<RemoteNode, TransactionPrepareFailedException> failures =
-        tm.sendPrepareMessages(prepareTransactionMessage.commitTime);
+    try {
+      tm.sendPrepareMessages(prepareTransactionMessage.commitTime);
+    } finally {
+      tm.associateLog(null);
+    }
 
-    tm.associateLog(null);
 
-    if (failures.isEmpty())
-      return new PrepareTransactionMessage.Response();
-    else 
-      throw new TransactionPrepareFailedException("Transaction prepare failed.");
+    try {
+      tm.sendPrepareMessages(prepareTransactionMessage.commitTime);
+    } finally {
+      tm.associateLog(null);
+    }
+
+    return new PrepareTransactionMessage.Response();
   }
 
   /**
@@ -303,5 +310,20 @@ public class MessageHandlerThread
   protected void runImpl() {
     // TODO Auto-generated method stub
     throw new NotImplementedException();
+  }
+
+  public InterWorkerStalenessMessage.Response handle(NodePrincipal p, InterWorkerStalenessMessage stalenessCheckMessage) {
+
+    TransactionID tid = stalenessCheckMessage.tid;
+    if (tid == null) return new InterWorkerStalenessMessage.Response(false);
+    
+    TransactionManager tm = TransactionManager.getInstance();
+    Log log = TransactionRegistry.getOrCreateInnermostLog(tid);
+    tm.associateAndSyncLog(log, tid);
+    
+    boolean result = tm.checkForStaleObjects();
+    
+    tm.associateLog(null);
+    return new InterWorkerStalenessMessage.Response(result);
   }
 }

@@ -145,6 +145,7 @@ public final class Logging {
    *          first parameter to the message
    */
   public static void log(Logger logger, Level level, String msg, Object param1) {
+    if (!logger.isLoggable(level)) return;
     logger.log(level, msg, param1);
   }
 
