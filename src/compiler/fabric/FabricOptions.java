@@ -72,5 +72,9 @@ public class FabricOptions extends JifOptions implements FabILOptions {
     // parse fabil options
     return delegate.parseCommand(args, index, source);
   }
+
+  public boolean createJavaSkel() {
+    return delegate.createJavaSkel;
+  }
     
 }
