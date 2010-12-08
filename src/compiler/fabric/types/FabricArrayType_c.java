@@ -1,6 +1,7 @@
 package fabric.types;
 
 import polyglot.types.Type;
+import polyglot.util.CodeWriter;
 import polyglot.util.Position;
 import jif.types.ConstArrayType_c;
 
@@ -25,5 +26,20 @@ public class FabricArrayType_c
   public boolean isNative() {
     return isNative;
   }
-  
+
+  @Override
+  public String toString() {
+      return base().toString() + 
+      ((isNative) ? " native" : "")
+      +"[]";
+  }
+
+  @Override
+  public void print(CodeWriter w) {
+      base().print(w);
+      if(isNative)
+        w.write("native");
+      w.write("[]");
+  }
+
 }

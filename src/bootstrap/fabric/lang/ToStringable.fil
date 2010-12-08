@@ -1,0 +1,8 @@
+package fabric.lang;
+
+public interface ToStringable {
+    
+    java.lang.String toString();
+    
+    fabric.lang.security.Label jif$getfabric_lang_ToStringable_L();
+}

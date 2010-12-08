@@ -26,6 +26,7 @@ import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.*;
+import fabric.visit.FabILSkeletonCreator;
 
 public class FabILScheduler extends JLScheduler {
   protected ExtensionInfo extInfo;
@@ -451,7 +452,7 @@ public class FabILScheduler extends JLScheduler {
     TypeSystem ts = extInfo.typeSystem();
     NodeFactory nf = extInfo.nodeFactory();
     Goal g =
-        internGoal(new VisitorGoal(job, new JavaSkeletonCreator(job, ts, nf)) {
+        internGoal(new VisitorGoal(job, new FabILSkeletonCreator(job, ts, nf)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
             List<Goal> l = new ArrayList<Goal>();

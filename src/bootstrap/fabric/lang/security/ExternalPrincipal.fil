@@ -1,0 +1,11 @@
+package fabric.lang.security;
+
+public class ExternalPrincipal extends fabric.lang.security.AbstractPrincipal {
+    
+    native public fabric.lang.security.ExternalPrincipal
+      fabric$lang$security$ExternalPrincipal$(final java.lang.String name);
+    
+    public ExternalPrincipal() { super(); }
+    
+    native private void jif$init();
+}

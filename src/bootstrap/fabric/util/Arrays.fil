@@ -1,0 +1,80 @@
+package fabric.util;
+
+
+public class Arrays extends fabric.lang.Object {
+    
+    native private fabric.util.Arrays fabric$util$Arrays$();
+    
+    native public static fabric.util.List asList(
+      final fabric.lang.security.Label lbl, final fabric.lang.Object[] a)
+          throws java.lang.NullPointerException;
+    
+    native public static fabric.util.List asList(
+      final fabric.lang.security.Label lbl, final fabric.lang.JifObject native[] a)
+          throws java.lang.NullPointerException;
+    
+    public Arrays() { super(); }
+    
+    native public void jif$invokeDefConstructor();
+    
+    native private void jif$init();
+}
+
+class Arrays$ArrayList extends fabric.util.AbstractList {
+    
+    native fabric.util.Arrays$ArrayList fabric$util$Arrays$ArrayList$(
+      final fabric.lang.JifObject[] a)
+          throws java.lang.NullPointerException;
+    
+    native public fabric.lang.JifObject get(final int index)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    native public fabric.lang.JifObject get_remote(
+      final fabric.lang.security.Principal worker$principal, final int index)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    native public int size();
+    
+    native public int size_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public fabric.lang.JifObject set(final int index,
+                                            final fabric.lang.JifObject element)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    native public fabric.lang.JifObject set_remote(
+      final fabric.lang.security.Principal worker$principal, final int index,
+      final fabric.lang.JifObject element)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    native public boolean contains(final fabric.lang.JifObject o);
+    
+    native public boolean contains_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject o);
+    
+    native public int indexOf(final fabric.lang.JifObject o);
+    
+    native public int indexOf_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject o);
+    
+    native public int lastIndexOf(final fabric.lang.JifObject o);
+    
+    native public int lastIndexOf_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject o);
+    
+    public Arrays$ArrayList(final fabric.lang.security.Label jif$L) {
+        super(jif$L);
+    }
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    native public static fabric.util.Arrays$ArrayList
+      jif$cast$fabric_util_Arrays$ArrayList(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+}

@@ -1,0 +1,15 @@
+package fabric.util;
+
+
+public interface MapEntry extends fabric.lang.JifObject {
+    
+    fabric.lang.JifObject getKey();
+    
+    fabric.lang.JifObject getValue();
+    
+    fabric.lang.JifObject setValue(final fabric.lang.JifObject value);
+    
+    fabric.lang.security.Label jif$getfabric_util_MapEntry_K();
+    
+    fabric.lang.security.Label jif$getfabric_util_MapEntry_V();
+}

@@ -1,0 +1,223 @@
+package fabric.lang;
+
+final public class JifString extends fabric.lang.Object
+  implements fabric.lang.JifObject
+{
+    
+    native public fabric.lang.JifString fabric$lang$JifString$(
+      final java.lang.String s);
+    
+    native public int length();
+    
+    native public int length_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public char charAt(final int index)
+          throws java.lang.StringIndexOutOfBoundsException;
+    
+    native public char charAt_remote(
+      final fabric.lang.security.Principal worker$principal, final int index)
+          throws java.lang.StringIndexOutOfBoundsException;
+    
+    native public boolean equals(final fabric.lang.Object anObject);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.Object anObject);
+    
+    native public boolean equals(final fabric.lang.IDComparable other);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.IDComparable other);
+    
+    native public boolean equals(final fabric.lang.security.Label lbl,
+                                 final fabric.lang.IDComparable obj);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final fabric.lang.IDComparable obj);
+    
+    native public boolean equalsIgnoreCase(
+      final java.lang.String anotherString);
+    
+    native public boolean equalsIgnoreCase_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String anotherString);
+    
+    native public boolean equalsIgnoreCase(
+      final fabric.lang.JifString anotherString);
+    
+    native public boolean equalsIgnoreCase_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifString anotherString);
+    
+    native public int compareTo(final java.lang.String anotherString)
+          throws java.lang.NullPointerException;
+    
+    native public int compareTo_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String anotherString)
+          throws java.lang.NullPointerException;
+    
+    native public int compareTo(final fabric.lang.JifString anotherString)
+          throws java.lang.NullPointerException;
+    
+    native public int compareTo_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifString anotherString)
+          throws java.lang.NullPointerException;
+    
+    native public int compareTo(final java.lang.Object o)
+          throws java.lang.ClassCastException, java.lang.NullPointerException;
+    
+    native public int compareTo_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.Object o)
+          throws java.lang.ClassCastException,
+        java.lang.NullPointerException;
+    
+    native public int compareToIgnoreCase(final java.lang.String str)
+          throws java.lang.NullPointerException;
+    
+    native public int compareToIgnoreCase_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String str)
+          throws java.lang.NullPointerException;
+    
+    native public int compareToIgnoreCase(final fabric.lang.JifString str)
+          throws java.lang.NullPointerException;
+    
+    native public int compareToIgnoreCase_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifString str)
+          throws java.lang.NullPointerException;
+    
+    native public boolean regionMatches(final int toffset,
+                                        final java.lang.String other,
+                                        final int ooffset, final int len)
+          throws java.lang.NullPointerException;
+    
+    native public boolean regionMatches_remote(
+      final fabric.lang.security.Principal worker$principal, final int toffset,
+      final java.lang.String other, final int ooffset, final int len)
+          throws java.lang.NullPointerException;
+    
+    native public boolean regionMatches(final boolean ignoreCase,
+                                        final int toffset,
+                                        final java.lang.String other,
+                                        final int ooffset, final int len)
+          throws java.lang.NullPointerException;
+    
+    native public boolean regionMatches_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final boolean ignoreCase, final int toffset, final java.lang.String other,
+      final int ooffset, final int len)
+          throws java.lang.NullPointerException;
+    
+    native public boolean startsWith(final java.lang.String prefix,
+                                     final int toffset);
+    
+    native public boolean startsWith_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String prefix, final int toffset);
+    
+    native public boolean startsWith(final java.lang.String prefix);
+    
+    native public boolean startsWith_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String prefix);
+    
+    native public boolean endsWith(final java.lang.String suffix);
+    
+    native public boolean endsWith_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String suffix);
+    
+    native public int hashCode();
+    
+    native public int hashCode_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public int indexOf(final int ch);
+    
+    native public int indexOf_remote(
+      final fabric.lang.security.Principal worker$principal, final int ch);
+    
+    native public int indexOf(final int ch, final int fromIndex);
+    
+    native public int indexOf_remote(
+      final fabric.lang.security.Principal worker$principal, final int ch,
+      final int fromIndex);
+    
+    native public int lastIndexOf(final int ch);
+    
+    native public int lastIndexOf_remote(
+      final fabric.lang.security.Principal worker$principal, final int ch);
+    
+    native public int lastIndexOf(final int ch, final int fromIndex);
+    
+    native public int lastIndexOf_remote(
+      final fabric.lang.security.Principal worker$principal, final int ch,
+      final int fromIndex);
+    
+    native public int indexOf(final java.lang.String str)
+          throws java.lang.NullPointerException;
+    
+    native public int indexOf_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String str)
+          throws java.lang.NullPointerException;
+    
+    native public int indexOf(final java.lang.String str, final int fromIndex)
+          throws java.lang.NullPointerException;
+    
+    native public int indexOf_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String str, final int fromIndex)
+          throws java.lang.NullPointerException;
+    
+    native public int lastIndexOf(final java.lang.String str)
+          throws java.lang.NullPointerException;
+    
+    native public int lastIndexOf_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String str)
+          throws java.lang.NullPointerException;
+    
+    native public int lastIndexOf(final java.lang.String str,
+                                  final int fromIndex)
+          throws java.lang.NullPointerException;
+    
+    native public int lastIndexOf_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String str, final int fromIndex)
+          throws java.lang.NullPointerException;
+    
+    native public java.lang.String toString();
+    
+    native public java.lang.String toString_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    public JifString(final fabric.lang.security.Label jif$L) { super(); }
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    native public static fabric.lang.JifString jif$cast$fabric_lang_JifString(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_JifObject_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_IDComparable_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_Hashable_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_ToStringable_L();
+}

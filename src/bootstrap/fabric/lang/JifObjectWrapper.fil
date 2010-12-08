@@ -1,0 +1,61 @@
+package fabric.lang;
+
+final public class JifObjectWrapper extends fabric.lang.Object
+  implements fabric.lang.JifObject
+{
+    
+    native public fabric.lang.JifObjectWrapper fabric$lang$JifObjectWrapper$(
+      final fabric.lang.Object obj);
+    
+    native public fabric.lang.Object getObject();
+    
+    native public fabric.lang.Object getObject_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public boolean equals(final fabric.lang.IDComparable obj);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.IDComparable obj);
+    
+    native public boolean equals(final fabric.lang.security.Label lbl,
+                                 final fabric.lang.IDComparable other);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl,
+      final fabric.lang.IDComparable other);
+    
+    native public int hashCode();
+    
+    native public int hashCode_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public java.lang.String toString();
+    
+    native public java.lang.String toString_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    public JifObjectWrapper(final fabric.lang.security.Label jif$L) { super(); }
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    native public static fabric.lang.JifObjectWrapper
+      jif$cast$fabric_lang_JifObjectWrapper(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_JifObject_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_IDComparable_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_Hashable_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_ToStringable_L();
+}

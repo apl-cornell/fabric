@@ -1,0 +1,53 @@
+package fabric.util;
+
+
+public interface Collection extends fabric.lang.JifObject {
+    
+    int size();
+    
+    boolean isEmpty();
+    
+    boolean contains(final fabric.lang.JifObject o);
+    
+    boolean contains(final fabric.lang.security.Label lbl,
+                     final fabric.lang.JifObject o);
+    
+    fabric.util.Iterator iterator();
+    
+    boolean add(final fabric.lang.JifObject o)
+          throws java.lang.ClassCastException,
+        java.lang.IllegalArgumentException;
+    
+    boolean remove(final fabric.lang.JifObject o);
+    
+    boolean containsAll(final fabric.util.Collection c)
+          throws java.lang.NullPointerException;
+    
+    boolean addAll(final fabric.util.Collection c)
+          throws java.lang.ClassCastException,
+        java.lang.IllegalArgumentException;
+    
+    boolean removeAll(final fabric.util.Collection c);
+    
+    boolean retainAll(final fabric.util.Collection c);
+    
+    boolean retainAll(final fabric.lang.security.Label lbl,
+                      final fabric.util.Collection c);
+    
+    void clear();
+    
+    fabric.lang.JifObject get(final int index)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    boolean add(final java.lang.String o) throws java.lang.ClassCastException,
+        java.lang.IllegalArgumentException;
+    
+    boolean remove(final java.lang.String o);
+    
+    boolean contains(final java.lang.String o);
+    
+    boolean contains(final fabric.lang.security.Label lbl,
+                     final java.lang.String o);
+    
+    fabric.lang.security.Label jif$getfabric_util_Collection_L();
+}

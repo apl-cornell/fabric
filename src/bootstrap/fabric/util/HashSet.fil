@@ -1,0 +1,110 @@
+package fabric.util;
+
+
+public class HashSet extends fabric.util.AbstractSet {
+    
+    native public fabric.util.HashSet fabric$util$HashSet$(
+      final int initialCapacity, final float loadFactor)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.HashSet fabric$util$HashSet$(
+      final int initialCapacity)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.HashSet fabric$util$HashSet$();
+    
+    native public int size();
+    
+    native public int size_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public boolean contains(final fabric.lang.security.Label lbl,
+                                   final fabric.lang.JifObject o);
+    
+    native public boolean contains_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final fabric.lang.JifObject o);
+    
+    native public boolean add(final fabric.lang.JifObject o)
+          throws java.lang.ClassCastException,
+        java.lang.IllegalArgumentException;
+    
+    native public boolean add_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject o)
+          throws java.lang.ClassCastException,
+        java.lang.IllegalArgumentException;
+    
+    native public boolean remove(final fabric.lang.JifObject o);
+    
+    native public boolean remove_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject o);
+    
+    native public void clear();
+    
+    native public void clear_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public fabric.lang.JifObject get(final int index)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    native public fabric.lang.JifObject get_remote(
+      final fabric.lang.security.Principal worker$principal, final int index)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    native public boolean equals(final fabric.lang.security.Label lbl,
+                                 final fabric.lang.IDComparable o);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final fabric.lang.IDComparable o);
+    
+    native public int hashCode();
+    
+    native public int hashCode_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public fabric.util.Iterator iterator();
+    
+    native public fabric.util.Iterator iterator_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    public HashSet(final fabric.lang.security.Label jif$L) { super(jif$L); }
+    
+    native public void jif$invokeDefConstructor();
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    native public static fabric.util.HashSet jif$cast$fabric_util_HashSet(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+}
+
+class HashSetEntryIterator extends fabric.util.HashMapEntrySetIterator {
+    
+    native public fabric.util.HashSetEntryIterator
+      fabric$util$HashSetEntryIterator$(final fabric.util.HashMap map);
+    
+    native public fabric.lang.JifObject next()
+          throws fabric.util.NoSuchElementException;
+    
+    native public fabric.lang.JifObject next_remote(
+      final fabric.lang.security.Principal worker$principal)
+          throws fabric.util.NoSuchElementException;
+    
+    public HashSetEntryIterator(final fabric.lang.security.Label jif$L) {
+        super(jif$L, jif$L);
+    }
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    native public static fabric.util.HashSetEntryIterator
+      jif$cast$fabric_util_HashSetEntryIterator(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+}

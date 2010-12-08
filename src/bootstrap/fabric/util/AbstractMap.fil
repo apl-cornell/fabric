@@ -1,0 +1,122 @@
+package fabric.util;
+
+
+abstract public class AbstractMap extends fabric.lang.Object
+  implements fabric.util.Map
+{
+    
+    native protected fabric.util.AbstractMap fabric$util$AbstractMap$();
+    
+    native public boolean isEmpty();
+    
+    native public boolean isEmpty_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public boolean containsKey(final fabric.lang.JifObject key);
+    
+    native public boolean containsKey_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject key);
+    
+    native public fabric.lang.JifObject get(final fabric.lang.JifObject key);
+    
+    native public fabric.lang.JifObject get_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject key);
+    
+    abstract public fabric.lang.JifObject put(
+      final fabric.lang.JifObject key, final fabric.lang.JifObject value);
+    
+    abstract public fabric.lang.JifObject remove(
+      final fabric.lang.JifObject key);
+    
+    final native public boolean containsKey(final java.lang.String key);
+    
+    final native public boolean containsKey_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String key);
+    
+    final native public fabric.lang.JifObject get(final java.lang.String key);
+    
+    final native public fabric.lang.JifObject get_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String key);
+    
+    final native public fabric.lang.JifObject get(
+      final fabric.lang.security.Label lbl, final java.lang.String key);
+    
+    final native public fabric.lang.JifObject get_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final java.lang.String key);
+    
+    final native public fabric.lang.JifObject put(
+      final java.lang.String key, final fabric.lang.JifObject value);
+    
+    final native public fabric.lang.JifObject put_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String key, final fabric.lang.JifObject value);
+    
+    final native public fabric.lang.JifObject remove(
+      final java.lang.String key);
+    
+    final native public fabric.lang.JifObject remove_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String key);
+    
+    native public boolean equals(final fabric.lang.IDComparable o);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.IDComparable o);
+    
+    native public boolean equals(final fabric.lang.security.Label lbl,
+                                 final fabric.lang.IDComparable o);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final fabric.lang.IDComparable o);
+    
+    native public int hashCode();
+    
+    native public int hashCode_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public java.lang.String toString();
+    
+    native public java.lang.String toString_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    public AbstractMap(final fabric.lang.security.Label jif$K,
+                       final fabric.lang.security.Label jif$V) {
+        super();
+    }
+    
+    native public void jif$invokeDefConstructor();
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$K,
+      final fabric.lang.security.Label jif$V, final java.lang.Object o);
+    
+    native public static fabric.util.AbstractMap
+      jif$cast$fabric_util_AbstractMap(final fabric.lang.security.Label jif$K,
+                                       final fabric.lang.security.Label jif$V,
+                                       final java.lang.Object o);
+    
+    final native public fabric.lang.security.Label jif$getfabric_util_Map_K();
+    
+    final native public fabric.lang.security.Label jif$getfabric_util_Map_V();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_JifObject_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_IDComparable_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_Hashable_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_ToStringable_L();
+}

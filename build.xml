@@ -478,10 +478,54 @@
       <fileset dir="${runtime.src}" includes="fabric/lang/arrays/*.fil"/>
       <globmapper from="*.fil" to="*.class" />
     </apply>
+    <touch millis="0">
+      <fileset dir="${bootstrap.classes}">
+        <include name="**/*.class"/>
+      </fileset>
+    </touch>
   </target>
 
+  <!-- Compiles the bootstrap classes. -->
+  <target name="fabil-bootstrap" depends="init,bootstrap-check"
+      unless="bootstrap.up-to-date">
+    <touch file="${bootstrap.tstamp}"/>
+
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${fabric.home}"
+        dest="${bootstrap.classes}"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${filc}" />
+      <arg line="${debug.flag}" />
+      <arg value="-O0" />
+      <arg value="-preferclassfiles"/>
+      <arg value="-d" />
+      <arg value="${bootstrap.classes}" />
+      <arg value="-sourcepath" />
+      <arg value="src/runtime" />
+      <arg value="-cp" />
+      <arg value="${bootstrap.classes}" />
+      <srcfile />
+      <fileset dir="${bootstrap.src}" includes="**/*.fil"/>
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+    <!--
+      The bootstrap classes pull in stuff from the system.  Give all class
+      files in ${bootstrap.classes} an ancient timestamp so they get recompiled
+      when we build things for real.
+    -->
+    <touch millis="0">
+      <fileset dir="${bootstrap.classes}">
+        <include name="**/*.class"/>
+      </fileset>
+    </touch>
+  </target>
   <target name="fabil-runtime"
-      depends="init,fabil-compiler,fabil-signatures,fabric-arrays">
+      depends="init,fabil-compiler,fabil-signatures,fabric-arrays,
+      fabil-bootstrap">
     <mkdir dir="${runtime.classes}" />
 
     <apply executable="bash"
@@ -536,7 +580,10 @@
       <srcfile />
       <fileset dir="${runtime.src}"
           includes="**/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
+      <!-- Copy *.class AND *.java files to the destination.
+           Otherwise Jif can't find supporting files like 
+           *_JIF_IMPL.java that are required for interfaces. -->
+      <globmapper from="*.fab" to="*.*" />
     </apply>
   </target>
 
@@ -1363,27 +1410,24 @@ public class Version {
 		<apply executable="bash"
 					parallel="true"
 					failonerror="true"
-					dest="${bootstrap.src}"
-					dir="${runtime.src}"
+					dest="${basedir}/src/bootstrap"
+					dir="${basedir}/src/runtime"
 					relative="false"
 					skipemptyfilesets="true"
 					vmlauncher="false">
 			<arg value="${fabc}" />
-			<arg value="-bootstrap-skel" />
+      <arg value="-bootstrap-skel" /> 
+      <arg value="-noserial" /> 
 			<arg value="-c" />
-			<arg value="-d" /> <arg value="${bootstrap.src}"/>
+			<arg value="-d" /> <arg value="${basedir}/src/bootstrap"/>
 			<arg value="-debugpositions" />
+			<arg value="-cp" />
+      <arg value="${runtime.classes}" />
+      <arg value="-sourcepath"/>
+			<arg value="${basedir}/src/runtime"/>
 			<srcfile />
-			<filelist dir="${runtime.src}">
-				<file name="fabric/lang/Hashable.fab"/>
-				<file name="fabric/lang/IDComparable.fab"/>
-				<file name="fabric/lang/JifObject.fab"/>
-				<file name="fabric/lang/JifString.fab"/>
-				<file name="fabric/lang/JifWrappedObject.fab"/>
-				<file name="fabric/lang/ToStringable.fab"/>
-			</filelist>
-			<fileset dir="${runtime.src}" includes="fabric/util/*.fab" excludes="**/*.fil"/>
-			<globmapper from="*.fab" to="classes/*.class" handledirsep="true"/>
+			<fileset dir="${basedir}/src/runtime" includes="**/*.fab" excludes="**/*.fil"/>
+      			<globmapper from="*.fab" to="*.*" />
 		</apply>
 	</target>
 </project>

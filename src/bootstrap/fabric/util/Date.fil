@@ -1,0 +1,230 @@
+package fabric.util;
+
+
+final public class Date extends fabric.lang.Object
+  implements fabric.lang.JifObject
+{
+    
+    native public static fabric.util.Date valueOf(
+      final fabric.lang.security.Label jif$L,
+      final fabric.lang.security.Label lbl, final java.lang.String d)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.Date fabric$util$Date$();
+    
+    native public fabric.util.Date fabric$util$Date$(final int pYear,
+                                                     final int pMonth,
+                                                     final int pDay)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.Date fabric$util$Date$(final int pYear,
+                                                     final int pMonth,
+                                                     final int pDay,
+                                                     final int pHour,
+                                                     final int pMinute)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.Date fabric$util$Date$(
+      final int pYear, final java.lang.String pMonth, final int pDay)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.Date fabric$util$Date$(
+      final int pYear, final java.lang.String pMonth, final int pDay,
+      final int pHour, final int pMinute)
+          throws java.lang.IllegalArgumentException;
+    
+    native public static int daysInMonth(final fabric.lang.security.Label jif$L,
+                                         final int month, final int year);
+    
+    native private static void checkDateValid(
+      final fabric.lang.security.Label jif$L, final int pYear, final int pMonth,
+      final int pDay, final int pHour, final int pMinute)
+          throws java.lang.IllegalArgumentException;
+    
+    native public static fabric.util.Date lenientDate(
+      final fabric.lang.security.Label jif$L,
+      final fabric.lang.security.Label lbl, final int year, final int month,
+      final int day);
+    
+    native public static fabric.util.Date lenientDate(
+      final fabric.lang.security.Label jif$L,
+      final fabric.lang.security.Label lbl, final int year, final int month,
+      final int day, final int hour, final int minute);
+    
+    native public int getYear();
+    
+    native public int getYear_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public int getMonth();
+    
+    native public int getMonth_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public int getDay();
+    
+    native public int getDay_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public int getHour();
+    
+    native public int getHour_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public int getMinute();
+    
+    native public int getMinute_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public int getDayOfWeek();
+    
+    native public int getDayOfWeek_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public java.lang.String getMonthName();
+    
+    native public java.lang.String getMonthName_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public java.lang.String getShortMonthName();
+    
+    native public java.lang.String getShortMonthName_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public java.lang.String getDayOfWeekName();
+    
+    native public java.lang.String getDayOfWeekName_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public java.lang.String getShortDayOfWeekName();
+    
+    native public java.lang.String getShortDayOfWeekName_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public boolean before(final fabric.util.Date when);
+    
+    native public boolean before_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.util.Date when);
+    
+    native public boolean after(final fabric.util.Date when);
+    
+    native public boolean after_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.util.Date when);
+    
+    native public int daysBefore(final fabric.util.Date when);
+    
+    native public int daysBefore_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.util.Date when);
+    
+    native private static int daysAfterJan_1_1900(
+      final fabric.lang.security.Label jif$L, final int year, final int month,
+      final int day);
+    
+    native public static boolean isLeapYear(
+      final fabric.lang.security.Label jif$L, final int pYear);
+    
+    native public java.lang.String toString();
+    
+    native public java.lang.String toString_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public boolean equals(final fabric.lang.IDComparable o);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.IDComparable o);
+    
+    native public boolean equals(final fabric.lang.security.Label lbl,
+                                 final fabric.lang.IDComparable o);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final fabric.lang.IDComparable o);
+    
+    native public int hashCode();
+    
+    native public int hashCode_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public java.lang.String toLongString();
+    
+    native public java.lang.String toLongString_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public java.lang.String toShortString();
+    
+    native public java.lang.String toShortString_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public fabric.util.Date year(final int year)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.Date month(final int month)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.Date day(final int day)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.Date hour(final int hour)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.Date minute(final int minute)
+          throws java.lang.IllegalArgumentException;
+    
+    native public static fabric.util.Date addYear(
+      final fabric.lang.security.Label jif$L,
+      final fabric.lang.security.Label lb, final fabric.util.Date date,
+      final int delta);
+    
+    native public static fabric.util.Date addMonth(
+      final fabric.lang.security.Label jif$L,
+      final fabric.lang.security.Label lb, final fabric.util.Date date,
+      final int delta);
+    
+    native public static fabric.util.Date addMonth(
+      final fabric.lang.security.Label jif$L,
+      final fabric.lang.security.Label lb, final fabric.util.Date date,
+      final int delta, final boolean smartUpdate);
+    
+    native public static fabric.util.Date addDay(
+      final fabric.lang.security.Label jif$L,
+      final fabric.lang.security.Label lb, final fabric.util.Date date,
+      final int delta);
+    
+    native public static fabric.util.Date addHour(
+      final fabric.lang.security.Label jif$L,
+      final fabric.lang.security.Label lb, final fabric.util.Date date,
+      final int delta);
+    
+    native public static fabric.util.Date addMinute(
+      final fabric.lang.security.Label jif$L,
+      final fabric.lang.security.Label lb, final fabric.util.Date date,
+      final int delta);
+    
+    public Date(final fabric.lang.security.Label jif$L) { super(); }
+    
+    native public void jif$invokeDefConstructor();
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    native public static fabric.util.Date jif$cast$fabric_util_Date(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_JifObject_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_IDComparable_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_Hashable_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_ToStringable_L();
+}

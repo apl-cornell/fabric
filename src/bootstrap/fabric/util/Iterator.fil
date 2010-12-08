@@ -1,0 +1,13 @@
+package fabric.util;
+
+
+public interface Iterator {
+    
+    boolean hasNext();
+    
+    fabric.lang.JifObject next() throws fabric.util.NoSuchElementException;
+    
+    void remove() throws java.lang.IllegalStateException;
+    
+    fabric.lang.security.Label jif$getfabric_util_Iterator_L();
+}

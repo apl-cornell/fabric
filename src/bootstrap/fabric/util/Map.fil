@@ -1,0 +1,44 @@
+package fabric.util;
+
+
+public interface Map extends fabric.lang.JifObject {
+    
+    int size();
+    
+    boolean isEmpty();
+    
+    boolean containsKey(final fabric.lang.JifObject key);
+    
+    boolean containsKey(final fabric.lang.security.Label lbl,
+                        final fabric.lang.JifObject key);
+    
+    fabric.lang.JifObject get(final fabric.lang.JifObject key);
+    
+    fabric.lang.JifObject get(final fabric.lang.security.Label lbl,
+                              final fabric.lang.JifObject key);
+    
+    fabric.lang.JifObject put(final fabric.lang.JifObject key,
+                              final fabric.lang.JifObject value);
+    
+    fabric.lang.JifObject remove(final fabric.lang.JifObject key);
+    
+    boolean containsKey(final java.lang.String key);
+    
+    fabric.lang.JifObject get(final java.lang.String key);
+    
+    fabric.lang.JifObject get(final fabric.lang.security.Label lbl,
+                              final java.lang.String key);
+    
+    fabric.lang.JifObject put(final java.lang.String key,
+                              final fabric.lang.JifObject value);
+    
+    fabric.lang.JifObject remove(final java.lang.String key);
+    
+    void clear();
+    
+    fabric.util.Set entrySet();
+    
+    fabric.lang.security.Label jif$getfabric_util_Map_K();
+    
+    fabric.lang.security.Label jif$getfabric_util_Map_V();
+}

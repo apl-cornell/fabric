@@ -1,0 +1,343 @@
+package fabric.util;
+
+
+class HMConsts extends fabric.lang.Object {
+    
+    native public fabric.util.HMConsts fabric$util$HMConsts$();
+    
+    public HMConsts() { super(); }
+    
+    native public void jif$invokeDefConstructor();
+    
+    native private void jif$init();
+}
+
+public class HashMap extends fabric.util.AbstractMap {
+    
+    native public fabric.util.HashMap fabric$util$HashMap$(
+      final int initialCapacity, final float loadFactor)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.HashMap fabric$util$HashMap$(
+      final int initialCapacity)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.HashMap fabric$util$HashMap$();
+    
+    native void init();
+    
+    native static int hash(final fabric.lang.security.Label jif$K,
+                           final fabric.lang.security.Label jif$V,
+                           final fabric.lang.security.Label lbl,
+                           final fabric.lang.Hashable x);
+    
+    native static boolean eq(final fabric.lang.security.Label jif$K,
+                             final fabric.lang.security.Label jif$V,
+                             final fabric.lang.security.Label lbx,
+                             final fabric.lang.IDComparable x,
+                             final fabric.lang.security.Label lby,
+                             final fabric.lang.IDComparable y);
+    
+    native static int indexFor(final fabric.lang.security.Label jif$K,
+                               final fabric.lang.security.Label jif$V,
+                               final int h, final int length);
+    
+    native static int indexFor(final fabric.lang.security.Label jif$K,
+                               final fabric.lang.security.Label jif$V,
+                               final int h,
+                               final fabric.util.HashMapEntry[] table);
+    
+    native public int size();
+    
+    native public int size_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public boolean isEmpty();
+    
+    native public boolean isEmpty_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public fabric.lang.JifObject get(
+      final fabric.lang.security.Label lbl, final fabric.lang.JifObject key);
+    
+    native public fabric.lang.JifObject get_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final fabric.lang.JifObject key);
+    
+    native public boolean containsKey(final fabric.lang.security.Label lbl,
+                                      final fabric.lang.JifObject key);
+    
+    native public boolean containsKey_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final fabric.lang.JifObject key);
+    
+    native fabric.util.HashMapEntry getEntry(
+      final fabric.lang.security.Label lbl, final fabric.lang.JifObject key);
+    
+    native public fabric.lang.JifObject put(final fabric.lang.JifObject key,
+                                            final fabric.lang.JifObject value);
+    
+    native public fabric.lang.JifObject put_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject key, final fabric.lang.JifObject value);
+    
+    native private void putForCreate(final fabric.lang.JifObject key,
+                                     final fabric.lang.JifObject value);
+    
+    native void resize(final int newCapacity);
+    
+    native void transfer(final fabric.util.HashMapEntry[] newTable);
+    
+    native public fabric.lang.JifObject remove(final fabric.lang.JifObject key);
+    
+    native public fabric.lang.JifObject remove_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject key);
+    
+    native fabric.util.HashMapEntry removeEntryForKey(
+      final fabric.lang.JifObject key);
+    
+    native fabric.util.HashMapEntry removeMapping(
+      final fabric.lang.JifObject o);
+    
+    native public void clear();
+    
+    native public void clear_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native void addEntry(final int hash, final fabric.lang.JifObject key,
+                         final fabric.lang.JifObject value,
+                         final int bucketIndex);
+    
+    native void createEntry(final int hash, final fabric.lang.JifObject key,
+                            final fabric.lang.JifObject value,
+                            final int bucketIndex);
+    
+    native public fabric.util.Set entrySet();
+    
+    native public fabric.util.Set entrySet_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public boolean equals(final fabric.lang.security.Label lbl,
+                                 final fabric.lang.IDComparable o);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final fabric.lang.IDComparable o);
+    
+    native public int hashCode();
+    
+    native public int hashCode_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public java.lang.String toString();
+    
+    native public java.lang.String toString_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    public HashMap(final fabric.lang.security.Label jif$K,
+                   final fabric.lang.security.Label jif$V) {
+        super(jif$K, jif$V);
+    }
+    
+    native public void jif$invokeDefConstructor();
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$K,
+      final fabric.lang.security.Label jif$V, final java.lang.Object o);
+    
+    native public static fabric.util.HashMap jif$cast$fabric_util_HashMap(
+      final fabric.lang.security.Label jif$K,
+      final fabric.lang.security.Label jif$V, final java.lang.Object o);
+}
+
+class HashMapEntry extends fabric.lang.Object implements fabric.util.MapEntry {
+    
+    native fabric.util.HashMapEntry fabric$util$HashMapEntry$(
+      final int h, final fabric.lang.JifObject k, final fabric.lang.JifObject v,
+      final fabric.util.HashMapEntry n);
+    
+    native public fabric.lang.JifObject getKey();
+    
+    native public fabric.lang.JifObject getKey_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public fabric.lang.JifObject getValue();
+    
+    native public fabric.lang.JifObject getValue_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public fabric.lang.JifObject setValue(
+      final fabric.lang.JifObject newValue);
+    
+    native public fabric.lang.JifObject setValue_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject newValue);
+    
+    native public boolean equals(final fabric.lang.IDComparable obj);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.IDComparable obj);
+    
+    native public boolean equals(final fabric.lang.security.Label lbl,
+                                 final fabric.lang.IDComparable obj);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final fabric.lang.IDComparable obj);
+    
+    native public int hashCode();
+    
+    native public int hashCode_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public java.lang.String toString();
+    
+    native public java.lang.String toString_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native void addBefore(final fabric.util.HashMapEntry existingEntry);
+    
+    native void recordAccess(final fabric.util.HashMap m);
+    
+    native void recordRemoval(final fabric.util.HashMap m);
+    
+    public HashMapEntry(final fabric.lang.security.Label jif$K,
+                        final fabric.lang.security.Label jif$V) {
+        super();
+    }
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$K,
+      final fabric.lang.security.Label jif$V, final java.lang.Object o);
+    
+    native public static fabric.util.HashMapEntry
+      jif$cast$fabric_util_HashMapEntry(final fabric.lang.security.Label jif$K,
+                                        final fabric.lang.security.Label jif$V,
+                                        final java.lang.Object o);
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_util_MapEntry_K();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_util_MapEntry_V();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_JifObject_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_IDComparable_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_Hashable_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_ToStringable_L();
+}
+
+class HashMapEntrySet extends fabric.util.AbstractSet {
+    
+    native fabric.util.HashMapEntrySet fabric$util$HashMapEntrySet$(
+      final fabric.util.HashMap parent);
+    
+    native public fabric.util.Iterator iterator();
+    
+    native public fabric.util.Iterator iterator_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public fabric.lang.JifObject get(final int index)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    native public fabric.lang.JifObject get_remote(
+      final fabric.lang.security.Principal worker$principal, final int index)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    native public int size();
+    
+    native public int size_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public boolean contains(final fabric.lang.security.Label lbl,
+                                   final fabric.lang.JifObject o);
+    
+    native public boolean contains_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final fabric.lang.JifObject o);
+    
+    native public boolean remove(final fabric.lang.JifObject o);
+    
+    native public boolean remove_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject o);
+    
+    native public void clear();
+    
+    native public void clear_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    public HashMapEntrySet(final fabric.lang.security.Label jif$K,
+                           final fabric.lang.security.Label jif$V) {
+        super(jif$K);
+    }
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$K,
+      final fabric.lang.security.Label jif$V, final java.lang.Object o);
+    
+    native public static fabric.util.HashMapEntrySet
+      jif$cast$fabric_util_HashMapEntrySet(
+      final fabric.lang.security.Label jif$K,
+      final fabric.lang.security.Label jif$V, final java.lang.Object o);
+}
+
+class HashMapEntrySetIterator extends fabric.lang.Object
+  implements fabric.util.Iterator
+{
+    
+    native fabric.util.HashMapEntrySetIterator
+      fabric$util$HashMapEntrySetIterator$(final fabric.util.HashMap parent);
+    
+    native public boolean hasNext();
+    
+    native public boolean hasNext_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public fabric.lang.JifObject next()
+          throws fabric.util.NoSuchElementException;
+    
+    native public fabric.lang.JifObject next_remote(
+      final fabric.lang.security.Principal worker$principal)
+          throws fabric.util.NoSuchElementException;
+    
+    native public void remove() throws java.lang.IllegalStateException;
+    
+    native public void remove_remote(
+      final fabric.lang.security.Principal worker$principal)
+          throws java.lang.IllegalStateException;
+    
+    public HashMapEntrySetIterator(final fabric.lang.security.Label jif$K,
+                                   final fabric.lang.security.Label jif$V) {
+        super();
+    }
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$K,
+      final fabric.lang.security.Label jif$V, final java.lang.Object o);
+    
+    native public static fabric.util.HashMapEntrySetIterator
+      jif$cast$fabric_util_HashMapEntrySetIterator(
+      final fabric.lang.security.Label jif$K,
+      final fabric.lang.security.Label jif$V, final java.lang.Object o);
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_util_Iterator_L();
+}

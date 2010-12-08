@@ -1,0 +1,48 @@
+package fabric.util;
+
+
+abstract public class AbstractSet extends fabric.util.AbstractCollection
+  implements fabric.util.Set
+{
+    
+    native protected fabric.util.AbstractSet fabric$util$AbstractSet$();
+    
+    native public boolean equals(final fabric.lang.IDComparable o);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.IDComparable o);
+    
+    native public boolean equals(final fabric.lang.security.Label lbl,
+                                 final fabric.lang.IDComparable o);
+    
+    native public boolean equals_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final fabric.lang.IDComparable o);
+    
+    native public int hashCode();
+    
+    native public int hashCode_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public boolean removeAll(final fabric.util.Collection c);
+    
+    native public boolean removeAll_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.util.Collection c);
+    
+    public AbstractSet(final fabric.lang.security.Label jif$L) { super(jif$L); }
+    
+    native public void jif$invokeDefConstructor();
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    native public static fabric.util.AbstractSet
+      jif$cast$fabric_util_AbstractSet(final fabric.lang.security.Label jif$L,
+                                       final java.lang.Object o);
+    
+    final native public fabric.lang.security.Label jif$getfabric_util_Set_L();
+}

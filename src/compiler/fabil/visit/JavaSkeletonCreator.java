@@ -62,8 +62,6 @@ public class JavaSkeletonCreator extends NodeVisitor {
   @Override
   public Node leave(Node parent, Node old, Node n, NodeVisitor v) {
     // For each class,
-    if(n instanceof SourceFile)
-      System.out.println(n);
     if(n instanceof ClassBody) {
       List<ClassMember> members = ((ClassBody) n).members();
       List<ClassMember> stubmembers = new LinkedList<ClassMember>();
@@ -74,9 +72,10 @@ public class JavaSkeletonCreator extends NodeVisitor {
           MethodDecl pd = (MethodDecl) m;
           if(pd.body() != null) {
             pd = (MethodDecl) pd.body(null);
-            stubmembers.add(pd.flags(pd.flags().Native()));
-          } else
-            stubmembers.add(pd);
+            if(!pd.flags().isNative())
+              pd = pd.flags(pd.flags().Native());
+          }
+          stubmembers.add(pd);
         } else if(m instanceof ConstructorDecl) {
           ConstructorDecl cd = (ConstructorDecl) m;
           Block b = cd.body();

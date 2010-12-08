@@ -1,0 +1,11 @@
+package fabric.lang;
+
+public interface IDComparable {
+    
+    boolean equals(final fabric.lang.IDComparable obj);
+    
+    boolean equals(final fabric.lang.security.Label lbl,
+                   final fabric.lang.IDComparable obj);
+    
+    fabric.lang.security.Label jif$getfabric_lang_IDComparable_L();
+}

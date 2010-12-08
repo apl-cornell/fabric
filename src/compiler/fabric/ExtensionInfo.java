@@ -9,6 +9,7 @@ import polyglot.frontend.Compiler;
 import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
 import polyglot.util.ErrorQueue;
+import fabil.FabILOptions;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
@@ -55,7 +56,11 @@ public class ExtensionInfo extends jif.ExtensionInfo {
 
   @Override
   public Goal getCompileGoal(Job job) {
-    return scheduler().FabricToFabilRewritten(job);
+    FabILOptions opts = (FabILOptions) job.extensionInfo().getOptions();
+    if(opts.createJavaSkel())
+      return scheduler().FabILSkeletonGenerated(job);
+    else
+      return scheduler().FabricToFabilRewritten(job);
   }
 
   @Override

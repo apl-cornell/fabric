@@ -1,0 +1,30 @@
+package fabric.util;
+
+
+public interface List extends fabric.util.Collection {
+    
+    fabric.lang.JifObject get(final int index)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    fabric.lang.JifObject set(final int index,
+                              final fabric.lang.JifObject element)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    void add(final int index, final fabric.lang.JifObject element)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    fabric.lang.JifObject remove(final int index)
+          throws java.lang.IndexOutOfBoundsException;
+    
+    int indexOf(final fabric.lang.JifObject o);
+    
+    int lastIndexOf(final fabric.lang.JifObject o);
+    
+    int indexOf(final fabric.lang.security.Label lbl,
+                final fabric.lang.JifObject o);
+    
+    int lastIndexOf(final fabric.lang.security.Label lbl,
+                    final fabric.lang.JifObject o);
+    
+    fabric.lang.security.Label jif$getfabric_util_List_L();
+}

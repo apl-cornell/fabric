@@ -26,7 +26,8 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
       Flags flags = ProxyRewriter.toPublic(result.flags());
       result = result.flags(flags);
     }
-    
+    if(result.flags().isNative())
+      result = (MethodDecl) result.body(null);
     return Collections.singletonList((ClassMember) result);
   }
 
@@ -45,7 +46,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     if (flags.isStatic() || flags.isPrivate()) return Collections.emptyList();
 
     // Interface methods must be public and cannot be final nor synchronized.
-    flags = ProxyRewriter.toPublic(flags).clearFinal().clearSynchronized();
+    flags = ProxyRewriter.toPublic(flags).clearFinal().clearSynchronized().clearNative();
 
     // Clear out the method body.
     ClassMember result = (ClassMember) methodDecl.flags(flags).body(null);

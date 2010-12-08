@@ -1,0 +1,147 @@
+package fabric.util;
+
+
+abstract public class AbstractCollection extends fabric.lang.Object
+  implements fabric.util.Collection
+{
+    
+    native protected fabric.util.AbstractCollection
+      fabric$util$AbstractCollection$();
+    
+    abstract public fabric.util.Iterator iterator();
+    
+    abstract public int size();
+    
+    final native public boolean isEmpty();
+    
+    final native public boolean isEmpty_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public boolean contains(final fabric.lang.JifObject o);
+    
+    native public boolean contains_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject o);
+    
+    native public boolean add(final fabric.lang.JifObject o)
+          throws java.lang.ClassCastException,
+        java.lang.IllegalArgumentException;
+    
+    native public boolean add_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject o)
+          throws java.lang.ClassCastException,
+        java.lang.IllegalArgumentException;
+    
+    native public boolean add(final java.lang.String o)
+          throws java.lang.ClassCastException,
+        java.lang.IllegalArgumentException;
+    
+    native public boolean add_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String o)
+          throws java.lang.ClassCastException,
+        java.lang.IllegalArgumentException;
+    
+    native public boolean remove(final java.lang.String o);
+    
+    native public boolean remove_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String o);
+    
+    native public boolean contains(final java.lang.String o);
+    
+    native public boolean contains_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final java.lang.String o);
+    
+    native public boolean contains(final fabric.lang.security.Label lbl,
+                                   final java.lang.String o);
+    
+    native public boolean contains_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final java.lang.String o);
+    
+    native public boolean remove(final fabric.lang.JifObject o);
+    
+    native public boolean remove_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.JifObject o);
+    
+    native public boolean containsAll(final fabric.util.Collection c)
+          throws java.lang.NullPointerException;
+    
+    native public boolean containsAll_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.util.Collection c)
+          throws java.lang.NullPointerException;
+    
+    native public boolean addAll(final fabric.util.Collection c)
+          throws java.lang.ClassCastException,
+        java.lang.IllegalArgumentException;
+    
+    native public boolean addAll_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.util.Collection c)
+          throws java.lang.ClassCastException,
+        java.lang.IllegalArgumentException;
+    
+    native public boolean removeAll(final fabric.util.Collection c);
+    
+    native public boolean removeAll_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.util.Collection c);
+    
+    native public boolean retainAll(final fabric.util.Collection c);
+    
+    native public boolean retainAll_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.util.Collection c);
+    
+    native public boolean retainAll(final fabric.lang.security.Label lbl,
+                                    final fabric.util.Collection c);
+    
+    native public boolean retainAll_remote(
+      final fabric.lang.security.Principal worker$principal,
+      final fabric.lang.security.Label lbl, final fabric.util.Collection c);
+    
+    native public void clear();
+    
+    native public void clear_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    native public java.lang.String toString();
+    
+    native public java.lang.String toString_remote(
+      final fabric.lang.security.Principal worker$principal);
+    
+    public AbstractCollection(final fabric.lang.security.Label jif$L) {
+        super();
+    }
+    
+    native public void jif$invokeDefConstructor();
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    native public static fabric.util.AbstractCollection
+      jif$cast$fabric_util_AbstractCollection(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_util_Collection_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_JifObject_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_IDComparable_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_Hashable_L();
+    
+    final native public fabric.lang.security.Label
+      jif$getfabric_lang_ToStringable_L();
+}

@@ -1,0 +1,26 @@
+package fabric.util;
+
+
+public class LinkedHashSet extends fabric.util.HashSet {
+    
+    native public fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(
+      final int initialCapacity, final float loadFactor)
+          throws java.lang.IllegalArgumentException;
+    
+    native public fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(
+      final int initialCapacity)
+          throws java.lang.IllegalArgumentException;
+    
+    public LinkedHashSet(final fabric.lang.security.Label jif$L) {
+        super(jif$L);
+    }
+    
+    native private void jif$init();
+    
+    native public static boolean jif$Instanceof(
+      final fabric.lang.security.Label jif$L, final java.lang.Object o);
+    
+    native public static fabric.util.LinkedHashSet
+      jif$cast$fabric_util_LinkedHashSet(final fabric.lang.security.Label jif$L,
+                                         final java.lang.Object o);
+}

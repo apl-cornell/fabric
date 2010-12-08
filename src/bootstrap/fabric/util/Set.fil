@@ -1,0 +1,7 @@
+package fabric.util;
+
+
+public interface Set extends fabric.util.Collection {
+    
+    fabric.lang.security.Label jif$getfabric_util_Set_L();
+}

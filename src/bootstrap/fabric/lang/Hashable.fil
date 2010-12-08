@@ -1,0 +1,8 @@
+package fabric.lang;
+
+public interface Hashable {
+    
+    int hashCode();
+    
+    fabric.lang.security.Label jif$getfabric_lang_Hashable_L();
+}

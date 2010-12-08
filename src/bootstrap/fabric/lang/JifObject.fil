@@ -1,0 +1,9 @@
+package fabric.lang;
+
+public interface JifObject
+  extends fabric.lang.IDComparable, fabric.lang.Hashable,
+          fabric.lang.ToStringable
+{
+    
+    fabric.lang.security.Label jif$getfabric_lang_JifObject_L();
+}

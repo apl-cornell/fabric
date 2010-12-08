@@ -1,0 +1,21 @@
+package fabric.util;
+
+
+public interface ListIterator extends fabric.util.Iterator {
+    
+    boolean hasPrevious();
+    
+    fabric.lang.JifObject previous() throws fabric.util.NoSuchElementException;
+    
+    int nextIndex();
+    
+    int previousIndex();
+    
+    void set(final fabric.lang.JifObject o)
+          throws java.lang.IllegalStateException;
+    
+    void add(final fabric.lang.JifObject o) throws java.lang.ClassCastException,
+        java.lang.IllegalArgumentException;
+    
+    fabric.lang.security.Label jif$getfabric_util_ListIterator_L();
+}
