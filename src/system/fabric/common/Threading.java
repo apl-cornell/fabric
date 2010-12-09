@@ -20,7 +20,7 @@ public class Threading {
    * 
    * @param poolSize the size of the thread pool.  If poolSize < 1, then the
    *                 thread pool will be allowed to grow as needed.
-   * @throws InternalError if the pool is alread initialized.                   
+   * @throws InternalError if the pool is already initialized.                   
    */
   public static void init(int poolSize) throws InternalError {
     if (Threading.pool != null) 
@@ -49,7 +49,7 @@ public class Threading {
   
   
   /**
-   * A ThreadFactory that creats FabricThread.Impls.
+   * A ThreadFactory that creates FabricThread.Impls.
    */
   private static class FabricThreadFactory implements ThreadFactory {
     public Thread newThread(Runnable r) {
