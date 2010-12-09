@@ -325,6 +325,34 @@
     </subant>
   </target>
 
+  <target name="regen-bootstrap"
+      description="Create bootstrap classes of collections written in Fabric.">
+		<apply executable="bash"
+					parallel="true"
+					failonerror="true"
+					dest="${basedir}/../fabcollections/src/bootstrap"
+					dir="${basedir}/../fabcollections/src/runtime"
+					relative="false"
+					skipemptyfilesets="true"
+					vmlauncher="false">
+			<arg value="${fabc}" />
+      <arg value="-bootstrap-skel" /> 
+      <arg value="-noserial" /> 
+			<arg value="-c" />
+			<arg value="-d" /> <arg value="${basedir}/../fabcollections/src/bootstrap"/>
+			<arg value="-debugpositions" />
+			<arg value="-cp" />
+      <arg value="${runtime.classes}" />
+      <arg value="-sourcepath"/>
+			<arg value="${basedir}/../fabcollections/src/runtime"/>
+			<srcfile />
+			<fileset dir="${basedir}/../fabcollections/src/runtime"
+          includes="**/*.fab"
+          excludes="**/*.fil" />
+      <globmapper from="*.fab" to="*.*" />
+		</apply>
+	</target>
+
   <!--
   ____________________________________________________________________________
     Compilation helper targets.
@@ -1375,32 +1403,6 @@ public class Version {
       <classpath refid="jif.classpath" />
     </javac>
   </target>
-
-   <target name="regen-bootstrap"
-		description="Create bootstrap classes of collections written in fabric.">
-		<apply executable="bash"
-					parallel="true"
-					failonerror="true"
-					dest="${basedir}/../fabcollections/src/bootstrap"
-					dir="${basedir}/../fabcollections/src/runtime"
-					relative="false"
-					skipemptyfilesets="true"
-					vmlauncher="false">
-			<arg value="${fabc}" />
-      <arg value="-bootstrap-skel" /> 
-      <arg value="-noserial" /> 
-			<arg value="-c" />
-			<arg value="-d" /> <arg value="${basedir}/../fabcollections/src/bootstrap"/>
-			<arg value="-debugpositions" />
-			<arg value="-cp" />
-      <arg value="${runtime.classes}" />
-      <arg value="-sourcepath"/>
-			<arg value="${basedir}/../fabcollections/src/runtime"/>
-			<srcfile />
-			<fileset dir="${basedir}/../fabcollections/src/runtime" includes="**/*.fab" excludes="**/*.fil"/>
-      			<globmapper from="*.fab" to="*.*" />
-		</apply>
-	</target>
 </project>
 
 <!--
