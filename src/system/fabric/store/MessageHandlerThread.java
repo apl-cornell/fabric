@@ -74,7 +74,7 @@ public class MessageHandlerThread
   throws TransactionCommitFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Commit Message from {0} for tid={1}",
-                session.workerPrincipalName, message.transactionID);
+                p.name(), message.transactionID);
     tm.commitTransaction(session.remoteNode, p, message.transactionID);
     return new CommitTransactionMessage.Response();
   }
@@ -130,7 +130,7 @@ public class MessageHandlerThread
                                              GetCertChainMessage msg) {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling request for SSL cert chain, worker={0}",
-                session.remoteNode);
+                p.name());
     return new GetCertChainMessage.Response(certificateChain);
   }
 
@@ -142,7 +142,7 @@ public class MessageHandlerThread
     // Note: p should always be null.
     
     // Get the store's node object and its signing key. 
-    final String storeName = session.store.name;
+    final String storeName = p.name();
     final fabric.worker.Store store = Worker.getWorker().getStore(storeName);
     final PrivateKey storeKey = session.store.privateKey;
     
