@@ -7,7 +7,6 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
-import java.util.List;
 import java.util.logging.Level;
 
 import fabric.common.*;
@@ -27,8 +26,7 @@ public class MessageHandlerThread
      extends NamedRunnable
   implements MessageToStoreHandler {
 
-  private final SessionAttributes session;
-  private final TransactionManager tm;
+  private final Store store;
   private Certificate[] certificateChain;
   
   /**
@@ -38,7 +36,6 @@ public class MessageHandlerThread
     super("Store message handler");
 
     // TODO
-    session = null;
     throw new NotImplementedException();
   }
   
@@ -49,7 +46,7 @@ public class MessageHandlerThread
                 "Handling Abort Message from {0} for tid={1}",
                 p.name(), message.tid.topTid);
     
-    tm.abortTransaction(p, message.tid.topTid);
+    store.tm.abortTransaction(p, message.tid.topTid);
     return new AbortTransactionMessage.Response();
   }
 
@@ -62,7 +59,7 @@ public class MessageHandlerThread
                 "Handling Allocate Message from {0}",
                 p.name());
     
-    long[] onums = tm.newOnums(p, msg.num);
+    long[] onums = store.tm.newOnums(p, msg.num);
     return new AllocateMessage.Response(onums);
   }
 
@@ -75,7 +72,7 @@ public class MessageHandlerThread
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Commit Message from {0} for tid={1}",
                 p.name(), message.transactionID);
-    tm.commitTransaction(session.remoteNode, p, message.transactionID);
+    store.tm.commitTransaction(p, message.transactionID);
     return new CommitTransactionMessage.Response();
   }
 
@@ -88,7 +85,8 @@ public class MessageHandlerThread
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling Prepare Message, worker={0}, tid={1}",
                 p.name(), msg.tid);
-    boolean subTransactionCreated = prepareTransaction(msg.tid,
+    boolean subTransactionCreated = prepareTransaction(p,
+                                                       msg.tid,
                                                        msg.commitTime,
                                                        msg.serializedCreates,
                                                        msg.serializedWrites,
@@ -105,7 +103,7 @@ public class MessageHandlerThread
                 "Handling Read Message from {0}, onum={1}",
                 p.name(), msg.onum);
 
-    ObjectGroup group = tm.getGroup(p, session.remoteNode, msg.onum, this);
+    ObjectGroup group = store.tm.getGroup(p, msg.onum);
     return new ReadMessage.Response(group);
   }
 
@@ -118,7 +116,7 @@ public class MessageHandlerThread
                 "Handling DissemRead message from {0}, onum={1}",
                 p.name(), msg.onum);
 
-    Glob glob = tm.getGlob(msg.onum, session.remoteNode, this);
+    Glob glob = store.tm.getGlob(msg.onum);
 
     return new DissemReadMessage.Response(glob);
   }
@@ -144,7 +142,7 @@ public class MessageHandlerThread
     // Get the store's node object and its signing key. 
     final String storeName = p.name();
     final fabric.worker.Store store = Worker.getWorker().getStore(storeName);
-    final PrivateKey storeKey = session.store.privateKey;
+    final PrivateKey storeKey = this.store.privateKey;
     
     // Create a principal object on the store and get the resulting object's
     // onum.
@@ -171,8 +169,8 @@ public class MessageHandlerThread
   public StalenessCheckMessage.Response handle(NodePrincipal p,
       StalenessCheckMessage message) throws AccessException {
     STORE_REQUEST_LOGGER.log(Level.FINER,
-	"Handling Staleness Check Message from {0}", p);
-    return new StalenessCheckMessage.Response(session.store.tm.checkForStaleObjects(session.workerPrincipal, message.versions));
+	"Handling Staleness Check Message from {0}", p.name());
+    return new StalenessCheckMessage.Response(this.store.tm.checkForStaleObjects(p, message.versions));
   }
   
   /**
@@ -180,6 +178,7 @@ public class MessageHandlerThread
    *         objects.
    */
   private boolean prepareTransaction(
+      NodePrincipal p,
       long tid, long commitTime,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites, LongKeyMap<Integer> reads)
@@ -189,10 +188,10 @@ public class MessageHandlerThread
         new PrepareRequest(tid, commitTime, serializedCreates,
             serializedWrites, reads);
 
-    session.store.sm.createSurrogates(req);
+    this.store.sm.createSurrogates(req);
 
     boolean subTransactionCreated =
-        session.store.tm.prepare(session.workerPrincipal, req);
+        this.store.tm.prepare(p, req);
 
     return subTransactionCreated;
   }

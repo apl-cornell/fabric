@@ -22,7 +22,6 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
-import fabric.worker.remote.RemoteWorker;
 
 public class TransactionManager {
 
@@ -75,12 +74,11 @@ public class TransactionManager {
   /**
    * Execute the commit phase of two phase commit.
    */
-  public void commitTransaction(RemoteWorker workerNode,
-      NodePrincipal workerPrincipal, long transactionID)
+  public void commitTransaction(NodePrincipal workerPrincipal, long transactionID)
       throws TransactionCommitFailedException {
     synchronized (database) {
       try {
-        database.commit(transactionID, workerNode, workerPrincipal, sm);
+        database.commit(transactionID, workerPrincipal, sm);
         STORE_TRANSACTION_LOGGER.fine("Committed transaction "
             + transactionID);
       } catch (final AccessException e) {
@@ -349,24 +347,24 @@ public class TransactionManager {
    *          True if the subscriber is a dissemination node; false if it's a
    *          worker.
    */
-  GroupContainer getGroupContainerAndSubscribe(long onum,
-      RemoteWorker subscriber, boolean dissemSubscribe, MessageHandlerThread handler)
+  GroupContainer getGroupContainerAndSubscribe(long onum)
       throws AccessException {
     GroupContainer container;
     synchronized (database) {
       container = database.getCachedGroupContainer(onum);
       if (container != null) {
-        if (subscriber != null)
-          sm.subscribe(onum, subscriber, dissemSubscribe);
+      //  if (subscriber != null)
+      //    sm.subscribe(onum, subscriber, dissemSubscribe);
         return container;
       }
     }
 
     // XXX Ideally, the subscription registration should happen atomically with
     // the read.
-    if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
-    ObjectGroup group = readGroup(onum, handler);
-    if (group == null) throw new AccessException(database.getName(), onum);
+    //if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
+    ObjectGroup group = readGroup(onum);
+    if (group == null)
+      throw new AccessException(database.getName(), onum);
 
     Store store = Worker.getWorker().getStore(database.getName());
     container = new GroupContainer(store, signingKey, group);
@@ -388,10 +386,8 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  public Glob getGlob(long onum, RemoteWorker subscriber,
-      MessageHandlerThread handler) throws AccessException {
-    return getGroupContainerAndSubscribe(onum, subscriber, true, handler)
-        .getGlob();
+  public Glob getGlob(long onum) throws AccessException {
+    return getGroupContainerAndSubscribe(onum).getGlob();
   }
 
   /**
@@ -407,11 +403,8 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  public ObjectGroup getGroup(NodePrincipal principal, RemoteWorker subscriber,
-      long onum, MessageHandlerThread handler) throws AccessException {
-    ObjectGroup group =
-        getGroupContainerAndSubscribe(onum, subscriber, false, handler)
-            .getGroup(principal);
+  public ObjectGroup getGroup(NodePrincipal principal, long onum) throws AccessException {
+    ObjectGroup group = getGroupContainerAndSubscribe(onum).getGroup(principal);
     if (group == null) throw new AccessException(database.getName(), onum);
     return group;
   }
@@ -424,7 +417,7 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  private ObjectGroup readGroup(long onum, MessageHandlerThread handler) {
+  private ObjectGroup readGroup(long onum) {
     SerializedObject obj = read(onum);
     if (obj == null) return null;
 
@@ -509,7 +502,7 @@ public class TransactionManager {
                 database.beginTransaction(tid, worker);
                 database.registerUpdate(tid, worker, newObj);
                 database.finishPrepare(tid, worker);
-                database.commit(tid, null, worker, sm);
+                database.commit(tid, worker, sm);
               } catch (AccessException exc) {
                 // TODO: this should probably use the store principal instead of
                 // the worker principal, and AccessExceptions should be

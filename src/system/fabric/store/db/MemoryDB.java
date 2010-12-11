@@ -15,7 +15,6 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.NodePrincipal;
 import fabric.store.SubscriptionManager;
-import fabric.worker.remote.RemoteWorker;
 
 /**
  * <p>
@@ -91,8 +90,7 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  public void commit(long tid, RemoteWorker workerNode,
-      NodePrincipal workerPrincipal, SubscriptionManager sm)
+  public void commit(long tid, NodePrincipal workerPrincipal, SubscriptionManager sm)
       throws AccessException {
     PendingTransaction tx = remove(workerPrincipal, tid);
 
@@ -101,7 +99,7 @@ public class MemoryDB extends ObjectDB {
       objectTable.put(o.getOnum(), o);
 
       // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum(), workerNode);
+      notifyCommittedUpdate(sm, o.getOnum());
     }
   }
 

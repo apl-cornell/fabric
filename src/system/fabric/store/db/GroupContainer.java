@@ -12,7 +12,8 @@ import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
 
 /**
- * Abstracts groups and globs.  This class is thread-safe.
+ * A group container contains a group or a glob, and supports converting between
+ * them.  This class is thread-safe.
  */
 public final class GroupContainer {
   private final Store store;

@@ -15,7 +15,6 @@ import fabric.lang.security.ReaderPolicy;
 import fabric.lang.security.WriterPolicy;
 import fabric.worker.Worker;
 import fabric.worker.Store;
-import fabric.worker.remote.RemoteWorker;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
@@ -311,8 +310,7 @@ public abstract class ObjectDB {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid, RemoteWorker workerNode,
-      NodePrincipal workerPrincipal, SubscriptionManager sm)
+  public abstract void commit(long tid, NodePrincipal workerPrincipal, SubscriptionManager sm)
       throws AccessException;
 
   /**
@@ -389,8 +387,7 @@ public abstract class ObjectDB {
    * @param worker
    *          the worker that performed the update.
    */
-  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum,
-      RemoteWorker worker) {
+  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum) {
     // Remove from the glob table the glob associated with the onum.
     Long globID = globIDByOnum.remove(onum);
     GroupContainer group = null;
@@ -399,7 +396,7 @@ public abstract class ObjectDB {
     }
 
     // Notify the subscription manager that the group has been updated.
-    sm.notifyUpdate(onum, worker);
+    // sm.notifyUpdate(onum, worker);
     if (group != null) {
       for (LongIterator onumIt = group.onums.iterator(); onumIt.hasNext();) {
         long relatedOnum = onumIt.next();
@@ -407,7 +404,7 @@ public abstract class ObjectDB {
 
         Long relatedGlobId = globIDByOnum.get(relatedOnum);
         if (relatedGlobId != null && relatedGlobId == globID) {
-          sm.notifyUpdate(relatedOnum, worker);
+          // sm.notifyUpdate(relatedOnum, worker);
         }
       }
     }

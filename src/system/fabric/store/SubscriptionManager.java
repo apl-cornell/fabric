@@ -94,8 +94,7 @@ public class SubscriptionManager extends FabricThread.Impl {
       GroupContainer groupContainer;
       Glob glob;
       try {
-        groupContainer =
-            tm.getGroupContainerAndSubscribe(onum, null, false, null);
+        groupContainer = tm.getGroupContainerAndSubscribe(onum);
         glob = groupContainer.getGlob();
       } catch (AccessException e) {
         throw new InternalError(e);
