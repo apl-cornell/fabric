@@ -2,9 +2,11 @@ package fabric;
 
 import java.util.*;
 
+import fabil.FabILOptions;
 import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.ExplicitSuperclassAdder;
+import fabric.visit.FabILSkeletonCreator;
 import fabric.visit.FabricExceptionChecker;
 import fabric.visit.FabricToFabilRewriter;
 import fabric.visit.FabricTypeBuilder;
@@ -16,14 +18,22 @@ import fabric.visit.ThisLabelChecker;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.CyclicDependencyException;
+import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Job;
+import polyglot.frontend.OutputPass;
+import polyglot.frontend.Pass;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.Source;
+import polyglot.frontend.TargetFactory;
+import polyglot.frontend.goals.AbstractGoal;
+import polyglot.frontend.goals.CodeGenerated;
 import polyglot.frontend.goals.Goal;
 import polyglot.frontend.goals.Serialized;
 import polyglot.frontend.goals.VisitorGoal;
+import polyglot.main.Options;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
+import polyglot.visit.Translator;
 import jif.JifScheduler;
 
 public class FabricScheduler extends JifScheduler {
@@ -179,7 +189,7 @@ public class FabricScheduler extends JifScheduler {
       try {
         g.addPrerequisiteGoal(ThisLabelChecked(job), this);
       } catch (CyclicDependencyException e) {
-        e.printStackTrace();
+        throw new InternalCompilerError(e);
       }
     } else {
       // Signature mode.  Don't run some passes.
@@ -231,6 +241,7 @@ public class FabricScheduler extends JifScheduler {
         // Cannot happen
         throw new InternalCompilerError(e);
     }
+    
     return g;
   }
 
@@ -251,6 +262,47 @@ public class FabricScheduler extends JifScheduler {
         l.add(s.IntegerBoundsChecker(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
+      }
+    });
+    return g;
+  }
+  
+  public Goal CreateFabILSkeleton(Job job) {
+    FabricTypeSystem  ts = fabext.typeSystem();
+    FabricNodeFactory nf = fabext.nodeFactory();
+    Goal g = internGoal(new VisitorGoal(job, new FabILSkeletonCreator(job, ts, nf)));
+    
+    try {
+      addPrerequisiteDependency(g, this.FabricToFabilRewritten(job));
+    } catch (CyclicDependencyException e) {
+      throw new InternalCompilerError(e);
+    }
+    return g;
+  }
+  
+  private TargetFactory target_factory = new TargetFactory(
+      Options.global.output_directory,
+      "fil",
+      Options.global.output_stdout);
+
+  public Goal FabILSkeletonGenerated(final Job job) {
+    Goal g = internGoal(new AbstractGoal(job){
+      @SuppressWarnings({ "unchecked", "rawtypes" })
+      @Override
+      public Collection prerequisiteGoals(Scheduler scheduler) {
+        FabILOptions opts = (FabILOptions) job.extensionInfo().getOptions();
+          List<Goal> l = new ArrayList<Goal>();
+          l.add(CreateFabILSkeleton(job));
+          l.addAll(super.prerequisiteGoals(scheduler));
+          return l;
+      }
+      @Override
+      public Pass createPass(ExtensionInfo extInfo) {
+        TypeSystem ts = extInfo.typeSystem();
+        NodeFactory nf = extInfo.nodeFactory();
+
+        return new OutputPass(this, new Translator(job(), ts, nf,
+            target_factory));
       }
     });
     return g;

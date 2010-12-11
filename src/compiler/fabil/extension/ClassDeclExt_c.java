@@ -298,24 +298,27 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       methodDecl.append("throws %LT ");
       subst.add(new ArrayList<Type>(throwTypes));
     }
-
-    methodDecl.append("{ " + (returnType.isVoid() ? "" : "return "));
-
-    // Figure out the call target.
-    String implType = node().type().fullName();
-    if (flags.isStatic()) {
-      methodDecl.append(implType + "._Impl");
-    } else {
-      methodDecl.append("((" + implType + ") fetch())");
+    if(!mi.flags().isNative()) {
+      methodDecl.append("{ " + (returnType.isVoid() ? "" : "return "));
+    
+      // Figure out the call target.
+      String implType = node().type().fullName();
+      if (flags.isStatic()) {
+        methodDecl.append(implType + "._Impl");
+      } else {
+        methodDecl.append("((" + implType + ") fetch())");
+      }
+    
+      // Call the delegate.
+      methodDecl.append("." + name + "(" + args + "); }");
+    } 
+    else {
+      methodDecl.append(";");
     }
-
-    // Call the delegate.
-    methodDecl.append("." + name + "(" + args + "); }");
-
     QQ qq = pr.qq();
     return qq.parseMember(methodDecl.toString(), subst);
-  }
-
+  } 
+ 
   /**
    * Returns the Impl translation of the class declaration.
    */

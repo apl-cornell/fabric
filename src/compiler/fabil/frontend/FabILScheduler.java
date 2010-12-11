@@ -26,6 +26,7 @@ import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.*;
+import fabric.visit.FabILSkeletonCreator;
 
 public class FabILScheduler extends JLScheduler {
   protected ExtensionInfo extInfo;
@@ -427,6 +428,9 @@ public class FabILScheduler extends JLScheduler {
           l.add(Memoized(job));
           l.add(InstrumentThreads(job));
           l.add(ClassReferencesCollected(job));
+          if(((FabILOptions) extInfo.getOptions()).createJavaSkel()) {
+            l.add(CreateJavaSkeleton(job));
+          }
         }
         return l;
       }
@@ -444,6 +448,21 @@ public class FabILScheduler extends JLScheduler {
     return g;
   }
   
+  protected Goal CreateJavaSkeleton(Job job) {
+    TypeSystem ts = extInfo.typeSystem();
+    NodeFactory nf = extInfo.nodeFactory();
+    Goal g =
+        internGoal(new VisitorGoal(job, new FabILSkeletonCreator(job, ts, nf)) {
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+            List<Goal> l = new ArrayList<Goal>();
+            l.add(Memoized(job));
+            return l;
+          }
+        });
+    return g;
+  }
+
   public Goal SignatureClean(final Job job) {
     Goal g = internGoal(new VisitorGoal(job, new SignatureCleaner()) {
       @SuppressWarnings({ "unchecked", "rawtypes" })
