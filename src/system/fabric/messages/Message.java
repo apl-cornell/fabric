@@ -9,7 +9,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
-import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.SubSocket;
 import fabric.lang.Object._Proxy;
@@ -116,7 +115,7 @@ public abstract class Message<R extends Message.Response, E extends Exception> {
     try {
       MessageType messageType = MessageType.values()[in.readByte()];
 
-      Message<?,?> message = messageType.parse(in);
+      m = messageType.parse(in);
 
       Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
                   "Received {0}", messageType);

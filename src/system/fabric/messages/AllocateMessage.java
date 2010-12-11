@@ -11,7 +11,7 @@ import fabric.lang.security.NodePrincipal;
  */
 public final class AllocateMessage
            extends Message<AllocateMessage.Response, RuntimeException>
-        implements MessageToStore 
+        implements MessageToStore<FabricException>
 {
 
   //////////////////////////////////////////////////////////////////////////////

@@ -19,7 +19,7 @@ import fabric.worker.TransactionPrepareFailedException;
  */
 public class PrepareTransactionMessage
      extends Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException>
-  implements MessageToWorker, MessageToStore
+  implements MessageToWorker, MessageToStore<FabricException>
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //

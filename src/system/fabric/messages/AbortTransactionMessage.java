@@ -10,7 +10,7 @@ import fabric.lang.security.NodePrincipal;
 
 public class AbortTransactionMessage
      extends Message<AbortTransactionMessage.Response, RuntimeException>
-  implements MessageToStore, MessageToWorker
+  implements MessageToStore<FabricException>, MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //

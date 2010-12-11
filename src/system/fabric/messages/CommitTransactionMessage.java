@@ -10,7 +10,7 @@ import fabric.worker.TransactionCommitFailedException;
 
 public class CommitTransactionMessage
      extends Message<CommitTransactionMessage.Response, TransactionCommitFailedException>
-  implements MessageToStore, MessageToWorker
+  implements MessageToStore<FabricException>, MessageToWorker
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //

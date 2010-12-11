@@ -16,7 +16,7 @@ import fabric.lang.security.NodePrincipal;
  */
 public final class DissemReadMessage
            extends Message<DissemReadMessage.Response, FetchException>
-        implements MessageToStore
+        implements MessageToStore<FabricException>
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //

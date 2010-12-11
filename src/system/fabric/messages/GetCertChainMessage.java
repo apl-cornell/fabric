@@ -12,7 +12,7 @@ import fabric.lang.security.NodePrincipal;
  */
 public class GetCertChainMessage
      extends Message<GetCertChainMessage.Response, RuntimeException>
-  implements MessageToStore
+  implements MessageToStore<FabricException>
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //

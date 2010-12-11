@@ -15,7 +15,7 @@ import fabric.lang.security.NodePrincipal;
  */
 public class ReadMessage
      extends Message<ReadMessage.Response, FetchException>
-  implements MessageToStore
+  implements MessageToStore<FabricException>
 {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
