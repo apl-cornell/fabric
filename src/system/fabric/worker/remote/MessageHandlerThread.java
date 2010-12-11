@@ -2,31 +2,17 @@ package fabric.worker.remote;
 
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
-import java.util.Map;
 
 import fabric.common.AuthorizationUtil;
-import fabric.common.TransactionID;
 import fabric.common.Threading.NamedRunnable;
+import fabric.common.TransactionID;
 import fabric.common.exceptions.NotImplementedException;
-import fabric.common.exceptions.ProtocolError;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.NodePrincipal;
-import fabric.messages.AbortTransactionMessage;
-import fabric.messages.CommitTransactionMessage;
-import fabric.messages.DirtyReadMessage;
-import fabric.messages.GetPrincipalMessage;
-import fabric.messages.MessageToWorkerHandler;
-import fabric.messages.ObjectUpdateMessage;
-import fabric.messages.PrepareTransactionMessage;
-import fabric.messages.RemoteCallMessage;
-import fabric.messages.TakeOwnershipMessage;
-import fabric.messages.StalenessCheckMessage;
-import fabric.messages.InterWorkerStalenessMessage;
+import fabric.messages.*;
 import fabric.messages.GetPrincipalMessage.Response;
-import fabric.net.RemoteNode;
-import fabric.worker.RemoteStore;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -46,14 +32,11 @@ public class MessageHandlerThread
     // TODO Auto-generated constructor stub
     throw new NotImplementedException();
   }
-
-  private final SessionAttributes session;  
   
   private final Worker worker;
 
-  public RemoteCallMessage.Response handle(
-      NodePrincipal p, final RemoteCallMessage remoteCallMessage) throws RemoteCallException,
-      ProtocolError {
+  public RemoteCallMessage.Response handle(final NodePrincipal p,
+      final RemoteCallMessage remoteCallMessage) throws RemoteCallException {
     // We assume that this thread's transaction manager is free (i.e., it's not
     // managing any tranaction's log) at the start of the method and ensure that
     // it will be free at the end of the method.
@@ -81,7 +64,7 @@ public class MessageHandlerThread
             fabric.lang.Object receiver =
                 remoteCallMessage.receiver.fetch().$getProxy();
             Object[] args = new Object[remoteCallMessage.args.length + 1];
-            args[0] = session.remotePrincipal;
+            args[0] = p;
             for (int i = 0; i < remoteCallMessage.args.length; i++) {
               Object arg = remoteCallMessage.args[i];
               if (arg instanceof fabric.lang.Object) {
@@ -205,8 +188,7 @@ public class MessageHandlerThread
     return new CommitTransactionMessage.Response();
   }
 
-  public DirtyReadMessage.Response handle(NodePrincipal p, DirtyReadMessage readMessage)
-      throws ProtocolError {
+  public DirtyReadMessage.Response handle(NodePrincipal p, DirtyReadMessage readMessage) {
     Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
     if (log == null) return new DirtyReadMessage.Response(null);
 
@@ -225,7 +207,7 @@ public class MessageHandlerThread
 
     // Ensure that the remote worker is allowed to read the object.
     Label label = obj.get$label();
-    if (!AuthorizationUtil.isReadPermitted(session.remotePrincipal, label
+    if (!AuthorizationUtil.isReadPermitted(p, label
         .$getStore(), label.$getOnum())) {
       obj = null;
     }
@@ -263,15 +245,15 @@ public class MessageHandlerThread
       // Ensure that the remote worker is allowed to write the object.
       Label label = obj.get$label();
       boolean authorized =
-        AuthorizationUtil.isWritePermitted(session.remotePrincipal, label
+        AuthorizationUtil.isWritePermitted(p, label
             .$getStore(), label.$getOnum());
 
       tm.associateLog(null);
 
-      if(!authorized)
+      if (!authorized)
         throw new TakeOwnershipFailedException(MessageFormat.format(
-            "{0} is not authorized to own fab://{1}/{2}",
-            session.remoteNodeName, msg.store.name(), msg.onum));
+            "{0} is not authorized to own fab://{1}/{2}", p.$getStore() + "/"
+                + p.$getOnum(), msg.store.name(), msg.onum));
       
       // Relinquish ownership.
       obj.$isOwned = false;
