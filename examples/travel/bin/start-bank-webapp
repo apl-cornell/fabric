@@ -13,5 +13,5 @@ CP="${CP}:${FABRIC}/lib/fabric-sif.jar"
 export FABRIC_HOME="${APP_HOME}"
 
 fab-http -classpath "${CP}" "$@" \
-  --name bankweb ${APP_HOME}/web/bank --port 8081
+  --worker bankweb ${APP_HOME}/web/bank --port 8081
 

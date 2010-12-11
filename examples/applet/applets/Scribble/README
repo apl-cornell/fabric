@@ -14,10 +14,10 @@ libraries.
 
 0.2. Start and initialize some stores: 
 	fab-store --store store0
-	fab --name worker0 --make-principal store0 
+	fab --worker worker0 --make-principal store0 
 
 	fab-store --store database
-	fab --name worker --make-principal database
+	fab --worker worker --make-principal database
 
 1. Compile Scribble.fil
 	filc -dumpdeps Scribble.fil

@@ -13,5 +13,5 @@ for i in "${JETTY}"/*.jar ; do
   CP="${CP}:$i"
 done
 
-fab --debug -classpath "${CP}" --name blog-worker webapp.blog.BlogServer "$@"
+fab --debug -classpath "${CP}" --worker blog-worker webapp.blog.BlogServer "$@"
 

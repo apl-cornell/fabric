@@ -144,11 +144,11 @@ environment variable.
 Before workers are started, they must create a principal object on a
 store.  This is accomplished by running
 
-  $ fab --name [worker host name] --make-principal [store host name]
+  $ fab --worker [worker host name] --make-principal [store host name]
 
 Once this is done, you can start the worker by running:
 
-  $ fab --name [worker host name] [main class]
+  $ fab --worker [worker host name] [main class]
 
 where [main class] is the fully-qualified name of the class you wish to
 invoke.  If the main class is omitted, the worker will simply start and

@@ -32,16 +32,16 @@ Step 2. Create principals for worker0
 
 Run the following command to do this:
 
-$ fab --name worker0 --make-principal store0
+$ fab --worker worker0 --make-principal store0
 
 Step 3. 
 Make sure $FABRIC/examples/tree/classes is on your classpath, and
 Run the following command in any terminal to create a tree at store0:
 
-$ fab --name worker0 tree.Main create
+$ fab --worker worker0 tree.Main create
 
 Step 4.
 Make sure $FABRIC/examples/tree/classes is on your classpath, and
 Run the following command in any terminal to read from the tree just created:
 
-$ fab --name worker0 tree.Main read
+$ fab --worker worker0 tree.Main read
