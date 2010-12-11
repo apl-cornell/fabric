@@ -18,7 +18,7 @@ if (! -d 'src' || ! -f 'bin/loc') {
     print STDERR 'Run from the top directory of Fabric', "\n";
     exit 1;
 }
-open (CVSFILES, "bin/cvsfiles src |");
+open (SVNFILES, "bin/svnfiles src |");
 
 my %pattern, %lines;
 
@@ -41,6 +41,10 @@ $pattern{'Fabric signatures for fabric.*'} = '^src/signatures/fabric/fabric';
 $pattern{'FabIL signatures for fabric.*'} = '^src/signatures/fabil/fabric';
 $pattern{'FabIL signatures for java.*'} = '^src/signatures/fabil/java';
 $pattern{'FabIL signatures for javax.*'} = '^src/signatures/fabil/javax';
+$pattern{'SIF (java)'} = '^src/lib/sif/src';
+$pattern{'SIF (fabric)'} = '^src/lib/sif/fab-src';
+$pattern{'SIF (signatures)'} = '^src/lib/sif/sig-src';
+$pattern{'Transient collections'} = '^src/lib/transient/';
 $pattern{'bootstrap support'} = '^src/bootstrap';
 
 my $other = 0;
@@ -52,12 +56,12 @@ sub pad {
     return $str;
 }
 
-while (<CVSFILES>) {
+while (<SVNFILES>) {
     chomp;
     if ($_ =~ m/README/ ||
 	$_ =~ m/\.png/ ||
 	$_ =~ m/\.html/ ||
-	$_ =~ m/\.cvsignore/ ||
+	$_ =~ m/\.xml/ ||
 	$_ =~ m/\.dia/) {
 # 	ignore
 	next;
