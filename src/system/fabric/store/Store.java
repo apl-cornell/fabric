@@ -139,6 +139,11 @@ class Store implements Runnable {
 
         // XXX not setting timeout
         // worker.setSoTimeout(opts.timeout * 1000);
+        
+        // Threading.execute(new NamedRunnable("Store message handler thread") {
+        //  @Override runImpl() {
+        //    // handle connection
+        //  });
         throw new NotImplementedException();
         // connectionHandler.handle(connection);
       }

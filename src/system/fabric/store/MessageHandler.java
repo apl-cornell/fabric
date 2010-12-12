@@ -4,15 +4,12 @@ import static fabric.common.Logging.STORE_REQUEST_LOGGER;
 
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.logging.Level;
 
 import fabric.common.*;
-import fabric.common.Threading.NamedRunnable;
 import fabric.common.exceptions.AccessException;
-import fabric.common.exceptions.NotImplementedException;
 import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.security.NodePrincipal;
@@ -22,21 +19,16 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 
-public class MessageHandlerThread
-     extends NamedRunnable
+public class MessageHandler
   implements MessageToStoreHandler {
 
   private final Store store;
-  private Certificate[] certificateChain;
   
   /**
    * Instantiates a new message-handler thread and starts it running.
    */
-  private MessageHandlerThread() {
-    super("Store message handler");
-
-    // TODO
-    throw new NotImplementedException();
+  private MessageHandler(Store store) {
+    this.store = store;
   }
   
   public AbortTransactionMessage.Response handle(NodePrincipal p, AbortTransactionMessage message)
@@ -129,7 +121,7 @@ public class MessageHandlerThread
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
                 "Handling request for SSL cert chain, worker={0}",
                 p.name());
-    return new GetCertChainMessage.Response(certificateChain);
+    return new GetCertChainMessage.Response(store.certificateChain);
   }
 
   /**
@@ -196,11 +188,4 @@ public class MessageHandlerThread
     return subTransactionCreated;
   }
   
-  @Override
-  protected void runImpl() {
-    // TODO Auto-generated method stub
-    fabric.worker.transaction.TransactionManager.startThread(Thread.currentThread());
-    throw new NotImplementedException();
-  }
-
 }
