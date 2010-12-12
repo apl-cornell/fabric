@@ -29,11 +29,11 @@ abstract class Channel extends Thread {
   //
   // a message is one of the following:
   //  channel   close (sendClose()   method): 0  0
-  //  subsocket close (sendClose(SN) method): SN 0
-  //  subsocket send  (sendData      method): SN length data[len]
+  //  subsocket close (sendClose(ID) method): ID 0
+  //  subsocket send  (sendData      method): ID length data[len]
   //
-  // any unrecognized or previously closed SN should create a new stream (thus
-  // the subsocket close message should be the last sent by a subsocket).
+  // any unrecognized or previously closed stream ID should create a new stream
+  // (thus the subsocket close message should be the last sent by a subsocket).
 
   protected Channel(ShakenSocket s) throws IOException {
     super();
@@ -47,8 +47,8 @@ abstract class Channel extends Thread {
 
   @Override public abstract String toString();
   
-  /** called to create a Connection to an unknown sequence number */
-  protected abstract Connection accept(int sequence) throws IOException;
+  /** called to create a Connection to an unknown stream id */
+  protected abstract Connection accept(int streamID) throws IOException;
   
   /** called to notify the container that there are no remaining open sockets */
   protected abstract void cleanup();
@@ -60,18 +60,18 @@ abstract class Channel extends Thread {
   }
 
   /** send subsocket close message */
-  public synchronized void sendClose(int sequence) throws IOException {
-    out.writeInt(sequence);
+  public synchronized void sendClose(int streamID) throws IOException {
+    out.writeInt(streamID);
     out.writeInt(0);
     out.flush();
   }
 
   /** send data */
-  public synchronized void sendData(int sequence, byte[] data, int offset, int len) throws IOException {
+  public synchronized void sendData(int streamID, byte[] data, int offset, int len) throws IOException {
     NETWORK_CHANNEL_LOGGER.log(Level.FINE, "sending " + len
         + " bytes of data on {0}", this);
     
-    out.writeInt(sequence);
+    out.writeInt(streamID);
     out.writeInt(len);
     out.write(data, offset, len);
     out.flush();
@@ -83,25 +83,25 @@ abstract class Channel extends Thread {
   }
 
   /** called on receipt of subsocket close message */
-  public synchronized void recvClose(int sequence) throws IOException {
-    Connection listener = getReceiver(sequence);
+  public synchronized void recvClose(int streamID) throws IOException {
+    Connection listener = getReceiver(streamID);
     listener.close();
   }
 
   /** called on receipt of data message */
-  public synchronized void recvData(int sequence, byte[] data) throws IOException {
-    Connection listener = getReceiver(sequence);
+  public synchronized void recvData(int streamID, byte[] data) throws IOException {
+    Connection listener = getReceiver(streamID);
     listener.receiveData(data);
   }
 
   /**
-   * returns the Connection associated with a given sequence number, creating
+   * returns the Connection associated with a given stream id, creating
    * it if necessary
    * */
-  private synchronized Connection getReceiver(int sequence) throws IOException {
-    Connection result = connections.get(sequence);
+  private synchronized Connection getReceiver(int streamID) throws IOException {
+    Connection result = connections.get(streamID);
     if (result == null) {
-      result = accept(sequence);
+      result = accept(streamID);
     }
     return result;
   }
@@ -114,8 +114,8 @@ abstract class Channel extends Thread {
   public void run() {
     try {
       while(true) {
-        int sequenceNumber = in.readInt();
-        if (sequenceNumber == 0) {
+        int streamID = in.readInt();
+        if (streamID == 0) {
           recvClose();
           continue;
         }
@@ -123,7 +123,7 @@ abstract class Channel extends Thread {
         int len = in.readInt();
         if (len == 0) {
           // error - deliver to reader
-          recvClose(sequenceNumber);
+          recvClose(streamID);
           continue;
         }
 
@@ -133,7 +133,7 @@ abstract class Channel extends Thread {
         NETWORK_CHANNEL_LOGGER.log(Level.FINE, "received " + len
             + " bytes on {0}", this);
         
-        recvData(sequenceNumber, buf);
+        recvData(streamID, buf);
       }
     } catch (final IOException exc) {
       // TODO cleanup
@@ -145,25 +145,25 @@ abstract class Channel extends Thread {
    * this contains all of the state for an open connection.
    */
   class Connection {
-    final public int sequenceNum;
+    final public int streamID;
     final public InputStream  in;
     final public OutputStream out;
 
     final public OutputStream sink;
 
-    public Connection(int sequenceNum) throws IOException {
-      this.sequenceNum = sequenceNum;
-      this.out         = new BufferedOutputStream(new MuxedOutputStream(sequenceNum));
+    public Connection(int streamID) throws IOException {
+      this.streamID = streamID;
+      this.out      = new BufferedOutputStream(new MuxedOutputStream(streamID));
 
       PipedInputStream in = new PipedInputStream();
       this.sink           = new PipedOutputStream(in);
       this.in             = in;
-      connections.put(this.sequenceNum, this);
+      connections.put(this.streamID, this);
     }
 
     @Override
     public String toString() {
-      return "stream " + sequenceNum + " on " + Channel.this.toString();
+      return "stream " + streamID + " on " + Channel.this.toString();
     }
 
     /** this method is called by SubSocket.close(). */
@@ -171,7 +171,7 @@ abstract class Channel extends Thread {
       throw new NotImplementedException();
       //in.close();
       //out.close();
-      //sendClose(sequenceNum);
+      //sendClose(streamID);
     }
 
     /** this method called by recvClose in response to a close message */
@@ -190,15 +190,15 @@ abstract class Channel extends Thread {
   }
 
   /**
-   * an OutputStream that expands written data to include the sequence number,
+   * an OutputStream that expands written data to include the stream id,
    * and writes to the channel's output stream. These should be wrapped in
    * BufferedOutputStreams before being returned.
    */
   private class MuxedOutputStream extends OutputStream {
-    private final int sequenceNumber;
+    private final int streamID;
 
-    public MuxedOutputStream(int sequenceNumber) {
-      this.sequenceNumber = sequenceNumber;
+    public MuxedOutputStream(int streamID) {
+      this.streamID = streamID;
     }
     
     @Override
@@ -208,7 +208,7 @@ abstract class Channel extends Thread {
 
     @Override
     public void write(byte[] buf, int offset, int len) throws IOException {
-      sendData(sequenceNumber, buf, offset, len);
+      sendData(streamID, buf, offset, len);
     }
 
     @Override
