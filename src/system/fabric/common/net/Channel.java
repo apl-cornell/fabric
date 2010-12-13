@@ -50,9 +50,6 @@ abstract class Channel extends Thread {
   /** called to create a Connection to an unknown stream id */
   protected abstract Connection accept(int streamID) throws IOException;
   
-  /** called to notify the container that there are no remaining open sockets */
-  protected abstract void cleanup();
-
   /** send channel close message */
   public synchronized void sendClose() throws IOException {
     out.writeInt(0);
@@ -85,7 +82,7 @@ abstract class Channel extends Thread {
   /** called on receipt of subsocket close message */
   public synchronized void recvClose(int streamID) throws IOException {
     Connection listener = getReceiver(streamID);
-    listener.close();
+    listener.receiveClose();
   }
 
   /** called on receipt of data message */
@@ -168,17 +165,14 @@ abstract class Channel extends Thread {
 
     /** this method is called by SubSocket.close(). */
     public void close() throws IOException {
-      throw new NotImplementedException();
-      //in.close();
-      //out.close();
-      //sendClose(streamID);
+      sendClose(streamID);
+      connections.remove(streamID);
     }
 
     /** this method called by recvClose in response to a close message */
     public void receiveClose() throws IOException {
-      throw new NotImplementedException();
-      //connections.remove(this);
-      //sink.close();
+      connections.remove(this);
+      sink.close();
     }
 
     /** forward data to the reading thread */

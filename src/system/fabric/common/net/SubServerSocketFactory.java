@@ -280,12 +280,6 @@ public class SubServerSocketFactory {
           return result;
         }
         
-        /** remove self from the connectionqueue */
-        @Override
-        protected void cleanup() {
-          throw new NotImplementedException();
-        }
-
         @Override
         public String toString() {
           return "channel from " + sock.getInetAddress() + " to " + ConnectionQueue.this.toString();

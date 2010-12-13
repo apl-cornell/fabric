@@ -107,11 +107,6 @@ public final class SubSocketFactory {
     }
     
     @Override
-    public void cleanup() {
-      throw new NotImplementedException();
-    }
-
-    @Override
     public String toString() {
       return "channel to " + name + " [" + addr.toString() + "]";
     }
