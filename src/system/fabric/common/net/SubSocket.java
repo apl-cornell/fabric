@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.naming.SocketAddress;
 import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 
 
 /**
@@ -58,8 +59,8 @@ public class SubSocket {
   /** 
    * Return the Principal that represents the remote endpoint of the connection
    */
-  public final NodePrincipal getPrincipal() {
-    throw new NotImplementedException();
+  public final Principal getPrincipal() throws IOException {
+    return state.getPrincipal();
   }
   
   //////////////////////////////////////////////////////////////////////////////
@@ -95,6 +96,10 @@ public class SubSocket {
 
     public OutputStream getOutputStream() throws IOException {
       throw new IOException("Cannot get an output stream: socket " + this, cause);
+    }
+    
+    public Principal getPrincipal() throws IOException {
+      throw new IOException("There is no principal associated with the socket: it " + this, cause);
     }
   }
 
@@ -156,6 +161,11 @@ public class SubSocket {
       return conn.out;
     }
 
+    @Override
+    public Principal getPrincipal() {
+      return conn.getPrincipal();
+    }
+    
     public Connected(Channel.Connection conn) {
       this.conn = conn;
     }

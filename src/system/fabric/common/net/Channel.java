@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.ShakenSocket;
+import fabric.lang.security.Principal;
 
 
 /**
@@ -22,8 +23,9 @@ abstract class Channel extends Thread {
   private final DataOutputStream out;
   private final DataInputStream  in;
   protected final Socket           sock;
-
+  
   private final Map<Integer, Connection> connections;
+  private final Principal                remotePrincipal;
 
   // channel protocol:
   //
@@ -37,7 +39,8 @@ abstract class Channel extends Thread {
 
   protected Channel(ShakenSocket s) throws IOException {
     super();
-    this.sock = s.sock;
+    this.sock            = s.sock;
+    this.remotePrincipal = s.principal;  
     this.out  = new DataOutputStream(this.sock.getOutputStream());
     this.in   = new DataInputStream(this.sock.getInputStream());
     this.connections = new HashMap<Integer, Connection>();
@@ -161,6 +164,10 @@ abstract class Channel extends Thread {
     @Override
     public String toString() {
       return "stream " + streamID + " on " + Channel.this.toString();
+    }
+    
+    public Principal getPrincipal() {
+      return Channel.this.remotePrincipal;
     }
 
     /** this method is called by SubSocket.close(). */
